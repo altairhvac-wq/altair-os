@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type { JobInsert, JobRow } from "@/lib/database/types/core-tables";
-import type { Job, JobDetail, JobFormData } from "@/shared/types/job";
+import type { Job, JobDetail, JobFormData, JobStatus } from "@/shared/types/job";
 
 type JobRowWithCustomer = JobRow & {
   customers: {
@@ -223,6 +223,50 @@ export async function createJob(
 
   if (!row) {
     return { job: null, error: "Failed to create job." };
+  }
+
+  return {
+    job: mapJobRowToJob(row as JobRowWithCustomer),
+    error: null,
+  };
+}
+
+export async function updateJobStatus(
+  companyId: string,
+  jobId: string,
+  fromStatus: JobStatus,
+  toStatus: JobStatus,
+): Promise<{ job: Job | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("jobs")
+    .update({ status: toStatus })
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .eq("status", fromStatus)
+    .select("*, customers(name)")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[updateJobStatus] update failed:", {
+      companyId,
+      jobId,
+      fromStatus,
+      toStatus,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    return { job: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return {
+      job: null,
+      error: "Job status has changed. Refresh the page and try again.",
+    };
   }
 
   return {

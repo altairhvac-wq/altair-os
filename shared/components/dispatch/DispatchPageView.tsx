@@ -85,6 +85,12 @@ export function DispatchPageView({
     });
   }
 
+  function handleStatusUpdated(jobId: string, status: DispatchJobStatus) {
+    setJobs((previous) =>
+      previous.map((job) => (job.id === jobId ? { ...job, status } : job)),
+    );
+  }
+
   const hasNoJobs = jobs.length === 0;
   const hasNoResults = !hasNoJobs && filteredJobs.length === 0;
 
@@ -158,6 +164,7 @@ export function DispatchPageView({
                 isAssigning={isPending}
                 onClose={handleClosePanel}
                 onAssign={handleAssign}
+                onStatusUpdated={handleStatusUpdated}
               />
             </div>
           </div>
@@ -171,6 +178,7 @@ export function DispatchPageView({
             isAssigning={false}
             onClose={handleClosePanel}
             onAssign={handleAssign}
+            onStatusUpdated={handleStatusUpdated}
           />
         )}
       </div>

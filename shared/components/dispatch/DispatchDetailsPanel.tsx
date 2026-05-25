@@ -12,6 +12,7 @@ import {
 } from "@/shared/types/dispatch";
 import { DispatchPriorityBadge } from "./DispatchPriorityBadge";
 import { DispatchStatusBadge } from "./DispatchStatusBadge";
+import { JobWorkflowActions } from "@/shared/components/jobs/JobWorkflowActions";
 
 type DispatchDetailsPanelProps = {
   job: DispatchJob | null;
@@ -22,6 +23,7 @@ type DispatchDetailsPanelProps = {
   isAssigning: boolean;
   onClose: () => void;
   onAssign: (jobId: string, technicianId: string) => void;
+  onStatusUpdated?: (jobId: string, status: DispatchJob["status"]) => void;
 };
 
 export function DispatchDetailsPanel({
@@ -33,6 +35,7 @@ export function DispatchDetailsPanel({
   isAssigning,
   onClose,
   onAssign,
+  onStatusUpdated,
 }: DispatchDetailsPanelProps) {
   const [selectedTechnicianId, setSelectedTechnicianId] = useState("");
   const isOpen = job !== null;
@@ -220,6 +223,19 @@ export function DispatchDetailsPanel({
                 </p>
               </section>
             ) : null}
+
+            <div className="space-y-3 border-t border-slate-100 pt-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Workflow
+              </h3>
+              <JobWorkflowActions
+                jobId={job.id}
+                status={job.status}
+                canUpdateStatus={canDispatchJobs}
+                layout="stack"
+                onStatusUpdated={(status) => onStatusUpdated?.(job.id, status)}
+              />
+            </div>
 
             <div className="flex gap-2 border-t border-slate-100 pt-4">
               <Link

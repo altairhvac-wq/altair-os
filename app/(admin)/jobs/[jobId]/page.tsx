@@ -21,5 +21,10 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     notFound();
   }
 
-  return <JobDetailPageView job={job} />;
+  return (
+    <JobDetailPageView
+      job={job}
+      canUpdateStatus={companyContext.permissions.dispatchJobs}
+    />
+  );
 }

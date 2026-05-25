@@ -18,6 +18,7 @@ import {
 import { getCustomerInitials } from "@/shared/types/customer";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
+import { JobWorkflowActions } from "./JobWorkflowActions";
 import {
   formatScheduledDate,
   formatScheduledTime,
@@ -26,6 +27,7 @@ import {
 
 type JobDetailPageViewProps = {
   job: JobDetail;
+  canUpdateStatus: boolean;
 };
 
 type ContentSectionProps = {
@@ -76,7 +78,10 @@ function ContentSection({ title, children, className }: ContentSectionProps) {
   );
 }
 
-export function JobDetailPageView({ job }: JobDetailPageViewProps) {
+export function JobDetailPageView({
+  job,
+  canUpdateStatus,
+}: JobDetailPageViewProps) {
   const customerEmail = job.customerEmail?.trim();
   const customerPhone = job.customerPhone?.trim();
   const customerCompany = job.customerCompany?.trim();
@@ -125,7 +130,13 @@ export function JobDetailPageView({ job }: JobDetailPageViewProps) {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 lg:shrink-0 lg:justify-end">
+            <div className="flex flex-col gap-3 lg:shrink-0 lg:items-end">
+              <JobWorkflowActions
+                jobId={job.id}
+                status={job.status}
+                canUpdateStatus={canUpdateStatus}
+              />
+              <div className="flex flex-wrap gap-2 lg:justify-end">
               <button
                 type="button"
                 className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
@@ -147,6 +158,7 @@ export function JobDetailPageView({ job }: JobDetailPageViewProps) {
                 <Truck className="h-4 w-4" />
                 Open dispatch
               </button>
+              </div>
             </div>
           </div>
         </div>

@@ -23,6 +23,7 @@ export {
   listJobsByCustomer,
   mapJobFormDataToInsert,
   mapJobRowToJob,
+  updateJobStatus,
 } from "./jobs";
 export {
   listTechnicians,
