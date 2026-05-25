@@ -180,7 +180,7 @@ export function DispatchPageView({
             onClick={handleClosePanel}
             className="absolute inset-0 bg-slate-900/40"
           />
-          <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden sm:max-h-[85vh]">
+          <div className="relative z-10 flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden">
             <DispatchDetailsPanel
               job={selectedJob}
               technician={selectedTechnician}

@@ -12,11 +12,17 @@ function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Sidebar() {
+type SidebarProps = {
+  className?: string;
+};
+
+export function Sidebar({ className = "" }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-slate-800 bg-slate-950">
+    <aside
+      className={`flex h-full w-64 shrink-0 flex-col border-r border-slate-800 bg-slate-950 ${className}`.trim()}
+    >
       <div className="border-b border-slate-800 px-5 py-5">
         <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400">
           Altair OS

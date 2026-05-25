@@ -1,3 +1,5 @@
+"use client";
+
 import { Bell, Search } from "lucide-react";
 import type { ActiveCompanyContext } from "@/lib/database/types";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
@@ -36,31 +38,37 @@ export function Header({ title, description, companyContext }: HeaderProps) {
   );
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6">
-      <div>
-        <h1 className="text-lg font-bold text-slate-900">{title}</h1>
-        {description ? (
-          <p className="text-sm text-slate-500">{description}</p>
-        ) : null}
+    <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 sm:px-6">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="min-w-0">
+          <h1 className="truncate text-base font-bold text-slate-900 sm:text-lg">
+            {title}
+          </h1>
+          {description ? (
+            <p className="hidden truncate text-sm text-slate-500 sm:block">
+              {description}
+            </p>
+          ) : null}
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-3">
         <button
           type="button"
-          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          className="hidden rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 sm:inline-flex"
           aria-label="Search"
         >
           <Search className="h-5 w-5" />
         </button>
         <button
           type="button"
-          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          className="hidden rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 sm:inline-flex"
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" />
         </button>
-        <div className="ml-2 flex items-center gap-3 border-l border-slate-200 pl-4">
-          <div className="text-right">
+        <div className="flex items-center gap-2 border-l border-slate-200 pl-2 sm:ml-2 sm:gap-3 sm:pl-4">
+          <div className="hidden text-right md:block">
             <p className="text-sm font-semibold text-slate-900">
               {companyContext.company.name}
             </p>

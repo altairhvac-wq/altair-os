@@ -129,7 +129,7 @@ export function TechnicianAssignedJobsView({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-200">
+      <div className="rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200 sm:px-4 sm:py-3">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           My Jobs
         </p>

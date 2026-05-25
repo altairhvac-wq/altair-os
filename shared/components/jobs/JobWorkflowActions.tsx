@@ -65,8 +65,8 @@ export function JobWorkflowActions({
           isPrimary
             ? isCompact
               ? "inline-flex w-full items-center justify-center rounded-xl bg-cyan-600 px-4 py-3.5 text-base font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-              : "inline-flex items-center justify-center rounded-lg bg-cyan-600 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-            : "inline-flex items-center justify-center rounded-lg border border-red-200 bg-white px-3.5 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+              : "inline-flex w-full items-center justify-center rounded-lg bg-cyan-600 px-4 py-3 sm:w-auto sm:px-3.5 sm:py-2 text-base sm:text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+            : "inline-flex w-full items-center justify-center rounded-lg border border-red-200 bg-white px-4 py-3 sm:w-auto sm:px-3.5 sm:py-2 text-base sm:text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
         }
       >
         {isActionPending ? "Updating..." : action.label}
@@ -109,7 +109,9 @@ export function JobWorkflowActions({
   }
 
   const actionRowClass =
-    layout === "stack" ? "flex flex-col gap-2" : "flex flex-wrap gap-2";
+    layout === "stack"
+      ? "flex flex-col gap-2"
+      : "flex flex-col gap-2 sm:flex-row sm:flex-wrap";
 
   return (
     <>

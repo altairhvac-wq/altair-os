@@ -30,7 +30,7 @@ export function TechnicianBottomNav() {
                 className="flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 text-slate-300"
               >
                 <Icon className="h-5 w-5" />
-                <span className="truncate text-[10px] font-semibold">
+                <span className="truncate text-xs font-semibold">
                   {item.label}
                 </span>
               </span>
@@ -48,7 +48,7 @@ export function TechnicianBottomNav() {
               }`}
             >
               <Icon className={`h-5 w-5 ${isActive ? "stroke-[2.5]" : ""}`} />
-              <span className="truncate text-[10px] font-semibold">
+              <span className="truncate text-xs font-semibold">
                 {item.label}
               </span>
               {isActive ? (

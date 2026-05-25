@@ -34,11 +34,11 @@ export function TechnicianJobCard({ job }: TechnicianJobCardProps) {
   );
 
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 p-4">
+    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-100 p-3 sm:p-4">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">{job.jobNumber}</h2>
+          <div className="min-w-0">
+            <h2 className="truncate text-lg font-bold text-slate-900">{job.jobNumber}</h2>
             <p className="mt-0.5 text-sm font-medium text-slate-600">
               {job.jobType}
             </p>
@@ -55,10 +55,10 @@ export function TechnicianJobCard({ job }: TechnicianJobCardProps) {
         </div>
       </div>
 
-      <div className="space-y-3 p-4">
+      <div className="space-y-3 p-3 sm:p-4">
         <div className="flex items-start gap-3">
           <User className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-900">
               {job.customerName}
             </p>
@@ -67,7 +67,7 @@ export function TechnicianJobCard({ job }: TechnicianJobCardProps) {
                 {contactLines.map(({ icon: Icon, value }) => (
                   <p
                     key={value}
-                    className="flex items-center gap-1.5 text-xs text-slate-500"
+                    className="flex items-center gap-1.5 break-all text-xs text-slate-500"
                   >
                     <Icon className="h-3.5 w-3.5 shrink-0" />
                     {value}
@@ -84,7 +84,7 @@ export function TechnicianJobCard({ job }: TechnicianJobCardProps) {
 
         <div className="flex items-start gap-3">
           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-          <p className="text-sm text-slate-700">
+          <p className="min-w-0 break-words text-sm text-slate-700">
             {formatTechnicianJobAddress(job)}
           </p>
         </div>
@@ -97,7 +97,7 @@ export function TechnicianJobCard({ job }: TechnicianJobCardProps) {
         </div>
       </div>
 
-      <div className="border-t border-slate-100 p-4">
+      <div className="border-t border-slate-100 p-3 sm:p-4">
         <JobWorkflowControls
           jobId={job.id}
           customerId={job.customerId}

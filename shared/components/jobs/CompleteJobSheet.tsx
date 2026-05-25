@@ -136,7 +136,7 @@ export function CompleteJobSheet({
         disabled={isPending}
         className="absolute inset-0 bg-slate-900/40"
       />
-      <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-xl sm:max-h-[85vh] sm:rounded-2xl">
+      <div className="relative z-10 flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-xl sm:rounded-2xl">
         <header className="flex shrink-0 items-center gap-3 border-b border-slate-100 bg-slate-50/70 px-4 py-3.5 sm:px-5">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 ring-1 ring-emerald-600/15">
             <CheckCircle2 className="h-5 w-5 text-emerald-600" />
@@ -156,7 +156,7 @@ export function CompleteJobSheet({
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
+            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -205,7 +205,7 @@ export function CompleteJobSheet({
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
           </div>
 
-          <footer className="flex shrink-0 gap-3 border-t border-slate-100 px-4 py-4 sm:px-5">
+          <footer className="flex shrink-0 gap-3 border-t border-slate-100 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5">
             <button
               type="button"
               onClick={onClose}

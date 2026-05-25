@@ -49,7 +49,7 @@ type ContentSectionProps = {
 function ContentSection({ title, children, className }: ContentSectionProps) {
   return (
     <section
-      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ${className ?? ""}`}
+      className={`rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 ${className ?? ""}`}
     >
       <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         {title}
@@ -86,7 +86,7 @@ export function JobDetailPageView({
       </Link>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-5 sm:px-6">
+        <div className="border-b border-slate-100 bg-slate-50/70 px-4 py-4 sm:px-6 sm:py-5">
           <JobDetailHeaderWorkflow
             job={job}
             scheduledLabel={scheduledLabel}
@@ -94,7 +94,7 @@ export function JobDetailPageView({
           />
         </div>
 
-        <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-6">
+        <div className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-6 sm:py-5">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Service location
@@ -142,7 +142,7 @@ export function JobDetailPageView({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Customer
         </h2>
@@ -170,7 +170,7 @@ export function JobDetailPageView({
             {customerEmail ? (
               <a
                 href={`mailto:${customerEmail}`}
-                className="inline-flex items-center gap-2 text-sm text-cyan-600 transition-colors hover:text-cyan-700"
+                className="inline-flex min-w-0 items-center gap-2 break-all text-sm text-cyan-600 transition-colors hover:text-cyan-700"
               >
                 <Mail className="h-4 w-4 shrink-0 text-slate-400" />
                 {customerEmail}

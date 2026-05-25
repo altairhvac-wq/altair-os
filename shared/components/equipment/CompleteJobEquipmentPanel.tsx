@@ -131,7 +131,7 @@ export function CompleteJobEquipmentPanel({
             <button
               type="button"
               onClick={() => handleModeChange("create")}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              className={`min-h-11 rounded-lg px-4 py-2.5 text-xs font-semibold transition-colors sm:px-3 sm:py-1.5 ${
                 value.mode === "create"
                   ? "bg-violet-600 text-white"
                   : "bg-white text-slate-700 ring-1 ring-slate-200"
@@ -142,7 +142,7 @@ export function CompleteJobEquipmentPanel({
             <button
               type="button"
               onClick={() => handleModeChange("update")}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              className={`min-h-11 rounded-lg px-4 py-2.5 text-xs font-semibold transition-colors sm:px-3 sm:py-1.5 ${
                 value.mode === "update"
                   ? "bg-violet-600 text-white"
                   : "bg-white text-slate-700 ring-1 ring-slate-200"
