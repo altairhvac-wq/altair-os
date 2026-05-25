@@ -56,6 +56,7 @@ export function ServiceItemsPageView({
   >("active");
   const [panelMode, setPanelMode] = useState<PanelMode>("empty");
   const [selectedItem, setSelectedItem] = useState<ServiceItem | null>(null);
+  const [createFormKey, setCreateFormKey] = useState(0);
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -64,12 +65,17 @@ export function ServiceItemsPageView({
     [serviceItems, search, statusFilter],
   );
 
-  function handleNewItem() {
-    if (!canManagePriceBook) return;
-
+  function openCreateForm() {
     setPanelMode("create");
     setSelectedItem(null);
     setFormError(null);
+    setCreateFormKey((previous) => previous + 1);
+  }
+
+  function handleNewItem() {
+    if (!canManagePriceBook) return;
+
+    openCreateForm();
   }
 
   function handleSelectItem(item: ServiceItem) {
@@ -86,7 +92,7 @@ export function ServiceItemsPageView({
     setFormError(null);
   }
 
-  function upsertServiceItem(updated: ServiceItem) {
+  function mergeServiceItemIntoList(updated: ServiceItem) {
     setServiceItems((previous) => {
       const index = previous.findIndex((item) => item.id === updated.id);
       if (index === -1) {
@@ -99,8 +105,6 @@ export function ServiceItemsPageView({
       next[index] = updated;
       return next.sort((a, b) => a.name.localeCompare(b.name));
     });
-    setSelectedItem(updated);
-    setPanelMode("edit");
   }
 
   function handleCreateSubmit(data: ServiceItemFormData) {
@@ -114,24 +118,28 @@ export function ServiceItemsPageView({
         return;
       }
 
-      upsertServiceItem(result.serviceItem);
+      mergeServiceItemIntoList(result.serviceItem);
+      openCreateForm();
     });
   }
 
   function handleEditSubmit(data: ServiceItemFormData) {
     if (!selectedItem) return;
 
+    const editingItemId = selectedItem.id;
     setFormError(null);
 
     startTransition(async () => {
-      const result = await updateServiceItemAction(selectedItem.id, data);
+      const result = await updateServiceItemAction(editingItemId, data);
 
       if (result.error || !result.serviceItem) {
         setFormError(result.error ?? "Failed to update service item.");
         return;
       }
 
-      upsertServiceItem(result.serviceItem);
+      mergeServiceItemIntoList(result.serviceItem);
+      setSelectedItem(result.serviceItem);
+      setPanelMode("edit");
     });
   }
 
@@ -193,10 +201,10 @@ export function ServiceItemsPageView({
       <ServiceItemDetailPanel
         mode={panelMode}
         serviceItem={selectedItem}
+        createFormKey={createFormKey}
         onClose={handleClosePanel}
-        onSubmit={
-          panelMode === "create" ? handleCreateSubmit : handleEditSubmit
-        }
+        onCreateSubmit={handleCreateSubmit}
+        onEditSubmit={handleEditSubmit}
         onCancel={handleClosePanel}
         error={formError}
         isSubmitting={isPending}

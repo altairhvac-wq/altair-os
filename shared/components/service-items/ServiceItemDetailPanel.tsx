@@ -13,8 +13,10 @@ type PanelMode = "create" | "edit" | "empty";
 type ServiceItemDetailPanelProps = {
   mode: PanelMode;
   serviceItem: ServiceItem | null;
+  createFormKey: number;
   onClose: () => void;
-  onSubmit: (data: ServiceItemFormData) => void;
+  onCreateSubmit: (data: ServiceItemFormData) => void;
+  onEditSubmit: (data: ServiceItemFormData) => void;
   onCancel: () => void;
   error?: string | null;
   isSubmitting?: boolean;
@@ -23,8 +25,10 @@ type ServiceItemDetailPanelProps = {
 export function ServiceItemDetailPanel({
   mode,
   serviceItem,
+  createFormKey,
   onClose,
-  onSubmit,
+  onCreateSubmit,
+  onEditSubmit,
   onCancel,
   error,
   isSubmitting = false,
@@ -79,7 +83,8 @@ export function ServiceItemDetailPanel({
 
         {mode === "create" ? (
           <ServiceItemForm
-            onSubmit={onSubmit}
+            key={`create-${createFormKey}`}
+            onSubmit={onCreateSubmit}
             onCancel={onCancel}
             error={error}
             isSubmitting={isSubmitting}
@@ -91,7 +96,7 @@ export function ServiceItemDetailPanel({
           <ServiceItemForm
             key={serviceItem.id}
             initialData={serviceItemToFormData(serviceItem)}
-            onSubmit={onSubmit}
+            onSubmit={onEditSubmit}
             onCancel={onCancel}
             error={error}
             isSubmitting={isSubmitting}
