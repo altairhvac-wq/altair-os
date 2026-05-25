@@ -8,8 +8,8 @@ function Skeleton({ className }: { className?: string }) {
 
 export function CustomersLoadingState() {
   return (
-    <div className="flex h-[calc(100vh-7rem)] gap-6">
-      <div className="flex min-w-0 flex-1 flex-col rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="flex h-[calc(100vh-7rem)] flex-col gap-4 overflow-hidden lg:flex-row">
+      <div className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1">
         <div className="border-b border-slate-100 p-4">
           <div className="flex items-center justify-between gap-4">
             <Skeleton className="h-10 w-64" />
@@ -21,7 +21,7 @@ export function CustomersLoadingState() {
           </div>
         </div>
 
-        <div className="flex-1 p-4">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4">
           <div className="space-y-3">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 px-2 py-3">
@@ -38,7 +38,7 @@ export function CustomersLoadingState() {
         </div>
       </div>
 
-      <div className="hidden w-[380px] shrink-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:block">
+      <div className="flex min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:min-h-0 lg:w-[380px] lg:flex-none lg:shrink-0">
         <Skeleton className="mx-auto h-16 w-16 rounded-full" />
         <Skeleton className="mx-auto mt-4 h-5 w-40" />
         <Skeleton className="mx-auto mt-2 h-4 w-28" />

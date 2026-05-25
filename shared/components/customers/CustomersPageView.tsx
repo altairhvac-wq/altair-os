@@ -122,9 +122,9 @@ export function CustomersPageView() {
   const hasNoResults = !hasNoCustomers && filteredCustomers.length === 0;
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] flex-col gap-4 xl:flex-row">
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-4 py-4">
+    <div className="flex h-[calc(100vh-7rem)] flex-col gap-4 overflow-hidden lg:flex-row">
+      <section className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1">
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
           <div>
             <h2 className="text-base font-bold text-slate-900">
               All customers
@@ -144,16 +144,18 @@ export function CustomersPageView() {
         </div>
 
         {!hasNoCustomers ? (
-          <CustomerSearchFilterBar
-            search={search}
-            statusFilter={statusFilter}
-            onSearchChange={setSearch}
-            onStatusFilterChange={setStatusFilter}
-            resultCount={filteredCustomers.length}
-          />
+          <div className="shrink-0">
+            <CustomerSearchFilterBar
+              search={search}
+              statusFilter={statusFilter}
+              onSearchChange={setSearch}
+              onStatusFilterChange={setStatusFilter}
+              resultCount={filteredCustomers.length}
+            />
+          </div>
         ) : null}
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           {hasNoCustomers ? (
             <CustomersEmptyState
               variant="no-customers"
@@ -169,7 +171,7 @@ export function CustomersPageView() {
             />
           )}
         </div>
-      </div>
+      </section>
 
       <CustomerDetailPanel
         mode={panelMode}
