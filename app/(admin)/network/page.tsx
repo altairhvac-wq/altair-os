@@ -1,10 +1,5 @@
-import { ModulePlaceholder } from "@/shared/components/admin/ModulePlaceholder";
+import { NetworkPageView } from "@/shared/components/network/NetworkPageView";
 
 export default function NetworkPage() {
-  return (
-    <ModulePlaceholder
-      title="Subcontractor network"
-      description="Job posting, bids, and subcontractor tracking will live here."
-    />
-  );
+  return <NetworkPageView />;
 }

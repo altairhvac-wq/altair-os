@@ -1,10 +1,5 @@
-import { ModulePlaceholder } from "@/shared/components/admin/ModulePlaceholder";
+import { AnalyticsPageView } from "@/shared/components/analytics/AnalyticsPageView";
 
 export default function ReportsPage() {
-  return (
-    <ModulePlaceholder
-      title="Reports"
-      description="Revenue, productivity, and profitability reports will live here."
-    />
-  );
+  return <AnalyticsPageView />;
 }
