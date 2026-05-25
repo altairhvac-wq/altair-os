@@ -1,0 +1,58 @@
+import type { Technician } from "@/shared/types/dispatch";
+
+export const mockTechnicians: Technician[] = [
+  {
+    id: "tech-001",
+    name: "Marcus Rivera",
+    role: "Senior HVAC Tech",
+    initials: "MR",
+    status: "on_job",
+    specialty: "HVAC",
+    phone: "(512) 555-0142",
+  },
+  {
+    id: "tech-002",
+    name: "Devin Walsh",
+    role: "Plumbing Specialist",
+    initials: "DW",
+    status: "available",
+    specialty: "Plumbing",
+    phone: "(512) 555-0187",
+  },
+  {
+    id: "tech-003",
+    name: "Lisa Park",
+    role: "Lead AC Technician",
+    initials: "LP",
+    status: "on_job",
+    specialty: "AC & Refrigeration",
+    phone: "(512) 555-0231",
+  },
+  {
+    id: "tech-004",
+    name: "Jordan Kim",
+    role: "Electrical Tech",
+    initials: "JK",
+    status: "available",
+    specialty: "Electrical",
+    phone: "(512) 555-0298",
+  },
+  {
+    id: "tech-005",
+    name: "Avery Collins",
+    role: "Field Service Tech",
+    initials: "AC",
+    status: "off_duty",
+    specialty: "General Service",
+    phone: "(512) 555-0315",
+  },
+  {
+    id: "tech-006",
+    name: "Riley Nguyen",
+    role: "Apprentice Tech",
+    initials: "RN",
+    status: "available",
+    specialty: "HVAC",
+    phone: "(512) 555-0374",
+  },
+];
