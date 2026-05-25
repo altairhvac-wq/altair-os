@@ -8,6 +8,9 @@ import type {
   CustomerInsert,
   CustomerRow,
   CustomerUpdate,
+  JobInsert,
+  JobRow,
+  JobUpdate,
   ProfileInsert,
   ProfileRow,
   ProfileUpdate,
@@ -71,6 +74,27 @@ export type Database = {
           },
         ];
       };
+      jobs: {
+        Row: JobRow;
+        Insert: JobInsert;
+        Update: JobUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "jobs_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "jobs_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -86,6 +110,8 @@ export type Database = {
       membership_status: CompanyMembershipRow["status"];
       company_status: CompanyRow["status"];
       customer_status: CustomerRow["status"];
+      job_status: JobRow["status"];
+      job_priority: JobRow["priority"];
     };
     CompositeTypes: Record<string, never>;
   };

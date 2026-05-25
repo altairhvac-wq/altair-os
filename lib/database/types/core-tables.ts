@@ -2,6 +2,8 @@ import type {
   CompanyRole,
   CompanyStatus,
   CustomerStatus,
+  JobPriority,
+  JobStatus,
   Json,
   MembershipStatus,
   Timestamp,
@@ -152,6 +154,50 @@ export type CustomerInsert = {
 
 export type CustomerUpdate = Partial<
   Omit<CustomerRow, "id" | "company_id" | "created_at" | "updated_at">
+>;
+
+export type JobRow = {
+  id: UUID;
+  company_id: UUID;
+  customer_id: UUID;
+  job_number: string;
+  service_address: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  job_type: string;
+  scheduled_at: Timestamp;
+  status: JobStatus;
+  priority: JobPriority;
+  description: string | null;
+  notes: string | null;
+  assigned_technician_id: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type JobInsert = {
+  id?: UUID;
+  company_id: UUID;
+  customer_id: UUID;
+  job_number: string;
+  service_address?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  job_type?: string;
+  scheduled_at: Timestamp;
+  status?: JobStatus;
+  priority?: JobPriority;
+  description?: string | null;
+  notes?: string | null;
+  assigned_technician_id?: UUID | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type JobUpdate = Partial<
+  Omit<JobRow, "id" | "company_id" | "created_at" | "updated_at">
 >;
 
 export type ActiveCompanyContext = UserCompanyContext & {

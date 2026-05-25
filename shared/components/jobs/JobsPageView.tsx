@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { Plus } from "lucide-react";
-import { mockJobs } from "@/shared/data/mock-jobs";
+import { createJobAction } from "@/app/actions/jobs";
+import type { Customer } from "@/shared/types/customer";
 import {
   type Job,
   type JobFormData,
@@ -12,10 +13,17 @@ import {
 import { JobDetailsPanel } from "./JobDetailsPanel";
 import { JobSearchFilterBar } from "./JobSearchFilterBar";
 import { JobsEmptyState } from "./JobsEmptyState";
-import { JobsLoadingState } from "./JobsLoadingState";
 import { JobsTable } from "./JobsTable";
 
 type PanelMode = "detail" | "create" | "empty";
+
+type JobsPageViewProps = {
+  initialJobs: Job[];
+  customers: Customer[];
+  canDispatchJobs: boolean;
+  initialPanelMode?: PanelMode;
+  createInitialData?: Partial<JobFormData>;
+};
 
 function filterJobs(
   jobs: Job[],
@@ -50,48 +58,23 @@ function filterJobs(
   });
 }
 
-function formDataToJob(data: JobFormData, existingCount: number): Job {
-  const jobNumber = `JOB-${1048 + existingCount}`;
-
-  return {
-    id: `job-${Date.now()}`,
-    jobNumber,
-    customerId: `cust-new-${Date.now()}`,
-    customerName: data.customerName,
-    serviceAddress: data.serviceAddress,
-    city: data.city,
-    state: data.state,
-    zip: data.zip,
-    jobType: data.jobType,
-    assignedTechnician: data.assignedTechnician || undefined,
-    scheduledDate: new Date(data.scheduledDate).toISOString(),
-    status: data.status,
-    priority: data.priority,
-    description: data.description || undefined,
-    notes: data.notes || undefined,
-    createdAt: new Date().toISOString().split("T")[0],
-  };
-}
-
-export function JobsPageView() {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function JobsPageView({
+  initialJobs,
+  customers,
+  canDispatchJobs,
+  initialPanelMode = "empty",
+  createInitialData,
+}: JobsPageViewProps) {
+  const [jobs, setJobs] = useState(initialJobs);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
   const [priorityFilter, setPriorityFilter] = useState<JobPriority | "all">(
     "all",
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [panelMode, setPanelMode] = useState<PanelMode>("empty");
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setJobs(mockJobs);
-      setIsLoading(false);
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const filteredJobs = useMemo(
     () => filterJobs(jobs, search, statusFilter, priorityFilter),
@@ -103,27 +86,40 @@ export function JobsPageView() {
   function handleSelectJob(job: Job) {
     setSelectedId(job.id);
     setPanelMode("detail");
+    setCreateError(null);
   }
 
   function handleNewJob() {
+    if (!canDispatchJobs) {
+      return;
+    }
+
     setSelectedId(null);
     setPanelMode("create");
+    setCreateError(null);
   }
 
   function handleClosePanel() {
     setSelectedId(null);
     setPanelMode("empty");
+    setCreateError(null);
   }
 
   function handleCreateSubmit(data: JobFormData) {
-    const newJob = formDataToJob(data, jobs.length);
-    setJobs((prev) => [newJob, ...prev]);
-    setSelectedId(newJob.id);
-    setPanelMode("detail");
-  }
+    setCreateError(null);
 
-  if (isLoading) {
-    return <JobsLoadingState />;
+    startTransition(async () => {
+      const result = await createJobAction(data);
+
+      if (result.error || !result.job) {
+        setCreateError(result.error ?? "Failed to create job.");
+        return;
+      }
+
+      setJobs((previous) => [result.job!, ...previous]);
+      setSelectedId(result.job.id);
+      setPanelMode("detail");
+    });
   }
 
   const hasNoJobs = jobs.length === 0;
@@ -139,14 +135,17 @@ export function JobsPageView() {
               Schedule work, assign technicians, and track status
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleNewJob}
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700"
-          >
-            <Plus className="h-4 w-4" />
-            New Job
-          </button>
+          {canDispatchJobs ? (
+            <button
+              type="button"
+              onClick={handleNewJob}
+              disabled={customers.length === 0}
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" />
+              New Job
+            </button>
+          ) : null}
         </div>
 
         {!hasNoJobs ? (
@@ -165,7 +164,10 @@ export function JobsPageView() {
 
         <div className="min-h-0 flex-1 overflow-y-auto">
           {hasNoJobs ? (
-            <JobsEmptyState variant="no-jobs" onCreateJob={handleNewJob} />
+            <JobsEmptyState
+              variant="no-jobs"
+              onCreateJob={canDispatchJobs ? handleNewJob : undefined}
+            />
           ) : hasNoResults ? (
             <JobsEmptyState variant="no-results" />
           ) : (
@@ -181,9 +183,13 @@ export function JobsPageView() {
       <JobDetailsPanel
         mode={panelMode}
         job={selectedJob}
+        customers={customers}
         onClose={handleClosePanel}
         onCreateSubmit={handleCreateSubmit}
         onCreateCancel={handleClosePanel}
+        createError={createError}
+        isSubmitting={isPending}
+        createInitialData={createInitialData}
       />
     </div>
   );

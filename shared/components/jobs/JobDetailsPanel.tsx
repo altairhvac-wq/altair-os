@@ -5,6 +5,7 @@ import {
   type Job,
   type JobFormData,
 } from "@/shared/types/job";
+import type { Customer } from "@/shared/types/customer";
 import { JobCard } from "./JobCard";
 import { JobForm } from "./JobForm";
 import { JobPriorityBadge } from "./JobPriorityBadge";
@@ -15,17 +16,25 @@ type PanelMode = "detail" | "create" | "empty";
 type JobDetailsPanelProps = {
   mode: PanelMode;
   job: Job | null;
+  customers: Customer[];
   onClose: () => void;
   onCreateSubmit: (data: JobFormData) => void;
   onCreateCancel: () => void;
+  createError?: string | null;
+  isSubmitting?: boolean;
+  createInitialData?: Partial<JobFormData>;
 };
 
 export function JobDetailsPanel({
   mode,
   job,
+  customers,
   onClose,
   onCreateSubmit,
   onCreateCancel,
+  createError,
+  isSubmitting = false,
+  createInitialData,
 }: JobDetailsPanelProps) {
   const title =
     mode === "create"
@@ -75,7 +84,14 @@ export function JobDetailsPanel({
         ) : null}
 
         {mode === "create" ? (
-          <JobForm onSubmit={onCreateSubmit} onCancel={onCreateCancel} />
+          <JobForm
+            customers={customers}
+            initialData={createInitialData}
+            onSubmit={onCreateSubmit}
+            onCancel={onCreateCancel}
+            error={createError}
+            isSubmitting={isSubmitting}
+          />
         ) : null}
 
         {mode === "detail" && job ? (

@@ -27,13 +27,12 @@ export type Job = {
 };
 
 export type JobFormData = {
-  customerName: string;
+  customerId: string;
   serviceAddress: string;
   city: string;
   state: string;
   zip: string;
   jobType: string;
-  assignedTechnician: string;
   scheduledDate: string;
   status: JobStatus;
   priority: JobPriority;

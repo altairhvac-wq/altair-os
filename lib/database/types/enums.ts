@@ -13,6 +13,15 @@ export type CompanyStatus = "active" | "trial" | "suspended";
 
 export type CustomerStatus = "active" | "inactive" | "lead";
 
+export type JobStatus =
+  | "scheduled"
+  | "dispatched"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
+
+export type JobPriority = "low" | "normal" | "high" | "urgent";
+
 export type Json =
   | string
   | number

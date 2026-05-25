@@ -1,3 +1,6 @@
+"use client";
+
+import { useRef, type ChangeEvent, type FormEvent, type RefObject } from "react";
 import {
   JOB_PRIORITY_OPTIONS,
   JOB_STATUS_OPTIONS,
@@ -6,21 +9,26 @@ import {
   type JobPriority,
   type JobStatus,
 } from "@/shared/types/job";
+import type { Customer } from "@/shared/types/customer";
+
+type AddressField = "serviceAddress" | "city" | "state" | "zip";
 
 type JobFormProps = {
+  customers: Customer[];
   initialData?: Partial<JobFormData>;
   onSubmit: (data: JobFormData) => void;
   onCancel: () => void;
+  error?: string | null;
+  isSubmitting?: boolean;
 };
 
 const emptyForm: JobFormData = {
-  customerName: "",
+  customerId: "",
   serviceAddress: "",
   city: "",
   state: "",
   zip: "",
   jobType: JOB_TYPE_OPTIONS[0],
-  assignedTechnician: "",
   scheduledDate: "",
   status: "scheduled",
   priority: "normal",
@@ -33,21 +41,62 @@ const inputClass =
 
 const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
 
-export function JobForm({ initialData, onSubmit, onCancel }: JobFormProps) {
+export function JobForm({
+  customers,
+  initialData,
+  onSubmit,
+  onCancel,
+  error,
+  isSubmitting = false,
+}: JobFormProps) {
   const defaults = { ...emptyForm, ...initialData };
+  const manuallyEdited = useRef(new Set<AddressField>());
+  const serviceAddressRef = useRef<HTMLInputElement>(null);
+  const cityRef = useRef<HTMLInputElement>(null);
+  const stateRef = useRef<HTMLInputElement>(null);
+  const zipRef = useRef<HTMLInputElement>(null);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function markAddressEdited(field: AddressField) {
+    manuallyEdited.current.add(field);
+  }
+
+  function handleCustomerChange(e: ChangeEvent<HTMLSelectElement>) {
+    const customer = customers.find((c) => c.id === e.target.value);
+    if (!customer) return;
+
+    const addressFields: {
+      field: AddressField;
+      ref: RefObject<HTMLInputElement | null>;
+      value: string;
+    }[] = [
+      { field: "serviceAddress", ref: serviceAddressRef, value: customer.address },
+      { field: "city", ref: cityRef, value: customer.city },
+      { field: "state", ref: stateRef, value: customer.state },
+      { field: "zip", ref: zipRef, value: customer.zip },
+    ];
+
+    for (const { field, ref, value } of addressFields) {
+      const input = ref.current;
+      if (!input || manuallyEdited.current.has(field) || input.value.trim() !== "") {
+        continue;
+      }
+      if (value) {
+        input.value = value;
+      }
+    }
+  }
+
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
 
     onSubmit({
-      customerName: String(form.get("customerName") ?? ""),
+      customerId: String(form.get("customerId") ?? ""),
       serviceAddress: String(form.get("serviceAddress") ?? ""),
       city: String(form.get("city") ?? ""),
       state: String(form.get("state") ?? ""),
       zip: String(form.get("zip") ?? ""),
       jobType: String(form.get("jobType") ?? JOB_TYPE_OPTIONS[0]),
-      assignedTechnician: String(form.get("assignedTechnician") ?? ""),
       scheduledDate: String(form.get("scheduledDate") ?? ""),
       status: String(form.get("status") ?? "scheduled") as JobStatus,
       priority: String(form.get("priority") ?? "normal") as JobPriority,
@@ -60,17 +109,26 @@ export function JobForm({ initialData, onSubmit, onCancel }: JobFormProps) {
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label htmlFor="customerName" className={labelClass}>
-            Customer name
+          <label htmlFor="customerId" className={labelClass}>
+            Customer
           </label>
-          <input
-            id="customerName"
-            name="customerName"
+          <select
+            id="customerId"
+            name="customerId"
             required
-            defaultValue={defaults.customerName}
-            placeholder="Jane Smith"
+            defaultValue={defaults.customerId}
+            onChange={handleCustomerChange}
             className={inputClass}
-          />
+          >
+            <option value="" disabled>
+              Select a customer
+            </option>
+            {customers.map((customer) => (
+              <option key={customer.id} value={customer.id}>
+                {customer.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -89,19 +147,6 @@ export function JobForm({ initialData, onSubmit, onCancel }: JobFormProps) {
               </option>
             ))}
           </select>
-        </div>
-
-        <div>
-          <label htmlFor="assignedTechnician" className={labelClass}>
-            Assigned technician
-          </label>
-          <input
-            id="assignedTechnician"
-            name="assignedTechnician"
-            defaultValue={defaults.assignedTechnician}
-            placeholder="Optional"
-            className={inputClass}
-          />
         </div>
 
         <div>
@@ -171,9 +216,11 @@ export function JobForm({ initialData, onSubmit, onCancel }: JobFormProps) {
             <input
               id="serviceAddress"
               name="serviceAddress"
+              ref={serviceAddressRef}
               required
               defaultValue={defaults.serviceAddress}
               placeholder="123 Main St"
+              onInput={() => markAddressEdited("serviceAddress")}
               className={inputClass}
             />
           </div>
@@ -185,8 +232,10 @@ export function JobForm({ initialData, onSubmit, onCancel }: JobFormProps) {
               <input
                 id="city"
                 name="city"
+                ref={cityRef}
                 required
                 defaultValue={defaults.city}
+                onInput={() => markAddressEdited("city")}
                 className={inputClass}
               />
             </div>
@@ -197,8 +246,10 @@ export function JobForm({ initialData, onSubmit, onCancel }: JobFormProps) {
               <input
                 id="state"
                 name="state"
+                ref={stateRef}
                 required
                 defaultValue={defaults.state}
+                onInput={() => markAddressEdited("state")}
                 className={inputClass}
               />
             </div>
@@ -209,8 +260,10 @@ export function JobForm({ initialData, onSubmit, onCancel }: JobFormProps) {
               <input
                 id="zip"
                 name="zip"
+                ref={zipRef}
                 required
                 defaultValue={defaults.zip}
+                onInput={() => markAddressEdited("zip")}
                 className={inputClass}
               />
             </div>
@@ -246,17 +299,25 @@ export function JobForm({ initialData, onSubmit, onCancel }: JobFormProps) {
         />
       </div>
 
+      {error ? (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
+
       <div className="flex gap-3 border-t border-slate-100 pt-4">
         <button
           type="submit"
-          className="flex-1 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700"
+          disabled={isSubmitting || customers.length === 0}
+          className="flex-1 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Save job
+          {isSubmitting ? "Saving..." : "Save job"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          disabled={isSubmitting}
+          className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Cancel
         </button>

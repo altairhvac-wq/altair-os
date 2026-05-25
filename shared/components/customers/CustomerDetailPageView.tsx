@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   ArrowLeft,
-  Briefcase,
   Calendar,
   FileText,
   History,
@@ -10,27 +9,26 @@ import {
   Tag,
 } from "lucide-react";
 import { CustomerCard } from "./CustomerCard";
+import { CustomerJobsSection } from "./CustomerJobsSection";
 import {
   formatDate,
   type Customer,
 } from "@/shared/types/customer";
+import type { Job } from "@/shared/types/job";
 
 type CustomerDetailPageViewProps = {
   customer: Customer;
+  jobs: Job[];
+  canCreateJob: boolean;
 };
 
 type PlaceholderSection = {
   title: string;
   description: string;
-  icon: typeof Briefcase;
+  icon: typeof FileText;
 };
 
 const placeholderSections: PlaceholderSection[] = [
-  {
-    title: "Jobs",
-    description: "Service history and scheduled work will appear here.",
-    icon: Briefcase,
-  },
   {
     title: "Estimates",
     description: "Quotes and proposals for this customer will appear here.",
@@ -50,6 +48,8 @@ const placeholderSections: PlaceholderSection[] = [
 
 export function CustomerDetailPageView({
   customer,
+  jobs,
+  canCreateJob,
 }: CustomerDetailPageViewProps) {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -119,6 +119,12 @@ export function CustomerDetailPageView({
           {customer.notes?.trim() ? customer.notes : "No notes on file."}
         </p>
       </section>
+
+      <CustomerJobsSection
+        customerId={customer.id}
+        jobs={jobs}
+        canCreateJob={canCreateJob}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {placeholderSections.map((section) => {

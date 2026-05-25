@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCustomerById } from "@/lib/database/queries/customers";
+import { listJobsByCustomer } from "@/lib/database/queries/jobs";
 import { CustomerDetailPageView } from "@/shared/components/customers/CustomerDetailPageView";
 
 type CustomerDetailPageProps = {
@@ -17,14 +18,20 @@ export default async function CustomerDetailPage({
     redirect("/setup");
   }
 
-  const customer = await getCustomerById(
-    companyContext.company.id,
-    customerId,
-  );
+  const [customer, jobs] = await Promise.all([
+    getCustomerById(companyContext.company.id, customerId),
+    listJobsByCustomer(companyContext.company.id, customerId),
+  ]);
 
   if (!customer) {
     notFound();
   }
 
-  return <CustomerDetailPageView customer={customer} />;
+  return (
+    <CustomerDetailPageView
+      customer={customer}
+      jobs={jobs}
+      canCreateJob={companyContext.permissions.dispatchJobs}
+    />
+  );
 }
