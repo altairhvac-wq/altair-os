@@ -1,4 +1,4 @@
-export type { Database } from "./database";
+export type { Database } from "./types/database";
 export type {
   ActiveCompanyContext,
   CompanyInsert,
@@ -13,21 +13,20 @@ export type {
   ProfileRow,
   ProfileUpdate,
   UserCompanyContext,
-} from "./core-tables";
+} from "./types/index";
 export type {
+  CompanyPermission,
   CompanyRole,
   CompanyStatus,
   Json,
   MembershipStatus,
   Timestamp,
   UUID,
-} from "./enums";
-
+} from "./types/index";
 export {
   COMPANY_ROLE_LABELS,
   COMPANY_ROLE_PERMISSIONS,
   compareCompanyRoles,
   hasCompanyPermission,
   hasCompanyRole,
-} from "./roles";
-export type { CompanyPermission } from "./roles";
+} from "./types/index";

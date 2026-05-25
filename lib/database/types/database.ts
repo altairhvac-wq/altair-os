@@ -23,17 +23,47 @@ export type Database = {
         Row: ProfileRow;
         Insert: ProfileInsert;
         Update: ProfileUpdate;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "profiles_default_company_id_fkey";
+            columns: ["default_company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       company_memberships: {
         Row: CompanyMembershipRow;
         Insert: CompanyMembershipInsert;
         Update: CompanyMembershipUpdate;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "company_memberships_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "company_memberships_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      bootstrap_company_for_new_user: {
+        Args: {
+          p_company_name: string;
+        };
+        Returns: string;
+      };
+    };
     Enums: {
       company_role: CompanyMembershipRow["role"];
       membership_status: CompanyMembershipRow["status"];

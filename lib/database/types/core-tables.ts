@@ -59,10 +59,13 @@ export type CompanyInsert = Omit<
   updated_at?: Timestamp;
 };
 
-export type ProfileInsert = Omit<
-  ProfileRow,
-  "created_at" | "updated_at"
-> & {
+export type ProfileInsert = {
+  id: UUID;
+  email: string;
+  full_name?: string | null;
+  phone?: string | null;
+  avatar_url?: string | null;
+  default_company_id?: UUID | null;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };
@@ -100,4 +103,21 @@ export type UserCompanyContext = {
   profile: ProfileRow;
   membership: CompanyMembershipRow;
   company: CompanyRow;
+};
+
+export type ActiveCompanyContext = UserCompanyContext & {
+  user: {
+    id: UUID;
+    email: string | undefined;
+  };
+  role: CompanyRole;
+  permissions: Record<
+    | "manageCompany"
+    | "manageUsers"
+    | "dispatchJobs"
+    | "manageCustomers"
+    | "viewAssignedJobs"
+    | "manageBilling",
+    boolean
+  >;
 };

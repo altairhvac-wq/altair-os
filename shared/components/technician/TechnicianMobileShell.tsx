@@ -1,11 +1,16 @@
 import { Wrench } from "lucide-react";
+import type { ActiveCompanyContext } from "@/lib/database/types";
 import { TechnicianBottomNav } from "./TechnicianBottomNav";
 
 type TechnicianMobileShellProps = {
   children: React.ReactNode;
+  companyContext: ActiveCompanyContext;
 };
 
-export function TechnicianMobileShell({ children }: TechnicianMobileShellProps) {
+export function TechnicianMobileShell({
+  children,
+  companyContext,
+}: TechnicianMobileShellProps) {
   return (
     <div className="min-h-dvh bg-slate-100">
       <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col border-x border-slate-200 bg-slate-100 shadow-xl">
@@ -16,7 +21,9 @@ export function TechnicianMobileShell({ children }: TechnicianMobileShellProps) 
             </div>
             <div>
               <p className="text-sm font-bold text-slate-900">Altair OS</p>
-              <p className="text-xs text-slate-500">Field Technician</p>
+              <p className="text-xs text-slate-500">
+                {companyContext.company.name}
+              </p>
             </div>
           </div>
         </header>

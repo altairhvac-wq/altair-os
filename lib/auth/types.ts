@@ -17,10 +17,12 @@ export type SignUpInput = {
   email: string;
   password: string;
   fullName?: string;
+  companyName?: string;
 };
 
 export type SignUpMetadata = {
   full_name?: string;
+  company_name?: string;
 };
 
 export function isAuthError<T>(
