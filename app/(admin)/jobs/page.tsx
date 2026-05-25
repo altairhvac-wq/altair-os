@@ -1,10 +1,5 @@
-import { ModulePlaceholder } from "@/shared/components/admin/ModulePlaceholder";
+import { JobsPageView } from "@/shared/components/jobs/JobsPageView";
 
 export default function JobsPage() {
-  return (
-    <ModulePlaceholder
-      title="Jobs"
-      description="Job creation, assignment, and status tracking will live here."
-    />
-  );
+  return <JobsPageView />;
 }
