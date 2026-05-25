@@ -161,7 +161,7 @@ export function LineItemsEditor({
 
               <div className="space-y-3">
                 <div>
-                  <label className={labelClass}>Service item</label>
+                  <label className={labelClass}>Price Book Item</label>
                   <select
                     value={selectedServiceId}
                     onChange={(e) =>
@@ -172,21 +172,26 @@ export function LineItemsEditor({
                     <option value={CUSTOM_SERVICE_ITEM_ID}>Custom item</option>
                     {serviceItems.map((serviceItem) => (
                       <option key={serviceItem.id} value={serviceItem.id}>
-                        {serviceItem.name}
+                        {serviceItem.name} — {formatCurrency(serviceItem.unitPrice)}
                       </option>
                     ))}
                   </select>
+                  {serviceItems.length === 0 ? (
+                    <p className="mt-1 text-xs text-slate-500">
+                      No price book items yet. Add items in Price Book first.
+                    </p>
+                  ) : null}
                 </div>
 
                 <div>
-                  <label className={labelClass}>Name</label>
+                  <label className={labelClass}>Line Item Name</label>
                   <input
                     type="text"
                     value={item.name}
                     onChange={(e) =>
                       handleItemChange(index, "name", e.target.value)
                     }
-                    placeholder="Service or part name"
+                    placeholder="Name shown on the estimate"
                     className={inputClass}
                     required
                   />

@@ -360,6 +360,7 @@ export type ServiceItemRow = {
   description: string | null;
   unit_price: number;
   taxable: boolean;
+  category: string | null;
   is_active: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
@@ -372,6 +373,7 @@ export type ServiceItemInsert = {
   description?: string | null;
   unit_price?: number;
   taxable?: boolean;
+  category?: string | null;
   is_active?: boolean;
   created_at?: Timestamp;
   updated_at?: Timestamp;

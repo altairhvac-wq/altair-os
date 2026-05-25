@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BookOpen,
   Briefcase,
   Clock,
   DollarSign,
@@ -50,6 +51,12 @@ export const adminNavItems: NavItem[] = [
     href: "/estimates",
     icon: FileText,
     description: "Create and send customer estimates",
+  },
+  {
+    label: "Price Book",
+    href: "/price-book",
+    icon: BookOpen,
+    description: "Manage reusable services and parts for estimates",
   },
   {
     label: "Invoices",

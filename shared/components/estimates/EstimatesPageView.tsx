@@ -93,6 +93,7 @@ export function EstimatesPageView({
       return;
     }
 
+    router.refresh();
     setPanelMode("create");
     setCreateError(null);
   }

@@ -30,7 +30,15 @@ export {
   mapProfileToTechnician,
 } from "./technicians";
 export { listAssignedJobsForTechnician } from "./technician-jobs";
-export { listActiveServiceItems } from "./service-items";
+export {
+  createServiceItem,
+  listActiveServiceItems,
+  listServiceItems,
+  mapServiceItemFormDataToInsert,
+  mapServiceItemFormDataToUpdate,
+  setServiceItemActive,
+  updateServiceItem,
+} from "./service-items";
 export {
   createEstimate,
   getEstimateById,
