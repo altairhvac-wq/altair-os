@@ -22,6 +22,12 @@ export type JobStatus =
 
 export type JobPriority = "low" | "normal" | "high" | "urgent";
 
+export type DispatchAssignmentStatus =
+  | "active"
+  | "completed"
+  | "cancelled"
+  | "unassigned";
+
 export type Json =
   | string
   | number

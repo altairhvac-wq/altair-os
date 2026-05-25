@@ -1,7 +1,7 @@
 import { Radio, SearchX } from "lucide-react";
 
 type DispatchEmptyStateProps = {
-  variant: "no-results";
+  variant: "no-results" | "no-jobs";
 };
 
 export function DispatchEmptyState({ variant }: DispatchEmptyStateProps) {
@@ -15,11 +15,14 @@ export function DispatchEmptyState({ variant }: DispatchEmptyStateProps) {
         )}
       </div>
 
-      <h3 className="mt-5 text-lg font-bold text-slate-900">No jobs on board</h3>
+      <h3 className="mt-5 text-lg font-bold text-slate-900">
+        {variant === "no-jobs" ? "No jobs scheduled today" : "No jobs on board"}
+      </h3>
 
       <p className="mt-2 max-w-sm text-sm text-slate-500">
-        Try adjusting your search or filters to find dispatch jobs matching your
-        criteria.
+        {variant === "no-jobs"
+          ? "Scheduled jobs for today will appear on the dispatch board. Create jobs from the Jobs page to get started."
+          : "Try adjusting your search or filters to find dispatch jobs matching your criteria."}
       </p>
     </div>
   );

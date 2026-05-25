@@ -1,3 +1,7 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
 import { Calendar, MapPin, Phone, User, Wrench, X } from "lucide-react";
 import {
   formatDispatchDate,
@@ -12,15 +16,34 @@ import { DispatchStatusBadge } from "./DispatchStatusBadge";
 type DispatchDetailsPanelProps = {
   job: DispatchJob | null;
   technician: Technician | null;
+  technicians: Technician[];
+  canDispatchJobs: boolean;
+  assignError: string | null;
+  isAssigning: boolean;
   onClose: () => void;
+  onAssign: (jobId: string, technicianId: string) => void;
 };
 
 export function DispatchDetailsPanel({
   job,
   technician,
+  technicians,
+  canDispatchJobs,
+  assignError,
+  isAssigning,
   onClose,
+  onAssign,
 }: DispatchDetailsPanelProps) {
+  const [selectedTechnicianId, setSelectedTechnicianId] = useState("");
   const isOpen = job !== null;
+
+  function handleAssignClick() {
+    if (!job || !selectedTechnicianId) {
+      return;
+    }
+
+    onAssign(job.id, selectedTechnicianId);
+  }
 
   return (
     <aside
@@ -124,9 +147,54 @@ export function DispatchDetailsPanel({
                   </div>
                 </div>
               ) : (
-                <div className="mt-2 flex items-center gap-2 text-sm text-amber-700">
-                  <User className="h-4 w-4" />
-                  Unassigned — awaiting dispatch
+                <div className="mt-2 space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-amber-700">
+                    <User className="h-4 w-4" />
+                    Unassigned — awaiting dispatch
+                  </div>
+
+                  {canDispatchJobs && technicians.length > 0 ? (
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="assign-technician"
+                        className="text-xs font-semibold uppercase tracking-wide text-slate-500"
+                      >
+                        Assign technician
+                      </label>
+                      <select
+                        id="assign-technician"
+                        value={selectedTechnicianId}
+                        onChange={(event) =>
+                          setSelectedTechnicianId(event.target.value)
+                        }
+                        disabled={isAssigning}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60"
+                      >
+                        <option value="">Select a technician</option>
+                        {technicians.map((tech) => (
+                          <option key={tech.id} value={tech.id}>
+                            {tech.name}
+                          </option>
+                        ))}
+                      </select>
+                      {assignError ? (
+                        <p className="text-xs text-red-600">{assignError}</p>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={handleAssignClick}
+                        disabled={!selectedTechnicianId || isAssigning}
+                        className="w-full rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isAssigning ? "Assigning..." : "Assign technician"}
+                      </button>
+                    </div>
+                  ) : canDispatchJobs ? (
+                    <p className="text-xs text-slate-500">
+                      No technicians are available. Invite team members with the
+                      technician role to enable assignments.
+                    </p>
+                  ) : null}
                 </div>
               )}
             </section>
@@ -154,18 +222,12 @@ export function DispatchDetailsPanel({
             ) : null}
 
             <div className="flex gap-2 border-t border-slate-100 pt-4">
-              <button
-                type="button"
-                className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-              >
-                Assign tech
-              </button>
-              <button
-                type="button"
-                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+              <Link
+                href={`/jobs/${job.id}`}
+                className="flex flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
               >
                 View job
-              </button>
+              </Link>
             </div>
           </div>
         )}

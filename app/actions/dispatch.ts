@@ -1,0 +1,43 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { assignJobToTechnician } from "@/lib/database/queries/dispatch";
+import type { DispatchJob } from "@/shared/types/dispatch";
+
+export type AssignJobActionResult = {
+  error?: string;
+  job?: DispatchJob;
+};
+
+export async function assignJobAction(
+  jobId: string,
+  technicianId: string,
+): Promise<AssignJobActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." };
+  }
+
+  if (!context.permissions.dispatchJobs) {
+    return { error: "You do not have permission to assign jobs." };
+  }
+
+  const { job, error } = await assignJobToTechnician(
+    context.company.id,
+    jobId,
+    technicianId,
+    context.user.id,
+  );
+
+  if (error || !job) {
+    return { error: error ?? "Failed to assign job." };
+  }
+
+  revalidatePath("/dispatch");
+  revalidatePath("/jobs");
+  revalidatePath(`/jobs/${jobId}`);
+
+  return { job };
+}

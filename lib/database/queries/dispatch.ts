@@ -1,0 +1,296 @@
+import { createClient } from "@/lib/supabase/server";
+import { mapDatabaseError } from "@/lib/database/errors";
+import type {
+  DispatchAssignmentInsert,
+  DispatchAssignmentRow,
+  JobRow,
+} from "@/lib/database/types/core-tables";
+import { mapJobRowToJob } from "@/lib/database/queries/jobs";
+import type { Job } from "@/shared/types/job";
+import type { DispatchJob } from "@/shared/types/dispatch";
+
+type DispatchAssignmentSummary = Pick<
+  DispatchAssignmentRow,
+  "id" | "technician_id" | "status"
+>;
+
+type JobRowWithDispatch = JobRow & {
+  customers: { name: string } | null;
+  dispatch_assignments: DispatchAssignmentSummary[] | null;
+};
+
+function getTodayBounds(reference = new Date()): { start: string; end: string } {
+  const start = new Date(reference);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(reference);
+  end.setHours(23, 59, 59, 999);
+
+  return {
+    start: start.toISOString(),
+    end: end.toISOString(),
+  };
+}
+
+function getActiveAssignment(
+  assignments: DispatchAssignmentSummary[] | null | undefined,
+): DispatchAssignmentSummary | null {
+  if (!assignments?.length) {
+    return null;
+  }
+
+  return assignments.find((assignment) => assignment.status === "active") ?? null;
+}
+
+export function mapJobRowToDispatchJob(row: JobRowWithDispatch): DispatchJob {
+  const job: Job = mapJobRowToJob({
+    ...row,
+    customers: row.customers
+      ? {
+          name: row.customers.name,
+          email: "",
+          phone: "",
+          company_name: null,
+        }
+      : null,
+  });
+  const activeAssignment = getActiveAssignment(row.dispatch_assignments);
+  const technicianId =
+    activeAssignment?.technician_id ?? row.assigned_technician_id ?? undefined;
+
+  return {
+    id: job.id,
+    jobNumber: job.jobNumber,
+    customerName: job.customerName,
+    serviceAddress: job.serviceAddress,
+    city: job.city,
+    state: job.state,
+    zip: job.zip,
+    jobType: job.jobType,
+    scheduledDate: job.scheduledDate,
+    status: job.status,
+    priority: job.priority,
+    description: job.description,
+    notes: job.notes,
+    technicianId,
+  };
+}
+
+export async function listDispatchJobsForToday(
+  companyId: string,
+  reference = new Date(),
+): Promise<DispatchJob[]> {
+  const supabase = await createClient();
+  const { start, end } = getTodayBounds(reference);
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .select(
+      `
+      *,
+      customers(name),
+      dispatch_assignments(id, technician_id, status)
+    `,
+    )
+    .eq("company_id", companyId)
+    .gte("scheduled_at", start)
+    .lte("scheduled_at", end)
+    .neq("status", "cancelled")
+    .order("scheduled_at", { ascending: true });
+
+  if (error) {
+    console.error("[listDispatchJobsForToday] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as JobRowWithDispatch[]).map(mapJobRowToDispatchJob);
+}
+
+export async function getDispatchJobById(
+  companyId: string,
+  jobId: string,
+): Promise<DispatchJob | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .select(
+      `
+      *,
+      customers(name),
+      dispatch_assignments(id, technician_id, status)
+    `,
+    )
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getDispatchJobById] query failed:", {
+      companyId,
+      jobId,
+      code: error.code,
+      message: error.message,
+    });
+    throw new Error(mapDatabaseError(error));
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapJobRowToDispatchJob(data as JobRowWithDispatch);
+}
+
+export async function assignJobToTechnician(
+  companyId: string,
+  jobId: string,
+  technicianId: string,
+  assignedBy: string,
+): Promise<{ job: DispatchJob | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: jobRow, error: jobError } = await supabase
+    .from("jobs")
+    .select("id, scheduled_at, status")
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .maybeSingle();
+
+  if (jobError) {
+    console.error("[assignJobToTechnician] job lookup failed:", {
+      companyId,
+      jobId,
+      code: jobError.code,
+      message: jobError.message,
+    });
+    return { job: null, error: mapDatabaseError(jobError) };
+  }
+
+  if (!jobRow) {
+    return { job: null, error: "Job was not found." };
+  }
+
+  const { data: membership, error: membershipError } = await supabase
+    .from("company_memberships")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("user_id", technicianId)
+    .eq("role", "technician")
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (membershipError) {
+    console.error("[assignJobToTechnician] technician lookup failed:", {
+      companyId,
+      technicianId,
+      code: membershipError.code,
+      message: membershipError.message,
+    });
+    return { job: null, error: mapDatabaseError(membershipError) };
+  }
+
+  if (!membership) {
+    return {
+      job: null,
+      error: "Selected technician is not an active member of this company.",
+    };
+  }
+
+  const now = new Date().toISOString();
+
+  const { data: activeAssignments, error: activeError } = await supabase
+    .from("dispatch_assignments")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("job_id", jobId)
+    .eq("status", "active");
+
+  if (activeError) {
+    console.error("[assignJobToTechnician] active assignment lookup failed:", {
+      companyId,
+      jobId,
+      code: activeError.code,
+      message: activeError.message,
+    });
+    return { job: null, error: mapDatabaseError(activeError) };
+  }
+
+  if (activeAssignments?.length) {
+    const { error: cancelError } = await supabase
+      .from("dispatch_assignments")
+      .update({
+        status: "cancelled",
+        unassigned_at: now,
+      })
+      .eq("company_id", companyId)
+      .eq("job_id", jobId)
+      .eq("status", "active");
+
+    if (cancelError) {
+      console.error("[assignJobToTechnician] cancel assignment failed:", {
+        companyId,
+        jobId,
+        code: cancelError.code,
+        message: cancelError.message,
+      });
+      return { job: null, error: mapDatabaseError(cancelError) };
+    }
+  }
+
+  const assignmentInsert: DispatchAssignmentInsert = {
+    company_id: companyId,
+    job_id: jobId,
+    technician_id: technicianId,
+    assigned_by: assignedBy,
+    status: "active",
+    scheduled_start: jobRow.scheduled_at,
+    assigned_at: now,
+  };
+
+  const { error: insertError } = await supabase
+    .from("dispatch_assignments")
+    .insert(assignmentInsert);
+
+  if (insertError) {
+    console.error("[assignJobToTechnician] insert assignment failed:", {
+      companyId,
+      jobId,
+      technicianId,
+      code: insertError.code,
+      message: insertError.message,
+    });
+    return { job: null, error: mapDatabaseError(insertError) };
+  }
+
+  const nextStatus =
+    jobRow.status === "scheduled" ? "dispatched" : jobRow.status;
+
+  const { error: updateError } = await supabase
+    .from("jobs")
+    .update({
+      assigned_technician_id: technicianId,
+      status: nextStatus,
+    })
+    .eq("company_id", companyId)
+    .eq("id", jobId);
+
+  if (updateError) {
+    console.error("[assignJobToTechnician] job update failed:", {
+      companyId,
+      jobId,
+      code: updateError.code,
+      message: updateError.message,
+    });
+    return { job: null, error: mapDatabaseError(updateError) };
+  }
+
+  const job = await getDispatchJobById(companyId, jobId);
+  return { job, error: null };
+}

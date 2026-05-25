@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createJobAction } from "@/app/actions/jobs";
 import type { Customer } from "@/shared/types/customer";
@@ -71,22 +72,18 @@ export function JobsPageView({
   const [priorityFilter, setPriorityFilter] = useState<JobPriority | "all">(
     "all",
   );
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
   const [createError, setCreateError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const filteredJobs = useMemo(
     () => filterJobs(jobs, search, statusFilter, priorityFilter),
     [jobs, search, statusFilter, priorityFilter],
   );
 
-  const selectedJob = jobs.find((j) => j.id === selectedId) ?? null;
-
   function handleSelectJob(job: Job) {
-    setSelectedId(job.id);
-    setPanelMode("detail");
-    setCreateError(null);
+    router.push(`/jobs/${job.id}`);
   }
 
   function handleNewJob() {
@@ -94,13 +91,11 @@ export function JobsPageView({
       return;
     }
 
-    setSelectedId(null);
     setPanelMode("create");
     setCreateError(null);
   }
 
   function handleClosePanel() {
-    setSelectedId(null);
     setPanelMode("empty");
     setCreateError(null);
   }
@@ -117,8 +112,8 @@ export function JobsPageView({
       }
 
       setJobs((previous) => [result.job!, ...previous]);
-      setSelectedId(result.job.id);
-      setPanelMode("detail");
+      setPanelMode("empty");
+      router.push(`/jobs/${result.job.id}`);
     });
   }
 
@@ -171,18 +166,14 @@ export function JobsPageView({
           ) : hasNoResults ? (
             <JobsEmptyState variant="no-results" />
           ) : (
-            <JobsTable
-              jobs={filteredJobs}
-              selectedId={selectedId}
-              onSelect={handleSelectJob}
-            />
+            <JobsTable jobs={filteredJobs} onSelect={handleSelectJob} />
           )}
         </div>
       </section>
 
       <JobDetailsPanel
         mode={panelMode}
-        job={selectedJob}
+        job={null}
         customers={customers}
         onClose={handleClosePanel}
         onCreateSubmit={handleCreateSubmit}

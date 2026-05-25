@@ -78,7 +78,7 @@ export function JobDetailsPanel({
               No job selected
             </p>
             <p className="mt-1 max-w-[220px] text-xs text-slate-500">
-              Click a row in the table to view full job details here.
+              Click a row in the table to open the job detail page.
             </p>
           </div>
         ) : null}

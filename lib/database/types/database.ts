@@ -8,6 +8,9 @@ import type {
   CustomerInsert,
   CustomerRow,
   CustomerUpdate,
+  DispatchAssignmentInsert,
+  DispatchAssignmentRow,
+  DispatchAssignmentUpdate,
   JobInsert,
   JobRow,
   JobUpdate,
@@ -95,6 +98,34 @@ export type Database = {
           },
         ];
       };
+      dispatch_assignments: {
+        Row: DispatchAssignmentRow;
+        Insert: DispatchAssignmentInsert;
+        Update: DispatchAssignmentUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "dispatch_assignments_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "dispatch_assignments_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "dispatch_assignments_technician_id_fkey";
+            columns: ["technician_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -112,6 +143,7 @@ export type Database = {
       customer_status: CustomerRow["status"];
       job_status: JobRow["status"];
       job_priority: JobRow["priority"];
+      dispatch_assignment_status: DispatchAssignmentRow["status"];
     };
     CompositeTypes: Record<string, never>;
   };

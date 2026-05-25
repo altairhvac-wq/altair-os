@@ -2,6 +2,7 @@ import type {
   CompanyRole,
   CompanyStatus,
   CustomerStatus,
+  DispatchAssignmentStatus,
   JobPriority,
   JobStatus,
   Json,
@@ -198,6 +199,47 @@ export type JobInsert = {
 
 export type JobUpdate = Partial<
   Omit<JobRow, "id" | "company_id" | "created_at" | "updated_at">
+>;
+
+export type DispatchAssignmentRow = {
+  id: UUID;
+  company_id: UUID;
+  job_id: UUID;
+  technician_id: UUID;
+  assigned_by: UUID | null;
+  status: DispatchAssignmentStatus;
+  scheduled_start: Timestamp;
+  scheduled_end: Timestamp | null;
+  assigned_at: Timestamp;
+  unassigned_at: Timestamp | null;
+  sort_order: number;
+  notes: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type DispatchAssignmentInsert = {
+  id?: UUID;
+  company_id: UUID;
+  job_id: UUID;
+  technician_id: UUID;
+  assigned_by?: UUID | null;
+  status?: DispatchAssignmentStatus;
+  scheduled_start: Timestamp;
+  scheduled_end?: Timestamp | null;
+  assigned_at?: Timestamp;
+  unassigned_at?: Timestamp | null;
+  sort_order?: number;
+  notes?: string | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type DispatchAssignmentUpdate = Partial<
+  Omit<
+    DispatchAssignmentRow,
+    "id" | "company_id" | "job_id" | "created_at" | "updated_at"
+  >
 >;
 
 export type ActiveCompanyContext = UserCompanyContext & {

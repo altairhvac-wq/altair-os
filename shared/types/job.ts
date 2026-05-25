@@ -26,6 +26,12 @@ export type Job = {
   createdAt: string;
 };
 
+export type JobDetail = Job & {
+  customerEmail?: string;
+  customerPhone?: string;
+  customerCompany?: string;
+};
+
 export type JobFormData = {
   customerId: string;
   serviceAddress: string;

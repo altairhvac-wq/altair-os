@@ -1,10 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type { JobInsert, JobRow } from "@/lib/database/types/core-tables";
-import type { Job, JobFormData } from "@/shared/types/job";
+import type { Job, JobDetail, JobFormData } from "@/shared/types/job";
 
 type JobRowWithCustomer = JobRow & {
-  customers: { name: string } | null;
+  customers: {
+    name: string;
+    email: string;
+    phone: string;
+    company_name: string | null;
+  } | null;
 };
 
 function toDateOnly(value: string): string {
@@ -124,6 +129,49 @@ export async function listJobsByCustomer(
   }
 
   return ((data ?? []) as JobRowWithCustomer[]).map(mapJobRowToJob);
+}
+
+function mapJobRowToJobDetail(row: JobRowWithCustomer): JobDetail {
+  const job = mapJobRowToJob(row);
+
+  return {
+    ...job,
+    customerEmail: row.customers?.email || undefined,
+    customerPhone: row.customers?.phone || undefined,
+    customerCompany: row.customers?.company_name || undefined,
+  };
+}
+
+export async function getJobById(
+  companyId: string,
+  jobId: string,
+): Promise<JobDetail | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("*, customers(name, email, phone, company_name)")
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getJobById] query failed:", {
+      companyId,
+      jobId,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    throw new Error(mapDatabaseError(error));
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapJobRowToJobDetail(data as JobRowWithCustomer);
 }
 
 export async function createJob(

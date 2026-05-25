@@ -8,11 +8,10 @@ import { JobStatusBadge } from "./JobStatusBadge";
 
 type JobsTableProps = {
   jobs: Job[];
-  selectedId: string | null;
   onSelect: (job: Job) => void;
 };
 
-export function JobsTable({ jobs, selectedId, onSelect }: JobsTableProps) {
+export function JobsTable({ jobs, onSelect }: JobsTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[760px] text-left text-sm">
@@ -29,16 +28,11 @@ export function JobsTable({ jobs, selectedId, onSelect }: JobsTableProps) {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50">
-          {jobs.map((job) => {
-            const isSelected = job.id === selectedId;
-
-            return (
+          {jobs.map((job) => (
               <tr
                 key={job.id}
                 onClick={() => onSelect(job)}
-                className={`cursor-pointer transition-colors ${
-                  isSelected ? "bg-cyan-50/70" : "hover:bg-slate-50"
-                }`}
+                className="cursor-pointer transition-colors hover:bg-slate-50"
               >
                 <td className="px-4 py-3">
                   <p className="font-semibold text-slate-900">{job.jobNumber}</p>
@@ -73,8 +67,7 @@ export function JobsTable({ jobs, selectedId, onSelect }: JobsTableProps) {
                   <JobPriorityBadge priority={job.priority} />
                 </td>
               </tr>
-            );
-          })}
+          ))}
         </tbody>
       </table>
     </div>
