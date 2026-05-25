@@ -1,0 +1,227 @@
+import {
+  CUSTOMER_STATUS_OPTIONS,
+  type CustomerFormData,
+  type CustomerStatus,
+} from "@/shared/types/customer";
+
+type CustomerFormProps = {
+  initialData?: Partial<CustomerFormData>;
+  onSubmit: (data: CustomerFormData) => void;
+  onCancel: () => void;
+};
+
+const emptyForm: CustomerFormData = {
+  name: "",
+  email: "",
+  phone: "",
+  company: "",
+  status: "lead",
+  address: "",
+  city: "",
+  state: "",
+  zip: "",
+  notes: "",
+};
+
+const inputClass =
+  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
+
+const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
+
+export function CustomerForm({
+  initialData,
+  onSubmit,
+  onCancel,
+}: CustomerFormProps) {
+  const defaults = { ...emptyForm, ...initialData };
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+
+    onSubmit({
+      name: String(form.get("name") ?? ""),
+      email: String(form.get("email") ?? ""),
+      phone: String(form.get("phone") ?? ""),
+      company: String(form.get("company") ?? ""),
+      status: String(form.get("status") ?? "lead") as CustomerStatus,
+      address: String(form.get("address") ?? ""),
+      city: String(form.get("city") ?? ""),
+      state: String(form.get("state") ?? ""),
+      zip: String(form.get("zip") ?? ""),
+      notes: String(form.get("notes") ?? ""),
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <label htmlFor="name" className={labelClass}>
+            Full name
+          </label>
+          <input
+            id="name"
+            name="name"
+            required
+            defaultValue={defaults.name}
+            placeholder="Jane Smith"
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="email" className={labelClass}>
+            Email
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            defaultValue={defaults.email}
+            placeholder="jane@example.com"
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="phone" className={labelClass}>
+            Phone
+          </label>
+          <input
+            id="phone"
+            name="phone"
+            type="tel"
+            required
+            defaultValue={defaults.phone}
+            placeholder="(555) 555-0100"
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="company" className={labelClass}>
+            Company
+          </label>
+          <input
+            id="company"
+            name="company"
+            defaultValue={defaults.company}
+            placeholder="Optional"
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="status" className={labelClass}>
+            Status
+          </label>
+          <select
+            id="status"
+            name="status"
+            defaultValue={defaults.status}
+            className={inputClass}
+          >
+            {CUSTOMER_STATUS_OPTIONS.filter((o) => o.value !== "all").map(
+              (option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ),
+            )}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Service location
+        </p>
+        <div className="grid gap-4">
+          <div>
+            <label htmlFor="address" className={labelClass}>
+              Street address
+            </label>
+            <input
+              id="address"
+              name="address"
+              required
+              defaultValue={defaults.address}
+              placeholder="123 Main St"
+              className={inputClass}
+            />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label htmlFor="city" className={labelClass}>
+                City
+              </label>
+              <input
+                id="city"
+                name="city"
+                required
+                defaultValue={defaults.city}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="state" className={labelClass}>
+                State
+              </label>
+              <input
+                id="state"
+                name="state"
+                required
+                defaultValue={defaults.state}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="zip" className={labelClass}>
+                ZIP
+              </label>
+              <input
+                id="zip"
+                name="zip"
+                required
+                defaultValue={defaults.zip}
+                className={inputClass}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="notes" className={labelClass}>
+          Notes
+        </label>
+        <textarea
+          id="notes"
+          name="notes"
+          rows={3}
+          defaultValue={defaults.notes}
+          placeholder="Scheduling preferences, access codes, etc."
+          className={`${inputClass} resize-none`}
+        />
+      </div>
+
+      <div className="flex gap-3 border-t border-slate-100 pt-4">
+        <button
+          type="submit"
+          className="flex-1 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700"
+        >
+          Save customer
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
