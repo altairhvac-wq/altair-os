@@ -122,7 +122,19 @@ export async function getCustomerById(
     .eq("id", customerId)
     .maybeSingle();
 
-  if (error || !data) {
+  if (error) {
+    console.error("[getCustomerById] query failed:", {
+      companyId,
+      customerId,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    throw new Error(mapDatabaseError(error));
+  }
+
+  if (!data) {
     return null;
   }
 

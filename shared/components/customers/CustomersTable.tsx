@@ -1,3 +1,6 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import {
   formatCurrency,
   formatDate,
@@ -7,8 +10,6 @@ import {
 
 type CustomersTableProps = {
   customers: Customer[];
-  selectedId: string | null;
-  onSelect: (customer: Customer) => void;
 };
 
 const statusStyles: Record<Customer["status"], string> = {
@@ -17,11 +18,9 @@ const statusStyles: Record<Customer["status"], string> = {
   inactive: "bg-slate-100 text-slate-600",
 };
 
-export function CustomersTable({
-  customers,
-  selectedId,
-  onSelect,
-}: CustomersTableProps) {
+export function CustomersTable({ customers }: CustomersTableProps) {
+  const router = useRouter();
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[640px] text-left text-sm">
@@ -36,26 +35,15 @@ export function CustomersTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50">
-          {customers.map((customer) => {
-            const isSelected = customer.id === selectedId;
-
-            return (
+          {customers.map((customer) => (
               <tr
                 key={customer.id}
-                onClick={() => onSelect(customer)}
-                className={`cursor-pointer transition-colors ${
-                  isSelected
-                    ? "bg-cyan-50/70"
-                    : "hover:bg-slate-50"
-                }`}
+                onClick={() => router.push(`/customers/${customer.id}`)}
+                className="cursor-pointer transition-colors hover:bg-slate-50"
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
-                        isSelected ? "bg-cyan-600" : "bg-slate-400"
-                      }`}
-                    >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-400 text-xs font-bold text-white">
                       {getCustomerInitials(customer.name)}
                     </div>
                     <div className="min-w-0">
@@ -90,8 +78,7 @@ export function CustomersTable({
                     : "—"}
                 </td>
               </tr>
-            );
-          })}
+          ))}
         </tbody>
       </table>
     </div>

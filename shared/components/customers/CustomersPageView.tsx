@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";
 import { createCustomerAction } from "@/app/actions/customers";
 import {
@@ -58,8 +59,8 @@ export function CustomersPageView({
   const [statusFilter, setStatusFilter] = useState<CustomerStatus | "all">(
     "all",
   );
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<PanelMode>("empty");
+  const router = useRouter();
   const [createError, setCreateError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -68,27 +69,16 @@ export function CustomersPageView({
     [customers, search, statusFilter],
   );
 
-  const selectedCustomer =
-    customers.find((customer) => customer.id === selectedId) ?? null;
-
-  function handleSelectCustomer(customer: Customer) {
-    setSelectedId(customer.id);
-    setPanelMode("detail");
-    setCreateError(null);
-  }
-
   function handleNewCustomer() {
     if (!canManageCustomers) {
       return;
     }
 
-    setSelectedId(null);
     setPanelMode("create");
     setCreateError(null);
   }
 
   function handleClosePanel() {
-    setSelectedId(null);
     setPanelMode("empty");
     setCreateError(null);
   }
@@ -105,8 +95,7 @@ export function CustomersPageView({
       }
 
       setCustomers((previous) => [result.customer!, ...previous]);
-      setSelectedId(result.customer.id);
-      setPanelMode("detail");
+      router.push(`/customers/${result.customer.id}`);
     });
   }
 
@@ -160,18 +149,14 @@ export function CustomersPageView({
           ) : hasNoResults ? (
             <CustomersEmptyState variant="no-results" />
           ) : (
-            <CustomersTable
-              customers={filteredCustomers}
-              selectedId={selectedId}
-              onSelect={handleSelectCustomer}
-            />
+            <CustomersTable customers={filteredCustomers} />
           )}
         </div>
       </section>
 
       <CustomerDetailPanel
         mode={panelMode}
-        customer={selectedCustomer}
+        customer={null}
         onClose={handleClosePanel}
         onCreateSubmit={handleCreateSubmit}
         onCreateCancel={handleClosePanel}
