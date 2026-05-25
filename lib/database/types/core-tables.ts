@@ -5,11 +5,14 @@ import type {
   DispatchAssignmentStatus,
   EstimateActivityType,
   EstimateStatus,
+  InvoiceActivityType,
+  InvoiceStatus,
   JobActivityType,
   JobPriority,
   JobStatus,
   Json,
   MembershipStatus,
+  PaymentMethod,
   Timestamp,
   UUID,
 } from "./enums";
@@ -382,6 +385,130 @@ export type ServiceItemInsert = {
 export type ServiceItemUpdate = Partial<
   Omit<ServiceItemRow, "id" | "company_id" | "created_at" | "updated_at">
 >;
+
+export type InvoiceRow = {
+  id: UUID;
+  company_id: UUID;
+  customer_id: UUID;
+  job_id: UUID | null;
+  estimate_id: UUID | null;
+  invoice_number: string;
+  status: InvoiceStatus;
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
+  total: number;
+  amount_paid: number;
+  balance_due: number;
+  issue_date: string;
+  due_date: string;
+  paid_at: Timestamp | null;
+  notes: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type InvoiceLineItemRow = {
+  id: UUID;
+  company_id: UUID;
+  invoice_id: UUID;
+  service_item_id: UUID | null;
+  name: string;
+  description: string | null;
+  quantity: number;
+  unit_price: number;
+  taxable: boolean;
+  line_total: number;
+  sort_order: number;
+  created_at: Timestamp;
+};
+
+export type InvoiceInsert = {
+  id?: UUID;
+  company_id: UUID;
+  customer_id: UUID;
+  job_id?: UUID | null;
+  estimate_id?: UUID | null;
+  invoice_number: string;
+  status?: InvoiceStatus;
+  subtotal?: number;
+  tax_rate?: number;
+  tax_amount?: number;
+  total?: number;
+  amount_paid?: number;
+  balance_due?: number;
+  issue_date?: string;
+  due_date: string;
+  paid_at?: Timestamp | null;
+  notes?: string | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type InvoiceLineItemInsert = {
+  id?: UUID;
+  company_id: UUID;
+  invoice_id: UUID;
+  service_item_id?: UUID | null;
+  name: string;
+  description?: string | null;
+  quantity: number;
+  unit_price: number;
+  taxable?: boolean;
+  line_total: number;
+  sort_order?: number;
+  created_at?: Timestamp;
+};
+
+export type InvoiceUpdate = Partial<
+  Omit<InvoiceRow, "id" | "company_id" | "created_at" | "updated_at">
+>;
+
+export type InvoiceActivityRow = {
+  id: UUID;
+  company_id: UUID;
+  invoice_id: UUID;
+  actor_id: UUID | null;
+  event_type: InvoiceActivityType;
+  metadata: Json;
+  created_at: Timestamp;
+};
+
+export type InvoiceActivityInsert = {
+  id?: UUID;
+  company_id: UUID;
+  invoice_id: UUID;
+  actor_id?: UUID | null;
+  event_type: InvoiceActivityType;
+  metadata?: Json;
+  created_at?: Timestamp;
+};
+
+export type InvoicePaymentRow = {
+  id: UUID;
+  company_id: UUID;
+  invoice_id: UUID;
+  amount: number;
+  payment_method: PaymentMethod;
+  payment_date: string;
+  reference: string | null;
+  notes: string | null;
+  recorded_by: UUID | null;
+  created_at: Timestamp;
+};
+
+export type InvoicePaymentInsert = {
+  id?: UUID;
+  company_id: UUID;
+  invoice_id: UUID;
+  amount: number;
+  payment_method: PaymentMethod;
+  payment_date?: string;
+  reference?: string | null;
+  notes?: string | null;
+  recorded_by?: UUID | null;
+  created_at?: Timestamp;
+};
 
 export type ActiveCompanyContext = UserCompanyContext & {
   user: {

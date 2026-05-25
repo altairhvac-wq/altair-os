@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCustomerById } from "@/lib/database/queries/customers";
+import { listEstimatesByCustomer } from "@/lib/database/queries/estimates";
+import { listInvoicesByCustomer } from "@/lib/database/queries/invoices";
 import { listJobsByCustomer } from "@/lib/database/queries/jobs";
 import { CustomerDetailPageView } from "@/shared/components/customers/CustomerDetailPageView";
 
@@ -18,9 +20,11 @@ export default async function CustomerDetailPage({
     redirect("/setup");
   }
 
-  const [customer, jobs] = await Promise.all([
+  const [customer, jobs, estimates, invoices] = await Promise.all([
     getCustomerById(companyContext.company.id, customerId),
     listJobsByCustomer(companyContext.company.id, customerId),
+    listEstimatesByCustomer(companyContext.company.id, customerId),
+    listInvoicesByCustomer(companyContext.company.id, customerId),
   ]);
 
   if (!customer) {
@@ -31,6 +35,8 @@ export default async function CustomerDetailPage({
     <CustomerDetailPageView
       customer={customer}
       jobs={jobs}
+      estimates={estimates}
+      invoices={invoices}
       canCreateJob={companyContext.permissions.dispatchJobs}
     />
   );

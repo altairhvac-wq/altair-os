@@ -15,6 +15,8 @@ export type EstimateActivityMetadata = {
   to_status?: EstimateStatus;
   job_id?: string;
   job_number?: string;
+  invoice_id?: string;
+  invoice_number?: string;
 };
 
 export type EstimateActivity = {
@@ -55,6 +57,9 @@ export function formatEstimateActivityDetails(
         : null;
 
     case "estimate_converted":
+      if (metadata.invoice_number) {
+        return `Converted to invoice ${metadata.invoice_number}`;
+      }
       if (metadata.job_number) {
         return `Converted to job ${metadata.job_number}`;
       }

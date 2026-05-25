@@ -36,6 +36,8 @@ export async function recordEstimateStatusChangedActivity(input: {
   toStatus: EstimateStatus;
   jobId?: string;
   jobNumber?: string;
+  invoiceId?: string;
+  invoiceNumber?: string;
 }): Promise<void> {
   const { error } = await recordEstimateActivity({
     company_id: input.companyId,
@@ -47,6 +49,8 @@ export async function recordEstimateStatusChangedActivity(input: {
       to_status: input.toStatus,
       job_id: input.jobId,
       job_number: input.jobNumber,
+      invoice_id: input.invoiceId,
+      invoice_number: input.invoiceNumber,
     },
   });
 

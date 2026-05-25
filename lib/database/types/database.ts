@@ -18,6 +18,15 @@ import type {
   EstimateLineItemRow,
   EstimateRow,
   EstimateUpdate,
+  InvoiceActivityInsert,
+  InvoiceActivityRow,
+  InvoiceInsert,
+  InvoiceLineItemInsert,
+  InvoiceLineItemRow,
+  InvoicePaymentInsert,
+  InvoicePaymentRow,
+  InvoiceRow,
+  InvoiceUpdate,
   ServiceItemInsert,
   ServiceItemRow,
   ServiceItemUpdate,
@@ -271,6 +280,125 @@ export type Database = {
           },
         ];
       };
+      invoices: {
+        Row: InvoiceRow;
+        Insert: InvoiceInsert;
+        Update: InvoiceUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "invoices_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoices_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoices_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoices_estimate_id_fkey";
+            columns: ["estimate_id"];
+            isOneToOne: false;
+            referencedRelation: "estimates";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      invoice_line_items: {
+        Row: InvoiceLineItemRow;
+        Insert: InvoiceLineItemInsert;
+        Update: Partial<InvoiceLineItemInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "invoice_line_items_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoice_line_items_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoice_line_items_service_item_id_fkey";
+            columns: ["service_item_id"];
+            isOneToOne: false;
+            referencedRelation: "service_items";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      invoice_activities: {
+        Row: InvoiceActivityRow;
+        Insert: InvoiceActivityInsert;
+        Update: Partial<InvoiceActivityInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "invoice_activities_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoice_activities_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoice_activities_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      invoice_payments: {
+        Row: InvoicePaymentRow;
+        Insert: InvoicePaymentInsert;
+        Update: Partial<InvoicePaymentInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "invoice_payments_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoice_payments_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoice_payments_recorded_by_fkey";
+            columns: ["recorded_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -292,6 +420,9 @@ export type Database = {
       job_activity_type: JobActivityRow["event_type"];
       estimate_status: EstimateRow["status"];
       estimate_activity_type: EstimateActivityRow["event_type"];
+      invoice_status: InvoiceRow["status"];
+      invoice_activity_type: InvoiceActivityRow["event_type"];
+      invoice_payment_method: InvoicePaymentRow["payment_method"];
     };
     CompositeTypes: Record<string, never>;
   };

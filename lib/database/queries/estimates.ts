@@ -302,6 +302,38 @@ export async function listEstimates(companyId: string): Promise<Estimate[]> {
   );
 }
 
+export async function listEstimatesByCustomer(
+  companyId: string,
+  customerId: string,
+  limit = 5,
+): Promise<Estimate[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("estimates")
+    .select(ESTIMATE_LIST_SELECT)
+    .eq("company_id", companyId)
+    .eq("customer_id", customerId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("[listEstimatesByCustomer] query failed:", {
+      companyId,
+      customerId,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as EstimateRowWithRelations[]).map(
+    mapEstimateRowToEstimate,
+  );
+}
+
 export async function getEstimateById(
   companyId: string,
   estimateId: string,

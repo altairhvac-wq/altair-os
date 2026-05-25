@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { convertEstimateToInvoiceAction } from "@/app/actions/invoices";
 import { updateEstimateStatusAction } from "@/app/actions/estimates";
 import type { EstimateDetail, EstimateStatus } from "@/shared/types/estimate";
 
@@ -23,8 +24,7 @@ function getAvailableActions(status: EstimateStatus): StatusAction[] {
         {
           label: "Send estimate",
           toStatus: "sent",
-          className:
-            "bg-slate-900 text-white hover:bg-slate-800",
+          className: "bg-slate-900 text-white hover:bg-slate-800",
         },
         {
           label: "Cancel",
@@ -38,8 +38,7 @@ function getAvailableActions(status: EstimateStatus): StatusAction[] {
         {
           label: "Mark approved",
           toStatus: "approved",
-          className:
-            "bg-emerald-600 text-white hover:bg-emerald-700",
+          className: "bg-emerald-600 text-white hover:bg-emerald-700",
         },
         {
           label: "Mark declined",
@@ -56,12 +55,6 @@ function getAvailableActions(status: EstimateStatus): StatusAction[] {
       ];
     case "approved":
       return [
-        {
-          label: "Mark converted",
-          toStatus: "converted",
-          className:
-            "bg-violet-600 text-white hover:bg-violet-700",
-        },
         {
           label: "Cancel",
           toStatus: "cancelled",
@@ -90,8 +83,9 @@ export function EstimateStatusActions({
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const actions = getAvailableActions(estimate.status);
+  const canConvertToInvoice = estimate.status === "approved";
 
-  if (!canManageEstimates || actions.length === 0) {
+  if (!canManageEstimates) {
     return null;
   }
 
@@ -109,8 +103,32 @@ export function EstimateStatusActions({
     });
   }
 
+  function handleConvertToInvoice() {
+    startTransition(async () => {
+      const result = await convertEstimateToInvoiceAction(estimate.id);
+
+      if (!result.error && result.invoice) {
+        router.push(`/invoices/${result.invoice.id}`);
+      }
+    });
+  }
+
+  if (!canConvertToInvoice && actions.length === 0) {
+    return null;
+  }
+
   return (
     <div className="flex flex-wrap gap-2">
+      {canConvertToInvoice ? (
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={handleConvertToInvoice}
+          className="rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Convert to invoice
+        </button>
+      ) : null}
       {actions.map((action) => (
         <button
           key={action.toStatus}

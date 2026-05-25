@@ -1,25 +1,36 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import { mockInvoices } from "@/shared/data/mock-invoices";
-import { formatCurrency } from "@/shared/types/customer";
+import { createInvoiceAction } from "@/app/actions/invoices";
+import type { Customer } from "@/shared/types/customer";
+import type { Job } from "@/shared/types/job";
+import type { ServiceItem } from "@/shared/types/service-item";
 import {
-  calculateInvoiceSubtotal,
-  calculateInvoiceTotal,
   formatInvoiceStatus,
   type Invoice,
   type InvoiceFormData,
   type InvoiceStatus,
 } from "@/shared/types/invoice";
+import { formatCurrency } from "@/shared/types/customer";
 import { InvoiceDetailsPanel } from "./InvoiceDetailsPanel";
 import { InvoiceSearchFilterBar } from "./InvoiceSearchFilterBar";
 import { InvoiceSummaryCards } from "./InvoiceSummaryCards";
 import { InvoicesEmptyState } from "./InvoicesEmptyState";
-import { InvoicesLoadingState } from "./InvoicesLoadingState";
 import { InvoicesTable } from "./InvoicesTable";
 
-type PanelMode = "detail" | "create" | "empty";
+type PanelMode = "create" | "empty";
+
+type InvoicesPageViewProps = {
+  initialInvoices: Invoice[];
+  customers: Customer[];
+  jobs: Job[];
+  serviceItems: ServiceItem[];
+  canManageInvoices: boolean;
+  initialPanelMode?: PanelMode;
+  createInitialData?: Partial<InvoiceFormData>;
+};
 
 function filterInvoices(
   invoices: Invoice[],
@@ -40,7 +51,8 @@ function filterInvoices(
       invoice.customerName,
       formatInvoiceStatus(invoice.status),
       invoice.status,
-      invoice.jobType,
+      invoice.jobNumber,
+      invoice.estimateNumber,
       formatCurrency(invoice.total),
       String(invoice.total),
     ]
@@ -51,85 +63,64 @@ function filterInvoices(
   });
 }
 
-function formDataToInvoice(data: InvoiceFormData, existingCount: number): Invoice {
-  const subtotal = calculateInvoiceSubtotal(data.lineItems);
-  const total = calculateInvoiceTotal(data.lineItems, data.tax);
-  const invoiceNumber = `INV-${1060 + existingCount}`;
-  const today = new Date().toISOString().split("T")[0];
-
-  return {
-    id: `inv-${Date.now()}`,
-    invoiceNumber,
-    customerId: `cust-new-${Date.now()}`,
-    customerName: data.customerName,
-    jobType: data.jobType,
-    status: data.status,
-    lineItems: data.lineItems.map((item, index) => ({
-      id: `ili-${Date.now()}-${index}`,
-      description: item.description,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-    })),
-    subtotal,
-    tax: data.tax > 0 ? data.tax : undefined,
-    total,
-    amountPaid: 0,
-    balanceDue: total,
-    issuedAt: today,
-    dueDate: data.dueDate,
-    notes: data.notes || undefined,
-    createdAt: today,
-  };
-}
-
-export function InvoicesPageView() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function InvoicesPageView({
+  initialInvoices,
+  customers,
+  jobs,
+  serviceItems,
+  canManageInvoices,
+  initialPanelMode = "empty",
+  createInitialData,
+}: InvoicesPageViewProps) {
+  const [invoices, setInvoices] = useState(initialInvoices);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "all">("all");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [panelMode, setPanelMode] = useState<PanelMode>("empty");
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setInvoices(mockInvoices);
-      setIsLoading(false);
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "all">(
+    "all",
+  );
+  const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const filteredInvoices = useMemo(
     () => filterInvoices(invoices, search, statusFilter),
     [invoices, search, statusFilter],
   );
 
-  const selectedInvoice = invoices.find((inv) => inv.id === selectedId) ?? null;
-
   function handleSelectInvoice(invoice: Invoice) {
-    setSelectedId(invoice.id);
-    setPanelMode("detail");
+    router.push(`/invoices/${invoice.id}`);
   }
 
   function handleNewInvoice() {
-    setSelectedId(null);
+    if (!canManageInvoices) {
+      return;
+    }
+
+    router.refresh();
     setPanelMode("create");
+    setCreateError(null);
   }
 
   function handleClosePanel() {
-    setSelectedId(null);
     setPanelMode("empty");
+    setCreateError(null);
   }
 
   function handleCreateSubmit(data: InvoiceFormData) {
-    const newInvoice = formDataToInvoice(data, invoices.length);
-    setInvoices((prev) => [newInvoice, ...prev]);
-    setSelectedId(newInvoice.id);
-    setPanelMode("detail");
-  }
+    setCreateError(null);
 
-  if (isLoading) {
-    return <InvoicesLoadingState />;
+    startTransition(async () => {
+      const result = await createInvoiceAction(data);
+
+      if (result.error || !result.invoice) {
+        setCreateError(result.error ?? "Failed to create invoice.");
+        return;
+      }
+
+      setInvoices((previous) => [result.invoice!, ...previous]);
+      setPanelMode("empty");
+      router.push(`/invoices/${result.invoice.id}`);
+    });
   }
 
   const hasNoInvoices = invoices.length === 0;
@@ -148,14 +139,17 @@ export function InvoicesPageView() {
                 Track billing, payments, and outstanding balances
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleNewInvoice}
-              className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700"
-            >
-              <Plus className="h-4 w-4" />
-              New Invoice
-            </button>
+            {canManageInvoices ? (
+              <button
+                type="button"
+                onClick={handleNewInvoice}
+                disabled={customers.length === 0}
+                className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Plus className="h-4 w-4" />
+                New Invoice
+              </button>
+            ) : null}
           </div>
 
           {!hasNoInvoices ? (
@@ -174,14 +168,17 @@ export function InvoicesPageView() {
             {hasNoInvoices ? (
               <InvoicesEmptyState
                 variant="no-invoices"
-                onCreateInvoice={handleNewInvoice}
+                onCreateInvoice={
+                  canManageInvoices && customers.length > 0
+                    ? handleNewInvoice
+                    : undefined
+                }
               />
             ) : hasNoResults ? (
               <InvoicesEmptyState variant="no-results" />
             ) : (
               <InvoicesTable
                 invoices={filteredInvoices}
-                selectedId={selectedId}
                 onSelect={handleSelectInvoice}
               />
             )}
@@ -190,10 +187,15 @@ export function InvoicesPageView() {
 
         <InvoiceDetailsPanel
           mode={panelMode}
-          invoice={selectedInvoice}
+          customers={customers}
+          jobs={jobs}
+          serviceItems={serviceItems}
           onClose={handleClosePanel}
           onCreateSubmit={handleCreateSubmit}
           onCreateCancel={handleClosePanel}
+          createError={createError}
+          isSubmitting={isPending}
+          createInitialData={createInitialData}
         />
       </div>
     </div>

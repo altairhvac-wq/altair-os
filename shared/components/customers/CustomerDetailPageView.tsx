@@ -2,53 +2,34 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Calendar,
-  FileText,
   History,
   MapPin,
-  Receipt,
   Tag,
 } from "lucide-react";
+import { CustomerBillingHistorySection } from "./CustomerBillingHistorySection";
 import { CustomerCard } from "./CustomerCard";
 import { CustomerJobsSection } from "./CustomerJobsSection";
 import {
   formatDate,
   type Customer,
 } from "@/shared/types/customer";
+import type { Estimate } from "@/shared/types/estimate";
+import type { Invoice } from "@/shared/types/invoice";
 import type { Job } from "@/shared/types/job";
 
 type CustomerDetailPageViewProps = {
   customer: Customer;
   jobs: Job[];
+  estimates: Estimate[];
+  invoices: Invoice[];
   canCreateJob: boolean;
 };
-
-type PlaceholderSection = {
-  title: string;
-  description: string;
-  icon: typeof FileText;
-};
-
-const placeholderSections: PlaceholderSection[] = [
-  {
-    title: "Estimates",
-    description: "Quotes and proposals for this customer will appear here.",
-    icon: FileText,
-  },
-  {
-    title: "Invoices",
-    description: "Billing and payment history will appear here.",
-    icon: Receipt,
-  },
-  {
-    title: "Activity",
-    description: "Timeline of calls, notes, and updates will appear here.",
-    icon: History,
-  },
-];
 
 export function CustomerDetailPageView({
   customer,
   jobs,
+  estimates,
+  invoices,
   canCreateJob,
 }: CustomerDetailPageViewProps) {
   return (
@@ -126,35 +107,27 @@ export function CustomerDetailPageView({
         canCreateJob={canCreateJob}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {placeholderSections.map((section) => {
-          const Icon = section.icon;
+      <CustomerBillingHistorySection
+        estimates={estimates}
+        invoices={invoices}
+      />
 
-          return (
-            <section
-              key={section.title}
-              className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-6"
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-                  <Icon className="h-5 w-5 text-slate-400" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    {section.title}
-                  </h3>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                    {section.description}
-                  </p>
-                  <p className="mt-3 text-xs font-medium text-slate-400">
-                    Coming soon
-                  </p>
-                </div>
-              </div>
-            </section>
-          );
-        })}
-      </div>
+      <section className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-6">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+            <History className="h-5 w-5 text-slate-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">Activity</h3>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">
+              Timeline of calls, notes, and updates will appear here.
+            </p>
+            <p className="mt-3 text-xs font-medium text-slate-400">
+              Coming soon
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

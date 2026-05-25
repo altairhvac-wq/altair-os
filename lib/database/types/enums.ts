@@ -54,6 +54,31 @@ export type EstimateActivityType =
   | "estimate_cancelled"
   | "estimate_converted";
 
+export type InvoiceStatus =
+  | "draft"
+  | "sent"
+  | "partially_paid"
+  | "paid"
+  | "overdue"
+  | "void"
+  | "cancelled";
+
+export type InvoiceActivityType =
+  | "invoice_created"
+  | "invoice_sent"
+  | "status_changed"
+  | "invoice_converted_from_estimate"
+  | "invoice_voided"
+  | "invoice_cancelled"
+  | "payment_recorded";
+
+export type PaymentMethod =
+  | "cash"
+  | "check"
+  | "card"
+  | "bank_transfer"
+  | "other";
+
 export type Json =
   | string
   | number

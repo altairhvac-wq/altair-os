@@ -43,6 +43,7 @@ export {
   createEstimate,
   getEstimateById,
   listEstimates,
+  listEstimatesByCustomer,
   mapEstimateRowToEstimate,
   updateEstimateStatus,
 } from "./estimates";
@@ -50,3 +51,20 @@ export {
   listEstimateActivitiesForEstimate,
   recordEstimateActivity,
 } from "./estimate-activities";
+export {
+  convertEstimateToInvoice,
+  createInvoice,
+  getInvoiceByEstimateId,
+  getInvoiceById,
+  listInvoices,
+  listInvoicesByCustomer,
+  mapInvoiceRowToInvoice,
+} from "./invoices";
+export {
+  listInvoiceActivitiesForInvoice,
+  recordInvoiceActivity,
+} from "./invoice-activities";
+export {
+  listPaymentsForInvoice,
+  recordInvoicePayment,
+} from "./invoice-payments";
