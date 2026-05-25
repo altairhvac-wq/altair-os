@@ -2,20 +2,27 @@ import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { formatCurrency } from "@/shared/types/customer";
 import {
-  calculateEstimateSubtotal,
+  calculateEstimateTotals,
   calculateLineItemTotal,
   type EstimateLineItemFormData,
 } from "@/shared/types/estimate";
+import type { ServiceItem } from "@/shared/types/service-item";
+
+const CUSTOM_SERVICE_ITEM_ID = "";
 
 type LineItemsEditorProps = {
   lineItems: EstimateLineItemFormData[];
+  serviceItems: ServiceItem[];
+  taxRate: number;
   onChange: (lineItems: EstimateLineItemFormData[]) => void;
 };
 
 const emptyLineItem: EstimateLineItemFormData = {
+  name: "",
   description: "",
   quantity: 1,
   unitPrice: 0,
+  taxable: true,
 };
 
 const inputClass =
@@ -23,7 +30,12 @@ const inputClass =
 
 const labelClass = "mb-1 block text-xs font-semibold text-slate-600";
 
-export function LineItemsEditor({ lineItems, onChange }: LineItemsEditorProps) {
+export function LineItemsEditor({
+  lineItems,
+  serviceItems,
+  taxRate,
+  onChange,
+}: LineItemsEditorProps) {
   const [items, setItems] = useState<EstimateLineItemFormData[]>(
     lineItems.length > 0 ? lineItems : [{ ...emptyLineItem }],
   );
@@ -33,19 +45,56 @@ export function LineItemsEditor({ lineItems, onChange }: LineItemsEditorProps) {
     onChange(nextItems);
   }
 
+  function handleServiceItemChange(index: number, serviceItemId: string) {
+    const nextItems = items.map((item, i) => {
+      if (i !== index) return item;
+
+      if (!serviceItemId) {
+        return {
+          ...item,
+          serviceItemId: undefined,
+        };
+      }
+
+      const serviceItem = serviceItems.find(
+        (candidate) => candidate.id === serviceItemId,
+      );
+
+      if (!serviceItem) {
+        return item;
+      }
+
+      return {
+        ...item,
+        serviceItemId: serviceItem.id,
+        name: serviceItem.name,
+        description: serviceItem.description ?? "",
+        unitPrice: serviceItem.unitPrice,
+        taxable: serviceItem.taxable,
+      };
+    });
+
+    updateItems(nextItems);
+  }
+
   function handleItemChange(
     index: number,
     field: keyof EstimateLineItemFormData,
-    value: string,
+    value: string | boolean,
   ) {
     const nextItems = items.map((item, i) => {
       if (i !== index) return item;
 
-      if (field === "description") {
-        return { ...item, description: value };
+      if (field === "name" || field === "description") {
+        return { ...item, [field]: String(value) };
       }
 
-      const numericValue = field === "quantity" ? parseInt(value, 10) : parseFloat(value);
+      if (field === "taxable") {
+        return { ...item, taxable: Boolean(value) };
+      }
+
+      const numericValue =
+        field === "quantity" ? parseInt(String(value), 10) : parseFloat(String(value));
       return {
         ...item,
         [field]: Number.isNaN(numericValue) ? 0 : numericValue,
@@ -68,7 +117,7 @@ export function LineItemsEditor({ lineItems, onChange }: LineItemsEditorProps) {
     updateItems(items.filter((_, i) => i !== index));
   }
 
-  const subtotal = calculateEstimateSubtotal(items);
+  const totals = calculateEstimateTotals(items, taxRate);
 
   return (
     <div className="space-y-4">
@@ -89,6 +138,7 @@ export function LineItemsEditor({ lineItems, onChange }: LineItemsEditorProps) {
       <div className="space-y-3">
         {items.map((item, index) => {
           const lineTotal = calculateLineItemTotal(item.quantity, item.unitPrice);
+          const selectedServiceId = item.serviceItemId ?? CUSTOM_SERVICE_ITEM_ID;
 
           return (
             <div
@@ -111,6 +161,38 @@ export function LineItemsEditor({ lineItems, onChange }: LineItemsEditorProps) {
 
               <div className="space-y-3">
                 <div>
+                  <label className={labelClass}>Service item</label>
+                  <select
+                    value={selectedServiceId}
+                    onChange={(e) =>
+                      handleServiceItemChange(index, e.target.value)
+                    }
+                    className={inputClass}
+                  >
+                    <option value={CUSTOM_SERVICE_ITEM_ID}>Custom item</option>
+                    {serviceItems.map((serviceItem) => (
+                      <option key={serviceItem.id} value={serviceItem.id}>
+                        {serviceItem.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Name</label>
+                  <input
+                    type="text"
+                    value={item.name}
+                    onChange={(e) =>
+                      handleItemChange(index, "name", e.target.value)
+                    }
+                    placeholder="Service or part name"
+                    className={inputClass}
+                    required
+                  />
+                </div>
+
+                <div>
                   <label className={labelClass}>Description</label>
                   <input
                     type="text"
@@ -118,9 +200,8 @@ export function LineItemsEditor({ lineItems, onChange }: LineItemsEditorProps) {
                     onChange={(e) =>
                       handleItemChange(index, "description", e.target.value)
                     }
-                    placeholder="Service or part description"
+                    placeholder="Optional details"
                     className={inputClass}
-                    required
                   />
                 </div>
 
@@ -154,23 +235,45 @@ export function LineItemsEditor({ lineItems, onChange }: LineItemsEditorProps) {
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>Total</label>
+                    <label className={labelClass}>Line total</label>
                     <div className="flex h-[38px] items-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900">
                       {formatCurrency(lineTotal)}
                     </div>
                   </div>
                 </div>
+
+                <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={item.taxable}
+                    onChange={(e) =>
+                      handleItemChange(index, "taxable", e.target.checked)
+                    }
+                    className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500/20"
+                  />
+                  Taxable
+                </label>
               </div>
             </div>
           );
         })}
       </div>
 
-      <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-3">
-        <span className="text-sm font-medium text-slate-600">Estimate total</span>
-        <span className="text-base font-bold text-slate-900">
-          {formatCurrency(subtotal)}
-        </span>
+      <div className="space-y-2 rounded-lg border border-slate-200 bg-white px-4 py-3">
+        <div className="flex items-center justify-between text-sm text-slate-600">
+          <span>Subtotal</span>
+          <span>{formatCurrency(totals.subtotal)}</span>
+        </div>
+        {taxRate > 0 ? (
+          <div className="flex items-center justify-between text-sm text-slate-600">
+            <span>Tax ({taxRate}%)</span>
+            <span>{formatCurrency(totals.tax)}</span>
+          </div>
+        ) : null}
+        <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-sm font-bold text-slate-900">
+          <span>Total</span>
+          <span>{formatCurrency(totals.total)}</span>
+        </div>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import type {
   JobRow,
 } from "@/lib/database/types/core-tables";
 import { mapJobRowToJob } from "@/lib/database/queries/jobs";
+import { recordTechnicianAssignedActivity } from "@/lib/database/services/job-activity";
 import type { Job } from "@/shared/types/job";
 import type { DispatchJob } from "@/shared/types/dispatch";
 
@@ -136,7 +137,7 @@ export async function assignJobToTechnician(
 
   const { data: jobRow, error: jobError } = await supabase
     .from("jobs")
-    .select("id, scheduled_at, status")
+    .select("id, scheduled_at, status, assigned_technician_id")
     .eq("company_id", companyId)
     .eq("id", jobId)
     .maybeSingle();
@@ -156,6 +157,7 @@ export async function assignJobToTechnician(
   }
 
   const statusBeforeAssignment = jobRow.status;
+  const previousTechnicianId = jobRow.assigned_technician_id;
   console.log("[assignJobToTechnician] assignment start", {
     companyId,
     jobId,
@@ -293,6 +295,14 @@ export async function assignJobToTechnician(
       status: job?.status ?? statusBeforeAssignment,
     });
   }
+
+  await recordTechnicianAssignedActivity({
+    companyId,
+    jobId,
+    actorId: assignedBy,
+    technicianId,
+    previousTechnicianId,
+  });
 
   return { job, error: null };
 }

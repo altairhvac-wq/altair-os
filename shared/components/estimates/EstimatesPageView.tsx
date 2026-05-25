@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import { mockEstimates } from "@/shared/data/mock-estimates";
-import { formatCurrency } from "@/shared/types/customer";
+import { createEstimateAction } from "@/app/actions/estimates";
+import type { Customer } from "@/shared/types/customer";
+import type { Job } from "@/shared/types/job";
+import type { ServiceItem } from "@/shared/types/service-item";
 import {
-  calculateEstimateSubtotal,
-  formatEstimateStatus,
   type Estimate,
   type EstimateFormData,
   type EstimateStatus,
@@ -14,10 +15,21 @@ import {
 import { EstimateDetailsPanel } from "./EstimateDetailsPanel";
 import { EstimateSearchFilterBar } from "./EstimateSearchFilterBar";
 import { EstimatesEmptyState } from "./EstimatesEmptyState";
-import { EstimatesLoadingState } from "./EstimatesLoadingState";
 import { EstimatesTable } from "./EstimatesTable";
+import { formatEstimateStatus } from "@/shared/types/estimate";
+import { formatCurrency } from "@/shared/types/customer";
 
-type PanelMode = "detail" | "create" | "empty";
+type PanelMode = "create" | "empty";
+
+type EstimatesPageViewProps = {
+  initialEstimates: Estimate[];
+  customers: Customer[];
+  jobs: Job[];
+  serviceItems: ServiceItem[];
+  canManageEstimates: boolean;
+  initialPanelMode?: PanelMode;
+  createInitialData?: Partial<EstimateFormData>;
+};
 
 function filterEstimates(
   estimates: Estimate[],
@@ -48,78 +60,63 @@ function filterEstimates(
   });
 }
 
-function formDataToEstimate(data: EstimateFormData, existingCount: number): Estimate {
-  const subtotal = calculateEstimateSubtotal(data.lineItems);
-  const estimateNumber = `EST-${1050 + existingCount}`;
-
-  return {
-    id: `est-${Date.now()}`,
-    estimateNumber,
-    customerId: `cust-new-${Date.now()}`,
-    customerName: data.customerName,
-    status: data.status,
-    lineItems: data.lineItems.map((item, index) => ({
-      id: `li-${Date.now()}-${index}`,
-      description: item.description,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-    })),
-    subtotal,
-    total: subtotal,
-    validUntil: data.validUntil || undefined,
-    notes: data.notes || undefined,
-    createdAt: new Date().toISOString().split("T")[0],
-  };
-}
-
-export function EstimatesPageView() {
-  const [estimates, setEstimates] = useState<Estimate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function EstimatesPageView({
+  initialEstimates,
+  customers,
+  jobs,
+  serviceItems,
+  canManageEstimates,
+  initialPanelMode = "empty",
+  createInitialData,
+}: EstimatesPageViewProps) {
+  const [estimates, setEstimates] = useState(initialEstimates);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<EstimateStatus | "all">("all");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [panelMode, setPanelMode] = useState<PanelMode>("empty");
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setEstimates(mockEstimates);
-      setIsLoading(false);
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const [statusFilter, setStatusFilter] = useState<EstimateStatus | "all">(
+    "all",
+  );
+  const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const filteredEstimates = useMemo(
     () => filterEstimates(estimates, search, statusFilter),
     [estimates, search, statusFilter],
   );
 
-  const selectedEstimate = estimates.find((e) => e.id === selectedId) ?? null;
-
   function handleSelectEstimate(estimate: Estimate) {
-    setSelectedId(estimate.id);
-    setPanelMode("detail");
+    router.push(`/estimates/${estimate.id}`);
   }
 
   function handleNewEstimate() {
-    setSelectedId(null);
+    if (!canManageEstimates) {
+      return;
+    }
+
     setPanelMode("create");
+    setCreateError(null);
   }
 
   function handleClosePanel() {
-    setSelectedId(null);
     setPanelMode("empty");
+    setCreateError(null);
   }
 
   function handleCreateSubmit(data: EstimateFormData) {
-    const newEstimate = formDataToEstimate(data, estimates.length);
-    setEstimates((prev) => [newEstimate, ...prev]);
-    setSelectedId(newEstimate.id);
-    setPanelMode("detail");
-  }
+    setCreateError(null);
 
-  if (isLoading) {
-    return <EstimatesLoadingState />;
+    startTransition(async () => {
+      const result = await createEstimateAction(data);
+
+      if (result.error || !result.estimate) {
+        setCreateError(result.error ?? "Failed to create estimate.");
+        return;
+      }
+
+      setEstimates((previous) => [result.estimate!, ...previous]);
+      setPanelMode("empty");
+      router.push(`/estimates/${result.estimate.id}`);
+    });
   }
 
   const hasNoEstimates = estimates.length === 0;
@@ -135,14 +132,17 @@ export function EstimatesPageView() {
               Create quotes, track approvals, and convert to jobs
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleNewEstimate}
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700"
-          >
-            <Plus className="h-4 w-4" />
-            New Estimate
-          </button>
+          {canManageEstimates ? (
+            <button
+              type="button"
+              onClick={handleNewEstimate}
+              disabled={customers.length === 0}
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" />
+              New Estimate
+            </button>
+          ) : null}
         </div>
 
         {!hasNoEstimates ? (
@@ -161,14 +161,17 @@ export function EstimatesPageView() {
           {hasNoEstimates ? (
             <EstimatesEmptyState
               variant="no-estimates"
-              onCreateEstimate={handleNewEstimate}
+              onCreateEstimate={
+                canManageEstimates && customers.length > 0
+                  ? handleNewEstimate
+                  : undefined
+              }
             />
           ) : hasNoResults ? (
             <EstimatesEmptyState variant="no-results" />
           ) : (
             <EstimatesTable
               estimates={filteredEstimates}
-              selectedId={selectedId}
               onSelect={handleSelectEstimate}
             />
           )}
@@ -177,10 +180,15 @@ export function EstimatesPageView() {
 
       <EstimateDetailsPanel
         mode={panelMode}
-        estimate={selectedEstimate}
+        customers={customers}
+        jobs={jobs}
+        serviceItems={serviceItems}
         onClose={handleClosePanel}
         onCreateSubmit={handleCreateSubmit}
         onCreateCancel={handleClosePanel}
+        createError={createError}
+        isSubmitting={isPending}
+        createInitialData={createInitialData}
       />
     </div>
   );

@@ -11,6 +11,9 @@ type DispatchJobCardProps = {
   job: DispatchJob;
   technicianName?: string;
   isSelected?: boolean;
+  compact?: boolean;
+  hideTechnician?: boolean;
+  className?: string;
   onSelect: (job: DispatchJob) => void;
 };
 
@@ -18,6 +21,9 @@ export function DispatchJobCard({
   job,
   technicianName,
   isSelected = false,
+  compact = false,
+  hideTechnician = false,
+  className = "",
   onSelect,
 }: DispatchJobCardProps) {
   const location = `${job.city}, ${job.state}`;
@@ -26,50 +32,88 @@ export function DispatchJobCard({
     <button
       type="button"
       onClick={() => onSelect(job)}
-      className={`w-full rounded-xl border p-3.5 text-left transition-all ${
+      className={`rounded-xl border text-left transition-all ${
+        compact ? "w-52 shrink-0 p-2.5" : "w-full p-3.5"
+      } ${
         isSelected
           ? "border-cyan-500 bg-cyan-50/60 shadow-md ring-2 ring-cyan-500/20"
           : "border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md"
-      }`}
+      } ${className}`}
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-1.5">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <p
+            className={`font-semibold uppercase tracking-wide text-slate-500 ${
+              compact ? "text-[10px]" : "text-[11px]"
+            }`}
+          >
             {job.jobNumber}
           </p>
-          <h4 className="mt-0.5 truncate text-sm font-bold text-slate-900">
+          <h4
+            className={`truncate font-bold text-slate-900 ${
+              compact ? "text-xs" : "mt-0.5 text-sm"
+            }`}
+          >
             {job.customerName}
           </h4>
-          <p className="mt-0.5 truncate text-xs text-slate-500">{job.jobType}</p>
+          {!compact ? (
+            <p className="mt-0.5 truncate text-xs text-slate-500">{job.jobType}</p>
+          ) : (
+            <p className="truncate text-[11px] text-slate-500">{job.jobType}</p>
+          )}
         </div>
-        <DispatchPriorityBadge priority={job.priority} />
+        <DispatchPriorityBadge
+          priority={job.priority}
+          className={compact ? "px-1.5 py-0 text-[10px]" : ""}
+        />
       </div>
 
-      <div className="mt-3 space-y-1.5 text-xs text-slate-600">
-        <div className="flex items-center gap-1.5">
-          <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+      <div
+        className={`text-slate-600 ${
+          compact ? "mt-1.5 space-y-1 text-[11px]" : "mt-3 space-y-1.5 text-xs"
+        }`}
+      >
+        <div className="flex items-center gap-1">
+          <Clock
+            className={`shrink-0 text-slate-400 ${compact ? "h-3 w-3" : "h-3.5 w-3.5"}`}
+          />
           <span className="font-medium text-slate-700">
             {formatDispatchTime(job.scheduledDate)}
           </span>
           <span className="text-slate-400">·</span>
-          <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-          <span>{formatDispatchDate(job.scheduledDate)}</span>
+          <Calendar
+            className={`shrink-0 text-slate-400 ${compact ? "h-3 w-3" : "h-3.5 w-3.5"}`}
+          />
+          <span className="truncate">{formatDispatchDate(job.scheduledDate)}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+        <div className="flex items-center gap-1">
+          <MapPin
+            className={`shrink-0 text-slate-400 ${compact ? "h-3 w-3" : "h-3.5 w-3.5"}`}
+          />
           <span className="truncate">
-            {job.serviceAddress}, {location}
+            {compact ? location : `${job.serviceAddress}, ${location}`}
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-          <span>{technicianName ?? "Unassigned"}</span>
-        </div>
+        {!hideTechnician ? (
+          <div className="flex items-center gap-1">
+            <User
+              className={`shrink-0 text-slate-400 ${compact ? "h-3 w-3" : "h-3.5 w-3.5"}`}
+            />
+            <span className="truncate">{technicianName ?? "Unassigned"}</span>
+          </div>
+        ) : null}
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
-        <DispatchStatusBadge status={job.status} />
-        {job.priority === "urgent" ? (
+      <div
+        className={`flex items-center justify-between gap-2 border-t border-slate-100 ${
+          compact ? "mt-1.5 pt-1.5" : "mt-3 pt-2.5"
+        }`}
+      >
+        <DispatchStatusBadge
+          status={job.status}
+          className={compact ? "px-1.5 py-0 text-[10px]" : ""}
+        />
+        {!compact && job.priority === "urgent" ? (
           <span className="text-[10px] font-bold uppercase tracking-wide text-red-600">
             Urgent
           </span>

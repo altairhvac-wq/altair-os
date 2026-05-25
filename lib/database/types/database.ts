@@ -11,9 +11,21 @@ import type {
   DispatchAssignmentInsert,
   DispatchAssignmentRow,
   DispatchAssignmentUpdate,
+  EstimateActivityInsert,
+  EstimateActivityRow,
+  EstimateInsert,
+  EstimateLineItemInsert,
+  EstimateLineItemRow,
+  EstimateRow,
+  EstimateUpdate,
+  ServiceItemInsert,
+  ServiceItemRow,
+  ServiceItemUpdate,
   JobInsert,
   JobRow,
   JobUpdate,
+  JobActivityInsert,
+  JobActivityRow,
   ProfileInsert,
   ProfileRow,
   ProfileUpdate,
@@ -133,6 +145,132 @@ export type Database = {
           },
         ];
       };
+      job_activities: {
+        Row: JobActivityRow;
+        Insert: JobActivityInsert;
+        Update: Partial<JobActivityInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "job_activities_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "job_activities_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "job_activities_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      estimates: {
+        Row: EstimateRow;
+        Insert: EstimateInsert;
+        Update: EstimateUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "estimates_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "estimates_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "estimates_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      estimate_line_items: {
+        Row: EstimateLineItemRow;
+        Insert: EstimateLineItemInsert;
+        Update: Partial<EstimateLineItemInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "estimate_line_items_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "estimate_line_items_estimate_id_fkey";
+            columns: ["estimate_id"];
+            isOneToOne: false;
+            referencedRelation: "estimates";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "estimate_line_items_service_item_id_fkey";
+            columns: ["service_item_id"];
+            isOneToOne: false;
+            referencedRelation: "service_items";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      service_items: {
+        Row: ServiceItemRow;
+        Insert: ServiceItemInsert;
+        Update: ServiceItemUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "service_items_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      estimate_activities: {
+        Row: EstimateActivityRow;
+        Insert: EstimateActivityInsert;
+        Update: Partial<EstimateActivityInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "estimate_activities_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "estimate_activities_estimate_id_fkey";
+            columns: ["estimate_id"];
+            isOneToOne: false;
+            referencedRelation: "estimates";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "estimate_activities_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -151,6 +289,9 @@ export type Database = {
       job_status: JobRow["status"];
       job_priority: JobRow["priority"];
       dispatch_assignment_status: DispatchAssignmentRow["status"];
+      job_activity_type: JobActivityRow["event_type"];
+      estimate_status: EstimateRow["status"];
+      estimate_activity_type: EstimateActivityRow["event_type"];
     };
     CompositeTypes: Record<string, never>;
   };

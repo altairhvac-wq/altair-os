@@ -5,7 +5,6 @@ import {
   Building2,
   Calendar,
   ClipboardList,
-  History,
   Mail,
   MapPin,
   Phone,
@@ -15,6 +14,7 @@ import {
 } from "lucide-react";
 import { getCustomerInitials } from "@/shared/types/customer";
 import type { Technician } from "@/shared/types/dispatch";
+import { JobActivityTimeline } from "./JobActivityTimeline";
 import { JobDetailHeaderWorkflow } from "./JobDetailHeaderWorkflow";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
@@ -24,10 +24,12 @@ import {
   formatScheduledTime,
   type JobDetail,
 } from "@/shared/types/job";
+import type { JobActivity } from "@/shared/types/job-activity";
 
 type JobDetailPageViewProps = {
   job: JobDetail;
   technicians: Technician[];
+  activities: JobActivity[];
   canUpdateStatus: boolean;
   canAssignTechnician: boolean;
 };
@@ -55,11 +57,6 @@ const placeholderSections: PlaceholderSection[] = [
     description: "Billing and payment details will appear here.",
     icon: Receipt,
   },
-  {
-    title: "Activity",
-    description: "Timeline of status changes and updates will appear here.",
-    icon: History,
-  },
 ];
 
 function ContentSection({ title, children, className }: ContentSectionProps) {
@@ -78,6 +75,7 @@ function ContentSection({ title, children, className }: ContentSectionProps) {
 export function JobDetailPageView({
   job,
   technicians,
+  activities,
   canUpdateStatus,
   canAssignTechnician,
 }: JobDetailPageViewProps) {
@@ -257,6 +255,8 @@ export function JobDetailPageView({
           />
         </ContentSection>
       </div>
+
+      <JobActivityTimeline activities={activities} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {placeholderSections.map((section) => {

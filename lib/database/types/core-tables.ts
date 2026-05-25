@@ -3,6 +3,9 @@ import type {
   CompanyStatus,
   CustomerStatus,
   DispatchAssignmentStatus,
+  EstimateActivityType,
+  EstimateStatus,
+  JobActivityType,
   JobPriority,
   JobStatus,
   Json,
@@ -240,6 +243,142 @@ export type DispatchAssignmentUpdate = Partial<
     DispatchAssignmentRow,
     "id" | "company_id" | "job_id" | "created_at" | "updated_at"
   >
+>;
+
+export type JobActivityRow = {
+  id: UUID;
+  company_id: UUID;
+  job_id: UUID;
+  actor_id: UUID | null;
+  event_type: JobActivityType;
+  metadata: Json;
+  created_at: Timestamp;
+};
+
+export type JobActivityInsert = {
+  id?: UUID;
+  company_id: UUID;
+  job_id: UUID;
+  actor_id?: UUID | null;
+  event_type: JobActivityType;
+  metadata?: Json;
+  created_at?: Timestamp;
+};
+
+export type EstimateRow = {
+  id: UUID;
+  company_id: UUID;
+  customer_id: UUID;
+  job_id: UUID | null;
+  estimate_number: string;
+  status: EstimateStatus;
+  subtotal: number;
+  tax_rate: number;
+  tax: number;
+  total: number;
+  valid_until: string | null;
+  notes: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type EstimateLineItemRow = {
+  id: UUID;
+  company_id: UUID;
+  estimate_id: UUID;
+  service_item_id: UUID | null;
+  sort_order: number;
+  name: string;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  taxable: boolean;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type EstimateInsert = {
+  id?: UUID;
+  company_id: UUID;
+  customer_id: UUID;
+  job_id?: UUID | null;
+  estimate_number: string;
+  status?: EstimateStatus;
+  subtotal?: number;
+  tax_rate?: number;
+  tax?: number;
+  total?: number;
+  valid_until?: string | null;
+  notes?: string | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type EstimateLineItemInsert = {
+  id?: UUID;
+  company_id: UUID;
+  estimate_id: UUID;
+  service_item_id?: UUID | null;
+  sort_order?: number;
+  name: string;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  taxable?: boolean;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type EstimateUpdate = Partial<
+  Omit<EstimateRow, "id" | "company_id" | "created_at" | "updated_at">
+>;
+
+export type EstimateActivityRow = {
+  id: UUID;
+  company_id: UUID;
+  estimate_id: UUID;
+  actor_id: UUID | null;
+  event_type: EstimateActivityType;
+  metadata: Json;
+  created_at: Timestamp;
+};
+
+export type EstimateActivityInsert = {
+  id?: UUID;
+  company_id: UUID;
+  estimate_id: UUID;
+  actor_id?: UUID | null;
+  event_type: EstimateActivityType;
+  metadata?: Json;
+  created_at?: Timestamp;
+};
+
+export type ServiceItemRow = {
+  id: UUID;
+  company_id: UUID;
+  name: string;
+  description: string | null;
+  unit_price: number;
+  taxable: boolean;
+  is_active: boolean;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type ServiceItemInsert = {
+  id?: UUID;
+  company_id: UUID;
+  name: string;
+  description?: string | null;
+  unit_price?: number;
+  taxable?: boolean;
+  is_active?: boolean;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type ServiceItemUpdate = Partial<
+  Omit<ServiceItemRow, "id" | "company_id" | "created_at" | "updated_at">
 >;
 
 export type ActiveCompanyContext = UserCompanyContext & {

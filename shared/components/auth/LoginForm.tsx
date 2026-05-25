@@ -21,26 +21,28 @@ export function LoginForm() {
 
   return (
     <AuthShell
-      title="Sign in"
-      description="Access your Altair OS command center."
+      title="Welcome back"
+      description="Sign in to your command center — dispatch, jobs, and field teams in one place."
       footer={
-        <p className="text-slate-600">
-          Need an account? <AuthLink href="/signup">Create one</AuthLink>
+        <p>
+          New to Altair OS?{" "}
+          <AuthLink href="/signup">Create an account</AuthLink>
         </p>
       }
     >
-      <form action={formAction} className="space-y-4">
+      <form action={formAction} className="space-y-5">
         {state.error ? <AuthMessage tone="error">{state.error}</AuthMessage> : null}
         {state.success ? (
           <AuthMessage tone="success">{state.success}</AuthMessage>
         ) : null}
 
-        <AuthField label="Email" id="email">
+        <AuthField label="Work email" id="email">
           <AuthInput
             id="email"
             name="email"
             type="email"
             autoComplete="email"
+            placeholder="you@company.com"
             required
           />
         </AuthField>
@@ -51,11 +53,14 @@ export function LoginForm() {
             name="password"
             type="password"
             autoComplete="current-password"
+            placeholder="Enter your password"
             required
           />
         </AuthField>
 
-        <AuthSubmitButton pending={pending}>Sign in</AuthSubmitButton>
+        <div className="pt-1">
+          <AuthSubmitButton pending={pending}>Sign in</AuthSubmitButton>
+        </div>
       </form>
     </AuthShell>
   );

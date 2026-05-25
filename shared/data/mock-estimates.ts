@@ -1,4 +1,25 @@
-import type { Estimate } from "@/shared/types/estimate";
+import type { Estimate, EstimateLineItem } from "@/shared/types/estimate";
+
+function mockLineItem(
+  id: string,
+  name: string,
+  quantity: number,
+  unitPrice: number,
+  taxable = true,
+): EstimateLineItem {
+  return {
+    id,
+    name,
+    quantity,
+    unitPrice,
+    taxable,
+  };
+}
+
+function mockTaxRate(subtotal: number, tax?: number): number {
+  if (!tax || subtotal <= 0) return 0;
+  return Math.round((tax / subtotal) * 10000) / 100;
+}
 
 export const mockEstimates: Estimate[] = [
   {
@@ -8,20 +29,11 @@ export const mockEstimates: Estimate[] = [
     customerName: "Sarah Mitchell",
     status: "sent",
     lineItems: [
-      {
-        id: "li-001",
-        description: "Rooftop HVAC tune-up",
-        quantity: 1,
-        unitPrice: 285,
-      },
-      {
-        id: "li-002",
-        description: "Replace air filters (4x)",
-        quantity: 4,
-        unitPrice: 32,
-      },
+      mockLineItem("li-001", "Rooftop HVAC tune-up", 1, 285),
+      mockLineItem("li-002", "Replace air filters (4x)", 4, 32),
     ],
     subtotal: 413,
+    taxRate: mockTaxRate(413, 34),
     tax: 34,
     total: 447,
     validUntil: "2026-06-10",
@@ -35,20 +47,11 @@ export const mockEstimates: Estimate[] = [
     customerName: "James Chen",
     status: "approved",
     lineItems: [
-      {
-        id: "li-003",
-        description: "50-gal gas water heater replacement",
-        quantity: 1,
-        unitPrice: 1850,
-      },
-      {
-        id: "li-004",
-        description: "Permit and disposal fees",
-        quantity: 1,
-        unitPrice: 175,
-      },
+      mockLineItem("li-003", "50-gal gas water heater replacement", 1, 1850),
+      mockLineItem("li-004", "Permit and disposal fees", 1, 175),
     ],
     subtotal: 2025,
+    taxRate: mockTaxRate(2025, 167),
     tax: 167,
     total: 2192,
     validUntil: "2026-06-05",
@@ -61,20 +64,11 @@ export const mockEstimates: Estimate[] = [
     customerName: "Greenfield Property Group",
     status: "draft",
     lineItems: [
-      {
-        id: "li-005",
-        description: "Commercial AC coil cleaning",
-        quantity: 3,
-        unitPrice: 420,
-      },
-      {
-        id: "li-006",
-        description: "Refrigerant top-off (per unit)",
-        quantity: 3,
-        unitPrice: 95,
-      },
+      mockLineItem("li-005", "Commercial AC coil cleaning", 3, 420),
+      mockLineItem("li-006", "Refrigerant top-off (per unit)", 3, 95),
     ],
     subtotal: 1545,
+    taxRate: 0,
     total: 1545,
     validUntil: "2026-06-15",
     notes: "Draft pending site walkthrough.",
@@ -87,14 +81,10 @@ export const mockEstimates: Estimate[] = [
     customerName: "Maria Gonzalez",
     status: "declined",
     lineItems: [
-      {
-        id: "li-007",
-        description: "Whole-home duct cleaning",
-        quantity: 1,
-        unitPrice: 695,
-      },
+      mockLineItem("li-007", "Whole-home duct cleaning", 1, 695),
     ],
     subtotal: 695,
+    taxRate: mockTaxRate(695, 57),
     tax: 57,
     total: 752,
     validUntil: "2026-05-01",
@@ -106,22 +96,13 @@ export const mockEstimates: Estimate[] = [
     estimateNumber: "EST-1046",
     customerId: "cust-005",
     customerName: "Northside Dental Clinic",
-    status: "expired",
+    status: "cancelled",
     lineItems: [
-      {
-        id: "li-008",
-        description: "Emergency drain line repair",
-        quantity: 1,
-        unitPrice: 540,
-      },
-      {
-        id: "li-009",
-        description: "After-hours service fee",
-        quantity: 1,
-        unitPrice: 150,
-      },
+      mockLineItem("li-008", "Emergency drain line repair", 1, 540),
+      mockLineItem("li-009", "After-hours service fee", 1, 150),
     ],
     subtotal: 690,
+    taxRate: mockTaxRate(690, 57),
     tax: 57,
     total: 747,
     validUntil: "2026-04-30",
@@ -134,20 +115,11 @@ export const mockEstimates: Estimate[] = [
     customerName: "Tom & Linda Reeves",
     status: "converted",
     lineItems: [
-      {
-        id: "li-010",
-        description: "Tankless water heater install",
-        quantity: 1,
-        unitPrice: 3200,
-      },
-      {
-        id: "li-011",
-        description: "Gas line modification",
-        quantity: 1,
-        unitPrice: 450,
-      },
+      mockLineItem("li-010", "Tankless water heater install", 1, 3200),
+      mockLineItem("li-011", "Gas line modification", 1, 450),
     ],
     subtotal: 3650,
+    taxRate: mockTaxRate(3650, 301),
     tax: 301,
     total: 3951,
     validUntil: "2026-05-15",
@@ -161,20 +133,11 @@ export const mockEstimates: Estimate[] = [
     customerName: "Sarah Mitchell",
     status: "sent",
     lineItems: [
-      {
-        id: "li-012",
-        description: "Mini-split installation (2 zones)",
-        quantity: 2,
-        unitPrice: 2100,
-      },
-      {
-        id: "li-013",
-        description: "Electrical disconnect upgrade",
-        quantity: 1,
-        unitPrice: 385,
-      },
+      mockLineItem("li-012", "Mini-split installation (2 zones)", 2, 2100),
+      mockLineItem("li-013", "Electrical disconnect upgrade", 1, 385),
     ],
     subtotal: 4585,
+    taxRate: mockTaxRate(4585, 378),
     tax: 378,
     total: 4963,
     validUntil: "2026-06-20",
@@ -187,20 +150,11 @@ export const mockEstimates: Estimate[] = [
     customerName: "James Chen",
     status: "draft",
     lineItems: [
-      {
-        id: "li-014",
-        description: "Kitchen faucet replacement",
-        quantity: 1,
-        unitPrice: 275,
-      },
-      {
-        id: "li-015",
-        description: "Supply line kit",
-        quantity: 2,
-        unitPrice: 28,
-      },
+      mockLineItem("li-014", "Kitchen faucet replacement", 1, 275),
+      mockLineItem("li-015", "Supply line kit", 2, 28),
     ],
     subtotal: 331,
+    taxRate: 0,
     total: 331,
     createdAt: "2026-05-24",
   },

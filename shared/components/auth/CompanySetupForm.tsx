@@ -23,23 +23,58 @@ export function CompanySetupForm() {
 
   return (
     <AuthShell
-      title="Finish setup"
-      description="Create your company workspace to start using Altair OS."
+      variant="onboarding"
+      onboardingStep={{
+        current: 2,
+        total: 2,
+        label: "Company workspace",
+      }}
+      title="Set up your workspace"
+      description="One last step — name your company to unlock dispatch, jobs, and your field team."
     >
-      <form action={formAction} className="space-y-4">
+      <form action={formAction} className="space-y-5">
         {state.error ? <AuthMessage tone="error">{state.error}</AuthMessage> : null}
 
-        <AuthField label="Company name" id="companyName">
+        <div className="rounded-lg border border-slate-100 bg-slate-50/80 px-4 py-3.5">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            What happens next
+          </p>
+          <ul className="mt-2.5 space-y-2 text-sm text-slate-600">
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-cyan-500" />
+              Your company workspace is created instantly
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-cyan-500" />
+              You&apos;re routed to your command center
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-cyan-500" />
+              Invite technicians and start dispatching
+            </li>
+          </ul>
+        </div>
+
+        <AuthField
+          label="Company name"
+          id="companyName"
+          hint="You can change this later in settings."
+        >
           <AuthInput
             id="companyName"
             name="companyName"
             type="text"
             autoComplete="organization"
+            placeholder="Your company name"
             required
           />
         </AuthField>
 
-        <AuthSubmitButton pending={pending}>Create company</AuthSubmitButton>
+        <div className="pt-1">
+          <AuthSubmitButton pending={pending}>
+            Launch workspace
+          </AuthSubmitButton>
+        </div>
       </form>
     </AuthShell>
   );

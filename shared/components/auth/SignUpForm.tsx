@@ -22,14 +22,15 @@ export function SignUpForm() {
   return (
     <AuthShell
       title="Create your account"
-      description="Set up Altair OS for your trades business."
+      description="Get your trades business on Altair OS — set up in minutes, built for the field."
       footer={
-        <p className="text-slate-600">
-          Already have an account? <AuthLink href="/login">Sign in</AuthLink>
+        <p>
+          Already have an account?{" "}
+          <AuthLink href="/login">Sign in</AuthLink>
         </p>
       }
     >
-      <form action={formAction} className="space-y-4">
+      <form action={formAction} className="space-y-5">
         {state.error ? <AuthMessage tone="error">{state.error}</AuthMessage> : null}
         {state.success ? (
           <AuthMessage tone="success">{state.success}</AuthMessage>
@@ -41,44 +42,58 @@ export function SignUpForm() {
             name="fullName"
             type="text"
             autoComplete="name"
+            placeholder="Jordan Smith"
             required
           />
         </AuthField>
 
-        <AuthField label="Company name" id="companyName">
+        <AuthField
+          label="Company name"
+          id="companyName"
+          hint="This becomes your workspace name."
+        >
           <AuthInput
             id="companyName"
             name="companyName"
             type="text"
             autoComplete="organization"
+            placeholder="Smith HVAC & Plumbing"
             required
           />
         </AuthField>
 
-        <AuthField label="Email" id="email">
+        <AuthField label="Work email" id="email">
           <AuthInput
             id="email"
             name="email"
             type="email"
             autoComplete="email"
+            placeholder="you@company.com"
             required
           />
         </AuthField>
 
-        <AuthField label="Password" id="password">
+        <AuthField
+          label="Password"
+          id="password"
+          hint="At least 6 characters."
+        >
           <AuthInput
             id="password"
             name="password"
             type="password"
             autoComplete="new-password"
+            placeholder="Create a secure password"
             minLength={6}
             required
           />
         </AuthField>
 
-        <AuthSubmitButton pending={pending}>
-          {state.needsEmailConfirmation ? "Account created" : "Create account"}
-        </AuthSubmitButton>
+        <div className="pt-1">
+          <AuthSubmitButton pending={pending}>
+            {state.needsEmailConfirmation ? "Account created" : "Create account"}
+          </AuthSubmitButton>
+        </div>
       </form>
     </AuthShell>
   );

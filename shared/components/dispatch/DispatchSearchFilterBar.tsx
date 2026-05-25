@@ -1,4 +1,4 @@
-import { Filter, Search } from "lucide-react";
+import { Filter, Inbox, Search } from "lucide-react";
 import {
   DISPATCH_STATUS_OPTIONS,
   type DispatchJobStatus,
@@ -14,6 +14,8 @@ type DispatchSearchFilterBarProps = {
   onStatusFilterChange: (value: DispatchJobStatus | "all") => void;
   onTechnicianFilterChange: (value: string) => void;
   resultCount: number;
+  unassignedCount: number;
+  onOpenUnassigned: () => void;
 };
 
 export function DispatchSearchFilterBar({
@@ -25,6 +27,8 @@ export function DispatchSearchFilterBar({
   onStatusFilterChange,
   onTechnicianFilterChange,
   resultCount,
+  unassignedCount,
+  onOpenUnassigned,
 }: DispatchSearchFilterBarProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
@@ -74,6 +78,18 @@ export function DispatchSearchFilterBar({
               ))}
             </select>
           </div>
+
+          <button
+            type="button"
+            onClick={onOpenUnassigned}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm font-semibold text-amber-900 transition-colors hover:border-amber-300 hover:bg-amber-100 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+          >
+            <Inbox className="h-4 w-4" />
+            <span>Unassigned Jobs</span>
+            <span className="rounded-full bg-amber-200/80 px-2 py-0.5 text-xs font-bold text-amber-900">
+              {unassignedCount}
+            </span>
+          </button>
         </div>
       </div>
 

@@ -28,6 +28,32 @@ export type DispatchAssignmentStatus =
   | "cancelled"
   | "unassigned";
 
+export type JobActivityType =
+  | "job_created"
+  | "technician_assigned"
+  | "start_route"
+  | "start_work"
+  | "complete_job"
+  | "status_changed"
+  | "job_cancelled";
+
+export type EstimateStatus =
+  | "draft"
+  | "sent"
+  | "approved"
+  | "declined"
+  | "converted"
+  | "cancelled";
+
+export type EstimateActivityType =
+  | "estimate_created"
+  | "status_changed"
+  | "estimate_sent"
+  | "estimate_approved"
+  | "estimate_declined"
+  | "estimate_cancelled"
+  | "estimate_converted";
+
 export type Json =
   | string
   | number

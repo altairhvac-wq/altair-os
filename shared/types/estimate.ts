@@ -3,14 +3,17 @@ export type EstimateStatus =
   | "sent"
   | "approved"
   | "declined"
-  | "expired"
-  | "converted";
+  | "converted"
+  | "cancelled";
 
 export type EstimateLineItem = {
   id: string;
-  description: string;
+  serviceItemId?: string;
+  name: string;
+  description?: string;
   quantity: number;
   unitPrice: number;
+  taxable: boolean;
 };
 
 export type Estimate = {
@@ -18,9 +21,13 @@ export type Estimate = {
   estimateNumber: string;
   customerId: string;
   customerName: string;
+  jobId?: string;
+  jobNumber?: string;
   status: EstimateStatus;
   lineItems: EstimateLineItem[];
+  lineItemCount?: number;
   subtotal: number;
+  taxRate: number;
   tax?: number;
   total: number;
   validUntil?: string;
@@ -28,17 +35,27 @@ export type Estimate = {
   createdAt: string;
 };
 
+export type EstimateDetail = Estimate & {
+  customerEmail?: string;
+  customerPhone?: string;
+};
+
 export type EstimateLineItemFormData = {
+  serviceItemId?: string;
+  name: string;
   description: string;
   quantity: number;
   unitPrice: number;
+  taxable: boolean;
 };
 
 export type EstimateFormData = {
-  customerName: string;
+  customerId: string;
+  jobId?: string;
   status: EstimateStatus;
   validUntil: string;
   notes: string;
+  taxRate: number;
   lineItems: EstimateLineItemFormData[];
 };
 
@@ -51,33 +68,87 @@ export const ESTIMATE_STATUS_OPTIONS: {
   { value: "sent", label: "Sent" },
   { value: "approved", label: "Approved" },
   { value: "declined", label: "Declined" },
-  { value: "expired", label: "Expired" },
   { value: "converted", label: "Converted" },
+  { value: "cancelled", label: "Cancelled" },
 ];
+
+export const ESTIMATE_VALIDITY_DAYS = 30;
 
 export function calculateLineItemTotal(
   quantity: number,
   unitPrice: number,
 ): number {
-  return quantity * unitPrice;
+  return roundCurrency(quantity * unitPrice);
 }
 
 export function calculateEstimateSubtotal(
   lineItems: Pick<EstimateLineItem, "quantity" | "unitPrice">[],
 ): number {
-  return lineItems.reduce(
-    (sum, item) => sum + calculateLineItemTotal(item.quantity, item.unitPrice),
-    0,
+  return roundCurrency(
+    lineItems.reduce(
+      (sum, item) => sum + calculateLineItemTotal(item.quantity, item.unitPrice),
+      0,
+    ),
   );
 }
 
-export function calculateEstimateTotal(
-  lineItems: Pick<EstimateLineItem, "quantity" | "unitPrice">[],
-  tax = 0,
+export function calculateTaxableSubtotal(
+  lineItems: Pick<EstimateLineItem, "quantity" | "unitPrice" | "taxable">[],
 ): number {
-  return calculateEstimateSubtotal(lineItems) + tax;
+  return roundCurrency(
+    lineItems.reduce((sum, item) => {
+      if (!item.taxable) return sum;
+      return sum + calculateLineItemTotal(item.quantity, item.unitPrice);
+    }, 0),
+  );
+}
+
+export function calculateTaxAmount(
+  taxableSubtotal: number,
+  taxRate: number,
+): number {
+  const normalizedRate = Math.max(taxRate, 0);
+  return roundCurrency(taxableSubtotal * (normalizedRate / 100));
+}
+
+export function calculateEstimateTotals(
+  lineItems: Pick<EstimateLineItem, "quantity" | "unitPrice" | "taxable">[],
+  taxRate: number,
+): { subtotal: number; taxableSubtotal: number; tax: number; total: number } {
+  const subtotal = calculateEstimateSubtotal(lineItems);
+  const taxableSubtotal = calculateTaxableSubtotal(lineItems);
+  const tax = calculateTaxAmount(taxableSubtotal, taxRate);
+  const total = roundCurrency(subtotal + tax);
+
+  return { subtotal, taxableSubtotal, tax, total };
+}
+
+export function calculateEstimateTotal(
+  lineItems: Pick<EstimateLineItem, "quantity" | "unitPrice" | "taxable">[],
+  taxRate = 0,
+): number {
+  return calculateEstimateTotals(lineItems, taxRate).total;
+}
+
+export function getDefaultValidUntilDate(
+  fromDate: Date = new Date(),
+): string {
+  const date = new Date(fromDate);
+  date.setDate(date.getDate() + ESTIMATE_VALIDITY_DAYS);
+  return date.toISOString().split("T")[0] ?? "";
+}
+
+export function roundCurrency(value: number): number {
+  return Math.round(value * 100) / 100;
 }
 
 export function formatEstimateStatus(status: EstimateStatus): string {
   return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+export function formatTaxRate(taxRate: number): string {
+  const normalized = roundCurrency(Math.max(taxRate, 0));
+  return Number.isInteger(normalized)
+    ? String(normalized)
+    : normalized.toFixed(2).replace(/\.?0+$/, "");
 }

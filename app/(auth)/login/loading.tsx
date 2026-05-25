@@ -1,0 +1,5 @@
+import { AuthPageSkeleton } from "@/shared/components/auth/AuthShell";
+
+export default function LoginLoading() {
+  return <AuthPageSkeleton />;
+}

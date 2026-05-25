@@ -4,15 +4,10 @@ import { EstimateStatusBadge } from "./EstimateStatusBadge";
 
 type EstimatesTableProps = {
   estimates: Estimate[];
-  selectedId: string | null;
   onSelect: (estimate: Estimate) => void;
 };
 
-export function EstimatesTable({
-  estimates,
-  selectedId,
-  onSelect,
-}: EstimatesTableProps) {
+export function EstimatesTable({ estimates, onSelect }: EstimatesTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[720px] text-left text-sm">
@@ -28,15 +23,14 @@ export function EstimatesTable({
         </thead>
         <tbody className="divide-y divide-slate-50">
           {estimates.map((estimate) => {
-            const isSelected = estimate.id === selectedId;
+            const lineItemCount =
+              estimate.lineItemCount ?? estimate.lineItems.length;
 
             return (
               <tr
                 key={estimate.id}
                 onClick={() => onSelect(estimate)}
-                className={`cursor-pointer transition-colors ${
-                  isSelected ? "bg-cyan-50/70" : "hover:bg-slate-50"
-                }`}
+                className="cursor-pointer transition-colors hover:bg-slate-50"
               >
                 <td className="px-4 py-3">
                   <p className="font-semibold text-slate-900">
@@ -52,8 +46,7 @@ export function EstimatesTable({
                   </p>
                 </td>
                 <td className="hidden px-4 py-3 text-slate-600 md:table-cell">
-                  {estimate.lineItems.length}{" "}
-                  {estimate.lineItems.length === 1 ? "item" : "items"}
+                  {lineItemCount} {lineItemCount === 1 ? "item" : "items"}
                 </td>
                 <td className="hidden px-4 py-3 text-slate-600 lg:table-cell">
                   {estimate.validUntil

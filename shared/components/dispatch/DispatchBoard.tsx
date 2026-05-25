@@ -38,36 +38,30 @@ export function DispatchBoard({
       ? technicians
       : technicians.filter((tech) => tech.id === technicianFilter);
 
-  const showUnassigned =
-    technicianFilter === "all" ||
-    technicianFilter === "unassigned" ||
-    unassignedJobs.length > 0;
-
+  const showUnassignedInline = technicianFilter === "unassigned";
   const showTechnicianColumns = technicianFilter !== "unassigned";
 
   return (
-    <div className="min-h-0 flex-1 overflow-hidden">
-      <div className="flex h-full flex-col gap-4 overflow-y-auto lg:flex-row lg:overflow-x-auto lg:overflow-y-hidden lg:pb-1">
-        {showUnassigned ? (
-          <UnassignedJobsPanel
-            jobs={unassignedJobs}
-            selectedJobId={selectedJobId}
-            onSelectJob={onSelectJob}
-          />
-        ) : null}
+    <div className="flex flex-col gap-3">
+      {showUnassignedInline ? (
+        <UnassignedJobsPanel
+          jobs={unassignedJobs}
+          selectedJobId={selectedJobId}
+          onSelectJob={onSelectJob}
+        />
+      ) : null}
 
-        {showTechnicianColumns
-          ? visibleTechnicians.map((technician) => (
-              <TechnicianColumn
-                key={technician.id}
-                technician={technician}
-                jobs={grouped.get(technician.id) ?? []}
-                selectedJobId={selectedJobId}
-                onSelectJob={onSelectJob}
-              />
-            ))
-          : null}
-      </div>
+      {showTechnicianColumns
+        ? visibleTechnicians.map((technician) => (
+            <TechnicianColumn
+              key={technician.id}
+              technician={technician}
+              jobs={grouped.get(technician.id) ?? []}
+              selectedJobId={selectedJobId}
+              onSelectJob={onSelectJob}
+            />
+          ))
+        : null}
     </div>
   );
 }

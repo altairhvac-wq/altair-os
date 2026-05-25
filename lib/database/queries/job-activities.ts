@@ -1,0 +1,125 @@
+import { createClient } from "@/lib/supabase/server";
+import { mapDatabaseError } from "@/lib/database/errors";
+import type {
+  JobActivityInsert,
+  JobActivityRow,
+} from "@/lib/database/types/core-tables";
+import type { JobActivityType } from "@/lib/database/types/enums";
+import type {
+  JobActivity,
+  JobActivityMetadata,
+} from "@/shared/types/job-activity";
+
+type ProfileSummary = {
+  full_name: string | null;
+  email: string;
+};
+
+type JobActivityRowWithActor = JobActivityRow & {
+  actor: ProfileSummary | null;
+};
+
+function formatProfileName(
+  profile: ProfileSummary | null | undefined,
+): string | undefined {
+  if (!profile) {
+    return undefined;
+  }
+
+  return profile.full_name?.trim() || profile.email;
+}
+
+function mapMetadata(value: JobActivityRow["metadata"]): JobActivityMetadata {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  return value as JobActivityMetadata;
+}
+
+function mapJobActivityRow(row: JobActivityRowWithActor): JobActivity {
+  return {
+    id: row.id,
+    jobId: row.job_id,
+    eventType: row.event_type,
+    metadata: mapMetadata(row.metadata),
+    actorId: row.actor_id ?? undefined,
+    actorName: formatProfileName(row.actor),
+    createdAt: row.created_at,
+  };
+}
+
+export async function recordJobActivity(
+  input: JobActivityInsert,
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("job_activities").insert({
+    company_id: input.company_id,
+    job_id: input.job_id,
+    actor_id: input.actor_id ?? null,
+    event_type: input.event_type,
+    metadata: input.metadata ?? {},
+  });
+
+  if (error) {
+    console.error("[recordJobActivity] insert failed:", {
+      companyId: input.company_id,
+      jobId: input.job_id,
+      eventType: input.event_type,
+      code: error.code,
+      message: error.message,
+    });
+    return { error: mapDatabaseError(error) };
+  }
+
+  return { error: null };
+}
+
+export async function listJobActivitiesForJob(
+  companyId: string,
+  jobId: string,
+): Promise<JobActivity[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("job_activities")
+    .select(
+      `
+      *,
+      actor:profiles!job_activities_actor_id_fkey(full_name, email)
+    `,
+    )
+    .eq("company_id", companyId)
+    .eq("job_id", jobId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[listJobActivitiesForJob] query failed:", {
+      companyId,
+      jobId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as JobActivityRowWithActor[]).map(mapJobActivityRow);
+}
+
+export function resolveStatusChangeEventType(
+  actionId: string,
+): JobActivityType {
+  switch (actionId) {
+    case "dispatch":
+      return "start_route";
+    case "start_work":
+      return "start_work";
+    case "complete":
+      return "complete_job";
+    case "cancel":
+      return "job_cancelled";
+    default:
+      return "status_changed";
+  }
+}

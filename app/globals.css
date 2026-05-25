@@ -22,5 +22,139 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Auth experience — industrial command-center backdrop */
+.auth-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 80% 70% at 30% 20%, black 20%, transparent 75%);
+}
+
+.auth-grid-fine {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 8px 8px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 85%);
+}
+
+.auth-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+}
+
+.auth-glow-primary {
+  background: radial-gradient(
+    circle at center,
+    rgba(8, 145, 178, 0.14) 0%,
+    rgba(8, 145, 178, 0.04) 40%,
+    transparent 70%
+  );
+}
+
+.auth-glow-secondary {
+  background: radial-gradient(
+    circle at center,
+    rgba(14, 116, 144, 0.08) 0%,
+    transparent 65%
+  );
+}
+
+.auth-panel-bg {
+  background-image:
+    linear-gradient(to bottom, rgba(248, 250, 252, 0.6), rgba(255, 255, 255, 1) 40%),
+    linear-gradient(to right, rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+  background-size: auto, 64px 64px, 64px 64px;
+}
+
+.auth-panel-enter {
+  animation: auth-panel-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-hero-enter {
+  animation: auth-hero-enter 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-metric-pulse {
+  animation: auth-metric-pulse 3s ease-in-out infinite;
+}
+
+.auth-tier {
+  animation: auth-tier-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-tier:nth-child(1) {
+  animation-delay: 0.12s;
+}
+
+.auth-tier:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.auth-tier:nth-child(3) {
+  animation-delay: 0.28s;
+}
+
+@keyframes auth-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-tier-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-metric-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-panel-enter,
+  .auth-hero-enter,
+  .auth-tier,
+  .auth-metric-pulse {
+    animation: none;
+  }
+
+  .auth-feature {
+    transition: none;
+  }
 }

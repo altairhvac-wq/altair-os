@@ -16,6 +16,7 @@ import { DispatchEmptyState } from "./DispatchEmptyState";
 import { DispatchSearchFilterBar } from "./DispatchSearchFilterBar";
 import { DispatchSummaryCards } from "./DispatchSummaryCards";
 import { TechnicianWorkloadCards } from "./TechnicianWorkloadCards";
+import { UnassignedJobsModal } from "./UnassignedJobsModal";
 
 type DispatchPageViewProps = {
   initialJobs: DispatchJob[];
@@ -35,6 +36,7 @@ export function DispatchPageView({
   );
   const [technicianFilter, setTechnicianFilter] = useState("all");
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [showUnassignedModal, setShowUnassignedModal] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -52,6 +54,11 @@ export function DispatchPageView({
 
   const summary = useMemo(() => getDispatchSummary(jobs), [jobs]);
 
+  const unassignedJobs = useMemo(
+    () => filteredJobs.filter((job) => !job.technicianId),
+    [filteredJobs],
+  );
+
   const selectedJob = jobs.find((job) => job.id === selectedJobId) ?? null;
   const selectedTechnician = selectedJob?.technicianId
     ? (technicians.find((tech) => tech.id === selectedJob.technicianId) ??
@@ -61,6 +68,7 @@ export function DispatchPageView({
   function handleSelectJob(job: DispatchJob) {
     setSelectedJobId(job.id);
     setAssignError(null);
+    setShowUnassignedModal(false);
   }
 
   function handleClosePanel() {
@@ -95,7 +103,7 @@ export function DispatchPageView({
   const hasNoResults = !hasNoJobs && filteredJobs.length === 0;
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] flex-col gap-4 overflow-hidden">
+    <div className="flex flex-col gap-4">
       <DispatchDashboardHeader
         jobCount={jobs.length}
         technicianCount={technicians.length}
@@ -115,20 +123,22 @@ export function DispatchPageView({
           onStatusFilterChange={setStatusFilter}
           onTechnicianFilterChange={setTechnicianFilter}
           resultCount={filteredJobs.length}
+          unassignedCount={unassignedJobs.length}
+          onOpenUnassigned={() => setShowUnassignedModal(true)}
         />
       ) : null}
 
-      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="shrink-0 border-b border-slate-100 px-4 py-3.5">
           <h2 className="text-base font-bold text-slate-900">
             Today&apos;s scheduled jobs
           </h2>
           <p className="text-xs text-slate-500">
-            Unassigned queue and assigned technician lanes
+            Technician lanes with horizontally scrollable job cards
           </p>
         </div>
 
-        <div className="min-h-0 flex-1 p-3 sm:p-4">
+        <div className="p-3 sm:p-4">
           {hasNoJobs ? (
             <DispatchEmptyState variant="no-jobs" />
           ) : hasNoResults ? (
@@ -144,6 +154,15 @@ export function DispatchPageView({
           )}
         </div>
       </section>
+
+      {showUnassignedModal ? (
+        <UnassignedJobsModal
+          jobs={unassignedJobs}
+          selectedJobId={selectedJobId}
+          onSelectJob={handleSelectJob}
+          onClose={() => setShowUnassignedModal(false)}
+        />
+      ) : null}
 
       {selectedJob ? (
         <div

@@ -7,6 +7,10 @@ import {
   getJobById,
   updateJobStatus,
 } from "@/lib/database/queries/jobs";
+import {
+  recordJobCreatedActivity,
+  recordJobStatusChangedActivity,
+} from "@/lib/database/services/job-activity";
 import type { Job, JobFormData, JobStatus } from "@/shared/types/job";
 import {
   getTargetStatusForAction,
@@ -36,6 +40,13 @@ export async function createJobAction(
   if (error || !job) {
     return { error: error ?? "Failed to create job." };
   }
+
+  await recordJobCreatedActivity({
+    companyId: context.company.id,
+    jobId: job.id,
+    actorId: context.user.id,
+    jobNumber: job.jobNumber,
+  });
 
   revalidatePath("/jobs");
   return { job };
@@ -108,6 +119,15 @@ export async function updateJobStatusAction(
   if (error || !job) {
     return { error: error ?? "Failed to update job status." };
   }
+
+  await recordJobStatusChangedActivity({
+    companyId: context.company.id,
+    jobId,
+    actorId: context.user.id,
+    actionId,
+    fromStatus: currentStatus,
+    toStatus: nextStatus,
+  });
 
   revalidatePath("/jobs");
   revalidatePath("/dispatch");
