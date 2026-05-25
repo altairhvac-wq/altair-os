@@ -42,6 +42,9 @@ export async function createEstimateAction(
     estimateId: estimate.id,
     actorId: context.user.id,
     estimateNumber: estimate.estimateNumber,
+    customerId: estimate.customerId,
+    jobId: estimate.jobId,
+    jobNumber: estimate.jobNumber,
   });
 
   revalidatePath("/estimates");
@@ -97,8 +100,10 @@ export async function updateEstimateStatusAction(
     actorId: context.user.id,
     fromStatus,
     toStatus,
+    customerId: estimate.customerId,
     jobId: estimate.jobId,
     jobNumber: estimate.jobNumber,
+    estimateNumber: estimate.estimateNumber,
   });
 
   revalidatePath("/estimates");

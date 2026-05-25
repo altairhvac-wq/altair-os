@@ -59,3 +59,33 @@ export type PayableInvoiceStatus = (typeof PAYABLE_INVOICE_STATUSES)[number];
 export function isInvoicePayable(status: string): status is PayableInvoiceStatus {
   return (PAYABLE_INVOICE_STATUSES as readonly string[]).includes(status);
 }
+
+export function canRecordInvoicePayment(invoice: {
+  status: string;
+  balanceDue: number;
+}): boolean {
+  return isInvoicePayable(invoice.status) && invoice.balanceDue > 0;
+}
+
+export function getRecordPaymentBlockReason(invoice: {
+  status: string;
+  balanceDue: number;
+}): string | null {
+  if (invoice.balanceDue <= 0) {
+    return "This invoice has no balance due.";
+  }
+
+  if (!isInvoicePayable(invoice.status)) {
+    if (invoice.status === "draft") {
+      return "Send this invoice before recording payments.";
+    }
+
+    if (invoice.status === "paid") {
+      return "This invoice is fully paid.";
+    }
+
+    return "This invoice cannot accept payments in its current status.";
+  }
+
+  return null;
+}

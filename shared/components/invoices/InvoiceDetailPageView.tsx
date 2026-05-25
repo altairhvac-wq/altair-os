@@ -13,10 +13,15 @@ import {
   formatTaxRate,
   type InvoiceDetail,
 } from "@/shared/types/invoice";
+import {
+  canRecordInvoicePayment,
+  getRecordPaymentBlockReason,
+} from "@/shared/types/invoice-payment";
 import type { InvoiceActivity } from "@/shared/types/invoice-activity";
 import type { InvoicePayment } from "@/shared/types/invoice-payment";
 import { InvoiceActivityTimeline } from "./InvoiceActivityTimeline";
 import { InvoicePaymentHistory } from "./InvoicePaymentHistory";
+import { InvoiceStatusActions } from "./InvoiceStatusActions";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { RecordPaymentForm } from "./RecordPaymentForm";
 
@@ -72,6 +77,11 @@ export function InvoiceDetailPageView({
                 </span>
               </div>
             </div>
+
+            <InvoiceStatusActions
+              invoice={invoice}
+              canManageBilling={canManageBilling}
+            />
           </div>
         </div>
 
@@ -212,11 +222,20 @@ export function InvoiceDetailPageView({
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Payments
-        </h2>
-        <div className="mt-4 space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Payments
+            </h2>
+            {canManageBilling && !canRecordInvoicePayment(invoice) ? (
+              <p className="mt-1 text-xs text-slate-500">
+                {getRecordPaymentBlockReason(invoice)}
+              </p>
+            ) : null}
+          </div>
           {canManageBilling ? <RecordPaymentForm invoice={invoice} /> : null}
+        </div>
+        <div className="mt-4">
           <InvoicePaymentHistory payments={payments} />
         </div>
       </section>

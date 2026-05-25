@@ -13,9 +13,12 @@ export type CompanyStatus = "active" | "trial" | "suspended";
 
 export type CustomerStatus = "active" | "inactive" | "lead";
 
+export type CustomerActivityType = "customer_created";
+
 export type JobStatus =
   | "scheduled"
   | "dispatched"
+  | "arrived"
   | "in_progress"
   | "completed"
   | "cancelled";
@@ -34,6 +37,9 @@ export type JobActivityType =
   | "start_route"
   | "start_work"
   | "complete_job"
+  | "technician_arrived"
+  | "work_started"
+  | "work_completed"
   | "status_changed"
   | "job_cancelled";
 
@@ -70,7 +76,8 @@ export type InvoiceActivityType =
   | "invoice_converted_from_estimate"
   | "invoice_voided"
   | "invoice_cancelled"
-  | "payment_recorded";
+  | "payment_recorded"
+  | "invoice_paid";
 
 export type PaymentMethod =
   | "cash"

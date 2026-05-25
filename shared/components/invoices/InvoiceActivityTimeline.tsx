@@ -1,6 +1,7 @@
 import {
   ArrowRightLeft,
   Ban,
+  CheckCircle2,
   ClipboardList,
   DollarSign,
   History,
@@ -29,6 +30,7 @@ const ACTIVITY_ICONS: Record<InvoiceActivityType, typeof History> = {
   invoice_voided: Ban,
   invoice_cancelled: Ban,
   payment_recorded: DollarSign,
+  invoice_paid: CheckCircle2,
 };
 
 const ACTIVITY_ICON_STYLES: Record<InvoiceActivityType, string> = {
@@ -39,6 +41,7 @@ const ACTIVITY_ICON_STYLES: Record<InvoiceActivityType, string> = {
   invoice_voided: "bg-slate-100 text-slate-500 ring-slate-400/15",
   invoice_cancelled: "bg-amber-50 text-amber-700 ring-amber-600/15",
   payment_recorded: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
+  invoice_paid: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
 };
 
 export function InvoiceActivityTimeline({

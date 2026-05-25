@@ -1,6 +1,7 @@
 export type DispatchJobStatus =
   | "scheduled"
   | "dispatched"
+  | "arrived"
   | "in_progress"
   | "completed"
   | "cancelled";
@@ -52,6 +53,7 @@ export const DISPATCH_STATUS_OPTIONS: {
   { value: "all", label: "All statuses" },
   { value: "scheduled", label: "Scheduled" },
   { value: "dispatched", label: "En Route" },
+  { value: "arrived", label: "On Site" },
   { value: "in_progress", label: "In progress" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
@@ -60,6 +62,7 @@ export const DISPATCH_STATUS_OPTIONS: {
 const DISPATCH_STATUS_LABELS: Record<DispatchJobStatus, string> = {
   scheduled: "Scheduled",
   dispatched: "En Route",
+  arrived: "On Site",
   in_progress: "In Progress",
   completed: "Completed",
   cancelled: "Cancelled",

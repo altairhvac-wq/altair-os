@@ -137,7 +137,7 @@ export async function assignJobToTechnician(
 
   const { data: jobRow, error: jobError } = await supabase
     .from("jobs")
-    .select("id, scheduled_at, status, assigned_technician_id")
+    .select("id, scheduled_at, status, assigned_technician_id, customer_id, job_number")
     .eq("company_id", companyId)
     .eq("id", jobId)
     .maybeSingle();
@@ -302,6 +302,8 @@ export async function assignJobToTechnician(
     actorId: assignedBy,
     technicianId,
     previousTechnicianId,
+    customerId: jobRow.customer_id,
+    jobNumber: jobRow.job_number,
   });
 
   return { job, error: null };

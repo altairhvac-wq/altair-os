@@ -9,13 +9,14 @@ type TechnicianAssignedJobsViewProps = {
 
 type ActiveJobStatus = Extract<
   DispatchJobStatus,
-  "in_progress" | "dispatched" | "scheduled"
+  "in_progress" | "arrived" | "dispatched" | "scheduled"
 >;
 
 const ACTIVE_STATUS_ORDER: Record<ActiveJobStatus, number> = {
   in_progress: 0,
-  dispatched: 1,
-  scheduled: 2,
+  arrived: 1,
+  dispatched: 2,
+  scheduled: 3,
 };
 
 function isActiveTechnicianJob(job: TechnicianJob): boolean {
@@ -45,6 +46,7 @@ function groupWorkQueue(jobs: TechnicianJob[]) {
 
   return {
     currentJobs: sorted.filter((job) => job.status === "in_progress"),
+    onSiteJobs: sorted.filter((job) => job.status === "arrived"),
     enRouteJobs: sorted.filter((job) => job.status === "dispatched"),
     upNextJobs: sorted.filter((job) => job.status === "scheduled"),
   };
@@ -109,7 +111,8 @@ export function TechnicianAssignedJobsView({
   jobs,
 }: TechnicianAssignedJobsViewProps) {
   const activeJobs = sortActiveJobs(jobs);
-  const { currentJobs, enRouteJobs, upNextJobs } = groupWorkQueue(jobs);
+  const { currentJobs, onSiteJobs, enRouteJobs, upNextJobs } =
+    groupWorkQueue(jobs);
 
   if (activeJobs.length === 0) {
     return (
@@ -140,6 +143,11 @@ export function TechnicianAssignedJobsView({
           label="Current Job"
           labelClassName="text-cyan-600"
           jobs={currentJobs}
+        />
+        <WorkQueueSection
+          label="On Site"
+          labelClassName="text-teal-600"
+          jobs={onSiteJobs}
         />
         <WorkQueueSection label="En Route" jobs={enRouteJobs} />
         <WorkQueueSection label="Up Next" jobs={upNextJobs} />

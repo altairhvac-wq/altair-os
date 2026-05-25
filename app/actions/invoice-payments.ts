@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { recordInvoicePayment } from "@/lib/database/queries/invoice-payments";
-import { recordInvoicePaymentActivity } from "@/lib/database/services/invoice-activity";
+import {
+  recordInvoicePaidActivity,
+  recordInvoicePaymentActivity,
+} from "@/lib/database/services/invoice-activity";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 import type {
   InvoicePayment,
@@ -41,19 +44,36 @@ export async function recordInvoicePaymentAction(
     return { error: error ?? "Failed to record payment." };
   }
 
-  await recordInvoicePaymentActivity({
+  const activityContext = {
     companyId: context.company.id,
     invoiceId,
     actorId: context.user.id,
+    paymentId: payment.id,
     amount: payment.amount,
+    invoiceNumber: invoice.invoiceNumber,
+    customerId: invoice.customerId,
+    jobId: invoice.jobId,
+    jobNumber: invoice.jobNumber,
+  };
+
+  await recordInvoicePaymentActivity({
+    ...activityContext,
     paymentMethod: payment.paymentMethod,
     reference: payment.reference,
     fromStatus: previousStatus,
     toStatus: invoice.status,
   });
 
+  if (invoice.status === "paid") {
+    await recordInvoicePaidActivity({
+      ...activityContext,
+      fromStatus: previousStatus,
+    });
+  }
+
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${invoiceId}`);
+  revalidatePath(`/customers/${invoice.customerId}`);
 
   return { payment, invoice };
 }

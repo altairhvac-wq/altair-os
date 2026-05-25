@@ -1,6 +1,7 @@
 import type {
   CompanyRole,
   CompanyStatus,
+  CustomerActivityType,
   CustomerStatus,
   DispatchAssignmentStatus,
   EstimateActivityType,
@@ -163,6 +164,26 @@ export type CustomerUpdate = Partial<
   Omit<CustomerRow, "id" | "company_id" | "created_at" | "updated_at">
 >;
 
+export type CustomerActivityRow = {
+  id: UUID;
+  company_id: UUID;
+  customer_id: UUID;
+  actor_id: UUID | null;
+  event_type: CustomerActivityType;
+  metadata: Json;
+  created_at: Timestamp;
+};
+
+export type CustomerActivityInsert = {
+  id?: UUID;
+  company_id: UUID;
+  customer_id: UUID;
+  actor_id?: UUID | null;
+  event_type: CustomerActivityType;
+  metadata?: Json;
+  created_at?: Timestamp;
+};
+
 export type JobRow = {
   id: UUID;
   company_id: UUID;
@@ -179,6 +200,11 @@ export type JobRow = {
   description: string | null;
   notes: string | null;
   assigned_technician_id: UUID | null;
+  arrived_at: Timestamp | null;
+  work_started_at: Timestamp | null;
+  completed_at: Timestamp | null;
+  completion_notes: string | null;
+  follow_up_notes: string | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -199,6 +225,11 @@ export type JobInsert = {
   description?: string | null;
   notes?: string | null;
   assigned_technician_id?: UUID | null;
+  arrived_at?: Timestamp | null;
+  work_started_at?: Timestamp | null;
+  completed_at?: Timestamp | null;
+  completion_notes?: string | null;
+  follow_up_notes?: string | null;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };

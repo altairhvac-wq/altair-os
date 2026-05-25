@@ -127,7 +127,7 @@ export function StartRouteButton({
       </button>
       {isEnRoute ? (
         <p className="text-xs text-slate-500">
-          You&apos;re en route. Start work when you arrive at the job site.
+          You&apos;re en route. Tap &quot;Arrived on site&quot; when you reach the job.
         </p>
       ) : null}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}

@@ -8,6 +8,8 @@ import type {
   CustomerInsert,
   CustomerRow,
   CustomerUpdate,
+  CustomerActivityInsert,
+  CustomerActivityRow,
   DispatchAssignmentInsert,
   DispatchAssignmentRow,
   DispatchAssignmentUpdate,
@@ -94,6 +96,34 @@ export type Database = {
             columns: ["company_id"];
             isOneToOne: false;
             referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      customer_activities: {
+        Row: CustomerActivityRow;
+        Insert: CustomerActivityInsert;
+        Update: Partial<CustomerActivityInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "customer_activities_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_activities_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_activities_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -414,6 +444,7 @@ export type Database = {
       membership_status: CompanyMembershipRow["status"];
       company_status: CompanyRow["status"];
       customer_status: CustomerRow["status"];
+      customer_activity_type: CustomerActivityRow["event_type"];
       job_status: JobRow["status"];
       job_priority: JobRow["priority"];
       dispatch_assignment_status: DispatchAssignmentRow["status"];

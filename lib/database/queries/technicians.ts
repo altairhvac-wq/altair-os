@@ -30,7 +30,11 @@ function deriveTechnicianStatus(
 ): Technician["status"] {
   const assignedJobs = jobs.filter((job) => job.technicianId === technicianId);
 
-  if (assignedJobs.some((job) => job.status === "in_progress")) {
+  if (
+    assignedJobs.some(
+      (job) => job.status === "in_progress" || job.status === "arrived",
+    )
+  ) {
     return "on_job";
   }
 

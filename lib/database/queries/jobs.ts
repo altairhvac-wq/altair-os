@@ -1,7 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
-import type { JobInsert, JobRow } from "@/lib/database/types/core-tables";
+import type { JobInsert, JobRow, JobUpdate } from "@/lib/database/types/core-tables";
 import type { Job, JobDetail, JobFormData, JobStatus } from "@/shared/types/job";
+import type {
+  JobWorkflowActionId,
+  JobWorkflowCompletionPayload,
+} from "@/shared/types/job-workflow";
 
 type ProfileSummary = {
   full_name: string | null;
@@ -79,6 +83,11 @@ export function mapJobRowToJob(row: JobRowWithTechnician): Job {
     priority: row.priority,
     description: row.description ?? undefined,
     notes: row.notes ?? undefined,
+    arrivedAt: row.arrived_at ?? undefined,
+    workStartedAt: row.work_started_at ?? undefined,
+    completedAt: row.completed_at ?? undefined,
+    completionNotes: row.completion_notes ?? undefined,
+    followUpNotes: row.follow_up_notes ?? undefined,
     createdAt: toDateOnly(row.created_at),
     ...technician,
   };
@@ -279,17 +288,45 @@ export async function createJob(
   };
 }
 
-export async function updateJobStatus(
+export async function updateJobWorkflowStatus(
   companyId: string,
   jobId: string,
   fromStatus: JobStatus,
   toStatus: JobStatus,
+  actionId: JobWorkflowActionId,
+  payload?: JobWorkflowCompletionPayload,
 ): Promise<{ job: Job | null; error: string | null }> {
   const supabase = await createClient();
+  const now = new Date().toISOString();
+
+  const updatePayload: JobUpdate = { status: toStatus };
+
+  switch (actionId) {
+    case "arrive":
+      updatePayload.arrived_at = now;
+      break;
+    case "start_work":
+      updatePayload.work_started_at = now;
+      break;
+    case "complete": {
+      updatePayload.completed_at = now;
+      const completionNotes = payload?.completionNotes?.trim();
+      const followUpNotes = payload?.followUpNotes?.trim();
+      if (completionNotes) {
+        updatePayload.completion_notes = completionNotes;
+      }
+      if (followUpNotes) {
+        updatePayload.follow_up_notes = followUpNotes;
+      }
+      break;
+    }
+    default:
+      break;
+  }
 
   const { data: row, error } = await supabase
     .from("jobs")
-    .update({ status: toStatus })
+    .update(updatePayload)
     .eq("company_id", companyId)
     .eq("id", jobId)
     .eq("status", fromStatus)
@@ -297,11 +334,12 @@ export async function updateJobStatus(
     .maybeSingle();
 
   if (error) {
-    console.error("[updateJobStatus] update failed:", {
+    console.error("[updateJobWorkflowStatus] update failed:", {
       companyId,
       jobId,
       fromStatus,
       toStatus,
+      actionId,
       code: error.code,
       message: error.message,
       details: error.details,

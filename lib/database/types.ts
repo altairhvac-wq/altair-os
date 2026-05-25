@@ -29,4 +29,5 @@ export {
   compareCompanyRoles,
   hasCompanyPermission,
   hasCompanyRole,
+  normalizeCompanyRole,
 } from "./types/index";

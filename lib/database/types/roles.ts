@@ -20,6 +20,23 @@ const ROLE_RANK: Record<CompanyRole, number> = {
   customer: 10,
 };
 
+const COMPANY_ROLES = new Set<string>(
+  Object.keys(COMPANY_ROLE_LABELS) as CompanyRole[],
+);
+
+export function normalizeCompanyRole(
+  role: string | null | undefined,
+): CompanyRole | null {
+  if (role == null) {
+    return null;
+  }
+
+  const raw = String(role).trim().toLowerCase();
+  const normalized = raw.includes(".") ? (raw.split(".").pop() ?? raw) : raw;
+
+  return COMPANY_ROLES.has(normalized) ? (normalized as CompanyRole) : null;
+}
+
 export const COMPANY_ROLE_PERMISSIONS = {
   manageCompany: ["owner", "admin"] as const satisfies readonly CompanyRole[],
   manageUsers: ["owner", "admin"] as const satisfies readonly CompanyRole[],
@@ -50,22 +67,39 @@ export const COMPANY_ROLE_PERMISSIONS = {
 export type CompanyPermission = keyof typeof COMPANY_ROLE_PERMISSIONS;
 
 export function hasCompanyRole(
-  role: CompanyRole,
+  role: CompanyRole | string | null | undefined,
   allowedRoles: readonly CompanyRole[],
 ): boolean {
-  return allowedRoles.includes(role);
+  const normalized = normalizeCompanyRole(role);
+  if (!normalized) {
+    return false;
+  }
+
+  return (allowedRoles as readonly string[]).includes(normalized);
 }
 
 export function hasCompanyPermission(
-  role: CompanyRole,
+  role: CompanyRole | string | null | undefined,
   permission: CompanyPermission,
 ): boolean {
-  return hasCompanyRole(role, COMPANY_ROLE_PERMISSIONS[permission]);
+  const normalized = normalizeCompanyRole(role);
+  if (!normalized) {
+    return false;
+  }
+
+  return (COMPANY_ROLE_PERMISSIONS[permission] as readonly string[]).includes(
+    normalized,
+  );
 }
 
 export function compareCompanyRoles(
-  role: CompanyRole,
+  role: CompanyRole | string | null | undefined,
   minimumRole: CompanyRole,
 ): boolean {
-  return ROLE_RANK[role] >= ROLE_RANK[minimumRole];
+  const normalized = normalizeCompanyRole(role);
+  if (!normalized) {
+    return false;
+  }
+
+  return ROLE_RANK[normalized] >= ROLE_RANK[minimumRole];
 }

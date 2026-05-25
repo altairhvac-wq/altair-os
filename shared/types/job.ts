@@ -1,6 +1,7 @@
 export type JobStatus =
   | "scheduled"
   | "dispatched"
+  | "arrived"
   | "in_progress"
   | "completed"
   | "cancelled";
@@ -24,6 +25,11 @@ export type Job = {
   priority: JobPriority;
   description?: string;
   notes?: string;
+  arrivedAt?: string;
+  workStartedAt?: string;
+  completedAt?: string;
+  completionNotes?: string;
+  followUpNotes?: string;
   createdAt: string;
 };
 
@@ -54,6 +60,7 @@ export const JOB_STATUS_OPTIONS: {
   { value: "all", label: "All statuses" },
   { value: "scheduled", label: "Scheduled" },
   { value: "dispatched", label: "En Route" },
+  { value: "arrived", label: "On Site" },
   { value: "in_progress", label: "In progress" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
@@ -84,6 +91,7 @@ export const JOB_TYPE_OPTIONS = [
 const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   scheduled: "Scheduled",
   dispatched: "En Route",
+  arrived: "On Site",
   in_progress: "In Progress",
   completed: "Completed",
   cancelled: "Cancelled",

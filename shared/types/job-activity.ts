@@ -6,10 +6,15 @@ export type JobActivityType =
   | "start_route"
   | "start_work"
   | "complete_job"
+  | "technician_arrived"
+  | "work_started"
+  | "work_completed"
   | "status_changed"
   | "job_cancelled";
 
 export type JobActivityMetadata = {
+  customer_id?: string;
+  job_id?: string;
   job_number?: string;
   from_status?: JobStatus;
   to_status?: JobStatus;
@@ -18,6 +23,8 @@ export type JobActivityMetadata = {
   technician_name?: string;
   previous_technician_id?: string;
   previous_technician_name?: string;
+  completion_notes?: string;
+  follow_up_notes?: string;
 };
 
 export type JobActivity = {
@@ -33,9 +40,12 @@ export type JobActivity = {
 const ACTIVITY_TYPE_LABELS: Record<JobActivityType, string> = {
   job_created: "Job created",
   technician_assigned: "Technician assigned",
-  start_route: "Start Route",
+  start_route: "En Route",
   start_work: "Start Work",
   complete_job: "Complete Job",
+  technician_arrived: "Arrived on site",
+  work_started: "Work started",
+  work_completed: "Work completed",
   status_changed: "Status changed",
   job_cancelled: "Job cancelled",
 };
@@ -60,23 +70,49 @@ export function formatJobActivityDetails(activity: JobActivity): string | null {
       }
       return null;
 
+    case "work_completed": {
+      const parts: string[] = [];
+      const statusLine = formatStatusTransition(
+        metadata.from_status,
+        metadata.to_status,
+      );
+      if (statusLine) {
+        parts.push(statusLine);
+      }
+      if (metadata.completion_notes?.trim()) {
+        parts.push(metadata.completion_notes.trim());
+      }
+      if (metadata.follow_up_notes?.trim()) {
+        parts.push(`Follow-up: ${metadata.follow_up_notes.trim()}`);
+      }
+      return parts.length > 0 ? parts.join(" · ") : null;
+    }
+
     case "job_cancelled":
     case "start_route":
     case "start_work":
     case "complete_job":
-    case "status_changed": {
-      if (metadata.from_status && metadata.to_status) {
-        return `${formatJobStatus(metadata.from_status)} → ${formatJobStatus(metadata.to_status)}`;
-      }
-      if (metadata.to_status) {
-        return formatJobStatus(metadata.to_status);
-      }
-      return null;
-    }
+    case "technician_arrived":
+    case "work_started":
+    case "status_changed":
+      return formatStatusTransition(metadata.from_status, metadata.to_status);
 
     default:
       return null;
   }
+}
+
+function formatStatusTransition(
+  fromStatus: JobStatus | undefined,
+  toStatus: JobStatus | undefined,
+): string | null {
+  if (fromStatus && toStatus) {
+    return `${formatJobStatus(fromStatus)} → ${formatJobStatus(toStatus)}`;
+  }
+  if (toStatus) {
+    return formatJobStatus(toStatus);
+  }
+  return null;
 }
 
 export function formatJobActivityTimestamp(isoDate: string): string {

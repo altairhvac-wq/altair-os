@@ -23,7 +23,7 @@ export {
   listJobsByCustomer,
   mapJobFormDataToInsert,
   mapJobRowToJob,
-  updateJobStatus,
+  updateJobWorkflowStatus,
 } from "./jobs";
 export {
   listTechnicians,
@@ -51,6 +51,14 @@ export {
   listEstimateActivitiesForEstimate,
   recordEstimateActivity,
 } from "./estimate-activities";
+export {
+  listCustomerActivitiesForCustomer,
+  recordCustomerActivity,
+} from "./customer-activities";
+export {
+  listOperationalActivitiesForCustomer,
+  listOperationalActivitiesForJob,
+} from "./operational-activities";
 export {
   convertEstimateToInvoice,
   createInvoice,

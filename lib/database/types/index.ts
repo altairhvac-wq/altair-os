@@ -38,5 +38,6 @@ export {
   compareCompanyRoles,
   hasCompanyPermission,
   hasCompanyRole,
+  normalizeCompanyRole,
 } from "./roles";
 export type { CompanyPermission } from "./roles";

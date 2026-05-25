@@ -9,6 +9,7 @@ import type {
 import {
   COMPANY_ROLE_PERMISSIONS,
   hasCompanyPermission,
+  normalizeCompanyRole,
   type CompanyPermission,
 } from "@/lib/database/types/roles";
 
@@ -35,14 +36,25 @@ function toActiveCompanyContext(
   profile: ProfileRow,
   membership: CompanyMembershipRow,
   company: CompanyRow,
-): ActiveCompanyContext {
+): ActiveCompanyContext | null {
+  const role = normalizeCompanyRole(membership.role);
+
+  if (!role) {
+    console.error("[getActiveCompanyContext] unrecognized membership role:", {
+      userId: user.id,
+      companyId: company.id,
+      role: membership.role,
+    });
+    return null;
+  }
+
   return {
     user,
     profile,
-    membership,
+    membership: { ...membership, role },
     company,
-    role: membership.role,
-    permissions: buildPermissions(membership.role),
+    role,
+    permissions: buildPermissions(role),
   };
 }
 

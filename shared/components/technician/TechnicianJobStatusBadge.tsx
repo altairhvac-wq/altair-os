@@ -11,6 +11,7 @@ type TechnicianJobStatusBadgeProps = {
 const statusStyles: Record<DispatchJobStatus, string> = {
   scheduled: "bg-blue-50 text-blue-700 ring-blue-600/20",
   dispatched: "bg-violet-50 text-violet-700 ring-violet-600/20",
+  arrived: "bg-teal-50 text-teal-700 ring-teal-600/20",
   in_progress: "bg-amber-50 text-amber-700 ring-amber-600/20",
   completed: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
   cancelled: "bg-slate-100 text-slate-600 ring-slate-500/20",

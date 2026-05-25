@@ -11,16 +11,19 @@ export type InvoiceActivityType =
   | "invoice_converted_from_estimate"
   | "invoice_voided"
   | "invoice_cancelled"
-  | "payment_recorded";
+  | "payment_recorded"
+  | "invoice_paid";
 
 export type InvoiceActivityMetadata = {
   invoice_number?: string;
   from_status?: InvoiceStatus;
   to_status?: InvoiceStatus;
+  customer_id?: string;
   estimate_id?: string;
   estimate_number?: string;
   job_id?: string;
   job_number?: string;
+  payment_id?: string;
   amount?: number;
   payment_method?: PaymentMethod;
   reference?: string;
@@ -44,6 +47,7 @@ const ACTIVITY_TYPE_LABELS: Record<InvoiceActivityType, string> = {
   invoice_voided: "Invoice voided",
   invoice_cancelled: "Invoice cancelled",
   payment_recorded: "Payment recorded",
+  invoice_paid: "Invoice paid",
 };
 
 export function formatInvoiceActivityLabel(activity: InvoiceActivity): string {
@@ -103,6 +107,22 @@ export function formatInvoiceActivityDetails(
         );
       }
       return parts.length > 0 ? parts.join(" · ") : null;
+    }
+
+    case "invoice_paid": {
+      if (typeof metadata.amount === "number") {
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        }).format(metadata.amount);
+      }
+      if (metadata.invoice_number) {
+        return `Invoice ${metadata.invoice_number}`;
+      }
+      if (metadata.from_status && metadata.to_status) {
+        return `${formatInvoiceStatus(metadata.from_status)} → ${formatInvoiceStatus(metadata.to_status)}`;
+      }
+      return null;
     }
 
     default:

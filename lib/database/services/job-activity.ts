@@ -27,6 +27,7 @@ export async function recordJobCreatedActivity(input: {
   jobId: string;
   actorId: string;
   jobNumber: string;
+  customerId?: string;
 }): Promise<void> {
   const { error } = await recordJobActivity({
     company_id: input.companyId,
@@ -35,6 +36,8 @@ export async function recordJobCreatedActivity(input: {
     event_type: "job_created",
     metadata: {
       job_number: input.jobNumber,
+      customer_id: input.customerId,
+      job_id: input.jobId,
     },
   });
 
@@ -52,6 +55,8 @@ export async function recordTechnicianAssignedActivity(input: {
   actorId: string;
   technicianId: string;
   previousTechnicianId?: string | null;
+  customerId?: string;
+  jobNumber?: string;
 }): Promise<void> {
   const [technicianName, previousTechnicianName] = await Promise.all([
     getProfileName(input.technicianId),
@@ -66,6 +71,9 @@ export async function recordTechnicianAssignedActivity(input: {
     actor_id: input.actorId,
     event_type: "technician_assigned",
     metadata: {
+      customer_id: input.customerId,
+      job_id: input.jobId,
+      job_number: input.jobNumber,
       technician_id: input.technicianId,
       technician_name: technicianName,
       previous_technician_id: input.previousTechnicianId ?? undefined,
@@ -88,6 +96,10 @@ export async function recordJobStatusChangedActivity(input: {
   actionId: JobWorkflowActionId;
   fromStatus: JobStatus;
   toStatus: JobStatus;
+  customerId?: string;
+  jobNumber?: string;
+  completionNotes?: string;
+  followUpNotes?: string;
 }): Promise<void> {
   const { error } = await recordJobActivity({
     company_id: input.companyId,
@@ -95,9 +107,14 @@ export async function recordJobStatusChangedActivity(input: {
     actor_id: input.actorId,
     event_type: resolveStatusChangeEventType(input.actionId),
     metadata: {
+      customer_id: input.customerId,
+      job_id: input.jobId,
+      job_number: input.jobNumber,
       from_status: input.fromStatus,
       to_status: input.toStatus,
       action_id: input.actionId,
+      completion_notes: input.completionNotes?.trim() || undefined,
+      follow_up_notes: input.followUpNotes?.trim() || undefined,
     },
   });
 

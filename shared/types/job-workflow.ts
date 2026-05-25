@@ -2,6 +2,7 @@ import type { JobStatus } from "@/shared/types/job";
 
 export type JobWorkflowActionId =
   | "dispatch"
+  | "arrive"
   | "start_work"
   | "complete"
   | "cancel";
@@ -11,6 +12,11 @@ export type JobWorkflowAction = {
   label: string;
   targetStatus: JobStatus;
   variant: "primary" | "danger";
+};
+
+export type JobWorkflowCompletionPayload = {
+  completionNotes?: string;
+  followUpNotes?: string;
 };
 
 const WORKFLOW_ACTIONS: Record<JobStatus, JobWorkflowAction[]> = {
@@ -30,8 +36,22 @@ const WORKFLOW_ACTIONS: Record<JobStatus, JobWorkflowAction[]> = {
   ],
   dispatched: [
     {
+      id: "arrive",
+      label: "Arrived on site",
+      targetStatus: "arrived",
+      variant: "primary",
+    },
+    {
+      id: "cancel",
+      label: "Cancel Job",
+      targetStatus: "cancelled",
+      variant: "danger",
+    },
+  ],
+  arrived: [
+    {
       id: "start_work",
-      label: "Start Work",
+      label: "Start work",
       targetStatus: "in_progress",
       variant: "primary",
     },
@@ -45,7 +65,7 @@ const WORKFLOW_ACTIONS: Record<JobStatus, JobWorkflowAction[]> = {
   in_progress: [
     {
       id: "complete",
-      label: "Complete Job",
+      label: "Complete work",
       targetStatus: "completed",
       variant: "primary",
     },
@@ -73,6 +93,16 @@ export function getDisplayWorkflowActions(
 ): JobWorkflowAction[] {
   return WORKFLOW_ACTIONS[status].filter(
     (action) => !DISPLAY_EXCLUDED_ACTION_IDS.has(action.id),
+  );
+}
+
+export function getPrimaryWorkflowAction(
+  status: JobStatus,
+): JobWorkflowAction | null {
+  return (
+    getDisplayWorkflowActions(status).find(
+      (action) => action.variant === "primary",
+    ) ?? null
   );
 }
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { createCustomer } from "@/lib/database/queries/customers";
+import { recordCustomerCreatedActivity } from "@/lib/database/services/customer-activity";
 import type { Customer, CustomerFormData } from "@/shared/types/customer";
 
 export type CreateCustomerActionResult = {
@@ -28,6 +29,14 @@ export async function createCustomerAction(
   if (error || !customer) {
     return { error: error ?? "Failed to create customer." };
   }
+
+  await recordCustomerCreatedActivity({
+    companyId: context.company.id,
+    customerId: customer.id,
+    actorId: context.user.id,
+    customerName: customer.name,
+    status: customer.status,
+  });
 
   revalidatePath("/customers");
   return { customer };

@@ -11,6 +11,7 @@ export type EstimateActivityType =
 
 export type EstimateActivityMetadata = {
   estimate_number?: string;
+  customer_id?: string;
   from_status?: EstimateStatus;
   to_status?: EstimateStatus;
   job_id?: string;

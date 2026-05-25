@@ -1,21 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {
-  JobActivityInsert,
-  JobActivityRow,
+  CustomerActivityInsert,
+  CustomerActivityRow,
 } from "@/lib/database/types/core-tables";
-import type { JobActivityType } from "@/lib/database/types/enums";
 import type {
-  JobActivity,
-  JobActivityMetadata,
-} from "@/shared/types/job-activity";
+  CustomerActivity,
+  CustomerActivityMetadata,
+} from "@/shared/types/customer-activity";
 
 type ProfileSummary = {
   full_name: string | null;
   email: string;
 };
 
-type JobActivityRowWithActor = JobActivityRow & {
+type CustomerActivityRowWithActor = CustomerActivityRow & {
   actor: ProfileSummary | null;
 };
 
@@ -29,18 +28,22 @@ function formatProfileName(
   return profile.full_name?.trim() || profile.email;
 }
 
-function mapMetadata(value: JobActivityRow["metadata"]): JobActivityMetadata {
+function mapMetadata(
+  value: CustomerActivityRow["metadata"],
+): CustomerActivityMetadata {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return {};
   }
 
-  return value as JobActivityMetadata;
+  return value as CustomerActivityMetadata;
 }
 
-function mapJobActivityRow(row: JobActivityRowWithActor): JobActivity {
+function mapCustomerActivityRow(
+  row: CustomerActivityRowWithActor,
+): CustomerActivity {
   return {
     id: row.id,
-    jobId: row.job_id,
+    customerId: row.customer_id,
     eventType: row.event_type,
     metadata: mapMetadata(row.metadata),
     actorId: row.actor_id ?? undefined,
@@ -49,23 +52,23 @@ function mapJobActivityRow(row: JobActivityRowWithActor): JobActivity {
   };
 }
 
-export async function recordJobActivity(
-  input: JobActivityInsert,
+export async function recordCustomerActivity(
+  input: CustomerActivityInsert,
 ): Promise<{ error: string | null }> {
   const supabase = await createClient();
 
-  const { error } = await supabase.from("job_activities").insert({
+  const { error } = await supabase.from("customer_activities").insert({
     company_id: input.company_id,
-    job_id: input.job_id,
+    customer_id: input.customer_id,
     actor_id: input.actor_id ?? null,
     event_type: input.event_type,
     metadata: input.metadata ?? {},
   });
 
   if (error) {
-    console.error("[recordJobActivity] insert failed:", {
+    console.error("[recordCustomerActivity] insert failed:", {
       companyId: input.company_id,
-      jobId: input.job_id,
+      customerId: input.customer_id,
       eventType: input.event_type,
       code: error.code,
       message: error.message,
@@ -76,52 +79,35 @@ export async function recordJobActivity(
   return { error: null };
 }
 
-export async function listJobActivitiesForJob(
+export async function listCustomerActivitiesForCustomer(
   companyId: string,
-  jobId: string,
-): Promise<JobActivity[]> {
+  customerId: string,
+): Promise<CustomerActivity[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from("job_activities")
+    .from("customer_activities")
     .select(
       `
       *,
-      actor:profiles!job_activities_actor_id_fkey(full_name, email)
+      actor:profiles!customer_activities_actor_id_fkey(full_name, email)
     `,
     )
     .eq("company_id", companyId)
-    .eq("job_id", jobId)
+    .eq("customer_id", customerId)
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("[listJobActivitiesForJob] query failed:", {
+    console.error("[listCustomerActivitiesForCustomer] query failed:", {
       companyId,
-      jobId,
+      customerId,
       code: error.code,
       message: error.message,
     });
     return [];
   }
 
-  return ((data ?? []) as JobActivityRowWithActor[]).map(mapJobActivityRow);
-}
-
-export function resolveStatusChangeEventType(
-  actionId: string,
-): JobActivityType {
-  switch (actionId) {
-    case "dispatch":
-      return "start_route";
-    case "arrive":
-      return "technician_arrived";
-    case "start_work":
-      return "work_started";
-    case "complete":
-      return "work_completed";
-    case "cancel":
-      return "job_cancelled";
-    default:
-      return "status_changed";
-  }
+  return ((data ?? []) as CustomerActivityRowWithActor[]).map(
+    mapCustomerActivityRow,
+  );
 }

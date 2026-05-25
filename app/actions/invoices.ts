@@ -6,10 +6,12 @@ import {
   convertEstimateToInvoice,
   createInvoice,
   getInvoiceById,
+  updateInvoiceStatus,
 } from "@/lib/database/queries/invoices";
 import {
   recordInvoiceConvertedFromEstimateActivity,
   recordInvoiceCreatedActivity,
+  recordInvoiceStatusChangedActivity,
 } from "@/lib/database/services/invoice-activity";
 import { recordEstimateStatusChangedActivity } from "@/lib/database/services/estimate-activity";
 import type { InvoiceDetail, InvoiceFormData } from "@/shared/types/invoice";
@@ -43,6 +45,9 @@ export async function createInvoiceAction(
     invoiceId: invoice.id,
     actorId: context.user.id,
     invoiceNumber: invoice.invoiceNumber,
+    customerId: invoice.customerId,
+    jobId: invoice.jobId,
+    jobNumber: invoice.jobNumber,
   });
 
   revalidatePath("/invoices");
@@ -77,12 +82,6 @@ export async function convertEstimateToInvoiceAction(
   }
 
   await Promise.all([
-    recordInvoiceCreatedActivity({
-      companyId: context.company.id,
-      invoiceId: invoice.id,
-      actorId: context.user.id,
-      invoiceNumber: invoice.invoiceNumber,
-    }),
     recordInvoiceConvertedFromEstimateActivity({
       companyId: context.company.id,
       invoiceId: invoice.id,
@@ -90,6 +89,9 @@ export async function convertEstimateToInvoiceAction(
       invoiceNumber: invoice.invoiceNumber,
       estimateId,
       estimateNumber: invoice.estimateNumber ?? "",
+      customerId: invoice.customerId,
+      jobId: invoice.jobId,
+      jobNumber: invoice.jobNumber,
     }),
     recordEstimateStatusChangedActivity({
       companyId: context.company.id,
@@ -97,10 +99,12 @@ export async function convertEstimateToInvoiceAction(
       actorId: context.user.id,
       fromStatus: "approved",
       toStatus: "converted",
+      customerId: invoice.customerId,
       jobId: invoice.jobId,
       jobNumber: invoice.jobNumber,
       invoiceId: invoice.id,
       invoiceNumber: invoice.invoiceNumber,
+      estimateNumber: invoice.estimateNumber,
     }),
   ]);
 
@@ -108,6 +112,66 @@ export async function convertEstimateToInvoiceAction(
   revalidatePath("/estimates");
   revalidatePath(`/estimates/${estimateId}`);
   revalidatePath(`/invoices/${invoice.id}`);
+
+  return { invoice };
+}
+
+export type SendInvoiceActionResult = {
+  error?: string;
+  invoice?: InvoiceDetail;
+};
+
+export async function sendInvoiceAction(
+  invoiceId: string,
+): Promise<SendInvoiceActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." };
+  }
+
+  if (!context.permissions.manageBilling) {
+    return { error: "You do not have permission to send invoices." };
+  }
+
+  const currentInvoice = await getInvoiceById(context.company.id, invoiceId);
+
+  if (!currentInvoice) {
+    return { error: "Invoice not found." };
+  }
+
+  if (currentInvoice.status !== "draft") {
+    return {
+      error: "Only draft invoices can be sent. Refresh the page and try again.",
+    };
+  }
+
+  const { invoice, error } = await updateInvoiceStatus(
+    context.company.id,
+    invoiceId,
+    "draft",
+    "sent",
+  );
+
+  if (error || !invoice) {
+    return { error: error ?? "Failed to send invoice." };
+  }
+
+  await recordInvoiceStatusChangedActivity({
+    companyId: context.company.id,
+    invoiceId,
+    actorId: context.user.id,
+    fromStatus: "draft",
+    toStatus: "sent",
+    invoiceNumber: invoice.invoiceNumber,
+    customerId: invoice.customerId,
+    jobId: invoice.jobId,
+    jobNumber: invoice.jobNumber,
+  });
+
+  revalidatePath("/invoices");
+  revalidatePath(`/invoices/${invoiceId}`);
+  revalidatePath(`/customers/${invoice.customerId}`);
 
   return { invoice };
 }

@@ -14,22 +14,22 @@ import {
 } from "lucide-react";
 import { getCustomerInitials } from "@/shared/types/customer";
 import type { Technician } from "@/shared/types/dispatch";
-import { JobActivityTimeline } from "./JobActivityTimeline";
 import { JobDetailHeaderWorkflow } from "./JobDetailHeaderWorkflow";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
 import { JobTechnicianAssignment } from "./JobTechnicianAssignment";
+import { OperationalActivityTimeline } from "@/shared/components/operational/OperationalActivityTimeline";
 import {
   formatScheduledDate,
   formatScheduledTime,
   type JobDetail,
 } from "@/shared/types/job";
-import type { JobActivity } from "@/shared/types/job-activity";
+import type { OperationalActivity } from "@/shared/types/operational-activity";
 
 type JobDetailPageViewProps = {
   job: JobDetail;
   technicians: Technician[];
-  activities: JobActivity[];
+  activities: OperationalActivity[];
   canUpdateStatus: boolean;
   canAssignTechnician: boolean;
 };
@@ -256,7 +256,11 @@ export function JobDetailPageView({
         </ContentSection>
       </div>
 
-      <JobActivityTimeline activities={activities} />
+      <OperationalActivityTimeline
+        activities={activities}
+        description="Job workflow, estimates, and billing events"
+        emptyDescription="Status changes, assignments, estimates, and invoices will appear here."
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {placeholderSections.map((section) => {

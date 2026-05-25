@@ -421,6 +421,50 @@ export async function getInvoiceById(
   });
 }
 
+export async function updateInvoiceStatus(
+  companyId: string,
+  invoiceId: string,
+  fromStatus: InvoiceStatus,
+  toStatus: InvoiceStatus,
+): Promise<{ invoice: InvoiceDetail | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("invoices")
+    .update({ status: toStatus })
+    .eq("company_id", companyId)
+    .eq("id", invoiceId)
+    .eq("status", fromStatus)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[updateInvoiceStatus] update failed:", {
+      companyId,
+      invoiceId,
+      fromStatus,
+      toStatus,
+      code: error.code,
+      message: error.message,
+    });
+    return { invoice: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return {
+      invoice: null,
+      error: "Invoice status has changed. Refresh the page and try again.",
+    };
+  }
+
+  const invoice = await getInvoiceById(companyId, invoiceId);
+
+  return {
+    invoice,
+    error: invoice ? null : "Failed to load updated invoice.",
+  };
+}
+
 export async function getInvoiceByEstimateId(
   companyId: string,
   estimateId: string,

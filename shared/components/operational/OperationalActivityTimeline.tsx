@@ -3,53 +3,80 @@ import {
   Ban,
   CheckCircle2,
   ClipboardList,
+  DollarSign,
   History,
-  MapPin,
   Navigation,
   Play,
+  Receipt,
+  Send,
   User,
+  UserPlus,
 } from "lucide-react";
-import type { JobActivity, JobActivityType } from "@/shared/types/job-activity";
+import type {
+  OperationalActivity,
+  OperationalActivityEventType,
+} from "@/shared/types/operational-activity";
 import {
-  formatJobActivityDetails,
-  formatJobActivityLabel,
-  formatJobActivityTimestamp,
-} from "@/shared/types/job-activity";
+  formatOperationalActivityDetails,
+  formatOperationalActivityLabel,
+  formatOperationalActivityTimestamp,
+} from "@/shared/types/operational-activity";
 
-type JobActivityTimelineProps = {
-  activities: JobActivity[];
+type OperationalActivityTimelineProps = {
+  activities: OperationalActivity[];
+  title?: string;
+  description?: string;
+  emptyTitle?: string;
+  emptyDescription?: string;
 };
 
 const ACTIVITY_ICONS: Record<
-  JobActivityType,
+  OperationalActivityEventType,
   typeof History
 > = {
+  customer_created: UserPlus,
   job_created: ClipboardList,
+  job_status_changed: ArrowRightLeft,
   technician_assigned: User,
+  estimate_created: ClipboardList,
+  estimate_approved: CheckCircle2,
+  estimate_converted_to_invoice: Receipt,
+  invoice_created: Receipt,
+  invoice_sent: Send,
+  payment_recorded: DollarSign,
+  invoice_paid: CheckCircle2,
+  status_changed: ArrowRightLeft,
+};
+
+const ACTIVITY_ICON_STYLES: Record<OperationalActivityEventType, string> = {
+  customer_created: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
+  job_created: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
+  job_status_changed: "bg-slate-100 text-slate-600 ring-slate-500/15",
+  technician_assigned: "bg-violet-50 text-violet-700 ring-violet-600/15",
+  estimate_created: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
+  estimate_approved: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
+  estimate_converted_to_invoice: "bg-violet-50 text-violet-700 ring-violet-600/15",
+  invoice_created: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
+  invoice_sent: "bg-blue-50 text-blue-700 ring-blue-600/15",
+  payment_recorded: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
+  invoice_paid: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
+  status_changed: "bg-slate-100 text-slate-600 ring-slate-500/15",
+};
+
+const WORKFLOW_ICON_OVERRIDES: Record<string, typeof History> = {
   start_route: Navigation,
   start_work: Play,
   complete_job: CheckCircle2,
-  technician_arrived: MapPin,
-  work_started: Play,
-  work_completed: CheckCircle2,
-  status_changed: ArrowRightLeft,
   job_cancelled: Ban,
 };
 
-const ACTIVITY_ICON_STYLES: Record<JobActivityType, string> = {
-  job_created: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
-  technician_assigned: "bg-violet-50 text-violet-700 ring-violet-600/15",
-  start_route: "bg-blue-50 text-blue-700 ring-blue-600/15",
-  start_work: "bg-amber-50 text-amber-700 ring-amber-600/15",
-  complete_job: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
-  technician_arrived: "bg-teal-50 text-teal-700 ring-teal-600/15",
-  work_started: "bg-amber-50 text-amber-700 ring-amber-600/15",
-  work_completed: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
-  status_changed: "bg-slate-100 text-slate-600 ring-slate-500/15",
-  job_cancelled: "bg-red-50 text-red-700 ring-red-600/15",
-};
-
-export function JobActivityTimeline({ activities }: JobActivityTimelineProps) {
+export function OperationalActivityTimeline({
+  activities,
+  title = "Activity",
+  description = "Operational timeline",
+  emptyTitle = "No activity yet",
+  emptyDescription = "Workflow events will appear here as work progresses.",
+}: OperationalActivityTimelineProps) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-center gap-2.5">
@@ -58,26 +85,24 @@ export function JobActivityTimeline({ activities }: JobActivityTimelineProps) {
         </div>
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Activity
+            {title}
           </h2>
-          <p className="text-sm text-slate-600">
-            Operational timeline for this job
-          </p>
+          <p className="text-sm text-slate-600">{description}</p>
         </div>
       </div>
 
       {activities.length === 0 ? (
         <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center">
-          <p className="text-sm font-medium text-slate-700">No activity yet</p>
-          <p className="mt-1 text-xs text-slate-500">
-            Status changes, assignments, and workflow actions will appear here.
-          </p>
+          <p className="text-sm font-medium text-slate-700">{emptyTitle}</p>
+          <p className="mt-1 text-xs text-slate-500">{emptyDescription}</p>
         </div>
       ) : (
         <ol className="mt-5 space-y-0">
           {activities.map((activity, index) => {
-            const Icon = ACTIVITY_ICONS[activity.eventType];
-            const details = formatJobActivityDetails(activity);
+            const Icon =
+              WORKFLOW_ICON_OVERRIDES[activity.rawEventType] ??
+              ACTIVITY_ICONS[activity.eventType];
+            const details = formatOperationalActivityDetails(activity);
             const isLast = index === activities.length - 1;
 
             return (
@@ -98,13 +123,13 @@ export function JobActivityTimeline({ activities }: JobActivityTimelineProps) {
                 <div className="min-w-0 flex-1 pt-0.5">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <p className="text-sm font-semibold text-slate-900">
-                      {formatJobActivityLabel(activity)}
+                      {formatOperationalActivityLabel(activity)}
                     </p>
                     <time
                       dateTime={activity.createdAt}
                       className="shrink-0 text-xs text-slate-400"
                     >
-                      {formatJobActivityTimestamp(activity.createdAt)}
+                      {formatOperationalActivityTimestamp(activity.createdAt)}
                     </time>
                   </div>
 

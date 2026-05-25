@@ -5,7 +5,7 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
   createJob,
   getJobById,
-  updateJobStatus,
+  updateJobWorkflowStatus,
 } from "@/lib/database/queries/jobs";
 import {
   recordJobCreatedActivity,
@@ -15,6 +15,7 @@ import type { Job, JobFormData, JobStatus } from "@/shared/types/job";
 import {
   getTargetStatusForAction,
   type JobWorkflowActionId,
+  type JobWorkflowCompletionPayload,
 } from "@/shared/types/job-workflow";
 
 export type CreateJobActionResult = {
@@ -46,6 +47,7 @@ export async function createJobAction(
     jobId: job.id,
     actorId: context.user.id,
     jobNumber: job.jobNumber,
+    customerId: job.customerId,
   });
 
   revalidatePath("/jobs");
@@ -61,6 +63,7 @@ export async function updateJobStatusAction(
   jobId: string,
   actionId: JobWorkflowActionId,
   currentStatus: JobStatus,
+  payload?: JobWorkflowCompletionPayload,
 ): Promise<UpdateJobStatusActionResult> {
   const context = await getActiveCompanyContext();
 
@@ -72,6 +75,7 @@ export async function updateJobStatusAction(
   const canViewAssigned = context.permissions.viewAssignedJobs;
   const technicianAllowedActions: JobWorkflowActionId[] = [
     "dispatch",
+    "arrive",
     "start_work",
     "complete",
   ];
@@ -109,11 +113,13 @@ export async function updateJobStatusAction(
     nextStatus,
   });
 
-  const { job, error } = await updateJobStatus(
+  const { job, error } = await updateJobWorkflowStatus(
     context.company.id,
     jobId,
     currentStatus,
     nextStatus,
+    actionId,
+    payload,
   );
 
   if (error || !job) {
@@ -127,6 +133,10 @@ export async function updateJobStatusAction(
     actionId,
     fromStatus: currentStatus,
     toStatus: nextStatus,
+    customerId: job.customerId,
+    jobNumber: job.jobNumber,
+    completionNotes: payload?.completionNotes,
+    followUpNotes: payload?.followUpNotes,
   });
 
   revalidatePath("/jobs");
