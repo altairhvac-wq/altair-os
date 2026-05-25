@@ -1,0 +1,280 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { Plus } from "lucide-react";
+import {
+  mockActiveSession,
+  mockTimeEntries,
+} from "@/shared/data/mock-time-entries";
+import {
+  calculateHours,
+  formatTimeEntryStatus,
+  type ActiveTechnicianSession,
+  type TimeEntry,
+  type TimeEntryFormData,
+  type TimeEntryStatus,
+} from "@/shared/types/time-entry";
+import { TimeClockEmptyState } from "./TimeClockEmptyState";
+import { TimeClockLoadingState } from "./TimeClockLoadingState";
+import { TimeClockWidget } from "./TimeClockWidget";
+import { TimeEntriesTable } from "./TimeEntriesTable";
+import { TimeEntryDetailsPanel } from "./TimeEntryDetailsPanel";
+import { TimeSearchFilterBar } from "./TimeSearchFilterBar";
+import { WeeklySummaryCards } from "./WeeklySummaryCards";
+
+type PanelMode = "detail" | "create" | "edit" | "empty";
+
+function filterEntries(
+  entries: TimeEntry[],
+  search: string,
+  statusFilter: TimeEntryStatus | "all",
+): TimeEntry[] {
+  const query = search.trim().toLowerCase();
+
+  return entries.filter((entry) => {
+    const matchesStatus =
+      statusFilter === "all" || entry.status === statusFilter;
+    if (!matchesStatus) return false;
+    if (!query) return true;
+
+    const haystack = [
+      entry.entryNumber,
+      entry.technician,
+      entry.jobNumber ?? "",
+      entry.customerName ?? "",
+      formatTimeEntryStatus(entry.status),
+      entry.status,
+      entry.notes ?? "",
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(query);
+  });
+}
+
+function datetimeLocalToIso(value: string): string {
+  return new Date(value).toISOString();
+}
+
+function formDataToEntry(
+  data: TimeEntryFormData,
+  existingCount: number,
+  existing?: TimeEntry,
+): TimeEntry {
+  const today = new Date().toISOString().split("T")[0];
+  const clockInAt = datetimeLocalToIso(data.clockInAt);
+  const clockOutAt = data.clockOutAt
+    ? datetimeLocalToIso(data.clockOutAt)
+    : undefined;
+  const totalHours =
+    clockOutAt != null ? calculateHours(clockInAt, clockOutAt) : undefined;
+  const isActive = !clockOutAt;
+
+  return {
+    id: existing?.id ?? `time-${Date.now()}`,
+    entryNumber: existing?.entryNumber ?? `TIME-${2001 + existingCount}`,
+    technician: data.technician,
+    clockInAt,
+    clockOutAt,
+    totalHours,
+    jobNumber: data.jobNumber || undefined,
+    customerName: data.customerName || undefined,
+    isOvertime: data.isOvertime,
+    status: isActive ? "active" : data.status,
+    notes: data.notes || undefined,
+    createdAt: existing?.createdAt ?? today,
+  };
+}
+
+export function TimeClockPageView() {
+  const [entries, setEntries] = useState<TimeEntry[]>([]);
+  const [activeSession, setActiveSession] =
+    useState<ActiveTechnicianSession | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<TimeEntryStatus | "all">(
+    "all",
+  );
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [panelMode, setPanelMode] = useState<PanelMode>("empty");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setEntries(mockTimeEntries);
+      setActiveSession(mockActiveSession);
+      setIsLoading(false);
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const filteredEntries = useMemo(
+    () => filterEntries(entries, search, statusFilter),
+    [entries, search, statusFilter],
+  );
+
+  const selectedEntry = entries.find((entry) => entry.id === selectedId) ?? null;
+
+  function handleSelectEntry(entry: TimeEntry) {
+    setSelectedId(entry.id);
+    setPanelMode("detail");
+  }
+
+  function handleNewEntry() {
+    setSelectedId(null);
+    setPanelMode("create");
+  }
+
+  function handleClosePanel() {
+    setSelectedId(null);
+    setPanelMode("empty");
+  }
+
+  function handleCreateSubmit(data: TimeEntryFormData) {
+    const newEntry = formDataToEntry(data, entries.length);
+    setEntries((prev) => [newEntry, ...prev]);
+    setSelectedId(newEntry.id);
+    setPanelMode("detail");
+  }
+
+  function handleEditSubmit(data: TimeEntryFormData) {
+    if (!selectedEntry) return;
+    const updated = formDataToEntry(data, entries.length, selectedEntry);
+    setEntries((prev) =>
+      prev.map((entry) => (entry.id === selectedEntry.id ? updated : entry)),
+    );
+    setPanelMode("detail");
+  }
+
+  function handleClockIn() {
+    if (activeSession) return;
+
+    const now = new Date().toISOString();
+    const session: ActiveTechnicianSession = {
+      technician: "Lisa Park",
+      clockInAt: now,
+      jobNumber: "JOB-1044",
+      customerName: "Greenfield Property Group",
+    };
+
+    const newEntry: TimeEntry = {
+      id: `time-${Date.now()}`,
+      entryNumber: `TIME-${2001 + entries.length}`,
+      technician: session.technician,
+      clockInAt: now,
+      jobNumber: session.jobNumber,
+      customerName: session.customerName,
+      isOvertime: false,
+      status: "active",
+      notes: "Clocked in from time clock widget.",
+      createdAt: now.split("T")[0],
+    };
+
+    setActiveSession(session);
+    setEntries((prev) => [newEntry, ...prev]);
+  }
+
+  function handleClockOut() {
+    if (!activeSession) return;
+
+    const now = new Date().toISOString();
+    const totalHours = calculateHours(activeSession.clockInAt, now);
+
+    setEntries((prev) =>
+      prev.map((entry) =>
+        entry.status === "active" &&
+        entry.technician === activeSession.technician
+          ? {
+              ...entry,
+              clockOutAt: now,
+              totalHours,
+              status: "pending",
+            }
+          : entry,
+      ),
+    );
+    setActiveSession(null);
+  }
+
+  if (isLoading) {
+    return <TimeClockLoadingState />;
+  }
+
+  const hasNoEntries = entries.length === 0;
+  const hasNoResults = !hasNoEntries && filteredEntries.length === 0;
+
+  return (
+    <div className="flex h-[calc(100vh-7rem)] flex-col gap-4 overflow-hidden">
+      <WeeklySummaryCards entries={entries} />
+
+      <TimeClockWidget
+        activeSession={activeSession}
+        onClockIn={handleClockIn}
+        onClockOut={handleClockOut}
+      />
+
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
+        <section className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1">
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">
+                All time entries
+              </h2>
+              <p className="text-xs text-slate-500">
+                Field hours, job links, and approval workflow
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleNewEntry}
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700"
+            >
+              <Plus className="h-4 w-4" />
+              Manual Entry
+            </button>
+          </div>
+
+          {!hasNoEntries ? (
+            <div className="shrink-0">
+              <TimeSearchFilterBar
+                search={search}
+                statusFilter={statusFilter}
+                onSearchChange={setSearch}
+                onStatusFilterChange={setStatusFilter}
+                resultCount={filteredEntries.length}
+              />
+            </div>
+          ) : null}
+
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {hasNoEntries ? (
+              <TimeClockEmptyState
+                variant="no-entries"
+                onCreateEntry={handleNewEntry}
+              />
+            ) : hasNoResults ? (
+              <TimeClockEmptyState variant="no-results" />
+            ) : (
+              <TimeEntriesTable
+                entries={filteredEntries}
+                selectedId={selectedId}
+                onSelect={handleSelectEntry}
+              />
+            )}
+          </div>
+        </section>
+
+        <TimeEntryDetailsPanel
+          mode={panelMode}
+          entry={selectedEntry}
+          onClose={handleClosePanel}
+          onCreateSubmit={handleCreateSubmit}
+          onEditSubmit={handleEditSubmit}
+          onCreateCancel={handleClosePanel}
+          onEdit={() => setPanelMode("edit")}
+        />
+      </div>
+    </div>
+  );
+}

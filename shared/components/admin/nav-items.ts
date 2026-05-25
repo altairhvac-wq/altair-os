@@ -1,6 +1,7 @@
 import {
   BarChart3,
   Briefcase,
+  Clock,
   DollarSign,
   FileText,
   LayoutDashboard,
@@ -61,6 +62,12 @@ export const adminNavItems: NavItem[] = [
     href: "/expenses",
     icon: DollarSign,
     description: "Receipts, mileage, and expense categories",
+  },
+  {
+    label: "Time Clock",
+    href: "/time",
+    icon: Clock,
+    description: "Field hours, clock in/out, and approvals",
   },
   {
     label: "Network",
