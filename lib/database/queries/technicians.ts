@@ -1,9 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import type { ProfileRow } from "@/lib/database/types/core-tables";
+import type { CompanyRole } from "@/lib/database/types/enums";
+import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 
-type TechnicianMembershipRow = {
+type AssignableMembershipRow = {
   user_id: string;
+  role: CompanyRole;
   profile: ProfileRow | null;
 };
 
@@ -36,6 +39,7 @@ function deriveTechnicianStatus(
 
 export function mapProfileToTechnician(
   profile: ProfileRow,
+  membershipRole: CompanyRole = "technician",
   jobs: DispatchJob[] = [],
 ): Technician {
   const name = profile.full_name?.trim() || profile.email;
@@ -43,7 +47,7 @@ export function mapProfileToTechnician(
   return {
     id: profile.id,
     name,
-    role: "Field Technician",
+    role: COMPANY_ROLE_LABELS[membershipRole] ?? "Team Member",
     initials: getInitials(name),
     status: deriveTechnicianStatus(profile.id, jobs),
     specialty: "General Service",
@@ -59,10 +63,10 @@ export async function listTechnicians(
 
   const { data, error } = await supabase
     .from("company_memberships")
-    .select("user_id, profile:profiles(*)")
+    .select("user_id, role, profile:profiles!company_memberships_user_id_fkey(*)")
     .eq("company_id", companyId)
-    .eq("role", "technician")
     .eq("status", "active")
+    .neq("role", "customer")
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -76,8 +80,13 @@ export async function listTechnicians(
     return [];
   }
 
-  return ((data ?? []) as TechnicianMembershipRow[])
-    .map((row) => row.profile)
-    .filter((profile): profile is ProfileRow => Boolean(profile))
-    .map((profile) => mapProfileToTechnician(profile, jobs));
+  return ((data ?? []) as AssignableMembershipRow[])
+    .map((row) => {
+      if (!row.profile) {
+        return null;
+      }
+
+      return mapProfileToTechnician(row.profile, row.role, jobs);
+    })
+    .filter((technician): technician is Technician => Boolean(technician));
 }

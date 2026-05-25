@@ -8,17 +8,17 @@ import {
   History,
   Mail,
   MapPin,
-  Pencil,
   Phone,
   Receipt,
   Truck,
   User,
-  UserPlus,
 } from "lucide-react";
 import { getCustomerInitials } from "@/shared/types/customer";
+import type { Technician } from "@/shared/types/dispatch";
+import { JobDetailHeaderWorkflow } from "./JobDetailHeaderWorkflow";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
-import { JobWorkflowActions } from "./JobWorkflowActions";
+import { JobTechnicianAssignment } from "./JobTechnicianAssignment";
 import {
   formatScheduledDate,
   formatScheduledTime,
@@ -27,7 +27,9 @@ import {
 
 type JobDetailPageViewProps = {
   job: JobDetail;
+  technicians: Technician[];
   canUpdateStatus: boolean;
+  canAssignTechnician: boolean;
 };
 
 type ContentSectionProps = {
@@ -43,11 +45,6 @@ type PlaceholderSection = {
 };
 
 const placeholderSections: PlaceholderSection[] = [
-  {
-    title: "Dispatch",
-    description: "Technician assignment and routing will appear here.",
-    icon: Truck,
-  },
   {
     title: "Technician notes",
     description: "Field updates and on-site notes will appear here.",
@@ -80,12 +77,14 @@ function ContentSection({ title, children, className }: ContentSectionProps) {
 
 export function JobDetailPageView({
   job,
+  technicians,
   canUpdateStatus,
+  canAssignTechnician,
 }: JobDetailPageViewProps) {
   const customerEmail = job.customerEmail?.trim();
   const customerPhone = job.customerPhone?.trim();
   const customerCompany = job.customerCompany?.trim();
-  const isAssigned = Boolean(job.assignedTechnician?.trim());
+  const isAssigned = Boolean(job.assignedTechnicianId);
   const scheduledLabel = `${formatScheduledDate(job.scheduledDate)} at ${formatScheduledTime(job.scheduledDate)}`;
 
   return (
@@ -100,67 +99,11 @@ export function JobDetailPageView({
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-5 sm:px-6">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0 space-y-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Job
-                </p>
-                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                  {job.jobNumber}
-                </h1>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
-                <span className="text-sm font-medium text-slate-700">
-                  {job.jobType}
-                </span>
-                <span className="hidden text-slate-300 sm:inline" aria-hidden>
-                  ·
-                </span>
-                <JobStatusBadge status={job.status} />
-                <JobPriorityBadge priority={job.priority} />
-                <span className="hidden text-slate-300 sm:inline" aria-hidden>
-                  ·
-                </span>
-                <div className="flex items-center gap-1.5 text-sm text-slate-600">
-                  <Calendar className="h-4 w-4 shrink-0 text-slate-400" />
-                  <span>{scheduledLabel}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 lg:shrink-0 lg:items-end">
-              <JobWorkflowActions
-                jobId={job.id}
-                status={job.status}
-                canUpdateStatus={canUpdateStatus}
-              />
-              <div className="flex flex-wrap gap-2 lg:justify-end">
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-              >
-                <Pencil className="h-4 w-4" />
-                Edit job
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-              >
-                <UserPlus className="h-4 w-4" />
-                Assign technician
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-              >
-                <Truck className="h-4 w-4" />
-                Open dispatch
-              </button>
-              </div>
-            </div>
-          </div>
+          <JobDetailHeaderWorkflow
+            job={job}
+            scheduledLabel={scheduledLabel}
+            canUpdateStatus={canUpdateStatus}
+          />
         </div>
 
         <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-6">
@@ -302,6 +245,16 @@ export function JobDetailPageView({
           <p className="mt-3 text-sm text-slate-500">
             Current workflow state and urgency for dispatch and field teams.
           </p>
+        </ContentSection>
+
+        <ContentSection title="Technician assignment" className="lg:col-span-3">
+          <JobTechnicianAssignment
+            jobId={job.id}
+            assignedTechnicianId={job.assignedTechnicianId}
+            assignedTechnician={job.assignedTechnician}
+            technicians={technicians}
+            canAssign={canAssignTechnician}
+          />
         </ContentSection>
       </div>
 

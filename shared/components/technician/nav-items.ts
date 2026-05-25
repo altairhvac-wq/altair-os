@@ -19,7 +19,7 @@ export const technicianNavItems: TechnicianNavItem[] = [
   {
     id: "today",
     label: "Today",
-    href: "/tech",
+    href: "/technician",
     icon: CalendarDays,
     enabled: true,
   },
@@ -58,8 +58,8 @@ export function getTechnicianNavItemForPath(
 ): TechnicianNavItem {
   const match = technicianNavItems.find(
     (item) =>
-      item.href === "/tech"
-        ? pathname === "/tech"
+      item.href === "/technician"
+        ? pathname === "/technician"
         : pathname === item.href || pathname.startsWith(`${item.href}/`),
   );
 

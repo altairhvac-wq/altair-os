@@ -23,6 +23,8 @@ export type DispatchJob = {
   id: string;
   jobNumber: string;
   customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
   serviceAddress: string;
   city: string;
   state: string;
@@ -49,14 +51,22 @@ export const DISPATCH_STATUS_OPTIONS: {
 }[] = [
   { value: "all", label: "All statuses" },
   { value: "scheduled", label: "Scheduled" },
-  { value: "dispatched", label: "Dispatched" },
+  { value: "dispatched", label: "En Route" },
   { value: "in_progress", label: "In progress" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
 ];
 
+const DISPATCH_STATUS_LABELS: Record<DispatchJobStatus, string> = {
+  scheduled: "Scheduled",
+  dispatched: "En Route",
+  in_progress: "In Progress",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
 export function formatDispatchStatus(status: DispatchJobStatus): string {
-  return status.replace("_", " ");
+  return DISPATCH_STATUS_LABELS[status];
 }
 
 export function formatDispatchTime(date: string): string {

@@ -29,3 +29,4 @@ export {
   listTechnicians,
   mapProfileToTechnician,
 } from "./technicians";
+export { listAssignedJobsForTechnician } from "./technician-jobs";

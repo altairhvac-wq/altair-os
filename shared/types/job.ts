@@ -17,6 +17,7 @@ export type Job = {
   state: string;
   zip: string;
   jobType: string;
+  assignedTechnicianId?: string;
   assignedTechnician?: string;
   scheduledDate: string;
   status: JobStatus;
@@ -52,7 +53,7 @@ export const JOB_STATUS_OPTIONS: {
 }[] = [
   { value: "all", label: "All statuses" },
   { value: "scheduled", label: "Scheduled" },
-  { value: "dispatched", label: "Dispatched" },
+  { value: "dispatched", label: "En Route" },
   { value: "in_progress", label: "In progress" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
@@ -80,8 +81,16 @@ export const JOB_TYPE_OPTIONS = [
   "Emergency Service",
 ] as const;
 
+const JOB_STATUS_LABELS: Record<JobStatus, string> = {
+  scheduled: "Scheduled",
+  dispatched: "En Route",
+  in_progress: "In Progress",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
 export function formatJobStatus(status: JobStatus): string {
-  return status.replace("_", " ");
+  return JOB_STATUS_LABELS[status];
 }
 
 export function formatScheduledDate(date: string): string {

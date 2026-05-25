@@ -15,7 +15,8 @@ export type TechnicianJob = {
   id: string;
   jobNumber: string;
   customerName: string;
-  customerPhone: string;
+  customerPhone?: string;
+  customerEmail?: string;
   serviceAddress: string;
   city: string;
   state: string;

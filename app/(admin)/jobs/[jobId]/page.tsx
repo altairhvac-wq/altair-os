@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getJobById } from "@/lib/database/queries/jobs";
+import { listTechnicians } from "@/lib/database/queries/technicians";
 import { JobDetailPageView } from "@/shared/components/jobs/JobDetailPageView";
 
 type JobDetailPageProps = {
@@ -15,7 +16,10 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     redirect("/setup");
   }
 
-  const job = await getJobById(companyContext.company.id, jobId);
+  const [job, technicians] = await Promise.all([
+    getJobById(companyContext.company.id, jobId),
+    listTechnicians(companyContext.company.id),
+  ]);
 
   if (!job) {
     notFound();
@@ -24,7 +28,9 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   return (
     <JobDetailPageView
       job={job}
+      technicians={technicians}
       canUpdateStatus={companyContext.permissions.dispatchJobs}
+      canAssignTechnician={companyContext.permissions.dispatchJobs}
     />
   );
 }

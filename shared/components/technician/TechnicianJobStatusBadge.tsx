@@ -22,7 +22,7 @@ export function TechnicianJobStatusBadge({
 }: TechnicianJobStatusBadgeProps) {
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ring-1 ring-inset ${statusStyles[status]} ${className}`}
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${statusStyles[status]} ${className}`}
     >
       {formatDispatchStatus(status)}
     </span>

@@ -2,22 +2,22 @@ import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {
   DispatchAssignmentInsert,
-  DispatchAssignmentRow,
   JobRow,
 } from "@/lib/database/types/core-tables";
 import { mapJobRowToJob } from "@/lib/database/queries/jobs";
 import type { Job } from "@/shared/types/job";
 import type { DispatchJob } from "@/shared/types/dispatch";
 
-type DispatchAssignmentSummary = Pick<
-  DispatchAssignmentRow,
-  "id" | "technician_id" | "status"
->;
-
 type JobRowWithDispatch = JobRow & {
-  customers: { name: string } | null;
-  dispatch_assignments: DispatchAssignmentSummary[] | null;
+  customers: { name: string; email?: string; phone?: string } | null;
+  assigned_technician: { full_name: string | null; email: string } | null;
 };
+
+const DISPATCH_JOB_SELECT = `
+  *,
+  customers(name, email, phone),
+  assigned_technician:profiles!jobs_assigned_technician_id_fkey(full_name, email)
+`;
 
 function getTodayBounds(reference = new Date()): { start: string; end: string } {
   const start = new Date(reference);
@@ -32,16 +32,6 @@ function getTodayBounds(reference = new Date()): { start: string; end: string } 
   };
 }
 
-function getActiveAssignment(
-  assignments: DispatchAssignmentSummary[] | null | undefined,
-): DispatchAssignmentSummary | null {
-  if (!assignments?.length) {
-    return null;
-  }
-
-  return assignments.find((assignment) => assignment.status === "active") ?? null;
-}
-
 export function mapJobRowToDispatchJob(row: JobRowWithDispatch): DispatchJob {
   const job: Job = mapJobRowToJob({
     ...row,
@@ -53,15 +43,15 @@ export function mapJobRowToDispatchJob(row: JobRowWithDispatch): DispatchJob {
           company_name: null,
         }
       : null,
+    assigned_technician: row.assigned_technician,
   });
-  const activeAssignment = getActiveAssignment(row.dispatch_assignments);
-  const technicianId =
-    activeAssignment?.technician_id ?? row.assigned_technician_id ?? undefined;
 
   return {
     id: job.id,
     jobNumber: job.jobNumber,
     customerName: job.customerName,
+    customerEmail: row.customers?.email || undefined,
+    customerPhone: row.customers?.phone || undefined,
     serviceAddress: job.serviceAddress,
     city: job.city,
     state: job.state,
@@ -72,7 +62,7 @@ export function mapJobRowToDispatchJob(row: JobRowWithDispatch): DispatchJob {
     priority: job.priority,
     description: job.description,
     notes: job.notes,
-    technicianId,
+    technicianId: row.assigned_technician_id ?? undefined,
   };
 }
 
@@ -85,13 +75,7 @@ export async function listDispatchJobsForToday(
 
   const { data, error } = await supabase
     .from("jobs")
-    .select(
-      `
-      *,
-      customers(name),
-      dispatch_assignments(id, technician_id, status)
-    `,
-    )
+    .select(DISPATCH_JOB_SELECT)
     .eq("company_id", companyId)
     .gte("scheduled_at", start)
     .lte("scheduled_at", end)
@@ -120,13 +104,7 @@ export async function getDispatchJobById(
 
   const { data, error } = await supabase
     .from("jobs")
-    .select(
-      `
-      *,
-      customers(name),
-      dispatch_assignments(id, technician_id, status)
-    `,
-    )
+    .select(DISPATCH_JOB_SELECT)
     .eq("company_id", companyId)
     .eq("id", jobId)
     .maybeSingle();
@@ -177,13 +155,21 @@ export async function assignJobToTechnician(
     return { job: null, error: "Job was not found." };
   }
 
+  const statusBeforeAssignment = jobRow.status;
+  console.log("[assignJobToTechnician] assignment start", {
+    companyId,
+    jobId,
+    technicianId,
+    statusBeforeAssignment,
+  });
+
   const { data: membership, error: membershipError } = await supabase
     .from("company_memberships")
     .select("id")
     .eq("company_id", companyId)
     .eq("user_id", technicianId)
-    .eq("role", "technician")
     .eq("status", "active")
+    .neq("role", "customer")
     .maybeSingle();
 
   if (membershipError) {
@@ -269,14 +255,10 @@ export async function assignJobToTechnician(
     return { job: null, error: mapDatabaseError(insertError) };
   }
 
-  const nextStatus =
-    jobRow.status === "scheduled" ? "dispatched" : jobRow.status;
-
   const { error: updateError } = await supabase
     .from("jobs")
     .update({
       assigned_technician_id: technicianId,
-      status: nextStatus,
     })
     .eq("company_id", companyId)
     .eq("id", jobId);
@@ -292,5 +274,25 @@ export async function assignJobToTechnician(
   }
 
   const job = await getDispatchJobById(companyId, jobId);
+
+  if (job && job.status !== statusBeforeAssignment) {
+    console.error(
+      "[assignJobToTechnician] unexpected job.status change during assignment",
+      {
+        companyId,
+        jobId,
+        statusBeforeAssignment,
+        statusAfterAssignment: job.status,
+      },
+    );
+  } else {
+    console.log("[assignJobToTechnician] assignment complete", {
+      companyId,
+      jobId,
+      technicianId,
+      status: job?.status ?? statusBeforeAssignment,
+    });
+  }
+
   return { job, error: null };
 }

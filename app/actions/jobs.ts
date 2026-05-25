@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { createJob, updateJobStatus } from "@/lib/database/queries/jobs";
+import {
+  createJob,
+  getJobById,
+  updateJobStatus,
+} from "@/lib/database/queries/jobs";
 import type { Job, JobFormData, JobStatus } from "@/shared/types/job";
 import {
   getTargetStatusForAction,
@@ -53,8 +57,32 @@ export async function updateJobStatusAction(
     return { error: "No active company workspace." };
   }
 
-  if (!context.permissions.dispatchJobs) {
-    return { error: "You do not have permission to update job status." };
+  const canDispatch = context.permissions.dispatchJobs;
+  const canViewAssigned = context.permissions.viewAssignedJobs;
+  const technicianAllowedActions: JobWorkflowActionId[] = [
+    "dispatch",
+    "start_work",
+    "complete",
+  ];
+
+  if (!canDispatch) {
+    if (!canViewAssigned) {
+      return { error: "You do not have permission to update job status." };
+    }
+
+    if (!technicianAllowedActions.includes(actionId)) {
+      return { error: "You do not have permission for this action." };
+    }
+
+    const assignedJob = await getJobById(context.company.id, jobId);
+
+    if (!assignedJob) {
+      return { error: "Job not found." };
+    }
+
+    if (assignedJob.assignedTechnicianId !== context.user.id) {
+      return { error: "You can only update jobs assigned to you." };
+    }
   }
 
   const nextStatus = getTargetStatusForAction(currentStatus, actionId);
@@ -62,6 +90,13 @@ export async function updateJobStatusAction(
   if (!nextStatus) {
     return { error: "This status change is not allowed." };
   }
+
+  console.log("[updateJobStatusAction] status transition", {
+    jobId,
+    actionId,
+    currentStatus,
+    nextStatus,
+  });
 
   const { job, error } = await updateJobStatus(
     context.company.id,
@@ -76,6 +111,7 @@ export async function updateJobStatusAction(
 
   revalidatePath("/jobs");
   revalidatePath("/dispatch");
+  revalidatePath("/technician");
   revalidatePath(`/jobs/${jobId}`);
 
   return { job };

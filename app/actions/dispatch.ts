@@ -35,8 +35,15 @@ export async function assignJobAction(
     return { error: error ?? "Failed to assign job." };
   }
 
+  console.log("[assignJobAction] assignment returned", {
+    jobId,
+    technicianId,
+    status: job.status,
+  });
+
   revalidatePath("/dispatch");
   revalidatePath("/jobs");
+  revalidatePath("/technician");
   revalidatePath(`/jobs/${jobId}`);
 
   return { job };

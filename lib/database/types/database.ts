@@ -96,6 +96,13 @@ export type Database = {
             referencedRelation: "customers";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "jobs_assigned_technician_id_fkey";
+            columns: ["assigned_technician_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
         ];
       };
       dispatch_assignments: {

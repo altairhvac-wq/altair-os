@@ -3,20 +3,67 @@ import { mapDatabaseError } from "@/lib/database/errors";
 import type { JobInsert, JobRow } from "@/lib/database/types/core-tables";
 import type { Job, JobDetail, JobFormData, JobStatus } from "@/shared/types/job";
 
+type ProfileSummary = {
+  full_name: string | null;
+  email: string;
+};
+
 type JobRowWithCustomer = JobRow & {
   customers: {
     name: string;
-    email: string;
-    phone: string;
-    company_name: string | null;
+    email?: string;
+    phone?: string;
+    company_name?: string | null;
   } | null;
 };
+
+type JobRowWithTechnician = JobRowWithCustomer & {
+  assigned_technician: ProfileSummary | null;
+};
+
+const JOB_TECHNICIAN_SELECT = `
+  *,
+  customers(name),
+  assigned_technician:profiles!jobs_assigned_technician_id_fkey(full_name, email)
+`;
+
+const JOB_DETAIL_SELECT = `
+  *,
+  customers(name, email, phone, company_name),
+  assigned_technician:profiles!jobs_assigned_technician_id_fkey(full_name, email)
+`;
 
 function toDateOnly(value: string): string {
   return value.split("T")[0] ?? value;
 }
 
-export function mapJobRowToJob(row: JobRowWithCustomer): Job {
+function formatProfileName(
+  profile: ProfileSummary | null | undefined,
+): string | undefined {
+  if (!profile) {
+    return undefined;
+  }
+
+  return profile.full_name?.trim() || profile.email;
+}
+
+function resolveAssignedTechnician(row: JobRowWithTechnician): {
+  assignedTechnicianId?: string;
+  assignedTechnician?: string;
+} {
+  if (!row.assigned_technician_id) {
+    return {};
+  }
+
+  return {
+    assignedTechnicianId: row.assigned_technician_id,
+    assignedTechnician: formatProfileName(row.assigned_technician),
+  };
+}
+
+export function mapJobRowToJob(row: JobRowWithTechnician): Job {
+  const technician = resolveAssignedTechnician(row);
+
   return {
     id: row.id,
     jobNumber: row.job_number,
@@ -33,6 +80,7 @@ export function mapJobRowToJob(row: JobRowWithCustomer): Job {
     description: row.description ?? undefined,
     notes: row.notes ?? undefined,
     createdAt: toDateOnly(row.created_at),
+    ...technician,
   };
 }
 
@@ -83,7 +131,7 @@ export async function listJobs(companyId: string): Promise<Job[]> {
 
   const { data, error } = await supabase
     .from("jobs")
-    .select("*, customers(name)")
+    .select(JOB_TECHNICIAN_SELECT)
     .eq("company_id", companyId)
     .order("scheduled_at", { ascending: false });
 
@@ -98,7 +146,7 @@ export async function listJobs(companyId: string): Promise<Job[]> {
     return [];
   }
 
-  return ((data ?? []) as JobRowWithCustomer[]).map(mapJobRowToJob);
+  return ((data ?? []) as JobRowWithTechnician[]).map(mapJobRowToJob);
 }
 
 export async function listJobsByCustomer(
@@ -110,7 +158,7 @@ export async function listJobsByCustomer(
 
   const { data, error } = await supabase
     .from("jobs")
-    .select("*, customers(name)")
+    .select(JOB_TECHNICIAN_SELECT)
     .eq("company_id", companyId)
     .eq("customer_id", customerId)
     .order("scheduled_at", { ascending: false })
@@ -128,10 +176,10 @@ export async function listJobsByCustomer(
     return [];
   }
 
-  return ((data ?? []) as JobRowWithCustomer[]).map(mapJobRowToJob);
+  return ((data ?? []) as JobRowWithTechnician[]).map(mapJobRowToJob);
 }
 
-function mapJobRowToJobDetail(row: JobRowWithCustomer): JobDetail {
+function mapJobRowToJobDetail(row: JobRowWithTechnician): JobDetail {
   const job = mapJobRowToJob(row);
 
   return {
@@ -150,7 +198,7 @@ export async function getJobById(
 
   const { data, error } = await supabase
     .from("jobs")
-    .select("*, customers(name, email, phone, company_name)")
+    .select(JOB_DETAIL_SELECT)
     .eq("company_id", companyId)
     .eq("id", jobId)
     .maybeSingle();
@@ -171,7 +219,7 @@ export async function getJobById(
     return null;
   }
 
-  return mapJobRowToJobDetail(data as JobRowWithCustomer);
+  return mapJobRowToJobDetail(data as JobRowWithTechnician);
 }
 
 export async function createJob(
@@ -207,7 +255,7 @@ export async function createJob(
   const { data: row, error } = await supabase
     .from("jobs")
     .insert(insert)
-    .select("*, customers(name)")
+    .select(JOB_TECHNICIAN_SELECT)
     .single();
 
   if (error) {
@@ -226,7 +274,7 @@ export async function createJob(
   }
 
   return {
-    job: mapJobRowToJob(row as JobRowWithCustomer),
+    job: mapJobRowToJob(row as JobRowWithTechnician),
     error: null,
   };
 }
@@ -245,7 +293,7 @@ export async function updateJobStatus(
     .eq("company_id", companyId)
     .eq("id", jobId)
     .eq("status", fromStatus)
-    .select("*, customers(name)")
+    .select(JOB_TECHNICIAN_SELECT)
     .maybeSingle();
 
   if (error) {
@@ -270,7 +318,7 @@ export async function updateJobStatus(
   }
 
   return {
-    job: mapJobRowToJob(row as JobRowWithCustomer),
+    job: mapJobRowToJob(row as JobRowWithTechnician),
     error: null,
   };
 }

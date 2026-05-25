@@ -17,13 +17,13 @@ const WORKFLOW_ACTIONS: Record<JobStatus, JobWorkflowAction[]> = {
   scheduled: [
     {
       id: "dispatch",
-      label: "Dispatch",
+      label: "En Route",
       targetStatus: "dispatched",
       variant: "primary",
     },
     {
       id: "cancel",
-      label: "Cancel",
+      label: "Cancel Job",
       targetStatus: "cancelled",
       variant: "danger",
     },
@@ -37,7 +37,7 @@ const WORKFLOW_ACTIONS: Record<JobStatus, JobWorkflowAction[]> = {
     },
     {
       id: "cancel",
-      label: "Cancel",
+      label: "Cancel Job",
       targetStatus: "cancelled",
       variant: "danger",
     },
@@ -45,13 +45,13 @@ const WORKFLOW_ACTIONS: Record<JobStatus, JobWorkflowAction[]> = {
   in_progress: [
     {
       id: "complete",
-      label: "Complete",
+      label: "Complete Job",
       targetStatus: "completed",
       variant: "primary",
     },
     {
       id: "cancel",
-      label: "Cancel",
+      label: "Cancel Job",
       targetStatus: "cancelled",
       variant: "danger",
     },
@@ -60,10 +60,20 @@ const WORKFLOW_ACTIONS: Record<JobStatus, JobWorkflowAction[]> = {
   cancelled: [],
 };
 
+const DISPLAY_EXCLUDED_ACTION_IDS = new Set<JobWorkflowActionId>(["dispatch"]);
+
 export function getAvailableWorkflowActions(
   status: JobStatus,
 ): JobWorkflowAction[] {
   return WORKFLOW_ACTIONS[status];
+}
+
+export function getDisplayWorkflowActions(
+  status: JobStatus,
+): JobWorkflowAction[] {
+  return WORKFLOW_ACTIONS[status].filter(
+    (action) => !DISPLAY_EXCLUDED_ACTION_IDS.has(action.id),
+  );
 }
 
 export function getTargetStatusForAction(

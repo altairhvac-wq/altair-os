@@ -118,70 +118,61 @@ export function DispatchPageView({
         />
       ) : null}
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
-        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="shrink-0 border-b border-slate-100 px-4 py-3.5">
-            <h2 className="text-base font-bold text-slate-900">
-              Today&apos;s scheduled jobs
-            </h2>
-            <p className="text-xs text-slate-500">
-              Unassigned queue and assigned technician lanes
-            </p>
-          </div>
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="shrink-0 border-b border-slate-100 px-4 py-3.5">
+          <h2 className="text-base font-bold text-slate-900">
+            Today&apos;s scheduled jobs
+          </h2>
+          <p className="text-xs text-slate-500">
+            Unassigned queue and assigned technician lanes
+          </p>
+        </div>
 
-          <div className="min-h-0 flex-1 p-3 sm:p-4">
-            {hasNoJobs ? (
-              <DispatchEmptyState variant="no-jobs" />
-            ) : hasNoResults ? (
-              <DispatchEmptyState variant="no-results" />
-            ) : (
-              <DispatchBoard
-                jobs={filteredJobs}
-                technicians={technicians}
-                technicianFilter={technicianFilter}
-                selectedJobId={selectedJobId}
-                onSelectJob={handleSelectJob}
-              />
-            )}
-          </div>
-        </section>
-
-        {selectedJob ? (
-          <div className="fixed inset-0 z-40 flex items-end lg:static lg:z-auto lg:block">
-            <button
-              type="button"
-              aria-label="Close job details"
-              onClick={handleClosePanel}
-              className="absolute inset-0 bg-slate-900/40 lg:hidden"
+        <div className="min-h-0 flex-1 p-3 sm:p-4">
+          {hasNoJobs ? (
+            <DispatchEmptyState variant="no-jobs" />
+          ) : hasNoResults ? (
+            <DispatchEmptyState variant="no-results" />
+          ) : (
+            <DispatchBoard
+              jobs={filteredJobs}
+              technicians={technicians}
+              technicianFilter={technicianFilter}
+              selectedJobId={selectedJobId}
+              onSelectJob={handleSelectJob}
             />
-            <div className="relative z-10 max-h-[85vh] w-full overflow-hidden lg:max-h-none lg:w-auto">
-              <DispatchDetailsPanel
-                job={selectedJob}
-                technician={selectedTechnician}
-                technicians={technicians}
-                canDispatchJobs={canDispatchJobs}
-                assignError={assignError}
-                isAssigning={isPending}
-                onClose={handleClosePanel}
-                onAssign={handleAssign}
-                onStatusUpdated={handleStatusUpdated}
-              />
-            </div>
-          </div>
-        ) : (
-          <DispatchDetailsPanel
-            job={null}
-            technician={null}
-            technicians={technicians}
-            canDispatchJobs={canDispatchJobs}
-            assignError={null}
-            isAssigning={false}
-            onClose={handleClosePanel}
-            onAssign={handleAssign}
-            onStatusUpdated={handleStatusUpdated}
+          )}
+        </div>
+      </section>
+
+      {selectedJob ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dispatch-job-modal-title"
+        >
+          <button
+            type="button"
+            aria-label="Close job details"
+            onClick={handleClosePanel}
+            className="absolute inset-0 bg-slate-900/40"
           />
-        )}
-      </div>
+          <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden sm:max-h-[85vh]">
+            <DispatchDetailsPanel
+              job={selectedJob}
+              technician={selectedTechnician}
+              technicians={technicians}
+              canDispatchJobs={canDispatchJobs}
+              assignError={assignError}
+              isAssigning={isPending}
+              onClose={handleClosePanel}
+              onAssign={handleAssign}
+              onStatusUpdated={handleStatusUpdated}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
