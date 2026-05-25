@@ -1,10 +1,5 @@
-import { ModulePlaceholder } from "@/shared/components/admin/ModulePlaceholder";
+import { EstimatesPageView } from "@/shared/components/estimates/EstimatesPageView";
 
 export default function EstimatesPage() {
-  return (
-    <ModulePlaceholder
-      title="Estimates"
-      description="Line items, price book, and customer approvals will live here."
-    />
-  );
+  return <EstimatesPageView />;
 }
