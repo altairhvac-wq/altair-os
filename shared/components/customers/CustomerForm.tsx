@@ -8,6 +8,8 @@ type CustomerFormProps = {
   initialData?: Partial<CustomerFormData>;
   onSubmit: (data: CustomerFormData) => void;
   onCancel: () => void;
+  error?: string | null;
+  isSubmitting?: boolean;
 };
 
 const emptyForm: CustomerFormData = {
@@ -32,6 +34,8 @@ export function CustomerForm({
   initialData,
   onSubmit,
   onCancel,
+  error,
+  isSubmitting = false,
 }: CustomerFormProps) {
   const defaults = { ...emptyForm, ...initialData };
 
@@ -207,17 +211,25 @@ export function CustomerForm({
         />
       </div>
 
+      {error ? (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
+
       <div className="flex gap-3 border-t border-slate-100 pt-4">
         <button
           type="submit"
-          className="flex-1 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700"
+          disabled={isSubmitting}
+          className="flex-1 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Save customer
+          {isSubmitting ? "Saving..." : "Save customer"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          disabled={isSubmitting}
+          className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Cancel
         </button>

@@ -12,4 +12,11 @@ export {
   getUserCompanies,
   listUserCompanies,
 } from "./company-context";
+export {
+  createCustomer,
+  getCustomerById,
+  listCustomers,
+  mapCustomerFormDataToInsert,
+  mapCustomerRowToCustomer,
+} from "./queries/customers";
 export { mapAuthError, mapDatabaseError } from "./errors";

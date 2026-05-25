@@ -7,6 +7,9 @@ export type {
   CompanyMembershipUpdate,
   CompanyRow,
   CompanyUpdate,
+  CustomerInsert,
+  CustomerRow,
+  CustomerUpdate,
   MembershipWithCompany,
   MembershipWithProfile,
   ProfileInsert,
@@ -17,6 +20,7 @@ export type {
 export type {
   CompanyRole,
   CompanyStatus,
+  CustomerStatus,
   Json,
   MembershipStatus,
   Timestamp,

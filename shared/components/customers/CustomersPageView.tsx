@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { UserPlus } from "lucide-react";
-import { mockCustomers } from "@/shared/data/mock-customers";
+import { createCustomerAction } from "@/app/actions/customers";
 import {
   type Customer,
   type CustomerFormData,
@@ -11,10 +11,14 @@ import {
 import { CustomerDetailPanel } from "./CustomerDetailPanel";
 import { CustomerSearchFilterBar } from "./CustomerSearchFilterBar";
 import { CustomersEmptyState } from "./CustomersEmptyState";
-import { CustomersLoadingState } from "./CustomersLoadingState";
 import { CustomersTable } from "./CustomersTable";
 
 type PanelMode = "detail" | "create" | "empty";
+
+type CustomersPageViewProps = {
+  initialCustomers: Customer[];
+  canManageCustomers: boolean;
+};
 
 function filterCustomers(
   customers: Customer[],
@@ -45,44 +49,19 @@ function filterCustomers(
   });
 }
 
-function formDataToCustomer(data: CustomerFormData): Customer {
-  return {
-    id: `cust-${Date.now()}`,
-    name: data.name,
-    email: data.email,
-    phone: data.phone,
-    company: data.company || undefined,
-    status: data.status,
-    address: data.address,
-    city: data.city,
-    state: data.state,
-    zip: data.zip,
-    totalJobs: 0,
-    totalRevenue: 0,
-    tags: [],
-    notes: data.notes || undefined,
-    createdAt: new Date().toISOString().split("T")[0],
-  };
-}
-
-export function CustomersPageView() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function CustomersPageView({
+  initialCustomers,
+  canManageCustomers,
+}: CustomersPageViewProps) {
+  const [customers, setCustomers] = useState(initialCustomers);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<CustomerStatus | "all">(
     "all",
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<PanelMode>("empty");
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setCustomers(mockCustomers);
-      setIsLoading(false);
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const filteredCustomers = useMemo(
     () => filterCustomers(customers, search, statusFilter),
@@ -90,32 +69,45 @@ export function CustomersPageView() {
   );
 
   const selectedCustomer =
-    customers.find((c) => c.id === selectedId) ?? null;
+    customers.find((customer) => customer.id === selectedId) ?? null;
 
   function handleSelectCustomer(customer: Customer) {
     setSelectedId(customer.id);
     setPanelMode("detail");
+    setCreateError(null);
   }
 
   function handleNewCustomer() {
+    if (!canManageCustomers) {
+      return;
+    }
+
     setSelectedId(null);
     setPanelMode("create");
+    setCreateError(null);
   }
 
   function handleClosePanel() {
     setSelectedId(null);
     setPanelMode("empty");
+    setCreateError(null);
   }
 
   function handleCreateSubmit(data: CustomerFormData) {
-    const newCustomer = formDataToCustomer(data);
-    setCustomers((prev) => [newCustomer, ...prev]);
-    setSelectedId(newCustomer.id);
-    setPanelMode("detail");
-  }
+    setCreateError(null);
 
-  if (isLoading) {
-    return <CustomersLoadingState />;
+    startTransition(async () => {
+      const result = await createCustomerAction(data);
+
+      if (result.error || !result.customer) {
+        setCreateError(result.error ?? "Failed to create customer.");
+        return;
+      }
+
+      setCustomers((previous) => [result.customer!, ...previous]);
+      setSelectedId(result.customer.id);
+      setPanelMode("detail");
+    });
   }
 
   const hasNoCustomers = customers.length === 0;
@@ -133,14 +125,16 @@ export function CustomersPageView() {
               Manage profiles, locations, and service history
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleNewCustomer}
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700"
-          >
-            <UserPlus className="h-4 w-4" />
-            New Customer
-          </button>
+          {canManageCustomers ? (
+            <button
+              type="button"
+              onClick={handleNewCustomer}
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700"
+            >
+              <UserPlus className="h-4 w-4" />
+              New Customer
+            </button>
+          ) : null}
         </div>
 
         {!hasNoCustomers ? (
@@ -159,7 +153,9 @@ export function CustomersPageView() {
           {hasNoCustomers ? (
             <CustomersEmptyState
               variant="no-customers"
-              onCreateCustomer={handleNewCustomer}
+              onCreateCustomer={
+                canManageCustomers ? handleNewCustomer : undefined
+              }
             />
           ) : hasNoResults ? (
             <CustomersEmptyState variant="no-results" />
@@ -179,6 +175,8 @@ export function CustomersPageView() {
         onClose={handleClosePanel}
         onCreateSubmit={handleCreateSubmit}
         onCreateCancel={handleClosePanel}
+        createError={createError}
+        isSubmitting={isPending}
       />
     </div>
   );

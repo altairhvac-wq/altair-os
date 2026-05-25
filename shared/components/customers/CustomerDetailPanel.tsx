@@ -15,6 +15,8 @@ type CustomerDetailPanelProps = {
   onClose: () => void;
   onCreateSubmit: (data: CustomerFormData) => void;
   onCreateCancel: () => void;
+  createError?: string | null;
+  isSubmitting?: boolean;
 };
 
 export function CustomerDetailPanel({
@@ -23,6 +25,8 @@ export function CustomerDetailPanel({
   onClose,
   onCreateSubmit,
   onCreateCancel,
+  createError,
+  isSubmitting = false,
 }: CustomerDetailPanelProps) {
   const title =
     mode === "create"
@@ -72,7 +76,12 @@ export function CustomerDetailPanel({
         ) : null}
 
         {mode === "create" ? (
-          <CustomerForm onSubmit={onCreateSubmit} onCancel={onCreateCancel} />
+          <CustomerForm
+            onSubmit={onCreateSubmit}
+            onCancel={onCreateCancel}
+            error={createError}
+            isSubmitting={isSubmitting}
+          />
         ) : null}
 
         {mode === "detail" && customer ? (

@@ -5,6 +5,9 @@ import type {
   CompanyMembershipUpdate,
   CompanyRow,
   CompanyUpdate,
+  CustomerInsert,
+  CustomerRow,
+  CustomerUpdate,
   ProfileInsert,
   ProfileRow,
   ProfileUpdate,
@@ -54,6 +57,20 @@ export type Database = {
           },
         ];
       };
+      customers: {
+        Row: CustomerRow;
+        Insert: CustomerInsert;
+        Update: CustomerUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "customers_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -68,6 +85,7 @@ export type Database = {
       company_role: CompanyMembershipRow["role"];
       membership_status: CompanyMembershipRow["status"];
       company_status: CompanyRow["status"];
+      customer_status: CustomerRow["status"];
     };
     CompositeTypes: Record<string, never>;
   };

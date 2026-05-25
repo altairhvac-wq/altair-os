@@ -1,6 +1,7 @@
 import type {
   CompanyRole,
   CompanyStatus,
+  CustomerStatus,
   Json,
   MembershipStatus,
   Timestamp,
@@ -104,6 +105,54 @@ export type UserCompanyContext = {
   membership: CompanyMembershipRow;
   company: CompanyRow;
 };
+
+export type CustomerRow = {
+  id: UUID;
+  company_id: UUID;
+  name: string;
+  email: string;
+  phone: string;
+  company_name: string | null;
+  status: CustomerStatus;
+  address_line1: string;
+  address_line2: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  tags: string[];
+  notes: string | null;
+  total_jobs: number;
+  total_revenue: number;
+  last_service_date: Timestamp | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type CustomerInsert = {
+  id?: UUID;
+  company_id: UUID;
+  name: string;
+  email?: string;
+  phone?: string;
+  company_name?: string | null;
+  status?: CustomerStatus;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  tags?: string[];
+  notes?: string | null;
+  total_jobs?: number;
+  total_revenue?: number;
+  last_service_date?: Timestamp | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type CustomerUpdate = Partial<
+  Omit<CustomerRow, "id" | "company_id" | "created_at" | "updated_at">
+>;
 
 export type ActiveCompanyContext = UserCompanyContext & {
   user: {
