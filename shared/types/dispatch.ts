@@ -22,6 +22,7 @@ export type Technician = {
 
 export type DispatchJob = {
   id: string;
+  customerId: string;
   jobNumber: string;
   customerName: string;
   customerEmail?: string;

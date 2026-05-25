@@ -11,10 +11,14 @@ export type OperationalActivitySource =
   | "customer"
   | "job"
   | "estimate"
-  | "invoice";
+  | "invoice"
+  | "expense";
 
 export type OperationalActivityEventType =
   | "customer_created"
+  | "equipment_added"
+  | "equipment_updated"
+  | "warranty_expiration_recorded"
   | "job_created"
   | "job_status_changed"
   | "technician_assigned"
@@ -25,6 +29,8 @@ export type OperationalActivityEventType =
   | "invoice_sent"
   | "payment_recorded"
   | "invoice_paid"
+  | "job_attachment_uploaded"
+  | "expense_receipt_uploaded"
   | "status_changed";
 
 export type OperationalActivityMetadata = {
@@ -47,9 +53,21 @@ export type OperationalActivityMetadata = {
   previous_technician_name?: string;
   completion_notes?: string;
   follow_up_notes?: string;
+  equipment_id?: string;
+  equipment_name?: string;
+  changed_fields?: string[];
+  warranty_expires_at?: string;
+  previous_warranty_expires_at?: string;
   amount?: number;
   payment_method?: PaymentMethod;
   reference?: string;
+  attachment_type?: string;
+  file_name?: string;
+  expense_id?: string;
+  expense_number?: string;
+  merchant?: string;
+  purchase_date?: string;
+  category?: string;
 };
 
 export type OperationalActivity = {
@@ -66,6 +84,7 @@ export type OperationalActivity = {
   estimateId?: string;
   invoiceId?: string;
   paymentId?: string;
+  expenseId?: string;
 };
 
 const JOB_STATUS_CHANGE_EVENTS = new Set([
@@ -81,6 +100,9 @@ const JOB_STATUS_CHANGE_EVENTS = new Set([
 
 const ACTIVITY_TYPE_LABELS: Record<OperationalActivityEventType, string> = {
   customer_created: "Customer created",
+  equipment_added: "Equipment added",
+  equipment_updated: "Equipment updated",
+  warranty_expiration_recorded: "Warranty recorded",
   job_created: "Job created",
   job_status_changed: "Job status changed",
   technician_assigned: "Technician assigned",
@@ -91,6 +113,8 @@ const ACTIVITY_TYPE_LABELS: Record<OperationalActivityEventType, string> = {
   invoice_sent: "Invoice sent",
   payment_recorded: "Payment recorded",
   invoice_paid: "Invoice paid",
+  job_attachment_uploaded: "Attachment uploaded",
+  expense_receipt_uploaded: "Receipt uploaded",
   status_changed: "Status changed",
 };
 
@@ -192,6 +216,22 @@ export function formatOperationalActivityDetails(
     case "customer_created":
       return metadata.customer_name ?? null;
 
+    case "equipment_added":
+    case "equipment_updated":
+      if (metadata.equipment_name && metadata.job_number) {
+        return `${metadata.equipment_name} · Job ${metadata.job_number}`;
+      }
+      if (metadata.changed_fields?.length) {
+        return `${metadata.equipment_name ?? "Equipment"} · ${metadata.changed_fields.join(", ")}`;
+      }
+      return metadata.equipment_name ?? null;
+
+    case "warranty_expiration_recorded":
+      if (metadata.equipment_name && metadata.warranty_expires_at) {
+        return `${metadata.equipment_name} · expires ${metadata.warranty_expires_at}`;
+      }
+      return metadata.equipment_name ?? null;
+
     case "job_created":
       return metadata.job_number ? `Job ${metadata.job_number}` : null;
 
@@ -281,6 +321,46 @@ export function formatOperationalActivityDetails(
       }
       return parts.length > 0 ? parts.join(" · ") : null;
     }
+
+    case "job_attachment_uploaded": {
+      const parts: string[] = [];
+      if (metadata.attachment_type) {
+        parts.push(
+          metadata.attachment_type.charAt(0).toUpperCase() +
+            metadata.attachment_type.slice(1),
+        );
+      }
+      if (metadata.file_name) {
+        parts.push(metadata.file_name);
+      }
+      if (metadata.job_number) {
+        parts.push(`Job ${metadata.job_number}`);
+      }
+      return parts.length > 0 ? parts.join(" · ") : null;
+    }
+
+    case "expense_receipt_uploaded": {
+      const parts: string[] = [];
+      if (metadata.merchant?.trim()) {
+        parts.push(metadata.merchant.trim());
+      }
+      if (typeof metadata.amount === "number") {
+        parts.push(
+          new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(metadata.amount),
+        );
+      }
+      if (metadata.file_name) {
+        parts.push(metadata.file_name);
+      }
+      if (metadata.expense_number) {
+        parts.push(metadata.expense_number);
+      }
+      return parts.length > 0 ? parts.join(" · ") : null;
+    }
+
     case "estimate_approved":
     case "invoice_sent":
     case "status_changed":

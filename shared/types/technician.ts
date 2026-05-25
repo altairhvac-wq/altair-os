@@ -13,6 +13,7 @@ export type TechnicianShift = {
 
 export type TechnicianJob = {
   id: string;
+  customerId: string;
   jobNumber: string;
   customerName: string;
   customerPhone?: string;

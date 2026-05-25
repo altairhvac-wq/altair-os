@@ -5,6 +5,9 @@ import { listEstimatesByCustomer } from "@/lib/database/queries/estimates";
 import { listInvoicesByCustomer } from "@/lib/database/queries/invoices";
 import { listJobsByCustomer } from "@/lib/database/queries/jobs";
 import { listOperationalActivitiesForCustomer } from "@/lib/database/queries/operational-activities";
+import { listRecentExpensesForCustomer } from "@/lib/database/queries/expenses";
+import { listRecentJobAttachmentsForCustomer } from "@/lib/database/queries/job-attachments";
+import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment";
 import { CustomerDetailPageView } from "@/shared/components/customers/CustomerDetailPageView";
 
 type CustomerDetailPageProps = {
@@ -21,12 +24,24 @@ export default async function CustomerDetailPage({
     redirect("/setup");
   }
 
-  const [customer, jobs, estimates, invoices, activities] = await Promise.all([
+  const [customer, jobs, estimates, invoices, activities, equipment, recentPhotos, recentReceipts] =
+    await Promise.all([
     getCustomerById(companyContext.company.id, customerId),
     listJobsByCustomer(companyContext.company.id, customerId),
     listEstimatesByCustomer(companyContext.company.id, customerId),
     listInvoicesByCustomer(companyContext.company.id, customerId),
     listOperationalActivitiesForCustomer(companyContext.company.id, customerId),
+    listCustomerEquipment(companyContext.company.id, customerId, {
+      includeInactive: true,
+    }),
+    listRecentJobAttachmentsForCustomer(companyContext.company.id, customerId, {
+      limit: 6,
+      imagesOnly: true,
+    }),
+    listRecentExpensesForCustomer(companyContext.company.id, customerId, {
+      limit: 6,
+      withReceiptOnly: true,
+    }),
   ]);
 
   if (!customer) {
@@ -40,7 +55,11 @@ export default async function CustomerDetailPage({
       estimates={estimates}
       invoices={invoices}
       activities={activities}
+      equipment={equipment}
+      recentPhotos={recentPhotos}
+      recentReceipts={recentReceipts}
       canCreateJob={companyContext.permissions.dispatchJobs}
+      canManageEquipment={companyContext.permissions.manageCustomers}
     />
   );
 }

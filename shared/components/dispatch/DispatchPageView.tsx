@@ -22,13 +22,16 @@ type DispatchPageViewProps = {
   initialJobs: DispatchJob[];
   technicians: Technician[];
   canDispatchJobs: boolean;
+  canViewAssignedJobs: boolean;
 };
 
 export function DispatchPageView({
   initialJobs,
   technicians,
   canDispatchJobs,
+  canViewAssignedJobs,
 }: DispatchPageViewProps) {
+  const canUpdateJobWorkflow = canDispatchJobs || canViewAssignedJobs;
   const [jobs, setJobs] = useState(initialJobs);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<DispatchJobStatus | "all">(
@@ -183,6 +186,7 @@ export function DispatchPageView({
               technician={selectedTechnician}
               technicians={technicians}
               canDispatchJobs={canDispatchJobs}
+              canUpdateJobWorkflow={canUpdateJobWorkflow}
               assignError={assignError}
               isAssigning={isPending}
               onClose={handleClosePanel}

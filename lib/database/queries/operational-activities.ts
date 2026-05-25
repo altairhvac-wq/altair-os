@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { listCustomerActivitiesForCustomer } from "@/lib/database/queries/customer-activities";
+import { listExpenseActivitiesForCustomer, listExpenseActivitiesForJob } from "@/lib/database/queries/expense-activities";
 import type { CustomerActivity } from "@/shared/types/customer-activity";
 import type { EstimateActivity } from "@/shared/types/estimate-activity";
 import type { InvoiceActivity } from "@/shared/types/invoice-activity";
@@ -50,6 +51,7 @@ function buildOperationalActivity(input: {
   jobId?: string;
   estimateId?: string;
   invoiceId?: string;
+  expenseId?: string;
 }): OperationalActivity {
   const metadata = mapMetadata(input.row.metadata);
   const eventType = normalizeOperationalEventType(
@@ -71,6 +73,7 @@ function buildOperationalActivity(input: {
     estimateId: input.estimateId ?? metadata.estimate_id,
     invoiceId: input.invoiceId ?? metadata.invoice_id,
     paymentId: metadata.payment_id,
+    expenseId: input.expenseId ?? metadata.expense_id,
   };
 }
 
@@ -155,6 +158,21 @@ function fromInvoiceActivity(
     invoiceId: activity.invoiceId,
     jobId: activity.metadata.job_id,
     estimateId: activity.metadata.estimate_id,
+  });
+}
+
+function fromExpenseActivityRow(
+  row: ActivityRowBase & { expense_id: string },
+  customerId?: string,
+): OperationalActivity {
+  const metadata = mapMetadata(row.metadata);
+
+  return buildOperationalActivity({
+    source: "expense",
+    row,
+    customerId: customerId ?? metadata.customer_id,
+    jobId: metadata.job_id,
+    expenseId: row.expense_id,
   });
 }
 
@@ -326,11 +344,12 @@ export async function listOperationalActivitiesForCustomer(
   const estimateIds = (estimateRows.data ?? []).map((row) => row.id);
   const invoiceIds = (invoiceRows.data ?? []).map((row) => row.id);
 
-  const [jobActivities, estimateActivities, invoiceActivities] =
+  const [jobActivities, estimateActivities, invoiceActivities, expenseActivities] =
     await Promise.all([
       listJobActivitiesForJobIds(companyId, jobIds),
       listEstimateActivitiesForEstimateIds(companyId, estimateIds),
       listInvoiceActivitiesForInvoiceIds(companyId, invoiceIds),
+      listExpenseActivitiesForCustomer(companyId, customerId),
     ]);
 
   const activities = [
@@ -341,6 +360,20 @@ export async function listOperationalActivitiesForCustomer(
     ),
     ...invoiceActivities.map((activity) =>
       fromInvoiceActivity(activity, customerId),
+    ),
+    ...expenseActivities.map((row) =>
+      fromExpenseActivityRow(
+        {
+          id: row.id,
+          actor_id: row.actor_id,
+          event_type: row.event_type,
+          metadata: row.metadata,
+          created_at: row.created_at,
+          actor: row.actor as ProfileSummary | null,
+          expense_id: row.expense_id,
+        },
+        customerId,
+      ),
     ),
   ];
 
@@ -380,11 +413,12 @@ export async function listOperationalActivitiesForJob(
   const estimateIds = (estimateRows.data ?? []).map((row) => row.id);
   const invoiceIds = (invoiceRows.data ?? []).map((row) => row.id);
 
-  const [jobActivities, estimateActivities, invoiceActivities] =
+  const [jobActivities, estimateActivities, invoiceActivities, expenseActivities] =
     await Promise.all([
       listJobActivitiesForJobIds(companyId, [jobId]),
       listEstimateActivitiesForEstimateIds(companyId, estimateIds),
       listInvoiceActivitiesForInvoiceIds(companyId, invoiceIds),
+      listExpenseActivitiesForJob(companyId, jobId),
     ]);
 
   const activities = [
@@ -394,6 +428,20 @@ export async function listOperationalActivitiesForJob(
     ),
     ...invoiceActivities.map((activity) =>
       fromInvoiceActivity(activity, customerId),
+    ),
+    ...expenseActivities.map((row) =>
+      fromExpenseActivityRow(
+        {
+          id: row.id,
+          actor_id: row.actor_id,
+          event_type: row.event_type,
+          metadata: row.metadata,
+          created_at: row.created_at,
+          actor: row.actor as ProfileSummary | null,
+          expense_id: row.expense_id,
+        },
+        customerId,
+      ),
     ),
   ];
 

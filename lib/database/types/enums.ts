@@ -13,7 +13,11 @@ export type CompanyStatus = "active" | "trial" | "suspended";
 
 export type CustomerStatus = "active" | "inactive" | "lead";
 
-export type CustomerActivityType = "customer_created";
+export type CustomerActivityType =
+  | "customer_created"
+  | "equipment_added"
+  | "equipment_updated"
+  | "warranty_expiration_recorded";
 
 export type JobStatus =
   | "scheduled"
@@ -41,7 +45,8 @@ export type JobActivityType =
   | "work_started"
   | "work_completed"
   | "status_changed"
-  | "job_cancelled";
+  | "job_cancelled"
+  | "job_attachment_uploaded";
 
 export type EstimateStatus =
   | "draft"
@@ -85,6 +90,27 @@ export type PaymentMethod =
   | "card"
   | "bank_transfer"
   | "other";
+
+export type ExpenseStatus =
+  | "draft"
+  | "submitted"
+  | "approved"
+  | "rejected"
+  | "reimbursed";
+
+export type ExpenseCategory =
+  | "materials"
+  | "fuel"
+  | "tools"
+  | "meals"
+  | "lodging"
+  | "vehicle"
+  | "office"
+  | "other";
+
+export type ReceiptStatus = "missing" | "attached" | "pending";
+
+export type ExpenseActivityType = "expense_receipt_uploaded";
 
 export type Json =
   | string

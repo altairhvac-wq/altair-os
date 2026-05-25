@@ -15,6 +15,7 @@ import { CompleteJobSheet } from "./CompleteJobSheet";
 
 type JobWorkflowActionsProps = {
   jobId: string;
+  customerId: string;
   status: JobStatus;
   canUpdateStatus: boolean;
   layout?: "row" | "stack";
@@ -23,6 +24,7 @@ type JobWorkflowActionsProps = {
 
 export function JobWorkflowActions({
   jobId,
+  customerId,
   status,
   canUpdateStatus,
   layout = "row",
@@ -37,23 +39,15 @@ export function JobWorkflowActions({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showCompleteSheet, setShowCompleteSheet] = useState(false);
 
-  const actions = getDisplayWorkflowActions(status);
-  const primaryAction = getPrimaryWorkflowAction(status);
   const isCompact = layout === "stack";
-
-  const visibleActions = isCompact
-    ? primaryAction
-      ? [primaryAction]
-      : []
-    : actions;
-  const primaryActions = visibleActions.filter(
-    (action) => action.variant === "primary",
-  );
+  const primaryAction = getPrimaryWorkflowAction(status);
   const secondaryActions = isCompact
     ? []
-    : actions.filter((action) => action.variant === "danger");
+    : getDisplayWorkflowActions(status).filter(
+        (action) => action.variant === "danger",
+      );
 
-  if (!canUpdateStatus || isTerminalJobStatus(status) || actions.length === 0) {
+  if (!canUpdateStatus || isTerminalJobStatus(status) || !primaryAction) {
     return null;
   }
 
@@ -103,7 +97,10 @@ export function JobWorkflowActions({
       }
 
       const actionLabel =
-        actions.find((action) => action.id === actionId)?.label ?? "Status";
+        actionId === primaryAction?.id
+          ? primaryAction.label
+          : (secondaryActions.find((candidate) => candidate.id === actionId)
+              ?.label ?? "Status");
       setSuccessMessage(`${actionLabel} updated successfully.`);
 
       onStatusUpdated?.(result.job.status);
@@ -117,11 +114,7 @@ export function JobWorkflowActions({
   return (
     <>
       <div className={layout === "stack" ? "space-y-3" : "space-y-2"}>
-        {primaryActions.length > 0 ? (
-          <div className={actionRowClass}>
-            {primaryActions.map(renderActionButton)}
-          </div>
-        ) : null}
+        <div className={actionRowClass}>{renderActionButton(primaryAction)}</div>
         {secondaryActions.length > 0 ? (
           <div className={actionRowClass}>
             {secondaryActions.map(renderActionButton)}
@@ -137,6 +130,7 @@ export function JobWorkflowActions({
       {showCompleteSheet ? (
         <CompleteJobSheet
           jobId={jobId}
+          customerId={customerId}
           currentStatus={status}
           onClose={() => setShowCompleteSheet(false)}
           onCompleted={onStatusUpdated}

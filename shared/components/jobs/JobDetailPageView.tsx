@@ -4,12 +4,9 @@ import {
   ArrowLeft,
   Building2,
   Calendar,
-  ClipboardList,
   Mail,
   MapPin,
   Phone,
-  Receipt,
-  Truck,
   User,
 } from "lucide-react";
 import { getCustomerInitials } from "@/shared/types/customer";
@@ -18,18 +15,27 @@ import { JobDetailHeaderWorkflow } from "./JobDetailHeaderWorkflow";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
 import { JobTechnicianAssignment } from "./JobTechnicianAssignment";
+import { JobCustomerEquipmentSection } from "./JobCustomerEquipmentSection";
+import { JobAttachmentsSection } from "./JobAttachmentsSection";
+import { JobExpenseReceiptsSection } from "./JobExpenseReceiptsSection";
 import { OperationalActivityTimeline } from "@/shared/components/operational/OperationalActivityTimeline";
 import {
   formatScheduledDate,
   formatScheduledTime,
   type JobDetail,
 } from "@/shared/types/job";
+import type { CustomerEquipment } from "@/shared/types/customer-equipment";
+import type { JobAttachment } from "@/shared/types/job-attachment";
+import type { Expense } from "@/shared/types/expense";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
 
 type JobDetailPageViewProps = {
   job: JobDetail;
   technicians: Technician[];
   activities: OperationalActivity[];
+  equipment: CustomerEquipment[];
+  attachments: JobAttachment[];
+  expenses: Expense[];
   canUpdateStatus: boolean;
   canAssignTechnician: boolean;
 };
@@ -39,25 +45,6 @@ type ContentSectionProps = {
   children: ReactNode;
   className?: string;
 };
-
-type PlaceholderSection = {
-  title: string;
-  description: string;
-  icon: typeof Truck;
-};
-
-const placeholderSections: PlaceholderSection[] = [
-  {
-    title: "Technician notes",
-    description: "Field updates and on-site notes will appear here.",
-    icon: ClipboardList,
-  },
-  {
-    title: "Invoice",
-    description: "Billing and payment details will appear here.",
-    icon: Receipt,
-  },
-];
 
 function ContentSection({ title, children, className }: ContentSectionProps) {
   return (
@@ -76,6 +63,9 @@ export function JobDetailPageView({
   job,
   technicians,
   activities,
+  equipment,
+  attachments,
+  expenses,
   canUpdateStatus,
   canAssignTechnician,
 }: JobDetailPageViewProps) {
@@ -256,41 +246,25 @@ export function JobDetailPageView({
         </ContentSection>
       </div>
 
+      <JobCustomerEquipmentSection
+        customerId={job.customerId}
+        jobId={job.id}
+        equipment={equipment}
+      />
+
+      <JobAttachmentsSection
+        jobId={job.id}
+        attachments={attachments}
+        canUpload={canUpdateStatus}
+      />
+
+      <JobExpenseReceiptsSection jobId={job.id} expenses={expenses} />
+
       <OperationalActivityTimeline
         activities={activities}
         description="Job workflow, estimates, and billing events"
         emptyDescription="Status changes, assignments, estimates, and invoices will appear here."
       />
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        {placeholderSections.map((section) => {
-          const Icon = section.icon;
-
-          return (
-            <section
-              key={section.title}
-              className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-5"
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-                  <Icon className="h-5 w-5 text-slate-400" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    {section.title}
-                  </h3>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                    {section.description}
-                  </p>
-                  <p className="mt-3 text-xs font-medium text-slate-400">
-                    Coming soon
-                  </p>
-                </div>
-              </div>
-            </section>
-          );
-        })}
-      </div>
     </div>
   );
 }

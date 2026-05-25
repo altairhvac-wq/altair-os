@@ -61,6 +61,7 @@ export function JobDetailHeaderWorkflow({
       <div className="flex flex-col gap-3 lg:shrink-0 lg:items-end">
         <JobWorkflowControls
           jobId={job.id}
+          customerId={job.customerId}
           initialStatus={status}
           serviceAddress={job.serviceAddress}
           city={job.city}

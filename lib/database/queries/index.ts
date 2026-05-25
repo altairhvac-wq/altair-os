@@ -56,6 +56,15 @@ export {
   recordCustomerActivity,
 } from "./customer-activities";
 export {
+  createCustomerEquipment,
+  getCustomerEquipmentById,
+  listCustomerEquipment,
+  mapCustomerEquipmentFormDataToInsert,
+  mapCustomerEquipmentFormDataToUpdate,
+  setCustomerEquipmentActive,
+  updateCustomerEquipment,
+} from "./customer-equipment";
+export {
   listOperationalActivitiesForCustomer,
   listOperationalActivitiesForJob,
 } from "./operational-activities";

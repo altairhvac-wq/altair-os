@@ -18,6 +18,7 @@ const TECHNICIAN_JOB_SELECT = `
 function mapJobRowToTechnicianJob(row: JobRowWithCustomer): TechnicianJob {
   return {
     id: row.id,
+    customerId: row.customer_id,
     jobNumber: row.job_number,
     customerName: row.customers?.name ?? "Unknown customer",
     customerPhone: row.customers?.phone ?? undefined,

@@ -10,7 +10,8 @@ export type JobActivityType =
   | "work_started"
   | "work_completed"
   | "status_changed"
-  | "job_cancelled";
+  | "job_cancelled"
+  | "job_attachment_uploaded";
 
 export type JobActivityMetadata = {
   customer_id?: string;
@@ -25,6 +26,8 @@ export type JobActivityMetadata = {
   previous_technician_name?: string;
   completion_notes?: string;
   follow_up_notes?: string;
+  attachment_type?: string;
+  file_name?: string;
 };
 
 export type JobActivity = {
@@ -48,6 +51,7 @@ const ACTIVITY_TYPE_LABELS: Record<JobActivityType, string> = {
   work_completed: "Work completed",
   status_changed: "Status changed",
   job_cancelled: "Job cancelled",
+  job_attachment_uploaded: "Attachment uploaded",
 };
 
 export function formatJobActivityLabel(activity: JobActivity): string {
@@ -96,6 +100,20 @@ export function formatJobActivityDetails(activity: JobActivity): string | null {
     case "work_started":
     case "status_changed":
       return formatStatusTransition(metadata.from_status, metadata.to_status);
+
+    case "job_attachment_uploaded": {
+      const parts: string[] = [];
+      if (metadata.attachment_type) {
+        parts.push(
+          metadata.attachment_type.charAt(0).toUpperCase() +
+            metadata.attachment_type.slice(1),
+        );
+      }
+      if (metadata.file_name) {
+        parts.push(metadata.file_name);
+      }
+      return parts.length > 0 ? parts.join(" · ") : null;
+    }
 
     default:
       return null;

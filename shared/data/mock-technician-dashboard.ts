@@ -11,6 +11,7 @@ export const mockTechnicianDashboard: TechnicianDashboardData = {
   },
   currentJob: {
     id: "disp-003",
+    customerId: "00000000-0000-0000-0000-000000000001",
     jobNumber: "JOB-1042",
     customerName: "Sarah Mitchell",
     customerPhone: "(512) 555-0198",
@@ -28,6 +29,7 @@ export const mockTechnicianDashboard: TechnicianDashboardData = {
   upcomingJobs: [
     {
       id: "disp-013",
+      customerId: "00000000-0000-0000-0000-000000000002",
       jobNumber: "JOB-1055",
       customerName: "Riverside Apartments",
       customerPhone: "(512) 555-0264",
@@ -43,6 +45,7 @@ export const mockTechnicianDashboard: TechnicianDashboardData = {
     },
     {
       id: "disp-007",
+      customerId: "00000000-0000-0000-0000-000000000003",
       jobNumber: "JOB-1047",
       customerName: "Michael Foster",
       customerPhone: "(512) 555-0331",

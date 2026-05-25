@@ -1,27 +1,25 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import {
+  createExpenseAction,
+  prepareExpenseReceiptUploadAction,
+} from "@/app/actions/expenses";
+import { COMPANY_FILES_BUCKET } from "@/lib/storage/company-files";
 import {
   EXPENSE_CATEGORY_OPTIONS,
-  EXPENSE_STATUS_OPTIONS,
   type ExpenseCategory,
   type ExpenseFormData,
-  type ExpenseStatus,
 } from "@/shared/types/expense";
 import { ReceiptUploadBox } from "./ReceiptUploadBox";
 
 type ExpenseFormProps = {
   initialData?: Partial<ExpenseFormData>;
-  onSubmit: (data: ExpenseFormData) => void;
+  jobId?: string;
+  onSuccess?: () => void;
   onCancel: () => void;
-};
-
-const emptyForm: ExpenseFormData = {
-  amount: 0,
-  purchaseDate: "",
-  merchant: "",
-  category: "materials",
-  technician: "",
-  jobNumber: "",
-  status: "draft",
-  notes: "",
 };
 
 const inputClass =
@@ -31,32 +29,100 @@ const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
 
 export function ExpenseForm({
   initialData,
-  onSubmit,
+  jobId,
+  onSuccess,
   onCancel,
 }: ExpenseFormProps) {
-  const defaults = { ...emptyForm, ...initialData };
-
-  const statusOptions = EXPENSE_STATUS_OPTIONS.filter(
-    (option) => option.value !== "all",
-  );
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   const categoryOptions = EXPENSE_CATEGORY_OPTIONS.filter(
     (option) => option.value !== "all",
   );
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = new FormData(e.currentTarget);
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
 
-    onSubmit({
-      amount: Number(form.get("amount") ?? 0),
-      purchaseDate: String(form.get("purchaseDate") ?? ""),
-      merchant: String(form.get("merchant") ?? ""),
-      category: String(form.get("category") ?? "materials") as ExpenseCategory,
-      technician: String(form.get("technician") ?? ""),
-      jobNumber: String(form.get("jobNumber") ?? ""),
-      status: String(form.get("status") ?? "draft") as ExpenseStatus,
-      notes: String(form.get("notes") ?? ""),
+    startTransition(async () => {
+      const form = new FormData(event.currentTarget);
+      const amountValue = String(form.get("amount") ?? "").trim();
+      const purchaseDate = String(form.get("purchaseDate") ?? "").trim();
+      const merchant = String(form.get("merchant") ?? "").trim();
+      const category = String(form.get("category") ?? "materials") as ExpenseCategory;
+      const notes = String(form.get("notes") ?? "").trim();
+      const linkedJobId =
+        jobId ?? (String(form.get("jobId") ?? "").trim() || undefined);
+
+      const data: ExpenseFormData = {
+        amount: amountValue ? Number(amountValue) : undefined,
+        purchaseDate: purchaseDate || undefined,
+        merchant: merchant || undefined,
+        category,
+        jobId: linkedJobId,
+        notes: notes || undefined,
+      };
+
+      const expenseId = crypto.randomUUID();
+      let receiptFileName: string | undefined;
+      let receiptStoragePath: string | undefined;
+      let receiptMimeType: string | undefined;
+      let receiptFileSize: number | undefined;
+
+      if (receiptFile) {
+        const target = await prepareExpenseReceiptUploadAction({
+          expenseId,
+          fileName: receiptFile.name,
+        });
+
+        if (target.error || !target.storagePath) {
+          setError(target.error ?? "Could not prepare receipt upload.");
+          return;
+        }
+
+        const supabase = createClient();
+        const { error: uploadError } = await supabase.storage
+          .from(COMPANY_FILES_BUCKET)
+          .upload(target.storagePath, receiptFile, {
+            upsert: false,
+            contentType: receiptFile.type,
+          });
+
+        if (uploadError) {
+          setError(uploadError.message || "Receipt upload failed.");
+          return;
+        }
+
+        receiptFileName = receiptFile.name;
+        receiptStoragePath = target.storagePath;
+        receiptMimeType = receiptFile.type;
+        receiptFileSize = receiptFile.size;
+      }
+
+      const result = await createExpenseAction({
+        data,
+        expenseId,
+        receiptFileName,
+        receiptStoragePath,
+        receiptMimeType,
+        receiptFileSize,
+      });
+
+      if (result.error) {
+        if (receiptStoragePath) {
+          const supabase = createClient();
+          await supabase.storage
+            .from(COMPANY_FILES_BUCKET)
+            .remove([receiptStoragePath]);
+        }
+        setError(result.error);
+        return;
+      }
+
+      onSuccess?.();
+      router.refresh();
     });
   }
 
@@ -65,7 +131,8 @@ export function ExpenseForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="amount" className={labelClass}>
-            Amount
+            Amount{" "}
+            <span className="font-normal text-slate-400">(optional)</span>
           </label>
           <input
             id="amount"
@@ -73,8 +140,7 @@ export function ExpenseForm({
             type="number"
             min="0"
             step="0.01"
-            required
-            defaultValue={defaults.amount || ""}
+            defaultValue={initialData?.amount ?? ""}
             placeholder="0.00"
             className={inputClass}
           />
@@ -82,27 +148,27 @@ export function ExpenseForm({
 
         <div>
           <label htmlFor="purchaseDate" className={labelClass}>
-            Purchase date
+            Purchase date{" "}
+            <span className="font-normal text-slate-400">(optional)</span>
           </label>
           <input
             id="purchaseDate"
             name="purchaseDate"
             type="date"
-            required
-            defaultValue={defaults.purchaseDate}
+            defaultValue={initialData?.purchaseDate ?? ""}
             className={inputClass}
           />
         </div>
 
         <div className="sm:col-span-2">
           <label htmlFor="merchant" className={labelClass}>
-            Merchant
+            Merchant / vendor{" "}
+            <span className="font-normal text-slate-400">(optional)</span>
           </label>
           <input
             id="merchant"
             name="merchant"
-            required
-            defaultValue={defaults.merchant}
+            defaultValue={initialData?.merchant ?? ""}
             placeholder="Home Depot"
             className={inputClass}
           />
@@ -115,7 +181,7 @@ export function ExpenseForm({
           <select
             id="category"
             name="category"
-            defaultValue={defaults.category}
+            defaultValue={initialData?.category ?? "materials"}
             className={inputClass}
           >
             {categoryOptions.map((option) => (
@@ -126,50 +192,23 @@ export function ExpenseForm({
           </select>
         </div>
 
-        <div>
-          <label htmlFor="status" className={labelClass}>
-            Approval status
-          </label>
-          <select
-            id="status"
-            name="status"
-            defaultValue={defaults.status}
-            className={inputClass}
-          >
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="technician" className={labelClass}>
-            Technician
-          </label>
-          <input
-            id="technician"
-            name="technician"
-            required
-            defaultValue={defaults.technician}
-            placeholder="Marcus Rivera"
-            className={inputClass}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="jobNumber" className={labelClass}>
-            Linked job
-          </label>
-          <input
-            id="jobNumber"
-            name="jobNumber"
-            defaultValue={defaults.jobNumber}
-            placeholder="JOB-1042"
-            className={inputClass}
-          />
-        </div>
+        {!jobId ? (
+          <div>
+            <label htmlFor="jobId" className={labelClass}>
+              Linked job ID{" "}
+              <span className="font-normal text-slate-400">(optional)</span>
+            </label>
+            <input
+              id="jobId"
+              name="jobId"
+              defaultValue={initialData?.jobId ?? ""}
+              placeholder="Job UUID"
+              className={inputClass}
+            />
+          </div>
+        ) : (
+          <input type="hidden" name="jobId" value={jobId} />
+        )}
 
         <div className="sm:col-span-2">
           <label htmlFor="notes" className={labelClass}>
@@ -179,7 +218,7 @@ export function ExpenseForm({
             id="notes"
             name="notes"
             rows={3}
-            defaultValue={defaults.notes}
+            defaultValue={initialData?.notes ?? ""}
             placeholder="What was purchased and why"
             className={inputClass}
           />
@@ -190,20 +229,28 @@ export function ExpenseForm({
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
           Receipt
         </h3>
-        <ReceiptUploadBox compact />
+        <ReceiptUploadBox
+          compact
+          selectedFile={receiptFile}
+          onFileSelected={setReceiptFile}
+        />
       </section>
+
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       <div className="flex gap-2 border-t border-slate-100 pt-4">
         <button
           type="submit"
-          className="flex-1 rounded-lg bg-cyan-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+          disabled={isPending}
+          className="flex-1 rounded-lg bg-cyan-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:opacity-60"
         >
-          Save expense
+          {isPending ? "Saving..." : "Save draft expense"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          disabled={isPending}
+          className="flex-1 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
         >
           Cancel
         </button>

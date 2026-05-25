@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Clock, Mail, MapPin, Phone, User } from "lucide-react";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
 import {
@@ -9,6 +10,7 @@ import {
   getPriorityStyles,
   type TechnicianJob,
 } from "@/shared/types/technician";
+import { shouldAcceptServerWorkflowStatus } from "@/shared/types/job-workflow";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 
 type TechnicianJobCardProps = {
@@ -16,6 +18,14 @@ type TechnicianJobCardProps = {
 };
 
 export function TechnicianJobCard({ job }: TechnicianJobCardProps) {
+  const [status, setStatus] = useState(job.status);
+
+  useEffect(() => {
+    setStatus((current) =>
+      shouldAcceptServerWorkflowStatus(current, job.status) ? job.status : current,
+    );
+  }, [job.status]);
+
   const contactLines = [
     job.customerPhone ? { icon: Phone, value: job.customerPhone } : null,
     job.customerEmail ? { icon: Mail, value: job.customerEmail } : null,
@@ -36,7 +46,7 @@ export function TechnicianJobCard({ job }: TechnicianJobCardProps) {
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <TechnicianJobStatusBadge status={job.status} />
+          <TechnicianJobStatusBadge status={status} />
           <span
             className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${getPriorityStyles(job.priority)}`}
           >
@@ -90,13 +100,15 @@ export function TechnicianJobCard({ job }: TechnicianJobCardProps) {
       <div className="border-t border-slate-100 p-4">
         <JobWorkflowControls
           jobId={job.id}
-          initialStatus={job.status}
+          customerId={job.customerId}
+          initialStatus={status}
           serviceAddress={job.serviceAddress}
           city={job.city}
           state={job.state}
           zip={job.zip}
           canUpdateStatus
           layout="stack"
+          onStatusUpdated={setStatus}
         />
       </div>
     </article>

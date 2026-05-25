@@ -6,6 +6,9 @@ import type {
   DispatchAssignmentStatus,
   EstimateActivityType,
   EstimateStatus,
+  ExpenseActivityType,
+  ExpenseCategory,
+  ExpenseStatus,
   InvoiceActivityType,
   InvoiceStatus,
   JobActivityType,
@@ -14,6 +17,7 @@ import type {
   Json,
   MembershipStatus,
   PaymentMethod,
+  ReceiptStatus,
   Timestamp,
   UUID,
 } from "./enums";
@@ -184,6 +188,51 @@ export type CustomerActivityInsert = {
   created_at?: Timestamp;
 };
 
+export type CustomerEquipmentRow = {
+  id: UUID;
+  company_id: UUID;
+  customer_id: UUID;
+  job_id: UUID | null;
+  name: string;
+  equipment_type: string | null;
+  brand: string | null;
+  model_number: string | null;
+  serial_number: string | null;
+  install_date: string | null;
+  warranty_expires_at: string | null;
+  location: string | null;
+  notes: string | null;
+  is_active: boolean;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type CustomerEquipmentInsert = {
+  id?: UUID;
+  company_id: UUID;
+  customer_id: UUID;
+  job_id?: UUID | null;
+  name: string;
+  equipment_type?: string | null;
+  brand?: string | null;
+  model_number?: string | null;
+  serial_number?: string | null;
+  install_date?: string | null;
+  warranty_expires_at?: string | null;
+  location?: string | null;
+  notes?: string | null;
+  is_active?: boolean;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type CustomerEquipmentUpdate = Partial<
+  Omit<
+    CustomerEquipmentRow,
+    "id" | "company_id" | "customer_id" | "created_at" | "updated_at"
+  >
+>;
+
 export type JobRow = {
   id: UUID;
   company_id: UUID;
@@ -295,6 +344,105 @@ export type JobActivityInsert = {
   job_id: UUID;
   actor_id?: UUID | null;
   event_type: JobActivityType;
+  metadata?: Json;
+  created_at?: Timestamp;
+};
+
+export type JobAttachmentRow = {
+  id: UUID;
+  company_id: UUID;
+  customer_id: UUID | null;
+  job_id: UUID;
+  uploaded_by: UUID | null;
+  file_name: string;
+  file_path: string;
+  file_type: string | null;
+  mime_type: string | null;
+  file_size: number | null;
+  attachment_type: string;
+  caption: string | null;
+  created_at: Timestamp;
+};
+
+export type JobAttachmentInsert = {
+  id?: UUID;
+  company_id: UUID;
+  customer_id?: UUID | null;
+  job_id: UUID;
+  uploaded_by?: UUID | null;
+  file_name: string;
+  file_path: string;
+  file_type?: string | null;
+  mime_type?: string | null;
+  file_size?: number | null;
+  attachment_type?: string;
+  caption?: string | null;
+  created_at?: Timestamp;
+};
+
+export type ExpenseRow = {
+  id: UUID;
+  company_id: UUID;
+  customer_id: UUID | null;
+  job_id: UUID | null;
+  technician_id: UUID;
+  expense_number: string;
+  amount: number | null;
+  purchase_date: string | null;
+  merchant: string;
+  category: ExpenseCategory;
+  receipt_status: ReceiptStatus;
+  receipt_file_name: string | null;
+  receipt_storage_path: string | null;
+  status: ExpenseStatus;
+  notes: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type ExpenseInsert = {
+  id?: UUID;
+  company_id: UUID;
+  customer_id?: UUID | null;
+  job_id?: UUID | null;
+  technician_id: UUID;
+  expense_number: string;
+  amount?: number | null;
+  purchase_date?: string | null;
+  merchant?: string;
+  category?: ExpenseCategory;
+  receipt_status?: ReceiptStatus;
+  receipt_file_name?: string | null;
+  receipt_storage_path?: string | null;
+  status?: ExpenseStatus;
+  notes?: string | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type ExpenseUpdate = Partial<
+  Omit<
+    ExpenseRow,
+    "id" | "company_id" | "technician_id" | "expense_number" | "created_at" | "updated_at"
+  >
+>;
+
+export type ExpenseActivityRow = {
+  id: UUID;
+  company_id: UUID;
+  expense_id: UUID;
+  actor_id: UUID | null;
+  event_type: ExpenseActivityType;
+  metadata: Json;
+  created_at: Timestamp;
+};
+
+export type ExpenseActivityInsert = {
+  id?: UUID;
+  company_id: UUID;
+  expense_id: UUID;
+  actor_id?: UUID | null;
+  event_type: ExpenseActivityType;
   metadata?: Json;
   created_at?: Timestamp;
 };

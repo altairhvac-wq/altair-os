@@ -49,6 +49,7 @@ export function mapJobRowToDispatchJob(row: JobRowWithDispatch): DispatchJob {
 
   return {
     id: job.id,
+    customerId: job.customerId,
     jobNumber: job.jobNumber,
     customerName: job.customerName,
     customerEmail: row.customers?.email || undefined,

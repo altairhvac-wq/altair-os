@@ -1,6 +1,7 @@
 import {
   ArrowRightLeft,
   Ban,
+  Camera,
   CheckCircle2,
   ClipboardList,
   DollarSign,
@@ -9,6 +10,8 @@ import {
   Play,
   Receipt,
   Send,
+  Settings2,
+  ShieldCheck,
   User,
   UserPlus,
 } from "lucide-react";
@@ -35,6 +38,9 @@ const ACTIVITY_ICONS: Record<
   typeof History
 > = {
   customer_created: UserPlus,
+  equipment_added: Settings2,
+  equipment_updated: Settings2,
+  warranty_expiration_recorded: ShieldCheck,
   job_created: ClipboardList,
   job_status_changed: ArrowRightLeft,
   technician_assigned: User,
@@ -45,11 +51,16 @@ const ACTIVITY_ICONS: Record<
   invoice_sent: Send,
   payment_recorded: DollarSign,
   invoice_paid: CheckCircle2,
+  job_attachment_uploaded: Camera,
+  expense_receipt_uploaded: Receipt,
   status_changed: ArrowRightLeft,
 };
 
 const ACTIVITY_ICON_STYLES: Record<OperationalActivityEventType, string> = {
   customer_created: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
+  equipment_added: "bg-violet-50 text-violet-700 ring-violet-600/15",
+  equipment_updated: "bg-violet-50 text-violet-700 ring-violet-600/15",
+  warranty_expiration_recorded: "bg-amber-50 text-amber-700 ring-amber-600/15",
   job_created: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
   job_status_changed: "bg-slate-100 text-slate-600 ring-slate-500/15",
   technician_assigned: "bg-violet-50 text-violet-700 ring-violet-600/15",
@@ -60,6 +71,8 @@ const ACTIVITY_ICON_STYLES: Record<OperationalActivityEventType, string> = {
   invoice_sent: "bg-blue-50 text-blue-700 ring-blue-600/15",
   payment_recorded: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
   invoice_paid: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
+  job_attachment_uploaded: "bg-blue-50 text-blue-700 ring-blue-600/15",
+  expense_receipt_uploaded: "bg-amber-50 text-amber-700 ring-amber-600/15",
   status_changed: "bg-slate-100 text-slate-600 ring-slate-500/15",
 };
 

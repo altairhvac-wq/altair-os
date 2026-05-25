@@ -6,7 +6,10 @@ import {
   Tag,
 } from "lucide-react";
 import { CustomerBillingHistorySection } from "./CustomerBillingHistorySection";
+import { CustomerRecentPhotosSection } from "./CustomerRecentPhotosSection";
+import { CustomerRecentReceiptsSection } from "./CustomerRecentReceiptsSection";
 import { CustomerCard } from "./CustomerCard";
+import { CustomerEquipmentSection } from "./CustomerEquipmentSection";
 import { CustomerJobsSection } from "./CustomerJobsSection";
 import { OperationalActivityTimeline } from "@/shared/components/operational/OperationalActivityTimeline";
 import {
@@ -16,6 +19,9 @@ import {
 import type { Estimate } from "@/shared/types/estimate";
 import type { Invoice } from "@/shared/types/invoice";
 import type { Job } from "@/shared/types/job";
+import type { CustomerEquipment } from "@/shared/types/customer-equipment";
+import type { Expense } from "@/shared/types/expense";
+import type { JobAttachment } from "@/shared/types/job-attachment";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
 
 type CustomerDetailPageViewProps = {
@@ -24,7 +30,11 @@ type CustomerDetailPageViewProps = {
   estimates: Estimate[];
   invoices: Invoice[];
   activities: OperationalActivity[];
+  equipment: CustomerEquipment[];
+  recentPhotos: JobAttachment[];
+  recentReceipts: Expense[];
   canCreateJob: boolean;
+  canManageEquipment: boolean;
 };
 
 export function CustomerDetailPageView({
@@ -33,7 +43,11 @@ export function CustomerDetailPageView({
   estimates,
   invoices,
   activities,
+  equipment,
+  recentPhotos,
+  recentReceipts,
   canCreateJob,
+  canManageEquipment,
 }: CustomerDetailPageViewProps) {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -110,9 +124,25 @@ export function CustomerDetailPageView({
         canCreateJob={canCreateJob}
       />
 
+      <CustomerEquipmentSection
+        customerId={customer.id}
+        equipment={equipment.filter((item) => item.isActive)}
+        canManage={canManageEquipment}
+      />
+
       <CustomerBillingHistorySection
         estimates={estimates}
         invoices={invoices}
+      />
+
+      <CustomerRecentPhotosSection
+        customerId={customer.id}
+        attachments={recentPhotos}
+      />
+
+      <CustomerRecentReceiptsSection
+        customerId={customer.id}
+        expenses={recentReceipts}
       />
 
       <OperationalActivityTimeline

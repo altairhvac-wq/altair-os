@@ -10,6 +10,9 @@ import type {
   CustomerUpdate,
   CustomerActivityInsert,
   CustomerActivityRow,
+  CustomerEquipmentInsert,
+  CustomerEquipmentRow,
+  CustomerEquipmentUpdate,
   DispatchAssignmentInsert,
   DispatchAssignmentRow,
   DispatchAssignmentUpdate,
@@ -20,6 +23,11 @@ import type {
   EstimateLineItemRow,
   EstimateRow,
   EstimateUpdate,
+  ExpenseActivityInsert,
+  ExpenseActivityRow,
+  ExpenseInsert,
+  ExpenseRow,
+  ExpenseUpdate,
   InvoiceActivityInsert,
   InvoiceActivityRow,
   InvoiceInsert,
@@ -37,6 +45,8 @@ import type {
   JobUpdate,
   JobActivityInsert,
   JobActivityRow,
+  JobAttachmentInsert,
+  JobAttachmentRow,
   ProfileInsert,
   ProfileRow,
   ProfileUpdate,
@@ -128,6 +138,34 @@ export type Database = {
           },
         ];
       };
+      customer_equipment: {
+        Row: CustomerEquipmentRow;
+        Insert: CustomerEquipmentInsert;
+        Update: CustomerEquipmentUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "customer_equipment_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_equipment_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_equipment_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       jobs: {
         Row: JobRow;
         Insert: JobInsert;
@@ -205,6 +243,104 @@ export type Database = {
           },
           {
             foreignKeyName: "job_activities_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      job_attachments: {
+        Row: JobAttachmentRow;
+        Insert: JobAttachmentInsert;
+        Update: Partial<JobAttachmentInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "job_attachments_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "job_attachments_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "job_attachments_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "job_attachments_uploaded_by_fkey";
+            columns: ["uploaded_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      expenses: {
+        Row: ExpenseRow;
+        Insert: ExpenseInsert;
+        Update: ExpenseUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "expenses_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_technician_id_fkey";
+            columns: ["technician_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      expense_activities: {
+        Row: ExpenseActivityRow;
+        Insert: ExpenseActivityInsert;
+        Update: Partial<ExpenseActivityInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "expense_activities_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_activities_expense_id_fkey";
+            columns: ["expense_id"];
+            isOneToOne: false;
+            referencedRelation: "expenses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_activities_actor_id_fkey";
             columns: ["actor_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
@@ -454,6 +590,10 @@ export type Database = {
       invoice_status: InvoiceRow["status"];
       invoice_activity_type: InvoiceActivityRow["event_type"];
       invoice_payment_method: InvoicePaymentRow["payment_method"];
+      expense_status: ExpenseRow["status"];
+      expense_category: ExpenseRow["category"];
+      receipt_status: ExpenseRow["receipt_status"];
+      expense_activity_type: ExpenseActivityRow["event_type"];
     };
     CompositeTypes: Record<string, never>;
   };

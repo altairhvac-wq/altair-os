@@ -126,3 +126,34 @@ export async function recordJobStatusChangedActivity(input: {
     });
   }
 }
+
+export async function recordJobAttachmentUploadedActivity(input: {
+  companyId: string;
+  jobId: string;
+  actorId: string;
+  customerId?: string;
+  jobNumber?: string;
+  attachmentType: string;
+  fileName: string;
+}): Promise<void> {
+  const { error } = await recordJobActivity({
+    company_id: input.companyId,
+    job_id: input.jobId,
+    actor_id: input.actorId,
+    event_type: "job_attachment_uploaded",
+    metadata: {
+      customer_id: input.customerId,
+      job_id: input.jobId,
+      job_number: input.jobNumber,
+      attachment_type: input.attachmentType,
+      file_name: input.fileName,
+    },
+  });
+
+  if (error) {
+    console.error("[recordJobAttachmentUploadedActivity] failed:", {
+      jobId: input.jobId,
+      error,
+    });
+  }
+}

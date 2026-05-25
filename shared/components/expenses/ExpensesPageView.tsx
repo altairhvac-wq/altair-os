@@ -1,25 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
-import { mockExpenses } from "@/shared/data/mock-expenses";
-import { formatCurrency } from "@/shared/types/customer";
 import {
   formatExpenseCategory,
   formatExpenseStatus,
   type Expense,
   type ExpenseCategory,
-  type ExpenseFormData,
   type ExpenseStatus,
 } from "@/shared/types/expense";
 import { ExpenseDetailsPanel } from "./ExpenseDetailsPanel";
 import { ExpenseSearchFilterBar } from "./ExpenseSearchFilterBar";
 import { ExpenseSummaryCards } from "./ExpenseSummaryCards";
 import { ExpensesEmptyState } from "./ExpensesEmptyState";
-import { ExpensesLoadingState } from "./ExpensesLoadingState";
 import { ExpensesTable } from "./ExpensesTable";
 
 type PanelMode = "detail" | "create" | "empty";
+
+type ExpensesPageViewProps = {
+  expenses: Expense[];
+};
 
 function filterExpenses(
   expenses: Expense[],
@@ -47,8 +47,7 @@ function filterExpenses(
       expense.jobNumber ?? "",
       formatExpenseStatus(expense.status),
       expense.status,
-      formatCurrency(expense.amount),
-      String(expense.amount),
+      expense.amount != null ? String(expense.amount) : "",
       expense.notes ?? "",
     ]
       .join(" ")
@@ -58,29 +57,7 @@ function filterExpenses(
   });
 }
 
-function formDataToExpense(data: ExpenseFormData, existingCount: number): Expense {
-  const expenseNumber = `EXP-${1013 + existingCount}`;
-  const today = new Date().toISOString().split("T")[0];
-
-  return {
-    id: `exp-${Date.now()}`,
-    expenseNumber,
-    amount: data.amount,
-    purchaseDate: data.purchaseDate,
-    merchant: data.merchant,
-    category: data.category,
-    technician: data.technician,
-    jobNumber: data.jobNumber || undefined,
-    receiptStatus: "missing",
-    status: data.status,
-    notes: data.notes || undefined,
-    createdAt: today,
-  };
-}
-
-export function ExpensesPageView() {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function ExpensesPageView({ expenses }: ExpensesPageViewProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ExpenseStatus | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | "all">(
@@ -88,15 +65,6 @@ export function ExpensesPageView() {
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<PanelMode>("empty");
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setExpenses(mockExpenses);
-      setIsLoading(false);
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   const filteredExpenses = useMemo(
     () => filterExpenses(expenses, search, statusFilter, categoryFilter),
@@ -120,15 +88,9 @@ export function ExpensesPageView() {
     setPanelMode("empty");
   }
 
-  function handleCreateSubmit(data: ExpenseFormData) {
-    const newExpense = formDataToExpense(data, expenses.length);
-    setExpenses((prev) => [newExpense, ...prev]);
-    setSelectedId(newExpense.id);
-    setPanelMode("detail");
-  }
-
-  if (isLoading) {
-    return <ExpensesLoadingState />;
+  function handleCreateSuccess() {
+    setPanelMode("empty");
+    setSelectedId(null);
   }
 
   const hasNoExpenses = expenses.length === 0;
@@ -144,7 +106,7 @@ export function ExpensesPageView() {
             <div>
               <h2 className="text-base font-bold text-slate-900">All expenses</h2>
               <p className="text-xs text-slate-500">
-                Track receipts, approvals, and reimbursements
+                Capture receipts and draft expenses for later review
               </p>
             </div>
             <button
@@ -193,7 +155,7 @@ export function ExpensesPageView() {
           mode={panelMode}
           expense={selectedExpense}
           onClose={handleClosePanel}
-          onCreateSubmit={handleCreateSubmit}
+          onCreateSuccess={handleCreateSuccess}
           onCreateCancel={handleClosePanel}
         />
       </div>

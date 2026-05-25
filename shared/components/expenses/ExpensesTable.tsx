@@ -1,4 +1,4 @@
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatExpenseAmount, formatExpenseDate } from "@/shared/types/expense";
 import type { Expense } from "@/shared/types/expense";
 import { ExpenseCategoryBadge } from "./ExpenseCategoryBadge";
 import { ExpenseStatusBadge } from "./ExpenseStatusBadge";
@@ -45,7 +45,7 @@ export function ExpensesTable({
                     {expense.expenseNumber}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {formatDate(expense.purchaseDate)}
+                    {formatExpenseDate(expense.purchaseDate)}
                   </p>
                 </td>
                 <td className="px-4 py-3">
@@ -63,7 +63,7 @@ export function ExpensesTable({
                   {expense.jobNumber ?? "—"}
                 </td>
                 <td className="px-4 py-3 font-semibold text-slate-900">
-                  {formatCurrency(expense.amount)}
+                  {formatExpenseAmount(expense.amount)}
                 </td>
                 <td className="px-4 py-3">
                   <ExpenseStatusBadge status={expense.status} />

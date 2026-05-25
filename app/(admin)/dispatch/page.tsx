@@ -19,6 +19,7 @@ export default async function DispatchPage() {
       initialJobs={jobs}
       technicians={technicians}
       canDispatchJobs={companyContext.permissions.dispatchJobs}
+      canViewAssignedJobs={companyContext.permissions.viewAssignedJobs}
     />
   );
 }

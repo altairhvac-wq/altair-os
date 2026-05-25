@@ -3,11 +3,22 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, X } from "lucide-react";
+import {
+  createCustomerEquipmentAction,
+  updateCustomerEquipmentAction,
+} from "@/app/actions/customer-equipment";
 import { updateJobStatusAction } from "@/app/actions/jobs";
+import {
+  CompleteJobEquipmentPanel,
+  EMPTY_COMPLETE_JOB_EQUIPMENT_PAYLOAD,
+  type CompleteJobEquipmentPayload,
+} from "@/shared/components/equipment/CompleteJobEquipmentPanel";
+import { CompleteJobPhotosPanel } from "@/shared/components/jobs/CompleteJobPhotosPanel";
 import type { JobStatus } from "@/shared/types/job";
 
 type CompleteJobSheetProps = {
   jobId: string;
+  customerId: string;
   currentStatus: JobStatus;
   onClose: () => void;
   onCompleted?: (status: JobStatus) => void;
@@ -20,6 +31,7 @@ const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
 
 export function CompleteJobSheet({
   jobId,
+  customerId,
   currentStatus,
   onClose,
   onCompleted,
@@ -29,6 +41,8 @@ export function CompleteJobSheet({
   const [error, setError] = useState<string | null>(null);
   const [completionNotes, setCompletionNotes] = useState("");
   const [followUpNotes, setFollowUpNotes] = useState("");
+  const [equipmentPayload, setEquipmentPayload] =
+    useState<CompleteJobEquipmentPayload>(EMPTY_COMPLETE_JOB_EQUIPMENT_PAYLOAD);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -52,6 +66,46 @@ export function CompleteJobSheet({
     setError(null);
 
     startTransition(async () => {
+      if (equipmentPayload.mode === "create" && equipmentPayload.data) {
+        if (!equipmentPayload.data.name.trim()) {
+          setError("Equipment name is required when adding equipment.");
+          return;
+        }
+
+        const equipmentResult = await createCustomerEquipmentAction(
+          customerId,
+          equipmentPayload.data,
+          jobId,
+        );
+
+        if (equipmentResult.error) {
+          setError(equipmentResult.error);
+          return;
+        }
+      }
+
+      if (
+        equipmentPayload.mode === "update" &&
+        equipmentPayload.equipmentId &&
+        equipmentPayload.data
+      ) {
+        if (!equipmentPayload.data.name.trim()) {
+          setError("Equipment name is required when updating equipment.");
+          return;
+        }
+
+        const equipmentResult = await updateCustomerEquipmentAction(
+          equipmentPayload.equipmentId,
+          equipmentPayload.data,
+          jobId,
+        );
+
+        if (equipmentResult.error) {
+          setError(equipmentResult.error);
+          return;
+        }
+      }
+
       const result = await updateJobStatusAction(jobId, "complete", currentStatus, {
         completionNotes: completionNotes.trim() || undefined,
         followUpNotes: followUpNotes.trim() || undefined,
@@ -139,6 +193,14 @@ export function CompleteJobSheet({
                 className={inputClass}
               />
             </div>
+
+            <CompleteJobEquipmentPanel
+              customerId={customerId}
+              value={equipmentPayload}
+              onChange={setEquipmentPayload}
+            />
+
+            <CompleteJobPhotosPanel jobId={jobId} />
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
           </div>

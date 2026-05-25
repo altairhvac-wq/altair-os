@@ -106,13 +106,6 @@ export async function updateJobStatusAction(
     return { error: "This status change is not allowed." };
   }
 
-  console.log("[updateJobStatusAction] status transition", {
-    jobId,
-    actionId,
-    currentStatus,
-    nextStatus,
-  });
-
   const { job, error } = await updateJobWorkflowStatus(
     context.company.id,
     jobId,
@@ -143,6 +136,7 @@ export async function updateJobStatusAction(
   revalidatePath("/dispatch");
   revalidatePath("/technician");
   revalidatePath(`/jobs/${jobId}`);
+  revalidatePath(`/customers/${job.customerId}`);
 
   return { job };
 }

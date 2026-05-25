@@ -19,6 +19,7 @@ type DispatchDetailsPanelProps = {
   technician: Technician | null;
   technicians: Technician[];
   canDispatchJobs: boolean;
+  canUpdateJobWorkflow: boolean;
   assignError: string | null;
   isAssigning: boolean;
   onClose: () => void;
@@ -31,6 +32,7 @@ export function DispatchDetailsPanel({
   technician,
   technicians,
   canDispatchJobs,
+  canUpdateJobWorkflow,
   assignError,
   isAssigning,
   onClose,
@@ -305,12 +307,13 @@ export function DispatchDetailsPanel({
               </h3>
               <JobWorkflowControls
                 jobId={job.id}
+                customerId={job.customerId}
                 initialStatus={job.status}
                 serviceAddress={job.serviceAddress}
                 city={job.city}
                 state={job.state}
                 zip={job.zip}
-                canUpdateStatus={canDispatchJobs}
+                canUpdateStatus={canUpdateJobWorkflow}
                 layout="stack"
                 onStatusUpdated={(status) => onStatusUpdated?.(job.id, status)}
               />

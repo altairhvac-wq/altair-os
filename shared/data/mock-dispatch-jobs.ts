@@ -3,6 +3,7 @@ import type { DispatchJob } from "@/shared/types/dispatch";
 export const mockDispatchJobs: DispatchJob[] = [
   {
     id: "disp-001",
+    customerId: "00000000-0000-0000-0000-000000000001",
     jobNumber: "JOB-1043",
     customerName: "James Chen",
     serviceAddress: "903 Willow Creek Ln",
@@ -18,6 +19,7 @@ export const mockDispatchJobs: DispatchJob[] = [
   },
   {
     id: "disp-002",
+    customerId: "00000000-0000-0000-0000-000000000002",
     jobNumber: "JOB-1044",
     customerName: "Greenfield Property Group",
     serviceAddress: "5500 Business Park Blvd, Ste 200",
@@ -34,6 +36,7 @@ export const mockDispatchJobs: DispatchJob[] = [
   },
   {
     id: "disp-003",
+    customerId: "00000000-0000-0000-0000-000000000003",
     jobNumber: "JOB-1042",
     customerName: "Sarah Mitchell",
     serviceAddress: "1842 Oak Valley Dr",
@@ -50,6 +53,7 @@ export const mockDispatchJobs: DispatchJob[] = [
   },
   {
     id: "disp-004",
+    customerId: "00000000-0000-0000-0000-000000000004",
     jobNumber: "JOB-1048",
     customerName: "Angela Brooks",
     serviceAddress: "901 Congress Ave, Fl 12",
@@ -65,6 +69,7 @@ export const mockDispatchJobs: DispatchJob[] = [
   },
   {
     id: "disp-005",
+    customerId: "00000000-0000-0000-0000-000000000005",
     jobNumber: "JOB-1049",
     customerName: "Emily Rodriguez",
     serviceAddress: "221 Sunset Ridge",
@@ -80,6 +85,7 @@ export const mockDispatchJobs: DispatchJob[] = [
   },
   {
     id: "disp-006",
+    customerId: "00000000-0000-0000-0000-000000000006",
     jobNumber: "JOB-1050",
     customerName: "David Thompson",
     serviceAddress: "774 Pinehurst Ave",
@@ -94,6 +100,7 @@ export const mockDispatchJobs: DispatchJob[] = [
   },
   {
     id: "disp-007",
+    customerId: "00000000-0000-0000-0000-000000000007",
     jobNumber: "JOB-1047",
     customerName: "Michael Foster",
     serviceAddress: "118 Birchwood Ct",
@@ -109,6 +116,7 @@ export const mockDispatchJobs: DispatchJob[] = [
   },
   {
     id: "disp-008",
+    customerId: "00000000-0000-0000-0000-000000000008",
     jobNumber: "JOB-1038",
     customerName: "Lakewood Apartments",
     serviceAddress: "3200 Lakewood Dr, Unit 14B",
@@ -124,6 +132,7 @@ export const mockDispatchJobs: DispatchJob[] = [
   },
   {
     id: "disp-009",
+    customerId: "00000000-0000-0000-0000-000000000009",
     jobNumber: "JOB-1051",
     customerName: "Northside Dental",
     serviceAddress: "4400 Medical Pkwy, Ste 110",
@@ -139,6 +148,7 @@ export const mockDispatchJobs: DispatchJob[] = [
   },
   {
     id: "disp-010",
+    customerId: "00000000-0000-0000-0000-000000000010",
     jobNumber: "JOB-1052",
     customerName: "Harbor View HOA",
     serviceAddress: "1200 Lakeside Blvd",
@@ -153,6 +163,7 @@ export const mockDispatchJobs: DispatchJob[] = [
   },
   {
     id: "disp-011",
+    customerId: "00000000-0000-0000-0000-000000000006",
     jobNumber: "JOB-1035",
     customerName: "David Thompson",
     serviceAddress: "774 Pinehurst Ave",
@@ -168,6 +179,7 @@ export const mockDispatchJobs: DispatchJob[] = [
   },
   {
     id: "disp-012",
+    customerId: "00000000-0000-0000-0000-000000000011",
     jobNumber: "JOB-1053",
     customerName: "Summit Retail Group",
     serviceAddress: "8800 Research Blvd",

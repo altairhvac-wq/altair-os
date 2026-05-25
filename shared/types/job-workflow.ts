@@ -82,16 +82,20 @@ const WORKFLOW_ACTIONS: Record<JobStatus, JobWorkflowAction[]> = {
 
 const DISPLAY_EXCLUDED_ACTION_IDS = new Set<JobWorkflowActionId>(["dispatch"]);
 
+function getWorkflowActionsForStatus(status: JobStatus): JobWorkflowAction[] {
+  return WORKFLOW_ACTIONS[status] ?? [];
+}
+
 export function getAvailableWorkflowActions(
   status: JobStatus,
 ): JobWorkflowAction[] {
-  return WORKFLOW_ACTIONS[status];
+  return getWorkflowActionsForStatus(status);
 }
 
 export function getDisplayWorkflowActions(
   status: JobStatus,
 ): JobWorkflowAction[] {
-  return WORKFLOW_ACTIONS[status].filter(
+  return getWorkflowActionsForStatus(status).filter(
     (action) => !DISPLAY_EXCLUDED_ACTION_IDS.has(action.id),
   );
 }
@@ -110,7 +114,7 @@ export function getTargetStatusForAction(
   currentStatus: JobStatus,
   actionId: JobWorkflowActionId,
 ): JobStatus | null {
-  const action = WORKFLOW_ACTIONS[currentStatus].find(
+  const action = getWorkflowActionsForStatus(currentStatus).find(
     (candidate) => candidate.id === actionId,
   );
 
@@ -119,4 +123,30 @@ export function getTargetStatusForAction(
 
 export function isTerminalJobStatus(status: JobStatus): boolean {
   return status === "completed" || status === "cancelled";
+}
+
+const WORKFLOW_STATUS_RANK: Record<JobStatus, number> = {
+  scheduled: 0,
+  dispatched: 1,
+  arrived: 2,
+  in_progress: 3,
+  completed: 4,
+  cancelled: -1,
+};
+
+export function shouldAcceptServerWorkflowStatus(
+  localStatus: JobStatus,
+  serverStatus: JobStatus,
+): boolean {
+  if (localStatus === serverStatus) {
+    return false;
+  }
+
+  if (isTerminalJobStatus(serverStatus) || isTerminalJobStatus(localStatus)) {
+    return true;
+  }
+
+  return (
+    WORKFLOW_STATUS_RANK[serverStatus] >= WORKFLOW_STATUS_RANK[localStatus]
+  );
 }

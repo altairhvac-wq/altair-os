@@ -7,11 +7,11 @@ import {
   Wrench,
   X,
 } from "lucide-react";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
 import {
+  formatExpenseAmount,
+  formatExpenseDate,
   formatReceiptStatus,
   type Expense,
-  type ExpenseFormData,
 } from "@/shared/types/expense";
 import { ExpenseCategoryBadge } from "./ExpenseCategoryBadge";
 import { ExpenseForm } from "./ExpenseForm";
@@ -24,7 +24,7 @@ type ExpenseDetailsPanelProps = {
   mode: PanelMode;
   expense: Expense | null;
   onClose: () => void;
-  onCreateSubmit: (data: ExpenseFormData) => void;
+  onCreateSuccess: () => void;
   onCreateCancel: () => void;
 };
 
@@ -38,7 +38,7 @@ export function ExpenseDetailsPanel({
   mode,
   expense,
   onClose,
-  onCreateSubmit,
+  onCreateSuccess,
   onCreateCancel,
 }: ExpenseDetailsPanelProps) {
   const title =
@@ -57,7 +57,7 @@ export function ExpenseDetailsPanel({
             {mode === "create"
               ? "Log a purchase and attach a receipt"
               : mode === "detail"
-                ? "Expense details and approval status"
+                ? "Draft expense details and receipt"
                 : "Select an expense from the list"}
           </p>
         </div>
@@ -89,7 +89,7 @@ export function ExpenseDetailsPanel({
         ) : null}
 
         {mode === "create" ? (
-          <ExpenseForm onSubmit={onCreateSubmit} onCancel={onCreateCancel} />
+          <ExpenseForm onSuccess={onCreateSuccess} onCancel={onCreateCancel} />
         ) : null}
 
         {mode === "detail" && expense ? (
@@ -98,10 +98,10 @@ export function ExpenseDetailsPanel({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-lg font-bold text-slate-900">
-                    {formatCurrency(expense.amount)}
+                    {formatExpenseAmount(expense.amount)}
                   </p>
                   <p className="mt-1 text-sm text-slate-600">
-                    {expense.merchant}
+                    {expense.merchant.trim() || "Vendor not set"}
                   </p>
                   <div className="mt-2">
                     <ExpenseCategoryBadge category={expense.category} />
@@ -118,11 +118,11 @@ export function ExpenseDetailsPanel({
               <div className="mt-2 space-y-2 text-sm text-slate-700">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-slate-400" />
-                  {formatDate(expense.purchaseDate)}
+                  {formatExpenseDate(expense.purchaseDate)}
                 </div>
                 <div className="flex items-center gap-2">
                   <Store className="h-4 w-4 text-slate-400" />
-                  {expense.merchant}
+                  {expense.merchant.trim() || "—"}
                 </div>
               </div>
             </section>
@@ -157,13 +157,22 @@ export function ExpenseDetailsPanel({
                 >
                   {formatReceiptStatus(expense.receiptStatus)}
                 </span>
-                {expense.receiptFileName ? (
-                  <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700">
-                    <FileText className="h-4 w-4 text-slate-400" />
-                    {expense.receiptFileName}
-                  </div>
+                {expense.receiptStatus === "attached" && expense.receiptSignedUrl ? (
+                  isExpenseReceiptImage(expense.receiptFileName) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={expense.receiptSignedUrl}
+                      alt={expense.receiptFileName ?? "Receipt"}
+                      className="max-h-56 w-full rounded-lg border border-slate-200 object-contain bg-slate-50"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700">
+                      <FileText className="h-4 w-4 text-slate-400" />
+                      {expense.receiptFileName}
+                    </div>
+                  )
                 ) : (
-                  <ReceiptUploadBox compact />
+                  <ReceiptUploadBox compact expenseId={expense.id} />
                 )}
               </div>
             </section>
@@ -178,24 +187,17 @@ export function ExpenseDetailsPanel({
                 </p>
               </section>
             ) : null}
-
-            <div className="flex gap-2 border-t border-slate-100 pt-4">
-              <button
-                type="button"
-                className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-              >
-                Submit for approval
-              </button>
-              <button
-                type="button"
-                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-              >
-                Edit expense
-              </button>
-            </div>
           </div>
         ) : null}
       </div>
     </aside>
   );
+}
+
+function isExpenseReceiptImage(fileName?: string): boolean {
+  if (!fileName) {
+    return false;
+  }
+
+  return /\.(jpe?g|png|webp|heic|heif)$/i.test(fileName);
 }

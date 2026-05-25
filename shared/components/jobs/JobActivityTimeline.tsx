@@ -1,6 +1,7 @@
 import {
   ArrowRightLeft,
   Ban,
+  Camera,
   CheckCircle2,
   ClipboardList,
   History,
@@ -34,6 +35,7 @@ const ACTIVITY_ICONS: Record<
   work_completed: CheckCircle2,
   status_changed: ArrowRightLeft,
   job_cancelled: Ban,
+  job_attachment_uploaded: Camera,
 };
 
 const ACTIVITY_ICON_STYLES: Record<JobActivityType, string> = {
@@ -47,6 +49,7 @@ const ACTIVITY_ICON_STYLES: Record<JobActivityType, string> = {
   work_completed: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
   status_changed: "bg-slate-100 text-slate-600 ring-slate-500/15",
   job_cancelled: "bg-red-50 text-red-700 ring-red-600/15",
+  job_attachment_uploaded: "bg-blue-50 text-blue-700 ring-blue-600/15",
 };
 
 export function JobActivityTimeline({ activities }: JobActivityTimelineProps) {

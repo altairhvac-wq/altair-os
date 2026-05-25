@@ -62,29 +62,13 @@ export function StartRouteButton({
       ? "Updating..."
       : "Start Route";
 
-  function handleStartRoute() {
+  function handleStartRoute(event: React.MouseEvent<HTMLAnchorElement>) {
+    if (isPending) {
+      event.preventDefault();
+      return;
+    }
+
     setError(null);
-
-    const url = buildGoogleMapsDirectionsUrl({
-      serviceAddress,
-      city,
-      state,
-      zip,
-    });
-
-    if (!url) {
-      setError("Service address is incomplete.");
-      return;
-    }
-
-    const navigationWindow = window.open(url, "_blank", "noopener,noreferrer");
-
-    if (!navigationWindow) {
-      setError(
-        "Unable to open navigation. Allow pop-ups for this site and try again.",
-      );
-      return;
-    }
 
     if (status !== "scheduled" || !canUpdateStatus) {
       return;
@@ -94,10 +78,7 @@ export function StartRouteButton({
       const result = await updateJobStatusAction(jobId, "dispatch", status);
 
       if (result.error || !result.job) {
-        setError(
-          result.error ??
-            "Navigation opened, but the job status could not be updated.",
-        );
+        setError(result.error ?? "The job status could not be updated.");
         return;
       }
 
@@ -106,25 +87,32 @@ export function StartRouteButton({
     });
   }
 
+  const linkClassName = isEnRoute
+    ? layout === "block"
+      ? "inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+      : "inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+    : layout === "block"
+      ? "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-600 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+      : "inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-600 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60";
+
   return (
     <div className={layout === "block" ? "space-y-2" : "space-y-2"}>
-      <button
-        type="button"
+      <a
+        href={mapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
         onClick={handleStartRoute}
-        disabled={isPending}
+        aria-disabled={isPending || undefined}
+        tabIndex={isPending ? -1 : undefined}
         className={
-          isEnRoute
-            ? layout === "block"
-              ? "inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-              : "inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-            : layout === "block"
-              ? "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-600 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-              : "inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-600 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+          isPending
+            ? `${linkClassName} pointer-events-none opacity-60`
+            : linkClassName
         }
       >
         <Navigation className="h-4 w-4" />
         {buttonLabel}
-      </button>
+      </a>
       {isEnRoute ? (
         <p className="text-xs text-slate-500">
           You&apos;re en route. Tap &quot;Arrived on site&quot; when you reach the job.
