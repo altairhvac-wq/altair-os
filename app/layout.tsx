@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -12,9 +12,43 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/** Matches `.admin-canvas` shell background in globals.css */
+const APP_SHELL_BACKGROUND = "#f1f5f9";
+/** Premium slate accent used across auth/admin surfaces */
+const APP_THEME_COLOR = "#0f172a";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: APP_THEME_COLOR,
+  colorScheme: "light",
+};
+
 export const metadata: Metadata = {
   title: "Altair OS",
-  description: "Tradesman operating system for dispatch, jobs, and field service",
+  applicationName: "Altair OS",
+  description: "Field service command center for trades companies",
+  appleWebApp: {
+    capable: true,
+    title: "Altair",
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
@@ -26,8 +60,12 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full overflow-x-clip antialiased`}
+      style={{ backgroundColor: APP_SHELL_BACKGROUND }}
     >
-      <body className="flex min-h-full max-w-full flex-col overflow-x-clip">
+      <body
+        className="flex min-h-full max-w-full flex-col overflow-x-clip"
+        style={{ backgroundColor: APP_SHELL_BACKGROUND }}
+      >
         {children}
       </body>
     </html>

@@ -1242,13 +1242,12 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 pb-2 max-lg:gap-4 lg:gap-6 xl:max-w-[1440px] xl:gap-8">
-      <DashboardHeader />
-
       <div className="lg:hidden">
         <MobileDashboardShell snapshot={mobileSnapshot} tabs={mobileTabs} />
       </div>
 
       <div className="hidden lg:flex lg:flex-col lg:gap-8">
+        <DashboardHeader />
         <DesktopDashboardLayout data={data} />
       </div>
     </div>
