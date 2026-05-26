@@ -50,8 +50,8 @@ export function Header({
   );
 
   return (
-    <header className="flex h-[4.25rem] shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-md sm:px-6">
-      <div className="flex min-w-0 items-center gap-3">
+    <header className="flex h-[4.25rem] w-full max-w-full shrink-0 items-center justify-between gap-2 overflow-hidden border-b border-slate-200/80 bg-white/90 px-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-md sm:gap-3 sm:px-6">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className="min-w-0">
           <h1 className="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg">
             {title}

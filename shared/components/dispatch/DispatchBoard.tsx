@@ -44,7 +44,7 @@ export function DispatchBoard({
   const showTechnicianColumns = technicianFilter !== "unassigned";
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-w-0 max-w-full flex-col gap-3">
       {showUnassignedInline ? (
         <UnassignedJobsPanel
           jobs={unassignedJobs}

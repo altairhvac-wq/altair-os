@@ -89,12 +89,12 @@ function DashboardSection({
 }) {
   return (
     <section className="admin-card overflow-hidden">
-      <div className="flex items-start justify-between gap-3 border-b border-slate-100/90 bg-slate-50/40 px-5 py-4">
-        <div className="flex items-start gap-3">
+      <div className="flex min-w-0 items-start justify-between gap-3 border-b border-slate-100/90 bg-slate-50/40 px-5 py-4">
+        <div className="flex min-w-0 items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200/80">
             <Icon className="h-4 w-4 text-slate-600" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h2 className="text-sm font-bold tracking-tight text-slate-900">
               {title}
             </h2>
@@ -983,7 +983,7 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
     !hasCashFlowPressure(data) && !hasDispatchPressure(data);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-2">
+    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-2 xl:max-w-[1440px]">
       <header className="admin-hero">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">
           Operations overview

@@ -10,7 +10,7 @@ export function DispatchDashboardHeader({
   technicianCount,
 }: DispatchDashboardHeaderProps) {
   return (
-    <div className="flex shrink-0 flex-wrap items-end justify-between gap-3">
+    <div className="flex min-w-0 max-w-full shrink-0 flex-wrap items-end justify-between gap-3">
       <div>
         <h1 className="text-xl font-black tracking-tight text-slate-900">
           Dispatch

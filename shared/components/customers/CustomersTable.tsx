@@ -22,7 +22,7 @@ export function CustomersTable({ customers }: CustomersTableProps) {
   const router = useRouter();
 
   return (
-    <div className="overflow-x-auto">
+    <div className="max-w-full overflow-x-auto">
       <table className="w-full min-w-[640px] text-left text-sm">
         <thead>
           <tr className="border-b border-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-500">

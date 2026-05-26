@@ -122,7 +122,7 @@ export function JobsPageView({
   const hasNoResults = !hasNoJobs && filteredJobs.length === 0;
 
   return (
-    <div className="flex min-h-0 flex-col gap-4 lg:h-[calc(100dvh-9.5rem)] lg:flex-row lg:overflow-hidden">
+    <div className="flex min-h-0 min-w-0 max-w-full flex-col gap-4 lg:h-[calc(100dvh-9.5rem)] lg:flex-row lg:overflow-hidden">
       <section
         className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col admin-card lg:min-h-0 lg:flex-1 lg:overflow-hidden ${panelMode === "create" ? "max-lg:hidden" : ""}`}
       >
@@ -160,7 +160,7 @@ export function JobsPageView({
           </div>
         ) : null}
 
-        <div className="min-h-0 flex-1 lg:overflow-y-auto">
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-auto lg:overflow-y-auto">
           {hasNoJobs ? (
             <JobsEmptyState
               variant="no-jobs"

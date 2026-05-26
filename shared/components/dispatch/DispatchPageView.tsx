@@ -118,7 +118,7 @@ export function DispatchPageView({
     "Technician lanes with horizontally scrollable job cards";
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 max-w-full flex-col gap-4">
       <DispatchDashboardHeader
         jobCount={jobs.length}
         technicianCount={technicians.length}
@@ -160,7 +160,7 @@ export function DispatchPageView({
       ) : null}
 
       <section
-        className={`flex flex-col rounded-2xl border bg-white shadow-sm ${
+        className={`flex min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ${
           dispatchPageFocus?.emphasizeBoard
             ? "border-cyan-200 ring-2 ring-cyan-500/15"
             : "border-slate-200"
@@ -171,7 +171,7 @@ export function DispatchPageView({
           <p className="text-xs text-slate-500">{boardSubtitle}</p>
         </div>
 
-        <div className="p-3 sm:p-4">
+        <div className="min-w-0 max-w-full p-3 sm:p-4">
           {hasNoJobs ? (
             <DispatchEmptyState variant="no-jobs" />
           ) : hasNoResults ? (

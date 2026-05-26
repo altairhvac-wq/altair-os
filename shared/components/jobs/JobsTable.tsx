@@ -13,7 +13,7 @@ type JobsTableProps = {
 
 export function JobsTable({ jobs, onSelect }: JobsTableProps) {
   return (
-    <div className="overflow-x-auto">
+    <div className="max-w-full overflow-x-auto">
       <table className="w-full min-w-[760px] text-left text-sm">
         <thead>
           <tr className="border-b border-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-500">

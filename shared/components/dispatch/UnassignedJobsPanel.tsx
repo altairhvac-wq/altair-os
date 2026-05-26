@@ -17,13 +17,13 @@ export function UnassignedJobsPanel({
 }: UnassignedJobsPanelProps) {
   return (
     <section
-      className={`rounded-2xl border bg-amber-50/40 ${
+      className={`min-w-0 max-w-full overflow-hidden rounded-2xl border bg-amber-50/40 ${
         emphasized
           ? "border-amber-400 bg-amber-50/70 shadow-md ring-2 ring-amber-400/25"
           : "border-amber-200/80"
       }`}
     >
-      <div className="flex flex-col sm:flex-row sm:items-stretch">
+      <div className="flex min-w-0 flex-col sm:flex-row sm:items-stretch">
         <header className="flex shrink-0 items-center gap-2.5 border-b border-amber-200/80 bg-white px-3 py-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r lg:w-48">
           <div className="flex items-center gap-2.5 sm:w-full">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
@@ -39,7 +39,7 @@ export function UnassignedJobsPanel({
           </span>
         </header>
 
-        <div className="flex min-h-[5.5rem] flex-1 gap-2 overflow-x-auto p-2">
+        <div className="flex min-h-[5.5rem] min-w-0 flex-1 gap-2 overflow-x-auto p-2">
           {jobs.length === 0 ? (
             <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-amber-200 bg-white/70 px-4 py-4 text-center">
               <p className="text-[11px] font-medium text-slate-600">

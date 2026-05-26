@@ -22,8 +22,8 @@ export function TechnicianMobileShell({
     <TechnicianNotificationBadgeProvider
       initialUnreadCount={unreadNotificationCount}
     >
-      <div className="min-h-dvh bg-slate-100">
-        <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col border-x border-slate-200 bg-slate-100 shadow-xl">
+      <div className="min-h-dvh max-w-full overflow-x-clip bg-slate-100">
+        <div className="mx-auto flex min-h-dvh w-full min-w-0 max-w-md flex-col border-x border-slate-200 bg-slate-100 shadow-xl">
           <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm">
             <div className="flex min-w-0 items-center gap-2.5">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-600 text-white">

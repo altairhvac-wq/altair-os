@@ -101,6 +101,13 @@ export const adminNavItems: NavItem[] = [
   },
 ];
 
+export const PRIMARY_MOBILE_ADMIN_NAV_HREFS = [
+  "/",
+  "/jobs",
+  "/dispatch",
+  "/customers",
+] as const;
+
 export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {
   const visibleHrefs = new Set(getAccessibleAdminNavHrefs(context));
 
@@ -111,6 +118,27 @@ export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {
 
     return visibleHrefs.has(item.href);
   });
+}
+
+export function splitAdminNavItemsForMobile(context: ActiveCompanyContext): {
+  primary: NavItem[];
+  secondary: NavItem[];
+} {
+  const items = getAdminNavItems(context);
+  const primaryHrefs = new Set<string>(PRIMARY_MOBILE_ADMIN_NAV_HREFS);
+  const primary: NavItem[] = [];
+
+  for (const href of PRIMARY_MOBILE_ADMIN_NAV_HREFS) {
+    const item = items.find((entry) => entry.href === href);
+
+    if (item) {
+      primary.push(item);
+    }
+  }
+
+  const secondary = items.filter((item) => !primaryHrefs.has(item.href));
+
+  return { primary, secondary };
 }
 
 /** @deprecated Use getAdminNavItems instead */
