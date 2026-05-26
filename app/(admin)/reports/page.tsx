@@ -5,6 +5,7 @@ import { getCompanyJobActivityReport } from "@/lib/database/services/reports/job
 import { getCompanyProfitabilityReport } from "@/lib/database/services/reports/profitability-report";
 import { getCompanyRevenueReport } from "@/lib/database/services/reports/revenue-report";
 import { getCompanyOfficeReviewQueueReport } from "@/lib/database/services/reports/office-review-queue";
+import { getCompanyOperationalHealthReport } from "@/lib/database/services/reports/operational-health-report";
 import { getCompanyReportChartSeries } from "@/lib/database/services/reports/report-chart-series";
 import { getCompanyTechnicianLaborReport } from "@/lib/database/services/reports/technician-labor-report";
 import { AnalyticsPageView } from "@/shared/components/analytics/AnalyticsPageView";
@@ -34,6 +35,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     jobActivityReport,
     technicianLaborReport,
     officeReviewQueueReport,
+    operationalHealthReport,
     chartSeries,
   ] = await Promise.all([
     getCompanyProfitabilityReport(companyContext.company.id, reportOptions),
@@ -42,6 +44,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     getCompanyJobActivityReport(companyContext.company.id, reportOptions),
     getCompanyTechnicianLaborReport(companyContext.company.id, reportOptions),
     getCompanyOfficeReviewQueueReport(companyContext.company.id),
+    getCompanyOperationalHealthReport(companyContext.company.id),
     getCompanyReportChartSeries(companyContext.company.id, reportOptions),
   ]);
 
@@ -53,6 +56,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
         expenses: expenseReport,
         jobs: jobActivityReport,
         labor: technicianLaborReport,
+        operationalHealth: operationalHealthReport,
         officeReviewQueue: officeReviewQueueReport,
       }}
       profitabilityReport={profitabilityReport}

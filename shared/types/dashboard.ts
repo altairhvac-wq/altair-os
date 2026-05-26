@@ -5,6 +5,7 @@ import type { Notification } from "@/shared/types/notification";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
 import type { OfficeReviewQueueReport } from "@/shared/types/office-review-queue";
 import type { DailyOperationsSummary } from "@/shared/types/daily-operations-summary";
+import type { OperationalHealthReport } from "@/shared/types/operational-health-report";
 import type { CompletedWorkAwaitingInvoicingEntry, CompletedWorkReviewEntry, StalledJobEntry } from "@/shared/types/reports";
 import type { TechnicianTimeState } from "@/shared/types/time-entry";
 
@@ -98,6 +99,7 @@ export type DashboardData = {
   completedWorkAwaitingInvoicing: DashboardCompletedWorkAwaitingInvoicingSnapshot;
   completedWorkReview: DashboardCompletedWorkReviewSnapshot;
   operationalInsights: DailyOperationsSummary;
+  operationalHealth: OperationalHealthReport;
   recentActivity: OperationalActivity[];
 };
 

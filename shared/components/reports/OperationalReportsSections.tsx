@@ -24,6 +24,7 @@ import type {
 import type { OfficeReviewQueueFilter } from "@/shared/types/office-review-queue";
 import { formatPercent } from "@/shared/types/analytics";
 import { OfficeReviewQueueSection } from "@/shared/components/reports/OfficeReviewQueueSection";
+import { OperationalHealthSection } from "@/shared/components/reports/OperationalHealthSection";
 
 type OperationalReportsSectionsProps = {
   reports: OperationalReportsBundle;
@@ -330,6 +331,7 @@ export function OperationalReportsSections({
 }: OperationalReportsSectionsProps) {
   return (
     <div className="flex flex-col gap-6">
+      <OperationalHealthSection report={reports.operationalHealth} />
       <OfficeReviewQueueSection
         report={reports.officeReviewQueue}
         queueFilter={officeReviewQueueFilter}

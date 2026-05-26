@@ -16,6 +16,7 @@ import {
 } from "@/lib/database/queries/time-entries";
 import { getDailyOperationsSummary } from "@/lib/database/services/operations/daily-operations-summary";
 import { getCompanyOfficeReviewQueueReport } from "@/lib/database/services/reports/office-review-queue";
+import { buildOperationalHealthReportFromOfficeQueue } from "@/shared/types/operational-health-report";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { getTodayOperationsSummary } from "@/shared/types/dashboard";
 import { getInvoiceSummary } from "@/shared/types/invoice";
@@ -202,6 +203,15 @@ export async function getDashboardData(
       resolvedThisWeek: summarySections.completedWorkReview.resolvedThisWeek,
     },
     operationalInsights: operationsSummary,
+    operationalHealth: buildOperationalHealthReportFromOfficeQueue(
+      officeReviewQueueReport,
+      {
+        jobsWithWarnings:
+          summarySections.profitabilityWarnings.jobsWithWarnings,
+        materialCostExceedsCollectedCount:
+          summarySections.profitabilityWarnings.materialCostExceedsCollectedCount,
+      },
+    ),
     recentActivity,
   };
 }

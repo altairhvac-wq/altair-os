@@ -456,12 +456,14 @@ export function formatCompletedWorkInvoiceStatus(
 }
 
 import type { OfficeReviewQueueReport } from "@/shared/types/office-review-queue";
+import type { OperationalHealthReport } from "@/shared/types/operational-health-report";
 
 export type OperationalReportsBundle = {
   revenue: RevenueReport;
   expenses: ExpenseReport;
   jobs: JobActivityReport;
   labor: TechnicianLaborReport;
+  operationalHealth: OperationalHealthReport;
   officeReviewQueue: OfficeReviewQueueReport;
 };
 
