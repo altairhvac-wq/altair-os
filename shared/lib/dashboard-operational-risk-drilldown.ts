@@ -1,4 +1,5 @@
 import type { DashboardData } from "@/shared/types/dashboard";
+import { INVOICE_PAGE_OVERDUE_HREF } from "@/shared/lib/invoice-page-focus";
 import type { DailyOperationsSummarySeverity } from "@/shared/types/daily-operations-summary";
 import type { OperationalHealthAreaId } from "@/shared/types/operational-health-report";
 
@@ -135,7 +136,7 @@ function resolveCashFlowBlockedRisk(
       overdueInvoices > 0
         ? "Follow up on overdue invoices first, then invoice any completed work still waiting."
         : "Create invoices for completed jobs so finished work converts to billable revenue.",
-    href: overdueInvoices > 0 ? "/invoices" : "/reports?queue=invoicing",
+    href: overdueInvoices > 0 ? INVOICE_PAGE_OVERDUE_HREF : "/reports?queue=invoicing",
     priorityScore: 980 + overdueInvoices * 12 + awaitingInvoicing * 8,
     areaId: "invoicing_backlog",
   };

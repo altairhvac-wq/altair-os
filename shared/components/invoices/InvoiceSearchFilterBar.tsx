@@ -1,14 +1,20 @@
 import { Filter, Search } from "lucide-react";
-import {
-  INVOICE_STATUS_OPTIONS,
-  type InvoiceStatus,
-} from "@/shared/types/invoice";
+import { INVOICE_STATUS_OPTIONS } from "@/shared/types/invoice";
+import type { InvoiceListStatusFilter } from "@/shared/lib/invoice-page-focus";
+
+const INVOICE_LIST_STATUS_OPTIONS: {
+  value: InvoiceListStatusFilter;
+  label: string;
+}[] = [
+  ...INVOICE_STATUS_OPTIONS,
+  { value: "unpaid", label: "Unpaid (outstanding)" },
+];
 
 type InvoiceSearchFilterBarProps = {
   search: string;
-  statusFilter: InvoiceStatus | "all";
+  statusFilter: InvoiceListStatusFilter;
   onSearchChange: (value: string) => void;
-  onStatusFilterChange: (value: InvoiceStatus | "all") => void;
+  onStatusFilterChange: (value: InvoiceListStatusFilter) => void;
   resultCount: number;
 };
 
@@ -38,11 +44,11 @@ export function InvoiceSearchFilterBar({
           <select
             value={statusFilter}
             onChange={(e) =>
-              onStatusFilterChange(e.target.value as InvoiceStatus | "all")
+              onStatusFilterChange(e.target.value as InvoiceListStatusFilter)
             }
             className="w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-10 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:w-auto"
           >
-            {INVOICE_STATUS_OPTIONS.map((option) => (
+            {INVOICE_LIST_STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>

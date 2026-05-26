@@ -1,4 +1,8 @@
 import type { DashboardData } from "@/shared/types/dashboard";
+import {
+  INVOICE_PAGE_CASH_FLOW_HREF,
+  INVOICE_PAGE_OVERDUE_HREF,
+} from "@/shared/lib/invoice-page-focus";
 
 export type CashFlowCommandSeverity = "healthy" | "warning" | "critical";
 
@@ -172,7 +176,7 @@ function resolvePrimaryHref(input: CashFlowCommandInput): string {
   const reviewBlockers = input.completedWorkReview.count;
 
   if (overdueInvoices > 0) {
-    return "/invoices";
+    return INVOICE_PAGE_OVERDUE_HREF;
   }
 
   if (reviewBlockers > 0) {
@@ -183,7 +187,7 @@ function resolvePrimaryHref(input: CashFlowCommandInput): string {
     return "/reports?queue=invoicing";
   }
 
-  return "/invoices";
+  return INVOICE_PAGE_CASH_FLOW_HREF;
 }
 
 function resolveDrillDownLinks(
@@ -192,7 +196,7 @@ function resolveDrillDownLinks(
   const links: CashFlowCommandDrillDownLink[] = [];
 
   if (input.money.overdueCount > 0) {
-    links.push({ label: "Overdue invoices", href: "/invoices" });
+    links.push({ label: "Overdue invoices", href: INVOICE_PAGE_OVERDUE_HREF });
   }
 
   if (input.completedWorkAwaitingInvoicing.count > 0) {

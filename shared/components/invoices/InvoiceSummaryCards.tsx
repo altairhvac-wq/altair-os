@@ -4,9 +4,13 @@ import { getInvoiceSummary, type Invoice } from "@/shared/types/invoice";
 
 type InvoiceSummaryCardsProps = {
   invoices: Invoice[];
+  highlightedLabels?: Array<"Unpaid" | "Overdue" | "Paid">;
 };
 
-export function InvoiceSummaryCards({ invoices }: InvoiceSummaryCardsProps) {
+export function InvoiceSummaryCards({
+  invoices,
+  highlightedLabels = [],
+}: InvoiceSummaryCardsProps) {
   const { unpaidTotal, paidTotal, overdueTotal } = getInvoiceSummary(invoices);
 
   const cards = [
@@ -35,10 +39,19 @@ export function InvoiceSummaryCards({ invoices }: InvoiceSummaryCardsProps) {
 
   return (
     <div className="grid shrink-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {cards.map((card) => (
+      {cards.map((card) => {
+        const isHighlighted = highlightedLabels.includes(
+          card.label as "Unpaid" | "Overdue" | "Paid",
+        );
+
+        return (
         <div
           key={card.label}
-          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+          className={`rounded-2xl border bg-white p-4 shadow-sm transition-shadow ${
+            isHighlighted
+              ? "border-amber-300 ring-2 ring-amber-400/25 shadow-md"
+              : "border-slate-200"
+          }`}
         >
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -55,7 +68,8 @@ export function InvoiceSummaryCards({ invoices }: InvoiceSummaryCardsProps) {
             </div>
           </div>
         </div>
-      ))}
+      );
+      })}
     </div>
   );
 }

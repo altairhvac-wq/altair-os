@@ -1,4 +1,5 @@
 import type { DashboardData } from "@/shared/types/dashboard";
+import { INVOICE_PAGE_OVERDUE_HREF } from "@/shared/lib/invoice-page-focus";
 import type { DailyOperationsSummarySeverity } from "@/shared/types/daily-operations-summary";
 
 export type DashboardNextBestActionSeverity = Exclude<
@@ -76,7 +77,7 @@ function resolveOverdueInvoicesAction(
       "Review overdue invoices and contact customers to protect cash flow.",
     count: overdueInvoices,
     metricLabel: "overdue invoices",
-    href: "/invoices",
+    href: INVOICE_PAGE_OVERDUE_HREF,
   };
 }
 

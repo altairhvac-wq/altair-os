@@ -26,6 +26,11 @@ import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatu
 import { CashFlowCommandSection } from "@/shared/components/dashboard/CashFlowCommandSection";
 import { DispatchPressureSection } from "@/shared/components/dashboard/DispatchPressureSection";
 import { hasCashFlowPressure } from "@/shared/lib/dashboard-cash-flow-command";
+import {
+  INVOICE_PAGE_CASH_FLOW_HREF,
+  INVOICE_PAGE_OVERDUE_HREF,
+  INVOICE_PAGE_UNPAID_HREF,
+} from "@/shared/lib/invoice-page-focus";
 import { hasDispatchPressure } from "@/shared/lib/dashboard-dispatch-pressure";
 import { NextBestActionsSection } from "@/shared/components/dashboard/NextBestActionsSection";
 import { OperationalMomentumSection } from "@/shared/components/dashboard/OperationalMomentumSection";
@@ -116,6 +121,7 @@ function MetricCard({
   icon: Icon,
   iconClass,
   accent,
+  href,
 }: {
   label: string;
   value: string | number;
@@ -123,9 +129,10 @@ function MetricCard({
   icon: typeof CalendarCheck;
   iconClass: string;
   accent: string;
+  href?: string;
 }) {
-  return (
-    <div className={`rounded-xl border bg-white p-4 ${accent}`}>
+  const content = (
+    <>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
@@ -142,7 +149,25 @@ function MetricCard({
           <Icon className="h-4 w-4" />
         </div>
       </div>
-    </div>
+      {href ? (
+        <p className="mt-3 text-xs font-semibold text-cyan-600">View invoices</p>
+      ) : null}
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={`block rounded-xl border bg-white p-4 transition-colors hover:bg-slate-50/80 ${accent}`}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className={`rounded-xl border bg-white p-4 ${accent}`}>{content}</div>
   );
 }
 
@@ -536,7 +561,7 @@ function MoneySnapshotSection({ money }: { money: DashboardData["money"] }) {
       title="Money Snapshot"
       description="Receivables and recent collections"
       icon={DollarSign}
-      href="/invoices"
+      href={INVOICE_PAGE_CASH_FLOW_HREF}
       linkLabel="Open invoices"
     >
       <div className="grid gap-3 sm:grid-cols-2">
@@ -547,6 +572,7 @@ function MoneySnapshotSection({ money }: { money: DashboardData["money"] }) {
           icon={Clock}
           iconClass="text-amber-600 bg-amber-50"
           accent="border-amber-100"
+          href={money.unpaidCount > 0 ? INVOICE_PAGE_UNPAID_HREF : undefined}
         />
         <MetricCard
           label="Overdue"
@@ -555,6 +581,7 @@ function MoneySnapshotSection({ money }: { money: DashboardData["money"] }) {
           icon={AlertCircle}
           iconClass="text-rose-600 bg-rose-50"
           accent="border-rose-100"
+          href={money.overdueCount > 0 ? INVOICE_PAGE_OVERDUE_HREF : undefined}
         />
       </div>
 

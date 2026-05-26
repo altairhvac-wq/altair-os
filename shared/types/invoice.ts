@@ -180,13 +180,26 @@ export function formatTaxRate(taxRate: number): string {
     : normalized.toFixed(2).replace(/\.?0+$/, "");
 }
 
-export function getInvoiceSummary(invoices: Invoice[]) {
-  const active = invoices.filter(
-    (inv) => inv.status !== "void" && inv.status !== "cancelled",
+export function isActiveInvoice(invoice: Pick<Invoice, "status">): boolean {
+  return invoice.status !== "void" && invoice.status !== "cancelled";
+}
+
+/** Matches dashboard money snapshot and summary-card unpaid totals. */
+export function hasInvoiceUnpaidBalance(
+  invoice: Pick<Invoice, "status" | "balanceDue">,
+): boolean {
+  return (
+    isActiveInvoice(invoice) &&
+    invoice.status !== "paid" &&
+    invoice.balanceDue > 0
   );
+}
+
+export function getInvoiceSummary(invoices: Invoice[]) {
+  const active = invoices.filter(isActiveInvoice);
 
   const unpaidTotal = active
-    .filter((inv) => inv.status !== "paid" && inv.balanceDue > 0)
+    .filter(hasInvoiceUnpaidBalance)
     .reduce((sum, inv) => sum + inv.balanceDue, 0);
 
   const paidTotal = active

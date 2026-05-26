@@ -1,4 +1,8 @@
 import type { DashboardData } from "@/shared/types/dashboard";
+import {
+  INVOICE_PAGE_CASH_FLOW_HREF,
+  INVOICE_PAGE_OVERDUE_HREF,
+} from "@/shared/lib/invoice-page-focus";
 import type { DailyOperationsSummarySeverity } from "@/shared/types/daily-operations-summary";
 
 export type DashboardAttentionCardSeverity =
@@ -96,7 +100,7 @@ function resolveInvoicingCard(
       statusLabel: "Current",
       explanation: "No overdue invoices or completed work waiting to be billed.",
       severity: "healthy",
-      href: "/invoices",
+      href: INVOICE_PAGE_CASH_FLOW_HREF,
     };
   }
 
@@ -122,7 +126,10 @@ function resolveInvoicingCard(
     statusLabel: `${total}`,
     explanation: `${parts.join(" and ")} — follow up to protect cash flow.`,
     severity,
-    href: overdueInvoices > 0 ? "/invoices" : "/reports?queue=invoicing",
+    href:
+      overdueInvoices > 0
+        ? INVOICE_PAGE_OVERDUE_HREF
+        : "/reports?queue=invoicing",
   };
 }
 

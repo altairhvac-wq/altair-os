@@ -11,11 +11,17 @@ import {
   formatInvoiceStatus,
   type Invoice,
   type InvoiceFormData,
-  type InvoiceStatus,
 } from "@/shared/types/invoice";
+import {
+  matchesInvoiceListStatusFilter,
+  sortInvoicesForCashFlowFocus,
+  type InvoiceListStatusFilter,
+  type InvoicePageFocusState,
+} from "@/shared/lib/invoice-page-focus";
 import { formatCurrency } from "@/shared/types/customer";
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
+import { InvoiceCashFlowFocusBanner } from "./InvoiceCashFlowFocusBanner";
 import { InvoiceDetailsPanel } from "./InvoiceDetailsPanel";
 import { InvoiceSearchFilterBar } from "./InvoiceSearchFilterBar";
 import { InvoiceSummaryCards } from "./InvoiceSummaryCards";
@@ -35,20 +41,22 @@ type InvoicesPageViewProps = {
   initialJobId?: string;
   initialJobLabel?: string;
   initialCreateMode?: boolean;
+  initialStatusFilter?: InvoiceListStatusFilter;
+  invoicePageFocus?: InvoicePageFocusState;
 };
 
 function filterInvoices(
   invoices: Invoice[],
   search: string,
-  statusFilter: InvoiceStatus | "all",
+  statusFilter: InvoiceListStatusFilter,
   jobIdFilter?: string,
+  prioritizeCashFlow = false,
 ): Invoice[] {
   const query = search.trim().toLowerCase();
 
-  return invoices.filter((invoice) => {
+  const filtered = invoices.filter((invoice) => {
     const matchesJob = !jobIdFilter || invoice.jobId === jobIdFilter;
-    const matchesStatus =
-      statusFilter === "all" || invoice.status === statusFilter;
+    const matchesStatus = matchesInvoiceListStatusFilter(invoice, statusFilter);
 
     if (!matchesJob || !matchesStatus) return false;
     if (!query) return true;
@@ -68,6 +76,10 @@ function filterInvoices(
 
     return haystack.includes(query);
   });
+
+  return prioritizeCashFlow
+    ? sortInvoicesForCashFlowFocus(filtered)
+    : filtered;
 }
 
 export function InvoicesPageView({
@@ -81,20 +93,30 @@ export function InvoicesPageView({
   initialJobId,
   initialJobLabel,
   initialCreateMode = false,
+  initialStatusFilter = "all",
+  invoicePageFocus,
 }: InvoicesPageViewProps) {
   const [invoices, setInvoices] = useState(initialInvoices);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "all">(
-    "all",
-  );
+  const [statusFilter, setStatusFilter] =
+    useState<InvoiceListStatusFilter>(initialStatusFilter);
   const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
   const [createError, setCreateError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
+  const prioritizeCashFlow = invoicePageFocus?.focus === "cash-flow";
+
   const filteredInvoices = useMemo(
-    () => filterInvoices(invoices, search, statusFilter, initialJobId),
-    [invoices, search, statusFilter, initialJobId],
+    () =>
+      filterInvoices(
+        invoices,
+        search,
+        statusFilter,
+        initialJobId,
+        prioritizeCashFlow,
+      ),
+    [invoices, search, statusFilter, initialJobId, prioritizeCashFlow],
   );
 
   function handleSelectInvoice(invoice: Invoice) {
@@ -141,20 +163,37 @@ export function InvoicesPageView({
       {initialJobId && initialJobLabel ? (
         <JobContextFilterBanner
           jobLabel={initialJobLabel}
-          clearHref="/invoices"
+          clearHref={invoicePageFocus?.jobClearHref ?? "/invoices"}
           variant={initialCreateMode ? "create" : "filter"}
         />
       ) : null}
 
-      <InvoiceSummaryCards invoices={invoices} />
+      {invoicePageFocus?.banner ? (
+        <InvoiceCashFlowFocusBanner
+          title={invoicePageFocus.banner.title}
+          description={invoicePageFocus.banner.description}
+          clearHref={invoicePageFocus.banner.clearHref}
+        />
+      ) : null}
+
+      <InvoiceSummaryCards
+        invoices={invoices}
+        highlightedLabels={invoicePageFocus?.highlightedSummaryLabels}
+      />
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">
         <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1`}>
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
             <div>
+              {invoicePageFocus?.sectionEyebrow ? (
+                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700">
+                  {invoicePageFocus.sectionEyebrow}
+                </p>
+              ) : null}
               <h2 className="text-base font-bold text-slate-900">All invoices</h2>
               <p className="text-xs text-slate-500">
-                Track billing, payments, and outstanding balances
+                {invoicePageFocus?.sectionDescription ??
+                  "Track billing, payments, and outstanding balances"}
               </p>
             </div>
             {canManageInvoices ? (

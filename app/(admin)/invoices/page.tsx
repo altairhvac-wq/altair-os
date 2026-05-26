@@ -5,12 +5,15 @@ import { listInvoices } from "@/lib/database/queries/invoices";
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import { InvoicesPageView } from "@/shared/components/invoices/InvoicesPageView";
+import { parseInvoicePageSearchParams } from "@/shared/lib/invoice-page-focus";
 
 type InvoicesPageProps = {
   searchParams: Promise<{
     customerId?: string;
     jobId?: string;
     create?: string;
+    status?: string;
+    focus?: string;
   }>;
 };
 
@@ -21,7 +24,14 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
     redirect("/setup");
   }
 
-  const { customerId, jobId, create } = await searchParams;
+  const { customerId, jobId, create, status, focus } = await searchParams;
+  const pageFocus = parseInvoicePageSearchParams({
+    status,
+    focus,
+    customerId,
+    jobId,
+    create,
+  });
 
   const [invoices, customers, jobs, serviceItems] = await Promise.all([
     listInvoices(companyContext.company.id),
@@ -81,6 +91,8 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
       initialJobId={validJob?.id}
       initialJobLabel={validJob?.jobNumber}
       initialCreateMode={create === "1"}
+      initialStatusFilter={pageFocus.statusFilter}
+      invoicePageFocus={pageFocus}
     />
   );
 }
