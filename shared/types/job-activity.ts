@@ -11,7 +11,8 @@ export type JobActivityType =
   | "work_completed"
   | "status_changed"
   | "job_cancelled"
-  | "job_attachment_uploaded";
+  | "job_attachment_uploaded"
+  | "job_material_added";
 
 export type JobActivityMetadata = {
   customer_id?: string;
@@ -28,6 +29,13 @@ export type JobActivityMetadata = {
   follow_up_notes?: string;
   attachment_type?: string;
   file_name?: string;
+  material_id?: string;
+  service_item_id?: string;
+  name?: string;
+  quantity?: number;
+  unit_cost?: number;
+  unit_price?: number;
+  taxable?: boolean;
 };
 
 export type JobActivity = {
@@ -52,6 +60,7 @@ const ACTIVITY_TYPE_LABELS: Record<JobActivityType, string> = {
   status_changed: "Status changed",
   job_cancelled: "Job cancelled",
   job_attachment_uploaded: "Attachment uploaded",
+  job_material_added: "Material logged",
 };
 
 export function formatJobActivityLabel(activity: JobActivity): string {
@@ -111,6 +120,25 @@ export function formatJobActivityDetails(activity: JobActivity): string | null {
       }
       if (metadata.file_name) {
         parts.push(metadata.file_name);
+      }
+      return parts.length > 0 ? parts.join(" · ") : null;
+    }
+
+    case "job_material_added": {
+      const parts: string[] = [];
+      if (metadata.name) {
+        parts.push(metadata.name);
+      }
+      if (typeof metadata.quantity === "number") {
+        parts.push(`Qty ${metadata.quantity}`);
+      }
+      if (typeof metadata.unit_price === "number") {
+        parts.push(
+          new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(metadata.unit_price),
+        );
       }
       return parts.length > 0 ? parts.join(" · ") : null;
     }

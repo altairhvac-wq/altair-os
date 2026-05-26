@@ -47,6 +47,8 @@ import type {
   JobActivityRow,
   JobAttachmentInsert,
   JobAttachmentRow,
+  JobMaterialInsert,
+  JobMaterialRow,
   ProfileInsert,
   ProfileRow,
   ProfileUpdate,
@@ -287,6 +289,48 @@ export type Database = {
           {
             foreignKeyName: "job_attachments_uploaded_by_fkey";
             columns: ["uploaded_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      job_materials: {
+        Row: JobMaterialRow;
+        Insert: JobMaterialInsert;
+        Update: Partial<JobMaterialInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "job_materials_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "job_materials_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "job_materials_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "job_materials_service_item_id_fkey";
+            columns: ["service_item_id"];
+            isOneToOne: false;
+            referencedRelation: "service_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "job_materials_added_by_fkey";
+            columns: ["added_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];

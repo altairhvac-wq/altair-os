@@ -9,6 +9,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import type { JobStatus } from "@/shared/types/job";
 import type { JobWorkflowActionId } from "@/shared/types/job-workflow";
+import type { JobMaterial } from "@/shared/types/job-material";
 
 async function getProfileName(profileId: string): Promise<string | undefined> {
   const supabase = await createClient();
@@ -179,6 +180,42 @@ export async function recordJobAttachmentUploadedActivity(input: {
   if (error) {
     console.error("[recordJobAttachmentUploadedActivity] failed:", {
       jobId: input.jobId,
+      error,
+    });
+  }
+}
+
+export async function recordJobMaterialAddedActivity(input: {
+  companyId: string;
+  jobId: string;
+  actorId: string;
+  customerId?: string;
+  jobNumber?: string;
+  material: JobMaterial;
+}): Promise<void> {
+  const { error } = await recordJobActivity({
+    company_id: input.companyId,
+    job_id: input.jobId,
+    actor_id: input.actorId,
+    event_type: "job_material_added",
+    metadata: {
+      customer_id: input.customerId,
+      job_id: input.jobId,
+      job_number: input.jobNumber,
+      material_id: input.material.id,
+      service_item_id: input.material.serviceItemId,
+      name: input.material.name,
+      quantity: input.material.quantity,
+      unit_cost: input.material.unitCost,
+      unit_price: input.material.unitPrice,
+      taxable: input.material.taxable,
+    },
+  });
+
+  if (error) {
+    console.error("[recordJobMaterialAddedActivity] failed:", {
+      jobId: input.jobId,
+      materialId: input.material.id,
       error,
     });
   }

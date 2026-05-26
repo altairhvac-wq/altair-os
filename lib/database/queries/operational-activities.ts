@@ -44,7 +44,7 @@ function mapMetadata(value: unknown): OperationalActivityMetadata {
   return value as OperationalActivityMetadata;
 }
 
-function buildOperationalActivity(input: {
+export function buildOperationalActivity(input: {
   source: OperationalActivitySource;
   row: ActivityRowBase;
   customerId?: string;
@@ -305,7 +305,7 @@ async function listInvoiceActivitiesForInvoiceIds(
   }));
 }
 
-function sortActivitiesNewestFirst(
+export function sortActivitiesNewestFirst(
   activities: OperationalActivity[],
 ): OperationalActivity[] {
   return [...activities].sort(

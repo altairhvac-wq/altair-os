@@ -43,7 +43,7 @@ function mapPaymentRow(row: InvoicePaymentRowWithRecorder): InvoicePayment {
   return {
     id: row.id,
     invoiceId: row.invoice_id,
-    amount: Number(row.amount),
+    amount: Number(row.amount) || 0,
     paymentMethod: row.payment_method,
     paymentDate: toDateOnly(row.payment_date),
     reference: row.reference?.trim() || undefined,
@@ -90,6 +90,92 @@ export async function listPaymentsForInvoice(
   }
 
   return ((data ?? []) as InvoicePaymentRowWithRecorder[]).map(mapPaymentRow);
+}
+
+type InvoicePaymentRowWithInvoice = InvoicePaymentRowWithRecorder & {
+  invoice: {
+    invoice_number: string;
+    customers: { name: string } | null;
+  } | null;
+};
+
+export type RecentInvoicePayment = InvoicePayment & {
+  invoiceNumber: string;
+  customerName: string;
+};
+
+export async function listRecentPayments(
+  companyId: string,
+  limit = 5,
+): Promise<RecentInvoicePayment[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("invoice_payments")
+    .select(
+      `
+      *,
+      recorder:profiles!invoice_payments_recorded_by_fkey(full_name, email),
+      invoice:invoices(invoice_number, customers(name))
+    `,
+    )
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("[listRecentPayments] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as InvoicePaymentRowWithInvoice[]).map((row) => ({
+    ...mapPaymentRow(row),
+    invoiceNumber: row.invoice?.invoice_number ?? "—",
+    customerName: row.invoice?.customers?.name ?? "Unknown",
+  }));
+}
+
+function getTodayDateOnly(reference = new Date()): string {
+  const year = reference.getFullYear();
+  const month = String(reference.getMonth() + 1).padStart(2, "0");
+  const day = String(reference.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+export async function getPaymentsTodaySummary(
+  companyId: string,
+): Promise<{ count: number; total: number }> {
+  const supabase = await createClient();
+  const today = getTodayDateOnly();
+
+  const { data, error } = await supabase
+    .from("invoice_payments")
+    .select("amount")
+    .eq("company_id", companyId)
+    .eq("payment_date", today);
+
+  if (error) {
+    console.error("[getPaymentsTodaySummary] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return { count: 0, total: 0 };
+  }
+
+  const payments = data ?? [];
+
+  return {
+    count: payments.length,
+    total: roundCurrency(
+      payments.reduce((sum, payment) => sum + Number(payment.amount), 0),
+    ),
+  };
 }
 
 export async function recordInvoicePayment(

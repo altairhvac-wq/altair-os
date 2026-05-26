@@ -385,6 +385,40 @@ export type JobAttachmentInsert = {
   created_at?: Timestamp;
 };
 
+export type JobMaterialRow = {
+  id: UUID;
+  company_id: UUID;
+  customer_id: UUID | null;
+  job_id: UUID;
+  service_item_id: UUID | null;
+  name: string;
+  description: string | null;
+  quantity: number;
+  unit_cost: number | null;
+  unit_price: number;
+  taxable: boolean;
+  added_by: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type JobMaterialInsert = {
+  id?: UUID;
+  company_id: UUID;
+  customer_id?: UUID | null;
+  job_id: UUID;
+  service_item_id?: UUID | null;
+  name: string;
+  description?: string | null;
+  quantity?: number;
+  unit_cost?: number | null;
+  unit_price?: number;
+  taxable?: boolean;
+  added_by?: UUID | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
 export type ExpenseRow = {
   id: UUID;
   company_id: UUID;

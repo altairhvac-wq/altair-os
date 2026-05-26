@@ -31,6 +31,7 @@ export type OperationalActivityEventType =
   | "payment_recorded"
   | "invoice_paid"
   | "job_attachment_uploaded"
+  | "job_material_added"
   | "expense_receipt_uploaded"
   | "expense_created"
   | "expense_submitted"
@@ -69,6 +70,13 @@ export type OperationalActivityMetadata = {
   reference?: string;
   attachment_type?: string;
   file_name?: string;
+  material_id?: string;
+  service_item_id?: string;
+  name?: string;
+  quantity?: number;
+  unit_cost?: number;
+  unit_price?: number;
+  taxable?: boolean;
   expense_id?: string;
   expense_number?: string;
   merchant?: string;
@@ -122,6 +130,7 @@ const ACTIVITY_TYPE_LABELS: Record<OperationalActivityEventType, string> = {
   payment_recorded: "Payment recorded",
   invoice_paid: "Invoice paid",
   job_attachment_uploaded: "Attachment uploaded",
+  job_material_added: "Material logged",
   expense_receipt_uploaded: "Receipt uploaded",
   expense_created: "Expense created",
   expense_submitted: "Expense submitted",
@@ -403,6 +412,28 @@ export function formatOperationalActivityDetails(
       return parts.length > 0 ? parts.join(" · ") : null;
     }
 
+    case "job_material_added": {
+      const parts: string[] = [];
+      if (metadata.name) {
+        parts.push(metadata.name);
+      }
+      if (typeof metadata.quantity === "number") {
+        parts.push(`Qty ${metadata.quantity}`);
+      }
+      if (typeof metadata.unit_price === "number") {
+        parts.push(
+          new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(metadata.unit_price),
+        );
+      }
+      if (metadata.job_number) {
+        parts.push(`Job ${metadata.job_number}`);
+      }
+      return parts.length > 0 ? parts.join(" · ") : null;
+    }
+
     case "expense_receipt_uploaded": {
       const parts: string[] = [];
       if (metadata.merchant?.trim()) {
@@ -442,8 +473,38 @@ export function formatOperationalActivityDetails(
   }
 }
 
+export function getOperationalActivityHref(
+  activity: OperationalActivity,
+): string | null {
+  if (activity.jobId) {
+    return `/jobs/${activity.jobId}`;
+  }
+
+  if (activity.estimateId) {
+    return `/estimates/${activity.estimateId}`;
+  }
+
+  if (activity.invoiceId) {
+    return `/invoices/${activity.invoiceId}`;
+  }
+
+  if (activity.expenseId) {
+    return `/expenses?selected=${activity.expenseId}`;
+  }
+
+  if (activity.customerId) {
+    return `/customers/${activity.customerId}`;
+  }
+
+  return null;
+}
+
 export function formatOperationalActivityTimestamp(isoDate: string): string {
   const date = new Date(isoDate);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
 
   return new Intl.DateTimeFormat("en-US", {
     month: "short",

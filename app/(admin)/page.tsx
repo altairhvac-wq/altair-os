@@ -1,35 +1,19 @@
-export default function DashboardPage() {
-  return (
-    <>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="text-sm font-bold text-slate-500">Active Jobs</p>
-          <p className="mt-3 text-3xl font-black text-slate-900">0</p>
-        </div>
+import { redirect } from "next/navigation";
+import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { getDashboardData } from "@/lib/database/services/dashboard";
+import { OperationalDashboardView } from "@/shared/components/dashboard/OperationalDashboardView";
 
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="text-sm font-bold text-slate-500">Pending Estimates</p>
-          <p className="mt-3 text-3xl font-black text-slate-900">0</p>
-        </div>
+export default async function DashboardPage() {
+  const companyContext = await getActiveCompanyContext();
 
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="text-sm font-bold text-slate-500">Unpaid Invoices</p>
-          <p className="mt-3 text-3xl font-black text-slate-900">$0</p>
-        </div>
+  if (!companyContext) {
+    redirect("/setup");
+  }
 
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="text-sm font-bold text-slate-500">Technicians</p>
-          <p className="mt-3 text-3xl font-black text-slate-900">0</p>
-        </div>
-      </div>
-
-      <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-black text-slate-900">Welcome to Altair OS</h2>
-        <p className="mt-2 max-w-2xl text-slate-600">
-          Your admin command center is ready. Use the sidebar to navigate
-          modules as they are built out one at a time.
-        </p>
-      </div>
-    </>
+  const data = await getDashboardData(
+    companyContext.company.id,
+    companyContext.user.id,
   );
+
+  return <OperationalDashboardView data={data} />;
 }

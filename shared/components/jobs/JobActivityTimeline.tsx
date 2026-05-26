@@ -7,6 +7,7 @@ import {
   History,
   MapPin,
   Navigation,
+  Package,
   Play,
   User,
 } from "lucide-react";
@@ -36,6 +37,7 @@ const ACTIVITY_ICONS: Record<
   status_changed: ArrowRightLeft,
   job_cancelled: Ban,
   job_attachment_uploaded: Camera,
+  job_material_added: Package,
 };
 
 const ACTIVITY_ICON_STYLES: Record<JobActivityType, string> = {
@@ -50,6 +52,7 @@ const ACTIVITY_ICON_STYLES: Record<JobActivityType, string> = {
   status_changed: "bg-slate-100 text-slate-600 ring-slate-500/15",
   job_cancelled: "bg-red-50 text-red-700 ring-red-600/15",
   job_attachment_uploaded: "bg-blue-50 text-blue-700 ring-blue-600/15",
+  job_material_added: "bg-amber-50 text-amber-700 ring-amber-600/15",
 };
 
 export function JobActivityTimeline({ activities }: JobActivityTimelineProps) {

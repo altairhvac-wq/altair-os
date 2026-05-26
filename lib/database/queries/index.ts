@@ -31,6 +31,11 @@ export {
 } from "./technicians";
 export { listAssignedJobsForTechnician } from "./technician-jobs";
 export {
+  createJobMaterial,
+  listJobMaterialsForJob,
+  mapJobMaterialFormDataToInsert,
+} from "./job-materials";
+export {
   createServiceItem,
   listActiveServiceItems,
   listServiceItems,
