@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 import {
   AlertTriangle,
   ArrowDownUp,
@@ -27,6 +34,17 @@ import {
   parseQueueSortMode,
   persistQueuePreferences,
 } from "@/shared/lib/office-review-queue-preferences";
+import {
+  clearQueueSelection,
+  OFFICE_REVIEW_QUEUE_SELECTION_LIMITATIONS,
+  pruneQueueSelection,
+  resolveBulkQueueActionAvailability,
+  resolveGroupSelectionState,
+  resolveSelectedQueueItems,
+  toggleGroupQueueSelection,
+  toggleQueueSelection,
+  type OfficeReviewQueueBulkActionAvailability,
+} from "@/shared/lib/office-review-queue-selection";
 import {
   applyQueueDefaultView,
   applyQueuePreset,
@@ -439,6 +457,7 @@ function FilterEmptyState({
 const QUEUE_PREFERENCE_LIMITATIONS = [
   "Queue filter, sort, and collapse preferences are browser-local only — not synced across users or devices.",
   "No server-side preference storage yet — shared links use URL params; remembered defaults use localStorage.",
+  ...OFFICE_REVIEW_QUEUE_SELECTION_LIMITATIONS,
   ...OFFICE_REVIEW_QUEUE_PRESET_LIMITATIONS,
 ] as const;
 
@@ -695,11 +714,17 @@ function QueueItemRow({
   showActions,
   compactActions = false,
   dense = false,
+  selectionEnabled = false,
+  isSelected = false,
+  onToggleSelect,
 }: {
   item: OfficeReviewQueueItem;
   showActions: boolean;
   compactActions?: boolean;
   dense?: boolean;
+  selectionEnabled?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (jobId: string) => void;
 }) {
   const hasValidJobLink = isValidOfficeReviewQueueJobId(item.jobId);
   const jobHref = hasValidJobLink
@@ -708,10 +733,24 @@ function QueueItemRow({
 
   return (
     <li
-      className={`px-3 py-2.5 sm:px-4 sm:py-3 ${queueItemRowClassName(item)}`}
+      className={`px-3 py-2.5 sm:px-4 sm:py-3 ${queueItemRowClassName(item)} ${
+        selectionEnabled && isSelected ? "bg-violet-50/60" : ""
+      }`}
     >
       <div className="flex min-w-0 flex-col gap-2 sm:gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 gap-2.5 sm:gap-3">
+          {selectionEnabled ? (
+            <label className="flex min-h-10 shrink-0 items-start pt-0.5 sm:min-h-0">
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={() => onToggleSelect?.(item.jobId)}
+                aria-label={`Select ${item.jobNumber} for bulk actions`}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+              />
+            </label>
+          ) : null}
+          <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
             {jobHref ? (
               <Link
@@ -783,12 +822,112 @@ function QueueItemRow({
               </span>
             ) : null}
           </div>
+          </div>
         </div>
         {showActions ? (
           <QueueItemActions item={item} compact={compactActions} />
         ) : null}
       </div>
     </li>
+  );
+}
+
+function GroupSelectCheckbox({
+  groupLabel,
+  allSelected,
+  someSelected,
+  onChange,
+}: {
+  groupLabel: string;
+  allSelected: boolean;
+  someSelected: boolean;
+  onChange: (selectAll: boolean) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.indeterminate = someSelected;
+    }
+  }, [someSelected]);
+
+  return (
+    <label
+      className="flex min-h-10 shrink-0 items-start pt-0.5 sm:min-h-0"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <input
+        ref={inputRef}
+        type="checkbox"
+        checked={allSelected}
+        onChange={(event: ChangeEvent<HTMLInputElement>) =>
+          onChange(event.target.checked)
+        }
+        aria-label={`Select all visible items in ${groupLabel}`}
+        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+      />
+    </label>
+  );
+}
+
+function QueueBulkSelectionBar({
+  selectedCount,
+  bulkActions,
+  onClearSelection,
+}: {
+  selectedCount: number;
+  bulkActions: OfficeReviewQueueBulkActionAvailability[];
+  onClearSelection: () => void;
+}) {
+  if (selectedCount === 0) {
+    return null;
+  }
+
+  return (
+    <div
+      className="sticky bottom-0 z-20 -mx-4 mt-4 border-t border-violet-200 bg-violet-50/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.25)] backdrop-blur-sm sm:-mx-5 sm:px-5"
+      role="region"
+      aria-label="Bulk queue actions"
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-violet-950">
+            {selectedCount} item{selectedCount === 1 ? "" : "s"} selected
+          </p>
+          <p className="mt-0.5 text-xs text-violet-800/80">
+            Bulk workflows coming soon — selection is UI-only for now.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClearSelection}
+          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-violet-200 bg-white px-3 py-2 text-xs font-semibold text-violet-800 transition-colors hover:border-violet-300 hover:bg-violet-50 sm:min-h-9"
+        >
+          Clear selection
+        </button>
+      </div>
+      <div className="-mx-1 mt-3 overflow-x-auto px-1 pb-1">
+        <div className="flex w-max min-w-full gap-2 sm:flex-wrap sm:w-auto">
+          {bulkActions.map((action) => (
+            <button
+              key={action.id}
+              type="button"
+              disabled
+              title="Coming soon"
+              aria-disabled="true"
+              className="inline-flex min-h-10 shrink-0 cursor-not-allowed items-center rounded-lg border border-violet-200/80 bg-white/70 px-3 py-2 text-xs font-semibold text-violet-900/50 sm:min-h-9"
+            >
+              {action.label}
+              {action.applicableCount > 0 ? (
+                <span className="ml-1.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-violet-700/70">
+                  {action.applicableCount}
+                </span>
+              ) : null}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -801,6 +940,10 @@ function QueueGroupSection({
   collapsible = false,
   isCollapsed = false,
   onToggleCollapse,
+  selectionEnabled = false,
+  selectedJobIds,
+  onToggleItemSelect,
+  onToggleGroupSelect,
 }: {
   group: OfficeReviewQueueGroup;
   items: OfficeReviewQueueItem[];
@@ -810,13 +953,38 @@ function QueueGroupSection({
   collapsible?: boolean;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  selectionEnabled?: boolean;
+  selectedJobIds?: ReadonlySet<string>;
+  onToggleItemSelect?: (jobId: string) => void;
+  onToggleGroupSelect?: (
+    groupItems: OfficeReviewQueueItem[],
+    selectAll: boolean,
+  ) => void;
 }) {
   if (items.length === 0 && !showEmptyState) {
     return null;
   }
 
-  const headerContent = (
-    <>
+  const groupSelection =
+    selectionEnabled && selectedJobIds
+      ? resolveGroupSelectionState(selectedJobIds, items)
+      : null;
+  const showGroupSelect =
+    selectionEnabled &&
+    items.length > 0 &&
+    groupSelection != null &&
+    onToggleGroupSelect != null;
+
+  const groupTitle = (
+    <div className="flex min-w-0 flex-1 items-start gap-2">
+      {showGroupSelect ? (
+        <GroupSelectCheckbox
+          groupLabel={GROUP_LABELS[group]}
+          allSelected={groupSelection.allSelected}
+          someSelected={groupSelection.someSelected}
+          onChange={(selectAll) => onToggleGroupSelect(items, selectAll)}
+        />
+      ) : null}
       <div className="min-w-0 flex-1">
         <h3 className="text-sm font-bold text-slate-900">
           {GROUP_LABELS[group]}
@@ -825,6 +993,12 @@ function QueueGroupSection({
           {GROUP_DESCRIPTIONS[group]}
         </p>
       </div>
+    </div>
+  );
+
+  const headerContent = (
+    <>
+      {groupTitle}
       <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold tabular-nums text-slate-700 ring-1 ring-slate-200">
         {items.length}
       </span>
@@ -857,14 +1031,7 @@ function QueueGroupSection({
                   aria-hidden="true"
                 />
               )}
-              <div className="min-w-0 flex-1">
-                <h3 className="text-sm font-bold text-slate-900">
-                  {GROUP_LABELS[group]}
-                </h3>
-                <p className="mt-0.5 hidden text-xs text-slate-600 sm:block">
-                  {GROUP_DESCRIPTIONS[group]}
-                </p>
-              </div>
+              {groupTitle}
             </span>
             <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold tabular-nums text-slate-700 ring-1 ring-slate-200">
               {items.length}
@@ -887,6 +1054,9 @@ function QueueGroupSection({
                 item={item}
                 showActions={showActions}
                 compactActions={compactActions}
+                selectionEnabled={selectionEnabled}
+                isSelected={selectedJobIds?.has(item.jobId) ?? false}
+                onToggleSelect={onToggleItemSelect}
               />
             ))}
           </ul>
@@ -966,6 +1136,13 @@ function renderFilteredGroupSections(input: {
   compactActions?: boolean;
   collapsedGroups: ReadonlySet<OfficeReviewQueueGroup>;
   onToggleGroupCollapse: (group: OfficeReviewQueueGroup) => void;
+  selectionEnabled?: boolean;
+  selectedJobIds?: ReadonlySet<string>;
+  onToggleItemSelect?: (jobId: string) => void;
+  onToggleGroupSelect?: (
+    groupItems: OfficeReviewQueueItem[],
+    selectAll: boolean,
+  ) => void;
 }): ReactNode {
   const {
     activeFilter,
@@ -975,6 +1152,10 @@ function renderFilteredGroupSections(input: {
     compactActions,
     collapsedGroups,
     onToggleGroupCollapse,
+    selectionEnabled = false,
+    selectedJobIds,
+    onToggleItemSelect,
+    onToggleGroupSelect,
   } = input;
 
   if (activeGroupFilter) {
@@ -988,6 +1169,10 @@ function renderFilteredGroupSections(input: {
         collapsible
         isCollapsed={collapsedGroups.has(activeGroupFilter)}
         onToggleCollapse={() => onToggleGroupCollapse(activeGroupFilter)}
+        selectionEnabled={selectionEnabled}
+        selectedJobIds={selectedJobIds}
+        onToggleItemSelect={onToggleItemSelect}
+        onToggleGroupSelect={onToggleGroupSelect}
       />
     );
   }
@@ -1019,6 +1204,10 @@ function renderFilteredGroupSections(input: {
         collapsible
         isCollapsed={collapsedGroups.has(group)}
         onToggleCollapse={() => onToggleGroupCollapse(group)}
+        selectionEnabled={selectionEnabled}
+        selectedJobIds={selectedJobIds}
+        onToggleItemSelect={onToggleItemSelect}
+        onToggleGroupSelect={onToggleGroupSelect}
       />
     );
   });
@@ -1048,6 +1237,9 @@ export function OfficeReviewQueueSection({
   const [collapsedGroups, setCollapsedGroups] = useState<
     Set<OfficeReviewQueueGroup>
   >(() => new Set());
+  const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   useEffect(() => {
     if (isCompact) {
@@ -1202,6 +1394,52 @@ export function OfficeReviewQueueSection({
     [filteredItems, effectiveSortMode],
   );
 
+  useEffect(() => {
+    if (isCompact) {
+      return;
+    }
+
+    const validJobIds = new Set(baseItems.map((item) => item.jobId));
+    setSelectedJobIds((previous) => {
+      const pruned = pruneQueueSelection(previous, validJobIds);
+      if (
+        pruned.size === previous.size &&
+        [...pruned].every((jobId) => previous.has(jobId))
+      ) {
+        return previous;
+      }
+
+      return pruned;
+    });
+  }, [baseItems, isCompact]);
+
+  const selectedItems = useMemo(
+    () => resolveSelectedQueueItems(baseItems, selectedJobIds),
+    [baseItems, selectedJobIds],
+  );
+
+  const bulkActions = useMemo(
+    () => resolveBulkQueueActionAvailability(selectedItems),
+    [selectedItems],
+  );
+
+  const handleToggleItemSelect = (jobId: string) => {
+    setSelectedJobIds((previous) => toggleQueueSelection(previous, jobId));
+  };
+
+  const handleToggleGroupSelect = (
+    groupItems: OfficeReviewQueueItem[],
+    selectAll: boolean,
+  ) => {
+    setSelectedJobIds((previous) =>
+      toggleGroupQueueSelection(previous, groupItems, selectAll),
+    );
+  };
+
+  const handleClearSelection = () => {
+    setSelectedJobIds(clearQueueSelection());
+  };
+
   const showGrouped = !isCompact;
   const showActions = true;
   const compactActions = isCompact;
@@ -1217,6 +1455,8 @@ export function OfficeReviewQueueSection({
   const showFilterEmptyState =
     isFiltered && filteredCount === 0 && summary.totalCount > 0;
   const showGlobalEmptyState = summary.totalCount === 0;
+  const selectionEnabled =
+    !isCompact && !showGlobalEmptyState && !showFilterEmptyState;
 
   return (
     <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
@@ -1387,16 +1627,29 @@ export function OfficeReviewQueueSection({
           clearHref={clearHref}
         />
       ) : showGrouped ? (
-        <div className="mt-3 flex flex-col gap-3 sm:mt-4 sm:gap-4">
-          {renderFilteredGroupSections({
-            activeFilter,
-            activeGroupFilter,
-            groups,
-            showActions,
-            collapsedGroups,
-            onToggleGroupCollapse: handleToggleGroupCollapse,
-          })}
-        </div>
+        <>
+          <div className="mt-3 flex flex-col gap-3 sm:mt-4 sm:gap-4">
+            {renderFilteredGroupSections({
+              activeFilter,
+              activeGroupFilter,
+              groups,
+              showActions,
+              collapsedGroups,
+              onToggleGroupCollapse: handleToggleGroupCollapse,
+              selectionEnabled,
+              selectedJobIds,
+              onToggleItemSelect: handleToggleItemSelect,
+              onToggleGroupSelect: handleToggleGroupSelect,
+            })}
+          </div>
+          {selectionEnabled ? (
+            <QueueBulkSelectionBar
+              selectedCount={selectedItems.length}
+              bulkActions={bulkActions}
+              onClearSelection={handleClearSelection}
+            />
+          ) : null}
+        </>
       ) : (
         <ul className="mt-3 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-100 sm:mt-4">
           {baseItems
