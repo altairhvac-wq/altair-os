@@ -5,11 +5,13 @@ import { Briefcase } from "lucide-react";
 import type { DispatchJobStatus } from "@/shared/types/dispatch";
 import type { TechnicianJob } from "@/shared/types/technician";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
+import type { ServiceItem } from "@/shared/types/service-item";
 import { TechnicianJobCard } from "./TechnicianJobCard";
 
 type TechnicianAssignedJobsViewProps = {
   jobs: TechnicianJob[];
   timeState: TechnicianTimeStateSnapshot;
+  serviceItems: ServiceItem[];
 };
 
 type ActiveJobStatus = Extract<
@@ -62,6 +64,7 @@ type WorkQueueSectionProps = {
   labelClassName?: string;
   jobs: TechnicianJob[];
   timeState: TechnicianTimeStateSnapshot;
+  serviceItems: ServiceItem[];
   onTimeStateChange: (state: TechnicianTimeStateSnapshot) => void;
 };
 
@@ -70,6 +73,7 @@ function WorkQueueSection({
   labelClassName = "text-slate-500",
   jobs,
   timeState,
+  serviceItems,
   onTimeStateChange,
 }: WorkQueueSectionProps) {
   if (jobs.length === 0) {
@@ -89,6 +93,7 @@ function WorkQueueSection({
             <TechnicianJobCard
               job={job}
               timeState={timeState}
+              serviceItems={serviceItems}
               onTimeStateChange={onTimeStateChange}
             />
           </li>
@@ -123,6 +128,7 @@ function TechnicianJobsEmptyState({
 export function TechnicianAssignedJobsView({
   jobs,
   timeState: initialTimeState,
+  serviceItems,
 }: TechnicianAssignedJobsViewProps) {
   const [timeState, setTimeState] = useState(initialTimeState);
 
@@ -164,6 +170,7 @@ export function TechnicianAssignedJobsView({
           labelClassName="text-cyan-600"
           jobs={currentJobs}
           timeState={timeState}
+          serviceItems={serviceItems}
           onTimeStateChange={setTimeState}
         />
         <WorkQueueSection
@@ -171,18 +178,21 @@ export function TechnicianAssignedJobsView({
           labelClassName="text-teal-600"
           jobs={onSiteJobs}
           timeState={timeState}
+          serviceItems={serviceItems}
           onTimeStateChange={setTimeState}
         />
         <WorkQueueSection
           label="En Route"
           jobs={enRouteJobs}
           timeState={timeState}
+          serviceItems={serviceItems}
           onTimeStateChange={setTimeState}
         />
         <WorkQueueSection
           label="Up Next"
           jobs={upNextJobs}
           timeState={timeState}
+          serviceItems={serviceItems}
           onTimeStateChange={setTimeState}
         />
       </div>

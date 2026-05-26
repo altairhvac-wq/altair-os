@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, Mail, MapPin, Phone, Receipt, User } from "lucide-react";
+import { Clock, Mail, MapPin, Package, Phone, Receipt, User } from "lucide-react";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
 import {
   formatJobPriority,
@@ -15,26 +15,38 @@ import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import { TechnicianExpenseSheet } from "./TechnicianExpenseSheet";
 import { TechnicianJobLaborControls } from "./TechnicianJobLaborControls";
+import { TechnicianMaterialSheet } from "./TechnicianMaterialSheet";
+import type { ServiceItem } from "@/shared/types/service-item";
 
 type TechnicianJobCardProps = {
   job: TechnicianJob;
   timeState: TechnicianTimeStateSnapshot;
+  serviceItems: ServiceItem[];
   onTimeStateChange?: (state: TechnicianTimeStateSnapshot) => void;
 };
 
 export function TechnicianJobCard({
   job,
   timeState,
+  serviceItems,
   onTimeStateChange,
 }: TechnicianJobCardProps) {
   const [status, setStatus] = useState(job.status);
   const [showExpenseSheet, setShowExpenseSheet] = useState(false);
+  const [showMaterialSheet, setShowMaterialSheet] = useState(false);
 
   useEffect(() => {
     setStatus((current) =>
       shouldAcceptServerWorkflowStatus(current, job.status) ? job.status : current,
     );
   }, [job.status]);
+
+  useEffect(() => {
+    if (status === "completed" || status === "cancelled") {
+      setShowMaterialSheet(false);
+      setShowExpenseSheet(false);
+    }
+  }, [status]);
 
   const contactLines = [
     job.customerPhone ? { icon: Phone, value: job.customerPhone } : null,
@@ -129,16 +141,33 @@ export function TechnicianJobCard({
               onTimeStateChange={onTimeStateChange}
             />
             <button
-            type="button"
-            onClick={() => setShowExpenseSheet(true)}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100"
-          >
-            <Receipt className="h-4 w-4" />
-            Snap receipt
-          </button>
+              type="button"
+              onClick={() => setShowMaterialSheet(true)}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-semibold text-cyan-800 transition-colors hover:bg-cyan-100"
+            >
+              <Package className="h-4 w-4" />
+              Log material
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowExpenseSheet(true)}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100"
+            >
+              <Receipt className="h-4 w-4" />
+              Snap receipt
+            </button>
           </>
         ) : null}
       </div>
+
+      {showMaterialSheet ? (
+        <TechnicianMaterialSheet
+          jobId={job.id}
+          jobNumber={job.jobNumber}
+          serviceItems={serviceItems}
+          onClose={() => setShowMaterialSheet(false)}
+        />
+      ) : null}
 
       {showExpenseSheet ? (
         <TechnicianExpenseSheet

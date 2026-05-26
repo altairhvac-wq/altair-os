@@ -6,6 +6,8 @@ import { createJobMaterial } from "@/lib/database/queries/job-materials";
 import { getJobById } from "@/lib/database/queries/jobs";
 import { recordJobMaterialAddedActivity } from "@/lib/database/services/job-activity";
 import type { JobMaterial, JobMaterialFormData } from "@/shared/types/job-material";
+import { roundJobMaterialAmount } from "@/shared/types/job-material";
+import { isTerminalJobStatus } from "@/shared/types/job-workflow";
 
 export type JobMaterialActionResult = {
   error?: string;
@@ -59,6 +61,12 @@ async function assertJobMaterialWritePermission(jobId: string): Promise<{
     };
   }
 
+  if (isTerminalJobStatus(job.status)) {
+    return {
+      error: "Materials cannot be logged on completed or cancelled jobs.",
+    };
+  }
+
   return {
     jobId: job.id,
     customerId: job.customerId,
@@ -66,14 +74,30 @@ async function assertJobMaterialWritePermission(jobId: string): Promise<{
   };
 }
 
+function normalizeJobMaterialFormData(
+  data: JobMaterialFormData,
+): JobMaterialFormData {
+  return {
+    ...data,
+    jobId: data.jobId.trim(),
+    name: data.name.trim(),
+    description: data.description?.trim() || undefined,
+    serviceItemId: data.serviceItemId?.trim() || undefined,
+    quantity: roundJobMaterialAmount(data.quantity),
+    unitCost:
+      data.unitCost == null ? null : roundJobMaterialAmount(data.unitCost),
+    unitPrice: roundJobMaterialAmount(Math.max(data.unitPrice, 0)),
+  };
+}
+
 function validateJobMaterialFormData(
   data: JobMaterialFormData,
 ): string | null {
-  if (!data.jobId.trim()) {
+  if (!data.jobId) {
     return "Job is required.";
   }
 
-  if (!data.name.trim()) {
+  if (!data.name) {
     return "Material name is required.";
   }
 
@@ -104,23 +128,27 @@ export async function createJobMaterialAction(input: {
     return { error: "No active company workspace." };
   }
 
-  const validationError = validateJobMaterialFormData(input.data);
+  const normalizedData = normalizeJobMaterialFormData(input.data);
+  const validationError = validateJobMaterialFormData(normalizedData);
 
   if (validationError) {
     return { error: validationError };
   }
 
-  const permission = await assertJobMaterialWritePermission(input.data.jobId);
+  const permission = await assertJobMaterialWritePermission(normalizedData.jobId);
 
-  if (permission.error) {
-    return { error: permission.error };
+  if (permission.error || !permission.jobId) {
+    return { error: permission.error ?? "Linked job not found." };
   }
 
   const { material, error } = await createJobMaterial({
     companyId: context.company.id,
     customerId: permission.customerId ?? null,
     addedBy: context.user.id,
-    data: input.data,
+    data: {
+      ...normalizedData,
+      jobId: permission.jobId,
+    },
   });
 
   if (error || !material) {

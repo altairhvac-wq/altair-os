@@ -18,6 +18,7 @@ import { JobTechnicianAssignment } from "./JobTechnicianAssignment";
 import { JobCustomerEquipmentSection } from "./JobCustomerEquipmentSection";
 import { JobAttachmentsSection } from "./JobAttachmentsSection";
 import { JobExpenseReceiptsSection } from "./JobExpenseReceiptsSection";
+import { JobMaterialsSection } from "./JobMaterialsSection";
 import { OperationalActivityTimeline } from "@/shared/components/operational/OperationalActivityTimeline";
 import {
   formatScheduledDate,
@@ -27,7 +28,9 @@ import {
 import type { CustomerEquipment } from "@/shared/types/customer-equipment";
 import type { JobAttachment } from "@/shared/types/job-attachment";
 import type { Expense } from "@/shared/types/expense";
+import type { JobMaterial } from "@/shared/types/job-material";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
+import type { ServiceItem } from "@/shared/types/service-item";
 
 type JobDetailPageViewProps = {
   job: JobDetail;
@@ -36,8 +39,11 @@ type JobDetailPageViewProps = {
   equipment: CustomerEquipment[];
   attachments: JobAttachment[];
   expenses: Expense[];
+  materials: JobMaterial[];
+  serviceItems: ServiceItem[];
   canUpdateStatus: boolean;
   canAssignTechnician: boolean;
+  canLogMaterials: boolean;
 };
 
 type ContentSectionProps = {
@@ -66,8 +72,11 @@ export function JobDetailPageView({
   equipment,
   attachments,
   expenses,
+  materials,
+  serviceItems,
   canUpdateStatus,
   canAssignTechnician,
+  canLogMaterials,
 }: JobDetailPageViewProps) {
   const customerEmail = job.customerEmail?.trim();
   const customerPhone = job.customerPhone?.trim();
@@ -259,6 +268,13 @@ export function JobDetailPageView({
       />
 
       <JobExpenseReceiptsSection jobId={job.id} expenses={expenses} />
+
+      <JobMaterialsSection
+        jobId={job.id}
+        materials={materials}
+        serviceItems={serviceItems}
+        canLogMaterials={canLogMaterials}
+      />
 
       <OperationalActivityTimeline
         activities={activities}

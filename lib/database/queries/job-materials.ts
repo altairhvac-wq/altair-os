@@ -5,6 +5,7 @@ import type {
   JobMaterialRow,
 } from "@/lib/database/types/core-tables";
 import type { JobMaterial, JobMaterialFormData } from "@/shared/types/job-material";
+import { roundJobMaterialAmount } from "@/shared/types/job-material";
 
 type ProfileSummary = {
   full_name: string | null;
@@ -26,6 +27,11 @@ function formatProfileName(
 }
 
 function mapJobMaterialRow(row: JobMaterialRowWithAddedBy): JobMaterial {
+  const quantity = Number(row.quantity);
+  const unitPrice = Number(row.unit_price);
+  const unitCost =
+    row.unit_cost == null ? undefined : Number(row.unit_cost);
+
   return {
     id: row.id,
     companyId: row.company_id,
@@ -34,9 +40,10 @@ function mapJobMaterialRow(row: JobMaterialRowWithAddedBy): JobMaterial {
     serviceItemId: row.service_item_id ?? undefined,
     name: row.name,
     description: row.description ?? undefined,
-    quantity: Number(row.quantity),
-    unitCost: row.unit_cost == null ? undefined : Number(row.unit_cost),
-    unitPrice: Number(row.unit_price),
+    quantity: Number.isFinite(quantity) ? quantity : 0,
+    unitCost:
+      unitCost == null || Number.isFinite(unitCost) ? unitCost : undefined,
+    unitPrice: Number.isFinite(unitPrice) ? unitPrice : 0,
     taxable: row.taxable,
     addedBy: row.added_by ?? undefined,
     addedByName: formatProfileName(row.added_by_profile),
@@ -63,9 +70,12 @@ export function mapJobMaterialFormDataToInsert(input: {
     service_item_id: input.data.serviceItemId?.trim() || null,
     name: input.data.name.trim(),
     description: input.data.description?.trim() || null,
-    quantity: input.data.quantity,
-    unit_cost: input.data.unitCost ?? null,
-    unit_price: Math.max(input.data.unitPrice, 0),
+    quantity: roundJobMaterialAmount(input.data.quantity),
+    unit_cost:
+      input.data.unitCost == null
+        ? null
+        : roundJobMaterialAmount(input.data.unitCost),
+    unit_price: roundJobMaterialAmount(Math.max(input.data.unitPrice, 0)),
     taxable: input.data.taxable,
     added_by: input.addedBy,
   };

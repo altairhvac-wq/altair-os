@@ -3,6 +3,8 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listOperationalActivitiesForJob } from "@/lib/database/queries/operational-activities";
 import { listExpensesForJob } from "@/lib/database/queries/expenses";
 import { listJobAttachmentsForJob } from "@/lib/database/queries/job-attachments";
+import { listJobMaterialsForJob } from "@/lib/database/queries/job-materials";
+import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment";
 import { getJobById } from "@/lib/database/queries/jobs";
 import { listTechnicians } from "@/lib/database/queries/technicians";
@@ -26,13 +28,22 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     notFound();
   }
 
-  const [technicians, activities, equipment, attachments, expenses] =
-    await Promise.all([
+  const [
+    technicians,
+    activities,
+    equipment,
+    attachments,
+    expenses,
+    materials,
+    serviceItems,
+  ] = await Promise.all([
     listTechnicians(companyContext.company.id),
     listOperationalActivitiesForJob(companyContext.company.id, jobId),
     listCustomerEquipment(companyContext.company.id, job.customerId),
     listJobAttachmentsForJob(companyContext.company.id, jobId),
     listExpensesForJob(companyContext.company.id, jobId),
+    listJobMaterialsForJob(companyContext.company.id, jobId),
+    listActiveServiceItems(companyContext.company.id),
   ]);
 
   return (
@@ -43,12 +54,20 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       equipment={equipment}
       attachments={attachments}
       expenses={expenses}
+      materials={materials}
+      serviceItems={serviceItems}
       canUpdateStatus={
         companyContext.permissions.dispatchJobs ||
         (companyContext.permissions.viewAssignedJobs &&
           job.assignedTechnicianId === companyContext.user.id)
       }
       canAssignTechnician={companyContext.permissions.dispatchJobs}
+      canLogMaterials={
+        companyContext.permissions.dispatchJobs ||
+        companyContext.permissions.manageBilling ||
+        (companyContext.permissions.viewAssignedJobs &&
+          job.assignedTechnicianId === companyContext.user.id)
+      }
     />
   );
 }
