@@ -122,29 +122,76 @@ export async function getActiveCompanyContext(
     return null;
   }
 
-  let targetCompanyId = options.companyId ?? profile.default_company_id;
+  const typedProfile = profile as ProfileRow;
 
-  if (!targetCompanyId) {
-    const memberships = await getUserCompanies();
-    targetCompanyId = memberships[0]?.company_id ?? null;
+  if (options.companyId) {
+    return resolveActiveCompanyContext(
+      supabase,
+      { id: user.id, email: user.email },
+      typedProfile,
+      options.companyId,
+    );
   }
 
-  if (!targetCompanyId) {
+  const activeMemberships = await getUserCompanies();
+
+  if (activeMemberships.length === 0) {
     return null;
   }
 
+  const preferredMembership =
+    activeMemberships.find(
+      (membership) => membership.company_id === typedProfile.default_company_id,
+    ) ?? activeMemberships[0];
+
+  if (
+    typedProfile.default_company_id &&
+    typedProfile.default_company_id !== preferredMembership.company_id
+  ) {
+    const { error: healError } = await supabase
+      .from("profiles")
+      .update({ default_company_id: preferredMembership.company_id })
+      .eq("id", user.id);
+
+    if (healError) {
+      console.error("[getActiveCompanyContext] stale default heal failed:", {
+        userId: user.id,
+        staleDefaultCompanyId: typedProfile.default_company_id,
+        nextDefaultCompanyId: preferredMembership.company_id,
+        code: healError.code,
+        message: healError.message,
+      });
+    } else {
+      typedProfile.default_company_id = preferredMembership.company_id;
+    }
+  }
+
+  return toActiveCompanyContext(
+    { id: user.id, email: user.email },
+    typedProfile,
+    preferredMembership,
+    preferredMembership.company,
+  );
+}
+
+async function resolveActiveCompanyContext(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  user: { id: string; email: string | undefined },
+  profile: ProfileRow,
+  companyId: string,
+): Promise<ActiveCompanyContext | null> {
   const { data: membershipRow, error: membershipError } = await supabase
     .from("company_memberships")
     .select("*, company:companies(*)")
     .eq("user_id", user.id)
-    .eq("company_id", targetCompanyId)
+    .eq("company_id", companyId)
     .eq("status", "active")
     .maybeSingle();
 
   if (membershipError) {
     console.error("[getActiveCompanyContext] membership lookup failed:", {
       userId: user.id,
-      companyId: targetCompanyId,
+      companyId,
       code: membershipError.code,
       message: membershipError.message,
       details: membershipError.details,
@@ -164,12 +211,7 @@ export async function getActiveCompanyContext(
     return null;
   }
 
-  return toActiveCompanyContext(
-    { id: user.id, email: user.email },
-    profile as ProfileRow,
-    membership,
-    company,
-  );
+  return toActiveCompanyContext(user, profile, membership, company);
 }
 
 /** @deprecated Use getUserCompanies instead */

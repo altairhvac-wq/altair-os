@@ -184,12 +184,7 @@ export function CompanySwitcher({
       ) : null}
 
       {error ? (
-        <p
-          className={`mt-1 text-xs text-red-600 ${
-            variant === "admin" ? "hidden md:block" : ""
-          }`}
-          role="alert"
-        >
+        <p className="mt-1 text-xs text-red-600" role="alert">
           {error}
         </p>
       ) : null}

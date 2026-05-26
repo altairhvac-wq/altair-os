@@ -67,8 +67,11 @@ export async function acceptInviteAction(
   revalidatePath("/", "layout");
   revalidatePath("/setup");
   revalidatePath("/settings");
-  revalidatePath("/dispatch");
-  revalidatePath("/technician");
+  revalidatePath("/dispatch", "layout");
+  revalidatePath("/reports", "layout");
+  revalidatePath("/jobs", "layout");
+  revalidatePath("/technician", "layout");
+  revalidatePath("/tech", "layout");
 
   return { companyId: result.companyId };
 }
