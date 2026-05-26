@@ -6,6 +6,7 @@ import { listJobMaterialsForCompany } from "@/lib/database/queries/job-materials
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listTimeEntries } from "@/lib/database/queries/time-entries";
 import { getCompanyCompletedWorkReport } from "@/lib/database/services/reports/completed-work-report";
+import { getCompanyCompletedWorkReviewReport } from "@/lib/database/services/reports/completed-work-review-report";
 import { getCompanyExpenseReport } from "@/lib/database/services/reports/expense-report";
 import { getCompanyJobActivityReport } from "@/lib/database/services/reports/job-activity-report";
 import { getCompanyProfitabilityReport } from "@/lib/database/services/reports/profitability-report";
@@ -125,6 +126,8 @@ function buildHighlights(input: {
   stalledCount: number;
   pendingExpenseCount: number;
   completedAwaitingInvoicingCount: number;
+  completedWorkReviewCount: number;
+  criticalCompletedWorkReviewCount: number;
   jobsWithWarnings: number;
   materialCostExceedsCollectedCount: number;
   todayPaymentCount: number;
@@ -152,6 +155,19 @@ function buildHighlights(input: {
       category: "invoicing",
       count: input.completedAwaitingInvoicingCount,
       message: `${input.completedAwaitingInvoicingCount} completed ${pluralize(input.completedAwaitingInvoicingCount, "job")} ${input.completedAwaitingInvoicingCount === 1 ? "is" : "are"} awaiting invoicing.`,
+      href: "/reports",
+    });
+  }
+
+  if (input.completedWorkReviewCount > 0) {
+    const severity: DailyOperationsSummarySeverity =
+      input.criticalCompletedWorkReviewCount > 0 ? "critical" : "warning";
+    addHighlight(highlights, {
+      id: "completed-work-review",
+      severity,
+      category: "completed_work_review",
+      count: input.completedWorkReviewCount,
+      message: `${input.completedWorkReviewCount} completed ${pluralize(input.completedWorkReviewCount, "job")} ${input.completedWorkReviewCount === 1 ? "needs" : "need"} office review before admin closure.`,
       href: "/reports",
     });
   }
@@ -265,6 +281,7 @@ export async function getDailyOperationsSummary(
     profitabilityReport,
     paymentsToday,
     completedWorkReport,
+    completedWorkReviewReport,
     jobLevelCounts,
   ] = await Promise.all([
     getCompanyRevenueReport(companyId, REPORT_OPTIONS),
@@ -275,6 +292,7 @@ export async function getDailyOperationsSummary(
     getCompanyProfitabilityReport(companyId, REPORT_OPTIONS),
     getPaymentsTodaySummary(companyId),
     getCompanyCompletedWorkReport(companyId),
+    getCompanyCompletedWorkReviewReport(companyId),
     deriveJobLevelOperationalCounts(companyId),
   ]);
 
@@ -306,6 +324,10 @@ export async function getDailyOperationsSummary(
       count: completedWorkReport.summary.count,
       jobs: completedWorkReport.summary.jobs,
     },
+    completedWorkReview: {
+      count: completedWorkReviewReport.summary.count,
+      jobs: completedWorkReviewReport.summary.jobs,
+    },
     profitabilityWarnings: {
       jobsWithWarnings: profitabilityReport.summary.jobsWithWarnings,
       materialCostExceedsCollectedCount:
@@ -318,6 +340,10 @@ export async function getDailyOperationsSummary(
     pendingExpenseCount: sections.pendingExpenses.count,
     completedAwaitingInvoicingCount:
       sections.completedAwaitingInvoicing.count,
+    completedWorkReviewCount: sections.completedWorkReview.count,
+    criticalCompletedWorkReviewCount: sections.completedWorkReview.jobs.filter(
+      (job) => job.severity === "critical",
+    ).length,
     jobsWithWarnings: sections.profitabilityWarnings.jobsWithWarnings,
     materialCostExceedsCollectedCount:
       sections.profitabilityWarnings.materialCostExceedsCollectedCount,
@@ -337,6 +363,7 @@ export async function getDailyOperationsSummary(
         stalledJobsReport.meta.limitations,
         technicianLaborReport.meta.limitations,
         completedWorkReport.meta.limitations,
+        completedWorkReviewReport.meta.limitations,
       ],
       profitabilityWarnings: profitabilityReport.meta.completenessWarnings,
     }),

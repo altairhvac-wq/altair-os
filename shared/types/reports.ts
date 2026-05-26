@@ -1,7 +1,7 @@
 import type { AnalyticsDateRange } from "@/shared/types/analytics";
 import type { Job } from "@/shared/types/job";
 import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
-import { roundCurrency } from "@/shared/types/invoice";
+import { roundCurrency, type InvoiceStatus } from "@/shared/types/invoice";
 import { roundJobMaterialAmount } from "@/shared/types/job-material";
 
 export type ProfitabilityReportDateRange = AnalyticsDateRange | "all";
@@ -289,6 +289,172 @@ export type CompletedWorkAwaitingInvoicingReport = {
   meta: ReportSectionMeta;
 };
 
+export type CompletedWorkReviewReason =
+  | "no_active_invoice"
+  | "open_labor_entries"
+  | "pending_expenses"
+  | "profitability_data_incomplete";
+
+export type CompletedWorkReviewSeverity = "warning" | "critical";
+
+export type CompletedWorkInvoiceStatusSnapshot = {
+  activeInvoiceCount: number;
+  statuses: InvoiceStatus[];
+  latestStatus: InvoiceStatus | null;
+};
+
+export type CompletedWorkReviewEntry = {
+  jobId: string;
+  jobNumber: string;
+  customerName: string;
+  completedAt: string | null;
+  assignedTechnician?: string;
+  daysSinceCompletion: number;
+  reviewReasons: CompletedWorkReviewReason[];
+  severity: CompletedWorkReviewSeverity;
+  invoiceStatus: CompletedWorkInvoiceStatusSnapshot;
+  profitabilityWarningCount: number;
+};
+
+export type CompletedWorkReviewReportSummary = {
+  count: number;
+  jobs: CompletedWorkReviewEntry[];
+};
+
+export type CompletedWorkReviewReport = {
+  summary: CompletedWorkReviewReportSummary;
+  meta: ReportSectionMeta;
+};
+
+export function countJobProfitabilityWarningFlags(
+  snapshot: JobProfitabilitySnapshot,
+): number {
+  const { completeness } = snapshot;
+  let count = 0;
+
+  if (completeness.noActiveInvoices) {
+    count += 1;
+  }
+  if (completeness.materialsMissingUnitCostCount > 0) {
+    count += 1;
+  }
+  if (completeness.excludedPendingExpenseCount > 0) {
+    count += 1;
+  }
+  if (completeness.excludedRejectedExpenseCount > 0) {
+    count += 1;
+  }
+  if (completeness.excludedMaterialsExpenseCount > 0) {
+    count += 1;
+  }
+  if (completeness.expensesMissingAmountCount > 0) {
+    count += 1;
+  }
+  if (completeness.openLaborEntryCount > 0) {
+    count += 1;
+  }
+
+  return count;
+}
+
+export function resolveCompletedWorkReviewReasons(
+  snapshot: JobProfitabilitySnapshot,
+): CompletedWorkReviewReason[] {
+  const reasons: CompletedWorkReviewReason[] = [];
+  const { completeness } = snapshot;
+
+  if (completeness.noActiveInvoices) {
+    reasons.push("no_active_invoice");
+  }
+  if (completeness.openLaborEntryCount > 0) {
+    reasons.push("open_labor_entries");
+  }
+  if (completeness.excludedPendingExpenseCount > 0) {
+    reasons.push("pending_expenses");
+  }
+
+  const hasOtherProfitabilityWarnings =
+    completeness.materialsMissingUnitCostCount > 0 ||
+    completeness.excludedRejectedExpenseCount > 0 ||
+    completeness.excludedMaterialsExpenseCount > 0 ||
+    completeness.expensesMissingAmountCount > 0;
+
+  if (hasOtherProfitabilityWarnings) {
+    reasons.push("profitability_data_incomplete");
+  }
+
+  return reasons;
+}
+
+export function resolveCompletedWorkReviewSeverity(
+  reasons: CompletedWorkReviewReason[],
+): CompletedWorkReviewSeverity {
+  const hasNoInvoice = reasons.includes("no_active_invoice");
+  const hasOpenLabor = reasons.includes("open_labor_entries");
+  const hasPendingExpenses = reasons.includes("pending_expenses");
+
+  if (hasNoInvoice && hasOpenLabor && hasPendingExpenses) {
+    return "critical";
+  }
+
+  if (hasNoInvoice) {
+    return "warning";
+  }
+
+  return "warning";
+}
+
+export function jobRequiresCompletedWorkReview(
+  job: Job,
+  snapshot: JobProfitabilitySnapshot,
+): boolean {
+  return (
+    job.status === "completed" &&
+    resolveCompletedWorkReviewReasons(snapshot).length > 0
+  );
+}
+
+const COMPLETED_WORK_REVIEW_REASON_LABELS: Record<
+  CompletedWorkReviewReason,
+  string
+> = {
+  no_active_invoice: "No active invoice",
+  open_labor_entries: "Open labor entries",
+  pending_expenses: "Pending expenses",
+  profitability_data_incomplete: "Profitability data gaps",
+};
+
+export function formatCompletedWorkReviewReason(
+  reason: CompletedWorkReviewReason,
+): string {
+  return COMPLETED_WORK_REVIEW_REASON_LABELS[reason];
+}
+
+export function formatCompletedWorkReviewReasons(
+  reasons: CompletedWorkReviewReason[],
+): string {
+  return reasons.map(formatCompletedWorkReviewReason).join(" · ");
+}
+
+export function formatCompletedWorkInvoiceStatus(
+  snapshot: CompletedWorkInvoiceStatusSnapshot,
+): string {
+  if (snapshot.activeInvoiceCount === 0) {
+    return "No active invoices";
+  }
+
+  const statusLabel =
+    snapshot.latestStatus != null
+      ? snapshot.latestStatus.replaceAll("_", " ")
+      : "unknown";
+
+  if (snapshot.activeInvoiceCount === 1) {
+    return statusLabel;
+  }
+
+  return `${snapshot.activeInvoiceCount} invoices · latest ${statusLabel}`;
+}
+
 export type OperationalReportsBundle = {
   revenue: RevenueReport;
   expenses: ExpenseReport;
@@ -296,6 +462,7 @@ export type OperationalReportsBundle = {
   labor: TechnicianLaborReport;
   stalledJobs: StalledJobsReport;
   completedWorkAwaitingInvoicing: CompletedWorkAwaitingInvoicingReport;
+  completedWorkReview: CompletedWorkReviewReport;
 };
 
 export type ReportChartBucketSize = "day" | "week" | "month";

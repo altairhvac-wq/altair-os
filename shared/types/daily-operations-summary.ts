@@ -1,5 +1,6 @@
 import type {
   CompletedWorkAwaitingInvoicingEntry,
+  CompletedWorkReviewEntry,
   StalledJobEntry,
 } from "@/shared/types/reports";
 
@@ -16,7 +17,8 @@ export type DailyOperationsSummaryHighlight = {
     | "expenses"
     | "labor"
     | "invoicing"
-    | "profitability";
+    | "profitability"
+    | "completed_work_review";
   count?: number;
   href?: string;
 };
@@ -53,6 +55,11 @@ export type DailyOperationsCompletedAwaitingInvoicingSnapshot = {
   jobs: CompletedWorkAwaitingInvoicingEntry[];
 };
 
+export type DailyOperationsCompletedWorkReviewSnapshot = {
+  count: number;
+  jobs: CompletedWorkReviewEntry[];
+};
+
 export type DailyOperationsProfitabilityWarningsSnapshot = {
   jobsWithWarnings: number;
   materialCostExceedsCollectedCount: number;
@@ -65,6 +72,7 @@ export type DailyOperationsSummarySections = {
   pendingExpenses: DailyOperationsPendingExpensesSnapshot;
   activeTechnicians: DailyOperationsActiveTechniciansSnapshot;
   completedAwaitingInvoicing: DailyOperationsCompletedAwaitingInvoicingSnapshot;
+  completedWorkReview: DailyOperationsCompletedWorkReviewSnapshot;
   profitabilityWarnings: DailyOperationsProfitabilityWarningsSnapshot;
 };
 

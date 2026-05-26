@@ -18,6 +18,7 @@ import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { formatJobStatus } from "@/shared/types/job";
 import type {
   CompletedWorkAwaitingInvoicingReport,
+  CompletedWorkReviewReport,
   ExpenseReport,
   JobActivityReport,
   OperationalReportsBundle,
@@ -25,6 +26,10 @@ import type {
   RevenueReport,
   StalledJobsReport,
   TechnicianLaborReport,
+} from "@/shared/types/reports";
+import {
+  formatCompletedWorkInvoiceStatus,
+  formatCompletedWorkReviewReasons,
 } from "@/shared/types/reports";
 import {
   formatOperationalActivityTimestamp,
@@ -329,6 +334,85 @@ function TechnicianLaborReportSection({
   );
 }
 
+function CompletedWorkReviewReportSection({
+  report,
+}: {
+  report: CompletedWorkReviewReport;
+}) {
+  const { summary, meta } = report;
+
+  return (
+    <ReportSectionShell
+      title="Completed work requiring review"
+      description="Finished jobs that may still need office follow-up before invoicing or closure"
+      meta={meta}
+    >
+      <MetricCard
+        label="Needs review"
+        value={String(summary.count)}
+        description="Completed jobs with review flags"
+        icon={AlertTriangle}
+        iconClassName="text-rose-600 bg-rose-50"
+        accentClassName="border-rose-100"
+      />
+      <div className="col-span-full">
+        {summary.jobs.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-center text-sm text-slate-600">
+            No completed jobs require office review right now.
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-slate-100">
+            <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
+              <thead className="bg-slate-50/80 text-xs font-bold uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Job</th>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3">Technician</th>
+                  <th className="px-4 py-3">Review reasons</th>
+                  <th className="px-4 py-3">Invoice status</th>
+                  <th className="px-4 py-3 text-right">Warnings</th>
+                  <th className="px-4 py-3 text-right">Days since complete</th>
+                  <th className="px-4 py-3">Severity</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {summary.jobs.map((job) => (
+                  <tr key={job.jobId} className="transition-colors hover:bg-slate-50">
+                    <td className="px-4 py-3 font-semibold text-slate-900">
+                      <Link href={`/jobs/${job.jobId}`} className="hover:text-cyan-700">
+                        {job.jobNumber}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">{job.customerName}</td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {job.assignedTechnician ?? "Unassigned"}
+                    </td>
+                    <td className="max-w-xs px-4 py-3 text-slate-600">
+                      {formatCompletedWorkReviewReasons(job.reviewReasons)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {formatCompletedWorkInvoiceStatus(job.invoiceStatus)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                      {job.profitabilityWarningCount}
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold tabular-nums text-amber-800">
+                      {job.daysSinceCompletion}
+                    </td>
+                    <td className="px-4 py-3 capitalize text-slate-700">
+                      {job.severity}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </ReportSectionShell>
+  );
+}
+
 function CompletedWorkAwaitingInvoicingReportSection({
   report,
 }: {
@@ -480,6 +564,7 @@ export function OperationalReportsSections({
 }: OperationalReportsSectionsProps) {
   return (
     <div className="flex flex-col gap-6">
+      <CompletedWorkReviewReportSection report={reports.completedWorkReview} />
       <CompletedWorkAwaitingInvoicingReportSection
         report={reports.completedWorkAwaitingInvoicing}
       />

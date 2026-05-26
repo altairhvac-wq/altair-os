@@ -45,6 +45,10 @@ import {
 } from "@/shared/types/operational-activity";
 import { formatJobStatus } from "@/shared/types/job";
 import {
+  formatCompletedWorkInvoiceStatus,
+  formatCompletedWorkReviewReasons,
+} from "@/shared/types/reports";
+import {
   formatTechnicianTimeState,
   getTechnicianTimeStateStyles,
 } from "@/shared/types/time-entry";
@@ -337,6 +341,92 @@ function AnalyticsSnapshotSection({
         ))}
       </div>
     </section>
+  );
+}
+
+function CompletedWorkReviewSection({
+  completedWorkReview,
+}: {
+  completedWorkReview: DashboardData["completedWorkReview"];
+}) {
+  return (
+    <DashboardSection
+      title="Needs review"
+      description="Completed jobs that may still need office follow-up before invoicing or closure"
+      icon={AlertTriangle}
+      href="/reports"
+      linkLabel="View report"
+    >
+      <div className="mb-4">
+        <MetricCard
+          label="Needs review"
+          value={completedWorkReview.count}
+          description="Heuristic review flags on completed jobs"
+          icon={AlertTriangle}
+          iconClass="text-rose-600 bg-rose-50"
+          accent="border-rose-100"
+        />
+      </div>
+
+      {completedWorkReview.jobs.length === 0 ? (
+        <EmptyState
+          title="No completed jobs need review"
+          description="Jobs with invoices, closed labor, resolved expenses, and complete profitability data are excluded."
+        />
+      ) : (
+        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
+          {completedWorkReview.jobs.map((job) => (
+            <li key={job.jobId}>
+              <Link
+                href={`/jobs/${job.jobId}`}
+                className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-bold text-slate-900">{job.jobNumber}</p>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                        job.severity === "critical"
+                          ? "bg-rose-100 text-rose-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {job.severity}
+                    </span>
+                  </div>
+                  <p className="mt-1 truncate text-sm text-slate-600">
+                    {job.customerName}
+                    {job.assignedTechnician
+                      ? ` · ${job.assignedTechnician}`
+                      : " · Unassigned"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    {formatCompletedWorkReviewReasons(job.reviewReasons)}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-semibold text-amber-800">
+                    {job.daysSinceCompletion} day
+                    {job.daysSinceCompletion === 1 ? "" : "s"} since complete
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {formatCompletedWorkInvoiceStatus(job.invoiceStatus)}
+                    {job.profitabilityWarningCount > 0
+                      ? ` · ${job.profitabilityWarningCount} warning${job.profitabilityWarningCount === 1 ? "" : "s"}`
+                      : ""}
+                  </p>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <p className="mt-4 text-xs text-slate-500">
+        Heuristic only — not an approval workflow. Does not validate accounting
+        or payroll readiness.
+      </p>
+    </DashboardSection>
   );
 }
 
@@ -1089,6 +1179,7 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
     <div className="flex flex-col gap-6">
       <AnalyticsSnapshotSection analytics={data.analytics} />
       <OperationalInsightsSection insights={data.operationalInsights} />
+      <CompletedWorkReviewSection completedWorkReview={data.completedWorkReview} />
       <CompletedWorkAwaitingInvoicingSection
         completedWork={data.completedWorkAwaitingInvoicing}
       />
