@@ -10,6 +10,8 @@ const STORAGE_KEY = "altair:office-review-queue-preferences:v1";
 const VALID_SORT_MODES: OfficeReviewQueueSortMode[] = [
   "severity_first",
   "blockers_first",
+  "readiness_highest_first",
+  "readiness_lowest_first",
   "oldest_first",
   "newest_first",
 ];

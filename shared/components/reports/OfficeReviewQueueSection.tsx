@@ -31,6 +31,10 @@ import {
   Minus,
 } from "lucide-react";
 import {
+  OFFICE_REVIEW_QUEUE_READINESS_LEGEND,
+  OFFICE_REVIEW_QUEUE_READINESS_LIMITATIONS,
+} from "@/shared/lib/office-review-queue-readiness";
+import {
   loadQueuePreferences,
   parseCollapsedQueueGroups,
   parseQueueSortMode,
@@ -85,6 +89,7 @@ import {
   type OfficeReviewQueueReport,
   type OfficeReviewQueueAction,
   type OfficeReviewQueueSortMode,
+  type OfficeReviewQueueReadinessColor,
   resolvePrimaryQueueAction,
   resolveQueueActions,
 } from "@/shared/types/office-review-queue";
@@ -167,6 +172,120 @@ function agingBucketBadgeClassName(
     case "overdue":
       return "bg-rose-100 text-rose-900 ring-1 ring-rose-300/70";
   }
+}
+
+function readinessBadgeClassName(
+  color: OfficeReviewQueueReadinessColor,
+): string {
+  switch (color) {
+    case "emerald":
+      return "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80";
+    case "sky":
+      return "bg-sky-100 text-sky-900 ring-1 ring-sky-200/80";
+    case "amber":
+      return "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80";
+    case "orange":
+      return "bg-orange-100 text-orange-900 ring-1 ring-orange-200/80";
+    case "rose":
+      return "bg-rose-100 text-rose-900 ring-1 ring-rose-300/70";
+  }
+}
+
+function readinessProgressBarClassName(
+  color: OfficeReviewQueueReadinessColor,
+): string {
+  switch (color) {
+    case "emerald":
+      return "bg-emerald-500";
+    case "sky":
+      return "bg-sky-500";
+    case "amber":
+      return "bg-amber-500";
+    case "orange":
+      return "bg-orange-500";
+    case "rose":
+      return "bg-rose-500";
+  }
+}
+
+function ReadinessLegend({ compact = false }: { compact?: boolean }) {
+  return (
+    <details
+      className={`rounded-lg border border-slate-200 bg-slate-50/80 ${
+        compact ? "px-3 py-2" : "px-3 py-2.5"
+      }`}
+    >
+      <summary className="cursor-pointer text-xs font-semibold text-slate-700">
+        Workflow readiness legend
+      </summary>
+      <ul className={`mt-2 space-y-1.5 ${compact ? "text-[11px]" : "text-xs"} text-slate-600`}>
+        {OFFICE_REVIEW_QUEUE_READINESS_LEGEND.map((entry) => (
+          <li key={entry.score} className="flex items-start gap-2">
+            <span
+              className={`mt-0.5 inline-flex shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${readinessBadgeClassName(
+                entry.score === 100
+                  ? "emerald"
+                  : entry.score === 75
+                    ? "sky"
+                    : entry.score === 50
+                      ? "amber"
+                      : entry.score === 25
+                        ? "orange"
+                        : "rose",
+              )}`}
+            >
+              {entry.score}
+            </span>
+            <span>
+              <span className="font-semibold text-slate-800">{entry.label}</span>
+              {" — "}
+              {entry.description}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <ul className="mt-2 space-y-1 border-t border-slate-200 pt-2 text-[11px] text-slate-500">
+        {OFFICE_REVIEW_QUEUE_READINESS_LIMITATIONS.map((limitation) => (
+          <li key={limitation}>{limitation}</li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+function ReadinessIndicator({
+  item,
+  showProgress = true,
+}: {
+  item: OfficeReviewQueueItem;
+  showProgress?: boolean;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <span
+        className={`inline-flex w-fit max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${readinessBadgeClassName(item.readinessColor)}`}
+        title={item.readinessExplanation}
+      >
+        <span className="tabular-nums">{item.readinessScore}</span>
+        <span className="truncate normal-case">{item.readinessLabel}</span>
+      </span>
+      {showProgress ? (
+        <div
+          className="h-1 w-full max-w-[8rem] overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200/80"
+          role="progressbar"
+          aria-valuenow={item.readinessScore}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Workflow readiness ${item.readinessScore}% — ${item.readinessLabel}`}
+        >
+          <div
+            className={`h-full rounded-full transition-[width] ${readinessProgressBarClassName(item.readinessColor)}`}
+            style={{ width: `${item.readinessScore}%` }}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function queueItemRowClassName(item: OfficeReviewQueueItem): string {
@@ -789,6 +908,7 @@ function QueueItemRow({
             >
               {item.severityEscalated ? "Critical · overdue" : item.severity}
             </span>
+            <ReadinessIndicator item={item} showProgress={!dense} />
             {item.jobStatus ? (
               <JobStatusBadge
                 status={item.jobStatus}
@@ -1308,6 +1428,8 @@ const SORT_MODE_OPTIONS: {
   label: string;
 }[] = [
   { value: "severity_first", label: "Highest severity" },
+  { value: "readiness_highest_first", label: "Most ready" },
+  { value: "readiness_lowest_first", label: "Least ready" },
   { value: "blockers_first", label: "Most blockers" },
   { value: "oldest_first", label: "Oldest first" },
   { value: "newest_first", label: "Newest first" },
@@ -1873,6 +1995,12 @@ export function OfficeReviewQueueSection({
             Clear filter
           </Link>
         </p>
+      ) : null}
+
+      {!isCompact && !showGlobalEmptyState ? (
+        <div className="mt-3 sm:mt-4">
+          <ReadinessLegend />
+        </div>
       ) : null}
 
       {showGlobalEmptyState ? (

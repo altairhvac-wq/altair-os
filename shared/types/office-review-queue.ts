@@ -1,3 +1,9 @@
+import {
+  OFFICE_REVIEW_QUEUE_READINESS_LIMITATIONS,
+  resolveOfficeReviewQueueReadiness,
+  type OfficeReviewQueueReadinessColor,
+  type OfficeReviewQueueReadinessScore,
+} from "@/shared/lib/office-review-queue-readiness";
 import type { Job } from "@/shared/types/job";
 import type { QueueResolutionTrendSummary } from "@/shared/types/queue-resolution-trends";
 import type {
@@ -38,7 +44,11 @@ export type OfficeReviewQueueSortMode =
   | "severity_first"
   | "oldest_first"
   | "newest_first"
-  | "blockers_first";
+  | "blockers_first"
+  | "readiness_highest_first"
+  | "readiness_lowest_first";
+
+export type { OfficeReviewQueueReadinessColor, OfficeReviewQueueReadinessScore };
 
 /** UI/query-param filter for the full reports queue view only. */
 export type OfficeReviewQueueFilter =
@@ -102,6 +112,11 @@ export type OfficeReviewQueueItem = {
   assignedTechnician?: string;
   jobStatus?: Job["status"];
   detail: string;
+  /** Heuristic operational readiness — read-only, not accounting validation. */
+  readinessScore: OfficeReviewQueueReadinessScore;
+  readinessLabel: string;
+  readinessColor: OfficeReviewQueueReadinessColor;
+  readinessExplanation: string;
 };
 
 export type OfficeReviewQueueAgingBucketCounts = Record<
@@ -357,18 +372,31 @@ export function countOfficeReviewQueueAgingBuckets(
 function enrichQueueItemWithAgingMetadata(
   item: Omit<
     OfficeReviewQueueItem,
-    "agingBucket" | "agingLabel" | "severityEscalated"
+    | "agingBucket"
+    | "agingLabel"
+    | "severityEscalated"
+    | "readinessScore"
+    | "readinessLabel"
+    | "readinessColor"
+    | "readinessExplanation"
   >,
 ): OfficeReviewQueueItem {
   const agingBucket = resolveOfficeReviewQueueAgingBucket(item.daysAging);
   const severityEscalated =
     item.severity === "critical" && agingBucket === "overdue";
 
-  return {
+  const withAging = {
     ...item,
     agingBucket,
     agingLabel: formatOfficeReviewQueueAgingBucket(agingBucket),
     severityEscalated,
+  };
+
+  const readiness = resolveOfficeReviewQueueReadiness(withAging);
+
+  return {
+    ...withAging,
+    ...readiness,
   };
 }
 
@@ -534,6 +562,34 @@ export function compareOfficeReviewQueueItems(
     const blockerDiff = right.blockerCount - left.blockerCount;
     if (blockerDiff !== 0) {
       return blockerDiff;
+    }
+
+    const agingDiff = right.daysAging - left.daysAging;
+    if (agingDiff !== 0) {
+      return agingDiff;
+    }
+
+    return SEVERITY_RANK[left.severity] - SEVERITY_RANK[right.severity];
+  }
+
+  if (sortMode === "readiness_highest_first") {
+    const readinessDiff = right.readinessScore - left.readinessScore;
+    if (readinessDiff !== 0) {
+      return readinessDiff;
+    }
+
+    const agingDiff = right.daysAging - left.daysAging;
+    if (agingDiff !== 0) {
+      return agingDiff;
+    }
+
+    return SEVERITY_RANK[left.severity] - SEVERITY_RANK[right.severity];
+  }
+
+  if (sortMode === "readiness_lowest_first") {
+    const readinessDiff = left.readinessScore - right.readinessScore;
+    if (readinessDiff !== 0) {
+      return readinessDiff;
     }
 
     const agingDiff = right.daysAging - left.daysAging;
@@ -909,6 +965,7 @@ export function buildOfficeReviewQueueReport(input: {
     "Batch action previews are available for multi-select — preview only, no bulk execution or writes.",
     "Stalled jobs are lower-priority context; they do not block invoicing or review closure.",
     "Read-only visibility — company-scoped from existing job, invoice, expense, and time records.",
+    ...OFFICE_REVIEW_QUEUE_READINESS_LIMITATIONS,
     ...input.resolutionTrend.limitations,
   ];
 
@@ -918,6 +975,10 @@ export function buildOfficeReviewQueueReport(input: {
   // TODO(office-review-queue-v2): AI prioritization and smart batching suggestions.
   // TODO(office-review-queue-v2): Staffing-aware queue routing by role and capacity.
   // TODO(office-review-queue-v2): Reminder automation for aging queue items.
+  // TODO(office-review-queue-readiness-v2): AI readiness scoring with explainability review.
+  // TODO(office-review-queue-readiness-v2): Staffing-aware readiness weighting.
+  // TODO(office-review-queue-readiness-v2): Predictive workflow risk scoring.
+  // TODO(office-review-queue-readiness-v2): Operational health scoring across report sections.
 
   return {
     summary: {
