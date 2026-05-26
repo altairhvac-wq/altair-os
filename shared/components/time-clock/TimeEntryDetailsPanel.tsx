@@ -7,13 +7,14 @@ import {
   User,
   X,
 } from "lucide-react";
+import { listDetailPanelClass } from "@/shared/components/layout/list-detail-layout";
 import {
-  formatDateTime,
-  formatHours,
-  formatTimeEntryStatus,
-  type TimeEntry,
-  type TimeEntryFormData,
-} from "@/shared/types/time-entry";
+  formatMockDateTime,
+  formatMockHours,
+  formatMockTimeEntryStatus,
+  type MockTimeEntry,
+  type MockTimeEntryFormData,
+} from "@/shared/types/time-entry-mock";
 import { TimeEntryForm } from "./TimeEntryForm";
 import { TimeEntryStatusBadge } from "./TimeEntryStatusBadge";
 
@@ -21,10 +22,10 @@ type PanelMode = "detail" | "create" | "edit" | "empty";
 
 type TimeEntryDetailsPanelProps = {
   mode: PanelMode;
-  entry: TimeEntry | null;
+  entry: MockTimeEntry | null;
   onClose: () => void;
-  onCreateSubmit: (data: TimeEntryFormData) => void;
-  onEditSubmit: (data: TimeEntryFormData) => void;
+  onCreateSubmit: (data: MockTimeEntryFormData) => void;
+  onEditSubmit: (data: MockTimeEntryFormData) => void;
   onCreateCancel: () => void;
   onEdit: () => void;
 };
@@ -36,7 +37,7 @@ function toDatetimeLocal(iso: string): string {
   return local.toISOString().slice(0, 16);
 }
 
-function entryToFormData(entry: TimeEntry): Partial<TimeEntryFormData> {
+function entryToFormData(entry: MockTimeEntry): Partial<MockTimeEntryFormData> {
   return {
     technician: entry.technician,
     clockInAt: toDatetimeLocal(entry.clockInAt),
@@ -68,7 +69,9 @@ export function TimeEntryDetailsPanel({
           : "Time entry details";
 
   return (
-    <aside className="flex min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:h-full lg:min-h-0 lg:w-[400px] lg:flex-none lg:shrink-0">
+    <aside
+      className={`${listDetailPanelClass(mode !== "empty")} min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:h-full lg:min-h-0 lg:w-[400px] lg:flex-none lg:shrink-0`}
+    >
       <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-5 py-4">
         <div>
           <h2 className="text-base font-bold text-slate-900">{title}</h2>
@@ -129,7 +132,7 @@ export function TimeEntryDetailsPanel({
                 <div>
                   <p className="text-lg font-bold text-slate-900">
                     {entry.totalHours != null
-                      ? formatHours(entry.totalHours)
+                      ? formatMockHours(entry.totalHours)
                       : "In progress"}
                   </p>
                   <p className="mt-1 text-sm text-slate-600">
@@ -153,13 +156,13 @@ export function TimeEntryDetailsPanel({
               <div className="mt-2 space-y-2 text-sm text-slate-700">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-slate-400" />
-                  In: {formatDateTime(entry.clockInAt)}
+                  In: {formatMockDateTime(entry.clockInAt)}
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-slate-400" />
                   Out:{" "}
                   {entry.clockOutAt
-                    ? formatDateTime(entry.clockOutAt)
+                    ? formatMockDateTime(entry.clockOutAt)
                     : "Still active"}
                 </div>
               </div>
@@ -196,7 +199,7 @@ export function TimeEntryDetailsPanel({
                 Approval
               </h3>
               <p className="mt-2 text-sm text-slate-700">
-                {formatTimeEntryStatus(entry.status)}
+                {formatMockTimeEntryStatus(entry.status)}
               </p>
             </section>
 

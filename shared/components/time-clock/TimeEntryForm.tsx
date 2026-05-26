@@ -1,17 +1,19 @@
+"use client";
+
 import {
-  TIME_ENTRY_STATUS_OPTIONS,
-  type TimeEntryFormData,
-  type TimeEntryStatus,
-} from "@/shared/types/time-entry";
+  MOCK_TIME_ENTRY_STATUS_OPTIONS,
+  type MockTimeEntryFormData,
+  type MockTimeEntryStatus,
+} from "@/shared/types/time-entry-mock";
 
 type TimeEntryFormProps = {
-  initialData?: Partial<TimeEntryFormData>;
-  onSubmit: (data: TimeEntryFormData) => void;
+  initialData?: Partial<MockTimeEntryFormData>;
+  onSubmit: (data: MockTimeEntryFormData) => void;
   onCancel: () => void;
   submitLabel?: string;
 };
 
-const emptyForm: TimeEntryFormData = {
+const emptyForm: MockTimeEntryFormData = {
   technician: "",
   clockInAt: "",
   clockOutAt: "",
@@ -31,17 +33,11 @@ export function TimeEntryForm({
   initialData,
   onSubmit,
   onCancel,
-  submitLabel = "Save time entry",
+  submitLabel = "Save entry",
 }: TimeEntryFormProps) {
-  const defaults = { ...emptyForm, ...initialData };
-
-  const statusOptions = TIME_ENTRY_STATUS_OPTIONS.filter(
-    (option) => option.value !== "all",
-  );
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = new FormData(e.currentTarget);
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
 
     onSubmit({
       technician: String(form.get("technician") ?? ""),
@@ -50,28 +46,27 @@ export function TimeEntryForm({
       jobNumber: String(form.get("jobNumber") ?? ""),
       customerName: String(form.get("customerName") ?? ""),
       isOvertime: form.get("isOvertime") === "on",
-      status: String(form.get("status") ?? "pending") as TimeEntryStatus,
+      status: String(form.get("status") ?? "pending") as MockTimeEntryStatus,
       notes: String(form.get("notes") ?? ""),
     });
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <label htmlFor="technician" className={labelClass}>
-            Technician
-          </label>
-          <input
-            id="technician"
-            name="technician"
-            required
-            defaultValue={defaults.technician}
-            placeholder="Marcus Rivera"
-            className={inputClass}
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="technician" className={labelClass}>
+          Technician
+        </label>
+        <input
+          id="technician"
+          name="technician"
+          defaultValue={initialData?.technician ?? emptyForm.technician}
+          className={inputClass}
+          required
+        />
+      </div>
 
+      <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="clockInAt" className={labelClass}>
             Clock in
@@ -80,12 +75,11 @@ export function TimeEntryForm({
             id="clockInAt"
             name="clockInAt"
             type="datetime-local"
-            required
-            defaultValue={defaults.clockInAt}
+            defaultValue={initialData?.clockInAt ?? emptyForm.clockInAt}
             className={inputClass}
+            required
           />
         </div>
-
         <div>
           <label htmlFor="clockOutAt" className={labelClass}>
             Clock out
@@ -94,24 +88,24 @@ export function TimeEntryForm({
             id="clockOutAt"
             name="clockOutAt"
             type="datetime-local"
-            defaultValue={defaults.clockOutAt}
+            defaultValue={initialData?.clockOutAt ?? emptyForm.clockOutAt}
             className={inputClass}
           />
         </div>
+      </div>
 
+      <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="jobNumber" className={labelClass}>
-            Linked job
+            Job number
           </label>
           <input
             id="jobNumber"
             name="jobNumber"
-            defaultValue={defaults.jobNumber}
-            placeholder="JOB-1042"
+            defaultValue={initialData?.jobNumber ?? emptyForm.jobNumber}
             className={inputClass}
           />
         </div>
-
         <div>
           <label htmlFor="customerName" className={labelClass}>
             Customer
@@ -119,70 +113,68 @@ export function TimeEntryForm({
           <input
             id="customerName"
             name="customerName"
-            defaultValue={defaults.customerName}
-            placeholder="Sarah Mitchell"
-            className={inputClass}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="status" className={labelClass}>
-            Approval status
-          </label>
-          <select
-            id="status"
-            name="status"
-            defaultValue={defaults.status}
-            className={inputClass}
-          >
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-end">
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-            <input
-              type="checkbox"
-              name="isOvertime"
-              defaultChecked={defaults.isOvertime}
-              className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500/20"
-            />
-            Flag as overtime
-          </label>
-        </div>
-
-        <div className="sm:col-span-2">
-          <label htmlFor="notes" className={labelClass}>
-            Notes
-          </label>
-          <textarea
-            id="notes"
-            name="notes"
-            rows={3}
-            defaultValue={defaults.notes}
-            placeholder="Work performed, site conditions, or approval context"
+            defaultValue={initialData?.customerName ?? emptyForm.customerName}
             className={inputClass}
           />
         </div>
       </div>
 
-      <div className="flex gap-2 border-t border-slate-100 pt-4">
-        <button
-          type="submit"
-          className="flex-1 rounded-lg bg-cyan-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+      <div>
+        <label htmlFor="status" className={labelClass}>
+          Status
+        </label>
+        <select
+          id="status"
+          name="status"
+          defaultValue={initialData?.status ?? emptyForm.status}
+          className={inputClass}
         >
-          {submitLabel}
-        </button>
+          {MOCK_TIME_ENTRY_STATUS_OPTIONS.filter(
+            (option) => option.value !== "all",
+          ).map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+        <input
+          type="checkbox"
+          name="isOvertime"
+          defaultChecked={initialData?.isOvertime ?? emptyForm.isOvertime}
+          className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+        />
+        Mark as overtime
+      </label>
+
+      <div>
+        <label htmlFor="notes" className={labelClass}>
+          Notes
+        </label>
+        <textarea
+          id="notes"
+          name="notes"
+          rows={3}
+          defaultValue={initialData?.notes ?? emptyForm.notes}
+          className={inputClass}
+        />
+      </div>
+
+      <div className="flex items-center justify-end gap-2">
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
         >
           Cancel
+        </button>
+        <button
+          type="submit"
+          className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700"
+        >
+          {submitLabel}
         </button>
       </div>
     </form>

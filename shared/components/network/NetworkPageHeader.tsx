@@ -1,3 +1,5 @@
+"use client";
+
 import { Shield } from "lucide-react";
 import { NETWORK_TAB_OPTIONS, type NetworkTab } from "@/shared/types/network";
 

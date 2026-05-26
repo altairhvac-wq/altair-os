@@ -1,4 +1,7 @@
+"use client";
+
 import { Calendar, MapPin, Tag, X } from "lucide-react";
+import { listDetailPanelClass } from "@/shared/components/layout/list-detail-layout";
 import { CustomerCard } from "./CustomerCard";
 import { CustomerForm } from "./CustomerForm";
 import {
@@ -36,7 +39,9 @@ export function CustomerDetailPanel({
         : "Customer details";
 
   return (
-    <aside className="flex min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:h-full lg:min-h-0 lg:w-[400px] lg:flex-none lg:shrink-0">
+    <aside
+      className={`${listDetailPanelClass(mode !== "empty")} min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:h-full lg:min-h-0 lg:w-[400px] lg:flex-none lg:shrink-0`}
+    >
       <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-5 py-4">
         <div>
           <h2 className="text-base font-bold text-slate-900">{title}</h2>

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   PARTNER_FORM_STATUS_OPTIONS,
   PARTNER_FORM_TRADE_OPTIONS,

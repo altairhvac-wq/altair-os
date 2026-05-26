@@ -84,6 +84,12 @@ export type InvoiceActivityType =
   | "payment_recorded"
   | "invoice_paid";
 
+export type ExpensePaymentMethod =
+  | "company_card"
+  | "personal_card"
+  | "cash"
+  | "other";
+
 export type PaymentMethod =
   | "cash"
   | "check"
@@ -110,7 +116,23 @@ export type ExpenseCategory =
 
 export type ReceiptStatus = "missing" | "attached" | "pending";
 
-export type ExpenseActivityType = "expense_receipt_uploaded";
+export type ExpenseActivityType =
+  | "expense_receipt_uploaded"
+  | "expense_created"
+  | "expense_submitted"
+  | "expense_approved"
+  | "expense_rejected"
+  | "expense_reimbursed";
+
+export type TimeEntryType = "clock" | "break" | "job_labor";
+
+export type TimeActivityType =
+  | "technician_clocked_in"
+  | "technician_clocked_out"
+  | "break_started"
+  | "break_ended"
+  | "job_labor_started"
+  | "job_labor_ended";
 
 export type Json =
   | string

@@ -28,7 +28,7 @@ export function TechnicianMobileShell({
           </div>
         </header>
 
-        <main className="flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 pb-24 sm:px-4">
+        <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 pb-24 sm:px-4">
           {children}
         </main>
 

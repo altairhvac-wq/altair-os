@@ -35,14 +35,14 @@ export const technicianNavItems: TechnicianNavItem[] = [
     label: "Time",
     href: "/tech/time",
     icon: Clock,
-    enabled: false,
+    enabled: true,
   },
   {
     id: "receipts",
     label: "Receipts",
     href: "/tech/receipts",
     icon: Receipt,
-    enabled: false,
+    enabled: true,
   },
   {
     id: "profile",

@@ -25,6 +25,17 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
+/* iOS Safari: help nested page buttons synthesize taps into clicks */
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+select,
+textarea,
+a[href] {
+  touch-action: manipulation;
+}
+
 /* Auth experience — industrial command-center backdrop */
 .auth-grid {
   background-image:

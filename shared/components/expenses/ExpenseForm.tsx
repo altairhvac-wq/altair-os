@@ -12,7 +12,12 @@ import {
   EXPENSE_CATEGORY_OPTIONS,
   type ExpenseCategory,
   type ExpenseFormData,
+  type ExpensePaymentMethod,
 } from "@/shared/types/expense";
+import {
+  ExpensePaymentMethodField,
+  parseExpensePaymentMethod,
+} from "./ExpensePaymentMethodField";
 import { ReceiptUploadBox } from "./ReceiptUploadBox";
 
 type ExpenseFormProps = {
@@ -37,6 +42,9 @@ export function ExpenseForm({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<ExpensePaymentMethod>(
+    initialData?.paymentMethod ?? "personal_card",
+  );
 
   const categoryOptions = EXPENSE_CATEGORY_OPTIONS.filter(
     (option) => option.value !== "all",
@@ -61,6 +69,7 @@ export function ExpenseForm({
         purchaseDate: purchaseDate || undefined,
         merchant: merchant || undefined,
         category,
+        paymentMethod: parseExpensePaymentMethod(form.get("paymentMethod")),
         jobId: linkedJobId,
         notes: notes || undefined,
       };
@@ -209,6 +218,14 @@ export function ExpenseForm({
         ) : (
           <input type="hidden" name="jobId" value={jobId} />
         )}
+
+        <div className="sm:col-span-2">
+          <ExpensePaymentMethodField
+            value={paymentMethod}
+            onChange={setPaymentMethod}
+            disabled={isPending}
+          />
+        </div>
 
         <div className="sm:col-span-2">
           <label htmlFor="notes" className={labelClass}>

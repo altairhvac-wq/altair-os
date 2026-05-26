@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, Mail, MapPin, Phone, User } from "lucide-react";
+import { Clock, Mail, MapPin, Phone, Receipt, User } from "lucide-react";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
 import {
   formatJobPriority,
@@ -12,13 +12,23 @@ import {
 } from "@/shared/types/technician";
 import { shouldAcceptServerWorkflowStatus } from "@/shared/types/job-workflow";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
+import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
+import { TechnicianExpenseSheet } from "./TechnicianExpenseSheet";
+import { TechnicianJobLaborControls } from "./TechnicianJobLaborControls";
 
 type TechnicianJobCardProps = {
   job: TechnicianJob;
+  timeState: TechnicianTimeStateSnapshot;
+  onTimeStateChange?: (state: TechnicianTimeStateSnapshot) => void;
 };
 
-export function TechnicianJobCard({ job }: TechnicianJobCardProps) {
+export function TechnicianJobCard({
+  job,
+  timeState,
+  onTimeStateChange,
+}: TechnicianJobCardProps) {
   const [status, setStatus] = useState(job.status);
+  const [showExpenseSheet, setShowExpenseSheet] = useState(false);
 
   useEffect(() => {
     setStatus((current) =>
@@ -97,7 +107,7 @@ export function TechnicianJobCard({ job }: TechnicianJobCardProps) {
         </div>
       </div>
 
-      <div className="border-t border-slate-100 p-3 sm:p-4">
+      <div className="space-y-3 border-t border-slate-100 p-3 sm:p-4">
         <JobWorkflowControls
           jobId={job.id}
           customerId={job.customerId}
@@ -110,7 +120,33 @@ export function TechnicianJobCard({ job }: TechnicianJobCardProps) {
           layout="stack"
           onStatusUpdated={setStatus}
         />
+        {status !== "completed" && status !== "cancelled" ? (
+          <>
+            <TechnicianJobLaborControls
+              jobId={job.id}
+              jobNumber={job.jobNumber}
+              timeState={timeState}
+              onTimeStateChange={onTimeStateChange}
+            />
+            <button
+            type="button"
+            onClick={() => setShowExpenseSheet(true)}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100"
+          >
+            <Receipt className="h-4 w-4" />
+            Snap receipt
+          </button>
+          </>
+        ) : null}
       </div>
+
+      {showExpenseSheet ? (
+        <TechnicianExpenseSheet
+          jobId={job.id}
+          jobNumber={job.jobNumber}
+          onClose={() => setShowExpenseSheet(false)}
+        />
+      ) : null}
     </article>
   );
 }

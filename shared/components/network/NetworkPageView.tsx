@@ -24,6 +24,7 @@ import {
   type SubcontractJobStatus,
   type TradeType,
 } from "@/shared/types/network";
+import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import { MyNetworkContent } from "./MyNetworkContent";
 import { NetworkEmptyState } from "./NetworkEmptyState";
 import { NetworkLoadingState } from "./NetworkLoadingState";
@@ -183,15 +184,15 @@ export function NetworkPageView() {
     ) : null;
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] min-w-0 flex-col gap-4 overflow-hidden">
+    <div className="flex min-w-0 flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:overflow-hidden">
       <NetworkPageHeader activeTab={activeTab} onTabChange={handleTabChange} />
 
       {isRevenueTab ? (
         hasNoData ? (
           <NetworkEmptyState variant="no-revenue" />
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
-            <div className="shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex min-h-0 flex-1 flex-col gap-4 lg:overflow-hidden">
+            <div className="shrink-0 lg:overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               {filterBar}
             </div>
             {hasNoResults ? (
@@ -207,8 +208,8 @@ export function NetworkPageView() {
           </div>
         )
       ) : (
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
-          <section className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">
+          <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1`}>
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
               <div className="min-w-0 flex-1">
                 <h2 className="text-base font-bold text-slate-900">
@@ -232,7 +233,7 @@ export function NetworkPageView() {
 
             {filterBar ? <div className="shrink-0">{filterBar}</div> : null}
 
-            <div className="@container min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
+            <div className="@container min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
               {isPartnerTab ? (
                 <MyNetworkContent
                   partners={filteredPartners}

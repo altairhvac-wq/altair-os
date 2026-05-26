@@ -1,17 +1,17 @@
 import { Briefcase, Building2, Clock, User } from "lucide-react";
 import {
-  formatDateTime,
-  formatHours,
-  getElapsedHours,
-  type ActiveTechnicianSession,
-} from "@/shared/types/time-entry";
+  formatMockDateTime,
+  formatMockHours,
+  getMockElapsedHours,
+  type MockActiveTechnicianSession,
+} from "@/shared/types/time-entry-mock";
 
 type TechnicianTimeCardProps = {
-  session: ActiveTechnicianSession;
+  session: MockActiveTechnicianSession;
 };
 
 export function TechnicianTimeCard({ session }: TechnicianTimeCardProps) {
-  const elapsed = formatHours(getElapsedHours(session.clockInAt));
+  const elapsed = formatMockHours(getMockElapsedHours(session.clockInAt));
 
   return (
     <div className="rounded-xl border border-cyan-200 bg-cyan-50/50 p-4">
@@ -40,7 +40,7 @@ export function TechnicianTimeCard({ session }: TechnicianTimeCardProps) {
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-slate-400" />
           <span>
-            Clocked in {formatDateTime(session.clockInAt)} · {elapsed}
+            Clocked in {formatMockDateTime(session.clockInAt)} · {elapsed}
           </span>
         </div>
         {session.jobNumber ? (

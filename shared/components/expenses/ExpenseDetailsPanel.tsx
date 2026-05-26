@@ -1,31 +1,39 @@
 import {
   Calendar,
-  FileText,
+  CreditCard,
   Receipt,
   Store,
   User,
   Wrench,
   X,
 } from "lucide-react";
+import { listDetailPanelClass } from "@/shared/components/layout/list-detail-layout";
 import {
   formatExpenseAmount,
   formatExpenseDate,
+  formatExpensePaymentMethod,
   formatReceiptStatus,
   type Expense,
 } from "@/shared/types/expense";
 import { ExpenseCategoryBadge } from "./ExpenseCategoryBadge";
 import { ExpenseForm } from "./ExpenseForm";
+import { ExpenseReceiptPreview } from "./ExpenseReceiptPreview";
 import { ExpenseStatusBadge } from "./ExpenseStatusBadge";
-import { ReceiptUploadBox } from "./ReceiptUploadBox";
+import { ExpenseWorkflowActions } from "./ExpenseWorkflowActions";
 
 type PanelMode = "detail" | "create" | "empty";
 
 type ExpenseDetailsPanelProps = {
   mode: PanelMode;
   expense: Expense | null;
+  createJobId?: string;
+  currentUserId: string;
+  canManageBilling: boolean;
+  canDispatchJobs: boolean;
   onClose: () => void;
   onCreateSuccess: () => void;
   onCreateCancel: () => void;
+  onExpenseUpdated?: (expense: Expense) => void;
 };
 
 const receiptStatusStyles = {
@@ -37,9 +45,14 @@ const receiptStatusStyles = {
 export function ExpenseDetailsPanel({
   mode,
   expense,
+  createJobId,
+  currentUserId,
+  canManageBilling,
+  canDispatchJobs,
   onClose,
   onCreateSuccess,
   onCreateCancel,
+  onExpenseUpdated,
 }: ExpenseDetailsPanelProps) {
   const title =
     mode === "create"
@@ -49,7 +62,9 @@ export function ExpenseDetailsPanel({
         : "Expense details";
 
   return (
-    <aside className="flex min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:h-full lg:min-h-0 lg:w-[400px] lg:flex-none lg:shrink-0">
+    <aside
+      className={`${listDetailPanelClass(mode !== "empty")} min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:h-full lg:min-h-0 lg:w-[400px] lg:flex-none lg:shrink-0`}
+    >
       <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-5 py-4">
         <div>
           <h2 className="text-base font-bold text-slate-900">{title}</h2>
@@ -57,7 +72,7 @@ export function ExpenseDetailsPanel({
             {mode === "create"
               ? "Log a purchase and attach a receipt"
               : mode === "detail"
-                ? "Draft expense details and receipt"
+                ? "Review receipt before approving"
                 : "Select an expense from the list"}
           </p>
         </div>
@@ -89,7 +104,11 @@ export function ExpenseDetailsPanel({
         ) : null}
 
         {mode === "create" ? (
-          <ExpenseForm onSuccess={onCreateSuccess} onCancel={onCreateCancel} />
+          <ExpenseForm
+            jobId={createJobId}
+            onSuccess={onCreateSuccess}
+            onCancel={onCreateCancel}
+          />
         ) : null}
 
         {mode === "detail" && expense ? (
@@ -112,6 +131,25 @@ export function ExpenseDetailsPanel({
             </div>
 
             <section>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Receipt
+                </h3>
+                <span
+                  className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${receiptStatusStyles[expense.receiptStatus]}`}
+                >
+                  {formatReceiptStatus(expense.receiptStatus)}
+                </span>
+              </div>
+              <div className="mt-2">
+                <ExpenseReceiptPreview
+                  expense={expense}
+                  onExpenseUpdated={onExpenseUpdated}
+                />
+              </div>
+            </section>
+
+            <section>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Purchase
               </h3>
@@ -124,6 +162,27 @@ export function ExpenseDetailsPanel({
                   <Store className="h-4 w-4 text-slate-400" />
                   {expense.merchant.trim() || "—"}
                 </div>
+              </div>
+            </section>
+
+            <section>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Payment
+              </h3>
+              <div className="mt-2 space-y-2 text-sm text-slate-700">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-slate-400" />
+                  {formatExpensePaymentMethod(expense.paymentMethod)}
+                </div>
+                <span
+                  className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    expense.isReimbursable
+                      ? "bg-amber-50 text-amber-700"
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  {expense.isReimbursable ? "Reimbursable" : "Company-paid"}
+                </span>
               </div>
             </section>
 
@@ -147,36 +206,6 @@ export function ExpenseDetailsPanel({
               </div>
             </section>
 
-            <section>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Receipt
-              </h3>
-              <div className="mt-2 space-y-3">
-                <span
-                  className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${receiptStatusStyles[expense.receiptStatus]}`}
-                >
-                  {formatReceiptStatus(expense.receiptStatus)}
-                </span>
-                {expense.receiptStatus === "attached" && expense.receiptSignedUrl ? (
-                  isExpenseReceiptImage(expense.receiptFileName) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={expense.receiptSignedUrl}
-                      alt={expense.receiptFileName ?? "Receipt"}
-                      className="max-h-56 w-full rounded-lg border border-slate-200 object-contain bg-slate-50"
-                    />
-                  ) : (
-                    <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700">
-                      <FileText className="h-4 w-4 text-slate-400" />
-                      {expense.receiptFileName}
-                    </div>
-                  )
-                ) : (
-                  <ReceiptUploadBox compact expenseId={expense.id} />
-                )}
-              </div>
-            </section>
-
             {expense.notes ? (
               <section>
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -187,17 +216,17 @@ export function ExpenseDetailsPanel({
                 </p>
               </section>
             ) : null}
+
+            <ExpenseWorkflowActions
+              expense={expense}
+              currentUserId={currentUserId}
+              canManageBilling={canManageBilling}
+              canDispatchJobs={canDispatchJobs}
+              onExpenseUpdated={onExpenseUpdated}
+            />
           </div>
         ) : null}
       </div>
     </aside>
   );
-}
-
-function isExpenseReceiptImage(fileName?: string): boolean {
-  if (!fileName) {
-    return false;
-  }
-
-  return /\.(jpe?g|png|webp|heic|heif)$/i.test(fileName);
 }

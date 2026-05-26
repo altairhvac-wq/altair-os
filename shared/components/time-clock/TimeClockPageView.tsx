@@ -7,13 +7,14 @@ import {
   mockTimeEntries,
 } from "@/shared/data/mock-time-entries";
 import {
-  calculateHours,
-  formatTimeEntryStatus,
-  type ActiveTechnicianSession,
-  type TimeEntry,
-  type TimeEntryFormData,
-  type TimeEntryStatus,
-} from "@/shared/types/time-entry";
+  calculateMockHours,
+  formatMockTimeEntryStatus,
+  type MockActiveTechnicianSession,
+  type MockTimeEntry,
+  type MockTimeEntryFormData,
+  type MockTimeEntryStatus,
+} from "@/shared/types/time-entry-mock";
+import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import { TimeClockEmptyState } from "./TimeClockEmptyState";
 import { TimeClockLoadingState } from "./TimeClockLoadingState";
 import { TimeClockWidget } from "./TimeClockWidget";
@@ -25,10 +26,10 @@ import { WeeklySummaryCards } from "./WeeklySummaryCards";
 type PanelMode = "detail" | "create" | "edit" | "empty";
 
 function filterEntries(
-  entries: TimeEntry[],
+  entries: MockTimeEntry[],
   search: string,
-  statusFilter: TimeEntryStatus | "all",
-): TimeEntry[] {
+  statusFilter: MockTimeEntryStatus | "all",
+): MockTimeEntry[] {
   const query = search.trim().toLowerCase();
 
   return entries.filter((entry) => {
@@ -42,7 +43,7 @@ function filterEntries(
       entry.technician,
       entry.jobNumber ?? "",
       entry.customerName ?? "",
-      formatTimeEntryStatus(entry.status),
+      formatMockTimeEntryStatus(entry.status),
       entry.status,
       entry.notes ?? "",
     ]
@@ -58,17 +59,17 @@ function datetimeLocalToIso(value: string): string {
 }
 
 function formDataToEntry(
-  data: TimeEntryFormData,
+  data: MockTimeEntryFormData,
   existingCount: number,
-  existing?: TimeEntry,
-): TimeEntry {
+  existing?: MockTimeEntry,
+): MockTimeEntry {
   const today = new Date().toISOString().split("T")[0];
   const clockInAt = datetimeLocalToIso(data.clockInAt);
   const clockOutAt = data.clockOutAt
     ? datetimeLocalToIso(data.clockOutAt)
     : undefined;
   const totalHours =
-    clockOutAt != null ? calculateHours(clockInAt, clockOutAt) : undefined;
+    clockOutAt != null ? calculateMockHours(clockInAt, clockOutAt) : undefined;
   const isActive = !clockOutAt;
 
   return {
@@ -88,12 +89,12 @@ function formDataToEntry(
 }
 
 export function TimeClockPageView() {
-  const [entries, setEntries] = useState<TimeEntry[]>([]);
+  const [entries, setEntries] = useState<MockTimeEntry[]>([]);
   const [activeSession, setActiveSession] =
-    useState<ActiveTechnicianSession | null>(null);
+    useState<MockActiveTechnicianSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<TimeEntryStatus | "all">(
+  const [statusFilter, setStatusFilter] = useState<MockTimeEntryStatus | "all">(
     "all",
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -116,7 +117,7 @@ export function TimeClockPageView() {
 
   const selectedEntry = entries.find((entry) => entry.id === selectedId) ?? null;
 
-  function handleSelectEntry(entry: TimeEntry) {
+  function handleSelectEntry(entry: MockTimeEntry) {
     setSelectedId(entry.id);
     setPanelMode("detail");
   }
@@ -131,14 +132,14 @@ export function TimeClockPageView() {
     setPanelMode("empty");
   }
 
-  function handleCreateSubmit(data: TimeEntryFormData) {
+  function handleCreateSubmit(data: MockTimeEntryFormData) {
     const newEntry = formDataToEntry(data, entries.length);
     setEntries((prev) => [newEntry, ...prev]);
     setSelectedId(newEntry.id);
     setPanelMode("detail");
   }
 
-  function handleEditSubmit(data: TimeEntryFormData) {
+  function handleEditSubmit(data: MockTimeEntryFormData) {
     if (!selectedEntry) return;
     const updated = formDataToEntry(data, entries.length, selectedEntry);
     setEntries((prev) =>
@@ -151,14 +152,14 @@ export function TimeClockPageView() {
     if (activeSession) return;
 
     const now = new Date().toISOString();
-    const session: ActiveTechnicianSession = {
+    const session: MockActiveTechnicianSession = {
       technician: "Lisa Park",
       clockInAt: now,
       jobNumber: "JOB-1044",
       customerName: "Greenfield Property Group",
     };
 
-    const newEntry: TimeEntry = {
+    const newEntry: MockTimeEntry = {
       id: `time-${Date.now()}`,
       entryNumber: `TIME-${2001 + entries.length}`,
       technician: session.technician,
@@ -179,7 +180,7 @@ export function TimeClockPageView() {
     if (!activeSession) return;
 
     const now = new Date().toISOString();
-    const totalHours = calculateHours(activeSession.clockInAt, now);
+    const totalHours = calculateMockHours(activeSession.clockInAt, now);
 
     setEntries((prev) =>
       prev.map((entry) =>
@@ -205,7 +206,7 @@ export function TimeClockPageView() {
   const hasNoResults = !hasNoEntries && filteredEntries.length === 0;
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] flex-col gap-4 overflow-hidden">
+    <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:overflow-hidden">
       <WeeklySummaryCards entries={entries} />
 
       <TimeClockWidget
@@ -214,8 +215,8 @@ export function TimeClockPageView() {
         onClockOut={handleClockOut}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
-        <section className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">
+        <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1`}>
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
             <div>
               <h2 className="text-base font-bold text-slate-900">
@@ -247,7 +248,7 @@ export function TimeClockPageView() {
             </div>
           ) : null}
 
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="min-h-0 flex-1 lg:overflow-y-auto">
             {hasNoEntries ? (
               <TimeClockEmptyState
                 variant="no-entries"

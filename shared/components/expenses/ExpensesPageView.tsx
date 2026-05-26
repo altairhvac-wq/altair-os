@@ -1,14 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
-import {
-  formatExpenseCategory,
-  formatExpenseStatus,
-  type Expense,
-  type ExpenseCategory,
-  type ExpenseStatus,
+import type {
+  Expense,
+  ExpenseCategory,
+  ExpenseDateFilter,
+  ExpensePaymentFilter,
+  ExpenseReceiptFilter,
+  ExpenseStatus,
 } from "@/shared/types/expense";
+import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
+import {
+  filterExpenses,
+  getExpenseJobOptions,
+  getExpenseTechnicianOptions,
+  hasActiveExpenseFilters,
+} from "@/shared/utils/expense-filters";
 import { ExpenseDetailsPanel } from "./ExpenseDetailsPanel";
 import { ExpenseSearchFilterBar } from "./ExpenseSearchFilterBar";
 import { ExpenseSummaryCards } from "./ExpenseSummaryCards";
@@ -19,59 +27,120 @@ type PanelMode = "detail" | "create" | "empty";
 
 type ExpensesPageViewProps = {
   expenses: Expense[];
+  currentUserId: string;
+  canManageBilling: boolean;
+  canDispatchJobs: boolean;
+  initialJobId?: string;
+  initialCustomerId?: string;
+  initialSelectedId?: string;
+  initialCreate?: boolean;
 };
 
-function filterExpenses(
-  expenses: Expense[],
-  search: string,
-  statusFilter: ExpenseStatus | "all",
-  categoryFilter: ExpenseCategory | "all",
-): Expense[] {
-  const query = search.trim().toLowerCase();
+const DEFAULT_FILTERS = {
+  search: "",
+  statusFilter: "all" as ExpenseStatus | "all",
+  categoryFilter: "all" as ExpenseCategory | "all",
+  technicianFilter: "all",
+  jobFilter: "all",
+  paymentFilter: "all" as ExpensePaymentFilter,
+  dateFilter: "all" as ExpenseDateFilter,
+  receiptFilter: "all" as ExpenseReceiptFilter,
+};
 
-  return expenses.filter((expense) => {
-    const matchesStatus =
-      statusFilter === "all" || expense.status === statusFilter;
-    const matchesCategory =
-      categoryFilter === "all" || expense.category === categoryFilter;
-
-    if (!matchesStatus || !matchesCategory) return false;
-    if (!query) return true;
-
-    const haystack = [
-      expense.expenseNumber,
-      expense.merchant,
-      formatExpenseCategory(expense.category),
-      expense.category,
-      expense.technician,
-      expense.jobNumber ?? "",
-      formatExpenseStatus(expense.status),
-      expense.status,
-      expense.amount != null ? String(expense.amount) : "",
-      expense.notes ?? "",
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(query);
-  });
-}
-
-export function ExpensesPageView({ expenses }: ExpensesPageViewProps) {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ExpenseStatus | "all">("all");
-  const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | "all">(
-    "all",
+export function ExpensesPageView({
+  expenses,
+  currentUserId,
+  canManageBilling,
+  canDispatchJobs,
+  initialJobId,
+  initialCustomerId,
+  initialSelectedId,
+  initialCreate = false,
+}: ExpensesPageViewProps) {
+  const [search, setSearch] = useState(DEFAULT_FILTERS.search);
+  const [statusFilter, setStatusFilter] = useState(DEFAULT_FILTERS.statusFilter);
+  const [categoryFilter, setCategoryFilter] = useState(DEFAULT_FILTERS.categoryFilter);
+  const [technicianFilter, setTechnicianFilter] = useState(
+    DEFAULT_FILTERS.technicianFilter,
   );
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [panelMode, setPanelMode] = useState<PanelMode>("empty");
+  const [jobFilter, setJobFilter] = useState(DEFAULT_FILTERS.jobFilter);
+  const [paymentFilter, setPaymentFilter] = useState(DEFAULT_FILTERS.paymentFilter);
+  const [dateFilter, setDateFilter] = useState(DEFAULT_FILTERS.dateFilter);
+  const [receiptFilter, setReceiptFilter] = useState(DEFAULT_FILTERS.receiptFilter);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialSelectedId ?? null,
+  );
+  const [panelMode, setPanelMode] = useState<PanelMode>(() => {
+    if (initialCreate) return "create";
+    if (initialSelectedId) return "detail";
+    return "empty";
+  });
+  const [createJobId] = useState(initialJobId);
+  const [localExpenses, setLocalExpenses] = useState(expenses);
+
+  useEffect(() => {
+    setLocalExpenses(expenses);
+  }, [expenses]);
+
+  useEffect(() => {
+    if (initialSelectedId && expenses.some((expense) => expense.id === initialSelectedId)) {
+      setSelectedId(initialSelectedId);
+      setPanelMode("detail");
+    }
+  }, [expenses, initialSelectedId]);
+
+  const technicianOptions = useMemo(
+    () => getExpenseTechnicianOptions(localExpenses),
+    [localExpenses],
+  );
+  const jobOptions = useMemo(
+    () => getExpenseJobOptions(localExpenses),
+    [localExpenses],
+  );
+
+  const listFilters = useMemo(
+    () => ({
+      search,
+      statusFilter,
+      categoryFilter,
+      technicianFilter,
+      jobFilter,
+      paymentFilter,
+      dateFilter,
+      receiptFilter,
+      jobIdFilter: initialJobId,
+      customerIdFilter: initialCustomerId,
+    }),
+    [
+      search,
+      statusFilter,
+      categoryFilter,
+      technicianFilter,
+      jobFilter,
+      paymentFilter,
+      dateFilter,
+      receiptFilter,
+      initialJobId,
+      initialCustomerId,
+    ],
+  );
 
   const filteredExpenses = useMemo(
-    () => filterExpenses(expenses, search, statusFilter, categoryFilter),
-    [expenses, search, statusFilter, categoryFilter],
+    () => filterExpenses(localExpenses, listFilters),
+    [localExpenses, listFilters],
   );
 
-  const selectedExpense = expenses.find((exp) => exp.id === selectedId) ?? null;
+  const activeFilters = hasActiveExpenseFilters(listFilters);
+
+  const selectedExpense = localExpenses.find((exp) => exp.id === selectedId) ?? null;
+
+  function handleExpenseUpdated(updated: Expense) {
+    setLocalExpenses((current) =>
+      current.map((expense) =>
+        expense.id === updated.id ? updated : expense,
+      ),
+    );
+  }
 
   function handleSelectExpense(expense: Expense) {
     setSelectedId(expense.id);
@@ -83,6 +152,28 @@ export function ExpensesPageView({ expenses }: ExpensesPageViewProps) {
     setPanelMode("create");
   }
 
+  function handleClearFilters() {
+    setSearch(DEFAULT_FILTERS.search);
+    setStatusFilter(DEFAULT_FILTERS.statusFilter);
+    setCategoryFilter(DEFAULT_FILTERS.categoryFilter);
+    setTechnicianFilter(DEFAULT_FILTERS.technicianFilter);
+    setJobFilter(DEFAULT_FILTERS.jobFilter);
+    setPaymentFilter(DEFAULT_FILTERS.paymentFilter);
+    setDateFilter(DEFAULT_FILTERS.dateFilter);
+    setReceiptFilter(DEFAULT_FILTERS.receiptFilter);
+  }
+
+  function handleNeedsReview() {
+    setStatusFilter((current) => (current === "submitted" ? "all" : "submitted"));
+  }
+
+  const contextLabel =
+    initialJobId || initialCustomerId
+      ? filteredExpenses.length === localExpenses.length
+        ? null
+        : `${filteredExpenses.length} linked expense${filteredExpenses.length === 1 ? "" : "s"}`
+      : null;
+
   function handleClosePanel() {
     setSelectedId(null);
     setPanelMode("empty");
@@ -93,20 +184,21 @@ export function ExpensesPageView({ expenses }: ExpensesPageViewProps) {
     setSelectedId(null);
   }
 
-  const hasNoExpenses = expenses.length === 0;
+  const hasNoExpenses = localExpenses.length === 0;
   const hasNoResults = !hasNoExpenses && filteredExpenses.length === 0;
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] flex-col gap-4 overflow-hidden">
-      <ExpenseSummaryCards expenses={expenses} />
+    <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:overflow-hidden">
+      <ExpenseSummaryCards expenses={localExpenses} />
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
-        <section className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">
+        <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1`}>
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
             <div>
               <h2 className="text-base font-bold text-slate-900">All expenses</h2>
               <p className="text-xs text-slate-500">
-                Capture receipts and draft expenses for later review
+                {contextLabel ??
+                  "Capture receipts and draft expenses for later review"}
               </p>
             </div>
             <button
@@ -125,15 +217,32 @@ export function ExpensesPageView({ expenses }: ExpensesPageViewProps) {
                 search={search}
                 statusFilter={statusFilter}
                 categoryFilter={categoryFilter}
+                technicianFilter={technicianFilter}
+                jobFilter={jobFilter}
+                paymentFilter={paymentFilter}
+                dateFilter={dateFilter}
+                receiptFilter={receiptFilter}
+                technicianOptions={technicianOptions}
+                jobOptions={jobOptions}
+                showTechnicianFilter={technicianOptions.length > 1}
+                showJobFilter={!initialJobId && jobOptions.length > 0}
                 onSearchChange={setSearch}
                 onStatusFilterChange={setStatusFilter}
                 onCategoryFilterChange={setCategoryFilter}
+                onTechnicianFilterChange={setTechnicianFilter}
+                onJobFilterChange={setJobFilter}
+                onPaymentFilterChange={setPaymentFilter}
+                onDateFilterChange={setDateFilter}
+                onReceiptFilterChange={setReceiptFilter}
+                onNeedsReview={handleNeedsReview}
+                onClearFilters={handleClearFilters}
+                hasActiveFilters={activeFilters}
                 resultCount={filteredExpenses.length}
               />
             </div>
           ) : null}
 
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="min-h-0 flex-1 lg:overflow-y-auto">
             {hasNoExpenses ? (
               <ExpensesEmptyState
                 variant="no-expenses"
@@ -154,9 +263,14 @@ export function ExpensesPageView({ expenses }: ExpensesPageViewProps) {
         <ExpenseDetailsPanel
           mode={panelMode}
           expense={selectedExpense}
+          createJobId={createJobId}
+          currentUserId={currentUserId}
+          canManageBilling={canManageBilling}
+          canDispatchJobs={canDispatchJobs}
           onClose={handleClosePanel}
           onCreateSuccess={handleCreateSuccess}
           onCreateCancel={handleClosePanel}
+          onExpenseUpdated={handleExpenseUpdated}
         />
       </div>
     </div>

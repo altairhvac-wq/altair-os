@@ -13,6 +13,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import type { CompanyRole } from "@/lib/database/types/enums";
 
 export type NavItem = {
   label: string;
@@ -95,6 +96,16 @@ export const adminNavItems: NavItem[] = [
     description: "Company and platform configuration",
   },
 ];
+
+const technicianMobileHiddenHrefs = new Set(["/reports"]);
+
+export function getAdminMobileNavItems(role: CompanyRole): NavItem[] {
+  if (role !== "technician") {
+    return adminNavItems;
+  }
+
+  return adminNavItems.filter((item) => !technicianMobileHiddenHrefs.has(item.href));
+}
 
 export function getNavItemForPath(pathname: string): NavItem {
   const match = adminNavItems.find(

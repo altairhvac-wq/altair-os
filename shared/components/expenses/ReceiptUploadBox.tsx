@@ -12,22 +12,27 @@ import { COMPANY_FILES_BUCKET } from "@/lib/storage/company-files";
 import {
   EXPENSE_RECEIPT_ALLOWED_MIME_TYPES,
   EXPENSE_RECEIPT_MAX_FILE_SIZE,
+  type Expense,
 } from "@/shared/types/expense";
 
 type ReceiptUploadBoxProps = {
   compact?: boolean;
+  captureEnvironment?: boolean;
   expenseId?: string;
   selectedFile?: File | null;
   onFileSelected?: (file: File | null) => void;
   onUploaded?: () => void;
+  onExpenseUpdated?: (expense: Expense) => void;
 };
 
 export function ReceiptUploadBox({
   compact = false,
+  captureEnvironment = false,
   expenseId,
   selectedFile,
   onFileSelected,
   onUploaded,
+  onExpenseUpdated,
 }: ReceiptUploadBoxProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -116,6 +121,10 @@ export function ReceiptUploadBox({
           return;
         }
 
+        if (result.expense) {
+          onExpenseUpdated?.(result.expense);
+        }
+
         setLocalFileName(file.name);
         onUploaded?.();
         router.refresh();
@@ -148,6 +157,7 @@ export function ReceiptUploadBox({
           ref={inputRef}
           type="file"
           accept={EXPENSE_RECEIPT_ALLOWED_MIME_TYPES.join(",")}
+          capture={captureEnvironment ? "environment" : undefined}
           className="hidden"
           onChange={handleFileChange}
           disabled={isPending}
@@ -168,7 +178,9 @@ export function ReceiptUploadBox({
               : "Drop receipt here or tap to browse"}
         </p>
         <p className="mt-1 text-xs text-slate-500">
-          PNG, JPG, WEBP, HEIC, or PDF up to 10 MB
+          {captureEnvironment
+            ? "Tap to open camera or choose a file · up to 10 MB"
+            : "PNG, JPG, WEBP, HEIC, or PDF up to 10 MB"}
         </p>
         <button
           type="button"

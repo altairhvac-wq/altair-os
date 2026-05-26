@@ -6,15 +6,28 @@ import {
   attachReceiptToExpense,
   createExpense,
   getExpenseById,
+  updateExpenseStatus,
 } from "@/lib/database/queries/expenses";
 import { getJobById } from "@/lib/database/queries/jobs";
-import { recordExpenseReceiptUploadedActivity } from "@/lib/database/services/expense-activity";
+import {
+  recordExpenseApprovedActivity,
+  recordExpenseCreatedActivity,
+  recordExpenseReceiptUploadedActivity,
+  recordExpenseRejectedActivity,
+  recordExpenseReimbursedActivity,
+  recordExpenseSubmittedActivity,
+} from "@/lib/database/services/expense-activity";
 import { buildExpenseReceiptStoragePath } from "@/lib/storage/company-files";
-import type { Expense, ExpenseFormData } from "@/shared/types/expense";
+import type { Expense, ExpenseFormData, ExpenseStatus } from "@/shared/types/expense";
 import {
   EXPENSE_RECEIPT_ALLOWED_MIME_TYPES,
   EXPENSE_RECEIPT_MAX_FILE_SIZE,
 } from "@/shared/types/expense";
+import {
+  getExpenseStatusForWorkflowAction,
+  getExpenseWorkflowActions,
+  type ExpenseWorkflowAction,
+} from "@/shared/types/expense-workflow";
 
 export type ExpenseActionResult = {
   error?: string;
@@ -43,18 +56,15 @@ function revalidateExpensePaths(input: {
     revalidatePath(`/customers/${input.customerId}`);
   }
   revalidatePath("/technician");
+  revalidatePath("/tech/receipts");
 }
 
-async function resolveJobContext(jobId?: string | null): Promise<{
+async function assertExpenseJobPermission(jobId: string): Promise<{
   error?: string;
   jobId?: string;
   customerId?: string;
   jobNumber?: string;
 }> {
-  if (!jobId) {
-    return {};
-  }
-
   const context = await getActiveCompanyContext();
 
   if (!context) {
@@ -67,11 +77,42 @@ async function resolveJobContext(jobId?: string | null): Promise<{
     return { error: "Linked job not found." };
   }
 
+  if (context.permissions.dispatchJobs || context.permissions.manageBilling) {
+    return {
+      jobId: job.id,
+      customerId: job.customerId,
+      jobNumber: job.jobNumber,
+    };
+  }
+
+  if (!context.permissions.viewAssignedJobs) {
+    return { error: "You do not have permission to log expenses on this job." };
+  }
+
+  if (job.assignedTechnicianId !== context.user.id) {
+    return {
+      error: "You can only log expenses on jobs assigned to you.",
+    };
+  }
+
   return {
     jobId: job.id,
     customerId: job.customerId,
     jobNumber: job.jobNumber,
   };
+}
+
+async function resolveJobContext(jobId?: string | null): Promise<{
+  error?: string;
+  jobId?: string;
+  customerId?: string;
+  jobNumber?: string;
+}> {
+  if (!jobId) {
+    return {};
+  }
+
+  return assertExpenseJobPermission(jobId);
 }
 
 function isAllowedReceiptMimeType(mimeType: string): boolean {
@@ -176,6 +217,13 @@ export async function createExpenseAction(input: {
     return { error: error ?? "Failed to create expense." };
   }
 
+  await recordExpenseCreatedActivity({
+    companyId: context.company.id,
+    expenseId: expense.id,
+    actorId: context.user.id,
+    expense,
+  });
+
   if (input.receiptStoragePath) {
     await recordExpenseReceiptUploadedActivity({
       companyId: context.company.id,
@@ -257,6 +305,122 @@ export async function attachExpenseReceiptAction(input: {
     actorId: context.user.id,
     expense,
   });
+
+  revalidateExpensePaths({
+    expenseId: expense.id,
+    jobId: expense.jobId,
+    customerId: expense.customerId,
+  });
+
+  return { expense };
+}
+
+function assertExpenseWorkflowPermission(input: {
+  expense: Expense;
+  action: ExpenseWorkflowAction;
+  canManageBilling: boolean;
+  canDispatchJobs: boolean;
+  userId: string;
+}): string | null {
+  const allowed = getExpenseWorkflowActions({
+    status: input.expense.status,
+    isReimbursable: input.expense.isReimbursable,
+    technicianId: input.expense.technicianId,
+    currentUserId: input.userId,
+    canManageBilling: input.canManageBilling,
+    canDispatchJobs: input.canDispatchJobs,
+  });
+
+  if (!allowed.includes(input.action)) {
+    return "You do not have permission to perform this action.";
+  }
+
+  return null;
+}
+
+export async function updateExpenseStatusAction(input: {
+  expenseId: string;
+  fromStatus: ExpenseStatus;
+  action: ExpenseWorkflowAction;
+  rejectionReason?: string;
+}): Promise<ExpenseActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." };
+  }
+
+  const existing = await getExpenseById(context.company.id, input.expenseId);
+
+  if (!existing) {
+    return { error: "Expense not found." };
+  }
+
+  if (existing.status !== input.fromStatus) {
+    return {
+      error: "Expense status has changed. Refresh the page and try again.",
+    };
+  }
+
+  const permissionError = assertExpenseWorkflowPermission({
+    expense: existing,
+    action: input.action,
+    canManageBilling: context.permissions.manageBilling,
+    canDispatchJobs: context.permissions.dispatchJobs,
+    userId: context.user.id,
+  });
+
+  if (permissionError) {
+    return { error: permissionError };
+  }
+
+  const toStatus = getExpenseStatusForWorkflowAction(
+    input.fromStatus,
+    input.action,
+  );
+
+  if (!toStatus) {
+    return { error: "This expense action is not allowed." };
+  }
+
+  const { expense, error } = await updateExpenseStatus(
+    context.company.id,
+    input.expenseId,
+    input.fromStatus,
+    toStatus,
+  );
+
+  if (error || !expense) {
+    return { error: error ?? "Failed to update expense status." };
+  }
+
+  const activityInput = {
+    companyId: context.company.id,
+    expenseId: expense.id,
+    actorId: context.user.id,
+    expense,
+    fromStatus: input.fromStatus,
+  };
+
+  switch (input.action) {
+    case "submit":
+      await recordExpenseSubmittedActivity(activityInput);
+      break;
+    case "approve":
+      await recordExpenseApprovedActivity(activityInput);
+      break;
+    case "reject":
+      await recordExpenseRejectedActivity({
+        ...activityInput,
+        rejectionReason: input.rejectionReason,
+      });
+      break;
+    case "reimburse":
+      await recordExpenseReimbursedActivity(activityInput);
+      break;
+    case "return_to_draft":
+      break;
+  }
 
   revalidateExpensePaths({
     expenseId: expense.id,

@@ -1,4 +1,5 @@
 import { formatEstimateStatus } from "@/shared/types/estimate";
+import { formatExpenseStatus } from "@/shared/types/expense";
 import { formatInvoiceStatus } from "@/shared/types/invoice";
 import {
   formatPaymentMethod,
@@ -31,6 +32,11 @@ export type OperationalActivityEventType =
   | "invoice_paid"
   | "job_attachment_uploaded"
   | "expense_receipt_uploaded"
+  | "expense_created"
+  | "expense_submitted"
+  | "expense_approved"
+  | "expense_rejected"
+  | "expense_reimbursed"
   | "status_changed";
 
 export type OperationalActivityMetadata = {
@@ -68,6 +74,8 @@ export type OperationalActivityMetadata = {
   merchant?: string;
   purchase_date?: string;
   category?: string;
+  rejection_reason?: string;
+  is_reimbursable?: boolean;
 };
 
 export type OperationalActivity = {
@@ -115,6 +123,11 @@ const ACTIVITY_TYPE_LABELS: Record<OperationalActivityEventType, string> = {
   invoice_paid: "Invoice paid",
   job_attachment_uploaded: "Attachment uploaded",
   expense_receipt_uploaded: "Receipt uploaded",
+  expense_created: "Expense created",
+  expense_submitted: "Expense submitted",
+  expense_approved: "Expense approved",
+  expense_rejected: "Expense rejected",
+  expense_reimbursed: "Expense reimbursed",
   status_changed: "Status changed",
 };
 
@@ -161,6 +174,44 @@ function formatStatusTransition(
   return null;
 }
 
+function formatExpenseActivityDetails(
+  metadata: OperationalActivityMetadata,
+): string | null {
+  const parts: string[] = [];
+
+  if (metadata.merchant?.trim()) {
+    parts.push(metadata.merchant.trim());
+  }
+
+  if (typeof metadata.amount === "number") {
+    parts.push(
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+      }).format(metadata.amount),
+    );
+  }
+
+  if (metadata.expense_number) {
+    parts.push(metadata.expense_number);
+  }
+
+  const statusLine = formatStatusTransition(
+    metadata.from_status,
+    metadata.to_status,
+  );
+
+  if (statusLine) {
+    parts.push(statusLine);
+  }
+
+  if (metadata.rejection_reason?.trim()) {
+    parts.push(metadata.rejection_reason.trim());
+  }
+
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
 function formatGenericStatus(status: string): string {
   const jobStatuses: JobStatus[] = [
     "scheduled",
@@ -201,6 +252,19 @@ function formatGenericStatus(status: string): string {
   if (invoiceStatuses.includes(status)) {
     return formatInvoiceStatus(
       status as Parameters<typeof formatInvoiceStatus>[0],
+    );
+  }
+
+  const expenseStatuses = [
+    "draft",
+    "submitted",
+    "approved",
+    "rejected",
+    "reimbursed",
+  ];
+  if (expenseStatuses.includes(status)) {
+    return formatExpenseStatus(
+      status as Parameters<typeof formatExpenseStatus>[0],
     );
   }
 
@@ -360,6 +424,13 @@ export function formatOperationalActivityDetails(
       }
       return parts.length > 0 ? parts.join(" · ") : null;
     }
+
+    case "expense_created":
+    case "expense_submitted":
+    case "expense_approved":
+    case "expense_rejected":
+    case "expense_reimbursed":
+      return formatExpenseActivityDetails(metadata);
 
     case "estimate_approved":
     case "invoice_sent":

@@ -1,10 +1,15 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Briefcase } from "lucide-react";
 import type { DispatchJobStatus } from "@/shared/types/dispatch";
 import type { TechnicianJob } from "@/shared/types/technician";
+import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import { TechnicianJobCard } from "./TechnicianJobCard";
 
 type TechnicianAssignedJobsViewProps = {
   jobs: TechnicianJob[];
+  timeState: TechnicianTimeStateSnapshot;
 };
 
 type ActiveJobStatus = Extract<
@@ -56,12 +61,16 @@ type WorkQueueSectionProps = {
   label: string;
   labelClassName?: string;
   jobs: TechnicianJob[];
+  timeState: TechnicianTimeStateSnapshot;
+  onTimeStateChange: (state: TechnicianTimeStateSnapshot) => void;
 };
 
 function WorkQueueSection({
   label,
   labelClassName = "text-slate-500",
   jobs,
+  timeState,
+  onTimeStateChange,
 }: WorkQueueSectionProps) {
   if (jobs.length === 0) {
     return null;
@@ -77,7 +86,11 @@ function WorkQueueSection({
       <ul className="space-y-4">
         {jobs.map((job) => (
           <li key={job.id}>
-            <TechnicianJobCard job={job} />
+            <TechnicianJobCard
+              job={job}
+              timeState={timeState}
+              onTimeStateChange={onTimeStateChange}
+            />
           </li>
         ))}
       </ul>
@@ -109,7 +122,14 @@ function TechnicianJobsEmptyState({
 
 export function TechnicianAssignedJobsView({
   jobs,
+  timeState: initialTimeState,
 }: TechnicianAssignedJobsViewProps) {
+  const [timeState, setTimeState] = useState(initialTimeState);
+
+  useEffect(() => {
+    setTimeState(initialTimeState);
+  }, [initialTimeState]);
+
   const activeJobs = sortActiveJobs(jobs);
   const { currentJobs, onSiteJobs, enRouteJobs, upNextJobs } =
     groupWorkQueue(jobs);
@@ -143,14 +163,28 @@ export function TechnicianAssignedJobsView({
           label="Current Job"
           labelClassName="text-cyan-600"
           jobs={currentJobs}
+          timeState={timeState}
+          onTimeStateChange={setTimeState}
         />
         <WorkQueueSection
           label="On Site"
           labelClassName="text-teal-600"
           jobs={onSiteJobs}
+          timeState={timeState}
+          onTimeStateChange={setTimeState}
         />
-        <WorkQueueSection label="En Route" jobs={enRouteJobs} />
-        <WorkQueueSection label="Up Next" jobs={upNextJobs} />
+        <WorkQueueSection
+          label="En Route"
+          jobs={enRouteJobs}
+          timeState={timeState}
+          onTimeStateChange={setTimeState}
+        />
+        <WorkQueueSection
+          label="Up Next"
+          jobs={upNextJobs}
+          timeState={timeState}
+          onTimeStateChange={setTimeState}
+        />
       </div>
     </div>
   );

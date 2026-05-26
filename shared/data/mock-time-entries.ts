@@ -1,13 +1,16 @@
-import type { ActiveTechnicianSession, TimeEntry } from "@/shared/types/time-entry";
+import type {
+  MockActiveTechnicianSession,
+  MockTimeEntry,
+} from "@/shared/types/time-entry-mock";
 
-export const mockActiveSession: ActiveTechnicianSession = {
+export const mockActiveSession: MockActiveTechnicianSession = {
   technician: "Lisa Park",
   clockInAt: "2026-05-24T08:00:00",
   jobNumber: "JOB-1044",
   customerName: "Greenfield Property Group",
 };
 
-export const mockTimeEntries: TimeEntry[] = [
+export const mockTimeEntries: MockTimeEntry[] = [
   {
     id: "time-001",
     entryNumber: "TIME-2001",

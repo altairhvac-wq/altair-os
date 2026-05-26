@@ -9,6 +9,7 @@ import {
   type CustomerFormData,
   type CustomerStatus,
 } from "@/shared/types/customer";
+import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import { CustomerDetailPanel } from "./CustomerDetailPanel";
 import { CustomerSearchFilterBar } from "./CustomerSearchFilterBar";
 import { CustomersEmptyState } from "./CustomersEmptyState";
@@ -103,8 +104,8 @@ export function CustomersPageView({
   const hasNoResults = !hasNoCustomers && filteredCustomers.length === 0;
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] flex-col gap-4 overflow-hidden lg:flex-row">
-      <section className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1">
+    <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:flex-row lg:overflow-hidden">
+      <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1`}>
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
           <div>
             <h2 className="text-base font-bold text-slate-900">
@@ -138,7 +139,7 @@ export function CustomersPageView({
           </div>
         ) : null}
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 lg:overflow-y-auto">
           {hasNoCustomers ? (
             <CustomersEmptyState
               variant="no-customers"

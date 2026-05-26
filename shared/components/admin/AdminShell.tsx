@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ActiveCompanyContext } from "@/lib/database/types";
-import { adminNavItems, getNavItemForPath } from "./nav-items";
+import { getAdminMobileNavItems, getNavItemForPath } from "./nav-items";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 
@@ -23,12 +23,13 @@ function isActivePath(pathname: string, href: string) {
 export function AdminShell({ children, companyContext }: AdminShellProps) {
   const pathname = usePathname();
   const current = getNavItemForPath(pathname);
+  const mobileNavItems = getAdminMobileNavItems(companyContext.role);
 
   return (
-    <div className="flex h-dvh bg-slate-100 md:overflow-hidden">
+    <div className="flex min-h-dvh bg-slate-100 md:h-dvh md:overflow-hidden">
       <Sidebar className="hidden md:flex" />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Header
           title={current.label}
           description={current.description}
@@ -40,7 +41,7 @@ export function AdminShell({ children, companyContext }: AdminShellProps) {
           className="shrink-0 overflow-x-auto border-b border-slate-200 bg-white md:hidden"
         >
           <ul className="flex gap-1 px-3 py-2">
-            {adminNavItems.map((item) => {
+            {mobileNavItems.map((item) => {
               const active = isActivePath(pathname, item.href);
 
               return (
@@ -61,7 +62,7 @@ export function AdminShell({ children, companyContext }: AdminShellProps) {
           </ul>
         </nav>
 
-        <main className="relative z-0 flex-1 overflow-y-auto p-4 sm:p-6">
+        <main className="min-h-0 flex-1 p-4 sm:p-6 md:overflow-y-auto">
           {children}
         </main>
       </div>

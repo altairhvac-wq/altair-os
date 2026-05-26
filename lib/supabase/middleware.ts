@@ -15,6 +15,17 @@ function isPublicRoute(pathname: string) {
   return isAuthRoute(pathname);
 }
 
+function withSupabaseCookies(
+  target: NextResponse,
+  source: NextResponse,
+): NextResponse {
+  source.cookies.getAll().forEach(({ name, value, ...options }) => {
+    target.cookies.set(name, value, options);
+  });
+
+  return target;
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -49,14 +60,20 @@ export async function updateSession(request: NextRequest) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     redirectUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(redirectUrl);
+    return withSupabaseCookies(
+      NextResponse.redirect(redirectUrl),
+      supabaseResponse,
+    );
   }
 
   if (user && isAuthRoute(pathname)) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/";
     redirectUrl.search = "";
-    return NextResponse.redirect(redirectUrl);
+    return withSupabaseCookies(
+      NextResponse.redirect(redirectUrl),
+      supabaseResponse,
+    );
   }
 
   return supabaseResponse;

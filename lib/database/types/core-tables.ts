@@ -8,6 +8,7 @@ import type {
   EstimateStatus,
   ExpenseActivityType,
   ExpenseCategory,
+  ExpensePaymentMethod,
   ExpenseStatus,
   InvoiceActivityType,
   InvoiceStatus,
@@ -18,6 +19,8 @@ import type {
   MembershipStatus,
   PaymentMethod,
   ReceiptStatus,
+  TimeActivityType,
+  TimeEntryType,
   Timestamp,
   UUID,
 } from "./enums";
@@ -391,6 +394,8 @@ export type ExpenseRow = {
   purchase_date: string | null;
   merchant: string;
   category: ExpenseCategory;
+  payment_method: ExpensePaymentMethod;
+  is_reimbursable: boolean;
   receipt_status: ReceiptStatus;
   receipt_file_name: string | null;
   receipt_storage_path: string | null;
@@ -411,6 +416,8 @@ export type ExpenseInsert = {
   purchase_date?: string | null;
   merchant?: string;
   category?: ExpenseCategory;
+  payment_method?: ExpensePaymentMethod;
+  is_reimbursable?: boolean;
   receipt_status?: ReceiptStatus;
   receipt_file_name?: string | null;
   receipt_storage_path?: string | null;
@@ -686,6 +693,62 @@ export type InvoicePaymentInsert = {
   reference?: string | null;
   notes?: string | null;
   recorded_by?: UUID | null;
+  created_at?: Timestamp;
+};
+
+export type TimeEntryRow = {
+  id: UUID;
+  company_id: UUID;
+  technician_id: UUID;
+  job_id: UUID | null;
+  entry_type: TimeEntryType;
+  started_at: Timestamp;
+  ended_at: Timestamp | null;
+  duration_minutes: number | null;
+  notes: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type TimeEntryInsert = {
+  id?: UUID;
+  company_id: UUID;
+  technician_id: UUID;
+  job_id?: UUID | null;
+  entry_type: TimeEntryType;
+  started_at?: Timestamp;
+  ended_at?: Timestamp | null;
+  duration_minutes?: number | null;
+  notes?: string | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type TimeEntryUpdate = Partial<
+  Omit<TimeEntryRow, "id" | "company_id" | "technician_id" | "created_at">
+>;
+
+export type TimeActivityRow = {
+  id: UUID;
+  company_id: UUID;
+  time_entry_id: UUID;
+  technician_id: UUID;
+  job_id: UUID | null;
+  actor_id: UUID | null;
+  event_type: TimeActivityType;
+  metadata: Json;
+  created_at: Timestamp;
+};
+
+export type TimeActivityInsert = {
+  id?: UUID;
+  company_id: UUID;
+  time_entry_id: UUID;
+  technician_id: UUID;
+  job_id?: UUID | null;
+  actor_id?: UUID | null;
+  event_type: TimeActivityType;
+  metadata?: Json;
   created_at?: Timestamp;
 };
 

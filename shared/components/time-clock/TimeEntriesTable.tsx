@@ -1,16 +1,16 @@
 import { AlertTriangle } from "lucide-react";
 import { formatDate } from "@/shared/types/customer";
+import { formatTime } from "@/shared/types/time-entry";
 import {
-  formatHours,
-  formatTime,
-  type TimeEntry,
-} from "@/shared/types/time-entry";
+  formatMockHours,
+  type MockTimeEntry,
+} from "@/shared/types/time-entry-mock";
 import { TimeEntryStatusBadge } from "./TimeEntryStatusBadge";
 
 type TimeEntriesTableProps = {
-  entries: TimeEntry[];
+  entries: MockTimeEntry[];
   selectedId: string | null;
-  onSelect: (entry: TimeEntry) => void;
+  onSelect: (entry: MockTimeEntry) => void;
 };
 
 export function TimeEntriesTable({
@@ -76,7 +76,7 @@ export function TimeEntriesTable({
                   {entry.clockOutAt ? formatTime(entry.clockOutAt) : "—"}
                 </td>
                 <td className="px-4 py-3 font-semibold text-slate-900">
-                  {hours != null ? formatHours(hours) : "In progress"}
+                  {hours != null ? formatMockHours(hours) : "In progress"}
                 </td>
                 <td className="hidden px-4 py-3 lg:table-cell">
                   <p className="font-medium text-slate-900">

@@ -1,7 +1,29 @@
+import os from "os";
 import type { NextConfig } from "next";
 
+function getLocalDevOrigins(): string[] {
+  const origins = new Set<string>();
+
+  for (const interfaces of Object.values(os.networkInterfaces())) {
+    for (const net of interfaces ?? []) {
+      if (net.family === "IPv4" && !net.internal) {
+        origins.add(net.address);
+      }
+    }
+  }
+
+  for (const origin of process.env.DEV_ALLOWED_ORIGINS?.split(",") ?? []) {
+    const trimmed = origin.trim();
+    if (trimmed) {
+      origins.add(trimmed);
+    }
+  }
+
+  return [...origins];
+}
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: getLocalDevOrigins(),
 };
 
 export default nextConfig;

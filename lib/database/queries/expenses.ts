@@ -5,7 +5,11 @@ import type {
   ExpenseRow,
 } from "@/lib/database/types/core-tables";
 import { createSignedUrlsForPaths } from "@/lib/storage/signed-urls";
-import type { Expense, ExpenseFormData } from "@/shared/types/expense";
+import type { Expense, ExpenseFormData, ExpenseStatus } from "@/shared/types/expense";
+import {
+  resolveExpenseReimbursable,
+  type ExpensePaymentMethod,
+} from "@/shared/types/expense";
 
 type ProfileSummary = {
   full_name: string | null;
@@ -44,6 +48,8 @@ function mapExpenseRow(row: ExpenseRowWithRelations): Expense {
     purchaseDate: row.purchase_date ?? undefined,
     merchant: row.merchant,
     category: row.category,
+    paymentMethod: row.payment_method,
+    isReimbursable: row.is_reimbursable,
     technicianId: row.technician_id,
     technician: formatProfileName(row.technician),
     customerId: row.customer_id ?? row.job?.customer_id ?? undefined,
@@ -114,6 +120,33 @@ export async function listExpenses(companyId: string): Promise<Expense[]> {
   if (error) {
     console.error("[listExpenses] query failed:", {
       companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  const expenses = ((data ?? []) as ExpenseRowWithRelations[]).map(mapExpenseRow);
+  return attachReceiptSignedUrls(expenses);
+}
+
+export async function listExpensesForTechnician(
+  companyId: string,
+  technicianId: string,
+): Promise<Expense[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("expenses")
+    .select(EXPENSE_SELECT)
+    .eq("company_id", companyId)
+    .eq("technician_id", technicianId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[listExpensesForTechnician] query failed:", {
+      companyId,
+      technicianId,
       code: error.code,
       message: error.message,
     });
@@ -224,6 +257,11 @@ export async function createExpense(
 ): Promise<{ expense: Expense | null; error: string | null }> {
   const supabase = await createClient();
   const expenseNumber = await generateExpenseNumber(companyId);
+  const paymentMethod: ExpensePaymentMethod = data.paymentMethod ?? "personal_card";
+  const isReimbursable = resolveExpenseReimbursable({
+    paymentMethod,
+    isReimbursable: data.isReimbursable,
+  });
 
   const insert: ExpenseInsert = {
     id: options?.expenseId,
@@ -236,6 +274,8 @@ export async function createExpense(
     purchase_date: data.purchaseDate?.trim() || null,
     merchant: data.merchant?.trim() || "",
     category: data.category,
+    payment_method: paymentMethod,
+    is_reimbursable: isReimbursable,
     receipt_status: options?.receiptStoragePath ? "attached" : "missing",
     receipt_file_name: options?.receiptFileName ?? null,
     receipt_storage_path: options?.receiptStoragePath ?? null,
@@ -308,4 +348,48 @@ export async function attachReceiptToExpense(
   ]);
 
   return { expense, error: null };
+}
+
+export async function updateExpenseStatus(
+  companyId: string,
+  expenseId: string,
+  fromStatus: ExpenseStatus,
+  toStatus: ExpenseStatus,
+): Promise<{ expense: Expense | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("expenses")
+    .update({ status: toStatus })
+    .eq("company_id", companyId)
+    .eq("id", expenseId)
+    .eq("status", fromStatus)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[updateExpenseStatus] update failed:", {
+      companyId,
+      expenseId,
+      fromStatus,
+      toStatus,
+      code: error.code,
+      message: error.message,
+    });
+    return { expense: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return {
+      expense: null,
+      error: "Expense status has changed. Refresh the page and try again.",
+    };
+  }
+
+  const expense = await getExpenseById(companyId, expenseId);
+
+  return {
+    expense,
+    error: expense ? null : "Failed to load updated expense.",
+  };
 }

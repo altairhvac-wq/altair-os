@@ -1,3 +1,5 @@
+"use client";
+
 import {
   CUSTOMER_STATUS_OPTIONS,
   type CustomerFormData,

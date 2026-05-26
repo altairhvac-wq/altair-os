@@ -50,6 +50,11 @@ import type {
   ProfileInsert,
   ProfileRow,
   ProfileUpdate,
+  TimeActivityInsert,
+  TimeActivityRow,
+  TimeEntryInsert,
+  TimeEntryRow,
+  TimeEntryUpdate,
 } from "./core-tables";
 
 export type Database = {
@@ -565,6 +570,76 @@ export type Database = {
           },
         ];
       };
+      time_entries: {
+        Row: TimeEntryRow;
+        Insert: TimeEntryInsert;
+        Update: TimeEntryUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_entries_technician_id_fkey";
+            columns: ["technician_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_entries_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      time_activities: {
+        Row: TimeActivityRow;
+        Insert: TimeActivityInsert;
+        Update: Partial<TimeActivityInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "time_activities_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_activities_time_entry_id_fkey";
+            columns: ["time_entry_id"];
+            isOneToOne: false;
+            referencedRelation: "time_entries";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_activities_technician_id_fkey";
+            columns: ["technician_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_activities_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_activities_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -592,8 +667,11 @@ export type Database = {
       invoice_payment_method: InvoicePaymentRow["payment_method"];
       expense_status: ExpenseRow["status"];
       expense_category: ExpenseRow["category"];
+      expense_payment_method: ExpenseRow["payment_method"];
       receipt_status: ExpenseRow["receipt_status"];
       expense_activity_type: ExpenseActivityRow["event_type"];
+      time_entry_type: TimeEntryRow["entry_type"];
+      time_activity_type: TimeActivityRow["event_type"];
     };
     CompositeTypes: Record<string, never>;
   };

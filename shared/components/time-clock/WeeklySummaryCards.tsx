@@ -1,22 +1,22 @@
 import { AlertTriangle, Clock, Timer, Users } from "lucide-react";
 import {
-  formatHours,
-  getWeeklySummary,
-  type TimeEntry,
-} from "@/shared/types/time-entry";
+  formatMockHours,
+  getMockWeeklySummary,
+  type MockTimeEntry,
+} from "@/shared/types/time-entry-mock";
 
 type WeeklySummaryCardsProps = {
-  entries: TimeEntry[];
+  entries: MockTimeEntry[];
 };
 
 export function WeeklySummaryCards({ entries }: WeeklySummaryCardsProps) {
   const { totalHours, activeTechnicians, overtimeEntries, pendingApprovals } =
-    getWeeklySummary(entries);
+    getMockWeeklySummary(entries);
 
   const cards = [
     {
       label: "Total Hours",
-      value: formatHours(totalHours),
+      value: formatMockHours(totalHours),
       description: "Logged this week",
       icon: Clock,
       iconClass: "text-blue-600 bg-blue-50",

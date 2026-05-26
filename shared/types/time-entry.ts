@@ -1,55 +1,61 @@
-export type TimeEntryStatus = "active" | "pending" | "approved" | "rejected";
+export type TimeEntryType = "clock" | "break" | "job_labor";
+
+export type TechnicianTimeState =
+  | "off_clock"
+  | "clocked_in"
+  | "on_break"
+  | "working_job";
 
 export type TimeEntry = {
   id: string;
-  entryNumber: string;
-  technician: string;
-  clockInAt: string;
-  clockOutAt?: string;
-  totalHours?: number;
+  companyId: string;
+  technicianId: string;
+  technicianName: string;
   jobId?: string;
   jobNumber?: string;
-  customerName?: string;
-  isOvertime: boolean;
-  status: TimeEntryStatus;
+  entryType: TimeEntryType;
+  startedAt: string;
+  endedAt?: string;
+  durationMinutes?: number;
   notes?: string;
   createdAt: string;
+  updatedAt: string;
 };
 
-export type ActiveTechnicianSession = {
-  technician: string;
-  clockInAt: string;
-  jobNumber?: string;
-  customerName?: string;
+export type TechnicianTimeStateSnapshot = {
+  state: TechnicianTimeState;
+  activeEntry?: TimeEntry;
+  activeJobId?: string;
+  activeJobNumber?: string;
 };
 
-export type TimeEntryFormData = {
-  technician: string;
-  clockInAt: string;
-  clockOutAt: string;
-  jobNumber: string;
-  customerName: string;
-  isOvertime: boolean;
-  status: TimeEntryStatus;
-  notes: string;
+export type TodayTimeSummary = {
+  clockMinutes: number;
+  breakMinutes: number;
+  jobLaborMinutes: number;
+  entryCount: number;
 };
 
-export const TIME_ENTRY_STATUS_OPTIONS: {
-  value: TimeEntryStatus | "all";
-  label: string;
-}[] = [
-  { value: "all", label: "All statuses" },
-  { value: "active", label: "Active" },
-  { value: "pending", label: "Pending" },
-  { value: "approved", label: "Approved" },
-  { value: "rejected", label: "Rejected" },
-];
+export const TIME_ENTRY_TYPE_LABELS: Record<TimeEntryType, string> = {
+  clock: "Clock",
+  break: "Break",
+  job_labor: "Job labor",
+};
 
-export function formatTimeEntryStatus(status: TimeEntryStatus): string {
-  return (
-    TIME_ENTRY_STATUS_OPTIONS.find((option) => option.value === status)
-      ?.label ?? status
-  );
+export const TECHNICIAN_TIME_STATE_LABELS: Record<TechnicianTimeState, string> =
+  {
+    off_clock: "Off clock",
+    clocked_in: "Clocked in",
+    on_break: "On break",
+    working_job: "Working job",
+  };
+
+export function formatTimeEntryType(entryType: TimeEntryType): string {
+  return TIME_ENTRY_TYPE_LABELS[entryType] ?? entryType;
+}
+
+export function formatTechnicianTimeState(state: TechnicianTimeState): string {
+  return TECHNICIAN_TIME_STATE_LABELS[state] ?? state;
 }
 
 export function formatDateTime(iso: string): string {
@@ -71,41 +77,69 @@ export function formatTime(iso: string): string {
   });
 }
 
-export function calculateHours(clockInAt: string, clockOutAt: string): number {
-  const start = new Date(clockInAt).getTime();
-  const end = new Date(clockOutAt).getTime();
-  const hours = (end - start) / (1000 * 60 * 60);
-  return Math.round(hours * 100) / 100;
+export function calculateDurationMinutes(
+  startedAt: string,
+  endedAt: string,
+): number {
+  const start = new Date(startedAt).getTime();
+  const end = new Date(endedAt).getTime();
+  return Math.max(0, Math.round((end - start) / (1000 * 60)));
 }
 
-export function formatHours(hours: number): string {
-  const whole = Math.floor(hours);
-  const minutes = Math.round((hours - whole) * 60);
-  if (minutes === 0) return `${whole}h`;
-  return `${whole}h ${minutes}m`;
+export function getElapsedMinutes(startedAt: string, now = Date.now()): number {
+  const start = new Date(startedAt).getTime();
+  return Math.max(0, Math.round((now - start) / (1000 * 60)));
 }
 
-export function getElapsedHours(clockInAt: string): number {
-  const start = new Date(clockInAt).getTime();
-  const now = Date.now();
-  const hours = (now - start) / (1000 * 60 * 60);
-  return Math.round(hours * 100) / 100;
+export function formatDurationMinutes(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes}m`;
+  if (minutes === 0) return `${hours}h`;
+  return `${hours}h ${minutes}m`;
 }
 
-export function getWeeklySummary(entries: TimeEntry[]) {
-  const totalHours = entries
-    .filter((entry) => entry.totalHours != null)
-    .reduce((sum, entry) => sum + (entry.totalHours ?? 0), 0);
+export function summarizeTodayEntries(
+  entries: TimeEntry[],
+  now = Date.now(),
+): TodayTimeSummary {
+  let clockMinutes = 0;
+  let breakMinutes = 0;
+  let jobLaborMinutes = 0;
 
-  const activeTechnicians = new Set(
-    entries.filter((entry) => entry.status === "active").map((e) => e.technician),
-  ).size;
+  for (const entry of entries) {
+    const minutes =
+      entry.durationMinutes ??
+      (entry.endedAt
+        ? calculateDurationMinutes(entry.startedAt, entry.endedAt)
+        : getElapsedMinutes(entry.startedAt, now));
 
-  const overtimeEntries = entries.filter((entry) => entry.isOvertime).length;
+    if (entry.entryType === "clock") {
+      clockMinutes += minutes;
+    } else if (entry.entryType === "break") {
+      breakMinutes += minutes;
+    } else if (entry.entryType === "job_labor") {
+      jobLaborMinutes += minutes;
+    }
+  }
 
-  const pendingApprovals = entries.filter(
-    (entry) => entry.status === "pending",
-  ).length;
+  return {
+    clockMinutes,
+    breakMinutes,
+    jobLaborMinutes,
+    entryCount: entries.length,
+  };
+}
 
-  return { totalHours, activeTechnicians, overtimeEntries, pendingApprovals };
+export function getTechnicianTimeStateStyles(state: TechnicianTimeState): string {
+  switch (state) {
+    case "clocked_in":
+      return "bg-emerald-50 text-emerald-700 ring-emerald-600/20";
+    case "on_break":
+      return "bg-amber-50 text-amber-700 ring-amber-600/20";
+    case "working_job":
+      return "bg-cyan-50 text-cyan-700 ring-cyan-600/20";
+    default:
+      return "bg-slate-100 text-slate-600 ring-slate-500/20";
+  }
 }

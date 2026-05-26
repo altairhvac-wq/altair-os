@@ -1,10 +1,10 @@
 import { Timer } from "lucide-react";
-import type { ActiveTechnicianSession } from "@/shared/types/time-entry";
+import type { MockActiveTechnicianSession } from "@/shared/types/time-entry-mock";
 import { ClockInOutPanel } from "./ClockInOutPanel";
 import { TechnicianTimeCard } from "./TechnicianTimeCard";
 
 type TimeClockWidgetProps = {
-  activeSession: ActiveTechnicianSession | null;
+  activeSession: MockActiveTechnicianSession | null;
   onClockIn: () => void;
   onClockOut: () => void;
 };

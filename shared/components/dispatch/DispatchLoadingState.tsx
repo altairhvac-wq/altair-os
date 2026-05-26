@@ -8,7 +8,7 @@ function Skeleton({ className }: { className?: string }) {
 
 export function DispatchLoadingState() {
   return (
-    <div className="flex h-[calc(100vh-7rem)] flex-col gap-4 overflow-hidden">
+    <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:overflow-hidden">
       <div className="grid shrink-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-28 rounded-2xl" />

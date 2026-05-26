@@ -4,6 +4,7 @@ import {
   formatExpenseAmount,
   formatExpenseCategory,
   formatReceiptStatus,
+  isExpenseReceiptImageFile,
   type Expense,
 } from "@/shared/types/expense";
 import { ExpenseCategoryBadge } from "@/shared/components/expenses/ExpenseCategoryBadge";
@@ -38,19 +39,27 @@ export function JobExpenseReceiptsSection({
           </div>
         </div>
 
-        <Link
-          href={`/expenses?jobId=${jobId}`}
-          className="text-sm font-semibold text-cyan-600 transition-colors hover:text-cyan-700"
-        >
-          View all
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href={`/expenses?jobId=${jobId}&create=1`}
+            className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+          >
+            Add receipt
+          </Link>
+          <Link
+            href={`/expenses?jobId=${jobId}`}
+            className="text-sm font-semibold text-cyan-600 transition-colors hover:text-cyan-700"
+          >
+            View all
+          </Link>
+        </div>
       </div>
 
       {receiptExpenses.length === 0 ? (
         <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-8 text-center">
           <p className="text-sm font-medium text-slate-700">No receipts linked yet</p>
           <p className="mt-1 text-xs text-slate-500">
-            Upload receipts from the expenses page or when completing field work.
+            Snap a receipt from the job card or add one from the expenses page.
           </p>
         </div>
       ) : (
@@ -61,7 +70,7 @@ export function JobExpenseReceiptsSection({
               className="overflow-hidden rounded-xl border border-slate-200 bg-white"
             >
               <div className="relative aspect-[4/3] bg-slate-100">
-                {isExpenseReceiptImage(expense.receiptFileName) &&
+                {isExpenseReceiptImageFile(expense.receiptFileName) &&
                 expense.receiptSignedUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -101,12 +110,4 @@ export function JobExpenseReceiptsSection({
       )}
     </section>
   );
-}
-
-function isExpenseReceiptImage(fileName?: string): boolean {
-  if (!fileName) {
-    return false;
-  }
-
-  return /\.(jpe?g|png|webp|heic|heif)$/i.test(fileName);
 }
