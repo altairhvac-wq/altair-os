@@ -257,17 +257,48 @@ export function dedupeQueueActions(
   return deduped;
 }
 
+/** In-page anchor for dashboard drill-down scroll targets on /reports. */
+export const OFFICE_REVIEW_QUEUE_SECTION_ID = "office-review-queue";
+
+export function isOfficeReviewQueueFilterParam(
+  value: string | undefined | null,
+): value is Exclude<OfficeReviewQueueFilter, "all"> {
+  if (value == null) {
+    return false;
+  }
+
+  const trimmed = value.trim();
+  return (
+    trimmed.length > 0 &&
+    (OFFICE_REVIEW_QUEUE_FILTER_VALUES as readonly string[]).includes(trimmed)
+  );
+}
+
 export function parseOfficeReviewQueueFilter(
   value: string | undefined,
 ): OfficeReviewQueueFilter {
-  if (
-    value != null &&
-    (OFFICE_REVIEW_QUEUE_FILTER_VALUES as readonly string[]).includes(value)
-  ) {
-    return value as Exclude<OfficeReviewQueueFilter, "all">;
+  if (isOfficeReviewQueueFilterParam(value)) {
+    return value;
   }
 
   return "all";
+}
+
+const OFFICE_REVIEW_QUEUE_FILTER_DESCRIPTIONS: Record<
+  Exclude<OfficeReviewQueueFilter, "all">,
+  string
+> = {
+  critical: "Multiple blockers on completed work — highest priority follow-up.",
+  aging: `${OFFICE_REVIEW_QUEUE_AGING_DAYS}+ days without meaningful progress — monitor for backlog buildup.`,
+  attention: "Review flags, invoicing backlog, and active pipeline stalls.",
+  invoicing: "Completed jobs awaiting invoice — billing backlog from live records.",
+  stalled: "Inactive pipeline jobs — flow stalls from existing job activity signals.",
+};
+
+export function getOfficeReviewQueueFilterDescription(
+  filter: Exclude<OfficeReviewQueueFilter, "all">,
+): string {
+  return OFFICE_REVIEW_QUEUE_FILTER_DESCRIPTIONS[filter];
 }
 
 /**

@@ -75,13 +75,16 @@ import {
   dedupeQueueActions,
   filterOfficeReviewQueueItems,
   formatOfficeReviewQueueKind,
+  getOfficeReviewQueueFilterDescription,
   getOfficeReviewQueueFilterLabel,
+  isOfficeReviewQueueFilterParam,
   isValidOfficeReviewQueueJobId,
   isValidQueueActionHref,
   OFFICE_REVIEW_QUEUE_AGING_BUCKET_MAX_DAYS,
   OFFICE_REVIEW_QUEUE_AGING_DAYS,
   OFFICE_REVIEW_QUEUE_FRESH_MAX_DAYS,
   OFFICE_REVIEW_QUEUE_FILTER_OPTIONS,
+  OFFICE_REVIEW_QUEUE_SECTION_ID,
   type OfficeReviewQueueAgingBucket,
   type OfficeReviewQueueFilter,
   type OfficeReviewQueueGroup,
@@ -579,6 +582,26 @@ function FilterEmptyState({
       >
         Clear filter
       </Link>
+    </div>
+  );
+}
+
+function QueueDrilldownBanner({
+  filter,
+}: {
+  filter: Exclude<OfficeReviewQueueFilter, "all">;
+}) {
+  return (
+    <div
+      className="mt-3 rounded-xl border border-violet-200 bg-violet-50/70 px-3 py-2.5 sm:mt-4"
+      role="status"
+    >
+      <p className="text-xs font-semibold text-violet-950">
+        Operational focus · {getOfficeReviewQueueFilterLabel(filter)}
+      </p>
+      <p className="mt-0.5 text-xs leading-relaxed text-violet-900/80">
+        {getOfficeReviewQueueFilterDescription(filter)}
+      </p>
     </div>
   );
 }
@@ -1581,6 +1604,8 @@ export function OfficeReviewQueueSection({
   const router = useRouter();
   const searchParams = useSearchParams();
   const isCompact = variant === "compact";
+  const sectionRef = useRef<HTMLElement>(null);
+  const hasScrolledToSectionRef = useRef(false);
 
   const queueParam = searchParams.get("queue");
   const sortParam = searchParams.get("queueSort");
@@ -1632,6 +1657,7 @@ export function OfficeReviewQueueSection({
       ? queueFilter
       : (savedFilter ?? "all");
   const effectiveSortMode = isCompact ? "severity_first" : sortMode;
+  const openedViaQueueParam = isOfficeReviewQueueFilterParam(queueParam);
 
   const clearHref = buildReportsHref({
     filter: "all",
@@ -1660,6 +1686,36 @@ export function OfficeReviewQueueSection({
     const query = nextParams.toString();
     router.replace(query ? `/reports?${query}` : "/reports", { scroll: false });
   };
+
+  useEffect(() => {
+    if (isCompact || queueParam == null || openedViaQueueParam) {
+      return;
+    }
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("queue");
+    syncReportsUrl(params);
+  }, [isCompact, openedViaQueueParam, queueParam, searchParams]);
+
+  useEffect(() => {
+    if (
+      isCompact ||
+      hasScrolledToSectionRef.current ||
+      !openedViaQueueParam
+    ) {
+      return;
+    }
+
+    hasScrolledToSectionRef.current = true;
+
+    const frame = window.requestAnimationFrame(() => {
+      sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [isCompact, openedViaQueueParam]);
 
   const handleSortChange = (nextSortMode: OfficeReviewQueueSortMode) => {
     if (isCompact) {
@@ -1837,7 +1893,15 @@ export function OfficeReviewQueueSection({
     !isCompact && !showGlobalEmptyState && !showFilterEmptyState;
 
   return (
-    <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <section
+      ref={sectionRef}
+      id={OFFICE_REVIEW_QUEUE_SECTION_ID}
+      className={`min-w-0 scroll-mt-6 overflow-hidden rounded-2xl border bg-white p-4 shadow-sm sm:p-5 ${
+        isFiltered && !isCompact
+          ? "border-violet-300 ring-2 ring-violet-100"
+          : "border-slate-200"
+      }`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 ring-1 ring-violet-600/10 sm:h-10 sm:w-10">
@@ -1884,6 +1948,11 @@ export function OfficeReviewQueueSection({
             sortMode={effectiveSortMode}
             collapsedGroups={collapsedGroups}
           />
+          {isFiltered ? (
+            <QueueDrilldownBanner
+              filter={activeFilter as Exclude<OfficeReviewQueueFilter, "all">}
+            />
+          ) : null}
         </>
       ) : null}
 
