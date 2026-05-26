@@ -108,12 +108,20 @@ export const PRIMARY_MOBILE_ADMIN_NAV_HREFS = [
   "/customers",
 ] as const;
 
-export const PRIMARY_DESKTOP_ADMIN_NAV_HREFS = [
+/** Left-to-right desktop tab order (workflow-first, admin items last). */
+export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/",
+  "/customers",
   "/jobs",
   "/dispatch",
-  "/customers",
   "/estimates",
+  "/price-book",
+  "/invoices",
+  "/expenses",
+  "/reports",
+  "/time",
+  "/network",
+  "/settings",
 ] as const;
 
 export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {
@@ -149,25 +157,30 @@ export function splitAdminNavItemsForMobile(context: ActiveCompanyContext): {
   return { primary, secondary };
 }
 
-export function splitAdminNavItemsForDesktop(context: ActiveCompanyContext): {
-  primary: NavItem[];
-  secondary: NavItem[];
-} {
+export function getOrderedAdminNavItemsForDesktop(
+  context: ActiveCompanyContext,
+): NavItem[] {
   const items = getAdminNavItems(context);
-  const primaryHrefs = new Set<string>(PRIMARY_DESKTOP_ADMIN_NAV_HREFS);
-  const primary: NavItem[] = [];
+  const itemsByHref = new Map(items.map((item) => [item.href, item]));
+  const ordered: NavItem[] = [];
+  const seen = new Set<string>();
 
-  for (const href of PRIMARY_DESKTOP_ADMIN_NAV_HREFS) {
-    const item = items.find((entry) => entry.href === href);
+  for (const href of DESKTOP_ADMIN_NAV_WORKFLOW_ORDER) {
+    const item = itemsByHref.get(href);
 
     if (item) {
-      primary.push(item);
+      ordered.push(item);
+      seen.add(href);
     }
   }
 
-  const secondary = items.filter((item) => !primaryHrefs.has(item.href));
+  for (const item of items) {
+    if (!seen.has(item.href)) {
+      ordered.push(item);
+    }
+  }
 
-  return { primary, secondary };
+  return ordered;
 }
 
 /** @deprecated Use getAdminNavItems instead */
