@@ -1,4 +1,5 @@
 import type { DispatchJob } from "@/shared/types/dispatch";
+import { getDispatchSummary } from "@/shared/types/dispatch";
 import type { Estimate } from "@/shared/types/estimate";
 import type { Expense } from "@/shared/types/expense";
 import type { Notification } from "@/shared/types/notification";
@@ -14,6 +15,12 @@ export type DashboardOperationsSummary = {
   dispatched: number;
   inProgress: number;
   completedToday: number;
+  /** Jobs on today's board without an assigned technician. */
+  unassignedToday: number;
+  /** All non-cancelled jobs scheduled for today. */
+  totalJobsToday: number;
+  /** Technicians with two or more active jobs on today's board. */
+  overloadedTechnicianCount: number;
   todayJobs: DispatchJob[];
 };
 
@@ -103,12 +110,44 @@ export type DashboardData = {
   recentActivity: OperationalActivity[];
 };
 
+const ACTIVE_DISPATCH_JOB_STATUSES = new Set<DispatchJob["status"]>([
+  "scheduled",
+  "dispatched",
+  "arrived",
+  "in_progress",
+]);
+
+function countOverloadedTechnicians(jobs: DispatchJob[]): number {
+  const activeJobsByTechnician = new Map<string, number>();
+
+  for (const job of jobs) {
+    if (!job.technicianId || !ACTIVE_DISPATCH_JOB_STATUSES.has(job.status)) {
+      continue;
+    }
+
+    activeJobsByTechnician.set(
+      job.technicianId,
+      (activeJobsByTechnician.get(job.technicianId) ?? 0) + 1,
+    );
+  }
+
+  return [...activeJobsByTechnician.values()].filter((count) => count >= 2).length;
+}
+
 export function getTodayOperationsSummary(
   jobs: DispatchJob[],
 ): Pick<
   DashboardOperationsSummary,
-  "scheduledToday" | "dispatched" | "inProgress" | "completedToday"
+  | "scheduledToday"
+  | "dispatched"
+  | "inProgress"
+  | "completedToday"
+  | "unassignedToday"
+  | "totalJobsToday"
+  | "overloadedTechnicianCount"
 > {
+  const dispatchSummary = getDispatchSummary(jobs);
+
   return {
     scheduledToday: jobs.filter((job) => job.status === "scheduled").length,
     dispatched: jobs.filter((job) => job.status === "dispatched").length,
@@ -116,6 +155,9 @@ export function getTodayOperationsSummary(
       (job) => job.status === "in_progress" || job.status === "arrived",
     ).length,
     completedToday: jobs.filter((job) => job.status === "completed").length,
+    unassignedToday: dispatchSummary.unassigned,
+    totalJobsToday: dispatchSummary.scheduledToday,
+    overloadedTechnicianCount: countOverloadedTechnicians(jobs),
   };
 }
 

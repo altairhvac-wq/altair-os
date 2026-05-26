@@ -24,6 +24,7 @@ import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { ExpenseStatusBadge } from "@/shared/components/expenses/ExpenseStatusBadge";
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
 import { CashFlowCommandSection } from "@/shared/components/dashboard/CashFlowCommandSection";
+import { DispatchPressureSection } from "@/shared/components/dashboard/DispatchPressureSection";
 import { NextBestActionsSection } from "@/shared/components/dashboard/NextBestActionsSection";
 import { OperationalRiskDrilldownSection } from "@/shared/components/dashboard/OperationalRiskDrilldownSection";
 import { TodayNeedsAttentionSection } from "@/shared/components/dashboard/TodayNeedsAttentionSection";
@@ -938,6 +939,7 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
     <div className="flex flex-col gap-6">
       <AnalyticsSnapshotSection analytics={data.analytics} />
       <CashFlowCommandSection data={data} />
+      <DispatchPressureSection data={data} />
       <div className="grid gap-6 xl:grid-cols-2">
         <TodayNeedsAttentionSection data={data} />
         <NextBestActionsSection data={data} />
