@@ -2,6 +2,11 @@ import {
   dispatchNotification,
   dispatchNotificationsForPermission,
 } from "@/lib/database/services/notifications";
+import type { Json } from "@/lib/database/types/enums";
+import {
+  isNonEmptyId,
+  sanitizeNotificationMetadata,
+} from "@/lib/database/services/operational-guards";
 
 function formatJobLabel(jobNumber?: string, jobId?: string): string {
   return jobNumber?.trim() || (jobId ? `Job ${jobId.slice(0, 8)}` : "a job");
@@ -18,6 +23,11 @@ function formatCurrency(amount?: number): string {
   }).format(amount);
 }
 
+function formatMerchantLabel(merchant: string): string {
+  const trimmed = merchant.trim();
+  return trimmed.length > 0 ? trimmed : "a merchant";
+}
+
 export function notifyJobAssigned(input: {
   companyId: string;
   technicianId: string;
@@ -27,7 +37,15 @@ export function notifyJobAssigned(input: {
   customerId?: string;
   technicianName?: string;
 }): void {
-  if (input.actorId && input.actorId === input.technicianId) {
+  if (
+    !isNonEmptyId(input.companyId) ||
+    !isNonEmptyId(input.technicianId) ||
+    !isNonEmptyId(input.jobId)
+  ) {
+    return;
+  }
+
+  if (input.actorId === input.technicianId) {
     return;
   }
 
@@ -41,13 +59,13 @@ export function notifyJobAssigned(input: {
     message: `You have been assigned to ${jobLabel}.`,
     entityType: "job",
     entityId: input.jobId,
-    metadata: {
+    metadata: sanitizeNotificationMetadata({
       job_id: input.jobId,
       job_number: input.jobNumber,
       customer_id: input.customerId,
       technician_id: input.technicianId,
       technician_name: input.technicianName,
-    },
+    }) as Json,
   });
 }
 
@@ -58,6 +76,10 @@ export function notifyWorkCompleted(input: {
   jobNumber?: string;
   customerId?: string;
 }): void {
+  if (!isNonEmptyId(input.companyId) || !isNonEmptyId(input.jobId) || !isNonEmptyId(input.actorId)) {
+    return;
+  }
+
   const jobLabel = formatJobLabel(input.jobNumber, input.jobId);
 
   dispatchNotificationsForPermission({
@@ -69,11 +91,11 @@ export function notifyWorkCompleted(input: {
     entityType: "job",
     entityId: input.jobId,
     excludeUserIds: [input.actorId],
-    metadata: {
+    metadata: sanitizeNotificationMetadata({
       job_id: input.jobId,
       job_number: input.jobNumber,
       customer_id: input.customerId,
-    },
+    }),
   });
 }
 
@@ -87,22 +109,32 @@ export function notifyExpenseSubmitted(input: {
   technicianName?: string;
   jobId?: string;
 }): void {
+  if (
+    !isNonEmptyId(input.companyId) ||
+    !isNonEmptyId(input.expenseId) ||
+    !isNonEmptyId(input.actorId)
+  ) {
+    return;
+  }
+
+  const merchantLabel = formatMerchantLabel(input.merchant);
+
   dispatchNotificationsForPermission({
     companyId: input.companyId,
     permission: "manageBilling",
     type: "expense_submitted",
     title: "Expense submitted",
-    message: `${input.technicianName ?? "A technician"} submitted ${formatCurrency(input.amount)} at ${input.merchant}.`,
+    message: `${input.technicianName?.trim() || "A technician"} submitted ${formatCurrency(input.amount)} at ${merchantLabel}.`,
     entityType: "expense",
     entityId: input.expenseId,
     excludeUserIds: [input.actorId],
-    metadata: {
+    metadata: sanitizeNotificationMetadata({
       expense_id: input.expenseId,
       expense_number: input.expenseNumber,
-      merchant: input.merchant,
+      merchant: merchantLabel,
       amount: input.amount,
       job_id: input.jobId,
-    },
+    }),
   });
 }
 
@@ -116,10 +148,20 @@ export function notifyExpenseRejected(input: {
   amount?: number;
   rejectionReason?: string;
 }): void {
+  if (
+    !isNonEmptyId(input.companyId) ||
+    !isNonEmptyId(input.technicianId) ||
+    !isNonEmptyId(input.expenseId) ||
+    !isNonEmptyId(input.actorId)
+  ) {
+    return;
+  }
+
   if (input.actorId === input.technicianId) {
     return;
   }
 
+  const merchantLabel = formatMerchantLabel(input.merchant);
   const reason = input.rejectionReason?.trim();
   const suffix = reason ? ` Reason: ${reason}` : "";
 
@@ -128,16 +170,16 @@ export function notifyExpenseRejected(input: {
     userId: input.technicianId,
     type: "expense_rejected",
     title: "Expense rejected",
-    message: `Your ${formatCurrency(input.amount)} expense at ${input.merchant} was rejected.${suffix}`,
+    message: `Your ${formatCurrency(input.amount)} expense at ${merchantLabel} was rejected.${suffix}`,
     entityType: "expense",
     entityId: input.expenseId,
-    metadata: {
+    metadata: sanitizeNotificationMetadata({
       expense_id: input.expenseId,
       expense_number: input.expenseNumber,
-      merchant: input.merchant,
+      merchant: merchantLabel,
       amount: input.amount,
       rejection_reason: reason,
-    },
+    }) as Json,
   });
 }
 
@@ -150,6 +192,14 @@ export function notifyInvoicePaid(input: {
   customerId?: string;
   jobId?: string;
 }): void {
+  if (
+    !isNonEmptyId(input.companyId) ||
+    !isNonEmptyId(input.invoiceId) ||
+    !isNonEmptyId(input.actorId)
+  ) {
+    return;
+  }
+
   const invoiceLabel = input.invoiceNumber?.trim() || "An invoice";
 
   dispatchNotificationsForPermission({
@@ -161,13 +211,13 @@ export function notifyInvoicePaid(input: {
     entityType: "invoice",
     entityId: input.invoiceId,
     excludeUserIds: [input.actorId],
-    metadata: {
+    metadata: sanitizeNotificationMetadata({
       invoice_id: input.invoiceId,
       invoice_number: input.invoiceNumber,
       amount: input.amount,
       customer_id: input.customerId,
       job_id: input.jobId,
-    },
+    }),
   });
 }
 
@@ -179,6 +229,14 @@ export function notifyEstimateApproved(input: {
   customerId?: string;
   jobId?: string;
 }): void {
+  if (
+    !isNonEmptyId(input.companyId) ||
+    !isNonEmptyId(input.estimateId) ||
+    !isNonEmptyId(input.actorId)
+  ) {
+    return;
+  }
+
   const estimateLabel = input.estimateNumber?.trim() || "An estimate";
 
   dispatchNotificationsForPermission({
@@ -190,11 +248,11 @@ export function notifyEstimateApproved(input: {
     entityType: "estimate",
     entityId: input.estimateId,
     excludeUserIds: [input.actorId],
-    metadata: {
+    metadata: sanitizeNotificationMetadata({
       estimate_id: input.estimateId,
       estimate_number: input.estimateNumber,
       customer_id: input.customerId,
       job_id: input.jobId,
-    },
+    }),
   });
 }

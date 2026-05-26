@@ -1,4 +1,10 @@
 import {
+  assertNever,
+  isRunnableAutomationEvent,
+  type OperationalAutomationEvent,
+  type OperationalEventName,
+} from "@/lib/database/services/operational-guards";
+import {
   notifyEstimateApproved,
   notifyExpenseRejected,
   notifyExpenseSubmitted,
@@ -6,6 +12,8 @@ import {
   notifyJobAssigned,
   notifyWorkCompleted,
 } from "@/lib/database/services/operational-notifications";
+
+export type { OperationalAutomationEvent, OperationalEventName };
 
 /**
  * Internal automation hook for operational events.
@@ -19,75 +27,6 @@ import {
  * TODO(automation): pending expense aging (requires delayed re-check).
  * TODO(ai): AI summaries from enriched event context.
  */
-
-export type OperationalAutomationEvent =
-  | {
-      type: "job_assigned";
-      companyId: string;
-      jobId: string;
-      actorId: string;
-      technicianId: string;
-      jobNumber?: string;
-      customerId?: string;
-      technicianName?: string;
-    }
-  | {
-      type: "work_completed";
-      companyId: string;
-      jobId: string;
-      actorId: string;
-      jobNumber?: string;
-      customerId?: string;
-    }
-  | {
-      type: "expense_submitted";
-      companyId: string;
-      actorId: string;
-      expenseId: string;
-      expenseNumber?: string;
-      merchant: string;
-      amount?: number;
-      technicianName?: string;
-      jobId?: string;
-    }
-  | {
-      type: "expense_rejected";
-      companyId: string;
-      technicianId: string;
-      actorId: string;
-      expenseId: string;
-      expenseNumber?: string;
-      merchant: string;
-      amount?: number;
-      rejectionReason?: string;
-    }
-  | {
-      type: "invoice_paid";
-      companyId: string;
-      actorId: string;
-      invoiceId: string;
-      invoiceNumber?: string;
-      amount?: number;
-      customerId?: string;
-      jobId?: string;
-    }
-  | {
-      type: "estimate_approved";
-      companyId: string;
-      actorId: string;
-      estimateId: string;
-      estimateNumber?: string;
-      customerId?: string;
-      jobId?: string;
-    }
-  | {
-      type: "job_material_added";
-      companyId: string;
-      jobId: string;
-      actorId: string;
-      customerId?: string;
-      jobNumber?: string;
-    };
 
 function fireAndForgetAutomation(handler: () => void): void {
   try {
@@ -173,11 +112,22 @@ function runOperationalAutomation(event: OperationalAutomationEvent): void {
     case "job_material_added":
       // TODO(automation): evaluate inventory/low-stock or billing follow-ups.
       return;
+
+    default:
+      return assertNever(event);
   }
 }
 
 export function maybeRunOperationalAutomation(
   event: OperationalAutomationEvent,
 ): void {
+  if (!isRunnableAutomationEvent(event)) {
+    console.warn("[operational-automation] skipped invalid event:", {
+      type: event.type,
+      companyId: event.companyId,
+    });
+    return;
+  }
+
   fireAndForgetAutomation(() => runOperationalAutomation(event));
 }

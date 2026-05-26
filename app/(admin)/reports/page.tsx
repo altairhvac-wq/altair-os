@@ -5,6 +5,7 @@ import { getCompanyJobActivityReport } from "@/lib/database/services/reports/job
 import { getCompanyProfitabilityReport } from "@/lib/database/services/reports/profitability-report";
 import { getCompanyRevenueReport } from "@/lib/database/services/reports/revenue-report";
 import { getCompanyReportChartSeries } from "@/lib/database/services/reports/report-chart-series";
+import { getCompanyStalledJobsReport } from "@/lib/database/services/reports/stalled-jobs-report";
 import { getCompanyTechnicianLaborReport } from "@/lib/database/services/reports/technician-labor-report";
 import { AnalyticsPageView } from "@/shared/components/analytics/AnalyticsPageView";
 import { parseProfitabilityReportDateRange } from "@/shared/types/reports";
@@ -30,6 +31,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     expenseReport,
     jobActivityReport,
     technicianLaborReport,
+    stalledJobsReport,
     chartSeries,
   ] = await Promise.all([
     getCompanyProfitabilityReport(companyContext.company.id, reportOptions),
@@ -37,6 +39,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     getCompanyExpenseReport(companyContext.company.id, reportOptions),
     getCompanyJobActivityReport(companyContext.company.id, reportOptions),
     getCompanyTechnicianLaborReport(companyContext.company.id, reportOptions),
+    getCompanyStalledJobsReport(companyContext.company.id),
     getCompanyReportChartSeries(companyContext.company.id, reportOptions),
   ]);
 
@@ -48,6 +51,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
         expenses: expenseReport,
         jobs: jobActivityReport,
         labor: technicianLaborReport,
+        stalledJobs: stalledJobsReport,
       }}
       profitabilityReport={profitabilityReport}
       profitabilityDateRange={dateRange}

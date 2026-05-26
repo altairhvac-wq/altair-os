@@ -1,6 +1,8 @@
 import { recordExpenseActivity } from "@/lib/database/queries/expense-activities";
 import { recordJobActivity } from "@/lib/database/queries/job-activities";
 import { maybeRunOperationalAutomation } from "@/lib/database/services/operational-automation";
+import type { OperationalEventName } from "@/lib/database/services/operational-guards";
+import { isNonEmptyId } from "@/lib/database/services/operational-guards";
 import type { Expense, ExpenseStatus } from "@/shared/types/expense";
 import type { JobMaterial } from "@/shared/types/job-material";
 import type { InvoiceStatus } from "@/shared/types/invoice";
@@ -13,14 +15,14 @@ import type { InvoiceStatus } from "@/shared/types/invoice";
  * primary workflows.
  */
 
-export type OperationalEventType =
-  | "job_assigned"
-  | "work_completed"
-  | "expense_submitted"
-  | "expense_rejected"
-  | "invoice_paid"
-  | "estimate_approved"
-  | "job_material_added";
+export type { OperationalEventName };
+
+function hasOperationalEmitContext(input: {
+  companyId: string;
+  actorId: string;
+}): boolean {
+  return isNonEmptyId(input.companyId) && isNonEmptyId(input.actorId);
+}
 
 function buildExpenseActivityMetadata(expense: Expense) {
   return {
@@ -45,6 +47,13 @@ export async function emitExpenseSubmittedEvent(input: {
   expense: Expense;
   fromStatus: ExpenseStatus;
 }): Promise<void> {
+  if (!hasOperationalEmitContext(input) || !isNonEmptyId(input.expenseId)) {
+    console.warn("[emitExpenseSubmittedEvent] skipped: missing context", {
+      expenseId: input.expenseId,
+    });
+    return;
+  }
+
   const { error } = await recordExpenseActivity({
     company_id: input.companyId,
     expense_id: input.expenseId,
@@ -86,6 +95,18 @@ export async function emitExpenseRejectedEvent(input: {
   fromStatus: ExpenseStatus;
   rejectionReason?: string;
 }): Promise<void> {
+  if (
+    !hasOperationalEmitContext(input) ||
+    !isNonEmptyId(input.expenseId) ||
+    !isNonEmptyId(input.expense.technicianId)
+  ) {
+    console.warn("[emitExpenseRejectedEvent] skipped: missing context", {
+      expenseId: input.expenseId,
+      technicianId: input.expense.technicianId,
+    });
+    return;
+  }
+
   const { error } = await recordExpenseActivity({
     company_id: input.companyId,
     expense_id: input.expenseId,
@@ -131,6 +152,18 @@ export async function emitJobAssignedEvent(input: {
   technicianName?: string;
   previousTechnicianName?: string;
 }): Promise<void> {
+  if (
+    !hasOperationalEmitContext(input) ||
+    !isNonEmptyId(input.jobId) ||
+    !isNonEmptyId(input.technicianId)
+  ) {
+    console.warn("[emitJobAssignedEvent] skipped: missing context", {
+      jobId: input.jobId,
+      technicianId: input.technicianId,
+    });
+    return;
+  }
+
   const { error } = await recordJobActivity({
     company_id: input.companyId,
     job_id: input.jobId,
@@ -176,6 +209,13 @@ export async function emitWorkCompletedEvent(input: {
 }): Promise<void> {
   // Activity is recorded upstream via recordJobStatusChangedActivity today.
 
+  if (!hasOperationalEmitContext(input) || !isNonEmptyId(input.jobId)) {
+    console.warn("[emitWorkCompletedEvent] skipped: missing context", {
+      jobId: input.jobId,
+    });
+    return;
+  }
+
   maybeRunOperationalAutomation({
     type: "work_completed",
     companyId: input.companyId,
@@ -200,6 +240,17 @@ export async function emitInvoicePaidEvent(input: {
 }): Promise<void> {
   // Activity is recorded upstream via recordInvoicePaidActivity today.
 
+  if (
+    !hasOperationalEmitContext(input) ||
+    !isNonEmptyId(input.invoiceId) ||
+    !isNonEmptyId(input.paymentId)
+  ) {
+    console.warn("[emitInvoicePaidEvent] skipped: missing context", {
+      invoiceId: input.invoiceId,
+    });
+    return;
+  }
+
   maybeRunOperationalAutomation({
     type: "invoice_paid",
     companyId: input.companyId,
@@ -222,6 +273,13 @@ export async function emitEstimateApprovedEvent(input: {
 }): Promise<void> {
   // Activity is recorded upstream via recordEstimateStatusChangedActivity today.
 
+  if (!hasOperationalEmitContext(input) || !isNonEmptyId(input.estimateId)) {
+    console.warn("[emitEstimateApprovedEvent] skipped: missing context", {
+      estimateId: input.estimateId,
+    });
+    return;
+  }
+
   maybeRunOperationalAutomation({
     type: "estimate_approved",
     companyId: input.companyId,
@@ -241,6 +299,13 @@ export async function emitJobMaterialAddedEvent(input: {
   jobNumber?: string;
   material: JobMaterial;
 }): Promise<void> {
+  if (!hasOperationalEmitContext(input) || !isNonEmptyId(input.jobId)) {
+    console.warn("[emitJobMaterialAddedEvent] skipped: missing context", {
+      jobId: input.jobId,
+    });
+    return;
+  }
+
   const { error } = await recordJobActivity({
     company_id: input.companyId,
     job_id: input.jobId,

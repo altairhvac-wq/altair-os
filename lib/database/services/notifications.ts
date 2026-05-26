@@ -116,6 +116,15 @@ export async function createNotificationsForPermission(
 }
 
 export function dispatchNotification(input: CreateNotificationInput): void {
+  if (!input.companyId?.trim() || !input.userId?.trim()) {
+    console.warn("[dispatchNotification] skipped: missing company or user", {
+      type: input.type,
+      companyId: input.companyId,
+      userId: input.userId,
+    });
+    return;
+  }
+
   fireAndForget(createNotification(input));
 }
 
@@ -124,6 +133,14 @@ export function dispatchNotificationsForPermission(
     permission: CompanyPermission;
   },
 ): void {
+  if (!input.companyId?.trim()) {
+    console.warn("[dispatchNotificationsForPermission] skipped: missing company", {
+      type: input.type,
+      permission: input.permission,
+    });
+    return;
+  }
+
   fireAndForget(createNotificationsForPermission(input));
 }
 

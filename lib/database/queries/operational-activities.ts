@@ -176,7 +176,7 @@ function fromExpenseActivityRow(
   });
 }
 
-async function listJobActivitiesForJobIds(
+export async function listJobActivitiesForJobIds(
   companyId: string,
   jobIds: string[],
 ): Promise<JobActivity[]> {

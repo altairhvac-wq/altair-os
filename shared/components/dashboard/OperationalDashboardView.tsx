@@ -39,6 +39,7 @@ import {
   formatOperationalActivityTimestamp,
   getOperationalActivityHref,
 } from "@/shared/types/operational-activity";
+import { formatJobStatus } from "@/shared/types/job";
 import {
   formatTechnicianTimeState,
   getTechnicianTimeStateStyles,
@@ -233,6 +234,84 @@ function AnalyticsSnapshotSection({
         ))}
       </div>
     </section>
+  );
+}
+
+function StalledJobsSection({
+  stalledJobs,
+}: {
+  stalledJobs: DashboardData["stalledJobs"];
+}) {
+  return (
+    <DashboardSection
+      title="Potentially stalled jobs"
+      description={`${stalledJobs.inactivityThresholdDays}+ days without job activity`}
+      icon={AlertCircle}
+      href="/reports"
+      linkLabel="View report"
+    >
+      <div className="mb-4">
+        <MetricCard
+          label="Stalled jobs"
+          value={stalledJobs.stalledCount}
+          description="Heuristic inactivity flag only"
+          icon={AlertCircle}
+          iconClass="text-amber-600 bg-amber-50"
+          accent="border-amber-100"
+        />
+      </div>
+
+      {stalledJobs.stalledJobs.length === 0 ? (
+        <EmptyState
+          title="No stalled jobs detected"
+          description="Active pipeline jobs with recent activity look healthy."
+        />
+      ) : (
+        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
+          {stalledJobs.stalledJobs.map((job) => (
+            <li key={job.jobId}>
+              <Link
+                href={`/jobs/${job.jobId}`}
+                className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-bold text-slate-900">
+                      {job.jobNumber}
+                    </p>
+                    <JobStatusBadge status={job.status} />
+                  </div>
+                  <p className="mt-1 truncate text-sm text-slate-600">
+                    {job.customerName}
+                    {job.assignedTechnician
+                      ? ` · ${job.assignedTechnician}`
+                      : " · Unassigned"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Last activity{" "}
+                    {formatOperationalActivityTimestamp(job.lastActivityAt)}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-semibold text-amber-800">
+                    {job.daysSinceActivity} day
+                    {job.daysSinceActivity === 1 ? "" : "s"} idle
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {formatJobStatus(job.status)}
+                  </p>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <p className="mt-4 text-xs text-slate-500">
+        Heuristic only — no scheduled checks, GPS, or dispatch schedule
+        awareness.
+      </p>
+    </DashboardSection>
   );
 }
 
@@ -829,6 +908,7 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
     <div className="flex flex-col gap-6">
       <AnalyticsSnapshotSection analytics={data.analytics} />
       <TodayOperationsSection operations={data.operations} />
+      <StalledJobsSection stalledJobs={data.stalledJobs} />
 
       <div className="grid gap-6 xl:grid-cols-2">
         <TechnicianStatusSection technicians={data.technicians} />

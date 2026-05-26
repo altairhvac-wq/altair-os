@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   AlertTriangle,
@@ -13,14 +14,20 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/shared/types/customer";
 import { formatJobProfitabilityLaborHours } from "@/shared/types/job-profitability";
+import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
+import { formatJobStatus } from "@/shared/types/job";
 import type {
   ExpenseReport,
   JobActivityReport,
   OperationalReportsBundle,
   ReportSectionMeta,
   RevenueReport,
+  StalledJobsReport,
   TechnicianLaborReport,
 } from "@/shared/types/reports";
+import {
+  formatOperationalActivityTimestamp,
+} from "@/shared/types/operational-activity";
 import { formatPercent } from "@/shared/types/analytics";
 
 type OperationalReportsSectionsProps = {
@@ -321,11 +328,79 @@ function TechnicianLaborReportSection({
   );
 }
 
+function StalledJobsReportSection({ report }: { report: StalledJobsReport }) {
+  const { summary, meta } = report;
+
+  return (
+    <ReportSectionShell
+      title="Potentially stalled jobs"
+      description={`Active pipeline jobs with no activity for ${summary.inactivityThresholdDays}+ days`}
+      meta={meta}
+    >
+      <MetricCard
+        label="Stalled jobs"
+        value={String(summary.stalledCount)}
+        description={`${summary.inactivityThresholdDays}-day inactivity threshold`}
+        icon={AlertTriangle}
+        iconClassName="text-amber-600 bg-amber-50"
+        accentClassName="border-amber-100"
+      />
+      <div className="col-span-full">
+        {summary.stalledJobs.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-center text-sm text-slate-600">
+            No potentially stalled jobs right now.
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
+            {summary.stalledJobs.map((job) => (
+              <li key={job.jobId}>
+                <Link
+                  href={`/jobs/${job.jobId}`}
+                  className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
+                >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-bold text-slate-900">
+                      {job.jobNumber}
+                    </p>
+                    <JobStatusBadge status={job.status} />
+                  </div>
+                  <p className="mt-1 truncate text-sm text-slate-600">
+                    {job.customerName}
+                    {job.assignedTechnician
+                      ? ` · ${job.assignedTechnician}`
+                      : " · Unassigned"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Last activity{" "}
+                    {formatOperationalActivityTimestamp(job.lastActivityAt)}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-semibold text-amber-800">
+                    {job.daysSinceActivity} day
+                    {job.daysSinceActivity === 1 ? "" : "s"} idle
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {formatJobStatus(job.status)}
+                  </p>
+                </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </ReportSectionShell>
+  );
+}
+
 export function OperationalReportsSections({
   reports,
 }: OperationalReportsSectionsProps) {
   return (
     <div className="flex flex-col gap-6">
+      <StalledJobsReportSection report={reports.stalledJobs} />
       <RevenueReportSection report={reports.revenue} />
       <ExpenseReportSection report={reports.expenses} />
       <JobActivityReportSection report={reports.jobs} />

@@ -17,6 +17,7 @@ import {
 import { getCompanyExpenseReport } from "@/lib/database/services/reports/expense-report";
 import { getCompanyJobActivityReport } from "@/lib/database/services/reports/job-activity-report";
 import { getCompanyRevenueReport } from "@/lib/database/services/reports/revenue-report";
+import { getCompanyStalledJobsReport } from "@/lib/database/services/reports/stalled-jobs-report";
 import { getCompanyTechnicianLaborReport } from "@/lib/database/services/reports/technician-labor-report";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { getTodayOperationsSummary } from "@/shared/types/dashboard";
@@ -31,6 +32,7 @@ const APPROVED_ESTIMATES_LIMIT = 5;
 const RECENT_PAYMENTS_LIMIT = 5;
 const RECENT_ACTIVITY_LIMIT = 10;
 const RECENT_NOTIFICATIONS_LIMIT = 5;
+const STALLED_JOBS_DASHBOARD_LIMIT = 5;
 /** Match admin layout fetch so React cache dedupes within the request. */
 const NOTIFICATIONS_FETCH_LIMIT = 20;
 
@@ -83,6 +85,7 @@ export async function getDashboardData(
     expenseReport,
     jobActivityReport,
     technicianLaborReport,
+    stalledJobsReport,
   ] = await Promise.all([
     listTechnicians(companyId, todayJobs),
     listActiveTechnicianTimeEntries(companyId),
@@ -103,6 +106,7 @@ export async function getDashboardData(
     getCompanyExpenseReport(companyId, reportOptions),
     getCompanyJobActivityReport(companyId, reportOptions),
     getCompanyTechnicianLaborReport(companyId, reportOptions),
+    getCompanyStalledJobsReport(companyId),
   ]);
 
   const operationsSummary = getTodayOperationsSummary(todayJobs);
@@ -177,6 +181,15 @@ export async function getDashboardData(
     notifications: {
       unreadCount,
       recent: notifications.slice(0, RECENT_NOTIFICATIONS_LIMIT),
+    },
+    stalledJobs: {
+      stalledCount: stalledJobsReport.summary.stalledCount,
+      inactivityThresholdDays:
+        stalledJobsReport.summary.inactivityThresholdDays,
+      stalledJobs: stalledJobsReport.summary.stalledJobs.slice(
+        0,
+        STALLED_JOBS_DASHBOARD_LIMIT,
+      ),
     },
     recentActivity,
   };

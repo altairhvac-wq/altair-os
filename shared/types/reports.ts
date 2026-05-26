@@ -247,11 +247,33 @@ export type TechnicianLaborReport = {
   meta: ReportSectionMeta;
 };
 
+export type StalledJobEntry = {
+  jobId: string;
+  jobNumber: string;
+  customerName: string;
+  status: Job["status"];
+  assignedTechnician?: string;
+  lastActivityAt: string;
+  daysSinceActivity: number;
+};
+
+export type StalledJobsReportSummary = {
+  stalledCount: number;
+  stalledJobs: StalledJobEntry[];
+  inactivityThresholdDays: number;
+};
+
+export type StalledJobsReport = {
+  summary: StalledJobsReportSummary;
+  meta: ReportSectionMeta;
+};
+
 export type OperationalReportsBundle = {
   revenue: RevenueReport;
   expenses: ExpenseReport;
   jobs: JobActivityReport;
   labor: TechnicianLaborReport;
+  stalledJobs: StalledJobsReport;
 };
 
 export type ReportChartBucketSize = "day" | "week" | "month";
