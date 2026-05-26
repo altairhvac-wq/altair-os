@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   ArrowDownUp,
@@ -20,9 +21,13 @@ import { formatJobStatus } from "@/shared/types/job";
 import {
   buildOfficeReviewQueueActions,
   compareOfficeReviewQueueItems,
+  filterOfficeReviewQueueItems,
   formatOfficeReviewQueueKind,
+  getOfficeReviewQueueFilterLabel,
   isValidOfficeReviewQueueJobId,
   OFFICE_REVIEW_QUEUE_AGING_DAYS,
+  OFFICE_REVIEW_QUEUE_FILTER_OPTIONS,
+  type OfficeReviewQueueFilter,
   type OfficeReviewQueueGroup,
   type OfficeReviewQueueItem,
   type OfficeReviewQueueReport,
@@ -36,6 +41,8 @@ type OfficeReviewQueueSectionProps = {
   variant?: "full" | "compact";
   /** When compact, caps visible rows while preserving summary metrics. */
   itemLimit?: number;
+  /** Reports-only queue filter from URL search params. Ignored in compact variant. */
+  queueFilter?: OfficeReviewQueueFilter;
 };
 
 const GROUP_LABELS: Record<OfficeReviewQueueGroup, string> = {
@@ -48,6 +55,25 @@ const GROUP_DESCRIPTIONS: Record<OfficeReviewQueueGroup, string> = {
   critical: "Multiple blockers on completed work — highest priority follow-up.",
   needs_attention: "Review flags, invoicing backlog, and active pipeline stalls.",
   aging: `${OFFICE_REVIEW_QUEUE_AGING_DAYS}+ days without meaningful progress — monitor for backlog buildup.`,
+};
+
+const FILTER_EMPTY_MESSAGES: Record<
+  Exclude<OfficeReviewQueueFilter, "all">,
+  string
+> = {
+  critical: "No critical items match this filter — completed work has no multi-blocker flags.",
+  aging: `No aging items match this filter — nothing sitting ${OFFICE_REVIEW_QUEUE_AGING_DAYS}+ days without progress.`,
+  attention: "No standard follow-up items match this filter.",
+  invoicing: "No completed jobs awaiting invoicing match this filter.",
+  stalled: "No stalled pipeline jobs match this filter.",
+};
+
+const GROUP_FILTER_MAP: Partial<
+  Record<OfficeReviewQueueFilter, OfficeReviewQueueGroup>
+> = {
+  critical: "critical",
+  aging: "aging",
+  attention: "needs_attention",
 };
 
 const GROUP_EMPTY_MESSAGES: Record<OfficeReviewQueueGroup, string> = {
@@ -184,6 +210,107 @@ function GroupEmptyState({ group }: { group: OfficeReviewQueueGroup }) {
         <p className="text-xs text-slate-600 sm:text-sm">
           {GROUP_EMPTY_MESSAGES[group]}
         </p>
+      </div>
+    </div>
+  );
+}
+
+function FilterEmptyState({
+  filter,
+  clearHref,
+}: {
+  filter: Exclude<OfficeReviewQueueFilter, "all">;
+  clearHref: string;
+}) {
+  return (
+    <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center sm:py-10">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 ring-1 ring-slate-200">
+        <Inbox className="h-6 w-6 text-slate-500" />
+      </div>
+      <h3 className="mt-4 text-sm font-bold text-slate-900">
+        No items for {getOfficeReviewQueueFilterLabel(filter)}
+      </h3>
+      <p className="mt-1 max-w-sm text-xs text-slate-500 sm:text-sm">
+        {FILTER_EMPTY_MESSAGES[filter]}
+      </p>
+      <Link
+        href={clearHref}
+        className="mt-4 inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+      >
+        Clear filter
+      </Link>
+    </div>
+  );
+}
+
+function buildReportsHref(
+  filter: OfficeReviewQueueFilter,
+  range: string | null,
+): string {
+  const params = new URLSearchParams();
+
+  if (range) {
+    params.set("range", range);
+  }
+
+  if (filter !== "all") {
+    params.set("queue", filter);
+  }
+
+  const query = params.toString();
+  return query ? `/reports?${query}` : "/reports";
+}
+
+function QueueFilterBar({
+  activeFilter,
+  range,
+}: {
+  activeFilter: OfficeReviewQueueFilter;
+  range: string | null;
+}) {
+  const clearHref = buildReportsHref("all", range);
+
+  return (
+    <div className="mt-3 min-w-0 sm:mt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Filter queue
+        </p>
+        {activeFilter !== "all" ? (
+          <Link
+            href={clearHref}
+            className="inline-flex min-h-9 shrink-0 items-center text-xs font-semibold text-cyan-700 hover:text-cyan-800"
+          >
+            Clear filter
+          </Link>
+        ) : null}
+      </div>
+      <div className="-mx-1 mt-2 overflow-x-auto px-1 pb-1">
+        <div
+          className="flex w-max min-w-full gap-2 sm:flex-wrap sm:w-auto"
+          role="tablist"
+          aria-label="Office review queue filters"
+        >
+          {OFFICE_REVIEW_QUEUE_FILTER_OPTIONS.map((option) => {
+            const isActive = option.value === activeFilter;
+
+            return (
+              <Link
+                key={option.value}
+                href={buildReportsHref(option.value, range)}
+                role="tab"
+                aria-selected={isActive}
+                className={`inline-flex min-h-10 shrink-0 items-center rounded-full px-3.5 py-2 text-xs font-semibold transition-colors sm:min-h-9 ${
+                  isActive
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {option.label}
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -412,13 +539,67 @@ function recomputeGroups(
   return groups;
 }
 
+function renderFilteredGroupSections(input: {
+  activeFilter: OfficeReviewQueueFilter;
+  activeGroupFilter: OfficeReviewQueueGroup | undefined;
+  groups: Record<OfficeReviewQueueGroup, OfficeReviewQueueItem[]>;
+  showActions: boolean;
+}): ReactNode {
+  const { activeFilter, activeGroupFilter, groups, showActions } = input;
+
+  if (activeGroupFilter) {
+    return (
+      <QueueGroupSection
+        group={activeGroupFilter}
+        items={groups[activeGroupFilter]}
+        showActions={showActions}
+        showEmptyState
+      />
+    );
+  }
+
+  const groupOrder: OfficeReviewQueueGroup[] = [
+    "critical",
+    "needs_attention",
+    "aging",
+  ];
+
+  return groupOrder.map((group) => {
+    const items = groups[group];
+    const showEmptyState =
+      activeFilter === "all" && (group === "critical" || group === "aging");
+    const hideWhenEmpty = activeFilter !== "all" && items.length === 0;
+
+    if (hideWhenEmpty && !showEmptyState) {
+      return null;
+    }
+
+    return (
+      <QueueGroupSection
+        key={group}
+        group={group}
+        items={items}
+        showActions={showActions}
+        showEmptyState={showEmptyState}
+      />
+    );
+  });
+}
+
 export function OfficeReviewQueueSection({
   report,
   variant = "full",
   itemLimit,
+  queueFilter = "all",
 }: OfficeReviewQueueSectionProps) {
+  const searchParams = useSearchParams();
   const [sortMode, setSortMode] =
     useState<OfficeReviewQueueSortMode>("severity_first");
+
+  const isCompact = variant === "compact";
+  const activeFilter = isCompact ? "all" : queueFilter;
+  const rangeParam = searchParams.get("range");
+  const clearHref = buildReportsHref("all", rangeParam);
 
   const baseItems = useMemo(() => {
     const items =
@@ -429,12 +610,16 @@ export function OfficeReviewQueueSection({
     return items.filter((item) => isValidOfficeReviewQueueJobId(item.jobId));
   }, [itemLimit, report.summary.items, variant]);
 
-  const groups = useMemo(
-    () => recomputeGroups(baseItems, sortMode),
-    [baseItems, sortMode],
+  const filteredItems = useMemo(
+    () => filterOfficeReviewQueueItems(baseItems, activeFilter),
+    [activeFilter, baseItems],
   );
 
-  const isCompact = variant === "compact";
+  const groups = useMemo(
+    () => recomputeGroups(filteredItems, sortMode),
+    [filteredItems, sortMode],
+  );
+
   const showGrouped = !isCompact;
   const showActions = !isCompact;
   const { summary, meta } = report;
@@ -442,6 +627,13 @@ export function OfficeReviewQueueSection({
   const visibleCount = baseItems.length;
   const hasMoreItems =
     isCompact && itemLimit != null && summary.totalCount > itemLimit;
+
+  const activeGroupFilter = GROUP_FILTER_MAP[activeFilter];
+  const isFiltered = activeFilter !== "all";
+  const filteredCount = filteredItems.length;
+  const showFilterEmptyState =
+    isFiltered && filteredCount === 0 && summary.totalCount > 0;
+  const showGlobalEmptyState = summary.totalCount === 0;
 
   return (
     <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
@@ -476,6 +668,10 @@ export function OfficeReviewQueueSection({
           </Link>
         )}
       </div>
+
+      {!isCompact ? (
+        <QueueFilterBar activeFilter={activeFilter} range={rangeParam} />
+      ) : null}
 
       <div
         className={`mt-3 grid gap-2 sm:mt-4 sm:gap-4 ${
@@ -532,28 +728,37 @@ export function OfficeReviewQueueSection({
         ) : null}
       </div>
 
-      {baseItems.length === 0 ? (
+      {isFiltered && !showFilterEmptyState && !showGlobalEmptyState ? (
+        <p className="mt-3 text-xs text-slate-500">
+          Showing {filteredCount} of {summary.totalCount} queue items ·{" "}
+          <span className="font-semibold text-slate-700">
+            {getOfficeReviewQueueFilterLabel(activeFilter)}
+          </span>
+          {" · "}
+          <Link
+            href={clearHref}
+            className="font-semibold text-cyan-600 hover:text-cyan-700"
+          >
+            Clear filter
+          </Link>
+        </p>
+      ) : null}
+
+      {showGlobalEmptyState ? (
         <QueueEmptyState />
+      ) : showFilterEmptyState ? (
+        <FilterEmptyState
+          filter={activeFilter}
+          clearHref={clearHref}
+        />
       ) : showGrouped ? (
         <div className="mt-3 flex flex-col gap-3 sm:mt-4 sm:gap-4">
-          <QueueGroupSection
-            group="critical"
-            items={groups.critical}
-            showActions={showActions}
-            showEmptyState
-          />
-          <QueueGroupSection
-            group="needs_attention"
-            items={groups.needs_attention}
-            showActions={showActions}
-            showEmptyState={false}
-          />
-          <QueueGroupSection
-            group="aging"
-            items={groups.aging}
-            showActions={showActions}
-            showEmptyState
-          />
+          {renderFilteredGroupSections({
+            activeFilter,
+            activeGroupFilter,
+            groups,
+            showActions,
+          })}
         </div>
       ) : (
         <ul className="mt-3 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-100 sm:mt-4">

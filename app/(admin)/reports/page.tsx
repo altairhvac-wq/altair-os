@@ -9,9 +9,10 @@ import { getCompanyReportChartSeries } from "@/lib/database/services/reports/rep
 import { getCompanyTechnicianLaborReport } from "@/lib/database/services/reports/technician-labor-report";
 import { AnalyticsPageView } from "@/shared/components/analytics/AnalyticsPageView";
 import { parseProfitabilityReportDateRange } from "@/shared/types/reports";
+import { parseOfficeReviewQueueFilter } from "@/shared/types/office-review-queue";
 
 type ReportsPageProps = {
-  searchParams: Promise<{ range?: string }>;
+  searchParams: Promise<{ range?: string; queue?: string }>;
 };
 
 export default async function ReportsPage({ searchParams }: ReportsPageProps) {
@@ -23,6 +24,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
 
   const params = await searchParams;
   const dateRange = parseProfitabilityReportDateRange(params.range);
+  const officeReviewQueueFilter = parseOfficeReviewQueueFilter(params.queue);
   const reportOptions = { dateRange };
 
   const [
@@ -55,6 +57,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
       }}
       profitabilityReport={profitabilityReport}
       profitabilityDateRange={dateRange}
+      officeReviewQueueFilter={officeReviewQueueFilter}
     />
   );
 }

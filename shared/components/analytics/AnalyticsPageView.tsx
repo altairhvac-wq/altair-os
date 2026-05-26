@@ -1,8 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { AnalyticsDateRange } from "@/shared/types/analytics";
+import type { OfficeReviewQueueFilter } from "@/shared/types/office-review-queue";
 import { OperationalChartsSection } from "@/shared/components/reports/OperationalChartsSection";
 import { OperationalReportsSections } from "@/shared/components/reports/OperationalReportsSections";
 import { ProfitabilityReportSection } from "@/shared/components/reports/ProfitabilityReportSection";
@@ -28,6 +29,7 @@ type AnalyticsPageViewProps = {
   operationalReports?: OperationalReportsBundle;
   profitabilityReport?: ProfitabilityReport;
   profitabilityDateRange?: ProfitabilityReportDateRange;
+  officeReviewQueueFilter?: OfficeReviewQueueFilter;
 };
 
 function toAnalyticsDateRange(
@@ -41,8 +43,10 @@ export function AnalyticsPageView({
   operationalReports,
   profitabilityReport,
   profitabilityDateRange = "30d",
+  officeReviewQueueFilter = "all",
 }: AnalyticsPageViewProps = {}) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [range, setRange] = useState<AnalyticsDateRange>(
     toAnalyticsDateRange(profitabilityDateRange),
   );
@@ -55,7 +59,15 @@ export function AnalyticsPageView({
     setRange(nextRange);
 
     if (operationalReports || profitabilityReport) {
-      router.push(`/reports?range=${nextRange}`);
+      const params = new URLSearchParams();
+      params.set("range", nextRange);
+
+      const queue = searchParams.get("queue");
+      if (queue) {
+        params.set("queue", queue);
+      }
+
+      router.push(`/reports?${params.toString()}`);
     }
   };
 
@@ -77,7 +89,10 @@ export function AnalyticsPageView({
       <DateRangeFilterBar range={range} onRangeChange={handleRangeChange} />
 
       {operationalReports ? (
-        <OperationalReportsSections reports={operationalReports} />
+        <OperationalReportsSections
+          reports={operationalReports}
+          officeReviewQueueFilter={officeReviewQueueFilter}
+        />
       ) : null}
 
       {chartSeries ? <OperationalChartsSection charts={chartSeries} /> : null}

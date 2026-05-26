@@ -21,11 +21,13 @@ import type {
   RevenueReport,
   TechnicianLaborReport,
 } from "@/shared/types/reports";
+import type { OfficeReviewQueueFilter } from "@/shared/types/office-review-queue";
 import { formatPercent } from "@/shared/types/analytics";
 import { OfficeReviewQueueSection } from "@/shared/components/reports/OfficeReviewQueueSection";
 
 type OperationalReportsSectionsProps = {
   reports: OperationalReportsBundle;
+  officeReviewQueueFilter?: OfficeReviewQueueFilter;
 };
 
 type MetricCardProps = {
@@ -324,10 +326,14 @@ function TechnicianLaborReportSection({
 
 export function OperationalReportsSections({
   reports,
+  officeReviewQueueFilter = "all",
 }: OperationalReportsSectionsProps) {
   return (
     <div className="flex flex-col gap-6">
-      <OfficeReviewQueueSection report={reports.officeReviewQueue} />
+      <OfficeReviewQueueSection
+        report={reports.officeReviewQueue}
+        queueFilter={officeReviewQueueFilter}
+      />
       <RevenueReportSection report={reports.revenue} />
       <ExpenseReportSection report={reports.expenses} />
       <JobActivityReportSection report={reports.jobs} />

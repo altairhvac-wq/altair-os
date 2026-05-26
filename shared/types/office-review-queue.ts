@@ -26,6 +26,32 @@ export type OfficeReviewQueueGroup = "critical" | "needs_attention" | "aging";
 
 export type OfficeReviewQueueSortMode = "oldest_first" | "severity_first";
 
+/** UI/query-param filter for the full reports queue view only. */
+export type OfficeReviewQueueFilter =
+  | "all"
+  | "critical"
+  | "aging"
+  | "attention"
+  | "invoicing"
+  | "stalled";
+
+const OFFICE_REVIEW_QUEUE_FILTER_VALUES: Exclude<
+  OfficeReviewQueueFilter,
+  "all"
+>[] = ["critical", "aging", "attention", "invoicing", "stalled"];
+
+export const OFFICE_REVIEW_QUEUE_FILTER_OPTIONS: {
+  value: OfficeReviewQueueFilter;
+  label: string;
+}[] = [
+  { value: "all", label: "All" },
+  { value: "critical", label: "Critical" },
+  { value: "aging", label: "Aging" },
+  { value: "attention", label: "Needs attention" },
+  { value: "invoicing", label: "Needs invoice" },
+  { value: "stalled", label: "Stalled jobs" },
+];
+
 export type OfficeReviewQueueActionId =
   | "open_job"
   | "create_invoice"
@@ -101,6 +127,54 @@ const FALLBACK_CUSTOMER_NAME = "Unknown customer";
 
 export function isValidOfficeReviewQueueJobId(jobId: string | undefined): jobId is string {
   return typeof jobId === "string" && jobId.trim().length > 0;
+}
+
+export function parseOfficeReviewQueueFilter(
+  value: string | undefined,
+): OfficeReviewQueueFilter {
+  if (
+    value != null &&
+    (OFFICE_REVIEW_QUEUE_FILTER_VALUES as readonly string[]).includes(value)
+  ) {
+    return value as Exclude<OfficeReviewQueueFilter, "all">;
+  }
+
+  return "all";
+}
+
+/**
+ * Read-only view filter — does not change item priority, grouping assignment,
+ * or underlying report data.
+ */
+export function filterOfficeReviewQueueItems(
+  items: OfficeReviewQueueItem[],
+  filter: OfficeReviewQueueFilter,
+): OfficeReviewQueueItem[] {
+  if (filter === "all") {
+    return items;
+  }
+
+  switch (filter) {
+    case "critical":
+      return items.filter((item) => item.group === "critical");
+    case "aging":
+      return items.filter((item) => item.group === "aging");
+    case "attention":
+      return items.filter((item) => item.group === "needs_attention");
+    case "invoicing":
+      return items.filter((item) => item.kind === "awaiting_invoicing");
+    case "stalled":
+      return items.filter((item) => item.kind === "stalled_job");
+  }
+}
+
+export function getOfficeReviewQueueFilterLabel(
+  filter: OfficeReviewQueueFilter,
+): string {
+  return (
+    OFFICE_REVIEW_QUEUE_FILTER_OPTIONS.find((option) => option.value === filter)
+      ?.label ?? "All"
+  );
 }
 
 export function sanitizeOfficeReviewQueueLabel(
