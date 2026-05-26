@@ -15,11 +15,11 @@ export function TechnicianWorkloadCards({
 }: TechnicianWorkloadCardsProps) {
   if (technicians.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4">
-        <p className="text-sm font-semibold text-slate-700">
+      <div className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2.5 sm:rounded-2xl sm:px-4 sm:py-4">
+        <p className="text-xs font-semibold text-slate-700 sm:text-sm">
           No technicians on roster
         </p>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-0.5 hidden text-xs text-slate-500 sm:mt-1 sm:block">
           Invite team members with the technician role to enable assignments.
           Technician availability and specialties are not modeled in the database
           yet.
@@ -29,7 +29,7 @@ export function TechnicianWorkloadCards({
   }
 
   const grid = (
-    <div className="grid shrink-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid shrink-0 grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {technicians.map((technician) => {
         const assignedCount = jobs.filter(
           (job) => job.technicianId === technician.id,
@@ -39,30 +39,30 @@ export function TechnicianWorkloadCards({
         return (
           <div
             key={technician.id}
-            className={`rounded-2xl border bg-white p-4 shadow-sm transition-shadow ${
+            className={`rounded-xl border bg-white p-2.5 shadow-sm transition-shadow sm:rounded-2xl sm:p-4 ${
               isHighlighted
                 ? "border-amber-300 ring-2 ring-amber-400/25 shadow-md"
                 : "border-slate-200"
             }`}
           >
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-800 to-slate-600 text-sm font-bold text-white">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-800 to-slate-600 text-xs font-bold text-white sm:h-10 sm:w-10 sm:rounded-xl sm:text-sm">
                 {technician.initials}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-slate-900">
+                <p className="truncate text-xs font-bold text-slate-900 sm:text-sm">
                   {technician.name}
                 </p>
-                <p className="truncate text-xs text-slate-500">
+                <p className="hidden truncate text-xs text-slate-500 sm:block">
                   {technician.role}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-black tabular-nums text-slate-900">
+              <div className="shrink-0 text-right">
+                <p className="text-lg font-black tabular-nums text-slate-900 sm:text-2xl">
                   {assignedCount}
                 </p>
-                <p className="text-[11px] font-medium text-slate-500">
-                  {assignedCount === 1 ? "job today" : "jobs today"}
+                <p className="text-[10px] font-medium text-slate-500 sm:text-[11px]">
+                  {assignedCount === 1 ? "job" : "jobs"}
                 </p>
               </div>
             </div>
@@ -77,8 +77,8 @@ export function TechnicianWorkloadCards({
   }
 
   return (
-    <section className="rounded-2xl border border-amber-200/90 bg-amber-50/30 p-3 shadow-sm ring-2 ring-amber-400/15 sm:p-4">
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-amber-900/80">
+    <section className="rounded-xl border border-amber-200/90 bg-amber-50/30 p-2 shadow-sm ring-2 ring-amber-400/15 sm:rounded-2xl sm:p-4">
+      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-amber-900/80 sm:mb-3 sm:text-xs">
         Technician workload today
       </p>
       {grid}

@@ -118,7 +118,7 @@ export function DispatchPageView({
     "Technician lanes with horizontally scrollable job cards";
 
   return (
-    <div className="flex min-w-0 max-w-full flex-col gap-4">
+    <div className="flex min-w-0 max-w-full flex-col gap-2 sm:gap-4">
       <DispatchDashboardHeader
         jobCount={jobs.length}
         technicianCount={technicians.length}
@@ -166,12 +166,14 @@ export function DispatchPageView({
             : "border-slate-200"
         }`}
       >
-        <div className="shrink-0 border-b border-slate-100 px-4 py-3.5">
-          <h2 className="text-base font-bold text-slate-900">{boardTitle}</h2>
-          <p className="text-xs text-slate-500">{boardSubtitle}</p>
+        <div className="shrink-0 border-b border-slate-100 px-3 py-2 sm:px-4 sm:py-3.5">
+          <h2 className="text-sm font-bold text-slate-900 sm:text-base">
+            {boardTitle}
+          </h2>
+          <p className="hidden text-xs text-slate-500 sm:block">{boardSubtitle}</p>
         </div>
 
-        <div className="min-w-0 max-w-full p-3 sm:p-4">
+        <div className="min-w-0 max-w-full p-2 sm:p-4">
           {hasNoJobs ? (
             <DispatchEmptyState variant="no-jobs" />
           ) : hasNoResults ? (

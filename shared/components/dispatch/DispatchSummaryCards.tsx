@@ -47,7 +47,7 @@ export function DispatchSummaryCards({
   ];
 
   return (
-    <div className="grid shrink-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid shrink-0 grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => {
         const isHighlighted = highlightedLabels.includes(
           card.label as DispatchSummaryHighlightLabel,
@@ -56,24 +56,28 @@ export function DispatchSummaryCards({
         return (
         <div
           key={card.label}
-          className={`rounded-2xl border bg-white p-4 shadow-sm transition-shadow ${
+          className={`rounded-xl border bg-white p-2.5 shadow-sm transition-shadow sm:rounded-2xl sm:p-4 ${
             isHighlighted
               ? "border-amber-300 ring-2 ring-amber-400/25 shadow-md"
               : card.accent
           }`}
         >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-bold text-slate-500">{card.label}</p>
-              <p className="mt-2 text-3xl font-black tabular-nums text-slate-900">
+          <div className="flex items-start justify-between gap-2 sm:gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-bold text-slate-500 sm:text-sm">
+                {card.label}
+              </p>
+              <p className="mt-0.5 text-xl font-black tabular-nums text-slate-900 sm:mt-2 sm:text-3xl">
                 {card.value}
               </p>
-              <p className="mt-1 text-xs text-slate-500">{card.description}</p>
+              <p className="mt-0.5 hidden text-xs text-slate-500 sm:block">
+                {card.description}
+              </p>
             </div>
             <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.iconClass}`}
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 sm:rounded-xl ${card.iconClass}`}
             >
-              <card.icon className="h-5 w-5" />
+              <card.icon className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </div>
         </div>

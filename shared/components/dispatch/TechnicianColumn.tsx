@@ -27,11 +27,11 @@ export function TechnicianColumn({
   onSelectJob,
 }: TechnicianColumnProps) {
   return (
-    <section className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80">
+    <section className="min-w-0 max-w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50/80 sm:rounded-2xl">
       <div className="flex min-w-0 flex-col sm:flex-row sm:items-stretch">
-        <header className="flex shrink-0 items-center gap-2.5 border-b border-slate-200 bg-white px-3 py-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r lg:w-48">
-          <div className="flex items-center gap-2.5 sm:w-full">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-800 to-slate-600 text-xs font-bold text-white shadow-sm">
+        <header className="flex shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:px-3 sm:py-2.5 lg:w-48">
+          <div className="flex items-center gap-2 sm:w-full sm:gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-800 to-slate-600 text-xs font-bold text-white shadow-sm sm:h-9 sm:w-9 sm:rounded-xl">
               {technician.initials}
             </div>
             <div className="min-w-0 flex-1 sm:w-full">
@@ -58,9 +58,9 @@ export function TechnicianColumn({
           </div>
         </header>
 
-        <div className="flex min-h-[5.5rem] min-w-0 flex-1 gap-2 overflow-x-auto p-2">
+        <div className="flex min-h-[4.5rem] min-w-0 flex-1 gap-1.5 overflow-x-auto p-1.5 sm:min-h-[5.5rem] sm:gap-2 sm:p-2">
           {jobs.length === 0 ? (
-            <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white/60 px-4 py-4 text-center">
+            <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-slate-200 bg-white/60 px-3 py-3 text-center sm:rounded-xl sm:px-4 sm:py-4">
               <p className="text-[11px] font-medium text-slate-500">
                 No assigned jobs
               </p>

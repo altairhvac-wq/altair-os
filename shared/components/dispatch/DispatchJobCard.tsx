@@ -33,7 +33,7 @@ export function DispatchJobCard({
       type="button"
       onClick={() => onSelect(job)}
       className={`rounded-xl border text-left transition-all ${
-        compact ? "w-52 shrink-0 p-2.5" : "w-full p-3.5"
+        compact ? "w-[11.5rem] shrink-0 p-2 sm:w-52 sm:p-2.5" : "w-full p-3.5"
       } ${
         isSelected
           ? "border-cyan-500 bg-cyan-50/60 shadow-md ring-2 ring-cyan-500/20"
@@ -70,7 +70,9 @@ export function DispatchJobCard({
 
       <div
         className={`text-slate-600 ${
-          compact ? "mt-1.5 space-y-1 text-[11px]" : "mt-3 space-y-1.5 text-xs"
+          compact
+            ? "mt-1 space-y-0.5 text-[11px] sm:mt-1.5 sm:space-y-1"
+            : "mt-3 space-y-1.5 text-xs"
         }`}
       >
         <div className="flex items-center gap-1">
@@ -106,7 +108,7 @@ export function DispatchJobCard({
 
       <div
         className={`flex items-center justify-between gap-2 border-t border-slate-100 ${
-          compact ? "mt-1.5 pt-1.5" : "mt-3 pt-2.5"
+          compact ? "mt-1 pt-1 sm:mt-1.5 sm:pt-1.5" : "mt-3 pt-2.5"
         }`}
       >
         <DispatchStatusBadge
