@@ -53,11 +53,11 @@ function MetricTile({
           : "border-slate-100 bg-slate-50/70";
 
   return (
-    <div className={`rounded-xl border px-3 py-3 sm:px-4 ${toneClass}`}>
+    <div className={`rounded-xl border px-2.5 py-2.5 max-lg:px-2.5 max-lg:py-2.5 sm:px-4 lg:py-3 ${toneClass}`}>
       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
         {label}
       </p>
-      <p className="mt-1 text-base font-black tabular-nums tracking-tight text-slate-900 sm:text-lg">
+      <p className="mt-0.5 text-sm font-black tabular-nums tracking-tight text-slate-900 max-lg:text-sm lg:mt-1 lg:text-base xl:text-lg">
         {value}
       </p>
       {detail ? (
@@ -83,8 +83,8 @@ export function OperationalMomentumSection({
   const queueTrend = snapshot.metrics.queueResolutionTrend;
 
   return (
-    <section className="flex h-full flex-col rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/80 to-indigo-50/30 p-5 shadow-sm">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <section className="flex h-full flex-col rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/80 to-indigo-50/30 p-4 shadow-sm max-lg:p-4 lg:p-5">
+      <div className="flex flex-col gap-3 max-lg:gap-3 lg:flex-row lg:items-start lg:justify-between lg:gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
@@ -104,9 +104,9 @@ export function OperationalMomentumSection({
             ) : null}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-end gap-3">
+          <div className="mt-2 flex flex-wrap items-end gap-2 max-lg:mt-2 max-lg:gap-2 lg:mt-3 lg:gap-3">
             <p
-              className={`text-4xl font-black tabular-nums tracking-tight ${labelStyles.scoreClass}`}
+              className={`text-3xl font-black tabular-nums tracking-tight max-lg:text-3xl lg:text-4xl ${labelStyles.scoreClass}`}
             >
               {snapshot.metrics.operationalHealthScore}
             </p>
@@ -117,13 +117,13 @@ export function OperationalMomentumSection({
             </span>
           </div>
 
-          <h2 className="mt-3 text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+          <h2 className="mt-2 text-base font-black tracking-tight text-slate-900 max-lg:mt-2 lg:mt-3 lg:text-lg xl:text-xl">
             {snapshot.headline}
           </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+          <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-slate-600 max-lg:line-clamp-3 lg:mt-2 lg:text-sm lg:line-clamp-none">
             {snapshot.explanation}
           </p>
-          <p className="mt-3 text-sm font-semibold leading-relaxed text-slate-900">
+          <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-900 lg:mt-3 lg:text-sm">
             {snapshot.recommendedAction}
           </p>
         </div>
@@ -137,7 +137,7 @@ export function OperationalMomentumSection({
         </Link>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-2 max-lg:mt-4 max-lg:gap-2 sm:grid-cols-2 sm:gap-3 lg:mt-5 xl:grid-cols-4">
         {snapshot.metrics.improvingArea ? (
           <MetricTile
             label="Improving signal"

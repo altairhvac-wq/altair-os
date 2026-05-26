@@ -73,11 +73,11 @@ function MetricTile({
   accentClass: string;
 }) {
   return (
-    <div className={`rounded-xl border px-3 py-3 sm:px-4 ${accentClass}`}>
+    <div className={`rounded-xl border px-2.5 py-2.5 max-lg:px-2.5 max-lg:py-2.5 sm:px-4 lg:py-3 ${accentClass}`}>
       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300/80">
         {label}
       </p>
-      <p className="mt-1 text-xl font-black tabular-nums tracking-tight text-white sm:text-2xl">
+      <p className="mt-0.5 text-lg font-black tabular-nums tracking-tight text-white max-lg:text-lg lg:mt-1 lg:text-xl xl:text-2xl">
         {value}
       </p>
       {detail ? (
@@ -95,7 +95,7 @@ function CompactHealthySection({
   StatusIcon: typeof CheckCircle2;
 }) {
   return (
-    <section className="flex h-full flex-col rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/70 via-white to-white p-4 shadow-sm sm:p-5">
+    <section className="flex h-full flex-col rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/70 via-white to-white p-3 shadow-sm max-lg:p-3 sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
@@ -142,9 +142,9 @@ export function DispatchPressureSection({ data }: DispatchPressureSectionProps) 
 
   return (
     <section
-      className={`rounded-2xl border p-5 text-white shadow-sm ${styles.sectionClass}`}
+      className={`rounded-2xl border p-4 text-white shadow-sm max-lg:p-4 lg:p-5 ${styles.sectionClass}`}
     >
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-3 max-lg:gap-3 lg:flex-row lg:items-start lg:justify-between lg:gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <p
@@ -160,13 +160,13 @@ export function DispatchPressureSection({ data }: DispatchPressureSectionProps) 
             </span>
           </div>
 
-          <h2 className="mt-2 text-lg font-black tracking-tight sm:text-xl">
+          <h2 className="mt-1.5 text-base font-black tracking-tight max-lg:mt-1.5 lg:mt-2 lg:text-lg xl:text-xl">
             {snapshot.headline}
           </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
+          <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-slate-300 max-lg:line-clamp-3 lg:mt-2 lg:text-sm lg:line-clamp-none">
             {snapshot.explanation}
           </p>
-          <p className="mt-3 text-sm font-semibold leading-relaxed text-white/90">
+          <p className="mt-2 text-xs font-semibold leading-relaxed text-white/90 lg:mt-3 lg:text-sm">
             {snapshot.recommendedAction}
           </p>
         </div>
@@ -180,7 +180,7 @@ export function DispatchPressureSection({ data }: DispatchPressureSectionProps) 
         </Link>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="mt-4 grid grid-cols-2 gap-2 max-lg:mt-4 max-lg:gap-2 lg:mt-5 lg:gap-3 lg:grid-cols-3 xl:grid-cols-6">
         <MetricTile
           label="Scheduled today"
           value={snapshot.metrics.totalJobsToday}
@@ -243,7 +243,7 @@ export function DispatchPressureSection({ data }: DispatchPressureSectionProps) 
         />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/10 pt-4">
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-white/10 pt-3 max-lg:mt-3 max-lg:pt-3 lg:mt-4 lg:gap-x-4 lg:gap-y-2 lg:pt-4">
         <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">
           <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
           Drill down

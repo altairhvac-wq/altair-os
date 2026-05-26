@@ -64,18 +64,18 @@ export function OperationalHealthSection({
 
   if (variant === "compact") {
     return (
-      <section className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <section className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm max-lg:p-4 lg:p-5">
+        <div className="flex flex-col gap-3 max-lg:gap-3 sm:flex-row sm:items-start sm:justify-between lg:gap-4">
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 lg:text-xs">
               Operational health
             </p>
-            <h2 className="mt-1 text-lg font-black tracking-tight text-slate-900">
+            <h2 className="mt-0.5 text-base font-black tracking-tight text-slate-900 lg:mt-1 lg:text-lg">
               Score snapshot
             </h2>
-            <div className="mt-3 flex flex-wrap items-end gap-3">
+            <div className="mt-2 flex flex-wrap items-end gap-2 max-lg:mt-2 max-lg:gap-2 lg:mt-3 lg:gap-3">
               <p
-                className={`text-4xl font-black tabular-nums tracking-tight ${labelStyles.scoreClass}`}
+                className={`text-3xl font-black tabular-nums tracking-tight max-lg:text-3xl lg:text-4xl ${labelStyles.scoreClass}`}
               >
                 {report.operationalHealthScore}
               </p>
@@ -96,8 +96,8 @@ export function OperationalHealthSection({
           </Link>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 px-4 py-3">
+        <div className="mt-3 grid grid-cols-2 gap-2 max-lg:mt-3 max-lg:gap-2 lg:mt-4 lg:gap-3">
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 px-3 py-2.5 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3">
             <p className="text-xs font-bold uppercase tracking-wide text-emerald-800/80">
               Top strength
             </p>
@@ -108,7 +108,7 @@ export function OperationalHealthSection({
               Area score {report.strongestOperationalArea.score}/100
             </p>
           </div>
-          <div className="rounded-xl border border-rose-100 bg-rose-50/40 px-4 py-3">
+          <div className="rounded-xl border border-rose-100 bg-rose-50/40 px-3 py-2.5 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3">
             <p className="text-xs font-bold uppercase tracking-wide text-rose-800/80">
               Top risk
             </p>

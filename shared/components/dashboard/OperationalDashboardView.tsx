@@ -94,16 +94,18 @@ function DashboardSection({
 }) {
   return (
     <section className="admin-card overflow-hidden">
-      <div className="flex min-w-0 items-start justify-between gap-3 border-b border-slate-100/90 bg-slate-50/40 px-5 py-4">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200/80">
-            <Icon className="h-4 w-4 text-slate-600" />
+      <div className="flex min-w-0 items-start justify-between gap-2 border-b border-slate-100/90 bg-slate-50/40 px-4 py-3 max-lg:gap-2 lg:gap-3 lg:px-5 lg:py-4">
+        <div className="flex min-w-0 items-start gap-2.5 lg:gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200/80 lg:h-10 lg:w-10 lg:rounded-xl">
+            <Icon className="h-3.5 w-3.5 text-slate-600 lg:h-4 lg:w-4" />
           </div>
           <div className="min-w-0">
             <h2 className="text-sm font-bold tracking-tight text-slate-900">
               {title}
             </h2>
-            <p className="text-xs text-slate-500">{description}</p>
+            <p className="text-[11px] leading-snug text-slate-500 lg:text-xs">
+              {description}
+            </p>
           </div>
         </div>
         {href && linkLabel ? (
@@ -113,7 +115,7 @@ function DashboardSection({
           </Link>
         ) : null}
       </div>
-      <div className="p-5 sm:p-6">{children}</div>
+      <div className="p-4 lg:p-5 xl:p-6">{children}</div>
     </section>
   );
 }
@@ -137,24 +139,28 @@ function MetricCard({
 }) {
   const content = (
     <>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 lg:text-xs">
             {label}
           </p>
-          <p className="mt-2 text-2xl font-black tabular-nums text-slate-900">
+          <p className="mt-1 text-xl font-black tabular-nums text-slate-900 lg:mt-2 lg:text-2xl">
             {value}
           </p>
-          <p className="mt-1 text-xs text-slate-500">{description}</p>
+          <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-slate-500 lg:mt-1 lg:text-xs">
+            {description}
+          </p>
         </div>
         <div
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${iconClass}`}
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg lg:h-9 lg:w-9 ${iconClass}`}
         >
-          <Icon className="h-4 w-4" />
+          <Icon className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
         </div>
       </div>
       {href ? (
-        <p className="mt-3 text-xs font-semibold text-cyan-600">View invoices</p>
+        <p className="mt-2 text-xs font-semibold text-cyan-600 lg:mt-3">
+          View invoices
+        </p>
       ) : null}
     </>
   );
@@ -163,7 +169,7 @@ function MetricCard({
     return (
       <Link
         href={href}
-        className={`admin-card-interactive block rounded-xl border bg-white p-4 shadow-sm ${accent}`}
+        className={`admin-card-interactive block rounded-xl border bg-white p-3 shadow-sm max-lg:p-3 lg:p-4 ${accent}`}
       >
         {content}
       </Link>
@@ -171,7 +177,7 @@ function MetricCard({
   }
 
   return (
-    <div className={`rounded-xl border bg-white p-4 shadow-sm ${accent}`}>
+    <div className={`rounded-xl border bg-white p-3 shadow-sm max-lg:p-3 lg:p-4 ${accent}`}>
       {content}
     </div>
   );
@@ -179,7 +185,7 @@ function MetricCard({
 
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <div className="admin-empty-state">
+    <div className="admin-empty-state max-lg:px-3 max-lg:py-3">
       <p className="text-sm font-semibold text-slate-700">{title}</p>
       <p className="mt-1 text-xs text-slate-500">{description}</p>
     </div>
@@ -239,7 +245,7 @@ function OperationalInsightsSection({
 
             const content = (
               <div
-                className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${styles.rowClass}`}
+                className={`flex items-start gap-2.5 rounded-xl border px-3 py-2.5 max-lg:gap-2.5 max-lg:px-3 max-lg:py-2.5 lg:gap-3 lg:px-4 lg:py-3 ${styles.rowClass}`}
               >
                 <div
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${styles.iconClass}`}
@@ -278,7 +284,7 @@ function OperationalInsightsSection({
         </ul>
       )}
 
-      <p className="mt-4 text-xs text-slate-500">
+      <p className="mt-3 text-[11px] text-slate-500 lg:mt-4 lg:text-xs">
         Deterministic counts only — no AI narrative or recommendations yet.
       </p>
     </DashboardSection>
@@ -330,16 +336,16 @@ function AnalyticsSnapshotSection({
   ];
 
   return (
-    <section className="admin-command-surface p-5 sm:p-6">
-      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <section className="admin-command-surface p-4 max-lg:p-4 lg:p-5 xl:p-6">
+      <div className="mb-3 flex flex-col gap-2 max-lg:mb-3 sm:flex-row sm:items-end sm:justify-between lg:mb-5">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-300/90">
             Command center
           </p>
-          <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">
+          <h2 className="mt-0.5 text-lg font-black tracking-tight max-lg:text-lg lg:mt-1 lg:text-xl xl:text-2xl">
             Live operations
           </h2>
-          <p className="mt-1 text-sm text-slate-300">
+          <p className="mt-0.5 hidden text-xs text-slate-300 lg:block lg:text-sm">
             Today&apos;s collections and current workload
           </p>
         </div>
@@ -352,27 +358,29 @@ function AnalyticsSnapshotSection({
         </Link>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 max-lg:gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
         {metrics.map((metric) => (
           <Link
             key={metric.label}
             href={metric.href}
-            className={`admin-card-interactive rounded-xl border bg-white/95 p-4 shadow-sm transition-colors hover:bg-white ${metric.accent}`}
+            className={`admin-card-interactive rounded-xl border bg-white/95 p-3 shadow-sm transition-colors hover:bg-white max-lg:p-3 lg:p-4 ${metric.accent}`}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 lg:text-xs">
                   {metric.label}
                 </p>
-                <p className="mt-2 text-2xl font-black tabular-nums text-slate-900">
+                <p className="mt-1 text-xl font-black tabular-nums text-slate-900 lg:mt-2 lg:text-2xl">
                   {metric.value}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">{metric.description}</p>
+                <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-slate-500 lg:mt-1 lg:text-xs">
+                  {metric.description}
+                </p>
               </div>
               <div
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${metric.iconClass}`}
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg lg:h-9 lg:w-9 ${metric.iconClass}`}
               >
-                <metric.icon className="h-4 w-4" />
+                <metric.icon className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
               </div>
             </div>
           </Link>
@@ -430,14 +438,14 @@ function TodayOperationsSection({
       href="/dispatch?focus=today"
       linkLabel="Open dispatch"
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 max-lg:gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
         {metrics.map((metric) => (
           <MetricCard key={metric.label} {...metric} />
         ))}
       </div>
 
-      <div className="mt-5">
-        <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="mt-4 max-lg:mt-4 lg:mt-5">
+        <div className="mb-2 flex items-center justify-between gap-2 lg:mb-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Today&apos;s jobs
           </p>
@@ -460,7 +468,7 @@ function TodayOperationsSection({
               <li key={job.id}>
                 <Link
                   href={`/jobs/${job.id}`}
-                  className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-1.5 px-3 py-2.5 transition-colors hover:bg-slate-50 max-lg:px-3 max-lg:py-2.5 sm:flex-row sm:items-center sm:justify-between lg:gap-2 lg:px-4 lg:py-3"
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -524,10 +532,10 @@ function TechnicianStatusSection({
           {technicians.map((technician) => (
             <li
               key={technician.id}
-              className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-1.5 px-3 py-2.5 max-lg:px-3 max-lg:py-2.5 sm:flex-row sm:items-center sm:justify-between lg:gap-2 lg:px-4 lg:py-3"
             >
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+              <div className="flex min-w-0 items-center gap-2.5 lg:gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white lg:h-9 lg:w-9 lg:text-xs">
                   {technician.initials}
                 </div>
                 <div className="min-w-0">
@@ -572,7 +580,7 @@ function MoneySnapshotSection({ money }: { money: DashboardData["money"] }) {
       href={INVOICE_PAGE_CASH_FLOW_HREF}
       linkLabel="Open invoices"
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-2 max-lg:gap-2 lg:gap-3">
         <MetricCard
           label="Unpaid"
           value={formatCurrency(money.unpaidTotal)}
@@ -593,11 +601,11 @@ function MoneySnapshotSection({ money }: { money: DashboardData["money"] }) {
         />
       </div>
 
-      <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/40 px-4 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+      <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/40 px-3 py-2.5 max-lg:mt-3 lg:mt-4 lg:px-4 lg:py-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 lg:text-xs">
           Payments today
         </p>
-        <p className="mt-1 text-xl font-black text-emerald-900">
+        <p className="mt-0.5 text-lg font-black text-emerald-900 lg:mt-1 lg:text-xl">
           {formatCurrency(money.paymentsTodayTotal)}
         </p>
         <p className="text-xs text-emerald-700/80">
@@ -626,7 +634,7 @@ function MoneySnapshotSection({ money }: { money: DashboardData["money"] }) {
               <li key={payment.id}>
                 <Link
                   href={`/invoices/${payment.invoiceId}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-slate-50"
+                  className="flex items-center justify-between gap-3 px-3 py-2.5 transition-colors hover:bg-slate-50 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-slate-900">
@@ -687,7 +695,7 @@ function MoneySnapshotSection({ money }: { money: DashboardData["money"] }) {
               <li key={estimate.id}>
                 <Link
                   href={`/estimates/${estimate.id}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-slate-50"
+                  className="flex items-center justify-between gap-3 px-3 py-2.5 transition-colors hover:bg-slate-50 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3"
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -726,7 +734,7 @@ function ExpenseReviewSection({
       href="/expenses"
       linkLabel="Open expenses"
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-2 max-lg:gap-2 lg:gap-3">
         <MetricCard
           label="Needs Approval"
           value={expenses.submittedCount}
@@ -755,7 +763,7 @@ function ExpenseReviewSection({
               <li key={expense.id}>
                 <Link
                   href={`/expenses?selected=${expense.id}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-slate-50"
+                  className="flex items-center justify-between gap-3 px-3 py-2.5 transition-colors hover:bg-slate-50 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3"
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -805,7 +813,7 @@ function ExpenseReviewSection({
               <li key={expense.id}>
                 <Link
                   href={`/expenses?selected=${expense.id}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-slate-50"
+                  className="flex items-center justify-between gap-3 px-3 py-2.5 transition-colors hover:bg-slate-50 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-slate-900">
@@ -880,12 +888,12 @@ function NotificationsSummarySection({
                 {href ? (
                   <Link
                     href={href}
-                    className="flex items-start justify-between gap-3 px-4 py-3 transition-colors hover:bg-slate-50"
+                    className="flex items-start justify-between gap-3 px-3 py-2.5 transition-colors hover:bg-slate-50 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3"
                   >
                     {content}
                   </Link>
                 ) : (
-                  <div className="flex items-start justify-between gap-3 px-4 py-3">
+                  <div className="flex items-start justify-between gap-3 px-3 py-2.5 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3">
                     {content}
                   </div>
                 )}
@@ -945,7 +953,7 @@ function RecentActivitySection({
             );
 
             return (
-              <li key={activity.id} className="relative flex gap-3 pb-4">
+              <li key={activity.id} className="relative flex gap-2.5 pb-3 max-lg:pb-3 lg:gap-3 lg:pb-4">
                 {!isLast ? (
                   <span
                     aria-hidden="true"
@@ -979,19 +987,23 @@ function DashboardZone({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={`flex flex-col gap-4 ${className}`}>{children}</div>;
+  return (
+    <div className={`flex flex-col gap-3 max-lg:gap-3 lg:gap-4 ${className}`}>
+      {children}
+    </div>
+  );
 }
 
 function DashboardHeader() {
   return (
-    <header className="admin-hero">
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">
+    <header className="admin-hero max-lg:px-4 max-lg:py-3 lg:px-6 lg:py-5">
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-600 lg:text-xs">
         Operations overview
       </p>
-      <h1 className="mt-1.5 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+      <h1 className="mt-1 text-xl font-black tracking-tight text-slate-900 max-lg:mt-1 lg:mt-1.5 lg:text-2xl xl:text-3xl">
         Command center
       </h1>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+      <p className="mt-1.5 max-w-2xl text-xs leading-relaxed text-slate-600 max-lg:line-clamp-2 lg:mt-2 lg:text-sm lg:line-clamp-none">
         Real-time view of field operations, billing pressure, and team status —
         built for fast decisions during the workday.
       </p>
@@ -1229,7 +1241,7 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
   const mobileTabs = buildMobileDashboardTabs(data);
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-6 pb-2 lg:gap-8 xl:max-w-[1440px]">
+    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 pb-2 max-lg:gap-4 lg:gap-6 xl:max-w-[1440px] xl:gap-8">
       <DashboardHeader />
 
       <div className="lg:hidden">

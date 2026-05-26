@@ -58,11 +58,11 @@ function ActionRow({ action }: { action: DashboardNextBestAction }) {
     <li>
       <Link
         href={action.href}
-        className={`block rounded-xl border px-4 py-3 transition-colors ${styles.rowClass}`}
+        className={`block rounded-xl border px-3 py-2.5 transition-colors max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3 ${styles.rowClass}`}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-2.5 lg:gap-3">
           <div
-            className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${styles.iconClass}`}
+            className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg lg:h-8 lg:w-8 ${styles.iconClass}`}
           >
             <StatusIcon className="h-4 w-4" aria-hidden="true" />
           </div>
@@ -87,7 +87,7 @@ function ActionRow({ action }: { action: DashboardNextBestAction }) {
               {action.explanation}
             </p>
 
-            <p className="mt-2 text-xs font-semibold text-slate-800">
+            <p className="mt-1.5 text-xs font-semibold text-slate-800 lg:mt-2">
               {action.recommendedAction}
             </p>
           </div>
@@ -108,15 +108,15 @@ export function NextBestActionsSection({ data }: NextBestActionsSectionProps) {
 
   return (
     <section className="admin-card flex h-full flex-col overflow-hidden">
-      <div className="flex flex-col gap-2 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-1.5 border-b border-slate-100 px-4 py-3 max-lg:gap-1.5 sm:flex-row sm:items-end sm:justify-between lg:gap-2 lg:px-5 lg:py-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-cyan-600/90">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600/90 lg:text-xs">
             Next best actions
           </p>
-          <h2 className="text-lg font-black tracking-tight text-slate-900">
+          <h2 className="text-base font-black tracking-tight text-slate-900 lg:text-lg">
             What to do today
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-xs text-slate-500 lg:text-sm">
             {hasActions
               ? `${actions.length} prioritized action${actions.length === 1 ? "" : "s"} based on live operational data.`
               : "Operations are running smoothly today."}
@@ -132,12 +132,12 @@ export function NextBestActionsSection({ data }: NextBestActionsSectionProps) {
       </div>
 
       {hasActions ? (
-        <ul className="space-y-2 p-5">{actions.map((action) => (
+        <ul className="space-y-2 p-4 lg:p-5">{actions.map((action) => (
             <ActionRow key={action.id} action={action} />
           ))}</ul>
       ) : (
-        <div className="p-5">
-          <div className="flex items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50/50 px-4 py-4">
+        <div className="p-4 lg:p-5">
+          <div className="flex items-start gap-2.5 rounded-xl border border-emerald-100 bg-emerald-50/50 px-3 py-3 lg:gap-3 lg:px-4 lg:py-4">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
             </div>

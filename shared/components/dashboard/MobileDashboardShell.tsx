@@ -56,18 +56,18 @@ function MobileDashboardSnapshot({
   return (
     <section
       aria-label="Operations snapshot"
-      className="admin-command-surface overflow-hidden p-4"
+      className="admin-command-surface overflow-hidden p-3"
     >
-      <div className="mb-3">
+      <div className="mb-2">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/90">
           Snapshot
         </p>
-        <h2 className="mt-0.5 text-lg font-black tracking-tight text-white">
+        <h2 className="mt-0.5 text-base font-black tracking-tight text-white">
           Today at a glance
         </h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-1.5">
         {items.map((item) => {
           const styles = SNAPSHOT_TONE_STYLES[item.tone];
           const body = (
@@ -76,7 +76,7 @@ function MobileDashboardSnapshot({
                 {item.label}
               </p>
               <p
-                className={`mt-1 text-xl font-black tabular-nums leading-none tracking-tight ${styles.value}`}
+                className={`mt-0.5 text-lg font-black tabular-nums leading-none tracking-tight ${styles.value}`}
               >
                 {item.value}
               </p>
@@ -93,7 +93,7 @@ function MobileDashboardSnapshot({
               <Link
                 key={item.id}
                 href={item.href}
-                className={`min-w-0 rounded-xl border p-3 shadow-sm transition-colors hover:bg-white ${styles.card}`}
+                className={`min-w-0 rounded-lg border p-2.5 shadow-sm transition-colors hover:bg-white ${styles.card}`}
               >
                 {body}
               </Link>
@@ -103,7 +103,7 @@ function MobileDashboardSnapshot({
           return (
             <div
               key={item.id}
-              className={`min-w-0 rounded-xl border p-3 shadow-sm ${styles.card}`}
+              className={`min-w-0 rounded-lg border p-2.5 shadow-sm ${styles.card}`}
             >
               {body}
             </div>
@@ -142,7 +142,7 @@ function MobileDashboardTabBar({
               aria-controls={`dashboard-panel-${tab.id}`}
               id={`dashboard-tab-${tab.id}`}
               onClick={() => onSelect(tab.id)}
-              className={`inline-flex min-h-10 shrink-0 items-center rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${
+              className={`inline-flex min-h-9 shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
                 isActive
                   ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-900/10"
                   : "bg-slate-100 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200/80"
@@ -168,7 +168,7 @@ export function MobileDashboardShell({
   const activePanel = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-3">
       <MobileDashboardSnapshot items={snapshot} />
 
       {tabs.length > 0 ? (
@@ -183,7 +183,7 @@ export function MobileDashboardShell({
             id={`dashboard-panel-${activePanel.id}`}
             role="tabpanel"
             aria-labelledby={`dashboard-tab-${activePanel.id}`}
-            className="flex min-w-0 flex-col gap-4"
+            className="flex min-w-0 flex-col gap-3"
           >
             {activePanel.content}
           </div>

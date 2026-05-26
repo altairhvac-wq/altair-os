@@ -50,9 +50,9 @@ function RiskCard({ risk }: { risk: OperationalRiskExplanation }) {
     <li>
       <Link
         href={risk.href}
-        className={`group block rounded-xl border p-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md sm:p-5 ${styles.cardClass}`}
+        className={`group block rounded-xl border p-3 shadow-sm transition-all hover:border-slate-300 hover:shadow-md max-lg:p-3 sm:p-5 ${styles.cardClass}`}
       >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-3 max-lg:gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <div
@@ -71,16 +71,16 @@ function RiskCard({ risk }: { risk: OperationalRiskExplanation }) {
               </span>
             </div>
 
-            <p className="mt-3 text-sm leading-relaxed text-slate-700">
+            <p className="mt-2 text-xs leading-relaxed text-slate-700 max-lg:line-clamp-3 lg:mt-3 lg:text-sm lg:line-clamp-none">
               {risk.reason}
             </p>
 
-            <p className="mt-3 text-xs font-semibold leading-relaxed text-slate-800">
+            <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-800 lg:mt-3">
               {risk.recommendedFollowUp}
             </p>
           </div>
 
-          <div className="shrink-0 sm:max-w-[11rem] sm:text-right">
+          <div className="hidden shrink-0 lg:block lg:max-w-[11rem] lg:text-right">
             <p
               className={`text-xs font-bold uppercase tracking-wide ${styles.metricClass}`}
             >
@@ -109,15 +109,15 @@ export function OperationalRiskDrilldownSection({
 
   return (
     <section className="admin-card overflow-hidden">
-      <div className="flex flex-col gap-2 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-1.5 border-b border-slate-100 px-4 py-3 max-lg:gap-1.5 sm:flex-row sm:items-end sm:justify-between lg:gap-2 lg:px-5 lg:py-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-violet-600/90">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-violet-600/90 lg:text-xs">
             Operational risk drilldown
           </p>
-          <h2 className="text-lg font-black tracking-tight text-slate-900">
+          <h2 className="text-base font-black tracking-tight text-slate-900 lg:text-lg">
             Why risks are flagged
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-xs text-slate-500 lg:text-sm">
             {hasRisks
               ? `${summary.riskCount} active ${summary.riskCount === 1 ? "risk" : "risks"} explained from live dashboard data — weakest area: ${summary.biggestRiskLabel.toLowerCase()}.`
               : `Operational health is ${summary.healthScore}/100 — no material risks need explanation right now.`}
@@ -133,14 +133,14 @@ export function OperationalRiskDrilldownSection({
       </div>
 
       {hasRisks ? (
-        <ul className="space-y-3 p-5">
+        <ul className="space-y-2 p-4 max-lg:space-y-2 lg:space-y-3 lg:p-5">
           {risks.map((risk) => (
             <RiskCard key={risk.id} risk={risk} />
           ))}
         </ul>
       ) : (
-        <div className="p-5">
-          <div className="flex items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50/50 px-4 py-4">
+        <div className="p-4 lg:p-5">
+          <div className="flex items-start gap-2.5 rounded-xl border border-emerald-100 bg-emerald-50/50 px-3 py-3 lg:gap-3 lg:px-4 lg:py-4">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
             </div>
