@@ -4,10 +4,8 @@ import { getCompanyExpenseReport } from "@/lib/database/services/reports/expense
 import { getCompanyJobActivityReport } from "@/lib/database/services/reports/job-activity-report";
 import { getCompanyProfitabilityReport } from "@/lib/database/services/reports/profitability-report";
 import { getCompanyRevenueReport } from "@/lib/database/services/reports/revenue-report";
+import { getCompanyOfficeReviewQueueReport } from "@/lib/database/services/reports/office-review-queue";
 import { getCompanyReportChartSeries } from "@/lib/database/services/reports/report-chart-series";
-import { getCompanyCompletedWorkReport } from "@/lib/database/services/reports/completed-work-report";
-import { getCompanyCompletedWorkReviewReport } from "@/lib/database/services/reports/completed-work-review-report";
-import { getCompanyStalledJobsReport } from "@/lib/database/services/reports/stalled-jobs-report";
 import { getCompanyTechnicianLaborReport } from "@/lib/database/services/reports/technician-labor-report";
 import { AnalyticsPageView } from "@/shared/components/analytics/AnalyticsPageView";
 import { parseProfitabilityReportDateRange } from "@/shared/types/reports";
@@ -33,9 +31,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     expenseReport,
     jobActivityReport,
     technicianLaborReport,
-    stalledJobsReport,
-    completedWorkReport,
-    completedWorkReviewReport,
+    officeReviewQueueReport,
     chartSeries,
   ] = await Promise.all([
     getCompanyProfitabilityReport(companyContext.company.id, reportOptions),
@@ -43,9 +39,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     getCompanyExpenseReport(companyContext.company.id, reportOptions),
     getCompanyJobActivityReport(companyContext.company.id, reportOptions),
     getCompanyTechnicianLaborReport(companyContext.company.id, reportOptions),
-    getCompanyStalledJobsReport(companyContext.company.id),
-    getCompanyCompletedWorkReport(companyContext.company.id),
-    getCompanyCompletedWorkReviewReport(companyContext.company.id),
+    getCompanyOfficeReviewQueueReport(companyContext.company.id),
     getCompanyReportChartSeries(companyContext.company.id, reportOptions),
   ]);
 
@@ -57,9 +51,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
         expenses: expenseReport,
         jobs: jobActivityReport,
         labor: technicianLaborReport,
-        stalledJobs: stalledJobsReport,
-        completedWorkAwaitingInvoicing: completedWorkReport,
-        completedWorkReview: completedWorkReviewReport,
+        officeReviewQueue: officeReviewQueueReport,
       }}
       profitabilityReport={profitabilityReport}
       profitabilityDateRange={dateRange}

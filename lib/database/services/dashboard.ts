@@ -15,6 +15,7 @@ import {
   mapEntryTypeToTimeState,
 } from "@/lib/database/queries/time-entries";
 import { getDailyOperationsSummary } from "@/lib/database/services/operations/daily-operations-summary";
+import { getCompanyOfficeReviewQueueReport } from "@/lib/database/services/reports/office-review-queue";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { getTodayOperationsSummary } from "@/shared/types/dashboard";
 import { getInvoiceSummary } from "@/shared/types/invoice";
@@ -78,6 +79,7 @@ export async function getDashboardData(
     notifications,
     unreadCount,
     operationsSummary,
+    officeReviewQueueReport,
   ] = await Promise.all([
     listTechnicians(companyId, todayJobs),
     listActiveTechnicianTimeEntries(companyId),
@@ -94,6 +96,7 @@ export async function getDashboardData(
     }),
     getUnreadNotificationCount(companyId, userId),
     getDailyOperationsSummary(companyId),
+    getCompanyOfficeReviewQueueReport(companyId),
   ]);
 
   const todayOperationsSummary = getTodayOperationsSummary(todayJobs);
@@ -174,6 +177,7 @@ export async function getDashboardData(
       unreadCount,
       recent: notifications.slice(0, RECENT_NOTIFICATIONS_LIMIT),
     },
+    officeReviewQueue: officeReviewQueueReport,
     stalledJobs: {
       stalledCount: summarySections.stalledJobs.count,
       inactivityThresholdDays: summarySections.stalledJobs.inactivityThresholdDays,

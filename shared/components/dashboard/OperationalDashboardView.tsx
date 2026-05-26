@@ -23,6 +23,7 @@ import type { DailyOperationsSummaryHighlight } from "@/shared/types/daily-opera
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { ExpenseStatusBadge } from "@/shared/components/expenses/ExpenseStatusBadge";
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
+import { OfficeReviewQueueSection } from "@/shared/components/reports/OfficeReviewQueueSection";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { formatCurrency } from "@/shared/types/customer";
 import {
@@ -43,11 +44,6 @@ import {
   formatOperationalActivityTimestamp,
   getOperationalActivityHref,
 } from "@/shared/types/operational-activity";
-import { formatJobStatus } from "@/shared/types/job";
-import {
-  formatCompletedWorkInvoiceStatus,
-  formatCompletedWorkReviewReasons,
-} from "@/shared/types/reports";
 import {
   formatTechnicianTimeState,
   getTechnicianTimeStateStyles,
@@ -341,256 +337,6 @@ function AnalyticsSnapshotSection({
         ))}
       </div>
     </section>
-  );
-}
-
-function CompletedWorkReviewSection({
-  completedWorkReview,
-}: {
-  completedWorkReview: DashboardData["completedWorkReview"];
-}) {
-  return (
-    <DashboardSection
-      title="Needs review"
-      description="Completed jobs that may still need office follow-up before invoicing or closure"
-      icon={AlertTriangle}
-      href="/reports"
-      linkLabel="View report"
-    >
-      <div className="mb-4 grid gap-3 sm:grid-cols-2">
-        <MetricCard
-          label="Needs review"
-          value={completedWorkReview.count}
-          description="Heuristic review flags on completed jobs"
-          icon={AlertTriangle}
-          iconClass="text-rose-600 bg-rose-50"
-          accent="border-rose-100"
-        />
-        <MetricCard
-          label="Review issues resolved this week"
-          value={completedWorkReview.resolvedThisWeek}
-          description="Office review blockers cleared on completed jobs"
-          icon={CheckCircle2}
-          iconClass="text-emerald-600 bg-emerald-50"
-          accent="border-emerald-100"
-        />
-      </div>
-
-      {completedWorkReview.jobs.length === 0 ? (
-        <EmptyState
-          title="No completed jobs need review"
-          description="Jobs with invoices, closed labor, resolved expenses, and complete profitability data are excluded."
-        />
-      ) : (
-        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
-          {completedWorkReview.jobs.map((job) => (
-            <li key={job.jobId}>
-              <Link
-                href={`/jobs/${job.jobId}`}
-                className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-bold text-slate-900">{job.jobNumber}</p>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                        job.severity === "critical"
-                          ? "bg-rose-100 text-rose-800"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {job.severity}
-                    </span>
-                  </div>
-                  <p className="mt-1 truncate text-sm text-slate-600">
-                    {job.customerName}
-                    {job.assignedTechnician
-                      ? ` · ${job.assignedTechnician}`
-                      : " · Unassigned"}
-                  </p>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    {formatCompletedWorkReviewReasons(job.reviewReasons)}
-                  </p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="text-sm font-semibold text-amber-800">
-                    {job.daysSinceCompletion} day
-                    {job.daysSinceCompletion === 1 ? "" : "s"} since complete
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {formatCompletedWorkInvoiceStatus(job.invoiceStatus)}
-                    {job.profitabilityWarningCount > 0
-                      ? ` · ${job.profitabilityWarningCount} warning${job.profitabilityWarningCount === 1 ? "" : "s"}`
-                      : ""}
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <p className="mt-4 text-xs text-slate-500">
-        Heuristic only — not an approval workflow. Does not validate accounting
-        or payroll readiness.
-      </p>
-    </DashboardSection>
-  );
-}
-
-function CompletedWorkAwaitingInvoicingSection({
-  completedWork,
-}: {
-  completedWork: DashboardData["completedWorkAwaitingInvoicing"];
-}) {
-  return (
-    <DashboardSection
-      title="Needs invoicing"
-      description="Completed jobs with no active invoices on file"
-      icon={FileText}
-      href="/reports"
-      linkLabel="View report"
-    >
-      <div className="mb-4">
-        <MetricCard
-          label="Awaiting invoicing"
-          value={completedWork.count}
-          description="Missing active invoices only"
-          icon={FileText}
-          iconClass="text-amber-600 bg-amber-50"
-          accent="border-amber-100"
-        />
-      </div>
-
-      {completedWork.jobs.length === 0 ? (
-        <EmptyState
-          title="No jobs waiting for invoicing"
-          description="Completed jobs with active invoices on file are excluded."
-        />
-      ) : (
-        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
-          {completedWork.jobs.map((job) => (
-            <li key={job.jobId}>
-              <Link
-                href={`/jobs/${job.jobId}`}
-                className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-slate-900">{job.jobNumber}</p>
-                  <p className="mt-1 truncate text-sm text-slate-600">
-                    {job.customerName}
-                    {job.assignedTechnician
-                      ? ` · ${job.assignedTechnician}`
-                      : " · Unassigned"}
-                  </p>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    Completed{" "}
-                    {job.completedAt
-                      ? formatOperationalActivityTimestamp(job.completedAt)
-                      : "date not recorded"}
-                    {job.approvedEstimateAmount != null
-                      ? ` · Est. ${formatCurrency(job.approvedEstimateAmount)}`
-                      : ""}
-                  </p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="text-sm font-semibold text-amber-800">
-                    {job.daysSinceCompletion} day
-                    {job.daysSinceCompletion === 1 ? "" : "s"} waiting
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    Collected {formatCurrency(job.collectedRevenue)}
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <p className="mt-4 text-xs text-slate-500">
-        Read-only visibility — does not generate invoices, verify accounting
-        readiness, or send reminders.
-      </p>
-    </DashboardSection>
-  );
-}
-
-function StalledJobsSection({
-  stalledJobs,
-}: {
-  stalledJobs: DashboardData["stalledJobs"];
-}) {
-  return (
-    <DashboardSection
-      title="Potentially stalled jobs"
-      description={`${stalledJobs.inactivityThresholdDays}+ days without job activity`}
-      icon={AlertCircle}
-      href="/reports"
-      linkLabel="View report"
-    >
-      <div className="mb-4">
-        <MetricCard
-          label="Stalled jobs"
-          value={stalledJobs.stalledCount}
-          description="Heuristic inactivity flag only"
-          icon={AlertCircle}
-          iconClass="text-amber-600 bg-amber-50"
-          accent="border-amber-100"
-        />
-      </div>
-
-      {stalledJobs.stalledJobs.length === 0 ? (
-        <EmptyState
-          title="No stalled jobs detected"
-          description="Active pipeline jobs with recent activity look healthy."
-        />
-      ) : (
-        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
-          {stalledJobs.stalledJobs.map((job) => (
-            <li key={job.jobId}>
-              <Link
-                href={`/jobs/${job.jobId}`}
-                className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-bold text-slate-900">
-                      {job.jobNumber}
-                    </p>
-                    <JobStatusBadge status={job.status} />
-                  </div>
-                  <p className="mt-1 truncate text-sm text-slate-600">
-                    {job.customerName}
-                    {job.assignedTechnician
-                      ? ` · ${job.assignedTechnician}`
-                      : " · Unassigned"}
-                  </p>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    Last activity{" "}
-                    {formatOperationalActivityTimestamp(job.lastActivityAt)}
-                  </p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="text-sm font-semibold text-amber-800">
-                    {job.daysSinceActivity} day
-                    {job.daysSinceActivity === 1 ? "" : "s"} idle
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {formatJobStatus(job.status)}
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <p className="mt-4 text-xs text-slate-500">
-        Heuristic only — no scheduled checks, GPS, or dispatch schedule
-        awareness.
-      </p>
-    </DashboardSection>
   );
 }
 
@@ -1187,12 +933,12 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
     <div className="flex flex-col gap-6">
       <AnalyticsSnapshotSection analytics={data.analytics} />
       <OperationalInsightsSection insights={data.operationalInsights} />
-      <CompletedWorkReviewSection completedWorkReview={data.completedWorkReview} />
-      <CompletedWorkAwaitingInvoicingSection
-        completedWork={data.completedWorkAwaitingInvoicing}
+      <OfficeReviewQueueSection
+        report={data.officeReviewQueue}
+        variant="compact"
+        itemLimit={8}
       />
       <TodayOperationsSection operations={data.operations} />
-      <StalledJobsSection stalledJobs={data.stalledJobs} />
 
       <div className="grid gap-6 xl:grid-cols-2">
         <TechnicianStatusSection technicians={data.technicians} />

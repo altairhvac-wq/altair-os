@@ -455,14 +455,14 @@ export function formatCompletedWorkInvoiceStatus(
   return `${snapshot.activeInvoiceCount} invoices · latest ${statusLabel}`;
 }
 
+import type { OfficeReviewQueueReport } from "@/shared/types/office-review-queue";
+
 export type OperationalReportsBundle = {
   revenue: RevenueReport;
   expenses: ExpenseReport;
   jobs: JobActivityReport;
   labor: TechnicianLaborReport;
-  stalledJobs: StalledJobsReport;
-  completedWorkAwaitingInvoicing: CompletedWorkAwaitingInvoicingReport;
-  completedWorkReview: CompletedWorkReviewReport;
+  officeReviewQueue: OfficeReviewQueueReport;
 };
 
 export type ReportChartBucketSize = "day" | "week" | "month";

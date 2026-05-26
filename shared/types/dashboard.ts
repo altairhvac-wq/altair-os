@@ -3,6 +3,7 @@ import type { Estimate } from "@/shared/types/estimate";
 import type { Expense } from "@/shared/types/expense";
 import type { Notification } from "@/shared/types/notification";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
+import type { OfficeReviewQueueReport } from "@/shared/types/office-review-queue";
 import type { DailyOperationsSummary } from "@/shared/types/daily-operations-summary";
 import type { CompletedWorkAwaitingInvoicingEntry, CompletedWorkReviewEntry, StalledJobEntry } from "@/shared/types/reports";
 import type { TechnicianTimeState } from "@/shared/types/time-entry";
@@ -92,6 +93,7 @@ export type DashboardData = {
   money: DashboardMoneySnapshot;
   expenses: DashboardExpenseReview;
   notifications: DashboardNotificationsSummary;
+  officeReviewQueue: OfficeReviewQueueReport;
   stalledJobs: DashboardStalledJobsSnapshot;
   completedWorkAwaitingInvoicing: DashboardCompletedWorkAwaitingInvoicingSnapshot;
   completedWorkReview: DashboardCompletedWorkReviewSnapshot;
