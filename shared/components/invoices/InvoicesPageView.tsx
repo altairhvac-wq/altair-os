@@ -15,6 +15,7 @@ import {
 } from "@/shared/types/invoice";
 import { formatCurrency } from "@/shared/types/customer";
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
+import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
 import { InvoiceDetailsPanel } from "./InvoiceDetailsPanel";
 import { InvoiceSearchFilterBar } from "./InvoiceSearchFilterBar";
 import { InvoiceSummaryCards } from "./InvoiceSummaryCards";
@@ -31,20 +32,25 @@ type InvoicesPageViewProps = {
   canManageInvoices: boolean;
   initialPanelMode?: PanelMode;
   createInitialData?: Partial<InvoiceFormData>;
+  initialJobId?: string;
+  initialJobLabel?: string;
+  initialCreateMode?: boolean;
 };
 
 function filterInvoices(
   invoices: Invoice[],
   search: string,
   statusFilter: InvoiceStatus | "all",
+  jobIdFilter?: string,
 ): Invoice[] {
   const query = search.trim().toLowerCase();
 
   return invoices.filter((invoice) => {
+    const matchesJob = !jobIdFilter || invoice.jobId === jobIdFilter;
     const matchesStatus =
       statusFilter === "all" || invoice.status === statusFilter;
 
-    if (!matchesStatus) return false;
+    if (!matchesJob || !matchesStatus) return false;
     if (!query) return true;
 
     const haystack = [
@@ -72,6 +78,9 @@ export function InvoicesPageView({
   canManageInvoices,
   initialPanelMode = "empty",
   createInitialData,
+  initialJobId,
+  initialJobLabel,
+  initialCreateMode = false,
 }: InvoicesPageViewProps) {
   const [invoices, setInvoices] = useState(initialInvoices);
   const [search, setSearch] = useState("");
@@ -84,8 +93,8 @@ export function InvoicesPageView({
   const router = useRouter();
 
   const filteredInvoices = useMemo(
-    () => filterInvoices(invoices, search, statusFilter),
-    [invoices, search, statusFilter],
+    () => filterInvoices(invoices, search, statusFilter, initialJobId),
+    [invoices, search, statusFilter, initialJobId],
   );
 
   function handleSelectInvoice(invoice: Invoice) {
@@ -129,6 +138,14 @@ export function InvoicesPageView({
 
   return (
     <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:overflow-hidden">
+      {initialJobId && initialJobLabel ? (
+        <JobContextFilterBanner
+          jobLabel={initialJobLabel}
+          clearHref="/invoices"
+          variant={initialCreateMode ? "create" : "filter"}
+        />
+      ) : null}
+
       <InvoiceSummaryCards invoices={invoices} />
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">

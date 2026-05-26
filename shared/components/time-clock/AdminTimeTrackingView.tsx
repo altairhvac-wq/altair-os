@@ -9,34 +9,54 @@ import {
   getTechnicianTimeStateStyles,
   type TimeEntry,
 } from "@/shared/types/time-entry";
+import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
 
 type AdminTimeTrackingViewProps = {
   entries: TimeEntry[];
   activeEntries: TimeEntry[];
   canViewAll: boolean;
+  initialJobId?: string;
+  initialJobLabel?: string;
 };
+
+function matchesJobFilter(entry: TimeEntry, jobId?: string): boolean {
+  return !jobId || entry.jobId === jobId;
+}
 
 export function AdminTimeTrackingView({
   entries,
   activeEntries,
   canViewAll,
+  initialJobId,
+  initialJobLabel,
 }: AdminTimeTrackingViewProps) {
   const [technicianFilter, setTechnicianFilter] = useState<string>("all");
 
   const technicians = useMemo(() => {
-    const names = new Set(entries.map((entry) => entry.technicianName));
+    const scopedEntries = initialJobId
+      ? entries.filter((entry) => matchesJobFilter(entry, initialJobId))
+      : entries;
+    const names = new Set(scopedEntries.map((entry) => entry.technicianName));
     return Array.from(names).sort();
-  }, [entries]);
+  }, [entries, initialJobId]);
+
+  const filteredActiveEntries = useMemo(() => {
+    return activeEntries.filter(
+      (entry) =>
+        matchesJobFilter(entry, initialJobId) &&
+        (technicianFilter === "all" ||
+          entry.technicianName === technicianFilter),
+    );
+  }, [activeEntries, initialJobId, technicianFilter]);
 
   const filteredEntries = useMemo(() => {
-    if (technicianFilter === "all") {
-      return entries;
-    }
-
     return entries.filter(
-      (entry) => entry.technicianName === technicianFilter,
+      (entry) =>
+        matchesJobFilter(entry, initialJobId) &&
+        (technicianFilter === "all" ||
+          entry.technicianName === technicianFilter),
     );
-  }, [entries, technicianFilter]);
+  }, [entries, initialJobId, technicianFilter]);
 
   if (!canViewAll) {
     return (
@@ -48,13 +68,24 @@ export function AdminTimeTrackingView({
 
   return (
     <div className="space-y-6">
+      {initialJobId && initialJobLabel ? (
+        <JobContextFilterBanner
+          jobLabel={initialJobLabel}
+          clearHref="/time"
+        />
+      ) : null}
+
       <section>
         <h2 className="text-sm font-semibold text-slate-900">Active technicians</h2>
-        {activeEntries.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No technicians are currently on the clock.</p>
+        {filteredActiveEntries.length === 0 ? (
+          <p className="mt-2 text-sm text-slate-500">
+            {initialJobId
+              ? "No active labor entries for this job."
+              : "No technicians are currently on the clock."}
+          </p>
         ) : (
           <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {activeEntries.map((entry) => (
+            {filteredActiveEntries.map((entry) => (
               <div
                 key={entry.id}
                 className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
@@ -102,6 +133,7 @@ export function AdminTimeTrackingView({
             <h2 className="text-sm font-semibold text-slate-900">Recent time entries</h2>
             <p className="text-xs text-slate-500">
               {filteredEntries.length} entr{filteredEntries.length === 1 ? "y" : "ies"}
+              {initialJobLabel ? ` for Job ${initialJobLabel}` : ""}
             </p>
           </div>
           <label className="flex items-center gap-2 text-sm text-slate-600">
@@ -122,7 +154,11 @@ export function AdminTimeTrackingView({
         </div>
 
         {filteredEntries.length === 0 ? (
-          <p className="px-4 py-8 text-sm text-slate-500">No time entries yet.</p>
+          <p className="px-4 py-8 text-sm text-slate-500">
+            {initialJobId
+              ? "No time entries for this job yet."
+              : "No time entries yet."}
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-100">
@@ -150,7 +186,14 @@ export function AdminTimeTrackingView({
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredEntries.map((entry) => (
-                  <tr key={entry.id}>
+                  <tr
+                    key={entry.id}
+                    className={
+                      initialJobId && entry.jobId === initialJobId
+                        ? "bg-cyan-50/40"
+                        : undefined
+                    }
+                  >
                     <td className="px-4 py-3 text-sm font-medium text-slate-900">
                       {entry.technicianName}
                     </td>

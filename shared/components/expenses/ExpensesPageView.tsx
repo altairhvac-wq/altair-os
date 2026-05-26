@@ -11,6 +11,7 @@ import type {
   ExpenseStatus,
 } from "@/shared/types/expense";
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
+import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
 import {
   filterExpenses,
   getExpenseJobOptions,
@@ -31,6 +32,7 @@ type ExpensesPageViewProps = {
   canManageBilling: boolean;
   canDispatchJobs: boolean;
   initialJobId?: string;
+  initialJobLabel?: string;
   initialCustomerId?: string;
   initialSelectedId?: string;
   initialCreate?: boolean;
@@ -53,6 +55,7 @@ export function ExpensesPageView({
   canManageBilling,
   canDispatchJobs,
   initialJobId,
+  initialJobLabel,
   initialCustomerId,
   initialSelectedId,
   initialCreate = false,
@@ -168,11 +171,13 @@ export function ExpensesPageView({
   }
 
   const contextLabel =
-    initialJobId || initialCustomerId
-      ? filteredExpenses.length === localExpenses.length
-        ? null
-        : `${filteredExpenses.length} linked expense${filteredExpenses.length === 1 ? "" : "s"}`
-      : null;
+    initialJobId && initialJobLabel
+      ? `${filteredExpenses.length} expense${filteredExpenses.length === 1 ? "" : "s"} for Job ${initialJobLabel}`
+      : initialCustomerId && !initialJobId
+        ? filteredExpenses.length === localExpenses.length
+          ? null
+          : `${filteredExpenses.length} linked expense${filteredExpenses.length === 1 ? "" : "s"}`
+        : null;
 
   function handleClosePanel() {
     setSelectedId(null);
@@ -189,6 +194,13 @@ export function ExpensesPageView({
 
   return (
     <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:overflow-hidden">
+      {initialJobId && initialJobLabel ? (
+        <JobContextFilterBanner
+          jobLabel={initialJobLabel}
+          clearHref="/expenses"
+        />
+      ) : null}
+
       <ExpenseSummaryCards expenses={localExpenses} />
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">

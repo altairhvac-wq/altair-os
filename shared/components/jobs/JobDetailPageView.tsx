@@ -20,6 +20,7 @@ import { JobAttachmentsSection } from "./JobAttachmentsSection";
 import { JobExpenseReceiptsSection } from "./JobExpenseReceiptsSection";
 import { JobMaterialsSection } from "./JobMaterialsSection";
 import { JobProfitabilitySection } from "./JobProfitabilitySection";
+import { JobDetailHashScroll } from "./JobDetailHashScroll";
 import { JobReviewChecklistSection } from "./JobReviewChecklistSection";
 import { OperationalActivityTimeline } from "@/shared/components/operational/OperationalActivityTimeline";
 import {
@@ -91,6 +92,7 @@ export function JobDetailPageView({
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
+      <JobDetailHashScroll />
       <Link
         href="/jobs"
         className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"

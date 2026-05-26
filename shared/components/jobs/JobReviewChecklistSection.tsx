@@ -186,7 +186,7 @@ function buildOfficeReviewActions(
     {
       id: "create_invoice",
       label: "Create invoice",
-      href: `/invoices?create=1&customerId=${encodeURIComponent(customerId)}`,
+      href: `/invoices?create=1&customerId=${encodeURIComponent(customerId)}&jobId=${encodeURIComponent(jobId)}`,
       external: true,
     },
     {
@@ -198,7 +198,7 @@ function buildOfficeReviewActions(
     {
       id: "review_labor",
       label: "Review labor",
-      href: "/time",
+      href: `/time?jobId=${encodeURIComponent(jobId)}`,
       external: true,
     },
     {

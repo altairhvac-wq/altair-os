@@ -7,7 +7,11 @@ import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import { InvoicesPageView } from "@/shared/components/invoices/InvoicesPageView";
 
 type InvoicesPageProps = {
-  searchParams: Promise<{ customerId?: string; create?: string }>;
+  searchParams: Promise<{
+    customerId?: string;
+    jobId?: string;
+    create?: string;
+  }>;
 };
 
 export default async function InvoicesPage({ searchParams }: InvoicesPageProps) {
@@ -17,7 +21,7 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
     redirect("/setup");
   }
 
-  const { customerId, create } = await searchParams;
+  const { customerId, jobId, create } = await searchParams;
 
   const [invoices, customers, jobs, serviceItems] = await Promise.all([
     listInvoices(companyContext.company.id),
@@ -26,9 +30,37 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
     listActiveServiceItems(companyContext.company.id),
   ]);
 
-  const preselectedCustomer = customerId
+  const preselectedJob = jobId
+    ? jobs.find((job) => job.id === jobId)
+    : undefined;
+
+  const preselectedCustomerFromParam = customerId
     ? customers.find((customer) => customer.id === customerId)
     : undefined;
+
+  const customerJobMismatch = Boolean(
+    preselectedCustomerFromParam &&
+      preselectedJob &&
+      preselectedCustomerFromParam.id !== preselectedJob.customerId,
+  );
+
+  const validJob = customerJobMismatch
+    ? undefined
+    : preselectedJob &&
+        (!preselectedCustomerFromParam ||
+          preselectedJob.customerId === preselectedCustomerFromParam.id)
+      ? preselectedJob
+      : undefined;
+
+  const preselectedCustomer = customerJobMismatch
+    ? preselectedCustomerFromParam
+    : preselectedCustomerFromParam ??
+      (validJob
+        ? customers.find((customer) => customer.id === validJob.customerId)
+        : undefined);
+
+  const shouldOpenCreate =
+    create === "1" && Boolean(preselectedCustomer ?? validJob);
 
   return (
     <InvoicesPageView
@@ -37,12 +69,18 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
       jobs={jobs}
       serviceItems={serviceItems}
       canManageInvoices={companyContext.permissions.manageBilling}
-      initialPanelMode={create === "1" && preselectedCustomer ? "create" : "empty"}
+      initialPanelMode={shouldOpenCreate ? "create" : "empty"}
       createInitialData={
-        preselectedCustomer
-          ? { customerId: preselectedCustomer.id }
+        preselectedCustomer || validJob
+          ? {
+              customerId: preselectedCustomer?.id ?? validJob!.customerId,
+              jobId: validJob?.id ?? "",
+            }
           : undefined
       }
+      initialJobId={validJob?.id}
+      initialJobLabel={validJob?.jobNumber}
+      initialCreateMode={create === "1"}
     />
   );
 }
