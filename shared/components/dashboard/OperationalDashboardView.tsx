@@ -26,6 +26,7 @@ import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatu
 import { CashFlowCommandSection } from "@/shared/components/dashboard/CashFlowCommandSection";
 import { DispatchPressureSection } from "@/shared/components/dashboard/DispatchPressureSection";
 import { NextBestActionsSection } from "@/shared/components/dashboard/NextBestActionsSection";
+import { OperationalMomentumSection } from "@/shared/components/dashboard/OperationalMomentumSection";
 import { OperationalRiskDrilldownSection } from "@/shared/components/dashboard/OperationalRiskDrilldownSection";
 import { TodayNeedsAttentionSection } from "@/shared/components/dashboard/TodayNeedsAttentionSection";
 import { OfficeReviewQueueSection } from "@/shared/components/reports/OfficeReviewQueueSection";
@@ -945,6 +946,7 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
         <NextBestActionsSection data={data} />
       </div>
       <OperationalRiskDrilldownSection data={data} />
+      <OperationalMomentumSection data={data} />
       <OperationalHealthSection report={data.operationalHealth} variant="compact" />
       <OperationalInsightsSection insights={data.operationalInsights} />
       <OfficeReviewQueueSection
