@@ -40,7 +40,7 @@ export function TechnicianMobileShell({
             {children}
           </main>
 
-          <TechnicianBottomNav />
+          <TechnicianBottomNav companyContext={companyContext} />
         </div>
       </div>
     </TechnicianNotificationBadgeProvider>

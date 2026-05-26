@@ -88,7 +88,10 @@ export async function listActiveMemberUserIdsByRoles(
 
   return (data ?? [])
     .map((row) => row.user_id)
-    .filter((userId): userId is string => Boolean(userId) && !exclude.has(userId));
+    .filter(
+      (userId): userId is string =>
+        userId != null && !exclude.has(userId),
+    );
 }
 
 export const getUserNotifications = cache(async function getUserNotifications(

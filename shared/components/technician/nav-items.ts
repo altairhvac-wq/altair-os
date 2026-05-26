@@ -7,9 +7,11 @@ import {
   User,
   type LucideIcon,
 } from "lucide-react";
+import { canAccessTechnicianNavItem, type TechnicianNavId } from "@/lib/database/access-control";
+import type { ActiveCompanyContext } from "@/lib/database/types";
 
 export type TechnicianNavItem = {
-  id: string;
+  id: TechnicianNavId;
   label: string;
   href: string;
   icon: LucideIcon;
@@ -61,15 +63,28 @@ export const technicianNavItems: TechnicianNavItem[] = [
   },
 ];
 
+export function getTechnicianNavItems(
+  context: ActiveCompanyContext,
+): TechnicianNavItem[] {
+  return technicianNavItems.filter((item) =>
+    canAccessTechnicianNavItem(context, item.id),
+  );
+}
+
 export function getTechnicianNavItemForPath(
   pathname: string,
+  context?: ActiveCompanyContext,
 ): TechnicianNavItem {
-  const match = technicianNavItems.find(
+  const items = context
+    ? getTechnicianNavItems(context)
+    : technicianNavItems.filter((item) => item.enabled);
+
+  const match = items.find(
     (item) =>
       item.href === "/technician"
         ? pathname === "/technician"
         : pathname === item.href || pathname.startsWith(`${item.href}/`),
   );
 
-  return match ?? technicianNavItems[0];
+  return match ?? items[0] ?? technicianNavItems[0];
 }

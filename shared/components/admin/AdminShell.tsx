@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ActiveCompanyContext } from "@/lib/database/types";
-import { getAdminMobileNavItems, getNavItemForPath } from "./nav-items";
+import { getAdminNavItems, getNavItemForPath } from "./nav-items";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import type { Notification } from "@/shared/types/notification";
@@ -30,12 +30,12 @@ export function AdminShell({
   unreadNotificationCount = 0,
 }: AdminShellProps) {
   const pathname = usePathname();
-  const current = getNavItemForPath(pathname);
-  const mobileNavItems = getAdminMobileNavItems(companyContext.role);
+  const mobileNavItems = getAdminNavItems(companyContext);
+  const current = getNavItemForPath(pathname, companyContext);
 
   return (
     <div className="flex min-h-dvh bg-slate-100 md:h-dvh md:overflow-hidden">
-      <Sidebar className="hidden md:flex" />
+      <Sidebar className="hidden md:flex" companyContext={companyContext} />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Header

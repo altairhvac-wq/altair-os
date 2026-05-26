@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { adminNavItems } from "./nav-items";
+import type { ActiveCompanyContext } from "@/lib/database/types";
+import { getAdminNavItems } from "./nav-items";
 
 function isActivePath(pathname: string, href: string) {
   if (href === "/") {
@@ -14,10 +15,12 @@ function isActivePath(pathname: string, href: string) {
 
 type SidebarProps = {
   className?: string;
+  companyContext: ActiveCompanyContext;
 };
 
-export function Sidebar({ className = "" }: SidebarProps) {
+export function Sidebar({ className = "", companyContext }: SidebarProps) {
   const pathname = usePathname();
+  const navItems = getAdminNavItems(companyContext);
 
   return (
     <aside
@@ -34,7 +37,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="space-y-1">
-          {adminNavItems.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActivePath(pathname, item.href);
 
@@ -56,6 +59,15 @@ export function Sidebar({ className = "" }: SidebarProps) {
           })}
         </ul>
       </nav>
+
+      {navItems.length <= 2 ? (
+        <div className="border-t border-slate-800 px-4 py-3">
+          <p className="text-xs leading-relaxed text-slate-500">
+            Your role has limited workspace access. Contact a company admin if
+            you need additional modules.
+          </p>
+        </div>
+      ) : null}
     </aside>
   );
 }

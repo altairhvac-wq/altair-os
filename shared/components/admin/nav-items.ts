@@ -13,7 +13,11 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import type { CompanyRole } from "@/lib/database/types/enums";
+import {
+  getAccessibleAdminNavHrefs,
+  isAdminNavHref,
+} from "@/lib/database/access-control";
+import type { ActiveCompanyContext } from "@/lib/database/types";
 
 export type NavItem = {
   label: string;
@@ -97,17 +101,27 @@ export const adminNavItems: NavItem[] = [
   },
 ];
 
-const technicianMobileHiddenHrefs = new Set(["/reports"]);
+export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {
+  const visibleHrefs = new Set(getAccessibleAdminNavHrefs(context));
 
-export function getAdminMobileNavItems(role: CompanyRole): NavItem[] {
-  if (role !== "technician") {
-    return adminNavItems;
-  }
+  return adminNavItems.filter((item) => {
+    if (!isAdminNavHref(item.href)) {
+      return false;
+    }
 
-  return adminNavItems.filter((item) => !technicianMobileHiddenHrefs.has(item.href));
+    return visibleHrefs.has(item.href);
+  });
 }
 
-export function getNavItemForPath(pathname: string): NavItem {
+/** @deprecated Use getAdminNavItems instead */
+export function getAdminMobileNavItems(context: ActiveCompanyContext): NavItem[] {
+  return getAdminNavItems(context);
+}
+
+export function getNavItemForPath(
+  pathname: string,
+  context?: ActiveCompanyContext,
+): NavItem {
   const match = adminNavItems.find(
     (item) =>
       item.href === "/"
@@ -115,5 +129,14 @@ export function getNavItemForPath(pathname: string): NavItem {
         : pathname === item.href || pathname.startsWith(`${item.href}/`),
   );
 
-  return match ?? adminNavItems[0];
+  if (match) {
+    return match;
+  }
+
+  if (context) {
+    const visibleItems = getAdminNavItems(context);
+    return visibleItems[0] ?? adminNavItems[0];
+  }
+
+  return adminNavItems[0];
 }

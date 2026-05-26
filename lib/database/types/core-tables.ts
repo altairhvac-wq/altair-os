@@ -60,9 +60,10 @@ export type ProfileRow = {
 export type CompanyMembershipRow = {
   id: UUID;
   company_id: UUID;
-  user_id: UUID;
+  user_id: UUID | null;
   role: CompanyRole;
   status: MembershipStatus;
+  invite_email: string | null;
   invited_by: UUID | null;
   invited_at: Timestamp | null;
   joined_at: Timestamp | null;

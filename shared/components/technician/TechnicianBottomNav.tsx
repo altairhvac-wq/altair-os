@@ -2,14 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ActiveCompanyContext } from "@/lib/database/types";
 import {
   getTechnicianNavItemForPath,
-  technicianNavItems,
+  getTechnicianNavItems,
 } from "./nav-items";
 
-export function TechnicianBottomNav() {
+type TechnicianBottomNavProps = {
+  companyContext: ActiveCompanyContext;
+};
+
+export function TechnicianBottomNav({
+  companyContext,
+}: TechnicianBottomNavProps) {
   const pathname = usePathname();
-  const activeItem = getTechnicianNavItemForPath(pathname);
+  const navItems = getTechnicianNavItems(companyContext);
+  const activeItem = getTechnicianNavItemForPath(pathname, companyContext);
 
   return (
     <nav
@@ -17,7 +25,7 @@ export function TechnicianBottomNav() {
       className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-sm"
     >
       <div className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[env(safe-area-inset-bottom)] pt-1">
-        {technicianNavItems.map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.id === activeItem.id;
 
