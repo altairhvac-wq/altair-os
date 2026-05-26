@@ -7,6 +7,10 @@ import {
 } from "@/lib/database/queries/time-entries";
 import { getJobById } from "@/lib/database/queries/jobs";
 import {
+  captureCompletedJobReviewSnapshot,
+  trackJobReviewBlockerResolutions,
+} from "@/lib/database/services/job-review-resolution";
+import {
   recordBreakEndedActivity,
   recordBreakStartedActivity,
   recordJobLaborEndedActivity,
@@ -53,6 +57,25 @@ async function closeActiveEntry(input: {
     | "job_labor_ended"
     | null;
 }): Promise<{ entry: TimeEntry | null; error: string | null }> {
+  let reviewSnapshotBefore = null;
+  let reviewJob:
+    | Awaited<ReturnType<typeof getJobById>>
+    | null = null;
+
+  if (
+    input.activeEntry.entryType === "job_labor" &&
+    input.activeEntry.jobId
+  ) {
+    reviewJob = await getJobById(input.companyId, input.activeEntry.jobId);
+    if (reviewJob) {
+      reviewSnapshotBefore = await captureCompletedJobReviewSnapshot(
+        input.companyId,
+        reviewJob.id,
+        reviewJob.status,
+      );
+    }
+  }
+
   const endedAt = new Date().toISOString();
   const durationMinutes = calculateDurationMinutes(
     input.activeEntry.startedAt,
@@ -87,6 +110,23 @@ async function closeActiveEntry(input: {
       companyId: input.companyId,
       actorId: input.actorId,
       entry,
+    });
+  }
+
+  if (reviewSnapshotBefore && reviewJob) {
+    void trackJobReviewBlockerResolutions({
+      companyId: input.companyId,
+      jobId: reviewJob.id,
+      jobStatus: reviewJob.status,
+      actorId: input.actorId,
+      beforeSnapshot: reviewSnapshotBefore,
+      jobNumber: reviewJob.jobNumber,
+      customerId: reviewJob.customerId,
+    }).catch((trackingError) => {
+      console.error("[closeActiveEntry] review resolution tracking failed:", {
+        jobId: reviewJob.id,
+        trackingError,
+      });
     });
   }
 

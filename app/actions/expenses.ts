@@ -10,6 +10,10 @@ import {
 } from "@/lib/database/queries/expenses";
 import { getJobById } from "@/lib/database/queries/jobs";
 import {
+  captureCompletedJobReviewSnapshot,
+  trackJobReviewBlockerResolutions,
+} from "@/lib/database/services/job-review-resolution";
+import {
   recordExpenseApprovedActivity,
   recordExpenseCreatedActivity,
   recordExpenseReceiptUploadedActivity,
@@ -383,6 +387,20 @@ export async function updateExpenseStatusAction(input: {
     return { error: "This expense action is not allowed." };
   }
 
+  let reviewSnapshotBefore = null;
+  let reviewJobStatus = null;
+  if (existing.jobId) {
+    const job = await getJobById(context.company.id, existing.jobId);
+    if (job) {
+      reviewJobStatus = job.status;
+      reviewSnapshotBefore = await captureCompletedJobReviewSnapshot(
+        context.company.id,
+        job.id,
+        job.status,
+      );
+    }
+  }
+
   const { expense, error } = await updateExpenseStatus(
     context.company.id,
     input.expenseId,
@@ -420,6 +438,25 @@ export async function updateExpenseStatusAction(input: {
       break;
     case "return_to_draft":
       break;
+  }
+
+  if (reviewSnapshotBefore && expense.jobId && reviewJobStatus) {
+    void trackJobReviewBlockerResolutions({
+      companyId: context.company.id,
+      jobId: expense.jobId,
+      jobStatus: reviewJobStatus,
+      actorId: context.user.id,
+      beforeSnapshot: reviewSnapshotBefore,
+      customerId: expense.customerId,
+    }).catch((trackingError) => {
+      console.error(
+        "[updateExpenseStatusAction] review resolution tracking failed:",
+        {
+          jobId: expense.jobId,
+          trackingError,
+        },
+      );
+    });
   }
 
   revalidateExpensePaths({

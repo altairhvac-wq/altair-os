@@ -5,7 +5,12 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { createJobMaterial } from "@/lib/database/queries/job-materials";
 import { getJobById } from "@/lib/database/queries/jobs";
 import { recordJobMaterialAddedActivity } from "@/lib/database/services/job-activity";
+import {
+  captureCompletedJobReviewSnapshot,
+  trackJobReviewBlockerResolutions,
+} from "@/lib/database/services/job-review-resolution";
 import type { JobMaterial, JobMaterialFormData } from "@/shared/types/job-material";
+import type { JobStatus } from "@/shared/types/job";
 import { roundJobMaterialAmount } from "@/shared/types/job-material";
 import { isTerminalJobStatus } from "@/shared/types/job-workflow";
 
@@ -30,6 +35,7 @@ async function assertJobMaterialWritePermission(jobId: string): Promise<{
   jobId?: string;
   customerId?: string;
   jobNumber?: string;
+  jobStatus?: JobStatus;
 }> {
   const context = await getActiveCompanyContext();
 
@@ -48,6 +54,7 @@ async function assertJobMaterialWritePermission(jobId: string): Promise<{
       jobId: job.id,
       customerId: job.customerId,
       jobNumber: job.jobNumber,
+      jobStatus: job.status,
     };
   }
 
@@ -71,6 +78,7 @@ async function assertJobMaterialWritePermission(jobId: string): Promise<{
     jobId: job.id,
     customerId: job.customerId,
     jobNumber: job.jobNumber,
+    jobStatus: job.status,
   };
 }
 
@@ -141,6 +149,15 @@ export async function createJobMaterialAction(input: {
     return { error: permission.error ?? "Linked job not found." };
   }
 
+  const reviewSnapshotBefore =
+    permission.jobStatus != null
+      ? await captureCompletedJobReviewSnapshot(
+          context.company.id,
+          permission.jobId,
+          permission.jobStatus,
+        )
+      : null;
+
   const { material, error } = await createJobMaterial({
     companyId: context.company.id,
     customerId: permission.customerId ?? null,
@@ -163,6 +180,26 @@ export async function createJobMaterialAction(input: {
     jobNumber: permission.jobNumber,
     material,
   });
+
+  if (reviewSnapshotBefore && permission.jobStatus) {
+    void trackJobReviewBlockerResolutions({
+      companyId: context.company.id,
+      jobId: material.jobId,
+      jobStatus: permission.jobStatus,
+      actorId: context.user.id,
+      beforeSnapshot: reviewSnapshotBefore,
+      jobNumber: permission.jobNumber,
+      customerId: permission.customerId,
+    }).catch((trackingError) => {
+      console.error(
+        "[createJobMaterialAction] review resolution tracking failed:",
+        {
+          jobId: material.jobId,
+          trackingError,
+        },
+      );
+    });
+  }
 
   revalidateMaterialPaths({
     jobId: material.jobId,

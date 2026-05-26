@@ -357,7 +357,7 @@ function CompletedWorkReviewSection({
       href="/reports"
       linkLabel="View report"
     >
-      <div className="mb-4">
+      <div className="mb-4 grid gap-3 sm:grid-cols-2">
         <MetricCard
           label="Needs review"
           value={completedWorkReview.count}
@@ -365,6 +365,14 @@ function CompletedWorkReviewSection({
           icon={AlertTriangle}
           iconClass="text-rose-600 bg-rose-50"
           accent="border-rose-100"
+        />
+        <MetricCard
+          label="Review issues resolved this week"
+          value={completedWorkReview.resolvedThisWeek}
+          description="Office review blockers cleared on completed jobs"
+          icon={CheckCircle2}
+          iconClass="text-emerald-600 bg-emerald-50"
+          accent="border-emerald-100"
         />
       </div>
 

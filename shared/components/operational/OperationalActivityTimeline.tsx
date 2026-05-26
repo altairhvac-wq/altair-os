@@ -61,6 +61,10 @@ const ACTIVITY_ICONS: Record<
   expense_rejected: Ban,
   expense_reimbursed: DollarSign,
   status_changed: ArrowRightLeft,
+  invoice_created_for_completed_job: CheckCircle2,
+  labor_entries_closed: CheckCircle2,
+  pending_expenses_resolved: CheckCircle2,
+  material_costs_completed: CheckCircle2,
 };
 
 const ACTIVITY_ICON_STYLES: Record<OperationalActivityEventType, string> = {
@@ -87,6 +91,13 @@ const ACTIVITY_ICON_STYLES: Record<OperationalActivityEventType, string> = {
   expense_rejected: "bg-rose-50 text-rose-700 ring-rose-600/15",
   expense_reimbursed: "bg-violet-50 text-violet-700 ring-violet-600/15",
   status_changed: "bg-slate-100 text-slate-600 ring-slate-500/15",
+  invoice_created_for_completed_job:
+    "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
+  labor_entries_closed: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
+  pending_expenses_resolved:
+    "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
+  material_costs_completed:
+    "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
 };
 
 const WORKFLOW_ICON_OVERRIDES: Record<string, typeof History> = {

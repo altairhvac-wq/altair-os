@@ -7,6 +7,7 @@ import { listJobs } from "@/lib/database/queries/jobs";
 import { listTimeEntries } from "@/lib/database/queries/time-entries";
 import { getCompanyCompletedWorkReport } from "@/lib/database/services/reports/completed-work-report";
 import { getCompanyCompletedWorkReviewReport } from "@/lib/database/services/reports/completed-work-review-report";
+import { getJobReviewBlockerResolutionsThisWeekCount } from "@/lib/database/services/job-review-resolution";
 import { getCompanyExpenseReport } from "@/lib/database/services/reports/expense-report";
 import { getCompanyJobActivityReport } from "@/lib/database/services/reports/job-activity-report";
 import { getCompanyProfitabilityReport } from "@/lib/database/services/reports/profitability-report";
@@ -283,6 +284,7 @@ export async function getDailyOperationsSummary(
     completedWorkReport,
     completedWorkReviewReport,
     jobLevelCounts,
+    reviewIssuesResolvedThisWeek,
   ] = await Promise.all([
     getCompanyRevenueReport(companyId, REPORT_OPTIONS),
     getCompanyExpenseReport(companyId, REPORT_OPTIONS),
@@ -294,6 +296,7 @@ export async function getDailyOperationsSummary(
     getCompanyCompletedWorkReport(companyId),
     getCompanyCompletedWorkReviewReport(companyId),
     deriveJobLevelOperationalCounts(companyId),
+    getJobReviewBlockerResolutionsThisWeekCount(companyId),
   ]);
 
   const sections = {
@@ -327,6 +330,7 @@ export async function getDailyOperationsSummary(
     completedWorkReview: {
       count: completedWorkReviewReport.summary.count,
       jobs: completedWorkReviewReport.summary.jobs,
+      resolvedThisWeek: reviewIssuesResolvedThisWeek,
     },
     profitabilityWarnings: {
       jobsWithWarnings: profitabilityReport.summary.jobsWithWarnings,

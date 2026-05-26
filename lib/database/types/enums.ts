@@ -47,7 +47,11 @@ export type JobActivityType =
   | "status_changed"
   | "job_cancelled"
   | "job_attachment_uploaded"
-  | "job_material_added";
+  | "job_material_added"
+  | "invoice_created_for_completed_job"
+  | "labor_entries_closed"
+  | "pending_expenses_resolved"
+  | "material_costs_completed";
 
 export type EstimateStatus =
   | "draft"

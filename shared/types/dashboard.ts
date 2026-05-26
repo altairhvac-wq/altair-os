@@ -65,6 +65,7 @@ export type DashboardAnalyticsSnapshot = {
   openJobs: number;
   pendingExpenseCount: number;
   activeLaborEntries: number;
+  reviewIssuesResolvedThisWeek: number;
 };
 
 export type DashboardStalledJobsSnapshot = {
@@ -81,6 +82,7 @@ export type DashboardCompletedWorkAwaitingInvoicingSnapshot = {
 export type DashboardCompletedWorkReviewSnapshot = {
   count: number;
   jobs: CompletedWorkReviewEntry[];
+  resolvedThisWeek: number;
 };
 
 export type DashboardData = {

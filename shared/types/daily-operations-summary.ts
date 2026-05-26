@@ -58,6 +58,7 @@ export type DailyOperationsCompletedAwaitingInvoicingSnapshot = {
 export type DailyOperationsCompletedWorkReviewSnapshot = {
   count: number;
   jobs: CompletedWorkReviewEntry[];
+  resolvedThisWeek: number;
 };
 
 export type DailyOperationsProfitabilityWarningsSnapshot = {

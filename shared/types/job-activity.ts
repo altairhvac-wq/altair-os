@@ -12,7 +12,11 @@ export type JobActivityType =
   | "status_changed"
   | "job_cancelled"
   | "job_attachment_uploaded"
-  | "job_material_added";
+  | "job_material_added"
+  | "invoice_created_for_completed_job"
+  | "labor_entries_closed"
+  | "pending_expenses_resolved"
+  | "material_costs_completed";
 
 export type JobActivityMetadata = {
   customer_id?: string;
@@ -36,6 +40,7 @@ export type JobActivityMetadata = {
   unit_cost?: number;
   unit_price?: number;
   taxable?: boolean;
+  review_blocker?: string;
 };
 
 export type JobActivity = {
@@ -61,6 +66,14 @@ const ACTIVITY_TYPE_LABELS: Record<JobActivityType, string> = {
   job_cancelled: "Job cancelled",
   job_attachment_uploaded: "Attachment uploaded",
   job_material_added: "Material logged",
+  invoice_created_for_completed_job:
+    "Office review blocker resolved: Invoice created",
+  labor_entries_closed:
+    "Office review blocker resolved: Labor entries closed",
+  pending_expenses_resolved:
+    "Office review blocker resolved: Pending expenses resolved",
+  material_costs_completed:
+    "Office review blocker resolved: Material costs completed",
 };
 
 export function formatJobActivityLabel(activity: JobActivity): string {
@@ -142,6 +155,12 @@ export function formatJobActivityDetails(activity: JobActivity): string | null {
       }
       return parts.length > 0 ? parts.join(" · ") : null;
     }
+
+    case "invoice_created_for_completed_job":
+    case "labor_entries_closed":
+    case "pending_expenses_resolved":
+    case "material_costs_completed":
+      return metadata.job_number ? `Job ${metadata.job_number}` : null;
 
     default:
       return null;

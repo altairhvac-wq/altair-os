@@ -2,12 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { getEstimateById } from "@/lib/database/queries/estimates";
 import {
   convertEstimateToInvoice,
   createInvoice,
   getInvoiceById,
   updateInvoiceStatus,
 } from "@/lib/database/queries/invoices";
+import { getJobById } from "@/lib/database/queries/jobs";
+import {
+  captureCompletedJobReviewSnapshot,
+  trackJobReviewBlockerResolutions,
+} from "@/lib/database/services/job-review-resolution";
 import {
   recordInvoiceConvertedFromEstimateActivity,
   recordInvoiceCreatedActivity,
@@ -34,6 +40,20 @@ export async function createInvoiceAction(
     return { error: "You do not have permission to create invoices." };
   }
 
+  let reviewSnapshotBefore = null;
+  let reviewJobStatus = null;
+  if (data.jobId) {
+    const job = await getJobById(context.company.id, data.jobId);
+    if (job) {
+      reviewJobStatus = job.status;
+      reviewSnapshotBefore = await captureCompletedJobReviewSnapshot(
+        context.company.id,
+        job.id,
+        job.status,
+      );
+    }
+  }
+
   const { invoice, error } = await createInvoice(context.company.id, data);
 
   if (error || !invoice) {
@@ -49,6 +69,23 @@ export async function createInvoiceAction(
     jobId: invoice.jobId,
     jobNumber: invoice.jobNumber,
   });
+
+  if (reviewSnapshotBefore && invoice.jobId && reviewJobStatus) {
+    void trackJobReviewBlockerResolutions({
+      companyId: context.company.id,
+      jobId: invoice.jobId,
+      jobStatus: reviewJobStatus,
+      actorId: context.user.id,
+      beforeSnapshot: reviewSnapshotBefore,
+      jobNumber: invoice.jobNumber,
+      customerId: invoice.customerId,
+    }).catch((trackingError) => {
+      console.error("[createInvoiceAction] review resolution tracking failed:", {
+        jobId: invoice.jobId,
+        trackingError,
+      });
+    });
+  }
 
   revalidatePath("/invoices");
   return { invoice };
@@ -70,6 +107,21 @@ export async function convertEstimateToInvoiceAction(
 
   if (!context.permissions.manageBilling) {
     return { error: "You do not have permission to convert estimates." };
+  }
+
+  let reviewSnapshotBefore = null;
+  let reviewJobStatus = null;
+  const estimate = await getEstimateById(context.company.id, estimateId);
+  if (estimate?.jobId) {
+    const job = await getJobById(context.company.id, estimate.jobId);
+    if (job) {
+      reviewJobStatus = job.status;
+      reviewSnapshotBefore = await captureCompletedJobReviewSnapshot(
+        context.company.id,
+        job.id,
+        job.status,
+      );
+    }
   }
 
   const { invoice, error } = await convertEstimateToInvoice(
@@ -107,6 +159,26 @@ export async function convertEstimateToInvoiceAction(
       estimateNumber: invoice.estimateNumber,
     }),
   ]);
+
+  if (reviewSnapshotBefore && invoice.jobId && reviewJobStatus) {
+    void trackJobReviewBlockerResolutions({
+      companyId: context.company.id,
+      jobId: invoice.jobId,
+      jobStatus: reviewJobStatus,
+      actorId: context.user.id,
+      beforeSnapshot: reviewSnapshotBefore,
+      jobNumber: invoice.jobNumber,
+      customerId: invoice.customerId,
+    }).catch((trackingError) => {
+      console.error(
+        "[convertEstimateToInvoiceAction] review resolution tracking failed:",
+        {
+          jobId: invoice.jobId,
+          trackingError,
+        },
+      );
+    });
+  }
 
   revalidatePath("/invoices");
   revalidatePath("/estimates");

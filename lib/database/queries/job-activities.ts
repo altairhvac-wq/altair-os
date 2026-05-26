@@ -9,6 +9,7 @@ import type {
   JobActivity,
   JobActivityMetadata,
 } from "@/shared/types/job-activity";
+import { JOB_REVIEW_BLOCKER_RESOLUTION_EVENT_TYPES } from "@/shared/types/job-review-resolution";
 
 type ProfileSummary = {
   full_name: string | null;
@@ -105,6 +106,32 @@ export async function listJobActivitiesForJob(
   }
 
   return ((data ?? []) as JobActivityRowWithActor[]).map(mapJobActivityRow);
+}
+
+export async function countJobReviewBlockerResolutionsSince(
+  companyId: string,
+  sinceIso: string,
+): Promise<number> {
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("job_activities")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .in("event_type", [...JOB_REVIEW_BLOCKER_RESOLUTION_EVENT_TYPES])
+    .gte("created_at", sinceIso);
+
+  if (error) {
+    console.error("[countJobReviewBlockerResolutionsSince] query failed:", {
+      companyId,
+      sinceIso,
+      code: error.code,
+      message: error.message,
+    });
+    return 0;
+  }
+
+  return count ?? 0;
 }
 
 export function resolveStatusChangeEventType(

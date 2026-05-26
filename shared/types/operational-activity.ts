@@ -38,7 +38,11 @@ export type OperationalActivityEventType =
   | "expense_approved"
   | "expense_rejected"
   | "expense_reimbursed"
-  | "status_changed";
+  | "status_changed"
+  | "invoice_created_for_completed_job"
+  | "labor_entries_closed"
+  | "pending_expenses_resolved"
+  | "material_costs_completed";
 
 export type OperationalActivityMetadata = {
   customer_id?: string;
@@ -84,6 +88,7 @@ export type OperationalActivityMetadata = {
   category?: string;
   rejection_reason?: string;
   is_reimbursable?: boolean;
+  review_blocker?: string;
 };
 
 export type OperationalActivity = {
@@ -138,6 +143,14 @@ const ACTIVITY_TYPE_LABELS: Record<OperationalActivityEventType, string> = {
   expense_rejected: "Expense rejected",
   expense_reimbursed: "Expense reimbursed",
   status_changed: "Status changed",
+  invoice_created_for_completed_job:
+    "Office review blocker resolved: Invoice created",
+  labor_entries_closed:
+    "Office review blocker resolved: Labor entries closed",
+  pending_expenses_resolved:
+    "Office review blocker resolved: Pending expenses resolved",
+  material_costs_completed:
+    "Office review blocker resolved: Material costs completed",
 };
 
 export function normalizeOperationalEventType(
@@ -462,6 +475,12 @@ export function formatOperationalActivityDetails(
     case "expense_rejected":
     case "expense_reimbursed":
       return formatExpenseActivityDetails(metadata);
+
+    case "invoice_created_for_completed_job":
+    case "labor_entries_closed":
+    case "pending_expenses_resolved":
+    case "material_costs_completed":
+      return metadata.job_number ? `Job ${metadata.job_number}` : null;
 
     case "estimate_approved":
     case "invoice_sent":

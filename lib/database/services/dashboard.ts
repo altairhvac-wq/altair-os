@@ -136,6 +136,8 @@ export async function getDashboardData(
       openJobs: summarySections.openJobs.count,
       pendingExpenseCount: summarySections.pendingExpenses.count,
       activeLaborEntries: summarySections.activeTechnicians.activeLaborEntries,
+      reviewIssuesResolvedThisWeek:
+        summarySections.completedWorkReview.resolvedThisWeek,
     },
     operations: {
       ...todayOperationsSummary,
@@ -193,6 +195,7 @@ export async function getDashboardData(
         0,
         COMPLETED_WORK_REVIEW_DASHBOARD_LIMIT,
       ),
+      resolvedThisWeek: summarySections.completedWorkReview.resolvedThisWeek,
     },
     operationalInsights: operationsSummary,
     recentActivity,
