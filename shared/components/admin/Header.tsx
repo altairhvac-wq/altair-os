@@ -3,6 +3,7 @@
 import { Search } from "lucide-react";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { logoutAction } from "@/app/actions/auth";
+import { AlphaIndicator } from "@/shared/components/admin/AlphaIndicator";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import type { Notification } from "@/shared/types/notification";
@@ -53,9 +54,12 @@ export function Header({
     <header className="flex h-[4.25rem] w-full max-w-full shrink-0 items-center justify-between gap-2 overflow-hidden border-b border-slate-200/80 bg-white/90 px-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-md sm:gap-3 sm:px-6">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className="min-w-0">
-          <h1 className="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg">
-            {title}
-          </h1>
+          <div className="flex min-w-0 items-center gap-2">
+            <h1 className="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg">
+              {title}
+            </h1>
+            <AlphaIndicator />
+          </div>
           {description ? (
             <p className="hidden truncate text-sm text-slate-500 sm:block">
               {description}

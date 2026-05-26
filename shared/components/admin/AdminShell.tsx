@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { getNavItemForPath } from "./nav-items";
-import { AlphaStatusBanner } from "./AlphaStatusBanner";
 import { MobileNav } from "./MobileNav";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
@@ -40,8 +39,6 @@ export function AdminShell({
           notifications={notifications}
           unreadNotificationCount={unreadNotificationCount}
         />
-
-        <AlphaStatusBanner />
 
         <MobileNav companyContext={companyContext} />
 
