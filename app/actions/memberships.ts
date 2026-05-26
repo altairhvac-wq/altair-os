@@ -1,9 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
+  acceptPendingInvite,
   createTeamInvite,
+  resolveUserEmailForInvite,
   updateMemberRole,
 } from "@/lib/database/queries/memberships";
 import type { CompanyRole } from "@/lib/database/types/enums";
@@ -18,6 +21,45 @@ export type InviteTeamMemberActionResult = {
   error?: string;
   member?: TeamMember;
 };
+
+export type AcceptInviteActionResult = {
+  error?: string;
+  companyId?: string;
+};
+
+export async function acceptInviteAction(
+  membershipId: string,
+): Promise<AcceptInviteActionResult> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return { error: "You must be signed in to accept an invitation." };
+  }
+
+  const profile = await getCurrentProfile();
+  const email = resolveUserEmailForInvite(profile?.email, user.email ?? undefined);
+
+  if (!email) {
+    return {
+      error:
+        "Your account email could not be verified. Update your profile email and try again.",
+    };
+  }
+
+  const result = await acceptPendingInvite(membershipId, user.id, email);
+
+  if (result.error || !result.companyId) {
+    return { error: result.error ?? "Failed to accept invitation." };
+  }
+
+  revalidatePath("/", "layout");
+  revalidatePath("/setup");
+  revalidatePath("/settings");
+  revalidatePath("/dispatch");
+  revalidatePath("/technician");
+
+  return { companyId: result.companyId };
+}
 
 export async function inviteTeamMemberAction(
   email: string,

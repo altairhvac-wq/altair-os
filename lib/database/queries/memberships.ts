@@ -3,6 +3,7 @@ import { mapDatabaseError } from "@/lib/database/errors";
 import { validateMemberRoleChange, validateInviteRole } from "@/lib/database/services/member-role-guard";
 import type {
   CompanyMembershipRow,
+  CompanyRow,
   MembershipWithProfile,
 } from "@/lib/database/types/core-tables";
 import type { CompanyRole } from "@/lib/database/types/enums";
@@ -206,6 +207,266 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function normalizeInviteEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+export function resolveUserEmailForInvite(
+  profileEmail: string | undefined,
+  authEmail: string | undefined,
+): string | null {
+  const normalizedProfile = profileEmail?.trim().toLowerCase() ?? "";
+  const normalizedAuth = authEmail?.trim().toLowerCase() ?? "";
+
+  if (normalizedProfile && normalizedAuth && normalizedProfile !== normalizedAuth) {
+    return null;
+  }
+
+  return normalizedProfile || normalizedAuth || null;
+}
+
+function inviteEmailMatchesUserEmail(
+  inviteEmail: string,
+  userEmail: string,
+): boolean {
+  return normalizeInviteEmail(inviteEmail) === normalizeInviteEmail(userEmail);
+}
+
+type PendingInviteRow = {
+  id: string;
+  company_id: string;
+  role: CompanyRole;
+  invite_email: string;
+  invited_at: string | null;
+  company: Pick<CompanyRow, "name"> | null;
+};
+
+export type PendingTeamInvite = {
+  id: string;
+  companyId: string;
+  companyName: string;
+  role: CompanyRole;
+  inviteEmail: string;
+  invitedAt: string | null;
+};
+
+export type ListPendingInvitesResult = {
+  invites: PendingTeamInvite[];
+  error?: string;
+};
+
+export async function listPendingInvitesForUserEmail(
+  email: string,
+): Promise<ListPendingInvitesResult> {
+  const normalizedEmail = normalizeInviteEmail(email);
+
+  if (!normalizedEmail) {
+    return { invites: [] };
+  }
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("company_memberships")
+    .select(
+      "id, company_id, role, invite_email, invited_at, company:companies(name)",
+    )
+    .eq("status", "invited")
+    .is("user_id", null)
+    .eq("invite_email", normalizedEmail)
+    .order("invited_at", { ascending: false });
+
+  if (error) {
+    console.error("[listPendingInvitesForUserEmail] query failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    return {
+      invites: [],
+      error: "Failed to load pending invitations. Please refresh and try again.",
+    };
+  }
+
+  const invites = ((data ?? []) as PendingInviteRow[]).flatMap((row) => {
+    const companyName = row.company?.name?.trim();
+    const inviteEmail = row.invite_email?.trim();
+
+    if (!companyName || !inviteEmail) {
+      return [];
+    }
+
+    return [
+      {
+        id: row.id,
+        companyId: row.company_id,
+        companyName,
+        role: row.role,
+        inviteEmail,
+        invitedAt: row.invited_at,
+      },
+    ];
+  });
+
+  return { invites };
+}
+
+export type AcceptPendingInviteResult = {
+  companyId?: string;
+  error?: string;
+};
+
+export async function acceptPendingInvite(
+  membershipId: string,
+  userId: string,
+  userEmail: string,
+): Promise<AcceptPendingInviteResult> {
+  const normalizedEmail = normalizeInviteEmail(userEmail);
+
+  if (!normalizedEmail) {
+    return { error: "A verified email address is required to accept an invitation." };
+  }
+
+  const supabase = await createClient();
+
+  const { data: membership, error: membershipError } = await supabase
+    .from("company_memberships")
+    .select("id, company_id, status, user_id, invite_email")
+    .eq("id", membershipId)
+    .maybeSingle();
+
+  if (membershipError) {
+    console.error("[acceptPendingInvite] membership lookup failed:", {
+      membershipId,
+      userId,
+      code: membershipError.code,
+      message: membershipError.message,
+    });
+    return { error: "Failed to load invitation. Please try again." };
+  }
+
+  if (!membership) {
+    return { error: "Invitation not found or no longer available." };
+  }
+
+  const row = membership as Pick<
+    CompanyMembershipRow,
+    "id" | "company_id" | "status" | "user_id" | "invite_email"
+  >;
+
+  if (row.status === "suspended") {
+    return { error: "This invitation is suspended and cannot be accepted." };
+  }
+
+  if (row.status !== "invited") {
+    return {
+      error:
+        row.status === "active"
+          ? "This invitation has already been accepted."
+          : "This invitation is no longer available.",
+    };
+  }
+
+  if (row.user_id) {
+    return { error: "This invitation has already been claimed." };
+  }
+
+  const inviteEmail = row.invite_email?.trim();
+
+  if (!inviteEmail || !inviteEmailMatchesUserEmail(inviteEmail, normalizedEmail)) {
+    return {
+      error: "This invitation does not match your signed-in email address.",
+    };
+  }
+
+  const { data: existingMembership, error: existingError } = await supabase
+    .from("company_memberships")
+    .select("id, status")
+    .eq("company_id", row.company_id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existingError) {
+    console.error("[acceptPendingInvite] existing membership lookup failed:", {
+      membershipId,
+      userId,
+      companyId: row.company_id,
+      code: existingError.code,
+      message: existingError.message,
+    });
+    return { error: "Failed to verify your membership status. Please try again." };
+  }
+
+  if (existingMembership) {
+    const existing = existingMembership as Pick<
+      CompanyMembershipRow,
+      "id" | "status"
+    >;
+
+    if (existing.status === "active") {
+      return { error: "You are already an active member of this company." };
+    }
+
+    return {
+      error: "You already have a membership record in this company workspace.",
+    };
+  }
+
+  const joinedAt = new Date().toISOString();
+
+  const { data: updatedMembership, error: updateError } = await supabase
+    .from("company_memberships")
+    .update({
+      user_id: userId,
+      status: "active",
+      joined_at: joinedAt,
+    })
+    .eq("id", membershipId)
+    .eq("company_id", row.company_id)
+    .eq("status", "invited")
+    .is("user_id", null)
+    .eq("invite_email", normalizeInviteEmail(inviteEmail))
+    .select("id, company_id")
+    .maybeSingle();
+
+  if (updateError) {
+    console.error("[acceptPendingInvite] update failed:", {
+      membershipId,
+      userId,
+      companyId: row.company_id,
+      code: updateError.code,
+      message: updateError.message,
+    });
+
+    if (updateError.code === "23505") {
+      return {
+        error: "You are already a member of this company or this invitation was claimed.",
+      };
+    }
+
+    return { error: mapDatabaseError(updateError) };
+  }
+
+  if (!updatedMembership) {
+    return {
+      error:
+        "This invitation was already accepted or is no longer available. Refresh and try again.",
+    };
+  }
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({ default_company_id: row.company_id })
+    .eq("id", userId)
+    .is("default_company_id", null);
+
+  if (profileError) {
+    console.error("[acceptPendingInvite] default company update failed:", {
+      userId,
+      companyId: row.company_id,
+      code: profileError.code,
+      message: profileError.message,
+    });
+  }
+
+  return { companyId: row.company_id };
 }
 
 export type CreateTeamInviteResult = {

@@ -3,13 +3,20 @@ import {
   canAccessAdminNavItem,
   canManageTeamMembers,
 } from "@/lib/database/access-control";
+import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { listCompanyMembers } from "@/lib/database/queries/memberships";
+import {
+  listCompanyMembers,
+  listPendingInvitesForUserEmail,
+  resolveUserEmailForInvite,
+} from "@/lib/database/queries/memberships";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
+import { PendingInvitesCard } from "@/shared/components/settings/PendingInvitesCard";
 import { SettingsPageView } from "@/shared/components/settings/SettingsPageView";
 import type { CompanyProfileSummary } from "@/shared/types/team-member";
 
 export default async function SettingsPage() {
+  const user = await getCurrentUser();
   const companyContext = await getActiveCompanyContext();
 
   if (!companyContext) {
@@ -22,8 +29,22 @@ export default async function SettingsPage() {
     );
   }
 
-  const { members, error: membersError } = await listCompanyMembers(
-    companyContext.company.id,
+  const profile = await getCurrentProfile();
+  const email = resolveUserEmailForInvite(
+    profile?.email,
+    user?.email ?? undefined,
+  );
+
+  const [{ members, error: membersError }, pendingInvitesResult] =
+    await Promise.all([
+      listCompanyMembers(companyContext.company.id),
+      email
+        ? listPendingInvitesForUserEmail(email)
+        : Promise.resolve({ invites: [], error: undefined }),
+    ]);
+
+  const pendingInvites = pendingInvitesResult.invites.filter(
+    (invite) => invite.companyId !== companyContext.company.id,
   );
 
   const companyProfile: CompanyProfileSummary = {
@@ -40,13 +61,23 @@ export default async function SettingsPage() {
   };
 
   return (
-    <SettingsPageView
-      companyProfile={companyProfile}
-      initialMembers={members}
-      currentUserId={companyContext.user.id}
-      currentUserRole={companyContext.role}
-      canManageTeam={canManageTeamMembers(companyContext)}
-      membersLoadError={membersError}
-    />
+    <div className="space-y-6">
+      {pendingInvitesResult.error ? (
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {pendingInvitesResult.error}
+        </div>
+      ) : null}
+
+      <PendingInvitesCard invites={pendingInvites} variant="settings" />
+
+      <SettingsPageView
+        companyProfile={companyProfile}
+        initialMembers={members}
+        currentUserId={companyContext.user.id}
+        currentUserRole={companyContext.role}
+        canManageTeam={canManageTeamMembers(companyContext)}
+        membersLoadError={membersError}
+      />
+    </div>
   );
 }
