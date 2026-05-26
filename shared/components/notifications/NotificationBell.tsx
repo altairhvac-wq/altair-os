@@ -1,0 +1,123 @@
+"use client";
+
+import { useEffect, useRef, useState, useTransition } from "react";
+import { Bell } from "lucide-react";
+import {
+  markAllNotificationsReadAction,
+} from "@/app/actions/notifications";
+import type { Notification } from "@/shared/types/notification";
+import { NotificationListItem } from "./NotificationListItem";
+
+type NotificationBellProps = {
+  initialNotifications: Notification[];
+  initialUnreadCount: number;
+};
+
+export function NotificationBell({
+  initialNotifications,
+  initialUnreadCount,
+}: NotificationBellProps) {
+  const [open, setOpen] = useState(false);
+  const [notifications, setNotifications] = useState(initialNotifications);
+  const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
+  const [isPending, startTransition] = useTransition();
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setNotifications(initialNotifications);
+    setUnreadCount(initialUnreadCount);
+  }, [initialNotifications, initialUnreadCount]);
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (!panelRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    if (open) {
+      document.addEventListener("mousedown", handlePointerDown);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, [open]);
+
+  function handleNotificationRead(notificationId: string) {
+    setNotifications((current) =>
+      current.map((notification) =>
+        notification.id === notificationId
+          ? { ...notification, readAt: new Date().toISOString() }
+          : notification,
+      ),
+    );
+    setUnreadCount((current) => Math.max(0, current - 1));
+  }
+
+  function handleMarkAllRead() {
+    startTransition(async () => {
+      const result = await markAllNotificationsReadAction();
+
+      if (result.error) {
+        return;
+      }
+
+      setNotifications(result.notifications ?? []);
+      setUnreadCount(result.unreadCount ?? 0);
+    });
+  }
+
+  return (
+    <div ref={panelRef} className="relative hidden sm:block">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="relative rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+        aria-label="Notifications"
+        aria-expanded={open}
+      >
+        <Bell className="h-5 w-5" />
+        {unreadCount > 0 ? (
+          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-600 px-1 text-[10px] font-bold text-white">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        ) : null}
+      </button>
+
+      {open ? (
+        <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+            <p className="text-sm font-semibold text-slate-900">Notifications</p>
+            {unreadCount > 0 ? (
+              <button
+                type="button"
+                onClick={handleMarkAllRead}
+                disabled={isPending}
+                className="text-xs font-semibold text-cyan-700 transition-colors hover:text-cyan-800 disabled:opacity-50"
+              >
+                Mark all read
+              </button>
+            ) : null}
+          </div>
+
+          <div className="max-h-96 space-y-2 overflow-y-auto p-3">
+            {notifications.length === 0 ? (
+              <p className="px-2 py-6 text-center text-sm text-slate-500">
+                No notifications yet.
+              </p>
+            ) : (
+              notifications.map((notification) => (
+                <NotificationListItem
+                  key={notification.id}
+                  notification={notification}
+                  onRead={handleNotificationRead}
+                />
+              ))
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}

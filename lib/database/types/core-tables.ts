@@ -21,6 +21,8 @@ import type {
   ReceiptStatus,
   TimeActivityType,
   TimeEntryType,
+  NotificationEntityType,
+  NotificationType,
   Timestamp,
   UUID,
 } from "./enums";
@@ -751,6 +753,40 @@ export type TimeActivityInsert = {
   metadata?: Json;
   created_at?: Timestamp;
 };
+
+export type NotificationRow = {
+  id: UUID;
+  company_id: UUID;
+  user_id: UUID | null;
+  role_target: CompanyRole | null;
+  type: NotificationType;
+  title: string;
+  message: string;
+  entity_type: NotificationEntityType | null;
+  entity_id: UUID | null;
+  read_at: Timestamp | null;
+  metadata: Json;
+  created_at: Timestamp;
+};
+
+export type NotificationInsert = {
+  id?: UUID;
+  company_id: UUID;
+  user_id?: UUID | null;
+  role_target?: CompanyRole | null;
+  type: NotificationType;
+  title: string;
+  message: string;
+  entity_type?: NotificationEntityType | null;
+  entity_id?: UUID | null;
+  read_at?: Timestamp | null;
+  metadata?: Json;
+  created_at?: Timestamp;
+};
+
+export type NotificationUpdate = Partial<
+  Pick<NotificationRow, "read_at">
+>;
 
 export type ActiveCompanyContext = UserCompanyContext & {
   user: {

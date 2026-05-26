@@ -1,14 +1,18 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import type { ActiveCompanyContext } from "@/lib/database/types";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import { logoutAction } from "@/app/actions/auth";
+import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
+import type { Notification } from "@/shared/types/notification";
 
 type HeaderProps = {
   title: string;
   description?: string;
   companyContext: ActiveCompanyContext;
+  notifications?: Notification[];
+  unreadNotificationCount?: number;
 };
 
 function getInitials(fullName: string | null, email: string | undefined) {
@@ -27,7 +31,13 @@ function getInitials(fullName: string | null, email: string | undefined) {
   return (email?.slice(0, 2) ?? "U").toUpperCase();
 }
 
-export function Header({ title, description, companyContext }: HeaderProps) {
+export function Header({
+  title,
+  description,
+  companyContext,
+  notifications = [],
+  unreadNotificationCount = 0,
+}: HeaderProps) {
   const displayName =
     companyContext.profile.full_name ??
     companyContext.user.email ??
@@ -60,13 +70,10 @@ export function Header({ title, description, companyContext }: HeaderProps) {
         >
           <Search className="h-5 w-5" />
         </button>
-        <button
-          type="button"
-          className="hidden rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 sm:inline-flex"
-          aria-label="Notifications"
-        >
-          <Bell className="h-5 w-5" />
-        </button>
+        <NotificationBell
+          initialNotifications={notifications}
+          initialUnreadCount={unreadNotificationCount}
+        />
         <div className="flex items-center gap-2 border-l border-slate-200 pl-2 sm:ml-2 sm:gap-3 sm:pl-4">
           <div className="hidden text-right md:block">
             <p className="text-sm font-semibold text-slate-900">

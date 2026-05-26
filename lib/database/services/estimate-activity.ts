@@ -2,6 +2,7 @@ import {
   recordEstimateActivity,
   resolveEstimateStatusEventType,
 } from "@/lib/database/queries/estimate-activities";
+import { notifyEstimateApproved } from "@/lib/database/services/operational-notifications";
 import type { EstimateStatus } from "@/shared/types/estimate";
 
 export async function recordEstimateCreatedActivity(input: {
@@ -69,6 +70,18 @@ export async function recordEstimateStatusChangedActivity(input: {
       estimateId: input.estimateId,
       toStatus: input.toStatus,
       error,
+    });
+    return;
+  }
+
+  if (input.toStatus === "approved") {
+    notifyEstimateApproved({
+      companyId: input.companyId,
+      actorId: input.actorId,
+      estimateId: input.estimateId,
+      estimateNumber: input.estimateNumber,
+      customerId: input.customerId,
+      jobId: input.jobId,
     });
   }
 }

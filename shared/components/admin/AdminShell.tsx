@@ -6,10 +6,13 @@ import type { ActiveCompanyContext } from "@/lib/database/types";
 import { getAdminMobileNavItems, getNavItemForPath } from "./nav-items";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import type { Notification } from "@/shared/types/notification";
 
 type AdminShellProps = {
   children: React.ReactNode;
   companyContext: ActiveCompanyContext;
+  notifications?: Notification[];
+  unreadNotificationCount?: number;
 };
 
 function isActivePath(pathname: string, href: string) {
@@ -20,7 +23,12 @@ function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AdminShell({ children, companyContext }: AdminShellProps) {
+export function AdminShell({
+  children,
+  companyContext,
+  notifications = [],
+  unreadNotificationCount = 0,
+}: AdminShellProps) {
   const pathname = usePathname();
   const current = getNavItemForPath(pathname);
   const mobileNavItems = getAdminMobileNavItems(companyContext.role);
@@ -34,6 +42,8 @@ export function AdminShell({ children, companyContext }: AdminShellProps) {
           title={current.label}
           description={current.description}
           companyContext={companyContext}
+          notifications={notifications}
+          unreadNotificationCount={unreadNotificationCount}
         />
 
         <nav

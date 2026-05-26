@@ -134,6 +134,24 @@ export type TimeActivityType =
   | "job_labor_started"
   | "job_labor_ended";
 
+export type NotificationType =
+  | "job_assigned"
+  | "job_completed"
+  | "estimate_approved"
+  | "invoice_paid"
+  | "expense_submitted"
+  | "expense_rejected"
+  | "time_clocked_in"
+  | "time_clocked_out";
+
+export type NotificationEntityType =
+  | "job"
+  | "customer"
+  | "estimate"
+  | "invoice"
+  | "expense"
+  | "time_entry";
+
 export type Json =
   | string
   | number

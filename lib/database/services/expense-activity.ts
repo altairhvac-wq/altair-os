@@ -1,4 +1,8 @@
 import { recordExpenseActivity } from "@/lib/database/queries/expense-activities";
+import {
+  notifyExpenseRejected,
+  notifyExpenseSubmitted,
+} from "@/lib/database/services/operational-notifications";
 import type { Expense, ExpenseStatus } from "@/shared/types/expense";
 
 function buildExpenseActivityMetadata(expense: Expense) {
@@ -96,6 +100,33 @@ async function recordExpenseStatusActivity(input: {
       expenseId: input.expenseId,
       eventType: input.eventType,
       error,
+    });
+    return;
+  }
+
+  if (input.eventType === "expense_submitted") {
+    notifyExpenseSubmitted({
+      companyId: input.companyId,
+      actorId: input.actorId,
+      expenseId: input.expenseId,
+      expenseNumber: input.expense.expenseNumber,
+      merchant: input.expense.merchant,
+      amount: input.expense.amount,
+      technicianName: input.expense.technician,
+      jobId: input.expense.jobId,
+    });
+  }
+
+  if (input.eventType === "expense_rejected") {
+    notifyExpenseRejected({
+      companyId: input.companyId,
+      technicianId: input.expense.technicianId,
+      actorId: input.actorId,
+      expenseId: input.expenseId,
+      expenseNumber: input.expense.expenseNumber,
+      merchant: input.expense.merchant,
+      amount: input.expense.amount,
+      rejectionReason: input.rejectionReason,
     });
   }
 }

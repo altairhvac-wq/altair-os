@@ -1,4 +1,5 @@
 import {
+  Bell,
   Briefcase,
   CalendarDays,
   Clock,
@@ -42,6 +43,13 @@ export const technicianNavItems: TechnicianNavItem[] = [
     label: "Receipts",
     href: "/tech/receipts",
     icon: Receipt,
+    enabled: true,
+  },
+  {
+    id: "notifications",
+    label: "Alerts",
+    href: "/tech/notifications",
+    icon: Bell,
     enabled: true,
   },
   {

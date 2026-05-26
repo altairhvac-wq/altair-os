@@ -1,39 +1,48 @@
 import { Wrench } from "lucide-react";
 import type { ActiveCompanyContext } from "@/lib/database/types";
 import { TechnicianBottomNav } from "./TechnicianBottomNav";
+import { TechnicianNotificationBadgeProvider } from "@/shared/components/notifications/TechnicianNotificationBadgeContext";
+import { TechnicianNotificationLink } from "@/shared/components/notifications/TechnicianNotificationLink";
 
 type TechnicianMobileShellProps = {
   children: React.ReactNode;
   companyContext: ActiveCompanyContext;
+  unreadNotificationCount?: number;
 };
 
 export function TechnicianMobileShell({
   children,
   companyContext,
+  unreadNotificationCount = 0,
 }: TechnicianMobileShellProps) {
   return (
-    <div className="min-h-dvh bg-slate-100">
-      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col border-x border-slate-200 bg-slate-100 shadow-xl">
-        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-600 text-white">
-              <Wrench className="h-4 w-4" />
+    <TechnicianNotificationBadgeProvider
+      initialUnreadCount={unreadNotificationCount}
+    >
+      <div className="min-h-dvh bg-slate-100">
+        <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col border-x border-slate-200 bg-slate-100 shadow-xl">
+          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-600 text-white">
+                <Wrench className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-slate-900">Altair OS</p>
+                <p className="truncate text-xs text-slate-500">
+                  {companyContext.company.name}
+                </p>
+              </div>
+              <TechnicianNotificationLink />
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-slate-900">Altair OS</p>
-              <p className="truncate text-xs text-slate-500">
-                {companyContext.company.name}
-              </p>
-            </div>
-          </div>
-        </header>
+          </header>
 
-        <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 pb-24 sm:px-4">
-          {children}
-        </main>
+          <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 pb-24 sm:px-4">
+            {children}
+          </main>
 
-        <TechnicianBottomNav />
+          <TechnicianBottomNav />
+        </div>
       </div>
-    </div>
+    </TechnicianNotificationBadgeProvider>
   );
 }

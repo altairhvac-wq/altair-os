@@ -55,6 +55,9 @@ import type {
   TimeEntryInsert,
   TimeEntryRow,
   TimeEntryUpdate,
+  NotificationInsert,
+  NotificationRow,
+  NotificationUpdate,
 } from "./core-tables";
 
 export type Database = {
@@ -640,6 +643,27 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: NotificationRow;
+        Insert: NotificationInsert;
+        Update: NotificationUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "notifications_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -672,6 +696,8 @@ export type Database = {
       expense_activity_type: ExpenseActivityRow["event_type"];
       time_entry_type: TimeEntryRow["entry_type"];
       time_activity_type: TimeActivityRow["event_type"];
+      notification_type: NotificationRow["type"];
+      notification_entity_type: NotificationRow["entity_type"];
     };
     CompositeTypes: Record<string, never>;
   };

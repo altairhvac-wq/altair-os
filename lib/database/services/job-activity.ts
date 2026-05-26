@@ -2,6 +2,10 @@ import {
   recordJobActivity,
   resolveStatusChangeEventType,
 } from "@/lib/database/queries/job-activities";
+import {
+  notifyJobAssigned,
+  notifyWorkCompleted,
+} from "@/lib/database/services/operational-notifications";
 import { createClient } from "@/lib/supabase/server";
 import type { JobStatus } from "@/shared/types/job";
 import type { JobWorkflowActionId } from "@/shared/types/job-workflow";
@@ -86,7 +90,18 @@ export async function recordTechnicianAssignedActivity(input: {
       jobId: input.jobId,
       error,
     });
+    return;
   }
+
+  notifyJobAssigned({
+    companyId: input.companyId,
+    technicianId: input.technicianId,
+    actorId: input.actorId,
+    jobId: input.jobId,
+    jobNumber: input.jobNumber,
+    customerId: input.customerId,
+    technicianName,
+  });
 }
 
 export async function recordJobStatusChangedActivity(input: {
@@ -123,6 +138,17 @@ export async function recordJobStatusChangedActivity(input: {
       jobId: input.jobId,
       actionId: input.actionId,
       error,
+    });
+    return;
+  }
+
+  if (input.actionId === "complete") {
+    notifyWorkCompleted({
+      companyId: input.companyId,
+      actorId: input.actorId,
+      jobId: input.jobId,
+      jobNumber: input.jobNumber,
+      customerId: input.customerId,
     });
   }
 }
