@@ -122,8 +122,10 @@ export function JobsPageView({
   const hasNoResults = !hasNoJobs && filteredJobs.length === 0;
 
   return (
-    <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:flex-row lg:overflow-hidden">
-      <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1`}>
+    <div className="flex min-h-0 flex-col gap-4 lg:h-[calc(100dvh-9.5rem)] lg:flex-row lg:overflow-hidden">
+      <section
+        className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col admin-card lg:min-h-0 lg:flex-1 lg:overflow-hidden ${panelMode === "create" ? "max-lg:hidden" : ""}`}
+      >
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
           <div>
             <h2 className="text-base font-bold text-slate-900">All jobs</h2>
