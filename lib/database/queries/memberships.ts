@@ -209,18 +209,26 @@ function normalizeInviteEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
+export type InviteEmailResolution = {
+  email: string | null;
+  mismatch: boolean;
+};
+
 export function resolveUserEmailForInvite(
   profileEmail: string | undefined,
   authEmail: string | undefined,
-): string | null {
+): InviteEmailResolution {
   const normalizedProfile = profileEmail?.trim().toLowerCase() ?? "";
   const normalizedAuth = authEmail?.trim().toLowerCase() ?? "";
 
   if (normalizedProfile && normalizedAuth && normalizedProfile !== normalizedAuth) {
-    return null;
+    return { email: null, mismatch: true };
   }
 
-  return normalizedProfile || normalizedAuth || null;
+  return {
+    email: normalizedProfile || normalizedAuth || null,
+    mismatch: false,
+  };
 }
 
 function inviteEmailMatchesUserEmail(
@@ -422,7 +430,6 @@ export async function acceptPendingInvite(
     .eq("company_id", row.company_id)
     .eq("status", "invited")
     .is("user_id", null)
-    .eq("invite_email", normalizeInviteEmail(inviteEmail))
     .select("id, company_id")
     .maybeSingle();
 

@@ -8,9 +8,24 @@ stable
 security invoker
 set search_path = public
 as $$
-  select lower(trim(email))
-  from public.profiles
-  where id = auth.uid();
+  with identity as (
+    select
+      lower(trim(p.email)) as profile_email,
+      lower(trim(coalesce(auth.jwt() ->> 'email', ''))) as auth_email
+    from public.profiles p
+    where p.id = auth.uid()
+  )
+  select case
+    when not exists (select 1 from identity) then null
+    when (select profile_email from identity) <> ''
+         and (select auth_email from identity) <> ''
+         and (select profile_email from identity) <> (select auth_email from identity)
+      then null
+    else coalesce(
+      nullif((select profile_email from identity), ''),
+      nullif((select auth_email from identity), '')
+    )
+  end;
 $$;
 
 grant execute on function public.current_user_profile_email() to authenticated;

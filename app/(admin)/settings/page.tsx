@@ -30,7 +30,7 @@ export default async function SettingsPage() {
   }
 
   const profile = await getCurrentProfile();
-  const email = resolveUserEmailForInvite(
+  const emailResolution = resolveUserEmailForInvite(
     profile?.email,
     user?.email ?? undefined,
   );
@@ -38,8 +38,8 @@ export default async function SettingsPage() {
   const [{ members, error: membersError }, pendingInvitesResult] =
     await Promise.all([
       listCompanyMembers(companyContext.company.id),
-      email
-        ? listPendingInvitesForUserEmail(email)
+      emailResolution.email
+        ? listPendingInvitesForUserEmail(emailResolution.email)
         : Promise.resolve({ invites: [], error: undefined }),
     ]);
 
@@ -62,6 +62,13 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6">
+      {emailResolution.mismatch ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Your profile email and sign-in email do not match. Update them to the
+          same address before you can view or accept team invitations.
+        </div>
+      ) : null}
+
       {pendingInvitesResult.error ? (
         <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
           {pendingInvitesResult.error}

@@ -37,7 +37,19 @@ export async function acceptInviteAction(
   }
 
   const profile = await getCurrentProfile();
-  const email = resolveUserEmailForInvite(profile?.email, user.email ?? undefined);
+  const emailResolution = resolveUserEmailForInvite(
+    profile?.email,
+    user.email ?? undefined,
+  );
+
+  if (emailResolution.mismatch) {
+    return {
+      error:
+        "Your profile email and sign-in email do not match. Update them to the same address before accepting an invitation.",
+    };
+  }
+
+  const email = emailResolution.email;
 
   if (!email) {
     return {
