@@ -5,6 +5,7 @@ import { listInvoices } from "@/lib/database/queries/invoices";
 import { listJobMaterialsForCompany } from "@/lib/database/queries/job-materials";
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listTimeEntries } from "@/lib/database/queries/time-entries";
+import { getCompanyCompletedWorkReport } from "@/lib/database/services/reports/completed-work-report";
 import { getCompanyExpenseReport } from "@/lib/database/services/reports/expense-report";
 import { getCompanyJobActivityReport } from "@/lib/database/services/reports/job-activity-report";
 import { getCompanyProfitabilityReport } from "@/lib/database/services/reports/profitability-report";
@@ -24,14 +25,12 @@ import type { ProfitabilityReportDateRange } from "@/shared/types/reports";
 import type { Estimate } from "@/shared/types/estimate";
 import type { Expense } from "@/shared/types/expense";
 import type { Invoice } from "@/shared/types/invoice";
-import type { Job, JobStatus } from "@/shared/types/job";
 import type { JobMaterial } from "@/shared/types/job-material";
 import type { TimeEntry } from "@/shared/types/time-entry";
 
 const REPORT_OPTIONS = { dateRange: "all" as const satisfies ProfitabilityReportDateRange };
 
 type JobLevelOperationalCounts = {
-  completedAwaitingInvoicingCount: number;
   materialCostExceedsCollectedCount: number;
 };
 
@@ -88,7 +87,6 @@ async function deriveJobLevelOperationalCounts(
   const laborByJob = groupByJobId(laborEntries, jobIds);
   const materialsByJob = groupByJobId(materials, jobIds);
 
-  let completedAwaitingInvoicingCount = 0;
   let materialCostExceedsCollectedCount = 0;
 
   for (const job of jobs) {
@@ -102,19 +100,12 @@ async function deriveJobLevelOperationalCounts(
 
     const snapshot = computeJobProfitability(inputs);
 
-    if (job.status === ("completed" satisfies JobStatus)) {
-      if (snapshot.completeness.noActiveInvoices) {
-        completedAwaitingInvoicingCount += 1;
-      }
-    }
-
     if (jobMaterialCostExceedsCollectedRevenue(snapshot)) {
       materialCostExceedsCollectedCount += 1;
     }
   }
 
   return {
-    completedAwaitingInvoicingCount,
     materialCostExceedsCollectedCount,
   };
 }
@@ -161,7 +152,7 @@ function buildHighlights(input: {
       category: "invoicing",
       count: input.completedAwaitingInvoicingCount,
       message: `${input.completedAwaitingInvoicingCount} completed ${pluralize(input.completedAwaitingInvoicingCount, "job")} ${input.completedAwaitingInvoicingCount === 1 ? "is" : "are"} awaiting invoicing.`,
-      href: "/jobs",
+      href: "/reports",
     });
   }
 
@@ -273,6 +264,7 @@ export async function getDailyOperationsSummary(
     technicianLaborReport,
     profitabilityReport,
     paymentsToday,
+    completedWorkReport,
     jobLevelCounts,
   ] = await Promise.all([
     getCompanyRevenueReport(companyId, REPORT_OPTIONS),
@@ -282,6 +274,7 @@ export async function getDailyOperationsSummary(
     getCompanyTechnicianLaborReport(companyId, REPORT_OPTIONS),
     getCompanyProfitabilityReport(companyId, REPORT_OPTIONS),
     getPaymentsTodaySummary(companyId),
+    getCompanyCompletedWorkReport(companyId),
     deriveJobLevelOperationalCounts(companyId),
   ]);
 
@@ -310,7 +303,8 @@ export async function getDailyOperationsSummary(
       technicianCount: technicianLaborReport.summary.technicianCount,
     },
     completedAwaitingInvoicing: {
-      count: jobLevelCounts.completedAwaitingInvoicingCount,
+      count: completedWorkReport.summary.count,
+      jobs: completedWorkReport.summary.jobs,
     },
     profitabilityWarnings: {
       jobsWithWarnings: profitabilityReport.summary.jobsWithWarnings,
@@ -342,6 +336,7 @@ export async function getDailyOperationsSummary(
         jobActivityReport.meta.limitations,
         stalledJobsReport.meta.limitations,
         technicianLaborReport.meta.limitations,
+        completedWorkReport.meta.limitations,
       ],
       profitabilityWarnings: profitabilityReport.meta.completenessWarnings,
     }),

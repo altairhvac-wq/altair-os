@@ -340,6 +340,84 @@ function AnalyticsSnapshotSection({
   );
 }
 
+function CompletedWorkAwaitingInvoicingSection({
+  completedWork,
+}: {
+  completedWork: DashboardData["completedWorkAwaitingInvoicing"];
+}) {
+  return (
+    <DashboardSection
+      title="Needs invoicing"
+      description="Completed jobs with no active invoices on file"
+      icon={FileText}
+      href="/reports"
+      linkLabel="View report"
+    >
+      <div className="mb-4">
+        <MetricCard
+          label="Awaiting invoicing"
+          value={completedWork.count}
+          description="Missing active invoices only"
+          icon={FileText}
+          iconClass="text-amber-600 bg-amber-50"
+          accent="border-amber-100"
+        />
+      </div>
+
+      {completedWork.jobs.length === 0 ? (
+        <EmptyState
+          title="No jobs waiting for invoicing"
+          description="Completed jobs with active invoices on file are excluded."
+        />
+      ) : (
+        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
+          {completedWork.jobs.map((job) => (
+            <li key={job.jobId}>
+              <Link
+                href={`/jobs/${job.jobId}`}
+                className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-900">{job.jobNumber}</p>
+                  <p className="mt-1 truncate text-sm text-slate-600">
+                    {job.customerName}
+                    {job.assignedTechnician
+                      ? ` · ${job.assignedTechnician}`
+                      : " · Unassigned"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Completed{" "}
+                    {job.completedAt
+                      ? formatOperationalActivityTimestamp(job.completedAt)
+                      : "date not recorded"}
+                    {job.approvedEstimateAmount != null
+                      ? ` · Est. ${formatCurrency(job.approvedEstimateAmount)}`
+                      : ""}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-semibold text-amber-800">
+                    {job.daysSinceCompletion} day
+                    {job.daysSinceCompletion === 1 ? "" : "s"} waiting
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Collected {formatCurrency(job.collectedRevenue)}
+                  </p>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <p className="mt-4 text-xs text-slate-500">
+        Read-only visibility — does not generate invoices, verify accounting
+        readiness, or send reminders.
+      </p>
+    </DashboardSection>
+  );
+}
+
 function StalledJobsSection({
   stalledJobs,
 }: {
@@ -1011,6 +1089,9 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
     <div className="flex flex-col gap-6">
       <AnalyticsSnapshotSection analytics={data.analytics} />
       <OperationalInsightsSection insights={data.operationalInsights} />
+      <CompletedWorkAwaitingInvoicingSection
+        completedWork={data.completedWorkAwaitingInvoicing}
+      />
       <TodayOperationsSection operations={data.operations} />
       <StalledJobsSection stalledJobs={data.stalledJobs} />
 

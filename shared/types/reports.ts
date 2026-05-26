@@ -268,12 +268,34 @@ export type StalledJobsReport = {
   meta: ReportSectionMeta;
 };
 
+export type CompletedWorkAwaitingInvoicingEntry = {
+  jobId: string;
+  jobNumber: string;
+  customerName: string;
+  completedAt: string | null;
+  assignedTechnician?: string;
+  approvedEstimateAmount: number | null;
+  collectedRevenue: number;
+  daysSinceCompletion: number;
+};
+
+export type CompletedWorkAwaitingInvoicingReportSummary = {
+  count: number;
+  jobs: CompletedWorkAwaitingInvoicingEntry[];
+};
+
+export type CompletedWorkAwaitingInvoicingReport = {
+  summary: CompletedWorkAwaitingInvoicingReportSummary;
+  meta: ReportSectionMeta;
+};
+
 export type OperationalReportsBundle = {
   revenue: RevenueReport;
   expenses: ExpenseReport;
   jobs: JobActivityReport;
   labor: TechnicianLaborReport;
   stalledJobs: StalledJobsReport;
+  completedWorkAwaitingInvoicing: CompletedWorkAwaitingInvoicingReport;
 };
 
 export type ReportChartBucketSize = "day" | "week" | "month";

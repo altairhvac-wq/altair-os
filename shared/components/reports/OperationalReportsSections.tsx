@@ -17,6 +17,7 @@ import { formatJobProfitabilityLaborHours } from "@/shared/types/job-profitabili
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { formatJobStatus } from "@/shared/types/job";
 import type {
+  CompletedWorkAwaitingInvoicingReport,
   ExpenseReport,
   JobActivityReport,
   OperationalReportsBundle,
@@ -328,6 +329,85 @@ function TechnicianLaborReportSection({
   );
 }
 
+function CompletedWorkAwaitingInvoicingReportSection({
+  report,
+}: {
+  report: CompletedWorkAwaitingInvoicingReport;
+}) {
+  const { summary, meta } = report;
+
+  return (
+    <ReportSectionShell
+      title="Completed work awaiting invoicing"
+      description="Finished jobs with no active invoices on file"
+      meta={meta}
+    >
+      <MetricCard
+        label="Needs invoicing"
+        value={String(summary.count)}
+        description="Completed jobs without active invoices"
+        icon={FileText}
+        iconClassName="text-amber-600 bg-amber-50"
+        accentClassName="border-amber-100"
+      />
+      <div className="col-span-full">
+        {summary.jobs.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-center text-sm text-slate-600">
+            No completed jobs are waiting for invoicing right now.
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-slate-100">
+            <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
+              <thead className="bg-slate-50/80 text-xs font-bold uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Job</th>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3">Completed</th>
+                  <th className="px-4 py-3">Technician</th>
+                  <th className="px-4 py-3 text-right">Estimate</th>
+                  <th className="px-4 py-3 text-right">Collected</th>
+                  <th className="px-4 py-3 text-right">Days waiting</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {summary.jobs.map((job) => (
+                  <tr key={job.jobId} className="transition-colors hover:bg-slate-50">
+                    <td className="px-4 py-3 font-semibold text-slate-900">
+                      <Link href={`/jobs/${job.jobId}`} className="hover:text-cyan-700">
+                        {job.jobNumber}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">{job.customerName}</td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {job.completedAt
+                        ? formatOperationalActivityTimestamp(job.completedAt)
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {job.assignedTechnician ?? "Unassigned"}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                      {job.approvedEstimateAmount == null
+                        ? "—"
+                        : formatCurrency(job.approvedEstimateAmount)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                      {formatCurrency(job.collectedRevenue)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold tabular-nums text-amber-800">
+                      {job.daysSinceCompletion}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </ReportSectionShell>
+  );
+}
+
 function StalledJobsReportSection({ report }: { report: StalledJobsReport }) {
   const { summary, meta } = report;
 
@@ -400,6 +480,9 @@ export function OperationalReportsSections({
 }: OperationalReportsSectionsProps) {
   return (
     <div className="flex flex-col gap-6">
+      <CompletedWorkAwaitingInvoicingReportSection
+        report={reports.completedWorkAwaitingInvoicing}
+      />
       <StalledJobsReportSection report={reports.stalledJobs} />
       <RevenueReportSection report={reports.revenue} />
       <ExpenseReportSection report={reports.expenses} />

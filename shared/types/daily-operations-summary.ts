@@ -1,4 +1,7 @@
-import type { StalledJobEntry } from "@/shared/types/reports";
+import type {
+  CompletedWorkAwaitingInvoicingEntry,
+  StalledJobEntry,
+} from "@/shared/types/reports";
 
 export type DailyOperationsSummarySeverity = "info" | "warning" | "critical";
 
@@ -47,6 +50,7 @@ export type DailyOperationsActiveTechniciansSnapshot = {
 
 export type DailyOperationsCompletedAwaitingInvoicingSnapshot = {
   count: number;
+  jobs: CompletedWorkAwaitingInvoicingEntry[];
 };
 
 export type DailyOperationsProfitabilityWarningsSnapshot = {

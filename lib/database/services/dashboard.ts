@@ -29,6 +29,7 @@ const RECENT_PAYMENTS_LIMIT = 5;
 const RECENT_ACTIVITY_LIMIT = 10;
 const RECENT_NOTIFICATIONS_LIMIT = 5;
 const STALLED_JOBS_DASHBOARD_LIMIT = 5;
+const COMPLETED_WORK_DASHBOARD_LIMIT = 5;
 /** Match admin layout fetch so React cache dedupes within the request. */
 const NOTIFICATIONS_FETCH_LIMIT = 20;
 
@@ -176,6 +177,13 @@ export async function getDashboardData(
       stalledJobs: summarySections.stalledJobs.stalledJobs.slice(
         0,
         STALLED_JOBS_DASHBOARD_LIMIT,
+      ),
+    },
+    completedWorkAwaitingInvoicing: {
+      count: summarySections.completedAwaitingInvoicing.count,
+      jobs: summarySections.completedAwaitingInvoicing.jobs.slice(
+        0,
+        COMPLETED_WORK_DASHBOARD_LIMIT,
       ),
     },
     operationalInsights: operationsSummary,

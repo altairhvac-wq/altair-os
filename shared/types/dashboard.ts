@@ -4,7 +4,7 @@ import type { Expense } from "@/shared/types/expense";
 import type { Notification } from "@/shared/types/notification";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
 import type { DailyOperationsSummary } from "@/shared/types/daily-operations-summary";
-import type { StalledJobEntry } from "@/shared/types/reports";
+import type { CompletedWorkAwaitingInvoicingEntry, StalledJobEntry } from "@/shared/types/reports";
 import type { TechnicianTimeState } from "@/shared/types/time-entry";
 
 export type DashboardOperationsSummary = {
@@ -73,6 +73,11 @@ export type DashboardStalledJobsSnapshot = {
   stalledJobs: StalledJobEntry[];
 };
 
+export type DashboardCompletedWorkAwaitingInvoicingSnapshot = {
+  count: number;
+  jobs: CompletedWorkAwaitingInvoicingEntry[];
+};
+
 export type DashboardData = {
   analytics: DashboardAnalyticsSnapshot;
   operations: DashboardOperationsSummary;
@@ -81,6 +86,7 @@ export type DashboardData = {
   expenses: DashboardExpenseReview;
   notifications: DashboardNotificationsSummary;
   stalledJobs: DashboardStalledJobsSnapshot;
+  completedWorkAwaitingInvoicing: DashboardCompletedWorkAwaitingInvoicingSnapshot;
   operationalInsights: DailyOperationsSummary;
   recentActivity: OperationalActivity[];
 };
