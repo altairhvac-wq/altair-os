@@ -9,10 +9,12 @@ import {
   type DispatchJobStatus,
   type Technician,
 } from "@/shared/types/dispatch";
+import type { DispatchPageFocusState } from "@/shared/lib/dispatch-page-focus";
 import { DispatchBoard } from "./DispatchBoard";
 import { DispatchDashboardHeader } from "./DispatchDashboardHeader";
 import { DispatchDetailsPanel } from "./DispatchDetailsPanel";
 import { DispatchEmptyState } from "./DispatchEmptyState";
+import { DispatchFocusBanner } from "./DispatchFocusBanner";
 import { DispatchSearchFilterBar } from "./DispatchSearchFilterBar";
 import { DispatchSummaryCards } from "./DispatchSummaryCards";
 import { TechnicianWorkloadCards } from "./TechnicianWorkloadCards";
@@ -23,6 +25,7 @@ type DispatchPageViewProps = {
   technicians: Technician[];
   canDispatchJobs: boolean;
   canViewAssignedJobs: boolean;
+  dispatchPageFocus?: DispatchPageFocusState;
 };
 
 export function DispatchPageView({
@@ -30,6 +33,7 @@ export function DispatchPageView({
   technicians,
   canDispatchJobs,
   canViewAssignedJobs,
+  dispatchPageFocus,
 }: DispatchPageViewProps) {
   const canUpdateJobWorkflow = canDispatchJobs || canViewAssignedJobs;
   const [jobs, setJobs] = useState(initialJobs);
@@ -37,7 +41,9 @@ export function DispatchPageView({
   const [statusFilter, setStatusFilter] = useState<DispatchJobStatus | "all">(
     "all",
   );
-  const [technicianFilter, setTechnicianFilter] = useState("all");
+  const [technicianFilter, setTechnicianFilter] = useState<string>(
+    dispatchPageFocus?.initialTechnicianFilter ?? "all",
+  );
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [showUnassignedModal, setShowUnassignedModal] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
@@ -105,6 +111,12 @@ export function DispatchPageView({
   const hasNoJobs = jobs.length === 0;
   const hasNoResults = !hasNoJobs && filteredJobs.length === 0;
 
+  const boardTitle =
+    dispatchPageFocus?.boardEyebrow ?? "Today's scheduled jobs";
+  const boardSubtitle =
+    dispatchPageFocus?.boardDescription ??
+    "Technician lanes with horizontally scrollable job cards";
+
   return (
     <div className="flex flex-col gap-4">
       <DispatchDashboardHeader
@@ -112,9 +124,25 @@ export function DispatchPageView({
         technicianCount={technicians.length}
       />
 
-      <DispatchSummaryCards summary={summary} />
+      {dispatchPageFocus?.banner ? (
+        <DispatchFocusBanner
+          title={dispatchPageFocus.banner.title}
+          description={dispatchPageFocus.banner.description}
+          clearHref={dispatchPageFocus.banner.clearHref}
+        />
+      ) : null}
 
-      <TechnicianWorkloadCards technicians={technicians} jobs={jobs} />
+      <DispatchSummaryCards
+        summary={summary}
+        highlightedLabels={dispatchPageFocus?.highlightedSummaryLabels}
+      />
+
+      <TechnicianWorkloadCards
+        technicians={technicians}
+        jobs={jobs}
+        emphasized={dispatchPageFocus?.emphasizeWorkload}
+        highlightedTechnicianIds={dispatchPageFocus?.overloadedTechnicianIds}
+      />
 
       {!hasNoJobs ? (
         <DispatchSearchFilterBar
@@ -131,14 +159,16 @@ export function DispatchPageView({
         />
       ) : null}
 
-      <section className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section
+        className={`flex flex-col rounded-2xl border bg-white shadow-sm ${
+          dispatchPageFocus?.emphasizeBoard
+            ? "border-cyan-200 ring-2 ring-cyan-500/15"
+            : "border-slate-200"
+        }`}
+      >
         <div className="shrink-0 border-b border-slate-100 px-4 py-3.5">
-          <h2 className="text-base font-bold text-slate-900">
-            Today&apos;s scheduled jobs
-          </h2>
-          <p className="text-xs text-slate-500">
-            Technician lanes with horizontally scrollable job cards
-          </p>
+          <h2 className="text-base font-bold text-slate-900">{boardTitle}</h2>
+          <p className="text-xs text-slate-500">{boardSubtitle}</p>
         </div>
 
         <div className="p-3 sm:p-4">
@@ -153,6 +183,9 @@ export function DispatchPageView({
               technicianFilter={technicianFilter}
               selectedJobId={selectedJobId}
               onSelectJob={handleSelectJob}
+              highlightUnassignedPanel={
+                dispatchPageFocus?.highlightUnassignedPanel ?? false
+              }
             />
           )}
         </div>

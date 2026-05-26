@@ -1,4 +1,9 @@
 import type { DashboardData } from "@/shared/types/dashboard";
+import {
+  DISPATCH_PAGE_OVERLOAD_HREF,
+  DISPATCH_PAGE_TODAY_HREF,
+  DISPATCH_PAGE_UNASSIGNED_HREF,
+} from "@/shared/lib/dispatch-page-focus";
 
 export type DispatchPressureSeverity = "healthy" | "warning" | "critical";
 
@@ -248,8 +253,12 @@ function resolvePrimaryHref(input: DispatchPressureInput): string {
   const stalledJobs = input.stalledJobs.stalledCount;
   const readinessBlockers = countReadinessBlockers(input);
 
-  if (unassignedToday > 0 || overloadedTechnicianCount > 0) {
-    return "/dispatch";
+  if (unassignedToday > 0) {
+    return DISPATCH_PAGE_UNASSIGNED_HREF;
+  }
+
+  if (overloadedTechnicianCount > 0) {
+    return DISPATCH_PAGE_OVERLOAD_HREF;
   }
 
   if (stalledJobs > 0) {
@@ -260,7 +269,7 @@ function resolvePrimaryHref(input: DispatchPressureInput): string {
     return "/reports?queue=attention";
   }
 
-  return "/dispatch";
+  return DISPATCH_PAGE_TODAY_HREF;
 }
 
 function resolveDrillDownLinks(
@@ -268,8 +277,22 @@ function resolveDrillDownLinks(
 ): DispatchPressureDrillDownLink[] {
   const links: DispatchPressureDrillDownLink[] = [];
 
-  if (input.operations.unassignedToday > 0 || input.operations.totalJobsToday > 0) {
-    links.push({ label: "Dispatch board", href: "/dispatch" });
+  if (input.operations.unassignedToday > 0) {
+    links.push({
+      label: "Unassigned jobs",
+      href: DISPATCH_PAGE_UNASSIGNED_HREF,
+    });
+  }
+
+  if (input.operations.overloadedTechnicianCount > 0) {
+    links.push({
+      label: "Technician workload",
+      href: DISPATCH_PAGE_OVERLOAD_HREF,
+    });
+  }
+
+  if (input.operations.totalJobsToday > 0) {
+    links.push({ label: "Dispatch board", href: DISPATCH_PAGE_TODAY_HREF });
   }
 
   if (input.stalledJobs.stalledCount > 0) {

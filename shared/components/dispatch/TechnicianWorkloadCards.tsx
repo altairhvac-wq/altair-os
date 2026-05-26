@@ -3,11 +3,15 @@ import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 type TechnicianWorkloadCardsProps = {
   technicians: Technician[];
   jobs: DispatchJob[];
+  emphasized?: boolean;
+  highlightedTechnicianIds?: string[];
 };
 
 export function TechnicianWorkloadCards({
   technicians,
   jobs,
+  emphasized = false,
+  highlightedTechnicianIds = [],
 }: TechnicianWorkloadCardsProps) {
   if (technicians.length === 0) {
     return (
@@ -24,17 +28,22 @@ export function TechnicianWorkloadCards({
     );
   }
 
-  return (
+  const grid = (
     <div className="grid shrink-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {technicians.map((technician) => {
         const assignedCount = jobs.filter(
           (job) => job.technicianId === technician.id,
         ).length;
+        const isHighlighted = highlightedTechnicianIds.includes(technician.id);
 
         return (
           <div
             key={technician.id}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+            className={`rounded-2xl border bg-white p-4 shadow-sm transition-shadow ${
+              isHighlighted
+                ? "border-amber-300 ring-2 ring-amber-400/25 shadow-md"
+                : "border-slate-200"
+            }`}
           >
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-800 to-slate-600 text-sm font-bold text-white">
@@ -61,5 +70,18 @@ export function TechnicianWorkloadCards({
         );
       })}
     </div>
+  );
+
+  if (!emphasized) {
+    return grid;
+  }
+
+  return (
+    <section className="rounded-2xl border border-amber-200/90 bg-amber-50/30 p-3 shadow-sm ring-2 ring-amber-400/15 sm:p-4">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-amber-900/80">
+        Technician workload today
+      </p>
+      {grid}
+    </section>
   );
 }

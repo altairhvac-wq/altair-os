@@ -419,7 +419,7 @@ function TodayOperationsSection({
       title="Today's Operations"
       description="Live job board snapshot for today"
       icon={CalendarCheck}
-      href="/dispatch"
+      href="/dispatch?focus=today"
       linkLabel="Open dispatch"
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

@@ -1,11 +1,16 @@
 import { CalendarCheck, CheckCircle2, Loader2, UserX } from "lucide-react";
 import type { DispatchSummary } from "@/shared/types/dispatch";
+import type { DispatchSummaryHighlightLabel } from "@/shared/lib/dispatch-page-focus";
 
 type DispatchSummaryCardsProps = {
   summary: DispatchSummary;
+  highlightedLabels?: DispatchSummaryHighlightLabel[];
 };
 
-export function DispatchSummaryCards({ summary }: DispatchSummaryCardsProps) {
+export function DispatchSummaryCards({
+  summary,
+  highlightedLabels = [],
+}: DispatchSummaryCardsProps) {
   const cards = [
     {
       label: "Scheduled Today",
@@ -43,10 +48,19 @@ export function DispatchSummaryCards({ summary }: DispatchSummaryCardsProps) {
 
   return (
     <div className="grid shrink-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {cards.map((card) => (
+      {cards.map((card) => {
+        const isHighlighted = highlightedLabels.includes(
+          card.label as DispatchSummaryHighlightLabel,
+        );
+
+        return (
         <div
           key={card.label}
-          className={`rounded-2xl border bg-white p-4 shadow-sm ${card.accent}`}
+          className={`rounded-2xl border bg-white p-4 shadow-sm transition-shadow ${
+            isHighlighted
+              ? "border-amber-300 ring-2 ring-amber-400/25 shadow-md"
+              : card.accent
+          }`}
         >
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -63,7 +77,8 @@ export function DispatchSummaryCards({ summary }: DispatchSummaryCardsProps) {
             </div>
           </div>
         </div>
-      ))}
+      );
+      })}
     </div>
   );
 }

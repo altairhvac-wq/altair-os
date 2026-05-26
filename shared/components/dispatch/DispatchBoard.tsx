@@ -8,6 +8,7 @@ type DispatchBoardProps = {
   technicianFilter: string;
   selectedJobId: string | null;
   onSelectJob: (job: DispatchJob) => void;
+  highlightUnassignedPanel?: boolean;
 };
 
 function groupJobsByTechnician(jobs: DispatchJob[]): Map<string, DispatchJob[]> {
@@ -29,6 +30,7 @@ export function DispatchBoard({
   technicianFilter,
   selectedJobId,
   onSelectJob,
+  highlightUnassignedPanel = false,
 }: DispatchBoardProps) {
   const unassignedJobs = jobs.filter((job) => !job.technicianId);
   const grouped = groupJobsByTechnician(jobs);
@@ -48,6 +50,7 @@ export function DispatchBoard({
           jobs={unassignedJobs}
           selectedJobId={selectedJobId}
           onSelectJob={onSelectJob}
+          emphasized={highlightUnassignedPanel}
         />
       ) : null}
 

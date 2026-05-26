@@ -6,15 +6,23 @@ type UnassignedJobsPanelProps = {
   jobs: DispatchJob[];
   selectedJobId: string | null;
   onSelectJob: (job: DispatchJob) => void;
+  emphasized?: boolean;
 };
 
 export function UnassignedJobsPanel({
   jobs,
   selectedJobId,
   onSelectJob,
+  emphasized = false,
 }: UnassignedJobsPanelProps) {
   return (
-    <section className="rounded-2xl border border-amber-200/80 bg-amber-50/40">
+    <section
+      className={`rounded-2xl border bg-amber-50/40 ${
+        emphasized
+          ? "border-amber-400 bg-amber-50/70 shadow-md ring-2 ring-amber-400/25"
+          : "border-amber-200/80"
+      }`}
+    >
       <div className="flex flex-col sm:flex-row sm:items-stretch">
         <header className="flex shrink-0 items-center gap-2.5 border-b border-amber-200/80 bg-white px-3 py-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r lg:w-48">
           <div className="flex items-center gap-2.5 sm:w-full">
