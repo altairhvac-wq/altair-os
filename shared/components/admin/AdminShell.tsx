@@ -2,6 +2,9 @@
 
 import { usePathname } from "next/navigation";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
+import { PullToRefresh } from "@/shared/components/mobile/PullToRefresh";
+import { isPullToRefreshRoute } from "@/shared/components/mobile/is-pull-to-refresh-route";
+import { useMobileViewport } from "@/shared/components/mobile/use-mobile-viewport";
 import { getNavItemForPath } from "./nav-items";
 import { MobileNav } from "./MobileNav";
 import { Sidebar } from "./Sidebar";
@@ -24,6 +27,9 @@ export function AdminShell({
   unreadNotificationCount = 0,
 }: AdminShellProps) {
   const pathname = usePathname();
+  const isMobile = useMobileViewport();
+  const pullToRefreshEnabled =
+    isMobile && isPullToRefreshRoute(pathname);
   const current = getNavItemForPath(pathname, companyContext);
 
   return (
@@ -43,7 +49,9 @@ export function AdminShell({
         <MobileNav companyContext={companyContext} />
 
         <main className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-clip p-4 sm:p-6 lg:p-8 md:overflow-y-auto">
-          {children}
+          <PullToRefresh enabled={pullToRefreshEnabled}>
+            {children}
+          </PullToRefresh>
         </main>
       </div>
     </div>
