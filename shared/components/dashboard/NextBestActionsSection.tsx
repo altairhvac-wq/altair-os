@@ -107,7 +107,7 @@ export function NextBestActionsSection({ data }: NextBestActionsSectionProps) {
   const hasActions = hasDashboardNextBestActions(data);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-col gap-2 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-cyan-600/90">

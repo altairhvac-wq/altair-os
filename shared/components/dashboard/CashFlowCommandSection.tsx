@@ -89,10 +89,60 @@ function MetricTile({
   );
 }
 
+function CompactHealthySection({
+  snapshot,
+  StatusIcon,
+}: {
+  snapshot: ReturnType<typeof buildCashFlowCommandSnapshot>;
+  StatusIcon: typeof CheckCircle2;
+}) {
+  return (
+    <section className="flex h-full flex-col rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/70 via-white to-white p-4 shadow-sm sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+            <StatusIcon className="h-4 w-4" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs font-bold uppercase tracking-widest text-emerald-700/90">
+                Cash flow command
+              </p>
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-800">
+                {snapshot.statusLabel}
+              </span>
+            </div>
+            <p className="mt-1 text-sm font-semibold leading-snug text-slate-900">
+              {snapshot.headline}
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-600">
+              {snapshot.explanation}
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href={snapshot.primaryHref}
+          className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700"
+        >
+          View billing
+          <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 export function CashFlowCommandSection({ data }: CashFlowCommandSectionProps) {
   const snapshot = buildCashFlowCommandSnapshot(data);
   const styles = getSeverityStyles(snapshot.severity);
   const StatusIcon = styles.Icon;
+
+  if (snapshot.severity === "healthy") {
+    return (
+      <CompactHealthySection snapshot={snapshot} StatusIcon={StatusIcon} />
+    );
+  }
 
   return (
     <section

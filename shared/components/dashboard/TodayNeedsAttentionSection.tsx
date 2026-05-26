@@ -125,21 +125,42 @@ function AttentionCard({ card }: { card: DashboardAttentionCard }) {
   return body;
 }
 
+function HealthySummaryBanner() {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50/50 px-4 py-4">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+        <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+      </div>
+      <div>
+        <p className="text-sm font-bold text-emerald-900">
+          All priority areas look healthy
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-emerald-800/80">
+          Office queue, billing, pipeline, profitability, and readiness signals
+          are clear. Issue cards will appear here when something needs follow-up.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function TodayNeedsAttentionSection({
   data,
 }: TodayNeedsAttentionSectionProps) {
   const cards = buildDashboardAttentionCards(data);
   const issueCount = countDashboardAttentionIssues(cards);
+  const issueCards = cards.filter((card) => card.severity !== "healthy");
+  const healthyCards = cards.filter((card) => card.severity === "healthy");
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-col gap-2 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-amber-600/90">
             Today needs attention
           </p>
           <h2 className="text-lg font-black tracking-tight text-slate-900">
-            Operational risks
+            Priority areas
           </h2>
           <p className="text-sm text-slate-500">
             {issueCount === 0
@@ -156,10 +177,29 @@ export function TodayNeedsAttentionSection({
         </Link>
       </div>
 
-      <div className="grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-        {cards.map((card) => (
-          <AttentionCard key={card.id} card={card} />
-        ))}
+      <div className="p-5">
+        {issueCount === 0 ? (
+          <HealthySummaryBanner />
+        ) : (
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {issueCards.map((card) => (
+                <AttentionCard key={card.id} card={card} />
+              ))}
+            </div>
+
+            {healthyCards.length > 0 ? (
+              <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  Healthy
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                  {healthyCards.map((card) => card.label).join(" · ")}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     </section>
   );

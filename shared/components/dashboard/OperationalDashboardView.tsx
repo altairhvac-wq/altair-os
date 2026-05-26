@@ -25,6 +25,8 @@ import { ExpenseStatusBadge } from "@/shared/components/expenses/ExpenseStatusBa
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
 import { CashFlowCommandSection } from "@/shared/components/dashboard/CashFlowCommandSection";
 import { DispatchPressureSection } from "@/shared/components/dashboard/DispatchPressureSection";
+import { hasCashFlowPressure } from "@/shared/lib/dashboard-cash-flow-command";
+import { hasDispatchPressure } from "@/shared/lib/dashboard-dispatch-pressure";
 import { NextBestActionsSection } from "@/shared/components/dashboard/NextBestActionsSection";
 import { OperationalMomentumSection } from "@/shared/components/dashboard/OperationalMomentumSection";
 import { OperationalRiskDrilldownSection } from "@/shared/components/dashboard/OperationalRiskDrilldownSection";
@@ -935,38 +937,73 @@ function RecentActivitySection({
   );
 }
 
+function DashboardZone({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <div className={`flex flex-col gap-4 ${className}`}>{children}</div>;
+}
+
 export function OperationalDashboardView({ data }: OperationalDashboardViewProps) {
+  const showCommandPairSideBySide =
+    !hasCashFlowPressure(data) && !hasDispatchPressure(data);
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-1">
       <AnalyticsSnapshotSection analytics={data.analytics} />
-      <CashFlowCommandSection data={data} />
-      <DispatchPressureSection data={data} />
-      <div className="grid gap-6 xl:grid-cols-2">
-        <TodayNeedsAttentionSection data={data} />
-        <NextBestActionsSection data={data} />
-      </div>
-      <OperationalRiskDrilldownSection data={data} />
-      <OperationalMomentumSection data={data} />
-      <OperationalHealthSection report={data.operationalHealth} variant="compact" />
-      <OperationalInsightsSection insights={data.operationalInsights} />
-      <OfficeReviewQueueSection
-        report={data.officeReviewQueue}
-        variant="compact"
-        itemLimit={5}
-      />
-      <TodayOperationsSection operations={data.operations} />
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <TechnicianStatusSection technicians={data.technicians} />
-        <MoneySnapshotSection money={data.money} />
-      </div>
+      <DashboardZone>
+        <div
+          className={
+            showCommandPairSideBySide
+              ? "grid gap-4 xl:grid-cols-2 xl:items-stretch"
+              : "flex flex-col gap-4"
+          }
+        >
+          <CashFlowCommandSection data={data} />
+          <DispatchPressureSection data={data} />
+        </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <ExpenseReviewSection expenses={data.expenses} />
-        <NotificationsSummarySection notifications={data.notifications} />
-      </div>
+        <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
+          <TodayNeedsAttentionSection data={data} />
+          <NextBestActionsSection data={data} />
+        </div>
 
-      <RecentActivitySection activities={data.recentActivity} />
+        <OperationalRiskDrilldownSection data={data} />
+
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] xl:items-start">
+          <OperationalMomentumSection data={data} />
+          <OperationalHealthSection report={data.operationalHealth} variant="compact" />
+        </div>
+      </DashboardZone>
+
+      <DashboardZone>
+        <OperationalInsightsSection insights={data.operationalInsights} />
+        <OfficeReviewQueueSection
+          report={data.officeReviewQueue}
+          variant="compact"
+          itemLimit={5}
+        />
+      </DashboardZone>
+
+      <DashboardZone>
+        <TodayOperationsSection operations={data.operations} />
+
+        <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
+          <TechnicianStatusSection technicians={data.technicians} />
+          <MoneySnapshotSection money={data.money} />
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
+          <ExpenseReviewSection expenses={data.expenses} />
+          <NotificationsSummarySection notifications={data.notifications} />
+        </div>
+
+        <RecentActivitySection activities={data.recentActivity} />
+      </DashboardZone>
     </div>
   );
 }

@@ -64,13 +64,16 @@ export function OperationalHealthSection({
 
   if (variant === "compact") {
     return (
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
               Operational health
             </p>
-            <div className="mt-2 flex flex-wrap items-end gap-3">
+            <h2 className="mt-1 text-lg font-black tracking-tight text-slate-900">
+              Score snapshot
+            </h2>
+            <div className="mt-3 flex flex-wrap items-end gap-3">
               <p
                 className={`text-4xl font-black tabular-nums tracking-tight ${labelStyles.scoreClass}`}
               >

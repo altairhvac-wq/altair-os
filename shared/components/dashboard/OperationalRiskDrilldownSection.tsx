@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
-  ShieldAlert,
 } from "lucide-react";
 import {
   buildOperationalRiskDrilldown,
@@ -134,29 +133,25 @@ export function OperationalRiskDrilldownSection({
       </div>
 
       {hasRisks ? (
-        <ul className="space-y-3 p-5">{risks.map((risk) => (
+        <ul className="space-y-3 p-5">
+          {risks.map((risk) => (
             <RiskCard key={risk.id} risk={risk} />
-          ))}</ul>
+          ))}
+        </ul>
       ) : (
         <div className="p-5">
-          <div className="flex items-start gap-3 rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/70 to-white px-4 py-5 sm:px-5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+          <div className="flex items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50/50 px-4 py-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-black text-emerald-900">
-                  No operational risks need explanation
-                </p>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-800">
-                  <ShieldAlert className="h-3 w-3" aria-hidden="true" />
-                  Healthy
-                </span>
-              </div>
-              <p className="mt-2 text-sm leading-relaxed text-emerald-800/90">
-                Office queue, billing, pipeline, profitability, and readiness
-                signals are within normal ranges. Check reports anytime for the
-                full operational picture.
+              <p className="text-sm font-bold text-emerald-900">
+                No operational risks need explanation
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-emerald-800/80">
+                Operational health is {summary.healthScore}/100 — office queue,
+                billing, pipeline, and readiness signals are within normal
+                ranges.
               </p>
             </div>
           </div>

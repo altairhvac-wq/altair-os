@@ -83,7 +83,7 @@ export function OperationalMomentumSection({
   const queueTrend = snapshot.metrics.queueResolutionTrend;
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/80 to-indigo-50/30 p-5 shadow-sm">
+    <section className="flex h-full flex-col rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/80 to-indigo-50/30 p-5 shadow-sm">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
