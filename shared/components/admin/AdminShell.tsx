@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ActiveCompanyContext } from "@/lib/database/types";
+import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { getAdminNavItems, getNavItemForPath } from "./nav-items";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
@@ -11,6 +11,7 @@ import type { Notification } from "@/shared/types/notification";
 type AdminShellProps = {
   children: React.ReactNode;
   companyContext: ActiveCompanyContext;
+  userCompanies: MembershipWithCompany[];
   notifications?: Notification[];
   unreadNotificationCount?: number;
 };
@@ -26,6 +27,7 @@ function isActivePath(pathname: string, href: string) {
 export function AdminShell({
   children,
   companyContext,
+  userCompanies,
   notifications = [],
   unreadNotificationCount = 0,
 }: AdminShellProps) {
@@ -42,6 +44,7 @@ export function AdminShell({
           title={current.label}
           description={current.description}
           companyContext={companyContext}
+          userCompanies={userCompanies}
           notifications={notifications}
           unreadNotificationCount={unreadNotificationCount}
         />

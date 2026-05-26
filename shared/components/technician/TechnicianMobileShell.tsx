@@ -1,5 +1,6 @@
 import { Wrench } from "lucide-react";
-import type { ActiveCompanyContext } from "@/lib/database/types";
+import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
+import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { TechnicianBottomNav } from "./TechnicianBottomNav";
 import { TechnicianNotificationBadgeProvider } from "@/shared/components/notifications/TechnicianNotificationBadgeContext";
 import { TechnicianNotificationLink } from "@/shared/components/notifications/TechnicianNotificationLink";
@@ -7,12 +8,14 @@ import { TechnicianNotificationLink } from "@/shared/components/notifications/Te
 type TechnicianMobileShellProps = {
   children: React.ReactNode;
   companyContext: ActiveCompanyContext;
+  userCompanies: MembershipWithCompany[];
   unreadNotificationCount?: number;
 };
 
 export function TechnicianMobileShell({
   children,
   companyContext,
+  userCompanies,
   unreadNotificationCount = 0,
 }: TechnicianMobileShellProps) {
   return (
@@ -28,9 +31,11 @@ export function TechnicianMobileShell({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-slate-900">Altair OS</p>
-                <p className="truncate text-xs text-slate-500">
-                  {companyContext.company.name}
-                </p>
+                <CompanySwitcher
+                  activeCompanyId={companyContext.company.id}
+                  companies={userCompanies}
+                  variant="technician"
+                />
               </div>
               <TechnicianNotificationLink />
             </div>

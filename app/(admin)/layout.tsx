@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { AdminShell } from "@/shared/components/admin/AdminShell";
 import { getCurrentUser } from "@/lib/database/auth";
-import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { getActiveCompanyContext, getUserCompanies } from "@/lib/database/company-context";
 import {
   getUnreadNotificationCount,
   getUserNotifications,
@@ -18,7 +18,10 @@ export default async function AdminLayout({
     redirect("/login");
   }
 
-  const companyContext = await getActiveCompanyContext();
+  const [companyContext, userCompanies] = await Promise.all([
+    getActiveCompanyContext(),
+    getUserCompanies(),
+  ]);
 
   if (!companyContext) {
     redirect("/setup");
@@ -37,6 +40,7 @@ export default async function AdminLayout({
   return (
     <AdminShell
       companyContext={companyContext}
+      userCompanies={userCompanies}
       notifications={notifications}
       unreadNotificationCount={unreadNotificationCount}
     >

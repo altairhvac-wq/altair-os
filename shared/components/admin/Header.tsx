@@ -1,9 +1,9 @@
 "use client";
 
 import { Search } from "lucide-react";
-import type { ActiveCompanyContext } from "@/lib/database/types";
-import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
+import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { logoutAction } from "@/app/actions/auth";
+import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import type { Notification } from "@/shared/types/notification";
 
@@ -11,6 +11,7 @@ type HeaderProps = {
   title: string;
   description?: string;
   companyContext: ActiveCompanyContext;
+  userCompanies: MembershipWithCompany[];
   notifications?: Notification[];
   unreadNotificationCount?: number;
 };
@@ -35,6 +36,7 @@ export function Header({
   title,
   description,
   companyContext,
+  userCompanies,
   notifications = [],
   unreadNotificationCount = 0,
 }: HeaderProps) {
@@ -75,14 +77,14 @@ export function Header({
           initialUnreadCount={unreadNotificationCount}
         />
         <div className="flex items-center gap-2 border-l border-slate-200 pl-2 sm:ml-2 sm:gap-3 sm:pl-4">
-          <div className="hidden text-right md:block">
-            <p className="text-sm font-semibold text-slate-900">
-              {companyContext.company.name}
-            </p>
-            <p className="text-xs text-slate-500">
-              {COMPANY_ROLE_LABELS[companyContext.role]}
-            </p>
-          </div>
+          <CompanySwitcher
+            activeCompanyId={companyContext.company.id}
+            companies={userCompanies}
+            variant="admin"
+            className={
+              userCompanies.length > 1 ? "block" : "hidden md:block"
+            }
+          />
           <div
             className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-600 text-sm font-bold text-white"
             title={displayName}

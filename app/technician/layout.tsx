@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { TechnicianMobileShell } from "@/shared/components/technician/TechnicianMobileShell";
 import { getCurrentUser } from "@/lib/database/auth";
-import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { getActiveCompanyContext, getUserCompanies } from "@/lib/database/company-context";
 import { getUnreadNotificationCount } from "@/lib/database/services/notifications";
 
 export default async function TechnicianLayout({
@@ -15,7 +15,10 @@ export default async function TechnicianLayout({
     redirect("/login");
   }
 
-  const companyContext = await getActiveCompanyContext();
+  const [companyContext, userCompanies] = await Promise.all([
+    getActiveCompanyContext(),
+    getUserCompanies(),
+  ]);
 
   if (!companyContext) {
     redirect("/setup");
@@ -29,6 +32,7 @@ export default async function TechnicianLayout({
   return (
     <TechnicianMobileShell
       companyContext={companyContext}
+      userCompanies={userCompanies}
       unreadNotificationCount={unreadNotificationCount}
     >
       {children}
