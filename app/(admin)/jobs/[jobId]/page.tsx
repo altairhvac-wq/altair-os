@@ -8,6 +8,7 @@ import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment";
 import { getJobById } from "@/lib/database/queries/jobs";
 import { listTechnicians } from "@/lib/database/queries/technicians";
+import { getJobProfitabilitySnapshot } from "@/lib/database/services/job-profitability";
 import { JobDetailPageView } from "@/shared/components/jobs/JobDetailPageView";
 
 type JobDetailPageProps = {
@@ -46,6 +47,12 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     listActiveServiceItems(companyContext.company.id),
   ]);
 
+  const profitability = await getJobProfitabilitySnapshot(
+    companyContext.company.id,
+    jobId,
+    { expenses, materials },
+  );
+
   return (
     <JobDetailPageView
       job={job}
@@ -55,6 +62,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       attachments={attachments}
       expenses={expenses}
       materials={materials}
+      profitability={profitability}
       serviceItems={serviceItems}
       canUpdateStatus={
         companyContext.permissions.dispatchJobs ||

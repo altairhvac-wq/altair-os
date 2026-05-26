@@ -19,6 +19,7 @@ import { JobCustomerEquipmentSection } from "./JobCustomerEquipmentSection";
 import { JobAttachmentsSection } from "./JobAttachmentsSection";
 import { JobExpenseReceiptsSection } from "./JobExpenseReceiptsSection";
 import { JobMaterialsSection } from "./JobMaterialsSection";
+import { JobProfitabilitySection } from "./JobProfitabilitySection";
 import { OperationalActivityTimeline } from "@/shared/components/operational/OperationalActivityTimeline";
 import {
   formatScheduledDate,
@@ -31,6 +32,7 @@ import type { Expense } from "@/shared/types/expense";
 import type { JobMaterial } from "@/shared/types/job-material";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
 import type { ServiceItem } from "@/shared/types/service-item";
+import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
 
 type JobDetailPageViewProps = {
   job: JobDetail;
@@ -40,6 +42,7 @@ type JobDetailPageViewProps = {
   attachments: JobAttachment[];
   expenses: Expense[];
   materials: JobMaterial[];
+  profitability: JobProfitabilitySnapshot;
   serviceItems: ServiceItem[];
   canUpdateStatus: boolean;
   canAssignTechnician: boolean;
@@ -73,6 +76,7 @@ export function JobDetailPageView({
   attachments,
   expenses,
   materials,
+  profitability,
   serviceItems,
   canUpdateStatus,
   canAssignTechnician,
@@ -254,6 +258,8 @@ export function JobDetailPageView({
           />
         </ContentSection>
       </div>
+
+      <JobProfitabilitySection jobId={job.id} snapshot={profitability} />
 
       <JobCustomerEquipmentSection
         customerId={job.customerId}

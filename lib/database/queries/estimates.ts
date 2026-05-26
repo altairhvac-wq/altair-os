@@ -334,6 +334,36 @@ export async function listEstimatesByCustomer(
   );
 }
 
+export async function listEstimatesForJob(
+  companyId: string,
+  jobId: string,
+): Promise<Estimate[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("estimates")
+    .select(ESTIMATE_LIST_SELECT)
+    .eq("company_id", companyId)
+    .eq("job_id", jobId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[listEstimatesForJob] query failed:", {
+      companyId,
+      jobId,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as EstimateRowWithRelations[]).map(
+    mapEstimateRowToEstimate,
+  );
+}
+
 export async function getEstimateById(
   companyId: string,
   estimateId: string,

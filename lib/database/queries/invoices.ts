@@ -383,6 +383,34 @@ export async function listInvoicesByCustomer(
   return ((data ?? []) as InvoiceRowWithRelations[]).map(mapInvoiceRowToInvoice);
 }
 
+export async function listInvoicesForJob(
+  companyId: string,
+  jobId: string,
+): Promise<Invoice[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("invoices")
+    .select(INVOICE_LIST_SELECT)
+    .eq("company_id", companyId)
+    .eq("job_id", jobId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[listInvoicesForJob] query failed:", {
+      companyId,
+      jobId,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as InvoiceRowWithRelations[]).map(mapInvoiceRowToInvoice);
+}
+
 export async function getInvoiceById(
   companyId: string,
   invoiceId: string,

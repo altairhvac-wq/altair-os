@@ -128,6 +128,7 @@ export async function listTimeEntries(
   options: {
     technicianId?: string;
     jobId?: string;
+    entryType?: TimeEntryType;
     limit?: number;
   } = {},
 ): Promise<TimeEntry[]> {
@@ -145,6 +146,10 @@ export async function listTimeEntries(
 
   if (options.jobId) {
     query = query.eq("job_id", options.jobId);
+  }
+
+  if (options.entryType) {
+    query = query.eq("entry_type", options.entryType);
   }
 
   if (options.limit) {
@@ -166,6 +171,13 @@ export async function listTimeEntries(
   return (data ?? []).map((row) =>
     mapTimeEntryRow(row as TimeEntryRowWithRelations),
   );
+}
+
+export async function listJobLaborEntriesForJob(
+  companyId: string,
+  jobId: string,
+): Promise<TimeEntry[]> {
+  return listTimeEntries(companyId, { jobId, entryType: "job_labor" });
 }
 
 export async function listActiveTechnicianTimeEntries(
