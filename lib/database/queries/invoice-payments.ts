@@ -104,6 +104,35 @@ export type RecentInvoicePayment = InvoicePayment & {
   customerName: string;
 };
 
+export async function listInvoicePayments(
+  companyId: string,
+): Promise<InvoicePayment[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("invoice_payments")
+    .select(
+      `
+      *,
+      recorder:profiles!invoice_payments_recorded_by_fkey(full_name, email)
+    `,
+    )
+    .eq("company_id", companyId)
+    .order("payment_date", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[listInvoicePayments] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as InvoicePaymentRowWithRecorder[]).map(mapPaymentRow);
+}
+
 export async function listRecentPayments(
   companyId: string,
   limit = 5,

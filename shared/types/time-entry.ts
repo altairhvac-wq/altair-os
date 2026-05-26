@@ -86,6 +86,23 @@ export function calculateDurationMinutes(
   return Math.max(0, Math.round((end - start) / (1000 * 60)));
 }
 
+/** Closed job-labor minutes only; open entries return null. */
+export function resolveClosedJobLaborMinutes(entry: TimeEntry): number | null {
+  if (entry.entryType !== "job_labor") {
+    return null;
+  }
+
+  if (entry.durationMinutes != null) {
+    return Math.max(0, Math.round(entry.durationMinutes));
+  }
+
+  if (entry.endedAt) {
+    return calculateDurationMinutes(entry.startedAt, entry.endedAt);
+  }
+
+  return null;
+}
+
 export function getElapsedMinutes(startedAt: string, now = Date.now()): number {
   const start = new Date(startedAt).getTime();
   return Math.max(0, Math.round((now - start) / (1000 * 60)));

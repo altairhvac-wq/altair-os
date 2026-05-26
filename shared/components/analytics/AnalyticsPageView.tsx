@@ -1,46 +1,72 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { getMockAnalytics } from "@/shared/data/mock-analytics";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import type { AnalyticsDateRange } from "@/shared/types/analytics";
+import { OperationalChartsSection } from "@/shared/components/reports/OperationalChartsSection";
+import { OperationalReportsSections } from "@/shared/components/reports/OperationalReportsSections";
+import { ProfitabilityReportSection } from "@/shared/components/reports/ProfitabilityReportSection";
+import type {
+  OperationalReportsBundle,
+  ProfitabilityReport,
+  ProfitabilityReportDateRange,
+  ReportChartSeriesBundle,
+} from "@/shared/types/reports";
 import { AnalyticsEmptyState } from "./AnalyticsEmptyState";
-import { AnalyticsInsightCards } from "./AnalyticsInsightCards";
-import { AnalyticsLoadingState } from "./AnalyticsLoadingState";
-import { AnalyticsSummaryCards } from "./AnalyticsSummaryCards";
 import { DateRangeFilterBar } from "./DateRangeFilterBar";
-import { JobPerformanceChart } from "./JobPerformanceChart";
-import { OutstandingInvoicesPanel } from "./OutstandingInvoicesPanel";
-import { PartnerRevenueLeaderboard } from "./PartnerRevenueLeaderboard";
-import { ProfitabilityBreakdown } from "./ProfitabilityBreakdown";
-import { RevenueByModuleCards } from "./RevenueByModuleCards";
-import { RevenueTrendChart } from "./RevenueTrendChart";
-import { TechnicianPerformanceTable } from "./TechnicianPerformanceTable";
 
-export function AnalyticsPageView() {
-  const [range, setRange] = useState<AnalyticsDateRange>("30d");
-  const [isLoading, setIsLoading] = useState(true);
+// TODO(reports-v2): Wire real-data equivalents for sections previously backed by mock-analytics:
+// - Insight cards (trend callouts from live aggregates)
+// - Job performance breakdown (status/type from job records)
+// - Technician performance leaderboard (labor + completion metrics)
+// - Outstanding invoices panel (open invoice aging)
+// - Revenue by module cards (invoicing vs payments vs other modules)
+// - Partner revenue leaderboard (partner-attributed revenue)
+
+type AnalyticsPageViewProps = {
+  chartSeries?: ReportChartSeriesBundle;
+  operationalReports?: OperationalReportsBundle;
+  profitabilityReport?: ProfitabilityReport;
+  profitabilityDateRange?: ProfitabilityReportDateRange;
+};
+
+function toAnalyticsDateRange(
+  range: ProfitabilityReportDateRange,
+): AnalyticsDateRange {
+  return range === "all" ? "30d" : range;
+}
+
+export function AnalyticsPageView({
+  chartSeries,
+  operationalReports,
+  profitabilityReport,
+  profitabilityDateRange = "30d",
+}: AnalyticsPageViewProps = {}) {
+  const router = useRouter();
+  const [range, setRange] = useState<AnalyticsDateRange>(
+    toAnalyticsDateRange(profitabilityDateRange),
+  );
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 650);
+    setRange(toAnalyticsDateRange(profitabilityDateRange));
+  }, [profitabilityDateRange]);
 
-    return () => clearTimeout(timer);
-  }, []);
+  const handleRangeChange = (nextRange: AnalyticsDateRange) => {
+    setRange(nextRange);
 
-  const dashboard = useMemo(() => getMockAnalytics(range), [range]);
-  const isEmpty =
-    dashboard.revenueTrend.length === 0 &&
-    dashboard.summary.totalRevenue === 0;
+    if (operationalReports || profitabilityReport) {
+      router.push(`/reports?range=${nextRange}`);
+    }
+  };
 
-  if (isLoading) {
-    return <AnalyticsLoadingState />;
-  }
+  const hasReportData = Boolean(
+    operationalReports || chartSeries || profitabilityReport,
+  );
 
-  if (isEmpty) {
+  if (!hasReportData) {
     return (
       <div className="flex flex-col gap-6">
-        <DateRangeFilterBar range={range} onRangeChange={setRange} />
+        <DateRangeFilterBar range={range} onRangeChange={handleRangeChange} />
         <AnalyticsEmptyState variant="no-data" />
       </div>
     );
@@ -48,36 +74,17 @@ export function AnalyticsPageView() {
 
   return (
     <div className="flex flex-col gap-6 pb-8">
-      <DateRangeFilterBar range={range} onRangeChange={setRange} />
+      <DateRangeFilterBar range={range} onRangeChange={handleRangeChange} />
 
-      <AnalyticsInsightCards insights={dashboard.insights} />
+      {operationalReports ? (
+        <OperationalReportsSections reports={operationalReports} />
+      ) : null}
 
-      <AnalyticsSummaryCards summary={dashboard.summary} />
+      {chartSeries ? <OperationalChartsSection charts={chartSeries} /> : null}
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <RevenueTrendChart data={dashboard.revenueTrend} />
-        <JobPerformanceChart performance={dashboard.jobPerformance} />
-      </div>
-
-      <TechnicianPerformanceTable
-        technicians={dashboard.technicians}
-        topCustomers={dashboard.topCustomers}
-      />
-
-      <ProfitabilityBreakdown
-        invoiceBreakdown={dashboard.invoiceBreakdown}
-        expensesByCategory={dashboard.expensesByCategory}
-        profitByJobType={dashboard.profitByJobType}
-      />
-
-      <OutstandingInvoicesPanel
-        invoices={dashboard.outstandingInvoices}
-        totalOutstanding={dashboard.summary.outstandingInvoices}
-      />
-
-      <RevenueByModuleCards modules={dashboard.revenueByModule} />
-
-      <PartnerRevenueLeaderboard partners={dashboard.partnerRevenue} />
+      {profitabilityReport ? (
+        <ProfitabilityReportSection report={profitabilityReport} />
+      ) : null}
     </div>
   );
 }
