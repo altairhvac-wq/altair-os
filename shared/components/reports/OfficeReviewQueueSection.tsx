@@ -27,6 +27,15 @@ import {
   parseQueueSortMode,
   persistQueuePreferences,
 } from "@/shared/lib/office-review-queue-preferences";
+import {
+  applyQueueDefaultView,
+  applyQueuePreset,
+  isDefaultOfficeReviewQueueView,
+  OFFICE_REVIEW_QUEUE_PRESET_LIMITATIONS,
+  OFFICE_REVIEW_QUEUE_PRESETS,
+  resolveQueuePreset,
+  type OfficeReviewQueuePreset,
+} from "@/shared/lib/office-review-queue-presets";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { formatJobStatus } from "@/shared/types/job";
 import {
@@ -430,6 +439,7 @@ function FilterEmptyState({
 const QUEUE_PREFERENCE_LIMITATIONS = [
   "Queue filter, sort, and collapse preferences are browser-local only — not synced across users or devices.",
   "No server-side preference storage yet — shared links use URL params; remembered defaults use localStorage.",
+  ...OFFICE_REVIEW_QUEUE_PRESET_LIMITATIONS,
 ] as const;
 
 function buildReportsHref(input: {
@@ -459,6 +469,75 @@ function buildReportsHref(input: {
 
   const query = params.toString();
   return query ? `/reports?${query}` : "/reports";
+}
+
+function QueuePresetBar({
+  activeFilter,
+  sortMode,
+  onApplyPreset,
+  onResetToDefault,
+}: {
+  activeFilter: OfficeReviewQueueFilter;
+  sortMode: OfficeReviewQueueSortMode;
+  onApplyPreset: (preset: OfficeReviewQueuePreset) => void;
+  onResetToDefault: () => void;
+}) {
+  const activePreset = resolveQueuePreset({
+    filter: activeFilter,
+    sortMode,
+  });
+  const showReset = !isDefaultOfficeReviewQueueView({
+    filter: activeFilter,
+    sortMode,
+  });
+
+  return (
+    <div className="mt-3 min-w-0 sm:mt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Saved views
+        </p>
+        {showReset ? (
+          <button
+            type="button"
+            onClick={onResetToDefault}
+            className="inline-flex min-h-9 shrink-0 items-center text-xs font-semibold text-cyan-700 hover:text-cyan-800"
+          >
+            Reset to default
+          </button>
+        ) : null}
+      </div>
+      <div className="-mx-1 mt-2 overflow-x-auto px-1 pb-1">
+        <div
+          className="flex w-max min-w-full gap-2 sm:flex-wrap sm:w-auto"
+          role="tablist"
+          aria-label="Office review queue saved views"
+        >
+          {OFFICE_REVIEW_QUEUE_PRESETS.map((preset) => {
+            const isActive = activePreset?.id === preset.id;
+
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                title={preset.description}
+                onClick={() => onApplyPreset(preset)}
+                className={`inline-flex min-h-10 shrink-0 items-center rounded-full px-3.5 py-2 text-xs font-semibold transition-colors sm:min-h-9 ${
+                  isActive
+                    ? "bg-violet-600 text-white shadow-sm ring-1 ring-violet-700/20"
+                    : "bg-violet-50 text-violet-800 ring-1 ring-violet-200 hover:bg-violet-100"
+                }`}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function QueueFilterBar({
@@ -1046,6 +1125,37 @@ export function OfficeReviewQueueSection({
     syncReportsUrl(params);
   };
 
+  const handleApplyPreset = (preset: OfficeReviewQueuePreset) => {
+    if (isCompact) {
+      return;
+    }
+
+    const { preferences, params } = applyQueuePreset(
+      preset,
+      new URLSearchParams(searchParams.toString()),
+    );
+
+    setSavedFilter(preferences.filter);
+    setSortMode(preferences.sortMode);
+    persistQueuePreferences(preferences);
+    syncReportsUrl(params);
+  };
+
+  const handleResetToDefault = () => {
+    if (isCompact) {
+      return;
+    }
+
+    const { preferences, params } = applyQueueDefaultView(
+      new URLSearchParams(searchParams.toString()),
+    );
+
+    setSavedFilter(preferences.filter);
+    setSortMode(preferences.sortMode);
+    persistQueuePreferences(preferences);
+    syncReportsUrl(params);
+  };
+
   const handleToggleGroupCollapse = (group: OfficeReviewQueueGroup) => {
     if (isCompact) {
       return;
@@ -1143,12 +1253,20 @@ export function OfficeReviewQueueSection({
       </div>
 
       {!isCompact ? (
-        <QueueFilterBar
-          activeFilter={activeFilter}
-          range={rangeParam}
-          sortMode={effectiveSortMode}
-          collapsedGroups={collapsedGroups}
-        />
+        <>
+          <QueuePresetBar
+            activeFilter={activeFilter}
+            sortMode={effectiveSortMode}
+            onApplyPreset={handleApplyPreset}
+            onResetToDefault={handleResetToDefault}
+          />
+          <QueueFilterBar
+            activeFilter={activeFilter}
+            range={rangeParam}
+            sortMode={effectiveSortMode}
+            collapsedGroups={collapsedGroups}
+          />
+        </>
       ) : null}
 
       <div
