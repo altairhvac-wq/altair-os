@@ -23,6 +23,7 @@ import type { DailyOperationsSummaryHighlight } from "@/shared/types/daily-opera
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { ExpenseStatusBadge } from "@/shared/components/expenses/ExpenseStatusBadge";
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
+import { NextBestActionsSection } from "@/shared/components/dashboard/NextBestActionsSection";
 import { TodayNeedsAttentionSection } from "@/shared/components/dashboard/TodayNeedsAttentionSection";
 import { OfficeReviewQueueSection } from "@/shared/components/reports/OfficeReviewQueueSection";
 import { OperationalHealthSection } from "@/shared/components/reports/OperationalHealthSection";
@@ -934,7 +935,10 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
   return (
     <div className="flex flex-col gap-6">
       <AnalyticsSnapshotSection analytics={data.analytics} />
-      <TodayNeedsAttentionSection data={data} />
+      <div className="grid gap-6 xl:grid-cols-2">
+        <TodayNeedsAttentionSection data={data} />
+        <NextBestActionsSection data={data} />
+      </div>
       <OperationalHealthSection report={data.operationalHealth} variant="compact" />
       <OperationalInsightsSection insights={data.operationalInsights} />
       <OfficeReviewQueueSection
