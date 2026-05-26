@@ -8,11 +8,17 @@ import {
   createTeamInvite,
   resolveUserEmailForInvite,
   updateMemberRole,
+  updateMemberStatus,
 } from "@/lib/database/queries/memberships";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import type { TeamMember } from "@/shared/types/team-member";
 
 export type UpdateMemberRoleActionResult = {
+  error?: string;
+  member?: TeamMember;
+};
+
+export type UpdateMemberStatusActionResult = {
   error?: string;
   member?: TeamMember;
 };
@@ -141,4 +147,66 @@ export async function updateMemberRoleAction(
   revalidatePath("/dispatch");
 
   return { member: result.member };
+}
+
+async function runMemberStatusAction(
+  membershipId: string,
+  targetStatus: "active" | "suspended",
+): Promise<UpdateMemberStatusActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." };
+  }
+
+  if (!context.permissions.manageUsers) {
+    return {
+      error:
+        targetStatus === "suspended"
+          ? "You do not have permission to suspend team members."
+          : "You do not have permission to reactivate team members.",
+    };
+  }
+
+  const result = await updateMemberStatus(
+    context.company.id,
+    membershipId,
+    targetStatus,
+    {
+      userId: context.user.id,
+      role: context.role,
+    },
+  );
+
+  if (result.error || !result.member) {
+    return {
+      error:
+        result.error ??
+        (targetStatus === "suspended"
+          ? "Failed to suspend team member."
+          : "Failed to reactivate team member."),
+    };
+  }
+
+  revalidatePath("/settings");
+  revalidatePath("/", "layout");
+  revalidatePath("/dispatch", "layout");
+  revalidatePath("/reports", "layout");
+  revalidatePath("/jobs", "layout");
+  revalidatePath("/technician", "layout");
+  revalidatePath("/tech", "layout");
+
+  return { member: result.member };
+}
+
+export async function suspendTeamMemberAction(
+  membershipId: string,
+): Promise<UpdateMemberStatusActionResult> {
+  return runMemberStatusAction(membershipId, "suspended");
+}
+
+export async function reactivateTeamMemberAction(
+  membershipId: string,
+): Promise<UpdateMemberStatusActionResult> {
+  return runMemberStatusAction(membershipId, "active");
 }

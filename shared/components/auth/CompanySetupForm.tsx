@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useActionState } from "react";
 import {
   setupCompanyAction,
@@ -15,7 +16,11 @@ import {
 
 const initialState: AuthActionState = {};
 
-export function CompanySetupForm() {
+type CompanySetupFormProps = {
+  aboveCard?: ReactNode;
+};
+
+export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
   const [state, formAction, pending] = useActionState(
     setupCompanyAction,
     initialState,
@@ -31,6 +36,7 @@ export function CompanySetupForm() {
       }}
       title="Set up your workspace"
       description="One last step — name your company to unlock dispatch, jobs, and your field team."
+      aboveCard={aboveCard}
     >
       <form action={formAction} className="space-y-5">
         {state.error ? <AuthMessage tone="error">{state.error}</AuthMessage> : null}

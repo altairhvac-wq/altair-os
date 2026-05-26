@@ -83,6 +83,7 @@ type AuthShellProps = {
   title: string;
   description: string;
   children: ReactNode;
+  aboveCard?: ReactNode;
   footer?: ReactNode;
   variant?: "default" | "onboarding";
   onboardingStep?: {
@@ -307,6 +308,7 @@ export function AuthShell({
   title,
   description,
   children,
+  aboveCard,
   footer,
   variant = "default",
   onboardingStep,
@@ -340,6 +342,10 @@ export function AuthShell({
                 {description}
               </p>
             </div>
+
+            {aboveCard ? (
+              <div className="mt-6 space-y-4">{aboveCard}</div>
+            ) : null}
 
             <div className="mt-6 rounded-xl border border-slate-200/90 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.02] sm:p-6">
               {children}

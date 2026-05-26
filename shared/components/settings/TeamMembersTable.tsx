@@ -1,8 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { formatDate } from "@/shared/types/customer";
-import { canActorEditMemberRole } from "@/lib/database/services/member-role-guard";
+import {
+  canActorEditMemberRole,
+  canActorReactivateMember,
+  canActorSuspendMember,
+  validateMemberReactivation,
+  validateMemberSuspension,
+} from "@/lib/database/services/member-role-guard";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import {
   formatTeamMemberRole,
@@ -10,7 +16,11 @@ import {
   MANAGEABLE_TEAM_ROLES,
   type TeamMember,
 } from "@/shared/types/team-member";
-import { updateMemberRoleAction } from "@/app/actions/memberships";
+import {
+  reactivateTeamMemberAction,
+  suspendTeamMemberAction,
+  updateMemberRoleAction,
+} from "@/app/actions/memberships";
 import { MembershipStatusBadge } from "./MembershipStatusBadge";
 
 type TeamMembersTableProps = {
@@ -20,6 +30,13 @@ type TeamMembersTableProps = {
   canManageTeam: boolean;
   onMemberUpdated: (member: TeamMember) => void;
   onRoleChangeError?: (message: string) => void;
+};
+
+type PendingStatusAction = "suspend" | "reactivate";
+
+type ConfirmingAction = {
+  membershipId: string;
+  action: PendingStatusAction;
 };
 
 function getMemberDateLabel(member: TeamMember): string {
@@ -35,6 +52,14 @@ function getMemberDateCaption(member: TeamMember): string {
   return member.joinedAt ? "Joined" : "Added";
 }
 
+function getMemberSubject(member: TeamMember) {
+  return {
+    role: member.role,
+    user_id: member.userId,
+    status: member.status,
+  };
+}
+
 export function TeamMembersTable({
   members,
   currentUserId,
@@ -47,11 +72,18 @@ export function TeamMembersTable({
   const [pendingMembershipId, setPendingMembershipId] = useState<string | null>(
     null,
   );
+  const [confirmingAction, setConfirmingAction] =
+    useState<ConfirmingAction | null>(null);
 
-  function handleRoleChange(
-    membershipId: string,
-    newRole: CompanyRole,
-  ) {
+  const activeOwnerCount = useMemo(
+    () =>
+      members.filter(
+        (member) => member.role === "owner" && member.status === "active",
+      ).length,
+    [members],
+  );
+
+  function handleRoleChange(membershipId: string, newRole: CompanyRole) {
     setPendingMembershipId(membershipId);
 
     startTransition(async () => {
@@ -71,28 +103,93 @@ export function TeamMembersTable({
     });
   }
 
+  function handleStatusAction(membershipId: string, action: PendingStatusAction) {
+    setPendingMembershipId(membershipId);
+    setConfirmingAction(null);
+
+    startTransition(async () => {
+      const result =
+        action === "suspend"
+          ? await suspendTeamMemberAction(membershipId)
+          : await reactivateTeamMemberAction(membershipId);
+
+      setPendingMembershipId(null);
+
+      if (result.error) {
+        onRoleChangeError?.(result.error);
+        return;
+      }
+
+      if (result.member) {
+        onMemberUpdated(result.member);
+      } else {
+        onRoleChangeError?.(
+          action === "suspend"
+            ? "Failed to suspend team member."
+            : "Failed to reactivate team member.",
+        );
+      }
+    });
+  }
+
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[640px] text-left text-sm">
+      <table className="w-full min-w-[720px] text-left text-sm">
         <thead>
           <tr className="border-b border-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <th className="px-4 py-3">Member</th>
             <th className="px-4 py-3">Role</th>
             <th className="px-4 py-3">Status</th>
             <th className="hidden px-4 py-3 md:table-cell">Date</th>
+            {canManageTeam ? <th className="px-4 py-3">Actions</th> : null}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50">
           {members.map((member) => {
             const isCurrentUser =
               member.userId !== null && member.userId === currentUserId;
+            const memberSubject = getMemberSubject(member);
             const canEditRole =
               canManageTeam &&
-              canActorEditMemberRole(currentUserRole, currentUserId, {
-                role: member.role,
-                user_id: member.userId,
-                status: member.status,
-              });
+              canActorEditMemberRole(currentUserRole, currentUserId, memberSubject);
+            const canSuspend =
+              canManageTeam &&
+              canActorSuspendMember(
+                currentUserRole,
+                currentUserId,
+                memberSubject,
+                activeOwnerCount,
+              );
+            const canReactivate =
+              canManageTeam &&
+              canActorReactivateMember(
+                currentUserRole,
+                currentUserId,
+                memberSubject,
+              );
+            const suspendBlockReason = canManageTeam
+              ? validateMemberSuspension({
+                  membership: memberSubject,
+                  activeOwnerCount,
+                  actorUserId: currentUserId,
+                  actorRole: currentUserRole,
+                })
+              : null;
+            const reactivateBlockReason = canManageTeam
+              ? validateMemberReactivation({
+                  membership: memberSubject,
+                  activeOwnerCount,
+                  actorUserId: currentUserId,
+                  actorRole: currentUserRole,
+                })
+              : null;
+            const isRowPending =
+              isPending && pendingMembershipId === member.id;
+            const isConfirming =
+              confirmingAction?.membershipId === member.id;
+            const confirmingStatusAction = isConfirming
+              ? confirmingAction?.action
+              : null;
 
             return (
               <tr key={member.id} className="transition-colors hover:bg-slate-50/80">
@@ -123,9 +220,7 @@ export function TeamMembersTable({
                   {canEditRole ? (
                     <select
                       value={member.role}
-                      disabled={
-                        isPending && pendingMembershipId === member.id
-                      }
+                      disabled={isRowPending}
                       onChange={(event) => {
                         const nextRole = event.target.value as CompanyRole;
                         if (nextRole === member.role) {
@@ -165,6 +260,92 @@ export function TeamMembersTable({
                     {getMemberDateCaption(member)}
                   </p>
                 </td>
+                {canManageTeam ? (
+                  <td className="px-4 py-3">
+                    {isConfirming && confirmingStatusAction ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-slate-600">
+                          {confirmingStatusAction === "suspend"
+                            ? "Suspend access?"
+                            : "Restore access?"}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={isRowPending}
+                          onClick={() => setConfirmingAction(null)}
+                          className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isRowPending}
+                          onClick={() =>
+                            handleStatusAction(member.id, confirmingStatusAction)
+                          }
+                          className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-60 ${
+                            confirmingStatusAction === "suspend"
+                              ? "bg-rose-600 hover:bg-rose-700"
+                              : "bg-emerald-600 hover:bg-emerald-700"
+                          }`}
+                        >
+                          {isRowPending
+                            ? confirmingStatusAction === "suspend"
+                              ? "Suspending..."
+                              : "Reactivating..."
+                            : confirmingStatusAction === "suspend"
+                              ? "Confirm suspend"
+                              : "Confirm reactivate"}
+                        </button>
+                      </div>
+                    ) : member.status === "active" ? (
+                      <button
+                        type="button"
+                        disabled={!canSuspend || isRowPending}
+                        title={suspendBlockReason ?? undefined}
+                        onClick={() => {
+                          if (!canSuspend) {
+                            return;
+                          }
+
+                          setConfirmingAction({
+                            membershipId: member.id,
+                            action: "suspend",
+                          });
+                        }}
+                        className="rounded-lg border border-rose-200 px-2.5 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent"
+                      >
+                        Suspend
+                      </button>
+                    ) : member.status === "suspended" ? (
+                      <button
+                        type="button"
+                        disabled={!canReactivate || isRowPending}
+                        title={reactivateBlockReason ?? undefined}
+                        onClick={() => {
+                          if (!canReactivate) {
+                            return;
+                          }
+
+                          setConfirmingAction({
+                            membershipId: member.id,
+                            action: "reactivate",
+                          });
+                        }}
+                        className="rounded-lg border border-emerald-200 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent"
+                      >
+                        Reactivate
+                      </button>
+                    ) : (
+                      <span
+                        className="text-xs text-slate-400"
+                        title="Pending invitations are already inactive."
+                      >
+                        —
+                      </span>
+                    )}
+                  </td>
+                ) : null}
               </tr>
             );
           })}

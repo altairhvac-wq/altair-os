@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
-import { validateMemberRoleChange, validateInviteRole } from "@/lib/database/services/member-role-guard";
+import { validateMemberRoleChange, validateInviteRole, validateMemberSuspension, validateMemberReactivation } from "@/lib/database/services/member-role-guard";
 import type {
   CompanyMembershipRow,
   CompanyRow,
@@ -194,6 +194,88 @@ export async function updateMemberRole(
   const member = mapMembershipToTeamMember({
     ...row,
     profile: row.profile,
+  });
+
+  if (!member) {
+    return { error: "Updated membership could not be loaded." };
+  }
+
+  return { member };
+}
+
+export type UpdateMemberStatusResult = {
+  member?: TeamMember;
+  error?: string;
+};
+
+export async function updateMemberStatus(
+  companyId: string,
+  membershipId: string,
+  targetStatus: Extract<CompanyMembershipRow["status"], "active" | "suspended">,
+  actor: MemberRoleActor,
+): Promise<UpdateMemberStatusResult> {
+  const membership = await getCompanyMembershipById(companyId, membershipId);
+
+  if (!membership) {
+    return { error: "Team member not found in this company." };
+  }
+
+  const activeOwnerCount = await countActiveCompanyOwners(companyId);
+
+  const validationError =
+    targetStatus === "suspended"
+      ? validateMemberSuspension({
+          membership,
+          activeOwnerCount,
+          actorUserId: actor.userId,
+          actorRole: actor.role,
+        })
+      : validateMemberReactivation({
+          membership,
+          activeOwnerCount,
+          actorUserId: actor.userId,
+          actorRole: actor.role,
+        });
+
+  if (validationError) {
+    return { error: validationError };
+  }
+
+  if (membership.status === targetStatus) {
+    const { members } = await listCompanyMembers(companyId);
+    const member = members.find((item) => item.id === membershipId);
+    return member ? { member } : { error: "Team member not found." };
+  }
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("company_memberships")
+    .update({ status: targetStatus })
+    .eq("company_id", companyId)
+    .eq("id", membershipId)
+    .select(
+      "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(*)",
+    )
+    .single();
+
+  if (error) {
+    console.error("[updateMemberStatus] update failed:", {
+      companyId,
+      membershipId,
+      targetStatus,
+      code: error.code,
+      message: error.message,
+    });
+    return { error: mapDatabaseError(error) };
+  }
+
+  const row = data as MembershipProfileRow;
+
+  const member = mapMembershipToTeamMember({
+    ...row,
+    profile: row.profile,
+    invite_email: row.invite_email,
   });
 
   if (!member) {

@@ -1,7 +1,11 @@
 import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { listPendingInvitesForUserEmail, resolveUserEmailForInvite } from "@/lib/database/queries/memberships";
+import {
+  listPendingInvitesForUserEmail,
+  resolveUserEmailForInvite,
+} from "@/lib/database/queries/memberships";
 import { CompanySetupForm } from "@/shared/components/auth/CompanySetupForm";
 import { PendingInvitesCard } from "@/shared/components/settings/PendingInvitesCard";
 
@@ -24,27 +28,37 @@ export default async function SetupPage() {
     user.email ?? undefined,
   );
 
-  const { invites, error: invitesError } = emailResolution.email
-    ? await listPendingInvitesForUserEmail(emailResolution.email)
-    : { invites: [], error: undefined };
+  let pendingInvites: Awaited<
+    ReturnType<typeof listPendingInvitesForUserEmail>
+  >["invites"] = [];
 
-  return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4 py-8">
-      {emailResolution.mismatch ? (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Your profile email and sign-in email do not match. Update them to the
-          same address before you can view or accept team invitations.
-        </div>
-      ) : null}
+  if (emailResolution.email) {
+    try {
+      const result = await listPendingInvitesForUserEmail(emailResolution.email);
+      pendingInvites = result.invites;
 
-      {invitesError ? (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {invitesError}
-        </div>
-      ) : null}
+      if (result.error) {
+        console.error("[SetupPage] pending invites unavailable:", result.error);
+      }
+    } catch (error) {
+      console.error("[SetupPage] pending invites load failed:", error);
+    }
+  }
 
-      <PendingInvitesCard invites={invites} variant="setup" />
-      <CompanySetupForm />
-    </div>
-  );
+  let aboveCard: ReactNode;
+
+  if (emailResolution.mismatch) {
+    aboveCard = (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        Your profile email and sign-in email do not match. Update them to the
+        same address before you can view or accept team invitations.
+      </div>
+    );
+  } else if (pendingInvites.length > 0) {
+    aboveCard = (
+      <PendingInvitesCard invites={pendingInvites} variant="setup" />
+    );
+  }
+
+  return <CompanySetupForm aboveCard={aboveCard} />;
 }

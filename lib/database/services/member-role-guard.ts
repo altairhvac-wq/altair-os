@@ -13,6 +13,13 @@ type MemberRoleSubject = Pick<
   "role" | "user_id" | "status"
 >;
 
+type MemberStatusChangeInput = {
+  membership: MemberRoleSubject;
+  activeOwnerCount: number;
+  actorUserId: string;
+  actorRole: CompanyRole;
+};
+
 type ValidateMemberRoleChangeInput = {
   membership: MemberRoleSubject;
   newRole: CompanyRole;
@@ -134,5 +141,115 @@ export function getInvitableTeamRoles(actorRole: CompanyRole): InvitableTeamRole
     }
 
     return compareCompanyRoles(actorRole, role);
+  });
+}
+
+function validatePrivilegedMemberTarget({
+  membership,
+  actorRole,
+}: Pick<MemberStatusChangeInput, "membership" | "actorRole">): string | null {
+  if (membership.role === "customer") {
+    return "Customer memberships cannot be changed through team management.";
+  }
+
+  if (membership.status === "invited" && !membership.user_id) {
+    return "Pending invitations cannot be suspended.";
+  }
+
+  if (
+    actorRole !== "owner" &&
+    (membership.role === "owner" || membership.role === "admin")
+  ) {
+    return "Only owners can suspend or reactivate owners and admins.";
+  }
+
+  if (
+    actorRole !== "owner" &&
+    compareCompanyRoles(membership.role, actorRole)
+  ) {
+    return "You cannot change the status of a member with equal or higher access.";
+  }
+
+  return null;
+}
+
+export function canActorSuspendMember(
+  actorRole: CompanyRole,
+  actorUserId: string,
+  member: MemberRoleSubject,
+  activeOwnerCount: number,
+): boolean {
+  return (
+    validateMemberSuspension({
+      membership: member,
+      activeOwnerCount,
+      actorUserId,
+      actorRole,
+    }) === null
+  );
+}
+
+export function canActorReactivateMember(
+  actorRole: CompanyRole,
+  actorUserId: string,
+  member: MemberRoleSubject,
+): boolean {
+  return (
+    validateMemberReactivation({
+      membership: member,
+      activeOwnerCount: 0,
+      actorUserId,
+      actorRole,
+    }) === null
+  );
+}
+
+export function validateMemberSuspension({
+  membership,
+  activeOwnerCount,
+  actorUserId,
+  actorRole,
+}: MemberStatusChangeInput): string | null {
+  if (membership.status !== "active") {
+    return "Only active members can be suspended.";
+  }
+
+  if (membership.user_id === actorUserId) {
+    return "You cannot suspend yourself.";
+  }
+
+  const privilegedError = validatePrivilegedMemberTarget({
+    membership,
+    actorRole,
+  });
+
+  if (privilegedError) {
+    return privilegedError;
+  }
+
+  if (membership.role === "owner") {
+    if (activeOwnerCount < 0) {
+      return "Unable to verify owner count. Try again later.";
+    }
+
+    if (activeOwnerCount <= 1) {
+      return "Cannot suspend the last active owner. Promote another member to owner first.";
+    }
+  }
+
+  return null;
+}
+
+export function validateMemberReactivation({
+  membership,
+  actorRole,
+}: MemberStatusChangeInput): string | null {
+  if (membership.status !== "suspended") {
+    return "Only suspended members can be reactivated.";
+  }
+
+  return validatePrivilegedMemberTarget({
+    membership,
+    actorRole,
   });
 }
