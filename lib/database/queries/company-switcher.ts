@@ -1,9 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 
+export type SwitchDefaultCompanyAudit = {
+  membershipId: string;
+  previousCompanyId: string | null;
+  changed: boolean;
+};
+
 export type SwitchDefaultCompanyResult = {
   error?: string;
   companyId?: string;
+  audit?: SwitchDefaultCompanyAudit;
 };
 
 export async function switchDefaultCompany(
@@ -11,6 +18,23 @@ export async function switchDefaultCompany(
   companyId: string,
 ): Promise<SwitchDefaultCompanyResult> {
   const supabase = await createClient();
+
+  const { data: profile, error: profileLookupError } = await supabase
+    .from("profiles")
+    .select("default_company_id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (profileLookupError) {
+    console.error("[switchDefaultCompany] profile lookup failed:", {
+      userId,
+      code: profileLookupError.code,
+      message: profileLookupError.message,
+    });
+    return { error: mapDatabaseError(profileLookupError) };
+  }
+
+  const previousCompanyId = profile?.default_company_id ?? null;
 
   const { data: membership, error: membershipError } = await supabase
     .from("company_memberships")
@@ -55,5 +79,14 @@ export async function switchDefaultCompany(
     return { error: "Unable to switch companies. Please try again." };
   }
 
-  return { companyId };
+  const changed = previousCompanyId !== companyId;
+
+  return {
+    companyId,
+    audit: {
+      membershipId: membership.id,
+      previousCompanyId,
+      changed,
+    },
+  };
 }

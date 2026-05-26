@@ -10,8 +10,27 @@ import {
   updateMemberRole,
   updateMemberStatus,
 } from "@/lib/database/queries/memberships";
+import {
+  emitInviteAcceptedEvent,
+  emitMemberReactivatedEvent,
+  emitMemberRoleChangedEvent,
+  emitMemberSuspendedEvent,
+  emitTeamInviteCreatedEvent,
+  type MembershipActivityTarget,
+} from "@/lib/database/services/operational-events";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import type { TeamMember } from "@/shared/types/team-member";
+
+function toMembershipActivityTarget(member: TeamMember): MembershipActivityTarget {
+  return {
+    membershipId: member.id,
+    userId: member.userId,
+    email: member.email,
+    name: member.name,
+    role: member.role,
+    status: member.status,
+  };
+}
 
 export type UpdateMemberRoleActionResult = {
   error?: string;
@@ -70,6 +89,22 @@ export async function acceptInviteAction(
     return { error: result.error ?? "Failed to accept invitation." };
   }
 
+  if (result.audit) {
+    await emitInviteAcceptedEvent({
+      companyId: result.companyId,
+      actorId: user.id,
+      target: {
+        membershipId: result.audit.membershipId,
+        userId: user.id,
+        email: result.audit.inviteEmail,
+        name: profile?.full_name?.trim() || result.audit.inviteEmail,
+        role: result.audit.role,
+        status: "active",
+      },
+      inviteEmail: result.audit.inviteEmail,
+    });
+  }
+
   revalidatePath("/", "layout");
   revalidatePath("/setup");
   revalidatePath("/settings");
@@ -110,6 +145,13 @@ export async function inviteTeamMemberAction(
     return { error: result.error ?? "Failed to send invitation." };
   }
 
+  await emitTeamInviteCreatedEvent({
+    companyId: context.company.id,
+    actorId: context.user.id,
+    target: toMembershipActivityTarget(result.member),
+    inviteEmail: result.member.email,
+  });
+
   revalidatePath("/settings");
 
   return { member: result.member };
@@ -141,6 +183,16 @@ export async function updateMemberRoleAction(
 
   if (result.error || !result.member) {
     return { error: result.error ?? "Failed to update member role." };
+  }
+
+  if (result.audit?.changed) {
+    await emitMemberRoleChangedEvent({
+      companyId: context.company.id,
+      actorId: context.user.id,
+      target: toMembershipActivityTarget(result.member),
+      fromRole: result.audit.previousRole,
+      toRole: result.member.role,
+    });
   }
 
   revalidatePath("/settings");
@@ -186,6 +238,21 @@ async function runMemberStatusAction(
           ? "Failed to suspend team member."
           : "Failed to reactivate team member."),
     };
+  }
+
+  if (result.audit?.changed) {
+    const emitPayload = {
+      companyId: context.company.id,
+      actorId: context.user.id,
+      target: toMembershipActivityTarget(result.member),
+      fromStatus: result.audit.previousStatus,
+    };
+
+    if (targetStatus === "suspended") {
+      await emitMemberSuspendedEvent(emitPayload);
+    } else {
+      await emitMemberReactivatedEvent(emitPayload);
+    }
   }
 
   revalidatePath("/settings");

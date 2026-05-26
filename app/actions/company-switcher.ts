@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/database/auth";
 import { switchDefaultCompany } from "@/lib/database/queries/company-switcher";
+import { emitCompanySwitchedEvent } from "@/lib/database/services/operational-events";
 
 export type SwitchCompanyActionResult = {
   error?: string;
@@ -39,6 +40,15 @@ export async function switchCompanyAction(
 
   if (result.error || !result.companyId) {
     return { error: result.error ?? "Unable to switch companies." };
+  }
+
+  if (result.audit?.changed) {
+    await emitCompanySwitchedEvent({
+      companyId: result.companyId,
+      actorId: user.id,
+      membershipId: result.audit.membershipId,
+      previousCompanyId: result.audit.previousCompanyId,
+    });
   }
 
   revalidateCompanySwitcherPaths();

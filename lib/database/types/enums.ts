@@ -9,6 +9,14 @@ export type CompanyRole =
 
 export type MembershipStatus = "active" | "invited" | "suspended";
 
+export type MembershipActivityType =
+  | "team_invite_created"
+  | "invite_accepted"
+  | "member_role_changed"
+  | "member_suspended"
+  | "member_reactivated"
+  | "company_switched";
+
 export type CompanyStatus = "active" | "trial" | "suspended";
 
 export type CustomerStatus = "active" | "inactive" | "lead";

@@ -16,6 +16,7 @@ import type {
   JobPriority,
   JobStatus,
   Json,
+  MembershipActivityType,
   MembershipStatus,
   PaymentMethod,
   ReceiptStatus,
@@ -111,6 +112,26 @@ export type ProfileUpdate = Partial<
 export type CompanyMembershipUpdate = Partial<
   Omit<CompanyMembershipRow, "id" | "created_at" | "updated_at">
 >;
+
+export type MembershipActivityRow = {
+  id: UUID;
+  company_id: UUID;
+  membership_id: UUID;
+  actor_id: UUID | null;
+  event_type: MembershipActivityType;
+  metadata: Json;
+  created_at: Timestamp;
+};
+
+export type MembershipActivityInsert = {
+  id?: UUID;
+  company_id: UUID;
+  membership_id: UUID;
+  actor_id?: UUID | null;
+  event_type: MembershipActivityType;
+  metadata?: Json;
+  created_at?: Timestamp;
+};
 
 export type MembershipWithCompany = CompanyMembershipRow & {
   company: CompanyRow;

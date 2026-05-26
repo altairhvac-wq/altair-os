@@ -49,6 +49,8 @@ import type {
   JobAttachmentRow,
   JobMaterialInsert,
   JobMaterialRow,
+  MembershipActivityInsert,
+  MembershipActivityRow,
   ProfileInsert,
   ProfileRow,
   ProfileUpdate,
@@ -100,6 +102,34 @@ export type Database = {
           {
             foreignKeyName: "company_memberships_user_id_fkey";
             columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      membership_activities: {
+        Row: MembershipActivityRow;
+        Insert: MembershipActivityInsert;
+        Update: Partial<MembershipActivityInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "membership_activities_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "membership_activities_membership_id_fkey";
+            columns: ["membership_id"];
+            isOneToOne: false;
+            referencedRelation: "company_memberships";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "membership_activities_actor_id_fkey";
+            columns: ["actor_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
@@ -721,6 +751,7 @@ export type Database = {
     Enums: {
       company_role: CompanyMembershipRow["role"];
       membership_status: CompanyMembershipRow["status"];
+      membership_activity_type: MembershipActivityRow["event_type"];
       company_status: CompanyRow["status"];
       customer_status: CustomerRow["status"];
       customer_activity_type: CustomerActivityRow["event_type"];

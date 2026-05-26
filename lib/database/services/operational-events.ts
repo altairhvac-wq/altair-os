@@ -1,8 +1,15 @@
 import { recordExpenseActivity } from "@/lib/database/queries/expense-activities";
 import { recordJobActivity } from "@/lib/database/queries/job-activities";
+import { recordMembershipActivity } from "@/lib/database/queries/membership-activities";
 import { maybeRunOperationalAutomation } from "@/lib/database/services/operational-automation";
 import type { OperationalEventName } from "@/lib/database/services/operational-guards";
 import { isNonEmptyId } from "@/lib/database/services/operational-guards";
+import type {
+  CompanyRole,
+  Json,
+  MembershipActivityType,
+  MembershipStatus,
+} from "@/lib/database/types/enums";
 import type { Expense, ExpenseStatus } from "@/shared/types/expense";
 import type { JobMaterial } from "@/shared/types/job-material";
 import type { InvoiceStatus } from "@/shared/types/invoice";
@@ -341,5 +348,177 @@ export async function emitJobMaterialAddedEvent(input: {
     actorId: input.actorId,
     customerId: input.customerId,
     jobNumber: input.jobNumber,
+  });
+}
+
+export type MembershipActivityTarget = {
+  membershipId: string;
+  userId?: string | null;
+  email: string;
+  name: string;
+  role: CompanyRole;
+  status?: MembershipStatus;
+};
+
+function buildMembershipTargetMetadata(target: MembershipActivityTarget) {
+  return {
+    membership_id: target.membershipId,
+    target_user_id: target.userId ?? undefined,
+    target_email: target.email,
+    target_name: target.name,
+    role: target.role,
+    status: target.status,
+  };
+}
+
+async function emitMembershipActivityEvent(input: {
+  companyId: string;
+  membershipId: string;
+  actorId: string;
+  eventType: MembershipActivityType;
+  metadata: Json;
+}): Promise<void> {
+  if (
+    !hasOperationalEmitContext(input) ||
+    !isNonEmptyId(input.membershipId)
+  ) {
+    console.warn(`[emitMembershipActivity:${input.eventType}] skipped: missing context`, {
+      membershipId: input.membershipId,
+    });
+    return;
+  }
+
+  const { error } = await recordMembershipActivity({
+    company_id: input.companyId,
+    membership_id: input.membershipId,
+    actor_id: input.actorId,
+    event_type: input.eventType,
+    metadata: input.metadata,
+  });
+
+  if (error) {
+    console.error(`[emitMembershipActivity:${input.eventType}] activity failed:`, {
+      membershipId: input.membershipId,
+      error,
+    });
+  }
+}
+
+export async function emitTeamInviteCreatedEvent(input: {
+  companyId: string;
+  actorId: string;
+  target: MembershipActivityTarget;
+  inviteEmail: string;
+}): Promise<void> {
+  await emitMembershipActivityEvent({
+    companyId: input.companyId,
+    membershipId: input.target.membershipId,
+    actorId: input.actorId,
+    eventType: "team_invite_created",
+    metadata: {
+      ...buildMembershipTargetMetadata(input.target),
+      invite_email: input.inviteEmail,
+      to_status: "invited",
+      to_role: input.target.role,
+    },
+  });
+}
+
+export async function emitInviteAcceptedEvent(input: {
+  companyId: string;
+  actorId: string;
+  target: MembershipActivityTarget;
+  inviteEmail: string;
+}): Promise<void> {
+  await emitMembershipActivityEvent({
+    companyId: input.companyId,
+    membershipId: input.target.membershipId,
+    actorId: input.actorId,
+    eventType: "invite_accepted",
+    metadata: {
+      ...buildMembershipTargetMetadata(input.target),
+      invite_email: input.inviteEmail,
+      from_status: "invited",
+      to_status: "active",
+      to_role: input.target.role,
+    },
+  });
+}
+
+export async function emitMemberRoleChangedEvent(input: {
+  companyId: string;
+  actorId: string;
+  target: MembershipActivityTarget;
+  fromRole: CompanyRole;
+  toRole: CompanyRole;
+}): Promise<void> {
+  await emitMembershipActivityEvent({
+    companyId: input.companyId,
+    membershipId: input.target.membershipId,
+    actorId: input.actorId,
+    eventType: "member_role_changed",
+    metadata: {
+      ...buildMembershipTargetMetadata(input.target),
+      from_role: input.fromRole,
+      to_role: input.toRole,
+    },
+  });
+}
+
+export async function emitMemberSuspendedEvent(input: {
+  companyId: string;
+  actorId: string;
+  target: MembershipActivityTarget;
+  fromStatus: MembershipStatus;
+}): Promise<void> {
+  await emitMembershipActivityEvent({
+    companyId: input.companyId,
+    membershipId: input.target.membershipId,
+    actorId: input.actorId,
+    eventType: "member_suspended",
+    metadata: {
+      ...buildMembershipTargetMetadata(input.target),
+      from_status: input.fromStatus,
+      to_status: "suspended",
+    },
+  });
+}
+
+export async function emitMemberReactivatedEvent(input: {
+  companyId: string;
+  actorId: string;
+  target: MembershipActivityTarget;
+  fromStatus: MembershipStatus;
+}): Promise<void> {
+  await emitMembershipActivityEvent({
+    companyId: input.companyId,
+    membershipId: input.target.membershipId,
+    actorId: input.actorId,
+    eventType: "member_reactivated",
+    metadata: {
+      ...buildMembershipTargetMetadata(input.target),
+      from_status: input.fromStatus,
+      to_status: "active",
+    },
+  });
+}
+
+export async function emitCompanySwitchedEvent(input: {
+  companyId: string;
+  actorId: string;
+  membershipId: string;
+  previousCompanyId?: string | null;
+}): Promise<void> {
+  await emitMembershipActivityEvent({
+    companyId: input.companyId,
+    membershipId: input.membershipId,
+    actorId: input.actorId,
+    eventType: "company_switched",
+    metadata: {
+      membership_id: input.membershipId,
+      target_user_id: input.actorId,
+      to_company_id: input.companyId,
+      from_company_id: input.previousCompanyId ?? undefined,
+    },
   });
 }

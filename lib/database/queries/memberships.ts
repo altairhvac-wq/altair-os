@@ -121,9 +121,15 @@ export async function getCompanyMembershipById(
   return data as CompanyMembershipRow | null;
 }
 
+export type MemberRoleChangeAudit = {
+  previousRole: CompanyRole;
+  changed: boolean;
+};
+
 export type UpdateMemberRoleResult = {
   member?: TeamMember;
   error?: string;
+  audit?: MemberRoleChangeAudit;
 };
 
 type MemberRoleActor = {
@@ -159,8 +165,12 @@ export async function updateMemberRole(
   if (membership.role === newRole) {
     const { members } = await listCompanyMembers(companyId);
     const member = members.find((item) => item.id === membershipId);
-    return member ? { member } : { error: "Team member not found." };
+    return member
+      ? { member, audit: { previousRole: membership.role, changed: false } }
+      : { error: "Team member not found." };
   }
+
+  const previousRole = membership.role;
 
   const supabase = await createClient();
 
@@ -200,12 +210,21 @@ export async function updateMemberRole(
     return { error: "Updated membership could not be loaded." };
   }
 
-  return { member };
+  return {
+    member,
+    audit: { previousRole, changed: true },
+  };
 }
+
+export type MemberStatusChangeAudit = {
+  previousStatus: CompanyMembershipRow["status"];
+  changed: boolean;
+};
 
 export type UpdateMemberStatusResult = {
   member?: TeamMember;
   error?: string;
+  audit?: MemberStatusChangeAudit;
 };
 
 export async function updateMemberStatus(
@@ -244,9 +263,12 @@ export async function updateMemberStatus(
   if (membership.status === targetStatus) {
     const { members } = await listCompanyMembers(companyId);
     const member = members.find((item) => item.id === membershipId);
-    return member ? { member } : { error: "Team member not found." };
+    return member
+      ? { member, audit: { previousStatus: membership.status, changed: false } }
+      : { error: "Team member not found." };
   }
 
+  const previousStatus = membership.status;
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -282,7 +304,10 @@ export async function updateMemberStatus(
     return { error: "Updated membership could not be loaded." };
   }
 
-  return { member };
+  return {
+    member,
+    audit: { previousStatus, changed: true },
+  };
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -398,9 +423,16 @@ export async function listPendingInvitesForUserEmail(
   return { invites };
 }
 
+export type AcceptPendingInviteAudit = {
+  membershipId: string;
+  role: CompanyRole;
+  inviteEmail: string;
+};
+
 export type AcceptPendingInviteResult = {
   companyId?: string;
   error?: string;
+  audit?: AcceptPendingInviteAudit;
 };
 
 export async function acceptPendingInvite(
@@ -418,7 +450,7 @@ export async function acceptPendingInvite(
 
   const { data: membership, error: membershipError } = await supabase
     .from("company_memberships")
-    .select("id, company_id, status, user_id, invite_email")
+    .select("id, company_id, role, status, user_id, invite_email")
     .eq("id", membershipId)
     .maybeSingle();
 
@@ -438,7 +470,7 @@ export async function acceptPendingInvite(
 
   const row = membership as Pick<
     CompanyMembershipRow,
-    "id" | "company_id" | "status" | "user_id" | "invite_email"
+    "id" | "company_id" | "role" | "status" | "user_id" | "invite_email"
   >;
 
   if (row.status === "suspended") {
@@ -555,7 +587,14 @@ export async function acceptPendingInvite(
     });
   }
 
-  return { companyId: row.company_id };
+  return {
+    companyId: row.company_id,
+    audit: {
+      membershipId: row.id,
+      role: row.role,
+      inviteEmail,
+    },
+  };
 }
 
 export type CreateTeamInviteResult = {
