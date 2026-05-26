@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   AlertCircle,
+  AlertTriangle,
   ArrowRight,
   Bell,
   Briefcase,
@@ -9,13 +10,16 @@ import {
   Clock,
   DollarSign,
   FileText,
+  Info,
   Loader2,
   MapPin,
   Navigation,
   Receipt,
+  Sparkles,
   Timer,
   Users,
 } from "lucide-react";
+import type { DailyOperationsSummaryHighlight } from "@/shared/types/daily-operations-summary";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { ExpenseStatusBadge } from "@/shared/components/expenses/ExpenseStatusBadge";
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
@@ -139,6 +143,105 @@ function EmptyState({ title, description }: { title: string; description: string
       <p className="text-sm font-medium text-slate-700">{title}</p>
       <p className="mt-1 text-xs text-slate-500">{description}</p>
     </div>
+  );
+}
+
+function getHighlightSeverityStyles(
+  severity: DailyOperationsSummaryHighlight["severity"],
+): { icon: typeof Info; iconClass: string; rowClass: string } {
+  switch (severity) {
+    case "critical":
+      return {
+        icon: AlertCircle,
+        iconClass: "text-rose-700 bg-rose-50",
+        rowClass: "border-rose-100 bg-rose-50/40",
+      };
+    case "warning":
+      return {
+        icon: AlertTriangle,
+        iconClass: "text-amber-700 bg-amber-50",
+        rowClass: "border-amber-100 bg-amber-50/40",
+      };
+    default:
+      return {
+        icon: Info,
+        iconClass: "text-cyan-700 bg-cyan-50",
+        rowClass: "border-slate-100 bg-slate-50/60",
+      };
+  }
+}
+
+function OperationalInsightsSection({
+  insights,
+}: {
+  insights: DashboardData["operationalInsights"];
+}) {
+  const { highlights } = insights;
+
+  return (
+    <DashboardSection
+      title="Operational insights"
+      description="Rules-based summary from live operational data"
+      icon={Sparkles}
+      href="/reports"
+      linkLabel="View reports"
+    >
+      {highlights.length === 0 ? (
+        <EmptyState
+          title="No actionable insights right now"
+          description="Counts and warnings appear when stalled jobs, billing gaps, or expense reviews need attention."
+        />
+      ) : (
+        <ul className="space-y-2">
+          {highlights.map((highlight) => {
+            const styles = getHighlightSeverityStyles(highlight.severity);
+            const Icon = styles.icon;
+
+            const content = (
+              <div
+                className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${styles.rowClass}`}
+              >
+                <div
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${styles.iconClass}`}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {highlight.message}
+                  </p>
+                  <p className="mt-0.5 text-xs capitalize text-slate-500">
+                    {highlight.severity} · {highlight.category.replaceAll("_", " ")}
+                  </p>
+                </div>
+                {highlight.href ? (
+                  <ArrowRight
+                    className="mt-1 h-4 w-4 shrink-0 text-slate-400"
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </div>
+            );
+
+            return (
+              <li key={highlight.id}>
+                {highlight.href ? (
+                  <Link href={highlight.href} className="block transition-opacity hover:opacity-90">
+                    {content}
+                  </Link>
+                ) : (
+                  content
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <p className="mt-4 text-xs text-slate-500">
+        Deterministic counts only — no AI narrative or recommendations yet.
+      </p>
+    </DashboardSection>
   );
 }
 
@@ -907,6 +1010,7 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
   return (
     <div className="flex flex-col gap-6">
       <AnalyticsSnapshotSection analytics={data.analytics} />
+      <OperationalInsightsSection insights={data.operationalInsights} />
       <TodayOperationsSection operations={data.operations} />
       <StalledJobsSection stalledJobs={data.stalledJobs} />
 

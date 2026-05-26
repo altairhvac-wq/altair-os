@@ -4,7 +4,7 @@ import { listRecentOperationalActivitiesForCompany } from "@/lib/database/querie
 import { listEstimates } from "@/lib/database/queries/estimates";
 import { listExpenses } from "@/lib/database/queries/expenses";
 import { listInvoices } from "@/lib/database/queries/invoices";
-import { listRecentPayments, getPaymentsTodaySummary } from "@/lib/database/queries/invoice-payments";
+import { listRecentPayments } from "@/lib/database/queries/invoice-payments";
 import {
   getUnreadNotificationCount,
   getUserNotifications,
@@ -14,11 +14,7 @@ import {
   listActiveTechnicianTimeEntries,
   mapEntryTypeToTimeState,
 } from "@/lib/database/queries/time-entries";
-import { getCompanyExpenseReport } from "@/lib/database/services/reports/expense-report";
-import { getCompanyJobActivityReport } from "@/lib/database/services/reports/job-activity-report";
-import { getCompanyRevenueReport } from "@/lib/database/services/reports/revenue-report";
-import { getCompanyStalledJobsReport } from "@/lib/database/services/reports/stalled-jobs-report";
-import { getCompanyTechnicianLaborReport } from "@/lib/database/services/reports/technician-labor-report";
+import { getDailyOperationsSummary } from "@/lib/database/services/operations/daily-operations-summary";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { getTodayOperationsSummary } from "@/shared/types/dashboard";
 import { getInvoiceSummary } from "@/shared/types/invoice";
@@ -67,7 +63,6 @@ export async function getDashboardData(
   companyId: string,
   userId: string,
 ): Promise<DashboardData> {
-  const reportOptions = { dateRange: "all" as const };
   const todayJobs = await listDispatchJobsForToday(companyId);
 
   const [
@@ -77,15 +72,10 @@ export async function getDashboardData(
     estimates,
     expenses,
     recentPayments,
-    paymentsTodaySummary,
     recentActivity,
     notifications,
     unreadCount,
-    revenueReport,
-    expenseReport,
-    jobActivityReport,
-    technicianLaborReport,
-    stalledJobsReport,
+    operationsSummary,
   ] = await Promise.all([
     listTechnicians(companyId, todayJobs),
     listActiveTechnicianTimeEntries(companyId),
@@ -93,7 +83,6 @@ export async function getDashboardData(
     listEstimates(companyId),
     listExpenses(companyId),
     listRecentPayments(companyId, RECENT_PAYMENTS_LIMIT),
-    getPaymentsTodaySummary(companyId),
     listRecentOperationalActivitiesForCompany(
       companyId,
       RECENT_ACTIVITY_LIMIT,
@@ -102,14 +91,10 @@ export async function getDashboardData(
       limit: NOTIFICATIONS_FETCH_LIMIT,
     }),
     getUnreadNotificationCount(companyId, userId),
-    getCompanyRevenueReport(companyId, reportOptions),
-    getCompanyExpenseReport(companyId, reportOptions),
-    getCompanyJobActivityReport(companyId, reportOptions),
-    getCompanyTechnicianLaborReport(companyId, reportOptions),
-    getCompanyStalledJobsReport(companyId),
+    getDailyOperationsSummary(companyId),
   ]);
 
-  const operationsSummary = getTodayOperationsSummary(todayJobs);
+  const todayOperationsSummary = getTodayOperationsSummary(todayJobs);
   const invoiceSummary = getInvoiceSummary(invoices);
 
   const unpaidInvoices = invoices.filter(
@@ -140,26 +125,28 @@ export async function getDashboardData(
     )
     .slice(0, RECENT_RECEIPTS_LIMIT);
 
+  const { sections: summarySections } = operationsSummary;
+
   return {
     analytics: {
-      todayCollectedRevenue: paymentsTodaySummary.total,
-      todayPaymentCount: paymentsTodaySummary.count,
-      openJobs: jobActivityReport.summary.openJobs,
-      pendingExpenseCount: expenseReport.summary.submitted.count,
-      activeLaborEntries: technicianLaborReport.summary.activeLaborEntries,
+      todayCollectedRevenue: summarySections.revenue.todayCollectedRevenue,
+      todayPaymentCount: summarySections.revenue.todayPaymentCount,
+      openJobs: summarySections.openJobs.count,
+      pendingExpenseCount: summarySections.pendingExpenses.count,
+      activeLaborEntries: summarySections.activeTechnicians.activeLaborEntries,
     },
     operations: {
-      ...operationsSummary,
+      ...todayOperationsSummary,
       todayJobs: todayJobs.slice(0, TODAY_JOBS_LIMIT),
     },
     technicians: buildTechnicianStatuses(technicians, activeTimeEntries),
     money: {
       unpaidCount: unpaidInvoices.length,
-      unpaidTotal: revenueReport.summary.outstandingRevenue,
+      unpaidTotal: summarySections.revenue.outstandingRevenue,
       overdueCount: overdueInvoices.length,
       overdueTotal: invoiceSummary.overdueTotal,
-      paymentsTodayCount: paymentsTodaySummary.count,
-      paymentsTodayTotal: paymentsTodaySummary.total,
+      paymentsTodayCount: summarySections.revenue.todayPaymentCount,
+      paymentsTodayTotal: summarySections.revenue.todayCollectedRevenue,
       recentPayments: recentPayments.map((payment) => ({
         id: payment.id,
         invoiceId: payment.invoiceId,
@@ -172,9 +159,10 @@ export async function getDashboardData(
       approvedEstimates,
     },
     expenses: {
-      submittedCount: expenseReport.summary.submitted.count,
-      submittedTotal: expenseReport.summary.submitted.totalAmount,
-      rejectedCount: expenseReport.summary.rejected.count,
+      submittedCount: summarySections.pendingExpenses.count,
+      submittedTotal: summarySections.pendingExpenses.totalAmount,
+      rejectedCount: expenses.filter((expense) => expense.status === "rejected")
+        .length,
       recentReceipts,
       pendingExpenses: submittedExpenses.slice(0, PENDING_EXPENSES_LIMIT),
     },
@@ -183,14 +171,14 @@ export async function getDashboardData(
       recent: notifications.slice(0, RECENT_NOTIFICATIONS_LIMIT),
     },
     stalledJobs: {
-      stalledCount: stalledJobsReport.summary.stalledCount,
-      inactivityThresholdDays:
-        stalledJobsReport.summary.inactivityThresholdDays,
-      stalledJobs: stalledJobsReport.summary.stalledJobs.slice(
+      stalledCount: summarySections.stalledJobs.count,
+      inactivityThresholdDays: summarySections.stalledJobs.inactivityThresholdDays,
+      stalledJobs: summarySections.stalledJobs.stalledJobs.slice(
         0,
         STALLED_JOBS_DASHBOARD_LIMIT,
       ),
     },
+    operationalInsights: operationsSummary,
     recentActivity,
   };
 }
