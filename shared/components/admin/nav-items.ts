@@ -108,6 +108,14 @@ export const PRIMARY_MOBILE_ADMIN_NAV_HREFS = [
   "/customers",
 ] as const;
 
+export const PRIMARY_DESKTOP_ADMIN_NAV_HREFS = [
+  "/",
+  "/jobs",
+  "/dispatch",
+  "/customers",
+  "/estimates",
+] as const;
+
 export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {
   const visibleHrefs = new Set(getAccessibleAdminNavHrefs(context));
 
@@ -129,6 +137,27 @@ export function splitAdminNavItemsForMobile(context: ActiveCompanyContext): {
   const primary: NavItem[] = [];
 
   for (const href of PRIMARY_MOBILE_ADMIN_NAV_HREFS) {
+    const item = items.find((entry) => entry.href === href);
+
+    if (item) {
+      primary.push(item);
+    }
+  }
+
+  const secondary = items.filter((item) => !primaryHrefs.has(item.href));
+
+  return { primary, secondary };
+}
+
+export function splitAdminNavItemsForDesktop(context: ActiveCompanyContext): {
+  primary: NavItem[];
+  secondary: NavItem[];
+} {
+  const items = getAdminNavItems(context);
+  const primaryHrefs = new Set<string>(PRIMARY_DESKTOP_ADMIN_NAV_HREFS);
+  const primary: NavItem[] = [];
+
+  for (const href of PRIMARY_DESKTOP_ADMIN_NAV_HREFS) {
     const item = items.find((entry) => entry.href === href);
 
     if (item) {

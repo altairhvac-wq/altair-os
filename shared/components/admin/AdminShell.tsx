@@ -6,8 +6,8 @@ import { PullToRefresh } from "@/shared/components/mobile/PullToRefresh";
 import { isPullToRefreshRoute } from "@/shared/components/mobile/is-pull-to-refresh-route";
 import { useMobileViewport } from "@/shared/components/mobile/use-mobile-viewport";
 import { getNavItemForPath } from "./nav-items";
+import { DesktopNav } from "./DesktopNav";
 import { MobileNav } from "./MobileNav";
-import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import type { Notification } from "@/shared/types/notification";
 
@@ -33,27 +33,24 @@ export function AdminShell({
   const current = getNavItemForPath(pathname, companyContext);
 
   return (
-    <div className="admin-canvas flex min-h-dvh w-full min-w-0 max-w-full md:h-dvh md:overflow-hidden">
-      <Sidebar className="hidden md:flex" companyContext={companyContext} />
+    <div className="admin-canvas flex min-h-dvh w-full min-w-0 max-w-full flex-col md:h-dvh md:overflow-hidden">
+      <Header
+        title={current.label}
+        description={current.description}
+        companyContext={companyContext}
+        userCompanies={userCompanies}
+        notifications={notifications}
+        unreadNotificationCount={unreadNotificationCount}
+      />
 
-      <div className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col">
-        <Header
-          title={current.label}
-          description={current.description}
-          companyContext={companyContext}
-          userCompanies={userCompanies}
-          notifications={notifications}
-          unreadNotificationCount={unreadNotificationCount}
-        />
+      <DesktopNav companyContext={companyContext} />
+      <MobileNav companyContext={companyContext} />
 
-        <MobileNav companyContext={companyContext} />
-
-        <main className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-clip p-4 sm:p-6 lg:p-8 md:overflow-y-auto">
-          <PullToRefresh enabled={pullToRefreshEnabled}>
-            {children}
-          </PullToRefresh>
-        </main>
-      </div>
+      <main className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-clip p-4 sm:p-6 lg:p-8 md:overflow-y-auto">
+        <PullToRefresh enabled={pullToRefreshEnabled}>
+          {children}
+        </PullToRefresh>
+      </main>
     </div>
   );
 }
