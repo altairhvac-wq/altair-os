@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { getAdminNavItems, getNavItemForPath } from "./nav-items";
+import { AlphaStatusBanner } from "./AlphaStatusBanner";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import type { Notification } from "@/shared/types/notification";
@@ -48,6 +49,8 @@ export function AdminShell({
           notifications={notifications}
           unreadNotificationCount={unreadNotificationCount}
         />
+
+        <AlphaStatusBanner />
 
         <nav
           aria-label="Mobile navigation"

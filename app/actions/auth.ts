@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { resolvePostLoginRedirect } from "@/lib/auth/redirects";
 import { createClient } from "@/lib/supabase/server";
 import {
   bootstrapCompanyForNewUser,
@@ -16,8 +17,14 @@ export type AuthActionState = {
   needsEmailConfirmation?: boolean;
 };
 
-function redirectIfCompanyReady(): never {
-  redirect("/");
+async function redirectAfterAuth(next?: string | null): Promise<never> {
+  const companyContext = await getActiveCompanyContext();
+
+  if (!companyContext) {
+    redirect("/setup");
+  }
+
+  redirect(resolvePostLoginRedirect(companyContext, next));
 }
 
 async function ensureCompanyAfterAuth(
@@ -48,6 +55,7 @@ export async function loginAction(
 ): Promise<AuthActionState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const next = String(formData.get("next") ?? "").trim() || null;
 
   if (!email || !password) {
     return { error: "Email and password are required." };
@@ -72,7 +80,7 @@ export async function loginAction(
     return setupResult;
   }
 
-  redirectIfCompanyReady();
+  return redirectAfterAuth(next);
 }
 
 export async function signupAction(
@@ -83,6 +91,7 @@ export async function signupAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const companyName = String(formData.get("companyName") ?? "").trim();
+  const next = String(formData.get("next") ?? "").trim() || null;
 
   if (!fullName || !email || !password || !companyName) {
     return { error: "All fields are required." };
@@ -118,7 +127,7 @@ export async function signupAction(
     return { error: bootstrapResult.error };
   }
 
-  redirectIfCompanyReady();
+  return redirectAfterAuth(next);
 }
 
 export async function setupCompanyAction(
@@ -126,6 +135,7 @@ export async function setupCompanyAction(
   formData: FormData,
 ): Promise<AuthActionState> {
   const companyName = String(formData.get("companyName") ?? "").trim();
+  const next = String(formData.get("next") ?? "").trim() || null;
 
   if (!companyName) {
     return { error: "Company name is required." };
@@ -143,7 +153,7 @@ export async function setupCompanyAction(
   const existingContext = await getActiveCompanyContext();
 
   if (existingContext) {
-    redirectIfCompanyReady();
+    return redirectAfterAuth(next);
   }
 
   const bootstrapResult = await bootstrapCompanyForNewUser(companyName);
@@ -181,7 +191,7 @@ export async function setupCompanyAction(
     };
   }
 
-  redirectIfCompanyReady();
+  return redirectAfterAuth(next);
 }
 
 export async function logoutAction() {

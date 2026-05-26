@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
+import { NextRedirectField } from "./NextRedirectField";
 import {
   setupCompanyAction,
   type AuthActionState,
@@ -39,6 +40,9 @@ export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
       aboveCard={aboveCard}
     >
       <form action={formAction} className="space-y-5">
+        <Suspense fallback={null}>
+          <NextRedirectField />
+        </Suspense>
         {state.error ? <AuthMessage tone="error">{state.error}</AuthMessage> : null}
 
         <div className="rounded-lg border border-slate-100 bg-slate-50/80 px-4 py-3.5">

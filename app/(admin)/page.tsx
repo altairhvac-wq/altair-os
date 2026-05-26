@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { shouldUseTechnicianHome } from "@/lib/auth/redirects";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getDashboardData } from "@/lib/database/services/dashboard";
 import { OperationalDashboardView } from "@/shared/components/dashboard/OperationalDashboardView";
@@ -8,6 +9,10 @@ export default async function DashboardPage() {
 
   if (!companyContext) {
     redirect("/setup");
+  }
+
+  if (shouldUseTechnicianHome(companyContext)) {
+    redirect("/technician");
   }
 
   const data = await getDashboardData(companyContext);

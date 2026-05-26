@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
+import { shouldShowAlphaComingSoon } from "@/lib/beta/alpha-hardening";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { ComingSoonView } from "@/shared/components/layout/ComingSoonView";
 import { listCustomers } from "@/lib/database/queries/customers";
 import { listEstimates } from "@/lib/database/queries/estimates";
 import { listJobs } from "@/lib/database/queries/jobs";
@@ -17,6 +19,15 @@ export default async function EstimatesPage({
 
   if (!companyContext) {
     redirect("/setup");
+  }
+
+  if (shouldShowAlphaComingSoon("/estimates")) {
+    return (
+      <ComingSoonView
+        title="Estimates coming soon"
+        description="Estimate creation and customer approvals are being finalized for the internal alpha. Use jobs and invoices in the meantime."
+      />
+    );
   }
 
   const { customerId, create } = await searchParams;

@@ -10,6 +10,7 @@ import {
   listPendingInvitesForUserEmail,
   resolveUserEmailForInvite,
 } from "@/lib/database/queries/memberships";
+import { hasCompanyRole } from "@/lib/database/types/roles";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { PendingInvitesCard } from "@/shared/components/settings/PendingInvitesCard";
 import { SettingsPageView } from "@/shared/components/settings/SettingsPageView";
@@ -83,6 +84,7 @@ export default async function SettingsPage() {
         currentUserId={companyContext.user.id}
         currentUserRole={companyContext.role}
         canManageTeam={canManageTeamMembers(companyContext)}
+        showSystemCheckLink={hasCompanyRole(companyContext.role, ["owner"])}
         membersLoadError={membersError}
       />
     </div>

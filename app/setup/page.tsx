@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
+import { resolvePostLoginRedirect } from "@/lib/auth/redirects";
 import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
@@ -9,7 +10,11 @@ import {
 import { CompanySetupForm } from "@/shared/components/auth/CompanySetupForm";
 import { PendingInvitesCard } from "@/shared/components/settings/PendingInvitesCard";
 
-export default async function SetupPage() {
+type SetupPageProps = {
+  searchParams: Promise<{ next?: string }>;
+};
+
+export default async function SetupPage({ searchParams }: SetupPageProps) {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -17,9 +22,10 @@ export default async function SetupPage() {
   }
 
   const context = await getActiveCompanyContext();
+  const { next } = await searchParams;
 
   if (context) {
-    redirect("/");
+    redirect(resolvePostLoginRedirect(context, next));
   }
 
   const profile = await getCurrentProfile();

@@ -1,3 +1,4 @@
+import { isAlphaHiddenAdminNavHref } from "@/lib/beta/alpha-hardening";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 
 export type CompanyAccessScope = {
@@ -196,7 +197,10 @@ export function getAccessibleAdminNavHrefs(
     "/settings",
   ];
 
-  const visible = hrefs.filter((href) => canAccessAdminNavItem(context, href));
+  const visible = hrefs.filter(
+    (href) =>
+      canAccessAdminNavItem(context, href) && !isAlphaHiddenAdminNavHref(href),
+  );
 
   return visible.length > 0 ? visible : ["/"];
 }

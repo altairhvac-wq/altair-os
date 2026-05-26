@@ -24,6 +24,25 @@ function getLocalDevOrigins(): string[] {
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: getLocalDevOrigins(),
+  async redirects() {
+    return [
+      {
+        source: "/tech",
+        destination: "/technician",
+        permanent: false,
+      },
+      {
+        source: "/tech/jobs",
+        destination: "/technician",
+        permanent: false,
+      },
+      {
+        source: "/tech/profile",
+        destination: "/technician",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

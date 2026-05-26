@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   Bell,
@@ -7,6 +8,7 @@ import {
   CreditCard,
   Plug,
   Settings2,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
@@ -25,6 +27,7 @@ type SettingsPageViewProps = {
   currentUserId: string;
   currentUserRole: CompanyProfileSummary["currentUserRole"];
   canManageTeam: boolean;
+  showSystemCheckLink?: boolean;
   membersLoadError?: string;
 };
 
@@ -39,6 +42,7 @@ export function SettingsPageView({
   currentUserId,
   currentUserRole,
   canManageTeam,
+  showSystemCheckLink = false,
   membersLoadError,
 }: SettingsPageViewProps) {
   const [members, setMembers] = useState(initialMembers);
@@ -211,6 +215,27 @@ export function SettingsPageView({
           Workspace Preferences
         </h2>
         <div className="grid gap-4 md:grid-cols-2">
+          {showSystemCheckLink ? (
+            <Link
+              href="/settings/system-check"
+              className="rounded-2xl border border-cyan-200 bg-white p-5 transition-colors hover:border-cyan-300 hover:bg-cyan-50/40"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
+                  <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900">System Check</h3>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Read-only production readiness checks for the internal alpha.
+                  </p>
+                  <p className="mt-2 text-xs font-medium uppercase tracking-wide text-cyan-700">
+                    Owner only
+                  </p>
+                </div>
+              </div>
+            </Link>
+          ) : null}
           <SettingsFutureCard
             title="Billing"
             description="Subscription plans, payment methods, and invoice history."

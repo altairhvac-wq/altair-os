@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
+import { NextRedirectField } from "./NextRedirectField";
 import {
   loginAction,
   type AuthActionState,
@@ -31,6 +32,9 @@ export function LoginForm() {
       }
     >
       <form action={formAction} className="space-y-5">
+        <Suspense fallback={null}>
+          <NextRedirectField />
+        </Suspense>
         {state.error ? <AuthMessage tone="error">{state.error}</AuthMessage> : null}
         {state.success ? (
           <AuthMessage tone="success">{state.success}</AuthMessage>
