@@ -13,7 +13,16 @@ import {
   formatCompletedWorkInvoiceStatus,
 } from "@/shared/types/reports";
 
+/** Days threshold for the existing queue "aging" group (non-critical, 7+ days). */
 export const OFFICE_REVIEW_QUEUE_AGING_DAYS = 7;
+
+/** Inclusive upper bound for the fresh aging-intelligence bucket (0–2 days). */
+export const OFFICE_REVIEW_QUEUE_FRESH_MAX_DAYS = 2;
+
+/** Inclusive upper bound for the aging intelligence bucket (3–6 days). Overdue is 7+. */
+export const OFFICE_REVIEW_QUEUE_AGING_BUCKET_MAX_DAYS = 6;
+
+export type OfficeReviewQueueAgingBucket = "fresh" | "aging" | "overdue";
 
 export type OfficeReviewQueueItemKind =
   | "completed_work_review"
@@ -24,7 +33,11 @@ export type OfficeReviewQueueSeverity = "critical" | "warning" | "info";
 
 export type OfficeReviewQueueGroup = "critical" | "needs_attention" | "aging";
 
-export type OfficeReviewQueueSortMode = "oldest_first" | "severity_first";
+export type OfficeReviewQueueSortMode =
+  | "severity_first"
+  | "oldest_first"
+  | "newest_first"
+  | "blockers_first";
 
 /** UI/query-param filter for the full reports queue view only. */
 export type OfficeReviewQueueFilter =
@@ -73,7 +86,13 @@ export type OfficeReviewQueueItem = {
   kind: OfficeReviewQueueItemKind;
   severity: OfficeReviewQueueSeverity;
   group: OfficeReviewQueueGroup;
+  /** Heuristic operational age in whole days — independent of queue group assignment. */
   daysAging: number;
+  /** Time-based intelligence bucket — orthogonal to critical / needs_attention / aging groups. */
+  agingBucket: OfficeReviewQueueAgingBucket;
+  agingLabel: string;
+  /** True when a critical item has sat overdue (7+ days) — display escalation only, no SLA enforcement. */
+  severityEscalated: boolean;
   blockerCount: number;
   reviewReasons: CompletedWorkReviewReason[];
   lastActivityAt: string | null;
@@ -82,11 +101,17 @@ export type OfficeReviewQueueItem = {
   detail: string;
 };
 
+export type OfficeReviewQueueAgingBucketCounts = Record<
+  OfficeReviewQueueAgingBucket,
+  number
+>;
+
 export type OfficeReviewQueueSummary = {
   totalCount: number;
   criticalCount: number;
   needsAttentionCount: number;
   agingCount: number;
+  agingBucketCounts: OfficeReviewQueueAgingBucketCounts;
   resolvedThisWeek: number;
   groups: Record<OfficeReviewQueueGroup, OfficeReviewQueueItem[]>;
   items: OfficeReviewQueueItem[];
@@ -193,6 +218,72 @@ export function normalizeOfficeReviewQueueDays(days: number): number {
   return Math.floor(days);
 }
 
+const AGING_BUCKET_LABELS: Record<OfficeReviewQueueAgingBucket, string> = {
+  fresh: "Fresh",
+  aging: "Aging",
+  overdue: "Overdue",
+};
+
+/**
+ * Classifies operational age into read-only intelligence buckets.
+ * Uses existing daysAging only — does not change queue group assignment.
+ */
+export function resolveOfficeReviewQueueAgingBucket(
+  daysAging: number,
+): OfficeReviewQueueAgingBucket {
+  const days = normalizeOfficeReviewQueueDays(daysAging);
+
+  if (days <= OFFICE_REVIEW_QUEUE_FRESH_MAX_DAYS) {
+    return "fresh";
+  }
+
+  if (days <= OFFICE_REVIEW_QUEUE_AGING_BUCKET_MAX_DAYS) {
+    return "aging";
+  }
+
+  return "overdue";
+}
+
+export function formatOfficeReviewQueueAgingBucket(
+  bucket: OfficeReviewQueueAgingBucket,
+): string {
+  return AGING_BUCKET_LABELS[bucket];
+}
+
+export function countOfficeReviewQueueAgingBuckets(
+  items: OfficeReviewQueueItem[],
+): OfficeReviewQueueAgingBucketCounts {
+  const counts: OfficeReviewQueueAgingBucketCounts = {
+    fresh: 0,
+    aging: 0,
+    overdue: 0,
+  };
+
+  for (const item of items) {
+    counts[item.agingBucket] += 1;
+  }
+
+  return counts;
+}
+
+function enrichQueueItemWithAgingMetadata(
+  item: Omit<
+    OfficeReviewQueueItem,
+    "agingBucket" | "agingLabel" | "severityEscalated"
+  >,
+): OfficeReviewQueueItem {
+  const agingBucket = resolveOfficeReviewQueueAgingBucket(item.daysAging);
+  const severityEscalated =
+    item.severity === "critical" && agingBucket === "overdue";
+
+  return {
+    ...item,
+    agingBucket,
+    agingLabel: formatOfficeReviewQueueAgingBucket(agingBucket),
+    severityEscalated,
+  };
+}
+
 export function formatOfficeReviewQueueKind(
   kind: OfficeReviewQueueItemKind,
 ): string {
@@ -229,7 +320,7 @@ function toReviewQueueItem(
   const severity: OfficeReviewQueueSeverity = entry.severity;
   const daysAging = normalizeOfficeReviewQueueDays(entry.daysSinceCompletion);
 
-  return {
+  return enrichQueueItemWithAgingMetadata({
     jobId: entry.jobId,
     jobNumber: sanitizeOfficeReviewQueueLabel(
       entry.jobNumber,
@@ -249,7 +340,7 @@ function toReviewQueueItem(
     lastActivityAt: entry.completedAt,
     assignedTechnician: entry.assignedTechnician?.trim() || undefined,
     detail: formatCompletedWorkInvoiceStatus(entry.invoiceStatus),
-  };
+  });
 }
 
 function toAwaitingInvoicingQueueItem(
@@ -263,7 +354,7 @@ function toAwaitingInvoicingQueueItem(
   const severity: OfficeReviewQueueSeverity = "warning";
   const daysAging = normalizeOfficeReviewQueueDays(entry.daysSinceCompletion);
 
-  return {
+  return enrichQueueItemWithAgingMetadata({
     jobId: entry.jobId,
     jobNumber: sanitizeOfficeReviewQueueLabel(
       entry.jobNumber,
@@ -283,7 +374,7 @@ function toAwaitingInvoicingQueueItem(
     lastActivityAt: entry.completedAt,
     assignedTechnician: entry.assignedTechnician?.trim() || undefined,
     detail: "No active invoice on file",
-  };
+  });
 }
 
 function toStalledJobQueueItem(
@@ -299,7 +390,7 @@ function toStalledJobQueueItem(
   const severity: OfficeReviewQueueSeverity =
     daysAging >= OFFICE_REVIEW_QUEUE_AGING_DAYS ? "warning" : "info";
 
-  return {
+  return enrichQueueItemWithAgingMetadata({
     jobId: entry.jobId,
     jobNumber: sanitizeOfficeReviewQueueLabel(
       entry.jobNumber,
@@ -320,7 +411,7 @@ function toStalledJobQueueItem(
     assignedTechnician: entry.assignedTechnician?.trim() || undefined,
     jobStatus: entry.status,
     detail: `${inactivityThresholdDays}+ days without job activity`,
-  };
+  });
 }
 
 export function compareOfficeReviewQueueItems(
@@ -334,6 +425,29 @@ export function compareOfficeReviewQueueItems(
   }
 
   if (sortMode === "oldest_first") {
+    const agingDiff = right.daysAging - left.daysAging;
+    if (agingDiff !== 0) {
+      return agingDiff;
+    }
+
+    return SEVERITY_RANK[left.severity] - SEVERITY_RANK[right.severity];
+  }
+
+  if (sortMode === "newest_first") {
+    const agingDiff = left.daysAging - right.daysAging;
+    if (agingDiff !== 0) {
+      return agingDiff;
+    }
+
+    return SEVERITY_RANK[left.severity] - SEVERITY_RANK[right.severity];
+  }
+
+  if (sortMode === "blockers_first") {
+    const blockerDiff = right.blockerCount - left.blockerCount;
+    if (blockerDiff !== 0) {
+      return blockerDiff;
+    }
+
     const agingDiff = right.daysAging - left.daysAging;
     if (agingDiff !== 0) {
       return agingDiff;
@@ -501,6 +615,8 @@ export function buildOfficeReviewQueueReport(input: {
   const limitations = [
     "Heuristic operational queue only — not a true approval workflow.",
     "Combines completed-work review, invoicing backlog, and stalled-job signals from existing reports.",
+    "Aging intelligence buckets (Fresh / Aging / Overdue) are read-only heuristics based on days since last relevant activity — not SLA enforcement.",
+    "No business-hours awareness, staffing-aware routing, or automated escalation yet.",
     "No SLA enforcement, queue assignments, or scheduling intelligence yet.",
     "Quick actions are navigational shortcuts only — no writes or approvals.",
     "Stalled jobs are lower-priority context; they do not block invoicing or review closure.",
@@ -508,8 +624,10 @@ export function buildOfficeReviewQueueReport(input: {
   ];
 
   // TODO(office-review-queue-v2): Per-user queue assignments and ownership.
-  // TODO(office-review-queue-v2): SLA timers and overdue escalation.
+  // TODO(office-review-queue-v2): SLA timers with business-hours-aware due dates.
+  // TODO(office-review-queue-v2): Escalation automation for overdue critical items.
   // TODO(office-review-queue-v2): AI prioritization and smart batching suggestions.
+  // TODO(office-review-queue-v2): Staffing-aware queue routing by role and capacity.
   // TODO(office-review-queue-v2): Reminder automation for aging queue items.
 
   return {
@@ -518,6 +636,7 @@ export function buildOfficeReviewQueueReport(input: {
       criticalCount: groups.critical.length,
       needsAttentionCount: groups.needs_attention.length,
       agingCount: groups.aging.length,
+      agingBucketCounts: countOfficeReviewQueueAgingBuckets(items),
       resolvedThisWeek: input.resolvedThisWeek,
       groups,
       items,
@@ -545,6 +664,8 @@ export function sliceOfficeReviewQueueReport(
     ...report,
     summary: {
       ...report.summary,
+      totalCount: report.summary.totalCount,
+      agingBucketCounts: countOfficeReviewQueueAgingBuckets(items),
       groups,
       items,
     },

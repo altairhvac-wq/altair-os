@@ -25,8 +25,11 @@ import {
   formatOfficeReviewQueueKind,
   getOfficeReviewQueueFilterLabel,
   isValidOfficeReviewQueueJobId,
+  OFFICE_REVIEW_QUEUE_AGING_BUCKET_MAX_DAYS,
   OFFICE_REVIEW_QUEUE_AGING_DAYS,
+  OFFICE_REVIEW_QUEUE_FRESH_MAX_DAYS,
   OFFICE_REVIEW_QUEUE_FILTER_OPTIONS,
+  type OfficeReviewQueueAgingBucket,
   type OfficeReviewQueueFilter,
   type OfficeReviewQueueGroup,
   type OfficeReviewQueueItem,
@@ -84,7 +87,12 @@ const GROUP_EMPTY_MESSAGES: Record<OfficeReviewQueueGroup, string> = {
 
 function severityBadgeClassName(
   severity: OfficeReviewQueueItem["severity"],
+  escalated = false,
 ): string {
+  if (escalated) {
+    return "bg-rose-200 text-rose-950 ring-1 ring-rose-400/60";
+  }
+
   switch (severity) {
     case "critical":
       return "bg-rose-100 text-rose-800";
@@ -93,6 +101,31 @@ function severityBadgeClassName(
     case "info":
       return "bg-sky-100 text-sky-800";
   }
+}
+
+function agingBucketBadgeClassName(
+  bucket: OfficeReviewQueueAgingBucket,
+): string {
+  switch (bucket) {
+    case "fresh":
+      return "bg-emerald-100 text-emerald-800";
+    case "aging":
+      return "bg-amber-100 text-amber-900";
+    case "overdue":
+      return "bg-rose-100 text-rose-900 ring-1 ring-rose-300/70";
+  }
+}
+
+function queueItemRowClassName(item: OfficeReviewQueueItem): string {
+  if (item.severityEscalated) {
+    return "border-l-4 border-rose-500 bg-rose-50/50";
+  }
+
+  if (item.agingBucket === "overdue") {
+    return "border-l-4 border-rose-300 bg-rose-50/30";
+  }
+
+  return "";
 }
 
 function groupAccentClassName(group: OfficeReviewQueueGroup): string {
@@ -359,7 +392,9 @@ function QueueItemRow({
     : null;
 
   return (
-    <li className="px-3 py-2.5 sm:px-4 sm:py-3">
+    <li
+      className={`px-3 py-2.5 sm:px-4 sm:py-3 ${queueItemRowClassName(item)}`}
+    >
       <div className="flex min-w-0 flex-col gap-2 sm:gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
@@ -379,9 +414,15 @@ function QueueItemRow({
               {formatOfficeReviewQueueKind(item.kind)}
             </span>
             <span
-              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${severityBadgeClassName(item.severity)}`}
+              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${agingBucketBadgeClassName(item.agingBucket)}`}
+              title={`Operational age bucket: ${item.agingLabel} (${item.daysAging}d)`}
             >
-              {item.severity}
+              {item.agingLabel}
+            </span>
+            <span
+              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${severityBadgeClassName(item.severity, item.severityEscalated)}`}
+            >
+              {item.severityEscalated ? "Critical · overdue" : item.severity}
             </span>
             {item.jobStatus ? (
               <JobStatusBadge
@@ -483,6 +524,16 @@ function QueueGroupSection({
   );
 }
 
+const SORT_MODE_OPTIONS: {
+  value: OfficeReviewQueueSortMode;
+  label: string;
+}[] = [
+  { value: "severity_first", label: "Highest severity" },
+  { value: "blockers_first", label: "Most blockers" },
+  { value: "oldest_first", label: "Oldest first" },
+  { value: "newest_first", label: "Newest first" },
+];
+
 function SortToggle({
   sortMode,
   onChange,
@@ -491,29 +542,25 @@ function SortToggle({
   onChange: (mode: OfficeReviewQueueSortMode) => void;
 }) {
   return (
-    <div className="inline-flex w-full max-w-full rounded-lg border border-slate-200 bg-white p-1 text-xs font-semibold sm:w-auto">
-      <button
-        type="button"
-        onClick={() => onChange("severity_first")}
-        className={`min-h-9 flex-1 rounded-md px-3 py-1.5 transition-colors sm:min-h-0 sm:flex-none ${
-          sortMode === "severity_first"
-            ? "bg-slate-900 text-white"
-            : "text-slate-600 hover:bg-slate-50"
-        }`}
-      >
-        Highest severity
-      </button>
-      <button
-        type="button"
-        onClick={() => onChange("oldest_first")}
-        className={`min-h-9 flex-1 rounded-md px-3 py-1.5 transition-colors sm:min-h-0 sm:flex-none ${
-          sortMode === "oldest_first"
-            ? "bg-slate-900 text-white"
-            : "text-slate-600 hover:bg-slate-50"
-        }`}
-      >
-        Oldest first
-      </button>
+    <div
+      className="flex w-full max-w-full flex-wrap gap-1 rounded-lg border border-slate-200 bg-white p-1 text-xs font-semibold sm:w-auto"
+      role="group"
+      aria-label="Sort office review queue"
+    >
+      {SORT_MODE_OPTIONS.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          onClick={() => onChange(option.value)}
+          className={`min-h-9 flex-1 rounded-md px-2.5 py-1.5 transition-colors sm:min-h-0 sm:flex-none sm:px-3 ${
+            sortMode === option.value
+              ? "bg-slate-900 text-white"
+              : "text-slate-600 hover:bg-slate-50"
+          }`}
+        >
+          {option.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -726,6 +773,40 @@ export function OfficeReviewQueueSection({
             accentClassName="border-emerald-100"
           />
         ) : null}
+      </div>
+
+      <div
+        className={`mt-2 grid gap-2 sm:mt-3 sm:gap-3 ${
+          isCompact ? "grid-cols-3" : "sm:grid-cols-3"
+        }`}
+      >
+        <MetricCard
+          label="Fresh"
+          value={String(summary.agingBucketCounts.fresh)}
+          description={`0–${OFFICE_REVIEW_QUEUE_FRESH_MAX_DAYS} days — newly surfaced`}
+          icon={Sparkles}
+          iconClassName="text-emerald-600 bg-emerald-50"
+          accentClassName="border-emerald-100"
+          compact={isCompact}
+        />
+        <MetricCard
+          label="Aging"
+          value={String(summary.agingBucketCounts.aging)}
+          description={`${OFFICE_REVIEW_QUEUE_FRESH_MAX_DAYS + 1}–${OFFICE_REVIEW_QUEUE_AGING_BUCKET_MAX_DAYS} days — monitor follow-up`}
+          icon={Clock}
+          iconClassName="text-amber-600 bg-amber-50"
+          accentClassName="border-amber-100"
+          compact={isCompact}
+        />
+        <MetricCard
+          label="Overdue"
+          value={String(summary.agingBucketCounts.overdue)}
+          description={`${OFFICE_REVIEW_QUEUE_AGING_DAYS}+ days — operationally neglected`}
+          icon={AlertTriangle}
+          iconClassName="text-rose-600 bg-rose-50"
+          accentClassName="border-rose-100"
+          compact={isCompact}
+        />
       </div>
 
       {isFiltered && !showFilterEmptyState && !showGlobalEmptyState ? (
