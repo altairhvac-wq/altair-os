@@ -936,7 +936,7 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
       <OfficeReviewQueueSection
         report={data.officeReviewQueue}
         variant="compact"
-        itemLimit={8}
+        itemLimit={5}
       />
       <TodayOperationsSection operations={data.operations} />
 

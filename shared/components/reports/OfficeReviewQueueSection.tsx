@@ -5,12 +5,15 @@ import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   ArrowDownUp,
+  ArrowRight,
   Briefcase,
   CheckCircle2,
   ClipboardList,
   Clock,
   ExternalLink,
   FileText,
+  Inbox,
+  Sparkles,
 } from "lucide-react";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { formatJobStatus } from "@/shared/types/job";
@@ -46,6 +49,12 @@ const GROUP_DESCRIPTIONS: Record<OfficeReviewQueueGroup, string> = {
   aging: `${OFFICE_REVIEW_QUEUE_AGING_DAYS}+ days without meaningful progress — monitor for backlog buildup.`,
 };
 
+const GROUP_EMPTY_MESSAGES: Record<OfficeReviewQueueGroup, string> = {
+  critical: "No critical items — completed work has no multi-blocker flags.",
+  needs_attention: "No standard follow-up items in this group.",
+  aging: `No aging items — nothing sitting ${OFFICE_REVIEW_QUEUE_AGING_DAYS}+ days without progress.`,
+};
+
 function severityBadgeClassName(
   severity: OfficeReviewQueueItem["severity"],
 ): string {
@@ -77,6 +86,7 @@ function MetricCard({
   icon: Icon,
   iconClassName,
   accentClassName,
+  compact = false,
 }: {
   label: string;
   value: string;
@@ -84,7 +94,32 @@ function MetricCard({
   icon: typeof AlertTriangle;
   iconClassName: string;
   accentClassName: string;
+  compact?: boolean;
 }) {
+  if (compact) {
+    return (
+      <div
+        className={`rounded-lg border bg-white px-3 py-2.5 ${accentClassName}`}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="truncate text-[10px] font-bold uppercase tracking-wide text-slate-500">
+              {label}
+            </p>
+            <p className="mt-0.5 truncate text-lg font-black tabular-nums text-slate-900">
+              {value}
+            </p>
+          </div>
+          <div
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconClassName}`}
+          >
+            <Icon className="h-4 w-4" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`rounded-xl border bg-white p-4 ${accentClassName}`}>
       <div className="flex items-start justify-between gap-3">
@@ -107,20 +142,69 @@ function MetricCard({
   );
 }
 
+function QueueEmptyState() {
+  return (
+    <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center sm:py-10">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 ring-1 ring-emerald-600/10">
+        <Sparkles className="h-6 w-6 text-emerald-600" />
+      </div>
+      <h3 className="mt-4 text-sm font-bold text-slate-900">
+        Queue is clear
+      </h3>
+      <p className="mt-1 max-w-sm text-xs text-slate-500 sm:text-sm">
+        No items need office review right now. Completed-work flags, invoicing
+        backlog, and stalled jobs will appear here.
+      </p>
+    </div>
+  );
+}
+
+function GroupEmptyState({ group }: { group: OfficeReviewQueueGroup }) {
+  const isPositive = group === "critical" || group === "aging";
+
+  return (
+    <div
+      className={`px-3 py-4 text-center sm:px-4 ${
+        isPositive ? "bg-white/80" : "bg-white/60"
+      }`}
+    >
+      <div className="mx-auto flex max-w-md items-start justify-center gap-2 text-left sm:items-center sm:text-center">
+        {isPositive ? (
+          <CheckCircle2
+            className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 sm:mt-0"
+            aria-hidden="true"
+          />
+        ) : (
+          <Inbox
+            className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 sm:mt-0"
+            aria-hidden="true"
+          />
+        )}
+        <p className="text-xs text-slate-600 sm:text-sm">
+          {GROUP_EMPTY_MESSAGES[group]}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function QueueItemActions({ item }: { item: OfficeReviewQueueItem }) {
   const actions = buildOfficeReviewQueueActions(item);
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
       {actions.map((action) => (
         <Link
           key={action.id}
           href={action.href}
-          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+          className="inline-flex min-h-10 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 sm:min-h-0 sm:justify-start sm:px-2.5 sm:py-1.5"
         >
-          {action.label}
+          <span className="truncate">{action.label}</span>
           {action.external ? (
-            <ExternalLink className="h-3 w-3 text-slate-400" aria-hidden="true" />
+            <ExternalLink
+              className="h-3 w-3 shrink-0 text-slate-400"
+              aria-hidden="true"
+            />
           ) : null}
         </Link>
       ))}
@@ -131,31 +215,36 @@ function QueueItemActions({ item }: { item: OfficeReviewQueueItem }) {
 function QueueItemRow({
   item,
   showActions,
+  dense = false,
 }: {
   item: OfficeReviewQueueItem;
   showActions: boolean;
+  dense?: boolean;
 }) {
   return (
-    <li className="px-4 py-3">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <li className="px-3 py-2.5 sm:px-4 sm:py-3">
+      <div className="flex min-w-0 flex-col gap-2 sm:gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
             <Link
               href={`/jobs/${item.jobId}`}
-              className="text-sm font-bold text-slate-900 hover:text-cyan-700"
+              className="shrink-0 text-sm font-bold text-slate-900 hover:text-cyan-700"
             >
               {item.jobNumber}
             </Link>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-700">
+            <span className="max-w-full truncate rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-700">
               {formatOfficeReviewQueueKind(item.kind)}
             </span>
             <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${severityBadgeClassName(item.severity)}`}
+              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${severityBadgeClassName(item.severity)}`}
             >
               {item.severity}
             </span>
             {item.jobStatus ? (
-              <JobStatusBadge status={item.jobStatus} />
+              <JobStatusBadge
+                status={item.jobStatus}
+                className="shrink-0 px-2 py-0.5 text-[10px]"
+              />
             ) : null}
           </div>
           <p className="mt-1 truncate text-sm text-slate-600">
@@ -164,26 +253,36 @@ function QueueItemRow({
               ? ` · ${item.assignedTechnician}`
               : " · Unassigned"}
           </p>
-          {item.reviewReasons.length > 0 ? (
-            <p className="mt-0.5 text-xs text-slate-500">
-              {formatCompletedWorkReviewReasons(item.reviewReasons)}
-            </p>
-          ) : (
-            <p className="mt-0.5 text-xs text-slate-500">{item.detail}</p>
-          )}
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-            <span>
-              {item.daysAging} day{item.daysAging === 1 ? "" : "s"} aging
+          {!dense ? (
+            item.reviewReasons.length > 0 ? (
+              <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 sm:line-clamp-none">
+                {formatCompletedWorkReviewReasons(item.reviewReasons)}
+              </p>
+            ) : (
+              <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 sm:line-clamp-none">
+                {item.detail}
+              </p>
+            )
+          ) : null}
+          <div
+            className={`mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500 sm:mt-2 sm:gap-x-4 sm:text-xs ${
+              dense ? "" : "max-sm:gap-y-1"
+            }`}
+          >
+            <span className="shrink-0">
+              {item.daysAging}d aging
             </span>
-            <span>
+            <span className="shrink-0">
               {item.blockerCount} blocker{item.blockerCount === 1 ? "" : "s"}
             </span>
-            <span>
-              Last activity{" "}
-              {item.lastActivityAt
-                ? formatOperationalActivityTimestamp(item.lastActivityAt)
-                : "not recorded"}
-            </span>
+            {!dense ? (
+              <span className="min-w-0 truncate max-sm:hidden">
+                Last activity{" "}
+                {item.lastActivityAt
+                  ? formatOperationalActivityTimestamp(item.lastActivityAt)
+                  : "not recorded"}
+              </span>
+            ) : null}
           </div>
         </div>
         {showActions ? <QueueItemActions item={item} /> : null}
@@ -196,24 +295,26 @@ function QueueGroupSection({
   group,
   items,
   showActions,
+  showEmptyState,
 }: {
   group: OfficeReviewQueueGroup;
   items: OfficeReviewQueueItem[];
   showActions: boolean;
+  showEmptyState: boolean;
 }) {
-  if (items.length === 0) {
+  if (items.length === 0 && !showEmptyState) {
     return null;
   }
 
   return (
-    <section className={`rounded-xl border ${groupAccentClassName(group)}`}>
-      <div className="border-b border-inherit px-4 py-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
+    <section className={`overflow-hidden rounded-xl border ${groupAccentClassName(group)}`}>
+      <div className="border-b border-inherit px-3 py-2.5 sm:px-4 sm:py-3">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
             <h3 className="text-sm font-bold text-slate-900">
               {GROUP_LABELS[group]}
             </h3>
-            <p className="mt-0.5 text-xs text-slate-600">
+            <p className="mt-0.5 hidden text-xs text-slate-600 sm:block">
               {GROUP_DESCRIPTIONS[group]}
             </p>
           </div>
@@ -222,11 +323,19 @@ function QueueGroupSection({
           </span>
         </div>
       </div>
-      <ul className="divide-y divide-slate-100 bg-white/80">
-        {items.map((item) => (
-          <QueueItemRow key={`${group}-${item.jobId}-${item.kind}`} item={item} showActions={showActions} />
-        ))}
-      </ul>
+      {items.length === 0 ? (
+        <GroupEmptyState group={group} />
+      ) : (
+        <ul className="divide-y divide-slate-100 bg-white/80">
+          {items.map((item) => (
+            <QueueItemRow
+              key={`${group}-${item.jobId}-${item.kind}`}
+              item={item}
+              showActions={showActions}
+            />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
@@ -239,11 +348,11 @@ function SortToggle({
   onChange: (mode: OfficeReviewQueueSortMode) => void;
 }) {
   return (
-    <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1 text-xs font-semibold">
+    <div className="inline-flex w-full max-w-full rounded-lg border border-slate-200 bg-white p-1 text-xs font-semibold sm:w-auto">
       <button
         type="button"
         onClick={() => onChange("severity_first")}
-        className={`rounded-md px-3 py-1.5 transition-colors ${
+        className={`min-h-9 flex-1 rounded-md px-3 py-1.5 transition-colors sm:min-h-0 sm:flex-none ${
           sortMode === "severity_first"
             ? "bg-slate-900 text-white"
             : "text-slate-600 hover:bg-slate-50"
@@ -254,7 +363,7 @@ function SortToggle({
       <button
         type="button"
         onClick={() => onChange("oldest_first")}
-        className={`rounded-md px-3 py-1.5 transition-colors ${
+        className={`min-h-9 flex-1 rounded-md px-3 py-1.5 transition-colors sm:min-h-0 sm:flex-none ${
           sortMode === "oldest_first"
             ? "bg-slate-900 text-white"
             : "text-slate-600 hover:bg-slate-50"
@@ -310,39 +419,51 @@ export function OfficeReviewQueueSection({
   const showActions = !isCompact;
   const { summary, meta } = report;
 
+  const visibleCount = baseItems.length;
+  const hasMoreItems =
+    isCompact && itemLimit != null && summary.totalCount > itemLimit;
+
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 ring-1 ring-violet-600/10">
-            <ClipboardList className="h-5 w-5 text-violet-600" />
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 ring-1 ring-violet-600/10 sm:h-10 sm:w-10">
+            <ClipboardList className="h-4 w-4 text-violet-600 sm:h-5 sm:w-5" />
           </div>
-          <div>
-            <h2 className="text-base font-bold text-slate-900">
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold text-slate-900 sm:text-base">
               Office review queue
             </h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Centralized operational queue for completed-work review, invoicing
-              backlog, and stalled pipeline jobs · All time
+            <p className="mt-0.5 text-xs text-slate-500 sm:mt-1">
+              {isCompact
+                ? "Highest-priority items needing office follow-up"
+                : "Centralized operational queue for completed-work review, invoicing backlog, and stalled pipeline jobs · All time"}
             </p>
           </div>
         </div>
         {!isCompact ? (
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <ArrowDownUp className="h-3.5 w-3.5" aria-hidden="true" />
+          <div className="flex w-full min-w-0 items-center gap-2 text-xs text-slate-500 sm:w-auto">
+            <ArrowDownUp className="hidden h-3.5 w-3.5 sm:block" aria-hidden="true" />
             <SortToggle sortMode={sortMode} onChange={setSortMode} />
           </div>
         ) : (
           <Link
             href="/reports"
-            className="text-xs font-semibold text-cyan-600 hover:text-cyan-700"
+            className="inline-flex min-h-10 w-full shrink-0 items-center justify-center gap-1.5 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700 transition-colors hover:border-cyan-300 hover:bg-cyan-100 sm:min-h-0 sm:w-auto"
           >
-            View full queue
+            View all in reports
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         )}
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div
+        className={`mt-3 grid gap-2 sm:mt-4 sm:gap-4 ${
+          isCompact
+            ? "grid-cols-2 sm:grid-cols-4"
+            : "sm:grid-cols-2 xl:grid-cols-5"
+        }`}
+      >
         <MetricCard
           label="Queue total"
           value={String(summary.totalCount)}
@@ -350,6 +471,7 @@ export function OfficeReviewQueueSection({
           icon={Briefcase}
           iconClassName="text-violet-600 bg-violet-50"
           accentClassName="border-violet-100"
+          compact={isCompact}
         />
         <MetricCard
           label="Critical"
@@ -358,6 +480,7 @@ export function OfficeReviewQueueSection({
           icon={AlertTriangle}
           iconClassName="text-rose-600 bg-rose-50"
           accentClassName="border-rose-100"
+          compact={isCompact}
         />
         <MetricCard
           label="Needs attention"
@@ -366,6 +489,7 @@ export function OfficeReviewQueueSection({
           icon={FileText}
           iconClassName="text-amber-600 bg-amber-50"
           accentClassName="border-amber-100"
+          compact={isCompact}
         />
         <MetricCard
           label="Aging"
@@ -374,41 +498,45 @@ export function OfficeReviewQueueSection({
           icon={Clock}
           iconClassName="text-slate-600 bg-slate-100"
           accentClassName="border-slate-200"
+          compact={isCompact}
         />
-        <MetricCard
-          label="Resolved this week"
-          value={String(summary.resolvedThisWeek)}
-          description="Review blockers cleared on completed jobs"
-          icon={CheckCircle2}
-          iconClassName="text-emerald-600 bg-emerald-50"
-          accentClassName="border-emerald-100"
-        />
+        {!isCompact ? (
+          <MetricCard
+            label="Resolved this week"
+            value={String(summary.resolvedThisWeek)}
+            description="Review blockers cleared on completed jobs"
+            icon={CheckCircle2}
+            iconClassName="text-emerald-600 bg-emerald-50"
+            accentClassName="border-emerald-100"
+          />
+        ) : null}
       </div>
 
       {baseItems.length === 0 ? (
-        <p className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-center text-sm text-slate-600">
-          No items in the office review queue right now.
-        </p>
+        <QueueEmptyState />
       ) : showGrouped ? (
-        <div className="mt-4 flex flex-col gap-4">
+        <div className="mt-3 flex flex-col gap-3 sm:mt-4 sm:gap-4">
           <QueueGroupSection
             group="critical"
             items={groups.critical}
             showActions={showActions}
+            showEmptyState
           />
           <QueueGroupSection
             group="needs_attention"
             items={groups.needs_attention}
             showActions={showActions}
+            showEmptyState={false}
           />
           <QueueGroupSection
             group="aging"
             items={groups.aging}
             showActions={showActions}
+            showEmptyState
           />
         </div>
       ) : (
-        <ul className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-100">
+        <ul className="mt-3 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-100 sm:mt-4">
           {baseItems
             .slice()
             .sort((left, right) =>
@@ -419,6 +547,7 @@ export function OfficeReviewQueueSection({
                 key={`${item.jobId}-${item.kind}`}
                 item={item}
                 showActions={false}
+                dense
               />
             ))}
         </ul>
@@ -443,7 +572,17 @@ export function OfficeReviewQueueSection({
         </div>
       ) : null}
 
-      {isCompact ? (
+      {isCompact && hasMoreItems ? (
+        <p className="mt-3 text-center text-xs text-slate-500">
+          Showing {visibleCount} of {summary.totalCount} items ·{" "}
+          <Link
+            href="/reports"
+            className="font-semibold text-cyan-600 hover:text-cyan-700"
+          >
+            View all in reports
+          </Link>
+        </p>
+      ) : isCompact ? (
         <p className="mt-3 text-xs text-slate-500">
           Compact snapshot — open Reports for sorting, grouped views, and quick
           actions.
