@@ -10,10 +10,7 @@ export default async function DashboardPage() {
     redirect("/setup");
   }
 
-  const data = await getDashboardData(
-    companyContext.company.id,
-    companyContext.user.id,
-  );
+  const data = await getDashboardData(companyContext);
 
   return <OperationalDashboardView data={data} />;
 }

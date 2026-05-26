@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getCompanyAccessScope } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
 import { listTechnicians } from "@/lib/database/queries/technicians";
@@ -22,7 +23,13 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
   }
 
   const { focus } = await searchParams;
-  const jobs = await listDispatchJobsForToday(companyContext.company.id);
+  const access = getCompanyAccessScope(companyContext);
+  const allJobs = await listDispatchJobsForToday(companyContext.company.id);
+  const jobs = access.canViewAllJobs
+    ? allJobs
+    : allJobs.filter(
+        (job) => job.technicianId === companyContext.user.id,
+      );
   const pageFocus = enrichDispatchPageFocusState(
     parseDispatchPageSearchParams({ focus }),
     jobs,

@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
+import { canViewAllJobs } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listCustomers } from "@/lib/database/queries/customers";
-import { listJobs } from "@/lib/database/queries/jobs";
+import { listAssignedJobs, listJobs } from "@/lib/database/queries/jobs";
 import { JobsPageView } from "@/shared/components/jobs/JobsPageView";
 import type { JobFormData } from "@/shared/types/job";
 
@@ -18,9 +19,16 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
 
   const { customerId, create } = await searchParams;
 
+  const canViewAll = canViewAllJobs(companyContext);
+
   const [jobs, customers] = await Promise.all([
-    listJobs(companyContext.company.id),
-    listCustomers(companyContext.company.id),
+    canViewAll
+      ? listJobs(companyContext.company.id)
+      : listAssignedJobs(
+          companyContext.company.id,
+          companyContext.user.id,
+        ),
+    canViewAll ? listCustomers(companyContext.company.id) : Promise.resolve([]),
   ]);
 
   const preselectedCustomer = customerId

@@ -1,3 +1,8 @@
+import {
+  getCompanyAccessScope,
+  type CompanyAccessScope,
+} from "@/lib/database/access-control";
+import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
 import { listRecentOperationalActivitiesForCompany } from "@/lib/database/queries/dashboard";
@@ -17,9 +22,14 @@ import {
 import { getDailyOperationsSummary } from "@/lib/database/services/operations/daily-operations-summary";
 import { getCompanyOfficeReviewQueueReport } from "@/lib/database/services/reports/office-review-queue";
 import { buildOperationalHealthReportFromOfficeQueue } from "@/shared/types/operational-health-report";
+import type { DailyOperationsSummary } from "@/shared/types/daily-operations-summary";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { getTodayOperationsSummary } from "@/shared/types/dashboard";
 import { getInvoiceSummary } from "@/shared/types/invoice";
+import type { OfficeReviewQueueReport } from "@/shared/types/office-review-queue";
+import type { OperationalHealthReport } from "@/shared/types/operational-health-report";
+import type { QueueResolutionTrendSummary } from "@/shared/types/queue-resolution-trends";
+import { buildReportSectionMeta } from "@/shared/types/reports";
 import type { TechnicianTimeState } from "@/shared/types/time-entry";
 import type { TimeEntry } from "@/shared/types/time-entry";
 
@@ -35,6 +45,113 @@ const COMPLETED_WORK_DASHBOARD_LIMIT = 5;
 const COMPLETED_WORK_REVIEW_DASHBOARD_LIMIT = 5;
 /** Match admin layout fetch so React cache dedupes within the request. */
 const NOTIFICATIONS_FETCH_LIMIT = 20;
+
+const EMPTY_MONEY: DashboardData["money"] = {
+  unpaidCount: 0,
+  unpaidTotal: 0,
+  overdueCount: 0,
+  overdueTotal: 0,
+  paymentsTodayCount: 0,
+  paymentsTodayTotal: 0,
+  recentPayments: [],
+  approvedEstimates: [],
+};
+
+const EMPTY_EXPENSES: DashboardData["expenses"] = {
+  submittedCount: 0,
+  submittedTotal: 0,
+  rejectedCount: 0,
+  recentReceipts: [],
+  pendingExpenses: [],
+};
+
+const EMPTY_REPORT_META = buildReportSectionMeta({
+  dateRange: "30d",
+  dateBounds: null,
+  limitations: [],
+});
+
+const EMPTY_RESOLUTION_TREND: QueueResolutionTrendSummary = {
+  resolvedThisWeek: 0,
+  resolvedLastWeek: 0,
+  weekOverWeekDelta: 0,
+  rollingSevenDayAverage: 0,
+  direction: "stable",
+  headline: "Cleanup pace holding steady",
+  detail: "No resolution activity recorded yet.",
+  limitations: [],
+};
+
+const EMPTY_OFFICE_REVIEW_QUEUE: OfficeReviewQueueReport = {
+  summary: {
+    totalCount: 0,
+    criticalCount: 0,
+    needsAttentionCount: 0,
+    agingCount: 0,
+    agingBucketCounts: { fresh: 0, aging: 0, overdue: 0 },
+    resolvedThisWeek: 0,
+    resolutionTrend: EMPTY_RESOLUTION_TREND,
+    groups: {
+      critical: [],
+      needs_attention: [],
+      aging: [],
+    },
+    items: [],
+  },
+  meta: EMPTY_REPORT_META,
+};
+
+const EMPTY_OPERATIONAL_HEALTH: OperationalHealthReport = {
+  operationalHealthScore: 0,
+  operationalHealthLabel: "Healthy",
+  operationalHealthTrend: "stable",
+  strongestOperationalArea: {
+    id: "office_queue",
+    label: "Office review queue",
+    score: 0,
+  },
+  biggestOperationalRisk: {
+    id: "office_queue",
+    label: "Office review queue",
+    score: 0,
+  },
+  contributingFactors: [],
+  areaScores: [],
+  meta: EMPTY_REPORT_META,
+};
+
+const EMPTY_OPERATIONAL_INSIGHTS: DailyOperationsSummary = {
+  generatedAt: new Date().toISOString(),
+  sections: {
+    revenue: {
+      collectedRevenue: 0,
+      outstandingRevenue: 0,
+      todayCollectedRevenue: 0,
+      todayPaymentCount: 0,
+    },
+    openJobs: { count: 0 },
+    stalledJobs: {
+      count: 0,
+      inactivityThresholdDays: 0,
+      stalledJobs: [],
+    },
+    pendingExpenses: { count: 0, totalAmount: 0 },
+    activeTechnicians: { activeLaborEntries: 0, technicianCount: 0 },
+    completedAwaitingInvoicing: { count: 0, jobs: [] },
+    completedWorkReview: {
+      count: 0,
+      jobs: [],
+      resolvedThisWeek: 0,
+      resolutionTrend: EMPTY_RESOLUTION_TREND,
+    },
+    profitabilityWarnings: {
+      jobsWithWarnings: 0,
+      materialCostExceedsCollectedCount: 0,
+    },
+  },
+  highlights: [],
+  limitations: [],
+};
 
 function buildTechnicianStatuses(
   technicians: Awaited<ReturnType<typeof listTechnicians>>,
@@ -63,11 +180,28 @@ function buildTechnicianStatuses(
     });
 }
 
-export async function getDashboardData(
-  companyId: string,
+function filterJobsForAccess<T extends { technicianId?: string | null }>(
+  jobs: T[],
+  access: CompanyAccessScope,
   userId: string,
+): T[] {
+  if (access.canViewAllJobs) {
+    return jobs;
+  }
+
+  return jobs.filter((job) => job.technicianId === userId);
+}
+
+export async function getDashboardData(
+  context: ActiveCompanyContext,
 ): Promise<DashboardData> {
-  const todayJobs = await listDispatchJobsForToday(companyId);
+  const access = getCompanyAccessScope(context);
+  const companyId = context.company.id;
+  const userId = context.user.id;
+
+  const allTodayJobs = await listDispatchJobsForToday(companyId);
+  const todayJobs = filterJobsForAccess(allTodayJobs, access, userId);
+  const todayOperationsSummary = getTodayOperationsSummary(todayJobs);
 
   const [
     technicians,
@@ -82,136 +216,189 @@ export async function getDashboardData(
     operationsSummary,
     officeReviewQueueReport,
   ] = await Promise.all([
-    listTechnicians(companyId, todayJobs),
-    listActiveTechnicianTimeEntries(companyId),
-    listInvoices(companyId),
-    listEstimates(companyId),
-    listExpenses(companyId),
-    listRecentPayments(companyId, RECENT_PAYMENTS_LIMIT),
-    listRecentOperationalActivitiesForCompany(
-      companyId,
-      RECENT_ACTIVITY_LIMIT,
-    ),
+    access.canViewTechnicianRoster
+      ? listTechnicians(companyId, todayJobs)
+      : Promise.resolve([]),
+    access.canViewTechnicianRoster
+      ? listActiveTechnicianTimeEntries(companyId)
+      : Promise.resolve([]),
+    access.canViewBilling ? listInvoices(companyId) : Promise.resolve([]),
+    access.canViewBilling ? listEstimates(companyId) : Promise.resolve([]),
+    access.canViewCompanyExpenses
+      ? listExpenses(companyId)
+      : Promise.resolve([]),
+    access.canViewBilling
+      ? listRecentPayments(companyId, RECENT_PAYMENTS_LIMIT)
+      : Promise.resolve([]),
+    access.canViewOperationalReports
+      ? listRecentOperationalActivitiesForCompany(
+          companyId,
+          RECENT_ACTIVITY_LIMIT,
+        )
+      : Promise.resolve([]),
     getUserNotifications(companyId, userId, {
       limit: NOTIFICATIONS_FETCH_LIMIT,
     }),
     getUnreadNotificationCount(companyId, userId),
-    getDailyOperationsSummary(companyId),
-    getCompanyOfficeReviewQueueReport(companyId),
+    access.canViewOperationalReports
+      ? getDailyOperationsSummary(companyId)
+      : Promise.resolve(EMPTY_OPERATIONAL_INSIGHTS),
+    access.canViewOperationalReports
+      ? getCompanyOfficeReviewQueueReport(companyId)
+      : Promise.resolve(EMPTY_OFFICE_REVIEW_QUEUE),
   ]);
 
-  const todayOperationsSummary = getTodayOperationsSummary(todayJobs);
-  const invoiceSummary = getInvoiceSummary(invoices);
+  const invoiceSummary = access.canViewBilling
+    ? getInvoiceSummary(invoices)
+    : { overdueTotal: 0 };
 
-  const unpaidInvoices = invoices.filter(
-    (invoice) =>
-      invoice.status !== "void" &&
-      invoice.status !== "cancelled" &&
-      invoice.status !== "paid" &&
-      invoice.balanceDue > 0,
-  );
+  const unpaidInvoices = access.canViewBilling
+    ? invoices.filter(
+        (invoice) =>
+          invoice.status !== "void" &&
+          invoice.status !== "cancelled" &&
+          invoice.status !== "paid" &&
+          invoice.balanceDue > 0,
+      )
+    : [];
 
   const overdueInvoices = unpaidInvoices.filter(
     (invoice) => invoice.status === "overdue",
   );
 
-  const approvedEstimates = estimates
-    .filter((estimate) => estimate.status === "approved")
-    .slice(0, APPROVED_ESTIMATES_LIMIT);
+  const approvedEstimates = access.canViewBilling
+    ? estimates
+        .filter((estimate) => estimate.status === "approved")
+        .slice(0, APPROVED_ESTIMATES_LIMIT)
+    : [];
 
-  const submittedExpenses = expenses.filter(
-    (expense) => expense.status === "submitted",
-  );
+  const submittedExpenses = access.canViewCompanyExpenses
+    ? expenses.filter((expense) => expense.status === "submitted")
+    : [];
 
-  const recentReceipts = [...expenses]
-    .filter((expense) => expense.receiptStatus === "attached")
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
-    .slice(0, RECENT_RECEIPTS_LIMIT);
+  const recentReceipts = access.canViewCompanyExpenses
+    ? [...expenses]
+        .filter((expense) => expense.receiptStatus === "attached")
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        )
+        .slice(0, RECENT_RECEIPTS_LIMIT)
+    : [];
 
   const { sections: summarySections } = operationsSummary;
 
   return {
-    analytics: {
-      todayCollectedRevenue: summarySections.revenue.todayCollectedRevenue,
-      todayPaymentCount: summarySections.revenue.todayPaymentCount,
-      openJobs: summarySections.openJobs.count,
-      pendingExpenseCount: summarySections.pendingExpenses.count,
-      activeLaborEntries: summarySections.activeTechnicians.activeLaborEntries,
-      reviewIssuesResolvedThisWeek:
-        summarySections.completedWorkReview.resolvedThisWeek,
-    },
+    access,
+    analytics: access.canViewOperationalReports
+      ? {
+          todayCollectedRevenue: summarySections.revenue.todayCollectedRevenue,
+          todayPaymentCount: summarySections.revenue.todayPaymentCount,
+          openJobs: summarySections.openJobs.count,
+          pendingExpenseCount: summarySections.pendingExpenses.count,
+          activeLaborEntries:
+            summarySections.activeTechnicians.activeLaborEntries,
+          reviewIssuesResolvedThisWeek:
+            summarySections.completedWorkReview.resolvedThisWeek,
+        }
+      : {
+          todayCollectedRevenue: 0,
+          todayPaymentCount: 0,
+          openJobs: todayJobs.filter(
+            (job) =>
+              job.status !== "completed" && job.status !== "cancelled",
+          ).length,
+          pendingExpenseCount: 0,
+          activeLaborEntries: 0,
+          reviewIssuesResolvedThisWeek: 0,
+        },
     operations: {
       ...todayOperationsSummary,
       todayJobs: todayJobs.slice(0, TODAY_JOBS_LIMIT),
     },
-    technicians: buildTechnicianStatuses(technicians, activeTimeEntries),
-    money: {
-      unpaidCount: unpaidInvoices.length,
-      unpaidTotal: summarySections.revenue.outstandingRevenue,
-      overdueCount: overdueInvoices.length,
-      overdueTotal: invoiceSummary.overdueTotal,
-      paymentsTodayCount: summarySections.revenue.todayPaymentCount,
-      paymentsTodayTotal: summarySections.revenue.todayCollectedRevenue,
-      recentPayments: recentPayments.map((payment) => ({
-        id: payment.id,
-        invoiceId: payment.invoiceId,
-        invoiceNumber: payment.invoiceNumber,
-        customerName: payment.customerName,
-        amount: payment.amount,
-        paymentDate: payment.paymentDate,
-        createdAt: payment.createdAt,
-      })),
-      approvedEstimates,
-    },
-    expenses: {
-      submittedCount: summarySections.pendingExpenses.count,
-      submittedTotal: summarySections.pendingExpenses.totalAmount,
-      rejectedCount: expenses.filter((expense) => expense.status === "rejected")
-        .length,
-      recentReceipts,
-      pendingExpenses: submittedExpenses.slice(0, PENDING_EXPENSES_LIMIT),
-    },
+    technicians: access.canViewTechnicianRoster
+      ? buildTechnicianStatuses(technicians, activeTimeEntries)
+      : [],
+    money: access.canViewBilling
+      ? {
+          unpaidCount: unpaidInvoices.length,
+          unpaidTotal: summarySections.revenue.outstandingRevenue,
+          overdueCount: overdueInvoices.length,
+          overdueTotal: invoiceSummary.overdueTotal,
+          paymentsTodayCount: summarySections.revenue.todayPaymentCount,
+          paymentsTodayTotal: summarySections.revenue.todayCollectedRevenue,
+          recentPayments: recentPayments.map((payment) => ({
+            id: payment.id,
+            invoiceId: payment.invoiceId,
+            invoiceNumber: payment.invoiceNumber,
+            customerName: payment.customerName,
+            amount: payment.amount,
+            paymentDate: payment.paymentDate,
+            createdAt: payment.createdAt,
+          })),
+          approvedEstimates,
+        }
+      : EMPTY_MONEY,
+    expenses: access.canViewCompanyExpenses
+      ? {
+          submittedCount: summarySections.pendingExpenses.count,
+          submittedTotal: summarySections.pendingExpenses.totalAmount,
+          rejectedCount: expenses.filter(
+            (expense) => expense.status === "rejected",
+          ).length,
+          recentReceipts,
+          pendingExpenses: submittedExpenses.slice(0, PENDING_EXPENSES_LIMIT),
+        }
+      : EMPTY_EXPENSES,
     notifications: {
       unreadCount,
       recent: notifications.slice(0, RECENT_NOTIFICATIONS_LIMIT),
     },
     officeReviewQueue: officeReviewQueueReport,
-    stalledJobs: {
-      stalledCount: summarySections.stalledJobs.count,
-      inactivityThresholdDays: summarySections.stalledJobs.inactivityThresholdDays,
-      stalledJobs: summarySections.stalledJobs.stalledJobs.slice(
-        0,
-        STALLED_JOBS_DASHBOARD_LIMIT,
-      ),
-    },
-    completedWorkAwaitingInvoicing: {
-      count: summarySections.completedAwaitingInvoicing.count,
-      jobs: summarySections.completedAwaitingInvoicing.jobs.slice(
-        0,
-        COMPLETED_WORK_DASHBOARD_LIMIT,
-      ),
-    },
-    completedWorkReview: {
-      count: summarySections.completedWorkReview.count,
-      jobs: summarySections.completedWorkReview.jobs.slice(
-        0,
-        COMPLETED_WORK_REVIEW_DASHBOARD_LIMIT,
-      ),
-      resolvedThisWeek: summarySections.completedWorkReview.resolvedThisWeek,
-    },
+    stalledJobs: access.canViewOperationalReports
+      ? {
+          stalledCount: summarySections.stalledJobs.count,
+          inactivityThresholdDays:
+            summarySections.stalledJobs.inactivityThresholdDays,
+          stalledJobs: summarySections.stalledJobs.stalledJobs.slice(
+            0,
+            STALLED_JOBS_DASHBOARD_LIMIT,
+          ),
+        }
+      : {
+          stalledCount: 0,
+          inactivityThresholdDays: 0,
+          stalledJobs: [],
+        },
+    completedWorkAwaitingInvoicing: access.canViewOperationalReports
+      ? {
+          count: summarySections.completedAwaitingInvoicing.count,
+          jobs: summarySections.completedAwaitingInvoicing.jobs.slice(
+            0,
+            COMPLETED_WORK_DASHBOARD_LIMIT,
+          ),
+        }
+      : { count: 0, jobs: [] },
+    completedWorkReview: access.canViewOperationalReports
+      ? {
+          count: summarySections.completedWorkReview.count,
+          jobs: summarySections.completedWorkReview.jobs.slice(
+            0,
+            COMPLETED_WORK_REVIEW_DASHBOARD_LIMIT,
+          ),
+          resolvedThisWeek: summarySections.completedWorkReview.resolvedThisWeek,
+        }
+      : { count: 0, jobs: [], resolvedThisWeek: 0 },
     operationalInsights: operationsSummary,
-    operationalHealth: buildOperationalHealthReportFromOfficeQueue(
-      officeReviewQueueReport,
-      {
-        jobsWithWarnings:
-          summarySections.profitabilityWarnings.jobsWithWarnings,
-        materialCostExceedsCollectedCount:
-          summarySections.profitabilityWarnings.materialCostExceedsCollectedCount,
-      },
-    ),
+    operationalHealth: access.canViewOperationalReports
+      ? buildOperationalHealthReportFromOfficeQueue(officeReviewQueueReport, {
+          jobsWithWarnings:
+            summarySections.profitabilityWarnings.jobsWithWarnings,
+          materialCostExceedsCollectedCount:
+            summarySections.profitabilityWarnings
+              .materialCostExceedsCollectedCount,
+        })
+      : EMPTY_OPERATIONAL_HEALTH,
     recentActivity,
   };
 }

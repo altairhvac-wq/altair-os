@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { canViewCompanyTimeEntries } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
   endBreak,
@@ -54,16 +55,6 @@ async function finalizeOwnTimeAction(
 
 function canManageOwnTime(context: NonNullable<Awaited<ReturnType<typeof getActiveCompanyContext>>>) {
   return context.permissions.viewAssignedJobs;
-}
-
-function canViewCompanyTimeEntries(
-  context: NonNullable<Awaited<ReturnType<typeof getActiveCompanyContext>>>,
-) {
-  return (
-    context.permissions.manageBilling ||
-    context.permissions.dispatchJobs ||
-    context.permissions.manageCompany
-  );
 }
 
 async function assertOwnTimePermission(): Promise<{

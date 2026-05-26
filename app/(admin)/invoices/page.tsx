@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import { canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listCustomers } from "@/lib/database/queries/customers";
 import { listInvoices } from "@/lib/database/queries/invoices";
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import { InvoicesPageView } from "@/shared/components/invoices/InvoicesPageView";
+import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { parseInvoicePageSearchParams } from "@/shared/lib/invoice-page-focus";
 
 type InvoicesPageProps = {
@@ -22,6 +24,12 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
 
   if (!companyContext) {
     redirect("/setup");
+  }
+
+  if (!canViewBilling(companyContext)) {
+    return (
+      <UnauthorizedAccessView description="Invoice records are limited to billing and admin roles." />
+    );
   }
 
   const { customerId, jobId, create, status, focus } = await searchParams;

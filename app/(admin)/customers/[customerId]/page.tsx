@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { getCompanyAccessScope } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCustomerById } from "@/lib/database/queries/customers";
 import { listEstimatesByCustomer } from "@/lib/database/queries/estimates";
@@ -9,6 +10,7 @@ import { listRecentExpensesForCustomer } from "@/lib/database/queries/expenses";
 import { listRecentJobAttachmentsForCustomer } from "@/lib/database/queries/job-attachments";
 import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment";
 import { CustomerDetailPageView } from "@/shared/components/customers/CustomerDetailPageView";
+import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 
 type CustomerDetailPageProps = {
   params: Promise<{ customerId: string }>;
@@ -22,6 +24,12 @@ export default async function CustomerDetailPage({
 
   if (!companyContext) {
     redirect("/setup");
+  }
+
+  if (!getCompanyAccessScope(companyContext).canManageCustomers) {
+    return (
+      <UnauthorizedAccessView description="Customer records are limited to office and dispatch roles." />
+    );
   }
 
   const [customer, jobs, estimates, invoices, activities, equipment, recentPhotos, recentReceipts] =

@@ -975,61 +975,83 @@ function DashboardZone({
 }
 
 export function OperationalDashboardView({ data }: OperationalDashboardViewProps) {
+  const { access } = data;
   const showCommandPairSideBySide =
     !hasCashFlowPressure(data) && !hasDispatchPressure(data);
 
   return (
     <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-1">
-      <AnalyticsSnapshotSection analytics={data.analytics} />
+      {access.canViewOperationalReports ? (
+        <AnalyticsSnapshotSection analytics={data.analytics} />
+      ) : null}
 
       <DashboardZone>
-        <div
-          className={
-            showCommandPairSideBySide
-              ? "grid gap-4 xl:grid-cols-2 xl:items-stretch"
-              : "flex flex-col gap-4"
-          }
-        >
-          <CashFlowCommandSection data={data} />
-          <DispatchPressureSection data={data} />
-        </div>
+        {access.canViewOperationalReports ? (
+          <>
+            <div
+              className={
+                showCommandPairSideBySide
+                  ? "grid gap-4 xl:grid-cols-2 xl:items-stretch"
+                  : "flex flex-col gap-4"
+              }
+            >
+              {access.canViewBilling ? (
+                <CashFlowCommandSection data={data} />
+              ) : null}
+              <DispatchPressureSection data={data} />
+            </div>
 
-        <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
-          <TodayNeedsAttentionSection data={data} />
-          <NextBestActionsSection data={data} />
-        </div>
+            <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
+              <TodayNeedsAttentionSection data={data} />
+              <NextBestActionsSection data={data} />
+            </div>
 
-        <OperationalRiskDrilldownSection data={data} />
+            <OperationalRiskDrilldownSection data={data} />
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] xl:items-start">
-          <OperationalMomentumSection data={data} />
-          <OperationalHealthSection report={data.operationalHealth} variant="compact" />
-        </div>
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] xl:items-start">
+              <OperationalMomentumSection data={data} />
+              <OperationalHealthSection
+                report={data.operationalHealth}
+                variant="compact"
+              />
+            </div>
+          </>
+        ) : null}
       </DashboardZone>
 
-      <DashboardZone>
-        <OperationalInsightsSection insights={data.operationalInsights} />
-        <OfficeReviewQueueSection
-          report={data.officeReviewQueue}
-          variant="compact"
-          itemLimit={5}
-        />
-      </DashboardZone>
+      {access.canViewOperationalReports ? (
+        <DashboardZone>
+          <OperationalInsightsSection insights={data.operationalInsights} />
+          <OfficeReviewQueueSection
+            report={data.officeReviewQueue}
+            variant="compact"
+            itemLimit={5}
+          />
+        </DashboardZone>
+      ) : null}
 
       <DashboardZone>
         <TodayOperationsSection operations={data.operations} />
 
         <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
-          <TechnicianStatusSection technicians={data.technicians} />
-          <MoneySnapshotSection money={data.money} />
+          {access.canViewTechnicianRoster ? (
+            <TechnicianStatusSection technicians={data.technicians} />
+          ) : null}
+          {access.canViewBilling ? (
+            <MoneySnapshotSection money={data.money} />
+          ) : null}
         </div>
 
         <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
-          <ExpenseReviewSection expenses={data.expenses} />
+          {access.canViewCompanyExpenses ? (
+            <ExpenseReviewSection expenses={data.expenses} />
+          ) : null}
           <NotificationsSummarySection notifications={data.notifications} />
         </div>
 
-        <RecentActivitySection activities={data.recentActivity} />
+        {access.canViewOperationalReports ? (
+          <RecentActivitySection activities={data.recentActivity} />
+        ) : null}
       </DashboardZone>
     </div>
   );

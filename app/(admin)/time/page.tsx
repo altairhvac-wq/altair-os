@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { canViewCompanyTimeEntries } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getJobById } from "@/lib/database/queries/jobs";
 import {
@@ -21,10 +22,7 @@ export default async function TimePage({ searchParams }: TimePageProps) {
   const { jobId } = await searchParams;
   const job = jobId ? await getJobById(context.company.id, jobId) : null;
 
-  const canViewAll =
-    context.permissions.manageBilling ||
-    context.permissions.dispatchJobs ||
-    context.permissions.manageCompany;
+  const canViewAll = canViewCompanyTimeEntries(context);
 
   const [entries, activeEntries] = canViewAll
     ? await Promise.all([

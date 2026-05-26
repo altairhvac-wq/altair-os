@@ -1,9 +1,11 @@
 import { notFound, redirect } from "next/navigation";
+import { canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listInvoiceActivitiesForInvoice } from "@/lib/database/queries/invoice-activities";
 import { listPaymentsForInvoice } from "@/lib/database/queries/invoice-payments";
 import { getInvoiceById } from "@/lib/database/queries/invoices";
 import { InvoiceDetailPageView } from "@/shared/components/invoices/InvoiceDetailPageView";
+import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 
 type InvoiceDetailPageProps = {
   params: Promise<{ invoiceId: string }>;
@@ -17,6 +19,12 @@ export default async function InvoiceDetailPage({
 
   if (!companyContext) {
     redirect("/setup");
+  }
+
+  if (!canViewBilling(companyContext)) {
+    return (
+      <UnauthorizedAccessView description="Invoice records are limited to billing and admin roles." />
+    );
   }
 
   const [invoice, activities, payments] = await Promise.all([

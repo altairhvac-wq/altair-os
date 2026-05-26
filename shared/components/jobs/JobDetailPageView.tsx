@@ -44,11 +44,12 @@ type JobDetailPageViewProps = {
   attachments: JobAttachment[];
   expenses: Expense[];
   materials: JobMaterial[];
-  profitability: JobProfitabilitySnapshot;
+  profitability: JobProfitabilitySnapshot | null;
   serviceItems: ServiceItem[];
   canUpdateStatus: boolean;
   canAssignTechnician: boolean;
   canLogMaterials: boolean;
+  canViewFinancials: boolean;
 };
 
 type ContentSectionProps = {
@@ -83,6 +84,7 @@ export function JobDetailPageView({
   canUpdateStatus,
   canAssignTechnician,
   canLogMaterials,
+  canViewFinancials,
 }: JobDetailPageViewProps) {
   const customerEmail = job.customerEmail?.trim();
   const customerPhone = job.customerPhone?.trim();
@@ -262,14 +264,18 @@ export function JobDetailPageView({
         </ContentSection>
       </div>
 
-      <JobReviewChecklistSection
-        jobId={job.id}
-        jobStatus={job.status}
-        customerId={job.customerId}
-        snapshot={profitability}
-      />
+      {canViewFinancials && profitability ? (
+        <>
+          <JobReviewChecklistSection
+            jobId={job.id}
+            jobStatus={job.status}
+            customerId={job.customerId}
+            snapshot={profitability}
+          />
 
-      <JobProfitabilitySection jobId={job.id} snapshot={profitability} />
+          <JobProfitabilitySection jobId={job.id} snapshot={profitability} />
+        </>
+      ) : null}
 
       <JobCustomerEquipmentSection
         customerId={job.customerId}

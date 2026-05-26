@@ -158,6 +158,34 @@ export async function listJobs(companyId: string): Promise<Job[]> {
   return ((data ?? []) as JobRowWithTechnician[]).map(mapJobRowToJob);
 }
 
+export async function listAssignedJobs(
+  companyId: string,
+  technicianId: string,
+): Promise<Job[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .select(JOB_TECHNICIAN_SELECT)
+    .eq("company_id", companyId)
+    .eq("assigned_technician_id", technicianId)
+    .order("scheduled_at", { ascending: false });
+
+  if (error) {
+    console.error("[listAssignedJobs] query failed:", {
+      companyId,
+      technicianId,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as JobRowWithTechnician[]).map(mapJobRowToJob);
+}
+
 export async function listJobsByCustomer(
   companyId: string,
   customerId: string,

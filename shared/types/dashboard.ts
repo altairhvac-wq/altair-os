@@ -1,3 +1,4 @@
+import type { CompanyAccessScope } from "@/lib/database/access-control";
 import type { DispatchJob } from "@/shared/types/dispatch";
 import { getDispatchSummary } from "@/shared/types/dispatch";
 import type { Estimate } from "@/shared/types/estimate";
@@ -95,6 +96,7 @@ export type DashboardCompletedWorkReviewSnapshot = {
 };
 
 export type DashboardData = {
+  access: CompanyAccessScope;
   analytics: DashboardAnalyticsSnapshot;
   operations: DashboardOperationsSummary;
   technicians: DashboardTechnicianStatus[];

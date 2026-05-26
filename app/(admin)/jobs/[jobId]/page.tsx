@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { canViewJob, canViewJobFinancials } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listOperationalActivitiesForJob } from "@/lib/database/queries/operational-activities";
 import { listExpensesForJob } from "@/lib/database/queries/expenses";
@@ -10,6 +11,7 @@ import { getJobById } from "@/lib/database/queries/jobs";
 import { listTechnicians } from "@/lib/database/queries/technicians";
 import { getJobProfitabilitySnapshot } from "@/lib/database/services/job-profitability";
 import { JobDetailPageView } from "@/shared/components/jobs/JobDetailPageView";
+import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 
 type JobDetailPageProps = {
   params: Promise<{ jobId: string }>;
@@ -29,6 +31,14 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     notFound();
   }
 
+  if (!canViewJob(companyContext, job)) {
+    return (
+      <UnauthorizedAccessView description="You can only open jobs assigned to you." />
+    );
+  }
+
+  const canViewFinancials = canViewJobFinancials(companyContext);
+
   const [
     technicians,
     activities,
@@ -47,11 +57,13 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     listActiveServiceItems(companyContext.company.id),
   ]);
 
-  const profitability = await getJobProfitabilitySnapshot(
-    companyContext.company.id,
-    jobId,
-    { expenses, materials },
-  );
+  const profitability = canViewFinancials
+    ? await getJobProfitabilitySnapshot(
+        companyContext.company.id,
+        jobId,
+        { expenses, materials },
+      )
+    : null;
 
   return (
     <JobDetailPageView
@@ -76,6 +88,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         (companyContext.permissions.viewAssignedJobs &&
           job.assignedTechnicianId === companyContext.user.id)
       }
+      canViewFinancials={canViewFinancials}
     />
   );
 }

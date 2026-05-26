@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getEstimateById } from "@/lib/database/queries/estimates";
 import {
@@ -255,6 +256,10 @@ export async function getInvoiceDetailAction(
 
   if (!context) {
     return { invoice: null, error: "No active company workspace." };
+  }
+
+  if (!canViewBilling(context)) {
+    return { invoice: null, error: "You do not have permission to view invoices." };
   }
 
   const invoice = await getInvoiceById(context.company.id, invoiceId);

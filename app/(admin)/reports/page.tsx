@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { canViewOperationalReports } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyExpenseReport } from "@/lib/database/services/reports/expense-report";
 import { getCompanyJobActivityReport } from "@/lib/database/services/reports/job-activity-report";
@@ -9,6 +10,7 @@ import { getCompanyOperationalHealthReport } from "@/lib/database/services/repor
 import { getCompanyReportChartSeries } from "@/lib/database/services/reports/report-chart-series";
 import { getCompanyTechnicianLaborReport } from "@/lib/database/services/reports/technician-labor-report";
 import { AnalyticsPageView } from "@/shared/components/analytics/AnalyticsPageView";
+import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { parseProfitabilityReportDateRange } from "@/shared/types/reports";
 import { parseOfficeReviewQueueFilter } from "@/shared/types/office-review-queue";
 
@@ -21,6 +23,12 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
 
   if (!companyContext) {
     redirect("/setup");
+  }
+
+  if (!canViewOperationalReports(companyContext)) {
+    return (
+      <UnauthorizedAccessView description="Reports and analytics are limited to office, dispatch, and billing roles." />
+    );
   }
 
   const params = await searchParams;

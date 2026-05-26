@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { canViewCompanyExpenses } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listExpenses } from "@/lib/database/queries/expenses";
 import { getJobById } from "@/lib/database/queries/jobs";
@@ -31,10 +32,15 @@ export default async function ExpensesPage({ searchParams }: ExpensesPageProps) 
       : undefined;
 
   const expenses = await listExpenses(companyContext.company.id);
+  const visibleExpenses = canViewCompanyExpenses(companyContext)
+    ? expenses
+    : expenses.filter(
+        (expense) => expense.technicianId === companyContext.user.id,
+      );
 
   return (
     <ExpensesPageView
-      expenses={expenses}
+      expenses={visibleExpenses}
       currentUserId={companyContext.user.id}
       canManageBilling={companyContext.permissions.manageBilling}
       canDispatchJobs={companyContext.permissions.dispatchJobs}

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { canManageExpenseReceipt } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
   attachReceiptToExpense,
@@ -137,6 +138,16 @@ export async function prepareExpenseReceiptUploadAction(input: {
 
   if (!input.fileName.trim()) {
     return { error: "File name is required." };
+  }
+
+  const existing = await getExpenseById(context.company.id, input.expenseId);
+
+  if (!existing) {
+    return { error: "Expense not found." };
+  }
+
+  if (!canManageExpenseReceipt(context, existing)) {
+    return { error: "You do not have permission to upload receipts for this expense." };
   }
 
   const storagePath = buildExpenseReceiptStoragePath({
