@@ -1,5 +1,10 @@
 import Link from "next/link";
 import {
+  MobileDashboardShell,
+  type MobileDashboardTabId,
+} from "@/shared/components/dashboard/MobileDashboardShell";
+import { buildMobileDashboardSnapshot } from "@/shared/lib/mobile-dashboard-snapshot";
+import {
   AlertCircle,
   AlertTriangle,
   ArrowRight,
@@ -977,26 +982,172 @@ function DashboardZone({
   return <div className={`flex flex-col gap-4 ${className}`}>{children}</div>;
 }
 
-export function OperationalDashboardView({ data }: OperationalDashboardViewProps) {
+function DashboardHeader() {
+  return (
+    <header className="admin-hero">
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">
+        Operations overview
+      </p>
+      <h1 className="mt-1.5 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+        Command center
+      </h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+        Real-time view of field operations, billing pressure, and team status —
+        built for fast decisions during the workday.
+      </p>
+    </header>
+  );
+}
+
+function buildMobileDashboardTabs(
+  data: DashboardData,
+): Array<{ id: MobileDashboardTabId; label: string; content: React.ReactNode }> {
+  const { access } = data;
+  const tabs: Array<{
+    id: MobileDashboardTabId;
+    label: string;
+    content: React.ReactNode;
+  }> = [];
+
+  const overviewSections: React.ReactNode[] = [];
+  if (access.canViewOperationalReports) {
+    overviewSections.push(
+      <AnalyticsSnapshotSection key="analytics" analytics={data.analytics} />,
+      <TodayNeedsAttentionSection key="attention" data={data} />,
+      <NextBestActionsSection key="actions" data={data} />,
+      <OperationalMomentumSection key="momentum" data={data} />,
+      <OperationalHealthSection
+        key="health"
+        report={data.operationalHealth}
+        variant="compact"
+      />,
+    );
+  } else {
+    overviewSections.push(
+      <TodayOperationsSection key="operations" operations={data.operations} />,
+    );
+  }
+
+  if (overviewSections.length > 0) {
+    tabs.push({
+      id: "overview",
+      label: "Overview",
+      content: <DashboardZone>{overviewSections}</DashboardZone>,
+    });
+  }
+
+  const dispatchSections: React.ReactNode[] = [];
+  if (access.canViewOperationalReports) {
+    dispatchSections.push(
+      <DispatchPressureSection key="dispatch-pressure" data={data} />,
+    );
+  }
+  dispatchSections.push(
+    <TodayOperationsSection key="operations" operations={data.operations} />,
+  );
+  if (access.canViewTechnicianRoster) {
+    dispatchSections.push(
+      <TechnicianStatusSection key="technicians" technicians={data.technicians} />,
+    );
+  }
+
+  tabs.push({
+    id: "dispatch",
+    label: "Dispatch",
+    content: <DashboardZone>{dispatchSections}</DashboardZone>,
+  });
+
+  const moneySections: React.ReactNode[] = [];
+  if (access.canViewOperationalReports && access.canViewBilling) {
+    moneySections.push(
+      <CashFlowCommandSection key="cash-flow" data={data} />,
+    );
+  }
+  if (access.canViewBilling) {
+    moneySections.push(
+      <MoneySnapshotSection key="money" money={data.money} />,
+    );
+  }
+  if (access.canViewCompanyExpenses) {
+    moneySections.push(
+      <ExpenseReviewSection key="expenses" expenses={data.expenses} />,
+    );
+  }
+
+  if (moneySections.length > 0) {
+    tabs.push({
+      id: "money",
+      label: "Money",
+      content: <DashboardZone>{moneySections}</DashboardZone>,
+    });
+  }
+
+  const alertSections: React.ReactNode[] = [];
+  if (access.canViewOperationalReports) {
+    alertSections.push(
+      <OperationalRiskDrilldownSection key="risk" data={data} />,
+      <OperationalInsightsSection
+        key="insights"
+        insights={data.operationalInsights}
+      />,
+      <OfficeReviewQueueSection
+        key="review-queue"
+        report={data.officeReviewQueue}
+        variant="compact"
+        itemLimit={5}
+      />,
+    );
+  }
+  alertSections.push(
+    <NotificationsSummarySection
+      key="notifications"
+      notifications={data.notifications}
+    />,
+  );
+
+  if (alertSections.length > 0) {
+    tabs.push({
+      id: "alerts",
+      label: "Alerts",
+      content: <DashboardZone>{alertSections}</DashboardZone>,
+    });
+  }
+
+  const moreSections: React.ReactNode[] = [];
+  if (access.canViewOperationalReports) {
+    moreSections.push(
+      <RecentActivitySection key="activity" activities={data.recentActivity} />,
+    );
+  }
+  if (!access.canViewOperationalReports && access.canViewBilling) {
+    moreSections.push(
+      <MoneySnapshotSection key="money" money={data.money} />,
+    );
+  }
+  if (!access.canViewOperationalReports && access.canViewCompanyExpenses) {
+    moreSections.push(
+      <ExpenseReviewSection key="expenses" expenses={data.expenses} />,
+    );
+  }
+
+  if (moreSections.length > 0) {
+    tabs.push({
+      id: "more",
+      label: "More",
+      content: <DashboardZone>{moreSections}</DashboardZone>,
+    });
+  }
+
+  return tabs;
+}
+
+function DesktopDashboardLayout({ data }: OperationalDashboardViewProps) {
   const { access } = data;
   const showCommandPairSideBySide =
     !hasCashFlowPressure(data) && !hasDispatchPressure(data);
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-2 xl:max-w-[1440px]">
-      <header className="admin-hero">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">
-          Operations overview
-        </p>
-        <h1 className="mt-1.5 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-          Command center
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
-          Real-time view of field operations, billing pressure, and team status —
-          built for fast decisions during the workday.
-        </p>
-      </header>
-
+    <>
       {access.canViewOperationalReports ? (
         <AnalyticsSnapshotSection analytics={data.analytics} />
       ) : null}
@@ -1069,6 +1220,25 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
           <RecentActivitySection activities={data.recentActivity} />
         ) : null}
       </DashboardZone>
+    </>
+  );
+}
+
+export function OperationalDashboardView({ data }: OperationalDashboardViewProps) {
+  const mobileSnapshot = buildMobileDashboardSnapshot(data);
+  const mobileTabs = buildMobileDashboardTabs(data);
+
+  return (
+    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-6 pb-2 lg:gap-8 xl:max-w-[1440px]">
+      <DashboardHeader />
+
+      <div className="lg:hidden">
+        <MobileDashboardShell snapshot={mobileSnapshot} tabs={mobileTabs} />
+      </div>
+
+      <div className="hidden lg:flex lg:flex-col lg:gap-8">
+        <DesktopDashboardLayout data={data} />
+      </div>
     </div>
   );
 }
