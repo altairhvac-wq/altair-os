@@ -20,6 +20,7 @@ import { JobAttachmentsSection } from "./JobAttachmentsSection";
 import { JobExpenseReceiptsSection } from "./JobExpenseReceiptsSection";
 import { JobMaterialsSection } from "./JobMaterialsSection";
 import { JobProfitabilitySection } from "./JobProfitabilitySection";
+import { JobReviewChecklistSection } from "./JobReviewChecklistSection";
 import { OperationalActivityTimeline } from "@/shared/components/operational/OperationalActivityTimeline";
 import {
   formatScheduledDate,
@@ -258,6 +259,13 @@ export function JobDetailPageView({
           />
         </ContentSection>
       </div>
+
+      <JobReviewChecklistSection
+        jobId={job.id}
+        jobStatus={job.status}
+        customerId={job.customerId}
+        snapshot={profitability}
+      />
 
       <JobProfitabilitySection jobId={job.id} snapshot={profitability} />
 
