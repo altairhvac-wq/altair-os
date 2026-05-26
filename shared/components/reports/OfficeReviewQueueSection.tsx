@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   ArrowDownUp,
   ArrowRight,
   Briefcase,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   ClipboardList,
   Clock,
   ExternalLink,
@@ -19,6 +21,12 @@ import {
   TrendingUp,
   Minus,
 } from "lucide-react";
+import {
+  loadQueuePreferences,
+  parseCollapsedQueueGroups,
+  parseQueueSortMode,
+  persistQueuePreferences,
+} from "@/shared/lib/office-review-queue-preferences";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { formatJobStatus } from "@/shared/types/job";
 import {
@@ -419,10 +427,18 @@ function FilterEmptyState({
   );
 }
 
-function buildReportsHref(
-  filter: OfficeReviewQueueFilter,
-  range: string | null,
-): string {
+const QUEUE_PREFERENCE_LIMITATIONS = [
+  "Queue filter, sort, and collapse preferences are browser-local only — not synced across users or devices.",
+  "No server-side preference storage yet — shared links use URL params; remembered defaults use localStorage.",
+] as const;
+
+function buildReportsHref(input: {
+  filter: OfficeReviewQueueFilter;
+  range: string | null;
+  sortMode?: OfficeReviewQueueSortMode;
+  collapsedGroups?: ReadonlySet<OfficeReviewQueueGroup>;
+}): string {
+  const { filter, range, sortMode = "severity_first", collapsedGroups } = input;
   const params = new URLSearchParams();
 
   if (range) {
@@ -433,6 +449,14 @@ function buildReportsHref(
     params.set("queue", filter);
   }
 
+  if (sortMode !== "severity_first") {
+    params.set("queueSort", sortMode);
+  }
+
+  if (collapsedGroups && collapsedGroups.size > 0) {
+    params.set("queueCollapsed", [...collapsedGroups].join(","));
+  }
+
   const query = params.toString();
   return query ? `/reports?${query}` : "/reports";
 }
@@ -440,11 +464,20 @@ function buildReportsHref(
 function QueueFilterBar({
   activeFilter,
   range,
+  sortMode,
+  collapsedGroups,
 }: {
   activeFilter: OfficeReviewQueueFilter;
   range: string | null;
+  sortMode: OfficeReviewQueueSortMode;
+  collapsedGroups: ReadonlySet<OfficeReviewQueueGroup>;
 }) {
-  const clearHref = buildReportsHref("all", range);
+  const clearHref = buildReportsHref({
+    filter: "all",
+    range,
+    sortMode,
+    collapsedGroups,
+  });
 
   return (
     <div className="mt-3 min-w-0 sm:mt-4">
@@ -473,7 +506,12 @@ function QueueFilterBar({
             return (
               <Link
                 key={option.value}
-                href={buildReportsHref(option.value, range)}
+                href={buildReportsHref({
+                  filter: option.value,
+                  range,
+                  sortMode,
+                  collapsedGroups,
+                })}
                 role="tab"
                 aria-selected={isActive}
                 className={`inline-flex min-h-10 shrink-0 items-center rounded-full px-3.5 py-2 text-xs font-semibold transition-colors sm:min-h-9 ${
@@ -681,48 +719,100 @@ function QueueGroupSection({
   showActions,
   compactActions = false,
   showEmptyState,
+  collapsible = false,
+  isCollapsed = false,
+  onToggleCollapse,
 }: {
   group: OfficeReviewQueueGroup;
   items: OfficeReviewQueueItem[];
   showActions: boolean;
   compactActions?: boolean;
   showEmptyState: boolean;
+  collapsible?: boolean;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }) {
   if (items.length === 0 && !showEmptyState) {
     return null;
   }
 
+  const headerContent = (
+    <>
+      <div className="min-w-0 flex-1">
+        <h3 className="text-sm font-bold text-slate-900">
+          {GROUP_LABELS[group]}
+        </h3>
+        <p className="mt-0.5 hidden text-xs text-slate-600 sm:block">
+          {GROUP_DESCRIPTIONS[group]}
+        </p>
+      </div>
+      <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold tabular-nums text-slate-700 ring-1 ring-slate-200">
+        {items.length}
+      </span>
+    </>
+  );
+
   return (
     <section className={`overflow-hidden rounded-xl border ${groupAccentClassName(group)}`}>
-      <div className="border-b border-inherit px-3 py-2.5 sm:px-4 sm:py-3">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-bold text-slate-900">
-              {GROUP_LABELS[group]}
-            </h3>
-            <p className="mt-0.5 hidden text-xs text-slate-600 sm:block">
-              {GROUP_DESCRIPTIONS[group]}
-            </p>
+      <div
+        className={`px-3 py-2.5 sm:px-4 sm:py-3 ${
+          !isCollapsed ? "border-b border-inherit" : ""
+        }`}
+      >
+        {collapsible && onToggleCollapse ? (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            aria-expanded={!isCollapsed}
+            className="flex w-full flex-wrap items-start justify-between gap-2 text-left transition-colors hover:opacity-90"
+          >
+            <span className="flex min-w-0 flex-1 items-start gap-2">
+              {isCollapsed ? (
+                <ChevronRight
+                  className="mt-0.5 h-4 w-4 shrink-0 text-slate-500"
+                  aria-hidden="true"
+                />
+              ) : (
+                <ChevronDown
+                  className="mt-0.5 h-4 w-4 shrink-0 text-slate-500"
+                  aria-hidden="true"
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-bold text-slate-900">
+                  {GROUP_LABELS[group]}
+                </h3>
+                <p className="mt-0.5 hidden text-xs text-slate-600 sm:block">
+                  {GROUP_DESCRIPTIONS[group]}
+                </p>
+              </div>
+            </span>
+            <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold tabular-nums text-slate-700 ring-1 ring-slate-200">
+              {items.length}
+            </span>
+          </button>
+        ) : (
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            {headerContent}
           </div>
-          <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold tabular-nums text-slate-700 ring-1 ring-slate-200">
-            {items.length}
-          </span>
-        </div>
+        )}
       </div>
-      {items.length === 0 ? (
-        <GroupEmptyState group={group} />
-      ) : (
-        <ul className="divide-y divide-slate-100 bg-white/80">
-          {items.map((item) => (
-            <QueueItemRow
-              key={item.jobId}
-              item={item}
-              showActions={showActions}
-              compactActions={compactActions}
-            />
-          ))}
-        </ul>
-      )}
+      {!isCollapsed ? (
+        items.length === 0 ? (
+          <GroupEmptyState group={group} />
+        ) : (
+          <ul className="divide-y divide-slate-100 bg-white/80 transition-opacity duration-200">
+            {items.map((item) => (
+              <QueueItemRow
+                key={item.jobId}
+                item={item}
+                showActions={showActions}
+                compactActions={compactActions}
+              />
+            ))}
+          </ul>
+        )
+      ) : null}
     </section>
   );
 }
@@ -795,9 +885,18 @@ function renderFilteredGroupSections(input: {
   groups: Record<OfficeReviewQueueGroup, OfficeReviewQueueItem[]>;
   showActions: boolean;
   compactActions?: boolean;
+  collapsedGroups: ReadonlySet<OfficeReviewQueueGroup>;
+  onToggleGroupCollapse: (group: OfficeReviewQueueGroup) => void;
 }): ReactNode {
-  const { activeFilter, activeGroupFilter, groups, showActions, compactActions } =
-    input;
+  const {
+    activeFilter,
+    activeGroupFilter,
+    groups,
+    showActions,
+    compactActions,
+    collapsedGroups,
+    onToggleGroupCollapse,
+  } = input;
 
   if (activeGroupFilter) {
     return (
@@ -807,6 +906,9 @@ function renderFilteredGroupSections(input: {
         showActions={showActions}
         compactActions={compactActions}
         showEmptyState
+        collapsible
+        isCollapsed={collapsedGroups.has(activeGroupFilter)}
+        onToggleCollapse={() => onToggleGroupCollapse(activeGroupFilter)}
       />
     );
   }
@@ -835,6 +937,9 @@ function renderFilteredGroupSections(input: {
         showActions={showActions}
         compactActions={compactActions}
         showEmptyState={showEmptyState}
+        collapsible
+        isCollapsed={collapsedGroups.has(group)}
+        onToggleCollapse={() => onToggleGroupCollapse(group)}
       />
     );
   });
@@ -846,14 +951,127 @@ export function OfficeReviewQueueSection({
   itemLimit,
   queueFilter = "all",
 }: OfficeReviewQueueSectionProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const [sortMode, setSortMode] =
-    useState<OfficeReviewQueueSortMode>("severity_first");
-
   const isCompact = variant === "compact";
-  const activeFilter = isCompact ? "all" : queueFilter;
+
+  const queueParam = searchParams.get("queue");
+  const sortParam = searchParams.get("queueSort");
+  const collapsedParam = searchParams.get("queueCollapsed");
   const rangeParam = searchParams.get("range");
-  const clearHref = buildReportsHref("all", rangeParam);
+
+  const [savedFilter, setSavedFilter] = useState<OfficeReviewQueueFilter | null>(
+    null,
+  );
+  const [sortMode, setSortMode] = useState<OfficeReviewQueueSortMode>(
+    "severity_first",
+  );
+  const [collapsedGroups, setCollapsedGroups] = useState<
+    Set<OfficeReviewQueueGroup>
+  >(() => new Set());
+
+  useEffect(() => {
+    if (isCompact) {
+      return;
+    }
+
+    const saved = loadQueuePreferences();
+
+    if (queueParam == null) {
+      setSavedFilter(saved.filter);
+    }
+
+    if (sortParam == null) {
+      setSortMode(saved.sortMode);
+    } else {
+      setSortMode(parseQueueSortMode(sortParam));
+    }
+
+    if (collapsedParam == null) {
+      setCollapsedGroups(new Set(saved.collapsedGroups));
+    } else {
+      setCollapsedGroups(new Set(parseCollapsedQueueGroups(collapsedParam)));
+    }
+  }, [collapsedParam, isCompact, queueParam, sortParam]);
+
+  const activeFilter = isCompact
+    ? "all"
+    : queueParam != null
+      ? queueFilter
+      : (savedFilter ?? "all");
+  const effectiveSortMode = isCompact ? "severity_first" : sortMode;
+
+  const clearHref = buildReportsHref({
+    filter: "all",
+    range: rangeParam,
+    sortMode: effectiveSortMode,
+    collapsedGroups,
+  });
+
+  useEffect(() => {
+    if (isCompact) {
+      return;
+    }
+
+    persistQueuePreferences({ filter: activeFilter });
+  }, [activeFilter, isCompact]);
+
+  useEffect(() => {
+    if (isCompact) {
+      return;
+    }
+
+    persistQueuePreferences({ sortMode: effectiveSortMode });
+  }, [effectiveSortMode, isCompact]);
+
+  const syncReportsUrl = (nextParams: URLSearchParams) => {
+    const query = nextParams.toString();
+    router.replace(query ? `/reports?${query}` : "/reports", { scroll: false });
+  };
+
+  const handleSortChange = (nextSortMode: OfficeReviewQueueSortMode) => {
+    if (isCompact) {
+      return;
+    }
+
+    setSortMode(nextSortMode);
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextSortMode === "severity_first") {
+      params.delete("queueSort");
+    } else {
+      params.set("queueSort", nextSortMode);
+    }
+
+    syncReportsUrl(params);
+  };
+
+  const handleToggleGroupCollapse = (group: OfficeReviewQueueGroup) => {
+    if (isCompact) {
+      return;
+    }
+
+    setCollapsedGroups((previous) => {
+      const next = new Set(previous);
+      if (next.has(group)) {
+        next.delete(group);
+      } else {
+        next.add(group);
+      }
+
+      persistQueuePreferences({ collapsedGroups: [...next] });
+
+      const params = new URLSearchParams(searchParams.toString());
+      if (next.size === 0) {
+        params.delete("queueCollapsed");
+      } else {
+        params.set("queueCollapsed", [...next].join(","));
+      }
+
+      syncReportsUrl(params);
+      return next;
+    });
+  };
 
   const baseItems = useMemo(() => {
     const items =
@@ -870,8 +1088,8 @@ export function OfficeReviewQueueSection({
   );
 
   const groups = useMemo(
-    () => recomputeGroups(filteredItems, sortMode),
-    [filteredItems, sortMode],
+    () => recomputeGroups(filteredItems, effectiveSortMode),
+    [filteredItems, effectiveSortMode],
   );
 
   const showGrouped = !isCompact;
@@ -911,7 +1129,7 @@ export function OfficeReviewQueueSection({
         {!isCompact ? (
           <div className="flex w-full min-w-0 items-center gap-2 text-xs text-slate-500 sm:w-auto">
             <ArrowDownUp className="hidden h-3.5 w-3.5 sm:block" aria-hidden="true" />
-            <SortToggle sortMode={sortMode} onChange={setSortMode} />
+            <SortToggle sortMode={effectiveSortMode} onChange={handleSortChange} />
           </div>
         ) : (
           <Link
@@ -925,7 +1143,12 @@ export function OfficeReviewQueueSection({
       </div>
 
       {!isCompact ? (
-        <QueueFilterBar activeFilter={activeFilter} range={rangeParam} />
+        <QueueFilterBar
+          activeFilter={activeFilter}
+          range={rangeParam}
+          sortMode={effectiveSortMode}
+          collapsedGroups={collapsedGroups}
+        />
       ) : null}
 
       <div
@@ -1052,6 +1275,8 @@ export function OfficeReviewQueueSection({
             activeGroupFilter,
             groups,
             showActions,
+            collapsedGroups,
+            onToggleGroupCollapse: handleToggleGroupCollapse,
           })}
         </div>
       ) : (
@@ -1073,7 +1298,7 @@ export function OfficeReviewQueueSection({
         </ul>
       )}
 
-      {meta.limitations.length > 0 && !isCompact ? (
+      {!isCompact ? (
         <div
           className="mt-4 rounded-lg border border-amber-200/80 bg-amber-50/60 px-3 py-2.5"
           role="note"
@@ -1085,6 +1310,9 @@ export function OfficeReviewQueueSection({
             />
             <ul className="space-y-1 text-xs text-amber-900/90">
               {meta.limitations.map((limitation) => (
+                <li key={limitation}>{limitation}</li>
+              ))}
+              {QUEUE_PREFERENCE_LIMITATIONS.map((limitation) => (
                 <li key={limitation}>{limitation}</li>
               ))}
             </ul>

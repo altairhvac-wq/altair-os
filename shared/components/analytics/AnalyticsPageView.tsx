@@ -67,6 +67,16 @@ export function AnalyticsPageView({
         params.set("queue", queue);
       }
 
+      const queueSort = searchParams.get("queueSort");
+      if (queueSort) {
+        params.set("queueSort", queueSort);
+      }
+
+      const queueCollapsed = searchParams.get("queueCollapsed");
+      if (queueCollapsed) {
+        params.set("queueCollapsed", queueCollapsed);
+      }
+
       router.push(`/reports?${params.toString()}`);
     }
   };
