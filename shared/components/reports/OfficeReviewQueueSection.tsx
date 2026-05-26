@@ -21,9 +21,11 @@ import {
   ClipboardList,
   Clock,
   ExternalLink,
+  Eye,
   FileText,
   Inbox,
   Sparkles,
+  X,
   TrendingDown,
   TrendingUp,
   Minus,
@@ -35,6 +37,13 @@ import {
   persistQueuePreferences,
 } from "@/shared/lib/office-review-queue-preferences";
 import {
+  BATCH_BLOCK_REASON_LABELS,
+  buildQueueBatchPreview,
+  OFFICE_REVIEW_QUEUE_BATCH_PREVIEW_LIMITATIONS,
+  summarizeQueueBatchPreview,
+  type OfficeReviewQueueBatchPreview,
+} from "@/shared/lib/office-review-queue-batch-preview";
+import {
   clearQueueSelection,
   OFFICE_REVIEW_QUEUE_SELECTION_LIMITATIONS,
   pruneQueueSelection,
@@ -44,6 +53,7 @@ import {
   toggleGroupQueueSelection,
   toggleQueueSelection,
   type OfficeReviewQueueBulkActionAvailability,
+  type OfficeReviewQueueBulkActionId,
 } from "@/shared/lib/office-review-queue-selection";
 import {
   applyQueueDefaultView,
@@ -458,6 +468,7 @@ const QUEUE_PREFERENCE_LIMITATIONS = [
   "Queue filter, sort, and collapse preferences are browser-local only — not synced across users or devices.",
   "No server-side preference storage yet — shared links use URL params; remembered defaults use localStorage.",
   ...OFFICE_REVIEW_QUEUE_SELECTION_LIMITATIONS,
+  ...OFFICE_REVIEW_QUEUE_BATCH_PREVIEW_LIMITATIONS,
   ...OFFICE_REVIEW_QUEUE_PRESET_LIMITATIONS,
 ] as const;
 
@@ -870,14 +881,240 @@ function GroupSelectCheckbox({
   );
 }
 
+function QueueBatchPreviewModal({
+  preview,
+  selectedItems,
+  onClose,
+}: {
+  preview: OfficeReviewQueueBatchPreview;
+  selectedItems: OfficeReviewQueueItem[];
+  onClose: () => void;
+}) {
+  const summary = summarizeQueueBatchPreview(preview);
+  const selectedByJobId = useMemo(
+    () => new Map(selectedItems.map((item) => [item.jobId, item])),
+    [selectedItems],
+  );
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="queue-batch-preview-title"
+    >
+      <button
+        type="button"
+        aria-label="Close batch preview"
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-900/50"
+      />
+      <div className="relative z-10 flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-violet-200 bg-white shadow-xl sm:max-h-[85vh] sm:rounded-2xl">
+        <header className="flex shrink-0 items-start gap-3 border-b border-violet-100 bg-violet-50/60 px-4 py-3.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100 ring-1 ring-violet-200">
+            <Eye className="h-4 w-4 text-violet-700" aria-hidden="true" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-violet-700">
+              Batch preview
+            </p>
+            <h2
+              id="queue-batch-preview-title"
+              className="mt-0.5 text-sm font-bold text-slate-900 sm:text-base"
+            >
+              {preview.label}
+            </h2>
+            <p className="mt-0.5 text-xs text-slate-600">{summary.headline}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-violet-200 bg-white text-violet-800 transition-colors hover:bg-violet-50"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 px-2.5 py-2 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800/80">
+                Eligible
+              </p>
+              <p className="mt-0.5 text-lg font-black tabular-nums text-emerald-900">
+                {preview.eligibleCount}
+              </p>
+            </div>
+            <div className="rounded-lg border border-rose-100 bg-rose-50/70 px-2.5 py-2 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-rose-800/80">
+                Blocked
+              </p>
+              <p className="mt-0.5 text-lg font-black tabular-nums text-rose-900">
+                {preview.blockedCount}
+              </p>
+            </div>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                Selected
+              </p>
+              <p className="mt-0.5 text-lg font-black tabular-nums text-slate-900">
+                {preview.totalSelected}
+              </p>
+            </div>
+          </div>
+
+          {summary.detail ? (
+            <p className="mt-3 text-xs text-slate-600">{summary.detail}</p>
+          ) : null}
+
+          <div className="mt-4 rounded-lg border border-cyan-100 bg-cyan-50/60 px-3 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-cyan-800">
+              Recommended next step
+            </p>
+            <p className="mt-1 text-xs text-cyan-950/90">
+              {summary.recommendedNextStep}
+            </p>
+          </div>
+
+          {preview.blockedReasons.length > 0 ? (
+            <div className="mt-4">
+              <p className="text-xs font-bold text-slate-900">Blocked reasons</p>
+              <ul className="mt-2 space-y-2">
+                {preview.blockedReasons.map((entry) => (
+                  <li
+                    key={entry.reason}
+                    className="rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-xs font-semibold text-slate-800">
+                        {entry.label}
+                      </p>
+                      <span className="shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold tabular-nums text-rose-800">
+                        {entry.count}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {preview.eligibleJobIds.length > 0 ? (
+            <div className="mt-4">
+              <p className="text-xs font-bold text-slate-900">
+                Would affect ({preview.eligibleJobIds.length})
+              </p>
+              <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto rounded-lg border border-emerald-100 bg-emerald-50/40 p-2">
+                {preview.eligibleJobIds.map((jobId) => {
+                  const item = selectedByJobId.get(jobId);
+
+                  return (
+                    <li key={jobId}>
+                      <Link
+                        href={`/jobs/${encodeURIComponent(jobId)}`}
+                        className="flex min-h-9 items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs font-semibold text-emerald-900 transition-colors hover:bg-emerald-100/70"
+                      >
+                        <span className="truncate">
+                          {item?.jobNumber ?? jobId}
+                        </span>
+                        <ArrowRight
+                          className="h-3.5 w-3.5 shrink-0 opacity-70"
+                          aria-hidden="true"
+                        />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+
+          {preview.blockedJobIds.length > 0 ? (
+            <div className="mt-4">
+              <p className="text-xs font-bold text-slate-900">
+                Blocked jobs ({preview.blockedJobIds.length})
+              </p>
+              <ul className="mt-2 max-h-32 space-y-1 overflow-y-auto rounded-lg border border-rose-100 bg-rose-50/30 p-2">
+                {preview.jobs
+                  .filter((job) => !job.eligible)
+                  .map((job) => (
+                    <li
+                      key={job.jobId}
+                      className="rounded-md px-2 py-1.5 text-xs text-rose-900/90"
+                    >
+                      <span className="font-semibold">{job.jobNumber}</span>
+                      {job.blockedReasons.length > 0 ? (
+                        <span className="text-rose-800/80">
+                          {" "}
+                          ·{" "}
+                          {job.blockedReasons
+                            .map((reason) => BATCH_BLOCK_REASON_LABELS[reason])
+                            .join(", ")}
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <div
+            className="mt-4 rounded-lg border border-amber-200/80 bg-amber-50/60 px-3 py-2.5"
+            role="note"
+          >
+            <p className="text-xs font-bold text-amber-900">
+              Bulk workflows coming soon
+            </p>
+            <ul className="mt-1.5 space-y-1 text-[11px] text-amber-900/90">
+              {OFFICE_REVIEW_QUEUE_BATCH_PREVIEW_LIMITATIONS.map((limitation) => (
+                <li key={limitation}>{limitation}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <footer className="shrink-0 border-t border-violet-100 bg-white px-4 py-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-900 transition-colors hover:bg-violet-100 sm:min-h-9"
+          >
+            Close preview
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
 function QueueBulkSelectionBar({
   selectedCount,
   bulkActions,
   onClearSelection,
+  onPreviewAction,
 }: {
   selectedCount: number;
   bulkActions: OfficeReviewQueueBulkActionAvailability[];
   onClearSelection: () => void;
+  onPreviewAction: (actionId: OfficeReviewQueueBulkActionId) => void;
 }) {
   if (selectedCount === 0) {
     return null;
@@ -895,7 +1132,7 @@ function QueueBulkSelectionBar({
             {selectedCount} item{selectedCount === 1 ? "" : "s"} selected
           </p>
           <p className="mt-0.5 text-xs text-violet-800/80">
-            Bulk workflows coming soon — selection is UI-only for now.
+            Preview what batch actions would affect — no execution yet.
           </p>
         </div>
         <button
@@ -912,14 +1149,14 @@ function QueueBulkSelectionBar({
             <button
               key={action.id}
               type="button"
-              disabled
-              title="Coming soon"
-              aria-disabled="true"
-              className="inline-flex min-h-10 shrink-0 cursor-not-allowed items-center rounded-lg border border-violet-200/80 bg-white/70 px-3 py-2 text-xs font-semibold text-violet-900/50 sm:min-h-9"
+              onClick={() => onPreviewAction(action.id)}
+              title="Preview batch action — no execution"
+              className="inline-flex min-h-10 shrink-0 items-center rounded-lg border border-violet-300 bg-white px-3 py-2 text-xs font-semibold text-violet-900 transition-colors hover:border-violet-400 hover:bg-violet-100 sm:min-h-9"
             >
-              {action.label}
+              <Eye className="mr-1.5 h-3.5 w-3.5 shrink-0 text-violet-600" aria-hidden="true" />
+              Preview {action.label.toLowerCase()}
               {action.applicableCount > 0 ? (
-                <span className="ml-1.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-violet-700/70">
+                <span className="ml-1.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-emerald-800">
                   {action.applicableCount}
                 </span>
               ) : null}
@@ -1240,6 +1477,8 @@ export function OfficeReviewQueueSection({
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [previewActionId, setPreviewActionId] =
+    useState<OfficeReviewQueueBulkActionId | null>(null);
 
   useEffect(() => {
     if (isCompact) {
@@ -1423,6 +1662,14 @@ export function OfficeReviewQueueSection({
     [selectedItems],
   );
 
+  const activeBatchPreview = useMemo(() => {
+    if (previewActionId == null) {
+      return null;
+    }
+
+    return buildQueueBatchPreview(selectedItems, previewActionId);
+  }, [previewActionId, selectedItems]);
+
   const handleToggleItemSelect = (jobId: string) => {
     setSelectedJobIds((previous) => toggleQueueSelection(previous, jobId));
   };
@@ -1438,6 +1685,15 @@ export function OfficeReviewQueueSection({
 
   const handleClearSelection = () => {
     setSelectedJobIds(clearQueueSelection());
+    setPreviewActionId(null);
+  };
+
+  const handlePreviewAction = (actionId: OfficeReviewQueueBulkActionId) => {
+    setPreviewActionId(actionId);
+  };
+
+  const handleCloseBatchPreview = () => {
+    setPreviewActionId(null);
   };
 
   const showGrouped = !isCompact;
@@ -1643,11 +1899,21 @@ export function OfficeReviewQueueSection({
             })}
           </div>
           {selectionEnabled ? (
-            <QueueBulkSelectionBar
-              selectedCount={selectedItems.length}
-              bulkActions={bulkActions}
-              onClearSelection={handleClearSelection}
-            />
+            <>
+              <QueueBulkSelectionBar
+                selectedCount={selectedItems.length}
+                bulkActions={bulkActions}
+                onClearSelection={handleClearSelection}
+                onPreviewAction={handlePreviewAction}
+              />
+              {activeBatchPreview ? (
+                <QueueBatchPreviewModal
+                  preview={activeBatchPreview}
+                  selectedItems={selectedItems}
+                  onClose={handleCloseBatchPreview}
+                />
+              ) : null}
+            </>
           ) : null}
         </>
       ) : (

@@ -1,13 +1,13 @@
 import {
+  buildQueueBatchPreview,
+  type OfficeReviewQueueBulkActionId,
+} from "@/shared/lib/office-review-queue-batch-preview";
+import {
   isValidOfficeReviewQueueJobId,
   type OfficeReviewQueueItem,
 } from "@/shared/types/office-review-queue";
 
-export type OfficeReviewQueueBulkActionId =
-  | "create_invoices"
-  | "review_expenses"
-  | "review_labor"
-  | "open_jobs";
+export type { OfficeReviewQueueBulkActionId } from "@/shared/lib/office-review-queue-batch-preview";
 
 export type OfficeReviewQueueBulkActionAvailability = {
   id: OfficeReviewQueueBulkActionId;
@@ -19,6 +19,8 @@ export type OfficeReviewQueueBulkActionAvailability = {
 
 export const OFFICE_REVIEW_QUEUE_SELECTION_LIMITATIONS = [
   "Queue item selection is UI-only — no bulk workflow execution yet.",
+  "Batch previews show what future actions would affect — previews do not execute writes.",
+  "Preview eligibility is heuristic only — not permission-aware and not a substitute for approval routing.",
   "Selected items are not persisted across page refreshes or devices.",
 ] as const;
 
@@ -135,58 +137,28 @@ export function resolveSelectedQueueItems(
 }
 
 /**
- * Read-only heuristic for future bulk workflows — does not gate execution in V1.
+ * Read-only heuristic for future bulk workflows — preview-only in V1, no execution.
  */
 export function resolveBulkQueueActionAvailability(
   selectedItems: OfficeReviewQueueItem[],
 ): OfficeReviewQueueBulkActionAvailability[] {
-  let invoiceCount = 0;
-  let expenseCount = 0;
-  let laborCount = 0;
+  return (
+    [
+      "create_invoices",
+      "review_expenses",
+      "review_labor",
+      "open_jobs",
+    ] as const
+  ).map((id) => {
+    const preview = buildQueueBatchPreview(selectedItems, id);
 
-  for (const item of selectedItems) {
-    if (
-      item.kind === "awaiting_invoicing" ||
-      item.reviewReasons.includes("no_active_invoice")
-    ) {
-      invoiceCount += 1;
-    }
-
-    if (item.reviewReasons.includes("pending_expenses")) {
-      expenseCount += 1;
-    }
-
-    if (item.reviewReasons.includes("open_labor_entries")) {
-      laborCount += 1;
-    }
-  }
-
-  return [
-    {
-      id: "create_invoices",
-      label: "Create invoices",
-      applicableCount: invoiceCount,
+    return {
+      id,
+      label: preview.label,
+      applicableCount: preview.eligibleCount,
       disabled: true,
-    },
-    {
-      id: "review_expenses",
-      label: "Review expenses",
-      applicableCount: expenseCount,
-      disabled: true,
-    },
-    {
-      id: "review_labor",
-      label: "Review labor",
-      applicableCount: laborCount,
-      disabled: true,
-    },
-    {
-      id: "open_jobs",
-      label: "Open jobs",
-      applicableCount: selectedItems.length,
-      disabled: true,
-    },
-  ];
+    };
+  });
 }
 
 // TODO(office-review-queue-bulk-v2): Bulk invoicing workflow for selected awaiting-invoicing rows.

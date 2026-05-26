@@ -906,6 +906,7 @@ export function buildOfficeReviewQueueReport(input: {
     "Quick actions are navigational shortcuts only — no writes or approvals.",
     "Suggested next steps are heuristic only — based on queue kind and review flags, not assignments or live workflow state.",
     "No workflow automation, bulk actions, or assignment-aware routing yet.",
+    "Batch action previews are available for multi-select — preview only, no bulk execution or writes.",
     "Stalled jobs are lower-priority context; they do not block invoicing or review closure.",
     "Read-only visibility — company-scoped from existing job, invoice, expense, and time records.",
     ...input.resolutionTrend.limitations,
