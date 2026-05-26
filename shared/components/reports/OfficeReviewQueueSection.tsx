@@ -19,7 +19,6 @@ import {
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { formatJobStatus } from "@/shared/types/job";
 import {
-  buildOfficeReviewQueueActions,
   compareOfficeReviewQueueItems,
   filterOfficeReviewQueueItems,
   formatOfficeReviewQueueKind,
@@ -34,7 +33,10 @@ import {
   type OfficeReviewQueueGroup,
   type OfficeReviewQueueItem,
   type OfficeReviewQueueReport,
+  type OfficeReviewQueueAction,
   type OfficeReviewQueueSortMode,
+  resolvePrimaryQueueAction,
+  resolveQueueActions,
 } from "@/shared/types/office-review-queue";
 import { formatCompletedWorkReviewReasons } from "@/shared/types/reports";
 import { formatOperationalActivityTimestamp } from "@/shared/types/operational-activity";
@@ -349,30 +351,77 @@ function QueueFilterBar({
   );
 }
 
-function QueueItemActions({ item }: { item: OfficeReviewQueueItem }) {
-  const actions = buildOfficeReviewQueueActions(item);
+function primaryActionClassName(): string {
+  return "inline-flex min-h-10 w-full items-center justify-center gap-1 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-800 transition-colors hover:border-cyan-300 hover:bg-cyan-100 sm:min-h-0 sm:w-auto sm:justify-start sm:px-3 sm:py-2";
+}
 
-  if (actions.length === 0) {
+function secondaryActionClassName(): string {
+  return "inline-flex min-h-9 w-full items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 sm:min-h-0 sm:w-auto sm:justify-start sm:px-2 sm:py-1";
+}
+
+function QueueActionLink({
+  action,
+  variant,
+}: {
+  action: OfficeReviewQueueAction;
+  variant: "primary" | "secondary";
+}) {
+  const className =
+    variant === "primary"
+      ? primaryActionClassName()
+      : secondaryActionClassName();
+
+  return (
+    <Link href={action.href} className={className}>
+      <span className="truncate">{action.label}</span>
+      {action.external ? (
+        <ExternalLink
+          className={`h-3 w-3 shrink-0 ${variant === "primary" ? "text-cyan-600/80" : "text-slate-400"}`}
+          aria-hidden="true"
+        />
+      ) : null}
+    </Link>
+  );
+}
+
+function QueueItemActions({
+  item,
+  compact = false,
+}: {
+  item: OfficeReviewQueueItem;
+  compact?: boolean;
+}) {
+  const primary = resolvePrimaryQueueAction(item);
+  const actions = resolveQueueActions(item);
+
+  if (!primary) {
     return null;
   }
 
+  if (compact) {
+    return (
+      <div className="w-full shrink-0 sm:w-auto">
+        <QueueActionLink action={primary} variant="primary" />
+      </div>
+    );
+  }
+
+  const secondaryActions = actions.filter((action) => action.id !== primary.id);
+
   return (
-    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
-      {actions.map((action) => (
-        <Link
-          key={action.id}
-          href={action.href}
-          className="inline-flex min-h-10 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 sm:min-h-0 sm:justify-start sm:px-2.5 sm:py-1.5"
-        >
-          <span className="truncate">{action.label}</span>
-          {action.external ? (
-            <ExternalLink
-              className="h-3 w-3 shrink-0 text-slate-400"
-              aria-hidden="true"
+    <div className="flex w-full min-w-0 flex-col gap-1.5 sm:w-auto sm:items-end">
+      <QueueActionLink action={primary} variant="primary" />
+      {secondaryActions.length > 0 ? (
+        <div className="flex w-full flex-col gap-1 sm:flex-row sm:flex-wrap sm:justify-end">
+          {secondaryActions.map((action) => (
+            <QueueActionLink
+              key={action.id}
+              action={action}
+              variant="secondary"
             />
-          ) : null}
-        </Link>
-      ))}
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -380,10 +429,12 @@ function QueueItemActions({ item }: { item: OfficeReviewQueueItem }) {
 function QueueItemRow({
   item,
   showActions,
+  compactActions = false,
   dense = false,
 }: {
   item: OfficeReviewQueueItem;
   showActions: boolean;
+  compactActions?: boolean;
   dense?: boolean;
 }) {
   const hasValidJobLink = isValidOfficeReviewQueueJobId(item.jobId);
@@ -469,7 +520,9 @@ function QueueItemRow({
             ) : null}
           </div>
         </div>
-        {showActions ? <QueueItemActions item={item} /> : null}
+        {showActions ? (
+          <QueueItemActions item={item} compact={compactActions} />
+        ) : null}
       </div>
     </li>
   );
@@ -479,11 +532,13 @@ function QueueGroupSection({
   group,
   items,
   showActions,
+  compactActions = false,
   showEmptyState,
 }: {
   group: OfficeReviewQueueGroup;
   items: OfficeReviewQueueItem[];
   showActions: boolean;
+  compactActions?: boolean;
   showEmptyState: boolean;
 }) {
   if (items.length === 0 && !showEmptyState) {
@@ -516,6 +571,7 @@ function QueueGroupSection({
               key={item.jobId}
               item={item}
               showActions={showActions}
+              compactActions={compactActions}
             />
           ))}
         </ul>
@@ -591,8 +647,10 @@ function renderFilteredGroupSections(input: {
   activeGroupFilter: OfficeReviewQueueGroup | undefined;
   groups: Record<OfficeReviewQueueGroup, OfficeReviewQueueItem[]>;
   showActions: boolean;
+  compactActions?: boolean;
 }): ReactNode {
-  const { activeFilter, activeGroupFilter, groups, showActions } = input;
+  const { activeFilter, activeGroupFilter, groups, showActions, compactActions } =
+    input;
 
   if (activeGroupFilter) {
     return (
@@ -600,6 +658,7 @@ function renderFilteredGroupSections(input: {
         group={activeGroupFilter}
         items={groups[activeGroupFilter]}
         showActions={showActions}
+        compactActions={compactActions}
         showEmptyState
       />
     );
@@ -627,6 +686,7 @@ function renderFilteredGroupSections(input: {
         group={group}
         items={items}
         showActions={showActions}
+        compactActions={compactActions}
         showEmptyState={showEmptyState}
       />
     );
@@ -668,7 +728,8 @@ export function OfficeReviewQueueSection({
   );
 
   const showGrouped = !isCompact;
-  const showActions = !isCompact;
+  const showActions = true;
+  const compactActions = isCompact;
   const { summary, meta } = report;
 
   const visibleCount = baseItems.length;
@@ -852,7 +913,8 @@ export function OfficeReviewQueueSection({
               <QueueItemRow
                 key={item.jobId}
                 item={item}
-                showActions={false}
+                showActions={showActions}
+                compactActions={compactActions}
                 dense
               />
             ))}
@@ -890,12 +952,13 @@ export function OfficeReviewQueueSection({
         </p>
       ) : isCompact ? (
         <p className="mt-3 text-xs text-slate-500">
-          Compact snapshot — open Reports for sorting, grouped views, and quick
-          actions.
+          Compact snapshot — one suggested next step per item. Open Reports for
+          sorting, grouped views, and secondary shortcuts.
         </p>
       ) : (
         <p className="mt-3 text-xs text-slate-500">
-          Quick actions navigate to existing screens only. Stalled jobs use{" "}
+          Quick actions are navigational only — primary step emphasized, no
+          automatic writes. Stalled jobs use{" "}
           {formatJobStatus("in_progress")} pipeline statuses as context.
         </p>
       )}

@@ -67,9 +67,11 @@ export const OFFICE_REVIEW_QUEUE_FILTER_OPTIONS: {
 
 export type OfficeReviewQueueActionId =
   | "open_job"
+  | "open_dispatch"
   | "create_invoice"
   | "review_expenses"
-  | "review_labor";
+  | "review_labor"
+  | "view_profitability";
 
 export type OfficeReviewQueueAction = {
   id: OfficeReviewQueueActionId;
@@ -518,45 +520,173 @@ function groupQueueItems(
   return groups;
 }
 
-export function buildOfficeReviewQueueActions(
-  item: OfficeReviewQueueItem,
-): OfficeReviewQueueAction[] {
-  if (!isValidOfficeReviewQueueJobId(item.jobId)) {
-    return [];
-  }
+/** Heuristic priority when a completed-work row has multiple review reasons. */
+const COMPLETED_WORK_PRIMARY_REASON_ORDER: CompletedWorkReviewReason[] = [
+  "pending_expenses",
+  "open_labor_entries",
+  "no_active_invoice",
+  "profitability_data_incomplete",
+];
 
-  const { jobId, customerId } = item;
+function jobProfitabilityAnchor(jobId: string): string {
+  const encodedJobId = encodeURIComponent(jobId);
+  return `/jobs/${encodedJobId}#job-profitability-heading-${jobId}`;
+}
+
+function buildOpenJobAction(jobId: string): OfficeReviewQueueAction {
+  const encodedJobId = encodeURIComponent(jobId);
+  return {
+    id: "open_job",
+    label: "Open job",
+    href: `/jobs/${encodedJobId}`,
+  };
+}
+
+function buildCreateInvoiceAction(
+  jobId: string,
+  customerId: string | undefined,
+): OfficeReviewQueueAction {
   const encodedJobId = encodeURIComponent(jobId);
   const invoiceHref =
     customerId != null && customerId.trim().length > 0
       ? `/invoices?create=1&customerId=${encodeURIComponent(customerId)}&jobId=${encodedJobId}`
       : `/invoices?create=1&jobId=${encodedJobId}`;
 
-  return [
-    {
-      id: "open_job",
-      label: "Open job",
-      href: `/jobs/${encodedJobId}`,
-    },
-    {
-      id: "create_invoice",
-      label: "Create invoice",
-      href: invoiceHref,
-      external: true,
-    },
-    {
-      id: "review_expenses",
-      label: "Review expenses",
-      href: `/expenses?jobId=${encodedJobId}`,
-      external: true,
-    },
-    {
-      id: "review_labor",
-      label: "Review labor",
-      href: `/time?jobId=${encodedJobId}`,
-      external: true,
-    },
-  ];
+  return {
+    id: "create_invoice",
+    label: "Create invoice",
+    href: invoiceHref,
+    external: true,
+  };
+}
+
+function buildReviewExpensesAction(jobId: string): OfficeReviewQueueAction {
+  return {
+    id: "review_expenses",
+    label: "Review expenses",
+    href: `/expenses?jobId=${encodeURIComponent(jobId)}`,
+    external: true,
+  };
+}
+
+function buildReviewLaborAction(jobId: string): OfficeReviewQueueAction {
+  return {
+    id: "review_labor",
+    label: "Review labor",
+    href: `/time?jobId=${encodeURIComponent(jobId)}`,
+    external: true,
+  };
+}
+
+function buildViewProfitabilityAction(jobId: string): OfficeReviewQueueAction {
+  return {
+    id: "view_profitability",
+    label: "View profitability",
+    href: jobProfitabilityAnchor(jobId),
+  };
+}
+
+function buildOpenDispatchAction(): OfficeReviewQueueAction {
+  return {
+    id: "open_dispatch",
+    label: "Open dispatch",
+    href: "/dispatch",
+    external: true,
+  };
+}
+
+function resolveCompletedWorkPrimaryReason(
+  reasons: CompletedWorkReviewReason[],
+): CompletedWorkReviewReason | null {
+  for (const reason of COMPLETED_WORK_PRIMARY_REASON_ORDER) {
+    if (reasons.includes(reason)) {
+      return reason;
+    }
+  }
+
+  return null;
+}
+
+function resolveActionForReviewReason(
+  reason: CompletedWorkReviewReason,
+  jobId: string,
+  customerId: string | undefined,
+): OfficeReviewQueueAction {
+  switch (reason) {
+    case "no_active_invoice":
+      return buildCreateInvoiceAction(jobId, customerId);
+    case "open_labor_entries":
+      return buildReviewLaborAction(jobId);
+    case "pending_expenses":
+      return buildReviewExpensesAction(jobId);
+    case "profitability_data_incomplete":
+      return buildViewProfitabilityAction(jobId);
+  }
+}
+
+/**
+ * Picks the most likely next navigational step from existing queue metadata only.
+ * Heuristic — does not inspect assignments, permissions, or live form state.
+ */
+export function resolvePrimaryQueueAction(
+  item: OfficeReviewQueueItem,
+): OfficeReviewQueueAction | null {
+  if (!isValidOfficeReviewQueueJobId(item.jobId)) {
+    return null;
+  }
+
+  const { jobId, customerId } = item;
+
+  if (item.kind === "stalled_job") {
+    return buildOpenJobAction(jobId);
+  }
+
+  if (item.kind === "awaiting_invoicing") {
+    return buildCreateInvoiceAction(jobId, customerId);
+  }
+
+  const primaryReason = resolveCompletedWorkPrimaryReason(item.reviewReasons);
+  if (primaryReason) {
+    return resolveActionForReviewReason(primaryReason, jobId, customerId);
+  }
+
+  return buildOpenJobAction(jobId);
+}
+
+/**
+ * Contextual navigational shortcuts for a queue row — primary action first, then
+ * at most one secondary follow-up. No writes, prefills, or workflow automation.
+ */
+export function resolveQueueActions(
+  item: OfficeReviewQueueItem,
+): OfficeReviewQueueAction[] {
+  const primary = resolvePrimaryQueueAction(item);
+  if (!primary) {
+    return [];
+  }
+
+  const actions: OfficeReviewQueueAction[] = [primary];
+
+  if (item.kind === "stalled_job") {
+    if (primary.id !== "open_dispatch") {
+      actions.push(buildOpenDispatchAction());
+    }
+    return actions;
+  }
+
+  const openJob = buildOpenJobAction(item.jobId);
+  if (primary.id !== openJob.id) {
+    actions.push(openJob);
+  }
+
+  return actions;
+}
+
+/** @deprecated Use resolveQueueActions — kept for callers migrating incrementally. */
+export function buildOfficeReviewQueueActions(
+  item: OfficeReviewQueueItem,
+): OfficeReviewQueueAction[] {
+  return resolveQueueActions(item);
 }
 
 export function buildOfficeReviewQueueReport(input: {
@@ -619,6 +749,8 @@ export function buildOfficeReviewQueueReport(input: {
     "No business-hours awareness, staffing-aware routing, or automated escalation yet.",
     "No SLA enforcement, queue assignments, or scheduling intelligence yet.",
     "Quick actions are navigational shortcuts only — no writes or approvals.",
+    "Suggested next steps are heuristic only — based on queue kind and review flags, not assignments or live workflow state.",
+    "No workflow automation, bulk actions, or assignment-aware routing yet.",
     "Stalled jobs are lower-priority context; they do not block invoicing or review closure.",
     "Read-only visibility — company-scoped from existing job, invoice, expense, and time records.",
   ];
