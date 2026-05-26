@@ -9,6 +9,13 @@ import {
 import type { JobStatus } from "@/shared/types/job";
 import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
 import {
+  isValidOfficeReviewQueueCustomerId,
+  isValidOfficeReviewQueueJobId,
+  isValidQueueActionHref,
+  jobProfitabilityHeadingAnchor,
+  safeBuildQueueActionHref,
+} from "@/shared/types/office-review-queue";
+import {
   resolveCompletedWorkReviewReasons,
   resolveCompletedWorkReviewSeverity,
   type CompletedWorkReviewSeverity,
@@ -51,7 +58,7 @@ type OfficeReviewAction = {
 };
 
 function profitabilityAnchor(jobId: string): string {
-  return `#job-profitability-heading-${jobId}`;
+  return jobProfitabilityHeadingAnchor(jobId);
 }
 
 function profitabilityWarningsAnchor(jobId: string): string {
@@ -182,23 +189,36 @@ function buildOfficeReviewActions(
   jobId: string,
   customerId: string,
 ): OfficeReviewAction[] {
-  return [
+  if (!isValidOfficeReviewQueueJobId(jobId)) {
+    return [];
+  }
+
+  const invoiceParams: Record<string, string> = {
+    create: "1",
+    jobId,
+  };
+
+  if (isValidOfficeReviewQueueCustomerId(customerId)) {
+    invoiceParams.customerId = customerId;
+  }
+
+  const candidates: OfficeReviewAction[] = [
     {
       id: "create_invoice",
       label: "Create invoice",
-      href: `/invoices?create=1&customerId=${encodeURIComponent(customerId)}&jobId=${encodeURIComponent(jobId)}`,
+      href: safeBuildQueueActionHref("/invoices", invoiceParams) ?? "",
       external: true,
     },
     {
       id: "review_expenses",
       label: "Review expenses",
-      href: `/expenses?jobId=${encodeURIComponent(jobId)}`,
+      href: safeBuildQueueActionHref("/expenses", { jobId }) ?? "",
       external: true,
     },
     {
       id: "review_labor",
       label: "Review labor",
-      href: `/time?jobId=${encodeURIComponent(jobId)}`,
+      href: safeBuildQueueActionHref("/time", { jobId }) ?? "",
       external: true,
     },
     {
@@ -207,6 +227,8 @@ function buildOfficeReviewActions(
       href: profitabilityAnchor(jobId),
     },
   ];
+
+  return candidates.filter((action) => isValidQueueActionHref(action.href));
 }
 
 function severityBadgeClassName(

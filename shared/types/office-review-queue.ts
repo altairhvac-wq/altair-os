@@ -156,6 +156,90 @@ export function isValidOfficeReviewQueueJobId(jobId: string | undefined): jobId 
   return typeof jobId === "string" && jobId.trim().length > 0;
 }
 
+export function isValidOfficeReviewQueueCustomerId(
+  customerId: string | undefined,
+): customerId is string {
+  return typeof customerId === "string" && customerId.trim().length > 0;
+}
+
+/** Rejects empty, external, and protocol-relative hrefs — queue links are in-app only. */
+export function isValidQueueActionHref(
+  href: string | undefined | null,
+): href is string {
+  if (typeof href !== "string") {
+    return false;
+  }
+
+  const trimmed = href.trim();
+  if (trimmed.length === 0) {
+    return false;
+  }
+
+  if (trimmed.startsWith("//")) {
+    return false;
+  }
+
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)) {
+    return false;
+  }
+
+  return trimmed.startsWith("/") || trimmed.startsWith("#");
+}
+
+export function safeBuildQueueActionHref(
+  pathname: string,
+  searchParams?: Record<string, string | undefined>,
+): string | null {
+  const normalizedPath = pathname.trim();
+
+  if (
+    normalizedPath.length === 0 ||
+    !normalizedPath.startsWith("/") ||
+    normalizedPath.startsWith("//")
+  ) {
+    return null;
+  }
+
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(searchParams ?? {})) {
+    if (value == null) {
+      continue;
+    }
+
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+      continue;
+    }
+
+    params.set(key, trimmed);
+  }
+
+  const query = params.toString();
+  const href = query ? `${normalizedPath}?${query}` : normalizedPath;
+
+  return isValidQueueActionHref(href) ? href : null;
+}
+
+/** Keeps the first action per id and drops rows with unsafe hrefs. */
+export function dedupeQueueActions(
+  actions: OfficeReviewQueueAction[],
+): OfficeReviewQueueAction[] {
+  const seen = new Set<OfficeReviewQueueActionId>();
+  const deduped: OfficeReviewQueueAction[] = [];
+
+  for (const action of actions) {
+    if (seen.has(action.id) || !isValidQueueActionHref(action.href)) {
+      continue;
+    }
+
+    seen.add(action.id);
+    deduped.push(action);
+  }
+
+  return deduped;
+}
+
 export function parseOfficeReviewQueueFilter(
   value: string | undefined,
 ): OfficeReviewQueueFilter {
@@ -520,7 +604,16 @@ function groupQueueItems(
   return groups;
 }
 
-/** Heuristic priority when a completed-work row has multiple review reasons. */
+/**
+ * Heuristic priority when a completed-work row has multiple review reasons.
+ * Order reflects typical office unblock sequence — expenses and labor must be
+ * settled before invoicing; profitability gaps are informational follow-up.
+ *
+ * 1. pending_expenses — draft/submitted expenses block billing readiness.
+ * 2. open_labor_entries — open time entries must close before invoice review.
+ * 3. no_active_invoice — invoicing backlog once operational blockers clear.
+ * 4. profitability_data_incomplete — missing amounts/costs; inspect on job page.
+ */
 const COMPLETED_WORK_PRIMARY_REASON_ORDER: CompletedWorkReviewReason[] = [
   "pending_expenses",
   "open_labor_entries",
@@ -528,61 +621,112 @@ const COMPLETED_WORK_PRIMARY_REASON_ORDER: CompletedWorkReviewReason[] = [
   "profitability_data_incomplete",
 ];
 
-function jobProfitabilityAnchor(jobId: string): string {
-  const encodedJobId = encodeURIComponent(jobId);
-  return `/jobs/${encodedJobId}#job-profitability-heading-${jobId}`;
+/** Matches JobProfitabilitySection heading id — hash fragment only for same-page links. */
+export function jobProfitabilityHeadingAnchor(jobId: string): string {
+  return `#job-profitability-heading-${jobId}`;
 }
 
-function buildOpenJobAction(jobId: string): OfficeReviewQueueAction {
-  const encodedJobId = encodeURIComponent(jobId);
+function buildOpenJobAction(jobId: string): OfficeReviewQueueAction | null {
+  if (!isValidOfficeReviewQueueJobId(jobId)) {
+    return null;
+  }
+
+  const href = safeBuildQueueActionHref(
+    `/jobs/${encodeURIComponent(jobId)}`,
+  );
+  if (!href) {
+    return null;
+  }
+
   return {
     id: "open_job",
     label: "Open job",
-    href: `/jobs/${encodedJobId}`,
+    href,
   };
 }
 
 function buildCreateInvoiceAction(
   jobId: string,
   customerId: string | undefined,
-): OfficeReviewQueueAction {
-  const encodedJobId = encodeURIComponent(jobId);
-  const invoiceHref =
-    customerId != null && customerId.trim().length > 0
-      ? `/invoices?create=1&customerId=${encodeURIComponent(customerId)}&jobId=${encodedJobId}`
-      : `/invoices?create=1&jobId=${encodedJobId}`;
+): OfficeReviewQueueAction | null {
+  if (!isValidOfficeReviewQueueJobId(jobId)) {
+    return null;
+  }
+
+  const params: Record<string, string> = {
+    create: "1",
+    jobId,
+  };
+
+  if (isValidOfficeReviewQueueCustomerId(customerId)) {
+    params.customerId = customerId;
+  }
+
+  const href = safeBuildQueueActionHref("/invoices", params);
+  if (!href) {
+    return null;
+  }
 
   return {
     id: "create_invoice",
     label: "Create invoice",
-    href: invoiceHref,
+    href,
     external: true,
   };
 }
 
-function buildReviewExpensesAction(jobId: string): OfficeReviewQueueAction {
+function buildReviewExpensesAction(jobId: string): OfficeReviewQueueAction | null {
+  if (!isValidOfficeReviewQueueJobId(jobId)) {
+    return null;
+  }
+
+  const href = safeBuildQueueActionHref("/expenses", { jobId });
+  if (!href) {
+    return null;
+  }
+
   return {
     id: "review_expenses",
     label: "Review expenses",
-    href: `/expenses?jobId=${encodeURIComponent(jobId)}`,
+    href,
     external: true,
   };
 }
 
-function buildReviewLaborAction(jobId: string): OfficeReviewQueueAction {
+function buildReviewLaborAction(jobId: string): OfficeReviewQueueAction | null {
+  if (!isValidOfficeReviewQueueJobId(jobId)) {
+    return null;
+  }
+
+  const href = safeBuildQueueActionHref("/time", { jobId });
+  if (!href) {
+    return null;
+  }
+
   return {
     id: "review_labor",
     label: "Review labor",
-    href: `/time?jobId=${encodeURIComponent(jobId)}`,
+    href,
     external: true,
   };
 }
 
-function buildViewProfitabilityAction(jobId: string): OfficeReviewQueueAction {
+function buildViewProfitabilityAction(jobId: string): OfficeReviewQueueAction | null {
+  if (!isValidOfficeReviewQueueJobId(jobId)) {
+    return null;
+  }
+
+  const href = safeBuildQueueActionHref(
+    `/jobs/${encodeURIComponent(jobId)}${jobProfitabilityHeadingAnchor(jobId)}`,
+  );
+  if (!href) {
+    return null;
+  }
+
   return {
     id: "view_profitability",
     label: "View profitability",
-    href: jobProfitabilityAnchor(jobId),
+    href,
   };
 }
 
@@ -611,7 +755,7 @@ function resolveActionForReviewReason(
   reason: CompletedWorkReviewReason,
   jobId: string,
   customerId: string | undefined,
-): OfficeReviewQueueAction {
+): OfficeReviewQueueAction | null {
   switch (reason) {
     case "no_active_invoice":
       return buildCreateInvoiceAction(jobId, customerId);
@@ -637,6 +781,7 @@ export function resolvePrimaryQueueAction(
 
   const { jobId, customerId } = item;
 
+  // Stalled jobs: open the job record first — dispatch is a secondary shortcut only.
   if (item.kind === "stalled_job") {
     return buildOpenJobAction(jobId);
   }
@@ -647,7 +792,14 @@ export function resolvePrimaryQueueAction(
 
   const primaryReason = resolveCompletedWorkPrimaryReason(item.reviewReasons);
   if (primaryReason) {
-    return resolveActionForReviewReason(primaryReason, jobId, customerId);
+    const reasonAction = resolveActionForReviewReason(
+      primaryReason,
+      jobId,
+      customerId,
+    );
+    if (reasonAction) {
+      return reasonAction;
+    }
   }
 
   return buildOpenJobAction(jobId);
@@ -661,25 +813,26 @@ export function resolveQueueActions(
   item: OfficeReviewQueueItem,
 ): OfficeReviewQueueAction[] {
   const primary = resolvePrimaryQueueAction(item);
-  if (!primary) {
+  if (!primary || !isValidQueueActionHref(primary.href)) {
     return [];
   }
 
   const actions: OfficeReviewQueueAction[] = [primary];
 
   if (item.kind === "stalled_job") {
-    if (primary.id !== "open_dispatch") {
-      actions.push(buildOpenDispatchAction());
+    const dispatch = buildOpenDispatchAction();
+    if (primary.id !== dispatch.id) {
+      actions.push(dispatch);
     }
-    return actions;
+    return dedupeQueueActions(actions).slice(0, 2);
   }
 
   const openJob = buildOpenJobAction(item.jobId);
-  if (primary.id !== openJob.id) {
+  if (openJob && primary.id !== openJob.id) {
     actions.push(openJob);
   }
 
-  return actions;
+  return dedupeQueueActions(actions).slice(0, 2);
 }
 
 /** @deprecated Use resolveQueueActions — kept for callers migrating incrementally. */

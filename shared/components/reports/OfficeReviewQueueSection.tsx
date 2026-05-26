@@ -20,10 +20,12 @@ import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { formatJobStatus } from "@/shared/types/job";
 import {
   compareOfficeReviewQueueItems,
+  dedupeQueueActions,
   filterOfficeReviewQueueItems,
   formatOfficeReviewQueueKind,
   getOfficeReviewQueueFilterLabel,
   isValidOfficeReviewQueueJobId,
+  isValidQueueActionHref,
   OFFICE_REVIEW_QUEUE_AGING_BUCKET_MAX_DAYS,
   OFFICE_REVIEW_QUEUE_AGING_DAYS,
   OFFICE_REVIEW_QUEUE_FRESH_MAX_DAYS,
@@ -352,11 +354,11 @@ function QueueFilterBar({
 }
 
 function primaryActionClassName(): string {
-  return "inline-flex min-h-10 w-full items-center justify-center gap-1 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-800 transition-colors hover:border-cyan-300 hover:bg-cyan-100 sm:min-h-0 sm:w-auto sm:justify-start sm:px-3 sm:py-2";
+  return "inline-flex min-h-10 w-full min-w-0 max-w-full items-center justify-center gap-1 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-800 transition-colors hover:border-cyan-300 hover:bg-cyan-100 sm:min-h-0 sm:w-auto sm:max-w-none sm:justify-start sm:px-3 sm:py-2";
 }
 
 function secondaryActionClassName(): string {
-  return "inline-flex min-h-9 w-full items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 sm:min-h-0 sm:w-auto sm:justify-start sm:px-2 sm:py-1";
+  return "inline-flex min-h-9 w-full min-w-0 max-w-full items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 sm:min-h-0 sm:w-auto sm:max-w-none sm:justify-start sm:px-2 sm:py-1";
 }
 
 function QueueActionLink({
@@ -366,6 +368,10 @@ function QueueActionLink({
   action: OfficeReviewQueueAction;
   variant: "primary" | "secondary";
 }) {
+  if (!isValidQueueActionHref(action.href)) {
+    return null;
+  }
+
   const className =
     variant === "primary"
       ? primaryActionClassName()
@@ -373,7 +379,7 @@ function QueueActionLink({
 
   return (
     <Link href={action.href} className={className}>
-      <span className="truncate">{action.label}</span>
+      <span className="min-w-0 truncate">{action.label}</span>
       {action.external ? (
         <ExternalLink
           className={`h-3 w-3 shrink-0 ${variant === "primary" ? "text-cyan-600/80" : "text-slate-400"}`}
@@ -394,19 +400,21 @@ function QueueItemActions({
   const primary = resolvePrimaryQueueAction(item);
   const actions = resolveQueueActions(item);
 
-  if (!primary) {
+  if (!primary || !isValidQueueActionHref(primary.href)) {
     return null;
   }
 
   if (compact) {
     return (
-      <div className="w-full shrink-0 sm:w-auto">
+      <div className="w-full min-w-0 shrink-0 sm:w-auto">
         <QueueActionLink action={primary} variant="primary" />
       </div>
     );
   }
 
-  const secondaryActions = actions.filter((action) => action.id !== primary.id);
+  const secondaryActions = dedupeQueueActions(
+    actions.filter((action) => action.id !== primary.id),
+  ).slice(0, 1);
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-1.5 sm:w-auto sm:items-end">
