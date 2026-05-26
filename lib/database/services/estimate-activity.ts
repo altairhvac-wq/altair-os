@@ -2,7 +2,7 @@ import {
   recordEstimateActivity,
   resolveEstimateStatusEventType,
 } from "@/lib/database/queries/estimate-activities";
-import { notifyEstimateApproved } from "@/lib/database/services/operational-notifications";
+import { emitEstimateApprovedEvent } from "@/lib/database/services/operational-events";
 import type { EstimateStatus } from "@/shared/types/estimate";
 
 export async function recordEstimateCreatedActivity(input: {
@@ -75,10 +75,10 @@ export async function recordEstimateStatusChangedActivity(input: {
   }
 
   if (input.toStatus === "approved") {
-    notifyEstimateApproved({
+    await emitEstimateApprovedEvent({
       companyId: input.companyId,
-      actorId: input.actorId,
       estimateId: input.estimateId,
+      actorId: input.actorId,
       estimateNumber: input.estimateNumber,
       customerId: input.customerId,
       jobId: input.jobId,

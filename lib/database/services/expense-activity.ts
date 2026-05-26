@@ -1,8 +1,8 @@
 import { recordExpenseActivity } from "@/lib/database/queries/expense-activities";
 import {
-  notifyExpenseRejected,
-  notifyExpenseSubmitted,
-} from "@/lib/database/services/operational-notifications";
+  emitExpenseRejectedEvent,
+  emitExpenseSubmittedEvent,
+} from "@/lib/database/services/operational-events";
 import type { Expense, ExpenseStatus } from "@/shared/types/expense";
 
 function buildExpenseActivityMetadata(expense: Expense) {
@@ -75,11 +75,7 @@ async function recordExpenseStatusActivity(input: {
   expense: Expense;
   fromStatus: ExpenseStatus;
   toStatus: ExpenseStatus;
-  eventType:
-    | "expense_submitted"
-    | "expense_approved"
-    | "expense_rejected"
-    | "expense_reimbursed";
+  eventType: "expense_approved" | "expense_reimbursed";
   rejectionReason?: string;
 }): Promise<void> {
   const { error } = await recordExpenseActivity({
@@ -101,33 +97,6 @@ async function recordExpenseStatusActivity(input: {
       eventType: input.eventType,
       error,
     });
-    return;
-  }
-
-  if (input.eventType === "expense_submitted") {
-    notifyExpenseSubmitted({
-      companyId: input.companyId,
-      actorId: input.actorId,
-      expenseId: input.expenseId,
-      expenseNumber: input.expense.expenseNumber,
-      merchant: input.expense.merchant,
-      amount: input.expense.amount,
-      technicianName: input.expense.technician,
-      jobId: input.expense.jobId,
-    });
-  }
-
-  if (input.eventType === "expense_rejected") {
-    notifyExpenseRejected({
-      companyId: input.companyId,
-      technicianId: input.expense.technicianId,
-      actorId: input.actorId,
-      expenseId: input.expenseId,
-      expenseNumber: input.expense.expenseNumber,
-      merchant: input.expense.merchant,
-      amount: input.expense.amount,
-      rejectionReason: input.rejectionReason,
-    });
   }
 }
 
@@ -138,11 +107,7 @@ export async function recordExpenseSubmittedActivity(input: {
   expense: Expense;
   fromStatus: ExpenseStatus;
 }): Promise<void> {
-  await recordExpenseStatusActivity({
-    ...input,
-    toStatus: "submitted",
-    eventType: "expense_submitted",
-  });
+  await emitExpenseSubmittedEvent(input);
 }
 
 export async function recordExpenseApprovedActivity(input: {
@@ -167,11 +132,7 @@ export async function recordExpenseRejectedActivity(input: {
   fromStatus: ExpenseStatus;
   rejectionReason?: string;
 }): Promise<void> {
-  await recordExpenseStatusActivity({
-    ...input,
-    toStatus: "rejected",
-    eventType: "expense_rejected",
-  });
+  await emitExpenseRejectedEvent(input);
 }
 
 export async function recordExpenseReimbursedActivity(input: {

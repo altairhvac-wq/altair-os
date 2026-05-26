@@ -1,0 +1,286 @@
+import { recordExpenseActivity } from "@/lib/database/queries/expense-activities";
+import { recordJobActivity } from "@/lib/database/queries/job-activities";
+import {
+  notifyEstimateApproved,
+  notifyExpenseRejected,
+  notifyExpenseSubmitted,
+  notifyInvoicePaid,
+  notifyJobAssigned,
+  notifyWorkCompleted,
+} from "@/lib/database/services/operational-notifications";
+import type { Expense, ExpenseStatus } from "@/shared/types/expense";
+import type { JobMaterial } from "@/shared/types/job-material";
+import type { InvoiceStatus } from "@/shared/types/invoice";
+
+/**
+ * Lightweight operational event layer.
+ *
+ * Coordinates activity history, notifications, and future automation hooks for
+ * known business events. Side-effect failures (notifications) remain fire-and-forget.
+ *
+ * TODO(automation): Evaluate user-configurable automation rules before dispatching side effects.
+ * TODO(automation): Schedule reminder/cron follow-ups from matched rules.
+ * TODO(ai): Forward enriched event context to an insights pipeline after rule evaluation.
+ */
+
+export type OperationalEventType =
+  | "job_assigned"
+  | "work_completed"
+  | "expense_submitted"
+  | "expense_rejected"
+  | "invoice_paid"
+  | "estimate_approved"
+  | "job_material_added";
+
+function buildExpenseActivityMetadata(expense: Expense) {
+  return {
+    expense_id: expense.id,
+    expense_number: expense.expenseNumber,
+    amount: expense.amount,
+    merchant: expense.merchant,
+    purchase_date: expense.purchaseDate,
+    payment_method: expense.paymentMethod,
+    is_reimbursable: expense.isReimbursable,
+    job_id: expense.jobId,
+    customer_id: expense.customerId,
+    category: expense.category,
+    status: expense.status,
+  };
+}
+
+export async function emitExpenseSubmittedEvent(input: {
+  companyId: string;
+  expenseId: string;
+  actorId: string;
+  expense: Expense;
+  fromStatus: ExpenseStatus;
+}): Promise<void> {
+  const { error } = await recordExpenseActivity({
+    company_id: input.companyId,
+    expense_id: input.expenseId,
+    actor_id: input.actorId,
+    event_type: "expense_submitted",
+    metadata: {
+      ...buildExpenseActivityMetadata(input.expense),
+      from_status: input.fromStatus,
+      to_status: "submitted",
+    },
+  });
+
+  if (error) {
+    console.error("[emitExpenseSubmittedEvent] activity failed:", {
+      expenseId: input.expenseId,
+      error,
+    });
+    return;
+  }
+
+  // TODO(automation): evaluate rules for expense_submitted
+
+  notifyExpenseSubmitted({
+    companyId: input.companyId,
+    actorId: input.actorId,
+    expenseId: input.expenseId,
+    expenseNumber: input.expense.expenseNumber,
+    merchant: input.expense.merchant,
+    amount: input.expense.amount,
+    technicianName: input.expense.technician,
+    jobId: input.expense.jobId,
+  });
+}
+
+export async function emitExpenseRejectedEvent(input: {
+  companyId: string;
+  expenseId: string;
+  actorId: string;
+  expense: Expense;
+  fromStatus: ExpenseStatus;
+  rejectionReason?: string;
+}): Promise<void> {
+  const { error } = await recordExpenseActivity({
+    company_id: input.companyId,
+    expense_id: input.expenseId,
+    actor_id: input.actorId,
+    event_type: "expense_rejected",
+    metadata: {
+      ...buildExpenseActivityMetadata(input.expense),
+      from_status: input.fromStatus,
+      to_status: "rejected",
+      rejection_reason: input.rejectionReason?.trim() || undefined,
+    },
+  });
+
+  if (error) {
+    console.error("[emitExpenseRejectedEvent] activity failed:", {
+      expenseId: input.expenseId,
+      error,
+    });
+    return;
+  }
+
+  // TODO(automation): evaluate rules for expense_rejected
+
+  notifyExpenseRejected({
+    companyId: input.companyId,
+    technicianId: input.expense.technicianId,
+    actorId: input.actorId,
+    expenseId: input.expenseId,
+    expenseNumber: input.expense.expenseNumber,
+    merchant: input.expense.merchant,
+    amount: input.expense.amount,
+    rejectionReason: input.rejectionReason,
+  });
+}
+
+export async function emitJobAssignedEvent(input: {
+  companyId: string;
+  jobId: string;
+  actorId: string;
+  technicianId: string;
+  previousTechnicianId?: string | null;
+  customerId?: string;
+  jobNumber?: string;
+  technicianName?: string;
+  previousTechnicianName?: string;
+}): Promise<void> {
+  const { error } = await recordJobActivity({
+    company_id: input.companyId,
+    job_id: input.jobId,
+    actor_id: input.actorId,
+    event_type: "technician_assigned",
+    metadata: {
+      customer_id: input.customerId,
+      job_id: input.jobId,
+      job_number: input.jobNumber,
+      technician_id: input.technicianId,
+      technician_name: input.technicianName,
+      previous_technician_id: input.previousTechnicianId ?? undefined,
+      previous_technician_name: input.previousTechnicianName,
+    },
+  });
+
+  if (error) {
+    console.error("[emitJobAssignedEvent] activity failed:", {
+      jobId: input.jobId,
+      error,
+    });
+    return;
+  }
+
+  // TODO(automation): evaluate rules for job_assigned
+
+  notifyJobAssigned({
+    companyId: input.companyId,
+    technicianId: input.technicianId,
+    actorId: input.actorId,
+    jobId: input.jobId,
+    jobNumber: input.jobNumber,
+    customerId: input.customerId,
+    technicianName: input.technicianName,
+  });
+}
+
+export async function emitWorkCompletedEvent(input: {
+  companyId: string;
+  jobId: string;
+  actorId: string;
+  customerId?: string;
+  jobNumber?: string;
+}): Promise<void> {
+  // Activity is recorded upstream via recordJobStatusChangedActivity today.
+  // TODO(automation): evaluate rules for work_completed
+
+  notifyWorkCompleted({
+    companyId: input.companyId,
+    actorId: input.actorId,
+    jobId: input.jobId,
+    jobNumber: input.jobNumber,
+    customerId: input.customerId,
+  });
+}
+
+export async function emitInvoicePaidEvent(input: {
+  companyId: string;
+  invoiceId: string;
+  actorId: string;
+  paymentId: string;
+  amount: number;
+  fromStatus: InvoiceStatus;
+  invoiceNumber?: string;
+  customerId?: string;
+  jobId?: string;
+  jobNumber?: string;
+}): Promise<void> {
+  // Activity is recorded upstream via recordInvoicePaidActivity today.
+  // TODO(automation): evaluate rules for invoice_paid
+
+  notifyInvoicePaid({
+    companyId: input.companyId,
+    actorId: input.actorId,
+    invoiceId: input.invoiceId,
+    invoiceNumber: input.invoiceNumber,
+    amount: input.amount,
+    customerId: input.customerId,
+    jobId: input.jobId,
+  });
+}
+
+export async function emitEstimateApprovedEvent(input: {
+  companyId: string;
+  estimateId: string;
+  actorId: string;
+  estimateNumber?: string;
+  customerId?: string;
+  jobId?: string;
+}): Promise<void> {
+  // Activity is recorded upstream via recordEstimateStatusChangedActivity today.
+  // TODO(automation): evaluate rules for estimate_approved
+
+  notifyEstimateApproved({
+    companyId: input.companyId,
+    actorId: input.actorId,
+    estimateId: input.estimateId,
+    estimateNumber: input.estimateNumber,
+    customerId: input.customerId,
+    jobId: input.jobId,
+  });
+}
+
+export async function emitJobMaterialAddedEvent(input: {
+  companyId: string;
+  jobId: string;
+  actorId: string;
+  customerId?: string;
+  jobNumber?: string;
+  material: JobMaterial;
+}): Promise<void> {
+  const { error } = await recordJobActivity({
+    company_id: input.companyId,
+    job_id: input.jobId,
+    actor_id: input.actorId,
+    event_type: "job_material_added",
+    metadata: {
+      customer_id: input.customerId,
+      job_id: input.jobId,
+      job_number: input.jobNumber,
+      material_id: input.material.id,
+      service_item_id: input.material.serviceItemId,
+      name: input.material.name,
+      quantity: input.material.quantity,
+      unit_cost: input.material.unitCost,
+      unit_price: input.material.unitPrice,
+      taxable: input.material.taxable,
+    },
+  });
+
+  if (error) {
+    console.error("[emitJobMaterialAddedEvent] activity failed:", {
+      jobId: input.jobId,
+      materialId: input.material.id,
+      error,
+    });
+    return;
+  }
+
+  // TODO(automation): evaluate rules for job_material_added (no notification today)
+}

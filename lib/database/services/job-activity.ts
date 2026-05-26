@@ -3,9 +3,10 @@ import {
   resolveStatusChangeEventType,
 } from "@/lib/database/queries/job-activities";
 import {
-  notifyJobAssigned,
-  notifyWorkCompleted,
-} from "@/lib/database/services/operational-notifications";
+  emitJobAssignedEvent,
+  emitJobMaterialAddedEvent,
+  emitWorkCompletedEvent,
+} from "@/lib/database/services/operational-events";
 import { createClient } from "@/lib/supabase/server";
 import type { JobStatus } from "@/shared/types/job";
 import type { JobWorkflowActionId } from "@/shared/types/job-workflow";
@@ -70,38 +71,10 @@ export async function recordTechnicianAssignedActivity(input: {
       : Promise.resolve(undefined),
   ]);
 
-  const { error } = await recordJobActivity({
-    company_id: input.companyId,
-    job_id: input.jobId,
-    actor_id: input.actorId,
-    event_type: "technician_assigned",
-    metadata: {
-      customer_id: input.customerId,
-      job_id: input.jobId,
-      job_number: input.jobNumber,
-      technician_id: input.technicianId,
-      technician_name: technicianName,
-      previous_technician_id: input.previousTechnicianId ?? undefined,
-      previous_technician_name: previousTechnicianName,
-    },
-  });
-
-  if (error) {
-    console.error("[recordTechnicianAssignedActivity] failed:", {
-      jobId: input.jobId,
-      error,
-    });
-    return;
-  }
-
-  notifyJobAssigned({
-    companyId: input.companyId,
-    technicianId: input.technicianId,
-    actorId: input.actorId,
-    jobId: input.jobId,
-    jobNumber: input.jobNumber,
-    customerId: input.customerId,
+  await emitJobAssignedEvent({
+    ...input,
     technicianName,
+    previousTechnicianName,
   });
 }
 
@@ -144,12 +117,12 @@ export async function recordJobStatusChangedActivity(input: {
   }
 
   if (input.actionId === "complete") {
-    notifyWorkCompleted({
+    await emitWorkCompletedEvent({
       companyId: input.companyId,
-      actorId: input.actorId,
       jobId: input.jobId,
-      jobNumber: input.jobNumber,
+      actorId: input.actorId,
       customerId: input.customerId,
+      jobNumber: input.jobNumber,
     });
   }
 }
@@ -193,30 +166,5 @@ export async function recordJobMaterialAddedActivity(input: {
   jobNumber?: string;
   material: JobMaterial;
 }): Promise<void> {
-  const { error } = await recordJobActivity({
-    company_id: input.companyId,
-    job_id: input.jobId,
-    actor_id: input.actorId,
-    event_type: "job_material_added",
-    metadata: {
-      customer_id: input.customerId,
-      job_id: input.jobId,
-      job_number: input.jobNumber,
-      material_id: input.material.id,
-      service_item_id: input.material.serviceItemId,
-      name: input.material.name,
-      quantity: input.material.quantity,
-      unit_cost: input.material.unitCost,
-      unit_price: input.material.unitPrice,
-      taxable: input.material.taxable,
-    },
-  });
-
-  if (error) {
-    console.error("[recordJobMaterialAddedActivity] failed:", {
-      jobId: input.jobId,
-      materialId: input.material.id,
-      error,
-    });
-  }
+  await emitJobMaterialAddedEvent(input);
 }

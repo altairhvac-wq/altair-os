@@ -2,7 +2,7 @@ import {
   recordInvoiceActivity,
   resolveInvoiceStatusEventType,
 } from "@/lib/database/queries/invoice-activities";
-import { notifyInvoicePaid } from "@/lib/database/services/operational-notifications";
+import { emitInvoicePaidEvent } from "@/lib/database/services/operational-events";
 import type { InvoiceStatus } from "@/shared/types/invoice";
 import type { PaymentMethod } from "@/shared/types/invoice-payment";
 
@@ -198,13 +198,16 @@ export async function recordInvoicePaidActivity(input: {
     return;
   }
 
-  notifyInvoicePaid({
+  await emitInvoicePaidEvent({
     companyId: input.companyId,
-    actorId: input.actorId,
     invoiceId: input.invoiceId,
-    invoiceNumber: input.invoiceNumber,
+    actorId: input.actorId,
+    paymentId: input.paymentId,
     amount: input.amount,
+    fromStatus: input.fromStatus,
+    invoiceNumber: input.invoiceNumber,
     customerId: input.customerId,
     jobId: input.jobId,
+    jobNumber: input.jobNumber,
   });
 }
