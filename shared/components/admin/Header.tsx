@@ -51,7 +51,7 @@ export function Header({
   );
 
   return (
-    <header className="flex h-[4.25rem] w-full max-w-full shrink-0 items-center justify-between gap-2 overflow-hidden border-b border-slate-200/80 bg-white/90 px-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-md sm:gap-3 sm:px-6">
+    <header className="flex min-h-[calc(4.25rem+env(safe-area-inset-top,0px))] w-full max-w-full shrink-0 items-center justify-between gap-2 overflow-hidden border-b border-slate-200/80 bg-white/90 px-4 pt-[env(safe-area-inset-top,0px)] shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-md sm:gap-3 sm:px-6 md:h-[4.25rem] md:min-h-[4.25rem] md:pt-0">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
