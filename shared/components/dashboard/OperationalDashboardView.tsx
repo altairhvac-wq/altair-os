@@ -3,6 +3,7 @@ import {
   AlertCircle,
   ArrowRight,
   Bell,
+  Briefcase,
   CalendarCheck,
   CheckCircle2,
   Clock,
@@ -12,6 +13,7 @@ import {
   MapPin,
   Navigation,
   Receipt,
+  Timer,
   Users,
 } from "lucide-react";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
@@ -136,6 +138,101 @@ function EmptyState({ title, description }: { title: string; description: string
       <p className="text-sm font-medium text-slate-700">{title}</p>
       <p className="mt-1 text-xs text-slate-500">{description}</p>
     </div>
+  );
+}
+
+function AnalyticsSnapshotSection({
+  analytics,
+}: {
+  analytics: DashboardData["analytics"];
+}) {
+  const metrics = [
+    {
+      label: "Collected today",
+      value: formatCurrency(analytics.todayCollectedRevenue),
+      description: `${analytics.todayPaymentCount} payment${analytics.todayPaymentCount === 1 ? "" : "s"}`,
+      icon: DollarSign,
+      iconClass: "text-emerald-600 bg-emerald-50",
+      accent: "border-emerald-100",
+      href: "/reports",
+    },
+    {
+      label: "Open jobs",
+      value: analytics.openJobs,
+      description: "Active backlog",
+      icon: Briefcase,
+      iconClass: "text-blue-600 bg-blue-50",
+      accent: "border-blue-100",
+      href: "/jobs",
+    },
+    {
+      label: "Pending expenses",
+      value: analytics.pendingExpenseCount,
+      description: "Awaiting approval",
+      icon: Receipt,
+      iconClass: "text-amber-600 bg-amber-50",
+      accent: "border-amber-100",
+      href: "/expenses",
+    },
+    {
+      label: "Active labor",
+      value: analytics.activeLaborEntries,
+      description: "Open job-labor clocks",
+      icon: Timer,
+      iconClass: "text-violet-600 bg-violet-50",
+      accent: "border-violet-100",
+      href: "/time",
+    },
+  ];
+
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-5 text-white shadow-sm">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-cyan-300/90">
+            Command center
+          </p>
+          <h2 className="text-lg font-black tracking-tight">Live operations</h2>
+          <p className="text-sm text-slate-300">
+            Today&apos;s collections and current workload
+          </p>
+        </div>
+        <Link
+          href="/reports"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-300 hover:text-cyan-200"
+        >
+          Full analytics
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {metrics.map((metric) => (
+          <Link
+            key={metric.label}
+            href={metric.href}
+            className={`rounded-xl border bg-white/95 p-4 transition-colors hover:bg-white ${metric.accent}`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                  {metric.label}
+                </p>
+                <p className="mt-2 text-2xl font-black tabular-nums text-slate-900">
+                  {metric.value}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">{metric.description}</p>
+              </div>
+              <div
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${metric.iconClass}`}
+              >
+                <metric.icon className="h-4 w-4" />
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -730,6 +827,7 @@ function RecentActivitySection({
 export function OperationalDashboardView({ data }: OperationalDashboardViewProps) {
   return (
     <div className="flex flex-col gap-6">
+      <AnalyticsSnapshotSection analytics={data.analytics} />
       <TodayOperationsSection operations={data.operations} />
 
       <div className="grid gap-6 xl:grid-cols-2">

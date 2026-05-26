@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type {
   NotificationInsert,
@@ -90,7 +91,7 @@ export async function listActiveMemberUserIdsByRoles(
     .filter((userId): userId is string => Boolean(userId) && !exclude.has(userId));
 }
 
-export async function getUserNotifications(
+export const getUserNotifications = cache(async function getUserNotifications(
   companyId: string,
   userId: string,
   options?: { limit?: number },
@@ -116,12 +117,13 @@ export async function getUserNotifications(
   }
 
   return ((data ?? []) as NotificationRow[]).map(mapNotificationRow);
-}
+});
 
-export async function getUnreadNotificationCount(
-  companyId: string,
-  userId: string,
-): Promise<number> {
+export const getUnreadNotificationCount = cache(
+  async function getUnreadNotificationCount(
+    companyId: string,
+    userId: string,
+  ): Promise<number> {
   const supabase = await createClient();
 
   const { count, error } = await supabase
@@ -141,7 +143,8 @@ export async function getUnreadNotificationCount(
   }
 
   return count ?? 0;
-}
+  },
+);
 
 export async function markNotificationRead(
   companyId: string,

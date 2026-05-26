@@ -14,10 +14,12 @@ import {
   listActiveTechnicianTimeEntries,
   mapEntryTypeToTimeState,
 } from "@/lib/database/queries/time-entries";
+import { getCompanyExpenseReport } from "@/lib/database/services/reports/expense-report";
+import { getCompanyJobActivityReport } from "@/lib/database/services/reports/job-activity-report";
+import { getCompanyRevenueReport } from "@/lib/database/services/reports/revenue-report";
+import { getCompanyTechnicianLaborReport } from "@/lib/database/services/reports/technician-labor-report";
 import type { DashboardData } from "@/shared/types/dashboard";
-import {
-  getTodayOperationsSummary,
-} from "@/shared/types/dashboard";
+import { getTodayOperationsSummary } from "@/shared/types/dashboard";
 import { getInvoiceSummary } from "@/shared/types/invoice";
 import type { TechnicianTimeState } from "@/shared/types/time-entry";
 import type { TimeEntry } from "@/shared/types/time-entry";
@@ -29,6 +31,8 @@ const APPROVED_ESTIMATES_LIMIT = 5;
 const RECENT_PAYMENTS_LIMIT = 5;
 const RECENT_ACTIVITY_LIMIT = 10;
 const RECENT_NOTIFICATIONS_LIMIT = 5;
+/** Match admin layout fetch so React cache dedupes within the request. */
+const NOTIFICATIONS_FETCH_LIMIT = 20;
 
 function buildTechnicianStatuses(
   technicians: Awaited<ReturnType<typeof listTechnicians>>,
@@ -61,6 +65,7 @@ export async function getDashboardData(
   companyId: string,
   userId: string,
 ): Promise<DashboardData> {
+  const reportOptions = { dateRange: "all" as const };
   const todayJobs = await listDispatchJobsForToday(companyId);
 
   const [
@@ -74,6 +79,10 @@ export async function getDashboardData(
     recentActivity,
     notifications,
     unreadCount,
+    revenueReport,
+    expenseReport,
+    jobActivityReport,
+    technicianLaborReport,
   ] = await Promise.all([
     listTechnicians(companyId, todayJobs),
     listActiveTechnicianTimeEntries(companyId),
@@ -87,9 +96,13 @@ export async function getDashboardData(
       RECENT_ACTIVITY_LIMIT,
     ),
     getUserNotifications(companyId, userId, {
-      limit: RECENT_NOTIFICATIONS_LIMIT,
+      limit: NOTIFICATIONS_FETCH_LIMIT,
     }),
     getUnreadNotificationCount(companyId, userId),
+    getCompanyRevenueReport(companyId, reportOptions),
+    getCompanyExpenseReport(companyId, reportOptions),
+    getCompanyJobActivityReport(companyId, reportOptions),
+    getCompanyTechnicianLaborReport(companyId, reportOptions),
   ]);
 
   const operationsSummary = getTodayOperationsSummary(todayJobs);
@@ -114,9 +127,6 @@ export async function getDashboardData(
   const submittedExpenses = expenses.filter(
     (expense) => expense.status === "submitted",
   );
-  const rejectedExpenses = expenses.filter(
-    (expense) => expense.status === "rejected",
-  );
 
   const recentReceipts = [...expenses]
     .filter((expense) => expense.receiptStatus === "attached")
@@ -127,6 +137,13 @@ export async function getDashboardData(
     .slice(0, RECENT_RECEIPTS_LIMIT);
 
   return {
+    analytics: {
+      todayCollectedRevenue: paymentsTodaySummary.total,
+      todayPaymentCount: paymentsTodaySummary.count,
+      openJobs: jobActivityReport.summary.openJobs,
+      pendingExpenseCount: expenseReport.summary.submitted.count,
+      activeLaborEntries: technicianLaborReport.summary.activeLaborEntries,
+    },
     operations: {
       ...operationsSummary,
       todayJobs: todayJobs.slice(0, TODAY_JOBS_LIMIT),
@@ -134,7 +151,7 @@ export async function getDashboardData(
     technicians: buildTechnicianStatuses(technicians, activeTimeEntries),
     money: {
       unpaidCount: unpaidInvoices.length,
-      unpaidTotal: invoiceSummary.unpaidTotal,
+      unpaidTotal: revenueReport.summary.outstandingRevenue,
       overdueCount: overdueInvoices.length,
       overdueTotal: invoiceSummary.overdueTotal,
       paymentsTodayCount: paymentsTodaySummary.count,
@@ -151,18 +168,15 @@ export async function getDashboardData(
       approvedEstimates,
     },
     expenses: {
-      submittedCount: submittedExpenses.length,
-      submittedTotal: submittedExpenses.reduce(
-        (sum, expense) => sum + (expense.amount ?? 0),
-        0,
-      ),
-      rejectedCount: rejectedExpenses.length,
+      submittedCount: expenseReport.summary.submitted.count,
+      submittedTotal: expenseReport.summary.submitted.totalAmount,
+      rejectedCount: expenseReport.summary.rejected.count,
       recentReceipts,
       pendingExpenses: submittedExpenses.slice(0, PENDING_EXPENSES_LIMIT),
     },
     notifications: {
       unreadCount,
-      recent: notifications,
+      recent: notifications.slice(0, RECENT_NOTIFICATIONS_LIMIT),
     },
     recentActivity,
   };

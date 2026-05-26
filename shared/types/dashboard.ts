@@ -56,7 +56,17 @@ export type DashboardNotificationsSummary = {
   recent: Notification[];
 };
 
+/** Lightweight operational KPIs sourced from shared report services. */
+export type DashboardAnalyticsSnapshot = {
+  todayCollectedRevenue: number;
+  todayPaymentCount: number;
+  openJobs: number;
+  pendingExpenseCount: number;
+  activeLaborEntries: number;
+};
+
 export type DashboardData = {
+  analytics: DashboardAnalyticsSnapshot;
   operations: DashboardOperationsSummary;
   technicians: DashboardTechnicianStatus[];
   money: DashboardMoneySnapshot;
