@@ -301,7 +301,10 @@ function resolveCompletedWorkReviewRisk(
     supportingMetric: `${reviewCount} review ${pluralize(reviewCount, "blocker")} · invoicing health ${invoicingAreaScore}/100`,
     recommendedFollowUp:
       "Open each blocked job, resolve review reasons, and move work toward billing or completion.",
-    href: "/reports?queue=attention",
+    href:
+      criticalReviewJobs > 0
+        ? "/reports?queue=critical"
+        : "/reports?queue=attention",
     priorityScore: 800 + reviewCount * 8 + criticalReviewJobs * 6,
     areaId: "invoicing_backlog",
   };

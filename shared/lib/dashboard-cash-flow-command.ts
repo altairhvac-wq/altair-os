@@ -170,6 +170,18 @@ function resolveRecommendedAction(input: CashFlowCommandInput): string {
   return "Create invoices for completed jobs so finished work converts to billable revenue.";
 }
 
+function resolveCompletedWorkReviewQueueHref(
+  input: CashFlowCommandInput,
+): string {
+  const hasCriticalReviewJobs = input.completedWorkReview.jobs.some(
+    (job) => job.severity === "critical",
+  );
+
+  return hasCriticalReviewJobs
+    ? "/reports?queue=critical"
+    : "/reports?queue=attention";
+}
+
 function resolvePrimaryHref(input: CashFlowCommandInput): string {
   const overdueInvoices = input.money.overdueCount;
   const awaitingInvoicing = input.completedWorkAwaitingInvoicing.count;
@@ -180,7 +192,7 @@ function resolvePrimaryHref(input: CashFlowCommandInput): string {
   }
 
   if (reviewBlockers > 0) {
-    return "/reports?queue=attention";
+    return resolveCompletedWorkReviewQueueHref(input);
   }
 
   if (awaitingInvoicing > 0) {
@@ -209,7 +221,7 @@ function resolveDrillDownLinks(
   if (input.completedWorkReview.count > 0) {
     links.push({
       label: "Review blockers",
-      href: "/reports?queue=attention",
+      href: resolveCompletedWorkReviewQueueHref(input),
     });
   }
 

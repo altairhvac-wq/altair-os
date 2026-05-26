@@ -221,7 +221,10 @@ function resolveCompletedWorkReviewAction(
       "Open each blocked job, clear review reasons, and move work toward billing.",
     count: reviewCount,
     metricLabel: "review blockers",
-    href: "/reports?queue=attention",
+    href:
+      criticalReviewJobs > 0
+        ? "/reports?queue=critical"
+        : "/reports?queue=attention",
   };
 }
 
