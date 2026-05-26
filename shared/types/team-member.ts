@@ -109,15 +109,19 @@ export function mapMembershipToTeamMember(
     invite_email?: string | null;
   },
 ): TeamMember | null {
-  if (membership.profile) {
+  const inviteEmail = membership.invite_email?.trim();
+
+  if (membership.user_id) {
+    const profileEmail = membership.profile?.email?.trim();
+    const email = profileEmail || inviteEmail || "";
     const name =
-      membership.profile.full_name?.trim() || membership.profile.email;
+      membership.profile?.full_name?.trim() || email || "Team member";
 
     return {
       id: membership.id,
       userId: membership.user_id,
       name,
-      email: membership.profile.email,
+      email,
       role: membership.role,
       status: membership.status,
       joinedAt: membership.joined_at,
@@ -125,7 +129,6 @@ export function mapMembershipToTeamMember(
     };
   }
 
-  const inviteEmail = membership.invite_email?.trim();
   if (membership.status === "invited" && inviteEmail) {
     return {
       id: membership.id,
