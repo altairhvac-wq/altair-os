@@ -3,6 +3,7 @@ import type {
   CompletedWorkReviewEntry,
   StalledJobEntry,
 } from "@/shared/types/reports";
+import type { QueueResolutionTrendSummary } from "@/shared/types/queue-resolution-trends";
 
 export type DailyOperationsSummarySeverity = "info" | "warning" | "critical";
 
@@ -59,6 +60,7 @@ export type DailyOperationsCompletedWorkReviewSnapshot = {
   count: number;
   jobs: CompletedWorkReviewEntry[];
   resolvedThisWeek: number;
+  resolutionTrend: QueueResolutionTrendSummary;
 };
 
 export type DailyOperationsProfitabilityWarningsSnapshot = {

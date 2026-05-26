@@ -10,6 +10,10 @@ import {
   isCompletedJobReviewResolutionCandidate,
   type JobReviewBlockerResolutionEventType,
 } from "@/shared/types/job-review-resolution";
+import {
+  buildQueueResolutionTrendSummary,
+  type QueueResolutionTrendSummary,
+} from "@/shared/types/queue-resolution-trends";
 
 function startOfLocalWeek(reference = new Date()): Date {
   const start = new Date(reference);
@@ -20,6 +24,19 @@ function startOfLocalWeek(reference = new Date()): Date {
   return start;
 }
 
+function startOfPreviousLocalWeek(reference = new Date()): Date {
+  const start = startOfLocalWeek(reference);
+  start.setDate(start.getDate() - 7);
+  return start;
+}
+
+function startOfLocalDaysAgo(days: number, reference = new Date()): Date {
+  const start = new Date(reference);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - days);
+  return start;
+}
+
 export async function getJobReviewBlockerResolutionsThisWeekCount(
   companyId: string,
 ): Promise<number> {
@@ -27,6 +44,41 @@ export async function getJobReviewBlockerResolutionsThisWeekCount(
     companyId,
     startOfLocalWeek().toISOString(),
   );
+}
+
+/**
+ * Read-only resolution velocity trend from existing blocker-resolution events.
+ * Uses three company-scoped count queries — no mutation or cron side effects.
+ */
+export async function getJobReviewBlockerResolutionTrendSummary(
+  companyId: string,
+  reference = new Date(),
+): Promise<QueueResolutionTrendSummary> {
+  const thisWeekStart = startOfLocalWeek(reference);
+  const lastWeekStart = startOfPreviousLocalWeek(reference);
+  const sevenDaysAgo = startOfLocalDaysAgo(7, reference);
+
+  const [countSinceThisWeek, countSinceLastWeek, countSinceSevenDaysAgo] =
+    await Promise.all([
+      countJobReviewBlockerResolutionsSince(
+        companyId,
+        thisWeekStart.toISOString(),
+      ),
+      countJobReviewBlockerResolutionsSince(
+        companyId,
+        lastWeekStart.toISOString(),
+      ),
+      countJobReviewBlockerResolutionsSince(
+        companyId,
+        sevenDaysAgo.toISOString(),
+      ),
+    ]);
+
+  return buildQueueResolutionTrendSummary({
+    resolvedThisWeek: countSinceThisWeek,
+    resolvedLastWeek: countSinceLastWeek - countSinceThisWeek,
+    resolvedLastSevenDays: countSinceSevenDaysAgo,
+  });
 }
 
 async function recordJobReviewBlockerResolvedActivity(input: {

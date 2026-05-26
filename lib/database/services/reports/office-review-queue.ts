@@ -2,7 +2,7 @@ import { listJobs } from "@/lib/database/queries/jobs";
 import { getCompanyCompletedWorkReport } from "@/lib/database/services/reports/completed-work-report";
 import { getCompanyCompletedWorkReviewReport } from "@/lib/database/services/reports/completed-work-review-report";
 import { getCompanyStalledJobsReport } from "@/lib/database/services/reports/stalled-jobs-report";
-import { getJobReviewBlockerResolutionsThisWeekCount } from "@/lib/database/services/job-review-resolution";
+import { getJobReviewBlockerResolutionTrendSummary } from "@/lib/database/services/job-review-resolution";
 import {
   buildOfficeReviewQueueReport,
   type OfficeReviewQueueReport,
@@ -17,13 +17,13 @@ export async function getCompanyOfficeReviewQueueReport(
     completedWorkReview,
     awaitingInvoicing,
     stalledJobs,
-    resolvedThisWeek,
+    resolutionTrend,
     jobs,
   ] = await Promise.all([
     getCompanyCompletedWorkReviewReport(companyId),
     getCompanyCompletedWorkReport(companyId),
     getCompanyStalledJobsReport(companyId),
-    getJobReviewBlockerResolutionsThisWeekCount(companyId),
+    getJobReviewBlockerResolutionTrendSummary(companyId),
     listJobs(companyId),
   ]);
 
@@ -35,7 +35,7 @@ export async function getCompanyOfficeReviewQueueReport(
     completedWorkReview,
     awaitingInvoicing,
     stalledJobs,
-    resolvedThisWeek,
+    resolutionTrend,
     customerIdByJobId,
     sortMode: options?.sortMode,
   });

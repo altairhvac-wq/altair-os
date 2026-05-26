@@ -1,4 +1,5 @@
 import type { Job } from "@/shared/types/job";
+import type { QueueResolutionTrendSummary } from "@/shared/types/queue-resolution-trends";
 import type {
   CompletedWorkAwaitingInvoicingReport,
   CompletedWorkReviewEntry,
@@ -115,6 +116,7 @@ export type OfficeReviewQueueSummary = {
   agingCount: number;
   agingBucketCounts: OfficeReviewQueueAgingBucketCounts;
   resolvedThisWeek: number;
+  resolutionTrend: QueueResolutionTrendSummary;
   groups: Record<OfficeReviewQueueGroup, OfficeReviewQueueItem[]>;
   items: OfficeReviewQueueItem[];
 };
@@ -846,7 +848,7 @@ export function buildOfficeReviewQueueReport(input: {
   completedWorkReview: CompletedWorkReviewReport;
   awaitingInvoicing: CompletedWorkAwaitingInvoicingReport;
   stalledJobs: StalledJobsReport;
-  resolvedThisWeek: number;
+  resolutionTrend: QueueResolutionTrendSummary;
   customerIdByJobId: Map<string, string>;
   sortMode?: OfficeReviewQueueSortMode;
 }): OfficeReviewQueueReport {
@@ -906,6 +908,7 @@ export function buildOfficeReviewQueueReport(input: {
     "No workflow automation, bulk actions, or assignment-aware routing yet.",
     "Stalled jobs are lower-priority context; they do not block invoicing or review closure.",
     "Read-only visibility — company-scoped from existing job, invoice, expense, and time records.",
+    ...input.resolutionTrend.limitations,
   ];
 
   // TODO(office-review-queue-v2): Per-user queue assignments and ownership.
@@ -922,7 +925,8 @@ export function buildOfficeReviewQueueReport(input: {
       needsAttentionCount: groups.needs_attention.length,
       agingCount: groups.aging.length,
       agingBucketCounts: countOfficeReviewQueueAgingBuckets(items),
-      resolvedThisWeek: input.resolvedThisWeek,
+      resolvedThisWeek: input.resolutionTrend.resolvedThisWeek,
+      resolutionTrend: input.resolutionTrend,
       groups,
       items,
     },

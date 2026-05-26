@@ -15,6 +15,9 @@ import {
   FileText,
   Inbox,
   Sparkles,
+  TrendingDown,
+  TrendingUp,
+  Minus,
 } from "lucide-react";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { formatJobStatus } from "@/shared/types/job";
@@ -40,6 +43,7 @@ import {
   resolvePrimaryQueueAction,
   resolveQueueActions,
 } from "@/shared/types/office-review-queue";
+import type { QueueResolutionTrendSummary } from "@/shared/types/queue-resolution-trends";
 import { formatCompletedWorkReviewReasons } from "@/shared/types/reports";
 import { formatOperationalActivityTimestamp } from "@/shared/types/operational-activity";
 
@@ -200,6 +204,141 @@ function MetricCard({
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconClassName}`}
         >
           <Icon className="h-5 w-5" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatTrendDelta(delta: number): string {
+  if (delta > 0) {
+    return `+${delta}`;
+  }
+
+  return String(delta);
+}
+
+function getTrendStyles(direction: QueueResolutionTrendSummary["direction"]): {
+  chipClassName: string;
+  icon: typeof TrendingUp;
+  iconClassName: string;
+} {
+  switch (direction) {
+    case "improving":
+      return {
+        chipClassName: "border-emerald-200 bg-emerald-50 text-emerald-900",
+        icon: TrendingUp,
+        iconClassName: "text-emerald-700",
+      };
+    case "declining":
+      return {
+        chipClassName: "border-rose-200 bg-rose-50 text-rose-900",
+        icon: TrendingDown,
+        iconClassName: "text-rose-700",
+      };
+    case "stable":
+      return {
+        chipClassName: "border-slate-200 bg-slate-50 text-slate-800",
+        icon: Minus,
+        iconClassName: "text-slate-600",
+      };
+  }
+}
+
+function QueueResolutionTrendBanner({
+  trend,
+  compact = false,
+}: {
+  trend: QueueResolutionTrendSummary;
+  compact?: boolean;
+}) {
+  const styles = getTrendStyles(trend.direction);
+  const TrendIcon = styles.icon;
+
+  if (compact) {
+    return (
+      <div
+        className={`mt-2 flex flex-col gap-2 rounded-lg border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between ${styles.chipClassName}`}
+        role="status"
+        aria-label={trend.headline}
+      >
+        <div className="flex min-w-0 items-start gap-2">
+          <TrendIcon
+            className={`mt-0.5 h-4 w-4 shrink-0 ${styles.iconClassName}`}
+            aria-hidden="true"
+          />
+          <div className="min-w-0">
+            <p className="text-xs font-bold">{trend.headline}</p>
+            <p className="mt-0.5 text-[11px] opacity-90">{trend.detail}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          <span className="inline-flex items-center rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold tabular-nums ring-1 ring-black/5">
+            WoW {formatTrendDelta(trend.weekOverWeekDelta)}
+          </span>
+          <span className="inline-flex items-center rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold tabular-nums ring-1 ring-black/5">
+            7d avg {trend.rollingSevenDayAverage.toFixed(1)}/d
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`mt-3 rounded-xl border px-4 py-3 sm:mt-4 ${styles.chipClassName}`}
+      role="status"
+      aria-label={trend.headline}
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/80 ring-1 ring-black/5">
+            <TrendIcon className={`h-4 w-4 ${styles.iconClassName}`} aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-bold">{trend.headline}</p>
+              <span className="inline-flex items-center rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ring-black/5">
+                {trend.direction}
+              </span>
+            </div>
+            <p className="mt-1 text-xs opacity-90">{trend.detail}</p>
+          </div>
+        </div>
+        <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="rounded-lg bg-white/80 px-2.5 py-2 ring-1 ring-black/5">
+            <p className="text-[10px] font-bold uppercase tracking-wide opacity-70">
+              This week
+            </p>
+            <p className="mt-0.5 text-lg font-black tabular-nums">
+              {trend.resolvedThisWeek}
+            </p>
+          </div>
+          <div className="rounded-lg bg-white/80 px-2.5 py-2 ring-1 ring-black/5">
+            <p className="text-[10px] font-bold uppercase tracking-wide opacity-70">
+              Last week
+            </p>
+            <p className="mt-0.5 text-lg font-black tabular-nums">
+              {trend.resolvedLastWeek}
+            </p>
+          </div>
+          <div className="rounded-lg bg-white/80 px-2.5 py-2 ring-1 ring-black/5">
+            <p className="text-[10px] font-bold uppercase tracking-wide opacity-70">
+              WoW delta
+            </p>
+            <p className="mt-0.5 text-lg font-black tabular-nums">
+              {formatTrendDelta(trend.weekOverWeekDelta)}
+            </p>
+          </div>
+          <div className="rounded-lg bg-white/80 px-2.5 py-2 ring-1 ring-black/5">
+            <p className="text-[10px] font-bold uppercase tracking-wide opacity-70">
+              7d avg
+            </p>
+            <p className="mt-0.5 text-lg font-black tabular-nums">
+              {trend.rollingSevenDayAverage.toFixed(1)}
+              <span className="text-xs font-semibold">/d</span>
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -843,6 +982,11 @@ export function OfficeReviewQueueSection({
           />
         ) : null}
       </div>
+
+      <QueueResolutionTrendBanner
+        trend={summary.resolutionTrend}
+        compact={isCompact}
+      />
 
       <div
         className={`mt-2 grid gap-2 sm:mt-3 sm:gap-3 ${
