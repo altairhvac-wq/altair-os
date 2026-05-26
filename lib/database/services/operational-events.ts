@@ -1,13 +1,6 @@
 import { recordExpenseActivity } from "@/lib/database/queries/expense-activities";
 import { recordJobActivity } from "@/lib/database/queries/job-activities";
-import {
-  notifyEstimateApproved,
-  notifyExpenseRejected,
-  notifyExpenseSubmitted,
-  notifyInvoicePaid,
-  notifyJobAssigned,
-  notifyWorkCompleted,
-} from "@/lib/database/services/operational-notifications";
+import { maybeRunOperationalAutomation } from "@/lib/database/services/operational-automation";
 import type { Expense, ExpenseStatus } from "@/shared/types/expense";
 import type { JobMaterial } from "@/shared/types/job-material";
 import type { InvoiceStatus } from "@/shared/types/invoice";
@@ -15,12 +8,9 @@ import type { InvoiceStatus } from "@/shared/types/invoice";
 /**
  * Lightweight operational event layer.
  *
- * Coordinates activity history, notifications, and future automation hooks for
- * known business events. Side-effect failures (notifications) remain fire-and-forget.
- *
- * TODO(automation): Evaluate user-configurable automation rules before dispatching side effects.
- * TODO(automation): Schedule reminder/cron follow-ups from matched rules.
- * TODO(ai): Forward enriched event context to an insights pipeline after rule evaluation.
+ * Coordinates activity history and delegates side effects to the internal
+ * automation hook. Side-effect failures remain fire-and-forget and never block
+ * primary workflows.
  */
 
 export type OperationalEventType =
@@ -75,9 +65,8 @@ export async function emitExpenseSubmittedEvent(input: {
     return;
   }
 
-  // TODO(automation): evaluate rules for expense_submitted
-
-  notifyExpenseSubmitted({
+  maybeRunOperationalAutomation({
+    type: "expense_submitted",
     companyId: input.companyId,
     actorId: input.actorId,
     expenseId: input.expenseId,
@@ -118,9 +107,8 @@ export async function emitExpenseRejectedEvent(input: {
     return;
   }
 
-  // TODO(automation): evaluate rules for expense_rejected
-
-  notifyExpenseRejected({
+  maybeRunOperationalAutomation({
+    type: "expense_rejected",
     companyId: input.companyId,
     technicianId: input.expense.technicianId,
     actorId: input.actorId,
@@ -167,9 +155,8 @@ export async function emitJobAssignedEvent(input: {
     return;
   }
 
-  // TODO(automation): evaluate rules for job_assigned
-
-  notifyJobAssigned({
+  maybeRunOperationalAutomation({
+    type: "job_assigned",
     companyId: input.companyId,
     technicianId: input.technicianId,
     actorId: input.actorId,
@@ -188,9 +175,9 @@ export async function emitWorkCompletedEvent(input: {
   jobNumber?: string;
 }): Promise<void> {
   // Activity is recorded upstream via recordJobStatusChangedActivity today.
-  // TODO(automation): evaluate rules for work_completed
 
-  notifyWorkCompleted({
+  maybeRunOperationalAutomation({
+    type: "work_completed",
     companyId: input.companyId,
     actorId: input.actorId,
     jobId: input.jobId,
@@ -212,9 +199,9 @@ export async function emitInvoicePaidEvent(input: {
   jobNumber?: string;
 }): Promise<void> {
   // Activity is recorded upstream via recordInvoicePaidActivity today.
-  // TODO(automation): evaluate rules for invoice_paid
 
-  notifyInvoicePaid({
+  maybeRunOperationalAutomation({
+    type: "invoice_paid",
     companyId: input.companyId,
     actorId: input.actorId,
     invoiceId: input.invoiceId,
@@ -234,9 +221,9 @@ export async function emitEstimateApprovedEvent(input: {
   jobId?: string;
 }): Promise<void> {
   // Activity is recorded upstream via recordEstimateStatusChangedActivity today.
-  // TODO(automation): evaluate rules for estimate_approved
 
-  notifyEstimateApproved({
+  maybeRunOperationalAutomation({
+    type: "estimate_approved",
     companyId: input.companyId,
     actorId: input.actorId,
     estimateId: input.estimateId,
@@ -282,5 +269,12 @@ export async function emitJobMaterialAddedEvent(input: {
     return;
   }
 
-  // TODO(automation): evaluate rules for job_material_added (no notification today)
+  maybeRunOperationalAutomation({
+    type: "job_material_added",
+    companyId: input.companyId,
+    jobId: input.jobId,
+    actorId: input.actorId,
+    customerId: input.customerId,
+    jobNumber: input.jobNumber,
+  });
 }
