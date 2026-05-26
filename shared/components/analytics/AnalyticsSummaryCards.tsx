@@ -88,7 +88,7 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className={`rounded-2xl border bg-white p-4 shadow-sm ${card.accent}`}
+          className={`admin-card admin-card-interactive p-4 sm:p-5 ${card.accent}`}
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">

@@ -20,10 +20,10 @@ export function DispatchDashboardHeader({
         </p>
       </div>
       <div className="flex items-center gap-2 text-xs text-slate-500">
-        <span className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-700">
+        <span className="rounded-full bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200/80">
           {jobCount} scheduled today
         </span>
-        <span className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-700">
+        <span className="rounded-full bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200/80">
           {technicianCount} technicians
         </span>
       </div>

@@ -108,7 +108,7 @@ export function OperationalRiskDrilldownSection({
   const summary = getOperationalRiskDrilldownSummary(data);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section className="admin-card overflow-hidden">
       <div className="flex flex-col gap-2 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-violet-600/90">

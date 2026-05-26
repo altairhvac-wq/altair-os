@@ -50,10 +50,10 @@ export function Header({
   );
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 sm:px-6">
+    <header className="flex h-[4.25rem] shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-md sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <div className="min-w-0">
-          <h1 className="truncate text-base font-bold text-slate-900 sm:text-lg">
+          <h1 className="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg">
             {title}
           </h1>
           {description ? (
@@ -86,7 +86,7 @@ export function Header({
             }
           />
           <div
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-600 text-sm font-bold text-white"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white"
             title={displayName}
           >
             {initials}

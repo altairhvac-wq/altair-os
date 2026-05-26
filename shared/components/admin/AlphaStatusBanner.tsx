@@ -11,7 +11,7 @@ export function AlphaStatusBanner() {
   return (
     <div
       role="status"
-      className="shrink-0 border-b border-sky-100 bg-sky-50/80 px-4 py-2 text-sm text-sky-900 sm:px-6"
+      className="shrink-0 border-b border-sky-100/90 bg-gradient-to-r from-sky-50/90 to-cyan-50/50 px-4 py-2.5 text-sm text-sky-900 sm:px-6"
     >
       <div className="flex items-start gap-2">
         <FlaskConical

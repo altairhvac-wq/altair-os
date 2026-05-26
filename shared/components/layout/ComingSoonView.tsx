@@ -10,8 +10,8 @@ export function ComingSoonView({
   description = "This area is being prepared for the next release. Check back after the internal alpha rollout.",
 }: ComingSoonViewProps) {
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col items-center rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-50 ring-1 ring-sky-100">
+    <div className="admin-card mx-auto flex w-full max-w-xl flex-col items-center px-6 py-12 text-center sm:px-8 sm:py-14">
+      <div className="admin-empty-icon">
         <Construction className="h-6 w-6 text-sky-600" aria-hidden="true" />
       </div>
       <h1 className="mt-4 text-lg font-bold text-slate-900">{title}</h1>

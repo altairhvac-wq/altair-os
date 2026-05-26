@@ -142,7 +142,7 @@ function ReportTimeSeriesChartCard({ chart }: { chart: ReportOperationalChart })
   const recentPoints = chart.series[0]?.points.slice(-3) ?? [];
 
   return (
-    <section className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section className="flex flex-col overflow-hidden admin-card">
       <div className="border-b border-slate-100 px-4 py-4 sm:px-5">
         <div className="flex items-center gap-2">
           <Icon className="h-4 w-4 text-slate-700" aria-hidden="true" />

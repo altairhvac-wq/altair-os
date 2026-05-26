@@ -1,7 +1,7 @@
 function Skeleton({ className }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded-lg bg-slate-200/80 ${className ?? ""}`}
+      className={`admin-skeleton ${className ?? ""}`}
     />
   );
 }
@@ -9,7 +9,7 @@ function Skeleton({ className }: { className?: string }) {
 export function JobsLoadingState() {
   return (
     <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:flex-row lg:overflow-hidden">
-      <div className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1">
+      <div className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1">
         <div className="border-b border-slate-100 p-4">
           <div className="flex items-center justify-between gap-4">
             <Skeleton className="h-10 w-64" />

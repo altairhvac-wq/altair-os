@@ -1,7 +1,7 @@
 function Skeleton({ className }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded-lg bg-slate-200/80 ${className ?? ""}`}
+      className={`admin-skeleton ${className ?? ""}`}
     />
   );
 }
@@ -27,7 +27,7 @@ export function SettingsLoadingState() {
         ))}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section className="admin-card">
         <div className="border-b border-slate-100 px-4 py-4 sm:px-6">
           <Skeleton className="h-6 w-40" />
           <Skeleton className="mt-2 h-4 w-72 max-w-full" />

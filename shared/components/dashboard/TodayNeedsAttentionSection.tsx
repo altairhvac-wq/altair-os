@@ -153,7 +153,7 @@ export function TodayNeedsAttentionSection({
   const healthyCards = cards.filter((card) => card.severity === "healthy");
 
   return (
-    <section className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section className="admin-card flex h-full flex-col overflow-hidden">
       <div className="flex flex-col gap-2 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-amber-600/90">
@@ -170,7 +170,7 @@ export function TodayNeedsAttentionSection({
         </div>
         <Link
           href="/reports"
-          className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700"
+          className="admin-section-link shrink-0"
         >
           Open reports
           <ArrowRight className="h-3.5 w-3.5" />

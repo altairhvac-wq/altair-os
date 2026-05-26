@@ -24,7 +24,7 @@ const iconMap = {
 
 export function RevenueByModuleCards({ modules }: RevenueByModuleCardsProps) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section className="overflow-hidden admin-card">
       <div className="border-b border-slate-100 px-5 py-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-violet-600" />

@@ -125,7 +125,7 @@ export function SystemCheckPageView({ report }: SystemCheckPageViewProps) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section className="admin-card">
         <div className="border-b border-slate-100 px-4 py-4 sm:px-6">
           <h2 className="text-lg font-bold text-slate-900">Checks</h2>
           <p className="text-sm text-slate-600">

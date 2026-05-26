@@ -30,7 +30,7 @@ export function OutstandingInvoicesPanel({
   totalOutstanding,
 }: OutstandingInvoicesPanelProps) {
   return (
-    <section className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section className="flex flex-col overflow-hidden admin-card">
       <div className="border-b border-slate-100 px-5 py-4">
         <div className="flex items-center justify-between gap-3">
           <div>

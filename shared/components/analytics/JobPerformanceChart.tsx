@@ -66,7 +66,7 @@ export function JobPerformanceChart({ performance }: JobPerformanceChartProps) {
   }));
 
   return (
-    <section className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section className="flex flex-col overflow-hidden admin-card">
       <div className="border-b border-slate-100 px-5 py-4">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-blue-600" />

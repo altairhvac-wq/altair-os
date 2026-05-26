@@ -103,7 +103,7 @@ export function JobDetailPageView({
         Back to jobs
       </Link>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section className="overflow-hidden admin-card">
         <div className="border-b border-slate-100 bg-slate-50/70 px-4 py-4 sm:px-6 sm:py-5">
           <JobDetailHeaderWorkflow
             job={job}

@@ -223,7 +223,7 @@ export function CustomerForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex-1 admin-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting ? "Saving..." : "Save customer"}
         </button>

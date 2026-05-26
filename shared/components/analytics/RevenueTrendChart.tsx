@@ -21,7 +21,7 @@ export function RevenueTrendChart({ data }: RevenueTrendChartProps) {
     .join(" ");
 
   return (
-    <section className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section className="flex flex-col overflow-hidden admin-card">
       <div className="border-b border-slate-100 px-5 py-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-emerald-600" />

@@ -105,7 +105,7 @@ export function CustomersPageView({
 
   return (
     <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:flex-row lg:overflow-hidden">
-      <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0 lg:flex-1`}>
+      <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1`}>
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
           <div>
             <h2 className="text-base font-bold text-slate-900">
@@ -119,7 +119,7 @@ export function CustomersPageView({
             <button
               type="button"
               onClick={handleNewCustomer}
-              className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700"
+              className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
             >
               <UserPlus className="h-4 w-4" />
               New Customer

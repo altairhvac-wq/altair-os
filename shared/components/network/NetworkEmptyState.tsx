@@ -57,7 +57,7 @@ export function NetworkEmptyState({
         <button
           type="button"
           onClick={onAddPartner}
-          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700"
+          className="mt-6 inline-flex items-center gap-2 admin-btn-primary"
         >
           <UserPlus className="h-4 w-4" />
           Add your first partner

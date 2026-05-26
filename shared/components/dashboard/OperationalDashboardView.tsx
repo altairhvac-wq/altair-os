@@ -88,28 +88,27 @@ function DashboardSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+    <section className="admin-card overflow-hidden">
+      <div className="flex items-start justify-between gap-3 border-b border-slate-100/90 bg-slate-50/40 px-5 py-4">
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200">
-            <Icon className="h-4 w-4 text-slate-500" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200/80">
+            <Icon className="h-4 w-4 text-slate-600" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-900">{title}</h2>
+            <h2 className="text-sm font-bold tracking-tight text-slate-900">
+              {title}
+            </h2>
             <p className="text-xs text-slate-500">{description}</p>
           </div>
         </div>
         {href && linkLabel ? (
-          <Link
-            href={href}
-            className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700"
-          >
+          <Link href={href} className="admin-section-link shrink-0">
             {linkLabel}
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         ) : null}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-5 sm:p-6">{children}</div>
     </section>
   );
 }
@@ -159,7 +158,7 @@ function MetricCard({
     return (
       <Link
         href={href}
-        className={`block rounded-xl border bg-white p-4 transition-colors hover:bg-slate-50/80 ${accent}`}
+        className={`admin-card-interactive block rounded-xl border bg-white p-4 shadow-sm ${accent}`}
       >
         {content}
       </Link>
@@ -167,14 +166,16 @@ function MetricCard({
   }
 
   return (
-    <div className={`rounded-xl border bg-white p-4 ${accent}`}>{content}</div>
+    <div className={`rounded-xl border bg-white p-4 shadow-sm ${accent}`}>
+      {content}
+    </div>
   );
 }
 
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-center">
-      <p className="text-sm font-medium text-slate-700">{title}</p>
+    <div className="admin-empty-state">
+      <p className="text-sm font-semibold text-slate-700">{title}</p>
       <p className="mt-1 text-xs text-slate-500">{description}</p>
     </div>
   );
@@ -324,20 +325,22 @@ function AnalyticsSnapshotSection({
   ];
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-5 text-white shadow-sm">
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <section className="admin-command-surface p-5 sm:p-6">
+      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-cyan-300/90">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-300/90">
             Command center
           </p>
-          <h2 className="text-lg font-black tracking-tight">Live operations</h2>
-          <p className="text-sm text-slate-300">
+          <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">
+            Live operations
+          </h2>
+          <p className="mt-1 text-sm text-slate-300">
             Today&apos;s collections and current workload
           </p>
         </div>
         <Link
           href="/reports"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-300 hover:text-cyan-200"
+          className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-cyan-200 ring-1 ring-white/10 transition-colors hover:bg-white/15 hover:text-white"
         >
           Full analytics
           <ArrowRight className="h-3.5 w-3.5" />
@@ -349,7 +352,7 @@ function AnalyticsSnapshotSection({
           <Link
             key={metric.label}
             href={metric.href}
-            className={`rounded-xl border bg-white/95 p-4 transition-colors hover:bg-white ${metric.accent}`}
+            className={`admin-card-interactive rounded-xl border bg-white/95 p-4 shadow-sm transition-colors hover:bg-white ${metric.accent}`}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -980,7 +983,20 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
     !hasCashFlowPressure(data) && !hasDispatchPressure(data);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-1">
+    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-2">
+      <header className="admin-hero">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">
+          Operations overview
+        </p>
+        <h1 className="mt-1.5 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+          Command center
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+          Real-time view of field operations, billing pressure, and team status —
+          built for fast decisions during the workday.
+        </p>
+      </header>
+
       {access.canViewOperationalReports ? (
         <AnalyticsSnapshotSection analytics={data.analytics} />
       ) : null}

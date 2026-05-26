@@ -45,7 +45,7 @@ export function EstimateDetailPageView({
         Back to estimates
       </Link>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section className="overflow-hidden admin-card">
         <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>

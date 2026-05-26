@@ -37,7 +37,7 @@ export function AdminShell({
   const current = getNavItemForPath(pathname, companyContext);
 
   return (
-    <div className="flex min-h-dvh bg-slate-100 md:h-dvh md:overflow-hidden">
+    <div className="admin-canvas flex min-h-dvh md:h-dvh md:overflow-hidden">
       <Sidebar className="hidden md:flex" companyContext={companyContext} />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -54,9 +54,9 @@ export function AdminShell({
 
         <nav
           aria-label="Mobile navigation"
-          className="shrink-0 overflow-x-auto border-b border-slate-200 bg-white md:hidden"
+          className="shrink-0 overflow-x-auto border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-sm md:hidden"
         >
-          <ul className="flex gap-1 px-3 py-2">
+          <ul className="flex gap-1.5 px-3 py-2.5">
             {mobileNavItems.map((item) => {
               const active = isActivePath(pathname, item.href);
 
@@ -64,10 +64,10 @@ export function AdminShell({
                 <li key={item.href} className="shrink-0">
                   <Link
                     href={item.href}
-                    className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`block rounded-xl px-3.5 py-2 text-sm font-medium transition-all duration-150 ${
                       active
-                        ? "bg-cyan-500/15 text-cyan-700"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        ? "bg-cyan-500/12 text-cyan-800 shadow-[inset_0_0_0_1px_rgba(6,182,212,0.2)] ring-1 ring-cyan-500/15"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                   >
                     {item.label}
@@ -78,7 +78,7 @@ export function AdminShell({
           </ul>
         </nav>
 
-        <main className="min-h-0 flex-1 p-4 sm:p-6 md:overflow-y-auto">
+        <main className="min-h-0 flex-1 p-4 sm:p-6 lg:p-8 md:overflow-y-auto">
           {children}
         </main>
       </div>

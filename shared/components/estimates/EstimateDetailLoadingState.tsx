@@ -1,7 +1,7 @@
 function Skeleton({ className }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded-lg bg-slate-200/80 ${className ?? ""}`}
+      className={`admin-skeleton ${className ?? ""}`}
     />
   );
 }
@@ -11,7 +11,7 @@ export function EstimateDetailLoadingState() {
     <div className="mx-auto max-w-5xl space-y-5">
       <Skeleton className="h-5 w-32" />
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden admin-card">
         <div className="space-y-4 border-b border-slate-100 bg-slate-50/70 px-5 py-5 sm:px-6">
           <div className="space-y-2">
             <Skeleton className="h-3 w-16" />

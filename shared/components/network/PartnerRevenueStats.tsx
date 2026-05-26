@@ -67,7 +67,7 @@ export function PartnerRevenueStats({ summary }: PartnerRevenueStatsProps) {
       </div>
 
       <div className="grid min-h-0 flex-1 gap-4 overflow-hidden lg:grid-cols-[1.2fr_0.8fr]">
-        <section className="flex min-h-[16rem] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0">
+        <section className="flex min-h-[16rem] flex-col overflow-hidden admin-card lg:min-h-0">
           <div className="shrink-0 border-b border-slate-100 px-5 py-4">
             <h3 className="text-base font-bold text-slate-900">
               Revenue by partner
@@ -117,7 +117,7 @@ export function PartnerRevenueStats({ summary }: PartnerRevenueStatsProps) {
           </div>
         </section>
 
-        <section className="flex min-h-[12rem] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:min-h-0">
+        <section className="flex min-h-[12rem] flex-col overflow-hidden admin-card lg:min-h-0">
           <div className="shrink-0 border-b border-slate-100 px-5 py-4">
             <div className="flex items-center gap-2">
               <Crown className="h-4 w-4 text-amber-500" />

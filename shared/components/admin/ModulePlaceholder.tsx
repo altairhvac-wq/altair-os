@@ -8,9 +8,11 @@ export function ModulePlaceholder({
   description,
 }: ModulePlaceholderProps) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8">
-      <h2 className="text-xl font-bold text-slate-900">{title}</h2>
-      <p className="mt-2 max-w-xl text-slate-600">{description}</p>
+    <div className="admin-card border-dashed p-8 sm:p-10">
+      <h2 className="text-xl font-bold tracking-tight text-slate-900">{title}</h2>
+      <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-600">
+        {description}
+      </p>
     </div>
   );
 }
