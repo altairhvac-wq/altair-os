@@ -87,7 +87,9 @@ export function MobileNav({ companyContext }: MobileNavProps) {
     <nav
       ref={navRef}
       aria-label="Mobile navigation"
-      className="relative w-full max-w-full shrink-0 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-sm md:hidden"
+      className={`relative w-full max-w-full shrink-0 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-sm md:hidden ${
+        moreOpen ? "z-50" : "z-30"
+      }`}
     >
       <ul className="flex w-full items-stretch gap-0.5 px-1 py-1.5">
         {primary.map((item) => (
@@ -129,13 +131,13 @@ export function MobileNav({ companyContext }: MobileNavProps) {
           <button
             type="button"
             aria-label="Close more navigation menu"
-            className="fixed inset-0 z-40 bg-slate-900/20"
+            className="fixed inset-0 z-[1] bg-slate-900/20"
             onClick={() => setMoreOpen(false)}
           />
           <div
             role="menu"
             aria-label="More navigation"
-            className="absolute inset-x-0 top-full z-50 border-b border-slate-200 bg-white shadow-lg"
+            className="absolute inset-x-0 top-full z-[2] border-b border-slate-200 bg-white shadow-lg"
           >
             <ul className="max-h-[min(60vh,24rem)] overflow-y-auto py-2">
               {secondary.map((item) => {
