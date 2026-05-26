@@ -97,16 +97,20 @@ function toCompletedWorkReviewEntry(
   snapshot: ReturnType<typeof computeJobProfitability>,
   invoices: Invoice[],
   reference: Date,
-): CompletedWorkReviewEntry {
+): CompletedWorkReviewEntry | null {
+  if (!job.id?.trim()) {
+    return null;
+  }
+
   const completedAt = resolveCompletedAt(job);
   const reviewReasons = resolveCompletedWorkReviewReasons(snapshot);
 
   return {
     jobId: job.id,
-    jobNumber: job.jobNumber,
-    customerName: job.customerName,
+    jobNumber: job.jobNumber?.trim() || "Unknown job",
+    customerName: job.customerName?.trim() || "Unknown customer",
     completedAt: job.completedAt ?? null,
-    assignedTechnician: job.assignedTechnician,
+    assignedTechnician: job.assignedTechnician?.trim() || undefined,
     daysSinceCompletion: daysSinceCompletion(completedAt, reference),
     reviewReasons,
     severity: resolveCompletedWorkReviewSeverity(reviewReasons),

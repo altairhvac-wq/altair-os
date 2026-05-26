@@ -89,12 +89,46 @@ const KIND_LABELS: Record<OfficeReviewQueueItemKind, string> = {
   stalled_job: "Stalled job",
 };
 
+/** Lower rank wins when the same job appears in multiple source reports. */
+const KIND_PRIORITY: Record<OfficeReviewQueueItemKind, number> = {
+  completed_work_review: 0,
+  awaiting_invoicing: 1,
+  stalled_job: 2,
+};
+
+const FALLBACK_JOB_NUMBER = "Unknown job";
+const FALLBACK_CUSTOMER_NAME = "Unknown customer";
+
+export function isValidOfficeReviewQueueJobId(jobId: string | undefined): jobId is string {
+  return typeof jobId === "string" && jobId.trim().length > 0;
+}
+
+export function sanitizeOfficeReviewQueueLabel(
+  value: string | undefined | null,
+  fallback: string,
+): string {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : fallback;
+}
+
+export function normalizeOfficeReviewQueueDays(days: number): number {
+  if (!Number.isFinite(days) || days < 0) {
+    return 0;
+  }
+
+  return Math.floor(days);
+}
+
 export function formatOfficeReviewQueueKind(
   kind: OfficeReviewQueueItemKind,
 ): string {
   return KIND_LABELS[kind];
 }
 
+/**
+ * Assigns exactly one group per item. Critical severity always wins over aging
+ * even when daysAging exceeds the threshold — groups are mutually exclusive.
+ */
 function resolveQueueGroup(input: {
   severity: OfficeReviewQueueSeverity;
   daysAging: number;
@@ -113,15 +147,25 @@ function resolveQueueGroup(input: {
 function toReviewQueueItem(
   entry: CompletedWorkReviewEntry,
   customerIdByJobId: Map<string, string>,
-): OfficeReviewQueueItem {
+): OfficeReviewQueueItem | null {
+  if (!isValidOfficeReviewQueueJobId(entry.jobId)) {
+    return null;
+  }
+
   const severity: OfficeReviewQueueSeverity = entry.severity;
-  const daysAging = entry.daysSinceCompletion;
+  const daysAging = normalizeOfficeReviewQueueDays(entry.daysSinceCompletion);
 
   return {
     jobId: entry.jobId,
-    jobNumber: entry.jobNumber,
+    jobNumber: sanitizeOfficeReviewQueueLabel(
+      entry.jobNumber,
+      FALLBACK_JOB_NUMBER,
+    ),
     customerId: customerIdByJobId.get(entry.jobId),
-    customerName: entry.customerName,
+    customerName: sanitizeOfficeReviewQueueLabel(
+      entry.customerName,
+      FALLBACK_CUSTOMER_NAME,
+    ),
     kind: "completed_work_review",
     severity,
     group: resolveQueueGroup({ severity, daysAging }),
@@ -129,7 +173,7 @@ function toReviewQueueItem(
     blockerCount: entry.reviewReasons.length,
     reviewReasons: entry.reviewReasons,
     lastActivityAt: entry.completedAt,
-    assignedTechnician: entry.assignedTechnician,
+    assignedTechnician: entry.assignedTechnician?.trim() || undefined,
     detail: formatCompletedWorkInvoiceStatus(entry.invoiceStatus),
   };
 }
@@ -137,15 +181,25 @@ function toReviewQueueItem(
 function toAwaitingInvoicingQueueItem(
   entry: CompletedWorkAwaitingInvoicingReport["summary"]["jobs"][number],
   customerIdByJobId: Map<string, string>,
-): OfficeReviewQueueItem {
+): OfficeReviewQueueItem | null {
+  if (!isValidOfficeReviewQueueJobId(entry.jobId)) {
+    return null;
+  }
+
   const severity: OfficeReviewQueueSeverity = "warning";
-  const daysAging = entry.daysSinceCompletion;
+  const daysAging = normalizeOfficeReviewQueueDays(entry.daysSinceCompletion);
 
   return {
     jobId: entry.jobId,
-    jobNumber: entry.jobNumber,
+    jobNumber: sanitizeOfficeReviewQueueLabel(
+      entry.jobNumber,
+      FALLBACK_JOB_NUMBER,
+    ),
     customerId: customerIdByJobId.get(entry.jobId),
-    customerName: entry.customerName,
+    customerName: sanitizeOfficeReviewQueueLabel(
+      entry.customerName,
+      FALLBACK_CUSTOMER_NAME,
+    ),
     kind: "awaiting_invoicing",
     severity,
     group: resolveQueueGroup({ severity, daysAging }),
@@ -153,7 +207,7 @@ function toAwaitingInvoicingQueueItem(
     blockerCount: 1,
     reviewReasons: ["no_active_invoice"],
     lastActivityAt: entry.completedAt,
-    assignedTechnician: entry.assignedTechnician,
+    assignedTechnician: entry.assignedTechnician?.trim() || undefined,
     detail: "No active invoice on file",
   };
 }
@@ -162,18 +216,26 @@ function toStalledJobQueueItem(
   entry: StalledJobEntry,
   customerIdByJobId: Map<string, string>,
   inactivityThresholdDays: number,
-): OfficeReviewQueueItem {
+): OfficeReviewQueueItem | null {
+  if (!isValidOfficeReviewQueueJobId(entry.jobId)) {
+    return null;
+  }
+
+  const daysAging = normalizeOfficeReviewQueueDays(entry.daysSinceActivity);
   const severity: OfficeReviewQueueSeverity =
-    entry.daysSinceActivity >= OFFICE_REVIEW_QUEUE_AGING_DAYS
-      ? "warning"
-      : "info";
-  const daysAging = entry.daysSinceActivity;
+    daysAging >= OFFICE_REVIEW_QUEUE_AGING_DAYS ? "warning" : "info";
 
   return {
     jobId: entry.jobId,
-    jobNumber: entry.jobNumber,
+    jobNumber: sanitizeOfficeReviewQueueLabel(
+      entry.jobNumber,
+      FALLBACK_JOB_NUMBER,
+    ),
     customerId: customerIdByJobId.get(entry.jobId),
-    customerName: entry.customerName,
+    customerName: sanitizeOfficeReviewQueueLabel(
+      entry.customerName,
+      FALLBACK_CUSTOMER_NAME,
+    ),
     kind: "stalled_job",
     severity,
     group: resolveQueueGroup({ severity, daysAging }),
@@ -181,7 +243,7 @@ function toStalledJobQueueItem(
     blockerCount: 0,
     reviewReasons: [],
     lastActivityAt: entry.lastActivityAt,
-    assignedTechnician: entry.assignedTechnician,
+    assignedTechnician: entry.assignedTechnician?.trim() || undefined,
     jobStatus: entry.status,
     detail: `${inactivityThresholdDays}+ days without job activity`,
   };
@@ -212,7 +274,37 @@ export function compareOfficeReviewQueueItems(
     return severityDiff;
   }
 
-  return right.daysAging - left.daysAging;
+  const agingDiff = right.daysAging - left.daysAging;
+  if (agingDiff !== 0) {
+    return agingDiff;
+  }
+
+  return left.jobNumber.localeCompare(right.jobNumber, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
+
+/**
+ * Keeps one row per jobId. Review entries beat invoicing backlog, which beat
+ * stalled pipeline context when source reports overlap on bad/migrated data.
+ */
+export function dedupeOfficeReviewQueueItems(
+  items: OfficeReviewQueueItem[],
+): OfficeReviewQueueItem[] {
+  const byJobId = new Map<string, OfficeReviewQueueItem>();
+
+  for (const item of items) {
+    const existing = byJobId.get(item.jobId);
+    if (
+      existing == null ||
+      KIND_PRIORITY[item.kind] < KIND_PRIORITY[existing.kind]
+    ) {
+      byJobId.set(item.jobId, item);
+    }
+  }
+
+  return [...byJobId.values()];
 }
 
 function groupQueueItems(
@@ -241,17 +333,22 @@ function groupQueueItems(
 export function buildOfficeReviewQueueActions(
   item: OfficeReviewQueueItem,
 ): OfficeReviewQueueAction[] {
+  if (!isValidOfficeReviewQueueJobId(item.jobId)) {
+    return [];
+  }
+
   const { jobId, customerId } = item;
+  const encodedJobId = encodeURIComponent(jobId);
   const invoiceHref =
-    customerId != null
-      ? `/invoices?create=1&customerId=${encodeURIComponent(customerId)}&jobId=${encodeURIComponent(jobId)}`
-      : `/invoices?create=1&jobId=${encodeURIComponent(jobId)}`;
+    customerId != null && customerId.trim().length > 0
+      ? `/invoices?create=1&customerId=${encodeURIComponent(customerId)}&jobId=${encodedJobId}`
+      : `/invoices?create=1&jobId=${encodedJobId}`;
 
   return [
     {
       id: "open_job",
       label: "Open job",
-      href: `/jobs/${jobId}`,
+      href: `/jobs/${encodedJobId}`,
     },
     {
       id: "create_invoice",
@@ -262,13 +359,13 @@ export function buildOfficeReviewQueueActions(
     {
       id: "review_expenses",
       label: "Review expenses",
-      href: `/expenses?jobId=${encodeURIComponent(jobId)}`,
+      href: `/expenses?jobId=${encodedJobId}`,
       external: true,
     },
     {
       id: "review_labor",
       label: "Review labor",
-      href: `/time?jobId=${encodeURIComponent(jobId)}`,
+      href: `/time?jobId=${encodedJobId}`,
       external: true,
     },
   ];
@@ -284,26 +381,46 @@ export function buildOfficeReviewQueueReport(input: {
 }): OfficeReviewQueueReport {
   const sortMode = input.sortMode ?? "severity_first";
   const reviewJobIds = new Set(
-    input.completedWorkReview.summary.jobs.map((job) => job.jobId),
+    input.completedWorkReview.summary.jobs
+      .map((job) => job.jobId)
+      .filter(isValidOfficeReviewQueueJobId),
   );
+  const higherPriorityJobIds = new Set(reviewJobIds);
 
-  const items: OfficeReviewQueueItem[] = [
-    ...input.completedWorkReview.summary.jobs.map((entry) =>
-      toReviewQueueItem(entry, input.customerIdByJobId),
-    ),
+  const rawItems: OfficeReviewQueueItem[] = [
+    ...input.completedWorkReview.summary.jobs
+      .map((entry) => toReviewQueueItem(entry, input.customerIdByJobId))
+      .filter((entry): entry is OfficeReviewQueueItem => entry != null),
     ...input.awaitingInvoicing.summary.jobs
-      .filter((entry) => !reviewJobIds.has(entry.jobId))
+      .filter(
+        (entry) =>
+          isValidOfficeReviewQueueJobId(entry.jobId) &&
+          !reviewJobIds.has(entry.jobId),
+      )
+      .map((entry) => {
+        higherPriorityJobIds.add(entry.jobId);
+        return toAwaitingInvoicingQueueItem(entry, input.customerIdByJobId);
+      })
+      .filter((entry): entry is OfficeReviewQueueItem => entry != null),
+    ...input.stalledJobs.summary.stalledJobs
+      .filter(
+        (entry) =>
+          isValidOfficeReviewQueueJobId(entry.jobId) &&
+          !higherPriorityJobIds.has(entry.jobId),
+      )
       .map((entry) =>
-        toAwaitingInvoicingQueueItem(entry, input.customerIdByJobId),
-      ),
-    ...input.stalledJobs.summary.stalledJobs.map((entry) =>
-      toStalledJobQueueItem(
-        entry,
-        input.customerIdByJobId,
-        input.stalledJobs.summary.inactivityThresholdDays,
-      ),
-    ),
-  ].sort((left, right) => compareOfficeReviewQueueItems(left, right, sortMode));
+        toStalledJobQueueItem(
+          entry,
+          input.customerIdByJobId,
+          input.stalledJobs.summary.inactivityThresholdDays,
+        ),
+      )
+      .filter((entry): entry is OfficeReviewQueueItem => entry != null),
+  ];
+
+  const items = dedupeOfficeReviewQueueItems(rawItems).sort((left, right) =>
+    compareOfficeReviewQueueItems(left, right, sortMode),
+  );
 
   const groups = groupQueueItems(items, sortMode);
 

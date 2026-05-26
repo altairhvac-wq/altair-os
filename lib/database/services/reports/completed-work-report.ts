@@ -47,6 +47,10 @@ function daysSinceCompletion(
   reference = new Date(),
 ): number {
   const elapsedMs = reference.getTime() - new Date(completedAt).getTime();
+  if (!Number.isFinite(elapsedMs)) {
+    return 0;
+  }
+
   return Math.max(0, Math.floor(elapsedMs / (1000 * 60 * 60 * 24)));
 }
 
@@ -58,15 +62,19 @@ function toCompletedWorkEntry(
   job: Job,
   snapshot: ReturnType<typeof computeJobProfitability>,
   reference: Date,
-): CompletedWorkAwaitingInvoicingEntry {
+): CompletedWorkAwaitingInvoicingEntry | null {
+  if (!job.id?.trim()) {
+    return null;
+  }
+
   const completedAt = resolveCompletedAt(job);
 
   return {
     jobId: job.id,
-    jobNumber: job.jobNumber,
-    customerName: job.customerName,
+    jobNumber: job.jobNumber?.trim() || "Unknown job",
+    customerName: job.customerName?.trim() || "Unknown customer",
     completedAt: job.completedAt ?? null,
-    assignedTechnician: job.assignedTechnician,
+    assignedTechnician: job.assignedTechnician?.trim() || undefined,
     approvedEstimateAmount: snapshot.projectedRevenue?.total ?? null,
     collectedRevenue: snapshot.revenue.collected,
     daysSinceCompletion: daysSinceCompletion(completedAt, reference),

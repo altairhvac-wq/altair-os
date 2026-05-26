@@ -21,7 +21,11 @@ function daysSinceActivity(
   reference = new Date(),
 ): number {
   const elapsedMs = reference.getTime() - new Date(timestamp).getTime();
-  return Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
+  if (!Number.isFinite(elapsedMs)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.floor(elapsedMs / (1000 * 60 * 60 * 24)));
 }
 
 function resolveLastActivityAt(
@@ -54,13 +58,17 @@ function toStalledJobEntry(
   job: Job,
   lastActivityAt: string,
   reference: Date,
-): StalledJobEntry {
+): StalledJobEntry | null {
+  if (!job.id?.trim()) {
+    return null;
+  }
+
   return {
     jobId: job.id,
-    jobNumber: job.jobNumber,
-    customerName: job.customerName,
+    jobNumber: job.jobNumber?.trim() || "Unknown job",
+    customerName: job.customerName?.trim() || "Unknown customer",
     status: job.status,
-    assignedTechnician: job.assignedTechnician,
+    assignedTechnician: job.assignedTechnician?.trim() || undefined,
     lastActivityAt,
     daysSinceActivity: daysSinceActivity(lastActivityAt, reference),
   };
@@ -85,6 +93,7 @@ export async function getCompanyStalledJobsReport(
       const lastActivityAt = resolveLastActivityAt(job, latestActivityByJobId);
       return toStalledJobEntry(job, lastActivityAt, reference);
     })
+    .filter((entry): entry is StalledJobEntry => entry != null)
     .filter(
       (entry) => entry.daysSinceActivity >= STALLED_JOB_INACTIVITY_DAYS,
     )

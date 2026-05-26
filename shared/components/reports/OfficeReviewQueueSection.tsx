@@ -21,6 +21,7 @@ import {
   buildOfficeReviewQueueActions,
   compareOfficeReviewQueueItems,
   formatOfficeReviewQueueKind,
+  isValidOfficeReviewQueueJobId,
   OFFICE_REVIEW_QUEUE_AGING_DAYS,
   type OfficeReviewQueueGroup,
   type OfficeReviewQueueItem,
@@ -191,6 +192,10 @@ function GroupEmptyState({ group }: { group: OfficeReviewQueueGroup }) {
 function QueueItemActions({ item }: { item: OfficeReviewQueueItem }) {
   const actions = buildOfficeReviewQueueActions(item);
 
+  if (actions.length === 0) {
+    return null;
+  }
+
   return (
     <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
       {actions.map((action) => (
@@ -221,17 +226,28 @@ function QueueItemRow({
   showActions: boolean;
   dense?: boolean;
 }) {
+  const hasValidJobLink = isValidOfficeReviewQueueJobId(item.jobId);
+  const jobHref = hasValidJobLink
+    ? `/jobs/${encodeURIComponent(item.jobId)}`
+    : null;
+
   return (
     <li className="px-3 py-2.5 sm:px-4 sm:py-3">
       <div className="flex min-w-0 flex-col gap-2 sm:gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-            <Link
-              href={`/jobs/${item.jobId}`}
-              className="shrink-0 text-sm font-bold text-slate-900 hover:text-cyan-700"
-            >
-              {item.jobNumber}
-            </Link>
+            {jobHref ? (
+              <Link
+                href={jobHref}
+                className="shrink-0 text-sm font-bold text-slate-900 hover:text-cyan-700"
+              >
+                {item.jobNumber}
+              </Link>
+            ) : (
+              <span className="shrink-0 text-sm font-bold text-slate-900">
+                {item.jobNumber}
+              </span>
+            )}
             <span className="max-w-full truncate rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-700">
               {formatOfficeReviewQueueKind(item.kind)}
             </span>
@@ -329,7 +345,7 @@ function QueueGroupSection({
         <ul className="divide-y divide-slate-100 bg-white/80">
           {items.map((item) => (
             <QueueItemRow
-              key={`${group}-${item.jobId}-${item.kind}`}
+              key={item.jobId}
               item={item}
               showActions={showActions}
             />
@@ -404,10 +420,14 @@ export function OfficeReviewQueueSection({
   const [sortMode, setSortMode] =
     useState<OfficeReviewQueueSortMode>("severity_first");
 
-  const baseItems =
-    variant === "compact" && itemLimit != null
-      ? report.summary.items.slice(0, itemLimit)
-      : report.summary.items;
+  const baseItems = useMemo(() => {
+    const items =
+      variant === "compact" && itemLimit != null
+        ? report.summary.items.slice(0, itemLimit)
+        : report.summary.items;
+
+    return items.filter((item) => isValidOfficeReviewQueueJobId(item.jobId));
+  }, [itemLimit, report.summary.items, variant]);
 
   const groups = useMemo(
     () => recomputeGroups(baseItems, sortMode),
@@ -424,7 +444,7 @@ export function OfficeReviewQueueSection({
     isCompact && itemLimit != null && summary.totalCount > itemLimit;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 ring-1 ring-violet-600/10 sm:h-10 sm:w-10">
@@ -544,7 +564,7 @@ export function OfficeReviewQueueSection({
             )
             .map((item) => (
               <QueueItemRow
-                key={`${item.jobId}-${item.kind}`}
+                key={item.jobId}
                 item={item}
                 showActions={false}
                 dense
@@ -553,7 +573,7 @@ export function OfficeReviewQueueSection({
         </ul>
       )}
 
-      {meta.limitations.length > 0 ? (
+      {meta.limitations.length > 0 && !isCompact ? (
         <div
           className="mt-4 rounded-lg border border-amber-200/80 bg-amber-50/60 px-3 py-2.5"
           role="note"
