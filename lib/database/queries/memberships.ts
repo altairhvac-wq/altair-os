@@ -702,7 +702,7 @@ export async function createTeamInvite(
       joined_at: null,
     })
     .select(
-      "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(*)",
+      "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, created_at, updated_at, company_id",
     )
     .single();
 
@@ -712,6 +712,8 @@ export async function createTeamInvite(
       role,
       code: error.code,
       message: error.message,
+      details: error.details,
+      hint: error.hint,
     });
 
     if (error.code === "23505") {
@@ -720,7 +722,7 @@ export async function createTeamInvite(
       };
     }
 
-    if (error.code === "42501") {
+    if (String(error.code) === "42501") {
       return {
         error:
           "You do not have permission to invite team members. Owner or admin access is required.",
@@ -733,7 +735,7 @@ export async function createTeamInvite(
   const row = data as MembershipProfileRow;
   const member = mapMembershipToTeamMember({
     ...row,
-    profile: row.profile,
+    profile: null,
     invite_email: row.invite_email,
   });
 

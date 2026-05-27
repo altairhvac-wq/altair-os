@@ -165,8 +165,6 @@ export function MobileDashboardShell({
     tabs[0]?.id ?? "overview",
   );
 
-  const activePanel = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
-
   return (
     <div className="flex min-w-0 flex-col gap-3">
       <MobileDashboardSnapshot items={snapshot} />
@@ -179,14 +177,24 @@ export function MobileDashboardShell({
             onSelect={setActiveTab}
           />
 
-          <div
-            id={`dashboard-panel-${activePanel.id}`}
-            role="tabpanel"
-            aria-labelledby={`dashboard-tab-${activePanel.id}`}
-            className="flex min-w-0 flex-col gap-3"
-          >
-            {activePanel.content}
-          </div>
+          {tabs.map((tab) => {
+            const isActive = tab.id === activeTab;
+
+            return (
+              <div
+                key={tab.id}
+                id={`dashboard-panel-${tab.id}`}
+                role="tabpanel"
+                aria-labelledby={`dashboard-tab-${tab.id}`}
+                hidden={!isActive}
+                className={
+                  isActive ? "flex min-w-0 flex-col gap-3" : "hidden"
+                }
+              >
+                {tab.content}
+              </div>
+            );
+          })}
         </>
       ) : null}
     </div>
