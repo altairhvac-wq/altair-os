@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import {
   ALPHA_TRACKER_STATUS_OPTIONS,
   type AlphaTrackerItem,
@@ -77,12 +78,43 @@ export function AlphaTrackerItemList({
           canManageCompany,
         );
 
+        const isComplete = item.status === "fixed";
+        const isUpdating = statusUpdatingId === item.id;
+
         return (
           <li key={item.id} className="px-4 py-4">
-            <div className="flex flex-col gap-3">
+            <div className="flex min-w-0 gap-3">
+              <button
+                type="button"
+                aria-label={
+                  isComplete
+                    ? `Mark "${item.title}" as open`
+                    : `Mark "${item.title}" as fixed`
+                }
+                aria-pressed={isComplete}
+                disabled={!canUpdateStatus || isUpdating}
+                onClick={() =>
+                  onStatusChange(item.id, isComplete ? "open" : "fixed")
+                }
+                className={`mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60 ${
+                  isComplete
+                    ? "border-emerald-500 bg-emerald-500 text-white"
+                    : "border-slate-300 bg-white text-transparent hover:border-emerald-400 hover:bg-emerald-50"
+                }`}
+              >
+                <Check className="h-5 w-5" strokeWidth={2.5} />
+              </button>
+
+              <div className="min-w-0 flex-1 flex flex-col gap-3">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
+                  <h3
+                    className={`text-sm font-semibold ${
+                      isComplete ? "text-slate-500 line-through" : "text-slate-900"
+                    }`}
+                  >
+                    {item.title}
+                  </h3>
                   {item.description ? (
                     <p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">
                       {item.description}
@@ -117,7 +149,7 @@ export function AlphaTrackerItemList({
                     Status
                     <select
                       value={item.status}
-                      disabled={statusUpdatingId === item.id}
+                      disabled={isUpdating}
                       onChange={(event) =>
                         onStatusChange(
                           item.id,
@@ -141,6 +173,7 @@ export function AlphaTrackerItemList({
                   {item.notes}
                 </p>
               ) : null}
+              </div>
             </div>
           </li>
         );

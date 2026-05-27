@@ -23,6 +23,33 @@ type AlphaTrackerPageViewProps = {
   canManageCompany: boolean;
 };
 
+const SEVERITY_SORT_ORDER: Record<AlphaTrackerSeverity, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+};
+
+const STATUS_SORT_ORDER: Record<AlphaTrackerStatus, number> = {
+  open: 0,
+  in_progress: 0,
+  deferred: 1,
+  fixed: 2,
+};
+
+function sortAlphaTrackerItems(items: AlphaTrackerItem[]): AlphaTrackerItem[] {
+  return [...items].sort((a, b) => {
+    const statusDiff = STATUS_SORT_ORDER[a.status] - STATUS_SORT_ORDER[b.status];
+    if (statusDiff !== 0) return statusDiff;
+
+    const severityDiff =
+      SEVERITY_SORT_ORDER[a.severity] - SEVERITY_SORT_ORDER[b.severity];
+    if (severityDiff !== 0) return severityDiff;
+
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
+}
+
 function filterAlphaTrackerItems(
   items: AlphaTrackerItem[],
   search: string,
@@ -73,12 +100,14 @@ export function AlphaTrackerPageView({
 
   const filteredItems = useMemo(
     () =>
-      filterAlphaTrackerItems(
-        items,
-        search,
-        typeFilter,
-        severityFilter,
-        statusFilter,
+      sortAlphaTrackerItems(
+        filterAlphaTrackerItems(
+          items,
+          search,
+          typeFilter,
+          severityFilter,
+          statusFilter,
+        ),
       ),
     [items, search, typeFilter, severityFilter, statusFilter],
   );
