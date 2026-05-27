@@ -14,9 +14,9 @@ export function isAlphaHardeningEnabled(): boolean {
 export const ALPHA_HIDDEN_ADMIN_NAV_HREFS = ["/network"] as const;
 
 /** Billing-adjacent pages shown as Coming Soon during alpha. */
-export const ALPHA_COMING_SOON_PATH_PREFIXES = ["/price-book"] as const;
+export const ALPHA_COMING_SOON_PATH_PREFIXES = [] as const;
 
-export const ALPHA_COMING_SOON_NAV_HREFS = ["/price-book"] as const;
+export const ALPHA_COMING_SOON_NAV_HREFS = [] as const;
 
 export function isAlphaComingSoonPath(pathname: string): boolean {
   return ALPHA_COMING_SOON_PATH_PREFIXES.some(

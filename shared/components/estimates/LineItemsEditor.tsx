@@ -1,5 +1,6 @@
+"use client";
+
 import { Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
 import { formatCurrency } from "@/shared/types/customer";
 import {
   calculateEstimateTotals,
@@ -36,12 +37,10 @@ export function LineItemsEditor({
   taxRate,
   onChange,
 }: LineItemsEditorProps) {
-  const [items, setItems] = useState<EstimateLineItemFormData[]>(
-    lineItems.length > 0 ? lineItems : [{ ...emptyLineItem }],
-  );
+  const items =
+    lineItems.length > 0 ? lineItems : [{ ...emptyLineItem }];
 
   function updateItems(nextItems: EstimateLineItemFormData[]) {
-    setItems(nextItems);
     onChange(nextItems);
   }
 
@@ -192,6 +191,7 @@ export function LineItemsEditor({
                       handleItemChange(index, "name", e.target.value)
                     }
                     placeholder="Name shown on the estimate"
+                    autoComplete="off"
                     className={inputClass}
                     required
                   />
