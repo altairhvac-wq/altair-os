@@ -164,7 +164,7 @@ export function CompleteJobSheet({
         </header>
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
+          <div className="space-y-4 overflow-y-auto px-4 py-4 sm:px-5" data-no-pull-refresh>
             <div>
               <label htmlFor="completion-notes" className={labelClass}>
                 Completion notes

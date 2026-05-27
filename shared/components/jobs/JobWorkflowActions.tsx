@@ -135,7 +135,10 @@ export function JobWorkflowActions({
           customerId={customerId}
           currentStatus={status}
           onClose={() => setShowCompleteSheet(false)}
-          onCompleted={onStatusUpdated}
+          onCompleted={(nextStatus) => {
+            setSuccessMessage("Work completed successfully.");
+            onStatusUpdated?.(nextStatus);
+          }}
         />
       ) : null}
     </>

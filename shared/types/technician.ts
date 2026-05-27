@@ -28,6 +28,7 @@ export type TechnicianJob = {
   priority: DispatchJobPriority;
   description?: string;
   notes?: string;
+  completedAt?: string;
 };
 
 export type TechnicianDashboardData = {

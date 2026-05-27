@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -25,6 +25,7 @@ type TechnicianExpenseFormProps = {
   jobNumber?: string;
   onSuccess?: () => void;
   onCancel: () => void;
+  onSubmittingChange?: (isSubmitting: boolean) => void;
 };
 
 const inputClass =
@@ -37,6 +38,7 @@ export function TechnicianExpenseForm({
   jobNumber,
   onSuccess,
   onCancel,
+  onSubmittingChange,
 }: TechnicianExpenseFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -48,6 +50,10 @@ export function TechnicianExpenseForm({
   const categoryOptions = EXPENSE_CATEGORY_OPTIONS.filter(
     (option) => option.value !== "all",
   );
+
+  useEffect(() => {
+    onSubmittingChange?.(isPending);
+  }, [isPending, onSubmittingChange]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -134,7 +140,11 @@ export function TechnicianExpenseForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form
+      id="technician-expense-form"
+      onSubmit={handleSubmit}
+      className="space-y-4"
+    >
       {jobNumber ? (
         <div className="rounded-xl bg-slate-50 px-3.5 py-2.5 text-sm text-slate-600">
           Linked to{" "}
@@ -210,24 +220,6 @@ export function TechnicianExpenseForm({
       />
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
-
-      <div className="flex gap-3 border-t border-slate-100 pt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isPending}
-          className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="inline-flex flex-1 items-center justify-center rounded-xl bg-cyan-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isPending ? "Saving..." : "Save receipt"}
-        </button>
-      </div>
     </form>
   );
 }

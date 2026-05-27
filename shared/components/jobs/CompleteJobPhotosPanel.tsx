@@ -19,7 +19,8 @@ export function CompleteJobPhotosPanel({ jobId }: CompleteJobPhotosPanelProps) {
         jobId={jobId}
         defaultAttachmentType="after"
         compact
-        showTypeSelector
+        captureEnvironment
+        showTypeSelector={false}
       />
     </div>
   );

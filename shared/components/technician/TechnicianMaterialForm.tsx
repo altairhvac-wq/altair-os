@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createJobMaterialAction } from "@/app/actions/job-materials";
 import { formatCurrency } from "@/shared/types/customer";
@@ -13,6 +13,7 @@ type TechnicianMaterialFormProps = {
   serviceItems: ServiceItem[];
   onSuccess?: () => void;
   onCancel: () => void;
+  onSubmittingChange?: (isSubmitting: boolean) => void;
 };
 
 const CUSTOM_SERVICE_ITEM_ID = "";
@@ -28,6 +29,7 @@ export function TechnicianMaterialForm({
   serviceItems,
   onSuccess,
   onCancel,
+  onSubmittingChange,
 }: TechnicianMaterialFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -41,6 +43,10 @@ export function TechnicianMaterialForm({
   const [unitCost, setUnitCost] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [taxable, setTaxable] = useState(true);
+
+  useEffect(() => {
+    onSubmittingChange?.(isPending);
+  }, [isPending, onSubmittingChange]);
 
   function resetForm() {
     setSelectedServiceItemId(CUSTOM_SERVICE_ITEM_ID);
@@ -158,6 +164,7 @@ export function TechnicianMaterialForm({
 
   return (
     <form
+      id="technician-material-form"
       onSubmit={handleSubmit}
       className="space-y-4"
       aria-busy={isPending}
@@ -286,24 +293,6 @@ export function TechnicianMaterialForm({
           {error}
         </p>
       ) : null}
-
-      <div className="flex gap-3 border-t border-slate-100 pt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isPending}
-          className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="inline-flex flex-1 items-center justify-center rounded-xl bg-cyan-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isPending ? "Saving..." : "Log material"}
-        </button>
-      </div>
     </form>
   );
 }

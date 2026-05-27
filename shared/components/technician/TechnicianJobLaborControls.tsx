@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { Briefcase, Square } from "lucide-react";
 import {
   startJobLaborAction,
@@ -62,7 +63,15 @@ export function TechnicianJobLaborControls({
   }
 
   if (isOffClock) {
-    return null;
+    return (
+      <Link
+        href="/tech/time"
+        className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100"
+      >
+        <Briefcase className="h-4 w-4" />
+        Clock in to track job labor
+      </Link>
+    );
   }
 
   return (

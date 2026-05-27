@@ -21,6 +21,7 @@ type JobAttachmentUploadBoxProps = {
   defaultAttachmentType?: JobAttachmentType;
   compact?: boolean;
   showTypeSelector?: boolean;
+  captureEnvironment?: boolean;
   onUploaded?: () => void;
 };
 
@@ -32,6 +33,7 @@ export function JobAttachmentUploadBox({
   defaultAttachmentType = "general",
   compact = false,
   showTypeSelector = true,
+  captureEnvironment = false,
   onUploaded,
 }: JobAttachmentUploadBoxProps) {
   const router = useRouter();
@@ -166,6 +168,7 @@ export function JobAttachmentUploadBox({
           ref={inputRef}
           type="file"
           accept={JOB_ATTACHMENT_ALLOWED_MIME_TYPES.join(",")}
+          capture={captureEnvironment ? "environment" : undefined}
           className="hidden"
           onChange={handleFileChange}
           disabled={isPending}
@@ -179,7 +182,11 @@ export function JobAttachmentUploadBox({
           )}
         </div>
         <p className="mt-3 text-sm font-semibold text-slate-800">
-          {isPending ? "Uploading..." : "Tap to upload photo or file"}
+          {isPending
+            ? "Uploading..."
+            : captureEnvironment
+              ? "Tap to take or upload photo"
+              : "Tap to upload photo or file"}
         </p>
         <p className="mt-1 text-xs text-slate-500">
           JPG, PNG, WEBP, HEIC, or PDF up to 10 MB

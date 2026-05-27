@@ -33,6 +33,7 @@ function mapJobRowToTechnicianJob(row: JobRowWithCustomer): TechnicianJob {
     priority: row.priority,
     description: row.description ?? undefined,
     notes: row.notes ?? undefined,
+    completedAt: row.completed_at ?? undefined,
   };
 }
 

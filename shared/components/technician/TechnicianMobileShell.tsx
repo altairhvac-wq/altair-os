@@ -1,6 +1,7 @@
 import { Wrench } from "lucide-react";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
+import { PullToRefresh } from "@/shared/components/mobile/PullToRefresh";
 import { TechnicianBottomNav } from "./TechnicianBottomNav";
 import { TechnicianNotificationBadgeProvider } from "@/shared/components/notifications/TechnicianNotificationBadgeContext";
 import { TechnicianNotificationLink } from "@/shared/components/notifications/TechnicianNotificationLink";
@@ -42,7 +43,7 @@ export function TechnicianMobileShell({
           </header>
 
           <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 pb-24 sm:px-4">
-            {children}
+            <PullToRefresh>{children}</PullToRefresh>
           </main>
 
           <TechnicianBottomNav companyContext={companyContext} />

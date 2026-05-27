@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Briefcase } from "lucide-react";
+import { Briefcase, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import type { DispatchJobStatus } from "@/shared/types/dispatch";
 import type { TechnicianJob } from "@/shared/types/technician";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import type { ServiceItem } from "@/shared/types/service-item";
+import { TechnicianClockStatusBanner } from "./TechnicianClockStatusBanner";
 import { TechnicianJobCard } from "./TechnicianJobCard";
+import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 
 type TechnicianAssignedJobsViewProps = {
   jobs: TechnicianJob[];
@@ -28,6 +30,20 @@ const ACTIVE_STATUS_ORDER: Record<ActiveJobStatus, number> = {
 
 function isActiveTechnicianJob(job: TechnicianJob): boolean {
   return job.status !== "completed" && job.status !== "cancelled";
+}
+
+function isCompletedToday(job: TechnicianJob, now = new Date()): boolean {
+  if (job.status !== "completed") {
+    return false;
+  }
+
+  const completedAt = job.completedAt ?? job.scheduledDate;
+  const completedDate = new Date(completedAt);
+  return (
+    completedDate.getFullYear() === now.getFullYear() &&
+    completedDate.getMonth() === now.getMonth() &&
+    completedDate.getDate() === now.getDate()
+  );
 }
 
 function compareActiveJobs(a: TechnicianJob, b: TechnicianJob): number {
@@ -66,6 +82,8 @@ type WorkQueueSectionProps = {
   timeState: TechnicianTimeStateSnapshot;
   serviceItems: ServiceItem[];
   onTimeStateChange: (state: TechnicianTimeStateSnapshot) => void;
+  defaultExpanded?: boolean;
+  emphasized?: boolean;
 };
 
 function WorkQueueSection({
@@ -75,6 +93,8 @@ function WorkQueueSection({
   timeState,
   serviceItems,
   onTimeStateChange,
+  defaultExpanded = false,
+  emphasized = false,
 }: WorkQueueSectionProps) {
   if (jobs.length === 0) {
     return null;
@@ -95,6 +115,8 @@ function WorkQueueSection({
               timeState={timeState}
               serviceItems={serviceItems}
               onTimeStateChange={onTimeStateChange}
+              defaultExpanded={defaultExpanded}
+              emphasized={emphasized}
             />
           </li>
         ))}
@@ -125,6 +147,63 @@ function TechnicianJobsEmptyState({
   );
 }
 
+function CompletedTodaySection({ jobs }: { jobs: TechnicianJob[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const completedToday = jobs
+    .filter((job) => isCompletedToday(job))
+    .sort(
+      (a, b) =>
+        new Date(b.completedAt ?? b.scheduledDate).getTime() -
+        new Date(a.completedAt ?? a.scheduledDate).getTime(),
+    );
+
+  if (completedToday.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="space-y-3">
+      <button
+        type="button"
+        onClick={() => setExpanded((current) => !current)}
+        className="flex min-h-11 w-full items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200"
+      >
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+          <span className="text-sm font-semibold text-slate-900">
+            Completed today ({completedToday.length})
+          </span>
+        </div>
+        {expanded ? (
+          <ChevronUp className="h-4 w-4 text-slate-400" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-slate-400" />
+        )}
+      </button>
+      {expanded ? (
+        <ul className="space-y-2">
+          {completedToday.map((job) => (
+            <li
+              key={job.id}
+              className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-3 ring-1 ring-slate-200"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-900">
+                  {job.jobNumber}
+                </p>
+                <p className="truncate text-xs text-slate-500">
+                  {job.customerName}
+                </p>
+              </div>
+              <TechnicianJobStatusBadge status={job.status} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
 export function TechnicianAssignedJobsView({
   jobs,
   timeState: initialTimeState,
@@ -139,22 +218,29 @@ export function TechnicianAssignedJobsView({
   const activeJobs = sortActiveJobs(jobs);
   const { currentJobs, onSiteJobs, enRouteJobs, upNextJobs } =
     groupWorkQueue(jobs);
+  const primaryJobId = currentJobs[0]?.id ?? onSiteJobs[0]?.id;
 
   if (activeJobs.length === 0) {
     return (
-      <TechnicianJobsEmptyState
-        title={jobs.length === 0 ? "No assigned jobs" : "No active jobs"}
-        description={
-          jobs.length === 0
-            ? "When dispatch assigns you work, it will show up here."
-            : "You're all caught up. New assignments will appear in your queue."
-        }
-      />
+      <div className="space-y-4">
+        <TechnicianClockStatusBanner timeState={timeState} />
+        <TechnicianJobsEmptyState
+          title={jobs.length === 0 ? "No assigned jobs" : "No active jobs"}
+          description={
+            jobs.length === 0
+              ? "When dispatch assigns you work, it will show up here."
+              : "You're all caught up. New assignments will appear in your queue."
+          }
+        />
+        <CompletedTodaySection jobs={jobs} />
+      </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      <TechnicianClockStatusBanner timeState={timeState} />
+
       <div className="rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200 sm:px-4 sm:py-3">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           My Jobs
@@ -172,6 +258,8 @@ export function TechnicianAssignedJobsView({
           timeState={timeState}
           serviceItems={serviceItems}
           onTimeStateChange={setTimeState}
+          defaultExpanded
+          emphasized
         />
         <WorkQueueSection
           label="On Site"
@@ -180,6 +268,7 @@ export function TechnicianAssignedJobsView({
           timeState={timeState}
           serviceItems={serviceItems}
           onTimeStateChange={setTimeState}
+          defaultExpanded={onSiteJobs.some((job) => job.id === primaryJobId)}
         />
         <WorkQueueSection
           label="En Route"
@@ -196,6 +285,8 @@ export function TechnicianAssignedJobsView({
           onTimeStateChange={setTimeState}
         />
       </div>
+
+      <CompletedTodaySection jobs={jobs} />
     </div>
   );
 }
