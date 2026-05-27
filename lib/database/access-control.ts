@@ -121,6 +121,7 @@ export type AdminNavHref =
   | "/time"
   | "/network"
   | "/reports"
+  | "/alpha-tracker"
   | "/settings";
 
 const ADMIN_NAV_HREF_SET = new Set<string>([
@@ -135,6 +136,7 @@ const ADMIN_NAV_HREF_SET = new Set<string>([
   "/time",
   "/network",
   "/reports",
+  "/alpha-tracker",
   "/settings",
 ]);
 
@@ -172,6 +174,8 @@ export function canAccessAdminNavItem(
       return permissions.dispatchJobs || permissions.manageCompany;
     case "/reports":
       return access.canViewOperationalReports;
+    case "/alpha-tracker":
+      return true;
     case "/settings":
       return permissions.manageCompany;
     default:
@@ -194,6 +198,7 @@ export function getAccessibleAdminNavHrefs(
     "/time",
     "/network",
     "/reports",
+    "/alpha-tracker",
     "/settings",
   ];
 

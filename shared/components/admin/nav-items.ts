@@ -2,6 +2,7 @@ import {
   BarChart3,
   BookOpen,
   Briefcase,
+  Bug,
   Clock,
   DollarSign,
   FileText,
@@ -94,6 +95,12 @@ export const adminNavItems: NavItem[] = [
     description: "Revenue and productivity insights",
   },
   {
+    label: "Alpha Tracker",
+    href: "/alpha-tracker",
+    icon: Bug,
+    description: "Internal bug and feature tracking for alpha testing",
+  },
+  {
     label: "Settings",
     href: "/settings",
     icon: Settings,
@@ -121,6 +128,7 @@ export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/reports",
   "/time",
   "/network",
+  "/alpha-tracker",
   "/settings",
 ] as const;
 

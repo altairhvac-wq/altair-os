@@ -1,0 +1,198 @@
+"use client";
+
+import { useMemo, useState, useTransition } from "react";
+import { Plus } from "lucide-react";
+import {
+  createAlphaTrackerItemAction,
+  updateAlphaTrackerItemStatusAction,
+} from "@/app/actions/alpha-tracker";
+import type {
+  AlphaTrackerItem,
+  AlphaTrackerItemFormData,
+  AlphaTrackerSeverity,
+  AlphaTrackerStatus,
+  AlphaTrackerType,
+} from "@/shared/types/alpha-tracker";
+import { AlphaTrackerFilterBar } from "./AlphaTrackerFilterBar";
+import { AlphaTrackerItemForm } from "./AlphaTrackerItemForm";
+import { AlphaTrackerItemList } from "./AlphaTrackerItemList";
+
+type AlphaTrackerPageViewProps = {
+  initialItems: AlphaTrackerItem[];
+  currentUserId: string;
+  canManageCompany: boolean;
+};
+
+function filterAlphaTrackerItems(
+  items: AlphaTrackerItem[],
+  search: string,
+  typeFilter: AlphaTrackerType | "all",
+  severityFilter: AlphaTrackerSeverity | "all",
+  statusFilter: AlphaTrackerStatus | "all",
+): AlphaTrackerItem[] {
+  const query = search.trim().toLowerCase();
+
+  return items.filter((item) => {
+    if (typeFilter !== "all" && item.type !== typeFilter) return false;
+    if (severityFilter !== "all" && item.severity !== severityFilter) return false;
+    if (statusFilter !== "all" && item.status !== statusFilter) return false;
+
+    if (!query) return true;
+
+    const haystack = [
+      item.title,
+      item.description ?? "",
+      item.pageOrArea ?? "",
+      item.notes ?? "",
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(query);
+  });
+}
+
+export function AlphaTrackerPageView({
+  initialItems,
+  currentUserId,
+  canManageCompany,
+}: AlphaTrackerPageViewProps) {
+  const [items, setItems] = useState(initialItems);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<AlphaTrackerType | "all">("all");
+  const [severityFilter, setSeverityFilter] = useState<
+    AlphaTrackerSeverity | "all"
+  >("all");
+  const [statusFilter, setStatusFilter] = useState<AlphaTrackerStatus | "all">(
+    "open",
+  );
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const filteredItems = useMemo(
+    () =>
+      filterAlphaTrackerItems(
+        items,
+        search,
+        typeFilter,
+        severityFilter,
+        statusFilter,
+      ),
+    [items, search, typeFilter, severityFilter, statusFilter],
+  );
+
+  function handleCreateSubmit(data: AlphaTrackerItemFormData) {
+    setFormError(null);
+
+    startTransition(async () => {
+      const result = await createAlphaTrackerItemAction(data);
+
+      if (result.error || !result.item) {
+        setFormError(result.error ?? "Failed to create tracker item.");
+        return;
+      }
+
+      setItems((previous) => [result.item!, ...previous]);
+      setShowCreateForm(false);
+    });
+  }
+
+  function handleStatusChange(itemId: string, status: AlphaTrackerStatus) {
+    setStatusUpdatingId(itemId);
+
+    startTransition(async () => {
+      const result = await updateAlphaTrackerItemStatusAction(itemId, status);
+
+      setStatusUpdatingId(null);
+
+      if (result.error || !result.item) {
+        return;
+      }
+
+      setItems((previous) =>
+        previous.map((item) =>
+          item.id === itemId ? result.item! : item,
+        ),
+      );
+    });
+  }
+
+  const hasNoItems = items.length === 0;
+  const hasNoResults = !hasNoItems && filteredItems.length === 0;
+
+  return (
+    <div className="admin-card flex min-w-0 max-w-full flex-col">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
+        <div>
+          <h2 className="text-base font-bold text-slate-900">Alpha Tracker</h2>
+          <p className="text-xs text-slate-500">
+            Internal bug and feature tracking for alpha testing
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setShowCreateForm((previous) => !previous);
+            setFormError(null);
+          }}
+          className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
+        >
+          <Plus className="h-4 w-4" />
+          {showCreateForm ? "Close form" : "New item"}
+        </button>
+      </div>
+
+      {showCreateForm ? (
+        <AlphaTrackerItemForm
+          onSubmit={handleCreateSubmit}
+          onCancel={() => {
+            setShowCreateForm(false);
+            setFormError(null);
+          }}
+          error={formError}
+          isSubmitting={isPending}
+        />
+      ) : null}
+
+      {!hasNoItems ? (
+        <AlphaTrackerFilterBar
+          search={search}
+          typeFilter={typeFilter}
+          severityFilter={severityFilter}
+          statusFilter={statusFilter}
+          onSearchChange={setSearch}
+          onTypeFilterChange={setTypeFilter}
+          onSeverityFilterChange={setSeverityFilter}
+          onStatusFilterChange={setStatusFilter}
+          resultCount={filteredItems.length}
+        />
+      ) : null}
+
+      <div className="min-h-0 min-w-0 flex-1 overflow-x-auto lg:overflow-y-auto">
+        {hasNoItems ? (
+          <AlphaTrackerItemList
+            items={[]}
+            currentUserId={currentUserId}
+            canManageCompany={canManageCompany}
+            onStatusChange={handleStatusChange}
+            statusUpdatingId={statusUpdatingId}
+          />
+        ) : hasNoResults ? (
+          <div className="px-6 py-16 text-center text-sm text-slate-500">
+            No items match the current filters.
+          </div>
+        ) : (
+          <AlphaTrackerItemList
+            items={filteredItems}
+            currentUserId={currentUserId}
+            canManageCompany={canManageCompany}
+            onStatusChange={handleStatusChange}
+            statusUpdatingId={statusUpdatingId}
+          />
+        )}
+      </div>
+    </div>
+  );
+}

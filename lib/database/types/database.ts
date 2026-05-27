@@ -62,6 +62,9 @@ import type {
   NotificationInsert,
   NotificationRow,
   NotificationUpdate,
+  AlphaTrackerItemInsert,
+  AlphaTrackerItemRow,
+  AlphaTrackerItemUpdate,
 } from "./core-tables";
 
 export type Database = {
@@ -102,6 +105,27 @@ export type Database = {
           {
             foreignKeyName: "company_memberships_user_id_fkey";
             columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      alpha_tracker_items: {
+        Row: AlphaTrackerItemRow;
+        Insert: AlphaTrackerItemInsert;
+        Update: AlphaTrackerItemUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "alpha_tracker_items_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "alpha_tracker_items_created_by_fkey";
+            columns: ["created_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
@@ -773,6 +797,10 @@ export type Database = {
       time_activity_type: TimeActivityRow["event_type"];
       notification_type: NotificationRow["type"];
       notification_entity_type: NotificationRow["entity_type"];
+      alpha_tracker_type: AlphaTrackerItemRow["type"];
+      alpha_tracker_severity: AlphaTrackerItemRow["severity"];
+      alpha_tracker_status: AlphaTrackerItemRow["status"];
+      alpha_tracker_device: AlphaTrackerItemRow["device"];
     };
     CompositeTypes: Record<string, never>;
   };

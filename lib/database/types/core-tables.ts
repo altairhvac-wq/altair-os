@@ -844,6 +844,61 @@ export type NotificationUpdate = Partial<
   Pick<NotificationRow, "read_at">
 >;
 
+export type AlphaTrackerType =
+  | "bug"
+  | "feature"
+  | "polish"
+  | "unfinished";
+
+export type AlphaTrackerSeverity = "critical" | "high" | "medium" | "low";
+
+export type AlphaTrackerStatus =
+  | "open"
+  | "in_progress"
+  | "fixed"
+  | "deferred";
+
+export type AlphaTrackerDevice = "desktop" | "mobile" | "both";
+
+export type AlphaTrackerItemRow = {
+  id: UUID;
+  company_id: UUID;
+  title: string;
+  description: string | null;
+  type: AlphaTrackerType;
+  severity: AlphaTrackerSeverity;
+  status: AlphaTrackerStatus;
+  page_or_area: string | null;
+  device: AlphaTrackerDevice;
+  notes: string | null;
+  created_by: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type AlphaTrackerItemInsert = {
+  id?: UUID;
+  company_id: UUID;
+  title: string;
+  description?: string | null;
+  type?: AlphaTrackerType;
+  severity?: AlphaTrackerSeverity;
+  status?: AlphaTrackerStatus;
+  page_or_area?: string | null;
+  device?: AlphaTrackerDevice;
+  notes?: string | null;
+  created_by?: UUID | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type AlphaTrackerItemUpdate = Partial<
+  Omit<
+    AlphaTrackerItemRow,
+    "id" | "company_id" | "created_by" | "created_at" | "updated_at"
+  >
+>;
+
 export type ActiveCompanyContext = UserCompanyContext & {
   user: {
     id: UUID;
