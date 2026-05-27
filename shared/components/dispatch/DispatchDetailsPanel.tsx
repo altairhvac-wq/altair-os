@@ -316,18 +316,26 @@ export function DispatchDetailsPanel({
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Workflow
               </h3>
-              <JobWorkflowControls
-                jobId={job.id}
-                customerId={job.customerId}
-                initialStatus={job.status}
-                serviceAddress={job.serviceAddress}
-                city={job.city}
-                state={job.state}
-                zip={job.zip}
-                canUpdateStatus={canUpdateJobWorkflow}
-                layout="stack"
-                onStatusUpdated={(status) => onStatusUpdated?.(job.id, status)}
-              />
+              {canUpdateJobWorkflow ? (
+                <JobWorkflowControls
+                  jobId={job.id}
+                  customerId={job.customerId}
+                  initialStatus={job.status}
+                  serviceAddress={job.serviceAddress}
+                  city={job.city}
+                  state={job.state}
+                  zip={job.zip}
+                  canUpdateStatus={canUpdateJobWorkflow}
+                  layout="stack"
+                  onStatusUpdated={(status) => onStatusUpdated?.(job.id, status)}
+                />
+              ) : (
+                <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  You do not have permission to update this job&apos;s workflow.
+                  Dispatch staff and the assigned technician can advance job
+                  status.
+                </p>
+              )}
             </div>
 
           <div className="flex gap-2 border-t border-slate-100 pt-4">

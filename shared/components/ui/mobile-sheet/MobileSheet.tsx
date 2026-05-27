@@ -13,7 +13,7 @@ type MobileSheetProps = {
   closeDisabled?: boolean;
   ariaLabelledBy: string;
   variant?: MobileSheetVariant;
-  zIndex?: 40 | 50;
+  zIndex?: 40 | 50 | 60;
   /** Applied to the fixed overlay root (e.g. `lg:hidden`). */
   rootClassName?: string;
 };
@@ -23,9 +23,10 @@ const rootVariantClass: Record<MobileSheetVariant, string> = {
   responsive: "items-end justify-center p-0 sm:items-center sm:p-4",
 };
 
-const zIndexClass: Record<40 | 50, string> = {
+const zIndexClass: Record<40 | 50 | 60, string> = {
   40: "z-40",
   50: "z-50",
+  60: "z-60",
 };
 
 export function MobileSheet({

@@ -121,6 +121,7 @@ export function CompleteJobSheet({
       closeDisabled={isPending}
       ariaLabelledBy={TITLE_ID}
       variant="responsive"
+      zIndex={60}
     >
       <MobileSheetPanel maxWidth="lg" responsiveRounded>
         <MobileSheetHeader

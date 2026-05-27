@@ -42,6 +42,7 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
       technicians={technicians}
       canDispatchJobs={companyContext.permissions.dispatchJobs}
       canViewAssignedJobs={companyContext.permissions.viewAssignedJobs}
+      currentUserId={companyContext.user.id}
       dispatchPageFocus={pageFocus}
     />
   );

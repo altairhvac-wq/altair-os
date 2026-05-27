@@ -10,6 +10,7 @@ import {
   type Technician,
 } from "@/shared/types/dispatch";
 import type { DispatchPageFocusState } from "@/shared/lib/dispatch-page-focus";
+import { canUpdateJobWorkflowStatus } from "@/lib/database/access-control";
 import { DispatchBoard } from "./DispatchBoard";
 import { DispatchDashboardHeader } from "./DispatchDashboardHeader";
 import { DispatchDetailsPanel } from "./DispatchDetailsPanel";
@@ -26,6 +27,7 @@ type DispatchPageViewProps = {
   technicians: Technician[];
   canDispatchJobs: boolean;
   canViewAssignedJobs: boolean;
+  currentUserId: string;
   dispatchPageFocus?: DispatchPageFocusState;
 };
 
@@ -34,9 +36,23 @@ export function DispatchPageView({
   technicians,
   canDispatchJobs,
   canViewAssignedJobs,
+  currentUserId,
   dispatchPageFocus,
 }: DispatchPageViewProps) {
-  const canUpdateJobWorkflow = canDispatchJobs || canViewAssignedJobs;
+  function canUpdateJobWorkflow(job: DispatchJob): boolean {
+    return canUpdateJobWorkflowStatus(
+      {
+        dispatchJobs: canDispatchJobs,
+        viewAssignedJobs: canViewAssignedJobs,
+        manageCompany: false,
+        manageUsers: false,
+        manageCustomers: false,
+        manageBilling: false,
+      },
+      currentUserId,
+      { assignedTechnicianId: job.technicianId ?? null },
+    );
+  }
   const [jobs, setJobs] = useState(initialJobs);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<DispatchJobStatus | "all">(
@@ -213,7 +229,7 @@ export function DispatchPageView({
               technician={selectedTechnician}
               technicians={technicians}
               canDispatchJobs={canDispatchJobs}
-              canUpdateJobWorkflow={canUpdateJobWorkflow}
+              canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
               assignError={assignError}
               assignSuccess={assignSuccess}
               isAssigning={isPending}
@@ -263,7 +279,7 @@ export function DispatchPageView({
               technician={selectedTechnician}
               technicians={technicians}
               canDispatchJobs={canDispatchJobs}
-              canUpdateJobWorkflow={canUpdateJobWorkflow}
+              canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
               assignError={assignError}
               assignSuccess={assignSuccess}
               isAssigning={isPending}

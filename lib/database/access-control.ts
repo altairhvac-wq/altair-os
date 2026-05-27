@@ -70,6 +70,22 @@ export function canViewCompanyTimeEntries(
   );
 }
 
+export function canUpdateJobWorkflowStatus(
+  permissions: ActiveCompanyContext["permissions"],
+  userId: string,
+  job: { assignedTechnicianId?: string | null },
+): boolean {
+  if (permissions.dispatchJobs) {
+    return true;
+  }
+
+  if (!permissions.viewAssignedJobs) {
+    return false;
+  }
+
+  return job.assignedTechnicianId === userId;
+}
+
 export function canViewJob(
   context: ActiveCompanyContext,
   job: { assignedTechnicianId?: string | null },
