@@ -26,6 +26,7 @@ export function JobTechnicianAssignment({
     assignedTechnicianId ?? "",
   );
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const isAssigned = Boolean(assignedTechnicianId);
   const hasSelectionChanged =
@@ -34,6 +35,7 @@ export function JobTechnicianAssignment({
   useEffect(() => {
     setSelectedTechnicianId(assignedTechnicianId ?? "");
     setError(null);
+    setSuccessMessage(null);
   }, [assignedTechnicianId, jobId]);
 
   function handleAssign() {
@@ -42,6 +44,7 @@ export function JobTechnicianAssignment({
     }
 
     setError(null);
+    setSuccessMessage(null);
 
     startTransition(async () => {
       const result = await assignJobAction(jobId, selectedTechnicianId);
@@ -51,6 +54,10 @@ export function JobTechnicianAssignment({
         return;
       }
 
+      const assignedName =
+        technicians.find((technician) => technician.id === selectedTechnicianId)
+          ?.name ?? "Technician";
+      setSuccessMessage(`Assigned to ${assignedName}.`);
       router.refresh();
     });
   }
@@ -111,11 +118,14 @@ export function JobTechnicianAssignment({
               ))}
             </select>
             {error ? <p className="text-xs text-red-600">{error}</p> : null}
+            {successMessage ? (
+              <p className="text-xs text-emerald-700">{successMessage}</p>
+            ) : null}
             <button
               type="button"
               onClick={handleAssign}
               disabled={!hasSelectionChanged || isPending}
-              className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-cyan-600 px-3.5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <UserPlus className="h-4 w-4" />
               {isPending

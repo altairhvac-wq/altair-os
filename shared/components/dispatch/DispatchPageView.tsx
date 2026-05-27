@@ -47,6 +47,7 @@ export function DispatchPageView({
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [showUnassignedModal, setShowUnassignedModal] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
+  const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const filteredJobs = useMemo(
@@ -77,16 +78,19 @@ export function DispatchPageView({
   function handleSelectJob(job: DispatchJob) {
     setSelectedJobId(job.id);
     setAssignError(null);
+    setAssignSuccess(null);
     setShowUnassignedModal(false);
   }
 
   function handleClosePanel() {
     setSelectedJobId(null);
     setAssignError(null);
+    setAssignSuccess(null);
   }
 
   function handleAssign(jobId: string, technicianId: string) {
     setAssignError(null);
+    setAssignSuccess(null);
 
     startTransition(async () => {
       const result = await assignJobAction(jobId, technicianId);
@@ -95,6 +99,11 @@ export function DispatchPageView({
         setAssignError(result.error ?? "Failed to assign job.");
         return;
       }
+
+      const assignedName =
+        technicians.find((technician) => technician.id === technicianId)?.name ??
+        "Technician";
+      setAssignSuccess(`Assigned to ${assignedName}.`);
 
       setJobs((previous) =>
         previous.map((job) => (job.id === result.job!.id ? result.job! : job)),
@@ -118,7 +127,7 @@ export function DispatchPageView({
     "Technician lanes with horizontally scrollable job cards";
 
   return (
-    <div className="flex min-w-0 max-w-full flex-col gap-2 sm:gap-4">
+    <div className="flex min-h-0 min-w-0 max-w-full flex-col gap-2 sm:gap-4 lg:h-[calc(100dvh-7rem)] lg:overflow-hidden">
       <DispatchDashboardHeader
         jobCount={jobs.length}
         technicianCount={technicians.length}
@@ -205,6 +214,7 @@ export function DispatchPageView({
               canDispatchJobs={canDispatchJobs}
               canUpdateJobWorkflow={canUpdateJobWorkflow}
               assignError={assignError}
+              assignSuccess={assignSuccess}
               isAssigning={isPending}
               lockBodyScroll={false}
               onClose={handleClosePanel}
@@ -259,6 +269,7 @@ export function DispatchPageView({
               canDispatchJobs={canDispatchJobs}
               canUpdateJobWorkflow={canUpdateJobWorkflow}
               assignError={assignError}
+              assignSuccess={assignSuccess}
               isAssigning={isPending}
               onClose={handleClosePanel}
               onAssign={handleAssign}

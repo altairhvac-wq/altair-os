@@ -17,6 +17,9 @@ import {
 
 type RecordPaymentFormProps = {
   invoice: InvoiceDetail;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
 };
 
 const inputClass =
@@ -24,28 +27,46 @@ const inputClass =
 
 const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
 
-export function RecordPaymentForm({ invoice }: RecordPaymentFormProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function RecordPaymentForm({
+  invoice,
+  open,
+  onOpenChange,
+  showTrigger = true,
+}: RecordPaymentFormProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const isOpen = isControlled ? open : internalOpen;
   const canRecord = canRecordInvoicePayment(invoice);
   const blockReason = getRecordPaymentBlockReason(invoice);
 
+  function setOpen(nextOpen: boolean) {
+    if (isControlled) {
+      onOpenChange?.(nextOpen);
+      return;
+    }
+
+    setInternalOpen(nextOpen);
+  }
+
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        disabled={!canRecord}
-        title={blockReason ?? undefined}
-        className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
-      >
-        <CreditCard className="h-4 w-4" />
-        Record payment
-      </button>
+      {showTrigger ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          disabled={!canRecord}
+          title={blockReason ?? undefined}
+          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+        >
+          <CreditCard className="h-4 w-4" />
+          Record payment
+        </button>
+      ) : null}
 
       {isOpen && canRecord ? (
         <RecordPaymentModal
           invoice={invoice}
-          onClose={() => setIsOpen(false)}
+          onClose={() => setOpen(false)}
         />
       ) : null}
     </>
@@ -258,7 +279,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
             </p>
           ) : null}
 
-          <div className="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+          <div className="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 bg-white pt-4 sm:static sm:bg-transparent">
             <button
               type="button"
               onClick={onClose}

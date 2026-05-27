@@ -11,10 +11,12 @@ export type InvoiceActivityType =
   | "invoice_converted_from_estimate"
   | "invoice_voided"
   | "invoice_cancelled"
+  | "invoice_updated"
   | "payment_recorded"
   | "invoice_paid";
 
 export type InvoiceActivityMetadata = {
+  invoice_id?: string;
   invoice_number?: string;
   from_status?: InvoiceStatus;
   to_status?: InvoiceStatus;
@@ -25,6 +27,10 @@ export type InvoiceActivityMetadata = {
   job_number?: string;
   payment_id?: string;
   amount?: number;
+  previous_total?: number;
+  new_total?: number;
+  line_item_count?: number;
+  changed_by?: string;
   payment_method?: PaymentMethod;
   reference?: string;
 };
@@ -46,6 +52,7 @@ const ACTIVITY_TYPE_LABELS: Record<InvoiceActivityType, string> = {
   invoice_converted_from_estimate: "Converted from estimate",
   invoice_voided: "Invoice voided",
   invoice_cancelled: "Invoice cancelled",
+  invoice_updated: "Invoice updated",
   payment_recorded: "Payment recorded",
   invoice_paid: "Invoice paid",
 };
@@ -71,6 +78,28 @@ export function formatInvoiceActivityDetails(
         : metadata.estimate_id
           ? "Converted from estimate"
           : null;
+
+    case "invoice_updated": {
+      const parts: string[] = [];
+      if (
+        typeof metadata.previous_total === "number" &&
+        typeof metadata.new_total === "number"
+      ) {
+        const formatter = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        });
+        parts.push(
+          `${formatter.format(metadata.previous_total)} → ${formatter.format(metadata.new_total)}`,
+        );
+      }
+      if (typeof metadata.line_item_count === "number") {
+        parts.push(
+          `${metadata.line_item_count} line item${metadata.line_item_count === 1 ? "" : "s"}`,
+        );
+      }
+      return parts.length > 0 ? parts.join(" · ") : null;
+    }
 
     case "invoice_sent":
     case "invoice_voided":

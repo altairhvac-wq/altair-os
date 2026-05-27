@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -20,6 +23,7 @@ import {
 import type { InvoiceActivity } from "@/shared/types/invoice-activity";
 import type { InvoicePayment } from "@/shared/types/invoice-payment";
 import { InvoiceActivityTimeline } from "./InvoiceActivityTimeline";
+import { InvoiceDetailActionBar } from "./InvoiceDetailActionBar";
 import { InvoicePaymentHistory } from "./InvoicePaymentHistory";
 import { InvoiceStatusActions } from "./InvoiceStatusActions";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
@@ -38,14 +42,17 @@ export function InvoiceDetailPageView({
   payments,
   canManageBilling,
 }: InvoiceDetailPageViewProps) {
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const customerEmail = invoice.customerEmail?.trim();
   const customerPhone = invoice.customerPhone?.trim();
+  const canRecordPayment = canRecordInvoicePayment(invoice);
+  const recordPaymentBlockReason = getRecordPaymentBlockReason(invoice);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
+    <div className="mx-auto max-w-5xl space-y-5 pb-2">
       <Link
         href="/invoices"
-        className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+        className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to invoices
@@ -54,7 +61,7 @@ export function InvoiceDetailPageView({
       <section className="overflow-hidden admin-card">
         <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Invoice
               </p>
@@ -78,10 +85,13 @@ export function InvoiceDetailPageView({
               </div>
             </div>
 
-            <InvoiceStatusActions
-              invoice={invoice}
-              canManageBilling={canManageBilling}
-            />
+            <div className="hidden sm:block">
+              <InvoiceStatusActions
+                invoice={invoice}
+                paymentCount={payments.length}
+                canManageBilling={canManageBilling}
+              />
+            </div>
           </div>
         </div>
 
@@ -92,18 +102,18 @@ export function InvoiceDetailPageView({
             </h2>
             <div className="mt-3 space-y-2 text-sm text-slate-700">
               <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-slate-400" />
+                <User className="h-4 w-4 shrink-0 text-slate-400" />
                 {invoice.customerName}
               </div>
               {customerEmail ? (
                 <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-slate-400" />
-                  {customerEmail}
+                  <Mail className="h-4 w-4 shrink-0 text-slate-400" />
+                  <span className="break-all">{customerEmail}</span>
                 </div>
               ) : null}
               {customerPhone ? (
                 <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-slate-400" />
+                  <Phone className="h-4 w-4 shrink-0 text-slate-400" />
                   {customerPhone}
                 </div>
               ) : null}
@@ -118,7 +128,7 @@ export function InvoiceDetailPageView({
                 </h2>
                 <Link
                   href={`/jobs/${invoice.jobId}`}
-                  className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-cyan-700 transition-colors hover:text-cyan-800"
+                  className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-cyan-700 transition-colors hover:text-cyan-800"
                 >
                   <Briefcase className="h-4 w-4" />
                   {invoice.jobNumber ?? "View job"}
@@ -140,7 +150,7 @@ export function InvoiceDetailPageView({
                 </h2>
                 <Link
                   href={`/estimates/${invoice.estimateId}`}
-                  className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-cyan-700 transition-colors hover:text-cyan-800"
+                  className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-cyan-700 transition-colors hover:text-cyan-800"
                 >
                   <FileText className="h-4 w-4" />
                   {invoice.estimateNumber ?? "View estimate"}
@@ -162,7 +172,7 @@ export function InvoiceDetailPageView({
               className="rounded-lg border border-slate-200 bg-white px-4 py-3"
             >
               <div className="flex items-start justify-between gap-3">
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-medium text-slate-900">
                     {item.name}
                   </p>
@@ -178,7 +188,7 @@ export function InvoiceDetailPageView({
                   </span>
                 ) : null}
               </div>
-              <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
+              <div className="mt-1 flex items-center justify-between gap-3 text-xs text-slate-500">
                 <span>
                   {item.quantity} × {formatCurrency(item.unitPrice)}
                 </span>
@@ -218,6 +228,12 @@ export function InvoiceDetailPageView({
               <span>{formatCurrency(invoice.amountPaid)}</span>
             </div>
           ) : null}
+          {invoice.balanceDue > 0 ? (
+            <div className="mt-2 flex items-center justify-between text-sm font-semibold text-amber-700">
+              <span>Balance due</span>
+              <span>{formatCurrency(invoice.balanceDue)}</span>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -227,13 +243,17 @@ export function InvoiceDetailPageView({
             <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Payments
             </h2>
-            {canManageBilling && !canRecordInvoicePayment(invoice) ? (
+            {canManageBilling && !canRecordPayment ? (
               <p className="mt-1 text-xs text-slate-500">
-                {getRecordPaymentBlockReason(invoice)}
+                {recordPaymentBlockReason}
               </p>
             ) : null}
           </div>
-          {canManageBilling ? <RecordPaymentForm invoice={invoice} /> : null}
+          {canManageBilling ? (
+            <div className="hidden sm:block">
+              <RecordPaymentForm invoice={invoice} />
+            </div>
+          ) : null}
         </div>
         <div className="mt-4">
           <InvoicePaymentHistory payments={payments} />
@@ -252,6 +272,26 @@ export function InvoiceDetailPageView({
       ) : null}
 
       <InvoiceActivityTimeline activities={activities} />
+
+      {canManageBilling ? (
+        <>
+          <RecordPaymentForm
+            invoice={invoice}
+            open={paymentModalOpen}
+            onOpenChange={setPaymentModalOpen}
+            showTrigger={false}
+          />
+          <InvoiceDetailActionBar
+            invoice={invoice}
+            paymentCount={payments.length}
+            canManageBilling={canManageBilling}
+            onRecordPayment={() => setPaymentModalOpen(true)}
+            canRecordPayment={canRecordPayment}
+            recordPaymentBlockReason={recordPaymentBlockReason}
+            variant="sticky"
+          />
+        </>
+      ) : null}
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
 import { listRecentOperationalActivitiesForCompany } from "@/lib/database/queries/dashboard";
 import { listEstimates } from "@/lib/database/queries/estimates";
 import { listExpenses } from "@/lib/database/queries/expenses";
-import { listInvoices } from "@/lib/database/queries/invoices";
+import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
 import { listRecentPayments } from "@/lib/database/queries/invoice-payments";
 import {
   getUnreadNotificationCount,
@@ -222,7 +222,7 @@ export async function getDashboardData(
     access.canViewTechnicianRoster
       ? listActiveTechnicianTimeEntries(companyId)
       : Promise.resolve([]),
-    access.canViewBilling ? listInvoices(companyId) : Promise.resolve([]),
+    access.canViewBilling ? listInvoicesWithBillingSync(companyId) : Promise.resolve([]),
     access.canViewBilling ? listEstimates(companyId) : Promise.resolve([]),
     access.canViewCompanyExpenses
       ? listExpenses(companyId)

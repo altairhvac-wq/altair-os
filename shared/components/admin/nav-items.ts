@@ -110,9 +110,9 @@ export const adminNavItems: NavItem[] = [
 
 export const PRIMARY_MOBILE_ADMIN_NAV_HREFS = [
   "/",
+  "/customers",
   "/jobs",
   "/dispatch",
-  "/customers",
 ] as const;
 
 /** Left-to-right desktop tab order (workflow-first, admin items last). */

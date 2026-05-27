@@ -21,6 +21,7 @@ type DispatchDetailsPanelProps = {
   canDispatchJobs: boolean;
   canUpdateJobWorkflow: boolean;
   assignError: string | null;
+  assignSuccess?: string | null;
   isAssigning: boolean;
   onClose: () => void;
   onAssign: (jobId: string, technicianId: string) => void;
@@ -35,6 +36,7 @@ export function DispatchDetailsPanel({
   canDispatchJobs,
   canUpdateJobWorkflow,
   assignError,
+  assignSuccess = null,
   isAssigning,
   onClose,
   onAssign,
@@ -224,6 +226,9 @@ export function DispatchDetailsPanel({
                       {assignError ? (
                         <p className="text-xs text-red-600">{assignError}</p>
                       ) : null}
+                      {assignSuccess ? (
+                        <p className="text-xs text-emerald-700">{assignSuccess}</p>
+                      ) : null}
                       <button
                         type="button"
                         onClick={handleAssignClick}
@@ -268,6 +273,9 @@ export function DispatchDetailsPanel({
                       </select>
                       {assignError ? (
                         <p className="text-xs text-red-600">{assignError}</p>
+                      ) : null}
+                      {assignSuccess ? (
+                        <p className="text-xs text-emerald-700">{assignSuccess}</p>
                       ) : null}
                       <button
                         type="button"

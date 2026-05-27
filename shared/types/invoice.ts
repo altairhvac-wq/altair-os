@@ -69,6 +69,13 @@ export type InvoiceFormData = {
   lineItems: InvoiceLineItemFormData[];
 };
 
+/** Editable invoice fields before any payment is collected. */
+export type InvoiceEditFormData = {
+  dueDate: string;
+  notes: string;
+  lineItems: InvoiceLineItemFormData[];
+};
+
 export const INVOICE_STATUS_OPTIONS: {
   value: InvoiceStatus | "all";
   label: string;
@@ -182,6 +189,107 @@ export function formatTaxRate(taxRate: number): string {
 
 export function isActiveInvoice(invoice: Pick<Invoice, "status">): boolean {
   return invoice.status !== "void" && invoice.status !== "cancelled";
+}
+
+export function canVoidInvoice(
+  invoice: Pick<Invoice, "status" | "amountPaid">,
+): boolean {
+  if (
+    invoice.status === "void" ||
+    invoice.status === "cancelled" ||
+    invoice.status === "paid" ||
+    invoice.status === "partially_paid" ||
+    invoice.amountPaid > 0
+  ) {
+    return false;
+  }
+
+  return (
+    invoice.status === "draft" ||
+    invoice.status === "sent" ||
+    invoice.status === "overdue"
+  );
+}
+
+export function canEditInvoice(
+  invoice: Pick<Invoice, "status" | "amountPaid">,
+  paymentCount = 0,
+): boolean {
+  if (paymentCount > 0 || invoice.amountPaid > 0) {
+    return false;
+  }
+
+  if (
+    invoice.status === "paid" ||
+    invoice.status === "partially_paid" ||
+    invoice.status === "void" ||
+    invoice.status === "cancelled"
+  ) {
+    return false;
+  }
+
+  return (
+    invoice.status === "draft" ||
+    invoice.status === "sent" ||
+    invoice.status === "overdue"
+  );
+}
+
+export function getEditInvoiceBlockReason(
+  invoice: Pick<Invoice, "status" | "amountPaid">,
+  paymentCount = 0,
+): string | null {
+  if (paymentCount > 0 || invoice.amountPaid > 0) {
+    return "Invoices with recorded payments cannot be edited.";
+  }
+
+  if (invoice.status === "paid") {
+    return "Paid invoices cannot be edited.";
+  }
+
+  if (invoice.status === "partially_paid") {
+    return "Partially paid invoices cannot be edited.";
+  }
+
+  if (invoice.status === "void") {
+    return "Void invoices cannot be edited.";
+  }
+
+  if (invoice.status === "cancelled") {
+    return "Cancelled invoices cannot be edited.";
+  }
+
+  if (!canEditInvoice(invoice, paymentCount)) {
+    return "This invoice cannot be edited in its current status.";
+  }
+
+  return null;
+}
+
+export function getVoidInvoiceBlockReason(
+  invoice: Pick<Invoice, "status" | "amountPaid">,
+): string | null {
+  if (invoice.status === "void") {
+    return "This invoice is already void.";
+  }
+
+  if (invoice.status === "cancelled") {
+    return "This invoice has been cancelled.";
+  }
+
+  if (invoice.status === "paid") {
+    return "Paid invoices cannot be voided.";
+  }
+
+  if (invoice.status === "partially_paid" || invoice.amountPaid > 0) {
+    return "Invoices with recorded payments cannot be voided.";
+  }
+
+  if (!canVoidInvoice(invoice)) {
+    return "This invoice cannot be voided in its current status.";
+  }
+
+  return null;
 }
 
 /** Matches dashboard money snapshot and summary-card unpaid totals. */

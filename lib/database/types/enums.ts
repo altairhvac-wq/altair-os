@@ -94,6 +94,7 @@ export type InvoiceActivityType =
   | "invoice_converted_from_estimate"
   | "invoice_voided"
   | "invoice_cancelled"
+  | "invoice_updated"
   | "payment_recorded"
   | "invoice_paid";
 

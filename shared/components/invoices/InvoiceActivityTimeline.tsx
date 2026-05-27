@@ -5,6 +5,7 @@ import {
   ClipboardList,
   DollarSign,
   History,
+  Pencil,
   Receipt,
   Send,
 } from "lucide-react";
@@ -29,6 +30,7 @@ const ACTIVITY_ICONS: Record<InvoiceActivityType, typeof History> = {
   invoice_converted_from_estimate: Receipt,
   invoice_voided: Ban,
   invoice_cancelled: Ban,
+  invoice_updated: Pencil,
   payment_recorded: DollarSign,
   invoice_paid: CheckCircle2,
 };
@@ -40,6 +42,7 @@ const ACTIVITY_ICON_STYLES: Record<InvoiceActivityType, string> = {
   invoice_converted_from_estimate: "bg-violet-50 text-violet-700 ring-violet-600/15",
   invoice_voided: "bg-slate-100 text-slate-500 ring-slate-400/15",
   invoice_cancelled: "bg-amber-50 text-amber-700 ring-amber-600/15",
+  invoice_updated: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
   payment_recorded: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
   invoice_paid: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
 };

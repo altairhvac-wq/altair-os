@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listCustomers } from "@/lib/database/queries/customers";
-import { listInvoices } from "@/lib/database/queries/invoices";
+import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import { InvoicesPageView } from "@/shared/components/invoices/InvoicesPageView";
@@ -42,7 +42,7 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
   });
 
   const [invoices, customers, jobs, serviceItems] = await Promise.all([
-    listInvoices(companyContext.company.id),
+    listInvoicesWithBillingSync(companyContext.company.id),
     listCustomers(companyContext.company.id),
     listJobs(companyContext.company.id),
     listActiveServiceItems(companyContext.company.id),

@@ -51,6 +51,10 @@ export function TechnicianExpenseForm({
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isPending) {
+      return;
+    }
+
     setError(null);
 
     startTransition(async () => {

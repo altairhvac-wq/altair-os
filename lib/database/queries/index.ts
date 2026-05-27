@@ -83,6 +83,9 @@ export {
   listInvoicesByCustomer,
   listInvoicesForJob,
   mapInvoiceRowToInvoice,
+  syncOverdueInvoiceStatuses,
+  updateInvoice,
+  voidInvoice,
 } from "./invoices";
 export {
   listInvoiceActivitiesForInvoice,

@@ -33,7 +33,7 @@ export const PAYMENT_METHOD_OPTIONS: {
   { value: "cash", label: "Cash" },
   { value: "check", label: "Check" },
   { value: "card", label: "Card" },
-  { value: "bank_transfer", label: "Bank transfer" },
+  { value: "bank_transfer", label: "ACH" },
   { value: "other", label: "Other" },
 ];
 

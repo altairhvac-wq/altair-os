@@ -8,7 +8,9 @@ import {
   convertEstimateToInvoice,
   createInvoice,
   getInvoiceById,
+  updateInvoice,
   updateInvoiceStatus,
+  voidInvoice,
 } from "@/lib/database/queries/invoices";
 import { getJobById } from "@/lib/database/queries/jobs";
 import {
@@ -19,9 +21,14 @@ import {
   recordInvoiceConvertedFromEstimateActivity,
   recordInvoiceCreatedActivity,
   recordInvoiceStatusChangedActivity,
+  recordInvoiceUpdatedActivity,
 } from "@/lib/database/services/invoice-activity";
 import { recordEstimateStatusChangedActivity } from "@/lib/database/services/estimate-activity";
-import type { InvoiceDetail, InvoiceFormData } from "@/shared/types/invoice";
+import type {
+  InvoiceDetail,
+  InvoiceEditFormData,
+  InvoiceFormData,
+} from "@/shared/types/invoice";
 
 export type CreateInvoiceActionResult = {
   error?: string;
@@ -245,6 +252,113 @@ export async function sendInvoiceAction(
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${invoiceId}`);
   revalidatePath(`/customers/${invoice.customerId}`);
+
+  if (invoice.jobId) {
+    revalidatePath(`/jobs/${invoice.jobId}`);
+  }
+
+  return { invoice };
+}
+
+export type VoidInvoiceActionResult = {
+  error?: string;
+  invoice?: InvoiceDetail;
+};
+
+export async function voidInvoiceAction(
+  invoiceId: string,
+): Promise<VoidInvoiceActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." };
+  }
+
+  if (!context.permissions.manageBilling) {
+    return { error: "You do not have permission to void invoices." };
+  }
+
+  const { invoice, previousStatus, error } = await voidInvoice(
+    context.company.id,
+    invoiceId,
+  );
+
+  if (error || !invoice || !previousStatus) {
+    return { error: error ?? "Failed to void invoice." };
+  }
+
+  await recordInvoiceStatusChangedActivity({
+    companyId: context.company.id,
+    invoiceId,
+    actorId: context.user.id,
+    fromStatus: previousStatus,
+    toStatus: "void",
+    invoiceNumber: invoice.invoiceNumber,
+    customerId: invoice.customerId,
+    jobId: invoice.jobId,
+    jobNumber: invoice.jobNumber,
+  });
+
+  revalidatePath("/invoices");
+  revalidatePath(`/invoices/${invoiceId}`);
+  revalidatePath(`/customers/${invoice.customerId}`);
+
+  if (invoice.jobId) {
+    revalidatePath(`/jobs/${invoice.jobId}`);
+  }
+
+  return { invoice };
+}
+
+export type UpdateInvoiceActionResult = {
+  error?: string;
+  invoice?: InvoiceDetail;
+};
+
+export async function updateInvoiceAction(
+  invoiceId: string,
+  data: InvoiceEditFormData,
+): Promise<UpdateInvoiceActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." };
+  }
+
+  if (!context.permissions.manageBilling) {
+    return { error: "You do not have permission to edit invoices." };
+  }
+
+  const { invoice, previousTotal, error } = await updateInvoice(
+    context.company.id,
+    invoiceId,
+    data,
+  );
+
+  if (error || !invoice || previousTotal === null) {
+    return { error: error ?? "Failed to update invoice." };
+  }
+
+  await recordInvoiceUpdatedActivity({
+    companyId: context.company.id,
+    invoiceId,
+    actorId: context.user.id,
+    previousTotal,
+    newTotal: invoice.total,
+    lineItemCount: invoice.lineItems.length,
+    invoiceNumber: invoice.invoiceNumber,
+    customerId: invoice.customerId,
+    jobId: invoice.jobId,
+    jobNumber: invoice.jobNumber,
+  });
+
+  revalidatePath("/invoices");
+  revalidatePath(`/invoices/${invoiceId}`);
+  revalidatePath(`/customers/${invoice.customerId}`);
+
+  if (invoice.jobId) {
+    revalidatePath(`/jobs/${invoice.jobId}`);
+  }
 
   return { invoice };
 }

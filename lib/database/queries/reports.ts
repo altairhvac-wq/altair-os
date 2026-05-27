@@ -1,6 +1,6 @@
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
 import { listEstimates } from "@/lib/database/queries/estimates";
-import { listInvoices } from "@/lib/database/queries/invoices";
+import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listTimeClockEntries } from "@/lib/database/queries/time-clock";
 import { getDailyOperationsSummary } from "@/lib/database/services/operations/daily-operations-summary";
@@ -27,7 +27,7 @@ export async function getReportsFoundationData(
   const [jobs, invoices, estimates, timeClockEntries, todayJobs, operations] =
     await Promise.all([
       listJobs(companyId),
-      listInvoices(companyId),
+      listInvoicesWithBillingSync(companyId),
       listEstimates(companyId),
       listTimeClockEntries(companyId, { limit: TIME_CLOCK_FETCH_LIMIT }),
       listDispatchJobsForToday(companyId),

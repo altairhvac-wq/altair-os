@@ -66,8 +66,8 @@ export const technicianNavItems: TechnicianNavItem[] = [
 export function getTechnicianNavItems(
   context: ActiveCompanyContext,
 ): TechnicianNavItem[] {
-  return technicianNavItems.filter((item) =>
-    canAccessTechnicianNavItem(context, item.id),
+  return technicianNavItems.filter(
+    (item) => item.enabled && canAccessTechnicianNavItem(context, item.id),
   );
 }
 

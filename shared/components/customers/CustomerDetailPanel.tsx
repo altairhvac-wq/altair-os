@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Calendar, MapPin, Tag, X } from "lucide-react";
 import { listDetailPanelClass } from "@/shared/components/layout/list-detail-layout";
 import { CustomerCard } from "./CustomerCard";
@@ -57,7 +58,7 @@ export function CustomerDetailPanel({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
             aria-label="Close panel"
           >
             <X className="h-4 w-4" />
@@ -75,7 +76,7 @@ export function CustomerDetailPanel({
               No customer selected
             </p>
             <p className="mt-1 max-w-[220px] text-xs text-slate-500">
-              Click a row in the table to view full customer details here.
+              Select a customer from the list or open a profile to view details.
             </p>
           </div>
         ) : null}
@@ -149,18 +150,18 @@ export function CustomerDetailPanel({
             </section>
 
             <div className="flex gap-2 border-t border-slate-100 pt-4">
-              <button
-                type="button"
-                className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+              <Link
+                href={`/jobs?customerId=${customer.id}&create=1`}
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-slate-900 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
               >
                 Create job
-              </button>
-              <button
-                type="button"
-                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+              </Link>
+              <Link
+                href={`/customers/${customer.id}`}
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
               >
-                Edit
-              </button>
+                View profile
+              </Link>
             </div>
           </div>
         ) : null}

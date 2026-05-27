@@ -77,6 +77,44 @@ export async function recordInvoiceConvertedFromEstimateActivity(input: {
   }
 }
 
+export async function recordInvoiceUpdatedActivity(input: {
+  companyId: string;
+  invoiceId: string;
+  actorId: string;
+  previousTotal: number;
+  newTotal: number;
+  lineItemCount: number;
+  invoiceNumber?: string;
+  customerId?: string;
+  jobId?: string;
+  jobNumber?: string;
+}): Promise<void> {
+  const { error } = await recordInvoiceActivity({
+    company_id: input.companyId,
+    invoice_id: input.invoiceId,
+    actor_id: input.actorId,
+    event_type: "invoice_updated",
+    metadata: {
+      invoice_id: input.invoiceId,
+      invoice_number: input.invoiceNumber,
+      previous_total: input.previousTotal,
+      new_total: input.newTotal,
+      line_item_count: input.lineItemCount,
+      changed_by: input.actorId,
+      customer_id: input.customerId,
+      job_id: input.jobId,
+      job_number: input.jobNumber,
+    },
+  });
+
+  if (error) {
+    console.error("[recordInvoiceUpdatedActivity] failed:", {
+      invoiceId: input.invoiceId,
+      error,
+    });
+  }
+}
+
 export async function recordInvoiceStatusChangedActivity(input: {
   companyId: string;
   invoiceId: string;

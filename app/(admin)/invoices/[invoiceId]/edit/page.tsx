@@ -1,20 +1,18 @@
 import { notFound, redirect } from "next/navigation";
 import { canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { ensureInvoiceBillingStatesSynced } from "@/lib/database/services/invoice-billing";
-import { listInvoiceActivitiesForInvoice } from "@/lib/database/queries/invoice-activities";
 import { listPaymentsForInvoice } from "@/lib/database/queries/invoice-payments";
 import { getInvoiceById } from "@/lib/database/queries/invoices";
-import { InvoiceDetailPageView } from "@/shared/components/invoices/InvoiceDetailPageView";
+import { listActiveServiceItems } from "@/lib/database/queries/service-items";
+import { ensureInvoiceBillingStatesSynced } from "@/lib/database/services/invoice-billing";
+import { InvoiceEditPageView } from "@/shared/components/invoices/InvoiceEditPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 
-type InvoiceDetailPageProps = {
+type InvoiceEditPageProps = {
   params: Promise<{ invoiceId: string }>;
 };
 
-export default async function InvoiceDetailPage({
-  params,
-}: InvoiceDetailPageProps) {
+export default async function InvoiceEditPage({ params }: InvoiceEditPageProps) {
   const { invoiceId } = await params;
   const companyContext = await getActiveCompanyContext();
 
@@ -28,12 +26,12 @@ export default async function InvoiceDetailPage({
     );
   }
 
-  const [invoice, activities, payments] = await Promise.all([
-    ensureInvoiceBillingStatesSynced(companyContext.company.id).then(() =>
-      getInvoiceById(companyContext.company.id, invoiceId),
-    ),
-    listInvoiceActivitiesForInvoice(companyContext.company.id, invoiceId),
+  await ensureInvoiceBillingStatesSynced(companyContext.company.id);
+
+  const [invoice, payments, serviceItems] = await Promise.all([
+    getInvoiceById(companyContext.company.id, invoiceId),
     listPaymentsForInvoice(companyContext.company.id, invoiceId),
+    listActiveServiceItems(companyContext.company.id),
   ]);
 
   if (!invoice) {
@@ -41,10 +39,10 @@ export default async function InvoiceDetailPage({
   }
 
   return (
-    <InvoiceDetailPageView
+    <InvoiceEditPageView
       invoice={invoice}
-      activities={activities}
-      payments={payments}
+      serviceItems={serviceItems}
+      paymentCount={payments.length}
       canManageBilling={companyContext.permissions.manageBilling}
     />
   );

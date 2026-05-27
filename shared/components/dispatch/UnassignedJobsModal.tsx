@@ -69,7 +69,7 @@ export function UnassignedJobsModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
           >
             <X className="h-4 w-4" />
           </button>

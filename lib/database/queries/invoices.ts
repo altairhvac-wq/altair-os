@@ -6,15 +6,21 @@ import type {
   InvoiceLineItemRow,
   InvoiceRow,
 } from "@/lib/database/types/core-tables";
+import { recordInvoiceActivity } from "@/lib/database/queries/invoice-activities";
 import { getEstimateById, updateEstimateStatus } from "@/lib/database/queries/estimates";
 import {
   calculateInvoiceTotals,
+  canEditInvoice,
+  canVoidInvoice,
   getDefaultDueDate,
   getDefaultIssueDate,
+  getEditInvoiceBlockReason,
+  getVoidInvoiceBlockReason,
   resolveDueDate,
   roundCurrency,
   type Invoice,
   type InvoiceDetail,
+  type InvoiceEditFormData,
   type InvoiceFormData,
   type InvoiceLineItem,
   type InvoiceStatus,
@@ -167,6 +173,27 @@ function computeTotals(
     taxAmount,
     total,
     balanceDue: total,
+  };
+}
+
+function computeTotalsForUpdate(
+  lineItems: InvoiceEditFormData["lineItems"],
+  taxRate: number,
+  amountPaid: number,
+) {
+  const normalizedTaxRate = roundCurrency(Math.max(taxRate, 0));
+  const { subtotal, taxAmount, total } = calculateInvoiceTotals(
+    lineItems,
+    normalizedTaxRate,
+  );
+  const balanceDue = roundCurrency(Math.max(total - amountPaid, 0));
+
+  return {
+    subtotal,
+    taxRate: normalizedTaxRate,
+    taxAmount,
+    total,
+    balanceDue,
   };
 }
 
@@ -493,6 +520,178 @@ export async function updateInvoiceStatus(
   };
 }
 
+function getTodayDateOnly(reference = new Date()): string {
+  const year = reference.getFullYear();
+  const month = String(reference.getMonth() + 1).padStart(2, "0");
+  const day = String(reference.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+type OverdueInvoiceCandidate = {
+  id: string;
+  status: InvoiceStatus;
+  invoice_number: string;
+  customer_id: string;
+  job_id: string | null;
+  jobs: JobSummary | null;
+};
+
+/**
+ * Promotes sent/partially paid invoices past due date to overdue.
+ * Safe to call on read paths; uses optimistic status checks per row.
+ */
+export async function syncOverdueInvoiceStatuses(
+  companyId: string,
+): Promise<number> {
+  const supabase = await createClient();
+  const today = getTodayDateOnly();
+
+  const { data, error } = await supabase
+    .from("invoices")
+    .select("id, status, invoice_number, customer_id, job_id, jobs(job_number)")
+    .eq("company_id", companyId)
+    .in("status", ["sent", "partially_paid"])
+    .gt("balance_due", 0)
+    .lt("due_date", today);
+
+  if (error) {
+    console.error("[syncOverdueInvoiceStatuses] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return 0;
+  }
+
+  const candidates = (data ?? []) as OverdueInvoiceCandidate[];
+  let updatedCount = 0;
+
+  for (const candidate of candidates) {
+    const fromStatus = candidate.status;
+
+    const { data: updatedRow, error: updateError } = await supabase
+      .from("invoices")
+      .update({ status: "overdue" })
+      .eq("company_id", companyId)
+      .eq("id", candidate.id)
+      .eq("status", fromStatus)
+      .select("id")
+      .maybeSingle();
+
+    if (updateError) {
+      console.error("[syncOverdueInvoiceStatuses] update failed:", {
+        companyId,
+        invoiceId: candidate.id,
+        code: updateError.code,
+        message: updateError.message,
+      });
+      continue;
+    }
+
+    if (!updatedRow) {
+      continue;
+    }
+
+    const { error: activityError } = await recordInvoiceActivity({
+      company_id: companyId,
+      invoice_id: candidate.id,
+      actor_id: null,
+      event_type: "status_changed",
+      metadata: {
+        from_status: fromStatus,
+        to_status: "overdue",
+        invoice_number: candidate.invoice_number,
+        customer_id: candidate.customer_id,
+        job_id: candidate.job_id ?? undefined,
+        job_number: candidate.jobs?.job_number,
+        automated: true,
+      },
+    });
+
+    if (activityError) {
+      console.error("[syncOverdueInvoiceStatuses] activity failed:", {
+        companyId,
+        invoiceId: candidate.id,
+        error: activityError,
+      });
+    }
+
+    updatedCount += 1;
+  }
+
+  return updatedCount;
+}
+
+export async function voidInvoice(
+  companyId: string,
+  invoiceId: string,
+): Promise<{
+  invoice: InvoiceDetail | null;
+  previousStatus: InvoiceStatus | null;
+  error: string | null;
+}> {
+  const invoice = await getInvoiceById(companyId, invoiceId);
+
+  if (!invoice) {
+    return {
+      invoice: null,
+      previousStatus: null,
+      error: "Invoice not found.",
+    };
+  }
+
+  if (!canVoidInvoice(invoice)) {
+    return {
+      invoice: null,
+      previousStatus: null,
+      error: getVoidInvoiceBlockReason(invoice) ?? "This invoice cannot be voided.",
+    };
+  }
+
+  const previousStatus = invoice.status;
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("invoices")
+    .update({
+      status: "void",
+      balance_due: 0,
+    })
+    .eq("company_id", companyId)
+    .eq("id", invoiceId)
+    .eq("status", previousStatus)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[voidInvoice] update failed:", {
+      companyId,
+      invoiceId,
+      previousStatus,
+      code: error.code,
+      message: error.message,
+    });
+    return { invoice: null, previousStatus: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return {
+      invoice: null,
+      previousStatus: null,
+      error: "Invoice status has changed. Refresh the page and try again.",
+    };
+  }
+
+  const updatedInvoice = await getInvoiceById(companyId, invoiceId);
+
+  return {
+    invoice: updatedInvoice,
+    previousStatus,
+    error: updatedInvoice ? null : "Failed to load voided invoice.",
+  };
+}
+
 export async function getInvoiceByEstimateId(
   companyId: string,
   estimateId: string,
@@ -618,6 +817,179 @@ export async function createInvoice(
   return {
     invoice,
     error: invoice ? null : "Failed to load created invoice.",
+  };
+}
+
+async function countInvoicePayments(
+  companyId: string,
+  invoiceId: string,
+): Promise<number> {
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("invoice_payments")
+    .select("*", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .eq("invoice_id", invoiceId);
+
+  if (error) {
+    console.error("[countInvoicePayments] count failed:", {
+      companyId,
+      invoiceId,
+      code: error.code,
+      message: error.message,
+    });
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+export async function updateInvoice(
+  companyId: string,
+  invoiceId: string,
+  data: InvoiceEditFormData,
+): Promise<{
+  invoice: InvoiceDetail | null;
+  previousTotal: number | null;
+  error: string | null;
+}> {
+  const currentInvoice = await getInvoiceById(companyId, invoiceId);
+
+  if (!currentInvoice) {
+    return { invoice: null, previousTotal: null, error: "Invoice not found." };
+  }
+
+  const paymentCount = await countInvoicePayments(companyId, invoiceId);
+  const editBlockReason = getEditInvoiceBlockReason(currentInvoice, paymentCount);
+
+  if (!canEditInvoice(currentInvoice, paymentCount)) {
+    return {
+      invoice: null,
+      previousTotal: null,
+      error: editBlockReason ?? "This invoice cannot be edited.",
+    };
+  }
+
+  const validLineItems = data.lineItems.filter(isValidLineItem);
+
+  if (validLineItems.length === 0) {
+    return {
+      invoice: null,
+      previousTotal: null,
+      error: "At least one line item is required.",
+    };
+  }
+
+  const previousTotal = currentInvoice.total;
+  const dueDate = resolveDueDate(currentInvoice.issueDate, data.dueDate);
+  const { subtotal, taxRate, taxAmount, total, balanceDue } =
+    computeTotalsForUpdate(
+      validLineItems,
+      currentInvoice.taxRate,
+      currentInvoice.amountPaid,
+    );
+
+  if (balanceDue < 0) {
+    return {
+      invoice: null,
+      previousTotal: null,
+      error: "Invoice balance cannot be negative.",
+    };
+  }
+
+  const supabase = await createClient();
+  const lineItemInserts = mapLineItemsToInsert(
+    companyId,
+    invoiceId,
+    validLineItems,
+  );
+
+  const { data: updatedRow, error: updateError } = await supabase
+    .from("invoices")
+    .update({
+      due_date: dueDate,
+      notes: data.notes.trim() || null,
+      subtotal,
+      tax_rate: taxRate,
+      tax_amount: taxAmount,
+      total,
+      balance_due: balanceDue,
+    })
+    .eq("id", invoiceId)
+    .eq("company_id", companyId)
+    .eq("status", currentInvoice.status)
+    .eq("amount_paid", currentInvoice.amountPaid)
+    .select("id")
+    .maybeSingle();
+
+  if (updateError) {
+    console.error("[updateInvoice] update failed:", {
+      companyId,
+      invoiceId,
+      code: updateError.code,
+      message: updateError.message,
+    });
+    return {
+      invoice: null,
+      previousTotal: null,
+      error: mapDatabaseError(updateError),
+    };
+  }
+
+  if (!updatedRow) {
+    return {
+      invoice: null,
+      previousTotal: null,
+      error:
+        "Invoice was updated by another action. Refresh the page and try again.",
+    };
+  }
+
+  const { error: deleteLineItemsError } = await supabase
+    .from("invoice_line_items")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("invoice_id", invoiceId);
+
+  if (deleteLineItemsError) {
+    console.error("[updateInvoice] line items delete failed:", {
+      companyId,
+      invoiceId,
+      code: deleteLineItemsError.code,
+      message: deleteLineItemsError.message,
+    });
+    return {
+      invoice: null,
+      previousTotal: null,
+      error: mapDatabaseError(deleteLineItemsError),
+    };
+  }
+
+  const { error: lineItemsError } = await supabase
+    .from("invoice_line_items")
+    .insert(lineItemInserts);
+
+  if (lineItemsError) {
+    console.error("[updateInvoice] line items insert failed:", {
+      companyId,
+      invoiceId,
+      code: lineItemsError.code,
+      message: lineItemsError.message,
+    });
+    return {
+      invoice: null,
+      previousTotal: null,
+      error: mapDatabaseError(lineItemsError),
+    };
+  }
+
+  const invoice = await getInvoiceById(companyId, invoiceId);
+
+  return {
+    invoice,
+    previousTotal,
+    error: invoice ? null : "Failed to load updated invoice.",
   };
 }
 
