@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Receipt, X } from "lucide-react";
+import { CheckCircle2, Receipt, X } from "lucide-react";
 import { TechnicianExpenseForm } from "./TechnicianExpenseForm";
 
 type TechnicianExpenseSheetProps = {
@@ -18,10 +18,11 @@ export function TechnicianExpenseSheet({
   onSaved,
 }: TechnicianExpenseSheetProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isSubmitting) {
+      if (event.key === "Escape" && !isSubmitting && !showSuccess) {
         onClose();
       }
     }
@@ -34,11 +35,14 @@ export function TechnicianExpenseSheet({
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [isSubmitting, onClose]);
+  }, [isSubmitting, onClose, showSuccess]);
 
   function handleSaved() {
+    setShowSuccess(true);
     onSaved?.();
-    onClose();
+    window.setTimeout(() => {
+      onClose();
+    }, 700);
   }
 
   return (
@@ -52,7 +56,7 @@ export function TechnicianExpenseSheet({
         type="button"
         aria-label="Close receipt form"
         onClick={onClose}
-        disabled={isSubmitting}
+        disabled={isSubmitting || showSuccess}
         className="absolute inset-0 bg-slate-900/40"
       />
       <div className="relative z-10 flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-xl">
@@ -72,7 +76,7 @@ export function TechnicianExpenseSheet({
           <button
             type="button"
             onClick={onClose}
-            disabled={isSubmitting}
+            disabled={isSubmitting || showSuccess}
             className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
             aria-label="Close"
           >
@@ -80,37 +84,53 @@ export function TechnicianExpenseSheet({
           </button>
         </header>
 
-        <div
-          className="min-h-0 flex-1 overflow-y-auto px-4 py-4"
-          data-no-pull-refresh
-        >
-          <TechnicianExpenseForm
-            jobId={jobId}
-            jobNumber={jobNumber}
-            onSuccess={handleSaved}
-            onCancel={onClose}
-            onSubmittingChange={setIsSubmitting}
-          />
-        </div>
+        {showSuccess ? (
+          <div className="flex min-h-[200px] flex-1 flex-col items-center justify-center px-4 py-10">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-emerald-600/15">
+              <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+            </div>
+            <p className="mt-4 text-base font-bold text-slate-900">
+              Receipt saved
+            </p>
+            <p className="mt-1 text-sm text-slate-500">
+              {jobNumber ? `Linked to ${jobNumber}` : "Ready for review"}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4"
+              data-no-pull-refresh
+            >
+              <TechnicianExpenseForm
+                jobId={jobId}
+                jobNumber={jobNumber}
+                onSuccess={handleSaved}
+                onCancel={onClose}
+                onSubmittingChange={setIsSubmitting}
+              />
+            </div>
 
-        <footer className="flex shrink-0 gap-3 border-t border-slate-100 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            form="technician-expense-form"
-            disabled={isSubmitting}
-            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-cyan-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting ? "Saving..." : "Save receipt"}
-          </button>
-        </footer>
+            <footer className="flex shrink-0 gap-3 border-t border-slate-100 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="technician-expense-form"
+                disabled={isSubmitting}
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-cyan-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSubmitting ? "Saving..." : "Save receipt"}
+              </button>
+            </footer>
+          </>
+        )}
       </div>
     </div>
   );

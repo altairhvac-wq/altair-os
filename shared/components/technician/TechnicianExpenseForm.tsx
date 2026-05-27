@@ -1,13 +1,8 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import {
-  createExpenseAction,
-  prepareExpenseReceiptUploadAction,
-} from "@/app/actions/expenses";
-import { COMPANY_FILES_BUCKET } from "@/lib/storage/company-files";
 import {
   EXPENSE_CATEGORY_OPTIONS,
   type ExpenseCategory,
@@ -19,6 +14,7 @@ import {
   parseExpensePaymentMethod,
 } from "@/shared/components/expenses/ExpensePaymentMethodField";
 import { ReceiptUploadBox } from "@/shared/components/expenses/ReceiptUploadBox";
+import { submitExpenseWithReceipt } from "@/shared/lib/submit-expense-with-receipt";
 
 type TechnicianExpenseFormProps = {
   jobId?: string;
@@ -28,8 +24,19 @@ type TechnicianExpenseFormProps = {
   onSubmittingChange?: (isSubmitting: boolean) => void;
 };
 
+const FIELD_CATEGORY_OPTIONS: ExpenseCategory[] = [
+  "materials",
+  "fuel",
+  "tools",
+  "meals",
+  "vehicle",
+  "other",
+];
+
 const inputClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
+  "w-full min-h-11 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-base text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:text-sm";
+
+const numericInputClass = `${inputClass} tabular-nums`;
 
 const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
 
@@ -44,6 +51,8 @@ export function TechnicianExpenseForm({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [category, setCategory] = useState<ExpenseCategory>("materials");
+  const [showMore, setShowMore] = useState(false);
   const [paymentMethod, setPaymentMethod] =
     useState<ExpensePaymentMethod>("personal_card");
 
@@ -67,7 +76,11 @@ export function TechnicianExpenseForm({
       const form = new FormData(event.currentTarget);
       const amountValue = String(form.get("amount") ?? "").trim();
       const merchant = String(form.get("merchant") ?? "").trim();
-      const category = String(form.get("category") ?? "materials") as ExpenseCategory;
+
+      if (!receiptFile && !amountValue) {
+        setError("Add a receipt photo or enter an amount.");
+        return;
+      }
 
       const data: ExpenseFormData = {
         amount: amountValue ? Number(amountValue) : undefined,
@@ -78,58 +91,9 @@ export function TechnicianExpenseForm({
         jobId,
       };
 
-      const expenseId = crypto.randomUUID();
-      let receiptFileName: string | undefined;
-      let receiptStoragePath: string | undefined;
-      let receiptMimeType: string | undefined;
-      let receiptFileSize: number | undefined;
-
-      if (receiptFile) {
-        const target = await prepareExpenseReceiptUploadAction({
-          expenseId,
-          fileName: receiptFile.name,
-        });
-
-        if (target.error || !target.storagePath) {
-          setError(target.error ?? "Could not prepare receipt upload.");
-          return;
-        }
-
-        const supabase = createClient();
-        const { error: uploadError } = await supabase.storage
-          .from(COMPANY_FILES_BUCKET)
-          .upload(target.storagePath, receiptFile, {
-            upsert: false,
-            contentType: receiptFile.type,
-          });
-
-        if (uploadError) {
-          setError(uploadError.message || "Receipt upload failed.");
-          return;
-        }
-
-        receiptFileName = receiptFile.name;
-        receiptStoragePath = target.storagePath;
-        receiptMimeType = receiptFile.type;
-        receiptFileSize = receiptFile.size;
-      }
-
-      const result = await createExpenseAction({
-        data,
-        expenseId,
-        receiptFileName,
-        receiptStoragePath,
-        receiptMimeType,
-        receiptFileSize,
-      });
+      const result = await submitExpenseWithReceipt({ data, receiptFile });
 
       if (result.error) {
-        if (receiptStoragePath) {
-          const supabase = createClient();
-          await supabase.storage
-            .from(COMPANY_FILES_BUCKET)
-            .remove([receiptStoragePath]);
-        }
         setError(result.error);
         return;
       }
@@ -144,6 +108,7 @@ export function TechnicianExpenseForm({
       id="technician-expense-form"
       onSubmit={handleSubmit}
       className="space-y-4"
+      aria-busy={isPending}
     >
       {jobNumber ? (
         <div className="rounded-xl bg-slate-50 px-3.5 py-2.5 text-sm text-slate-600">
@@ -152,22 +117,16 @@ export function TechnicianExpenseForm({
         </div>
       ) : null}
 
-      <section>
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Receipt photo
-        </h3>
-        <ReceiptUploadBox
-          compact
-          captureEnvironment
-          selectedFile={receiptFile}
-          onFileSelected={setReceiptFile}
-        />
-      </section>
+      <ReceiptUploadBox
+        compact
+        captureEnvironment
+        selectedFile={receiptFile}
+        onFileSelected={setReceiptFile}
+      />
 
       <div>
         <label htmlFor="tech-expense-amount" className={labelClass}>
-          Amount{" "}
-          <span className="font-normal text-slate-400">(optional)</span>
+          Amount
         </label>
         <input
           id="tech-expense-amount"
@@ -177,40 +136,39 @@ export function TechnicianExpenseForm({
           min="0"
           step="0.01"
           placeholder="0.00"
-          className={inputClass}
+          disabled={isPending}
+          enterKeyHint="done"
+          className={numericInputClass}
         />
       </div>
 
-      <div>
-        <label htmlFor="tech-expense-category" className={labelClass}>
-          Category
-        </label>
-        <select
-          id="tech-expense-category"
-          name="category"
-          defaultValue="materials"
-          className={inputClass}
-        >
-          {categoryOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      <fieldset>
+        <legend className={labelClass}>Category</legend>
+        <input type="hidden" name="category" value={category} />
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          {FIELD_CATEGORY_OPTIONS.map((value) => {
+            const label =
+              categoryOptions.find((option) => option.value === value)?.label ??
+              value;
 
-      <div>
-        <label htmlFor="tech-expense-merchant" className={labelClass}>
-          Vendor{" "}
-          <span className="font-normal text-slate-400">(optional)</span>
-        </label>
-        <input
-          id="tech-expense-merchant"
-          name="merchant"
-          placeholder="Home Depot"
-          className={inputClass}
-        />
-      </div>
+            return (
+              <button
+                key={value}
+                type="button"
+                disabled={isPending}
+                onClick={() => setCategory(value)}
+                className={`inline-flex min-h-11 shrink-0 items-center rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors ${
+                  category === value
+                    ? "border-cyan-300 bg-cyan-50 text-cyan-900"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
 
       <ExpensePaymentMethodField
         variant="toggle"
@@ -219,7 +177,65 @@ export function TechnicianExpenseForm({
         disabled={isPending}
       />
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      <button
+        type="button"
+        onClick={() => setShowMore((current) => !current)}
+        disabled={isPending}
+        className="flex min-h-11 w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-60"
+        aria-expanded={showMore}
+      >
+        <span>More options</span>
+        {showMore ? (
+          <ChevronUp className="h-4 w-4 text-slate-400" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-slate-400" />
+        )}
+      </button>
+
+      {showMore ? (
+        <div className="space-y-4 rounded-xl border border-slate-100 bg-slate-50/50 p-3.5">
+          <div>
+            <label htmlFor="tech-expense-merchant" className={labelClass}>
+              Vendor{" "}
+              <span className="font-normal text-slate-400">(optional)</span>
+            </label>
+            <input
+              id="tech-expense-merchant"
+              name="merchant"
+              placeholder="Home Depot"
+              disabled={isPending}
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="tech-expense-category-select" className={labelClass}>
+              All categories
+            </label>
+            <select
+              id="tech-expense-category-select"
+              value={category}
+              onChange={(event) =>
+                setCategory(event.target.value as ExpenseCategory)
+              }
+              disabled={isPending}
+              className={inputClass}
+            >
+              {categoryOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      ) : null}
+
+      {error ? (
+        <p className="text-sm text-red-600" role="alert" aria-live="polite">
+          {error}
+        </p>
+      ) : null}
     </form>
   );
 }

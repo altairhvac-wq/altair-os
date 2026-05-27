@@ -2,12 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import {
-  createExpenseAction,
-  prepareExpenseReceiptUploadAction,
-} from "@/app/actions/expenses";
-import { COMPANY_FILES_BUCKET } from "@/lib/storage/company-files";
 import {
   EXPENSE_CATEGORY_OPTIONS,
   type ExpenseCategory,
@@ -19,6 +13,7 @@ import {
   parseExpensePaymentMethod,
 } from "./ExpensePaymentMethodField";
 import { ReceiptUploadBox } from "./ReceiptUploadBox";
+import { submitExpenseWithReceipt } from "@/shared/lib/submit-expense-with-receipt";
 
 type ExpenseFormProps = {
   initialData?: Partial<ExpenseFormData>;
@@ -74,58 +69,9 @@ export function ExpenseForm({
         notes: notes || undefined,
       };
 
-      const expenseId = crypto.randomUUID();
-      let receiptFileName: string | undefined;
-      let receiptStoragePath: string | undefined;
-      let receiptMimeType: string | undefined;
-      let receiptFileSize: number | undefined;
-
-      if (receiptFile) {
-        const target = await prepareExpenseReceiptUploadAction({
-          expenseId,
-          fileName: receiptFile.name,
-        });
-
-        if (target.error || !target.storagePath) {
-          setError(target.error ?? "Could not prepare receipt upload.");
-          return;
-        }
-
-        const supabase = createClient();
-        const { error: uploadError } = await supabase.storage
-          .from(COMPANY_FILES_BUCKET)
-          .upload(target.storagePath, receiptFile, {
-            upsert: false,
-            contentType: receiptFile.type,
-          });
-
-        if (uploadError) {
-          setError(uploadError.message || "Receipt upload failed.");
-          return;
-        }
-
-        receiptFileName = receiptFile.name;
-        receiptStoragePath = target.storagePath;
-        receiptMimeType = receiptFile.type;
-        receiptFileSize = receiptFile.size;
-      }
-
-      const result = await createExpenseAction({
-        data,
-        expenseId,
-        receiptFileName,
-        receiptStoragePath,
-        receiptMimeType,
-        receiptFileSize,
-      });
+      const result = await submitExpenseWithReceipt({ data, receiptFile });
 
       if (result.error) {
-        if (receiptStoragePath) {
-          const supabase = createClient();
-          await supabase.storage
-            .from(COMPANY_FILES_BUCKET)
-            .remove([receiptStoragePath]);
-        }
         setError(result.error);
         return;
       }

@@ -129,6 +129,8 @@ function isAllowedReceiptMimeType(mimeType: string): boolean {
 export async function prepareExpenseReceiptUploadAction(input: {
   expenseId: string;
   fileName: string;
+  /** When true, skip the existing-expense check (used during create-before-save upload). */
+  forCreate?: boolean;
 }): Promise<ExpenseReceiptUploadTargetResult> {
   const context = await getActiveCompanyContext();
 
@@ -140,14 +142,18 @@ export async function prepareExpenseReceiptUploadAction(input: {
     return { error: "File name is required." };
   }
 
-  const existing = await getExpenseById(context.company.id, input.expenseId);
+  if (!input.forCreate) {
+    const existing = await getExpenseById(context.company.id, input.expenseId);
 
-  if (!existing) {
-    return { error: "Expense not found." };
-  }
+    if (!existing) {
+      return { error: "Expense not found." };
+    }
 
-  if (!canManageExpenseReceipt(context, existing)) {
-    return { error: "You do not have permission to upload receipts for this expense." };
+    if (!canManageExpenseReceipt(context, existing)) {
+      return {
+        error: "You do not have permission to upload receipts for this expense.",
+      };
+    }
   }
 
   const storagePath = buildExpenseReceiptStoragePath({

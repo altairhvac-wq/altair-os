@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createJobMaterialAction } from "@/app/actions/job-materials";
 import { formatCurrency } from "@/shared/types/customer";
@@ -19,7 +20,9 @@ type TechnicianMaterialFormProps = {
 const CUSTOM_SERVICE_ITEM_ID = "";
 
 const inputClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
+  "w-full min-h-11 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-base text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:text-sm";
+
+const numericInputClass = `${inputClass} tabular-nums`;
 
 const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
 
@@ -34,6 +37,7 @@ export function TechnicianMaterialForm({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedServiceItemId, setSelectedServiceItemId] = useState(
     CUSTOM_SERVICE_ITEM_ID,
   );
@@ -56,6 +60,7 @@ export function TechnicianMaterialForm({
     setUnitCost("");
     setUnitPrice("");
     setTaxable(true);
+    setShowAdvanced(false);
     setError(null);
   }
 
@@ -111,20 +116,6 @@ export function TechnicianMaterialForm({
       return;
     }
 
-    const trimmedUnitPrice = unitPrice.trim();
-
-    if (!trimmedUnitPrice) {
-      setError("Unit price is required.");
-      return;
-    }
-
-    const parsedUnitPrice = parseFloat(trimmedUnitPrice);
-
-    if (!Number.isFinite(parsedUnitPrice) || parsedUnitPrice < 0) {
-      setError("Unit price cannot be negative.");
-      return;
-    }
-
     const trimmedUnitCost = unitCost.trim();
     let parsedUnitCost: number | null = null;
 
@@ -132,9 +123,26 @@ export function TechnicianMaterialForm({
       parsedUnitCost = parseFloat(trimmedUnitCost);
 
       if (!Number.isFinite(parsedUnitCost) || parsedUnitCost < 0) {
-        setError("Unit cost cannot be negative.");
+        setError("Cost cannot be negative.");
         return;
       }
+    }
+
+    const trimmedUnitPrice = unitPrice.trim();
+    let parsedUnitPrice: number;
+
+    if (trimmedUnitPrice) {
+      parsedUnitPrice = parseFloat(trimmedUnitPrice);
+
+      if (!Number.isFinite(parsedUnitPrice) || parsedUnitPrice < 0) {
+        setError("Billable price cannot be negative.");
+        return;
+      }
+    } else if (parsedUnitCost != null) {
+      parsedUnitPrice = parsedUnitCost;
+    } else {
+      setError("Enter a cost or billable price.");
+      return;
     }
 
     const data: JobMaterialFormData = {
@@ -177,116 +185,143 @@ export function TechnicianMaterialForm({
       ) : null}
 
       <div>
-        <label htmlFor="tech-material-service-item" className={labelClass}>
-          Price book item
-        </label>
-        <select
-          id="tech-material-service-item"
-          value={selectedServiceItemId}
-          onChange={(event) => handleServiceItemChange(event.target.value)}
-          disabled={isPending}
-          className={inputClass}
-        >
-          <option value={CUSTOM_SERVICE_ITEM_ID}>Custom material</option>
-          {serviceItems.map((serviceItem) => (
-            <option key={serviceItem.id} value={serviceItem.id}>
-              {serviceItem.name} — {formatCurrency(serviceItem.unitPrice)}
-            </option>
-          ))}
-        </select>
-        {serviceItems.length === 0 ? (
-          <p className="mt-1 text-xs text-slate-500">
-            No price book items yet. Enter a custom material name below.
-          </p>
-        ) : null}
-      </div>
-
-      <div>
         <label htmlFor="tech-material-name" className={labelClass}>
-          Material name
+          What did you use?
         </label>
         <input
           id="tech-material-name"
           type="text"
           value={name}
           onChange={(event) => setName(event.target.value)}
-          placeholder="Part or supply used on this job"
+          placeholder="e.g. 3/4&quot; copper fitting"
           disabled={isPending}
           required
+          autoComplete="off"
+          enterKeyHint="next"
           className={inputClass}
         />
       </div>
 
-      <div>
-        <label htmlFor="tech-material-description" className={labelClass}>
-          Description{" "}
-          <span className="font-normal text-slate-400">(optional)</span>
-        </label>
-        <input
-          id="tech-material-description"
-          type="text"
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-          placeholder="Optional details"
-          disabled={isPending}
-          className={inputClass}
-        />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="tech-material-quantity" className={labelClass}>
+            Qty
+          </label>
+          <input
+            id="tech-material-quantity"
+            type="number"
+            inputMode="decimal"
+            min="0.01"
+            step="0.01"
+            value={quantity}
+            onChange={(event) => setQuantity(event.target.value)}
+            disabled={isPending}
+            required
+            enterKeyHint="next"
+            className={numericInputClass}
+          />
+        </div>
+        <div>
+          <label htmlFor="tech-material-unit-cost" className={labelClass}>
+            Cost each
+          </label>
+          <input
+            id="tech-material-unit-cost"
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="0.01"
+            value={unitCost}
+            onChange={(event) => setUnitCost(event.target.value)}
+            placeholder="0.00"
+            disabled={isPending}
+            enterKeyHint="done"
+            className={numericInputClass}
+          />
+        </div>
       </div>
 
-      <div>
-        <label htmlFor="tech-material-quantity" className={labelClass}>
-          Quantity
-        </label>
-        <input
-          id="tech-material-quantity"
-          type="number"
-          inputMode="decimal"
-          min="0.01"
-          step="0.01"
-          value={quantity}
-          onChange={(event) => setQuantity(event.target.value)}
-          disabled={isPending}
-          required
-          className={inputClass}
-        />
-      </div>
+      <button
+        type="button"
+        onClick={() => setShowAdvanced((current) => !current)}
+        disabled={isPending}
+        className="flex min-h-11 w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-60"
+        aria-expanded={showAdvanced}
+      >
+        <span>More options</span>
+        {showAdvanced ? (
+          <ChevronUp className="h-4 w-4 text-slate-400" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-slate-400" />
+        )}
+      </button>
 
-      <div>
-        <label htmlFor="tech-material-unit-cost" className={labelClass}>
-          Unit cost{" "}
-          <span className="font-normal text-slate-400">(optional)</span>
-        </label>
-        <input
-          id="tech-material-unit-cost"
-          type="number"
-          inputMode="decimal"
-          min="0"
-          step="0.01"
-          value={unitCost}
-          onChange={(event) => setUnitCost(event.target.value)}
-          placeholder="0.00"
-          disabled={isPending}
-          className={inputClass}
-        />
-      </div>
+      {showAdvanced ? (
+        <div className="space-y-4 rounded-xl border border-slate-100 bg-slate-50/50 p-3.5">
+          {serviceItems.length > 0 ? (
+            <div>
+              <label htmlFor="tech-material-service-item" className={labelClass}>
+                Price book item
+              </label>
+              <select
+                id="tech-material-service-item"
+                value={selectedServiceItemId}
+                onChange={(event) =>
+                  handleServiceItemChange(event.target.value)
+                }
+                disabled={isPending}
+                className={inputClass}
+              >
+                <option value={CUSTOM_SERVICE_ITEM_ID}>Custom material</option>
+                {serviceItems.map((serviceItem) => (
+                  <option key={serviceItem.id} value={serviceItem.id}>
+                    {serviceItem.name} — {formatCurrency(serviceItem.unitPrice)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
 
-      <div>
-        <label htmlFor="tech-material-unit-price" className={labelClass}>
-          Unit price
-        </label>
-        <input
-          id="tech-material-unit-price"
-          type="number"
-          inputMode="decimal"
-          min="0"
-          step="0.01"
-          value={unitPrice}
-          onChange={(event) => setUnitPrice(event.target.value)}
-          disabled={isPending}
-          required
-          className={inputClass}
-        />
-      </div>
+          <div>
+            <label htmlFor="tech-material-unit-price" className={labelClass}>
+              Billable price each
+            </label>
+            <input
+              id="tech-material-unit-price"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              value={unitPrice}
+              onChange={(event) => setUnitPrice(event.target.value)}
+              placeholder={
+                unitCost.trim() ? "Defaults to cost" : "Required if no cost"
+              }
+              disabled={isPending}
+              className={numericInputClass}
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Leave blank to bill at cost.
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="tech-material-description" className={labelClass}>
+              Notes{" "}
+              <span className="font-normal text-slate-400">(optional)</span>
+            </label>
+            <input
+              id="tech-material-description"
+              type="text"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="Optional details"
+              disabled={isPending}
+              className={inputClass}
+            />
+          </div>
+        </div>
+      ) : null}
 
       {error ? (
         <p className="text-sm text-red-600" role="alert" aria-live="polite">

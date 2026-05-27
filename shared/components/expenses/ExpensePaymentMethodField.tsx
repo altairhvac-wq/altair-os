@@ -33,7 +33,7 @@ export function ExpensePaymentMethodField({
             type="button"
             disabled={disabled}
             onClick={() => onChange("personal_card")}
-            className={`rounded-xl border px-3 py-3 text-left transition-colors ${
+            className={`min-h-11 rounded-xl border px-3 py-3 text-left transition-colors ${
               value !== "company_card"
                 ? "border-cyan-300 bg-cyan-50 text-cyan-900"
                 : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
@@ -48,7 +48,7 @@ export function ExpensePaymentMethodField({
             type="button"
             disabled={disabled}
             onClick={() => onChange("company_card")}
-            className={`rounded-xl border px-3 py-3 text-left transition-colors ${
+            className={`min-h-11 rounded-xl border px-3 py-3 text-left transition-colors ${
               value === "company_card"
                 ? "border-cyan-300 bg-cyan-50 text-cyan-900"
                 : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
