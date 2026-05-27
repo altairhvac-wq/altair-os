@@ -113,15 +113,9 @@ async function generateJobNumber(companyId: string): Promise<string> {
   return `JOB-${1049 + (count ?? 0)}`;
 }
 
-export function mapJobFormDataToInsert(
-  companyId: string,
-  jobNumber: string,
-  data: JobFormData,
-): JobInsert {
+function mapJobFormDataFields(data: JobFormData) {
   return {
-    company_id: companyId,
     customer_id: data.customerId,
-    job_number: jobNumber,
     service_address: data.serviceAddress.trim(),
     city: data.city.trim(),
     state: data.state.trim(),
@@ -133,6 +127,22 @@ export function mapJobFormDataToInsert(
     description: data.description.trim() || null,
     notes: data.notes.trim() || null,
   };
+}
+
+export function mapJobFormDataToInsert(
+  companyId: string,
+  jobNumber: string,
+  data: JobFormData,
+): JobInsert {
+  return {
+    company_id: companyId,
+    job_number: jobNumber,
+    ...mapJobFormDataFields(data),
+  };
+}
+
+export function mapJobFormDataToUpdate(data: JobFormData): JobUpdate {
+  return mapJobFormDataFields(data);
 }
 
 export async function listJobs(companyId: string): Promise<Job[]> {
@@ -312,6 +322,66 @@ export async function createJob(
 
   return {
     job: mapJobRowToJob(row as JobRowWithTechnician),
+    error: null,
+  };
+}
+
+export async function updateJob(
+  companyId: string,
+  jobId: string,
+  data: JobFormData,
+): Promise<{ job: JobDetail | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: customer, error: customerError } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("id", data.customerId)
+    .maybeSingle();
+
+  if (customerError) {
+    console.error("[updateJob] customer lookup failed:", {
+      companyId,
+      customerId: data.customerId,
+      code: customerError.code,
+      message: customerError.message,
+    });
+    return { job: null, error: mapDatabaseError(customerError) };
+  }
+
+  if (!customer) {
+    return { job: null, error: "Selected customer was not found." };
+  }
+
+  const update = mapJobFormDataToUpdate(data);
+
+  const { data: row, error } = await supabase
+    .from("jobs")
+    .update(update)
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .select(JOB_DETAIL_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[updateJob] update failed:", {
+      companyId,
+      jobId,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    return { job: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { job: null, error: "Job not found." };
+  }
+
+  return {
+    job: mapJobRowToJobDetail(row as JobRowWithTechnician),
     error: null,
   };
 }

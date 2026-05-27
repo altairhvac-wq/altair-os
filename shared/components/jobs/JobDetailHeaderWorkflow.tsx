@@ -12,12 +12,16 @@ type JobDetailHeaderWorkflowProps = {
   job: JobDetail;
   scheduledLabel: string;
   canUpdateStatus: boolean;
+  canEditJob: boolean;
+  onEdit: () => void;
 };
 
 export function JobDetailHeaderWorkflow({
   job,
   scheduledLabel,
   canUpdateStatus,
+  canEditJob,
+  onEdit,
 }: JobDetailHeaderWorkflowProps) {
   const [status, setStatus] = useState(job.status);
 
@@ -72,13 +76,16 @@ export function JobDetailHeaderWorkflow({
           onStatusUpdated={handleStatusUpdated}
         />
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:justify-end">
-          <button
-            type="button"
-            className="inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800 sm:w-auto sm:px-3.5 sm:py-2"
-          >
-            <Pencil className="h-4 w-4" />
-            Edit job
-          </button>
+          {canEditJob ? (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800 sm:w-auto sm:px-3.5 sm:py-2"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit job
+            </button>
+          ) : null}
           <Link
             href="/dispatch"
             className="inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 sm:w-auto sm:px-3.5 sm:py-2"

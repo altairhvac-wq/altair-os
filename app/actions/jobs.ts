@@ -5,8 +5,10 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
   createJob,
   getJobById,
+  updateJob,
   updateJobWorkflowStatus,
 } from "@/lib/database/queries/jobs";
+import type { JobDetail } from "@/shared/types/job";
 import {
   recordJobCreatedActivity,
   recordJobStatusChangedActivity,
@@ -51,6 +53,39 @@ export async function createJobAction(
   });
 
   revalidatePath("/jobs");
+  return { job };
+}
+
+export type UpdateJobActionResult = {
+  error?: string;
+  job?: JobDetail;
+};
+
+export async function updateJobAction(
+  jobId: string,
+  data: JobFormData,
+): Promise<UpdateJobActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." };
+  }
+
+  if (!context.permissions.dispatchJobs) {
+    return { error: "You do not have permission to edit jobs." };
+  }
+
+  const { job, error } = await updateJob(context.company.id, jobId, data);
+
+  if (error || !job) {
+    return { error: error ?? "Failed to update job." };
+  }
+
+  revalidatePath("/jobs");
+  revalidatePath("/dispatch");
+  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath(`/customers/${job.customerId}`);
+
   return { job };
 }
 

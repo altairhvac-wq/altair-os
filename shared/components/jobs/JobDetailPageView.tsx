@@ -9,9 +9,9 @@ import {
   Phone,
   User,
 } from "lucide-react";
-import { getCustomerInitials } from "@/shared/types/customer";
+import { getCustomerInitials, type Customer } from "@/shared/types/customer";
 import type { Technician } from "@/shared/types/dispatch";
-import { JobDetailHeaderWorkflow } from "./JobDetailHeaderWorkflow";
+import { JobDetailHeaderSection } from "./JobDetailHeaderSection";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
 import { JobTechnicianAssignment } from "./JobTechnicianAssignment";
@@ -38,6 +38,7 @@ import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability"
 
 type JobDetailPageViewProps = {
   job: JobDetail;
+  customers: Customer[];
   technicians: Technician[];
   activities: OperationalActivity[];
   equipment: CustomerEquipment[];
@@ -48,6 +49,7 @@ type JobDetailPageViewProps = {
   serviceItems: ServiceItem[];
   canUpdateStatus: boolean;
   canAssignTechnician: boolean;
+  canEditJob: boolean;
   canLogMaterials: boolean;
   canViewFinancials: boolean;
 };
@@ -73,6 +75,7 @@ function ContentSection({ title, children, className }: ContentSectionProps) {
 
 export function JobDetailPageView({
   job,
+  customers,
   technicians,
   activities,
   equipment,
@@ -83,6 +86,7 @@ export function JobDetailPageView({
   serviceItems,
   canUpdateStatus,
   canAssignTechnician,
+  canEditJob,
   canLogMaterials,
   canViewFinancials,
 }: JobDetailPageViewProps) {
@@ -105,10 +109,12 @@ export function JobDetailPageView({
 
       <section className="overflow-hidden admin-card">
         <div className="border-b border-slate-100 bg-slate-50/70 px-4 py-4 sm:px-6 sm:py-5">
-          <JobDetailHeaderWorkflow
+          <JobDetailHeaderSection
             job={job}
+            customers={customers}
             scheduledLabel={scheduledLabel}
             canUpdateStatus={canUpdateStatus}
+            canEditJob={canEditJob}
           />
         </div>
 

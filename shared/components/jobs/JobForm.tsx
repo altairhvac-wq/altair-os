@@ -5,6 +5,7 @@ import {
   JOB_PRIORITY_OPTIONS,
   JOB_STATUS_OPTIONS,
   JOB_TYPE_OPTIONS,
+  type Job,
   type JobFormData,
   type JobPriority,
   type JobStatus,
@@ -40,6 +41,29 @@ const inputClass =
   "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
 
 const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
+
+function toDatetimeLocal(iso: string): string {
+  const date = new Date(iso);
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60 * 1000);
+  return local.toISOString().slice(0, 16);
+}
+
+export function jobToFormData(job: Job): Partial<JobFormData> {
+  return {
+    customerId: job.customerId,
+    serviceAddress: job.serviceAddress,
+    city: job.city,
+    state: job.state,
+    zip: job.zip,
+    jobType: job.jobType,
+    scheduledDate: toDatetimeLocal(job.scheduledDate),
+    status: job.status,
+    priority: job.priority,
+    description: job.description ?? "",
+    notes: job.notes ?? "",
+  };
+}
 
 export function JobForm({
   customers,

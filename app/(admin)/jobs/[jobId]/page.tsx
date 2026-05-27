@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { canViewJob, canViewJobFinancials } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { listCustomers } from "@/lib/database/queries/customers";
 import { listOperationalActivitiesForJob } from "@/lib/database/queries/operational-activities";
 import { listExpensesForJob } from "@/lib/database/queries/expenses";
 import { listJobAttachmentsForJob } from "@/lib/database/queries/job-attachments";
@@ -38,6 +39,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   }
 
   const canViewFinancials = canViewJobFinancials(companyContext);
+  const canEditJob = companyContext.permissions.dispatchJobs;
 
   const [
     technicians,
@@ -47,6 +49,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     expenses,
     materials,
     serviceItems,
+    customers,
   ] = await Promise.all([
     listTechnicians(companyContext.company.id),
     listOperationalActivitiesForJob(companyContext.company.id, jobId),
@@ -55,6 +58,9 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     listExpensesForJob(companyContext.company.id, jobId),
     listJobMaterialsForJob(companyContext.company.id, jobId),
     listActiveServiceItems(companyContext.company.id),
+    canEditJob
+      ? listCustomers(companyContext.company.id)
+      : Promise.resolve([]),
   ]);
 
   const profitability = canViewFinancials
@@ -68,6 +74,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   return (
     <JobDetailPageView
       job={job}
+      customers={customers}
       technicians={technicians}
       activities={activities}
       equipment={equipment}
@@ -82,6 +89,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           job.assignedTechnicianId === companyContext.user.id)
       }
       canAssignTechnician={companyContext.permissions.dispatchJobs}
+      canEditJob={canEditJob}
       canLogMaterials={
         companyContext.permissions.dispatchJobs ||
         companyContext.permissions.manageBilling ||
