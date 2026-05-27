@@ -25,6 +25,7 @@ type DispatchDetailsPanelProps = {
   onClose: () => void;
   onAssign: (jobId: string, technicianId: string) => void;
   onStatusUpdated?: (jobId: string, status: DispatchJob["status"]) => void;
+  lockBodyScroll?: boolean;
 };
 
 export function DispatchDetailsPanel({
@@ -38,6 +39,7 @@ export function DispatchDetailsPanel({
   onClose,
   onAssign,
   onStatusUpdated,
+  lockBodyScroll = true,
 }: DispatchDetailsPanelProps) {
   const [selectedTechnicianId, setSelectedTechnicianId] = useState("");
   const hasSelectionChanged =
@@ -60,6 +62,13 @@ export function DispatchDetailsPanel({
     }
 
     document.addEventListener("keydown", handleEscape);
+
+    if (!lockBodyScroll) {
+      return () => {
+        document.removeEventListener("keydown", handleEscape);
+      };
+    }
+
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -67,7 +76,7 @@ export function DispatchDetailsPanel({
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = previousOverflow;
     };
-  }, [onClose]);
+  }, [lockBodyScroll, onClose]);
 
   function handleAssignClick() {
     if (!canSubmitAssignment) {

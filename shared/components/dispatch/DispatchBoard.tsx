@@ -40,7 +40,9 @@ export function DispatchBoard({
       ? technicians
       : technicians.filter((tech) => tech.id === technicianFilter);
 
-  const showUnassignedInline = technicianFilter === "unassigned";
+  const showUnassignedInline =
+    technicianFilter === "unassigned" ||
+    (technicianFilter === "all" && unassignedJobs.length > 0);
   const showTechnicianColumns = technicianFilter !== "unassigned";
 
   return (

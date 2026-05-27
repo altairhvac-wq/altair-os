@@ -58,7 +58,7 @@ export function TechnicianColumn({
           </div>
         </header>
 
-        <div className="flex min-h-[4.5rem] min-w-0 flex-1 gap-1.5 overflow-x-auto p-1.5 sm:min-h-[5.5rem] sm:gap-2 sm:p-2">
+        <div className="flex min-h-[4.5rem] min-w-0 flex-1 gap-1.5 overflow-x-auto p-1.5 sm:min-h-[5.5rem] sm:gap-2 sm:p-2" data-no-pull-refresh>
           {jobs.length === 0 ? (
             <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-slate-200 bg-white/60 px-3 py-3 text-center sm:rounded-xl sm:px-4 sm:py-4">
               <p className="text-[11px] font-medium text-slate-500">

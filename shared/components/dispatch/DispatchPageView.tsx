@@ -159,39 +159,75 @@ export function DispatchPageView({
         />
       ) : null}
 
-      <section
-        className={`flex min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ${
-          dispatchPageFocus?.emphasizeBoard
-            ? "border-cyan-200 ring-2 ring-cyan-500/15"
-            : "border-slate-200"
-        }`}
-      >
-        <div className="shrink-0 border-b border-slate-100 px-3 py-2 sm:px-4 sm:py-3.5">
-          <h2 className="text-sm font-bold text-slate-900 sm:text-base">
-            {boardTitle}
-          </h2>
-          <p className="hidden text-xs text-slate-500 sm:block">{boardSubtitle}</p>
-        </div>
+      <div className="flex min-w-0 max-w-full flex-col gap-2 sm:gap-4 lg:flex-row lg:items-start">
+        <section
+          className={`flex min-w-0 max-w-full flex-1 flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ${
+            dispatchPageFocus?.emphasizeBoard
+              ? "border-cyan-200 ring-2 ring-cyan-500/15"
+              : "border-slate-200"
+          }`}
+        >
+          <div className="shrink-0 border-b border-slate-100 px-3 py-2 sm:px-4 sm:py-3.5">
+            <h2 className="text-sm font-bold text-slate-900 sm:text-base">
+              {boardTitle}
+            </h2>
+            <p className="mt-0.5 text-[11px] text-slate-500 sm:text-xs">
+              {boardSubtitle}
+            </p>
+          </div>
 
-        <div className="min-w-0 max-w-full p-2 sm:p-4">
-          {hasNoJobs ? (
-            <DispatchEmptyState variant="no-jobs" />
-          ) : hasNoResults ? (
-            <DispatchEmptyState variant="no-results" />
-          ) : (
-            <DispatchBoard
-              jobs={filteredJobs}
+          <div className="min-w-0 max-w-full p-2 sm:p-4">
+            {hasNoJobs ? (
+              <DispatchEmptyState variant="no-jobs" />
+            ) : hasNoResults ? (
+              <DispatchEmptyState variant="no-results" />
+            ) : (
+              <DispatchBoard
+                jobs={filteredJobs}
+                technicians={technicians}
+                technicianFilter={technicianFilter}
+                selectedJobId={selectedJobId}
+                onSelectJob={handleSelectJob}
+                highlightUnassignedPanel={
+                  dispatchPageFocus?.highlightUnassignedPanel ?? false
+                }
+              />
+            )}
+          </div>
+        </section>
+
+        {selectedJob ? (
+          <div className="hidden lg:block lg:w-[380px] lg:shrink-0">
+            <DispatchDetailsPanel
+              job={selectedJob}
+              technician={selectedTechnician}
               technicians={technicians}
-              technicianFilter={technicianFilter}
-              selectedJobId={selectedJobId}
-              onSelectJob={handleSelectJob}
-              highlightUnassignedPanel={
-                dispatchPageFocus?.highlightUnassignedPanel ?? false
-              }
+              canDispatchJobs={canDispatchJobs}
+              canUpdateJobWorkflow={canUpdateJobWorkflow}
+              assignError={assignError}
+              isAssigning={isPending}
+              lockBodyScroll={false}
+              onClose={handleClosePanel}
+              onAssign={handleAssign}
+              onStatusUpdated={handleStatusUpdated}
             />
-          )}
-        </div>
-      </section>
+          </div>
+        ) : (
+          <aside className="hidden lg:flex lg:w-[380px] lg:shrink-0 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:border-slate-200 lg:bg-white lg:shadow-sm">
+            <div className="shrink-0 border-b border-slate-100 px-5 py-4">
+              <h2 className="text-base font-bold text-slate-900">Job details</h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Select a job from the board
+              </p>
+            </div>
+            <div className="flex flex-1 flex-col items-center justify-center px-5 py-10 text-center">
+              <p className="max-w-xs text-sm text-slate-500">
+                Click a job card to view assignment details and workflow actions.
+              </p>
+            </div>
+          </aside>
+        )}
+      </div>
 
       {showUnassignedModal ? (
         <UnassignedJobsModal
@@ -204,7 +240,7 @@ export function DispatchPageView({
 
       {selectedJob ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4 lg:hidden"
           role="dialog"
           aria-modal="true"
           aria-labelledby="dispatch-job-modal-title"
