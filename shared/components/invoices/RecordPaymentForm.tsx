@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CreditCard, X } from "lucide-react";
+import { CreditCard } from "lucide-react";
+import {
+  MobileSheet,
+  MobileSheetBody,
+  MobileSheetFooter,
+  MobileSheetHeader,
+  MobileSheetHeaderIcon,
+  MobileSheetPanel,
+} from "@/shared/components/ui/mobile-sheet";
 import { recordInvoicePaymentAction } from "@/app/actions/invoice-payments";
 import { formatCurrency } from "@/shared/types/customer";
 import type { InvoiceDetail } from "@/shared/types/invoice";
@@ -78,6 +86,8 @@ type RecordPaymentModalProps = {
   onClose: () => void;
 };
 
+const RECORD_PAYMENT_TITLE_ID = "record-payment-modal-title";
+
 function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -87,23 +97,6 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
   const [paymentDate, setPaymentDate] = useState(getDefaultPaymentDate());
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPending) {
-        onClose();
-      }
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [isPending, onClose]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -143,51 +136,33 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-end justify-center p-0 sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="record-payment-modal-title"
+    <MobileSheet
+      onClose={onClose}
+      closeDisabled={isPending}
+      ariaLabelledBy={RECORD_PAYMENT_TITLE_ID}
+      variant="responsive"
     >
-      <button
-        type="button"
-        aria-label="Close record payment"
-        onClick={onClose}
-        disabled={isPending}
-        className="absolute inset-0 bg-slate-900/40"
-      />
-      <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-xl sm:max-h-[85vh] sm:rounded-2xl">
-        <header className="flex shrink-0 items-center gap-3 border-b border-slate-100 bg-slate-50/70 px-4 py-3.5 sm:px-5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-            <CreditCard className="h-4 w-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2
-              id="record-payment-modal-title"
-              className="text-sm font-bold text-slate-900"
-            >
-              Record payment
-            </h2>
-            <p className="text-xs text-slate-500">
-              Balance due: {formatCurrency(invoice.balanceDue)}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isPending}
-            aria-label="Close"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </header>
+      <MobileSheetPanel maxWidth="lg" maxHeight="90" responsiveRounded>
+        <MobileSheetHeader
+          titleId={RECORD_PAYMENT_TITLE_ID}
+          title="Record payment"
+          subtitle={`Balance due: ${formatCurrency(invoice.balanceDue)}`}
+          onClose={onClose}
+          closeDisabled={isPending}
+          icon={
+            <MobileSheetHeaderIcon className="h-9 w-9 bg-emerald-100 text-emerald-700">
+              <CreditCard className="h-4 w-4" />
+            </MobileSheetHeaderIcon>
+          }
+        />
 
         <form
+          id="record-payment-form"
           onSubmit={handleSubmit}
-          className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5"
+          className="flex min-h-0 flex-1 flex-col"
         >
-          <div className="grid gap-4 sm:grid-cols-2">
+          <MobileSheetBody>
+            <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="payment-amount" className={labelClass}>
                 Amount
@@ -273,31 +248,32 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
             </div>
           </div>
 
-          {error ? (
-            <p className="mt-3 text-sm text-red-600" role="alert">
-              {error}
-            </p>
-          ) : null}
+            {error ? (
+              <p className="mt-3 text-sm text-red-600" role="alert">
+                {error}
+              </p>
+            ) : null}
+          </MobileSheetBody>
 
-          <div className="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 bg-white pt-4 sm:static sm:bg-transparent">
+          <MobileSheetFooter className="justify-end">
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isPending ? "Recording…" : "Record payment"}
             </button>
-          </div>
+          </MobileSheetFooter>
         </form>
-      </div>
-    </div>
+      </MobileSheetPanel>
+    </MobileSheet>
   );
 }

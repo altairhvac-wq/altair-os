@@ -13,6 +13,7 @@ import type { DispatchPageFocusState } from "@/shared/lib/dispatch-page-focus";
 import { DispatchBoard } from "./DispatchBoard";
 import { DispatchDashboardHeader } from "./DispatchDashboardHeader";
 import { DispatchDetailsPanel } from "./DispatchDetailsPanel";
+import { MobileSheet, MobileSheetPanel } from "@/shared/components/ui/mobile-sheet";
 import { DispatchEmptyState } from "./DispatchEmptyState";
 import { DispatchFocusBanner } from "./DispatchFocusBanner";
 import { DispatchSearchFilterBar } from "./DispatchSearchFilterBar";
@@ -249,19 +250,14 @@ export function DispatchPageView({
       ) : null}
 
       {selectedJob ? (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4 lg:hidden"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="dispatch-job-modal-title"
+        <MobileSheet
+          onClose={handleClosePanel}
+          ariaLabelledBy="dispatch-job-modal-title"
+          variant="responsive"
+          zIndex={50}
+          rootClassName="lg:hidden"
         >
-          <button
-            type="button"
-            aria-label="Close job details"
-            onClick={handleClosePanel}
-            className="absolute inset-0 bg-slate-900/40"
-          />
-          <div className="relative z-10 flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden">
+          <MobileSheetPanel maxWidth="lg" unstyled>
             <DispatchDetailsPanel
               job={selectedJob}
               technician={selectedTechnician}
@@ -271,12 +267,13 @@ export function DispatchPageView({
               assignError={assignError}
               assignSuccess={assignSuccess}
               isAssigning={isPending}
+              lockBodyScroll={false}
               onClose={handleClosePanel}
               onAssign={handleAssign}
               onStatusUpdated={handleStatusUpdated}
             />
-          </div>
-        </div>
+          </MobileSheetPanel>
+        </MobileSheet>
       ) : null}
     </div>
   );

@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
-import { Inbox, X } from "lucide-react";
+import { Inbox } from "lucide-react";
 import type { DispatchJob } from "@/shared/types/dispatch";
+import {
+  MobileSheet,
+  MobileSheetBody,
+  MobileSheetHeader,
+  MobileSheetHeaderIcon,
+  MobileSheetPanel,
+} from "@/shared/components/ui/mobile-sheet";
 import { DispatchJobCard } from "./DispatchJobCard";
 
 type UnassignedJobsModalProps = {
@@ -12,70 +18,45 @@ type UnassignedJobsModalProps = {
   onClose: () => void;
 };
 
+const TITLE_ID = "unassigned-jobs-modal-title";
+
 export function UnassignedJobsModal({
   jobs,
   selectedJobId,
   onSelectJob,
   onClose,
 }: UnassignedJobsModalProps) {
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [onClose]);
-
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-end justify-center p-0 sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="unassigned-jobs-modal-title"
+    <MobileSheet
+      onClose={onClose}
+      ariaLabelledBy={TITLE_ID}
+      variant="responsive"
     >
-      <button
-        type="button"
-        aria-label="Close unassigned jobs"
-        onClick={onClose}
-        className="absolute inset-0 bg-slate-900/40"
-      />
-      <div className="relative z-10 flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-amber-200/80 bg-white shadow-xl sm:max-h-[80vh] sm:rounded-2xl">
-        <header className="flex shrink-0 items-center gap-3 border-b border-amber-200/80 bg-amber-50/40 px-4 py-3.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
-            <Inbox className="h-4 w-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2
-              id="unassigned-jobs-modal-title"
-              className="text-sm font-bold text-slate-900"
-            >
-              Unassigned Jobs
-            </h2>
-            <p className="text-xs text-slate-500">
-              {jobs.length} {jobs.length === 1 ? "job" : "jobs"} need assignment
-            </p>
-          </div>
-          <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">
-            {jobs.length}
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </header>
+      <MobileSheetPanel
+        maxWidth="2xl"
+        tone="amber"
+        responsiveRounded
+        className="sm:max-h-[80vh]"
+      >
+        <MobileSheetHeader
+          titleId={TITLE_ID}
+          title="Unassigned Jobs"
+          subtitle={`${jobs.length} ${jobs.length === 1 ? "job" : "jobs"} need assignment`}
+          onClose={onClose}
+          headerClassName="border-amber-200/80 bg-amber-50/40"
+          icon={
+            <MobileSheetHeaderIcon className="h-9 w-9 bg-amber-100 text-amber-700">
+              <Inbox className="h-4 w-4" />
+            </MobileSheetHeaderIcon>
+          }
+          trailing={
+            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">
+              {jobs.length}
+            </span>
+          }
+        />
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
+        <MobileSheetBody unstyled className="p-3 sm:p-4">
           {jobs.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-amber-200 bg-amber-50/30 px-4 py-10 text-center">
               <p className="text-sm font-medium text-slate-600">
@@ -98,8 +79,8 @@ export function UnassignedJobsModal({
               ))}
             </div>
           )}
-        </div>
-      </div>
-    </div>
+        </MobileSheetBody>
+      </MobileSheetPanel>
+    </MobileSheet>
   );
 }

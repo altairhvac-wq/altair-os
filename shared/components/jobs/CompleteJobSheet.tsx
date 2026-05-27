@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, X } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import {
   createCustomerEquipmentAction,
   updateCustomerEquipmentAction,
@@ -14,6 +14,14 @@ import {
   type CompleteJobEquipmentPayload,
 } from "@/shared/components/equipment/CompleteJobEquipmentPanel";
 import { CompleteJobPhotosPanel } from "@/shared/components/jobs/CompleteJobPhotosPanel";
+import {
+  MobileSheet,
+  MobileSheetBody,
+  MobileSheetFooter,
+  MobileSheetHeader,
+  MobileSheetHeaderIcon,
+  MobileSheetPanel,
+} from "@/shared/components/ui/mobile-sheet";
 import type { JobStatus } from "@/shared/types/job";
 
 type CompleteJobSheetProps = {
@@ -23,6 +31,8 @@ type CompleteJobSheetProps = {
   onClose: () => void;
   onCompleted?: (status: JobStatus) => void;
 };
+
+const TITLE_ID = "complete-job-sheet-title";
 
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
@@ -43,23 +53,6 @@ export function CompleteJobSheet({
   const [followUpNotes, setFollowUpNotes] = useState("");
   const [equipmentPayload, setEquipmentPayload] =
     useState<CompleteJobEquipmentPayload>(EMPTY_COMPLETE_JOB_EQUIPMENT_PAYLOAD);
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPending) {
-        onClose();
-      }
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [isPending, onClose]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -123,48 +116,28 @@ export function CompleteJobSheet({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-end justify-center p-0 sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="complete-job-sheet-title"
+    <MobileSheet
+      onClose={onClose}
+      closeDisabled={isPending}
+      ariaLabelledBy={TITLE_ID}
+      variant="responsive"
     >
-      <button
-        type="button"
-        aria-label="Close complete job"
-        onClick={onClose}
-        disabled={isPending}
-        className="absolute inset-0 bg-slate-900/40"
-      />
-      <div className="relative z-10 flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-xl sm:rounded-2xl">
-        <header className="flex shrink-0 items-center gap-3 border-b border-slate-100 bg-slate-50/70 px-4 py-3.5 sm:px-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 ring-1 ring-emerald-600/15">
-            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2
-              id="complete-job-sheet-title"
-              className="text-base font-bold text-slate-900"
-            >
-              Complete work
-            </h2>
-            <p className="text-sm text-slate-500">
-              Add notes before marking this job complete.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isPending}
-            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </header>
+      <MobileSheetPanel maxWidth="lg" responsiveRounded>
+        <MobileSheetHeader
+          titleId={TITLE_ID}
+          title="Complete work"
+          subtitle="Add notes before marking this job complete."
+          onClose={onClose}
+          closeDisabled={isPending}
+          icon={
+            <MobileSheetHeaderIcon className="bg-emerald-50 ring-1 ring-emerald-600/15">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            </MobileSheetHeaderIcon>
+          }
+        />
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="space-y-4 overflow-y-auto px-4 py-4 sm:px-5" data-no-pull-refresh>
+          <MobileSheetBody className="space-y-4">
             <div>
               <label htmlFor="completion-notes" className={labelClass}>
                 Completion notes
@@ -203,27 +176,27 @@ export function CompleteJobSheet({
             <CompleteJobPhotosPanel jobId={jobId} />
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
-          </div>
+          </MobileSheetBody>
 
-          <footer className="flex shrink-0 gap-3 border-t border-slate-100 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5">
+          <MobileSheetFooter>
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
+              className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="inline-flex flex-1 items-center justify-center rounded-xl bg-emerald-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-emerald-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isPending ? "Completing..." : "Complete work"}
             </button>
-          </footer>
+          </MobileSheetFooter>
         </form>
-      </div>
-    </div>
+      </MobileSheetPanel>
+    </MobileSheet>
   );
 }

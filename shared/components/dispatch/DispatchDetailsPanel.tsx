@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useScrollLock } from "@/shared/hooks/useScrollLock";
 import { Calendar, Mail, MapPin, Phone, User, X } from "lucide-react";
 import {
   formatDispatchDate,
@@ -56,7 +57,13 @@ export function DispatchDetailsPanel({
     setSelectedTechnicianId("");
   }, [job.id, job.technicianId]);
 
+  useScrollLock(lockBodyScroll);
+
   useEffect(() => {
+    if (lockBodyScroll) {
+      return;
+    }
+
     function handleEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
         onClose();
@@ -64,20 +71,7 @@ export function DispatchDetailsPanel({
     }
 
     document.addEventListener("keydown", handleEscape);
-
-    if (!lockBodyScroll) {
-      return () => {
-        document.removeEventListener("keydown", handleEscape);
-      };
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = previousOverflow;
-    };
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [lockBodyScroll, onClose]);
 
   function handleAssignClick() {
