@@ -11,8 +11,11 @@ import {
   resolveUserEmailForInvite,
 } from "@/lib/database/queries/memberships";
 import { hasCompanyRole } from "@/lib/database/types/roles";
+import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
+import { buildOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { PendingInvitesCard } from "@/shared/components/settings/PendingInvitesCard";
+import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { SettingsPageView } from "@/shared/components/settings/SettingsPageView";
 import type { CompanyProfileSummary } from "@/shared/types/team-member";
 
@@ -36,12 +39,13 @@ export default async function SettingsPage() {
     user?.email ?? undefined,
   );
 
-  const [{ members, error: membersError }, pendingInvitesResult] =
+  const [{ members, error: membersError }, pendingInvitesResult, onboardingSnapshot] =
     await Promise.all([
       listCompanyMembers(companyContext.company.id),
       emailResolution.email
         ? listPendingInvitesForUserEmail(emailResolution.email)
         : Promise.resolve({ invites: [], error: undefined }),
+      getOnboardingSnapshot(companyContext.company.id),
     ]);
 
   const pendingInvites = pendingInvitesResult.invites.filter(
@@ -61,19 +65,21 @@ export default async function SettingsPage() {
     currentUserRole: companyContext.role,
   };
 
+  const onboardingChecklist = buildOnboardingChecklist(onboardingSnapshot);
+
   return (
     <div className="space-y-6">
       {emailResolution.mismatch ? (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <SettingsAlertBanner tone="warning">
           Your profile email and sign-in email do not match. Update them to the
           same address before you can view or accept team invitations.
-        </div>
+        </SettingsAlertBanner>
       ) : null}
 
       {pendingInvitesResult.error ? (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <SettingsAlertBanner tone="error">
           {pendingInvitesResult.error}
-        </div>
+        </SettingsAlertBanner>
       ) : null}
 
       <PendingInvitesCard invites={pendingInvites} variant="settings" />
@@ -86,6 +92,7 @@ export default async function SettingsPage() {
         canManageTeam={canManageTeamMembers(companyContext)}
         showSystemCheckLink={hasCompanyRole(companyContext.role, ["owner"])}
         membersLoadError={membersError}
+        onboardingChecklist={onboardingChecklist}
       />
     </div>
   );

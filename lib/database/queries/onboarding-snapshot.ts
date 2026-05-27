@@ -1,0 +1,58 @@
+import { createClient } from "@/lib/supabase/server";
+import type { OnboardingSnapshot } from "@/shared/types/onboarding";
+
+async function countTableRows(
+  table: "customers" | "jobs" | "service_items" | "company_memberships",
+  companyId: string,
+  extraFilters?: Record<string, string>,
+): Promise<number> {
+  const supabase = await createClient();
+
+  let query = supabase
+    .from(table)
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId);
+
+  if (extraFilters) {
+    for (const [key, value] of Object.entries(extraFilters)) {
+      query = query.eq(key, value);
+    }
+  }
+
+  const { count, error } = await query;
+
+  if (error) {
+    console.error(`[onboarding-snapshot] ${table} count failed:`, {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+export async function getOnboardingSnapshot(
+  companyId: string,
+): Promise<OnboardingSnapshot> {
+  const [
+    teamMemberCount,
+    customerCount,
+    jobCount,
+    serviceItemCount,
+  ] = await Promise.all([
+    countTableRows("company_memberships", companyId),
+    countTableRows("customers", companyId),
+    countTableRows("jobs", companyId),
+    countTableRows("service_items", companyId),
+  ]);
+
+  return {
+    teamMemberCount,
+    hasInvitedOrActiveTeam: teamMemberCount > 1,
+    customerCount,
+    jobCount,
+    serviceItemCount,
+  };
+}

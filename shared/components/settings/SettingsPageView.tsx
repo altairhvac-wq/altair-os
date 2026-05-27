@@ -17,8 +17,13 @@ import {
   type CompanyProfileSummary,
   type TeamMember,
 } from "@/shared/types/team-member";
+import type { OnboardingChecklist } from "@/shared/types/onboarding";
+import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
+import { SettingsAlertBanner } from "./SettingsAlertBanner";
 import { SettingsFutureCard } from "./SettingsFutureCard";
 import { TeamInviteForm } from "./TeamInviteForm";
+import { TeamMemberMobileCards } from "./TeamMemberMobileCards";
+import { TeamMembersEmptyState } from "./TeamMembersEmptyState";
 import { TeamMembersTable } from "./TeamMembersTable";
 
 type SettingsPageViewProps = {
@@ -29,6 +34,7 @@ type SettingsPageViewProps = {
   canManageTeam: boolean;
   showSystemCheckLink?: boolean;
   membersLoadError?: string;
+  onboardingChecklist?: OnboardingChecklist;
 };
 
 function buildLocationLabel(profile: CompanyProfileSummary): string | null {
@@ -44,10 +50,12 @@ export function SettingsPageView({
   canManageTeam,
   showSystemCheckLink = false,
   membersLoadError,
+  onboardingChecklist,
 }: SettingsPageViewProps) {
   const [members, setMembers] = useState(initialMembers);
   const [search, setSearch] = useState("");
   const [roleError, setRoleError] = useState<string | null>(null);
+  const [roleSuccess, setRoleSuccess] = useState<string | null>(null);
 
   const filteredMembers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -78,12 +86,24 @@ export function SettingsPageView({
       return [...previous, member];
     });
     setRoleError(null);
+    setRoleSuccess(null);
+  }
+
+  function handleRoleChangeSuccess(message: string) {
+    setRoleSuccess(message);
+    setRoleError(null);
+  }
+
+  function handleRoleChangeError(message: string) {
+    setRoleError(message);
+    setRoleSuccess(null);
   }
 
   const location = buildLocationLabel(companyProfile);
   const contactLine = [companyProfile.email, companyProfile.phone]
     .filter(Boolean)
     .join(" · ");
+  const hasContactInfo = Boolean(contactLine);
 
   const summaryCards = [
     {
@@ -121,12 +141,25 @@ export function SettingsPageView({
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Company Settings</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Manage your company profile, team members, and workspace preferences.
+          Manage your team, review workspace status, and prepare your company for
+          beta operations.
         </p>
-        {contactLine ? (
+        {hasContactInfo ? (
           <p className="mt-2 text-sm text-slate-500">{contactLine}</p>
-        ) : null}
+        ) : (
+          <p className="mt-2 text-sm text-slate-400">
+            Company contact details can be added in a future update.
+          </p>
+        )}
       </div>
+
+      {onboardingChecklist && !onboardingChecklist.isComplete ? (
+        <OnboardingChecklistSection
+          checklist={onboardingChecklist}
+          companyId={companyProfile.id}
+          variant="settings"
+        />
+      ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {summaryCards.map((card) => (
@@ -154,13 +187,13 @@ export function SettingsPageView({
         ))}
       </section>
 
-      <section className="admin-card">
+      <section className="admin-card overflow-hidden">
         <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Team Members</h2>
             <p className="text-sm text-slate-600">
               {canManageTeam
-                ? "View members and update roles for your company workspace."
+                ? "Invite teammates, assign roles, and manage workspace access."
                 : "View members in your company workspace."}
             </p>
           </div>
@@ -169,7 +202,7 @@ export function SettingsPageView({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search members..."
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 sm:max-w-xs"
+            className="w-full min-h-[44px] rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 shadow-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 sm:max-w-xs"
           />
         </div>
 
@@ -181,39 +214,59 @@ export function SettingsPageView({
         ) : null}
 
         {membersLoadError ? (
-          <div className="mx-4 mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 sm:mx-6">
+          <SettingsAlertBanner tone="error" className="mx-4 mt-4 sm:mx-6">
             {membersLoadError}
-          </div>
+          </SettingsAlertBanner>
         ) : null}
 
         {roleError ? (
-          <div className="mx-4 mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 sm:mx-6">
+          <SettingsAlertBanner tone="error" className="mx-4 mt-4 sm:mx-6">
             {roleError}
-          </div>
+          </SettingsAlertBanner>
+        ) : null}
+
+        {roleSuccess ? (
+          <SettingsAlertBanner tone="success" className="mx-4 mt-4 sm:mx-6">
+            {roleSuccess}
+          </SettingsAlertBanner>
         ) : null}
 
         {!membersLoadError && filteredMembers.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm text-slate-500">
-            {search.trim()
-              ? "No team members match your search."
-              : "No team members found."}
-          </div>
-        ) : !membersLoadError ? (
-          <TeamMembersTable
-            members={filteredMembers}
-            currentUserId={currentUserId}
-            currentUserRole={currentUserRole}
+          <TeamMembersEmptyState
+            variant={search.trim() ? "no-results" : "no-members"}
             canManageTeam={canManageTeam}
-            onMemberUpdated={handleMemberUpdated}
-            onRoleChangeError={setRoleError}
           />
+        ) : !membersLoadError ? (
+          <>
+            <TeamMemberMobileCards
+              members={filteredMembers}
+              currentUserId={currentUserId}
+              currentUserRole={currentUserRole}
+              canManageTeam={canManageTeam}
+              onMemberUpdated={handleMemberUpdated}
+              onRoleChangeError={handleRoleChangeError}
+              onRoleChangeSuccess={handleRoleChangeSuccess}
+            />
+            <TeamMembersTable
+              members={filteredMembers}
+              currentUserId={currentUserId}
+              currentUserRole={currentUserRole}
+              canManageTeam={canManageTeam}
+              onMemberUpdated={handleMemberUpdated}
+              onRoleChangeError={handleRoleChangeError}
+              onRoleChangeSuccess={handleRoleChangeSuccess}
+            />
+          </>
         ) : null}
       </section>
 
       <section>
-        <h2 className="mb-4 text-lg font-bold text-slate-900">
+        <h2 className="mb-1 text-lg font-bold text-slate-900">
           Workspace Preferences
         </h2>
+        <p className="mb-4 text-sm text-slate-600">
+          Additional configuration areas coming after beta onboarding.
+        </p>
         <div className="grid gap-4 md:grid-cols-2">
           {showSystemCheckLink ? (
             <Link

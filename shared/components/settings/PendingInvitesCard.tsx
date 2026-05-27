@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Mail, UserCheck } from "lucide-react";
 import { acceptInviteAction } from "@/app/actions/memberships";
+import { SettingsAlertBanner } from "./SettingsAlertBanner";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import type { PendingTeamInvite } from "@/lib/database/queries/memberships";
 
@@ -120,7 +121,7 @@ export function PendingInvitesCard({
                 type="button"
                 onClick={() => handleAccept(invite.id, invite.companyName)}
                 disabled={isPending}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
                 <UserCheck className="h-4 w-4" aria-hidden="true" />
                 {isAccepting ? "Accepting..." : "Accept invite"}
@@ -130,15 +131,11 @@ export function PendingInvitesCard({
         })}
 
         {error ? (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {error}
-          </div>
+          <SettingsAlertBanner tone="error">{error}</SettingsAlertBanner>
         ) : null}
 
         {success ? (
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            {success}
-          </div>
+          <SettingsAlertBanner tone="success">{success}</SettingsAlertBanner>
         ) : null}
       </div>
     </section>

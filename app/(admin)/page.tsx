@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { shouldUseTechnicianHome } from "@/lib/auth/redirects";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
 import { getDashboardData } from "@/lib/database/services/dashboard";
 import { OperationalDashboardView } from "@/shared/components/dashboard/OperationalDashboardView";
+import { buildOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
 
 export default async function DashboardPage() {
   const companyContext = await getActiveCompanyContext();
@@ -15,7 +17,18 @@ export default async function DashboardPage() {
     redirect("/technician");
   }
 
-  const data = await getDashboardData(companyContext);
+  const [data, onboardingSnapshot] = await Promise.all([
+    getDashboardData(companyContext),
+    getOnboardingSnapshot(companyContext.company.id),
+  ]);
 
-  return <OperationalDashboardView data={data} />;
+  const onboardingChecklist = buildOnboardingChecklist(onboardingSnapshot);
+
+  return (
+    <OperationalDashboardView
+      data={data}
+      onboardingChecklist={onboardingChecklist}
+      companyId={companyContext.company.id}
+    />
+  );
 }

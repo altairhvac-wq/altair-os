@@ -38,12 +38,14 @@ import {
 } from "@/shared/lib/invoice-page-focus";
 import { hasDispatchPressure } from "@/shared/lib/dashboard-dispatch-pressure";
 import { NextBestActionsSection } from "@/shared/components/dashboard/NextBestActionsSection";
+import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
 import { OperationalMomentumSection } from "@/shared/components/dashboard/OperationalMomentumSection";
 import { OperationalRiskDrilldownSection } from "@/shared/components/dashboard/OperationalRiskDrilldownSection";
 import { TodayNeedsAttentionSection } from "@/shared/components/dashboard/TodayNeedsAttentionSection";
 import { OfficeReviewQueueSection } from "@/shared/components/reports/OfficeReviewQueueSection";
 import { OperationalHealthSection } from "@/shared/components/reports/OperationalHealthSection";
 import type { DashboardData } from "@/shared/types/dashboard";
+import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import { formatCurrency } from "@/shared/types/customer";
 import {
   formatDispatchStatus,
@@ -70,6 +72,8 @@ import {
 
 type OperationalDashboardViewProps = {
   data: DashboardData;
+  onboardingChecklist?: OnboardingChecklist;
+  companyId?: string;
 };
 
 function formatJobLocation(city?: string, state?: string): string {
@@ -1013,6 +1017,8 @@ function DashboardHeader() {
 
 function buildMobileDashboardTabs(
   data: DashboardData,
+  onboardingChecklist?: OnboardingChecklist,
+  companyId?: string,
 ): Array<{ id: MobileDashboardTabId; label: string; content: React.ReactNode }> {
   const { access } = data;
   const tabs: Array<{
@@ -1022,6 +1028,21 @@ function buildMobileDashboardTabs(
   }> = [];
 
   const overviewSections: React.ReactNode[] = [];
+  if (
+    onboardingChecklist &&
+    companyId &&
+    access.canViewOperationalReports &&
+    !onboardingChecklist.isComplete
+  ) {
+    overviewSections.push(
+      <OnboardingChecklistSection
+        key="onboarding"
+        checklist={onboardingChecklist}
+        companyId={companyId}
+        variant="dashboard"
+      />,
+    );
+  }
   if (access.canViewOperationalReports) {
     overviewSections.push(
       <AnalyticsSnapshotSection key="analytics" analytics={data.analytics} />,
@@ -1153,13 +1174,28 @@ function buildMobileDashboardTabs(
   return tabs;
 }
 
-function DesktopDashboardLayout({ data }: OperationalDashboardViewProps) {
+function DesktopDashboardLayout({
+  data,
+  onboardingChecklist,
+  companyId,
+}: OperationalDashboardViewProps) {
   const { access } = data;
   const showCommandPairSideBySide =
     !hasCashFlowPressure(data) && !hasDispatchPressure(data);
 
   return (
     <>
+      {onboardingChecklist &&
+      companyId &&
+      access.canViewOperationalReports &&
+      !onboardingChecklist.isComplete ? (
+        <OnboardingChecklistSection
+          checklist={onboardingChecklist}
+          companyId={companyId}
+          variant="dashboard"
+        />
+      ) : null}
+
       {access.canViewOperationalReports ? (
         <AnalyticsSnapshotSection analytics={data.analytics} />
       ) : null}
@@ -1236,9 +1272,17 @@ function DesktopDashboardLayout({ data }: OperationalDashboardViewProps) {
   );
 }
 
-export function OperationalDashboardView({ data }: OperationalDashboardViewProps) {
+export function OperationalDashboardView({
+  data,
+  onboardingChecklist,
+  companyId,
+}: OperationalDashboardViewProps) {
   const mobileSnapshot = buildMobileDashboardSnapshot(data);
-  const mobileTabs = buildMobileDashboardTabs(data);
+  const mobileTabs = buildMobileDashboardTabs(
+    data,
+    onboardingChecklist,
+    companyId,
+  );
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 pb-2 max-lg:gap-4 lg:gap-6 xl:max-w-[1440px] xl:gap-8">
@@ -1248,7 +1292,11 @@ export function OperationalDashboardView({ data }: OperationalDashboardViewProps
 
       <div className="hidden lg:flex lg:flex-col lg:gap-8">
         <DashboardHeader />
-        <DesktopDashboardLayout data={data} />
+        <DesktopDashboardLayout
+          data={data}
+          onboardingChecklist={onboardingChecklist}
+          companyId={companyId}
+        />
       </div>
     </div>
   );

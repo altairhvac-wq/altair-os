@@ -1,0 +1,44 @@
+import { SearchX, UserPlus, Users } from "lucide-react";
+
+type TeamMembersEmptyStateProps = {
+  variant: "no-members" | "no-results";
+  canManageTeam?: boolean;
+};
+
+export function TeamMembersEmptyState({
+  variant,
+  canManageTeam = false,
+}: TeamMembersEmptyStateProps) {
+  const isNoResults = variant === "no-results";
+
+  return (
+    <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
+      <div className="admin-empty-icon">
+        {isNoResults ? (
+          <SearchX className="h-7 w-7 text-slate-400" />
+        ) : (
+          <Users className="h-7 w-7 text-slate-400" />
+        )}
+      </div>
+
+      <h3 className="mt-5 text-lg font-bold text-slate-900">
+        {isNoResults ? "No members match your search" : "You're the first member"}
+      </h3>
+
+      <p className="mt-2 max-w-sm text-sm text-slate-500">
+        {isNoResults
+          ? "Try a different name, email, or role."
+          : canManageTeam
+            ? "Invite technicians and office staff above so your crew can sign in and start working."
+            : "Team members will appear here once your admin invites them."}
+      </p>
+
+      {!isNoResults && canManageTeam ? (
+        <p className="mt-4 flex items-center gap-2 text-xs text-slate-400">
+          <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
+          Use the invite form above to add your first teammate
+        </p>
+      ) : null}
+    </div>
+  );
+}

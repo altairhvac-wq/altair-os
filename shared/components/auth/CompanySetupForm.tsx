@@ -68,7 +68,7 @@ export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
         <AuthField
           label="Company name"
           id="companyName"
-          hint="You can change this later in settings."
+          hint="Use your real business name — at least 2 characters. You can change this later."
         >
           <AuthInput
             id="companyName"
@@ -77,6 +77,7 @@ export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
             autoComplete="organization"
             placeholder="Your company name"
             required
+            minLength={2}
           />
         </AuthField>
 
