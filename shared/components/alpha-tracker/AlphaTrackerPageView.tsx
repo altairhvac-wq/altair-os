@@ -4,10 +4,12 @@ import { useMemo, useState, useTransition } from "react";
 import { Plus } from "lucide-react";
 import {
   createAlphaTrackerItemAction,
+  updateAlphaTrackerItemAction,
   updateAlphaTrackerItemStatusAction,
 } from "@/app/actions/alpha-tracker";
 import type {
   AlphaTrackerItem,
+  AlphaTrackerItemEditFormData,
   AlphaTrackerItemFormData,
   AlphaTrackerSeverity,
   AlphaTrackerStatus,
@@ -95,6 +97,8 @@ export function AlphaTrackerPageView({
   );
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -125,6 +129,36 @@ export function AlphaTrackerPageView({
 
       setItems((previous) => [result.item!, ...previous]);
       setShowCreateForm(false);
+    });
+  }
+
+  function handleEdit(itemId: string) {
+    setShowCreateForm(false);
+    setFormError(null);
+    setEditingItemId(itemId);
+    setEditError(null);
+  }
+
+  function handleEditCancel() {
+    setEditingItemId(null);
+    setEditError(null);
+  }
+
+  function handleEditSubmit(itemId: string, data: AlphaTrackerItemEditFormData) {
+    setEditError(null);
+
+    startTransition(async () => {
+      const result = await updateAlphaTrackerItemAction(itemId, data);
+
+      if (result.error || !result.item) {
+        setEditError(result.error ?? "Failed to update tracker item.");
+        return;
+      }
+
+      setItems((previous) =>
+        previous.map((item) => (item.id === itemId ? result.item! : item)),
+      );
+      setEditingItemId(null);
     });
   }
 
@@ -165,6 +199,8 @@ export function AlphaTrackerPageView({
           onClick={() => {
             setShowCreateForm((previous) => !previous);
             setFormError(null);
+            setEditingItemId(null);
+            setEditError(null);
           }}
           className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
         >
@@ -207,6 +243,12 @@ export function AlphaTrackerPageView({
             canManageCompany={canManageCompany}
             onStatusChange={handleStatusChange}
             statusUpdatingId={statusUpdatingId}
+            editingItemId={editingItemId}
+            editError={editError}
+            isEditSubmitting={isPending}
+            onEdit={handleEdit}
+            onEditCancel={handleEditCancel}
+            onEditSubmit={handleEditSubmit}
           />
         ) : hasNoResults ? (
           <div className="px-6 py-16 text-center text-sm text-slate-500">
@@ -219,6 +261,12 @@ export function AlphaTrackerPageView({
             canManageCompany={canManageCompany}
             onStatusChange={handleStatusChange}
             statusUpdatingId={statusUpdatingId}
+            editingItemId={editingItemId}
+            editError={editError}
+            isEditSubmitting={isPending}
+            onEdit={handleEdit}
+            onEditCancel={handleEditCancel}
+            onEditSubmit={handleEditSubmit}
           />
         )}
       </div>

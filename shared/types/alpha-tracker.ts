@@ -31,6 +31,10 @@ export type AlphaTrackerItemFormData = {
   notes: string;
 };
 
+export type AlphaTrackerItemEditFormData = AlphaTrackerItemFormData & {
+  status: AlphaTrackerStatus;
+};
+
 export const ALPHA_TRACKER_TYPE_OPTIONS: {
   value: AlphaTrackerType;
   label: string;

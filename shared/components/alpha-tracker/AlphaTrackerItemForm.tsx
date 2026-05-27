@@ -2,8 +2,11 @@ import type { FormEvent } from "react";
 import {
   ALPHA_TRACKER_DEVICE_OPTIONS,
   ALPHA_TRACKER_SEVERITY_OPTIONS,
+  ALPHA_TRACKER_STATUS_OPTIONS,
   ALPHA_TRACKER_TYPE_OPTIONS,
+  type AlphaTrackerItemEditFormData,
   type AlphaTrackerItemFormData,
+  type AlphaTrackerStatus,
 } from "@/shared/types/alpha-tracker";
 
 const DEFAULT_FORM: AlphaTrackerItemFormData = {
@@ -17,23 +20,34 @@ const DEFAULT_FORM: AlphaTrackerItemFormData = {
 };
 
 type AlphaTrackerItemFormProps = {
-  onSubmit: (data: AlphaTrackerItemFormData) => void;
+  mode?: "create" | "edit";
+  initialValues?: AlphaTrackerItemEditFormData;
+  onSubmit: (data: AlphaTrackerItemFormData | AlphaTrackerItemEditFormData) => void;
   onCancel: () => void;
   error: string | null;
   isSubmitting: boolean;
+  className?: string;
+  formInstanceKey?: string;
 };
 
 export function AlphaTrackerItemForm({
+  mode = "create",
+  initialValues,
   onSubmit,
   onCancel,
   error,
   isSubmitting,
+  className = "flex flex-col gap-4 border-b border-slate-100 px-4 py-4",
+  formInstanceKey,
 }: AlphaTrackerItemFormProps) {
+  const values = initialValues ?? { ...DEFAULT_FORM, status: "open" as AlphaTrackerStatus };
+  const isEdit = mode === "edit";
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
 
-    onSubmit({
+    const base = {
       title: String(formData.get("title") ?? ""),
       description: String(formData.get("description") ?? ""),
       type: String(formData.get("type") ?? "bug") as AlphaTrackerItemFormData["type"],
@@ -43,13 +57,24 @@ export function AlphaTrackerItemForm({
       pageOrArea: String(formData.get("pageOrArea") ?? ""),
       device: String(formData.get("device") ?? "both") as AlphaTrackerItemFormData["device"],
       notes: String(formData.get("notes") ?? ""),
-    });
+    };
+
+    if (isEdit) {
+      onSubmit({
+        ...base,
+        status: String(formData.get("status") ?? "open") as AlphaTrackerStatus,
+      });
+      return;
+    }
+
+    onSubmit(base);
   }
 
   return (
     <form
+      key={formInstanceKey ?? (isEdit ? "edit" : "create")}
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 border-b border-slate-100 px-4 py-4"
+      className={className}
     >
       <div>
         <label htmlFor="alpha-tracker-title" className="mb-1 block text-xs font-semibold text-slate-700">
@@ -59,7 +84,7 @@ export function AlphaTrackerItemForm({
           id="alpha-tracker-title"
           name="title"
           required
-          defaultValue={DEFAULT_FORM.title}
+          defaultValue={values.title}
           placeholder="Brief summary of the issue or idea"
           className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
         />
@@ -73,7 +98,7 @@ export function AlphaTrackerItemForm({
           id="alpha-tracker-description"
           name="description"
           rows={3}
-          defaultValue={DEFAULT_FORM.description}
+          defaultValue={values.description}
           placeholder="Steps to reproduce, expected behavior, or feature details"
           className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
         />
@@ -84,21 +109,30 @@ export function AlphaTrackerItemForm({
           id="alpha-tracker-type"
           name="type"
           label="Type"
-          defaultValue={DEFAULT_FORM.type}
+          defaultValue={values.type}
           options={ALPHA_TRACKER_TYPE_OPTIONS}
         />
         <FieldSelect
           id="alpha-tracker-severity"
           name="severity"
           label="Severity"
-          defaultValue={DEFAULT_FORM.severity}
+          defaultValue={values.severity}
           options={ALPHA_TRACKER_SEVERITY_OPTIONS}
         />
+        {isEdit ? (
+          <FieldSelect
+            id="alpha-tracker-status"
+            name="status"
+            label="Status"
+            defaultValue={"status" in values ? values.status : "open"}
+            options={ALPHA_TRACKER_STATUS_OPTIONS}
+          />
+        ) : null}
         <FieldSelect
           id="alpha-tracker-device"
           name="device"
           label="Device"
-          defaultValue={DEFAULT_FORM.device}
+          defaultValue={values.device}
           options={ALPHA_TRACKER_DEVICE_OPTIONS}
         />
         <div>
@@ -108,7 +142,7 @@ export function AlphaTrackerItemForm({
           <input
             id="alpha-tracker-page"
             name="pageOrArea"
-            defaultValue={DEFAULT_FORM.pageOrArea}
+            defaultValue={values.pageOrArea}
             placeholder="e.g. Dispatch, Jobs list"
             className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
           />
@@ -123,7 +157,7 @@ export function AlphaTrackerItemForm({
           id="alpha-tracker-notes"
           name="notes"
           rows={2}
-          defaultValue={DEFAULT_FORM.notes}
+          defaultValue={values.notes}
           placeholder="Optional follow-up notes"
           className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
         />
@@ -139,7 +173,7 @@ export function AlphaTrackerItemForm({
           disabled={isSubmitting}
           className="admin-btn-primary inline-flex items-center gap-2 disabled:opacity-60"
         >
-          {isSubmitting ? "Saving..." : "Add item"}
+          {isSubmitting ? "Saving..." : isEdit ? "Save changes" : "Add item"}
         </button>
         <button
           type="button"

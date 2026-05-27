@@ -102,6 +102,57 @@ export async function createAlphaTrackerItem(
   };
 }
 
+export function mapAlphaTrackerItemEditFormDataToUpdate(
+  data: AlphaTrackerItemFormData & { status: AlphaTrackerStatus },
+): AlphaTrackerItemUpdate {
+  return {
+    title: data.title.trim(),
+    description: data.description.trim() || null,
+    type: data.type,
+    severity: data.severity,
+    status: data.status,
+    page_or_area: data.pageOrArea.trim() || null,
+    device: data.device,
+    notes: data.notes.trim() || null,
+  };
+}
+
+export async function updateAlphaTrackerItem(
+  companyId: string,
+  itemId: string,
+  data: AlphaTrackerItemFormData & { status: AlphaTrackerStatus },
+): Promise<{ item: AlphaTrackerItem | null; error: string | null }> {
+  const supabase = await createClient();
+  const update = mapAlphaTrackerItemEditFormDataToUpdate(data);
+
+  const { data: row, error } = await supabase
+    .from("alpha_tracker_items")
+    .update(update)
+    .eq("company_id", companyId)
+    .eq("id", itemId)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("[updateAlphaTrackerItem] update failed:", {
+      companyId,
+      itemId,
+      code: error.code,
+      message: error.message,
+    });
+    return { item: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { item: null, error: "Tracker item not found." };
+  }
+
+  return {
+    item: mapAlphaTrackerItemRow(row as AlphaTrackerItemRow),
+    error: null,
+  };
+}
+
 export async function updateAlphaTrackerItemStatus(
   companyId: string,
   itemId: string,

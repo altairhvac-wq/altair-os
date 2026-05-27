@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
   createAlphaTrackerItem,
+  updateAlphaTrackerItem,
   updateAlphaTrackerItemStatus,
 } from "@/lib/database/queries/alpha-tracker-items";
 import type {
   AlphaTrackerItem,
+  AlphaTrackerItemEditFormData,
   AlphaTrackerItemFormData,
   AlphaTrackerStatus,
 } from "@/shared/types/alpha-tracker";
@@ -42,6 +44,34 @@ export async function createAlphaTrackerItemAction(
 
   if (error || !item) {
     return { error: error ?? "Failed to create tracker item." };
+  }
+
+  revalidateAlphaTrackerPaths();
+  return { item };
+}
+
+export async function updateAlphaTrackerItemAction(
+  itemId: string,
+  data: AlphaTrackerItemEditFormData,
+): Promise<AlphaTrackerActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." };
+  }
+
+  if (!data.title.trim()) {
+    return { error: "Title is required." };
+  }
+
+  const { item, error } = await updateAlphaTrackerItem(
+    context.company.id,
+    itemId,
+    data,
+  );
+
+  if (error || !item) {
+    return { error: error ?? "Failed to update tracker item." };
   }
 
   revalidateAlphaTrackerPaths();
