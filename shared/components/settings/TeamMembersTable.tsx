@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { formatDate } from "@/shared/types/customer";
 import {
+  canActorCancelInvite,
   canActorEditMemberRole,
   canActorReactivateMember,
   canActorSuspendMember,
@@ -18,6 +19,7 @@ import {
 } from "@/shared/types/team-member";
 import { isSensitiveTeamRole } from "@/shared/lib/team-role-descriptions";
 import {
+  cancelTeamInviteAction,
   reactivateTeamMemberAction,
   suspendTeamMemberAction,
   updateMemberRoleAction,
@@ -30,11 +32,12 @@ type TeamMembersTableProps = {
   currentUserRole: CompanyRole;
   canManageTeam: boolean;
   onMemberUpdated: (member: TeamMember) => void;
+  onMemberRemoved?: (membershipId: string) => void;
   onRoleChangeError?: (message: string) => void;
   onRoleChangeSuccess?: (message: string) => void;
 };
 
-type PendingStatusAction = "suspend" | "reactivate";
+type PendingStatusAction = "suspend" | "reactivate" | "cancelInvite";
 
 type ConfirmingAction = {
   membershipId: string;
@@ -74,6 +77,7 @@ export function TeamMembersTable({
   currentUserRole,
   canManageTeam,
   onMemberUpdated,
+  onMemberRemoved,
   onRoleChangeError,
   onRoleChangeSuccess,
 }: TeamMembersTableProps) {
@@ -149,6 +153,24 @@ export function TeamMembersTable({
     setConfirmingAction(null);
 
     startTransition(async () => {
+      if (action === "cancelInvite") {
+        const result = await cancelTeamInviteAction(membershipId);
+        setPendingMembershipId(null);
+
+        if (result.error) {
+          onRoleChangeError?.(result.error);
+          return;
+        }
+
+        onMemberRemoved?.(membershipId);
+        onRoleChangeSuccess?.(
+          result.inviteEmail
+            ? `Invite for ${result.inviteEmail} has been cancelled.`
+            : "Invitation has been cancelled.",
+        );
+        return;
+      }
+
       const result =
         action === "suspend"
           ? await suspendTeamMemberAction(membershipId)
@@ -249,6 +271,8 @@ export function TeamMembersTable({
                 currentUserId,
                 memberSubject,
               );
+            const canCancelInvite =
+              canManageTeam && canActorCancelInvite(memberSubject);
             const suspendBlockReason = canManageTeam
               ? validateMemberSuspension({
                   membership: memberSubject,
@@ -344,7 +368,9 @@ export function TeamMembersTable({
                         <span className="text-xs text-slate-600">
                           {confirmingStatusAction === "suspend"
                             ? "Suspend access?"
-                            : "Restore access?"}
+                            : confirmingStatusAction === "reactivate"
+                              ? "Restore access?"
+                              : "Cancel invite?"}
                         </span>
                         <button
                           type="button"
@@ -363,16 +389,22 @@ export function TeamMembersTable({
                           className={`inline-flex min-h-[44px] items-center rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 ${
                             confirmingStatusAction === "suspend"
                               ? "bg-rose-600 hover:bg-rose-700"
-                              : "bg-emerald-600 hover:bg-emerald-700"
+                              : confirmingStatusAction === "reactivate"
+                                ? "bg-emerald-600 hover:bg-emerald-700"
+                                : "bg-slate-600 hover:bg-slate-700"
                           }`}
                         >
                           {isRowPending
                             ? confirmingStatusAction === "suspend"
                               ? "Suspending..."
-                              : "Reactivating..."
+                              : confirmingStatusAction === "reactivate"
+                                ? "Reactivating..."
+                                : "Cancelling..."
                             : confirmingStatusAction === "suspend"
                               ? "Confirm suspend"
-                              : "Confirm reactivate"}
+                              : confirmingStatusAction === "reactivate"
+                                ? "Confirm reactivate"
+                                : "Confirm cancel"}
                         </button>
                       </div>
                     ) : member.status === "active" ? (
@@ -413,14 +445,25 @@ export function TeamMembersTable({
                       >
                         Reactivate
                       </button>
-                    ) : (
-                      <span
-                        className="text-xs text-slate-400"
-                        title="Pending invitations are waiting for sign-up."
+                    ) : member.status === "invited" ? (
+                      <button
+                        type="button"
+                        disabled={!canCancelInvite || isRowPending}
+                        onClick={() => {
+                          if (!canCancelInvite) {
+                            return;
+                          }
+
+                          setConfirmingAction({
+                            membershipId: member.id,
+                            action: "cancelInvite",
+                          });
+                        }}
+                        className="inline-flex min-h-[44px] items-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400 disabled:hover:bg-transparent"
                       >
-                        Pending invite
-                      </span>
-                    )}
+                        Cancel invite
+                      </button>
+                    ) : null}
                   </td>
                 ) : null}
               </tr>

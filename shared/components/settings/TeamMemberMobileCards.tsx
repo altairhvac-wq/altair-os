@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { formatDate } from "@/shared/types/customer";
 import {
+  canActorCancelInvite,
   canActorEditMemberRole,
   canActorReactivateMember,
   canActorSuspendMember,
@@ -18,6 +19,7 @@ import {
 } from "@/shared/types/team-member";
 import { isSensitiveTeamRole } from "@/shared/lib/team-role-descriptions";
 import {
+  cancelTeamInviteAction,
   reactivateTeamMemberAction,
   suspendTeamMemberAction,
   updateMemberRoleAction,
@@ -32,11 +34,12 @@ type TeamMemberMobileCardsProps = {
   currentUserRole: CompanyRole;
   canManageTeam: boolean;
   onMemberUpdated: (member: TeamMember) => void;
+  onMemberRemoved?: (membershipId: string) => void;
   onRoleChangeError?: (message: string) => void;
   onRoleChangeSuccess?: (message: string) => void;
 };
 
-type PendingStatusAction = "suspend" | "reactivate";
+type PendingStatusAction = "suspend" | "reactivate" | "cancelInvite";
 
 type ConfirmingAction = {
   membershipId: string;
@@ -76,6 +79,7 @@ export function TeamMemberMobileCards({
   currentUserRole,
   canManageTeam,
   onMemberUpdated,
+  onMemberRemoved,
   onRoleChangeError,
   onRoleChangeSuccess,
 }: TeamMemberMobileCardsProps) {
@@ -154,6 +158,24 @@ export function TeamMemberMobileCards({
     setConfirmingAction(null);
 
     startTransition(async () => {
+      if (action === "cancelInvite") {
+        const result = await cancelTeamInviteAction(membershipId);
+        setPendingMembershipId(null);
+
+        if (result.error) {
+          onRoleChangeError?.(result.error);
+          return;
+        }
+
+        onMemberRemoved?.(membershipId);
+        onRoleChangeSuccess?.(
+          result.inviteEmail
+            ? `Invite for ${result.inviteEmail} has been cancelled.`
+            : "Invitation has been cancelled.",
+        );
+        return;
+      }
+
       const result =
         action === "suspend"
           ? await suspendTeamMemberAction(membershipId)
@@ -243,6 +265,8 @@ export function TeamMemberMobileCards({
             currentUserId,
             memberSubject,
           );
+        const canCancelInvite =
+          canManageTeam && canActorCancelInvite(memberSubject);
         const suspendBlockReason = canManageTeam
           ? validateMemberSuspension({
               membership: memberSubject,
@@ -323,7 +347,9 @@ export function TeamMemberMobileCards({
                       <p className="text-sm font-medium text-slate-700">
                         {confirmingStatusAction === "suspend"
                           ? "Suspend this member's access?"
-                          : "Restore this member's access?"}
+                          : confirmingStatusAction === "reactivate"
+                            ? "Restore this member's access?"
+                            : "Cancel this pending invite?"}
                       </p>
                       <div className="flex flex-wrap gap-2">
                         <button
@@ -343,14 +369,18 @@ export function TeamMemberMobileCards({
                           className={`inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white ${
                             confirmingStatusAction === "suspend"
                               ? "bg-rose-600"
-                              : "bg-emerald-600"
+                              : confirmingStatusAction === "reactivate"
+                                ? "bg-emerald-600"
+                                : "bg-slate-600"
                           }`}
                         >
                           {isRowPending
                             ? "Working..."
                             : confirmingStatusAction === "suspend"
                               ? "Confirm suspend"
-                              : "Confirm reactivate"}
+                              : confirmingStatusAction === "reactivate"
+                                ? "Confirm reactivate"
+                                : "Confirm cancel"}
                         </button>
                       </div>
                     </div>
@@ -386,11 +416,22 @@ export function TeamMemberMobileCards({
                     >
                       Reactivate access
                     </button>
-                  ) : (
-                    <p className="text-center text-xs text-slate-400">
-                      Pending invite — waiting for sign-up
-                    </p>
-                  )}
+                  ) : member.status === "invited" ? (
+                    <button
+                      type="button"
+                      disabled={!canCancelInvite || isRowPending}
+                      onClick={() => {
+                        if (!canCancelInvite) return;
+                        setConfirmingAction({
+                          membershipId: member.id,
+                          action: "cancelInvite",
+                        });
+                      }}
+                      className="inline-flex min-h-[44px] w-full items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:text-slate-400"
+                    >
+                      Cancel invite
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
             </div>

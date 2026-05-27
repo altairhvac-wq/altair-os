@@ -5,6 +5,7 @@ import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
   acceptPendingInvite,
+  cancelPendingTeamInvite,
   createTeamInvite,
   resolveUserEmailForInvite,
   updateMemberRole,
@@ -50,6 +51,12 @@ export type InviteTeamMemberActionResult = {
 export type AcceptInviteActionResult = {
   error?: string;
   companyId?: string;
+};
+
+export type CancelTeamInviteActionResult = {
+  error?: string;
+  membershipId?: string;
+  inviteEmail?: string;
 };
 
 export async function acceptInviteAction(
@@ -155,6 +162,40 @@ export async function inviteTeamMemberAction(
   revalidatePath("/settings");
 
   return { member: result.member };
+}
+
+export async function cancelTeamInviteAction(
+  membershipId: string,
+): Promise<CancelTeamInviteActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." };
+  }
+
+  if (!context.permissions.manageUsers) {
+    return { error: "You do not have permission to cancel team invitations." };
+  }
+
+  const result = await cancelPendingTeamInvite(
+    context.company.id,
+    membershipId,
+    {
+      userId: context.user.id,
+      role: context.role,
+    },
+  );
+
+  if (result.error || !result.cancelled) {
+    return { error: result.error ?? "Failed to cancel invitation." };
+  }
+
+  revalidatePath("/settings");
+
+  return {
+    membershipId: result.cancelled.membershipId,
+    inviteEmail: result.cancelled.inviteEmail,
+  };
 }
 
 export async function updateMemberRoleAction(

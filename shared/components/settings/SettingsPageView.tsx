@@ -76,6 +76,13 @@ export function SettingsPageView({
     setRoleError(null);
   }
 
+  function handleMemberRemoved(membershipId: string) {
+    setMembers((previous) =>
+      previous.filter((item) => item.id !== membershipId),
+    );
+    setRoleError(null);
+  }
+
   function handleMemberInvited(member: TeamMember) {
     setMembers((previous) => {
       const existingIndex = previous.findIndex((item) => item.id === member.id);
@@ -244,6 +251,7 @@ export function SettingsPageView({
               currentUserRole={currentUserRole}
               canManageTeam={canManageTeam}
               onMemberUpdated={handleMemberUpdated}
+              onMemberRemoved={handleMemberRemoved}
               onRoleChangeError={handleRoleChangeError}
               onRoleChangeSuccess={handleRoleChangeSuccess}
             />
@@ -253,6 +261,7 @@ export function SettingsPageView({
               currentUserRole={currentUserRole}
               canManageTeam={canManageTeam}
               onMemberUpdated={handleMemberUpdated}
+              onMemberRemoved={handleMemberRemoved}
               onRoleChangeError={handleRoleChangeError}
               onRoleChangeSuccess={handleRoleChangeSuccess}
             />

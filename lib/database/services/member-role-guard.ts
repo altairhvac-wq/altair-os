@@ -253,3 +253,19 @@ export function validateMemberReactivation({
     actorRole,
   });
 }
+
+export function canActorCancelInvite(member: MemberRoleSubject): boolean {
+  return member.status === "invited" && !member.user_id;
+}
+
+export function validatePendingInviteCancellation({
+  membership,
+}: {
+  membership: MemberRoleSubject;
+}): string | null {
+  if (membership.status !== "invited" || membership.user_id) {
+    return "Only pending invitations can be cancelled.";
+  }
+
+  return null;
+}

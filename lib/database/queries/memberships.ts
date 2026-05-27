@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
-import { validateMemberRoleChange, validateInviteRole, validateMemberSuspension, validateMemberReactivation } from "@/lib/database/services/member-role-guard";
+import { validateMemberRoleChange, validateInviteRole, validateMemberSuspension, validateMemberReactivation, validatePendingInviteCancellation } from "@/lib/database/services/member-role-guard";
 import type {
   CompanyMembershipRow,
   CompanyRow,
@@ -744,4 +744,74 @@ export async function createTeamInvite(
   }
 
   return { member };
+}
+
+export type CancelPendingTeamInviteResult = {
+  cancelled?: {
+    membershipId: string;
+    inviteEmail: string;
+  };
+  error?: string;
+};
+
+export async function cancelPendingTeamInvite(
+  companyId: string,
+  membershipId: string,
+  actor: MemberRoleActor,
+): Promise<CancelPendingTeamInviteResult> {
+  const membership = await getCompanyMembershipById(companyId, membershipId);
+
+  if (!membership) {
+    return { error: "Invitation not found in this company." };
+  }
+
+  const validationError = validatePendingInviteCancellation({
+    membership,
+  });
+
+  if (validationError) {
+    return { error: validationError };
+  }
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("company_memberships")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("id", membershipId)
+    .eq("status", "invited")
+    .is("user_id", null)
+    .select("id, invite_email")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[cancelPendingTeamInvite] delete failed:", {
+      companyId,
+      membershipId,
+      actorUserId: actor.userId,
+      code: error.code,
+      message: error.message,
+    });
+
+    if (String(error.code) === "42501") {
+      return {
+        error:
+          "You do not have permission to cancel invitations. Owner or admin access is required.",
+      };
+    }
+
+    return { error: mapDatabaseError(error) };
+  }
+
+  if (!data) {
+    return { error: "Invitation not found or already accepted." };
+  }
+
+  return {
+    cancelled: {
+      membershipId: data.id,
+      inviteEmail: data.invite_email?.trim() ?? "",
+    },
+  };
 }
