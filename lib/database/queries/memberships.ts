@@ -720,6 +720,13 @@ export async function createTeamInvite(
       };
     }
 
+    if (error.code === "42501") {
+      return {
+        error:
+          "You do not have permission to invite team members. Owner or admin access is required.",
+      };
+    }
+
     return { error: mapDatabaseError(error) };
   }
 
