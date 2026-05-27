@@ -78,9 +78,9 @@ export const adminNavItems: NavItem[] = [
   },
   {
     label: "Time Clock",
-    href: "/time",
+    href: "/time-clock",
     icon: Clock,
-    description: "Field hours, clock in/out, and approvals",
+    description: "Clock in and out, view shift hours",
   },
   {
     label: "Network",
@@ -126,7 +126,7 @@ export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/invoices",
   "/expenses",
   "/reports",
-  "/time",
+  "/time-clock",
   "/network",
   "/alpha-tracker",
   "/settings",

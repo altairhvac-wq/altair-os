@@ -118,7 +118,7 @@ export type AdminNavHref =
   | "/price-book"
   | "/invoices"
   | "/expenses"
-  | "/time"
+  | "/time-clock"
   | "/network"
   | "/reports"
   | "/alpha-tracker"
@@ -133,7 +133,7 @@ const ADMIN_NAV_HREF_SET = new Set<string>([
   "/price-book",
   "/invoices",
   "/expenses",
-  "/time",
+  "/time-clock",
   "/network",
   "/reports",
   "/alpha-tracker",
@@ -168,8 +168,8 @@ export function canAccessAdminNavItem(
       return access.canViewBilling;
     case "/expenses":
       return true;
-    case "/time":
-      return canViewCompanyTimeEntries(context);
+    case "/time-clock":
+      return true;
     case "/network":
       return permissions.dispatchJobs || permissions.manageCompany;
     case "/reports":
@@ -195,7 +195,7 @@ export function getAccessibleAdminNavHrefs(
     "/price-book",
     "/invoices",
     "/expenses",
-    "/time",
+    "/time-clock",
     "/network",
     "/reports",
     "/alpha-tracker",

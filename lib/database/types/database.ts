@@ -65,6 +65,9 @@ import type {
   AlphaTrackerItemInsert,
   AlphaTrackerItemRow,
   AlphaTrackerItemUpdate,
+  TimeClockEntryInsert,
+  TimeClockEntryRow,
+  TimeClockEntryUpdate,
 } from "./core-tables";
 
 export type Database = {
@@ -695,6 +698,27 @@ export type Database = {
             columns: ["job_id"];
             isOneToOne: false;
             referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      time_clock_entries: {
+        Row: TimeClockEntryRow;
+        Insert: TimeClockEntryInsert;
+        Update: TimeClockEntryUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "time_clock_entries_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_clock_entries_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];

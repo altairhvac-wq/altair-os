@@ -899,6 +899,36 @@ export type AlphaTrackerItemUpdate = Partial<
   >
 >;
 
+export type TimeClockShiftStatus = "open" | "closed";
+
+export type TimeClockEntryRow = {
+  id: UUID;
+  company_id: UUID;
+  user_id: UUID;
+  clock_in_at: Timestamp;
+  clock_out_at: Timestamp | null;
+  status: TimeClockShiftStatus;
+  notes: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type TimeClockEntryInsert = {
+  id?: UUID;
+  company_id: UUID;
+  user_id: UUID;
+  clock_in_at?: Timestamp;
+  clock_out_at?: Timestamp | null;
+  status?: TimeClockShiftStatus;
+  notes?: string | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type TimeClockEntryUpdate = Partial<
+  Omit<TimeClockEntryRow, "id" | "company_id" | "user_id" | "created_at">
+>;
+
 export type ActiveCompanyContext = UserCompanyContext & {
   user: {
     id: UUID;
