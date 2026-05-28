@@ -37,7 +37,9 @@ export function BillingSignatureBlock({
       </h3>
 
       <div className="mt-4 grid gap-5 sm:grid-cols-2 print:grid-cols-2 print:gap-8">
-        <SignatureField label={content.fields.signature} />
+        <div className="sm:col-span-2 print:col-span-2">
+          <SignatureField label={content.fields.signature} />
+        </div>
         <SignatureField label={content.fields.printedName} />
         <SignatureField label={content.fields.date} />
       </div>
