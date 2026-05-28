@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { BarChart3, SlidersHorizontal, Users } from "lucide-react";
 import { assignJobAction } from "@/app/actions/dispatch";
 import {
   filterDispatchJobs,
@@ -18,6 +19,11 @@ import { MobileSheet, MobileSheetPanel } from "@/shared/components/ui/mobile-she
 import { DispatchEmptyState } from "./DispatchEmptyState";
 import { DispatchFocusBanner } from "./DispatchFocusBanner";
 import { DispatchSearchFilterBar } from "./DispatchSearchFilterBar";
+import {
+  DispatchSectionActions,
+  type DispatchSection,
+} from "./DispatchSectionActions";
+import { DispatchSectionSheet } from "./DispatchSectionSheet";
 import { DispatchSummaryCards } from "./DispatchSummaryCards";
 import { TechnicianWorkloadCards } from "./TechnicianWorkloadCards";
 import { UnassignedJobsModal } from "./UnassignedJobsModal";
@@ -62,6 +68,7 @@ export function DispatchPageView({
     dispatchPageFocus?.initialTechnicianFilter ?? "all",
   );
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [openSection, setOpenSection] = useState<DispatchSection | null>(null);
   const [showUnassignedModal, setShowUnassignedModal] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
   const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
@@ -97,6 +104,7 @@ export function DispatchPageView({
     setAssignError(null);
     setAssignSuccess(null);
     setShowUnassignedModal(false);
+    setOpenSection(null);
   }
 
   function handleClosePanel() {
@@ -136,6 +144,18 @@ export function DispatchPageView({
 
   const hasNoJobs = jobs.length === 0;
   const hasNoResults = !hasNoJobs && filteredJobs.length === 0;
+  const filtersActive =
+    search.trim().length > 0 ||
+    statusFilter !== "all" ||
+    technicianFilter !== "all";
+
+  function handleOpenSection(section: DispatchSection) {
+    setOpenSection((current) => (current === section ? null : section));
+  }
+
+  function handleCloseSection() {
+    setOpenSection(null);
+  }
 
   const boardTitle =
     dispatchPageFocus?.boardEyebrow ?? "Today's scheduled jobs";
@@ -158,36 +178,18 @@ export function DispatchPageView({
         />
       ) : null}
 
-      <DispatchSummaryCards
-        summary={summary}
-        highlightedLabels={dispatchPageFocus?.highlightedSummaryLabels}
+      <DispatchSectionActions
+        openSection={openSection}
+        onOpenSection={handleOpenSection}
+        hasJobs={!hasNoJobs}
+        filtersActive={filtersActive}
+        unassignedCount={unassignedJobs.length}
+        dispatchPageFocus={dispatchPageFocus}
       />
 
-      <TechnicianWorkloadCards
-        technicians={technicians}
-        jobs={jobs}
-        emphasized={dispatchPageFocus?.emphasizeWorkload}
-        highlightedTechnicianIds={dispatchPageFocus?.overloadedTechnicianIds}
-      />
-
-      {!hasNoJobs ? (
-        <DispatchSearchFilterBar
-          search={search}
-          statusFilter={statusFilter}
-          technicianFilter={technicianFilter}
-          technicians={technicians}
-          onSearchChange={setSearch}
-          onStatusFilterChange={setStatusFilter}
-          onTechnicianFilterChange={setTechnicianFilter}
-          resultCount={filteredJobs.length}
-          unassignedCount={unassignedJobs.length}
-          onOpenUnassigned={() => setShowUnassignedModal(true)}
-        />
-      ) : null}
-
-      <div className="flex min-w-0 max-w-full flex-col gap-2 sm:gap-4 lg:flex-row lg:items-start">
+      <div className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col gap-2 sm:gap-4 lg:flex-row lg:items-stretch">
         <section
-          className={`flex min-w-0 max-w-full flex-1 flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ${
+          className={`flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ${
             dispatchPageFocus?.emphasizeBoard
               ? "border-cyan-200 ring-2 ring-cyan-500/15"
               : "border-slate-200"
@@ -202,7 +204,7 @@ export function DispatchPageView({
             </p>
           </div>
 
-          <div className="min-w-0 max-w-full p-2 sm:p-4">
+          <div className="min-h-0 min-w-0 max-w-full flex-1 overflow-y-auto overscroll-contain p-2 sm:p-4">
             {hasNoJobs ? (
               <DispatchEmptyState variant="no-jobs" />
             ) : hasNoResults ? (
@@ -255,6 +257,64 @@ export function DispatchPageView({
           </aside>
         )}
       </div>
+
+      <DispatchSectionSheet
+        open={openSection === "summary"}
+        onClose={handleCloseSection}
+        titleId="dispatch-summary-section-title"
+        title="Today's overview"
+        subtitle="Status counts for today's dispatch board"
+        icon={<BarChart3 className="h-4 w-4" />}
+        iconClassName="bg-blue-50 text-blue-600"
+      >
+        <DispatchSummaryCards
+          summary={summary}
+          highlightedLabels={dispatchPageFocus?.highlightedSummaryLabels}
+        />
+      </DispatchSectionSheet>
+
+      <DispatchSectionSheet
+        open={openSection === "workload"}
+        onClose={handleCloseSection}
+        titleId="dispatch-workload-section-title"
+        title="Technician workload"
+        subtitle="Assigned jobs per technician today"
+        icon={<Users className="h-4 w-4" />}
+        iconClassName="bg-slate-100 text-slate-700"
+      >
+        <TechnicianWorkloadCards
+          technicians={technicians}
+          jobs={jobs}
+          emphasized={dispatchPageFocus?.emphasizeWorkload}
+          highlightedTechnicianIds={dispatchPageFocus?.overloadedTechnicianIds}
+        />
+      </DispatchSectionSheet>
+
+      <DispatchSectionSheet
+        open={openSection === "filters"}
+        onClose={handleCloseSection}
+        titleId="dispatch-filters-section-title"
+        title="Search & filters"
+        subtitle="Narrow the board without leaving dispatch"
+        icon={<SlidersHorizontal className="h-4 w-4" />}
+        iconClassName="bg-cyan-50 text-cyan-700"
+      >
+        <DispatchSearchFilterBar
+          search={search}
+          statusFilter={statusFilter}
+          technicianFilter={technicianFilter}
+          technicians={technicians}
+          onSearchChange={setSearch}
+          onStatusFilterChange={setStatusFilter}
+          onTechnicianFilterChange={setTechnicianFilter}
+          resultCount={filteredJobs.length}
+          unassignedCount={unassignedJobs.length}
+          onOpenUnassigned={() => {
+            handleCloseSection();
+            setShowUnassignedModal(true);
+          }}
+        />
+      </DispatchSectionSheet>
 
       {showUnassignedModal ? (
         <UnassignedJobsModal
