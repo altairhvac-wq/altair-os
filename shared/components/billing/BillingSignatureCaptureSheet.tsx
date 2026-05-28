@@ -131,6 +131,8 @@ function CaptureSignatureModal({
   const [hasDrawn, setHasDrawn] = useState(false);
 
   const formDisabled = isPending || isClearing;
+  /** Block backdrop/Escape dismiss while drawing; Cancel still works explicitly. */
+  const preventAccidentalDismiss = formDisabled || hasDrawn;
 
   function handleClearPad() {
     padRef.current?.clear();
@@ -220,7 +222,7 @@ function CaptureSignatureModal({
   return (
     <MobileSheet
       onClose={onClose}
-      closeDisabled={formDisabled}
+      closeDisabled={preventAccidentalDismiss}
       ariaLabelledBy={CAPTURE_SIGNATURE_TITLE_ID}
       variant="responsive"
     >
@@ -230,7 +232,7 @@ function CaptureSignatureModal({
           title={contentLabel}
           subtitle={`${documentNumber} — have the customer sign below.`}
           onClose={onClose}
-          closeDisabled={formDisabled}
+          closeDisabled={preventAccidentalDismiss}
           icon={
             <MobileSheetHeaderIcon className="h-9 w-9 bg-cyan-100 text-cyan-700">
               <PenLine className="h-4 w-4" />
@@ -295,13 +297,13 @@ function CaptureSignatureModal({
             </div>
           </MobileSheetBody>
 
-          <MobileSheetFooter>
+          <MobileSheetFooter className="flex-col gap-2 sm:flex-row sm:flex-wrap">
             {existingSignature ? (
               <button
                 type="button"
                 onClick={handleClearSavedSignature}
                 disabled={formDisabled}
-                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 {isClearing ? "Clearing…" : "Clear saved signature"}
               </button>
@@ -310,14 +312,14 @@ function CaptureSignatureModal({
               type="button"
               onClick={onClose}
               disabled={formDisabled}
-              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={formDisabled}
-              className="inline-flex min-h-11 items-center justify-center rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 sm:ml-auto sm:w-auto"
             >
               {isPending ? "Saving…" : "Save signature"}
             </button>
