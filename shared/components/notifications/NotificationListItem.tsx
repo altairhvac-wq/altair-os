@@ -10,6 +10,7 @@ import {
   getTechnicianNotificationHref,
   isNotificationUnread,
   type Notification,
+  type NotificationAccess,
 } from "@/shared/types/notification";
 import { markNotificationReadAction } from "@/app/actions/notifications";
 
@@ -17,45 +18,51 @@ type NotificationListItemProps = {
   notification: Notification;
   variant?: "admin" | "technician";
   onRead?: (notificationId: string) => void;
-  canManageCustomers?: boolean;
-  canViewBilling?: boolean;
+  onNavigate?: () => void;
+  notificationAccess?: NotificationAccess;
 };
 
 export function NotificationListItem({
   notification,
   variant = "admin",
   onRead,
-  canManageCustomers = true,
-  canViewBilling = true,
+  onNavigate,
+  notificationAccess,
 }: NotificationListItemProps) {
   const router = useRouter();
   const unread = isNotificationUnread(notification);
+  const canViewBilling = notificationAccess?.canViewBilling !== false;
   const href =
     variant === "technician"
       ? getTechnicianNotificationHref(notification)
-      : getNotificationHref(notification, {
-          canManageCustomers,
-          canViewBilling,
-        });
+      : getNotificationHref(notification, notificationAccess);
 
-  async function handleClick(event?: React.MouseEvent) {
+  async function markReadIfNeeded() {
     if (!unread) {
-      return;
+      return true;
     }
-
-    event?.preventDefault();
 
     const result = await markNotificationReadAction(notification.id);
 
     if (result.error) {
-      return;
+      return false;
     }
 
     onRead?.(notification.id);
+    return true;
+  }
 
-    if (href) {
-      router.push(href);
+  async function handleUnreadActivate(event: React.MouseEvent) {
+    event.preventDefault();
+
+    const marked = await markReadIfNeeded();
+
+    if (!marked || !href) {
+      return;
     }
+
+    onNavigate?.();
+    router.push(href);
   }
 
   const content = (
@@ -67,14 +74,14 @@ export function NotificationListItem({
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold text-slate-900">
+        <p className="break-words text-sm font-semibold text-slate-900">
           {formatNotificationTitleForAccess(notification, canViewBilling)}
         </p>
         {unread ? (
           <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-cyan-500" />
         ) : null}
       </div>
-      <p className="mt-1 text-sm text-slate-600">
+      <p className="mt-1 break-words text-sm text-slate-600">
         {formatNotificationMessageForAccess(notification, canViewBilling)}
       </p>
       <p className="mt-2 text-xs text-slate-400">
@@ -89,11 +96,13 @@ export function NotificationListItem({
         href={href}
         onClick={(event) => {
           if (unread) {
-            void handleClick(event);
+            void handleUnreadActivate(event);
             return;
           }
+
+          onNavigate?.();
         }}
-        className="block"
+        className="block min-w-0 max-w-full"
       >
         {content}
       </Link>
@@ -104,9 +113,9 @@ export function NotificationListItem({
     <button
       type="button"
       onClick={() => {
-        void handleClick();
+        void markReadIfNeeded();
       }}
-      className="block w-full text-left"
+      className="block w-full min-w-0 max-w-full text-left"
     >
       {content}
     </button>

@@ -19,6 +19,7 @@ type TechnicianReceiptsViewProps = {
   currentUserId: string;
   canManageBilling: boolean;
   canDispatchJobs: boolean;
+  initialSelectedId?: string | null;
 };
 
 export function TechnicianReceiptsView({
@@ -26,14 +27,27 @@ export function TechnicianReceiptsView({
   currentUserId,
   canManageBilling,
   canDispatchJobs,
+  initialSelectedId = null,
 }: TechnicianReceiptsViewProps) {
   const [showCreateSheet, setShowCreateSheet] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(
+    initialSelectedId,
+  );
   const [localExpenses, setLocalExpenses] = useState(expenses);
 
   useEffect(() => {
     setLocalExpenses(expenses);
   }, [expenses]);
+
+  useEffect(() => {
+    if (!initialSelectedId) {
+      return;
+    }
+
+    if (expenses.some((expense) => expense.id === initialSelectedId)) {
+      setExpandedId(initialSelectedId);
+    }
+  }, [expenses, initialSelectedId]);
 
   const pendingCount = useMemo(
     () =>

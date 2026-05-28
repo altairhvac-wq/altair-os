@@ -35,6 +35,7 @@ const BILLING_SENSITIVE_OPERATIONAL_SOURCES = new Set<OperationalActivitySource>
 const BILLING_SENSITIVE_NOTIFICATION_TYPES = new Set<NotificationType>([
   "estimate_approved",
   "invoice_paid",
+  "expense_submitted",
 ]);
 
 export function isBillingSensitiveOperationalActivity(

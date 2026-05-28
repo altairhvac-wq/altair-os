@@ -4,6 +4,7 @@ import type {
   NotificationInsert,
   NotificationRow,
 } from "@/lib/database/types/core-tables";
+import type { NotificationType } from "@/lib/database/types/enums";
 import type { Notification } from "@/shared/types/notification";
 
 function mapNotificationRow(row: NotificationRow): Notification {
@@ -65,18 +66,24 @@ export async function insertNotifications(
 export const getUserNotifications = cache(async function getUserNotifications(
   companyId: string,
   userId: string,
-  options?: { limit?: number },
+  options?: { limit?: number; types?: readonly NotificationType[] },
 ): Promise<Notification[]> {
   const supabase = await createClient();
   const limit = options?.limit ?? 50;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("notifications")
     .select("*")
     .eq("company_id", companyId)
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(limit);
+
+  if (options?.types && options.types.length > 0) {
+    query = query.in("type", [...options.types]);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("[getUserNotifications] query failed:", {
@@ -94,15 +101,22 @@ export const getUnreadNotificationCount = cache(
   async function getUnreadNotificationCount(
     companyId: string,
     userId: string,
+    options?: { types?: readonly NotificationType[] },
   ): Promise<number> {
   const supabase = await createClient();
 
-  const { count, error } = await supabase
+  let query = supabase
     .from("notifications")
     .select("id", { count: "exact", head: true })
     .eq("company_id", companyId)
     .eq("user_id", userId)
     .is("read_at", null);
+
+  if (options?.types && options.types.length > 0) {
+    query = query.in("type", [...options.types]);
+  }
+
+  const { count, error } = await query;
 
   if (error) {
     console.error("[getUnreadNotificationCount] query failed:", {
@@ -122,23 +136,21 @@ export async function markNotificationRead(
   userId: string,
   notificationId: string,
 ): Promise<{ error: string | null }> {
+  if (!notificationId.trim()) {
+    return { error: "Notification not found." };
+  }
+
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("notifications")
     .update({ read_at: new Date().toISOString() })
     .eq("company_id", companyId)
     .eq("user_id", userId)
-    .eq("id", notificationId)
-    .is("read_at", null)
-    .select("id");
+    .eq("id", notificationId);
 
   if (error) {
     return { error: error.message ?? "Failed to mark notification as read." };
-  }
-
-  if (!data || data.length === 0) {
-    return { error: "Notification not found or already read." };
   }
 
   return { error: null };

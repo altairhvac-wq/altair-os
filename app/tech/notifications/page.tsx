@@ -4,6 +4,10 @@ import {
   getUnreadNotificationCount,
   getUserNotifications,
 } from "@/lib/database/services/notifications";
+import {
+  filterNotificationsForTechnicianView,
+  TECHNICIAN_NOTIFICATION_TYPES,
+} from "@/shared/types/notification";
 import { TechnicianNotificationsView } from "@/shared/components/notifications/TechnicianNotificationsView";
 
 export default async function TechnicianNotificationsPage() {
@@ -14,13 +18,18 @@ export default async function TechnicianNotificationsPage() {
   }
 
   const [notifications, unreadCount] = await Promise.all([
-    getUserNotifications(context.company.id, context.user.id, { limit: 50 }),
-    getUnreadNotificationCount(context.company.id, context.user.id),
+    getUserNotifications(context.company.id, context.user.id, {
+      limit: 50,
+      types: TECHNICIAN_NOTIFICATION_TYPES,
+    }),
+    getUnreadNotificationCount(context.company.id, context.user.id, {
+      types: TECHNICIAN_NOTIFICATION_TYPES,
+    }),
   ]);
 
   return (
     <TechnicianNotificationsView
-      initialNotifications={notifications}
+      initialNotifications={filterNotificationsForTechnicianView(notifications)}
       initialUnreadCount={unreadCount}
     />
   );

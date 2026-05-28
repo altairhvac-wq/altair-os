@@ -3,6 +3,7 @@ import { TechnicianMobileShell } from "@/shared/components/technician/Technician
 import { getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext, getUserCompanies } from "@/lib/database/company-context";
 import { getUnreadNotificationCount } from "@/lib/database/services/notifications";
+import { TECHNICIAN_NOTIFICATION_TYPES } from "@/shared/types/notification";
 
 export default async function TechLayout({
   children,
@@ -27,6 +28,7 @@ export default async function TechLayout({
   const unreadNotificationCount = await getUnreadNotificationCount(
     companyContext.company.id,
     companyContext.user.id,
+    { types: TECHNICIAN_NOTIFICATION_TYPES },
   );
 
   return (

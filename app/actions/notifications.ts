@@ -33,6 +33,10 @@ export async function markNotificationReadAction(
     return { error: "No active company workspace." };
   }
 
+  if (!notificationId.trim()) {
+    return { error: "Notification not found." };
+  }
+
   const { error } = await markNotificationRead(
     context.company.id,
     context.user.id,

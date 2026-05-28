@@ -5,21 +5,22 @@ import { Bell } from "lucide-react";
 import {
   markAllNotificationsReadAction,
 } from "@/app/actions/notifications";
-import type { Notification } from "@/shared/types/notification";
+import type {
+  Notification,
+  NotificationAccess,
+} from "@/shared/types/notification";
 import { NotificationListItem } from "./NotificationListItem";
 
 type NotificationBellProps = {
   initialNotifications: Notification[];
   initialUnreadCount: number;
-  canManageCustomers?: boolean;
-  canViewBilling?: boolean;
+  notificationAccess?: NotificationAccess;
 };
 
 export function NotificationBell({
   initialNotifications,
   initialUnreadCount,
-  canManageCustomers = true,
-  canViewBilling = true,
+  notificationAccess,
 }: NotificationBellProps) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -73,7 +74,7 @@ export function NotificationBell({
   }
 
   return (
-    <div ref={panelRef} className="relative hidden sm:block">
+    <div ref={panelRef} className="relative">
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
@@ -90,7 +91,7 @@ export function NotificationBell({
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+        <div className="absolute right-0 z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg sm:w-80">
           <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
             <p className="text-sm font-semibold text-slate-900">Notifications</p>
             {unreadCount > 0 ? (
@@ -105,7 +106,7 @@ export function NotificationBell({
             ) : null}
           </div>
 
-          <div className="max-h-96 space-y-2 overflow-y-auto p-3">
+          <div className="max-h-[min(24rem,calc(100dvh-6rem-env(safe-area-inset-top,0px)))] space-y-2 overflow-y-auto overscroll-contain p-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
             {notifications.length === 0 ? (
               <p className="px-2 py-6 text-center text-sm text-slate-500">
                 No notifications yet.
@@ -116,8 +117,8 @@ export function NotificationBell({
                   key={notification.id}
                   notification={notification}
                   onRead={handleNotificationRead}
-                  canManageCustomers={canManageCustomers}
-                  canViewBilling={canViewBilling}
+                  notificationAccess={notificationAccess}
+                  onNavigate={() => setOpen(false)}
                 />
               ))
             )}

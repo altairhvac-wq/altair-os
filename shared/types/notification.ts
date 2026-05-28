@@ -19,6 +19,49 @@ export type Notification = {
   metadata: Record<string, unknown>;
 };
 
+export const TECHNICIAN_NOTIFICATION_TYPES = [
+  "job_assigned",
+  "expense_rejected",
+  "time_clocked_in",
+  "time_clocked_out",
+] as const satisfies readonly NotificationType[];
+
+export type NotificationAccess = {
+  canManageCustomers?: boolean;
+  canViewBilling?: boolean;
+  canViewJobs?: boolean;
+  canViewCompanyExpenses?: boolean;
+};
+
+export function buildNotificationAccess(input: {
+  canManageCustomers: boolean;
+  canViewBilling: boolean;
+  canViewAllJobs: boolean;
+  canViewCompanyExpenses: boolean;
+  canViewAssignedJobs?: boolean;
+}): NotificationAccess {
+  return {
+    canManageCustomers: input.canManageCustomers,
+    canViewBilling: input.canViewBilling,
+    canViewJobs: input.canViewAllJobs || input.canViewAssignedJobs === true,
+    canViewCompanyExpenses: input.canViewCompanyExpenses,
+  };
+}
+
+export function isTechnicianRelevantNotification(
+  notification: Pick<Notification, "type">,
+): boolean {
+  return (TECHNICIAN_NOTIFICATION_TYPES as readonly NotificationType[]).includes(
+    notification.type,
+  );
+}
+
+export function filterNotificationsForTechnicianView(
+  notifications: Notification[],
+): Notification[] {
+  return notifications.filter(isTechnicianRelevantNotification);
+}
+
 export function isNotificationUnread(notification: Notification): boolean {
   return !notification.readAt;
 }
@@ -58,10 +101,7 @@ export function formatNotificationTimestamp(value: string): string {
 
 export function getNotificationHref(
   notification: Notification,
-  access?: {
-    canManageCustomers?: boolean;
-    canViewBilling?: boolean;
-  },
+  access?: NotificationAccess,
 ): string | null {
   if (!notification.entityType || !notification.entityId) {
     return null;
@@ -69,6 +109,9 @@ export function getNotificationHref(
 
   switch (notification.entityType) {
     case "job":
+      if (access?.canViewJobs === false) {
+        return null;
+      }
       return `/jobs/${notification.entityId}`;
     case "estimate":
       if (access?.canViewBilling === false) {
@@ -81,6 +124,9 @@ export function getNotificationHref(
       }
       return `/invoices/${notification.entityId}`;
     case "expense":
+      if (access?.canViewCompanyExpenses === false) {
+        return null;
+      }
       return `/expenses?selected=${notification.entityId}`;
     case "customer":
       if (access?.canManageCustomers === false) {
@@ -105,7 +151,7 @@ export function getTechnicianNotificationHref(
     case "job":
       return "/technician";
     case "expense":
-      return "/tech/receipts";
+      return `/tech/receipts?selected=${notification.entityId}`;
     case "time_entry":
       return "/tech/time";
     default:
@@ -126,6 +172,8 @@ export function formatNotificationTitleForAccess(
       return "Estimate approved";
     case "invoice_paid":
       return "Invoice paid";
+    case "expense_submitted":
+      return "Expense submitted";
     default:
       return notification.title;
   }
@@ -144,6 +192,8 @@ export function formatNotificationMessageForAccess(
       return "An estimate was approved.";
     case "invoice_paid":
       return "An invoice was paid in full.";
+    case "expense_submitted":
+      return "A technician submitted an expense for review.";
     default:
       return notification.message;
   }

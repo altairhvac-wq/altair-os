@@ -1,6 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
+import { getCompanyAccessScope } from "@/lib/database/access-control";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { logoutAction } from "@/app/actions/auth";
 import { AlphaIndicator } from "@/shared/components/admin/AlphaIndicator";
@@ -8,6 +9,7 @@ import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
 import type { OwnerViewMode } from "@/shared/lib/owner-view-mode";
+import { buildNotificationAccess } from "@/shared/types/notification";
 import type { Notification } from "@/shared/types/notification";
 
 type HeaderProps = {
@@ -57,6 +59,14 @@ export function Header({
     companyContext.profile.full_name,
     companyContext.user.email,
   );
+  const accessScope = getCompanyAccessScope(companyContext);
+  const notificationAccess = buildNotificationAccess({
+    canManageCustomers: accessScope.canManageCustomers,
+    canViewBilling: accessScope.canViewBilling,
+    canViewAllJobs: accessScope.canViewAllJobs,
+    canViewCompanyExpenses: accessScope.canViewCompanyExpenses,
+    canViewAssignedJobs: companyContext.permissions.viewAssignedJobs,
+  });
 
   return (
     <header className="relative z-40 flex min-h-[calc(4.25rem+env(safe-area-inset-top,0px))] w-full max-w-full shrink-0 items-center justify-between gap-2 border-b border-slate-200/80 bg-white/90 px-4 pt-[env(safe-area-inset-top,0px)] shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-md sm:gap-3 sm:px-6 md:h-[4.25rem] md:min-h-[4.25rem] md:pt-0">
@@ -87,8 +97,7 @@ export function Header({
         <NotificationBell
           initialNotifications={notifications}
           initialUnreadCount={unreadNotificationCount}
-          canManageCustomers={companyContext.permissions.manageCustomers}
-          canViewBilling={companyContext.permissions.manageBilling}
+          notificationAccess={notificationAccess}
         />
         <div className="flex items-center gap-2 border-l border-slate-200 pl-2 sm:ml-2 sm:gap-3 sm:pl-4">
           <CompanySwitcher

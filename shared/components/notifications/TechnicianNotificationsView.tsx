@@ -63,7 +63,7 @@ export function TechnicianNotificationsView({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-lg font-bold text-slate-900">Notifications</h1>

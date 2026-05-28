@@ -60,6 +60,8 @@ import {
   formatNotificationTitleForAccess,
   formatNotificationTimestamp,
   getNotificationHref,
+  buildNotificationAccess,
+  type NotificationAccess,
 } from "@/shared/types/notification";
 import {
   formatOperationalActivityDetailsForAccess,
@@ -853,13 +855,13 @@ function ExpenseReviewSection({
 
 function NotificationsSummarySection({
   notifications,
-  canViewBilling,
-  canManageCustomers,
+  notificationAccess,
 }: {
   notifications: DashboardData["notifications"];
-  canViewBilling: boolean;
-  canManageCustomers: boolean;
+  notificationAccess: NotificationAccess;
 }) {
+  const canViewBilling = notificationAccess.canViewBilling !== false;
+
   return (
     <DashboardSection
       title="Notifications"
@@ -878,16 +880,13 @@ function NotificationsSummarySection({
       ) : (
         <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
           {notifications.recent.map((notification) => {
-            const href = getNotificationHref(notification, {
-              canViewBilling,
-              canManageCustomers,
-            });
+            const href = getNotificationHref(notification, notificationAccess);
 
             const content = (
               <>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-bold text-slate-900">
+                    <p className="break-words text-sm font-bold text-slate-900">
                       {formatNotificationTitleForAccess(
                         notification,
                         canViewBilling,
@@ -897,7 +896,7 @@ function NotificationsSummarySection({
                       <span className="inline-flex h-2 w-2 rounded-full bg-cyan-500" />
                     ) : null}
                   </div>
-                  <p className="mt-1 line-clamp-2 text-xs text-slate-600">
+                  <p className="mt-1 line-clamp-2 break-words text-xs text-slate-600">
                     {formatNotificationMessageForAccess(
                       notification,
                       canViewBilling,
@@ -1054,6 +1053,12 @@ function buildMobileDashboardTabs(
   companyId?: string,
 ): Array<{ id: MobileDashboardTabId; label: string; content: React.ReactNode }> {
   const { access } = data;
+  const notificationAccess = buildNotificationAccess({
+    canManageCustomers: access.canManageCustomers,
+    canViewBilling: access.canViewBilling,
+    canViewAllJobs: access.canViewAllJobs,
+    canViewCompanyExpenses: access.canViewCompanyExpenses,
+  });
   const tabs: Array<{
     id: MobileDashboardTabId;
     label: string;
@@ -1172,8 +1177,7 @@ function buildMobileDashboardTabs(
     <NotificationsSummarySection
       key="notifications"
       notifications={data.notifications}
-      canViewBilling={access.canViewBilling}
-      canManageCustomers={access.canManageCustomers}
+      notificationAccess={notificationAccess}
     />,
   );
 
@@ -1223,6 +1227,12 @@ function DesktopDashboardLayout({
   companyId,
 }: OperationalDashboardViewProps) {
   const { access } = data;
+  const notificationAccess = buildNotificationAccess({
+    canManageCustomers: access.canManageCustomers,
+    canViewBilling: access.canViewBilling,
+    canViewAllJobs: access.canViewAllJobs,
+    canViewCompanyExpenses: access.canViewCompanyExpenses,
+  });
   const showCommandPairSideBySide =
     !hasCashFlowPressure(data) && !hasDispatchPressure(data);
 
@@ -1309,8 +1319,7 @@ function DesktopDashboardLayout({
           ) : null}
           <NotificationsSummarySection
             notifications={data.notifications}
-            canViewBilling={access.canViewBilling}
-            canManageCustomers={access.canManageCustomers}
+            notificationAccess={notificationAccess}
           />
         </div>
 
