@@ -20,7 +20,22 @@ type SendViaResendInput = {
   text: string;
   html: string;
   logContext: string;
+  fromDisplayName?: string;
+  replyTo?: string;
 };
+
+function buildFromAddress(from: string, displayName?: string): string {
+  const trimmedName = displayName?.trim();
+
+  if (!trimmedName) {
+    return from;
+  }
+
+  const emailMatch = from.match(/<([^>]+)>/);
+  const email = emailMatch?.[1]?.trim() || from.trim();
+
+  return `${trimmedName} <${email}>`;
+}
 
 export async function sendViaResend(
   input: SendViaResendInput,
@@ -58,11 +73,12 @@ export async function sendViaResend(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: env.resend.from,
+        from: buildFromAddress(env.resend.from, input.fromDisplayName),
         to: [input.to],
         subject: input.subject,
         text: input.text,
         html: input.html,
+        ...(input.replyTo ? { reply_to: input.replyTo } : {}),
       }),
     });
 

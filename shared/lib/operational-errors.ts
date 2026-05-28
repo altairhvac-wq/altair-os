@@ -1,4 +1,5 @@
 import type { BillingEmailDelivery } from "@/lib/email/billing-send";
+import { isValidEmail } from "@/shared/lib/email-validation";
 
 export const NO_ACTIVE_COMPANY_MESSAGE =
   "Your session expired or no company is selected. Sign in again.";
@@ -88,6 +89,31 @@ export function formatRetryGuidance(message: string): string {
 
 export const MISSING_CUSTOMER_EMAIL_SEND_REASON =
   "Add a customer email on their profile before sending.";
+
+export const INVALID_CUSTOMER_EMAIL_SEND_REASON =
+  "The customer email on file isn't valid. Update it on their profile before sending.";
+
+export function getCustomerEmailSendBlockReason(
+  email: string | undefined | null,
+): string | null {
+  const trimmed = email?.trim();
+
+  if (!trimmed) {
+    return MISSING_CUSTOMER_EMAIL_SEND_REASON;
+  }
+
+  if (!isValidEmail(trimmed)) {
+    return INVALID_CUSTOMER_EMAIL_SEND_REASON;
+  }
+
+  return null;
+}
+
+export function hasValidCustomerEmailForSend(
+  email: string | undefined | null,
+): boolean {
+  return getCustomerEmailSendBlockReason(email) === null;
+}
 
 export function formatInviteAcceptError(message: string): string {
   const lower = message.toLowerCase();

@@ -17,6 +17,8 @@ import {
 } from "@/lib/database/services/estimate-activity";
 import { sendEstimateEmail, toBillingEmailDelivery } from "@/lib/email/billing-send";
 import type { BillingEmailDelivery } from "@/lib/email/billing-send";
+import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
+import { isValidEmail } from "@/shared/lib/email-validation";
 import {
   canResendEstimateEmail,
   getSendEstimateJobBlockReason,
@@ -130,7 +132,7 @@ export async function updateEstimateStatusAction(
 
     const customerEmail = currentEstimate.customerEmail?.trim();
 
-    if (!customerEmail || !customerEmail.includes("@")) {
+    if (!customerEmail || !isValidEmail(customerEmail)) {
       return {
         error:
           "A valid customer email is required to send this estimate. Add an email on the customer record and try again.",
@@ -151,9 +153,13 @@ export async function updateEstimateStatusAction(
 
     const emailResult = await sendEstimateEmail({
       to: customerEmail,
-      companyName: context.company.name,
+      company: mapCompanyRowToBillingContact(context.company),
       customerName: currentEstimate.customerName,
       estimateNumber: currentEstimate.estimateNumber,
+      issuedDate: currentEstimate.createdAt.slice(0, 10),
+      subtotal: currentEstimate.subtotal,
+      taxRate: currentEstimate.taxRate,
+      taxAmount: currentEstimate.tax ?? 0,
       total: currentEstimate.total,
       validUntil: currentEstimate.validUntil,
       timeZone: context.company.timezone,
@@ -283,7 +289,7 @@ export async function resendEstimateEmailAction(
 
   const customerEmail = currentEstimate.customerEmail?.trim();
 
-  if (!customerEmail || !customerEmail.includes("@")) {
+  if (!customerEmail || !isValidEmail(customerEmail)) {
     return {
       error:
         "A valid customer email is required to resend this estimate. Add an email on the customer record and try again.",
@@ -292,9 +298,13 @@ export async function resendEstimateEmailAction(
 
   const emailResult = await sendEstimateEmail({
     to: customerEmail,
-    companyName: context.company.name,
+    company: mapCompanyRowToBillingContact(context.company),
     customerName: currentEstimate.customerName,
     estimateNumber: currentEstimate.estimateNumber,
+    issuedDate: currentEstimate.createdAt.slice(0, 10),
+    subtotal: currentEstimate.subtotal,
+    taxRate: currentEstimate.taxRate,
+    taxAmount: currentEstimate.tax ?? 0,
     total: currentEstimate.total,
     validUntil: currentEstimate.validUntil,
     timeZone: context.company.timezone,

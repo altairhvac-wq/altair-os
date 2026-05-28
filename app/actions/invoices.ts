@@ -29,6 +29,8 @@ import {
 import { recordEstimateStatusChangedActivity } from "@/lib/database/services/estimate-activity";
 import { sendInvoiceEmail, toBillingEmailDelivery } from "@/lib/email/billing-send";
 import type { BillingEmailDelivery } from "@/lib/email/billing-send";
+import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
+import { isValidEmail } from "@/shared/lib/email-validation";
 import type {
   InvoiceDetail,
   InvoiceEditFormData,
@@ -269,7 +271,7 @@ export async function sendInvoiceAction(
 
   const customerEmail = currentInvoice.customerEmail?.trim();
 
-  if (!customerEmail || !customerEmail.includes("@")) {
+  if (!customerEmail || !isValidEmail(customerEmail)) {
     return {
       error:
         "A valid customer email is required to send this invoice. Add an email on the customer record and try again.",
@@ -289,11 +291,17 @@ export async function sendInvoiceAction(
 
   const emailResult = await sendInvoiceEmail({
     to: customerEmail,
-    companyName: context.company.name,
+    company: mapCompanyRowToBillingContact(context.company),
     customerName: currentInvoice.customerName,
     invoiceNumber: currentInvoice.invoiceNumber,
-    amountDue: currentInvoice.balanceDue,
+    issuedDate: currentInvoice.issueDate,
     dueDate: currentInvoice.dueDate,
+    subtotal: currentInvoice.subtotal,
+    taxRate: currentInvoice.taxRate,
+    taxAmount: currentInvoice.taxAmount ?? 0,
+    total: currentInvoice.total,
+    amountPaid: currentInvoice.amountPaid,
+    balanceDue: currentInvoice.balanceDue,
     timeZone: context.company.timezone,
     lineItems: currentInvoice.lineItems.map((item) => ({
       name: item.name,
@@ -399,7 +407,7 @@ export async function resendInvoiceEmailAction(
 
   const customerEmail = currentInvoice.customerEmail?.trim();
 
-  if (!customerEmail || !customerEmail.includes("@")) {
+  if (!customerEmail || !isValidEmail(customerEmail)) {
     return {
       error:
         "A valid customer email is required to resend this invoice. Add an email on the customer record and try again.",
@@ -408,11 +416,17 @@ export async function resendInvoiceEmailAction(
 
   const emailResult = await sendInvoiceEmail({
     to: customerEmail,
-    companyName: context.company.name,
+    company: mapCompanyRowToBillingContact(context.company),
     customerName: currentInvoice.customerName,
     invoiceNumber: currentInvoice.invoiceNumber,
-    amountDue: currentInvoice.balanceDue,
+    issuedDate: currentInvoice.issueDate,
     dueDate: currentInvoice.dueDate,
+    subtotal: currentInvoice.subtotal,
+    taxRate: currentInvoice.taxRate,
+    taxAmount: currentInvoice.taxAmount ?? 0,
+    total: currentInvoice.total,
+    amountPaid: currentInvoice.amountPaid,
+    balanceDue: currentInvoice.balanceDue,
     timeZone: context.company.timezone,
     lineItems: currentInvoice.lineItems.map((item) => ({
       name: item.name,

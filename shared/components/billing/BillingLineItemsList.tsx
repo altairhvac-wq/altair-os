@@ -13,19 +13,66 @@ export type BillingLineItemDisplay = {
 type BillingLineItemsListProps = {
   items: BillingLineItemDisplay[];
   documentLabel?: string;
+  variant?: "cards" | "table";
 };
 
 export function BillingLineItemsList({
   items,
   documentLabel = "document",
+  variant = "cards",
 }: BillingLineItemsListProps) {
   if (items.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center">
+      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center print:border-slate-300 print:bg-white">
         <p className="text-sm font-medium text-slate-700">No line items yet</p>
         <p className="mt-1 text-xs text-slate-500">
           Services and parts on this {documentLabel} will appear here.
         </p>
+      </div>
+    );
+  }
+
+  if (variant === "table") {
+    return (
+      <div className="overflow-x-auto">
+        <table className="min-w-full border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-slate-300 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <th className="px-3 py-2 font-semibold">Item</th>
+              <th className="px-3 py-2 text-center font-semibold">Qty</th>
+              <th className="px-3 py-2 text-right font-semibold">Rate</th>
+              <th className="px-3 py-2 text-right font-semibold">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr key={item.id} className="border-b border-slate-200">
+                <td className="px-3 py-3 align-top text-slate-900">
+                  <p className="font-medium">{item.name}</p>
+                  {item.description ? (
+                    <p className="mt-0.5 text-xs text-slate-500">{item.description}</p>
+                  ) : null}
+                  {item.taxable === false ? (
+                    <span className="mt-1 inline-block rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 print:border print:border-slate-300 print:bg-white">
+                      Non-taxable
+                    </span>
+                  ) : null}
+                </td>
+                <td className="px-3 py-3 text-center tabular-nums text-slate-600">
+                  {item.quantity}
+                </td>
+                <td className="px-3 py-3 text-right tabular-nums text-slate-600">
+                  {formatCurrency(item.unitPrice)}
+                </td>
+                <td className="px-3 py-3 text-right font-semibold tabular-nums text-slate-900">
+                  {formatCurrency(
+                    calculateLineItemTotal(item.quantity, item.unitPrice),
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   }

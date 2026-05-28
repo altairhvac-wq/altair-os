@@ -39,20 +39,24 @@ export function AdminShell({
   return (
     <CompanyTimezoneProvider timeZone={companyContext.company.timezone}>
       <div className="admin-canvas flex min-h-dvh w-full min-w-0 max-w-full flex-col md:h-dvh md:overflow-hidden">
-      <Header
-        title={current.label}
-        description={current.description}
-        companyContext={companyContext}
-        userCompanies={userCompanies}
-        notifications={notifications}
-        unreadNotificationCount={unreadNotificationCount}
-        showViewSwitcher={isOwner}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-      />
+      <div className="no-print">
+        <Header
+          title={current.label}
+          description={current.description}
+          companyContext={companyContext}
+          userCompanies={userCompanies}
+          notifications={notifications}
+          unreadNotificationCount={unreadNotificationCount}
+          showViewSwitcher={isOwner}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
+      </div>
 
-      <DesktopNav companyContext={navigationContext} />
-      <MobileNav companyContext={navigationContext} />
+      <div className="no-print">
+        <DesktopNav companyContext={navigationContext} />
+        <MobileNav companyContext={navigationContext} />
+      </div>
 
       <main className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-clip p-3 sm:p-5 lg:p-7 md:overflow-y-auto">
         <PullToRefresh enabled={pullToRefreshEnabled}>

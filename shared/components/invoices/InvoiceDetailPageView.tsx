@@ -1,15 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Briefcase,
-  FileText,
-  Mail,
-  Phone,
-  User,
-} from "lucide-react";
+import { ArrowLeft, Briefcase, FileText, Mail, Phone, Printer, User } from "lucide-react";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 import {
@@ -18,9 +11,14 @@ import {
 } from "@/shared/types/invoice-payment";
 import type { InvoiceActivity } from "@/shared/types/invoice-activity";
 import type { InvoicePayment } from "@/shared/types/invoice-payment";
-import { BillingLineItemsList } from "@/shared/components/billing/BillingLineItemsList";
+import {
+  formatBillingEmailSentMessage,
+  getLastInvoiceEmailSentInfo,
+} from "@/shared/lib/billing-email-sent";
+import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact";
+import { getCustomerEmailSendBlockReason } from "@/shared/lib/operational-errors";
 import { BillingMobileAmountHeader } from "@/shared/components/billing/BillingMobileAmountHeader";
-import { BillingTotalsSummary } from "@/shared/components/billing/BillingTotalsSummary";
+import { InvoiceDocumentSection } from "@/shared/components/billing/InvoiceDocumentSection";
 import { InvoiceActivityTimeline } from "./InvoiceActivityTimeline";
 import { InvoiceDetailActionBar } from "./InvoiceDetailActionBar";
 import { InvoicePaymentHistory } from "./InvoicePaymentHistory";
@@ -32,6 +30,8 @@ type InvoiceDetailPageViewProps = {
   invoice: InvoiceDetail;
   activities: InvoiceActivity[];
   payments: InvoicePayment[];
+  company: BillingCompanyContact;
+  companyTimeZone: string;
   canManageBilling: boolean;
 };
 
@@ -39,6 +39,8 @@ export function InvoiceDetailPageView({
   invoice,
   activities,
   payments,
+  company,
+  companyTimeZone,
   canManageBilling,
 }: InvoiceDetailPageViewProps) {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -46,18 +48,41 @@ export function InvoiceDetailPageView({
   const customerPhone = invoice.customerPhone?.trim();
   const canRecordPayment = canRecordInvoicePayment(invoice);
   const recordPaymentBlockReason = getRecordPaymentBlockReason(invoice);
+  const customerEmailBlockReason = getCustomerEmailSendBlockReason(customerEmail);
+  const lastEmailSentInfo = useMemo(
+    () => getLastInvoiceEmailSentInfo(activities, customerEmail),
+    [activities, customerEmail],
+  );
+  const lastEmailSentMessage = lastEmailSentInfo
+    ? formatBillingEmailSentMessage(lastEmailSentInfo, companyTimeZone)
+    : null;
+
+  function handlePrint() {
+    window.print();
+  }
 
   return (
-    <div className="mx-auto min-w-0 max-w-5xl space-y-5 overflow-x-hidden pb-2">
-      <Link
-        href="/invoices"
-        className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-      >
-        <ArrowLeft className="h-4 w-4 shrink-0" />
-        Back to invoices
-      </Link>
+    <div className="mx-auto min-w-0 max-w-5xl space-y-5 overflow-x-hidden pb-2 print:max-w-none print:pb-0">
+      <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Link
+          href="/invoices"
+          className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+        >
+          <ArrowLeft className="h-4 w-4 shrink-0" />
+          Back to invoices
+        </Link>
 
-      <section className="overflow-hidden admin-card">
+        <button
+          type="button"
+          onClick={handlePrint}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+        >
+          <Printer className="h-4 w-4" />
+          Print / Save PDF
+        </button>
+      </div>
+
+      <section className="no-print overflow-hidden admin-card">
         <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
@@ -86,6 +111,9 @@ export function InvoiceDetailPageView({
                 total={invoice.total}
                 balanceDue={invoice.balanceDue}
               />
+              {lastEmailSentMessage ? (
+                <p className="mt-3 text-xs text-slate-500">{lastEmailSentMessage}</p>
+              ) : null}
             </div>
 
             <div className="hidden sm:block">
@@ -93,6 +121,8 @@ export function InvoiceDetailPageView({
                 invoice={invoice}
                 paymentCount={payments.length}
                 canManageBilling={canManageBilling}
+                customerEmailBlockReason={customerEmailBlockReason}
+                lastEmailSentMessage={lastEmailSentMessage}
               />
             </div>
           </div>
@@ -189,30 +219,9 @@ export function InvoiceDetailPageView({
         </div>
       </section>
 
-      <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Line items
-        </h2>
-        <div className="mt-4">
-          <BillingLineItemsList
-            items={invoice.lineItems}
-            documentLabel="invoice"
-          />
-        </div>
+      <InvoiceDocumentSection invoice={invoice} company={company} />
 
-        <div className="mt-4">
-          <BillingTotalsSummary
-            subtotal={invoice.subtotal}
-            taxRate={invoice.taxRate}
-            taxAmount={invoice.taxAmount ?? 0}
-            total={invoice.total}
-            amountPaid={invoice.amountPaid}
-            balanceDue={invoice.balanceDue}
-          />
-        </div>
-      </section>
-
-      <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="no-print min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -243,18 +252,9 @@ export function InvoiceDetailPageView({
         </div>
       </section>
 
-      {invoice.notes ? (
-        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Notes
-          </h2>
-          <p className="mt-3 break-words text-sm leading-relaxed text-slate-600">
-            {invoice.notes}
-          </p>
-        </section>
-      ) : null}
-
-      <InvoiceActivityTimeline activities={activities} />
+      <div className="no-print">
+        <InvoiceActivityTimeline activities={activities} />
+      </div>
 
       {canManageBilling ? (
         <>
@@ -271,6 +271,8 @@ export function InvoiceDetailPageView({
             onRecordPayment={() => setPaymentModalOpen(true)}
             canRecordPayment={canRecordPayment}
             recordPaymentBlockReason={recordPaymentBlockReason}
+            customerEmailBlockReason={customerEmailBlockReason}
+            lastEmailSentMessage={lastEmailSentMessage}
             variant="sticky"
           />
         </>

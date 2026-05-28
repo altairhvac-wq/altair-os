@@ -5,6 +5,7 @@ import { ensureInvoiceBillingStatesSynced } from "@/lib/database/services/invoic
 import { listInvoiceActivitiesForInvoice } from "@/lib/database/queries/invoice-activities";
 import { listPaymentsForInvoice } from "@/lib/database/queries/invoice-payments";
 import { getInvoiceById } from "@/lib/database/queries/invoices";
+import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
 import { InvoiceDetailPageView } from "@/shared/components/invoices/InvoiceDetailPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 
@@ -46,6 +47,8 @@ export default async function InvoiceDetailPage({
       invoice={invoice}
       activities={activities}
       payments={payments}
+      company={mapCompanyRowToBillingContact(companyContext.company)}
+      companyTimeZone={companyContext.company.timezone}
       canManageBilling={companyContext.permissions.manageBilling}
     />
   );

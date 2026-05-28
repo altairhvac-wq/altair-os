@@ -472,3 +472,36 @@ a[href] {
     transform: none;
   }
 }
+
+@media print {
+  @page {
+    margin: 0.75in;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .admin-canvas,
+  main {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .no-print,
+  .admin-sticky-footer,
+  .admin-sticky-footer-spacer {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .admin-card,
+  .rounded-2xl,
+  .rounded-xl {
+    box-shadow: none !important;
+  }
+}

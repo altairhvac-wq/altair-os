@@ -13,8 +13,10 @@ import {
   formatActionError,
   formatBillingEmailDeliveryError,
   getBillingActionFeedbackTone,
-  MISSING_CUSTOMER_EMAIL_SEND_REASON,
+  getCustomerEmailSendBlockReason,
+  hasValidCustomerEmailForSend,
 } from "@/shared/lib/operational-errors";
+import { formatBillingEmailSuccessMessage } from "@/shared/lib/billing-email-sent";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import {
   canResendEstimateEmail,
@@ -127,6 +129,7 @@ export function EstimateStatusActions({
 }: EstimateStatusActionsProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [resendPending, setResendPending] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<EstimateStatus | null>(
     null,
@@ -143,11 +146,14 @@ export function EstimateStatusActions({
   }, [estimate.status]);
 
   const customerEmail = estimate.customerEmail?.trim();
-  const hasCustomerEmail = Boolean(customerEmail);
+  const customerEmailBlockReason = getCustomerEmailSendBlockReason(customerEmail);
+  const hasValidCustomerEmail = hasValidCustomerEmailForSend(customerEmail);
   const actions = getAvailableActions(localStatus);
   const canConvertToInvoice = localStatus === "approved";
   const canResendEmail = canResendEstimateEmail(localStatus);
-  const emailSendBlocked = !hasCustomerEmail && (canResendEmail || localStatus === "draft");
+  const emailSendBlocked =
+    Boolean(customerEmailBlockReason) &&
+    (canResendEmail || localStatus === "draft");
   const isSticky = variant === "sticky";
   const workflowBusy = isPending || resendPending || convertPending;
   const primaryAction = actions.find(
@@ -167,12 +173,14 @@ export function EstimateStatusActions({
       return;
     }
 
-    if (toStatus === "sent" && !hasCustomerEmail) {
-      setError(MISSING_CUSTOMER_EMAIL_SEND_REASON);
+    if (toStatus === "sent" && !hasValidCustomerEmail) {
+      setSuccessMessage(null);
+      setError(customerEmailBlockReason ?? "A valid customer email is required.");
       return;
     }
 
     setError(null);
+    setSuccessMessage(null);
     setEmailDelivery(undefined);
     setPendingStatus(toStatus);
 
@@ -202,6 +210,11 @@ export function EstimateStatusActions({
         }
 
         setLocalStatus(toStatus);
+        if (toStatus === "sent" && customerEmail) {
+          setSuccessMessage(
+            formatBillingEmailSuccessMessage(customerEmail, "send", "estimate"),
+          );
+        }
         router.refresh();
       } finally {
         setPendingStatus(null);
@@ -241,12 +254,14 @@ export function EstimateStatusActions({
       return;
     }
 
-    if (!hasCustomerEmail) {
-      setError(MISSING_CUSTOMER_EMAIL_SEND_REASON);
+    if (!hasValidCustomerEmail) {
+      setSuccessMessage(null);
+      setError(customerEmailBlockReason ?? "A valid customer email is required.");
       return;
     }
 
     setError(null);
+    setSuccessMessage(null);
     setEmailDelivery(undefined);
     setResendPending(true);
 
@@ -268,6 +283,11 @@ export function EstimateStatusActions({
           return;
         }
 
+        if (customerEmail) {
+          setSuccessMessage(
+            formatBillingEmailSuccessMessage(customerEmail, "resend", "estimate"),
+          );
+        }
         router.refresh();
       } finally {
         setResendPending(false);
@@ -306,12 +326,12 @@ export function EstimateStatusActions({
       {canResendEmail ? (
         <button
           type="button"
-          disabled={workflowBusy || !hasCustomerEmail}
+          disabled={workflowBusy || !hasValidCustomerEmail}
           onClick={handleResendEmail}
           title={
-            hasCustomerEmail
+            hasValidCustomerEmail
               ? "Sends another copy to the customer's email on file."
-              : MISSING_CUSTOMER_EMAIL_SEND_REASON
+              : customerEmailBlockReason ?? undefined
           }
           className={`${buttonClass} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}
         >
@@ -329,11 +349,11 @@ export function EstimateStatusActions({
           type="button"
           disabled={
             workflowBusy ||
-            (primaryAction.toStatus === "sent" && !hasCustomerEmail)
+            (primaryAction.toStatus === "sent" && !hasValidCustomerEmail)
           }
           title={
-            primaryAction.toStatus === "sent" && !hasCustomerEmail
-              ? MISSING_CUSTOMER_EMAIL_SEND_REASON
+            primaryAction.toStatus === "sent" && !hasValidCustomerEmail
+              ? customerEmailBlockReason ?? undefined
               : undefined
           }
           onClick={() => handleStatusChange(primaryAction.toStatus)}
@@ -350,11 +370,11 @@ export function EstimateStatusActions({
           type="button"
           disabled={
             workflowBusy ||
-            (action.toStatus === "sent" && !hasCustomerEmail)
+            (action.toStatus === "sent" && !hasValidCustomerEmail)
           }
           title={
-            action.toStatus === "sent" && !hasCustomerEmail
-              ? MISSING_CUSTOMER_EMAIL_SEND_REASON
+            action.toStatus === "sent" && !hasValidCustomerEmail
+              ? customerEmailBlockReason ?? undefined
               : undefined
           }
           onClick={() => handleStatusChange(action.toStatus)}
@@ -371,7 +391,7 @@ export function EstimateStatusActions({
   );
 
   const helperText = emailSendBlocked
-    ? MISSING_CUSTOMER_EMAIL_SEND_REASON
+    ? customerEmailBlockReason
     : primaryAction?.helper ??
       (canResendEmail
         ? "Resend sends another copy to the customer's email on file."
@@ -388,6 +408,10 @@ export function EstimateStatusActions({
     </SettingsAlertBanner>
   ) : null;
 
+  const successBanner = successMessage ? (
+    <SettingsAlertBanner tone="success">{successMessage}</SettingsAlertBanner>
+  ) : null;
+
   if (isSticky) {
     const hasActions =
       canConvertToInvoice || canResendEmail || actions.length > 0;
@@ -402,6 +426,8 @@ export function EstimateStatusActions({
           {actionButtons}
           {feedbackBanner ? (
             <div className="mt-2 w-full">{feedbackBanner}</div>
+          ) : successBanner ? (
+            <div className="mt-2 w-full">{successBanner}</div>
           ) : helperText ? (
             <p className="mt-2 text-xs text-slate-500">{helperText}</p>
           ) : null}
@@ -417,6 +443,7 @@ export function EstimateStatusActions({
       {helperText ? (
         <p className="text-xs text-slate-500">{helperText}</p>
       ) : null}
+      {successBanner}
       {feedbackBanner}
     </div>
   );
