@@ -16,27 +16,27 @@ type DashboardCommandStripProps = {
 
 const SEVERITY_STYLES: Record<
   CommandStripSeverity,
-  { card: string; value: string; badge: string }
+  { card: string; value: string; emphasized: boolean }
 > = {
   healthy: {
-    card: "border-emerald-200/80 bg-emerald-50/40 hover:border-emerald-300 hover:bg-emerald-50/70",
-    value: "text-emerald-900",
-    badge: "bg-emerald-100 text-emerald-800",
+    card: "border-slate-200/70 bg-white/95 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md focus-visible:ring-2 focus-visible:ring-slate-300/80",
+    value: "text-slate-700",
+    emphasized: false,
   },
   info: {
-    card: "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80",
-    value: "text-slate-900",
-    badge: "bg-slate-100 text-slate-700",
+    card: "border-slate-200/70 bg-white/95 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md focus-visible:ring-2 focus-visible:ring-slate-300/80",
+    value: "text-slate-700",
+    emphasized: false,
   },
   warning: {
-    card: "border-amber-200/80 bg-amber-50/40 hover:border-amber-300 hover:bg-amber-50/70",
-    value: "text-amber-900",
-    badge: "bg-amber-100 text-amber-800",
+    card: "border-amber-300/90 bg-amber-50/70 hover:border-amber-400 hover:bg-amber-50 shadow-sm focus-visible:ring-2 focus-visible:ring-amber-300/80",
+    value: "text-amber-950",
+    emphasized: true,
   },
   critical: {
-    card: "border-rose-200/80 bg-rose-50/40 hover:border-rose-300 hover:bg-rose-50/70",
-    value: "text-rose-900",
-    badge: "bg-rose-100 text-rose-800",
+    card: "border-rose-300/90 bg-rose-50/70 ring-1 ring-rose-200/60 hover:border-rose-400 hover:bg-rose-50 hover:ring-rose-300/70 shadow-sm focus-visible:ring-2 focus-visible:ring-rose-300/80",
+    value: "text-rose-950",
+    emphasized: true,
   },
 };
 
@@ -59,24 +59,31 @@ function CommandStripCardButton({
     <button
       type="button"
       onClick={onClick}
-      className={`group flex min-w-0 flex-col rounded-lg border p-2 text-left shadow-sm transition-colors lg:p-2.5 ${styles.card}`}
+      aria-label={`View ${label} details`}
+      className={`group flex min-w-0 flex-col rounded-lg border p-2 text-left transition-colors lg:p-2.5 ${styles.card} ${styles.emphasized ? "shadow-sm" : ""}`}
     >
       <div className="flex items-start justify-between gap-1">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+        <p
+          className={`text-[10px] font-bold uppercase tracking-wide ${styles.emphasized ? "text-slate-600" : "text-slate-500"}`}
+        >
           {label}
         </p>
         <ChevronRight
-          className="h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5"
+          className="h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-600"
           aria-hidden="true"
         />
       </div>
       <p
-        className={`mt-0.5 truncate text-lg font-black tabular-nums leading-none tracking-tight lg:text-xl ${styles.value}`}
+        className={`mt-0.5 truncate tabular-nums leading-none tracking-tight ${
+          styles.emphasized
+            ? `text-lg font-black lg:text-xl ${styles.value}`
+            : `text-base font-semibold lg:text-lg ${styles.value}`
+        }`}
       >
         {value}
       </p>
       {detail ? (
-        <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-slate-600">
+        <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-slate-500">
           {detail}
         </p>
       ) : null}

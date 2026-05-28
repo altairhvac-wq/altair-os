@@ -36,9 +36,15 @@ export type CommandStripGroup = {
   cards: CommandStripCard[];
 };
 
+/** Visual-only threshold for unpaid billing pressure on the command strip. */
+const UNPAID_CRITICAL_TOTAL = 5_000;
+
 function mapSnapshotSeverity(
   severity: "healthy" | "warning" | "critical",
 ): CommandStripSeverity {
+  if (severity === "healthy") {
+    return "info";
+  }
   return severity;
 }
 
@@ -47,7 +53,7 @@ function resolveAttentionSeverity(
   issueCount: number,
 ): CommandStripSeverity {
   if (issueCount === 0) {
-    return "healthy";
+    return "info";
   }
 
   const hasCritical = buildDashboardAttentionCards(data).some(
@@ -58,12 +64,25 @@ function resolveAttentionSeverity(
 
 function resolveHealthSeverity(score: number): CommandStripSeverity {
   if (score >= 75) {
-    return "healthy";
+    return "info";
   }
   if (score >= 50) {
     return "warning";
   }
   return "critical";
+}
+
+function resolveUnpaidSeverity(
+  unpaidCount: number,
+  unpaidTotal: number,
+): CommandStripSeverity {
+  if (unpaidCount === 0) {
+    return "info";
+  }
+  if (unpaidTotal >= UNPAID_CRITICAL_TOTAL) {
+    return "critical";
+  }
+  return "warning";
 }
 
 /**
@@ -149,7 +168,7 @@ export function buildDashboardCommandStripGroups(
         operations.totalJobsToday === 0
           ? "Nothing scheduled"
           : `${inMotion} in motion`,
-      severity: operations.totalJobsToday > 0 ? "info" : "healthy",
+      severity: "info",
     },
     {
       id: "unassigned",
@@ -163,7 +182,7 @@ export function buildDashboardCommandStripGroups(
           : "Need technician",
       severity:
         operations.unassignedToday === 0
-          ? "healthy"
+          ? "info"
           : operations.unassignedToday >= 3
             ? "critical"
             : "warning",
@@ -175,7 +194,7 @@ export function buildDashboardCommandStripGroups(
       label: "In progress",
       value: operations.inProgress,
       detail: `${operations.dispatched} en route`,
-      severity: operations.inProgress > 0 ? "info" : "healthy",
+      severity: operations.inProgress > 0 ? "warning" : "info",
     },
     {
       id: "completed-today",
@@ -184,7 +203,7 @@ export function buildDashboardCommandStripGroups(
       label: "Completed",
       value: operations.completedToday,
       detail: `${operations.scheduledToday} still scheduled`,
-      severity: operations.completedToday > 0 ? "healthy" : "info",
+      severity: "info",
     },
   ];
 
@@ -212,7 +231,7 @@ export function buildDashboardCommandStripGroups(
               : formatCurrency(money.overdueTotal),
           severity:
             money.overdueCount === 0
-              ? "healthy"
+              ? "info"
               : money.overdueCount >= 3
                 ? "critical"
                 : "warning",
@@ -224,7 +243,7 @@ export function buildDashboardCommandStripGroups(
           label: "Unpaid",
           value: formatCurrency(money.unpaidTotal),
           detail: `${money.unpaidCount} open invoice${money.unpaidCount === 1 ? "" : "s"}`,
-          severity: money.unpaidCount > 0 ? "warning" : "healthy",
+          severity: resolveUnpaidSeverity(money.unpaidCount, money.unpaidTotal),
         },
         {
           id: "collected-today",
@@ -233,7 +252,7 @@ export function buildDashboardCommandStripGroups(
           label: "Collected",
           value: formatCurrency(money.paymentsTodayTotal),
           detail: `${money.paymentsTodayCount} payment${money.paymentsTodayCount === 1 ? "" : "s"} today`,
-          severity: money.paymentsTodayTotal > 0 ? "healthy" : "info",
+          severity: "info",
         },
         {
           id: "ready-to-invoice",
@@ -250,7 +269,7 @@ export function buildDashboardCommandStripGroups(
               ? "critical"
               : cashFlow.metrics.awaitingInvoicing > 0
                 ? "warning"
-                : "healthy",
+                : "info",
         },
       ],
     });
@@ -266,7 +285,7 @@ export function buildDashboardCommandStripGroups(
           label: "Pending approval",
           value: data.expenses.submittedCount,
           detail: formatCurrency(data.expenses.submittedTotal),
-          severity: data.expenses.submittedCount > 0 ? "warning" : "healthy",
+          severity: data.expenses.submittedCount > 0 ? "warning" : "info",
         },
       ],
     });
