@@ -92,6 +92,10 @@ async function deriveJobLevelOperationalCounts(
   let materialCostExceedsCollectedCount = 0;
 
   for (const job of jobs) {
+    if (job.status === "cancelled") {
+      continue;
+    }
+
     const inputs: JobProfitabilityInputs = {
       invoices: (invoicesByJob.get(job.id) ?? []) as Invoice[],
       estimates: (estimatesByJob.get(job.id) ?? []) as Estimate[],

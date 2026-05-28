@@ -7,6 +7,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
+import type { JobStatus } from "@/shared/types/job";
 import {
   formatJobProfitabilityCurrency,
   formatJobProfitabilityLaborHours,
@@ -15,6 +16,7 @@ import {
 
 type JobProfitabilitySectionProps = {
   jobId: string;
+  jobStatus: JobStatus;
   snapshot: JobProfitabilitySnapshot;
 };
 
@@ -83,10 +85,11 @@ function ContextRow({ label, value, hint }: ContextRowProps) {
 
 function buildCompletenessWarnings(
   completeness: JobProfitabilitySnapshot["completeness"],
+  jobStatus: JobStatus,
 ): string[] {
   const warnings: string[] = [];
 
-  if (completeness.noActiveInvoices) {
+  if (completeness.noActiveInvoices && jobStatus !== "cancelled") {
     warnings.push("No active invoices are linked to this job yet.");
   }
 
@@ -125,7 +128,7 @@ function buildCompletenessWarnings(
     );
   }
 
-  if (completeness.openLaborEntryCount > 0) {
+  if (completeness.openLaborEntryCount > 0 && jobStatus !== "cancelled") {
     const count = completeness.openLaborEntryCount;
     warnings.push(
       `${count} open labor entr${count === 1 ? "y" : "ies"} excluded from labor hours until closed.`,
@@ -165,11 +168,12 @@ function resolveGrossProfitStyles(grossProfit: number): {
 
 export function JobProfitabilitySection({
   jobId,
+  jobStatus,
   snapshot,
 }: JobProfitabilitySectionProps) {
   const { revenue, costs, grossProfit, grossMarginPercent, labor, projectedRevenue } =
     snapshot;
-  const warnings = buildCompletenessWarnings(snapshot.completeness);
+  const warnings = buildCompletenessWarnings(snapshot.completeness, jobStatus);
   const grossProfitStyles = resolveGrossProfitStyles(grossProfit);
   const hasFinancialActivity =
     revenue.collected !== 0 ||

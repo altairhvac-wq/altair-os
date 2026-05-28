@@ -31,6 +31,7 @@ import type {
   InvoiceEditFormData,
   InvoiceFormData,
 } from "@/shared/types/invoice";
+import { getSendInvoiceJobBlockReason } from "@/shared/types/invoice";
 
 export type { BillingEmailDelivery } from "@/lib/email/billing-send";
 
@@ -234,6 +235,20 @@ export async function sendInvoiceAction(
     return {
       error: "Only draft invoices can be sent. Refresh the page and try again.",
     };
+  }
+
+  if (currentInvoice.jobId) {
+    const linkedJob = await getJobById(
+      context.company.id,
+      currentInvoice.jobId,
+    );
+    const jobBlockReason = linkedJob
+      ? getSendInvoiceJobBlockReason(linkedJob.status)
+      : null;
+
+    if (jobBlockReason) {
+      return { error: jobBlockReason };
+    }
   }
 
   const customerEmail = currentInvoice.customerEmail?.trim();

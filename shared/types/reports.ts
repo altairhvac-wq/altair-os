@@ -1,5 +1,5 @@
 import type { AnalyticsDateRange } from "@/shared/types/analytics";
-import type { Job } from "@/shared/types/job";
+import type { Job, JobStatus } from "@/shared/types/job";
 import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
 import { roundCurrency, type InvoiceStatus } from "@/shared/types/invoice";
 import { roundJobMaterialAmount } from "@/shared/types/job-material";
@@ -120,17 +120,21 @@ export function jobMatchesProfitabilityScheduledDateRange(
 
 export function jobProfitabilityHasWarnings(
   snapshot: JobProfitabilitySnapshot,
+  jobStatus?: JobStatus,
 ): boolean {
   const { completeness } = snapshot;
 
+  const noActiveInvoiceWarning =
+    completeness.noActiveInvoices && jobStatus !== "cancelled";
+
   return (
-    completeness.noActiveInvoices ||
+    noActiveInvoiceWarning ||
     completeness.materialsMissingUnitCostCount > 0 ||
     completeness.excludedPendingExpenseCount > 0 ||
     completeness.excludedRejectedExpenseCount > 0 ||
     completeness.expensesMissingAmountCount > 0 ||
     completeness.excludedMaterialsExpenseCount > 0 ||
-    completeness.openLaborEntryCount > 0
+    (completeness.openLaborEntryCount > 0 && jobStatus !== "cancelled")
   );
 }
 
@@ -139,7 +143,10 @@ export function jobProfitabilityHasWarnings(
  * Gross margin uses total collected revenue as the denominator (same basis as jobs).
  */
 export function aggregateJobProfitabilitySnapshots(
-  snapshots: JobProfitabilitySnapshot[],
+  entries: Array<{
+    snapshot: JobProfitabilitySnapshot;
+    jobStatus: JobStatus;
+  }>,
 ): ProfitabilityReportSummary {
   let collectedRevenue = 0;
   let invoicedRevenue = 0;
@@ -151,7 +158,7 @@ export function aggregateJobProfitabilitySnapshots(
   let totalLaborMinutes = 0;
   let jobsWithWarnings = 0;
 
-  for (const snapshot of snapshots) {
+  for (const { snapshot, jobStatus } of entries) {
     collectedRevenue += snapshot.revenue.collected;
     invoicedRevenue += snapshot.revenue.invoiced;
     outstandingRevenue += snapshot.revenue.outstanding;
@@ -161,7 +168,7 @@ export function aggregateJobProfitabilitySnapshots(
     directCostTotal += snapshot.costs.directCostTotal;
     totalLaborMinutes += snapshot.labor.totalMinutes;
 
-    if (jobProfitabilityHasWarnings(snapshot)) {
+    if (jobProfitabilityHasWarnings(snapshot, jobStatus)) {
       jobsWithWarnings += 1;
     }
   }
@@ -183,7 +190,7 @@ export function aggregateJobProfitabilitySnapshots(
     grossProfit,
     grossMarginPercent,
     laborHours: roundJobMaterialAmount(totalLaborMinutes / 60),
-    jobCount: snapshots.length,
+    jobCount: entries.length,
     jobsWithWarnings,
   };
 }
@@ -328,11 +335,12 @@ export type CompletedWorkReviewReport = {
 
 export function countJobProfitabilityWarningFlags(
   snapshot: JobProfitabilitySnapshot,
+  jobStatus?: JobStatus,
 ): number {
   const { completeness } = snapshot;
   let count = 0;
 
-  if (completeness.noActiveInvoices) {
+  if (completeness.noActiveInvoices && jobStatus !== "cancelled") {
     count += 1;
   }
   if (completeness.materialsMissingUnitCostCount > 0) {
@@ -350,7 +358,7 @@ export function countJobProfitabilityWarningFlags(
   if (completeness.expensesMissingAmountCount > 0) {
     count += 1;
   }
-  if (completeness.openLaborEntryCount > 0) {
+  if (completeness.openLaborEntryCount > 0 && jobStatus !== "cancelled") {
     count += 1;
   }
 

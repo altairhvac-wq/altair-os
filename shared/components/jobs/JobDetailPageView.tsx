@@ -279,7 +279,11 @@ export function JobDetailPageView({
             snapshot={profitability}
           />
 
-          <JobProfitabilitySection jobId={job.id} snapshot={profitability} />
+          <JobProfitabilitySection
+            jobId={job.id}
+            jobStatus={job.status}
+            snapshot={profitability}
+          />
         </>
       ) : null}
 

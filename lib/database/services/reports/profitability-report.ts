@@ -80,15 +80,16 @@ export async function getCompanyProfitabilityReport(
   const laborByJob = groupByJobId(laborEntries, jobIds);
   const materialsByJob = groupByJobId(materials, jobIds);
 
-  const snapshots = scopedJobs.map((job) =>
-    computeJobProfitability({
+  const snapshots = scopedJobs.map((job) => ({
+    jobStatus: job.status,
+    snapshot: computeJobProfitability({
       invoices: (invoicesByJob.get(job.id) ?? []) as Invoice[],
       estimates: (estimatesByJob.get(job.id) ?? []) as Estimate[],
       expenses: (expensesByJob.get(job.id) ?? []) as Expense[],
       materials: (materialsByJob.get(job.id) ?? []) as JobMaterial[],
       laborEntries: (laborByJob.get(job.id) ?? []) as TimeEntry[],
     }),
-  );
+  }));
 
   const summary = aggregateJobProfitabilitySnapshots(snapshots);
 

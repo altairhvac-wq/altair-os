@@ -4,6 +4,7 @@ import {
   getDateOnlyInTimeZone,
   parseDateInput,
 } from "@/shared/lib/datetime";
+import type { JobStatus } from "@/shared/types/job";
 
 export type InvoiceStatus =
   | "draft"
@@ -205,6 +206,46 @@ export function formatTaxRate(taxRate: number): string {
 
 export function isActiveInvoice(invoice: Pick<Invoice, "status">): boolean {
   return invoice.status !== "void" && invoice.status !== "cancelled";
+}
+
+/** New invoices always start as draft; sent requires email confirmation. */
+export const INVOICE_CREATE_STATUS: InvoiceStatus = "draft";
+
+export function canCreateInvoiceForJob(jobStatus: JobStatus): boolean {
+  return jobStatus !== "cancelled";
+}
+
+export function getCreateInvoiceJobBlockReason(
+  jobStatus: JobStatus,
+): string | null {
+  if (jobStatus === "cancelled") {
+    return "Invoices cannot be created for cancelled jobs.";
+  }
+
+  return null;
+}
+
+export function canSendInvoiceForJob(jobStatus: JobStatus): boolean {
+  return jobStatus !== "cancelled";
+}
+
+export function getSendInvoiceJobBlockReason(jobStatus: JobStatus): string | null {
+  if (jobStatus === "cancelled") {
+    return "Invoices cannot be sent for cancelled jobs.";
+  }
+
+  return null;
+}
+
+export function isInvoiceBalanceConsistent(invoice: {
+  total: number;
+  amountPaid: number;
+  balanceDue: number;
+}): boolean {
+  return (
+    roundCurrency(invoice.amountPaid + invoice.balanceDue) ===
+    roundCurrency(invoice.total)
+  );
 }
 
 export function canVoidInvoice(

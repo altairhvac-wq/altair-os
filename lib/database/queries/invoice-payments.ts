@@ -15,6 +15,7 @@ import {
   roundCurrency,
   type InvoiceDetail,
   type InvoiceStatus,
+  isInvoiceBalanceConsistent,
 } from "@/shared/types/invoice";
 
 import {
@@ -240,6 +241,16 @@ export async function recordInvoicePayment(
     };
   }
 
+  if (!isInvoiceBalanceConsistent(invoice)) {
+    return {
+      payment: null,
+      invoice: null,
+      previousStatus: null,
+      error:
+        "Invoice balance is inconsistent. Refresh the page or contact support before recording payments.",
+    };
+  }
+
   if (amount > invoice.balanceDue) {
     return {
       payment: null,
@@ -296,7 +307,7 @@ export async function recordInvoicePayment(
     };
   }
 
-  const { error: updateError } = await supabase
+  const { data: updatedRow, error: updateError } = await supabase
     .from("invoices")
     .update({
       amount_paid: newAmountPaid,
@@ -305,7 +316,12 @@ export async function recordInvoicePayment(
       paid_at: paidAt,
     })
     .eq("company_id", companyId)
-    .eq("id", invoiceId);
+    .eq("id", invoiceId)
+    .eq("status", previousStatus)
+    .eq("amount_paid", invoice.amountPaid)
+    .eq("balance_due", invoice.balanceDue)
+    .select("id")
+    .maybeSingle();
 
   if (updateError) {
     console.error("[recordInvoicePayment] invoice update failed:", {
@@ -321,6 +337,17 @@ export async function recordInvoicePayment(
       invoice: null,
       previousStatus: null,
       error: mapDatabaseError(updateError),
+    };
+  }
+
+  if (!updatedRow) {
+    await supabase.from("invoice_payments").delete().eq("id", paymentRow.id);
+    return {
+      payment: null,
+      invoice: null,
+      previousStatus: null,
+      error:
+        "Invoice balance changed while recording this payment. Refresh the page and try again.",
     };
   }
 

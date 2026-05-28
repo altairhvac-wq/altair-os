@@ -13,10 +13,12 @@ import {
   calculateInvoiceTotals,
   canEditInvoice,
   canVoidInvoice,
+  getCreateInvoiceJobBlockReason,
   getDefaultDueDate,
   getDefaultIssueDate,
   getEditInvoiceBlockReason,
   getVoidInvoiceBlockReason,
+  INVOICE_CREATE_STATUS,
   resolveDueDate,
   roundCurrency,
   type Invoice,
@@ -26,6 +28,7 @@ import {
   type InvoiceLineItem,
   type InvoiceStatus,
 } from "@/shared/types/invoice";
+import type { JobStatus } from "@/shared/types/job";
 
 type CustomerSummary = {
   name: string;
@@ -224,7 +227,7 @@ function mapInvoiceFormDataToInsert(
     job_id: data.jobId?.trim() || null,
     estimate_id: data.estimateId?.trim() || null,
     invoice_number: invoiceNumber,
-    status: data.status,
+    status: INVOICE_CREATE_STATUS,
     subtotal,
     tax_rate: taxRate,
     tax_amount: taxAmount,
@@ -303,7 +306,7 @@ async function validateJob(
 
   const { data, error } = await supabase
     .from("jobs")
-    .select("id, customer_id")
+    .select("id, customer_id, status")
     .eq("company_id", companyId)
     .eq("id", jobId)
     .maybeSingle();
@@ -324,6 +327,13 @@ async function validateJob(
 
   if (data.customer_id !== customerId) {
     return { error: "Selected job does not belong to this customer." };
+  }
+
+  const jobBlockReason = getCreateInvoiceJobBlockReason(
+    data.status as JobStatus,
+  );
+  if (jobBlockReason) {
+    return { error: jobBlockReason };
   }
 
   return { error: null };

@@ -4,10 +4,9 @@ import { useMemo, useState } from "react";
 import {
   getDefaultDueDate,
   getDefaultIssueDate,
-  INVOICE_STATUS_OPTIONS,
+  INVOICE_CREATE_STATUS,
   type InvoiceFormData,
   type InvoiceLineItemFormData,
-  type InvoiceStatus,
 } from "@/shared/types/invoice";
 import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
@@ -76,7 +75,10 @@ export function InvoiceForm({
   );
 
   const customerJobs = useMemo(
-    () => jobs.filter((job) => job.customerId === customerId),
+    () =>
+      jobs.filter(
+        (job) => job.customerId === customerId && job.status !== "cancelled",
+      ),
     [jobs, customerId],
   );
 
@@ -106,7 +108,7 @@ export function InvoiceForm({
     onSubmit({
       customerId,
       jobId: jobId.trim() || undefined,
-      status: String(form.get("status") ?? "draft") as InvoiceStatus,
+      status: INVOICE_CREATE_STATUS,
       issueDate: String(form.get("issueDate") ?? defaults.issueDate),
       dueDate: String(form.get("dueDate") ?? defaults.dueDate),
       notes: String(form.get("notes") ?? ""),
@@ -114,10 +116,6 @@ export function InvoiceForm({
       lineItems: validLineItems,
     });
   }
-
-  const statusOptions = INVOICE_STATUS_OPTIONS.filter(
-    (option) => option.value !== "all",
-  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5" aria-busy={isSubmitting}>
@@ -169,24 +167,6 @@ export function InvoiceForm({
             {customerJobs.map((job) => (
               <option key={job.id} value={job.id}>
                 {job.jobNumber}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="status" className={labelClass}>
-            Status
-          </label>
-          <select
-            id="status"
-            name="status"
-            defaultValue={defaults.status}
-            className={inputClass}
-          >
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
               </option>
             ))}
           </select>
