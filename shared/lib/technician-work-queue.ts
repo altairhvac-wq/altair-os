@@ -76,9 +76,7 @@ export function groupTechnicianWorkQueue(jobs: TechnicianJob[]) {
 
   return {
     currentJobs: sorted.filter((job) => job.status === "in_progress"),
-    onSiteJobs: sorted.filter((job) => job.status === "arrived"),
-    enRouteJobs: sorted.filter((job) => job.status === "dispatched"),
-    upNextJobs: sorted.filter((job) => job.status === "scheduled"),
+    upNextJobs: sorted.filter((job) => job.status !== "in_progress"),
   };
 }
 

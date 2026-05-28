@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Briefcase, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { Briefcase, CheckCircle2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import {
   groupTechnicianWorkQueue,
   sortActiveTechnicianJobs,
   sortCompletedTodayTechnicianJobs,
 } from "@/shared/lib/technician-work-queue";
+import {
+  formatTechnicianLastUpdated,
+  TECHNICIAN_PULL_REFRESH_EVENT,
+} from "@/shared/lib/technician-refresh";
 import type { JobStatus } from "@/shared/types/job";
 import type { TechnicianJob } from "@/shared/types/technician";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
@@ -32,6 +36,7 @@ type WorkQueueSectionProps = {
   onJobStatusUpdated: (jobId: string, status: JobStatus) => void;
   defaultExpanded?: boolean;
   emphasized?: boolean;
+  wrapperClassName?: string;
 };
 
 function WorkQueueSection({
@@ -44,13 +49,14 @@ function WorkQueueSection({
   onJobStatusUpdated,
   defaultExpanded = false,
   emphasized = false,
+  wrapperClassName,
 }: WorkQueueSectionProps) {
   if (jobs.length === 0) {
     return null;
   }
 
-  return (
-    <section className="space-y-3">
+  const content = (
+    <>
       <p
         className={`px-1 text-xs font-semibold uppercase tracking-wide ${labelClassName}`}
       >
@@ -71,8 +77,16 @@ function WorkQueueSection({
           </li>
         ))}
       </ul>
-    </section>
+    </>
   );
+
+  if (wrapperClassName) {
+    return (
+      <section className={`space-y-3 ${wrapperClassName}`}>{content}</section>
+    );
+  }
+
+  return <section className="space-y-3">{content}</section>;
 }
 
 function TechnicianJobsEmptyState({
@@ -83,14 +97,14 @@ function TechnicianJobsEmptyState({
   description: string;
 }) {
   return (
-    <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center shadow-sm">
+    <section className="min-h-[12rem] rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center shadow-sm">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
         <Briefcase className="h-8 w-8 text-slate-400" />
       </div>
 
       <h3 className="mt-5 text-lg font-bold text-slate-900">{title}</h3>
 
-      <p className="mx-auto mt-2 max-w-xs text-sm text-slate-500">
+      <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-slate-500">
         {description}
       </p>
     </section>
@@ -106,22 +120,27 @@ function CompletedTodaySection({ jobs }: { jobs: TechnicianJob[] }) {
   }
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-2 border-t border-slate-200/80 pt-4">
+      <p className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        Completed Today
+      </p>
       <button
         type="button"
         onClick={() => setExpanded((current) => !current)}
-        className="flex min-h-11 w-full items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200"
+        aria-expanded={expanded}
+        className="flex min-h-11 w-full touch-manipulation items-center justify-between rounded-lg bg-slate-50/80 px-3 py-2.5 ring-1 ring-slate-200/60"
       >
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-          <span className="text-sm font-semibold text-slate-900">
-            Completed today ({completedToday.length})
+          <CheckCircle2 className="h-4 w-4 text-slate-400" />
+          <span className="text-sm font-medium text-slate-600">
+            {completedToday.length} finished
+            {completedToday.length === 1 ? "" : " today"}
           </span>
         </div>
         {expanded ? (
-          <ChevronUp className="h-4 w-4 text-slate-400" />
+          <ChevronUp className="h-4 w-4 text-slate-400" aria-hidden />
         ) : (
-          <ChevronDown className="h-4 w-4 text-slate-400" />
+          <ChevronDown className="h-4 w-4 text-slate-400" aria-hidden />
         )}
       </button>
       {expanded ? (
@@ -129,10 +148,10 @@ function CompletedTodaySection({ jobs }: { jobs: TechnicianJob[] }) {
           {completedToday.map((job) => (
             <li
               key={job.id}
-              className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-3 ring-1 ring-slate-200"
+              className="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-slate-50/60 px-3 py-2.5 ring-1 ring-slate-200/50"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900">
+                <p className="truncate text-sm font-medium text-slate-700">
                   {job.jobNumber}
                 </p>
                 <p className="truncate text-xs text-slate-500">
@@ -148,6 +167,51 @@ function CompletedTodaySection({ jobs }: { jobs: TechnicianJob[] }) {
   );
 }
 
+function TechnicianQueueSummary({
+  activeCount,
+  lastUpdatedAt,
+  isRefreshing,
+}: {
+  activeCount: number;
+  lastUpdatedAt: Date;
+  isRefreshing: boolean;
+}) {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(new Date()), 15_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200 sm:px-4 sm:py-3">
+      <div className="flex min-h-11 items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Today&apos;s queue
+          </p>
+          <p className="text-sm font-bold text-slate-900">
+            {activeCount} active job{activeCount === 1 ? "" : "s"}
+          </p>
+        </div>
+        <p
+          className="shrink-0 text-right text-xs text-slate-500"
+          aria-live="polite"
+        >
+          {isRefreshing ? (
+            <span className="inline-flex items-center gap-1.5 font-medium text-cyan-700">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+              Updating…
+            </span>
+          ) : (
+            formatTechnicianLastUpdated(lastUpdatedAt, now)
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function TechnicianAssignedJobsView({
   jobs: initialJobs,
   timeState: initialTimeState,
@@ -156,27 +220,62 @@ export function TechnicianAssignedJobsView({
   const router = useRouter();
   const [jobs, setJobs] = useState(initialJobs);
   const [timeState, setTimeState] = useState(initialTimeState);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(() => new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const markRefreshComplete = useCallback(() => {
+    setIsRefreshing(false);
+    setLastUpdatedAt(new Date());
+  }, []);
+
+  const beginRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    router.refresh();
+  }, [router]);
 
   useEffect(() => {
     setJobs(initialJobs);
-  }, [initialJobs]);
+    markRefreshComplete();
+  }, [initialJobs, markRefreshComplete]);
 
   useEffect(() => {
     setTimeState(initialTimeState);
   }, [initialTimeState]);
 
   useEffect(() => {
+    if (!isRefreshing) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setIsRefreshing(false);
+    }, 10_000);
+
+    return () => window.clearTimeout(timeout);
+  }, [isRefreshing]);
+
+  useEffect(() => {
     function handleVisibilityChange() {
       if (document.visibilityState === "visible") {
-        router.refresh();
+        beginRefresh();
       }
     }
 
+    function handlePullRefresh() {
+      setIsRefreshing(true);
+    }
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener(TECHNICIAN_PULL_REFRESH_EVENT, handlePullRefresh);
+
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener(
+        TECHNICIAN_PULL_REFRESH_EVENT,
+        handlePullRefresh,
+      );
     };
-  }, [router]);
+  }, [beginRefresh]);
 
   function handleJobStatusUpdated(jobId: string, status: JobStatus) {
     setJobs((current) =>
@@ -185,20 +284,18 @@ export function TechnicianAssignedJobsView({
   }
 
   const activeJobs = sortActiveTechnicianJobs(jobs);
-  const { currentJobs, onSiteJobs, enRouteJobs, upNextJobs } =
-    groupTechnicianWorkQueue(jobs);
-  const primaryJobId = currentJobs[0]?.id ?? onSiteJobs[0]?.id;
+  const { currentJobs, upNextJobs } = groupTechnicianWorkQueue(jobs);
 
   if (activeJobs.length === 0) {
     return (
       <div className="space-y-4">
         <TechnicianClockStatusBanner timeState={timeState} />
         <TechnicianJobsEmptyState
-          title={jobs.length === 0 ? "No assigned jobs" : "No active jobs"}
+          title={jobs.length === 0 ? "Nothing on your schedule" : "All caught up"}
           description={
             jobs.length === 0
-              ? "When dispatch assigns you work, it will show up here."
-              : "You're all caught up. New assignments will appear in your queue."
+              ? "When dispatch assigns you work, it will appear here automatically."
+              : "No jobs need action right now. Finished work is listed below."
           }
         />
         <CompletedTodaySection jobs={jobs} />
@@ -210,19 +307,16 @@ export function TechnicianAssignedJobsView({
     <div className="space-y-4">
       <TechnicianClockStatusBanner timeState={timeState} />
 
-      <div className="rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200 sm:px-4 sm:py-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          My Jobs
-        </p>
-        <p className="text-sm font-bold text-slate-900">
-          {activeJobs.length} active job{activeJobs.length === 1 ? "" : "s"}
-        </p>
-      </div>
+      <TechnicianQueueSummary
+        activeCount={activeJobs.length}
+        lastUpdatedAt={lastUpdatedAt}
+        isRefreshing={isRefreshing}
+      />
 
       <div className="space-y-6">
         <WorkQueueSection
           label="Current Job"
-          labelClassName="text-cyan-600"
+          labelClassName="text-cyan-700"
           jobs={currentJobs}
           timeState={timeState}
           serviceItems={serviceItems}
@@ -230,32 +324,17 @@ export function TechnicianAssignedJobsView({
           onJobStatusUpdated={handleJobStatusUpdated}
           defaultExpanded
           emphasized
-        />
-        <WorkQueueSection
-          label="On Site"
-          labelClassName="text-teal-600"
-          jobs={onSiteJobs}
-          timeState={timeState}
-          serviceItems={serviceItems}
-          onTimeStateChange={setTimeState}
-          onJobStatusUpdated={handleJobStatusUpdated}
-          defaultExpanded={onSiteJobs.some((job) => job.id === primaryJobId)}
-        />
-        <WorkQueueSection
-          label="En Route"
-          jobs={enRouteJobs}
-          timeState={timeState}
-          serviceItems={serviceItems}
-          onTimeStateChange={setTimeState}
-          onJobStatusUpdated={handleJobStatusUpdated}
+          wrapperClassName="rounded-2xl border-2 border-cyan-200/90 bg-gradient-to-b from-cyan-50/70 to-white p-3 shadow-sm ring-1 ring-cyan-500/15 sm:p-4"
         />
         <WorkQueueSection
           label="Up Next"
+          labelClassName="text-slate-500"
           jobs={upNextJobs}
           timeState={timeState}
           serviceItems={serviceItems}
           onTimeStateChange={setTimeState}
           onJobStatusUpdated={handleJobStatusUpdated}
+          defaultExpanded={currentJobs.length === 0 && upNextJobs.length === 1}
         />
       </div>
 

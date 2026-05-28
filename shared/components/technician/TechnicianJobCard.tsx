@@ -43,7 +43,7 @@ type TechnicianJobCardProps = {
 };
 
 const fieldActionClass =
-  "inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors";
+  "inline-flex min-h-11 min-w-11 touch-manipulation flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors";
 
 export function TechnicianJobCard({
   job,
@@ -108,7 +108,7 @@ export function TechnicianJobCard({
             onClick={() => setExpanded((current) => !current)}
             aria-expanded={expanded}
             aria-label={expanded ? "Collapse job details" : "Expand job details"}
-            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="flex min-h-11 min-w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
           >
             {expanded ? (
               <ChevronUp className="h-5 w-5" />

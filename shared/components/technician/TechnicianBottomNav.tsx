@@ -24,7 +24,7 @@ export function TechnicianBottomNav({
       aria-label="Technician navigation"
       className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-sm"
     >
-      <div className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[env(safe-area-inset-bottom)] pt-1">
+      <div className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.id === activeItem.id;
@@ -49,7 +49,7 @@ export function TechnicianBottomNav({
             <Link
               key={item.id}
               href={item.href}
-              className={`relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${
+              className={`relative flex min-h-14 min-w-11 touch-manipulation flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${
                 isActive
                   ? "text-cyan-600"
                   : "text-slate-500 hover:text-slate-700"

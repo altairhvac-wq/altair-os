@@ -57,7 +57,7 @@ export function TechnicianMobileShell({
             </div>
           </header>
 
-          <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 pb-24 sm:px-4">
+          <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 pb-[max(6rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] sm:px-4">
             <PullToRefresh>{children}</PullToRefresh>
           </main>
 

@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { notifyTechnicianPullRefresh } from "@/shared/lib/technician-refresh";
 import {
   useCallback,
   useEffect,
@@ -99,6 +100,7 @@ export function PullToRefresh({ children, enabled = true }: PullToRefreshProps) 
     isRefreshingRef.current = true;
     setIsRefreshing(true);
     setPullOffset(MAX_PULL_OFFSET);
+    notifyTechnicianPullRefresh();
     router.refresh();
 
     window.setTimeout(() => {
