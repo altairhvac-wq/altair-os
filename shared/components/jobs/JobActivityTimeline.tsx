@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { JobActivity, JobActivityType } from "@/shared/types/job-activity";
 import {
+  formatJobActivityAttribution,
   formatJobActivityDetails,
   formatJobActivityLabel,
   formatJobActivityTimestamp,
@@ -98,8 +99,12 @@ export function JobActivityTimeline({ activities }: JobActivityTimelineProps) {
       ) : (
         <ol className="mt-5 space-y-0">
           {activities.map((activity, index) => {
-            const Icon = ACTIVITY_ICONS[activity.eventType];
+            const Icon = ACTIVITY_ICONS[activity.eventType] ?? History;
+            const iconStyle =
+              ACTIVITY_ICON_STYLES[activity.eventType] ??
+              "bg-slate-100 text-slate-600 ring-slate-500/15";
             const details = formatJobActivityDetails(activity);
+            const attribution = formatJobActivityAttribution(activity);
             const isLast = index === activities.length - 1;
 
             return (
@@ -112,7 +117,7 @@ export function JobActivityTimeline({ activities }: JobActivityTimelineProps) {
                 ) : null}
 
                 <div
-                  className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ring-inset ${ACTIVITY_ICON_STYLES[activity.eventType]}`}
+                  className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ring-inset ${iconStyle}`}
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
                 </div>
@@ -134,9 +139,9 @@ export function JobActivityTimeline({ activities }: JobActivityTimelineProps) {
                     <p className="mt-1 text-sm text-slate-600">{details}</p>
                   ) : null}
 
-                  {activity.actorName ? (
+                  {attribution ? (
                     <p className="mt-1.5 text-xs text-slate-500">
-                      by {activity.actorName}
+                      {attribution}
                     </p>
                   ) : null}
                 </div>

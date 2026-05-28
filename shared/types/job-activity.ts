@@ -101,7 +101,28 @@ export function formatJobActivityLabel(activity: JobActivity): string {
   if (activity.eventType === "status_changed") {
     return resolveStatusChangedLabel(activity.metadata);
   }
-  return ACTIVITY_TYPE_LABELS[activity.eventType];
+
+  return (
+    ACTIVITY_TYPE_LABELS[activity.eventType] ??
+    activity.eventType.replace(/_/g, " ")
+  );
+}
+
+export function formatJobActivityAttribution(
+  activity: JobActivity,
+): string | null {
+  if (activity.actorName) {
+    if (activity.metadata.automated && activity.metadata.source === "automatic") {
+      return `Triggered by ${activity.actorName} · automatic cleanup`;
+    }
+    return `by ${activity.actorName}`;
+  }
+
+  if (activity.metadata.automated || activity.metadata.source === "automatic") {
+    return "System · automatic";
+  }
+
+  return null;
 }
 
 export function formatJobActivityDetails(activity: JobActivity): string | null {
