@@ -11,6 +11,8 @@ import {
   recordEstimateCreatedActivity,
   recordEstimateStatusChangedActivity,
 } from "@/lib/database/services/estimate-activity";
+import { sendEstimateEmail, toBillingEmailDelivery } from "@/lib/email/billing-send";
+import type { BillingEmailDelivery } from "@/lib/email/billing-send";
 import type { EstimateDetail, EstimateFormData, EstimateStatus } from "@/shared/types/estimate";
 
 export type CreateEstimateActionResult = {
@@ -54,6 +56,7 @@ export async function createEstimateAction(
 export type UpdateEstimateStatusActionResult = {
   error?: string;
   estimate?: EstimateDetail;
+  emailDelivery?: BillingEmailDelivery;
 };
 
 export async function updateEstimateStatusAction(
@@ -81,6 +84,36 @@ export async function updateEstimateStatusAction(
     return {
       error: "Estimate status has changed. Refresh the page and try again.",
     };
+  }
+
+  if (fromStatus === "draft" && toStatus === "sent") {
+    const customerEmail = currentEstimate.customerEmail?.trim();
+
+    if (!customerEmail || !customerEmail.includes("@")) {
+      return {
+        error:
+          "A valid customer email is required to send this estimate. Add an email on the customer record and try again.",
+      };
+    }
+
+    const emailResult = await sendEstimateEmail({
+      to: customerEmail,
+      companyName: context.company.name,
+      customerName: currentEstimate.customerName,
+      estimateNumber: currentEstimate.estimateNumber,
+      total: currentEstimate.total,
+      validUntil: currentEstimate.validUntil,
+      lineItems: currentEstimate.lineItems.map((item) => ({
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      })),
+      notes: currentEstimate.notes,
+    });
+
+    if (!emailResult.ok) {
+      return { emailDelivery: toBillingEmailDelivery(emailResult) };
+    }
   }
 
   const { estimate, error } = await updateEstimateStatus(

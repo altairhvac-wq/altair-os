@@ -64,6 +64,14 @@ export function InvoiceDetailActionBar({
         return;
       }
 
+      if (result.emailDelivery && result.emailDelivery.status !== "sent") {
+        setError(
+          result.emailDelivery.message ??
+            "Invoice could not be sent by email. It remains a draft.",
+        );
+        return;
+      }
+
       setShowVoidConfirm(false);
       router.refresh();
     });

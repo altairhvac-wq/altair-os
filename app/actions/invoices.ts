@@ -24,11 +24,15 @@ import {
   recordInvoiceUpdatedActivity,
 } from "@/lib/database/services/invoice-activity";
 import { recordEstimateStatusChangedActivity } from "@/lib/database/services/estimate-activity";
+import { sendInvoiceEmail, toBillingEmailDelivery } from "@/lib/email/billing-send";
+import type { BillingEmailDelivery } from "@/lib/email/billing-send";
 import type {
   InvoiceDetail,
   InvoiceEditFormData,
   InvoiceFormData,
 } from "@/shared/types/invoice";
+
+export type { BillingEmailDelivery } from "@/lib/email/billing-send";
 
 export type CreateInvoiceActionResult = {
   error?: string;
@@ -199,6 +203,7 @@ export async function convertEstimateToInvoiceAction(
 export type SendInvoiceActionResult = {
   error?: string;
   invoice?: InvoiceDetail;
+  emailDelivery?: BillingEmailDelivery;
 };
 
 export async function sendInvoiceAction(
@@ -224,6 +229,34 @@ export async function sendInvoiceAction(
     return {
       error: "Only draft invoices can be sent. Refresh the page and try again.",
     };
+  }
+
+  const customerEmail = currentInvoice.customerEmail?.trim();
+
+  if (!customerEmail || !customerEmail.includes("@")) {
+    return {
+      error:
+        "A valid customer email is required to send this invoice. Add an email on the customer record and try again.",
+    };
+  }
+
+  const emailResult = await sendInvoiceEmail({
+    to: customerEmail,
+    companyName: context.company.name,
+    customerName: currentInvoice.customerName,
+    invoiceNumber: currentInvoice.invoiceNumber,
+    total: currentInvoice.total,
+    dueDate: currentInvoice.dueDate,
+    lineItems: currentInvoice.lineItems.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+    })),
+    notes: currentInvoice.notes,
+  });
+
+  if (!emailResult.ok) {
+    return { emailDelivery: toBillingEmailDelivery(emailResult) };
   }
 
   const { invoice, error } = await updateInvoiceStatus(

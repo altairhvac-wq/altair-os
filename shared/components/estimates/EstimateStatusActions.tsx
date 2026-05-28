@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { convertEstimateToInvoiceAction } from "@/app/actions/invoices";
 import { updateEstimateStatusAction } from "@/app/actions/estimates";
@@ -81,6 +81,7 @@ export function EstimateStatusActions({
   canManageEstimates,
 }: EstimateStatusActionsProps) {
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const actions = getAvailableActions(estimate.status);
   const canConvertToInvoice = estimate.status === "approved";
@@ -90,6 +91,8 @@ export function EstimateStatusActions({
   }
 
   function handleStatusChange(toStatus: EstimateStatus) {
+    setError(null);
+
     startTransition(async () => {
       const result = await updateEstimateStatusAction(
         estimate.id,
@@ -97,9 +100,24 @@ export function EstimateStatusActions({
         toStatus,
       );
 
-      if (!result.error) {
-        router.refresh();
+      if (result.error) {
+        setError(result.error);
+        return;
       }
+
+      if (
+        toStatus === "sent" &&
+        result.emailDelivery &&
+        result.emailDelivery.status !== "sent"
+      ) {
+        setError(
+          result.emailDelivery.message ??
+            "Estimate could not be sent by email. It remains a draft.",
+        );
+        return;
+      }
+
+      router.refresh();
     });
   }
 
@@ -118,7 +136,8 @@ export function EstimateStatusActions({
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col items-start gap-2">
+      <div className="flex flex-wrap gap-2">
       {canConvertToInvoice ? (
         <button
           type="button"
@@ -140,6 +159,13 @@ export function EstimateStatusActions({
           {action.label}
         </button>
       ))}
+      </div>
+
+      {error ? (
+        <p className="text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
