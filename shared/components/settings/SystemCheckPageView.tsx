@@ -72,7 +72,7 @@ export function SystemCheckPageView({ report }: SystemCheckPageViewProps) {
   const checkedAt = new Date(report.checkedAt).toLocaleString();
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6">
       <div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
@@ -125,7 +125,7 @@ export function SystemCheckPageView({ report }: SystemCheckPageViewProps) {
         </div>
       </section>
 
-      <section className="admin-card">
+      <section className="admin-card min-w-0 max-w-full overflow-x-clip">
         <div className="border-b border-slate-100 px-4 py-4 sm:px-6">
           <h2 className="text-lg font-bold text-slate-900">Checks</h2>
           <p className="text-sm text-slate-600">
@@ -137,12 +137,12 @@ export function SystemCheckPageView({ report }: SystemCheckPageViewProps) {
         ))}
       </section>
 
-      <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-5">
+      <section className="min-w-0 max-w-full rounded-2xl border border-dashed border-slate-300 bg-white p-5">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
             <CircleHelp className="h-5 w-5" aria-hidden="true" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="font-semibold text-slate-900">Deploy documentation</h3>
             <p className="mt-1 text-sm text-slate-600">
               Use the repo checklists for Vercel env vars, Supabase Auth URLs,

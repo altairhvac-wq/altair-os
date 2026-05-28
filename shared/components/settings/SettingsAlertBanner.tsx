@@ -36,7 +36,7 @@ export function SettingsAlertBanner({
   return (
     <div
       role={tone === "error" ? "alert" : "status"}
-      className={`rounded-lg border px-4 py-3 text-sm ${styles.container} ${styles.text} ${className}`}
+      className={`min-w-0 break-words rounded-lg border px-4 py-3 text-sm ${styles.container} ${styles.text} ${className}`}
     >
       {children}
     </div>

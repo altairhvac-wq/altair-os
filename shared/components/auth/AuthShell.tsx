@@ -319,9 +319,9 @@ export function AuthShell({
         <AuthHeroPanel />
       </div>
 
-      <div className="auth-panel-enter auth-panel-bg flex min-h-0 flex-1 flex-col">
-        <div className="flex flex-1 items-center justify-center px-5 py-8 sm:px-8 lg:px-10 xl:px-14">
-          <div className="w-full max-w-[400px]">
+      <div className="auth-panel-enter auth-panel-bg flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-y-auto">
+        <div className="flex min-h-full flex-1 flex-col justify-center px-5 py-8 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-8 lg:px-10 lg:py-10 xl:px-14">
+          <div className="mx-auto w-full min-w-0 max-w-[400px]">
             <AuthMobileBrand />
 
             {variant === "onboarding" && onboardingStep ? (
@@ -344,7 +344,7 @@ export function AuthShell({
             </div>
 
             {aboveCard ? (
-              <div className="mt-6 space-y-4">{aboveCard}</div>
+              <div className="mt-6 min-w-0 space-y-4">{aboveCard}</div>
             ) : null}
 
             <div className="mt-6 rounded-xl border border-slate-200/90 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/[0.02] sm:p-6">

@@ -68,7 +68,7 @@ export default async function SettingsPage() {
   const onboardingChecklist = buildOnboardingChecklist(onboardingSnapshot);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6">
       {emailResolution.mismatch ? (
         <SettingsAlertBanner tone="warning">
           Your profile email and sign-in email do not match. Update them to the

@@ -144,7 +144,7 @@ export function SettingsPageView({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Company Settings</h1>
         <p className="mt-1 text-sm text-slate-600">
@@ -152,7 +152,7 @@ export function SettingsPageView({
           beta operations.
         </p>
         {hasContactInfo ? (
-          <p className="mt-2 text-sm text-slate-500">{contactLine}</p>
+          <p className="mt-2 break-words text-sm text-slate-500">{contactLine}</p>
         ) : (
           <p className="mt-2 text-sm text-slate-400">
             Company contact details can be added in a future update.
@@ -172,7 +172,7 @@ export function SettingsPageView({
         {summaryCards.map((card) => (
           <div
             key={card.label}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+            className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -194,9 +194,9 @@ export function SettingsPageView({
         ))}
       </section>
 
-      <section className="admin-card overflow-hidden">
+      <section className="admin-card min-w-0 max-w-full overflow-x-clip">
         <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div>
+          <div className="min-w-0">
             <h2 className="text-lg font-bold text-slate-900">Team Members</h2>
             <p className="text-sm text-slate-600">
               {canManageTeam
@@ -276,17 +276,17 @@ export function SettingsPageView({
         <p className="mb-4 text-sm text-slate-600">
           Additional configuration areas coming after beta onboarding.
         </p>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid min-w-0 gap-4 md:grid-cols-2">
           {showSystemCheckLink ? (
             <Link
               href="/settings/system-check"
-              className="rounded-2xl border border-cyan-200 bg-white p-5 transition-colors hover:border-cyan-300 hover:bg-cyan-50/40"
+              className="min-w-0 rounded-2xl border border-cyan-200 bg-white p-5 transition-colors hover:border-cyan-300 hover:bg-cyan-50/40"
             >
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
                   <ShieldCheck className="h-5 w-5" aria-hidden="true" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3 className="font-semibold text-slate-900">System Check</h3>
                   <p className="mt-1 text-sm text-slate-600">
                     Read-only production readiness checks for the internal alpha.

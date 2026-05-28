@@ -137,10 +137,10 @@ export function TeamInviteForm({
   }
 
   return (
-    <div className="border-b border-slate-100 px-4 py-4 sm:px-6">
+    <div className="min-w-0 max-w-full border-b border-slate-100 px-4 py-4 sm:px-6">
       <form
         onSubmit={handleSubmit}
-        className="space-y-4"
+        className="min-w-0 space-y-4"
         aria-label="Invite team member"
         aria-busy={isPending}
       >
@@ -151,7 +151,7 @@ export function TeamInviteForm({
           </h3>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,220px)]">
+        <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,220px)]">
           <label className="block">
             <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
               Email
@@ -182,11 +182,11 @@ export function TeamInviteForm({
           />
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <button
             type="submit"
             disabled={isPending || email.trim().length === 0}
-            className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
             {isPending ? "Sending invite..." : "Send invite"}
           </button>
@@ -195,7 +195,7 @@ export function TeamInviteForm({
             type="button"
             onClick={handleCopyInstructions}
             disabled={isPending}
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
             <Copy className="h-4 w-4" aria-hidden="true" />
             {copied ? "Copied invite link" : "Copy invite link"}

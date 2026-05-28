@@ -56,7 +56,7 @@ export function OnboardingChecklistSection({
       : `${checklist.completedCount} of ${checklist.totalCount} setup steps done — finish the rest to unlock your full workflow.`;
 
   return (
-    <section className="admin-card overflow-hidden">
+    <section className="admin-card min-w-0 max-w-full overflow-x-clip">
       <div className="flex items-start justify-between gap-3 border-b border-slate-100 bg-gradient-to-r from-cyan-50/80 to-white px-4 py-4 sm:px-6">
         <div className="flex min-w-0 items-start gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-100 text-cyan-700">

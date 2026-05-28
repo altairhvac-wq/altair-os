@@ -8,7 +8,7 @@ function Skeleton({ className }: { className?: string }) {
 
 export function SettingsLoadingState() {
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6">
       <div>
         <Skeleton className="h-8 w-56" />
         <Skeleton className="mt-2 h-4 w-96 max-w-full" />
@@ -27,7 +27,7 @@ export function SettingsLoadingState() {
         ))}
       </section>
 
-      <section className="admin-card">
+      <section className="admin-card min-w-0 max-w-full overflow-x-clip">
         <div className="border-b border-slate-100 px-4 py-4 sm:px-6">
           <Skeleton className="h-6 w-40" />
           <Skeleton className="mt-2 h-4 w-72 max-w-full" />

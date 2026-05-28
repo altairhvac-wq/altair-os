@@ -215,7 +215,7 @@ export function TeamMemberMobileCards({
   }
 
   return (
-    <div className="space-y-3 p-4 md:hidden">
+    <div className="min-w-0 space-y-3 p-4 md:hidden">
       {pendingRoleChange ? (
         <SettingsAlertBanner tone="warning">
           <p className="font-semibold">
@@ -307,23 +307,26 @@ export function TeamMemberMobileCards({
         return (
           <article
             key={member.id}
-            className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+            className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
           >
             <div className="flex items-start gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-sm font-bold text-white">
                 {getTeamMemberInitials(member.name)}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="truncate font-semibold text-slate-900">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <p className="min-w-0 truncate font-semibold text-slate-900">
                     {member.name}
                   </p>
                   {isCurrentUser ? (
-                    <span className="text-xs font-medium text-slate-500">
+                    <span className="shrink-0 text-xs font-medium text-slate-500">
                       (You)
                     </span>
                   ) : null}
-                  <MembershipStatusBadge status={member.status} />
+                  <MembershipStatusBadge
+                    status={member.status}
+                    className="shrink-0"
+                  />
                 </div>
                 <p className="mt-0.5 truncate text-sm text-slate-500">
                   {member.email}
