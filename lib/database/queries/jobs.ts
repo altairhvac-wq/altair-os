@@ -542,3 +542,56 @@ export async function updateJobWorkflowStatus(
     error: null,
   };
 }
+
+export async function correctJobWorkflowStatus(
+  companyId: string,
+  jobId: string,
+  fromStatus: JobStatus,
+  toStatus: JobStatus,
+): Promise<{ job: Job | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const updatePayload: JobUpdate = { status: toStatus };
+
+  if (toStatus === "scheduled" || toStatus === "dispatched") {
+    updatePayload.arrived_at = null;
+    updatePayload.work_started_at = null;
+  } else if (toStatus === "arrived") {
+    updatePayload.work_started_at = null;
+  }
+
+  const { data: row, error } = await supabase
+    .from("jobs")
+    .update(updatePayload)
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .eq("status", fromStatus)
+    .select(JOB_TECHNICIAN_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[correctJobWorkflowStatus] update failed:", {
+      companyId,
+      jobId,
+      fromStatus,
+      toStatus,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    return { job: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return {
+      job: null,
+      error: "Job status has changed. Refresh the page and try again.",
+    };
+  }
+
+  return {
+    job: mapJobRowToJob(row as JobRowWithTechnician),
+    error: null,
+  };
+}

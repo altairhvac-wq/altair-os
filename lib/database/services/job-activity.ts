@@ -168,6 +168,38 @@ export async function recordJobAttachmentUploadedActivity(input: {
   }
 }
 
+export async function recordJobStatusCorrectedActivity(input: {
+  companyId: string;
+  jobId: string;
+  actorId: string;
+  fromStatus: JobStatus;
+  toStatus: JobStatus;
+  customerId?: string;
+  jobNumber?: string;
+}): Promise<void> {
+  const { error } = await recordJobActivity({
+    company_id: input.companyId,
+    job_id: input.jobId,
+    actor_id: input.actorId,
+    event_type: "status_changed",
+    metadata: {
+      customer_id: input.customerId,
+      job_id: input.jobId,
+      job_number: input.jobNumber,
+      from_status: input.fromStatus,
+      to_status: input.toStatus,
+      action_id: "status_correction",
+    },
+  });
+
+  if (error) {
+    console.error("[recordJobStatusCorrectedActivity] failed:", {
+      jobId: input.jobId,
+      error,
+    });
+  }
+}
+
 export async function recordJobMaterialAddedActivity(input: {
   companyId: string;
   jobId: string;

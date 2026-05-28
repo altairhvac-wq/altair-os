@@ -9,6 +9,7 @@ import {
   shouldAcceptServerWorkflowStatus,
 } from "@/shared/types/job-workflow";
 import { JobWorkflowActions } from "./JobWorkflowActions";
+import { JobStatusCorrectionControl } from "./JobStatusCorrectionControl";
 import { StartRouteButton } from "./StartRouteButton";
 
 type JobWorkflowControlsProps = {
@@ -20,6 +21,7 @@ type JobWorkflowControlsProps = {
   state: string;
   zip: string;
   canUpdateStatus: boolean;
+  canCorrectStatus?: boolean;
   layout?: "header" | "stack";
   onStatusUpdated?: (status: JobStatus) => void;
 };
@@ -51,6 +53,7 @@ export function JobWorkflowControls({
   state,
   zip,
   canUpdateStatus,
+  canCorrectStatus = false,
   layout = "header",
   onStatusUpdated,
 }: JobWorkflowControlsProps) {
@@ -92,6 +95,12 @@ export function JobWorkflowControls({
         zip={zip}
         canUpdateStatus={canUpdateStatus}
         layout={layout === "stack" ? "block" : "inline"}
+        onStatusUpdated={handleStatusUpdated}
+      />
+      <JobStatusCorrectionControl
+        jobId={jobId}
+        status={status}
+        canCorrectStatus={canCorrectStatus}
         onStatusUpdated={handleStatusUpdated}
       />
     </div>

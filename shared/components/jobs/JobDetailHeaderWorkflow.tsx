@@ -72,6 +72,7 @@ export function JobDetailHeaderWorkflow({
           state={job.state}
           zip={job.zip}
           canUpdateStatus={canUpdateStatus}
+          canCorrectStatus={canEditJob}
           layout="header"
           onStatusUpdated={handleStatusUpdated}
         />

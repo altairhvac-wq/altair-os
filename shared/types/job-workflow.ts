@@ -156,7 +156,46 @@ export function shouldAcceptServerWorkflowStatus(
     return true;
   }
 
+  if (isAllowedStatusCorrection(localStatus, serverStatus)) {
+    return true;
+  }
+
   return (
     WORKFLOW_STATUS_RANK[serverStatus] >= WORKFLOW_STATUS_RANK[localStatus]
   );
+}
+
+const STATUS_CORRECTION_TARGETS: Partial<Record<JobStatus, JobStatus[]>> = {
+  dispatched: ["scheduled"],
+  arrived: ["dispatched"],
+  in_progress: ["arrived", "dispatched"],
+};
+
+export function getAllowedStatusCorrectionTargets(
+  status: JobStatus,
+): JobStatus[] {
+  if (isTerminalJobStatus(status)) {
+    return [];
+  }
+
+  return STATUS_CORRECTION_TARGETS[status] ?? [];
+}
+
+export function isAllowedStatusCorrection(
+  fromStatus: JobStatus,
+  toStatus: JobStatus,
+): boolean {
+  if (fromStatus === toStatus) {
+    return false;
+  }
+
+  if (isTerminalJobStatus(fromStatus) || isTerminalJobStatus(toStatus)) {
+    return false;
+  }
+
+  return getAllowedStatusCorrectionTargets(fromStatus).includes(toStatus);
+}
+
+export function canCorrectJobStatus(status: JobStatus): boolean {
+  return getAllowedStatusCorrectionTargets(status).length > 0;
 }
