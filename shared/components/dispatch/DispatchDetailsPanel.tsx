@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useScrollLock } from "@/shared/hooks/useScrollLock";
+import { useScrollLock, useSheetEscape } from "@/shared/hooks/useScrollLock";
 import { Calendar, Mail, MapPin, Phone, User, X } from "lucide-react";
 import {
   formatDispatchDate,
@@ -58,21 +58,7 @@ export function DispatchDetailsPanel({
   }, [job.id, job.technicianId]);
 
   useScrollLock(lockBodyScroll);
-
-  useEffect(() => {
-    if (lockBodyScroll) {
-      return;
-    }
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    }
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [lockBodyScroll, onClose]);
+  useSheetEscape(onClose, !lockBodyScroll);
 
   function handleAssignClick() {
     if (!canSubmitAssignment) {

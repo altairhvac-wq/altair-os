@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { ModalPortal } from "@/shared/components/ui/ModalPortal";
-import { useScrollLock } from "@/shared/hooks/useScrollLock";
+import { useScrollLock, useSheetEscape } from "@/shared/hooks/useScrollLock";
 
 export type MobileSheetVariant = "bottom" | "responsive";
 
@@ -39,17 +38,7 @@ export function MobileSheet({
   rootClassName,
 }: MobileSheetProps) {
   useScrollLock(true);
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !closeDisabled) {
-        onClose();
-      }
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [closeDisabled, onClose]);
+  useSheetEscape(onClose, !closeDisabled);
 
   return (
     <ModalPortal>
