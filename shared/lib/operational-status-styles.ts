@@ -1,6 +1,6 @@
 /** Shared operational status badge styling — calmer tones, consistent scan rhythm. */
 export const OPERATIONAL_STATUS_BADGE_BASE =
-  "inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-tight ring-1 ring-inset sm:text-xs";
+  "inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-tight ring-1 ring-inset sm:text-xs print:!bg-white print:!text-slate-900 print:!ring-slate-400";
 
 export const OPERATIONAL_JOB_STATUS_STYLES = {
   scheduled: "bg-sky-50/90 text-sky-800 ring-sky-600/12",

@@ -43,7 +43,7 @@ export function BillingTotalsSummary({
   const showPaymentSummary = amountPaid > 0 || balanceDue > 0;
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-3 sm:px-5 sm:py-4 print:border-slate-300 print:bg-white">
+    <div className="rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-3 sm:px-5 sm:py-4 print:break-inside-avoid print:border-slate-300 print:bg-white">
       <TotalsRow
         label="Subtotal"
         value={formatCurrency(subtotal)}
@@ -71,8 +71,8 @@ export function BillingTotalsSummary({
             <TotalsRow
               label="Paid"
               value={formatCurrency(amountPaid)}
-              className="text-sm text-emerald-700"
-              valueClassName="font-semibold"
+              className="text-sm text-emerald-700 print:text-slate-700"
+              valueClassName="font-semibold print:text-slate-900"
             />
           ) : null}
           {balanceDue > 0 ? (

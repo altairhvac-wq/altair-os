@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -15,6 +16,11 @@ import type { EstimateDetail } from "@/shared/types/estimate";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 import type { EstimateActivity } from "@/shared/types/estimate-activity";
 import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact";
+import {
+  formatBillingEmailSentMessage,
+  getLastEstimateEmailSentInfo,
+} from "@/shared/lib/billing-email-sent";
+import { getCustomerEmailSendBlockReason } from "@/shared/lib/operational-errors";
 import { BillingMobileAmountHeader } from "@/shared/components/billing/BillingMobileAmountHeader";
 import { EstimateDocumentSection } from "@/shared/components/billing/EstimateDocumentSection";
 import { EstimateActivityTimeline } from "./EstimateActivityTimeline";
@@ -26,6 +32,7 @@ type EstimateDetailPageViewProps = {
   activities: EstimateActivity[];
   linkedInvoice?: InvoiceDetail | null;
   company: BillingCompanyContact;
+  companyTimeZone: string;
   canManageEstimates: boolean;
 };
 
@@ -34,10 +41,19 @@ export function EstimateDetailPageView({
   activities,
   linkedInvoice,
   company,
+  companyTimeZone,
   canManageEstimates,
 }: EstimateDetailPageViewProps) {
   const customerEmail = estimate.customerEmail?.trim();
   const customerPhone = estimate.customerPhone?.trim();
+  const customerEmailBlockReason = getCustomerEmailSendBlockReason(customerEmail);
+  const lastEmailSentInfo = useMemo(
+    () => getLastEstimateEmailSentInfo(activities, customerEmail),
+    [activities, customerEmail],
+  );
+  const lastEmailSentMessage = lastEmailSentInfo
+    ? formatBillingEmailSentMessage(lastEmailSentInfo, companyTimeZone)
+    : null;
 
   function handlePrint() {
     window.print();
@@ -89,12 +105,17 @@ export function EstimateDetailPageView({
                 ) : null}
               </div>
               <BillingMobileAmountHeader total={estimate.total} />
+              {lastEmailSentMessage ? (
+                <p className="mt-3 text-xs text-slate-500">{lastEmailSentMessage}</p>
+              ) : null}
             </div>
 
             <div className="hidden sm:block">
               <EstimateStatusActions
                 estimate={estimate}
                 canManageEstimates={canManageEstimates}
+                customerEmailBlockReason={customerEmailBlockReason}
+                lastEmailSentMessage={lastEmailSentMessage}
               />
             </div>
           </div>
@@ -198,6 +219,8 @@ export function EstimateDetailPageView({
         <EstimateStatusActions
           estimate={estimate}
           canManageEstimates={canManageEstimates}
+          customerEmailBlockReason={customerEmailBlockReason}
+          lastEmailSentMessage={lastEmailSentMessage}
           variant="sticky"
         />
       ) : null}

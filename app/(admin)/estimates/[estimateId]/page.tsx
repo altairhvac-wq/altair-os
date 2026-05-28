@@ -55,6 +55,7 @@ export default async function EstimateDetailPage({
       activities={activities}
       linkedInvoice={linkedInvoice}
       company={mapCompanyRowToBillingContact(companyContext.company)}
+      companyTimeZone={companyContext.company.timezone}
       canManageEstimates={companyContext.permissions.manageBilling}
     />
   );

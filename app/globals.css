@@ -504,4 +504,41 @@ a[href] {
   .rounded-xl {
     box-shadow: none !important;
   }
+
+  /* Neutralize tinted surfaces for monochrome printers */
+  [class*="bg-sky-"],
+  [class*="bg-emerald-"],
+  [class*="bg-amber-"],
+  [class*="bg-rose-"],
+  [class*="bg-indigo-"],
+  [class*="bg-teal-"],
+  [class*="bg-orange-"],
+  [class*="bg-violet-"],
+  [class*="bg-blue-"] {
+    background-color: #ffffff !important;
+  }
+
+  [class*="text-sky-"],
+  [class*="text-emerald-"],
+  [class*="text-amber-"],
+  [class*="text-rose-"],
+  [class*="text-indigo-"],
+  [class*="text-teal-"],
+  [class*="text-orange-"],
+  [class*="text-violet-"],
+  [class*="text-blue-"] {
+    color: #0f172a !important;
+  }
+
+  [class*="ring-sky-"],
+  [class*="ring-emerald-"],
+  [class*="ring-amber-"],
+  [class*="ring-rose-"],
+  [class*="ring-indigo-"],
+  [class*="ring-teal-"],
+  [class*="ring-orange-"],
+  [class*="ring-violet-"],
+  [class*="ring-blue-"] {
+    --tw-ring-color: #94a3b8 !important;
+  }
 }

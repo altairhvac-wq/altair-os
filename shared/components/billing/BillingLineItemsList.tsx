@@ -34,8 +34,8 @@ export function BillingLineItemsList({
 
   if (variant === "table") {
     return (
-      <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse text-sm">
+      <div className="overflow-x-auto print:overflow-visible">
+        <table className="min-w-full border-collapse text-sm print:text-xs">
           <thead>
             <tr className="border-b border-slate-300 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
               <th className="px-3 py-2 font-semibold">Item</th>

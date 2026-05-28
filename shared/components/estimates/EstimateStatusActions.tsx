@@ -13,7 +13,6 @@ import {
   formatActionError,
   formatBillingEmailDeliveryError,
   getBillingActionFeedbackTone,
-  getCustomerEmailSendBlockReason,
   hasValidCustomerEmailForSend,
 } from "@/shared/lib/operational-errors";
 import { formatBillingEmailSuccessMessage } from "@/shared/lib/billing-email-sent";
@@ -27,6 +26,8 @@ import {
 type EstimateStatusActionsProps = {
   estimate: EstimateDetail;
   canManageEstimates: boolean;
+  customerEmailBlockReason: string | null;
+  lastEmailSentMessage?: string | null;
   variant?: "inline" | "sticky";
 };
 
@@ -125,6 +126,8 @@ function getStatusPendingLabel(status: EstimateStatus): string {
 export function EstimateStatusActions({
   estimate,
   canManageEstimates,
+  customerEmailBlockReason,
+  lastEmailSentMessage,
   variant = "inline",
 }: EstimateStatusActionsProps) {
   const [isPending, startTransition] = useTransition();
@@ -146,7 +149,6 @@ export function EstimateStatusActions({
   }, [estimate.status]);
 
   const customerEmail = estimate.customerEmail?.trim();
-  const customerEmailBlockReason = getCustomerEmailSendBlockReason(customerEmail);
   const hasValidCustomerEmail = hasValidCustomerEmailForSend(customerEmail);
   const actions = getAvailableActions(localStatus);
   const canConvertToInvoice = localStatus === "approved";
@@ -394,7 +396,8 @@ export function EstimateStatusActions({
     ? customerEmailBlockReason
     : primaryAction?.helper ??
       (canResendEmail
-        ? "Resend sends another copy to the customer's email on file."
+        ? lastEmailSentMessage ??
+          "Resend sends another copy to the customer's email on file."
         : null);
 
   const feedbackBanner = error ? (
