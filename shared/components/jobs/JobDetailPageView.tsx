@@ -262,6 +262,7 @@ export function JobDetailPageView({
         <ContentSection title="Technician assignment" className="lg:col-span-3">
           <JobTechnicianAssignment
             jobId={job.id}
+            jobStatus={job.status}
             assignedTechnicianId={job.assignedTechnicianId}
             assignedTechnician={job.assignedTechnician}
             technicians={technicians}

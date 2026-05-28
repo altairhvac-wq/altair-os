@@ -2,12 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import { User, UserPlus } from "lucide-react";
-import { assignJobAction } from "@/app/actions/dispatch";
-import type { Technician } from "@/shared/types/dispatch";
+import { User, UserMinus, UserPlus } from "lucide-react";
+import { assignJobAction, unassignJobAction } from "@/app/actions/dispatch";
+import {
+  canUnassignJobTechnician,
+  type DispatchJobStatus,
+  type Technician,
+} from "@/shared/types/dispatch";
 
 type JobTechnicianAssignmentProps = {
   jobId: string;
+  jobStatus: DispatchJobStatus;
   assignedTechnicianId?: string;
   assignedTechnician?: string;
   technicians: Technician[];
@@ -16,6 +21,7 @@ type JobTechnicianAssignmentProps = {
 
 export function JobTechnicianAssignment({
   jobId,
+  jobStatus,
   assignedTechnicianId,
   assignedTechnician,
   technicians,
@@ -27,8 +33,15 @@ export function JobTechnicianAssignment({
   );
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<"assign" | "unassign" | null>(
+    null,
+  );
   const [isPending, startTransition] = useTransition();
   const isAssigned = Boolean(assignedTechnicianId);
+  const showUnassign = canUnassignJobTechnician(
+    { assignedTechnicianId, status: jobStatus },
+    canAssign,
+  );
   const hasSelectionChanged =
     Boolean(selectedTechnicianId) && selectedTechnicianId !== assignedTechnicianId;
 
@@ -38,6 +51,33 @@ export function JobTechnicianAssignment({
     setSuccessMessage(null);
   }, [assignedTechnicianId, jobId]);
 
+  function handleUnassign() {
+    if (!showUnassign || isPending) {
+      return;
+    }
+
+    setError(null);
+    setSuccessMessage(null);
+    setPendingAction("unassign");
+
+    startTransition(async () => {
+      try {
+        const result = await unassignJobAction(jobId);
+
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+
+        setSelectedTechnicianId("");
+        setSuccessMessage("Technician unassigned.");
+        router.refresh();
+      } finally {
+        setPendingAction(null);
+      }
+    });
+  }
+
   function handleAssign() {
     if (!selectedTechnicianId || !hasSelectionChanged) {
       return;
@@ -45,20 +85,25 @@ export function JobTechnicianAssignment({
 
     setError(null);
     setSuccessMessage(null);
+    setPendingAction("assign");
 
     startTransition(async () => {
-      const result = await assignJobAction(jobId, selectedTechnicianId);
+      try {
+        const result = await assignJobAction(jobId, selectedTechnicianId);
 
-      if (result.error) {
-        setError(result.error);
-        return;
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+
+        const assignedName =
+          technicians.find((technician) => technician.id === selectedTechnicianId)
+            ?.name ?? "Technician";
+        setSuccessMessage(`Assigned to ${assignedName}.`);
+        router.refresh();
+      } finally {
+        setPendingAction(null);
       }
-
-      const assignedName =
-        technicians.find((technician) => technician.id === selectedTechnicianId)
-          ?.name ?? "Technician";
-      setSuccessMessage(`Assigned to ${assignedName}.`);
-      router.refresh();
     });
   }
 
@@ -92,6 +137,20 @@ export function JobTechnicianAssignment({
           Unassigned — no technician has been assigned yet
         </div>
       )}
+
+      {showUnassign ? (
+        <button
+          type="button"
+          onClick={handleUnassign}
+          disabled={isPending}
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <UserMinus className="h-4 w-4" />
+          {pendingAction === "unassign" && isPending
+            ? "Unassigning..."
+            : "Unassign technician"}
+        </button>
+      ) : null}
 
       {canAssign ? (
         technicians.length > 0 ? (
@@ -128,7 +187,7 @@ export function JobTechnicianAssignment({
               className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-cyan-600 px-3.5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <UserPlus className="h-4 w-4" />
-              {isPending
+              {pendingAction === "assign" && isPending
                 ? "Saving..."
                 : isAssigned
                   ? "Change technician"

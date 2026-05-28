@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition, useCallback, useEffect } from "react";
 import { BarChart3, SlidersHorizontal, Users } from "lucide-react";
-import { assignJobAction } from "@/app/actions/dispatch";
+import { assignJobAction, unassignJobAction } from "@/app/actions/dispatch";
 import {
   filterDispatchJobs,
   getDispatchSummary,
@@ -148,6 +148,32 @@ export function DispatchPageView({
       });
     },
     [isPending, technicians],
+  );
+
+  const handleUnassign = useCallback(
+    (jobId: string) => {
+      if (isPending) {
+        return;
+      }
+
+      setAssignError(null);
+      setAssignSuccess(null);
+
+      startTransition(async () => {
+        const result = await unassignJobAction(jobId);
+
+        if (result.error || !result.job) {
+          setAssignError(result.error ?? "Failed to unassign job.");
+          return;
+        }
+
+        setAssignSuccess("Technician unassigned.");
+        setJobs((previous) =>
+          previous.map((job) => (job.id === result.job!.id ? result.job! : job)),
+        );
+      });
+    },
+    [isPending],
   );
 
   const handleStatusUpdated = useCallback(
@@ -353,10 +379,11 @@ export function DispatchPageView({
               canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
               assignError={assignError}
               assignSuccess={assignSuccess}
-              isAssigning={isPending}
+              isAssignmentBusy={isPending}
               lockBodyScroll={false}
               onClose={handleClosePanel}
               onAssign={handleAssign}
+              onUnassign={canDispatchJobs ? handleUnassign : undefined}
               onStatusUpdated={handleStatusUpdated}
             />
           </div>
@@ -416,10 +443,11 @@ export function DispatchPageView({
               canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
               assignError={assignError}
               assignSuccess={assignSuccess}
-              isAssigning={isPending}
+              isAssignmentBusy={isPending}
               lockBodyScroll={false}
               onClose={handleClosePanel}
               onAssign={handleAssign}
+              onUnassign={canDispatchJobs ? handleUnassign : undefined}
               onStatusUpdated={handleStatusUpdated}
             />
           </MobileSheetPanel>

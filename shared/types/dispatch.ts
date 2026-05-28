@@ -95,6 +95,26 @@ export function formatFullAddress(job: DispatchJob): string {
   return `${job.serviceAddress}, ${job.city}, ${job.state} ${job.zip}`;
 }
 
+export function canUnassignJobTechnician(
+  job: {
+    technicianId?: string;
+    assignedTechnicianId?: string;
+    status: DispatchJobStatus;
+  },
+  canDispatchJobs: boolean,
+): boolean {
+  const hasTechnician = Boolean(
+    job.technicianId ?? job.assignedTechnicianId,
+  );
+
+  return (
+    canDispatchJobs &&
+    hasTechnician &&
+    job.status !== "completed" &&
+    job.status !== "cancelled"
+  );
+}
+
 export function isScheduledToday(
   date: string,
   reference = new Date(),
