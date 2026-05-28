@@ -178,7 +178,9 @@ export async function acceptInviteAction(
   revalidatePath("/technician", "layout");
   revalidatePath("/tech", "layout");
 
-  const context = await getActiveCompanyContext();
+  const context = await getActiveCompanyContext({
+    companyId: result.companyId,
+  });
 
   return {
     companyId: result.companyId,

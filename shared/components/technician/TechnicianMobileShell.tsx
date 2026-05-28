@@ -1,7 +1,8 @@
 "use client";
 
-import { Wrench } from "lucide-react";
+import { LogOut, Wrench } from "lucide-react";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
+import { logoutAction } from "@/app/actions/auth";
 import { CompanyTimezoneProvider } from "@/shared/lib/company-timezone";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { PullToRefresh } from "@/shared/components/mobile/PullToRefresh";
@@ -54,6 +55,16 @@ export function TechnicianMobileShell({
                 />
               ) : null}
               <TechnicianNotificationLink />
+              <form action={logoutAction}>
+                <button
+                  type="submit"
+                  aria-label="Sign out"
+                  title="Sign out"
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </form>
             </div>
           </header>
 

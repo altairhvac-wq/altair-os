@@ -387,7 +387,7 @@ export function EstimateStatusActions({
             <p className="mt-2 text-xs text-slate-500">{helperText}</p>
           ) : null}
         </div>
-        <div className="h-24 sm:hidden" aria-hidden />
+        <div className="h-36 sm:hidden" aria-hidden />
       </>
     );
   }

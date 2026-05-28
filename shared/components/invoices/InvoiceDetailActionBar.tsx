@@ -301,7 +301,7 @@ export function InvoiceDetailActionBar({
         ) : null}
       </div>
 
-      {variant === "sticky" ? <div className="h-24 sm:hidden" aria-hidden /> : null}
+      {variant === "sticky" ? <div className="h-36 sm:hidden" aria-hidden /> : null}
     </>
   );
 }

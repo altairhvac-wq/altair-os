@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createEstimateAction } from "@/app/actions/estimates";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
 import type { ServiceItem } from "@/shared/types/service-item";
@@ -115,7 +116,12 @@ export function EstimatesPageView({
       const result = await createEstimateAction(data);
 
       if (result.error || !result.estimate) {
-        setCreateError(result.error ?? "Failed to create estimate.");
+        setCreateError(
+          formatActionError(
+            result.error,
+            "We couldn't create this estimate. Check the customer and line items, then try again.",
+          ),
+        );
         return;
       }
 

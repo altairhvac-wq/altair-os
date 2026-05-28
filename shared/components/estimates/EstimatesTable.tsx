@@ -1,6 +1,7 @@
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { Estimate } from "@/shared/types/estimate";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
+import { EstimatesMobileCardList } from "./EstimatesMobileCardList";
 
 type EstimatesTableProps = {
   estimates: Estimate[];
@@ -9,7 +10,10 @@ type EstimatesTableProps = {
 
 export function EstimatesTable({ estimates, onSelect }: EstimatesTableProps) {
   return (
-    <div className="overflow-x-auto">
+    <>
+      <EstimatesMobileCardList estimates={estimates} onSelect={onSelect} />
+
+      <div className="hidden overflow-x-auto md:block">
       <table className="w-full min-w-[720px] text-left text-sm">
         <thead>
           <tr className="border-b border-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -64,6 +68,7 @@ export function EstimatesTable({ estimates, onSelect }: EstimatesTableProps) {
           })}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }

@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createInvoiceAction } from "@/app/actions/invoices";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
 import type { ServiceItem } from "@/shared/types/service-item";
@@ -149,7 +150,12 @@ export function InvoicesPageView({
       const result = await createInvoiceAction(data);
 
       if (result.error || !result.invoice) {
-        setCreateError(result.error ?? "Failed to create invoice.");
+        setCreateError(
+          formatActionError(
+            result.error,
+            "We couldn't create this invoice. Check the customer and line items, then try again.",
+          ),
+        );
         return;
       }
 

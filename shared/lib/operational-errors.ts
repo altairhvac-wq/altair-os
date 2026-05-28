@@ -3,6 +3,23 @@ import type { BillingEmailDelivery } from "@/lib/email/billing-send";
 export const NO_ACTIVE_COMPANY_MESSAGE =
   "Your session expired or no company is selected. Sign in again.";
 
+const RELATED_RECORD_ERROR_MAP: Record<string, string> = {
+  "Selected customer was not found.":
+    "That customer is no longer available. Refresh the page and choose again.",
+  "Selected job was not found.":
+    "That job is no longer available. Refresh the page and choose again.",
+  "Linked estimate not found.":
+    "The linked estimate is no longer available. Refresh the page and try again.",
+  "Estimate not found.":
+    "This estimate is no longer available. Refresh the page and try again.",
+  "Invoice not found.":
+    "This invoice is no longer available. Refresh the page and try again.",
+  "Customer not found.":
+    "That customer is no longer available. Refresh the page and try again.",
+  "Job not found.":
+    "That job is no longer available. Refresh the page and try again.",
+};
+
 export function formatActionError(
   error: string | undefined | null,
   fallback: string,
@@ -15,8 +32,16 @@ export function formatActionError(
     return NO_ACTIVE_COMPANY_MESSAGE;
   }
 
+  const mapped = RELATED_RECORD_ERROR_MAP[error.trim()];
+  if (mapped) {
+    return mapped;
+  }
+
   return error;
 }
+
+export const AUTH_CALLBACK_ERROR_MESSAGE =
+  "Sign-in could not be completed. Try signing in again with your email and password.";
 
 export function formatBillingEmailDeliveryError(
   delivery: BillingEmailDelivery,

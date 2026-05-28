@@ -1,11 +1,13 @@
 "use client";
 
 import { Suspense, useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { NextRedirectField } from "./NextRedirectField";
 import {
   loginAction,
   type AuthActionState,
 } from "@/app/actions/auth";
+import { AUTH_CALLBACK_ERROR_MESSAGE } from "@/shared/lib/operational-errors";
 import {
   AuthField,
   AuthInput,
@@ -17,8 +19,14 @@ import {
 
 const initialState: AuthActionState = {};
 
-export function LoginForm() {
+function LoginFormFields() {
+  const searchParams = useSearchParams();
+  const callbackError =
+    searchParams.get("error") === "auth_callback"
+      ? AUTH_CALLBACK_ERROR_MESSAGE
+      : null;
   const [state, formAction, pending] = useActionState(loginAction, initialState);
+  const displayError = state.error ?? callbackError;
 
   return (
     <AuthShell
@@ -35,7 +43,7 @@ export function LoginForm() {
         <Suspense fallback={null}>
           <NextRedirectField />
         </Suspense>
-        {state.error ? <AuthMessage tone="error">{state.error}</AuthMessage> : null}
+        {displayError ? <AuthMessage tone="error">{displayError}</AuthMessage> : null}
         {state.success ? (
           <AuthMessage tone="success">{state.success}</AuthMessage>
         ) : null}
@@ -67,5 +75,13 @@ export function LoginForm() {
         </div>
       </form>
     </AuthShell>
+  );
+}
+
+export function LoginForm() {
+  return (
+    <Suspense fallback={null}>
+      <LoginFormFields />
+    </Suspense>
   );
 }
