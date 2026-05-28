@@ -19,7 +19,13 @@ export function TechnicianJobEquipmentSummary({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!expanded || equipment !== null || isLoading) {
+    setEquipment(null);
+    setError(null);
+    setIsLoading(false);
+  }, [customerId]);
+
+  useEffect(() => {
+    if (!expanded || equipment !== null) {
       return;
     }
 
@@ -27,25 +33,37 @@ export function TechnicianJobEquipmentSummary({
     setIsLoading(true);
     setError(null);
 
-    listCustomerEquipmentAction(customerId).then((result) => {
-      if (cancelled) {
-        return;
-      }
+    listCustomerEquipmentAction(customerId)
+      .then((result) => {
+        if (cancelled) {
+          return;
+        }
 
-      if (result.error) {
-        setError(result.error);
+        if (result.error) {
+          setError(result.error);
+          setEquipment([]);
+        } else {
+          setEquipment(result.equipment ?? []);
+        }
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+
+        setError("Failed to load equipment.");
         setEquipment([]);
-      } else {
-        setEquipment(result.equipment ?? []);
-      }
-
-      setIsLoading(false);
-    });
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [customerId, expanded, equipment, isLoading]);
+  }, [customerId, expanded, equipment]);
 
   if (!expanded) {
     return null;
