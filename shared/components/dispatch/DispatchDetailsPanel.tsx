@@ -9,6 +9,7 @@ import {
   formatDispatchDate,
   formatDispatchTime,
   formatFullAddress,
+  hasAssignedJobTechnician,
   type DispatchJob,
   type Technician,
 } from "@/shared/types/dispatch";
@@ -48,6 +49,13 @@ export function DispatchDetailsPanel({
   lockBodyScroll = true,
 }: DispatchDetailsPanelProps) {
   const [selectedTechnicianId, setSelectedTechnicianId] = useState("");
+  const isAssigned = hasAssignedJobTechnician(job);
+  const assignedTechnicianId = job.technicianId;
+  const displayTechnician =
+    technician ??
+    (assignedTechnicianId
+      ? (technicians.find((tech) => tech.id === assignedTechnicianId) ?? null)
+      : null);
   const showUnassign = canUnassignJobTechnician(job, canDispatchJobs);
   const hasSelectionChanged =
     Boolean(selectedTechnicianId) &&
@@ -171,24 +179,28 @@ export function DispatchDetailsPanel({
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Assigned technician
               </h3>
-              {technician ? (
+              {isAssigned ? (
                 <div className="mt-2 space-y-3">
                   <div className="rounded-xl border border-slate-100 bg-white p-3">
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 text-xs font-bold text-white">
-                        {technician.initials}
+                        {displayTechnician?.initials ?? "?"}
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-slate-900">
-                          {technician.name}
+                          {displayTechnician?.name ?? "Assigned technician"}
                         </p>
-                        <p className="text-xs text-slate-500">{technician.role}</p>
+                        <p className="text-xs text-slate-500">
+                          {displayTechnician?.role ?? "Team member"}
+                        </p>
                       </div>
                     </div>
-                    <div className="mt-2 flex items-center gap-2 text-xs text-slate-600">
-                      <Phone className="h-3.5 w-3.5 text-slate-400" />
-                      {technician.phone}
-                    </div>
+                    {displayTechnician?.phone ? (
+                      <div className="mt-2 flex items-center gap-2 text-xs text-slate-600">
+                        <Phone className="h-3.5 w-3.5 text-slate-400" />
+                        {displayTechnician.phone}
+                      </div>
+                    ) : null}
                   </div>
 
                   {showUnassign && onUnassign ? (

@@ -95,6 +95,13 @@ export function formatFullAddress(job: DispatchJob): string {
   return `${job.serviceAddress}, ${job.city}, ${job.state} ${job.zip}`;
 }
 
+export function hasAssignedJobTechnician(job: {
+  technicianId?: string;
+  assignedTechnicianId?: string;
+}): boolean {
+  return Boolean(job.technicianId ?? job.assignedTechnicianId);
+}
+
 export function canUnassignJobTechnician(
   job: {
     technicianId?: string;
@@ -103,13 +110,9 @@ export function canUnassignJobTechnician(
   },
   canDispatchJobs: boolean,
 ): boolean {
-  const hasTechnician = Boolean(
-    job.technicianId ?? job.assignedTechnicianId,
-  );
-
   return (
     canDispatchJobs &&
-    hasTechnician &&
+    hasAssignedJobTechnician(job) &&
     job.status !== "completed" &&
     job.status !== "cancelled"
   );

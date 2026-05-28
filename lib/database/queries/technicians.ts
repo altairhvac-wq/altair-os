@@ -33,7 +33,10 @@ function deriveTechnicianStatus(
 
   if (
     assignedJobs.some(
-      (job) => job.status === "in_progress" || job.status === "arrived",
+      (job) =>
+        job.status === "dispatched" ||
+        job.status === "arrived" ||
+        job.status === "in_progress",
     )
   ) {
     return "on_job";

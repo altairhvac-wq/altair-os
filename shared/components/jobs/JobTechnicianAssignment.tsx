@@ -6,6 +6,7 @@ import { User, UserMinus, UserPlus } from "lucide-react";
 import { assignJobAction, unassignJobAction } from "@/app/actions/dispatch";
 import {
   canUnassignJobTechnician,
+  hasAssignedJobTechnician,
   type DispatchJobStatus,
   type Technician,
 } from "@/shared/types/dispatch";
@@ -37,7 +38,7 @@ export function JobTechnicianAssignment({
     null,
   );
   const [isPending, startTransition] = useTransition();
-  const isAssigned = Boolean(assignedTechnicianId);
+  const isAssigned = hasAssignedJobTechnician({ assignedTechnicianId });
   const showUnassign = canUnassignJobTechnician(
     { assignedTechnicianId, status: jobStatus },
     canAssign,

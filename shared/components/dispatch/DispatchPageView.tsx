@@ -6,6 +6,7 @@ import { assignJobAction, unassignJobAction } from "@/app/actions/dispatch";
 import {
   filterDispatchJobs,
   getDispatchSummary,
+  hasAssignedJobTechnician,
   type DispatchJob,
   type DispatchJobStatus,
   type Technician,
@@ -63,7 +64,27 @@ export function DispatchPageView({
   const [jobs, setJobs] = useState(initialJobs);
 
   useEffect(() => {
-    setJobs(initialJobs);
+    setJobs((previous) => {
+      const previousById = new Map(previous.map((job) => [job.id, job]));
+
+      return initialJobs.map((serverJob) => {
+        const localJob = previousById.get(serverJob.id);
+
+        if (
+          localJob &&
+          hasAssignedJobTechnician(localJob) &&
+          !hasAssignedJobTechnician(serverJob) &&
+          localJob.status === serverJob.status
+        ) {
+          return {
+            ...serverJob,
+            technicianId: localJob.technicianId,
+          };
+        }
+
+        return serverJob;
+      });
+    });
   }, [initialJobs]);
 
   const [search, setSearch] = useState("");
