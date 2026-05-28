@@ -15,8 +15,11 @@ import {
   recordEstimateEmailResentActivity,
   recordEstimateStatusChangedActivity,
 } from "@/lib/database/services/estimate-activity";
+import { createEstimateApprovalTokenForEmail } from "@/lib/database/queries/estimate-approval-tokens";
+import { getAppBaseUrl } from "@/lib/email/env";
 import { sendEstimateEmail, toBillingEmailDelivery } from "@/lib/email/billing-send";
 import type { BillingEmailDelivery } from "@/lib/email/billing-send";
+import { buildEstimateApprovalUrl } from "@/shared/lib/estimate-approval-link";
 import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
 import { isValidEmail } from "@/shared/lib/email-validation";
 import {
@@ -28,6 +31,37 @@ import {
   type EstimateStatus,
 } from "@/shared/types/estimate";
 import { applyEstimateCreationDefaults } from "@/shared/lib/company-billing-defaults";
+
+const MISSING_APP_URL_MESSAGE =
+  "App URL is not configured. Set NEXT_PUBLIC_APP_URL (or deploy on Vercel) before sending estimate approval links.";
+
+async function buildEstimateApprovalEmailUrl(input: {
+  companyId: string;
+  estimateId: string;
+  customerEmail: string;
+  createdBy: string;
+}): Promise<{ approvalUrl?: string; error?: string }> {
+  const appBaseUrl = getAppBaseUrl();
+
+  if (!appBaseUrl) {
+    return { error: MISSING_APP_URL_MESSAGE };
+  }
+
+  const { rawToken, error } = await createEstimateApprovalTokenForEmail({
+    companyId: input.companyId,
+    estimateId: input.estimateId,
+    customerEmail: input.customerEmail,
+    createdBy: input.createdBy,
+  });
+
+  if (error || !rawToken) {
+    return { error: error ?? "Failed to create estimate approval link." };
+  }
+
+  return {
+    approvalUrl: buildEstimateApprovalUrl(appBaseUrl, rawToken),
+  };
+}
 
 export type CreateEstimateActionResult = {
   error?: string;
@@ -151,6 +185,31 @@ export async function updateEstimateStatusAction(
       return { error: statusError ?? "We couldn't mark this estimate as sent. Try again." };
     }
 
+    const approvalLink = await buildEstimateApprovalEmailUrl({
+      companyId: context.company.id,
+      estimateId,
+      customerEmail,
+      createdBy: context.user.id,
+    });
+
+    if (approvalLink.error) {
+      const { error: revertError } = await updateEstimateStatus(
+        context.company.id,
+        estimateId,
+        "sent",
+        "draft",
+      );
+
+      if (revertError) {
+        console.error(
+          "[updateEstimateStatusAction] failed to revert estimate after approval link failure:",
+          { estimateId, revertError },
+        );
+      }
+
+      return { error: approvalLink.error };
+    }
+
     const emailResult = await sendEstimateEmail({
       to: customerEmail,
       company: mapCompanyRowToBillingContact(context.company),
@@ -169,6 +228,7 @@ export async function updateEstimateStatusAction(
         unitPrice: item.unitPrice,
       })),
       notes: currentEstimate.notes,
+      approvalUrl: approvalLink.approvalUrl,
     });
 
     if (!emailResult.ok) {
@@ -296,6 +356,17 @@ export async function resendEstimateEmailAction(
     };
   }
 
+  const approvalLink = await buildEstimateApprovalEmailUrl({
+    companyId: context.company.id,
+    estimateId,
+    customerEmail,
+    createdBy: context.user.id,
+  });
+
+  if (approvalLink.error) {
+    return { error: approvalLink.error };
+  }
+
   const emailResult = await sendEstimateEmail({
     to: customerEmail,
     company: mapCompanyRowToBillingContact(context.company),
@@ -314,6 +385,7 @@ export async function resendEstimateEmailAction(
       unitPrice: item.unitPrice,
     })),
     notes: currentEstimate.notes,
+    approvalUrl: approvalLink.approvalUrl,
   });
 
   if (!emailResult.ok) {

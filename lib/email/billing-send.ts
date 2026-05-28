@@ -73,6 +73,7 @@ type SendEstimateEmailInput = {
   timeZone?: string;
   lineItems: BillingLineItem[];
   notes?: string;
+  approvalUrl?: string;
 };
 
 type SendInvoiceEmailInput = {
@@ -321,6 +322,35 @@ function wrapBillingEmailHtml(content: string): string {
   `.trim();
 }
 
+function formatEstimateApprovalCtaText(approvalUrl: string): string {
+  return [
+    "",
+    "Review and sign online:",
+    approvalUrl,
+  ].join("\n");
+}
+
+function formatEstimateApprovalCtaHtml(approvalUrl: string): string {
+  const safeUrl = escapeHtml(approvalUrl);
+
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 0;border-collapse:collapse;">
+      <tr>
+        <td>
+          <a href="${safeUrl}" style="display:inline-block;background:#0f766e;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 22px;border-radius:8px;">
+            Review &amp; Sign Estimate
+          </a>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-top:10px;color:#71717a;font-size:12px;line-height:1.5;">
+          Secure link to review this estimate and approve with your signature.
+        </td>
+      </tr>
+    </table>
+  `.trim();
+}
+
 function buildBillingEmailDeliveryOptions(
   company: BillingEmailCompanyInput,
 ): {
@@ -354,6 +384,13 @@ export async function sendEstimateEmail(
     companyName,
     deliveryOptions.hasReplyTo,
   );
+  const approvalUrl = input.approvalUrl?.trim();
+  const approvalCtaText = approvalUrl
+    ? formatEstimateApprovalCtaText(approvalUrl)
+    : null;
+  const approvalCtaHtml = approvalUrl
+    ? formatEstimateApprovalCtaHtml(approvalUrl)
+    : "";
   const totalsText = formatTotalsText({
     subtotal: input.subtotal,
     taxRate: input.taxRate,
@@ -365,6 +402,9 @@ export async function sendEstimateEmail(
     `Hello ${input.customerName},`,
     "",
     `${companyName} sent you estimate ${input.estimateNumber}.`,
+    approvalUrl
+      ? "Use the secure link below to review and sign this estimate online."
+      : null,
     "",
     `Issued: ${formatDate(input.issuedDate, input.timeZone)}`,
     validUntilLine,
@@ -374,8 +414,9 @@ export async function sendEstimateEmail(
     "Line items:",
     formatLineItemsText(input.lineItems),
     notesText ? `\nNotes:\n${notesText}` : null,
-    "",
-    formatBillingSignatureBlockText("estimate"),
+    approvalCtaText,
+    approvalUrl ? null : "",
+    approvalUrl ? null : formatBillingSignatureBlockText("estimate"),
     companyContactText ? `\n${companyName}\n${companyContactText}` : null,
     "",
     footer.text,
@@ -390,7 +431,8 @@ export async function sendEstimateEmail(
       <div style="margin-top:4px;color:#52525b;font-size:14px;">from ${escapeHtml(companyName)}</div>
     </div>
     <p style="margin:0 0 16px;color:#18181b;font-size:15px;line-height:1.5;">Hello ${escapeHtml(input.customerName)},</p>
-    <p style="margin:0 0 16px;color:#3f3f46;font-size:14px;line-height:1.6;">Please review the estimate details below. If you have questions, ${deliveryOptions.hasReplyTo ? "reply to this email" : "use the contact information below"}.</p>
+    <p style="margin:0 0 16px;color:#3f3f46;font-size:14px;line-height:1.6;">${approvalUrl ? "Please review the estimate below, then use the secure button to sign and approve online." : `Please review the estimate details below. If you have questions, ${deliveryOptions.hasReplyTo ? "reply to this email" : "use the contact information below"}.`}</p>
+    ${approvalCtaHtml}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fafafa;border:1px solid #e4e4e7;">
       <tr>
         <td style="padding:14px 16px;">
@@ -411,7 +453,7 @@ export async function sendEstimateEmail(
       total: input.total,
     })}
     ${notesText ? `<div style="margin-top:20px;"><div style="color:#71717a;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Notes</div><div style="color:#3f3f46;font-size:14px;line-height:1.6;">${formatMultilineHtml(notesText)}</div></div>` : ""}
-    ${formatBillingSignatureBlockHtml("estimate")}
+    ${approvalUrl ? "" : formatBillingSignatureBlockHtml("estimate")}
     ${formatCompanyContactHtml(input.company)}
     ${footer.html}
   `.trim();

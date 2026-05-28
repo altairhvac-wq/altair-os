@@ -788,6 +788,39 @@ export type BillingSignatureUpdate = Partial<
   Omit<BillingSignatureInsert, "company_id" | "entity_type" | "entity_id">
 >;
 
+export type EstimateApprovalTokenRow = {
+  id: UUID;
+  company_id: UUID;
+  estimate_id: UUID;
+  token_hash: string;
+  customer_email: string;
+  expires_at: Timestamp;
+  used_at: Timestamp | null;
+  revoked_at: Timestamp | null;
+  created_by: UUID | null;
+  created_at: Timestamp;
+};
+
+export type EstimateApprovalTokenInsert = {
+  id?: UUID;
+  company_id: UUID;
+  estimate_id: UUID;
+  token_hash: string;
+  customer_email: string;
+  expires_at: Timestamp;
+  used_at?: Timestamp | null;
+  revoked_at?: Timestamp | null;
+  created_by?: UUID | null;
+  created_at?: Timestamp;
+};
+
+export type EstimateApprovalTokenUpdate = Partial<
+  Omit<
+    EstimateApprovalTokenInsert,
+    "company_id" | "estimate_id" | "token_hash"
+  >
+>;
+
 export type TimeEntryRow = {
   id: UUID;
   company_id: UUID;

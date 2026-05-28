@@ -10,6 +10,7 @@ import { getSupabaseEnv } from "./env";
 
 const AUTH_ROUTES = ["/login", "/signup"];
 const AUTH_CALLBACK_ROUTE = "/auth/callback";
+const ESTIMATE_APPROVAL_ROUTE_PREFIX = "/estimate-approval";
 
 function isAuthRoute(pathname: string) {
   return AUTH_ROUTES.some(
@@ -17,9 +18,18 @@ function isAuthRoute(pathname: string) {
   );
 }
 
+function isEstimateApprovalRoute(pathname: string) {
+  return (
+    pathname === ESTIMATE_APPROVAL_ROUTE_PREFIX ||
+    pathname.startsWith(`${ESTIMATE_APPROVAL_ROUTE_PREFIX}/`)
+  );
+}
+
 function isPublicRoute(pathname: string) {
   return (
-    isAuthRoute(pathname) || pathname === AUTH_CALLBACK_ROUTE
+    isAuthRoute(pathname) ||
+    pathname === AUTH_CALLBACK_ROUTE ||
+    isEstimateApprovalRoute(pathname)
   );
 }
 

@@ -19,6 +19,9 @@ import type {
   BillingSignatureInsert,
   BillingSignatureRow,
   BillingSignatureUpdate,
+  EstimateApprovalTokenInsert,
+  EstimateApprovalTokenRow,
+  EstimateApprovalTokenUpdate,
   EstimateActivityInsert,
   EstimateActivityRow,
   EstimateInsert,
@@ -552,6 +555,34 @@ export type Database = {
           },
         ];
       };
+      estimate_approval_tokens: {
+        Row: EstimateApprovalTokenRow;
+        Insert: EstimateApprovalTokenInsert;
+        Update: EstimateApprovalTokenUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "estimate_approval_tokens_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "estimate_approval_tokens_estimate_id_fkey";
+            columns: ["estimate_id"];
+            isOneToOne: false;
+            referencedRelation: "estimates";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "estimate_approval_tokens_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       estimate_activities: {
         Row: EstimateActivityRow;
         Insert: EstimateActivityInsert;
@@ -842,6 +873,21 @@ export type Database = {
           p_final_status: DispatchAssignmentRow["status"];
         };
         Returns: undefined;
+      };
+      get_public_estimate_approval_view: {
+        Args: {
+          p_raw_token: string;
+        };
+        Returns: Json;
+      };
+      submit_public_estimate_approval: {
+        Args: {
+          p_raw_token: string;
+          p_signer_name: string;
+          p_signature_data: string;
+          p_authorized: boolean;
+        };
+        Returns: Json;
       };
     };
     Enums: {

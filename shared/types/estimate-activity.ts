@@ -20,6 +20,8 @@ export type EstimateActivityMetadata = {
   job_number?: string;
   invoice_id?: string;
   invoice_number?: string;
+  approval_source?: "public_link";
+  signer_name?: string;
 };
 
 export type EstimateActivity = {
@@ -82,6 +84,25 @@ export function formatEstimateActivityDetails(
     case "estimate_declined":
     case "estimate_cancelled":
     case "status_changed": {
+      if (
+        eventType === "estimate_approved" &&
+        metadata.approval_source === "public_link"
+      ) {
+        const parts: string[] = ["Approved by customer"];
+        if (metadata.signer_name) {
+          parts.push(metadata.signer_name);
+        }
+        if (metadata.estimate_number) {
+          parts.push(`Estimate ${metadata.estimate_number}`);
+        }
+        if (metadata.from_status && metadata.to_status) {
+          parts.push(
+            `${formatEstimateStatus(metadata.from_status)} → ${formatEstimateStatus(metadata.to_status)}`,
+          );
+        }
+        return parts.join(" · ");
+      }
+
       if (eventType === "estimate_sent") {
         const statusLine =
           metadata.from_status && metadata.to_status
@@ -117,6 +138,15 @@ export function formatEstimateActivityAttribution(
   if (activity.actorName) {
     return `by ${activity.actorName}`;
   }
+
+  if (
+    activity.eventType === "estimate_approved" &&
+    activity.metadata.approval_source === "public_link" &&
+    activity.metadata.signer_name
+  ) {
+    return `by ${activity.metadata.signer_name}`;
+  }
+
   return null;
 }
 
