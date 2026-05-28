@@ -25,6 +25,13 @@ export type ResendSendResult =
       missingEnv: string[];
       message: string;
     }
+  | { ok: false; reason: "invalid_recipient"; message: string }
+  | {
+      ok: false;
+      reason: "recipient_override_invalid";
+      message: string;
+      overrideEnv?: string;
+    }
   | { ok: false; reason: "provider_error"; message: string };
 
 type SendViaResendInput = {
@@ -37,6 +44,21 @@ type SendViaResendInput = {
   replyTo?: string;
 };
 
+function escapeDisplayName(displayName: string): string {
+  return displayName.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+function formatDisplayName(displayName: string): string {
+  const trimmedName = displayName.trim();
+  const needsQuoting = /[,;"<>()[\]]/.test(trimmedName) || trimmedName.includes("@");
+
+  if (!needsQuoting) {
+    return trimmedName;
+  }
+
+  return `"${escapeDisplayName(trimmedName)}"`;
+}
+
 function buildFromAddress(from: string, displayName?: string): string {
   const trimmedName = displayName?.trim();
 
@@ -47,7 +69,7 @@ function buildFromAddress(from: string, displayName?: string): string {
   const emailMatch = from.match(/<([^>]+)>/);
   const email = emailMatch?.[1]?.trim() || from.trim();
 
-  return `${trimmedName} <${email}>`;
+  return `${formatDisplayName(trimmedName)} <${email}>`;
 }
 
 export async function sendViaResend(
@@ -79,13 +101,24 @@ export async function sendViaResend(
   const resolved = resolveEmailRecipient(input.to);
 
   if (!resolved.ok) {
-    console.error(`[${input.logContext}] invalid recipient:`, {
+    console.error(`[${input.logContext}] recipient resolution failed before provider send:`, {
+      reason: resolved.reason,
       error: resolved.error,
+      overrideEnv: resolved.overrideEnv ?? null,
     });
+
+    if (resolved.reason === "recipient_override_invalid") {
+      return {
+        ok: false,
+        reason: "recipient_override_invalid",
+        message: resolved.error,
+        overrideEnv: resolved.overrideEnv,
+      };
+    }
 
     return {
       ok: false,
-      reason: "provider_error",
+      reason: "invalid_recipient",
       message: resolved.error,
     };
   }

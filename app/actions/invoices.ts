@@ -27,6 +27,7 @@ import {
   recordInvoiceUpdatedActivity,
 } from "@/lib/database/services/invoice-activity";
 import { recordEstimateStatusChangedActivity } from "@/lib/database/services/estimate-activity";
+import { getBillingEmailFailureUserMessage } from "@/lib/email/billing-failure";
 import { sendInvoiceEmail, toBillingEmailDelivery } from "@/lib/email/billing-send";
 import type { BillingEmailDelivery } from "@/lib/email/billing-send";
 import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
@@ -312,12 +313,28 @@ export async function sendInvoiceAction(
   });
 
   if (!emailResult.ok) {
+    console.error(
+      "[sendInvoiceAction] invoice email failed before or at provider:",
+      {
+        invoiceId,
+        reason: emailResult.reason,
+        message: emailResult.message,
+        reachedProvider: emailResult.reason === "provider_error",
+      },
+    );
+
     const { error: revertError } = await updateInvoiceStatus(
       context.company.id,
       invoiceId,
       "sent",
       "draft",
     );
+
+    const emailDelivery = toBillingEmailDelivery(emailResult);
+    const classifiedError = getBillingEmailFailureUserMessage(emailResult, {
+      document: "invoice",
+      mode: "send",
+    });
 
     if (revertError) {
       console.error("[sendInvoiceAction] failed to revert invoice after email failure:", {
@@ -327,11 +344,11 @@ export async function sendInvoiceAction(
       return {
         error:
           "Invoice could not be sent by email, and the status could not be reverted safely. Refresh the page and verify the invoice status before retrying.",
-        emailDelivery: toBillingEmailDelivery(emailResult),
+        emailDelivery,
       };
     }
 
-    return { emailDelivery: toBillingEmailDelivery(emailResult) };
+    return { error: classifiedError, emailDelivery };
   }
 
   const invoice = sentInvoice;
@@ -444,7 +461,25 @@ export async function resendInvoiceEmailAction(
   });
 
   if (!emailResult.ok) {
-    return { emailDelivery: toBillingEmailDelivery(emailResult) };
+    console.error(
+      "[resendInvoiceEmailAction] invoice email failed before or at provider:",
+      {
+        invoiceId,
+        reason: emailResult.reason,
+        message: emailResult.message,
+        reachedProvider: emailResult.reason === "provider_error",
+      },
+    );
+
+    const emailDelivery = toBillingEmailDelivery(emailResult);
+
+    return {
+      error: getBillingEmailFailureUserMessage(emailResult, {
+        document: "invoice",
+        mode: "resend",
+      }),
+      emailDelivery,
+    };
   }
 
   await recordInvoiceEmailResentActivity({

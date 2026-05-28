@@ -20,9 +20,18 @@ export type ResolvedEmailRecipient = {
   overrideEnv?: string;
 };
 
+export type ResolveEmailRecipientFailureReason =
+  | "invalid_recipient"
+  | "recipient_override_invalid";
+
 export type ResolveEmailRecipientResult =
   | { ok: true; recipient: ResolvedEmailRecipient }
-  | { ok: false; error: string };
+  | {
+      ok: false;
+      reason: ResolveEmailRecipientFailureReason;
+      error: string;
+      overrideEnv?: string;
+    };
 
 export function readEmailRecipientOverrideEnv(): {
   value: string | null;
@@ -73,7 +82,11 @@ export function resolveEmailRecipient(intendedTo: string): ResolveEmailRecipient
   const intendedRecipient = intendedTo.trim();
 
   if (!intendedRecipient || !isValidEmail(intendedRecipient)) {
-    return { ok: false, error: "Recipient email address is not valid." };
+    return {
+      ok: false,
+      reason: "invalid_recipient",
+      error: "Recipient email address is not valid.",
+    };
   }
 
   const { value: override, envName, legacyEnvNames } =
@@ -93,7 +106,9 @@ export function resolveEmailRecipient(intendedTo: string): ResolveEmailRecipient
   if (!isValidEmail(override)) {
     return {
       ok: false,
+      reason: "recipient_override_invalid",
       error: `${envName} is set but is not a valid email address.`,
+      overrideEnv: envName,
     };
   }
 

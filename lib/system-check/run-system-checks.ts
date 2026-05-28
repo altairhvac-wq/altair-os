@@ -1,4 +1,7 @@
 import { isAlphaHardeningEnabled } from "@/lib/beta/alpha-hardening";
+import { readEmailRecipientOverrideEnv } from "@/lib/email/recipient";
+import { resolveAppBaseUrl } from "@/lib/email/env";
+import { isValidEmail } from "@/shared/lib/email-validation";
 import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
@@ -77,6 +80,30 @@ function checkOutboundEmailConfig(): SystemCheckResult {
     "RESEND_TEST_EMAIL",
     "EMAIL_OVERRIDE_TO",
   ].filter((name) => Boolean(process.env[name]?.trim()));
+  const { value: overrideValue, envName: overrideEnvName } =
+    readEmailRecipientOverrideEnv();
+
+  if (overrideValue && overrideEnvName && !isValidEmail(overrideValue)) {
+    return {
+      id: "env-outbound-email",
+      label: "Outbound email (Resend)",
+      status: "fail",
+      message: `${overrideEnvName} is set but is not a valid email address.`,
+      hint: "Fix or remove the override env var. Invalid overrides block estimate and invoice sends before Resend is called.",
+    };
+  }
+
+  const appUrl = resolveAppBaseUrl();
+
+  if (appUrl.ok === false && appUrl.reason === "invalid") {
+    return {
+      id: "env-outbound-email",
+      label: "Outbound email (Resend)",
+      status: "fail",
+      message: "NEXT_PUBLIC_APP_URL is set but is not a valid URL.",
+      hint: "Use a full URL with https:// (for example, https://your-app.vercel.app). Estimate approval links require this.",
+    };
+  }
 
   if (recipientOverrideEnvs.length > 0 && process.env.NODE_ENV === "production") {
     return {

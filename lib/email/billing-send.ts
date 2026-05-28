@@ -1,4 +1,8 @@
 import {
+  getBillingEmailFailureCode,
+  type BillingEmailFailureCode,
+} from "@/lib/email/billing-failure";
+import {
   sendViaResend,
   type EmailRecipientRedirect,
   type ResendSendResult,
@@ -27,6 +31,7 @@ export type BillingEmailDeliveryStatus =
 
 export type BillingEmailDelivery = {
   status: BillingEmailDeliveryStatus;
+  failureCode?: BillingEmailFailureCode;
   message?: string;
   missingEnv?: string[];
   recipientRedirect?: EmailRecipientRedirect;
@@ -46,13 +51,17 @@ export function toBillingEmailDelivery(
   if (emailResult.reason === "not_configured") {
     return {
       status: "not_configured",
+      failureCode: "email_configuration_missing",
       message: emailResult.message,
       missingEnv: emailResult.missingEnv,
     };
   }
 
+  const failureCode = getBillingEmailFailureCode(emailResult);
+
   return {
     status: "failed",
+    failureCode,
     message: emailResult.message,
   };
 }

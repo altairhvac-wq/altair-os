@@ -42,20 +42,71 @@ export function getResendEmailEnv(): EmailEnvCheck {
   };
 }
 
-export function getAppBaseUrl(): string | null {
+function stripTrailingSlash(value: string): string {
+  return value.replace(/\/$/, "");
+}
+
+/** Normalize host-only or scheme-less values into an absolute http(s) URL. */
+export function normalizeAppBaseUrl(raw: string): string | null {
+  const trimmed = stripTrailingSlash(raw.trim());
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const url = new URL(trimmed);
+      if (!url.hostname) {
+        return null;
+      }
+      return stripTrailingSlash(url.toString());
+    } catch {
+      return null;
+    }
+  }
+
+  const hostOnly = trimmed.replace(/^\/+/, "");
+  const protocol = /^localhost(?::\d+)?$/i.test(hostOnly) ? "http" : "https";
+
+  try {
+    const url = new URL(`${protocol}://${hostOnly}`);
+    if (!url.hostname) {
+      return null;
+    }
+    return stripTrailingSlash(url.toString());
+  } catch {
+    return null;
+  }
+}
+
+export type AppBaseUrlResolution =
+  | { ok: true; url: string }
+  | { ok: false; reason: "missing" | "invalid" };
+
+export function resolveAppBaseUrl(): AppBaseUrlResolution {
   const explicit = process.env[NEXT_PUBLIC_APP_URL_ENV]?.trim();
 
   if (explicit) {
-    return explicit.replace(/\/$/, "");
+    const normalized = normalizeAppBaseUrl(explicit);
+    if (!normalized) {
+      return { ok: false, reason: "invalid" };
+    }
+    return { ok: true, url: normalized };
   }
 
   const vercel = process.env.VERCEL_URL?.trim();
 
   if (vercel) {
-    return `https://${vercel.replace(/\/$/, "")}`;
+    return { ok: true, url: `https://${stripTrailingSlash(vercel)}` };
   }
 
-  return null;
+  return { ok: false, reason: "missing" };
+}
+
+export function getAppBaseUrl(): string | null {
+  const resolved = resolveAppBaseUrl();
+  return resolved.ok ? resolved.url : null;
 }
 
 export function getMissingInviteEmailEnvVars(): string[] {
