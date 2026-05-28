@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
 import { canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import { listCustomers } from "@/lib/database/queries/customers";
 import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import { InvoicesPageView } from "@/shared/components/invoices/InvoicesPageView";
+import { getInvoiceCreateInitialData } from "@/shared/lib/company-billing-defaults";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { parseInvoicePageSearchParams } from "@/shared/lib/invoice-page-focus";
 
@@ -79,6 +81,17 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
 
   const shouldOpenCreate =
     create === "1" && Boolean(preselectedCustomer ?? validJob);
+  const billingDefaults = getCompanyBillingDefaultsFromRow(companyContext.company);
+  const createInitialData = getInvoiceCreateInitialData(
+    billingDefaults,
+    companyContext.company.timezone,
+    preselectedCustomer || validJob
+      ? {
+          customerId: preselectedCustomer?.id ?? validJob!.customerId,
+          jobId: validJob?.id ?? "",
+        }
+      : undefined,
+  );
 
   return (
     <InvoicesPageView
@@ -88,14 +101,7 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
       serviceItems={serviceItems}
       canManageInvoices={companyContext.permissions.manageBilling}
       initialPanelMode={shouldOpenCreate ? "create" : "empty"}
-      createInitialData={
-        preselectedCustomer || validJob
-          ? {
-              customerId: preselectedCustomer?.id ?? validJob!.customerId,
-              jobId: validJob?.id ?? "",
-            }
-          : undefined
-      }
+      createInitialData={createInitialData}
       initialJobId={validJob?.id}
       initialJobLabel={validJob?.jobNumber}
       initialCreateMode={create === "1"}

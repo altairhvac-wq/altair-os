@@ -4,11 +4,13 @@ import { shouldShowAlphaComingSoon } from "@/lib/beta/alpha-hardening";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { ComingSoonView } from "@/shared/components/layout/ComingSoonView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
+import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import { listCustomers } from "@/lib/database/queries/customers";
 import { listEstimates } from "@/lib/database/queries/estimates";
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import { EstimatesPageView } from "@/shared/components/estimates/EstimatesPageView";
+import { getEstimateCreateInitialData } from "@/shared/lib/company-billing-defaults";
 
 type EstimatesPageProps = {
   searchParams: Promise<{ customerId?: string; create?: string }>;
@@ -50,6 +52,12 @@ export default async function EstimatesPage({
   const preselectedCustomer = customerId
     ? customers.find((customer) => customer.id === customerId)
     : undefined;
+  const billingDefaults = getCompanyBillingDefaultsFromRow(companyContext.company);
+  const createInitialData = getEstimateCreateInitialData(
+    billingDefaults,
+    companyContext.company.timezone,
+    preselectedCustomer ? { customerId: preselectedCustomer.id } : undefined,
+  );
 
   return (
     <EstimatesPageView
@@ -59,11 +67,7 @@ export default async function EstimatesPage({
       serviceItems={serviceItems}
       canManageEstimates={companyContext.permissions.manageBilling}
       initialPanelMode={create === "1" && preselectedCustomer ? "create" : "empty"}
-      createInitialData={
-        preselectedCustomer
-          ? { customerId: preselectedCustomer.id }
-          : undefined
-      }
+      createInitialData={createInitialData}
     />
   );
 }

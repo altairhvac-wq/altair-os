@@ -87,6 +87,8 @@ export function Header({
         <NotificationBell
           initialNotifications={notifications}
           initialUnreadCount={unreadNotificationCount}
+          canManageCustomers={companyContext.permissions.manageCustomers}
+          canViewBilling={companyContext.permissions.manageBilling}
         />
         <div className="flex items-center gap-2 border-l border-slate-200 pl-2 sm:ml-2 sm:gap-3 sm:pl-4">
           <CompanySwitcher

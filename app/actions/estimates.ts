@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import {
   createEstimate,
   getEstimateById,
@@ -20,6 +21,7 @@ import {
   type EstimateFormData,
   type EstimateStatus,
 } from "@/shared/types/estimate";
+import { applyEstimateCreationDefaults } from "@/shared/lib/company-billing-defaults";
 
 export type CreateEstimateActionResult = {
   error?: string;
@@ -39,9 +41,16 @@ export async function createEstimateAction(
     return { error: "You do not have permission to create estimates." };
   }
 
+  const billingDefaults = getCompanyBillingDefaultsFromRow(context.company);
+  const normalizedData = applyEstimateCreationDefaults(
+    data,
+    billingDefaults,
+    context.company.timezone,
+  );
+
   const { estimate, error } = await createEstimate(
     context.company.id,
-    data,
+    normalizedData,
     context.company.timezone,
   );
 

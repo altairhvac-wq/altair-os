@@ -11,11 +11,15 @@ import { NotificationListItem } from "./NotificationListItem";
 type NotificationBellProps = {
   initialNotifications: Notification[];
   initialUnreadCount: number;
+  canManageCustomers?: boolean;
+  canViewBilling?: boolean;
 };
 
 export function NotificationBell({
   initialNotifications,
   initialUnreadCount,
+  canManageCustomers = true,
+  canViewBilling = true,
 }: NotificationBellProps) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -112,6 +116,8 @@ export function NotificationBell({
                   key={notification.id}
                   notification={notification}
                   onRead={handleNotificationRead}
+                  canManageCustomers={canManageCustomers}
+                  canViewBilling={canViewBilling}
                 />
               ))
             )}

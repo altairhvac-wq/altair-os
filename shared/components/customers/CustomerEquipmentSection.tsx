@@ -15,6 +15,7 @@ import {
   getWarrantyStatus,
   getWarrantyStatusStyles,
   mapCustomerEquipmentToFormData,
+  validateCustomerEquipmentFormData,
   type CustomerEquipment,
   type CustomerEquipmentFormData,
 } from "@/shared/types/customer-equipment";
@@ -67,6 +68,12 @@ export function CustomerEquipmentSection({
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+
+    const validationError = validateCustomerEquipmentFormData(formData);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
 
     startTransition(async () => {
       const result = editingEquipment

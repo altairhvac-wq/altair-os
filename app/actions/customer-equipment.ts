@@ -10,6 +10,7 @@ import {
   updateCustomerEquipment,
 } from "@/lib/database/queries/customer-equipment";
 import { getJobById, listAssignedJobs } from "@/lib/database/queries/jobs";
+import { getCustomerById } from "@/lib/database/queries/customers";
 import {
   recordEquipmentAddedActivity,
   recordEquipmentUpdatedActivity,
@@ -19,6 +20,8 @@ import type {
   CustomerEquipment,
   CustomerEquipmentFormData,
 } from "@/shared/types/customer-equipment";
+import { validateCustomerEquipmentFormData } from "@/shared/types/customer-equipment";
+import { isTerminalJobStatus } from "@/shared/types/job-workflow";
 
 export type CustomerEquipmentActionResult = {
   error?: string;
@@ -115,6 +118,12 @@ async function assertEquipmentWritePermission(input: {
     };
   }
 
+  if (isTerminalJobStatus(job.status)) {
+    return {
+      error: "Equipment cannot be changed on completed or cancelled jobs.",
+    };
+  }
+
   return { jobNumber: job.jobNumber };
 }
 
@@ -190,6 +199,16 @@ export async function createCustomerEquipmentAction(
     return { error: "Equipment name is required." };
   }
 
+  const validationError = validateCustomerEquipmentFormData(data);
+  if (validationError) {
+    return { error: validationError };
+  }
+
+  const customer = await getCustomerById(context.company.id, customerId);
+  if (!customer) {
+    return { error: "Customer not found." };
+  }
+
   const permission = await assertEquipmentWritePermission({ customerId, jobId });
 
   if (permission.error) {
@@ -233,6 +252,11 @@ export async function updateCustomerEquipmentAction(
 
   if (!data.name.trim()) {
     return { error: "Equipment name is required." };
+  }
+
+  const validationError = validateCustomerEquipmentFormData(data);
+  if (validationError) {
+    return { error: validationError };
   }
 
   const existing = await getCustomerEquipmentById(

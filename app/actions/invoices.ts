@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import { getEstimateById } from "@/lib/database/queries/estimates";
 import {
   convertEstimateToInvoice,
@@ -36,6 +37,7 @@ import {
   canResendInvoiceEmail,
   getSendInvoiceJobBlockReason,
 } from "@/shared/types/invoice";
+import { applyInvoiceCreationDefaults } from "@/shared/lib/company-billing-defaults";
 
 export type { BillingEmailDelivery } from "@/lib/email/billing-send";
 
@@ -57,10 +59,17 @@ export async function createInvoiceAction(
     return { error: "You do not have permission to create invoices." };
   }
 
+  const billingDefaults = getCompanyBillingDefaultsFromRow(context.company);
+  const normalizedData = applyInvoiceCreationDefaults(
+    data,
+    billingDefaults,
+    context.company.timezone,
+  );
+
   let reviewSnapshotBefore = null;
   let reviewJobStatus = null;
-  if (data.jobId) {
-    const job = await getJobById(context.company.id, data.jobId);
+  if (normalizedData.jobId) {
+    const job = await getJobById(context.company.id, normalizedData.jobId);
     if (job) {
       reviewJobStatus = job.status;
       reviewSnapshotBefore = await captureCompletedJobReviewSnapshot(
@@ -73,7 +82,7 @@ export async function createInvoiceAction(
 
   const { invoice, error } = await createInvoice(
     context.company.id,
-    data,
+    normalizedData,
     context.company.timezone,
   );
 

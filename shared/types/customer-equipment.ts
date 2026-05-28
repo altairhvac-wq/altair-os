@@ -124,3 +124,19 @@ export function getWarrantyStatusStyles(status: WarrantyStatus): string {
       return "bg-slate-100 text-slate-600 ring-slate-500/15";
   }
 }
+
+export function validateCustomerEquipmentFormData(
+  data: CustomerEquipmentFormData,
+): string | null {
+  if (!data.name.trim()) {
+    return "Equipment name is required.";
+  }
+
+  if (data.installDate && data.warrantyExpiresAt) {
+    if (data.warrantyExpiresAt < data.installDate) {
+      return "Warranty expiration must be on or after the install date.";
+    }
+  }
+
+  return null;
+}

@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import {
+  canAccessCompanySettings,
   canAccessSystemCheck,
   canManageTeamMembers,
 } from "@/lib/database/access-control";
+import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
@@ -61,6 +63,7 @@ export default async function SettingsPage() {
     buildOnboardingChecklist(onboardingSnapshot),
     companyContext,
   );
+  const billingDefaults = getCompanyBillingDefaultsFromRow(companyContext.company);
 
   return (
     <div className="min-w-0 max-w-full space-y-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
@@ -88,6 +91,8 @@ export default async function SettingsPage() {
         showSystemCheckLink={canAccessSystemCheck(companyContext)}
         membersLoadError={membersError}
         onboardingChecklist={onboardingChecklist}
+        billingDefaults={billingDefaults}
+        canManageBillingDefaults={canAccessCompanySettings(companyContext)}
       />
     </div>
   );

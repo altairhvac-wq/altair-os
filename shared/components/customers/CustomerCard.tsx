@@ -9,6 +9,7 @@ import {
 type CustomerCardProps = {
   customer: Customer;
   compact?: boolean;
+  showRevenueStats?: boolean;
 };
 
 const statusStyles: Record<Customer["status"], string> = {
@@ -17,7 +18,11 @@ const statusStyles: Record<Customer["status"], string> = {
   inactive: "bg-slate-100 text-slate-600 ring-slate-500/20",
 };
 
-export function CustomerCard({ customer, compact = false }: CustomerCardProps) {
+export function CustomerCard({
+  customer,
+  compact = false,
+  showRevenueStats = true,
+}: CustomerCardProps) {
   const location = `${customer.city}, ${customer.state}`;
 
   return (
@@ -63,19 +68,23 @@ export function CustomerCard({ customer, compact = false }: CustomerCardProps) {
       </div>
 
       {!compact ? (
-        <div className="mt-4 grid grid-cols-3 gap-3 border-t border-slate-100 pt-4">
+        <div
+          className={`mt-4 grid gap-3 border-t border-slate-100 pt-4 ${showRevenueStats ? "grid-cols-3" : "grid-cols-2"}`}
+        >
           <div>
             <p className="text-xs font-medium text-slate-500">Jobs</p>
             <p className="mt-0.5 text-lg font-bold text-slate-900">
               {customer.totalJobs}
             </p>
           </div>
-          <div>
-            <p className="text-xs font-medium text-slate-500">Revenue</p>
-            <p className="mt-0.5 text-lg font-bold text-slate-900">
-              {formatCurrency(customer.totalRevenue)}
-            </p>
-          </div>
+          {showRevenueStats ? (
+            <div>
+              <p className="text-xs font-medium text-slate-500">Revenue</p>
+              <p className="mt-0.5 text-lg font-bold text-slate-900">
+                {formatCurrency(customer.totalRevenue)}
+              </p>
+            </div>
+          ) : null}
           <div>
             <p className="text-xs font-medium text-slate-500">Last service</p>
             <p className="mt-0.5 text-sm font-semibold text-slate-900">

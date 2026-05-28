@@ -19,6 +19,8 @@ import {
 } from "@/shared/types/team-member";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
+import type { CompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
+import { BillingDocumentDefaultsCard } from "./BillingDocumentDefaultsCard";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
 import { SettingsFutureCard } from "./SettingsFutureCard";
 import { TeamInviteForm } from "./TeamInviteForm";
@@ -35,6 +37,8 @@ type SettingsPageViewProps = {
   showSystemCheckLink?: boolean;
   membersLoadError?: string;
   onboardingChecklist?: OnboardingChecklist;
+  billingDefaults: CompanyBillingDefaults;
+  canManageBillingDefaults: boolean;
 };
 
 function buildLocationLabel(profile: CompanyProfileSummary): string | null {
@@ -51,6 +55,8 @@ export function SettingsPageView({
   showSystemCheckLink = false,
   membersLoadError,
   onboardingChecklist,
+  billingDefaults,
+  canManageBillingDefaults,
 }: SettingsPageViewProps) {
   const [members, setMembers] = useState(initialMembers);
   const [search, setSearch] = useState("");
@@ -269,6 +275,22 @@ export function SettingsPageView({
         ) : null}
       </section>
 
+      <section className="min-w-0 space-y-4">
+        <div>
+          <h2 className="mb-1 text-lg font-bold text-slate-900">
+            Billing Document Defaults
+          </h2>
+          <p className="text-sm text-slate-600">
+            Configure default values applied when new estimates and invoices are
+            created.
+          </p>
+        </div>
+        <BillingDocumentDefaultsCard
+          initialDefaults={billingDefaults}
+          canManage={canManageBillingDefaults}
+        />
+      </section>
+
       <section>
         <h2 className="mb-1 text-lg font-bold text-slate-900">
           Workspace Preferences
@@ -315,7 +337,7 @@ export function SettingsPageView({
           />
           <SettingsFutureCard
             title="Company Preferences"
-            description="Company profile, branding, invoice defaults, and operational configuration."
+            description="Company profile, branding, and operational configuration."
             icon={Settings2}
           />
         </div>

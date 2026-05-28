@@ -12,12 +12,14 @@ type JobCustomerEquipmentSectionProps = {
   customerId: string;
   jobId: string;
   equipment: CustomerEquipment[];
+  canViewCustomerProfile?: boolean;
 };
 
 export function JobCustomerEquipmentSection({
   customerId,
   jobId,
   equipment,
+  canViewCustomerProfile = false,
 }: JobCustomerEquipmentSectionProps) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -36,12 +38,14 @@ export function JobCustomerEquipmentSection({
           </div>
         </div>
 
-        <Link
-          href={`/customers/${customerId}`}
-          className="text-sm font-semibold text-cyan-600 transition-colors hover:text-cyan-700"
-        >
-          View customer
-        </Link>
+        {canViewCustomerProfile ? (
+          <Link
+            href={`/customers/${customerId}`}
+            className="text-sm font-semibold text-cyan-600 transition-colors hover:text-cyan-700"
+          >
+            View customer
+          </Link>
+        ) : null}
       </div>
 
       {equipment.length === 0 ? (

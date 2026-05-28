@@ -31,6 +31,7 @@ export function CompleteJobEquipmentPanel({
   const [expanded, setExpanded] = useState(value.mode !== "none");
   const [equipment, setEquipment] = useState<CustomerEquipment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [formData, setFormData] = useState<CustomerEquipmentFormData>(
     EMPTY_CUSTOMER_EQUIPMENT_FORM,
   );
@@ -43,13 +44,20 @@ export function CompleteJobEquipmentPanel({
 
     let cancelled = false;
     setLoading(true);
+    setLoadError(null);
 
     listCustomerEquipmentAction(customerId).then((result) => {
       if (cancelled) {
         return;
       }
 
-      setEquipment(result.equipment ?? []);
+      if (result.error) {
+        setLoadError(result.error);
+        setEquipment([]);
+      } else {
+        setEquipment(result.equipment ?? []);
+      }
+
       setLoading(false);
     });
 
@@ -127,6 +135,10 @@ export function CompleteJobEquipmentPanel({
 
       {expanded ? (
         <div className="space-y-4 border-t border-slate-200 px-3.5 py-3.5">
+          {loadError ? (
+            <p className="text-sm text-red-600">{loadError}</p>
+          ) : null}
+
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
