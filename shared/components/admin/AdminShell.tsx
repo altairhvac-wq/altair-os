@@ -5,6 +5,7 @@ import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database
 import { PullToRefresh } from "@/shared/components/mobile/PullToRefresh";
 import { isPullToRefreshRoute } from "@/shared/components/mobile/is-pull-to-refresh-route";
 import { useMobileViewport } from "@/shared/components/mobile/use-mobile-viewport";
+import { useOwnerViewMode } from "@/shared/components/view-mode/useOwnerViewMode";
 import { getNavItemForPath } from "./nav-items";
 import { DesktopNav } from "./DesktopNav";
 import { MobileNav } from "./MobileNav";
@@ -28,9 +29,11 @@ export function AdminShell({
 }: AdminShellProps) {
   const pathname = usePathname();
   const isMobile = useMobileViewport();
+  const { isOwner, viewMode, setViewMode, navigationContext } =
+    useOwnerViewMode(companyContext);
   const pullToRefreshEnabled =
     isMobile && isPullToRefreshRoute(pathname);
-  const current = getNavItemForPath(pathname, companyContext);
+  const current = getNavItemForPath(pathname, navigationContext);
 
   return (
     <div className="admin-canvas flex min-h-dvh w-full min-w-0 max-w-full flex-col md:h-dvh md:overflow-hidden">
@@ -41,10 +44,13 @@ export function AdminShell({
         userCompanies={userCompanies}
         notifications={notifications}
         unreadNotificationCount={unreadNotificationCount}
+        showViewSwitcher={isOwner}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
 
-      <DesktopNav companyContext={companyContext} />
-      <MobileNav companyContext={companyContext} />
+      <DesktopNav companyContext={navigationContext} />
+      <MobileNav companyContext={navigationContext} />
 
       <main className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-clip p-4 sm:p-6 lg:p-8 md:overflow-y-auto">
         <PullToRefresh enabled={pullToRefreshEnabled}>

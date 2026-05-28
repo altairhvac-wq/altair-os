@@ -1,10 +1,14 @@
+"use client";
+
 import { Wrench } from "lucide-react";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { PullToRefresh } from "@/shared/components/mobile/PullToRefresh";
-import { TechnicianBottomNav } from "./TechnicianBottomNav";
 import { TechnicianNotificationBadgeProvider } from "@/shared/components/notifications/TechnicianNotificationBadgeContext";
 import { TechnicianNotificationLink } from "@/shared/components/notifications/TechnicianNotificationLink";
+import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
+import { useOwnerViewMode } from "@/shared/components/view-mode/useOwnerViewMode";
+import { TechnicianBottomNav } from "./TechnicianBottomNav";
 
 type TechnicianMobileShellProps = {
   children: React.ReactNode;
@@ -19,6 +23,9 @@ export function TechnicianMobileShell({
   userCompanies,
   unreadNotificationCount = 0,
 }: TechnicianMobileShellProps) {
+  const { isOwner, viewMode, setViewMode, navigationContext } =
+    useOwnerViewMode(companyContext);
+
   return (
     <TechnicianNotificationBadgeProvider
       initialUnreadCount={unreadNotificationCount}
@@ -38,6 +45,12 @@ export function TechnicianMobileShell({
                   variant="technician"
                 />
               </div>
+              {isOwner ? (
+                <OwnerViewSwitcher
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                />
+              ) : null}
               <TechnicianNotificationLink />
             </div>
           </header>
@@ -46,7 +59,7 @@ export function TechnicianMobileShell({
             <PullToRefresh>{children}</PullToRefresh>
           </main>
 
-          <TechnicianBottomNav companyContext={companyContext} />
+          <TechnicianBottomNav companyContext={navigationContext} />
         </div>
       </div>
     </TechnicianNotificationBadgeProvider>

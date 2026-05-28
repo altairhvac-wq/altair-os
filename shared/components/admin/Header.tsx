@@ -6,6 +6,8 @@ import { logoutAction } from "@/app/actions/auth";
 import { AlphaIndicator } from "@/shared/components/admin/AlphaIndicator";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
+import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
+import type { OwnerViewMode } from "@/shared/lib/owner-view-mode";
 import type { Notification } from "@/shared/types/notification";
 
 type HeaderProps = {
@@ -15,6 +17,9 @@ type HeaderProps = {
   userCompanies: MembershipWithCompany[];
   notifications?: Notification[];
   unreadNotificationCount?: number;
+  showViewSwitcher?: boolean;
+  viewMode?: OwnerViewMode;
+  onViewModeChange?: (viewMode: OwnerViewMode) => void;
 };
 
 function getInitials(fullName: string | null, email: string | undefined) {
@@ -40,6 +45,9 @@ export function Header({
   userCompanies,
   notifications = [],
   unreadNotificationCount = 0,
+  showViewSwitcher = false,
+  viewMode = "owner_admin",
+  onViewModeChange,
 }: HeaderProps) {
   const displayName =
     companyContext.profile.full_name ??
@@ -89,6 +97,12 @@ export function Header({
               userCompanies.length > 1 ? "block" : "hidden md:block"
             }
           />
+          {showViewSwitcher && onViewModeChange ? (
+            <OwnerViewSwitcher
+              viewMode={viewMode}
+              onViewModeChange={onViewModeChange}
+            />
+          ) : null}
           <div
             className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white"
             title={displayName}
