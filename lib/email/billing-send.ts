@@ -62,7 +62,10 @@ export function toBillingEmailDelivery(
   return {
     status: "failed",
     failureCode,
-    message: emailResult.message,
+    message:
+      failureCode === "recipient_override_invalid" && emailResult.message?.trim()
+        ? emailResult.message.trim()
+        : undefined,
   };
 }
 

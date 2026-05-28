@@ -1,5 +1,8 @@
 import {
-  formatMissingEmailEnvMessage,
+  classifyResendProviderError,
+  type BillingEmailFailureCode,
+} from "@/lib/email/billing-failure";
+import {
   getMissingResendEnvVars,
   getResendEmailEnv,
 } from "@/lib/email/env";
@@ -13,26 +16,37 @@ export type EmailRecipientRedirect = Pick<
   "intendedRecipient" | "redirected" | "warning" | "overrideEnv"
 >;
 
+type ResendSendFailure = {
+  ok: false;
+  message: string;
+  failureCode: BillingEmailFailureCode;
+  reachedProvider: boolean;
+  intendedRecipient?: string;
+  actualRecipient?: string;
+  fromEmail?: string;
+  providerMessage?: string;
+};
+
 export type ResendSendResult =
   | {
       ok: true;
       providerMessageId: string;
       recipientRedirect?: EmailRecipientRedirect;
     }
-  | {
-      ok: false;
+  | (ResendSendFailure & {
       reason: "not_configured";
       missingEnv: string[];
-      message: string;
-    }
-  | { ok: false; reason: "invalid_recipient"; message: string }
-  | {
-      ok: false;
+    })
+  | (ResendSendFailure & {
+      reason: "invalid_recipient";
+    })
+  | (ResendSendFailure & {
       reason: "recipient_override_invalid";
-      message: string;
       overrideEnv?: string;
-    }
-  | { ok: false; reason: "provider_error"; message: string };
+    })
+  | (ResendSendFailure & {
+      reason: "provider_error";
+    });
 
 type SendViaResendInput = {
   to: string;
@@ -82,7 +96,9 @@ export async function sendViaResend(
       ok: false,
       reason: "not_configured",
       missingEnv,
-      message: formatMissingEmailEnvMessage(missingEnv),
+      failureCode: "email_configuration_missing",
+      reachedProvider: false,
+      message: "Email sending is not configured yet.",
     };
   }
 
@@ -94,17 +110,23 @@ export async function sendViaResend(
       ok: false,
       reason: "not_configured",
       missingEnv: missing,
-      message: formatMissingEmailEnvMessage(missing),
+      failureCode: "email_configuration_missing",
+      reachedProvider: false,
+      message: "Email sending is not configured yet.",
     };
   }
 
   const resolved = resolveEmailRecipient(input.to);
+  const fromEmail = buildFromAddress(env.resend.from, input.fromDisplayName);
 
   if (!resolved.ok) {
     console.error(`[${input.logContext}] recipient resolution failed before provider send:`, {
       reason: resolved.reason,
       error: resolved.error,
       overrideEnv: resolved.overrideEnv ?? null,
+      intendedRecipient: input.to.trim() || null,
+      fromEmail,
+      reachedProvider: false,
     });
 
     if (resolved.reason === "recipient_override_invalid") {
@@ -112,6 +134,10 @@ export async function sendViaResend(
         ok: false,
         reason: "recipient_override_invalid",
         message: resolved.error,
+        failureCode: "recipient_override_invalid",
+        reachedProvider: false,
+        intendedRecipient: input.to.trim() || undefined,
+        fromEmail,
         overrideEnv: resolved.overrideEnv,
       };
     }
@@ -120,6 +146,10 @@ export async function sendViaResend(
       ok: false,
       reason: "invalid_recipient",
       message: resolved.error,
+      failureCode: "invalid_customer_email",
+      reachedProvider: false,
+      intendedRecipient: input.to.trim() || undefined,
+      fromEmail,
     };
   }
 
@@ -135,7 +165,7 @@ export async function sendViaResend(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: buildFromAddress(env.resend.from, input.fromDisplayName),
+        from: fromEmail,
         to: [recipient.to],
         subject: input.subject,
         text: input.text,
@@ -145,21 +175,36 @@ export async function sendViaResend(
     });
 
     const payload = (await response.json().catch(() => null)) as
-      | { id?: string; message?: string; name?: string }
+      | { id?: string; message?: string; name?: string; statusCode?: number }
       | null;
 
     if (!response.ok) {
+      const classified = classifyResendProviderError(response.status, payload);
+
       console.error(`[${input.logContext}] provider rejected request:`, {
         status: response.status,
-        providerMessage: payload?.message ?? payload?.name ?? "unknown",
+        failureCode: classified.failureCode,
+        reachedProvider: true,
+        providerMessage: classified.providerMessage,
+        intendedRecipient: recipient.intendedRecipient,
+        actualRecipient: recipient.to,
+        fromEmail,
         toDomain,
+        intendedDomain,
+        redirected: recipient.redirected,
+        overrideEnv: recipient.overrideEnv ?? null,
       });
 
       return {
         ok: false,
         reason: "provider_error",
-        message:
-          "The email could not be delivered. Check the recipient address and try again.",
+        failureCode: classified.failureCode,
+        reachedProvider: true,
+        message: classified.userMessage,
+        providerMessage: classified.providerMessage,
+        intendedRecipient: recipient.intendedRecipient,
+        actualRecipient: recipient.to,
+        fromEmail,
       };
     }
 
@@ -168,14 +213,26 @@ export async function sendViaResend(
     if (!providerMessageId) {
       console.error(`[${input.logContext}] provider response missing id:`, {
         status: response.status,
+        failureCode: "email_provider_failed",
+        reachedProvider: true,
+        providerMessage: payload?.message ?? payload?.name ?? "missing id",
+        intendedRecipient: recipient.intendedRecipient,
+        actualRecipient: recipient.to,
+        fromEmail,
         toDomain,
       });
 
       return {
         ok: false,
         reason: "provider_error",
+        failureCode: "email_provider_failed",
+        reachedProvider: true,
         message:
           "We couldn't confirm the email was sent. Review the customer's email and try again.",
+        providerMessage: payload?.message ?? payload?.name ?? "missing id",
+        intendedRecipient: recipient.intendedRecipient,
+        actualRecipient: recipient.to,
+        fromEmail,
       };
     }
 
@@ -186,6 +243,9 @@ export async function sendViaResend(
       intendedDomain,
       redirected: recipient.redirected,
       overrideEnv: recipient.overrideEnv ?? null,
+      intendedRecipient: recipient.intendedRecipient,
+      actualRecipient: recipient.to,
+      fromEmail,
     });
 
     return {
@@ -201,16 +261,29 @@ export async function sendViaResend(
         : undefined,
     };
   } catch (error) {
+    const providerMessage =
+      error instanceof Error ? error.message : "network request failed";
+
     console.error(`[${input.logContext}] provider request failed:`, {
+      failureCode: "email_provider_failed",
+      reachedProvider: true,
+      providerMessage,
+      intendedRecipient: recipient.intendedRecipient,
+      actualRecipient: recipient.to,
+      fromEmail,
       toDomain,
-      error: error instanceof Error ? error.message : "unknown",
     });
 
     return {
       ok: false,
       reason: "provider_error",
-      message:
-        "We couldn't reach the email service. Try again in a moment.",
+      failureCode: "email_provider_failed",
+      reachedProvider: true,
+      message: "We couldn't reach the email service. Try again in a moment.",
+      providerMessage,
+      intendedRecipient: recipient.intendedRecipient,
+      actualRecipient: recipient.to,
+      fromEmail,
     };
   }
 }

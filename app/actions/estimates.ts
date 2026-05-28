@@ -19,6 +19,7 @@ import { createEstimateApprovalTokenForEmail } from "@/lib/database/queries/esti
 import {
   getApprovalLinkFailureUserMessage,
   getBillingEmailFailureUserMessage,
+  logBillingEmailFailure,
   INVALID_APP_URL_USER_MESSAGE,
   MISSING_APP_URL_USER_MESSAGE,
 } from "@/lib/email/billing-failure";
@@ -267,14 +268,10 @@ export async function updateEstimateStatusAction(
     });
 
     if (!emailResult.ok) {
-      console.error(
-        "[updateEstimateStatusAction] estimate email failed before or at provider:",
-        {
-          estimateId,
-          reason: emailResult.reason,
-          message: emailResult.message,
-          reachedProvider: emailResult.reason === "provider_error",
-        },
+      logBillingEmailFailure(
+        "updateEstimateStatusAction",
+        emailResult,
+        { estimateId },
       );
 
       const { error: revertError } = await updateEstimateStatus(
@@ -455,15 +452,9 @@ export async function resendEstimateEmailAction(
   });
 
   if (!emailResult.ok) {
-    console.error(
-      "[resendEstimateEmailAction] estimate email failed before or at provider:",
-      {
-        estimateId,
-        reason: emailResult.reason,
-        message: emailResult.message,
-        reachedProvider: emailResult.reason === "provider_error",
-      },
-    );
+    logBillingEmailFailure("resendEstimateEmailAction", emailResult, {
+      estimateId,
+    });
 
     const emailDelivery = toBillingEmailDelivery(emailResult);
 

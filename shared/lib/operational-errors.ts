@@ -1,3 +1,4 @@
+import { getBillingEmailFailureMessageForCode } from "@/lib/email/billing-failure";
 import type { BillingEmailDelivery } from "@/lib/email/billing-send";
 import { isValidEmail } from "@/shared/lib/email-validation";
 
@@ -63,30 +64,23 @@ export function formatBillingEmailDeliveryError(
   documentLabel: "estimate" | "invoice",
   mode: "send" | "resend",
 ): string {
-  if (delivery.message?.trim()) {
+  if (delivery.failureCode === "recipient_override_invalid" && delivery.message?.trim()) {
     return delivery.message.trim();
   }
 
-  if (delivery.status === "not_configured") {
-    return `Email isn't set up yet. Ask your office admin to configure RESEND_API_KEY and RESEND_FROM_EMAIL in Vercel, or share the ${documentLabel} manually.`;
+  if (delivery.failureCode) {
+    const classified = getBillingEmailFailureMessageForCode(delivery.failureCode, {
+      document: documentLabel,
+      mode,
+    });
+
+    if (classified) {
+      return classified;
+    }
   }
 
-  switch (delivery.failureCode) {
-    case "email_configuration_missing":
-      return `Email isn't set up yet. Ask your office admin to configure RESEND_API_KEY and RESEND_FROM_EMAIL in Vercel, or share the ${documentLabel} manually.`;
-    case "recipient_override_invalid":
-      return "Billing email recipient override is misconfigured. Fix or remove EMAIL_RECIPIENT_OVERRIDE (or legacy TEST_EMAIL vars) in Vercel and try again.";
-    case "invalid_customer_email":
-      return `A valid customer email is required to ${mode} this ${documentLabel}. Update the email on the customer record and try again.`;
-    case "approval_link_generation_failed":
-      return `Estimate approval link could not be created. Refresh and try again, or contact your office admin if this keeps happening.`;
-    case "email_provider_failed":
-      if (mode === "resend") {
-        return `${documentLabel === "estimate" ? "Estimate" : "Invoice"} email could not be resent. Try again in a moment or contact your office admin.`;
-      }
-      return `${documentLabel === "estimate" ? "Estimate" : "Invoice"} could not be sent by email. It remains a draft — try again in a moment or contact your office admin.`;
-    default:
-      break;
+  if (delivery.status === "not_configured") {
+    return "Email sending is not configured yet.";
   }
 
   if (mode === "resend") {

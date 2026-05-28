@@ -27,7 +27,10 @@ import {
   recordInvoiceUpdatedActivity,
 } from "@/lib/database/services/invoice-activity";
 import { recordEstimateStatusChangedActivity } from "@/lib/database/services/estimate-activity";
-import { getBillingEmailFailureUserMessage } from "@/lib/email/billing-failure";
+import {
+  getBillingEmailFailureUserMessage,
+  logBillingEmailFailure,
+} from "@/lib/email/billing-failure";
 import { sendInvoiceEmail, toBillingEmailDelivery } from "@/lib/email/billing-send";
 import type { BillingEmailDelivery } from "@/lib/email/billing-send";
 import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
@@ -313,15 +316,7 @@ export async function sendInvoiceAction(
   });
 
   if (!emailResult.ok) {
-    console.error(
-      "[sendInvoiceAction] invoice email failed before or at provider:",
-      {
-        invoiceId,
-        reason: emailResult.reason,
-        message: emailResult.message,
-        reachedProvider: emailResult.reason === "provider_error",
-      },
-    );
+    logBillingEmailFailure("sendInvoiceAction", emailResult, { invoiceId });
 
     const { error: revertError } = await updateInvoiceStatus(
       context.company.id,
@@ -461,15 +456,9 @@ export async function resendInvoiceEmailAction(
   });
 
   if (!emailResult.ok) {
-    console.error(
-      "[resendInvoiceEmailAction] invoice email failed before or at provider:",
-      {
-        invoiceId,
-        reason: emailResult.reason,
-        message: emailResult.message,
-        reachedProvider: emailResult.reason === "provider_error",
-      },
-    );
+    logBillingEmailFailure("resendInvoiceEmailAction", emailResult, {
+      invoiceId,
+    });
 
     const emailDelivery = toBillingEmailDelivery(emailResult);
 
