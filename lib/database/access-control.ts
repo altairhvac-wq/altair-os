@@ -1,5 +1,6 @@
 import { isAlphaHiddenAdminNavHref } from "@/lib/beta/alpha-hardening";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
+import { hasCompanyRole } from "@/lib/database/types/roles";
 
 export type CompanyAccessScope = {
   canViewBilling: boolean;
@@ -38,6 +39,16 @@ export function getCompanyAccessScope(
 
 export function canManageTeamMembers(context: ActiveCompanyContext): boolean {
   return getCompanyAccessScope(context).canManageTeamMembers;
+}
+
+export function canAccessCompanySettings(
+  context: ActiveCompanyContext,
+): boolean {
+  return canAccessAdminNavItem(context, "/settings");
+}
+
+export function canAccessSystemCheck(context: ActiveCompanyContext): boolean {
+  return hasCompanyRole(context.role, ["owner"]);
 }
 
 export function canViewBilling(context: ActiveCompanyContext): boolean {

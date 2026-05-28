@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
+import { canAccessSystemCheck } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { hasCompanyRole } from "@/lib/database/types/roles";
 import { runSystemChecks } from "@/lib/system-check/run-system-checks";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { SystemCheckPageView } from "@/shared/components/settings/SystemCheckPageView";
@@ -8,11 +7,7 @@ import { SystemCheckPageView } from "@/shared/components/settings/SystemCheckPag
 export default async function SystemCheckPage() {
   const companyContext = await getActiveCompanyContext();
 
-  if (!companyContext) {
-    redirect("/setup");
-  }
-
-  if (!hasCompanyRole(companyContext.role, ["owner"])) {
+  if (!companyContext || !canAccessSystemCheck(companyContext)) {
     return (
       <UnauthorizedAccessView
         title="Owner access required"

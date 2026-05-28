@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import {
-  canAccessAdminNavItem,
+  canAccessSystemCheck,
   canManageTeamMembers,
 } from "@/lib/database/access-control";
 import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
@@ -10,10 +10,8 @@ import {
   listPendingInvitesForUserEmail,
   resolveUserEmailForInvite,
 } from "@/lib/database/queries/memberships";
-import { hasCompanyRole } from "@/lib/database/types/roles";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
 import { buildOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
-import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { PendingInvitesCard } from "@/shared/components/settings/PendingInvitesCard";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { SettingsPageView } from "@/shared/components/settings/SettingsPageView";
@@ -25,12 +23,6 @@ export default async function SettingsPage() {
 
   if (!companyContext) {
     redirect("/setup");
-  }
-
-  if (!canAccessAdminNavItem(companyContext, "/settings")) {
-    return (
-      <UnauthorizedAccessView description="Company settings are limited to owner and admin roles." />
-    );
   }
 
   const profile = await getCurrentProfile();
@@ -90,7 +82,7 @@ export default async function SettingsPage() {
         currentUserId={companyContext.user.id}
         currentUserRole={companyContext.role}
         canManageTeam={canManageTeamMembers(companyContext)}
-        showSystemCheckLink={hasCompanyRole(companyContext.role, ["owner"])}
+        showSystemCheckLink={canAccessSystemCheck(companyContext)}
         membersLoadError={membersError}
         onboardingChecklist={onboardingChecklist}
       />

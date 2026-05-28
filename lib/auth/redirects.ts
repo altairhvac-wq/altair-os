@@ -1,6 +1,10 @@
 import type { ActiveCompanyContext } from "@/lib/database/types";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import { isAlphaComingSoonPath } from "@/lib/beta/alpha-hardening";
+import {
+  canAccessCompanySettings,
+  canAccessSystemCheck,
+} from "@/lib/database/access-control";
 
 const AUTH_PATH_PREFIXES = ["/login", "/signup", "/auth"] as const;
 
@@ -116,6 +120,24 @@ export function resolvePostLoginRedirect(
 
     if (isAlphaComingSoonPath(safeNext)) {
       return getDefaultPostLoginPath(context);
+    }
+
+    if (
+      safeNext === "/settings" ||
+      safeNext.startsWith("/settings/")
+    ) {
+      if (!canAccessCompanySettings(context)) {
+        return getDefaultPostLoginPath(context);
+      }
+
+      if (
+        safeNext === "/settings/system-check" ||
+        safeNext.startsWith("/settings/system-check/")
+      ) {
+        if (!canAccessSystemCheck(context)) {
+          return "/settings";
+        }
+      }
     }
 
     return safeNext;
