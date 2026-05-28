@@ -379,7 +379,10 @@ export function DispatchPageView({
 
           <div className="min-h-0 min-w-0 max-w-full flex-1 overflow-y-auto overscroll-contain p-2 sm:p-4">
             {hasNoJobs ? (
-              <DispatchEmptyState variant="no-jobs" />
+              <DispatchEmptyState
+                variant="no-jobs"
+                canDispatchJobs={canDispatchJobs}
+              />
             ) : hasNoResults ? (
               <DispatchEmptyState variant="no-results" />
             ) : (

@@ -32,6 +32,7 @@ export default async function DashboardPage() {
       data={data}
       onboardingChecklist={onboardingChecklist}
       companyId={companyContext.company.id}
+      userId={companyContext.user.id}
     />
   );
 }

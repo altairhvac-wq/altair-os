@@ -1,13 +1,16 @@
 import { Receipt, SearchX } from "lucide-react";
+import Link from "next/link";
 
 type InvoicesEmptyStateProps = {
   variant: "no-invoices" | "no-results";
   onCreateInvoice?: () => void;
+  needsCustomers?: boolean;
 };
 
 export function InvoicesEmptyState({
   variant,
   onCreateInvoice,
+  needsCustomers = false,
 }: InvoicesEmptyStateProps) {
   const isNoResults = variant === "no-results";
 
@@ -28,10 +31,19 @@ export function InvoicesEmptyState({
       <p className="mt-2 max-w-sm text-sm text-slate-500">
         {isNoResults
           ? "Try adjusting your search or filters to find what you're looking for."
-          : "Create your first invoice with line items, tax, and a due date."}
+          : needsCustomers
+            ? "Invoices are linked to customers. Add a customer first, then create your first invoice."
+            : "Create your first invoice with line items, tax, and a due date."}
       </p>
 
-      {!isNoResults && onCreateInvoice ? (
+      {!isNoResults && needsCustomers ? (
+        <Link href="/customers" className="mt-6 inline-flex items-center gap-2 admin-btn-primary">
+          <Receipt className="h-4 w-4" />
+          Go to Customers
+        </Link>
+      ) : null}
+
+      {!isNoResults && !needsCustomers && onCreateInvoice ? (
         <button
           type="button"
           onClick={onCreateInvoice}

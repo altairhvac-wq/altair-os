@@ -229,6 +229,7 @@ export function InvoicesPageView({
             {hasNoInvoices ? (
               <InvoicesEmptyState
                 variant="no-invoices"
+                needsCustomers={canManageInvoices && customers.length === 0}
                 onCreateInvoice={
                   canManageInvoices && customers.length > 0
                     ? handleNewInvoice

@@ -15,7 +15,7 @@ export function buildOnboardingChecklist(
       title: "Invite your team",
       description:
         "Add technicians, dispatchers, or office staff so everyone can log in.",
-      href: "/settings",
+      href: "/settings#team-members",
       completed: snapshot.hasInvitedOrActiveTeam,
       tip: "Invites appear as pending until the teammate signs up with the same email.",
     },
@@ -61,16 +61,20 @@ export function buildOnboardingChecklist(
 export function shouldShowOnboardingChecklist(
   checklist: OnboardingChecklist,
 ): boolean {
-  return !checklist.isComplete;
+  return checklist.items.length > 0 && !checklist.isComplete;
 }
 
 export function filterOnboardingChecklistForContext(
   checklist: OnboardingChecklist,
   context: ActiveCompanyContext,
 ): OnboardingChecklist {
-  const items = checklist.items.filter(
-    (item) => item.completed || canAccessAppRedirectPath(context, item.href),
-  );
+  const items = checklist.items.filter((item) => {
+    if (item.completed) {
+      return true;
+    }
+
+    return canAccessAppRedirectPath(context, item.href);
+  });
   const completedCount = items.filter((item) => item.completed).length;
 
   return {

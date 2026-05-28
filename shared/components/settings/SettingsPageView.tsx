@@ -19,6 +19,7 @@ import {
 } from "@/shared/types/team-member";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
+import { shouldShowOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
 import type { CompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
 import { BillingDocumentDefaultsCard } from "./BillingDocumentDefaultsCard";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
@@ -166,10 +167,12 @@ export function SettingsPageView({
         )}
       </div>
 
-      {onboardingChecklist && !onboardingChecklist.isComplete ? (
+      {onboardingChecklist &&
+      shouldShowOnboardingChecklist(onboardingChecklist) ? (
         <OnboardingChecklistSection
           checklist={onboardingChecklist}
           companyId={companyProfile.id}
+          userId={currentUserId}
           variant="settings"
         />
       ) : null}
@@ -200,7 +203,7 @@ export function SettingsPageView({
         ))}
       </section>
 
-      <section className="admin-card min-w-0 max-w-full overflow-x-clip">
+      <section id="team-members" className="admin-card min-w-0 max-w-full overflow-x-clip">
         <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="min-w-0">
             <h2 className="text-lg font-bold text-slate-900">Team Members</h2>

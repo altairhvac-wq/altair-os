@@ -28,7 +28,9 @@ export function CustomersEmptyState({
       <p className="mt-2 max-w-sm text-sm text-slate-500">
         {isNoResults
           ? "Try adjusting your search or filter to find what you're looking for."
-          : "Get started by adding your first customer to track jobs, estimates, and service history."}
+          : onCreateCustomer
+            ? "Get started by adding your first customer to track jobs, estimates, and service history."
+            : "Customers will appear here once your team adds them."}
       </p>
 
       {!isNoResults && onCreateCustomer ? (

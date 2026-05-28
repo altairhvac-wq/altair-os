@@ -1,32 +1,47 @@
 import { Calendar, SearchX, Wrench } from "lucide-react";
 
 type JobsEmptyStateProps = {
-  variant: "no-jobs" | "no-results" | "no-jobs-today" | "no-customers";
+  variant:
+    | "no-jobs"
+    | "no-results"
+    | "no-jobs-today"
+    | "no-customer-search-results"
+    | "no-company-customers";
   onCreateJob?: () => void;
 };
 
 export function JobsEmptyState({ variant, onCreateJob }: JobsEmptyStateProps) {
   const isNoResults = variant === "no-results";
   const isNoJobsToday = variant === "no-jobs-today";
-  const isNoCustomers = variant === "no-customers";
+  const isNoCustomerSearchResults = variant === "no-customer-search-results";
+  const isNoCompanyCustomers = variant === "no-company-customers";
 
-  const icon = isNoResults || isNoCustomers ? SearchX : isNoJobsToday ? Calendar : Wrench;
-
-  const title = isNoCustomers
-    ? "No customers found"
-    : isNoResults
-      ? "No jobs found"
+  const icon =
+    isNoResults || isNoCustomerSearchResults
+      ? SearchX
       : isNoJobsToday
-        ? "No jobs scheduled for today"
-        : "No jobs yet";
+        ? Calendar
+        : Wrench;
 
-  const description = isNoCustomers
-    ? "Try a different name, phone number, or company."
-    : isNoResults
-      ? "Try adjusting your filters to find what you're looking for."
-      : isNoJobsToday
-        ? "Today's schedule is clear. Create a job or check All Jobs for upcoming work."
-        : "Create your first job to schedule work, assign technicians, and track status.";
+  const title = isNoCompanyCustomers
+    ? "Add a customer first"
+    : isNoCustomerSearchResults
+      ? "No matching customers"
+      : isNoResults
+        ? "No jobs found"
+        : isNoJobsToday
+          ? "No jobs scheduled for today"
+          : "No jobs yet";
+
+  const description = isNoCompanyCustomers
+    ? "Jobs are linked to customers. Add one from Customers, then come back to schedule your first job."
+    : isNoCustomerSearchResults
+      ? "Try a different name, phone number, or company."
+      : isNoResults
+        ? "Try adjusting your filters to find what you're looking for."
+        : isNoJobsToday
+          ? "Today's schedule is clear. Create a job or check All Jobs for upcoming work."
+          : "Create your first job to schedule work, assign technicians, and track status.";
 
   const Icon = icon;
 

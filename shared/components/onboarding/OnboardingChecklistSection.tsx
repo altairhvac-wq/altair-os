@@ -14,26 +14,32 @@ import type { OnboardingChecklist } from "@/shared/types/onboarding";
 type OnboardingChecklistSectionProps = {
   checklist: OnboardingChecklist;
   companyId: string;
+  userId?: string;
   variant?: "dashboard" | "settings";
 };
 
-function getDismissStorageKey(companyId: string): string {
-  return `altair-onboarding-dismissed:${companyId}`;
+function getDismissStorageKey(companyId: string, userId?: string): string {
+  return userId
+    ? `altair-onboarding-dismissed:${companyId}:${userId}`
+    : `altair-onboarding-dismissed:${companyId}`;
 }
 
 export function OnboardingChecklistSection({
   checklist,
   companyId,
+  userId,
   variant = "dashboard",
 }: OnboardingChecklistSectionProps) {
   const [dismissed, setDismissed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(getDismissStorageKey(companyId));
+    const stored = window.localStorage.getItem(
+      getDismissStorageKey(companyId, userId),
+    );
     setDismissed(stored === "true");
     setHydrated(true);
-  }, [companyId]);
+  }, [companyId, userId]);
 
   if (!hydrated || dismissed || checklist.isComplete) {
     return null;
@@ -44,7 +50,10 @@ export function OnboardingChecklistSection({
   );
 
   function handleDismiss() {
-    window.localStorage.setItem(getDismissStorageKey(companyId), "true");
+    window.localStorage.setItem(
+      getDismissStorageKey(companyId, userId),
+      "true",
+    );
     setDismissed(true);
   }
 
@@ -53,7 +62,7 @@ export function OnboardingChecklistSection({
   const description =
     variant === "settings"
       ? "Complete these steps to get your company operational for beta."
-      : `${checklist.completedCount} of ${checklist.totalCount} setup steps done — finish the rest to unlock your full workflow.`;
+      : `${checklist.completedCount} of ${checklist.totalCount} setup steps done — finish the rest to get your workspace operational.`;
 
   return (
     <section className="admin-card min-w-0 max-w-full overflow-x-clip">

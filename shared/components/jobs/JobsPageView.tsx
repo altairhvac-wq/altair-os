@@ -160,7 +160,7 @@ export function JobsPageView({
   function renderMainContent() {
     if (showCustomerSearch) {
       if (filteredCustomers.length === 0) {
-        return <JobsEmptyState variant="no-customers" />;
+        return <JobsEmptyState variant="no-customer-search-results" />;
       }
 
       return (
@@ -175,9 +175,7 @@ export function JobsPageView({
     }
 
     if (showCustomerSearchUnavailable) {
-      return (
-        <JobsEmptyState variant="no-customers" />
-      );
+      return <JobsEmptyState variant="no-company-customers" />;
     }
 
     if (viewTab === "today") {

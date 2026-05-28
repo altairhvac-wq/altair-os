@@ -1,13 +1,16 @@
 import { FileText, SearchX } from "lucide-react";
+import Link from "next/link";
 
 type EstimatesEmptyStateProps = {
   variant: "no-estimates" | "no-results";
   onCreateEstimate?: () => void;
+  needsCustomers?: boolean;
 };
 
 export function EstimatesEmptyState({
   variant,
   onCreateEstimate,
+  needsCustomers = false,
 }: EstimatesEmptyStateProps) {
   const isNoResults = variant === "no-results";
 
@@ -28,10 +31,19 @@ export function EstimatesEmptyState({
       <p className="mt-2 max-w-sm text-sm text-slate-500">
         {isNoResults
           ? "Try adjusting your search or filters to find what you're looking for."
-          : "Create your first estimate with line items, pricing, and a valid-until date."}
+          : needsCustomers
+            ? "Estimates are linked to customers. Add a customer first, then create your first quote."
+            : "Create your first estimate with line items, pricing, and a valid-until date."}
       </p>
 
-      {!isNoResults && onCreateEstimate ? (
+      {!isNoResults && needsCustomers ? (
+        <Link href="/customers" className="mt-6 inline-flex items-center gap-2 admin-btn-primary">
+          <FileText className="h-4 w-4" />
+          Go to Customers
+        </Link>
+      ) : null}
+
+      {!isNoResults && !needsCustomers && onCreateEstimate ? (
         <button
           type="button"
           onClick={onCreateEstimate}

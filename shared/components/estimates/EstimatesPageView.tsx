@@ -167,6 +167,7 @@ export function EstimatesPageView({
           {hasNoEstimates ? (
             <EstimatesEmptyState
               variant="no-estimates"
+              needsCustomers={canManageEstimates && customers.length === 0}
               onCreateEstimate={
                 canManageEstimates && customers.length > 0
                   ? handleNewEstimate

@@ -39,6 +39,7 @@ import {
 import { hasDispatchPressure } from "@/shared/lib/dashboard-dispatch-pressure";
 import { NextBestActionsSection } from "@/shared/components/dashboard/NextBestActionsSection";
 import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
+import { shouldShowOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
 import { OperationalMomentumSection } from "@/shared/components/dashboard/OperationalMomentumSection";
 import { OperationalRiskDrilldownSection } from "@/shared/components/dashboard/OperationalRiskDrilldownSection";
 import { TodayNeedsAttentionSection } from "@/shared/components/dashboard/TodayNeedsAttentionSection";
@@ -78,6 +79,7 @@ type OperationalDashboardViewProps = {
   data: DashboardData;
   onboardingChecklist?: OnboardingChecklist;
   companyId?: string;
+  userId?: string;
 };
 
 function formatJobLocation(city?: string, state?: string): string {
@@ -866,9 +868,11 @@ function NotificationsSummarySection({
     <DashboardSection
       title="Notifications"
       description={
-        notifications.unreadCount > 0
-          ? `${notifications.unreadCount} unread`
-          : "All caught up"
+        notifications.recent.length === 0
+          ? "All caught up"
+          : notifications.unreadCount > 0
+            ? `${notifications.unreadCount} unread`
+            : "All caught up"
       }
       icon={Bell}
     >
@@ -1051,6 +1055,7 @@ function buildMobileDashboardTabs(
   data: DashboardData,
   onboardingChecklist?: OnboardingChecklist,
   companyId?: string,
+  userId?: string,
 ): Array<{ id: MobileDashboardTabId; label: string; content: React.ReactNode }> {
   const { access } = data;
   const notificationAccess = buildNotificationAccess({
@@ -1069,14 +1074,14 @@ function buildMobileDashboardTabs(
   if (
     onboardingChecklist &&
     companyId &&
-    access.canViewOperationalReports &&
-    !onboardingChecklist.isComplete
+    shouldShowOnboardingChecklist(onboardingChecklist)
   ) {
     overviewSections.push(
       <OnboardingChecklistSection
         key="onboarding"
         checklist={onboardingChecklist}
         companyId={companyId}
+        userId={userId}
         variant="dashboard"
       />,
     );
@@ -1225,6 +1230,7 @@ function DesktopDashboardLayout({
   data,
   onboardingChecklist,
   companyId,
+  userId,
 }: OperationalDashboardViewProps) {
   const { access } = data;
   const notificationAccess = buildNotificationAccess({
@@ -1240,11 +1246,11 @@ function DesktopDashboardLayout({
     <>
       {onboardingChecklist &&
       companyId &&
-      access.canViewOperationalReports &&
-      !onboardingChecklist.isComplete ? (
+      shouldShowOnboardingChecklist(onboardingChecklist) ? (
         <OnboardingChecklistSection
           checklist={onboardingChecklist}
           companyId={companyId}
+          userId={userId}
           variant="dashboard"
         />
       ) : null}
@@ -1338,12 +1344,14 @@ export function OperationalDashboardView({
   data,
   onboardingChecklist,
   companyId,
+  userId,
 }: OperationalDashboardViewProps) {
   const mobileSnapshot = buildMobileDashboardSnapshot(data);
   const mobileTabs = buildMobileDashboardTabs(
     data,
     onboardingChecklist,
     companyId,
+    userId,
   );
 
   return (
@@ -1358,6 +1366,7 @@ export function OperationalDashboardView({
           data={data}
           onboardingChecklist={onboardingChecklist}
           companyId={companyId}
+          userId={userId}
         />
       </div>
     </div>
