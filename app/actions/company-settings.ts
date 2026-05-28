@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { assertCompanySettingsAccess } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { updateCompanyBillingDefaults } from "@/lib/database/queries/companies";
 import {
@@ -30,6 +31,11 @@ export async function updateCompanyBillingDefaultsAction(
   const contextResult = await requireCompanySettingsContext();
   if ("error" in contextResult) {
     return { error: contextResult.error };
+  }
+
+  const accessError = assertCompanySettingsAccess(contextResult.context);
+  if (accessError) {
+    return { error: accessError };
   }
 
   const validation = validateCompanyBillingDefaultsInput(input);

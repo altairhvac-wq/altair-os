@@ -1,3 +1,7 @@
+import {
+  applyInvoiceCreationDefaults,
+  type CompanyBillingDefaults,
+} from "@/shared/lib/company-billing-defaults";
 import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
@@ -1013,6 +1017,7 @@ export async function convertEstimateToInvoice(
   companyId: string,
   estimateId: string,
   timeZone?: string,
+  billingDefaults?: CompanyBillingDefaults,
 ): Promise<{ invoice: InvoiceDetail | null; error: string | null }> {
   const estimate = await getEstimateById(companyId, estimateId);
 
@@ -1035,13 +1040,13 @@ export async function convertEstimateToInvoice(
     return { invoice: null, error: duplicateCheck.error };
   }
 
-  const formData: InvoiceFormData = {
+  const baseFormData: InvoiceFormData = {
     customerId: estimate.customerId,
     jobId: estimate.jobId,
     estimateId: estimate.id,
     status: "draft",
-    issueDate: getDefaultIssueDate(new Date(), timeZone),
-    dueDate: getDefaultDueDate(new Date(), timeZone),
+    issueDate: "",
+    dueDate: "",
     notes: estimate.notes ?? "",
     taxRate: estimate.taxRate,
     lineItems: estimate.lineItems.map((item) => ({
@@ -1053,6 +1058,14 @@ export async function convertEstimateToInvoice(
       taxable: item.taxable,
     })),
   };
+
+  const formData = billingDefaults
+    ? applyInvoiceCreationDefaults(baseFormData, billingDefaults, timeZone)
+    : {
+        ...baseFormData,
+        issueDate: getDefaultIssueDate(new Date(), timeZone),
+        dueDate: getDefaultDueDate(new Date(), timeZone),
+      };
 
   const { invoice, error } = await createInvoice(companyId, formData, timeZone);
 

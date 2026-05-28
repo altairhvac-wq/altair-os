@@ -154,10 +154,12 @@ export async function convertEstimateToInvoiceAction(
     }
   }
 
+  const billingDefaults = getCompanyBillingDefaultsFromRow(context.company);
   const { invoice, error } = await convertEstimateToInvoice(
     context.company.id,
     estimateId,
     context.company.timezone,
+    billingDefaults,
   );
 
   if (error || !invoice) {
