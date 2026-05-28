@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import {
   buildOperationalRiskDrilldown,
+  formatOperationalRiskSeverityLabel,
   getOperationalRiskDrilldownSummary,
   hasOperationalRiskDrilldown,
   type OperationalRiskDrilldownInput,
@@ -64,7 +65,7 @@ function RiskCard({ risk }: { risk: OperationalRiskExplanation }) {
               <span
                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${styles.badgeClass}`}
               >
-                {risk.severity}
+                {formatOperationalRiskSeverityLabel(risk.severity)}
               </span>
               <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
                 {risk.affectedArea}

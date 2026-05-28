@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import {
   buildDashboardNextBestActions,
+  formatDashboardNextBestActionSeverityLabel,
   hasDashboardNextBestActions,
   type DashboardNextBestAction,
   type DashboardNextBestActionSeverity,
@@ -73,7 +74,7 @@ function ActionRow({ action }: { action: DashboardNextBestAction }) {
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${styles.badgeClass}`}
               >
-                {action.severity}
+                {formatDashboardNextBestActionSeverityLabel(action.severity)}
               </span>
               {action.count !== null ? (
                 <span className="text-xs font-semibold tabular-nums text-slate-600">

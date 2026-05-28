@@ -22,6 +22,7 @@ export type DashboardAttentionCard = {
 
 export type DashboardAttentionCardsInput = Pick<
   DashboardData,
+  | "access"
   | "officeReviewQueue"
   | "stalledJobs"
   | "completedWorkAwaitingInvoicing"
@@ -30,6 +31,21 @@ export type DashboardAttentionCardsInput = Pick<
   | "operationalHealth"
   | "money"
 >;
+
+export function formatDashboardAttentionSeverityLabel(
+  severity: DashboardAttentionCardSeverity,
+): string {
+  switch (severity) {
+    case "critical":
+      return "Priority";
+    case "warning":
+      return "Follow up";
+    case "info":
+      return "Info";
+    default:
+      return "Healthy";
+  }
+}
 
 function pluralize(count: number, singular: string, plural = `${singular}s`): string {
   return count === 1 ? singular : plural;
@@ -88,9 +104,11 @@ function resolveOfficeQueueCard(
 function resolveInvoicingCard(
   input: DashboardAttentionCardsInput,
 ): DashboardAttentionCard {
-  const overdueInvoices = input.money.overdueCount;
+  const canViewBilling = input.access.canViewBilling;
+  const overdueInvoices = canViewBilling ? input.money.overdueCount : 0;
   const awaitingInvoicing = input.completedWorkAwaitingInvoicing.count;
   const total = overdueInvoices + awaitingInvoicing;
+  const reportsInvoicingHref = "/reports?queue=invoicing";
 
   if (total === 0) {
     return {
@@ -98,9 +116,11 @@ function resolveInvoicingCard(
       label: "Invoicing",
       count: null,
       statusLabel: "Current",
-      explanation: "No overdue invoices or completed work waiting to be billed.",
+      explanation: canViewBilling
+        ? "No overdue invoices or completed work waiting to be billed."
+        : "No completed work waiting to be billed.",
       severity: "healthy",
-      href: INVOICE_PAGE_CASH_FLOW_HREF,
+      href: canViewBilling ? INVOICE_PAGE_CASH_FLOW_HREF : reportsInvoicingHref,
     };
   }
 
@@ -124,12 +144,14 @@ function resolveInvoicingCard(
     label: "Invoicing",
     count: total,
     statusLabel: `${total}`,
-    explanation: `${parts.join(" and ")} — follow up to protect cash flow.`,
+    explanation: canViewBilling
+      ? `${parts.join(" and ")} — follow up to protect cash flow.`
+      : `${parts.join(" and ")} — route finished work to billing.`,
     severity,
     href:
-      overdueInvoices > 0
+      overdueInvoices > 0 && canViewBilling
         ? INVOICE_PAGE_OVERDUE_HREF
-        : "/reports?queue=invoicing",
+        : reportsInvoicingHref,
   };
 }
 

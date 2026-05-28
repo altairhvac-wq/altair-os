@@ -5,7 +5,7 @@ import {
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
-import { filterOperationalActivitiesForBillingAccess } from "@/shared/lib/billing-activity-visibility";
+import { filterDailyOperationsSummaryForBillingAccess } from "@/shared/lib/dashboard-operational-insights-visibility";
 import { listRecentOperationalActivitiesForCompany } from "@/lib/database/queries/dashboard";
 import { listEstimates } from "@/lib/database/queries/estimates";
 import { listExpenses } from "@/lib/database/queries/expenses";
@@ -26,7 +26,7 @@ import { buildOperationalHealthReportFromOfficeQueue } from "@/shared/types/oper
 import type { DailyOperationsSummary } from "@/shared/types/daily-operations-summary";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { getTodayOperationsSummary } from "@/shared/types/dashboard";
-import { getInvoiceSummary } from "@/shared/types/invoice";
+import { getInvoiceSummary, hasInvoiceUnpaidBalance } from "@/shared/types/invoice";
 import type { OfficeReviewQueueReport } from "@/shared/types/office-review-queue";
 import type { OperationalHealthReport } from "@/shared/types/operational-health-report";
 import type { QueueResolutionTrendSummary } from "@/shared/types/queue-resolution-trends";
@@ -256,16 +256,10 @@ export async function getDashboardData(
 
   const invoiceSummary = access.canViewBilling
     ? getInvoiceSummary(invoices)
-    : { overdueTotal: 0 };
+    : { unpaidTotal: 0, overdueTotal: 0 };
 
   const unpaidInvoices = access.canViewBilling
-    ? invoices.filter(
-        (invoice) =>
-          invoice.status !== "void" &&
-          invoice.status !== "cancelled" &&
-          invoice.status !== "paid" &&
-          invoice.balanceDue > 0,
-      )
+    ? invoices.filter(hasInvoiceUnpaidBalance)
     : [];
 
   const overdueInvoices = unpaidInvoices.filter(
@@ -328,7 +322,7 @@ export async function getDashboardData(
     money: access.canViewBilling
       ? {
           unpaidCount: unpaidInvoices.length,
-          unpaidTotal: summarySections.revenue.outstandingRevenue,
+          unpaidTotal: invoiceSummary.unpaidTotal,
           overdueCount: overdueInvoices.length,
           overdueTotal: invoiceSummary.overdueTotal,
           paymentsTodayCount: summarySections.revenue.todayPaymentCount,
@@ -395,7 +389,12 @@ export async function getDashboardData(
           resolvedThisWeek: summarySections.completedWorkReview.resolvedThisWeek,
         }
       : { count: 0, jobs: [], resolvedThisWeek: 0 },
-    operationalInsights: operationsSummary,
+    operationalInsights: access.canViewOperationalReports
+      ? filterDailyOperationsSummaryForBillingAccess(
+          operationsSummary,
+          access.canViewBilling,
+        )
+      : EMPTY_OPERATIONAL_INSIGHTS,
     operationalHealth: access.canViewOperationalReports
       ? buildOperationalHealthReportFromOfficeQueue(officeReviewQueueReport, {
           jobsWithWarnings:
@@ -405,9 +404,6 @@ export async function getDashboardData(
               .materialCostExceedsCollectedCount,
         })
       : EMPTY_OPERATIONAL_HEALTH,
-    recentActivity: filterOperationalActivitiesForBillingAccess(
-      recentActivity,
-      access.canViewBilling,
-    ),
+    recentActivity,
   };
 }

@@ -245,7 +245,7 @@ function OperationalInsightsSection({
       {highlights.length === 0 ? (
         <EmptyState
           title="No actionable insights right now"
-          description="Counts and warnings appear when stalled jobs, billing gaps, or expense reviews need attention."
+          description="Counts and warnings appear when stalled jobs, office review gaps, or expense reviews need attention."
         />
       ) : (
         <ul className="space-y-2">
@@ -267,7 +267,12 @@ function OperationalInsightsSection({
                     {highlight.message}
                   </p>
                   <p className="mt-0.5 text-xs capitalize text-slate-500">
-                    {highlight.severity} · {highlight.category.replaceAll("_", " ")}
+                    {highlight.severity === "critical"
+                      ? "Priority"
+                      : highlight.severity === "warning"
+                        ? "Follow up"
+                        : "Info"}{" "}
+                    · {highlight.category.replaceAll("_", " ")}
                   </p>
                 </div>
                 {highlight.href ? (
@@ -952,7 +957,11 @@ function RecentActivitySection({
       {activities.length === 0 ? (
         <EmptyState
           title="No recent activity"
-          description="Job, billing, and expense events will show up here."
+          description={
+            canViewBilling
+              ? "Job, billing, and expense events will show up here."
+              : "Job and expense events will show up here."
+          }
         />
       ) : (
         <ol className="space-y-0">
@@ -1063,6 +1072,7 @@ function buildMobileDashboardTabs(
     canViewBilling: access.canViewBilling,
     canViewAllJobs: access.canViewAllJobs,
     canViewCompanyExpenses: access.canViewCompanyExpenses,
+    canViewAssignedJobs: access.canViewAssignedJobs,
   });
   const tabs: Array<{
     id: MobileDashboardTabId;
@@ -1238,6 +1248,7 @@ function DesktopDashboardLayout({
     canViewBilling: access.canViewBilling,
     canViewAllJobs: access.canViewAllJobs,
     canViewCompanyExpenses: access.canViewCompanyExpenses,
+    canViewAssignedJobs: access.canViewAssignedJobs,
   });
   const showCommandPairSideBySide =
     !hasCashFlowPressure(data) && !hasDispatchPressure(data);

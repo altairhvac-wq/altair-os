@@ -22,8 +22,15 @@ export type OperationalRiskExplanation = {
   areaId?: OperationalHealthAreaId;
 };
 
+export function formatOperationalRiskSeverityLabel(
+  severity: OperationalRiskDrilldownSeverity,
+): string {
+  return severity === "critical" ? "Priority" : "Follow up";
+}
+
 export type OperationalRiskDrilldownInput = Pick<
   DashboardData,
+  | "access"
   | "officeReviewQueue"
   | "stalledJobs"
   | "completedWorkAwaitingInvoicing"
@@ -98,9 +105,11 @@ function resolveOfficeQueuePressureRisk(
 function resolveCashFlowBlockedRisk(
   input: OperationalRiskDrilldownInput,
 ): OperationalRiskExplanation | null {
-  const overdueInvoices = input.money.overdueCount;
+  const canViewBilling = input.access.canViewBilling;
+  const overdueInvoices = canViewBilling ? input.money.overdueCount : 0;
   const awaitingInvoicing = input.completedWorkAwaitingInvoicing.count;
   const total = overdueInvoices + awaitingInvoicing;
+  const reportsInvoicingHref = "/reports?queue=invoicing";
 
   if (total === 0) {
     return null;
@@ -127,16 +136,23 @@ function resolveCashFlowBlockedRisk(
 
   return {
     id: "cash-flow-blocked",
-    title: "Cash flow blocked by billing gaps",
+    title: canViewBilling
+      ? "Cash flow blocked by billing gaps"
+      : "Billing backlog slowing close-out",
     severity,
     affectedArea: "Invoicing backlog",
-    reason: `${parts.join(" and ")} — revenue is tied up until invoices are sent and overdue balances are collected.`,
+    reason: canViewBilling
+      ? `${parts.join(" and ")} — revenue is tied up until invoices are sent and overdue balances are collected.`
+      : `${parts.join(" and ")} — finished work needs billing follow-up before close-out.`,
     supportingMetric: `${total} billing ${pluralize(total, "gap")} · invoicing health ${areaScore}/100`,
     recommendedFollowUp:
-      overdueInvoices > 0
+      overdueInvoices > 0 && canViewBilling
         ? "Follow up on overdue invoices first, then invoice any completed work still waiting."
-        : "Create invoices for completed jobs so finished work converts to billable revenue.",
-    href: overdueInvoices > 0 ? INVOICE_PAGE_OVERDUE_HREF : "/reports?queue=invoicing",
+        : "Route completed jobs to billing so finished work can move toward close-out.",
+    href:
+      overdueInvoices > 0 && canViewBilling
+        ? INVOICE_PAGE_OVERDUE_HREF
+        : reportsInvoicingHref,
     priorityScore: 980 + overdueInvoices * 12 + awaitingInvoicing * 8,
     areaId: "invoicing_backlog",
   };

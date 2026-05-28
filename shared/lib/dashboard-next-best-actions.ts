@@ -20,8 +20,22 @@ export type DashboardNextBestAction = {
   href: string;
 };
 
+export function formatDashboardNextBestActionSeverityLabel(
+  severity: DashboardNextBestActionSeverity,
+): string {
+  switch (severity) {
+    case "critical":
+      return "Priority";
+    case "warning":
+      return "Follow up";
+    default:
+      return "Suggested";
+  }
+}
+
 export type DashboardNextBestActionsInput = Pick<
   DashboardData,
+  | "access"
   | "officeReviewQueue"
   | "stalledJobs"
   | "completedWorkAwaitingInvoicing"
@@ -61,6 +75,10 @@ function resolveCriticalQueueAction(
 function resolveOverdueInvoicesAction(
   input: DashboardNextBestActionsInput,
 ): DashboardNextBestAction | null {
+  if (!input.access.canViewBilling) {
+    return null;
+  }
+
   const overdueInvoices = input.money.overdueCount;
 
   if (overdueInvoices === 0) {

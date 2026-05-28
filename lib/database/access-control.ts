@@ -6,6 +6,7 @@ export type CompanyAccessScope = {
   canViewBilling: boolean;
   canViewOperationalReports: boolean;
   canViewAllJobs: boolean;
+  canViewAssignedJobs: boolean;
   canViewCompanyExpenses: boolean;
   canViewTechnicianRoster: boolean;
   canManageCustomers: boolean;
@@ -28,6 +29,7 @@ export function getCompanyAccessScope(
       permissions.manageCustomers ||
       permissions.manageBilling ||
       permissions.manageCompany,
+    canViewAssignedJobs: permissions.viewAssignedJobs,
     canViewCompanyExpenses:
       permissions.manageBilling || permissions.dispatchJobs,
     canViewTechnicianRoster:

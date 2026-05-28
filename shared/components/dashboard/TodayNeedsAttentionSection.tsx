@@ -13,6 +13,7 @@ import {
 import {
   buildDashboardAttentionCards,
   countDashboardAttentionIssues,
+  formatDashboardAttentionSeverityLabel,
   type DashboardAttentionCard,
   type DashboardAttentionCardSeverity,
   type DashboardAttentionCardsInput,
@@ -89,7 +90,7 @@ function AttentionCard({ card }: { card: DashboardAttentionCard }) {
           className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${styles.badgeClass}`}
         >
           <StatusIcon className="h-3 w-3" aria-hidden="true" />
-          {card.severity === "healthy" ? "Healthy" : card.severity}
+          {formatDashboardAttentionSeverityLabel(card.severity)}
         </span>
       </div>
 
@@ -125,7 +126,7 @@ function AttentionCard({ card }: { card: DashboardAttentionCard }) {
   return body;
 }
 
-function HealthySummaryBanner() {
+function HealthySummaryBanner({ canViewBilling }: { canViewBilling: boolean }) {
   return (
     <div className="flex items-start gap-2.5 rounded-xl border border-emerald-100 bg-emerald-50/50 px-3 py-3 max-lg:px-3 max-lg:py-3 lg:gap-3 lg:px-4 lg:py-4">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
@@ -136,8 +137,9 @@ function HealthySummaryBanner() {
           All priority areas look healthy
         </p>
         <p className="mt-1 text-xs leading-relaxed text-emerald-800/80">
-          Office queue, billing, pipeline, profitability, and readiness signals
-          are clear. Issue cards will appear here when something needs follow-up.
+          {canViewBilling
+            ? "Office queue, billing, pipeline, profitability, and readiness signals are clear. Issue cards will appear here when something needs follow-up."
+            : "Office queue, pipeline, profitability, and readiness signals are clear. Issue cards will appear here when something needs follow-up."}
         </p>
       </div>
     </div>
@@ -179,7 +181,7 @@ export function TodayNeedsAttentionSection({
 
       <div className="p-4 lg:p-5">
         {issueCount === 0 ? (
-          <HealthySummaryBanner />
+          <HealthySummaryBanner canViewBilling={data.access.canViewBilling} />
         ) : (
           <div className="space-y-3 max-lg:space-y-3 lg:space-y-4">
             <div className="grid grid-cols-2 gap-2 max-lg:gap-2 sm:grid-cols-2 sm:gap-3">
