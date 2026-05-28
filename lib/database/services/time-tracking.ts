@@ -3,6 +3,7 @@ import {
   createTimeEntry,
   getActiveTimeEntryForTechnician,
   getTodayTimeEntriesForTechnician,
+  listOpenJobLaborEntriesForJob,
   mapEntryTypeToTimeState,
 } from "@/lib/database/queries/time-entries";
 import { getJobById } from "@/lib/database/queries/jobs";
@@ -371,6 +372,10 @@ export async function startJobLabor(input: {
     return { error: "You can only track labor on jobs assigned to you." };
   }
 
+  if (job.status === "completed" || job.status === "cancelled") {
+    return { error: "This job is no longer active." };
+  }
+
   const { entry: activeEntry } = await getActiveTimeEntryForTechnician(
     input.companyId,
     input.technicianId,
@@ -475,4 +480,86 @@ export async function stopJobLabor(input: {
     entry,
     state: buildStateSnapshot(entry),
   };
+}
+
+const JOB_LABOR_AUTO_CLOSE_NOTES = {
+  completed: "Auto-closed when job was marked complete.",
+  cancelled: "Auto-closed when job was cancelled.",
+} as const;
+
+export async function finalizeOpenJobLaborForTerminalJob(input: {
+  companyId: string;
+  jobId: string;
+  terminalReason: "completed" | "cancelled";
+  actorId: string;
+  endedAt?: string;
+}): Promise<{ closedCount: number; error: string | null }> {
+  const openEntries = await listOpenJobLaborEntriesForJob(
+    input.companyId,
+    input.jobId,
+  );
+
+  if (openEntries.length === 0) {
+    return { closedCount: 0, error: null };
+  }
+
+  const endedAt = input.endedAt ?? new Date().toISOString();
+  const closeNote = JOB_LABOR_AUTO_CLOSE_NOTES[input.terminalReason];
+
+  for (const entry of openEntries) {
+    const durationMinutes = calculateDurationMinutes(entry.startedAt, endedAt);
+    const { entry: closedEntry, error } = await closeTimeEntry(
+      input.companyId,
+      entry.id,
+      endedAt,
+      durationMinutes,
+      closeNote,
+    );
+
+    if (error || !closedEntry) {
+      console.error("[finalizeOpenJobLaborForTerminalJob] close failed:", {
+        companyId: input.companyId,
+        jobId: input.jobId,
+        entryId: entry.id,
+        error,
+      });
+      return {
+        closedCount: 0,
+        error:
+          error ??
+          "Could not close open labor for this job. Stop job work and try again.",
+      };
+    }
+
+    await recordJobLaborEndedActivity({
+      companyId: input.companyId,
+      actorId: input.actorId,
+      entry: closedEntry,
+      extraMetadata: {
+        auto_closed: true,
+        closed_reason: input.terminalReason,
+      },
+    });
+
+    const { error: clockError } = await openClockEntry({
+      companyId: input.companyId,
+      technicianId: entry.technicianId,
+      actorId: input.actorId,
+      recordActivity: false,
+    });
+
+    if (clockError) {
+      console.error(
+        "[finalizeOpenJobLaborForTerminalJob] resume clock failed:",
+        {
+          companyId: input.companyId,
+          jobId: input.jobId,
+          technicianId: entry.technicianId,
+          error: clockError,
+        },
+      );
+    }
+  }
+
+  return { closedCount: openEntries.length, error: null };
 }

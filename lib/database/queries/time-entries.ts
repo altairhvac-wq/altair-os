@@ -174,6 +174,14 @@ export async function listJobLaborEntriesForJob(
   return listTimeEntries(companyId, { jobId, entryType: "job_labor" });
 }
 
+export async function listOpenJobLaborEntriesForJob(
+  companyId: string,
+  jobId: string,
+): Promise<TimeEntry[]> {
+  const entries = await listJobLaborEntriesForJob(companyId, jobId);
+  return entries.filter((entry) => entry.endedAt == null);
+}
+
 export async function listActiveTechnicianTimeEntries(
   companyId: string,
 ): Promise<TimeEntry[]> {
@@ -253,6 +261,7 @@ export async function closeTimeEntry(
   entryId: string,
   endedAt: string,
   durationMinutes: number,
+  notes?: string,
 ): Promise<{ entry: TimeEntry | null; error: string | null }> {
   const supabase = await createClient();
 
@@ -260,6 +269,10 @@ export async function closeTimeEntry(
     ended_at: endedAt,
     duration_minutes: durationMinutes,
   };
+
+  if (notes !== undefined) {
+    update.notes = notes;
+  }
 
   const { data, error } = await supabase
     .from("time_entries")

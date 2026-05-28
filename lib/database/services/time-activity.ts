@@ -1,7 +1,8 @@
 import { recordTimeActivity } from "@/lib/database/queries/time-activities";
+import type { Json } from "@/lib/database/types/enums";
 import type { TimeEntry } from "@/shared/types/time-entry";
 
-function buildTimeActivityMetadata(entry: TimeEntry) {
+function buildTimeActivityMetadata(entry: TimeEntry): Json {
   return {
     time_entry_id: entry.id,
     entry_type: entry.entryType,
@@ -25,6 +26,7 @@ async function recordTimeEntryActivity(input: {
     | "break_ended"
     | "job_labor_started"
     | "job_labor_ended";
+  metadata?: Json;
 }): Promise<void> {
   const { error } = await recordTimeActivity({
     company_id: input.companyId,
@@ -33,7 +35,7 @@ async function recordTimeEntryActivity(input: {
     job_id: input.entry.jobId ?? null,
     actor_id: input.actorId,
     event_type: input.eventType,
-    metadata: buildTimeActivityMetadata(input.entry),
+    metadata: input.metadata ?? buildTimeActivityMetadata(input.entry),
   });
 
   if (error) {
@@ -104,9 +106,27 @@ export async function recordJobLaborEndedActivity(input: {
   companyId: string;
   actorId: string;
   entry: TimeEntry;
+  extraMetadata?: Json;
 }): Promise<void> {
+  const { extraMetadata, ...rest } = input;
+  const baseMetadata = buildTimeActivityMetadata(input.entry);
+  let metadata: Json = baseMetadata;
+
+  if (
+    extraMetadata &&
+    typeof baseMetadata === "object" &&
+    baseMetadata !== null &&
+    !Array.isArray(baseMetadata) &&
+    typeof extraMetadata === "object" &&
+    extraMetadata !== null &&
+    !Array.isArray(extraMetadata)
+  ) {
+    metadata = { ...baseMetadata, ...extraMetadata };
+  }
+
   await recordTimeEntryActivity({
-    ...input,
+    ...rest,
     eventType: "job_labor_ended",
+    metadata,
   });
 }

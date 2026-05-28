@@ -13,6 +13,7 @@ import {
   recordJobCreatedActivity,
   recordJobStatusChangedActivity,
 } from "@/lib/database/services/job-activity";
+import { finalizeOpenJobLaborForTerminalJob } from "@/lib/database/services/time-tracking";
 import type { Job, JobFormData, JobStatus } from "@/shared/types/job";
 import {
   getTargetStatusForAction,
@@ -146,6 +147,19 @@ export async function updateJobStatusAction(
     return { error: "This status change is not allowed." };
   }
 
+  if (actionId === "complete" || actionId === "cancel") {
+    const { error: laborError } = await finalizeOpenJobLaborForTerminalJob({
+      companyId: context.company.id,
+      jobId,
+      terminalReason: actionId === "complete" ? "completed" : "cancelled",
+      actorId: context.user.id,
+    });
+
+    if (laborError) {
+      return { error: laborError };
+    }
+  }
+
   const { job, error } = await updateJobWorkflowStatus(
     context.company.id,
     jobId,
@@ -175,6 +189,8 @@ export async function updateJobStatusAction(
   revalidatePath("/jobs");
   revalidatePath("/dispatch");
   revalidatePath("/technician");
+  revalidatePath("/tech/time");
+  revalidatePath("/time");
   revalidatePath(`/jobs/${jobId}`);
   revalidatePath(`/customers/${job.customerId}`);
 
