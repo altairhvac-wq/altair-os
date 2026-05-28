@@ -5,12 +5,19 @@ function Skeleton({ className }: { className?: string }) {
 export function OperationalDashboardLoadingState() {
   return (
     <div className="space-y-5">
-      <section className="admin-command-surface overflow-hidden p-3 lg:hidden">
+      <section className="admin-command-surface overflow-hidden p-3 lg:p-4">
         <Skeleton className="h-4 w-24" />
-        <Skeleton className="mt-2 h-5 w-40" />
-        <div className="mt-3 grid grid-cols-2 gap-1.5">
+        <Skeleton className="mt-2 h-5 w-44" />
+        <Skeleton className="mt-3 h-3 w-32" />
+        <div className="mt-2 grid grid-cols-2 gap-1.5 lg:grid-cols-4 lg:gap-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-lg" />
+            <Skeleton key={i} className="h-[4.5rem] rounded-lg" />
+          ))}
+        </div>
+        <Skeleton className="mt-3 h-3 w-28" />
+        <div className="mt-2 grid grid-cols-2 gap-1.5 lg:grid-cols-4 lg:gap-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={`today-${i}`} className="h-[4.5rem] rounded-lg" />
           ))}
         </div>
       </section>

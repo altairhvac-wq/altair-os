@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { MobileDashboardShell } from "@/shared/components/dashboard/MobileDashboardShell";
+import { DashboardCommandStrip } from "@/shared/components/dashboard/DashboardCommandStrip";
 import type { DashboardData } from "@/shared/types/dashboard";
-import { buildMobileDashboardSnapshot } from "@/shared/lib/mobile-dashboard-snapshot";
 import {
   AlertCircle,
   AlertTriangle,
@@ -29,13 +28,11 @@ import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatu
 import { CashFlowCommandSection } from "@/shared/components/dashboard/CashFlowCommandSection";
 import { DashboardNotificationsList } from "@/shared/components/dashboard/DashboardNotificationsList";
 import { DispatchPressureSection } from "@/shared/components/dashboard/DispatchPressureSection";
-import { hasCashFlowPressure } from "@/shared/lib/dashboard-cash-flow-command";
 import {
   INVOICE_PAGE_CASH_FLOW_HREF,
   INVOICE_PAGE_OVERDUE_HREF,
   INVOICE_PAGE_UNPAID_HREF,
 } from "@/shared/lib/invoice-page-focus";
-import { hasDispatchPressure } from "@/shared/lib/dashboard-dispatch-pressure";
 import { NextBestActionsSection } from "@/shared/components/dashboard/NextBestActionsSection";
 import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
 import { shouldShowOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
@@ -1129,36 +1126,73 @@ function DashboardContentLayout({
   const showLiveMetrics =
     access.canViewOperationalReports &&
     !(showOnboarding && onboardingChecklist && !onboardingChecklist.isComplete);
-  const showCommandPairSideBySide =
-    !hasCashFlowPressure(data) && !hasDispatchPressure(data);
+
+  const commandStripPanels = {
+    ...(access.canViewOperationalReports
+      ? {
+          attention: (
+            <>
+              <TodayNeedsAttentionSection data={data} />
+              <OperationalRiskDrilldownSection data={data} />
+              <OperationalInsightsSection insights={data.operationalInsights} />
+            </>
+          ),
+          health: (
+            <>
+              <OperationalMomentumSection data={data} />
+              <OperationalHealthSection
+                report={data.operationalHealth}
+                variant="full"
+              />
+            </>
+          ),
+        }
+      : {}),
+    ...(access.canViewBilling
+      ? {
+          "cash-flow": <CashFlowCommandSection data={data} />,
+          billing: (
+            <>
+              <MoneySnapshotSection money={data.money} />
+              {access.canViewCompanyExpenses ? (
+                <ExpenseReviewSection expenses={data.expenses} />
+              ) : null}
+            </>
+          ),
+        }
+      : access.canViewCompanyExpenses
+        ? {
+            billing: <ExpenseReviewSection expenses={data.expenses} />,
+          }
+        : {}),
+    ...(access.canViewTechnicianRoster
+      ? {
+          dispatch: <DispatchPressureSection data={data} />,
+        }
+      : {}),
+    today: (
+      <>
+        {showLiveMetrics ? (
+          <AnalyticsSnapshotSection
+            analytics={data.analytics}
+            canViewBilling={access.canViewBilling}
+          />
+        ) : null}
+        <TodayOperationsSection operations={data.operations} />
+        {access.canViewTechnicianRoster ? (
+          <TechnicianStatusSection technicians={data.technicians} />
+        ) : null}
+      </>
+    ),
+  };
 
   const needsAttentionContent = access.canViewOperationalReports ? (
     <>
-      <div
-        className={
-          showCommandPairSideBySide && access.canViewBilling
-            ? "grid gap-3 xl:grid-cols-2 xl:items-stretch lg:gap-4"
-            : "flex flex-col gap-3 lg:gap-4"
-        }
-      >
-        {access.canViewBilling ? (
-          <CashFlowCommandSection data={data} />
-        ) : null}
-        <DispatchPressureSection data={data} />
-      </div>
-
-      <div className="grid gap-3 xl:grid-cols-2 xl:items-start lg:gap-4">
-        <TodayNeedsAttentionSection data={data} />
-        <OfficeReviewQueueSection
-          report={data.officeReviewQueue}
-          variant="compact"
-          itemLimit={5}
-        />
-      </div>
-
-      <OperationalRiskDrilldownSection data={data} />
-
-      <OperationalInsightsSection insights={data.operationalInsights} />
+      <OfficeReviewQueueSection
+        report={data.officeReviewQueue}
+        variant="compact"
+        itemLimit={5}
+      />
 
       <NotificationsSummarySection
         notifications={data.notifications}
@@ -1169,13 +1203,6 @@ function DashboardContentLayout({
 
   const todaysWorkContent = (
     <>
-      {showLiveMetrics ? (
-        <AnalyticsSnapshotSection
-          analytics={data.analytics}
-          canViewBilling={access.canViewBilling}
-        />
-      ) : null}
-
       <TodayOperationsSection operations={data.operations} />
 
       {access.canViewTechnicianRoster ? (
@@ -1197,13 +1224,10 @@ function DashboardContentLayout({
     ) : null;
 
   const operationalHealthContent = access.canViewOperationalReports ? (
-    <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] xl:items-start lg:gap-4">
-      <OperationalMomentumSection data={data} />
-      <OperationalHealthSection
-        report={data.operationalHealth}
-        variant="compact"
-      />
-    </div>
+    <OperationalHealthSection
+      report={data.operationalHealth}
+      variant="compact"
+    />
   ) : null;
 
   const nextStepsContent = (
@@ -1246,6 +1270,8 @@ function DashboardContentLayout({
         />
       ) : null}
 
+      <DashboardCommandStrip data={data} panels={commandStripPanels} />
+
       {sectionOrder.map((sectionId) => {
         const content = sectionContent[sectionId];
         if (!content) {
@@ -1274,27 +1300,14 @@ export function OperationalDashboardView({
   companyId,
   userId,
 }: OperationalDashboardViewProps) {
-  const mobileSnapshot = buildMobileDashboardSnapshot(data);
-  const dashboardContent = (
-    <DashboardContentLayout
-      data={data}
-      onboardingChecklist={onboardingChecklist}
-      companyId={companyId}
-      userId={userId}
-    />
-  );
-
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 pb-2 xl:max-w-[1440px]">
-      <div className="lg:hidden">
-        <MobileDashboardShell snapshot={mobileSnapshot}>
-          {dashboardContent}
-        </MobileDashboardShell>
-      </div>
-
-      <div className="hidden lg:flex lg:flex-col lg:gap-5">
-        {dashboardContent}
-      </div>
+      <DashboardContentLayout
+        data={data}
+        onboardingChecklist={onboardingChecklist}
+        companyId={companyId}
+        userId={userId}
+      />
     </div>
   );
 }
