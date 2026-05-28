@@ -19,7 +19,7 @@ export default async function DashboardPage() {
 
   const [data, onboardingSnapshot] = await Promise.all([
     getDashboardData(companyContext),
-    getOnboardingSnapshot(companyContext.company.id),
+    getOnboardingSnapshot(companyContext.company.id, companyContext),
   ]);
 
   const onboardingChecklist = buildOnboardingChecklist(onboardingSnapshot);

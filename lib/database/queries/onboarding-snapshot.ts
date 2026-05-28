@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
+import { hasCompanyPermission } from "@/lib/database/types/roles";
 import type { OnboardingSnapshot } from "@/shared/types/onboarding";
 
 async function countTableRows(
@@ -35,18 +37,27 @@ async function countTableRows(
 
 export async function getOnboardingSnapshot(
   companyId: string,
+  context: ActiveCompanyContext,
 ): Promise<OnboardingSnapshot> {
-  const [
-    teamMemberCount,
-    customerCount,
-    jobCount,
-    serviceItemCount,
-  ] = await Promise.all([
-    countTableRows("company_memberships", companyId),
+  const canViewTeamRoster = hasCompanyPermission(context.role, "manageUsers");
+
+  const [customerCount, jobCount, serviceItemCount] = await Promise.all([
     countTableRows("customers", companyId),
     countTableRows("jobs", companyId),
     countTableRows("service_items", companyId),
   ]);
+
+  if (!canViewTeamRoster) {
+    return {
+      teamMemberCount: 0,
+      hasInvitedOrActiveTeam: true,
+      customerCount,
+      jobCount,
+      serviceItemCount,
+    };
+  }
+
+  const teamMemberCount = await countTableRows("company_memberships", companyId);
 
   return {
     teamMemberCount,

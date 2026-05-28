@@ -37,7 +37,7 @@ export default async function SettingsPage() {
       emailResolution.email
         ? listPendingInvitesForUserEmail(emailResolution.email)
         : Promise.resolve({ invites: [], error: undefined }),
-      getOnboardingSnapshot(companyContext.company.id),
+      getOnboardingSnapshot(companyContext.company.id, companyContext),
     ]);
 
   const pendingInvites = pendingInvitesResult.invites.filter(
