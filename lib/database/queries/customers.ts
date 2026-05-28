@@ -3,6 +3,7 @@ import { mapDatabaseError } from "@/lib/database/errors";
 import type {
   CustomerInsert,
   CustomerRow,
+  CustomerUpdate,
 } from "@/lib/database/types/core-tables";
 import type { Customer, CustomerFormData } from "@/shared/types/customer";
 
@@ -33,12 +34,22 @@ export function mapCustomerRowToCustomer(row: CustomerRow): Customer {
   };
 }
 
-export function mapCustomerFormDataToInsert(
-  companyId: string,
+function mapCustomerFormDataToRowFields(
   data: CustomerFormData,
-): CustomerInsert {
+): Pick<
+  CustomerInsert,
+  | "name"
+  | "email"
+  | "phone"
+  | "company_name"
+  | "status"
+  | "address_line1"
+  | "city"
+  | "state"
+  | "postal_code"
+  | "notes"
+> {
   return {
-    company_id: companyId,
     name: data.name.trim(),
     email: data.email.trim(),
     phone: data.phone.trim(),
@@ -50,6 +61,22 @@ export function mapCustomerFormDataToInsert(
     postal_code: data.zip.trim(),
     notes: data.notes.trim() || null,
   };
+}
+
+export function mapCustomerFormDataToInsert(
+  companyId: string,
+  data: CustomerFormData,
+): CustomerInsert {
+  return {
+    company_id: companyId,
+    ...mapCustomerFormDataToRowFields(data),
+  };
+}
+
+export function mapCustomerFormDataToUpdate(
+  data: CustomerFormData,
+): CustomerUpdate {
+  return mapCustomerFormDataToRowFields(data);
 }
 
 export async function listCustomers(companyId: string): Promise<Customer[]> {
@@ -139,4 +166,42 @@ export async function getCustomerById(
   }
 
   return mapCustomerRowToCustomer(data as CustomerRow);
+}
+
+export async function updateCustomer(
+  companyId: string,
+  customerId: string,
+  data: CustomerFormData,
+): Promise<{ customer: Customer | null; error: string | null }> {
+  const supabase = await createClient();
+  const update = mapCustomerFormDataToUpdate(data);
+
+  const { data: row, error } = await supabase
+    .from("customers")
+    .update(update)
+    .eq("company_id", companyId)
+    .eq("id", customerId)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[updateCustomer] update failed:", {
+      companyId,
+      customerId,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    return { customer: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { customer: null, error: "Customer not found." };
+  }
+
+  return {
+    customer: mapCustomerRowToCustomer(row as CustomerRow),
+    error: null,
+  };
 }

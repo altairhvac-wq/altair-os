@@ -8,7 +8,9 @@ export {
   getCustomerById,
   listCustomers,
   mapCustomerFormDataToInsert,
+  mapCustomerFormDataToUpdate,
   mapCustomerRowToCustomer,
+  updateCustomer,
 } from "./customers";
 export {
   assignJobToTechnician,

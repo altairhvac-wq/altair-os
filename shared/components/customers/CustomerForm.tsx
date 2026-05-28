@@ -8,6 +8,7 @@ import {
 
 type CustomerFormProps = {
   initialData?: Partial<CustomerFormData>;
+  variant?: "create" | "edit";
   onSubmit: (data: CustomerFormData) => void;
   onCancel: () => void;
   error?: string | null;
@@ -34,12 +35,15 @@ const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
 
 export function CustomerForm({
   initialData,
+  variant = "create",
   onSubmit,
   onCancel,
   error,
   isSubmitting = false,
 }: CustomerFormProps) {
   const defaults = { ...emptyForm, ...initialData };
+  const isEdit = variant === "edit";
+  const requireContact = !isEdit;
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -84,7 +88,7 @@ export function CustomerForm({
             id="email"
             name="email"
             type="email"
-            required
+            required={requireContact}
             defaultValue={defaults.email}
             placeholder="jane@example.com"
             className={inputClass}
@@ -99,7 +103,7 @@ export function CustomerForm({
             id="phone"
             name="phone"
             type="tel"
-            required
+            required={requireContact}
             defaultValue={defaults.phone}
             placeholder="(555) 555-0100"
             className={inputClass}
@@ -225,7 +229,11 @@ export function CustomerForm({
           disabled={isSubmitting}
           className="flex-1 admin-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isSubmitting ? "Saving..." : "Save customer"}
+          {isSubmitting
+            ? "Saving..."
+            : isEdit
+              ? "Save changes"
+              : "Save customer"}
         </button>
         <button
           type="button"

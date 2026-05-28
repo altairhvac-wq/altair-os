@@ -86,6 +86,7 @@ export default async function CustomerDetailPage({
       recentPhotos={recentPhotos}
       recentReceipts={recentReceipts}
       canCreateJob={companyContext.permissions.dispatchJobs}
+      canManageCustomers={companyContext.permissions.manageCustomers}
       canManageEquipment={companyContext.permissions.manageCustomers}
       canViewBilling={canViewBillingData}
       canViewCompanyExpenses={access.canViewCompanyExpenses}

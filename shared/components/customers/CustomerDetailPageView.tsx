@@ -9,6 +9,7 @@ import { CustomerBillingHistorySection } from "./CustomerBillingHistorySection";
 import { CustomerRecentPhotosSection } from "./CustomerRecentPhotosSection";
 import { CustomerRecentReceiptsSection } from "./CustomerRecentReceiptsSection";
 import { CustomerCard } from "./CustomerCard";
+import { CustomerEditControl } from "./CustomerEditControl";
 import { CustomerEquipmentSection } from "./CustomerEquipmentSection";
 import { CustomerJobsSection } from "./CustomerJobsSection";
 import { OperationalActivityTimeline } from "@/shared/components/operational/OperationalActivityTimeline";
@@ -34,6 +35,7 @@ type CustomerDetailPageViewProps = {
   recentPhotos: JobAttachment[];
   recentReceipts: Expense[];
   canCreateJob: boolean;
+  canManageCustomers: boolean;
   canManageEquipment: boolean;
   canViewBilling: boolean;
   canViewCompanyExpenses: boolean;
@@ -49,6 +51,7 @@ export function CustomerDetailPageView({
   recentPhotos,
   recentReceipts,
   canCreateJob,
+  canManageCustomers,
   canManageEquipment,
   canViewBilling,
   canViewCompanyExpenses,
@@ -64,6 +67,15 @@ export function CustomerDetailPageView({
       </Link>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Customer profile
+          </h2>
+          <CustomerEditControl
+            customer={customer}
+            canManage={canManageCustomers}
+          />
+        </div>
         <CustomerCard customer={customer} showRevenueStats={canViewBilling} />
       </div>
 
