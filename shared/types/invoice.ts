@@ -237,6 +237,16 @@ export function getSendInvoiceJobBlockReason(jobStatus: JobStatus): string | nul
   return null;
 }
 
+/** Non-draft invoices that were emailed can be resent without a status change. */
+export function canResendInvoiceEmail(status: InvoiceStatus): boolean {
+  return (
+    status === "sent" ||
+    status === "partially_paid" ||
+    status === "paid" ||
+    status === "overdue"
+  );
+}
+
 export function isInvoiceBalanceConsistent(invoice: {
   total: number;
   amountPaid: number;

@@ -20,6 +20,7 @@ import {
 import {
   recordInvoiceConvertedFromEstimateActivity,
   recordInvoiceCreatedActivity,
+  recordInvoiceEmailResentActivity,
   recordInvoiceStatusChangedActivity,
   recordInvoiceUpdatedActivity,
 } from "@/lib/database/services/invoice-activity";
@@ -31,7 +32,10 @@ import type {
   InvoiceEditFormData,
   InvoiceFormData,
 } from "@/shared/types/invoice";
-import { getSendInvoiceJobBlockReason } from "@/shared/types/invoice";
+import {
+  canResendInvoiceEmail,
+  getSendInvoiceJobBlockReason,
+} from "@/shared/types/invoice";
 
 export type { BillingEmailDelivery } from "@/lib/email/billing-send";
 
@@ -312,6 +316,88 @@ export async function sendInvoiceAction(
   }
 
   return { invoice };
+}
+
+export type ResendInvoiceEmailActionResult = {
+  error?: string;
+  invoice?: InvoiceDetail;
+  emailDelivery?: BillingEmailDelivery;
+};
+
+export async function resendInvoiceEmailAction(
+  invoiceId: string,
+): Promise<ResendInvoiceEmailActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." };
+  }
+
+  if (!context.permissions.manageBilling) {
+    return { error: "You do not have permission to resend invoice emails." };
+  }
+
+  const currentInvoice = await getInvoiceById(context.company.id, invoiceId);
+
+  if (!currentInvoice) {
+    return { error: "Invoice not found." };
+  }
+
+  if (!canResendInvoiceEmail(currentInvoice.status)) {
+    return {
+      error:
+        "Only invoices that have already been sent can be resent by email. Refresh the page and try again.",
+    };
+  }
+
+  const customerEmail = currentInvoice.customerEmail?.trim();
+
+  if (!customerEmail || !customerEmail.includes("@")) {
+    return {
+      error:
+        "A valid customer email is required to resend this invoice. Add an email on the customer record and try again.",
+    };
+  }
+
+  const emailResult = await sendInvoiceEmail({
+    to: customerEmail,
+    companyName: context.company.name,
+    customerName: currentInvoice.customerName,
+    invoiceNumber: currentInvoice.invoiceNumber,
+    total: currentInvoice.total,
+    dueDate: currentInvoice.dueDate,
+    timeZone: context.company.timezone,
+    lineItems: currentInvoice.lineItems.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+    })),
+    notes: currentInvoice.notes,
+  });
+
+  if (!emailResult.ok) {
+    return { emailDelivery: toBillingEmailDelivery(emailResult) };
+  }
+
+  await recordInvoiceEmailResentActivity({
+    companyId: context.company.id,
+    invoiceId,
+    actorId: context.user.id,
+    invoiceNumber: currentInvoice.invoiceNumber,
+    customerId: currentInvoice.customerId,
+    jobId: currentInvoice.jobId,
+    jobNumber: currentInvoice.jobNumber,
+  });
+
+  revalidatePath("/invoices");
+  revalidatePath(`/invoices/${invoiceId}`);
+  revalidatePath(`/customers/${currentInvoice.customerId}`);
+
+  if (currentInvoice.jobId) {
+    revalidatePath(`/jobs/${currentInvoice.jobId}`);
+  }
+
+  return { invoice: currentInvoice };
 }
 
 export type VoidInvoiceActionResult = {

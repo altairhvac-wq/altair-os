@@ -85,3 +85,33 @@ export async function recordEstimateStatusChangedActivity(input: {
     });
   }
 }
+
+export async function recordEstimateEmailResentActivity(input: {
+  companyId: string;
+  estimateId: string;
+  actorId: string;
+  estimateNumber: string;
+  customerId?: string;
+  jobId?: string;
+  jobNumber?: string;
+}): Promise<void> {
+  const { error } = await recordEstimateActivity({
+    company_id: input.companyId,
+    estimate_id: input.estimateId,
+    actor_id: input.actorId,
+    event_type: "estimate_email_resent",
+    metadata: {
+      estimate_number: input.estimateNumber,
+      customer_id: input.customerId,
+      job_id: input.jobId,
+      job_number: input.jobNumber,
+    },
+  });
+
+  if (error) {
+    console.error("[recordEstimateEmailResentActivity] failed:", {
+      estimateId: input.estimateId,
+      error,
+    });
+  }
+}

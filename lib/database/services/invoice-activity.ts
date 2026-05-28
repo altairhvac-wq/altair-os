@@ -249,3 +249,33 @@ export async function recordInvoicePaidActivity(input: {
     jobNumber: input.jobNumber,
   });
 }
+
+export async function recordInvoiceEmailResentActivity(input: {
+  companyId: string;
+  invoiceId: string;
+  actorId: string;
+  invoiceNumber: string;
+  customerId?: string;
+  jobId?: string;
+  jobNumber?: string;
+}): Promise<void> {
+  const { error } = await recordInvoiceActivity({
+    company_id: input.companyId,
+    invoice_id: input.invoiceId,
+    actor_id: input.actorId,
+    event_type: "invoice_email_resent",
+    metadata: {
+      invoice_number: input.invoiceNumber,
+      customer_id: input.customerId,
+      job_id: input.jobId,
+      job_number: input.jobNumber,
+    },
+  });
+
+  if (error) {
+    console.error("[recordInvoiceEmailResentActivity] failed:", {
+      invoiceId: input.invoiceId,
+      error,
+    });
+  }
+}

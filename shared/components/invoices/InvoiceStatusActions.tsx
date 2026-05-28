@@ -2,13 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Ban, Send } from "lucide-react";
+import { Ban, Mail, Send } from "lucide-react";
 import {
+  resendInvoiceEmailAction,
   sendInvoiceAction,
   voidInvoiceAction,
 } from "@/app/actions/invoices";
 import {
   canEditInvoice,
+  canResendInvoiceEmail,
   canVoidInvoice,
   getEditInvoiceBlockReason,
   getVoidInvoiceBlockReason,
@@ -29,10 +31,12 @@ export function InvoiceStatusActions({
 }: InvoiceStatusActionsProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [resendPending, setResendPending] = useState(false);
   const [showVoidConfirm, setShowVoidConfirm] = useState(false);
   const router = useRouter();
 
   const canSend = invoice.status === "draft";
+  const canResendEmail = canResendInvoiceEmail(invoice.status);
   const canVoid = canVoidInvoice(invoice);
   const canEdit = canEditInvoice(invoice, paymentCount);
   const voidBlockReason = getVoidInvoiceBlockReason(invoice);
@@ -46,7 +50,7 @@ export function InvoiceStatusActions({
     );
   }
 
-  if (!canSend && !canVoid && !canEdit) {
+  if (!canSend && !canVoid && !canEdit && !canResendEmail) {
     if (voidBlockReason && invoice.status !== "paid") {
       return <p className="text-xs text-slate-500">{voidBlockReason}</p>;
     }
@@ -78,6 +82,37 @@ export function InvoiceStatusActions({
       }
 
       router.refresh();
+    });
+  }
+
+  function handleResendEmail() {
+    setError(null);
+    setResendPending(true);
+
+    startTransition(async () => {
+      try {
+        const result = await resendInvoiceEmailAction(invoice.id);
+
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+
+        if (
+          result.emailDelivery &&
+          result.emailDelivery.status !== "sent"
+        ) {
+          setError(
+            result.emailDelivery.message ??
+              "Invoice email could not be resent. Try again.",
+          );
+          return;
+        }
+
+        router.refresh();
+      } finally {
+        setResendPending(false);
+      }
     });
   }
 
@@ -148,7 +183,7 @@ export function InvoiceStatusActions({
         {canSend ? (
           <button
             type="button"
-            disabled={isPending}
+            disabled={isPending || resendPending}
             onClick={handleSendInvoice}
             className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -157,10 +192,22 @@ export function InvoiceStatusActions({
           </button>
         ) : null}
 
+        {canResendEmail ? (
+          <button
+            type="button"
+            disabled={isPending || resendPending}
+            onClick={handleResendEmail}
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Mail className="h-4 w-4" />
+            {resendPending ? "Resending…" : "Resend email"}
+          </button>
+        ) : null}
+
         {canVoid ? (
           <button
             type="button"
-            disabled={isPending}
+            disabled={isPending || resendPending}
             onClick={() => setShowVoidConfirm(true)}
             className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
           >

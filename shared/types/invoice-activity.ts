@@ -8,6 +8,7 @@ import {
 export type InvoiceActivityType =
   | "invoice_created"
   | "invoice_sent"
+  | "invoice_email_resent"
   | "status_changed"
   | "invoice_converted_from_estimate"
   | "invoice_voided"
@@ -51,6 +52,7 @@ export type InvoiceActivity = {
 const ACTIVITY_TYPE_LABELS: Record<InvoiceActivityType, string> = {
   invoice_created: "Invoice created",
   invoice_sent: "Invoice sent",
+  invoice_email_resent: "Invoice email resent",
   status_changed: "Status changed",
   invoice_converted_from_estimate: "Converted from estimate",
   invoice_voided: "Invoice voided",
@@ -110,6 +112,11 @@ export function formatInvoiceActivityDetails(
       }
       return parts.length > 0 ? parts.join(" · ") : null;
     }
+
+    case "invoice_email_resent":
+      return metadata.invoice_number
+        ? `Invoice ${metadata.invoice_number}`
+        : "Email resent to customer";
 
     case "invoice_sent":
     case "invoice_voided":

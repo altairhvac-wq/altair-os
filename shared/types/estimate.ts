@@ -152,6 +152,11 @@ export function formatEstimateStatus(status: EstimateStatus): string {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
+/** Sent estimates can be emailed again without changing status. */
+export function canResendEstimateEmail(status: EstimateStatus): boolean {
+  return status === "sent";
+}
+
 export function formatTaxRate(taxRate: number): string {
   const normalized = roundCurrency(Math.max(taxRate, 0));
   return Number.isInteger(normalized)

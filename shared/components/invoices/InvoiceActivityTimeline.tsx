@@ -26,6 +26,7 @@ type InvoiceActivityTimelineProps = {
 const ACTIVITY_ICONS: Record<InvoiceActivityType, typeof History> = {
   invoice_created: ClipboardList,
   invoice_sent: Send,
+  invoice_email_resent: Send,
   status_changed: ArrowRightLeft,
   invoice_converted_from_estimate: Receipt,
   invoice_voided: Ban,
@@ -38,6 +39,7 @@ const ACTIVITY_ICONS: Record<InvoiceActivityType, typeof History> = {
 const ACTIVITY_ICON_STYLES: Record<InvoiceActivityType, string> = {
   invoice_created: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
   invoice_sent: "bg-blue-50 text-blue-700 ring-blue-600/15",
+  invoice_email_resent: "bg-blue-50 text-blue-700 ring-blue-600/15",
   status_changed: "bg-slate-100 text-slate-600 ring-slate-500/15",
   invoice_converted_from_estimate: "bg-violet-50 text-violet-700 ring-violet-600/15",
   invoice_voided: "bg-slate-100 text-slate-500 ring-slate-400/15",

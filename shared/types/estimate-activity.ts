@@ -5,6 +5,7 @@ export type EstimateActivityType =
   | "estimate_created"
   | "status_changed"
   | "estimate_sent"
+  | "estimate_email_resent"
   | "estimate_approved"
   | "estimate_declined"
   | "estimate_cancelled"
@@ -35,6 +36,7 @@ const ACTIVITY_TYPE_LABELS: Record<EstimateActivityType, string> = {
   estimate_created: "Estimate created",
   status_changed: "Status changed",
   estimate_sent: "Estimate sent",
+  estimate_email_resent: "Estimate email resent",
   estimate_approved: "Estimate approved",
   estimate_declined: "Estimate declined",
   estimate_cancelled: "Estimate cancelled",
@@ -66,6 +68,11 @@ export function formatEstimateActivityDetails(
         return `Converted to job ${metadata.job_number}`;
       }
       return metadata.job_id ? "Linked to job" : null;
+
+    case "estimate_email_resent":
+      return metadata.estimate_number
+        ? `Estimate ${metadata.estimate_number}`
+        : "Email resent to customer";
 
     case "estimate_sent":
     case "estimate_approved":

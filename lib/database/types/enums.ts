@@ -75,6 +75,7 @@ export type EstimateActivityType =
   | "estimate_created"
   | "status_changed"
   | "estimate_sent"
+  | "estimate_email_resent"
   | "estimate_approved"
   | "estimate_declined"
   | "estimate_cancelled"
@@ -92,6 +93,7 @@ export type InvoiceStatus =
 export type InvoiceActivityType =
   | "invoice_created"
   | "invoice_sent"
+  | "invoice_email_resent"
   | "status_changed"
   | "invoice_converted_from_estimate"
   | "invoice_voided"
