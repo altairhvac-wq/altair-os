@@ -1,8 +1,6 @@
 import Link from "next/link";
-import {
-  MobileDashboardShell,
-  type MobileDashboardTabId,
-} from "@/shared/components/dashboard/MobileDashboardShell";
+import { MobileDashboardShell } from "@/shared/components/dashboard/MobileDashboardShell";
+import type { DashboardData } from "@/shared/types/dashboard";
 import { buildMobileDashboardSnapshot } from "@/shared/lib/mobile-dashboard-snapshot";
 import {
   AlertCircle,
@@ -46,7 +44,6 @@ import { OperationalRiskDrilldownSection } from "@/shared/components/dashboard/O
 import { TodayNeedsAttentionSection } from "@/shared/components/dashboard/TodayNeedsAttentionSection";
 import { OfficeReviewQueueSection } from "@/shared/components/reports/OfficeReviewQueueSection";
 import { OperationalHealthSection } from "@/shared/components/reports/OperationalHealthSection";
-import type { DashboardData } from "@/shared/types/dashboard";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import { formatCurrency } from "@/shared/types/customer";
 import {
@@ -78,6 +75,133 @@ type OperationalDashboardViewProps = {
   companyId?: string;
   userId?: string;
 };
+
+type DashboardRoleFocus = "command" | "dispatch" | "office";
+
+type DashboardPrioritySectionId =
+  | "needs-attention"
+  | "todays-work"
+  | "revenue-billing"
+  | "operational-health"
+  | "next-steps";
+
+const DASHBOARD_SECTION_LABELS: Record<
+  DashboardPrioritySectionId,
+  { title: string; description: string }
+> = {
+  "needs-attention": {
+    title: "Needs attention",
+    description: "Blockers, review queues, and alerts that need action now",
+  },
+  "todays-work": {
+    title: "Today's work",
+    description: "Live field activity, dispatch board, and technician status",
+  },
+  "revenue-billing": {
+    title: "Revenue and billing",
+    description: "Receivables, collections, and expense approvals",
+  },
+  "operational-health": {
+    title: "Operational health",
+    description: "Momentum, trends, and overall workload balance",
+  },
+  "next-steps": {
+    title: "Next steps",
+    description: "Recommended actions and recent company activity",
+  },
+};
+
+function getDashboardRoleFocus(access: DashboardData["access"]): DashboardRoleFocus {
+  if (access.canViewBilling && access.canViewTechnicianRoster) {
+    return "command";
+  }
+  if (access.canViewTechnicianRoster && !access.canViewBilling) {
+    return "dispatch";
+  }
+  if (access.canViewBilling && !access.canViewTechnicianRoster) {
+    return "office";
+  }
+  return "command";
+}
+
+function getDashboardSectionOrder(
+  access: DashboardData["access"],
+  roleFocus: DashboardRoleFocus,
+): DashboardPrioritySectionId[] {
+  if (!access.canViewOperationalReports) {
+    const sections: DashboardPrioritySectionId[] = ["todays-work"];
+    if (access.canViewBilling || access.canViewCompanyExpenses) {
+      sections.push("revenue-billing");
+    }
+    sections.push("next-steps");
+    return sections;
+  }
+
+  switch (roleFocus) {
+    case "dispatch": {
+      const sections: DashboardPrioritySectionId[] = [
+        "needs-attention",
+        "todays-work",
+        "operational-health",
+        "next-steps",
+      ];
+      if (access.canViewCompanyExpenses) {
+        sections.splice(3, 0, "revenue-billing");
+      }
+      return sections;
+    }
+    case "office":
+      return [
+        "needs-attention",
+        "revenue-billing",
+        "todays-work",
+        "operational-health",
+        "next-steps",
+      ];
+    default:
+      return [
+        "needs-attention",
+        "todays-work",
+        "revenue-billing",
+        "operational-health",
+        "next-steps",
+      ];
+  }
+}
+
+function DashboardPriorityGroup({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  const visibleChildren = Array.isArray(children)
+    ? children.filter(Boolean)
+    : children
+      ? [children]
+      : [];
+
+  if (visibleChildren.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="flex min-w-0 flex-col gap-3 lg:gap-4">
+      <header className="border-b border-slate-200/80 pb-2">
+        <h2 className="text-sm font-black uppercase tracking-wide text-slate-900 lg:text-base">
+          {title}
+        </h2>
+        <p className="mt-0.5 text-xs leading-relaxed text-slate-500 lg:text-sm">
+          {description}
+        </p>
+      </header>
+      <div className="flex min-w-0 flex-col gap-3 lg:gap-4">{visibleChildren}</div>
+    </section>
+  );
+}
 
 function formatJobLocation(city?: string, state?: string): string {
   const parts = [city?.trim(), state?.trim()].filter(Boolean);
@@ -358,10 +482,10 @@ function AnalyticsSnapshotSection({
       <div className="mb-3 flex flex-col gap-2 max-lg:mb-3 sm:flex-row sm:items-end sm:justify-between lg:mb-5">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-300/90">
-            Command center
+            Live snapshot
           </p>
           <h2 className="mt-0.5 text-lg font-black tracking-tight max-lg:text-lg lg:mt-1 lg:text-xl xl:text-2xl">
-            Live operations
+            Today at a glance
           </h2>
           <p className="mt-0.5 hidden text-xs text-slate-300 lg:block lg:text-sm">
             {canViewBilling
@@ -982,20 +1106,6 @@ function RecentActivitySection({
   );
 }
 
-function DashboardZone({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={`flex flex-col gap-3 max-lg:gap-3 lg:gap-4 ${className}`}>
-      {children}
-    </div>
-  );
-}
-
 function DashboardHeader() {
   return (
     <header className="admin-hero max-lg:px-4 max-lg:py-3 lg:px-6 lg:py-5">
@@ -1006,197 +1116,23 @@ function DashboardHeader() {
         Command center
       </h1>
       <p className="mt-1.5 max-w-2xl text-xs leading-relaxed text-slate-600 max-lg:line-clamp-2 lg:mt-2 lg:text-sm lg:line-clamp-none">
-        Real-time view of field operations, billing pressure, and team status —
-        built for fast decisions during the workday.
+        Prioritized view of what needs action, today&apos;s field work, billing
+        pressure, and operational health — built for fast decisions during the
+        workday.
       </p>
     </header>
   );
 }
 
-function buildMobileDashboardTabs(
-  data: DashboardData,
-  onboardingChecklist?: OnboardingChecklist,
-  companyId?: string,
-  userId?: string,
-): Array<{ id: MobileDashboardTabId; label: string; content: React.ReactNode }> {
-  const { access } = data;
-  const notificationAccess = buildNotificationAccess({
-    canManageCustomers: access.canManageCustomers,
-    canViewBilling: access.canViewBilling,
-    canViewAllJobs: access.canViewAllJobs,
-    canViewCompanyExpenses: access.canViewCompanyExpenses,
-    canViewAssignedJobs: access.canViewAssignedJobs,
-  });
-  const tabs: Array<{
-    id: MobileDashboardTabId;
-    label: string;
-    content: React.ReactNode;
-  }> = [];
-
-  const overviewSections: React.ReactNode[] = [];
-  if (
-    onboardingChecklist &&
-    companyId &&
-    shouldShowOnboardingChecklist(onboardingChecklist)
-  ) {
-    overviewSections.push(
-      <OnboardingChecklistSection
-        key="onboarding"
-        checklist={onboardingChecklist}
-        companyId={companyId}
-        userId={userId}
-        variant="dashboard"
-      />,
-    );
-  }
-  if (access.canViewOperationalReports) {
-    overviewSections.push(
-      <AnalyticsSnapshotSection
-        key="analytics"
-        analytics={data.analytics}
-        canViewBilling={access.canViewBilling}
-      />,
-      <TodayNeedsAttentionSection key="attention" data={data} />,
-      <NextBestActionsSection key="actions" data={data} />,
-      <OperationalMomentumSection key="momentum" data={data} />,
-      <OperationalHealthSection
-        key="health"
-        report={data.operationalHealth}
-        variant="compact"
-      />,
-    );
-  } else {
-    overviewSections.push(
-      <TodayOperationsSection key="operations" operations={data.operations} />,
-    );
-  }
-
-  if (overviewSections.length > 0) {
-    tabs.push({
-      id: "overview",
-      label: "Overview",
-      content: <DashboardZone>{overviewSections}</DashboardZone>,
-    });
-  }
-
-  const dispatchSections: React.ReactNode[] = [];
-  if (access.canViewOperationalReports) {
-    dispatchSections.push(
-      <DispatchPressureSection key="dispatch-pressure" data={data} />,
-    );
-  }
-  dispatchSections.push(
-    <TodayOperationsSection key="operations" operations={data.operations} />,
-  );
-  if (access.canViewTechnicianRoster) {
-    dispatchSections.push(
-      <TechnicianStatusSection key="technicians" technicians={data.technicians} />,
-    );
-  }
-
-  tabs.push({
-    id: "dispatch",
-    label: "Dispatch",
-    content: <DashboardZone>{dispatchSections}</DashboardZone>,
-  });
-
-  const moneySections: React.ReactNode[] = [];
-  if (access.canViewOperationalReports && access.canViewBilling) {
-    moneySections.push(
-      <CashFlowCommandSection key="cash-flow" data={data} />,
-    );
-  }
-  if (access.canViewBilling) {
-    moneySections.push(
-      <MoneySnapshotSection key="money" money={data.money} />,
-    );
-  }
-  if (access.canViewCompanyExpenses) {
-    moneySections.push(
-      <ExpenseReviewSection key="expenses" expenses={data.expenses} />,
-    );
-  }
-
-  if (moneySections.length > 0) {
-    tabs.push({
-      id: "money",
-      label: "Money",
-      content: <DashboardZone>{moneySections}</DashboardZone>,
-    });
-  }
-
-  const alertSections: React.ReactNode[] = [];
-  if (access.canViewOperationalReports) {
-    alertSections.push(
-      <OperationalRiskDrilldownSection key="risk" data={data} />,
-      <OperationalInsightsSection
-        key="insights"
-        insights={data.operationalInsights}
-      />,
-      <OfficeReviewQueueSection
-        key="review-queue"
-        report={data.officeReviewQueue}
-        variant="compact"
-        itemLimit={5}
-      />,
-    );
-  }
-  alertSections.push(
-    <NotificationsSummarySection
-      key="notifications"
-      notifications={data.notifications}
-      notificationAccess={notificationAccess}
-    />,
-  );
-
-  if (alertSections.length > 0) {
-    tabs.push({
-      id: "alerts",
-      label: "Alerts",
-      content: <DashboardZone>{alertSections}</DashboardZone>,
-    });
-  }
-
-  const moreSections: React.ReactNode[] = [];
-  if (access.canViewOperationalReports) {
-    moreSections.push(
-      <RecentActivitySection
-        key="activity"
-        activities={data.recentActivity}
-        canViewBilling={access.canViewBilling}
-        canManageCustomers={access.canManageCustomers}
-      />,
-    );
-  }
-  if (!access.canViewOperationalReports && access.canViewBilling) {
-    moreSections.push(
-      <MoneySnapshotSection key="money" money={data.money} />,
-    );
-  }
-  if (!access.canViewOperationalReports && access.canViewCompanyExpenses) {
-    moreSections.push(
-      <ExpenseReviewSection key="expenses" expenses={data.expenses} />,
-    );
-  }
-
-  if (moreSections.length > 0) {
-    tabs.push({
-      id: "more",
-      label: "More",
-      content: <DashboardZone>{moreSections}</DashboardZone>,
-    });
-  }
-
-  return tabs;
-}
-
-function DesktopDashboardLayout({
+function DashboardContentLayout({
   data,
   onboardingChecklist,
   companyId,
   userId,
 }: OperationalDashboardViewProps) {
   const { access } = data;
+  const roleFocus = getDashboardRoleFocus(access);
+  const sectionOrder = getDashboardSectionOrder(access, roleFocus);
   const notificationAccess = buildNotificationAccess({
     canManageCustomers: access.canManageCustomers,
     canViewBilling: access.canViewBilling,
@@ -1204,14 +1140,122 @@ function DesktopDashboardLayout({
     canViewCompanyExpenses: access.canViewCompanyExpenses,
     canViewAssignedJobs: access.canViewAssignedJobs,
   });
+  const showOnboarding =
+    onboardingChecklist &&
+    companyId &&
+    shouldShowOnboardingChecklist(onboardingChecklist);
+  const showLiveMetrics =
+    access.canViewOperationalReports &&
+    !(showOnboarding && onboardingChecklist && !onboardingChecklist.isComplete);
   const showCommandPairSideBySide =
     !hasCashFlowPressure(data) && !hasDispatchPressure(data);
 
+  const needsAttentionContent = access.canViewOperationalReports ? (
+    <>
+      <div
+        className={
+          showCommandPairSideBySide && access.canViewBilling
+            ? "grid gap-3 xl:grid-cols-2 xl:items-stretch lg:gap-4"
+            : "flex flex-col gap-3 lg:gap-4"
+        }
+      >
+        {access.canViewBilling ? (
+          <CashFlowCommandSection data={data} />
+        ) : null}
+        <DispatchPressureSection data={data} />
+      </div>
+
+      <div className="grid gap-3 xl:grid-cols-2 xl:items-start lg:gap-4">
+        <TodayNeedsAttentionSection data={data} />
+        <OfficeReviewQueueSection
+          report={data.officeReviewQueue}
+          variant="compact"
+          itemLimit={5}
+        />
+      </div>
+
+      <OperationalRiskDrilldownSection data={data} />
+
+      <OperationalInsightsSection insights={data.operationalInsights} />
+
+      <NotificationsSummarySection
+        notifications={data.notifications}
+        notificationAccess={notificationAccess}
+      />
+    </>
+  ) : null;
+
+  const todaysWorkContent = (
+    <>
+      {showLiveMetrics ? (
+        <AnalyticsSnapshotSection
+          analytics={data.analytics}
+          canViewBilling={access.canViewBilling}
+        />
+      ) : null}
+
+      <TodayOperationsSection operations={data.operations} />
+
+      {access.canViewTechnicianRoster ? (
+        <TechnicianStatusSection technicians={data.technicians} />
+      ) : null}
+    </>
+  );
+
+  const revenueBillingContent =
+    access.canViewBilling || access.canViewCompanyExpenses ? (
+      <div className="grid gap-3 xl:grid-cols-2 xl:items-start lg:gap-4">
+        {access.canViewBilling ? (
+          <MoneySnapshotSection money={data.money} />
+        ) : null}
+        {access.canViewCompanyExpenses ? (
+          <ExpenseReviewSection expenses={data.expenses} />
+        ) : null}
+      </div>
+    ) : null;
+
+  const operationalHealthContent = access.canViewOperationalReports ? (
+    <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] xl:items-start lg:gap-4">
+      <OperationalMomentumSection data={data} />
+      <OperationalHealthSection
+        report={data.operationalHealth}
+        variant="compact"
+      />
+    </div>
+  ) : null;
+
+  const nextStepsContent = (
+    <>
+      {access.canViewOperationalReports ? (
+        <NextBestActionsSection data={data} />
+      ) : null}
+
+      {access.canViewOperationalReports ? (
+        <RecentActivitySection
+          activities={data.recentActivity}
+          canViewBilling={access.canViewBilling}
+          canManageCustomers={access.canManageCustomers}
+        />
+      ) : (
+        <NotificationsSummarySection
+          notifications={data.notifications}
+          notificationAccess={notificationAccess}
+        />
+      )}
+    </>
+  );
+
+  const sectionContent: Record<DashboardPrioritySectionId, React.ReactNode> = {
+    "needs-attention": needsAttentionContent,
+    "todays-work": todaysWorkContent,
+    "revenue-billing": revenueBillingContent,
+    "operational-health": operationalHealthContent,
+    "next-steps": nextStepsContent,
+  };
+
   return (
     <>
-      {onboardingChecklist &&
-      companyId &&
-      shouldShowOnboardingChecklist(onboardingChecklist) ? (
+      {showOnboarding ? (
         <OnboardingChecklistSection
           checklist={onboardingChecklist}
           companyId={companyId}
@@ -1220,88 +1264,24 @@ function DesktopDashboardLayout({
         />
       ) : null}
 
-      {access.canViewOperationalReports ? (
-        <AnalyticsSnapshotSection
-          analytics={data.analytics}
-          canViewBilling={access.canViewBilling}
-        />
-      ) : null}
+      {sectionOrder.map((sectionId) => {
+        const content = sectionContent[sectionId];
+        if (!content) {
+          return null;
+        }
 
-      <DashboardZone>
-        {access.canViewOperationalReports ? (
-          <>
-            <div
-              className={
-                showCommandPairSideBySide
-                  ? "grid gap-4 xl:grid-cols-2 xl:items-stretch"
-                  : "flex flex-col gap-4"
-              }
-            >
-              {access.canViewBilling ? (
-                <CashFlowCommandSection data={data} />
-              ) : null}
-              <DispatchPressureSection data={data} />
-            </div>
+        const labels = DASHBOARD_SECTION_LABELS[sectionId];
 
-            <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
-              <TodayNeedsAttentionSection data={data} />
-              <NextBestActionsSection data={data} />
-            </div>
-
-            <OperationalRiskDrilldownSection data={data} />
-
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] xl:items-start">
-              <OperationalMomentumSection data={data} />
-              <OperationalHealthSection
-                report={data.operationalHealth}
-                variant="compact"
-              />
-            </div>
-          </>
-        ) : null}
-      </DashboardZone>
-
-      {access.canViewOperationalReports ? (
-        <DashboardZone>
-          <OperationalInsightsSection insights={data.operationalInsights} />
-          <OfficeReviewQueueSection
-            report={data.officeReviewQueue}
-            variant="compact"
-            itemLimit={5}
-          />
-        </DashboardZone>
-      ) : null}
-
-      <DashboardZone>
-        <TodayOperationsSection operations={data.operations} />
-
-        <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
-          {access.canViewTechnicianRoster ? (
-            <TechnicianStatusSection technicians={data.technicians} />
-          ) : null}
-          {access.canViewBilling ? (
-            <MoneySnapshotSection money={data.money} />
-          ) : null}
-        </div>
-
-        <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
-          {access.canViewCompanyExpenses ? (
-            <ExpenseReviewSection expenses={data.expenses} />
-          ) : null}
-          <NotificationsSummarySection
-            notifications={data.notifications}
-            notificationAccess={notificationAccess}
-          />
-        </div>
-
-        {access.canViewOperationalReports ? (
-          <RecentActivitySection
-            activities={data.recentActivity}
-            canViewBilling={access.canViewBilling}
-            canManageCustomers={access.canManageCustomers}
-          />
-        ) : null}
-      </DashboardZone>
+        return (
+          <DashboardPriorityGroup
+            key={sectionId}
+            title={labels.title}
+            description={labels.description}
+          >
+            {content}
+          </DashboardPriorityGroup>
+        );
+      })}
     </>
   );
 }
@@ -1313,27 +1293,26 @@ export function OperationalDashboardView({
   userId,
 }: OperationalDashboardViewProps) {
   const mobileSnapshot = buildMobileDashboardSnapshot(data);
-  const mobileTabs = buildMobileDashboardTabs(
-    data,
-    onboardingChecklist,
-    companyId,
-    userId,
+  const dashboardContent = (
+    <DashboardContentLayout
+      data={data}
+      onboardingChecklist={onboardingChecklist}
+      companyId={companyId}
+      userId={userId}
+    />
   );
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 pb-2 max-lg:gap-4 lg:gap-6 xl:max-w-[1440px] xl:gap-8">
       <div className="lg:hidden">
-        <MobileDashboardShell snapshot={mobileSnapshot} tabs={mobileTabs} />
+        <MobileDashboardShell snapshot={mobileSnapshot}>
+          {dashboardContent}
+        </MobileDashboardShell>
       </div>
 
       <div className="hidden lg:flex lg:flex-col lg:gap-8">
         <DashboardHeader />
-        <DesktopDashboardLayout
-          data={data}
-          onboardingChecklist={onboardingChecklist}
-          companyId={companyId}
-          userId={userId}
-        />
+        {dashboardContent}
       </div>
     </div>
   );

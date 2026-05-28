@@ -1,25 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { memo, useCallback, useState } from "react";
+import { memo } from "react";
 import type { MobileDashboardSnapshotItem } from "@/shared/lib/mobile-dashboard-snapshot";
-
-export type MobileDashboardTabId =
-  | "overview"
-  | "dispatch"
-  | "money"
-  | "alerts"
-  | "more";
-
-type MobileDashboardTab = {
-  id: MobileDashboardTabId;
-  label: string;
-  content: React.ReactNode;
-};
 
 type MobileDashboardShellProps = {
   snapshot: MobileDashboardSnapshotItem[];
-  tabs: MobileDashboardTab[];
+  children: React.ReactNode;
 };
 
 const SNAPSHOT_TONE_STYLES: Record<
@@ -114,108 +101,14 @@ const MobileDashboardSnapshot = memo(function MobileDashboardSnapshot({
   );
 });
 
-function MobileDashboardTabBar({
-  tabs,
-  activeTab,
-  onSelect,
-}: {
-  tabs: MobileDashboardTab[];
-  activeTab: MobileDashboardTabId;
-  onSelect: (tabId: MobileDashboardTabId) => void;
-}) {
-  return (
-    <div className="-mx-1 overflow-x-auto px-1 pb-1">
-      <div
-        className="flex w-max min-w-full gap-2"
-        role="tablist"
-        aria-label="Dashboard sections"
-      >
-        {tabs.map((tab) => {
-          const isActive = tab.id === activeTab;
-
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              aria-controls={`dashboard-panel-${tab.id}`}
-              id={`dashboard-tab-${tab.id}`}
-              onClick={() => onSelect(tab.id)}
-              className={`inline-flex min-h-11 shrink-0 items-center rounded-full px-3 py-2 text-xs font-semibold transition-colors ${
-                isActive
-                  ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-900/10"
-                  : "bg-slate-100 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200/80"
-              }`}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 export function MobileDashboardShell({
   snapshot,
-  tabs,
+  children,
 }: MobileDashboardShellProps) {
-  const initialTabId = tabs[0]?.id ?? "overview";
-  const [activeTab, setActiveTab] = useState<MobileDashboardTabId>(initialTabId);
-  const [visitedTabs, setVisitedTabs] = useState<Set<MobileDashboardTabId>>(
-    () => new Set([initialTabId]),
-  );
-
-  const handleSelectTab = useCallback((tabId: MobileDashboardTabId) => {
-    setActiveTab(tabId);
-    setVisitedTabs((current) => {
-      if (current.has(tabId)) {
-        return current;
-      }
-
-      const next = new Set(current);
-      next.add(tabId);
-      return next;
-    });
-  }, []);
-
   return (
-    <div className="flex min-w-0 flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-4">
       <MobileDashboardSnapshot items={snapshot} />
-
-      {tabs.length > 0 ? (
-        <>
-          <MobileDashboardTabBar
-            tabs={tabs}
-            activeTab={activeTab}
-            onSelect={handleSelectTab}
-          />
-
-          {tabs.map((tab) => {
-            const isActive = tab.id === activeTab;
-
-            if (!visitedTabs.has(tab.id)) {
-              return null;
-            }
-
-            return (
-              <div
-                key={tab.id}
-                id={`dashboard-panel-${tab.id}`}
-                role="tabpanel"
-                aria-labelledby={`dashboard-tab-${tab.id}`}
-                hidden={!isActive}
-                className={
-                  isActive ? "flex min-w-0 flex-col gap-3" : "hidden"
-                }
-              >
-                {tab.content}
-              </div>
-            );
-          })}
-        </>
-      ) : null}
+      <div className="flex min-w-0 flex-col gap-5">{children}</div>
     </div>
   );
 }
