@@ -11,17 +11,16 @@ import {
   User,
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
-import {
-  calculateLineItemTotal,
-  formatTaxRate,
-  type InvoiceDetail,
-} from "@/shared/types/invoice";
+import type { InvoiceDetail } from "@/shared/types/invoice";
 import {
   canRecordInvoicePayment,
   getRecordPaymentBlockReason,
 } from "@/shared/types/invoice-payment";
 import type { InvoiceActivity } from "@/shared/types/invoice-activity";
 import type { InvoicePayment } from "@/shared/types/invoice-payment";
+import { BillingLineItemsList } from "@/shared/components/billing/BillingLineItemsList";
+import { BillingMobileAmountHeader } from "@/shared/components/billing/BillingMobileAmountHeader";
+import { BillingTotalsSummary } from "@/shared/components/billing/BillingTotalsSummary";
 import { InvoiceActivityTimeline } from "./InvoiceActivityTimeline";
 import { InvoiceDetailActionBar } from "./InvoiceDetailActionBar";
 import { InvoicePaymentHistory } from "./InvoicePaymentHistory";
@@ -49,12 +48,12 @@ export function InvoiceDetailPageView({
   const recordPaymentBlockReason = getRecordPaymentBlockReason(invoice);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5 pb-2">
+    <div className="mx-auto min-w-0 max-w-5xl space-y-5 overflow-x-hidden pb-2">
       <Link
         href="/invoices"
         className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-4 w-4 shrink-0" />
         Back to invoices
       </Link>
 
@@ -65,15 +64,15 @@ export function InvoiceDetailPageView({
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Invoice
               </p>
-              <h1 className="mt-1 text-2xl font-bold text-slate-900">
+              <h1 className="mt-1 break-words text-2xl font-bold text-slate-900">
                 {invoice.invoiceNumber}
               </h1>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <InvoiceStatusBadge status={invoice.status} />
-                <span className="text-sm font-semibold text-slate-900">
+                <span className="hidden text-sm font-semibold text-slate-900 sm:inline">
                   {formatCurrency(invoice.total)}
                 </span>
-                <span className="text-sm text-slate-500">
+                <span className="hidden text-sm text-slate-500 sm:inline">
                   Balance {formatCurrency(invoice.balanceDue)}
                 </span>
                 <span className="text-sm text-slate-500">
@@ -83,6 +82,10 @@ export function InvoiceDetailPageView({
                   Due {formatDate(invoice.dueDate)}
                 </span>
               </div>
+              <BillingMobileAmountHeader
+                total={invoice.total}
+                balanceDue={invoice.balanceDue}
+              />
             </div>
 
             <div className="hidden sm:block">
@@ -103,14 +106,19 @@ export function InvoiceDetailPageView({
             <div className="mt-3 space-y-2 text-sm text-slate-700">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 shrink-0 text-slate-400" />
-                {invoice.customerName}
+                <span className="min-w-0 break-words">{invoice.customerName}</span>
               </div>
               {customerEmail ? (
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 shrink-0 text-slate-400" />
-                  <span className="break-all">{customerEmail}</span>
+                  <span className="min-w-0 break-all">{customerEmail}</span>
                 </div>
-              ) : null}
+              ) : (
+                <div className="flex items-start gap-2 text-slate-500">
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                  <span>No email on file — add one on the customer record to send this invoice.</span>
+                </div>
+              )}
               {customerPhone ? (
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 shrink-0 text-slate-400" />
@@ -124,22 +132,30 @@ export function InvoiceDetailPageView({
             {invoice.jobId ? (
               <section className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Linked job
+                  Related job
                 </h2>
                 <Link
                   href={`/jobs/${invoice.jobId}`}
                   className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-cyan-700 transition-colors hover:text-cyan-800"
                 >
-                  <Briefcase className="h-4 w-4" />
+                  <Briefcase className="h-4 w-4 shrink-0" />
                   {invoice.jobNumber ?? "View job"}
                 </Link>
+                <p className="mt-1 text-xs text-slate-500">
+                  Open the job for schedule, notes, and field updates.
+                </p>
               </section>
             ) : (
               <section className="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 p-4">
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Linked job
+                  Related job
                 </h2>
-                <p className="mt-3 text-sm text-slate-500">No job linked</p>
+                <p className="mt-3 text-sm font-medium text-slate-700">
+                  No job linked
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Link a job when creating the invoice to keep field work and billing together.
+                </p>
               </section>
             )}
 
@@ -152,100 +168,58 @@ export function InvoiceDetailPageView({
                   href={`/estimates/${invoice.estimateId}`}
                   className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-cyan-700 transition-colors hover:text-cyan-800"
                 >
-                  <FileText className="h-4 w-4" />
+                  <FileText className="h-4 w-4 shrink-0" />
                   {invoice.estimateNumber ?? "View estimate"}
                 </Link>
+                <p className="mt-1 text-xs text-slate-500">
+                  View the original estimate this invoice was created from.
+                </p>
               </section>
             ) : null}
           </div>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Line items
         </h2>
-        <div className="mt-4 space-y-2">
-          {invoice.lineItems.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-3"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-900">
-                    {item.name}
-                  </p>
-                  {item.description ? (
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      {item.description}
-                    </p>
-                  ) : null}
-                </div>
-                {!item.taxable ? (
-                  <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                    Non-taxable
-                  </span>
-                ) : null}
-              </div>
-              <div className="mt-1 flex items-center justify-between gap-3 text-xs text-slate-500">
-                <span>
-                  {item.quantity} × {formatCurrency(item.unitPrice)}
-                </span>
-                <span className="font-semibold text-slate-700">
-                  {formatCurrency(
-                    calculateLineItemTotal(item.quantity, item.unitPrice),
-                  )}
-                </span>
-              </div>
-            </div>
-          ))}
+        <div className="mt-4">
+          <BillingLineItemsList
+            items={invoice.lineItems}
+            documentLabel="invoice"
+          />
         </div>
 
-        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-3">
-          <div className="flex items-center justify-between text-sm text-slate-600">
-            <span>Subtotal</span>
-            <span>{formatCurrency(invoice.subtotal)}</span>
-          </div>
-          {invoice.taxRate > 0 || invoice.taxAmount ? (
-            <div className="mt-2 flex items-center justify-between text-sm text-slate-600">
-              <span>
-                Tax
-                {invoice.taxRate > 0
-                  ? ` (${formatTaxRate(invoice.taxRate)}%)`
-                  : ""}
-              </span>
-              <span>{formatCurrency(invoice.taxAmount ?? 0)}</span>
-            </div>
-          ) : null}
-          <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2 text-sm font-bold text-slate-900">
-            <span>Total</span>
-            <span>{formatCurrency(invoice.total)}</span>
-          </div>
-          {invoice.amountPaid > 0 ? (
-            <div className="mt-2 flex items-center justify-between text-sm text-emerald-700">
-              <span>Paid</span>
-              <span>{formatCurrency(invoice.amountPaid)}</span>
-            </div>
-          ) : null}
-          {invoice.balanceDue > 0 ? (
-            <div className="mt-2 flex items-center justify-between text-sm font-semibold text-amber-700">
-              <span>Balance due</span>
-              <span>{formatCurrency(invoice.balanceDue)}</span>
-            </div>
-          ) : null}
+        <div className="mt-4">
+          <BillingTotalsSummary
+            subtotal={invoice.subtotal}
+            taxRate={invoice.taxRate}
+            taxAmount={invoice.taxAmount ?? 0}
+            total={invoice.total}
+            amountPaid={invoice.amountPaid}
+            balanceDue={invoice.balanceDue}
+          />
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Payments
             </h2>
-            {canManageBilling && !canRecordPayment ? (
+            {canManageBilling && canRecordPayment ? (
+              <p className="mt-1 text-xs text-slate-500">
+                Record a payment when the customer pays all or part of the balance due.
+              </p>
+            ) : canManageBilling && !canRecordPayment && recordPaymentBlockReason ? (
               <p className="mt-1 text-xs text-slate-500">
                 {recordPaymentBlockReason}
+              </p>
+            ) : !canManageBilling ? (
+              <p className="mt-1 text-xs text-slate-500">
+                Payment history for this invoice.
               </p>
             ) : null}
           </div>
@@ -261,11 +235,11 @@ export function InvoiceDetailPageView({
       </section>
 
       {invoice.notes ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Notes
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-slate-600">
+          <p className="mt-3 break-words text-sm leading-relaxed text-slate-600">
             {invoice.notes}
           </p>
         </section>

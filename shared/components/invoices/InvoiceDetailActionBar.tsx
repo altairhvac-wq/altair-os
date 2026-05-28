@@ -181,6 +181,7 @@ export function InvoiceDetailActionBar({
               <button
                 type="button"
                 onClick={onRecordPayment}
+                title="Record all or part of the balance due."
                 className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
               >
                 Record payment
@@ -192,10 +193,11 @@ export function InvoiceDetailActionBar({
                 type="button"
                 disabled={isPending || resendPending}
                 onClick={handleSendInvoice}
+                title="Emails the invoice and marks it as sent."
                 className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Send className="h-4 w-4" />
-                {isPending ? "Sending…" : "Send"}
+                {isPending ? "Sending…" : "Send invoice"}
               </button>
             ) : null}
 
@@ -204,10 +206,11 @@ export function InvoiceDetailActionBar({
                 type="button"
                 disabled={isPending || resendPending}
                 onClick={handleResendEmail}
+                title="Sends another copy to the customer's email on file."
                 className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Mail className="h-4 w-4" />
-                {resendPending ? "Resending…" : "Resend"}
+                {resendPending ? "Resending…" : "Resend email"}
               </button>
             ) : null}
 
@@ -231,9 +234,22 @@ export function InvoiceDetailActionBar({
           </p>
         ) : null}
 
-        {!canRecordPayment && recordPaymentBlockReason && variant === "sticky" ? (
-          <p className="mt-2 text-xs text-slate-500">{recordPaymentBlockReason}</p>
-        ) : null}
+        {variant === "sticky" ? (() => {
+          const helperText =
+            !canRecordPayment && recordPaymentBlockReason
+              ? recordPaymentBlockReason
+              : canSend
+                ? "Send emails the invoice to the customer on file."
+                : canResendEmail
+                  ? "Resend sends another copy to the customer's email on file."
+                  : canRecordPayment
+                    ? "Record when the customer pays all or part of the balance due."
+                    : null;
+
+          return helperText ? (
+            <p className="mt-2 text-xs text-slate-500">{helperText}</p>
+          ) : null;
+        })() : null}
 
         {!canVoid && voidBlockReason && canSend === false && variant !== "sticky" ? (
           <p className="text-xs text-slate-500">{voidBlockReason}</p>

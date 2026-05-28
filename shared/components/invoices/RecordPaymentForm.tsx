@@ -149,8 +149,8 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
       <MobileSheetPanel maxWidth="lg" maxHeight="90" responsiveRounded>
         <MobileSheetHeader
           titleId={RECORD_PAYMENT_TITLE_ID}
-          title="Record payment"
-          subtitle={`Balance due: ${formatCurrency(invoice.balanceDue)}`}
+          title="Record a payment against the balance due."
+          subtitle={`Amount due: ${formatCurrency(invoice.balanceDue)}`}
           onClose={onClose}
           closeDisabled={isPending}
           icon={

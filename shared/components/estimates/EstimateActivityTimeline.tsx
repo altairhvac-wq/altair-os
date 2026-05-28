@@ -57,7 +57,7 @@ export function EstimateActivityTimeline({
             Activity
           </h2>
           <p className="text-sm text-slate-600">
-            Timeline for this estimate
+            Status changes and customer responses for this estimate
           </p>
         </div>
       </div>
@@ -66,7 +66,7 @@ export function EstimateActivityTimeline({
         <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center">
           <p className="text-sm font-medium text-slate-700">No activity yet</p>
           <p className="mt-1 text-xs text-slate-500">
-            Status changes and estimate events will appear here.
+            Sends, approvals, and status changes will appear here.
           </p>
         </div>
       ) : (

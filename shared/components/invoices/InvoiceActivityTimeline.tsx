@@ -62,7 +62,9 @@ export function InvoiceActivityTimeline({
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Activity
           </h2>
-          <p className="text-sm text-slate-600">Timeline for this invoice</p>
+          <p className="text-sm text-slate-600">
+            Sends, payments, and status changes for this invoice
+          </p>
         </div>
       </div>
 
@@ -70,7 +72,7 @@ export function InvoiceActivityTimeline({
         <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center">
           <p className="text-sm font-medium text-slate-700">No activity yet</p>
           <p className="mt-1 text-xs text-slate-500">
-            Invoice events will appear here.
+            Sends, payments, and status changes will appear here.
           </p>
         </div>
       ) : (

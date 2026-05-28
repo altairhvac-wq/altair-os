@@ -17,10 +17,13 @@ import {
 type EstimateStatusActionsProps = {
   estimate: EstimateDetail;
   canManageEstimates: boolean;
+  variant?: "inline" | "sticky";
 };
 
 type StatusAction = {
   label: string;
+  shortLabel?: string;
+  helper?: string;
   toStatus: EstimateStatus;
   className: string;
 };
@@ -30,12 +33,15 @@ function getAvailableActions(status: EstimateStatus): StatusAction[] {
     case "draft":
       return [
         {
-          label: "Send estimate",
+          label: "Send to customer",
+          shortLabel: "Send",
+          helper: "Emails the estimate and marks it as sent.",
           toStatus: "sent",
           className: "bg-slate-900 text-white hover:bg-slate-800",
         },
         {
-          label: "Cancel",
+          label: "Cancel estimate",
+          shortLabel: "Cancel",
           toStatus: "cancelled",
           className:
             "border border-slate-200 text-slate-700 hover:bg-slate-50",
@@ -44,18 +50,23 @@ function getAvailableActions(status: EstimateStatus): StatusAction[] {
     case "sent":
       return [
         {
-          label: "Mark approved",
+          label: "Approve estimate",
+          shortLabel: "Approve",
+          helper: "Records customer approval for this estimate.",
           toStatus: "approved",
           className: "bg-emerald-600 text-white hover:bg-emerald-700",
         },
         {
-          label: "Mark declined",
+          label: "Decline estimate",
+          shortLabel: "Decline",
+          helper: "Records that the customer declined this estimate.",
           toStatus: "declined",
           className:
             "border border-slate-200 text-slate-700 hover:bg-slate-50",
         },
         {
-          label: "Cancel",
+          label: "Cancel estimate",
+          shortLabel: "Cancel",
           toStatus: "cancelled",
           className:
             "border border-slate-200 text-slate-700 hover:bg-slate-50",
@@ -64,7 +75,8 @@ function getAvailableActions(status: EstimateStatus): StatusAction[] {
     case "approved":
       return [
         {
-          label: "Cancel",
+          label: "Cancel estimate",
+          shortLabel: "Cancel",
           toStatus: "cancelled",
           className:
             "border border-slate-200 text-slate-700 hover:bg-slate-50",
@@ -73,7 +85,8 @@ function getAvailableActions(status: EstimateStatus): StatusAction[] {
     case "declined":
       return [
         {
-          label: "Cancel",
+          label: "Cancel estimate",
+          shortLabel: "Cancel",
           toStatus: "cancelled",
           className:
             "border border-slate-200 text-slate-700 hover:bg-slate-50",
@@ -87,6 +100,7 @@ function getAvailableActions(status: EstimateStatus): StatusAction[] {
 export function EstimateStatusActions({
   estimate,
   canManageEstimates,
+  variant = "inline",
 }: EstimateStatusActionsProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -95,6 +109,14 @@ export function EstimateStatusActions({
   const actions = getAvailableActions(estimate.status);
   const canConvertToInvoice = estimate.status === "approved";
   const canResendEmail = canResendEstimateEmail(estimate.status);
+  const isSticky = variant === "sticky";
+  const primaryAction = actions.find(
+    (action) =>
+      action.toStatus === "sent" ||
+      action.toStatus === "approved" ||
+      action.toStatus === "declined",
+  );
+  const secondaryActions = actions.filter((action) => action !== primaryAction);
 
   if (!canManageEstimates) {
     return null;
@@ -194,17 +216,24 @@ export function EstimateStatusActions({
     return null;
   }
 
-  return (
-    <div className="flex flex-col items-start gap-2">
-      <div className="flex flex-wrap gap-2">
+  const buttonClass = isSticky
+    ? "inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+    : "rounded-lg px-3 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+
+  const containerClass = isSticky
+    ? "fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-white/90 sm:hidden"
+    : "flex flex-col items-start gap-2";
+
+  const actionButtons = (
+    <div className={isSticky ? "flex flex-wrap gap-2" : "flex flex-wrap gap-2"}>
       {canConvertToInvoice ? (
         <button
           type="button"
           disabled={isPending || resendPending}
           onClick={handleConvertToInvoice}
-          className="rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className={`${buttonClass} bg-violet-600 text-white hover:bg-violet-700`}
         >
-          Convert to invoice
+          {isSticky ? "Convert" : "Convert to invoice"}
         </button>
       ) : null}
       {canResendEmail ? (
@@ -212,25 +241,79 @@ export function EstimateStatusActions({
           type="button"
           disabled={isPending || resendPending}
           onClick={handleResendEmail}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          title="Sends another copy to the customer's email on file."
+          className={`${buttonClass} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}
         >
           <Mail className="h-4 w-4" />
-          {resendPending ? "Resending…" : "Resend email"}
+          {resendPending
+            ? "Resending…"
+            : isSticky
+              ? "Resend"
+              : "Resend to customer"}
         </button>
       ) : null}
-      {actions.map((action) => (
+      {isSticky && primaryAction ? (
+        <button
+          key={primaryAction.toStatus}
+          type="button"
+          disabled={isPending || resendPending}
+          onClick={() => handleStatusChange(primaryAction.toStatus)}
+          className={`${buttonClass} ${primaryAction.className}`}
+        >
+          {primaryAction.shortLabel ?? primaryAction.label}
+        </button>
+      ) : null}
+      {(isSticky ? secondaryActions : actions).map((action) => (
         <button
           key={action.toStatus}
           type="button"
           disabled={isPending || resendPending}
           onClick={() => handleStatusChange(action.toStatus)}
-          className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${action.className}`}
+          className={`${buttonClass} ${action.className}`}
         >
-          {action.label}
+          {isSticky ? (action.shortLabel ?? action.label) : action.label}
         </button>
       ))}
-      </div>
+    </div>
+  );
 
+  const helperText =
+    primaryAction?.helper ??
+    (canResendEmail
+      ? "Resend sends another copy to the customer's email on file."
+      : null);
+
+  if (isSticky) {
+    const hasActions =
+      canConvertToInvoice || canResendEmail || actions.length > 0;
+
+    if (!hasActions) {
+      return null;
+    }
+
+    return (
+      <>
+        <div className={containerClass}>
+          {actionButtons}
+          {error ? (
+            <p className="mt-2 text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          ) : helperText ? (
+            <p className="mt-2 text-xs text-slate-500">{helperText}</p>
+          ) : null}
+        </div>
+        <div className="h-24 sm:hidden" aria-hidden />
+      </>
+    );
+  }
+
+  return (
+    <div className={containerClass}>
+      {actionButtons}
+      {helperText ? (
+        <p className="text-xs text-slate-500">{helperText}</p>
+      ) : null}
       {error ? (
         <p className="text-sm text-red-600" role="alert">
           {error}

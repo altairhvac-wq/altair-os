@@ -8,7 +8,12 @@ function Skeleton({ className }: { className?: string }) {
 
 export function InvoiceDetailLoadingState() {
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
+    <div
+      className="mx-auto min-w-0 max-w-5xl space-y-5 overflow-x-hidden"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <p className="sr-only">Loading invoice details…</p>
       <Skeleton className="h-5 w-32" />
 
       <div className="overflow-hidden admin-card">
@@ -22,6 +27,7 @@ export function InvoiceDetailLoadingState() {
             <Skeleton className="h-6 w-24" />
             <Skeleton className="h-6 w-32" />
           </div>
+          <Skeleton className="h-14 w-full sm:hidden" />
         </div>
         <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-3">
           <Skeleton className="h-28 w-full lg:col-span-2" />

@@ -43,11 +43,7 @@ export function InvoiceStatusActions({
   const editBlockReason = getEditInvoiceBlockReason(invoice, paymentCount);
 
   if (!canManageBilling) {
-    return (
-      <p className="text-sm text-slate-500">
-        You do not have permission to manage invoices.
-      </p>
-    );
+    return null;
   }
 
   if (!canSend && !canVoid && !canEdit && !canResendEmail) {
@@ -185,10 +181,11 @@ export function InvoiceStatusActions({
             type="button"
             disabled={isPending || resendPending}
             onClick={handleSendInvoice}
+            title="Emails the invoice and marks it as sent."
             className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Send className="h-4 w-4" />
-            {isPending ? "Sending…" : "Send invoice"}
+            {isPending ? "Sending…" : "Send to customer"}
           </button>
         ) : null}
 
@@ -197,10 +194,11 @@ export function InvoiceStatusActions({
             type="button"
             disabled={isPending || resendPending}
             onClick={handleResendEmail}
+            title="Sends another copy to the customer's email on file."
             className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Mail className="h-4 w-4" />
-            {resendPending ? "Resending…" : "Resend email"}
+            {resendPending ? "Resending…" : "Resend to customer"}
           </button>
         ) : null}
 
@@ -216,6 +214,16 @@ export function InvoiceStatusActions({
           </button>
         ) : null}
       </div>
+
+      {canSend ? (
+        <p className="text-xs text-slate-500">
+          Send emails the invoice to the customer on file.
+        </p>
+      ) : canResendEmail ? (
+        <p className="text-xs text-slate-500">
+          Resend sends another copy to the customer's email on file.
+        </p>
+      ) : null}
 
       {error ? (
         <p className="text-sm text-red-600" role="alert">

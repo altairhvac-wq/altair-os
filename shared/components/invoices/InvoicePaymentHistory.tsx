@@ -20,9 +20,9 @@ export function InvoicePaymentHistory({ payments }: InvoicePaymentHistoryProps) 
   if (payments.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center">
-        <p className="text-sm font-medium text-slate-700">No payments yet</p>
+        <p className="text-sm font-medium text-slate-700">No payments recorded</p>
         <p className="mt-1 text-xs text-slate-500">
-          Recorded payments will appear here.
+          Payments you record will show up here with date, amount, and method.
         </p>
       </div>
     );

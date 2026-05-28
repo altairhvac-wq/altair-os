@@ -32,9 +32,13 @@ export function InvoiceEditLinkButton({
 
   if (canEdit) {
     return (
-      <Link href={`/invoices/${invoice.id}/edit`} className={className}>
+      <Link
+        href={`/invoices/${invoice.id}/edit`}
+        className={className}
+        title="Update line items, dates, or notes before sending."
+      >
         <Pencil className="h-4 w-4" />
-        Edit
+        Edit invoice
       </Link>
     );
   }
