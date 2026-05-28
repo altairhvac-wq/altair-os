@@ -69,6 +69,7 @@ import type {
   TimeClockEntryRow,
   TimeClockEntryUpdate,
 } from "./core-tables";
+import type { Json } from "./enums";
 
 export type Database = {
   public: {
@@ -801,6 +802,22 @@ export type Database = {
           p_roles: CompanyMembershipRow["role"][];
         };
         Returns: string[];
+      };
+      assign_job_to_technician: {
+        Args: {
+          p_company_id: string;
+          p_job_id: string;
+          p_technician_id: string;
+        };
+        Returns: Json;
+      };
+      finalize_job_dispatch_assignments: {
+        Args: {
+          p_company_id: string;
+          p_job_id: string;
+          p_final_status: DispatchAssignmentRow["status"];
+        };
+        Returns: undefined;
       };
     };
     Enums: {

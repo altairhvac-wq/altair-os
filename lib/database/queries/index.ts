@@ -12,9 +12,11 @@ export {
 } from "./customers";
 export {
   assignJobToTechnician,
+  finalizeActiveDispatchAssignments,
   getDispatchJobById,
   listDispatchJobsForToday,
   mapJobRowToDispatchJob,
+  unassignJobFromTechnician,
 } from "./dispatch";
 export {
   createJob,

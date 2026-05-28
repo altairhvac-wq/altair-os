@@ -10,10 +10,19 @@ import { recordTechnicianAssignedActivity } from "@/lib/database/services/job-ac
 import type { Job } from "@/shared/types/job";
 import type { DispatchJob } from "@/shared/types/dispatch";
 import type { DispatchAssignmentStatus } from "@/lib/database/types/enums";
+import type { JobStatus } from "@/shared/types/job";
 
 type JobRowWithDispatch = JobRow & {
   customers: { name: string; email?: string; phone?: string } | null;
   assigned_technician: { full_name: string | null; email: string } | null;
+};
+
+type AssignJobRpcResult = {
+  changed: boolean;
+  job_id: string;
+  previous_technician_id?: string | null;
+  customer_id?: string;
+  job_number?: string;
 };
 
 const DISPATCH_JOB_SELECT = `
@@ -21,6 +30,19 @@ const DISPATCH_JOB_SELECT = `
   customers(name, email, phone),
   assigned_technician:profiles!jobs_assigned_technician_id_fkey(full_name, email)
 `;
+
+const NON_ASSIGNABLE_JOB_STATUSES = new Set<JobStatus>([
+  "cancelled",
+  "completed",
+]);
+
+function isRpcUnavailable(error: { code?: string; message?: string }): boolean {
+  const message = error.message?.toLowerCase() ?? "";
+  return (
+    error.code === "PGRST202" ||
+    message.includes("could not find the function")
+  );
+}
 
 function getTodayBounds(
   reference = new Date(),
@@ -125,14 +147,70 @@ export async function getDispatchJobById(
   return mapJobRowToDispatchJob(data as JobRowWithDispatch);
 }
 
+async function cancelActiveDispatchAssignments(
+  companyId: string,
+  jobId: string,
+  now: string,
+  finalStatus: Extract<DispatchAssignmentStatus, "cancelled" | "unassigned">,
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("dispatch_assignments")
+    .update({
+      status: finalStatus,
+      unassigned_at: now,
+    })
+    .eq("company_id", companyId)
+    .eq("job_id", jobId)
+    .eq("status", "active");
+
+  if (error) {
+    console.error("[cancelActiveDispatchAssignments] update failed:", {
+      companyId,
+      jobId,
+      finalStatus,
+      code: error.code,
+      message: error.message,
+    });
+    return { error: mapDatabaseError(error) };
+  }
+
+  return { error: null };
+}
+
 export async function finalizeActiveDispatchAssignments(
   companyId: string,
   jobId: string,
   finalStatus: Extract<DispatchAssignmentStatus, "completed" | "cancelled">,
-): Promise<void> {
+): Promise<{ error: string | null }> {
   const supabase = await createClient();
-  const now = new Date().toISOString();
 
+  const { error: rpcError } = await supabase.rpc(
+    "finalize_job_dispatch_assignments",
+    {
+      p_company_id: companyId,
+      p_job_id: jobId,
+      p_final_status: finalStatus,
+    },
+  );
+
+  if (!rpcError) {
+    return { error: null };
+  }
+
+  if (!isRpcUnavailable(rpcError)) {
+    console.error("[finalizeActiveDispatchAssignments] rpc failed:", {
+      companyId,
+      jobId,
+      finalStatus,
+      code: rpcError.code,
+      message: rpcError.message,
+    });
+    return { error: mapDatabaseError(rpcError) };
+  }
+
+  const now = new Date().toISOString();
   const updatePayload: {
     status: DispatchAssignmentStatus;
     unassigned_at?: string;
@@ -141,30 +219,120 @@ export async function finalizeActiveDispatchAssignments(
       ? { status: "completed" }
       : { status: "cancelled", unassigned_at: now };
 
-  const { error } = await supabase
+  const { error: assignmentError } = await supabase
     .from("dispatch_assignments")
     .update(updatePayload)
     .eq("company_id", companyId)
     .eq("job_id", jobId)
     .eq("status", "active");
 
-  if (error) {
+  if (assignmentError) {
     console.error("[finalizeActiveDispatchAssignments] update failed:", {
       companyId,
       jobId,
       finalStatus,
-      code: error.code,
-      message: error.message,
+      code: assignmentError.code,
+      message: assignmentError.message,
     });
+    return { error: mapDatabaseError(assignmentError) };
   }
+
+  if (finalStatus === "cancelled") {
+    const { error: jobError } = await supabase
+      .from("jobs")
+      .update({ assigned_technician_id: null })
+      .eq("company_id", companyId)
+      .eq("id", jobId);
+
+    if (jobError) {
+      console.error(
+        "[finalizeActiveDispatchAssignments] clear technician failed:",
+        {
+          companyId,
+          jobId,
+          code: jobError.code,
+          message: jobError.message,
+        },
+      );
+      return { error: mapDatabaseError(jobError) };
+    }
+  }
+
+  return { error: null };
 }
 
-export async function assignJobToTechnician(
+export async function unassignJobFromTechnician(
+  companyId: string,
+  jobId: string,
+): Promise<{ job: DispatchJob | null; error: string | null }> {
+  const supabase = await createClient();
+  const now = new Date().toISOString();
+
+  const { data: jobRow, error: jobError } = await supabase
+    .from("jobs")
+    .select("id, status, assigned_technician_id")
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .maybeSingle();
+
+  if (jobError) {
+    return { job: null, error: mapDatabaseError(jobError) };
+  }
+
+  if (!jobRow) {
+    return { job: null, error: "Job was not found." };
+  }
+
+  if (NON_ASSIGNABLE_JOB_STATUSES.has(jobRow.status as JobStatus)) {
+    return {
+      job: null,
+      error: `${jobRow.status === "cancelled" ? "Cancelled" : "Completed"} jobs cannot be unassigned.`,
+    };
+  }
+
+  if (!jobRow.assigned_technician_id) {
+    const job = await getDispatchJobById(companyId, jobId);
+    return { job, error: null };
+  }
+
+  const { error: cancelError } = await cancelActiveDispatchAssignments(
+    companyId,
+    jobId,
+    now,
+    "unassigned",
+  );
+
+  if (cancelError) {
+    return { job: null, error: cancelError };
+  }
+
+  const { error: updateError } = await supabase
+    .from("jobs")
+    .update({ assigned_technician_id: null })
+    .eq("company_id", companyId)
+    .eq("id", jobId);
+
+  if (updateError) {
+    return { job: null, error: mapDatabaseError(updateError) };
+  }
+
+  const job = await getDispatchJobById(companyId, jobId);
+  return { job, error: null };
+}
+
+async function assignJobToTechnicianLegacy(
   companyId: string,
   jobId: string,
   technicianId: string,
   assignedBy: string,
-): Promise<{ job: DispatchJob | null; error: string | null }> {
+): Promise<{
+  job: DispatchJob | null;
+  error: string | null;
+  changed: boolean;
+  previousTechnicianId?: string | null;
+  customerId?: string;
+  jobNumber?: string;
+}> {
   const supabase = await createClient();
 
   const { data: jobRow, error: jobError } = await supabase
@@ -175,34 +343,58 @@ export async function assignJobToTechnician(
     .maybeSingle();
 
   if (jobError) {
-    console.error("[assignJobToTechnician] job lookup failed:", {
-      companyId,
-      jobId,
-      code: jobError.code,
-      message: jobError.message,
-    });
-    return { job: null, error: mapDatabaseError(jobError) };
-  }
-
-  if (!jobRow) {
-    return { job: null, error: "Job was not found." };
-  }
-
-  if (jobRow.status === "cancelled") {
     return {
       job: null,
-      error: "Cancelled jobs cannot be reassigned.",
+      error: mapDatabaseError(jobError),
+      changed: false,
     };
   }
 
-  const statusBeforeAssignment = jobRow.status;
+  if (!jobRow) {
+    return { job: null, error: "Job was not found.", changed: false };
+  }
+
+  if (NON_ASSIGNABLE_JOB_STATUSES.has(jobRow.status as JobStatus)) {
+    return {
+      job: null,
+      error:
+        jobRow.status === "cancelled"
+          ? "Cancelled jobs cannot be reassigned."
+          : "Completed jobs cannot be reassigned.",
+      changed: false,
+    };
+  }
+
   const previousTechnicianId = jobRow.assigned_technician_id;
-  console.log("[assignJobToTechnician] assignment start", {
-    companyId,
-    jobId,
-    technicianId,
-    statusBeforeAssignment,
-  });
+  const customerId = jobRow.customer_id;
+  const jobNumber = jobRow.job_number;
+
+  const { data: activeAssignment, error: activeError } = await supabase
+    .from("dispatch_assignments")
+    .select("id, technician_id")
+    .eq("company_id", companyId)
+    .eq("job_id", jobId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (activeError) {
+    return { job: null, error: mapDatabaseError(activeError), changed: false };
+  }
+
+  if (
+    activeAssignment?.technician_id === technicianId &&
+    previousTechnicianId === technicianId
+  ) {
+    const job = await getDispatchJobById(companyId, jobId);
+    return {
+      job,
+      error: null,
+      changed: false,
+      previousTechnicianId,
+      customerId,
+      jobNumber,
+    };
+  }
 
   const { data: membership, error: membershipError } = await supabase
     .from("company_memberships")
@@ -214,61 +406,40 @@ export async function assignJobToTechnician(
     .maybeSingle();
 
   if (membershipError) {
-    console.error("[assignJobToTechnician] technician lookup failed:", {
-      companyId,
-      technicianId,
-      code: membershipError.code,
-      message: membershipError.message,
-    });
-    return { job: null, error: mapDatabaseError(membershipError) };
+    return { job: null, error: mapDatabaseError(membershipError), changed: false };
   }
 
   if (!membership) {
     return {
       job: null,
       error: "Selected technician is not an active member of this company.",
+      changed: false,
     };
   }
 
   const now = new Date().toISOString();
 
-  const { data: activeAssignments, error: activeError } = await supabase
-    .from("dispatch_assignments")
-    .select("id")
-    .eq("company_id", companyId)
-    .eq("job_id", jobId)
-    .eq("status", "active");
-
-  if (activeError) {
-    console.error("[assignJobToTechnician] active assignment lookup failed:", {
+  if (activeAssignment) {
+    const { error: cancelError } = await cancelActiveDispatchAssignments(
       companyId,
       jobId,
-      code: activeError.code,
-      message: activeError.message,
-    });
-    return { job: null, error: mapDatabaseError(activeError) };
-  }
-
-  if (activeAssignments?.length) {
-    const { error: cancelError } = await supabase
-      .from("dispatch_assignments")
-      .update({
-        status: "cancelled",
-        unassigned_at: now,
-      })
-      .eq("company_id", companyId)
-      .eq("job_id", jobId)
-      .eq("status", "active");
+      now,
+      "cancelled",
+    );
 
     if (cancelError) {
-      console.error("[assignJobToTechnician] cancel assignment failed:", {
-        companyId,
-        jobId,
-        code: cancelError.code,
-        message: cancelError.message,
-      });
-      return { job: null, error: mapDatabaseError(cancelError) };
+      return { job: null, error: cancelError, changed: false };
     }
+  }
+
+  const { error: updateError } = await supabase
+    .from("jobs")
+    .update({ assigned_technician_id: technicianId })
+    .eq("company_id", companyId)
+    .eq("id", jobId);
+
+  if (updateError) {
+    return { job: null, error: mapDatabaseError(updateError), changed: false };
   }
 
   const assignmentInsert: DispatchAssignmentInsert = {
@@ -286,64 +457,133 @@ export async function assignJobToTechnician(
     .insert(assignmentInsert);
 
   if (insertError) {
-    console.error("[assignJobToTechnician] insert assignment failed:", {
-      companyId,
-      jobId,
-      technicianId,
-      code: insertError.code,
-      message: insertError.message,
-    });
-    return { job: null, error: mapDatabaseError(insertError) };
-  }
+    if (insertError.code === "23505") {
+      const { error: revertError } = await supabase
+        .from("jobs")
+        .update({ assigned_technician_id: previousTechnicianId })
+        .eq("company_id", companyId)
+        .eq("id", jobId);
 
-  const { error: updateError } = await supabase
-    .from("jobs")
-    .update({
-      assigned_technician_id: technicianId,
-    })
-    .eq("company_id", companyId)
-    .eq("id", jobId);
+      if (revertError) {
+        console.error("[assignJobToTechnician] revert after conflict failed:", {
+          companyId,
+          jobId,
+          code: revertError.code,
+          message: revertError.message,
+        });
+      }
 
-  if (updateError) {
-    console.error("[assignJobToTechnician] job update failed:", {
-      companyId,
-      jobId,
-      code: updateError.code,
-      message: updateError.message,
-    });
-    return { job: null, error: mapDatabaseError(updateError) };
+      const job = await getDispatchJobById(companyId, jobId);
+      return {
+        job,
+        error:
+          "Assignment conflict detected. Refresh the dispatch board and try again.",
+        changed: false,
+      };
+    }
+
+    const { error: revertError } = await supabase
+      .from("jobs")
+      .update({ assigned_technician_id: previousTechnicianId })
+      .eq("company_id", companyId)
+      .eq("id", jobId);
+
+    if (revertError) {
+      console.error("[assignJobToTechnician] revert after insert failed:", {
+        companyId,
+        jobId,
+        code: revertError.code,
+        message: revertError.message,
+      });
+    }
+
+    return { job: null, error: mapDatabaseError(insertError), changed: false };
   }
 
   const job = await getDispatchJobById(companyId, jobId);
+  return {
+    job,
+    error: null,
+    changed: true,
+    previousTechnicianId,
+    customerId,
+    jobNumber,
+  };
+}
 
-  if (job && job.status !== statusBeforeAssignment) {
-    console.error(
-      "[assignJobToTechnician] unexpected job.status change during assignment",
-      {
+export async function assignJobToTechnician(
+  companyId: string,
+  jobId: string,
+  technicianId: string,
+  assignedBy: string,
+): Promise<{ job: DispatchJob | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: rpcData, error: rpcError } = await supabase.rpc(
+    "assign_job_to_technician",
+    {
+      p_company_id: companyId,
+      p_job_id: jobId,
+      p_technician_id: technicianId,
+    },
+  );
+
+  if (!rpcError && rpcData && typeof rpcData === "object") {
+    const result = rpcData as AssignJobRpcResult;
+    const job = await getDispatchJobById(companyId, jobId);
+
+    if (!job) {
+      return { job: null, error: "Job was not found." };
+    }
+
+    if (result.changed) {
+      await recordTechnicianAssignedActivity({
         companyId,
         jobId,
-        statusBeforeAssignment,
-        statusAfterAssignment: job.status,
-      },
-    );
-  } else {
-    console.log("[assignJobToTechnician] assignment complete", {
+        actorId: assignedBy,
+        technicianId,
+        previousTechnicianId: result.previous_technician_id,
+        customerId: result.customer_id,
+        jobNumber: result.job_number,
+      });
+    }
+
+    return { job, error: null };
+  }
+
+  if (rpcError && !isRpcUnavailable(rpcError)) {
+    console.error("[assignJobToTechnician] rpc failed:", {
       companyId,
       jobId,
       technicianId,
-      status: job?.status ?? statusBeforeAssignment,
+      code: rpcError.code,
+      message: rpcError.message,
+    });
+    return { job: null, error: mapDatabaseError(rpcError) };
+  }
+
+  const legacy = await assignJobToTechnicianLegacy(
+    companyId,
+    jobId,
+    technicianId,
+    assignedBy,
+  );
+
+  if (legacy.error || !legacy.job) {
+    return { job: legacy.job, error: legacy.error };
+  }
+
+  if (legacy.changed) {
+    await recordTechnicianAssignedActivity({
+      companyId,
+      jobId,
+      actorId: assignedBy,
+      technicianId,
+      previousTechnicianId: legacy.previousTechnicianId,
+      customerId: legacy.customerId,
+      jobNumber: legacy.jobNumber,
     });
   }
 
-  await recordTechnicianAssignedActivity({
-    companyId,
-    jobId,
-    actorId: assignedBy,
-    technicianId,
-    previousTechnicianId,
-    customerId: jobRow.customer_id,
-    jobNumber: jobRow.job_number,
-  });
-
-  return { job, error: null };
+  return { job: legacy.job, error: null };
 }

@@ -483,10 +483,42 @@ export async function updateJobWorkflowStatus(
     };
   }
 
-  if (actionId === "complete") {
-    await finalizeActiveDispatchAssignments(companyId, jobId, "completed");
-  } else if (actionId === "cancel") {
-    await finalizeActiveDispatchAssignments(companyId, jobId, "cancelled");
+  if (actionId === "complete" || actionId === "cancel") {
+    const finalStatus = actionId === "complete" ? "completed" : "cancelled";
+    let finalizeResult = await finalizeActiveDispatchAssignments(
+      companyId,
+      jobId,
+      finalStatus,
+    );
+
+    if (finalizeResult.error) {
+      console.error(
+        "[updateJobWorkflowStatus] assignment finalization failed, retrying:",
+        {
+          companyId,
+          jobId,
+          actionId,
+          error: finalizeResult.error,
+        },
+      );
+      finalizeResult = await finalizeActiveDispatchAssignments(
+        companyId,
+        jobId,
+        finalStatus,
+      );
+
+      if (finalizeResult.error) {
+        console.error(
+          "[updateJobWorkflowStatus] assignment finalization failed after retry:",
+          {
+            companyId,
+            jobId,
+            actionId,
+            error: finalizeResult.error,
+          },
+        );
+      }
+    }
   }
 
   return {

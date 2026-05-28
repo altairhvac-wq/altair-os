@@ -117,6 +117,10 @@ export function DispatchPageView({
 
   const handleAssign = useCallback(
     (jobId: string, technicianId: string) => {
+      if (isPending) {
+        return;
+      }
+
       setAssignError(null);
       setAssignSuccess(null);
 
@@ -138,7 +142,7 @@ export function DispatchPageView({
         );
       });
     },
-    [technicians],
+    [isPending, technicians],
   );
 
   const handleStatusUpdated = useCallback(
