@@ -22,9 +22,9 @@ export function TechnicianBottomNav({
   return (
     <nav
       aria-label="Technician navigation"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-sm"
+      className="tech-bottom-nav fixed inset-x-0 bottom-0 z-30"
     >
-      <div className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-1">
+      <div className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[max(0.375rem,env(safe-area-inset-bottom,0px))] pt-1.5">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.id === activeItem.id;
@@ -49,9 +49,9 @@ export function TechnicianBottomNav({
             <Link
               key={item.id}
               href={item.href}
-              className={`relative flex min-h-14 min-w-11 touch-manipulation flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${
+              className={`relative flex min-h-[3.25rem] min-w-11 touch-manipulation flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-1 transition-colors ${
                 isActive
-                  ? "text-cyan-600"
+                  ? "text-cyan-700"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
@@ -60,7 +60,7 @@ export function TechnicianBottomNav({
                 {item.label}
               </span>
               {isActive ? (
-                <span className="absolute bottom-1 h-1 w-8 rounded-full bg-cyan-600" />
+                <span className="absolute bottom-0.5 h-0.5 w-7 rounded-full bg-cyan-700" />
               ) : null}
             </Link>
           );

@@ -87,7 +87,7 @@ export function MobileNav({ companyContext }: MobileNavProps) {
     <nav
       ref={navRef}
       aria-label="Mobile navigation"
-      className={`relative w-full max-w-full shrink-0 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-sm md:hidden ${
+      className={`relative w-full max-w-full shrink-0 border-b border-slate-200/90 bg-white shadow-[0_1px_2px_rgb(15_23_42_/_0.03)] md:hidden ${
         moreOpen ? "z-50" : "z-30"
       }`}
     >

@@ -19,16 +19,16 @@ export function UnassignedJobsPanel({
 }: UnassignedJobsPanelProps) {
   return (
     <section
-      className={`min-w-0 max-w-full overflow-hidden rounded-xl border bg-amber-50/40 sm:rounded-2xl ${
+      className={`min-w-0 max-w-full overflow-hidden sm:rounded-2xl ${
         emphasized
-          ? "border-amber-400 bg-amber-50/70 shadow-md ring-2 ring-amber-400/25"
-          : "border-amber-200/80"
+          ? "admin-dispatch-lane-unassigned-emphasis border shadow-sm"
+          : "admin-dispatch-lane-unassigned border"
       }`}
     >
       <div className="flex min-w-0 flex-col sm:flex-row sm:items-stretch">
-        <header className="flex shrink-0 items-center gap-2 border-b border-amber-200/80 bg-white px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:px-3 sm:py-2.5 lg:w-48">
+        <header className="admin-dispatch-lane-header flex shrink-0 items-center gap-2 border-b px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:px-3 sm:py-2.5 lg:w-48">
           <div className="flex items-center gap-2 sm:w-full sm:gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 sm:h-9 sm:w-9 sm:rounded-xl">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100/90 text-amber-800 sm:h-9 sm:w-9 sm:rounded-xl">
               <Inbox className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1 sm:w-full">
@@ -38,14 +38,14 @@ export function UnassignedJobsPanel({
               </p>
             </div>
           </div>
-          <span className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 sm:ml-0">
+          <span className="ml-auto rounded-full bg-amber-100/90 px-2 py-0.5 text-[11px] font-bold tabular-nums text-amber-900 sm:ml-0">
             {jobs.length}
           </span>
         </header>
 
-        <div className="flex min-h-[4.5rem] min-w-0 flex-1 snap-x snap-mandatory gap-1.5 overflow-x-auto p-1.5 sm:min-h-[5.5rem] sm:gap-2 sm:p-2" data-no-pull-refresh>
+        <div className="flex min-h-[4.25rem] min-w-0 flex-1 snap-x snap-mandatory gap-1.5 overflow-x-auto bg-amber-50/25 p-1.5 sm:min-h-[5.25rem] sm:gap-2 sm:p-2" data-no-pull-refresh>
           {jobs.length === 0 ? (
-            <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-amber-200 bg-white/70 px-3 py-3 text-center sm:rounded-xl sm:px-4 sm:py-4">
+            <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-amber-200/70 bg-white/85 px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3">
               <p className="text-[11px] font-medium text-slate-600">
                 No unassigned jobs match your filters
               </p>

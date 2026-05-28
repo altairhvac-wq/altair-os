@@ -37,27 +37,27 @@ export const DispatchJobCard = memo(function DispatchJobCard({
       onClick={() => onSelect(job)}
       disabled={isAssigning}
       aria-busy={isAssigning}
-      className={`snap-start rounded-xl border text-left transition-all ${
+      className={`snap-start rounded-xl border text-left transition-[border-color,box-shadow,background-color] ${
         compact ? "w-[11.5rem] shrink-0 p-2 sm:w-52 sm:p-2.5" : "w-full p-3.5"
       } ${
         isAssigning
-          ? "border-cyan-300 bg-cyan-50/40 opacity-80"
+          ? "border-cyan-400/60 bg-cyan-50/35 opacity-90"
           : isSelected
-            ? "border-cyan-500 bg-cyan-50/60 shadow-md ring-2 ring-cyan-500/20"
-            : "border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md"
+            ? "border-cyan-600/70 bg-cyan-50/45 shadow-sm ring-1 ring-cyan-500/20"
+            : "border-slate-200/90 bg-white shadow-sm hover:border-slate-300/90 hover:shadow-md"
       } ${className}`}
     >
       <div className="flex items-start justify-between gap-1.5">
         <div className="min-w-0 flex-1">
           <p
-            className={`font-semibold uppercase tracking-wide text-slate-500 ${
+            className={`font-semibold uppercase tracking-wide text-slate-500 tabular-nums ${
               compact ? "text-[10px]" : "text-[11px]"
             }`}
           >
             {job.jobNumber}
           </p>
           <h4
-            className={`truncate font-bold text-slate-900 ${
+            className={`truncate font-bold tracking-tight text-slate-900 ${
               compact ? "text-xs" : "mt-0.5 text-sm"
             }`}
           >
@@ -131,7 +131,7 @@ export const DispatchJobCard = memo(function DispatchJobCard({
           className={compact ? "px-1.5 py-0 text-[10px]" : ""}
         />
         {!compact && job.priority === "urgent" ? (
-          <span className="text-[10px] font-bold uppercase tracking-wide text-red-600">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-rose-700">
             Urgent
           </span>
         ) : null}

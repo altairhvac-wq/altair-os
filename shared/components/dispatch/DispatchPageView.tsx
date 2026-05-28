@@ -402,18 +402,18 @@ export function DispatchPageView({
 
       <div className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col gap-2 sm:gap-4 lg:flex-row lg:items-stretch">
         <section
-          className={`flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ${
+          className={`admin-panel flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-hidden ${
             dispatchPageFocus?.emphasizeBoard
-              ? "border-cyan-200 ring-2 ring-cyan-500/15"
-              : "border-slate-200"
+              ? "ring-1 ring-cyan-500/20"
+              : ""
           }`}
         >
-          <div className="flex shrink-0 flex-wrap items-start justify-between gap-2 border-b border-slate-100 px-3 py-2 sm:px-4 sm:py-3">
+          <div className="admin-panel-header flex shrink-0 flex-wrap items-start justify-between gap-2 px-3 py-2 sm:px-4 sm:py-3">
             <div className="min-w-0">
-              <h2 className="text-sm font-bold text-slate-900 sm:text-base">
+              <h2 className="admin-heading-section sm:text-base">
                 {boardTitle}
               </h2>
-              <p className="mt-0.5 hidden text-[11px] text-slate-500 sm:block sm:text-xs">
+              <p className="admin-text-helper mt-0.5 hidden sm:block">
                 {boardSubtitle}
               </p>
             </div>
@@ -421,17 +421,17 @@ export function DispatchPageView({
               <button
                 type="button"
                 onClick={handleOpenUnassigned}
-                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100"
+                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-amber-200/80 bg-amber-50/80 px-2.5 py-1.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100/80"
               >
                 Unassigned
-                <span className="rounded-full bg-amber-200/80 px-1.5 py-0.5 text-[10px] font-bold tabular-nums">
+                <span className="rounded-full bg-amber-200/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums">
                   {unassignedJobs.length}
                 </span>
               </button>
             ) : null}
           </div>
 
-          <div className="min-h-0 min-w-0 max-w-full flex-1 overflow-y-auto overscroll-contain p-2 sm:p-4">
+          <div className="min-h-0 min-w-0 max-w-full flex-1 overflow-y-auto overscroll-contain bg-slate-50/35 p-2 sm:p-3">
             {hasNoJobs ? (
               <DispatchEmptyState
                 variant="no-jobs"
@@ -477,10 +477,10 @@ export function DispatchPageView({
             />
           </div>
         ) : (
-          <aside className="hidden lg:flex lg:w-[380px] lg:shrink-0 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:border-slate-200 lg:bg-white lg:shadow-sm">
-            <div className="shrink-0 border-b border-slate-100 px-5 py-4">
-              <h2 className="text-base font-bold text-slate-900">Job details</h2>
-              <p className="mt-0.5 text-xs text-slate-500">
+          <aside className="admin-panel hidden lg:flex lg:w-[380px] lg:shrink-0 lg:flex-col lg:overflow-hidden">
+            <div className="admin-panel-header shrink-0 px-5 py-4">
+              <h2 className="admin-heading-section text-base">Job details</h2>
+              <p className="admin-text-helper mt-0.5">
                 Select a job from the board
               </p>
             </div>

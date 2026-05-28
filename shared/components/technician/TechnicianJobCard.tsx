@@ -49,7 +49,7 @@ const fieldActionClass =
 const emptyStateClass = "text-sm text-slate-500";
 
 const stickyFooterClass =
-  "sticky bottom-0 z-10 shrink-0 space-y-2 border-t border-slate-200 bg-white/95 p-2.5 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:space-y-3 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]";
+  "admin-sticky-footer-inline sticky bottom-0 z-10 shrink-0 space-y-2 p-2.5 sm:space-y-3 sm:p-3.5";
 
 export function TechnicianJobCard({
   job,

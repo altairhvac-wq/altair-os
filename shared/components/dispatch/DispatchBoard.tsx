@@ -129,7 +129,7 @@ export const DispatchBoard = memo(function DispatchBoard({
         <button
           type="button"
           onClick={onToggleShowAllTechnicians}
-          className="self-start rounded-lg border border-dashed border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 sm:text-xs"
+          className="self-start rounded-lg border border-dashed border-slate-200/90 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 sm:text-xs"
         >
           Show {hiddenEmptyTechnicianCount} technician
           {hiddenEmptyTechnicianCount === 1 ? "" : "s"} with no jobs today
@@ -138,7 +138,7 @@ export const DispatchBoard = memo(function DispatchBoard({
         <button
           type="button"
           onClick={onToggleShowAllTechnicians}
-          className="self-start rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 sm:text-xs"
+          className="self-start rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 sm:text-xs"
         >
           Hide empty technician lanes
         </button>

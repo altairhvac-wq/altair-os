@@ -54,7 +54,7 @@ export function DesktopNav({ companyContext }: DesktopNavProps) {
   return (
     <nav
       aria-label="Desktop navigation"
-      className="relative z-30 hidden w-full max-w-full shrink-0 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-sm md:block"
+      className="relative z-30 hidden w-full max-w-full shrink-0 border-b border-slate-200/90 bg-white shadow-[0_1px_2px_rgb(15_23_42_/_0.03)] md:block"
     >
       <div className="flex min-w-0 items-center gap-2 px-4 sm:px-6">
         <ul className="flex min-w-0 flex-1 flex-wrap items-center gap-0.5 py-1.5">

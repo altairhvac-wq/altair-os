@@ -190,7 +190,7 @@ export function InvoiceDetailActionBar({
 
   const containerClass =
     variant === "sticky"
-      ? "fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-white/90 sm:hidden"
+      ? "admin-sticky-footer sm:hidden"
       : "hidden sm:flex sm:flex-col sm:items-end sm:gap-2";
 
   return (
@@ -320,7 +320,7 @@ export function InvoiceDetailActionBar({
         ) : null}
       </div>
 
-      {variant === "sticky" ? <div className="h-36 sm:hidden" aria-hidden /> : null}
+      {variant === "sticky" ? <div className="admin-sticky-footer-spacer" aria-hidden /> : null}
     </>
   );
 }

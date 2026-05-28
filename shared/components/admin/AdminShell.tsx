@@ -54,7 +54,7 @@ export function AdminShell({
       <DesktopNav companyContext={navigationContext} />
       <MobileNav companyContext={navigationContext} />
 
-      <main className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-clip p-4 sm:p-6 lg:p-8 md:overflow-y-auto">
+      <main className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-clip p-3 sm:p-5 lg:p-7 md:overflow-y-auto">
         <PullToRefresh enabled={pullToRefreshEnabled}>
           {children}
         </PullToRefresh>

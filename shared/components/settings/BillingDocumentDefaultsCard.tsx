@@ -212,7 +212,7 @@ export function BillingDocumentDefaultsCard({
         ) : null}
 
         {canManage ? (
-          <div className="sticky bottom-0 -mx-5 border-t border-slate-100 bg-white/95 px-5 py-4 backdrop-blur-sm supports-[padding:max(0px)]:pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="admin-sticky-footer-inline sticky bottom-0 -mx-5 px-5 py-3.5 supports-[padding:max(0px)]:pb-[max(0.875rem,env(safe-area-inset-bottom))]">
             <button
               type="submit"
               disabled={isPending}

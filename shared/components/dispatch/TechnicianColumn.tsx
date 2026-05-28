@@ -32,15 +32,15 @@ export const TechnicianColumn = memo(function TechnicianColumn({
   onSelectJob,
 }: TechnicianColumnProps) {
   return (
-    <section className="min-w-0 max-w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50/80 sm:rounded-2xl">
+    <section className="admin-dispatch-lane min-w-0 max-w-full overflow-hidden sm:rounded-2xl">
       <div className="flex min-w-0 flex-col sm:flex-row sm:items-stretch">
-        <header className="flex shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:px-3 sm:py-2.5 lg:w-48">
+        <header className="admin-dispatch-lane-header flex shrink-0 items-center gap-2 border-b px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:px-3 sm:py-2.5 lg:w-48">
           <div className="flex items-center gap-2 sm:w-full sm:gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-800 to-slate-600 text-xs font-bold text-white shadow-sm sm:h-9 sm:w-9 sm:rounded-xl">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-xs font-bold text-white shadow-sm sm:h-9 sm:w-9 sm:rounded-xl">
               {technician.initials}
             </div>
             <div className="min-w-0 flex-1 sm:w-full">
-              <h3 className="truncate text-sm font-bold text-slate-900">
+              <h3 className="truncate text-sm font-bold tracking-tight text-slate-900">
                 {technician.name}
               </h3>
               <p className="truncate text-[11px] text-slate-500">
@@ -63,16 +63,16 @@ export const TechnicianColumn = memo(function TechnicianColumn({
                   Next {nextJobTime}
                 </span>
               ) : null}
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+              <span className="rounded-full bg-slate-100/90 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-slate-700">
                 {jobs.length}
               </span>
             </div>
           </div>
         </header>
 
-        <div className="flex min-h-[4.5rem] min-w-0 flex-1 snap-x snap-mandatory gap-1.5 overflow-x-auto p-1.5 sm:min-h-[5.5rem] sm:gap-2 sm:p-2" data-no-pull-refresh>
+        <div className="flex min-h-[4.25rem] min-w-0 flex-1 snap-x snap-mandatory gap-1.5 overflow-x-auto bg-slate-50/40 p-1.5 sm:min-h-[5.25rem] sm:gap-2 sm:p-2" data-no-pull-refresh>
           {jobs.length === 0 ? (
-            <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-slate-200 bg-white/60 px-3 py-3 text-center sm:rounded-xl sm:px-4 sm:py-4">
+            <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-slate-200/90 bg-white/80 px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3">
               <p className="text-[11px] font-medium text-slate-500">
                 No assigned jobs
               </p>

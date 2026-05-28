@@ -90,8 +90,8 @@ export function DispatchDetailsPanel({
   }
 
   return (
-    <div className="flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-xl sm:rounded-2xl">
-      <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-4 py-4 sm:px-5">
+    <div className="admin-panel flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-t-2xl sm:rounded-2xl">
+      <div className="admin-panel-header flex shrink-0 items-start justify-between px-4 py-4 sm:px-5">
         <div className="min-w-0 pr-3">
           <h2
             id="dispatch-job-modal-title"

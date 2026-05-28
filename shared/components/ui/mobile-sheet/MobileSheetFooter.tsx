@@ -11,7 +11,7 @@ export function MobileSheetFooter({
 }: MobileSheetFooterProps) {
   return (
     <footer
-      className={`flex shrink-0 gap-3 border-t border-slate-100 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5 ${className ?? ""}`}
+      className={`flex shrink-0 gap-3 admin-sticky-footer-inline px-4 py-3 sm:px-5 ${className ?? ""}`}
     >
       {children}
     </footer>

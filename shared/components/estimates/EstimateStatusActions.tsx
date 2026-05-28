@@ -284,7 +284,7 @@ export function EstimateStatusActions({
     : "rounded-lg px-3 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60";
 
   const containerClass = isSticky
-    ? "fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-white/90 sm:hidden"
+    ? "admin-sticky-footer sm:hidden"
     : "flex flex-col items-start gap-2";
 
   const actionButtons = (
@@ -406,7 +406,7 @@ export function EstimateStatusActions({
             <p className="mt-2 text-xs text-slate-500">{helperText}</p>
           ) : null}
         </div>
-        <div className="h-36 sm:hidden" aria-hidden />
+        <div className="admin-sticky-footer-spacer" aria-hidden />
       </>
     );
   }
