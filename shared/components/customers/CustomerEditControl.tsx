@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, X } from "lucide-react";
 import { updateCustomerAction } from "@/app/actions/customers";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import { CustomerForm } from "./CustomerForm";
 import {
   mapCustomerToFormData,
@@ -58,7 +59,7 @@ export function CustomerEditControl({
       const result = await updateCustomerAction(customer.id, data);
 
       if (result.error || !result.customer) {
-        setError(result.error ?? "Failed to update customer.");
+        setError(formatActionError(result.error, "We couldn't save your changes. Try again."));
         return;
       }
 

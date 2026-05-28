@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
+import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import { getEstimateById } from "@/lib/database/queries/estimates";
 import {
   convertEstimateToInvoice,
@@ -52,7 +53,7 @@ export async function createInvoiceAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.manageBilling) {
@@ -132,7 +133,7 @@ export async function convertEstimateToInvoiceAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.manageBilling) {
@@ -233,7 +234,7 @@ export async function sendInvoiceAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.manageBilling) {
@@ -283,7 +284,7 @@ export async function sendInvoiceAction(
   );
 
   if (statusError || !sentInvoice) {
-    return { error: statusError ?? "Failed to send invoice." };
+    return { error: statusError ?? "We couldn't send this invoice. Try again." };
   }
 
   const emailResult = await sendInvoiceEmail({
@@ -362,7 +363,7 @@ export async function resendInvoiceEmailAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.manageBilling) {
@@ -457,7 +458,7 @@ export async function voidInvoiceAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.manageBilling) {
@@ -508,7 +509,7 @@ export async function updateInvoiceAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.manageBilling) {
@@ -555,7 +556,7 @@ export async function getInvoiceDetailAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { invoice: null, error: "No active company workspace." };
+    return { invoice: null, error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!canViewBilling(context)) {

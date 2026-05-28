@@ -12,6 +12,7 @@ import {
   MobileSheetPanel,
 } from "@/shared/components/ui/mobile-sheet";
 import { recordInvoicePaymentAction } from "@/app/actions/invoice-payments";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import { formatCurrency } from "@/shared/types/customer";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 import {
@@ -92,6 +93,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [amount, setAmount] = useState(String(invoice.balanceDue));
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [paymentDate, setPaymentDate] = useState(getDefaultPaymentDate());
@@ -100,7 +102,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (isPending) {
+    if (isPending || showSuccess) {
       return;
     }
 
@@ -130,19 +132,25 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
       const result = await recordInvoicePaymentAction(invoice.id, data);
 
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "We couldn't record this payment. Try again."));
         return;
       }
 
-      onClose();
       router.refresh();
+      setShowSuccess(true);
+      window.setTimeout(() => {
+        onClose();
+      }, 700);
     });
   }
+
+  const formDisabled = isPending || showSuccess;
+  const closeDisabled = isPending || showSuccess;
 
   return (
     <MobileSheet
       onClose={onClose}
-      closeDisabled={isPending}
+      closeDisabled={closeDisabled}
       ariaLabelledBy={RECORD_PAYMENT_TITLE_ID}
       variant="responsive"
     >
@@ -152,7 +160,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
           title="Record a payment against the balance due."
           subtitle={`Amount due: ${formatCurrency(invoice.balanceDue)}`}
           onClose={onClose}
-          closeDisabled={isPending}
+          closeDisabled={closeDisabled}
           icon={
             <MobileSheetHeaderIcon className="h-9 w-9 bg-emerald-100 text-emerald-700">
               <CreditCard className="h-4 w-4" />
@@ -181,7 +189,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
                 className={inputClass}
-                disabled={isPending}
+                disabled={formDisabled}
               />
             </div>
 
@@ -196,7 +204,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
                   setPaymentMethod(event.target.value as PaymentMethod)
                 }
                 className={inputClass}
-                disabled={isPending}
+                disabled={formDisabled}
               >
                 {PAYMENT_METHOD_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -217,7 +225,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
                 value={paymentDate}
                 onChange={(event) => setPaymentDate(event.target.value)}
                 className={inputClass}
-                disabled={isPending}
+                disabled={formDisabled}
               />
             </div>
 
@@ -232,7 +240,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
                 onChange={(event) => setReference(event.target.value)}
                 placeholder="Check #, transaction ID, etc."
                 className={inputClass}
-                disabled={isPending}
+                disabled={formDisabled}
               />
             </div>
 
@@ -247,7 +255,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
                 onChange={(event) => setNotes(event.target.value)}
                 placeholder="Optional payment notes"
                 className={inputClass}
-                disabled={isPending}
+                disabled={formDisabled}
               />
             </div>
           </div>
@@ -270,10 +278,10 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
             </button>
             <button
               type="submit"
-              disabled={isPending}
+              disabled={formDisabled}
               className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isPending ? "Recording…" : "Record payment"}
+              {showSuccess ? "Recorded" : isPending ? "Recording…" : "Record payment"}
             </button>
           </MobileSheetFooter>
         </form>

@@ -81,8 +81,7 @@ export async function sendViaResend(
         ok: false,
         reason: "provider_error",
         message:
-          payload?.message ??
-          "The email provider rejected the message. Check Resend configuration and sender domain.",
+          "The email could not be delivered. Check the recipient address and try again.",
       };
     }
 
@@ -98,7 +97,7 @@ export async function sendViaResend(
         ok: false,
         reason: "provider_error",
         message:
-          "The email provider did not confirm delivery. The document was not marked as sent.",
+          "We couldn't confirm the email was sent. Review the customer's email and try again.",
       };
     }
 
@@ -119,7 +118,7 @@ export async function sendViaResend(
       ok: false,
       reason: "provider_error",
       message:
-        "Could not reach the email provider. The document was not marked as sent.",
+        "We couldn't reach the email service. Try again in a moment.",
     };
   }
 }

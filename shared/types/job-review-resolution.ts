@@ -20,14 +20,10 @@ export const JOB_REVIEW_BLOCKER_RESOLUTION_LABELS: Record<
   JobReviewBlockerResolutionEventType,
   string
 > = {
-  invoice_created_for_completed_job:
-    "Office review blocker resolved: Invoice created",
-  labor_entries_closed:
-    "Office review blocker resolved: Labor entries closed",
-  pending_expenses_resolved:
-    "Office review blocker resolved: Pending expenses resolved",
-  material_costs_completed:
-    "Office review blocker resolved: Material costs completed",
+  invoice_created_for_completed_job: "Invoice created (office review complete)",
+  labor_entries_closed: "Labor entries closed (office review complete)",
+  pending_expenses_resolved: "Pending expenses resolved (office review complete)",
+  material_costs_completed: "Material costs completed (office review complete)",
 };
 
 /**

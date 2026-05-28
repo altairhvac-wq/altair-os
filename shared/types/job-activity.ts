@@ -76,15 +76,11 @@ const ACTIVITY_TYPE_LABELS: Record<JobActivityType, string> = {
   job_cancelled: "Job cancelled",
   job_attachment_uploaded: "Attachment uploaded",
   job_material_added: "Material logged",
-  invoice_created_for_completed_job:
-    "Office review blocker resolved: Invoice created",
-  labor_entries_closed:
-    "Office review blocker resolved: Labor entries closed",
+  invoice_created_for_completed_job: "Invoice created (office review complete)",
+  labor_entries_closed: "Labor entries closed (office review complete)",
   job_labor_auto_closed: "Labor auto-closed",
-  pending_expenses_resolved:
-    "Office review blocker resolved: Pending expenses resolved",
-  material_costs_completed:
-    "Office review blocker resolved: Material costs completed",
+  pending_expenses_resolved: "Pending expenses resolved (office review complete)",
+  material_costs_completed: "Material costs completed (office review complete)",
 };
 
 function resolveStatusChangedLabel(metadata: JobActivityMetadata): string {

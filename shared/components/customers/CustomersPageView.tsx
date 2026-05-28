@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";
 import { createCustomerAction } from "@/app/actions/customers";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import {
   type Customer,
   type CustomerFormData,
@@ -106,7 +107,7 @@ export function CustomersPageView({
       const result = await createCustomerAction(data);
 
       if (result.error || !result.customer) {
-        setCreateError(result.error ?? "Failed to create customer.");
+        setCreateError(formatActionError(result.error, "We couldn't save this customer. Check the details and try again."));
         return;
       }
 

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { updateJobAction } from "@/app/actions/jobs";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import type { Customer } from "@/shared/types/customer";
 import type { JobDetail, JobFormData } from "@/shared/types/job";
 import { JobDetailHeaderWorkflow } from "./JobDetailHeaderWorkflow";
@@ -45,7 +46,7 @@ export function JobDetailHeaderSection({
       const result = await updateJobAction(job.id, data);
 
       if (result.error || !result.job) {
-        setEditError(result.error ?? "Failed to update job.");
+        setEditError(formatActionError(result.error, "We couldn't save job changes. Try again."));
         return;
       }
 

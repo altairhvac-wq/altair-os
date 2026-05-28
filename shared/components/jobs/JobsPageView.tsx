@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createJobAction } from "@/app/actions/jobs";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import type { Customer } from "@/shared/types/customer";
 import {
   type Job,
@@ -149,7 +150,7 @@ export function JobsPageView({
       const result = await createJobAction(data);
 
       if (result.error || !result.job) {
-        setCreateError(result.error ?? "Failed to create job.");
+        setCreateError(formatActionError(result.error, "We couldn't create this job. Check the customer and schedule, then try again."));
         return;
       }
 

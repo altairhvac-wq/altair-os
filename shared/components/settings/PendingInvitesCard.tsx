@@ -13,6 +13,24 @@ type PendingInvitesCardProps = {
   variant?: "setup" | "settings";
 };
 
+function formatInviteAcceptError(message: string): string {
+  const lower = message.toLowerCase();
+
+  if (
+    lower.includes("not found") ||
+    lower.includes("no longer available") ||
+    lower.includes("already been accepted")
+  ) {
+    return `${message} Ask your office admin to resend the invite from Settings → Team.`;
+  }
+
+  if (lower.includes("does not match") || lower.includes("email address")) {
+    return `${message} Sign in with the email address that received the invitation.`;
+  }
+
+  return message;
+}
+
 function formatInvitedAt(value: string | null): string | null {
   if (!value) {
     return null;
@@ -72,7 +90,7 @@ function PendingInvitesCardContent({
       const result = await acceptInviteAction(membershipId, nextPath);
 
       if (result.error) {
-        setError(result.error);
+        setError(formatInviteAcceptError(result.error));
         setAcceptingId(null);
         return;
       }

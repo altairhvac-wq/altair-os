@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Ban, Mail, Send } from "lucide-react";
 import {
@@ -8,6 +8,11 @@ import {
   sendInvoiceAction,
   voidInvoiceAction,
 } from "@/app/actions/invoices";
+import {
+  formatActionError,
+  formatBillingEmailDeliveryError,
+  MISSING_CUSTOMER_EMAIL_SEND_REASON,
+} from "@/shared/lib/operational-errors";
 import {
   canEditInvoice,
   canResendInvoiceEmail,
@@ -33,21 +38,30 @@ export function InvoiceStatusActions({
   const [error, setError] = useState<string | null>(null);
   const [resendPending, setResendPending] = useState(false);
   const [showVoidConfirm, setShowVoidConfirm] = useState(false);
+  const [localStatus, setLocalStatus] = useState(invoice.status);
   const router = useRouter();
 
-  const canSend = invoice.status === "draft";
-  const canResendEmail = canResendInvoiceEmail(invoice.status);
-  const canVoid = canVoidInvoice(invoice);
-  const canEdit = canEditInvoice(invoice, paymentCount);
-  const voidBlockReason = getVoidInvoiceBlockReason(invoice);
-  const editBlockReason = getEditInvoiceBlockReason(invoice, paymentCount);
+  useEffect(() => {
+    setLocalStatus(invoice.status);
+  }, [invoice.status]);
+
+  const customerEmail = invoice.customerEmail?.trim();
+  const hasCustomerEmail = Boolean(customerEmail);
+  const canSend = localStatus === "draft";
+  const canResendEmail = canResendInvoiceEmail(localStatus);
+  const canVoid = canVoidInvoice({ ...invoice, status: localStatus });
+  const canEdit = canEditInvoice({ ...invoice, status: localStatus }, paymentCount);
+  const voidBlockReason = getVoidInvoiceBlockReason({ ...invoice, status: localStatus });
+  const editBlockReason = getEditInvoiceBlockReason({ ...invoice, status: localStatus }, paymentCount);
+  const emailSendBlocked = !hasCustomerEmail && (canSend || canResendEmail);
+  const workflowBusy = isPending || resendPending;
 
   if (!canManageBilling) {
     return null;
   }
 
   if (!canSend && !canVoid && !canEdit && !canResendEmail) {
-    if (voidBlockReason && invoice.status !== "paid") {
+    if (voidBlockReason && localStatus !== "paid") {
       return <p className="text-xs text-slate-500">{voidBlockReason}</p>;
     }
 
@@ -59,29 +73,47 @@ export function InvoiceStatusActions({
   }
 
   function handleSendInvoice() {
+    if (workflowBusy) {
+      return;
+    }
+
+    if (!hasCustomerEmail) {
+      setError(MISSING_CUSTOMER_EMAIL_SEND_REASON);
+      return;
+    }
+
     setError(null);
 
     startTransition(async () => {
       const result = await sendInvoiceAction(invoice.id);
 
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "We couldn't send this invoice. Try again."));
+        router.refresh();
         return;
       }
 
       if (result.emailDelivery && result.emailDelivery.status !== "sent") {
-        setError(
-          result.emailDelivery.message ??
-            "Invoice could not be sent by email. It remains a draft.",
-        );
+        setError(formatBillingEmailDeliveryError(result.emailDelivery, "invoice", "send"));
+        router.refresh();
         return;
       }
 
+      setLocalStatus("sent");
       router.refresh();
     });
   }
 
   function handleResendEmail() {
+    if (workflowBusy) {
+      return;
+    }
+
+    if (!hasCustomerEmail) {
+      setError(MISSING_CUSTOMER_EMAIL_SEND_REASON);
+      return;
+    }
+
     setError(null);
     setResendPending(true);
 
@@ -90,7 +122,7 @@ export function InvoiceStatusActions({
         const result = await resendInvoiceEmailAction(invoice.id);
 
         if (result.error) {
-          setError(result.error);
+          setError(formatActionError(result.error, "Invoice email could not be resent. Try again."));
           return;
         }
 
@@ -98,10 +130,7 @@ export function InvoiceStatusActions({
           result.emailDelivery &&
           result.emailDelivery.status !== "sent"
         ) {
-          setError(
-            result.emailDelivery.message ??
-              "Invoice email could not be resent. Try again.",
-          );
+          setError(formatBillingEmailDeliveryError(result.emailDelivery, "invoice", "resend"));
           return;
         }
 
@@ -113,16 +142,21 @@ export function InvoiceStatusActions({
   }
 
   function handleVoidInvoice() {
+    if (workflowBusy) {
+      return;
+    }
+
     setError(null);
 
     startTransition(async () => {
       const result = await voidInvoiceAction(invoice.id);
 
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "We couldn't void this invoice. Try again."));
         return;
       }
 
+      setLocalStatus("void");
       setShowVoidConfirm(false);
       router.refresh();
     });
@@ -179,9 +213,13 @@ export function InvoiceStatusActions({
         {canSend ? (
           <button
             type="button"
-            disabled={isPending || resendPending}
+            disabled={workflowBusy || !hasCustomerEmail}
             onClick={handleSendInvoice}
-            title="Emails the invoice and marks it as sent."
+            title={
+              hasCustomerEmail
+                ? "Emails the invoice and marks it as sent."
+                : MISSING_CUSTOMER_EMAIL_SEND_REASON
+            }
             className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Send className="h-4 w-4" />
@@ -192,9 +230,13 @@ export function InvoiceStatusActions({
         {canResendEmail ? (
           <button
             type="button"
-            disabled={isPending || resendPending}
+            disabled={workflowBusy || !hasCustomerEmail}
             onClick={handleResendEmail}
-            title="Sends another copy to the customer's email on file."
+            title={
+              hasCustomerEmail
+                ? "Sends another copy to the customer's email on file."
+                : MISSING_CUSTOMER_EMAIL_SEND_REASON
+            }
             className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Mail className="h-4 w-4" />
@@ -205,7 +247,7 @@ export function InvoiceStatusActions({
         {canVoid ? (
           <button
             type="button"
-            disabled={isPending || resendPending}
+            disabled={workflowBusy}
             onClick={() => setShowVoidConfirm(true)}
             className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -215,7 +257,9 @@ export function InvoiceStatusActions({
         ) : null}
       </div>
 
-      {canSend ? (
+      {emailSendBlocked ? (
+        <p className="text-xs text-slate-500">{MISSING_CUSTOMER_EMAIL_SEND_REASON}</p>
+      ) : canSend ? (
         <p className="text-xs text-slate-500">
           Send emails the invoice to the customer on file.
         </p>

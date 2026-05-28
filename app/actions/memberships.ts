@@ -25,6 +25,7 @@ import {
 import { getAppBaseUrl, logInviteEmailEnvPresence } from "@/lib/email/env";
 import { sendTeamInviteEmail } from "@/lib/email/team-invite";
 import type { CompanyRole } from "@/lib/database/types/enums";
+import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import { buildTeamInviteAcceptUrl } from "@/shared/lib/team-invite-link";
 import { isValidEmail } from "@/shared/lib/email-validation";
 import type { TeamMember } from "@/shared/types/team-member";
@@ -40,7 +41,7 @@ async function requireTeamManagementContext(): Promise<
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   const accessError = assertTeamManagementAccess(
@@ -218,7 +219,7 @@ export async function inviteTeamMemberAction(
   );
 
   if (result.error || !result.member) {
-    return { error: result.error ?? "Failed to create invitation." };
+    return { error: result.error ?? "We couldn't create this invitation. Try again." };
   }
 
   const appBaseUrl = getAppBaseUrl();

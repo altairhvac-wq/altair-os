@@ -12,6 +12,7 @@ import type {
   InvoicePayment,
   RecordPaymentFormData,
 } from "@/shared/types/invoice-payment";
+import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 
 export type RecordInvoicePaymentActionResult = {
   error?: string;
@@ -26,7 +27,7 @@ export async function recordInvoicePaymentAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.manageBilling) {
@@ -41,7 +42,7 @@ export async function recordInvoicePaymentAction(
   );
 
   if (error || !payment || !invoice || !previousStatus) {
-    return { error: error ?? "Failed to record payment." };
+    return { error: error ?? "We couldn't record this payment. Try again." };
   }
 
   const activityContext = {

@@ -68,8 +68,8 @@ export function getMissingInviteEmailEnvVars(): string[] {
   return missing;
 }
 
-export function formatMissingEmailEnvMessage(missing: string[]): string {
-  return `Email delivery is not configured. Set ${missing.join(", ")} (and deploy with a public app URL).`;
+export function formatMissingEmailEnvMessage(_missing: string[]): string {
+  return "Email isn't set up yet. Ask your office admin to configure outbound email in Settings.";
 }
 
 /** Temporary diagnostics — logs presence only, never secret values. */

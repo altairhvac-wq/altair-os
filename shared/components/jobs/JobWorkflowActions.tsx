@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { updateJobStatusAction } from "@/app/actions/jobs";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import type { JobStatus } from "@/shared/types/job";
 import {
   getDisplayWorkflowActions,
@@ -136,7 +137,7 @@ export function JobWorkflowActions({
       setPendingAction(null);
 
       if (!result.job) {
-        setError(result.error ?? "Failed to update job status.");
+        setError(formatActionError(result.error, "We couldn't update this job's status. Try again."));
         if (result.error?.includes("assigned")) {
           router.refresh();
         }

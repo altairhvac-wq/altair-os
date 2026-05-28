@@ -70,7 +70,7 @@ export function TeamInviteForm({
       }
 
       if (!result.member) {
-        setFeedback({ tone: "error", message: "Failed to create invitation." });
+        setFeedback({ tone: "error", message: "We couldn't create this invitation. Try again." });
         return;
       }
 
@@ -86,8 +86,7 @@ export function TeamInviteForm({
         setFeedback({
           tone: "warning",
           message:
-            result.emailDelivery.message ??
-            "Invite created, but email could not be sent. Copy the invite link or check email setup.",
+            "Invite saved, but email isn't set up yet. Copy the invite link below or ask your office admin to configure email in Settings.",
         });
         return;
       }
@@ -95,8 +94,7 @@ export function TeamInviteForm({
       setFeedback({
         tone: "warning",
         message:
-          result.emailDelivery?.message ??
-          "Invite created, but email could not be sent. Copy the invite link or check email setup.",
+          "Invite saved, but the email could not be sent. Copy the invite link below and share it with your teammate.",
       });
     });
   }

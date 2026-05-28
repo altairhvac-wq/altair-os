@@ -8,6 +8,7 @@ import {
   createJobAttachmentAction,
   prepareJobAttachmentUploadAction,
 } from "@/app/actions/job-attachments";
+import { formatActionError, formatUploadError } from "@/shared/lib/operational-errors";
 import { COMPANY_FILES_BUCKET } from "@/lib/storage/company-files";
 import {
   JOB_ATTACHMENT_ALLOWED_MIME_TYPES,
@@ -90,7 +91,7 @@ export function JobAttachmentUploadBox({
       });
 
       if (target.error || !target.storagePath) {
-        setError(target.error ?? "Could not prepare upload.");
+        setError(formatActionError(target.error, "Could not prepare upload. Try again."));
         return;
       }
 
@@ -103,7 +104,7 @@ export function JobAttachmentUploadBox({
         });
 
       if (uploadError) {
-        setError(uploadError.message || "Upload failed.");
+        setError(formatUploadError());
         return;
       }
 
@@ -121,7 +122,7 @@ export function JobAttachmentUploadBox({
         await supabase.storage
           .from(COMPANY_FILES_BUCKET)
           .remove([target.storagePath]);
-        setError(result.error);
+        setError(formatActionError(result.error, formatUploadError()));
         return;
       }
 
@@ -211,7 +212,21 @@ export function JobAttachmentUploadBox({
         </button>
       </div>
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? (
+        <div className="space-y-2">
+          <p className="text-sm text-red-600" role="alert">
+            {error}
+          </p>
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={handlePickFile}
+            className="text-sm font-semibold text-cyan-700 hover:text-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Try again
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

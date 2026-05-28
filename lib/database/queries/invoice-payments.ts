@@ -362,6 +362,6 @@ export async function recordInvoicePayment(
     payment,
     invoice: updatedInvoice,
     previousStatus,
-    error: payment && updatedInvoice ? null : "Failed to load recorded payment.",
+    error: payment && updatedInvoice ? null : "Payment may have been saved. Refresh the page to confirm.",
   };
 }

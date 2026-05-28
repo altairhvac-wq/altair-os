@@ -98,7 +98,16 @@ export function EstimateDetailPageView({
               ) : (
                 <div className="flex items-start gap-2 text-slate-500">
                   <Mail className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-                  <span>No email on file — add one on the customer record to send this estimate.</span>
+                  <span>
+                    No email on file —{" "}
+                    <Link
+                      href={`/customers/${estimate.customerId}`}
+                      className="font-semibold text-cyan-700 hover:text-cyan-800"
+                    >
+                      add one on the customer record
+                    </Link>{" "}
+                    to send this estimate.
+                  </span>
                 </div>
               )}
               {customerPhone ? (

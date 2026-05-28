@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Mail } from "lucide-react";
 import { convertEstimateToInvoiceAction } from "@/app/actions/invoices";
@@ -8,6 +8,11 @@ import {
   resendEstimateEmailAction,
   updateEstimateStatusAction,
 } from "@/app/actions/estimates";
+import {
+  formatActionError,
+  formatBillingEmailDeliveryError,
+  MISSING_CUSTOMER_EMAIL_SEND_REASON,
+} from "@/shared/lib/operational-errors";
 import {
   canResendEstimateEmail,
   type EstimateDetail,
@@ -124,11 +129,21 @@ export function EstimateStatusActions({
     null,
   );
   const [convertPending, setConvertPending] = useState(false);
+  const [localStatus, setLocalStatus] = useState(estimate.status);
   const router = useRouter();
-  const actions = getAvailableActions(estimate.status);
-  const canConvertToInvoice = estimate.status === "approved";
-  const canResendEmail = canResendEstimateEmail(estimate.status);
+
+  useEffect(() => {
+    setLocalStatus(estimate.status);
+  }, [estimate.status]);
+
+  const customerEmail = estimate.customerEmail?.trim();
+  const hasCustomerEmail = Boolean(customerEmail);
+  const actions = getAvailableActions(localStatus);
+  const canConvertToInvoice = localStatus === "approved";
+  const canResendEmail = canResendEstimateEmail(localStatus);
+  const emailSendBlocked = !hasCustomerEmail && (canResendEmail || localStatus === "draft");
   const isSticky = variant === "sticky";
+  const workflowBusy = isPending || resendPending || convertPending;
   const primaryAction = actions.find(
     (action) =>
       action.toStatus === "sent" ||
@@ -142,7 +157,12 @@ export function EstimateStatusActions({
   }
 
   function handleStatusChange(toStatus: EstimateStatus) {
-    if (isPending || resendPending) {
+    if (isPending || resendPending || convertPending) {
+      return;
+    }
+
+    if (toStatus === "sent" && !hasCustomerEmail) {
+      setError(MISSING_CUSTOMER_EMAIL_SEND_REASON);
       return;
     }
 
@@ -153,12 +173,12 @@ export function EstimateStatusActions({
       try {
         const result = await updateEstimateStatusAction(
           estimate.id,
-          estimate.status,
+          localStatus,
           toStatus,
         );
 
         if (result.error) {
-          setError(result.error);
+          setError(formatActionError(result.error, "We couldn't update this estimate. Try again."));
           router.refresh();
           return;
         }
@@ -168,14 +188,12 @@ export function EstimateStatusActions({
           result.emailDelivery &&
           result.emailDelivery.status !== "sent"
         ) {
-          setError(
-            result.emailDelivery.message ??
-              "Estimate could not be sent by email. It remains a draft.",
-          );
+          setError(formatBillingEmailDeliveryError(result.emailDelivery, "estimate", "send"));
           router.refresh();
           return;
         }
 
+        setLocalStatus(toStatus);
         router.refresh();
       } finally {
         setPendingStatus(null);
@@ -211,6 +229,15 @@ export function EstimateStatusActions({
   }
 
   function handleResendEmail() {
+    if (isPending || resendPending || convertPending) {
+      return;
+    }
+
+    if (!hasCustomerEmail) {
+      setError(MISSING_CUSTOMER_EMAIL_SEND_REASON);
+      return;
+    }
+
     setError(null);
     setResendPending(true);
 
@@ -219,7 +246,7 @@ export function EstimateStatusActions({
         const result = await resendEstimateEmailAction(estimate.id);
 
         if (result.error) {
-          setError(result.error);
+          setError(formatActionError(result.error, "Estimate email could not be resent. Try again."));
           return;
         }
 
@@ -227,10 +254,7 @@ export function EstimateStatusActions({
           result.emailDelivery &&
           result.emailDelivery.status !== "sent"
         ) {
-          setError(
-            result.emailDelivery.message ??
-              "Estimate email could not be resent. Try again.",
-          );
+          setError(formatBillingEmailDeliveryError(result.emailDelivery, "estimate", "resend"));
           return;
         }
 
@@ -272,9 +296,13 @@ export function EstimateStatusActions({
       {canResendEmail ? (
         <button
           type="button"
-          disabled={isPending || resendPending || convertPending}
+          disabled={workflowBusy || !hasCustomerEmail}
           onClick={handleResendEmail}
-          title="Sends another copy to the customer's email on file."
+          title={
+            hasCustomerEmail
+              ? "Sends another copy to the customer's email on file."
+              : MISSING_CUSTOMER_EMAIL_SEND_REASON
+          }
           className={`${buttonClass} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}
         >
           <Mail className="h-4 w-4" />
@@ -289,7 +317,15 @@ export function EstimateStatusActions({
         <button
           key={primaryAction.toStatus}
           type="button"
-          disabled={isPending || resendPending || convertPending}
+          disabled={
+            workflowBusy ||
+            (primaryAction.toStatus === "sent" && !hasCustomerEmail)
+          }
+          title={
+            primaryAction.toStatus === "sent" && !hasCustomerEmail
+              ? MISSING_CUSTOMER_EMAIL_SEND_REASON
+              : undefined
+          }
           onClick={() => handleStatusChange(primaryAction.toStatus)}
           className={`${buttonClass} ${primaryAction.className}`}
         >
@@ -302,7 +338,15 @@ export function EstimateStatusActions({
         <button
           key={action.toStatus}
           type="button"
-          disabled={isPending || resendPending || convertPending}
+          disabled={
+            workflowBusy ||
+            (action.toStatus === "sent" && !hasCustomerEmail)
+          }
+          title={
+            action.toStatus === "sent" && !hasCustomerEmail
+              ? MISSING_CUSTOMER_EMAIL_SEND_REASON
+              : undefined
+          }
           onClick={() => handleStatusChange(action.toStatus)}
           className={`${buttonClass} ${action.className}`}
         >
@@ -316,11 +360,12 @@ export function EstimateStatusActions({
     </div>
   );
 
-  const helperText =
-    primaryAction?.helper ??
-    (canResendEmail
-      ? "Resend sends another copy to the customer's email on file."
-      : null);
+  const helperText = emailSendBlocked
+    ? MISSING_CUSTOMER_EMAIL_SEND_REASON
+    : primaryAction?.helper ??
+      (canResendEmail
+        ? "Resend sends another copy to the customer's email on file."
+        : null);
 
   if (isSticky) {
     const hasActions =

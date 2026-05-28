@@ -461,6 +461,7 @@ export function DispatchPageView({
       {selectedJob && isBelowLg ? (
         <MobileSheet
           onClose={handleClosePanel}
+          closeDisabled={isPending}
           ariaLabelledBy="dispatch-job-modal-title"
           variant="responsive"
           zIndex={50}

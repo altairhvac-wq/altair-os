@@ -9,6 +9,7 @@ import {
   updateEstimateStatus,
 } from "@/lib/database/queries/estimates";
 import { getJobById } from "@/lib/database/queries/jobs";
+import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
   recordEstimateCreatedActivity,
   recordEstimateEmailResentActivity,
@@ -37,7 +38,7 @@ export async function createEstimateAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.manageBilling) {
@@ -89,7 +90,7 @@ export async function updateEstimateStatusAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.manageBilling) {
@@ -145,7 +146,7 @@ export async function updateEstimateStatusAction(
       );
 
     if (statusError || !sentEstimate) {
-      return { error: statusError ?? "Failed to update estimate status." };
+      return { error: statusError ?? "We couldn't mark this estimate as sent. Try again." };
     }
 
     const emailResult = await sendEstimateEmail({
@@ -246,7 +247,7 @@ export async function resendEstimateEmailAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.manageBilling) {

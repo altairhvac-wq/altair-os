@@ -21,6 +21,7 @@ import {
 import { finalizeOpenJobLaborForTerminalJob } from "@/lib/database/services/time-tracking";
 import type { Job, JobFormData, JobStatus } from "@/shared/types/job";
 import { getReopenCompletedJobBlockReason } from "@/shared/types/invoice";
+import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
   getTargetStatusForAction,
   isAllowedStatusCorrection,
@@ -42,7 +43,7 @@ export async function createJobAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.dispatchJobs) {
@@ -52,7 +53,7 @@ export async function createJobAction(
   const { job, error } = await createJob(context.company.id, data);
 
   if (error || !job) {
-    return { error: error ?? "Failed to create job." };
+    return { error: error ?? "We couldn't create this job. Check the customer and schedule, then try again." };
   }
 
   await recordJobCreatedActivity({
@@ -79,7 +80,7 @@ export async function updateJobAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.dispatchJobs) {
@@ -89,7 +90,7 @@ export async function updateJobAction(
   const { job, error } = await updateJob(context.company.id, jobId, data);
 
   if (error || !job) {
-    return { error: error ?? "Failed to update job." };
+    return { error: error ?? "We couldn't save job changes. Try again." };
   }
 
   revalidatePath("/jobs");
@@ -114,7 +115,7 @@ export async function updateJobStatusAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   const existingJob = await getJobById(context.company.id, jobId);
@@ -166,7 +167,7 @@ export async function updateJobStatusAction(
   );
 
   if (!job) {
-    return { error: error ?? "Failed to update job status." };
+    return { error: error ?? "We couldn't update this job's status. Try again." };
   }
 
   if (actionId === "complete" || actionId === "cancel") {
@@ -222,7 +223,7 @@ export async function correctJobStatusAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.dispatchJobs) {
@@ -288,7 +289,7 @@ export async function reopenCompletedJobAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.dispatchJobs) {

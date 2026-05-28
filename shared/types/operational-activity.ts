@@ -175,13 +175,12 @@ const ACTIVITY_TYPE_LABELS: Record<OperationalActivityEventType, string> = {
   expense_reimbursed: "Expense reimbursed",
   status_changed: "Status changed",
   invoice_created_for_completed_job:
-    "Office review blocker resolved: Invoice created",
-  labor_entries_closed:
-    "Office review blocker resolved: Labor entries closed",
+    "Invoice created (office review complete)",
+  labor_entries_closed: "Labor entries closed (office review complete)",
   pending_expenses_resolved:
-    "Office review blocker resolved: Pending expenses resolved",
+    "Pending expenses resolved (office review complete)",
   material_costs_completed:
-    "Office review blocker resolved: Material costs completed",
+    "Material costs completed (office review complete)",
 };
 
 export function normalizeOperationalEventType(

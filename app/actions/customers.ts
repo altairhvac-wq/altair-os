@@ -8,6 +8,7 @@ import {
   updateCustomer,
 } from "@/lib/database/queries/customers";
 import { recordCustomerCreatedActivity } from "@/lib/database/services/customer-activity";
+import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
   normalizeCustomerFormData,
   validateCustomerFormData,
@@ -31,7 +32,7 @@ export async function createCustomerAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.manageCustomers) {
@@ -50,7 +51,7 @@ export async function createCustomerAction(
   );
 
   if (error || !customer) {
-    return { error: error ?? "Failed to create customer." };
+    return { error: error ?? "We couldn't save this customer. Check the details and try again." };
   }
 
   await recordCustomerCreatedActivity({
@@ -72,7 +73,7 @@ export async function updateCustomerAction(
   const context = await getActiveCompanyContext();
 
   if (!context) {
-    return { error: "No active company workspace." };
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
   if (!context.permissions.manageCustomers) {
@@ -99,7 +100,7 @@ export async function updateCustomerAction(
   );
 
   if (error || !customer) {
-    return { error: error ?? "Failed to update customer." };
+    return { error: error ?? "We couldn't save your changes. Try again." };
   }
 
   revalidatePath("/customers");

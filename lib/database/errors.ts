@@ -1,3 +1,6 @@
+export const NO_ACTIVE_COMPANY_MESSAGE =
+  "Your session expired or no company is selected. Sign in again.";
+
 type DatabaseErrorLike = {
   message?: string;
   code?: string;
@@ -60,7 +63,15 @@ export function mapDatabaseError(error: DatabaseErrorLike): string {
   }
 
   if (message.includes("duplicate key") || error.code === "23505") {
-    return "That record already exists. Try signing in instead.";
+    if (message.includes("customer")) {
+      return "A customer with these details may already exist.";
+    }
+
+    if (message.includes("user") || message.includes("auth")) {
+      return "An account with this email already exists. Try signing in instead.";
+    }
+
+    return "A record with these details already exists.";
   }
 
   if (message.includes("permission denied") || error.code === "42501") {
