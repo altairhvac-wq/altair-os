@@ -13,6 +13,29 @@ import {
 } from "@/shared/types/job-workflow";
 import { CompleteJobSheet } from "./CompleteJobSheet";
 
+function getMobileWorkflowHint(
+  status: JobStatus,
+  primaryActionId: JobWorkflowActionId | undefined,
+): string | null {
+  if (status === "in_progress") {
+    if (primaryActionId === "complete") {
+      return "This job is active on site. Complete work opens a short wrap-up form, then marks the job finished for the office.";
+    }
+    return "This job is active on site.";
+  }
+
+  switch (status) {
+    case "scheduled":
+      return "Next: start route when you leave for this job, then mark arrived on site.";
+    case "dispatched":
+      return "You are en route. Mark arrived on site when you reach the customer.";
+    case "arrived":
+      return "On site. Start work when you are ready to begin service.";
+    default:
+      return null;
+  }
+}
+
 type JobWorkflowActionsProps = {
   jobId: string;
   customerId: string;
@@ -69,7 +92,7 @@ export function JobWorkflowActions({
             : "inline-flex w-full items-center justify-center rounded-lg border border-red-200 bg-white px-4 py-3 sm:w-auto sm:px-3.5 sm:py-2 text-base sm:text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
         }
       >
-        {isActionPending ? "Updating..." : action.label}
+        {isActionPending ? "Saving…" : action.label}
       </button>
     );
   }
@@ -126,9 +149,21 @@ export function JobWorkflowActions({
       ? "flex flex-col gap-2"
       : "flex flex-col gap-2 sm:flex-row sm:flex-wrap";
 
+  const mobileHint = isCompact
+    ? getMobileWorkflowHint(status, primaryAction.id)
+    : null;
+
   return (
     <>
       <div className={layout === "stack" ? "space-y-3" : "space-y-2"}>
+        {mobileHint ? (
+          <p className="text-xs leading-relaxed text-slate-500">{mobileHint}</p>
+        ) : null}
+        {isPending && !pendingAction ? (
+          <p className="text-xs text-slate-500" aria-live="polite">
+            Saving your last status change…
+          </p>
+        ) : null}
         <div className={actionRowClass}>{renderActionButton(primaryAction)}</div>
         {secondaryActions.length > 0 ? (
           <div className={actionRowClass}>

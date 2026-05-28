@@ -152,7 +152,7 @@ export function CompleteJobSheet({
         <MobileSheetHeader
           titleId={TITLE_ID}
           title="Complete work"
-          subtitle="Add notes before marking this job complete."
+          subtitle="Record what was done on site. This closes the job for dispatch and billing review."
           onClose={onClose}
           closeDisabled={isPending}
           icon={

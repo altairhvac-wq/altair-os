@@ -53,7 +53,7 @@ export function TechnicianJobEquipmentSummary({
           return;
         }
 
-        setError("Failed to load equipment.");
+        setError("Could not load equipment for this job.");
         setEquipment([]);
       })
       .finally(() => {
@@ -75,7 +75,7 @@ export function TechnicianJobEquipmentSummary({
     return (
       <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-xs text-slate-500">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        Loading equipment...
+        Loading equipment for this customer…
       </div>
     );
   }
@@ -101,7 +101,7 @@ export function TechnicianJobEquipmentSummary({
   if (!equipment || equipment.length === 0) {
     return (
       <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-xs text-slate-500">
-        No equipment on file for this customer.
+        No equipment recorded for this customer yet.
       </div>
     );
   }
@@ -111,7 +111,7 @@ export function TechnicianJobEquipmentSummary({
   if (activeEquipment.length === 0) {
     return (
       <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-xs text-slate-500">
-        No active equipment on file.
+        No active equipment on file for this customer.
       </div>
     );
   }

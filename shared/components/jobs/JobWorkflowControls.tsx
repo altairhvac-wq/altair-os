@@ -30,12 +30,26 @@ type JobWorkflowControlsProps = {
   onStatusUpdated?: (status: JobStatus) => void;
 };
 
-function JobWorkflowTerminalState({ status }: { status: JobStatus }) {
+function JobWorkflowTerminalState({
+  status,
+  compact = false,
+}: {
+  status: JobStatus;
+  compact?: boolean;
+}) {
   if (status === "completed") {
     return (
-      <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-        <CheckCircle2 className="h-4 w-4 shrink-0" />
-        Work completed
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          Work completed
+        </div>
+        {compact ? (
+          <p className="text-xs text-slate-500">
+            This job is closed. Use Resume below only if more field work is
+            needed.
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -78,11 +92,13 @@ export function JobWorkflowControls({
     onStatusUpdated?.(nextStatus);
   }
 
+  const isCompact = layout === "stack";
+
   if (isTerminalJobStatus(status)) {
     if (status === "completed") {
       return (
         <div className="space-y-3">
-          <JobWorkflowTerminalState status={status} />
+          <JobWorkflowTerminalState status={status} compact={isCompact} />
           <ReopenCompletedJobControl
             jobId={jobId}
             status={status}
@@ -100,7 +116,7 @@ export function JobWorkflowControls({
       );
     }
 
-    return <JobWorkflowTerminalState status={status} />;
+    return <JobWorkflowTerminalState status={status} compact={isCompact} />;
   }
 
   return (

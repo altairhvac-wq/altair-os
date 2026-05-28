@@ -6,6 +6,8 @@ import type { TechnicianJob } from "@/shared/types/technician";
 
 type TechnicianCustomerQuickActionsProps = {
   job: TechnicianJob;
+  /** When true, show operational copy if no contact methods are available. */
+  showEmptyState?: boolean;
 };
 
 const actionClass =
@@ -13,6 +15,7 @@ const actionClass =
 
 export function TechnicianCustomerQuickActions({
   job,
+  showEmptyState = false,
 }: TechnicianCustomerQuickActionsProps) {
   const mapsUrl = buildGoogleMapsDirectionsUrl({
     serviceAddress: job.serviceAddress,
@@ -26,11 +29,31 @@ export function TechnicianCustomerQuickActions({
   const hasMaps = Boolean(mapsUrl);
 
   if (!hasPhone && !hasEmail && !hasMaps) {
-    return null;
+    if (!showEmptyState) {
+      return null;
+    }
+
+    return (
+      <p className="text-sm text-slate-500">
+        No phone or email on file for this customer. Use Maps once a service
+        address is available.
+      </p>
+    );
   }
 
+  const contactGapMessage =
+    !hasPhone && hasEmail
+      ? "Phone not on file."
+      : hasPhone && !hasEmail
+        ? "Email not on file."
+        : null;
+
   return (
-    <div className="flex gap-2">
+    <div className="space-y-2">
+      {contactGapMessage ? (
+        <p className="text-xs text-slate-500">{contactGapMessage}</p>
+      ) : null}
+      <div className="flex gap-2">
       {hasPhone ? (
         <a
           href={`tel:${job.customerPhone}`}
@@ -60,6 +83,7 @@ export function TechnicianCustomerQuickActions({
           Maps
         </a>
       ) : null}
+      </div>
     </div>
   );
 }
