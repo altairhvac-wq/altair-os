@@ -4,10 +4,12 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { COMPANY_FILES_BUCKET } from "@/lib/storage/company-files";
+import type { CompanyMembershipInsert } from "@/lib/database/types/core-tables";
 import type { SystemCheckReport, SystemCheckResult } from "./types";
 
-const EXPECTED_MIGRATION_COUNT = 33;
-const LATEST_MIGRATION_MARKER = "033_membership_activities_foundation";
+const EXPECTED_MIGRATION_COUNT = 39;
+const LATEST_MIGRATION_MARKER = "039_grant_company_memberships_delete";
+const MIGRATION_PROBE_NIL_UUID = "00000000-0000-0000-0000-000000000000";
 
 function buildSummary(checks: SystemCheckResult[]): SystemCheckReport["summary"] {
   return checks.reduce(
@@ -359,21 +361,24 @@ async function checkMigrationMarker(): Promise<SystemCheckResult> {
 
   try {
     const supabase = await createClient();
-    const { error } = await supabase
-      .from("membership_activities")
-      .select("id", { head: true, count: "exact" })
-      .eq("company_id", context.company.id)
-      .limit(1);
+    const { error: deleteError } = await supabase
+      .from("company_memberships")
+      .delete()
+      .eq("id", MIGRATION_PROBE_NIL_UUID)
+      .eq("company_id", context.company.id);
 
-    if (error) {
-      const message = error.message.toLowerCase();
+    if (deleteError) {
+      const message = deleteError.message.toLowerCase();
 
-      if (message.includes("does not exist") || message.includes("could not find")) {
+      if (
+        message.includes("permission denied") &&
+        message.includes("company_memberships")
+      ) {
         return {
           id: "migration-status",
           label: "Production migration status",
           status: "fail",
-          message: "Latest schema marker table membership_activities is missing.",
+          message: "company_memberships DELETE grant is missing (invite cancellation).",
           hint: `Apply all migrations through ${LATEST_MIGRATION_MARKER}.`,
         };
       }
@@ -382,17 +387,73 @@ async function checkMigrationMarker(): Promise<SystemCheckResult> {
         id: "migration-status",
         label: "Production migration status",
         status: "warn",
-        message: "Could not verify the latest migration marker table.",
-        hint: error.message,
+        message: "Could not verify company_memberships DELETE grant.",
+        hint: deleteError.message,
+      };
+    }
+
+    const { error: insertError } = await supabase.from("company_memberships").insert({
+      company_id: context.company.id,
+      status: "invited",
+    } as CompanyMembershipInsert);
+
+    if (!insertError) {
+      return {
+        id: "migration-status",
+        label: "Production migration status",
+        status: "warn",
+        message: "Migration probe insert succeeded unexpectedly.",
+        hint: "Confirm invite/member RLS policies reject invalid membership rows.",
+      };
+    }
+
+    const insertMessage = insertError.message.toLowerCase();
+
+    if (
+      insertMessage.includes("permission denied") &&
+      insertMessage.includes("company_memberships")
+    ) {
+      return {
+        id: "migration-status",
+        label: "Production migration status",
+        status: "fail",
+        message: "company_memberships INSERT grant is missing (team invites).",
+        hint: "Apply migrations through 037_grant_company_memberships_insert.sql.",
+      };
+    }
+
+    if (
+      insertMessage.includes("row-level security") ||
+      insertMessage.includes("row level security")
+    ) {
+      return {
+        id: "migration-status",
+        label: "Production migration status",
+        status: "fail",
+        message: "company_memberships admin RLS policy is missing.",
+        hint: "Apply migrations through 038_restore_company_memberships_admin_rls.sql.",
+      };
+    }
+
+    if (
+      insertMessage.includes("company_memberships_invite_identity_check") ||
+      insertMessage.includes("check constraint")
+    ) {
+      return {
+        id: "migration-status",
+        label: "Production migration status",
+        status: "pass",
+        message: `Latest migration marker (${LATEST_MIGRATION_MARKER}) is present.`,
+        hint: `Repo contains ${EXPECTED_MIGRATION_COUNT} migrations. Confirm Supabase matches via CLI or dashboard.`,
       };
     }
 
     return {
       id: "migration-status",
       label: "Production migration status",
-      status: "pass",
-      message: `Latest migration marker (${LATEST_MIGRATION_MARKER}) is present.`,
-      hint: `Repo contains ${EXPECTED_MIGRATION_COUNT} migrations. Confirm Supabase matches via CLI or dashboard.`,
+      status: "warn",
+      message: "Migration marker probe returned an unexpected insert error.",
+      hint: insertError.message,
     };
   } catch (error) {
     return {

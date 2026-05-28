@@ -157,9 +157,20 @@ export function DispatchPageView({
     statusFilter !== "all" ||
     technicianFilter !== "all";
 
-  const handleOpenSection = useCallback((section: DispatchSection) => {
-    setOpenSection((current) => (current === section ? null : section));
-  }, []);
+  const handleOpenSection = useCallback(
+    (section: DispatchSection) => {
+      setOpenSection((current) => {
+        const isClosing = current === section;
+        if (!isClosing && isBelowLg) {
+          setSelectedJobId(null);
+          setAssignError(null);
+          setAssignSuccess(null);
+        }
+        return isClosing ? null : section;
+      });
+    },
+    [isBelowLg],
+  );
 
   const handleCloseSection = useCallback(() => {
     setOpenSection(null);
