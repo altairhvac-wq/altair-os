@@ -1,5 +1,15 @@
 import Link from "next/link";
 import { DashboardCommandStrip } from "@/shared/components/dashboard/DashboardCommandStrip";
+import {
+  DashboardCompactAttentionSummary,
+  DashboardCompactBillingSection,
+  DashboardCompactExpenseSection,
+  DashboardCompactHealthCard,
+  DashboardCompactNextStepsSection,
+  DashboardCompactTechnicianSummary,
+  DashboardCompactTodaySection,
+} from "@/shared/components/dashboard/DashboardCompactSummaries";
+import { DashboardDrilldownProvider } from "@/shared/components/dashboard/dashboard-drilldown-context";
 import type { DashboardData } from "@/shared/types/dashboard";
 import {
   AlertCircle,
@@ -28,12 +38,13 @@ import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatu
 import { CashFlowCommandSection } from "@/shared/components/dashboard/CashFlowCommandSection";
 import { DashboardNotificationsList } from "@/shared/components/dashboard/DashboardNotificationsList";
 import { DispatchPressureSection } from "@/shared/components/dashboard/DispatchPressureSection";
+import { NextBestActionsSection } from "@/shared/components/dashboard/NextBestActionsSection";
+import type { CommandStripPanelId } from "@/shared/lib/dashboard-command-strip";
 import {
   INVOICE_PAGE_CASH_FLOW_HREF,
   INVOICE_PAGE_OVERDUE_HREF,
   INVOICE_PAGE_UNPAID_HREF,
 } from "@/shared/lib/invoice-page-focus";
-import { NextBestActionsSection } from "@/shared/components/dashboard/NextBestActionsSection";
 import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
 import { shouldShowOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
 import { OperationalMomentumSection } from "@/shared/components/dashboard/OperationalMomentumSection";
@@ -186,16 +197,16 @@ function DashboardPriorityGroup({
   }
 
   return (
-    <section className="flex min-w-0 flex-col gap-3 lg:gap-4">
-      <header className="border-b border-slate-200/80 pb-2">
-        <h2 className="text-sm font-black uppercase tracking-wide text-slate-900 lg:text-base">
+    <section className="flex min-w-0 flex-col gap-2 lg:gap-3">
+      <header className="border-b border-slate-200/80 pb-1.5">
+        <h2 className="text-xs font-black uppercase tracking-wide text-slate-900 sm:text-sm">
           {title}
         </h2>
-        <p className="mt-0.5 text-xs leading-relaxed text-slate-500 lg:text-sm">
+        <p className="mt-0.5 text-[11px] leading-snug text-slate-500 sm:text-xs">
           {description}
         </p>
       </header>
-      <div className="flex min-w-0 flex-col gap-3 lg:gap-4">{visibleChildren}</div>
+      <div className="flex min-w-0 flex-col gap-2 lg:gap-3">{visibleChildren}</div>
     </section>
   );
 }
@@ -1127,7 +1138,7 @@ function DashboardContentLayout({
     access.canViewOperationalReports &&
     !(showOnboarding && onboardingChecklist && !onboardingChecklist.isComplete);
 
-  const commandStripPanels = {
+  const drilldownPanels: Partial<Record<CommandStripPanelId, React.ReactNode>> = {
     ...(access.canViewOperationalReports
       ? {
           attention: (
@@ -1170,6 +1181,20 @@ function DashboardContentLayout({
           dispatch: <DispatchPressureSection data={data} />,
         }
       : {}),
+    ...(access.canViewOperationalReports
+      ? {
+          "next-steps": (
+            <>
+              <NextBestActionsSection data={data} />
+              <RecentActivitySection
+                activities={data.recentActivity}
+                canViewBilling={access.canViewBilling}
+                canManageCustomers={access.canManageCustomers}
+              />
+            </>
+          ),
+        }
+      : {}),
     today: (
       <>
         {showLiveMetrics ? (
@@ -1187,68 +1212,63 @@ function DashboardContentLayout({
   };
 
   const needsAttentionContent = access.canViewOperationalReports ? (
-    <>
+    <div className="grid min-w-0 gap-2 lg:grid-cols-2 lg:gap-3">
+      <DashboardCompactAttentionSummary data={data} />
       <OfficeReviewQueueSection
         report={data.officeReviewQueue}
         variant="compact"
-        itemLimit={5}
+        itemLimit={4}
       />
-
-      <NotificationsSummarySection
-        notifications={data.notifications}
-        notificationAccess={notificationAccess}
-      />
-    </>
-  ) : null;
+      <div className="lg:col-span-2">
+        <NotificationsSummarySection
+          notifications={data.notifications}
+          notificationAccess={notificationAccess}
+        />
+      </div>
+    </div>
+  ) : (
+    <NotificationsSummarySection
+      notifications={data.notifications}
+      notificationAccess={notificationAccess}
+    />
+  );
 
   const todaysWorkContent = (
-    <>
-      <TodayOperationsSection operations={data.operations} />
-
+    <div className="grid min-w-0 gap-2 lg:grid-cols-2 lg:gap-3">
+      <DashboardCompactTodaySection operations={data.operations} />
       {access.canViewTechnicianRoster ? (
-        <TechnicianStatusSection technicians={data.technicians} />
+        <DashboardCompactTechnicianSummary technicians={data.technicians} />
       ) : null}
-    </>
+    </div>
   );
 
   const revenueBillingContent =
     access.canViewBilling || access.canViewCompanyExpenses ? (
-      <div className="grid gap-3 xl:grid-cols-2 xl:items-start lg:gap-4">
+      <div className="grid min-w-0 gap-2 lg:grid-cols-2 lg:gap-3">
         {access.canViewBilling ? (
-          <MoneySnapshotSection money={data.money} />
+          <DashboardCompactBillingSection
+            money={data.money}
+            canViewCompanyExpenses={access.canViewCompanyExpenses}
+            expenses={access.canViewCompanyExpenses ? data.expenses : undefined}
+          />
         ) : null}
         {access.canViewCompanyExpenses ? (
-          <ExpenseReviewSection expenses={data.expenses} />
+          <DashboardCompactExpenseSection expenses={data.expenses} />
         ) : null}
       </div>
     ) : null;
 
   const operationalHealthContent = access.canViewOperationalReports ? (
-    <OperationalHealthSection
-      report={data.operationalHealth}
-      variant="compact"
-    />
+    <DashboardCompactHealthCard report={data.operationalHealth} />
   ) : null;
 
-  const nextStepsContent = (
-    <>
-      {access.canViewOperationalReports ? (
-        <NextBestActionsSection data={data} />
-      ) : null}
-
-      {access.canViewOperationalReports ? (
-        <RecentActivitySection
-          activities={data.recentActivity}
-          canViewBilling={access.canViewBilling}
-          canManageCustomers={access.canManageCustomers}
-        />
-      ) : (
-        <NotificationsSummarySection
-          notifications={data.notifications}
-          notificationAccess={notificationAccess}
-        />
-      )}
-    </>
+  const nextStepsContent = access.canViewOperationalReports ? (
+    <DashboardCompactNextStepsSection data={data} />
+  ) : (
+    <NotificationsSummarySection
+      notifications={data.notifications}
+      notificationAccess={notificationAccess}
+    />
   );
 
   const sectionContent: Record<DashboardPrioritySectionId, React.ReactNode> = {
@@ -1260,7 +1280,7 @@ function DashboardContentLayout({
   };
 
   return (
-    <>
+    <DashboardDrilldownProvider panels={drilldownPanels}>
       {showOnboarding ? (
         <OnboardingChecklistSection
           checklist={onboardingChecklist}
@@ -1270,7 +1290,7 @@ function DashboardContentLayout({
         />
       ) : null}
 
-      <DashboardCommandStrip data={data} panels={commandStripPanels} />
+      <DashboardCommandStrip data={data} />
 
       {sectionOrder.map((sectionId) => {
         const content = sectionContent[sectionId];
@@ -1290,7 +1310,7 @@ function DashboardContentLayout({
           </DashboardPriorityGroup>
         );
       })}
-    </>
+    </DashboardDrilldownProvider>
   );
 }
 
@@ -1301,7 +1321,7 @@ export function OperationalDashboardView({
   userId,
 }: OperationalDashboardViewProps) {
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 pb-2 xl:max-w-[1440px]">
+    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-3 pb-2 xl:max-w-[1440px]">
       <DashboardContentLayout
         data={data}
         onboardingChecklist={onboardingChecklist}

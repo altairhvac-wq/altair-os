@@ -1,17 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { ChevronRight, LayoutDashboard } from "lucide-react";
-import {
-  MobileSheet,
-  MobileSheetBody,
-  MobileSheetHeader,
-  MobileSheetHeaderIcon,
-  MobileSheetPanel,
-} from "@/shared/components/ui/mobile-sheet";
+import { ChevronRight } from "lucide-react";
+import { useDashboardDrilldown } from "@/shared/components/dashboard/dashboard-drilldown-context";
 import {
   buildDashboardCommandStripGroups,
-  COMMAND_STRIP_PANEL_LABELS,
   type CommandStripGroup,
   type CommandStripPanelId,
   type CommandStripSeverity,
@@ -20,7 +12,6 @@ import type { DashboardData } from "@/shared/types/dashboard";
 
 type DashboardCommandStripProps = {
   data: DashboardData;
-  panels: Partial<Record<CommandStripPanelId, React.ReactNode>>;
 };
 
 const SEVERITY_STYLES: Record<
@@ -68,7 +59,7 @@ function CommandStripCardButton({
     <button
       type="button"
       onClick={onClick}
-      className={`group flex min-w-0 flex-col rounded-lg border p-2.5 text-left shadow-sm transition-colors max-lg:p-2.5 lg:p-3 ${styles.card}`}
+      className={`group flex min-w-0 flex-col rounded-lg border p-2 text-left shadow-sm transition-colors lg:p-2.5 ${styles.card}`}
     >
       <div className="flex items-start justify-between gap-1">
         <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
@@ -95,19 +86,19 @@ function CommandStripCardButton({
 
 function CommandStripGroupSection({
   group,
-  panels,
   onOpenPanel,
 }: {
   group: CommandStripGroup;
-  panels: Partial<Record<CommandStripPanelId, React.ReactNode>>;
   onOpenPanel: (panelId: CommandStripPanelId) => void;
 }) {
+  const { hasPanel } = useDashboardDrilldown();
+
   return (
     <div className="min-w-0">
-      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+      <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
         {group.label}
       </p>
-      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-2 lg:grid-cols-4 lg:gap-2">
+      <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:grid-cols-4">
         {group.cards.map((card) => (
           <CommandStripCardButton
             key={card.id}
@@ -116,7 +107,7 @@ function CommandStripGroupSection({
             detail={card.detail}
             severity={card.severity}
             onClick={() => {
-              if (panels[card.panelId]) {
+              if (hasPanel(card.panelId)) {
                 onOpenPanel(card.panelId);
               }
             }}
@@ -127,84 +118,39 @@ function CommandStripGroupSection({
   );
 }
 
-export function DashboardCommandStrip({
-  data,
-  panels,
-}: DashboardCommandStripProps) {
+export function DashboardCommandStrip({ data }: DashboardCommandStripProps) {
   const groups = buildDashboardCommandStripGroups(data);
-  const [openPanel, setOpenPanel] = useState<CommandStripPanelId | null>(null);
-
-  const handleClose = useCallback(() => {
-    setOpenPanel(null);
-  }, []);
+  const { openDashboardPanel } = useDashboardDrilldown();
 
   if (groups.length === 0) {
     return null;
   }
 
-  const panelContent = openPanel ? panels[openPanel] : null;
-  const panelTitle = openPanel ? COMMAND_STRIP_PANEL_LABELS[openPanel] : "";
-  const titleId = openPanel ? `dashboard-command-panel-${openPanel}` : "";
-
   return (
-    <>
-      <section
-        aria-label="Operational command strip"
-        className="admin-command-surface overflow-hidden p-3 lg:p-4"
-      >
-        <div className="mb-2 flex items-end justify-between gap-2">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/90">
-              Command strip
-            </p>
-            <h2 className="mt-0.5 text-base font-black tracking-tight text-white lg:text-lg">
-              Operations at a glance
-            </h2>
-          </div>
+    <section
+      aria-label="Operational command strip"
+      className="admin-command-surface min-w-0 overflow-hidden p-2.5 lg:p-3"
+    >
+      <div className="mb-2 flex items-end justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/90">
+            Command strip
+          </p>
+          <h2 className="mt-0.5 text-sm font-black tracking-tight text-white lg:text-base">
+            Operations at a glance
+          </h2>
         </div>
+      </div>
 
-        <div className="flex flex-col gap-3 lg:gap-3.5">
-          {groups.map((group) => (
-            <CommandStripGroupSection
-              key={group.id}
-              group={group}
-              panels={panels}
-              onOpenPanel={setOpenPanel}
-            />
-          ))}
-        </div>
-      </section>
-
-      {openPanel && panelContent ? (
-        <MobileSheet
-          onClose={handleClose}
-          ariaLabelledBy={titleId}
-          variant="responsive"
-          zIndex={60}
-        >
-          <MobileSheetPanel
-            maxWidth="2xl"
-            maxHeight="90"
-            responsiveRounded
-            className="pb-[max(1rem,env(safe-area-inset-bottom))]"
-          >
-            <MobileSheetHeader
-              titleId={titleId}
-              title={panelTitle}
-              subtitle="Full breakdown from live dashboard data"
-              onClose={handleClose}
-              icon={
-                <MobileSheetHeaderIcon className="bg-cyan-100 text-cyan-700">
-                  <LayoutDashboard className="h-4 w-4" />
-                </MobileSheetHeaderIcon>
-              }
-            />
-            <MobileSheetBody unstyled className="p-3 sm:p-4">
-              <div className="flex flex-col gap-3 lg:gap-4">{panelContent}</div>
-            </MobileSheetBody>
-          </MobileSheetPanel>
-        </MobileSheet>
-      ) : null}
-    </>
+      <div className="flex flex-col gap-2.5 lg:gap-3">
+        {groups.map((group) => (
+          <CommandStripGroupSection
+            key={group.id}
+            group={group}
+            onOpenPanel={openDashboardPanel}
+          />
+        ))}
+      </div>
+    </section>
   );
 }

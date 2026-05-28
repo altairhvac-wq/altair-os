@@ -13,7 +13,8 @@ export type CommandStripPanelId =
   | "dispatch"
   | "today"
   | "billing"
-  | "health";
+  | "health"
+  | "next-steps";
 
 export type CommandStripGroupId = "attention" | "today" | "billing" | "health";
 
@@ -281,4 +282,5 @@ export const COMMAND_STRIP_PANEL_LABELS: Record<CommandStripPanelId, string> = {
   today: "Today's work",
   billing: "Revenue and billing",
   health: "Operational health",
+  "next-steps": "Next steps and activity",
 };
