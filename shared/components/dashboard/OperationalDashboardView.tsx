@@ -1106,24 +1106,6 @@ function RecentActivitySection({
   );
 }
 
-function DashboardHeader() {
-  return (
-    <header className="admin-hero max-lg:px-4 max-lg:py-3 lg:px-6 lg:py-5">
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-600 lg:text-xs">
-        Operations overview
-      </p>
-      <h1 className="mt-1 text-xl font-black tracking-tight text-slate-900 max-lg:mt-1 lg:mt-1.5 lg:text-2xl xl:text-3xl">
-        Command center
-      </h1>
-      <p className="mt-1.5 max-w-2xl text-xs leading-relaxed text-slate-600 max-lg:line-clamp-2 lg:mt-2 lg:text-sm lg:line-clamp-none">
-        Prioritized view of what needs action, today&apos;s field work, billing
-        pressure, and operational health — built for fast decisions during the
-        workday.
-      </p>
-    </header>
-  );
-}
-
 function DashboardContentLayout({
   data,
   onboardingChecklist,
@@ -1303,15 +1285,14 @@ export function OperationalDashboardView({
   );
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 pb-2 max-lg:gap-4 lg:gap-6 xl:max-w-[1440px] xl:gap-8">
+    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 pb-2 xl:max-w-[1440px]">
       <div className="lg:hidden">
         <MobileDashboardShell snapshot={mobileSnapshot}>
           {dashboardContent}
         </MobileDashboardShell>
       </div>
 
-      <div className="hidden lg:flex lg:flex-col lg:gap-8">
-        <DashboardHeader />
+      <div className="hidden lg:flex lg:flex-col lg:gap-5">
         {dashboardContent}
       </div>
     </div>

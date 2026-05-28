@@ -5,10 +5,6 @@ function Skeleton({ className }: { className?: string }) {
 export function OperationalDashboardLoadingState() {
   return (
     <div className="space-y-5">
-      <div className="hidden lg:block">
-        <Skeleton className="h-28 w-full rounded-2xl" />
-      </div>
-
       <section className="admin-command-surface overflow-hidden p-3 lg:hidden">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="mt-2 h-5 w-40" />
