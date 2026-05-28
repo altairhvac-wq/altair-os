@@ -34,6 +34,8 @@ export type InvoiceActivityMetadata = {
   changed_by?: string;
   payment_method?: PaymentMethod;
   reference?: string;
+  automated?: boolean;
+  source?: "manual" | "automatic";
 };
 
 export type InvoiceActivity = {
@@ -59,6 +61,13 @@ const ACTIVITY_TYPE_LABELS: Record<InvoiceActivityType, string> = {
 };
 
 export function formatInvoiceActivityLabel(activity: InvoiceActivity): string {
+  if (
+    activity.eventType === "status_changed" &&
+    activity.metadata.automated
+  ) {
+    return "Status changed (automatic)";
+  }
+
   return ACTIVITY_TYPE_LABELS[activity.eventType];
 }
 
@@ -106,13 +115,18 @@ export function formatInvoiceActivityDetails(
     case "invoice_voided":
     case "invoice_cancelled":
     case "status_changed": {
+      const parts: string[] = [];
       if (metadata.from_status && metadata.to_status) {
-        return `${formatInvoiceStatus(metadata.from_status)} → ${formatInvoiceStatus(metadata.to_status)}`;
+        parts.push(
+          `${formatInvoiceStatus(metadata.from_status)} → ${formatInvoiceStatus(metadata.to_status)}`,
+        );
+      } else if (metadata.to_status) {
+        parts.push(formatInvoiceStatus(metadata.to_status));
       }
-      if (metadata.to_status) {
-        return formatInvoiceStatus(metadata.to_status);
+      if (metadata.automated) {
+        parts.push("Overdue sync · automatic");
       }
-      return null;
+      return parts.length > 0 ? parts.join(" · ") : null;
     }
 
     case "payment_recorded": {

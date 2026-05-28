@@ -333,6 +333,8 @@ export async function reopenCompletedJobAction(
     toStatus: targetStatus,
     customerId: job.customerId,
     jobNumber: job.jobNumber,
+    technicianId: job.assignedTechnicianId,
+    dispatchReactivated: Boolean(existingJob.assignedTechnicianId),
   });
 
   revalidatePath("/jobs");

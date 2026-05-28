@@ -23,7 +23,11 @@ export type OperationalActivityEventType =
   | "warranty_expiration_recorded"
   | "job_created"
   | "job_status_changed"
+  | "job_status_corrected"
+  | "job_reopened"
   | "technician_assigned"
+  | "technician_unassigned"
+  | "job_labor_auto_closed"
   | "estimate_created"
   | "estimate_approved"
   | "estimate_converted_to_invoice"
@@ -59,6 +63,11 @@ export type OperationalActivityMetadata = {
   from_status?: string;
   to_status?: string;
   action_id?: string;
+  source?: "manual" | "automatic";
+  automated?: boolean;
+  closed_reason?: "completed" | "cancelled";
+  entries_closed_count?: number;
+  dispatch_reactivated?: boolean;
   technician_id?: string;
   technician_name?: string;
   actor_name?: string;
@@ -128,7 +137,11 @@ const ACTIVITY_TYPE_LABELS: Record<OperationalActivityEventType, string> = {
   warranty_expiration_recorded: "Warranty recorded",
   job_created: "Job created",
   job_status_changed: "Job status changed",
+  job_status_corrected: "Status corrected",
+  job_reopened: "Job reopened",
   technician_assigned: "Technician assigned",
+  technician_unassigned: "Technician unassigned",
+  job_labor_auto_closed: "Labor auto-closed",
   estimate_created: "Estimate created",
   estimate_approved: "Estimate approved",
   estimate_converted_to_invoice: "Estimate converted to invoice",
@@ -158,7 +171,17 @@ const ACTIVITY_TYPE_LABELS: Record<OperationalActivityEventType, string> = {
 export function normalizeOperationalEventType(
   source: OperationalActivitySource,
   rawEventType: string,
+  metadata?: OperationalActivityMetadata,
 ): OperationalActivityEventType {
+  if (source === "job" && rawEventType === "status_changed") {
+    if (metadata?.action_id === "status_correction") {
+      return "job_status_corrected";
+    }
+    if (metadata?.action_id === "reopen") {
+      return "job_reopened";
+    }
+  }
+
   if (source === "job" && JOB_STATUS_CHANGE_EVENTS.has(rawEventType)) {
     return "job_status_changed";
   }
@@ -180,7 +203,31 @@ export function normalizeOperationalEventType(
 export function formatOperationalActivityLabel(
   activity: OperationalActivity,
 ): string {
+  if (
+    activity.eventType === "status_changed" &&
+    activity.metadata.automated
+  ) {
+    return "Status changed (automatic)";
+  }
+
   return ACTIVITY_TYPE_LABELS[activity.eventType];
+}
+
+export function formatOperationalActivityAttribution(
+  activity: OperationalActivity,
+): string | null {
+  if (activity.actorName) {
+    if (activity.metadata.automated && activity.metadata.source === "automatic") {
+      return `Triggered by ${activity.actorName} · automatic cleanup`;
+    }
+    return `by ${activity.actorName}`;
+  }
+
+  if (activity.metadata.automated || activity.metadata.source === "automatic") {
+    return "System · automatic";
+  }
+
+  return null;
 }
 
 function formatStatusTransition(
@@ -331,6 +378,51 @@ export function formatOperationalActivityDetails(
         return `Assigned to ${metadata.technician_name}`;
       }
       return null;
+
+    case "technician_unassigned":
+      if (metadata.technician_name) {
+        return `Removed ${metadata.technician_name} from dispatch`;
+      }
+      return "Removed technician from dispatch";
+
+    case "job_status_corrected": {
+      const transition = formatStatusTransition(
+        metadata.from_status,
+        metadata.to_status,
+      );
+      return transition
+        ? `Manual correction · ${transition}`
+        : "Manual correction";
+    }
+
+    case "job_reopened": {
+      const transition = formatStatusTransition(
+        metadata.from_status,
+        metadata.to_status,
+      );
+      const parts: string[] = [];
+      if (transition) {
+        parts.push(transition);
+      }
+      if (metadata.dispatch_reactivated && metadata.technician_name) {
+        parts.push(`Dispatch reactivated for ${metadata.technician_name}`);
+      }
+      return parts.length > 0 ? parts.join(" · ") : null;
+    }
+
+    case "job_labor_auto_closed": {
+      const parts: string[] = ["Automatic cleanup"];
+      const count = metadata.entries_closed_count ?? 1;
+      parts.push(
+        `${count} open labor segment${count === 1 ? "" : "s"}`,
+      );
+      if (metadata.closed_reason === "completed") {
+        parts.push("when job was marked complete");
+      } else if (metadata.closed_reason === "cancelled") {
+        parts.push("when job was cancelled");
+      }
+      return parts.join(" · ");
+    }
 
     case "estimate_created":
       return metadata.estimate_number
@@ -486,8 +578,20 @@ export function formatOperationalActivityDetails(
 
     case "estimate_approved":
     case "invoice_sent":
-    case "status_changed":
-      return formatStatusTransition(metadata.from_status, metadata.to_status);
+    case "status_changed": {
+      const parts: string[] = [];
+      const statusLine = formatStatusTransition(
+        metadata.from_status,
+        metadata.to_status,
+      );
+      if (statusLine) {
+        parts.push(statusLine);
+      }
+      if (metadata.automated) {
+        parts.push("Overdue sync · automatic");
+      }
+      return parts.length > 0 ? parts.join(" · ") : null;
+    }
 
     default:
       return null;

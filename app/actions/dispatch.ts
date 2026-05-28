@@ -73,6 +73,7 @@ export async function unassignJobAction(
   const { job, error } = await unassignJobFromTechnician(
     context.company.id,
     jobId,
+    context.user.id,
   );
 
   if (error || !job) {

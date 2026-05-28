@@ -79,6 +79,72 @@ export async function recordTechnicianAssignedActivity(input: {
   });
 }
 
+export async function recordTechnicianUnassignedActivity(input: {
+  companyId: string;
+  jobId: string;
+  actorId: string;
+  technicianId: string;
+  customerId?: string;
+  jobNumber?: string;
+}): Promise<void> {
+  const technicianName = await getProfileName(input.technicianId);
+
+  const { error } = await recordJobActivity({
+    company_id: input.companyId,
+    job_id: input.jobId,
+    actor_id: input.actorId,
+    event_type: "technician_unassigned",
+    metadata: {
+      customer_id: input.customerId,
+      job_id: input.jobId,
+      job_number: input.jobNumber,
+      technician_id: input.technicianId,
+      technician_name: technicianName,
+      source: "manual",
+    },
+  });
+
+  if (error) {
+    console.error("[recordTechnicianUnassignedActivity] failed:", {
+      jobId: input.jobId,
+      error,
+    });
+  }
+}
+
+export async function recordJobLaborAutoClosedActivity(input: {
+  companyId: string;
+  jobId: string;
+  actorId: string;
+  closedReason: "completed" | "cancelled";
+  entriesClosedCount: number;
+  customerId?: string;
+  jobNumber?: string;
+}): Promise<void> {
+  const { error } = await recordJobActivity({
+    company_id: input.companyId,
+    job_id: input.jobId,
+    actor_id: input.actorId,
+    event_type: "job_labor_auto_closed",
+    metadata: {
+      customer_id: input.customerId,
+      job_id: input.jobId,
+      job_number: input.jobNumber,
+      closed_reason: input.closedReason,
+      entries_closed_count: input.entriesClosedCount,
+      source: "automatic",
+      automated: true,
+    },
+  });
+
+  if (error) {
+    console.error("[recordJobLaborAutoClosedActivity] failed:", {
+      jobId: input.jobId,
+      error,
+    });
+  }
+}
+
 export async function recordJobStatusChangedActivity(input: {
   companyId: string;
   jobId: string;
@@ -189,6 +255,7 @@ export async function recordJobStatusCorrectedActivity(input: {
       from_status: input.fromStatus,
       to_status: input.toStatus,
       action_id: "status_correction",
+      source: "manual",
     },
   });
 
@@ -208,7 +275,13 @@ export async function recordJobReopenedActivity(input: {
   toStatus: JobStatus;
   customerId?: string;
   jobNumber?: string;
+  technicianId?: string | null;
+  dispatchReactivated?: boolean;
 }): Promise<void> {
+  const technicianName = input.technicianId
+    ? await getProfileName(input.technicianId)
+    : undefined;
+
   const { error } = await recordJobActivity({
     company_id: input.companyId,
     job_id: input.jobId,
@@ -221,6 +294,10 @@ export async function recordJobReopenedActivity(input: {
       from_status: input.fromStatus,
       to_status: input.toStatus,
       action_id: "reopen",
+      source: "manual",
+      dispatch_reactivated: input.dispatchReactivated ?? false,
+      technician_id: input.technicianId ?? undefined,
+      technician_name: technicianName,
     },
   });
 

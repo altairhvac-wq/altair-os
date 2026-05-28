@@ -4,6 +4,7 @@ import { formatJobStatus, type JobStatus } from "@/shared/types/job";
 export type JobActivityType =
   | "job_created"
   | "technician_assigned"
+  | "technician_unassigned"
   | "start_route"
   | "start_work"
   | "complete_job"
@@ -16,6 +17,7 @@ export type JobActivityType =
   | "job_material_added"
   | "invoice_created_for_completed_job"
   | "labor_entries_closed"
+  | "job_labor_auto_closed"
   | "pending_expenses_resolved"
   | "material_costs_completed";
 
@@ -26,11 +28,16 @@ export type JobActivityMetadata = {
   from_status?: JobStatus;
   to_status?: JobStatus;
   action_id?: string;
+  source?: "manual" | "automatic";
+  automated?: boolean;
+  closed_reason?: "completed" | "cancelled";
+  entries_closed_count?: number;
   technician_id?: string;
   technician_name?: string;
   actor_name?: string;
   previous_technician_id?: string;
   previous_technician_name?: string;
+  dispatch_reactivated?: boolean;
   completion_notes?: string;
   follow_up_notes?: string;
   attachment_type?: string;
@@ -58,6 +65,7 @@ export type JobActivity = {
 const ACTIVITY_TYPE_LABELS: Record<JobActivityType, string> = {
   job_created: "Job created",
   technician_assigned: "Technician assigned",
+  technician_unassigned: "Technician unassigned",
   start_route: "En Route",
   start_work: "Start Work",
   complete_job: "Complete Job",
@@ -72,13 +80,27 @@ const ACTIVITY_TYPE_LABELS: Record<JobActivityType, string> = {
     "Office review blocker resolved: Invoice created",
   labor_entries_closed:
     "Office review blocker resolved: Labor entries closed",
+  job_labor_auto_closed: "Labor auto-closed",
   pending_expenses_resolved:
     "Office review blocker resolved: Pending expenses resolved",
   material_costs_completed:
     "Office review blocker resolved: Material costs completed",
 };
 
+function resolveStatusChangedLabel(metadata: JobActivityMetadata): string {
+  if (metadata.action_id === "status_correction") {
+    return "Status corrected";
+  }
+  if (metadata.action_id === "reopen") {
+    return "Job reopened";
+  }
+  return ACTIVITY_TYPE_LABELS.status_changed;
+}
+
 export function formatJobActivityLabel(activity: JobActivity): string {
+  if (activity.eventType === "status_changed") {
+    return resolveStatusChangedLabel(activity.metadata);
+  }
   return ACTIVITY_TYPE_LABELS[activity.eventType];
 }
 
@@ -97,6 +119,12 @@ export function formatJobActivityDetails(activity: JobActivity): string | null {
         return `Assigned to ${metadata.technician_name}`;
       }
       return null;
+
+    case "technician_unassigned":
+      if (metadata.technician_name) {
+        return `Removed ${metadata.technician_name} from dispatch`;
+      }
+      return "Removed technician from dispatch";
 
     case "work_completed": {
       const parts: string[] = [];
@@ -123,15 +151,30 @@ export function formatJobActivityDetails(activity: JobActivity): string | null {
     case "technician_arrived":
     case "work_started":
     case "status_changed":
-      if (
-        eventType === "status_changed" &&
-        metadata.action_id === "reopen"
-      ) {
+      if (metadata.action_id === "status_correction") {
         const transition = formatStatusTransition(
           metadata.from_status,
           metadata.to_status,
         );
-        return transition ? `Job reopened (${transition})` : "Job reopened";
+        return transition
+          ? `Manual correction · ${transition}`
+          : "Manual correction";
+      }
+      if (metadata.action_id === "reopen") {
+        const transition = formatStatusTransition(
+          metadata.from_status,
+          metadata.to_status,
+        );
+        const parts: string[] = [];
+        if (transition) {
+          parts.push(transition);
+        }
+        if (metadata.dispatch_reactivated && metadata.technician_name) {
+          parts.push(
+            `Dispatch reactivated for ${metadata.technician_name}`,
+          );
+        }
+        return parts.length > 0 ? parts.join(" · ") : "Job reopened";
       }
       return formatStatusTransition(metadata.from_status, metadata.to_status);
 
@@ -173,6 +216,20 @@ export function formatJobActivityDetails(activity: JobActivity): string | null {
     case "pending_expenses_resolved":
     case "material_costs_completed":
       return metadata.job_number ? `Job ${metadata.job_number}` : null;
+
+    case "job_labor_auto_closed": {
+      const parts: string[] = ["Automatic cleanup"];
+      const count = metadata.entries_closed_count ?? 1;
+      parts.push(
+        `${count} open labor segment${count === 1 ? "" : "s"}`,
+      );
+      if (metadata.closed_reason === "completed") {
+        parts.push("when job was marked complete");
+      } else if (metadata.closed_reason === "cancelled") {
+        parts.push("when job was cancelled");
+      }
+      return parts.join(" · ");
+    }
 
     default:
       return null;

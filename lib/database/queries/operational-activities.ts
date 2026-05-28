@@ -46,6 +46,7 @@ export function buildOperationalActivity(input: {
   const eventType = normalizeOperationalEventType(
     input.source,
     input.row.event_type,
+    metadata,
   );
 
   return {

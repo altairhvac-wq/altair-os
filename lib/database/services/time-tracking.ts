@@ -19,6 +19,7 @@ import {
   recordTechnicianClockedInActivity,
   recordTechnicianClockedOutActivity,
 } from "@/lib/database/services/time-activity";
+import { recordJobLaborAutoClosedActivity } from "@/lib/database/services/job-activity";
 import {
   calculateDurationMinutes,
   type TechnicianTimeStateSnapshot,
@@ -560,6 +561,18 @@ export async function finalizeOpenJobLaborForTerminalJob(input: {
       );
     }
   }
+
+  const job = await getJobById(input.companyId, input.jobId);
+
+  await recordJobLaborAutoClosedActivity({
+    companyId: input.companyId,
+    jobId: input.jobId,
+    actorId: input.actorId,
+    closedReason: input.terminalReason,
+    entriesClosedCount: openEntries.length,
+    customerId: job?.customerId,
+    jobNumber: job?.jobNumber,
+  });
 
   return { closedCount: openEntries.length, error: null };
 }

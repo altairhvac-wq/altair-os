@@ -46,6 +46,7 @@ export type DispatchAssignmentStatus =
 export type JobActivityType =
   | "job_created"
   | "technician_assigned"
+  | "technician_unassigned"
   | "start_route"
   | "start_work"
   | "complete_job"
@@ -58,6 +59,7 @@ export type JobActivityType =
   | "job_material_added"
   | "invoice_created_for_completed_job"
   | "labor_entries_closed"
+  | "job_labor_auto_closed"
   | "pending_expenses_resolved"
   | "material_costs_completed";
 

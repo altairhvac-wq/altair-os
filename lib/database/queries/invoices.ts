@@ -615,6 +615,7 @@ export async function syncOverdueInvoiceStatuses(
         job_id: candidate.job_id ?? undefined,
         job_number: candidate.jobs?.job_number,
         automated: true,
+        source: "automatic",
       },
     });
 

@@ -10,6 +10,7 @@ import {
   Package,
   Play,
   User,
+  UserMinus,
 } from "lucide-react";
 import type { JobActivity, JobActivityType } from "@/shared/types/job-activity";
 import {
@@ -28,6 +29,7 @@ const ACTIVITY_ICONS: Record<
 > = {
   job_created: ClipboardList,
   technician_assigned: User,
+  technician_unassigned: UserMinus,
   start_route: Navigation,
   start_work: Play,
   complete_job: CheckCircle2,
@@ -40,6 +42,7 @@ const ACTIVITY_ICONS: Record<
   job_material_added: Package,
   invoice_created_for_completed_job: CheckCircle2,
   labor_entries_closed: CheckCircle2,
+  job_labor_auto_closed: CheckCircle2,
   pending_expenses_resolved: CheckCircle2,
   material_costs_completed: CheckCircle2,
 };
@@ -47,6 +50,7 @@ const ACTIVITY_ICONS: Record<
 const ACTIVITY_ICON_STYLES: Record<JobActivityType, string> = {
   job_created: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
   technician_assigned: "bg-violet-50 text-violet-700 ring-violet-600/15",
+  technician_unassigned: "bg-orange-50 text-orange-700 ring-orange-600/15",
   start_route: "bg-blue-50 text-blue-700 ring-blue-600/15",
   start_work: "bg-amber-50 text-amber-700 ring-amber-600/15",
   complete_job: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
@@ -60,6 +64,7 @@ const ACTIVITY_ICON_STYLES: Record<JobActivityType, string> = {
   invoice_created_for_completed_job:
     "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
   labor_entries_closed: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
+  job_labor_auto_closed: "bg-slate-100 text-slate-600 ring-slate-500/15",
   pending_expenses_resolved:
     "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
   material_costs_completed:

@@ -6,7 +6,7 @@ import type {
   JobRow,
 } from "@/lib/database/types/core-tables";
 import { mapJobRowToJob } from "@/lib/database/queries/jobs";
-import { recordTechnicianAssignedActivity } from "@/lib/database/services/job-activity";
+import { recordTechnicianAssignedActivity, recordTechnicianUnassignedActivity } from "@/lib/database/services/job-activity";
 import type { Job } from "@/shared/types/job";
 import type { DispatchJob } from "@/shared/types/dispatch";
 import type { DispatchAssignmentStatus } from "@/lib/database/types/enums";
@@ -266,13 +266,14 @@ export async function finalizeActiveDispatchAssignments(
 export async function unassignJobFromTechnician(
   companyId: string,
   jobId: string,
+  actorId: string,
 ): Promise<{ job: DispatchJob | null; error: string | null }> {
   const supabase = await createClient();
   const now = new Date().toISOString();
 
   const { data: jobRow, error: jobError } = await supabase
     .from("jobs")
-    .select("id, status, assigned_technician_id")
+    .select("id, status, assigned_technician_id, customer_id, job_number")
     .eq("company_id", companyId)
     .eq("id", jobId)
     .maybeSingle();
@@ -317,6 +318,15 @@ export async function unassignJobFromTechnician(
   if (updateError) {
     return { job: null, error: mapDatabaseError(updateError) };
   }
+
+  await recordTechnicianUnassignedActivity({
+    companyId,
+    jobId,
+    actorId,
+    technicianId: jobRow.assigned_technician_id,
+    customerId: jobRow.customer_id,
+    jobNumber: jobRow.job_number,
+  });
 
   const job = await getDispatchJobById(companyId, jobId);
   return { job, error: null };

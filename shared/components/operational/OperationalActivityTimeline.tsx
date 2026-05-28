@@ -4,6 +4,7 @@ import {
   Camera,
   CheckCircle2,
   ClipboardList,
+  Clock,
   DollarSign,
   History,
   Navigation,
@@ -14,6 +15,7 @@ import {
   Settings2,
   ShieldCheck,
   User,
+  UserMinus,
   UserPlus,
 } from "lucide-react";
 import type {
@@ -22,6 +24,7 @@ import type {
 } from "@/shared/types/operational-activity";
 import {
   formatOperationalActivityDetails,
+  formatOperationalActivityAttribution,
   formatOperationalActivityLabel,
   formatOperationalActivityTimestamp,
 } from "@/shared/types/operational-activity";
@@ -44,7 +47,11 @@ const ACTIVITY_ICONS: Record<
   warranty_expiration_recorded: ShieldCheck,
   job_created: ClipboardList,
   job_status_changed: ArrowRightLeft,
+  job_status_corrected: ArrowRightLeft,
+  job_reopened: History,
   technician_assigned: User,
+  technician_unassigned: UserMinus,
+  job_labor_auto_closed: Clock,
   estimate_created: ClipboardList,
   estimate_approved: CheckCircle2,
   estimate_converted_to_invoice: Receipt,
@@ -74,7 +81,11 @@ const ACTIVITY_ICON_STYLES: Record<OperationalActivityEventType, string> = {
   warranty_expiration_recorded: "bg-amber-50 text-amber-700 ring-amber-600/15",
   job_created: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
   job_status_changed: "bg-slate-100 text-slate-600 ring-slate-500/15",
+  job_status_corrected: "bg-amber-50 text-amber-800 ring-amber-600/15",
+  job_reopened: "bg-blue-50 text-blue-700 ring-blue-600/15",
   technician_assigned: "bg-violet-50 text-violet-700 ring-violet-600/15",
+  technician_unassigned: "bg-orange-50 text-orange-700 ring-orange-600/15",
+  job_labor_auto_closed: "bg-slate-100 text-slate-600 ring-slate-500/15",
   estimate_created: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
   estimate_approved: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
   estimate_converted_to_invoice: "bg-violet-50 text-violet-700 ring-violet-600/15",
@@ -140,6 +151,7 @@ export function OperationalActivityTimeline({
               WORKFLOW_ICON_OVERRIDES[activity.rawEventType] ??
               ACTIVITY_ICONS[activity.eventType];
             const details = formatOperationalActivityDetails(activity);
+            const attribution = formatOperationalActivityAttribution(activity);
             const isLast = index === activities.length - 1;
 
             return (
@@ -174,9 +186,9 @@ export function OperationalActivityTimeline({
                     <p className="mt-1 text-sm text-slate-600">{details}</p>
                   ) : null}
 
-                  {activity.actorName ? (
+                  {attribution ? (
                     <p className="mt-1.5 text-xs text-slate-500">
-                      by {activity.actorName}
+                      {attribution}
                     </p>
                   ) : null}
                 </div>

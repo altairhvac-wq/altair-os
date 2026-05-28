@@ -184,6 +184,7 @@ export async function emitJobAssignedEvent(input: {
       technician_name: input.technicianName,
       previous_technician_id: input.previousTechnicianId ?? undefined,
       previous_technician_name: input.previousTechnicianName,
+      source: "manual",
     },
   });
 
