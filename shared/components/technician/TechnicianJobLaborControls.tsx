@@ -7,6 +7,7 @@ import {
   startJobLaborAction,
   stopJobLaborAction,
 } from "@/app/actions/time-entries";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 
 type TechnicianJobLaborControlsProps = {
@@ -41,7 +42,7 @@ export function TechnicianJobLaborControls({
     startTransition(async () => {
       const result = await startJobLaborAction(jobId);
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "Could not start job work. Try again."));
         return;
       }
 
@@ -60,7 +61,7 @@ export function TechnicianJobLaborControls({
     startTransition(async () => {
       const result = await stopJobLaborAction(jobId);
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "Could not stop job work. Try again."));
         return;
       }
 

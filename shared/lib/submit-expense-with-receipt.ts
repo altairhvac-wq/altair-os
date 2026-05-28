@@ -4,6 +4,10 @@ import {
   prepareExpenseReceiptUploadAction,
 } from "@/app/actions/expenses";
 import { COMPANY_FILES_BUCKET } from "@/lib/storage/company-files";
+import {
+  formatActionError,
+  formatUploadError,
+} from "@/shared/lib/operational-errors";
 import type { ExpenseFormData } from "@/shared/types/expense";
 
 export type SubmitExpenseWithReceiptResult = {
@@ -28,7 +32,12 @@ export async function submitExpenseWithReceipt(input: {
     });
 
     if (target.error || !target.storagePath) {
-      return { error: target.error ?? "Could not prepare receipt upload." };
+      return {
+        error: formatActionError(
+          target.error,
+          "Could not prepare receipt upload. Try again.",
+        ),
+      };
     }
 
     const supabase = createClient();
@@ -40,7 +49,7 @@ export async function submitExpenseWithReceipt(input: {
       });
 
     if (uploadError) {
-      return { error: uploadError.message || "Receipt upload failed." };
+      return { error: formatUploadError() };
     }
 
     receiptFileName = input.receiptFile.name;
@@ -65,7 +74,9 @@ export async function submitExpenseWithReceipt(input: {
         .from(COMPANY_FILES_BUCKET)
         .remove([receiptStoragePath]);
     }
-    return { error: result.error };
+    return {
+      error: formatActionError(result.error, "Could not save this expense. Try again."),
+    };
   }
 
   return {};

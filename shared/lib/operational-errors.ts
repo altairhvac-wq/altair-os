@@ -44,3 +44,36 @@ export function formatRetryGuidance(message: string): string {
 
 export const MISSING_CUSTOMER_EMAIL_SEND_REASON =
   "Add a customer email on their profile before sending.";
+
+export function formatInviteAcceptError(message: string): string {
+  const lower = message.toLowerCase();
+
+  if (
+    lower.includes("not found") ||
+    lower.includes("no longer available")
+  ) {
+    return "This invitation is invalid or has expired. Ask your office admin to resend the invite from Settings → Team.";
+  }
+
+  if (
+    lower.includes("already been accepted") ||
+    lower.includes("already a member") ||
+    lower.includes("already been claimed")
+  ) {
+    return "This invitation was already used. Refresh to confirm your access, or ask an admin to resend a new invite.";
+  }
+
+  if (lower.includes("suspended")) {
+    return "This invitation is suspended and cannot be accepted. Contact your office admin for help.";
+  }
+
+  if (lower.includes("does not match") || lower.includes("email address")) {
+    return "This invitation does not match your sign-in email. Sign in with the email address that received the invitation.";
+  }
+
+  if (lower.includes("failed to load")) {
+    return `${message} Try again in a moment.`;
+  }
+
+  return formatActionError(message, "Could not accept this invitation. Try again.");
+}

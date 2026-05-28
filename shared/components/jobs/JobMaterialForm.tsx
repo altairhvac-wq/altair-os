@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createJobMaterialAction } from "@/app/actions/job-materials";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import { formatCurrency } from "@/shared/types/customer";
 import type { JobMaterialFormData } from "@/shared/types/job-material";
 import type { ServiceItem } from "@/shared/types/service-item";
@@ -143,7 +144,7 @@ export function JobMaterialForm({
       const result = await createJobMaterialAction({ data });
 
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "Could not log this material. Try again."));
         return;
       }
 

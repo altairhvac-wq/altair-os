@@ -14,6 +14,7 @@ import {
 } from "./ExpensePaymentMethodField";
 import { ReceiptUploadBox } from "./ReceiptUploadBox";
 import { submitExpenseWithReceipt } from "@/shared/lib/submit-expense-with-receipt";
+import { formatActionError } from "@/shared/lib/operational-errors";
 
 type ExpenseFormProps = {
   initialData?: Partial<ExpenseFormData>;
@@ -77,7 +78,7 @@ export function ExpenseForm({
       const result = await submitExpenseWithReceipt({ data, receiptFile });
 
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "Could not save this expense. Try again."));
         return;
       }
 

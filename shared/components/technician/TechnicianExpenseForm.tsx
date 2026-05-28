@@ -16,6 +16,7 @@ import {
 } from "@/shared/components/expenses/ExpensePaymentMethodField";
 import { ReceiptUploadBox } from "@/shared/components/expenses/ReceiptUploadBox";
 import { submitExpenseWithReceipt } from "@/shared/lib/submit-expense-with-receipt";
+import { formatActionError } from "@/shared/lib/operational-errors";
 
 type TechnicianExpenseFormProps = {
   jobId?: string;
@@ -109,7 +110,7 @@ export function TechnicianExpenseForm({
       const result = await submitExpenseWithReceipt({ data, receiptFile });
 
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "Could not save this expense. Try again."));
         submitLockRef.current = false;
         return;
       }

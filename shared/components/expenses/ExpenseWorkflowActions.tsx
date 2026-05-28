@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateExpenseStatusAction } from "@/app/actions/expenses";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import type { Expense } from "@/shared/types/expense";
 import {
   EXPENSE_WORKFLOW_ACTION_LABELS,
@@ -91,7 +92,7 @@ export function ExpenseWorkflowActions({
       });
 
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "Could not update this expense. Try again."));
         return;
       }
 
@@ -116,7 +117,7 @@ export function ExpenseWorkflowActions({
       });
 
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "Could not update this expense. Try again."));
         return;
       }
 

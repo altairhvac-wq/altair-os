@@ -145,7 +145,7 @@ export function JobWorkflowActions({
       }
 
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "We couldn't update this job's status. Try again."));
         onStatusUpdated?.(result.job.status);
         router.refresh();
         return;

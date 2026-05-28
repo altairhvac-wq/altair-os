@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, useTransition } from "react";
 import { Mail, UserCheck } from "lucide-react";
 import { acceptInviteAction } from "@/app/actions/memberships";
+import { formatInviteAcceptError } from "@/shared/lib/operational-errors";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import type { PendingTeamInvite } from "@/lib/database/queries/memberships";
@@ -12,24 +13,6 @@ type PendingInvitesCardProps = {
   invites: PendingTeamInvite[];
   variant?: "setup" | "settings";
 };
-
-function formatInviteAcceptError(message: string): string {
-  const lower = message.toLowerCase();
-
-  if (
-    lower.includes("not found") ||
-    lower.includes("no longer available") ||
-    lower.includes("already been accepted")
-  ) {
-    return `${message} Ask your office admin to resend the invite from Settings → Team.`;
-  }
-
-  if (lower.includes("does not match") || lower.includes("email address")) {
-    return `${message} Sign in with the email address that received the invitation.`;
-  }
-
-  return message;
-}
 
 function formatInvitedAt(value: string | null): string | null {
   if (!value) {

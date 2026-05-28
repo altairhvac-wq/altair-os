@@ -16,6 +16,7 @@ import {
   stopClockAction,
   type TimeEntryActionResult,
 } from "@/app/actions/time-entries";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import {
   formatDurationMinutes,
   formatTechnicianTimeState,
@@ -80,7 +81,7 @@ export function TechnicianTimeView({
     startTransition(async () => {
       const result = await action();
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "Could not update your time. Try again."));
         return;
       }
 

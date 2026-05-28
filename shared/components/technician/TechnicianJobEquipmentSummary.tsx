@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, Wrench } from "lucide-react";
 import { listCustomerEquipmentAction } from "@/app/actions/customer-equipment";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import type { CustomerEquipment } from "@/shared/types/customer-equipment";
 
 type TechnicianJobEquipmentSummaryProps = {
@@ -42,7 +43,7 @@ export function TechnicianJobEquipmentSummary({
         }
 
         if (result.error) {
-          setError(result.error);
+          setError(formatActionError(result.error, "Could not load equipment for this job. Try again."));
           setEquipment([]);
         } else {
           setEquipment(result.equipment ?? []);

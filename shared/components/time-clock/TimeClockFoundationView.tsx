@@ -6,6 +6,7 @@ import {
   clockInAction,
   clockOutAction,
 } from "@/app/actions/time-clock";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import type { TimeClockEntry } from "@/shared/types/time-clock";
 import {
   formatDateTime,
@@ -78,7 +79,7 @@ export function TimeClockFoundationView({
     startTransition(async () => {
       const result = await clockInAction();
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "Could not clock in. Try again."));
         return;
       }
 
@@ -94,7 +95,7 @@ export function TimeClockFoundationView({
     startTransition(async () => {
       const result = await clockOutAction();
       if (result.error) {
-        setError(result.error);
+        setError(formatActionError(result.error, "Could not clock out. Try again."));
         return;
       }
 
