@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { updateJobStatusAction } from "@/app/actions/jobs";
 import type { JobStatus } from "@/shared/types/job";
 import {
@@ -19,7 +19,7 @@ function getMobileWorkflowHint(
 ): string | null {
   if (status === "in_progress") {
     if (primaryActionId === "complete") {
-      return "This job is active on site. Complete work opens a short wrap-up form, then marks the job finished for the office.";
+      return "This job is active on site. Complete work opens a wrap-up form that marks the job finished for the office.";
     }
     return "This job is active on site.";
   }
@@ -42,6 +42,8 @@ type JobWorkflowActionsProps = {
   status: JobStatus;
   canUpdateStatus: boolean;
   layout?: "row" | "stack";
+  competingSheetActive?: boolean;
+  onCompleteSheetOpenChange?: (open: boolean) => void;
   onStatusUpdated?: (status: JobStatus) => void;
 };
 
@@ -51,6 +53,8 @@ export function JobWorkflowActions({
   status,
   canUpdateStatus,
   layout = "row",
+  competingSheetActive = false,
+  onCompleteSheetOpenChange,
   onStatusUpdated,
 }: JobWorkflowActionsProps) {
   const router = useRouter();
@@ -61,6 +65,19 @@ export function JobWorkflowActions({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showCompleteSheet, setShowCompleteSheet] = useState(false);
+
+  useEffect(() => {
+    onCompleteSheetOpenChange?.(showCompleteSheet);
+  }, [onCompleteSheetOpenChange, showCompleteSheet]);
+
+  useEffect(() => {
+    return () => {
+      onCompleteSheetOpenChange?.(false);
+    };
+  }, [onCompleteSheetOpenChange]);
+
+  const workflowActionsDisabled =
+    isPending || showCompleteSheet || competingSheetActive;
 
   const isCompact = layout === "stack";
   const primaryAction = getPrimaryWorkflowAction(status);
@@ -83,7 +100,7 @@ export function JobWorkflowActions({
         key={action.id}
         type="button"
         onClick={() => handleAction(action.id)}
-        disabled={isPending}
+        disabled={workflowActionsDisabled}
         className={
           isPrimary
             ? isCompact
@@ -98,7 +115,7 @@ export function JobWorkflowActions({
   }
 
   function handleAction(actionId: JobWorkflowActionId) {
-    if (isPending) {
+    if (workflowActionsDisabled) {
       return;
     }
 
@@ -157,7 +174,11 @@ export function JobWorkflowActions({
     <>
       <div className={layout === "stack" ? "space-y-3" : "space-y-2"}>
         {mobileHint ? (
-          <p className="text-xs leading-relaxed text-slate-500">{mobileHint}</p>
+          <p className="text-xs leading-relaxed text-slate-500">
+            {competingSheetActive
+              ? "Close the open field form before completing work."
+              : mobileHint}
+          </p>
         ) : null}
         {isPending && !pendingAction ? (
           <p className="text-xs text-slate-500" aria-live="polite">
@@ -187,8 +208,10 @@ export function JobWorkflowActions({
           customerId={customerId}
           currentStatus={status}
           onClose={() => setShowCompleteSheet(false)}
-          onCompleted={(nextStatus) => {
-            setSuccessMessage("Work completed successfully.");
+          onCompleted={(nextStatus, outcome) => {
+            if (outcome === "success") {
+              setSuccessMessage("Work completed successfully.");
+            }
             onStatusUpdated?.(nextStatus);
           }}
         />

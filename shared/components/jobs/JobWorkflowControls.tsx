@@ -27,6 +27,8 @@ type JobWorkflowControlsProps = {
   canReopenJob?: boolean;
   reopenSnapshot?: ReopenTargetJobSnapshot;
   layout?: "header" | "stack";
+  competingSheetActive?: boolean;
+  onCompleteSheetOpenChange?: (open: boolean) => void;
   onStatusUpdated?: (status: JobStatus) => void;
 };
 
@@ -75,6 +77,8 @@ export function JobWorkflowControls({
   canReopenJob = false,
   reopenSnapshot,
   layout = "header",
+  competingSheetActive = false,
+  onCompleteSheetOpenChange,
   onStatusUpdated,
 }: JobWorkflowControlsProps) {
   const [status, setStatus] = useState(initialStatus);
@@ -127,6 +131,8 @@ export function JobWorkflowControls({
         status={status}
         canUpdateStatus={canUpdateStatus}
         layout={layout === "stack" ? "stack" : "row"}
+        competingSheetActive={competingSheetActive}
+        onCompleteSheetOpenChange={onCompleteSheetOpenChange}
         onStatusUpdated={handleStatusUpdated}
       />
       <StartRouteButton

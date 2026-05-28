@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { ModalPortal } from "@/shared/components/ui/ModalPortal";
 import { useScrollLock, useSheetEscape } from "@/shared/hooks/useScrollLock";
 
@@ -38,7 +39,13 @@ export function MobileSheet({
   rootClassName,
 }: MobileSheetProps) {
   useScrollLock(true);
-  useSheetEscape(onClose, !closeDisabled);
+  const closeDisabledRef = useRef(closeDisabled);
+  closeDisabledRef.current = closeDisabled;
+  useSheetEscape(() => {
+    if (!closeDisabledRef.current) {
+      onClose();
+    }
+  }, true);
 
   return (
     <ModalPortal>

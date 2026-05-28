@@ -65,6 +65,7 @@ export function TechnicianJobCard({
   const [activeSheet, setActiveSheet] = useState<
     "material" | "expense" | "photo" | null
   >(null);
+  const [completeSheetOpen, setCompleteSheetOpen] = useState(false);
 
   useEffect(() => {
     setStatus((current) =>
@@ -75,6 +76,7 @@ export function TechnicianJobCard({
   useEffect(() => {
     if (status === "completed" || status === "cancelled") {
       setActiveSheet(null);
+      setCompleteSheetOpen(false);
     }
   }, [status]);
 
@@ -92,7 +94,7 @@ export function TechnicianJobCard({
     zip: job.zip,
   });
   const isActive = status !== "completed" && status !== "cancelled";
-  const fieldActionsDisabled = activeSheet !== null;
+  const fieldActionsDisabled = activeSheet !== null || completeSheetOpen;
 
   return (
     <article
@@ -154,6 +156,8 @@ export function TechnicianJobCard({
               zip={job.zip}
               canUpdateStatus
               layout="stack"
+              competingSheetActive={activeSheet !== null}
+              onCompleteSheetOpenChange={setCompleteSheetOpen}
               onStatusUpdated={handleStatusUpdated}
             />
           </div>
@@ -250,6 +254,8 @@ export function TechnicianJobCard({
               zip={job.zip}
               canUpdateStatus
               layout="stack"
+              competingSheetActive={activeSheet !== null}
+              onCompleteSheetOpenChange={setCompleteSheetOpen}
               onStatusUpdated={handleStatusUpdated}
             />
             {isActive ? (
@@ -268,7 +274,9 @@ export function TechnicianJobCard({
                     className={`${fieldActionClass} border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60`}
                     title={
                       fieldActionsDisabled
-                        ? "Finish the open form before logging material"
+                        ? completeSheetOpen
+                          ? "Finish or cancel complete work before logging material"
+                          : "Finish the open form before logging material"
                         : undefined
                     }
                   >
@@ -282,7 +290,9 @@ export function TechnicianJobCard({
                     className={`${fieldActionClass} border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60`}
                     title={
                       fieldActionsDisabled
-                        ? "Finish the open form before logging a receipt"
+                        ? completeSheetOpen
+                          ? "Finish or cancel complete work before logging a receipt"
+                          : "Finish the open form before logging a receipt"
                         : undefined
                     }
                   >
@@ -296,7 +306,9 @@ export function TechnicianJobCard({
                     className={`${fieldActionClass} border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60`}
                     title={
                       fieldActionsDisabled
-                        ? "Finish the open form before adding a photo"
+                        ? completeSheetOpen
+                          ? "Finish or cancel complete work before adding a photo"
+                          : "Finish the open form before adding a photo"
                         : undefined
                     }
                   >
@@ -306,7 +318,9 @@ export function TechnicianJobCard({
                 </div>
                 {fieldActionsDisabled ? (
                   <p className="text-xs text-slate-500">
-                    Close the open form to use other field actions.
+                    {completeSheetOpen
+                      ? "Finish or cancel complete work before using other field actions."
+                      : "Close the open form to use other field actions."}
                   </p>
                 ) : null}
               </>

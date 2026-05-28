@@ -4,9 +4,13 @@ import { JobAttachmentUploadBox } from "@/shared/components/jobs/JobAttachmentUp
 
 type CompleteJobPhotosPanelProps = {
   jobId: string;
+  onPendingChange?: (isPending: boolean) => void;
 };
 
-export function CompleteJobPhotosPanel({ jobId }: CompleteJobPhotosPanelProps) {
+export function CompleteJobPhotosPanel({
+  jobId,
+  onPendingChange,
+}: CompleteJobPhotosPanelProps) {
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
       <div className="mb-3">
@@ -21,6 +25,7 @@ export function CompleteJobPhotosPanel({ jobId }: CompleteJobPhotosPanelProps) {
         compact
         captureEnvironment
         showTypeSelector={false}
+        onPendingChange={onPendingChange}
       />
     </div>
   );
