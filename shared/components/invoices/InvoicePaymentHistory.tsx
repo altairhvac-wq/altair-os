@@ -54,7 +54,9 @@ export function InvoicePaymentHistory({ payments }: InvoicePaymentHistoryProps) 
                     </p>
                   ) : null}
                   {payment.notes ? (
-                    <p className="mt-1 text-xs text-slate-500">{payment.notes}</p>
+                    <p className="mt-1 break-words text-xs text-slate-500">
+                      {payment.notes}
+                    </p>
                   ) : null}
                 </div>
               </div>

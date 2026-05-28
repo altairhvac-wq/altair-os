@@ -95,10 +95,11 @@ export function TechnicianJobCard({
   });
   const isActive = status !== "completed" && status !== "cancelled";
   const fieldActionsDisabled = activeSheet !== null || completeSheetOpen;
+  const hasOpenSheet = activeSheet !== null || completeSheetOpen;
 
   return (
     <article
-      className={`flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ${
+      className={`flex flex-col rounded-2xl border bg-white shadow-sm ${
         emphasized
           ? "border-cyan-300 ring-2 ring-cyan-500/20"
           : "border-slate-200"
@@ -122,9 +123,15 @@ export function TechnicianJobCard({
           <button
             type="button"
             onClick={() => setExpanded((current) => !current)}
+            disabled={hasOpenSheet}
             aria-expanded={expanded}
             aria-label={expanded ? "Collapse job details" : "Expand job details"}
-            className="flex min-h-11 min-w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            title={
+              hasOpenSheet
+                ? "Close open forms before collapsing this job"
+                : undefined
+            }
+            className="flex min-h-11 min-w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {expanded ? (
               <ChevronUp className="h-5 w-5" />
@@ -207,7 +214,7 @@ export function TechnicianJobCard({
                 </p>
               </div>
               {hasDescription ? (
-                <p className="text-sm leading-relaxed text-slate-800">
+                <p className="break-words text-sm leading-relaxed text-slate-800">
                   {job.description}
                 </p>
               ) : (
@@ -225,7 +232,7 @@ export function TechnicianJobCard({
                 Notes
               </p>
               {hasNotes ? (
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-700">
+                <p className="mt-1.5 break-words text-sm leading-relaxed text-slate-700">
                   {job.notes}
                 </p>
               ) : (

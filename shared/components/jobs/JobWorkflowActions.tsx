@@ -211,8 +211,8 @@ export function JobWorkflowActions({
           onCompleted={(nextStatus, outcome) => {
             if (outcome === "success") {
               setSuccessMessage("Work completed successfully.");
+              onStatusUpdated?.(nextStatus);
             }
-            onStatusUpdated?.(nextStatus);
           }}
         />
       ) : null}

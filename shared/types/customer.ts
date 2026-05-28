@@ -131,11 +131,12 @@ export function getCustomerInitials(name: string): string {
 }
 
 export function formatCurrency(amount: number): string {
+  const safeAmount = Number.isFinite(amount) ? amount : 0;
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(safeAmount);
 }
 
 export function formatDate(

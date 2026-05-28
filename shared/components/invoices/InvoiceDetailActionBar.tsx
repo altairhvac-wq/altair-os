@@ -59,6 +59,10 @@ export function InvoiceDetailActionBar({
   }
 
   function handleSendInvoice() {
+    if (isPending || resendPending) {
+      return;
+    }
+
     setError(null);
 
     startTransition(async () => {
@@ -85,6 +89,10 @@ export function InvoiceDetailActionBar({
   }
 
   function handleResendEmail() {
+    if (isPending || resendPending) {
+      return;
+    }
+
     setError(null);
     setResendPending(true);
 
@@ -117,6 +125,10 @@ export function InvoiceDetailActionBar({
   }
 
   function handleVoidInvoice() {
+    if (isPending || resendPending) {
+      return;
+    }
+
     setError(null);
 
     startTransition(async () => {
@@ -131,6 +143,8 @@ export function InvoiceDetailActionBar({
       router.refresh();
     });
   }
+
+  const actionsDisabled = isPending || resendPending;
 
   const containerClass =
     variant === "sticky"
@@ -168,7 +182,7 @@ export function InvoiceDetailActionBar({
             </div>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex min-w-0 flex-wrap gap-2">
             {canEdit ? (
               <InvoiceEditLinkButton
                 invoice={invoice}
@@ -180,9 +194,10 @@ export function InvoiceDetailActionBar({
             {canRecordPayment ? (
               <button
                 type="button"
+                disabled={actionsDisabled}
                 onClick={onRecordPayment}
                 title="Record all or part of the balance due."
-                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Record payment
               </button>
@@ -191,7 +206,7 @@ export function InvoiceDetailActionBar({
             {canSend ? (
               <button
                 type="button"
-                disabled={isPending || resendPending}
+                disabled={actionsDisabled}
                 onClick={handleSendInvoice}
                 title="Emails the invoice and marks it as sent."
                 className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
@@ -204,7 +219,7 @@ export function InvoiceDetailActionBar({
             {canResendEmail ? (
               <button
                 type="button"
-                disabled={isPending || resendPending}
+                disabled={actionsDisabled}
                 onClick={handleResendEmail}
                 title="Sends another copy to the customer's email on file."
                 className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
@@ -217,7 +232,7 @@ export function InvoiceDetailActionBar({
             {canVoid ? (
               <button
                 type="button"
-                disabled={isPending || resendPending}
+                disabled={actionsDisabled}
                 onClick={() => setShowVoidConfirm(true)}
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
               >

@@ -12,8 +12,8 @@ export function BillingMobileAmountHeader({
   amountLabel = "Total",
 }: BillingMobileAmountHeaderProps) {
   return (
-    <div className="mt-3 grid gap-2 sm:hidden">
-      <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+    <div className="mt-3 grid min-w-0 gap-2 sm:hidden">
+      <div className="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           {amountLabel}
         </span>

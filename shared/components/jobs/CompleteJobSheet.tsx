@@ -58,6 +58,7 @@ export function CompleteJobSheet({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const submitLockRef = useRef(false);
+  const hadPartialSuccessRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
@@ -68,6 +69,14 @@ export function CompleteJobSheet({
 
   const closeDisabled = isPending || showSuccess || isPhotoUploading;
   const formDisabled = isPending || showSuccess;
+
+  function handleClose() {
+    if (hadPartialSuccessRef.current) {
+      hadPartialSuccessRef.current = false;
+      router.refresh();
+    }
+    onClose();
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -143,12 +152,12 @@ export function CompleteJobSheet({
       }
 
       if (result.error) {
+        hadPartialSuccessRef.current = true;
         onCompleted?.(result.job.status, "partial");
         setError(
           `${result.error} The job is marked complete, but the office may still need to review something. You can close this form safely.`,
         );
         submitLockRef.current = false;
-        router.refresh();
         return;
       }
 
@@ -156,14 +165,14 @@ export function CompleteJobSheet({
       router.refresh();
       setShowSuccess(true);
       window.setTimeout(() => {
-        onClose();
+        handleClose();
       }, 700);
     });
   }
 
   return (
     <MobileSheet
-      onClose={onClose}
+      onClose={handleClose}
       closeDisabled={closeDisabled}
       ariaLabelledBy={TITLE_ID}
       variant="responsive"
@@ -174,7 +183,7 @@ export function CompleteJobSheet({
           titleId={TITLE_ID}
           title="Complete work"
           subtitle="Submitting marks this job finished for dispatch. The office still reviews billing, labor, and any follow-up notes."
-          onClose={onClose}
+          onClose={handleClose}
           closeDisabled={closeDisabled}
           icon={
             <MobileSheetHeaderIcon className="bg-emerald-50 ring-1 ring-emerald-600/15">
@@ -263,7 +272,7 @@ export function CompleteJobSheet({
               <div className="flex w-full gap-3">
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={handleClose}
                   disabled={closeDisabled}
                   className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >

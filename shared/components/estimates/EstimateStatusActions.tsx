@@ -97,6 +97,21 @@ function getAvailableActions(status: EstimateStatus): StatusAction[] {
   }
 }
 
+function getStatusPendingLabel(status: EstimateStatus): string {
+  switch (status) {
+    case "sent":
+      return "Sending…";
+    case "approved":
+      return "Approving…";
+    case "declined":
+      return "Declining…";
+    case "cancelled":
+      return "Canceling…";
+    default:
+      return "Saving…";
+  }
+}
+
 export function EstimateStatusActions({
   estimate,
   canManageEstimates,
@@ -105,6 +120,10 @@ export function EstimateStatusActions({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [resendPending, setResendPending] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<EstimateStatus | null>(
+    null,
+  );
+  const [convertPending, setConvertPending] = useState(false);
   const router = useRouter();
   const actions = getAvailableActions(estimate.status);
   const canConvertToInvoice = estimate.status === "approved";
@@ -128,56 +147,66 @@ export function EstimateStatusActions({
     }
 
     setError(null);
+    setPendingStatus(toStatus);
 
     startTransition(async () => {
-      const result = await updateEstimateStatusAction(
-        estimate.id,
-        estimate.status,
-        toStatus,
-      );
-
-      if (result.error) {
-        setError(result.error);
-        router.refresh();
-        return;
-      }
-
-      if (
-        toStatus === "sent" &&
-        result.emailDelivery &&
-        result.emailDelivery.status !== "sent"
-      ) {
-        setError(
-          result.emailDelivery.message ??
-            "Estimate could not be sent by email. It remains a draft.",
+      try {
+        const result = await updateEstimateStatusAction(
+          estimate.id,
+          estimate.status,
+          toStatus,
         );
-        router.refresh();
-        return;
-      }
 
-      router.refresh();
+        if (result.error) {
+          setError(result.error);
+          router.refresh();
+          return;
+        }
+
+        if (
+          toStatus === "sent" &&
+          result.emailDelivery &&
+          result.emailDelivery.status !== "sent"
+        ) {
+          setError(
+            result.emailDelivery.message ??
+              "Estimate could not be sent by email. It remains a draft.",
+          );
+          router.refresh();
+          return;
+        }
+
+        router.refresh();
+      } finally {
+        setPendingStatus(null);
+      }
     });
   }
 
   function handleConvertToInvoice() {
-    if (isPending || resendPending) {
+    if (isPending || resendPending || convertPending) {
       return;
     }
 
     setError(null);
+    setConvertPending(true);
 
     startTransition(async () => {
-      const result = await convertEstimateToInvoiceAction(estimate.id);
+      try {
+        const result = await convertEstimateToInvoiceAction(estimate.id);
 
-      if (result.error || !result.invoice) {
-        setError(
-          result.error ??
-            "Could not convert this estimate to an invoice. Refresh and try again.",
-        );
-        return;
+        if (result.error || !result.invoice) {
+          setError(
+            result.error ??
+              "Could not convert this estimate to an invoice. Refresh and try again.",
+          );
+          return;
+        }
+
+        router.push(`/invoices/${result.invoice.id}`);
+      } finally {
+        setConvertPending(false);
       }
-
-      router.push(`/invoices/${result.invoice.id}`);
     });
   }
 
@@ -225,21 +254,25 @@ export function EstimateStatusActions({
     : "flex flex-col items-start gap-2";
 
   const actionButtons = (
-    <div className={isSticky ? "flex flex-wrap gap-2" : "flex flex-wrap gap-2"}>
+    <div className={isSticky ? "flex min-w-0 flex-wrap gap-2" : "flex flex-wrap gap-2"}>
       {canConvertToInvoice ? (
         <button
           type="button"
-          disabled={isPending || resendPending}
+          disabled={isPending || resendPending || convertPending}
           onClick={handleConvertToInvoice}
           className={`${buttonClass} bg-violet-600 text-white hover:bg-violet-700`}
         >
-          {isSticky ? "Convert" : "Convert to invoice"}
+          {convertPending
+            ? "Converting…"
+            : isSticky
+              ? "Convert"
+              : "Convert to invoice"}
         </button>
       ) : null}
       {canResendEmail ? (
         <button
           type="button"
-          disabled={isPending || resendPending}
+          disabled={isPending || resendPending || convertPending}
           onClick={handleResendEmail}
           title="Sends another copy to the customer's email on file."
           className={`${buttonClass} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}
@@ -256,22 +289,28 @@ export function EstimateStatusActions({
         <button
           key={primaryAction.toStatus}
           type="button"
-          disabled={isPending || resendPending}
+          disabled={isPending || resendPending || convertPending}
           onClick={() => handleStatusChange(primaryAction.toStatus)}
           className={`${buttonClass} ${primaryAction.className}`}
         >
-          {primaryAction.shortLabel ?? primaryAction.label}
+          {isPending && pendingStatus === primaryAction.toStatus
+            ? getStatusPendingLabel(primaryAction.toStatus)
+            : (primaryAction.shortLabel ?? primaryAction.label)}
         </button>
       ) : null}
       {(isSticky ? secondaryActions : actions).map((action) => (
         <button
           key={action.toStatus}
           type="button"
-          disabled={isPending || resendPending}
+          disabled={isPending || resendPending || convertPending}
           onClick={() => handleStatusChange(action.toStatus)}
           className={`${buttonClass} ${action.className}`}
         >
-          {isSticky ? (action.shortLabel ?? action.label) : action.label}
+          {isPending && pendingStatus === action.toStatus
+            ? getStatusPendingLabel(action.toStatus)
+            : isSticky
+              ? (action.shortLabel ?? action.label)
+              : action.label}
         </button>
       ))}
     </div>
