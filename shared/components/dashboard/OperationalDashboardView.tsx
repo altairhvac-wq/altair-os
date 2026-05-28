@@ -242,7 +242,7 @@ function OperationalInsightsSection({
       {highlights.length === 0 ? (
         <EmptyState
           title="No actionable insights right now"
-          description="Counts and warnings appear when stalled jobs, office review gaps, or expense reviews need attention."
+          description="Insights appear when stalled jobs, office review gaps, or expense reviews need attention."
         />
       ) : (
         <ul className="space-y-2">
@@ -480,7 +480,7 @@ function TodayOperationsSection({
         {operations.todayJobs.length === 0 ? (
           <EmptyState
             title="No jobs scheduled today"
-            description="Scheduled jobs will appear here when work is on the board."
+            description="Scheduled jobs show here. Add a customer and create a job to get work on the board."
           />
         ) : (
           <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
@@ -545,7 +545,7 @@ function TechnicianStatusSection({
       {technicians.length === 0 ? (
         <EmptyState
           title="No technicians on roster"
-          description="Active technician members will appear here."
+          description="Technician members appear here after you invite them in Settings."
         />
       ) : (
         <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
@@ -641,7 +641,7 @@ function MoneySnapshotSection({ money }: { money: DashboardData["money"] }) {
           </p>
           <EmptyState
             title="No recent payments"
-            description="Recorded payments will appear here."
+            description="Payments recorded against invoices will show up here."
           />
         </div>
       ) : (
@@ -694,7 +694,7 @@ function MoneySnapshotSection({ money }: { money: DashboardData["money"] }) {
           </div>
           <EmptyState
             title="No approved estimates"
-            description="Approved estimates ready for invoicing will appear here."
+            description="Approved estimates ready for invoicing will show up here."
           />
         </div>
       ) : (
@@ -808,7 +808,7 @@ function ExpenseReviewSection({
         <div className="mt-4">
           <EmptyState
             title="No expenses awaiting approval"
-            description="Submitted receipts will appear here for review."
+            description="Submitted receipts waiting for review will show up here."
           />
         </div>
       )}
@@ -820,7 +820,7 @@ function ExpenseReviewSection({
           </p>
           <EmptyState
             title="No recent receipt uploads"
-            description="Expenses with attached receipts will appear here."
+            description="Expenses with attached receipts will show up here."
           />
         </div>
       ) : (
@@ -879,7 +879,7 @@ function NotificationsSummarySection({
       {notifications.recent.length === 0 ? (
         <EmptyState
           title="No notifications yet"
-          description="Operational alerts will appear here as work happens."
+          description="Job, dispatch, and billing alerts will show up here as work happens."
         />
       ) : (
         <DashboardNotificationsList
@@ -911,8 +911,8 @@ function RecentActivitySection({
           title="No recent activity"
           description={
             canViewBilling
-              ? "Job, billing, and expense events will show up here."
-              : "Job and expense events will show up here."
+              ? "Job, billing, and expense events will show up here once your team starts working."
+              : "Job and expense events will show up here once your team starts working."
           }
         />
       ) : (

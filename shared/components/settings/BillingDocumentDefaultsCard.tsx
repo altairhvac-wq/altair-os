@@ -13,6 +13,7 @@ import { SettingsAlertBanner } from "./SettingsAlertBanner";
 type BillingDocumentDefaultsCardProps = {
   initialDefaults: CompanyBillingDefaults;
   canManage: boolean;
+  showSetupHint?: boolean;
 };
 
 type FeedbackState = {
@@ -31,6 +32,7 @@ const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
 export function BillingDocumentDefaultsCard({
   initialDefaults,
   canManage,
+  showSetupHint = false,
 }: BillingDocumentDefaultsCardProps) {
   const [formValues, setFormValues] = useState<CompanyBillingDefaultsInput>(() =>
     companyBillingDefaultsToFormValues(initialDefaults),
@@ -85,6 +87,12 @@ export function BillingDocumentDefaultsCard({
             Default tax rate, payment terms, and notes applied when new estimates
             and invoices are created.
           </p>
+          {showSetupHint && canManage ? (
+            <p className="mt-2 rounded-lg border border-cyan-100 bg-cyan-50/60 px-3 py-2 text-sm text-cyan-900">
+              Review these defaults before creating your first estimate or invoice.
+              Save once to mark this setup step complete.
+            </p>
+          ) : null}
         </div>
       </div>
 

@@ -4,13 +4,15 @@ export type OnboardingSnapshot = {
   customerCount: number;
   jobCount: number;
   serviceItemCount: number;
+  hasBillingDefaultsConfigured: boolean;
 };
 
 export type OnboardingChecklistItemId =
   | "invite-team"
   | "add-customer"
   | "create-job"
-  | "setup-price-book";
+  | "setup-price-book"
+  | "billing-defaults";
 
 export type OnboardingChecklistItem = {
   id: OnboardingChecklistItemId;
@@ -18,6 +20,7 @@ export type OnboardingChecklistItem = {
   description: string;
   href: string;
   completed: boolean;
+  optional?: boolean;
   tip?: string;
 };
 

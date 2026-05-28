@@ -58,6 +58,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
       initialJobs={jobs}
       customers={customers}
       canDispatchJobs={companyContext.permissions.dispatchJobs}
+      canManageCustomers={companyContext.permissions.manageCustomers}
       initialPanelMode={create === "1" && preselectedCustomer ? "create" : "empty"}
       createInitialData={createInitialData}
     />

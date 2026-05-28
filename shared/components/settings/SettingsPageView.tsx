@@ -40,6 +40,7 @@ type SettingsPageViewProps = {
   onboardingChecklist?: OnboardingChecklist;
   billingDefaults: CompanyBillingDefaults;
   canManageBillingDefaults: boolean;
+  showBillingDefaultsSetupHint?: boolean;
 };
 
 function buildLocationLabel(profile: CompanyProfileSummary): string | null {
@@ -58,6 +59,7 @@ export function SettingsPageView({
   onboardingChecklist,
   billingDefaults,
   canManageBillingDefaults,
+  showBillingDefaultsSetupHint = false,
 }: SettingsPageViewProps) {
   const [members, setMembers] = useState(initialMembers);
   const [search, setSearch] = useState("");
@@ -278,7 +280,7 @@ export function SettingsPageView({
         ) : null}
       </section>
 
-      <section className="min-w-0 space-y-4">
+      <section id="billing-defaults" className="min-w-0 space-y-4">
         <div>
           <h2 className="mb-1 text-lg font-bold text-slate-900">
             Billing Document Defaults
@@ -291,6 +293,7 @@ export function SettingsPageView({
         <BillingDocumentDefaultsCard
           initialDefaults={billingDefaults}
           canManage={canManageBillingDefaults}
+          showSetupHint={showBillingDefaultsSetupHint}
         />
       </section>
 

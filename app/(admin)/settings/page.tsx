@@ -14,6 +14,7 @@ import {
 } from "@/lib/database/queries/memberships";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
 import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@/shared/lib/onboarding-checklist";
+import { hasSavedCompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
 import { PendingInvitesCard } from "@/shared/components/settings/PendingInvitesCard";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { SettingsPageView } from "@/shared/components/settings/SettingsPageView";
@@ -100,6 +101,9 @@ export default async function SettingsPage() {
         onboardingChecklist={onboardingChecklist}
         billingDefaults={billingDefaults}
         canManageBillingDefaults={canAccessCompanySettings(companyContext)}
+        showBillingDefaultsSetupHint={
+          !hasSavedCompanyBillingDefaults(companyContext.company.settings)
+        }
       />
     </div>
   );

@@ -341,3 +341,13 @@ export function getInvoiceCreateInitialData(
 export function billingDefaultsSettingsKeys(): readonly string[] {
   return BILLING_DEFAULTS_KEYS;
 }
+
+export function hasSavedCompanyBillingDefaults(
+  settings: Json | null | undefined,
+): boolean {
+  if (!isRecord(settings)) {
+    return false;
+  }
+
+  return BILLING_DEFAULTS_KEYS.some((key) => key in settings);
+}

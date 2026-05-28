@@ -28,7 +28,9 @@ export function ServiceItemsEmptyState({
       <p className="mt-2 max-w-sm text-sm text-slate-500">
         {isNoResults
           ? "Try adjusting your search or filter to find what you're looking for."
-          : "Add services and parts to your price book so estimates can pull standardized line items."}
+          : onCreateItem
+            ? "Add services and parts to your price book so estimates and invoices stay consistent."
+            : "Price book items will appear here once your office team adds them."}
       </p>
 
       {!isNoResults && onCreateItem ? (

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { resolvePostLoginRedirect } from "@/lib/auth/redirects";
 import { assertTeamManagementAccess } from "@/lib/database/access-control";
 import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -94,6 +95,7 @@ export type InviteTeamMemberActionResult = {
 export type AcceptInviteActionResult = {
   error?: string;
   companyId?: string;
+  redirectPath?: string;
 };
 
 export type CancelTeamInviteActionResult = {
@@ -104,6 +106,7 @@ export type CancelTeamInviteActionResult = {
 
 export async function acceptInviteAction(
   membershipId: string,
+  next?: string | null,
 ): Promise<AcceptInviteActionResult> {
   const normalizedMembershipId = normalizeMembershipId(membershipId);
 
@@ -174,7 +177,12 @@ export async function acceptInviteAction(
   revalidatePath("/technician", "layout");
   revalidatePath("/tech", "layout");
 
-  return { companyId: result.companyId };
+  const context = await getActiveCompanyContext();
+
+  return {
+    companyId: result.companyId,
+    redirectPath: context ? resolvePostLoginRedirect(context, next) : "/",
+  };
 }
 
 export async function inviteTeamMemberAction(

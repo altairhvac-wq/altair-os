@@ -29,8 +29,8 @@ export function CustomersEmptyState({
         {isNoResults
           ? "Try adjusting your search or filter to find what you're looking for."
           : onCreateCustomer
-            ? "Get started by adding your first customer to track jobs, estimates, and service history."
-            : "Customers will appear here once your team adds them."}
+            ? "Add your first customer to start scheduling jobs, estimates, and service history."
+            : "Customers will appear here once someone on your team adds them."}
       </p>
 
       {!isNoResults && onCreateCustomer ? (

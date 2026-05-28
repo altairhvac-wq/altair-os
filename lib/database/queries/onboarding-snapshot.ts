@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
+import { hasSavedCompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
 import type { OnboardingSnapshot } from "@/shared/types/onboarding";
 
 async function countTableRows(
@@ -38,13 +39,24 @@ export async function getOnboardingSnapshot(
   companyId: string,
   _context: ActiveCompanyContext,
 ): Promise<OnboardingSnapshot> {
-  const [customerCount, jobCount, serviceItemCount, teamMemberCount] =
+  const supabase = await createClient();
+
+  const [customerCount, jobCount, serviceItemCount, teamMemberCount, companyResult] =
     await Promise.all([
       countTableRows("customers", companyId),
       countTableRows("jobs", companyId),
       countTableRows("service_items", companyId),
       countTableRows("company_memberships", companyId),
+      supabase.from("companies").select("settings").eq("id", companyId).maybeSingle(),
     ]);
+
+  if (companyResult.error) {
+    console.error("[onboarding-snapshot] company settings load failed:", {
+      companyId,
+      code: companyResult.error.code,
+      message: companyResult.error.message,
+    });
+  }
 
   return {
     teamMemberCount,
@@ -52,5 +64,8 @@ export async function getOnboardingSnapshot(
     customerCount,
     jobCount,
     serviceItemCount,
+    hasBillingDefaultsConfigured: hasSavedCompanyBillingDefaults(
+      companyResult.data?.settings,
+    ),
   };
 }

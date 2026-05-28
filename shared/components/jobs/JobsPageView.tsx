@@ -27,6 +27,7 @@ type JobsPageViewProps = {
   initialJobs: Job[];
   customers: Customer[];
   canDispatchJobs: boolean;
+  canManageCustomers?: boolean;
   initialPanelMode?: PanelMode;
   createInitialData?: Partial<JobFormData>;
 };
@@ -86,6 +87,7 @@ export function JobsPageView({
   initialJobs,
   customers,
   canDispatchJobs,
+  canManageCustomers = false,
   initialPanelMode = "empty",
   createInitialData,
 }: JobsPageViewProps) {
@@ -179,7 +181,12 @@ export function JobsPageView({
     }
 
     if (showCustomerSearchUnavailable) {
-      return <JobsEmptyState variant="no-company-customers" />;
+      return (
+        <JobsEmptyState
+          variant="no-company-customers"
+          canAddCustomer={canManageCustomers}
+        />
+      );
     }
 
     if (viewTab === "today") {

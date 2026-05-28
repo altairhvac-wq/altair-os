@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, useTransition } from "react";
 import { Mail, UserCheck } from "lucide-react";
 import { acceptInviteAction } from "@/app/actions/memberships";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
@@ -35,7 +35,20 @@ export function PendingInvitesCard({
   invites,
   variant = "settings",
 }: PendingInvitesCardProps) {
+  return (
+    <Suspense fallback={null}>
+      <PendingInvitesCardContent invites={invites} variant={variant} />
+    </Suspense>
+  );
+}
+
+function PendingInvitesCardContent({
+  invites,
+  variant = "settings",
+}: PendingInvitesCardProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next");
   const [items, setItems] = useState(invites);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -56,7 +69,7 @@ export function PendingInvitesCard({
     setAcceptingId(membershipId);
 
     startTransition(async () => {
-      const result = await acceptInviteAction(membershipId);
+      const result = await acceptInviteAction(membershipId, nextPath);
 
       if (result.error) {
         setError(result.error);
@@ -72,7 +85,7 @@ export function PendingInvitesCard({
       router.refresh();
 
       if (variant === "setup") {
-        router.push("/");
+        router.push(result.redirectPath ?? "/");
       }
     });
   }
@@ -81,7 +94,7 @@ export function PendingInvitesCard({
     variant === "setup" ? "You have a team invitation" : "Pending invitations";
   const description =
     variant === "setup"
-      ? "Accept an invitation to join an existing company workspace, or create your own below."
+      ? "Accept to join an existing company, or create your own workspace below."
       : "Accept an invitation to join another company workspace.";
 
   return (

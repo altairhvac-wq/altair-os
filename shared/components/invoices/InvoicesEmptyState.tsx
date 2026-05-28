@@ -14,6 +14,12 @@ export function InvoicesEmptyState({
 }: InvoicesEmptyStateProps) {
   const isNoResults = variant === "no-results";
 
+  const emptyDescription = needsCustomers
+    ? "Invoices are linked to customers. Add a customer first, then create your first invoice."
+    : onCreateInvoice
+      ? "Create your first invoice with line items, tax, and a due date."
+      : "Invoices will appear here once your office team creates them.";
+
   return (
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
       <div className="admin-empty-icon">
@@ -31,9 +37,7 @@ export function InvoicesEmptyState({
       <p className="mt-2 max-w-sm text-sm text-slate-500">
         {isNoResults
           ? "Try adjusting your search or filters to find what you're looking for."
-          : needsCustomers
-            ? "Invoices are linked to customers. Add a customer first, then create your first invoice."
-            : "Create your first invoice with line items, tax, and a due date."}
+          : emptyDescription}
       </p>
 
       {!isNoResults && needsCustomers ? (

@@ -22,21 +22,21 @@ export function TeamMembersEmptyState({
       </div>
 
       <h3 className="mt-5 text-lg font-bold text-slate-900">
-        {isNoResults ? "No members match your search" : "You're the first member"}
+        {isNoResults ? "No members match your search" : "You're the only member so far"}
       </h3>
 
       <p className="mt-2 max-w-sm text-sm text-slate-500">
         {isNoResults
           ? "Try a different name, email, or role."
           : canManageTeam
-            ? "Invite technicians and office staff above so your crew can sign in and start working."
+            ? "Use the invite form above when you're ready to add technicians or office staff."
             : "Team members will appear here once your admin invites them."}
       </p>
 
       {!isNoResults && canManageTeam ? (
         <p className="mt-4 flex items-center gap-2 text-xs text-slate-400">
           <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
-          Use the invite form above to add your first teammate
+          Invites stay pending until the teammate signs up with the same email
         </p>
       ) : null}
     </div>

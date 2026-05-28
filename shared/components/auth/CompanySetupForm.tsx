@@ -31,12 +31,12 @@ export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
     <AuthShell
       variant="onboarding"
       onboardingStep={{
-        current: 2,
-        total: 2,
+        current: 1,
+        total: 1,
         label: "Company workspace",
       }}
       title="Set up your workspace"
-      description="One last step — name your company to unlock dispatch, jobs, and your field team."
+      description="Name your company to create your workspace. This is the only required step before you can start using Altair."
       aboveCard={aboveCard}
     >
       <form action={formAction} className="space-y-5" aria-busy={pending}>
@@ -52,18 +52,27 @@ export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
           <ul className="mt-2.5 space-y-2 text-sm text-slate-600">
             <li className="flex items-start gap-2">
               <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-cyan-500" />
-              Your company workspace is created instantly
+              Your company workspace is created right away
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-cyan-500" />
-              You&apos;re routed to your command center
+              You&apos;ll land on your dashboard with a short setup checklist
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-cyan-500" />
-              Invite technicians and start dispatching
+              Add a customer, schedule a job, and invite your crew when ready
             </li>
           </ul>
         </div>
+
+        {aboveCard ? (
+          <div className="relative py-1">
+            <div className="absolute inset-x-0 top-1/2 border-t border-slate-200" />
+            <p className="relative mx-auto w-fit bg-white px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Or create your own workspace
+            </p>
+          </div>
+        ) : null}
 
         <AuthField
           label="Company name"

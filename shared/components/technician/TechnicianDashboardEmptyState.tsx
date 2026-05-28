@@ -23,8 +23,8 @@ export function TechnicianDashboardEmptyState({
 
       <p className="mx-auto mt-2 max-w-xs text-sm text-slate-500">
         {isOffShift
-          ? "Clock in when you're ready to start field work. Your assigned jobs will appear here."
-          : "You're all caught up. Check back later for new dispatch assignments."}
+          ? "Clock in when you are ready to start field work. Assigned jobs will appear here."
+          : "You are caught up for now. New dispatch assignments will show up here automatically."}
       </p>
 
       {isOffShift && onClockIn ? (

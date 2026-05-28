@@ -61,8 +61,8 @@ export function OnboardingChecklistSection({
     variant === "settings" ? "Workspace setup" : "Get your workspace ready";
   const description =
     variant === "settings"
-      ? "Complete these steps to get your company operational for beta."
-      : `${checklist.completedCount} of ${checklist.totalCount} setup steps done — finish the rest to get your workspace operational.`;
+      ? "Complete the required steps below to get your company operational for beta. Optional steps can wait."
+      : `${checklist.completedCount} of ${checklist.totalCount} required steps done — finish the rest to start dispatching work.`;
 
   return (
     <section className="admin-card min-w-0 max-w-full overflow-x-clip">
@@ -144,9 +144,16 @@ export function OnboardingChecklistSection({
                     aria-hidden="true"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-slate-900">
-                      {item.title}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-bold text-slate-900">
+                        {item.title}
+                      </p>
+                      {item.optional ? (
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          Optional
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
                       {item.description}
                     </p>
@@ -163,6 +170,11 @@ export function OnboardingChecklistSection({
             </li>
           ))}
         </ul>
+
+        <p className="mt-4 text-xs text-slate-500">
+          When required steps are done, this checklist hides automatically. Optional
+          team and billing setup can be finished anytime in Settings.
+        </p>
       </div>
     </section>
   );

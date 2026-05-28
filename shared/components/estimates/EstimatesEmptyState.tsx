@@ -14,6 +14,12 @@ export function EstimatesEmptyState({
 }: EstimatesEmptyStateProps) {
   const isNoResults = variant === "no-results";
 
+  const emptyDescription = needsCustomers
+    ? "Estimates are linked to customers. Add a customer first, then create your first quote."
+    : onCreateEstimate
+      ? "Create your first estimate with line items, pricing, and a valid-until date."
+      : "Estimates will appear here once your office team creates them.";
+
   return (
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
       <div className="admin-empty-icon">
@@ -31,9 +37,7 @@ export function EstimatesEmptyState({
       <p className="mt-2 max-w-sm text-sm text-slate-500">
         {isNoResults
           ? "Try adjusting your search or filters to find what you're looking for."
-          : needsCustomers
-            ? "Estimates are linked to customers. Add a customer first, then create your first quote."
-            : "Create your first estimate with line items, pricing, and a valid-until date."}
+          : emptyDescription}
       </p>
 
       {!isNoResults && needsCustomers ? (

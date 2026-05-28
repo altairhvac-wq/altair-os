@@ -1,4 +1,5 @@
-import { Calendar, SearchX, Wrench } from "lucide-react";
+import { Calendar, SearchX, UserPlus, Wrench } from "lucide-react";
+import Link from "next/link";
 
 type JobsEmptyStateProps = {
   variant:
@@ -8,9 +9,14 @@ type JobsEmptyStateProps = {
     | "no-customer-search-results"
     | "no-company-customers";
   onCreateJob?: () => void;
+  canAddCustomer?: boolean;
 };
 
-export function JobsEmptyState({ variant, onCreateJob }: JobsEmptyStateProps) {
+export function JobsEmptyState({
+  variant,
+  onCreateJob,
+  canAddCustomer = false,
+}: JobsEmptyStateProps) {
   const isNoResults = variant === "no-results";
   const isNoJobsToday = variant === "no-jobs-today";
   const isNoCustomerSearchResults = variant === "no-customer-search-results";
@@ -34,14 +40,18 @@ export function JobsEmptyState({ variant, onCreateJob }: JobsEmptyStateProps) {
           : "No jobs yet";
 
   const description = isNoCompanyCustomers
-    ? "Jobs are linked to customers. Add one from Customers, then come back to schedule your first job."
+    ? canAddCustomer
+      ? "Jobs are linked to customers. Add your first customer, then come back here to schedule work."
+      : "Jobs are linked to customers. Your office team needs to add a customer before work can be scheduled."
     : isNoCustomerSearchResults
       ? "Try a different name, phone number, or company."
       : isNoResults
         ? "Try adjusting your filters to find what you're looking for."
         : isNoJobsToday
-          ? "Today's schedule is clear. Create a job or check All Jobs for upcoming work."
-          : "Create your first job to schedule work, assign technicians, and track status.";
+          ? "Nothing is on today's board. Create a job or check All Jobs for upcoming work."
+          : onCreateJob
+            ? "Create your first job to schedule work, assign technicians, and track status."
+            : "Assigned and scheduled jobs will appear here once dispatch adds work to the board.";
 
   const Icon = icon;
 
@@ -54,6 +64,13 @@ export function JobsEmptyState({ variant, onCreateJob }: JobsEmptyStateProps) {
       <h3 className="mt-5 text-lg font-bold text-slate-900">{title}</h3>
 
       <p className="mt-2 max-w-sm text-sm text-slate-500">{description}</p>
+
+      {isNoCompanyCustomers && canAddCustomer ? (
+        <Link href="/customers" className="mt-6 inline-flex items-center gap-2 admin-btn-primary">
+          <UserPlus className="h-4 w-4" />
+          Go to Customers
+        </Link>
+      ) : null}
 
       {(variant === "no-jobs" || variant === "no-jobs-today") && onCreateJob ? (
         <button
