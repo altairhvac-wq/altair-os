@@ -38,10 +38,10 @@ function ReportsSection({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4">
-        <h2 className="text-base font-bold text-slate-900">{title}</h2>
-        <p className="mt-1 text-xs text-slate-500">{description}</p>
+    <section className="admin-card min-w-0 overflow-x-clip p-4 sm:p-5">
+      <div className="admin-panel-header -mx-4 mb-4 px-4 py-3 sm:-mx-5 sm:px-5 sm:py-4">
+        <h2 className="admin-heading-section sm:text-base">{title}</h2>
+        <p className="admin-text-helper mt-0.5">{description}</p>
       </div>
       {children}
     </section>

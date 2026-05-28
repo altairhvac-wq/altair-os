@@ -50,10 +50,10 @@ export function JobDetailsPanel({
     <aside
       className={`${listDetailPanelClass(mode !== "empty")} flex min-h-0 min-w-0 flex-[1_1_45%] flex-col overflow-hidden admin-card max-lg:min-h-[12rem] lg:h-full lg:w-[400px] lg:flex-none lg:shrink-0`}
     >
-      <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-5 py-4">
-        <div>
-          <h2 className="text-base font-bold text-slate-900">{title}</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+      <div className="admin-panel-header flex shrink-0 items-start justify-between px-4 py-3 sm:px-5 sm:py-4">
+        <div className="min-w-0 pr-2">
+          <h2 className="admin-heading-section sm:text-base">{title}</h2>
+          <p className="admin-text-helper mt-0.5">
             {mode === "create"
               ? "Schedule work and assign a technician"
               : mode === "detail"
@@ -75,16 +75,16 @@ export function JobDetailsPanel({
 
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
         {mode === "empty" ? (
-          <div className="flex h-full flex-col items-center justify-center text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
-              <Wrench className="h-6 w-6 text-slate-400" />
+          <div className="flex h-full flex-col items-center justify-center px-4 py-8 text-center">
+            <div className="admin-empty-state w-full max-w-xs">
+              <div className="admin-empty-icon mx-auto">
+                <Wrench className="h-6 w-6 text-slate-400" />
+              </div>
+              <p className="admin-heading-section mt-4 text-sm">No job selected</p>
+              <p className="admin-text-helper mx-auto mt-1 max-w-[220px]">
+                Click a row in the table to open the job detail page.
+              </p>
             </div>
-            <p className="mt-4 text-sm font-medium text-slate-700">
-              No job selected
-            </p>
-            <p className="mt-1 max-w-[220px] text-xs text-slate-500">
-              Click a row in the table to open the job detail page.
-            </p>
           </div>
         ) : null}
 

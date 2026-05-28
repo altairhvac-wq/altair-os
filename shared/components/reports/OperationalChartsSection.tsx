@@ -143,12 +143,12 @@ function ReportTimeSeriesChartCard({ chart }: { chart: ReportOperationalChart })
 
   return (
     <section className="flex flex-col overflow-hidden admin-card">
-      <div className="border-b border-slate-100 px-4 py-4 sm:px-5">
+      <div className="admin-panel-header px-4 py-3 sm:px-5 sm:py-4">
         <div className="flex items-center gap-2">
           <Icon className="h-4 w-4 text-slate-700" aria-hidden="true" />
-          <h3 className="text-base font-bold text-slate-900">{chart.title}</h3>
+          <h3 className="admin-heading-section sm:text-base">{chart.title}</h3>
         </div>
-        <p className="mt-1 text-xs text-slate-500">{chart.subtitle}</p>
+        <p className="admin-text-helper mt-0.5">{chart.subtitle}</p>
       </div>
 
       <div className="p-4 sm:p-5">
@@ -298,9 +298,9 @@ export function OperationalChartsSection({
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm sm:p-5">
-        <h2 className="text-base font-bold text-slate-900">Operational trends</h2>
-        <p className="mt-1 text-xs text-slate-500">
+      <div className="admin-card bg-gradient-to-br from-slate-50/80 to-white p-4 sm:p-5">
+        <h2 className="admin-heading-section sm:text-base">Operational trends</h2>
+        <p className="admin-text-helper mt-0.5">
           Company-scoped time series from live records ·{" "}
           {resolveScopeLabel(charts.meta)}
         </p>

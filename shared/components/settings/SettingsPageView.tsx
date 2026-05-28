@@ -183,7 +183,7 @@ export function SettingsPageView({
         {summaryCards.map((card) => (
           <div
             key={card.label}
-            className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+            className="admin-card min-w-0 p-4 sm:p-5"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -206,10 +206,10 @@ export function SettingsPageView({
       </section>
 
       <section id="team-members" className="admin-card min-w-0 max-w-full overflow-x-clip">
-        <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="admin-panel-header flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
           <div className="min-w-0">
-            <h2 className="text-lg font-bold text-slate-900">Team Members</h2>
-            <p className="text-sm text-slate-600">
+            <h2 className="admin-heading-section text-base sm:text-lg">Team Members</h2>
+            <p className="admin-text-helper mt-0.5 sm:text-sm">
               {canManageTeam
                 ? "Invite teammates, assign roles, and manage workspace access."
                 : "Team roster is limited to owner and admin roles."}

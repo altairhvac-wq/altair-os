@@ -1898,10 +1898,10 @@ export function OfficeReviewQueueSection({
     <section
       ref={sectionRef}
       id={OFFICE_REVIEW_QUEUE_SECTION_ID}
-      className={`min-w-0 scroll-mt-6 overflow-hidden rounded-2xl border bg-white p-3 shadow-sm lg:p-5 ${
+      className={`admin-card min-w-0 scroll-mt-6 overflow-hidden p-3 lg:p-5 ${
         isFiltered && !isCompact
-          ? "border-violet-300 ring-2 ring-violet-100"
-          : "border-slate-200"
+          ? "border-violet-300/80 ring-1 ring-violet-100"
+          : ""
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2 max-lg:gap-2 lg:gap-3">
@@ -1910,10 +1910,10 @@ export function OfficeReviewQueueSection({
             <ClipboardList className="h-4 w-4 text-violet-600 sm:h-5 sm:w-5" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold text-slate-900 sm:text-base">
+            <h2 className="admin-heading-section text-sm sm:text-base">
               Office review queue
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500 sm:mt-1">
+            <p className="admin-text-helper mt-0.5 sm:mt-1">
               {isCompact
                 ? "Highest-priority items needing office follow-up"
                 : "Centralized operational queue for completed-work review, invoicing backlog, and stalled pipeline jobs · All time"}

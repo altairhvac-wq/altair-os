@@ -11,13 +11,13 @@ export function InvoicesLoadingState() {
     <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:overflow-hidden">
       <div className="grid shrink-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-28 rounded-2xl" />
+          <Skeleton key={i} className="admin-card h-28" />
         ))}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
         <div className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1">
-          <div className="border-b border-slate-100 p-4">
+          <div className="admin-panel-header p-4 sm:px-5">
             <div className="flex items-center justify-between gap-4">
               <Skeleton className="h-10 w-64" />
               <Skeleton className="h-10 w-36" />
@@ -45,7 +45,7 @@ export function InvoicesLoadingState() {
           </div>
         </div>
 
-        <div className="hidden lg:flex min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:min-h-0 lg:w-[400px] lg:flex-none lg:shrink-0">
+        <div className="admin-card hidden min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden p-6 lg:flex lg:min-h-0 lg:w-[400px] lg:flex-none lg:shrink-0">
           <Skeleton className="h-5 w-40" />
           <Skeleton className="mt-2 h-4 w-56" />
           <div className="mt-8 space-y-4">

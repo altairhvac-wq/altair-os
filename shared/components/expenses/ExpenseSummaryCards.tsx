@@ -46,15 +46,17 @@ export function ExpenseSummaryCards({ expenses }: ExpenseSummaryCardsProps) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+          className="admin-card p-2.5 sm:p-4"
         >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-bold text-slate-500">{card.label}</p>
-              <p className="mt-2 text-2xl font-black text-slate-900">
+          <div className="flex items-start justify-between gap-2 sm:gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-semibold text-slate-500 sm:text-sm">
+                {card.label}
+              </p>
+              <p className="mt-0.5 text-xl font-bold tabular-nums tracking-tight text-slate-900 sm:mt-2 sm:text-3xl">
                 {card.value}
               </p>
-              <p className="mt-1 text-xs text-slate-500">{card.description}</p>
+              <p className="admin-text-helper mt-0.5 sm:mt-1">{card.description}</p>
             </div>
             <div
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.iconClass}`}

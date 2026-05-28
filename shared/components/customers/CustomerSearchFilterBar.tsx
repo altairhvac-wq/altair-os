@@ -20,7 +20,7 @@ export function CustomerSearchFilterBar({
   resultCount,
 }: CustomerSearchFilterBarProps) {
   return (
-    <div className="border-b border-slate-100 px-4 py-3">
+    <div className="shrink-0 border-b border-slate-100/90 bg-slate-50/40 px-4 py-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -51,7 +51,7 @@ export function CustomerSearchFilterBar({
         </div>
       </div>
 
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="admin-text-helper mt-2">
         {resultCount} {resultCount === 1 ? "customer" : "customers"}
       </p>
     </div>

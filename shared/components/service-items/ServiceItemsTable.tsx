@@ -23,7 +23,7 @@ export function ServiceItemsTable({
     <div className="overflow-x-auto">
       <table className="w-full min-w-[640px] text-left text-sm">
         <thead>
-          <tr className="border-b border-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <tr className="border-b border-slate-100/90 bg-slate-50/60 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <th className="px-4 py-3">Item</th>
             <th className="px-4 py-3">Category</th>
             <th className="px-4 py-3 text-right">Unit price</th>
