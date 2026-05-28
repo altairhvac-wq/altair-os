@@ -83,6 +83,8 @@ export function mapJobRowToDispatchJob(row: JobRowWithDispatch): DispatchJob {
     description: job.description,
     notes: job.notes,
     technicianId: row.assigned_technician_id ?? undefined,
+    arrivedAt: row.arrived_at ?? undefined,
+    workStartedAt: row.work_started_at ?? undefined,
   };
 }
 
@@ -586,4 +588,70 @@ export async function assignJobToTechnician(
   }
 
   return { job: legacy.job, error: null };
+}
+
+export async function reactivateDispatchAssignmentForReopenedJob(
+  companyId: string,
+  jobId: string,
+  technicianId: string,
+  assignedBy: string,
+  scheduledStart: string,
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: activeAssignment, error: activeError } = await supabase
+    .from("dispatch_assignments")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("job_id", jobId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (activeError) {
+    console.error(
+      "[reactivateDispatchAssignmentForReopenedJob] active lookup failed:",
+      {
+        companyId,
+        jobId,
+        code: activeError.code,
+        message: activeError.message,
+      },
+    );
+    return { error: mapDatabaseError(activeError) };
+  }
+
+  if (activeAssignment) {
+    return { error: null };
+  }
+
+  const now = new Date().toISOString();
+  const assignmentInsert: DispatchAssignmentInsert = {
+    company_id: companyId,
+    job_id: jobId,
+    technician_id: technicianId,
+    assigned_by: assignedBy,
+    status: "active",
+    scheduled_start: scheduledStart,
+    assigned_at: now,
+  };
+
+  const { error: insertError } = await supabase
+    .from("dispatch_assignments")
+    .insert(assignmentInsert);
+
+  if (insertError) {
+    console.error(
+      "[reactivateDispatchAssignmentForReopenedJob] insert failed:",
+      {
+        companyId,
+        jobId,
+        technicianId,
+        code: insertError.code,
+        message: insertError.message,
+      },
+    );
+    return { error: mapDatabaseError(insertError) };
+  }
+
+  return { error: null };
 }

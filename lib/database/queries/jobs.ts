@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
-import { finalizeActiveDispatchAssignments } from "@/lib/database/queries/dispatch";
+import {
+  finalizeActiveDispatchAssignments,
+  reactivateDispatchAssignmentForReopenedJob,
+} from "@/lib/database/queries/dispatch";
 import type { JobInsert, JobRow, JobUpdate } from "@/lib/database/types/core-tables";
 import type { Job, JobDetail, JobFormData, JobStatus } from "@/shared/types/job";
 import type {
@@ -588,6 +591,129 @@ export async function correctJobWorkflowStatus(
       job: null,
       error: "Job status has changed. Refresh the page and try again.",
     };
+  }
+
+  return {
+    job: mapJobRowToJob(row as JobRowWithTechnician),
+    error: null,
+  };
+}
+
+export async function reopenCompletedJob(
+  companyId: string,
+  jobId: string,
+  targetStatus: JobStatus,
+  actorId: string,
+): Promise<{ job: Job | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: existingRow, error: existingError } = await supabase
+    .from("jobs")
+    .select(
+      "id, status, assigned_technician_id, scheduled_at, work_started_at, arrived_at, completed_at",
+    )
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .maybeSingle();
+
+  if (existingError) {
+    console.error("[reopenCompletedJob] existing job lookup failed:", {
+      companyId,
+      jobId,
+      code: existingError.code,
+      message: existingError.message,
+    });
+    return { job: null, error: mapDatabaseError(existingError) };
+  }
+
+  if (!existingRow) {
+    return { job: null, error: "Job not found." };
+  }
+
+  if (existingRow.status === "cancelled") {
+    return { job: null, error: "Cancelled jobs cannot be reopened." };
+  }
+
+  if (existingRow.status !== "completed") {
+    return {
+      job: null,
+      error: "Only completed jobs can be reopened.",
+    };
+  }
+
+  const updatePayload: JobUpdate = {
+    status: targetStatus,
+    completed_at: null,
+  };
+
+  const { data: row, error } = await supabase
+    .from("jobs")
+    .update(updatePayload)
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .eq("status", "completed")
+    .select(JOB_TECHNICIAN_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[reopenCompletedJob] update failed:", {
+      companyId,
+      jobId,
+      targetStatus,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    return { job: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return {
+      job: null,
+      error: "Job status has changed. Refresh the page and try again.",
+    };
+  }
+
+  if (existingRow.assigned_technician_id) {
+    const { error: dispatchError } =
+      await reactivateDispatchAssignmentForReopenedJob(
+        companyId,
+        jobId,
+        existingRow.assigned_technician_id,
+        actorId,
+        existingRow.scheduled_at,
+      );
+
+    if (dispatchError) {
+      console.error("[reopenCompletedJob] dispatch reactivation failed:", {
+        companyId,
+        jobId,
+        technicianId: existingRow.assigned_technician_id,
+        error: dispatchError,
+      });
+
+      const { error: rollbackError } = await supabase
+        .from("jobs")
+        .update({
+          status: "completed",
+          completed_at: existingRow.completed_at,
+        })
+        .eq("company_id", companyId)
+        .eq("id", jobId)
+        .eq("status", targetStatus);
+
+      if (rollbackError) {
+        console.error("[reopenCompletedJob] rollback after dispatch failure:", {
+          companyId,
+          jobId,
+          code: rollbackError.code,
+          message: rollbackError.message,
+        });
+      }
+
+      return { job: null, error: dispatchError };
+    }
   }
 
   return {

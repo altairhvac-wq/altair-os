@@ -73,6 +73,12 @@ export function JobDetailHeaderWorkflow({
           zip={job.zip}
           canUpdateStatus={canUpdateStatus}
           canCorrectStatus={canEditJob}
+          canReopenJob={canEditJob}
+          reopenSnapshot={{
+            workStartedAt: job.workStartedAt,
+            arrivedAt: job.arrivedAt,
+            assignedTechnicianId: job.assignedTechnicianId,
+          }}
           layout="header"
           onStatusUpdated={handleStatusUpdated}
         />

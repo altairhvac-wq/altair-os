@@ -7,9 +7,11 @@ import { formatJobStatus } from "@/shared/types/job";
 import {
   isTerminalJobStatus,
   shouldAcceptServerWorkflowStatus,
+  type ReopenTargetJobSnapshot,
 } from "@/shared/types/job-workflow";
 import { JobWorkflowActions } from "./JobWorkflowActions";
 import { JobStatusCorrectionControl } from "./JobStatusCorrectionControl";
+import { ReopenCompletedJobControl } from "./ReopenCompletedJobControl";
 import { StartRouteButton } from "./StartRouteButton";
 
 type JobWorkflowControlsProps = {
@@ -22,6 +24,8 @@ type JobWorkflowControlsProps = {
   zip: string;
   canUpdateStatus: boolean;
   canCorrectStatus?: boolean;
+  canReopenJob?: boolean;
+  reopenSnapshot?: ReopenTargetJobSnapshot;
   layout?: "header" | "stack";
   onStatusUpdated?: (status: JobStatus) => void;
 };
@@ -54,6 +58,8 @@ export function JobWorkflowControls({
   zip,
   canUpdateStatus,
   canCorrectStatus = false,
+  canReopenJob = false,
+  reopenSnapshot,
   layout = "header",
   onStatusUpdated,
 }: JobWorkflowControlsProps) {
@@ -73,6 +79,27 @@ export function JobWorkflowControls({
   }
 
   if (isTerminalJobStatus(status)) {
+    if (status === "completed") {
+      return (
+        <div className="space-y-3">
+          <JobWorkflowTerminalState status={status} />
+          <ReopenCompletedJobControl
+            jobId={jobId}
+            status={status}
+            canReopenJob={canReopenJob}
+            reopenSnapshot={
+              reopenSnapshot ?? {
+                workStartedAt: undefined,
+                arrivedAt: undefined,
+                assignedTechnicianId: undefined,
+              }
+            }
+            onStatusUpdated={handleStatusUpdated}
+          />
+        </div>
+      );
+    }
+
     return <JobWorkflowTerminalState status={status} />;
   }
 

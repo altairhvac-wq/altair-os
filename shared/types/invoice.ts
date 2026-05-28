@@ -377,3 +377,21 @@ export function getInvoiceSummary(invoices: Invoice[]) {
 
   return { unpaidTotal, paidTotal, overdueTotal };
 }
+
+const INACTIVE_INVOICE_STATUSES = new Set<InvoiceStatus>(["void", "cancelled"]);
+
+export function getReopenCompletedJobBlockReason(
+  invoices: Pick<Invoice, "status" | "amountPaid">[],
+): string | null {
+  if (invoices.some((invoice) => invoice.amountPaid > 0)) {
+    return "Jobs with payments cannot be reopened.";
+  }
+
+  if (
+    invoices.some((invoice) => !INACTIVE_INVOICE_STATUSES.has(invoice.status))
+  ) {
+    return "Void linked invoices before reopening this job.";
+  }
+
+  return null;
+}

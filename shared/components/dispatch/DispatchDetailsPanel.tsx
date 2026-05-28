@@ -358,6 +358,12 @@ export function DispatchDetailsPanel({
                   zip={job.zip}
                   canUpdateStatus={canUpdateJobWorkflow}
                   canCorrectStatus={canDispatchJobs}
+                  canReopenJob={canDispatchJobs}
+                  reopenSnapshot={{
+                    workStartedAt: job.workStartedAt,
+                    arrivedAt: job.arrivedAt,
+                    assignedTechnicianId: job.technicianId,
+                  }}
                   layout="stack"
                   onStatusUpdated={(status) => onStatusUpdated?.(job.id, status)}
                 />

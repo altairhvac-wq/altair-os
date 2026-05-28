@@ -6,22 +6,27 @@ import {
   correctJobWorkflowStatus,
   createJob,
   getJobById,
+  reopenCompletedJob,
   updateJob,
   updateJobWorkflowStatus,
 } from "@/lib/database/queries/jobs";
+import { listInvoicesForJob } from "@/lib/database/queries/invoices";
 import type { JobDetail } from "@/shared/types/job";
 import {
   recordJobCreatedActivity,
+  recordJobReopenedActivity,
   recordJobStatusChangedActivity,
   recordJobStatusCorrectedActivity,
 } from "@/lib/database/services/job-activity";
 import { finalizeOpenJobLaborForTerminalJob } from "@/lib/database/services/time-tracking";
 import type { Job, JobFormData, JobStatus } from "@/shared/types/job";
+import { getReopenCompletedJobBlockReason } from "@/shared/types/invoice";
 import {
   getTargetStatusForAction,
   isAllowedStatusCorrection,
   isIdempotentWorkflowAction,
   isTerminalJobStatus,
+  resolveReopenTargetStatus,
   type JobWorkflowActionId,
   type JobWorkflowCompletionPayload,
 } from "@/shared/types/job-workflow";
@@ -262,6 +267,77 @@ export async function correctJobStatusAction(
   revalidatePath("/technician");
   revalidatePath("/tech/time");
   revalidatePath("/time");
+  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath(`/customers/${job.customerId}`);
+
+  return { job };
+}
+
+export type ReopenCompletedJobActionResult = {
+  error?: string;
+  job?: Job;
+};
+
+export async function reopenCompletedJobAction(
+  jobId: string,
+): Promise<ReopenCompletedJobActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." };
+  }
+
+  if (!context.permissions.dispatchJobs) {
+    return { error: "You do not have permission to reopen jobs." };
+  }
+
+  const existingJob = await getJobById(context.company.id, jobId);
+
+  if (!existingJob) {
+    return { error: "Job not found." };
+  }
+
+  if (existingJob.status === "cancelled") {
+    return { error: "Cancelled jobs cannot be reopened." };
+  }
+
+  if (existingJob.status !== "completed") {
+    return { error: "Only completed jobs can be reopened." };
+  }
+
+  const invoices = await listInvoicesForJob(context.company.id, jobId);
+  const blockReason = getReopenCompletedJobBlockReason(invoices);
+
+  if (blockReason) {
+    return { error: blockReason };
+  }
+
+  const targetStatus = resolveReopenTargetStatus(existingJob);
+
+  const { job, error } = await reopenCompletedJob(
+    context.company.id,
+    jobId,
+    targetStatus,
+    context.user.id,
+  );
+
+  if (error || !job) {
+    return { error: error ?? "Failed to reopen job." };
+  }
+
+  await recordJobReopenedActivity({
+    companyId: context.company.id,
+    jobId,
+    actorId: context.user.id,
+    fromStatus: "completed",
+    toStatus: targetStatus,
+    customerId: job.customerId,
+    jobNumber: job.jobNumber,
+  });
+
+  revalidatePath("/jobs");
+  revalidatePath("/dispatch");
+  revalidatePath("/technician");
   revalidatePath(`/jobs/${jobId}`);
   revalidatePath(`/customers/${job.customerId}`);
 

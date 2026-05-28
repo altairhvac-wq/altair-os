@@ -123,6 +123,16 @@ export function formatJobActivityDetails(activity: JobActivity): string | null {
     case "technician_arrived":
     case "work_started":
     case "status_changed":
+      if (
+        eventType === "status_changed" &&
+        metadata.action_id === "reopen"
+      ) {
+        const transition = formatStatusTransition(
+          metadata.from_status,
+          metadata.to_status,
+        );
+        return transition ? `Job reopened (${transition})` : "Job reopened";
+      }
       return formatStatusTransition(metadata.from_status, metadata.to_status);
 
     case "job_attachment_uploaded": {

@@ -44,6 +44,8 @@ export type DispatchJob = {
   priority: DispatchJobPriority;
   description?: string;
   notes?: string;
+  arrivedAt?: string;
+  workStartedAt?: string;
 };
 
 export type DispatchSummary = {

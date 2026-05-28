@@ -199,3 +199,31 @@ export function isAllowedStatusCorrection(
 export function canCorrectJobStatus(status: JobStatus): boolean {
   return getAllowedStatusCorrectionTargets(status).length > 0;
 }
+
+export type ReopenTargetJobSnapshot = {
+  workStartedAt?: string;
+  arrivedAt?: string;
+  assignedTechnicianId?: string;
+};
+
+export function canReopenCompletedJob(status: JobStatus): boolean {
+  return status === "completed";
+}
+
+export function resolveReopenTargetStatus(
+  job: ReopenTargetJobSnapshot,
+): Exclude<JobStatus, "completed" | "cancelled"> {
+  if (job.workStartedAt) {
+    return "in_progress";
+  }
+
+  if (job.arrivedAt) {
+    return "arrived";
+  }
+
+  if (job.assignedTechnicianId) {
+    return "dispatched";
+  }
+
+  return "scheduled";
+}
