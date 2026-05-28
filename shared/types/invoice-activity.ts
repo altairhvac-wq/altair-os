@@ -70,7 +70,10 @@ export function formatInvoiceActivityLabel(activity: InvoiceActivity): string {
     return "Status changed (automatic)";
   }
 
-  return ACTIVITY_TYPE_LABELS[activity.eventType];
+  return (
+    ACTIVITY_TYPE_LABELS[activity.eventType] ??
+    activity.eventType.replace(/_/g, " ")
+  );
 }
 
 export function formatInvoiceActivityDetails(

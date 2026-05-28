@@ -76,7 +76,10 @@ export function InvoiceActivityTimeline({
       ) : (
         <ol className="mt-5 space-y-0">
           {activities.map((activity, index) => {
-            const Icon = ACTIVITY_ICONS[activity.eventType];
+            const Icon = ACTIVITY_ICONS[activity.eventType] ?? History;
+            const iconStyle =
+              ACTIVITY_ICON_STYLES[activity.eventType] ??
+              "bg-slate-100 text-slate-600 ring-slate-500/15";
             const details = formatInvoiceActivityDetails(activity);
             const isLast = index === activities.length - 1;
 
@@ -90,7 +93,7 @@ export function InvoiceActivityTimeline({
                 ) : null}
 
                 <div
-                  className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ring-inset ${ACTIVITY_ICON_STYLES[activity.eventType]}`}
+                  className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ring-inset ${iconStyle}`}
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
                 </div>

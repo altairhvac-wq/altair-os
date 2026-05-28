@@ -46,7 +46,10 @@ const ACTIVITY_TYPE_LABELS: Record<EstimateActivityType, string> = {
 export function formatEstimateActivityLabel(
   activity: EstimateActivity,
 ): string {
-  return ACTIVITY_TYPE_LABELS[activity.eventType];
+  return (
+    ACTIVITY_TYPE_LABELS[activity.eventType] ??
+    activity.eventType.replace(/_/g, " ")
+  );
 }
 
 export function formatEstimateActivityDetails(
