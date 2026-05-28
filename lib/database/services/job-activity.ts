@@ -1,4 +1,5 @@
 import {
+  jobHasActivityEvent,
   recordJobActivity,
   resolveStatusChangeEventType,
 } from "@/lib/database/queries/job-activities";
@@ -90,11 +91,20 @@ export async function recordJobStatusChangedActivity(input: {
   completionNotes?: string;
   followUpNotes?: string;
 }): Promise<void> {
+  const eventType = resolveStatusChangeEventType(input.actionId);
+
+  if (
+    input.actionId === "complete" &&
+    (await jobHasActivityEvent(input.companyId, input.jobId, "work_completed"))
+  ) {
+    return;
+  }
+
   const { error } = await recordJobActivity({
     company_id: input.companyId,
     job_id: input.jobId,
     actor_id: input.actorId,
-    event_type: resolveStatusChangeEventType(input.actionId),
+    event_type: eventType,
     metadata: {
       customer_id: input.customerId,
       job_id: input.jobId,

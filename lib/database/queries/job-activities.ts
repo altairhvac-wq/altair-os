@@ -130,6 +130,34 @@ export async function countJobReviewBlockerResolutionsSince(
   return count ?? 0;
 }
 
+export async function jobHasActivityEvent(
+  companyId: string,
+  jobId: string,
+  eventType: JobActivityType,
+): Promise<boolean> {
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("job_activities")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .eq("job_id", jobId)
+    .eq("event_type", eventType);
+
+  if (error) {
+    console.error("[jobHasActivityEvent] query failed:", {
+      companyId,
+      jobId,
+      eventType,
+      code: error.code,
+      message: error.message,
+    });
+    return false;
+  }
+
+  return (count ?? 0) > 0;
+}
+
 export function resolveStatusChangeEventType(
   actionId: string,
 ): JobActivityType {

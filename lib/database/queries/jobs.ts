@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import { finalizeActiveDispatchAssignments } from "@/lib/database/queries/dispatch";
 import type { JobInsert, JobRow, JobUpdate } from "@/lib/database/types/core-tables";
 import type { Job, JobDetail, JobFormData, JobStatus } from "@/shared/types/job";
 import type {
@@ -289,6 +290,13 @@ export async function createJob(
     return { job: null, error: "Selected customer was not found." };
   }
 
+  if (data.status !== "scheduled") {
+    return {
+      job: null,
+      error: "New jobs must be created with Scheduled status.",
+    };
+  }
+
   const jobNumber = await generateJobNumber(companyId);
   const insert = mapJobFormDataToInsert(companyId, jobNumber, data);
 
@@ -345,6 +353,35 @@ export async function updateJob(
 
   if (!customer) {
     return { job: null, error: "Selected customer was not found." };
+  }
+
+  const { data: existingRow, error: existingError } = await supabase
+    .from("jobs")
+    .select("status")
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .maybeSingle();
+
+  if (existingError) {
+    console.error("[updateJob] existing job lookup failed:", {
+      companyId,
+      jobId,
+      code: existingError.code,
+      message: existingError.message,
+    });
+    return { job: null, error: mapDatabaseError(existingError) };
+  }
+
+  if (!existingRow) {
+    return { job: null, error: "Job not found." };
+  }
+
+  if (data.status !== existingRow.status) {
+    return {
+      job: null,
+      error:
+        "Job status can only be changed with workflow actions (En Route, Arrived, Complete, etc.).",
+    };
   }
 
   const update = mapJobFormDataToUpdate(data);
@@ -444,6 +481,12 @@ export async function updateJobWorkflowStatus(
       job: null,
       error: "Job status has changed. Refresh the page and try again.",
     };
+  }
+
+  if (actionId === "complete") {
+    await finalizeActiveDispatchAssignments(companyId, jobId, "completed");
+  } else if (actionId === "cancel") {
+    await finalizeActiveDispatchAssignments(companyId, jobId, "cancelled");
   }
 
   return {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import {
@@ -48,6 +48,7 @@ export function CompleteJobSheet({
 }: CompleteJobSheetProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const submitLockRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [completionNotes, setCompletionNotes] = useState("");
   const [followUpNotes, setFollowUpNotes] = useState("");
@@ -56,12 +57,18 @@ export function CompleteJobSheet({
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitLockRef.current || isPending) {
+      return;
+    }
+
     setError(null);
+    submitLockRef.current = true;
 
     startTransition(async () => {
       if (equipmentPayload.mode === "create" && equipmentPayload.data) {
         if (!equipmentPayload.data.name.trim()) {
           setError("Equipment name is required when adding equipment.");
+          submitLockRef.current = false;
           return;
         }
 
@@ -73,6 +80,7 @@ export function CompleteJobSheet({
 
         if (equipmentResult.error) {
           setError(equipmentResult.error);
+          submitLockRef.current = false;
           return;
         }
       }
@@ -84,6 +92,7 @@ export function CompleteJobSheet({
       ) {
         if (!equipmentPayload.data.name.trim()) {
           setError("Equipment name is required when updating equipment.");
+          submitLockRef.current = false;
           return;
         }
 
@@ -95,6 +104,7 @@ export function CompleteJobSheet({
 
         if (equipmentResult.error) {
           setError(equipmentResult.error);
+          submitLockRef.current = false;
           return;
         }
       }
@@ -106,6 +116,7 @@ export function CompleteJobSheet({
 
       if (result.error || !result.job) {
         setError(result.error ?? "Failed to complete job.");
+        submitLockRef.current = false;
         return;
       }
 

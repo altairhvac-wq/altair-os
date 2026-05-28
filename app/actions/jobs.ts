@@ -16,6 +16,7 @@ import {
 import type { Job, JobFormData, JobStatus } from "@/shared/types/job";
 import {
   getTargetStatusForAction,
+  isIdempotentWorkflowAction,
   type JobWorkflowActionId,
   type JobWorkflowCompletionPayload,
 } from "@/shared/types/job-workflow";
@@ -97,13 +98,19 @@ export type UpdateJobStatusActionResult = {
 export async function updateJobStatusAction(
   jobId: string,
   actionId: JobWorkflowActionId,
-  currentStatus: JobStatus,
+  _currentStatus: JobStatus,
   payload?: JobWorkflowCompletionPayload,
 ): Promise<UpdateJobStatusActionResult> {
   const context = await getActiveCompanyContext();
 
   if (!context) {
     return { error: "No active company workspace." };
+  }
+
+  const existingJob = await getJobById(context.company.id, jobId);
+
+  if (!existingJob) {
+    return { error: "Job not found." };
   }
 
   const canDispatch = context.permissions.dispatchJobs;
@@ -124,18 +131,16 @@ export async function updateJobStatusAction(
       return { error: "You do not have permission for this action." };
     }
 
-    const assignedJob = await getJobById(context.company.id, jobId);
-
-    if (!assignedJob) {
-      return { error: "Job not found." };
-    }
-
-    if (assignedJob.assignedTechnicianId !== context.user.id) {
+    if (existingJob.assignedTechnicianId !== context.user.id) {
       return { error: "You can only update jobs assigned to you." };
     }
   }
 
-  const nextStatus = getTargetStatusForAction(currentStatus, actionId);
+  if (isIdempotentWorkflowAction(existingJob.status, actionId)) {
+    return { job: existingJob };
+  }
+
+  const nextStatus = getTargetStatusForAction(existingJob.status, actionId);
 
   if (!nextStatus) {
     return { error: "This status change is not allowed." };
@@ -144,7 +149,7 @@ export async function updateJobStatusAction(
   const { job, error } = await updateJobWorkflowStatus(
     context.company.id,
     jobId,
-    currentStatus,
+    existingJob.status,
     nextStatus,
     actionId,
     payload,
@@ -159,7 +164,7 @@ export async function updateJobStatusAction(
     jobId,
     actorId: context.user.id,
     actionId,
-    fromStatus: currentStatus,
+    fromStatus: existingJob.status,
     toStatus: nextStatus,
     customerId: job.customerId,
     jobNumber: job.jobNumber,

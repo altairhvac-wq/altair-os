@@ -77,6 +77,7 @@ export function JobDetailHeaderSection({
           onCancel={handleCancelEdit}
           error={editError}
           isSubmitting={isPending}
+          lockStatus
         />
       </div>
     );

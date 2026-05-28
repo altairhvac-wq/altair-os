@@ -21,6 +21,7 @@ type JobFormProps = {
   onCancel: () => void;
   error?: string | null;
   isSubmitting?: boolean;
+  lockStatus?: boolean;
 };
 
 const emptyForm: JobFormData = {
@@ -72,6 +73,7 @@ export function JobForm({
   onCancel,
   error,
   isSubmitting = false,
+  lockStatus = false,
 }: JobFormProps) {
   const defaults = { ...emptyForm, ...initialData };
   const manuallyEdited = useRef(new Set<AddressField>());
@@ -191,20 +193,33 @@ export function JobForm({
           <label htmlFor="status" className={labelClass}>
             Status
           </label>
-          <select
-            id="status"
-            name="status"
-            defaultValue={defaults.status}
-            className={inputClass}
-          >
-            {JOB_STATUS_OPTIONS.filter((o) => o.value !== "all").map(
-              (option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ),
-            )}
-          </select>
+          {lockStatus ? (
+            <>
+              <input type="hidden" name="status" value={defaults.status} />
+              <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
+                {JOB_STATUS_OPTIONS.find((option) => option.value === defaults.status)
+                  ?.label ?? defaults.status}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Use workflow actions to change job status.
+              </p>
+            </>
+          ) : (
+            <select
+              id="status"
+              name="status"
+              defaultValue={defaults.status}
+              className={inputClass}
+            >
+              {JOB_STATUS_OPTIONS.filter((o) => o.value !== "all").map(
+                (option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ),
+              )}
+            </select>
+          )}
         </div>
 
         <div>

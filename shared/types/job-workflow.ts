@@ -125,6 +125,16 @@ export function isTerminalJobStatus(status: JobStatus): boolean {
   return status === "completed" || status === "cancelled";
 }
 
+export function isIdempotentWorkflowAction(
+  currentStatus: JobStatus,
+  actionId: JobWorkflowActionId,
+): boolean {
+  return (
+    (actionId === "complete" && currentStatus === "completed") ||
+    (actionId === "cancel" && currentStatus === "cancelled")
+  );
+}
+
 const WORKFLOW_STATUS_RANK: Record<JobStatus, number> = {
   scheduled: 0,
   dispatched: 1,

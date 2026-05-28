@@ -9,6 +9,7 @@ import { mapJobRowToJob } from "@/lib/database/queries/jobs";
 import { recordTechnicianAssignedActivity } from "@/lib/database/services/job-activity";
 import type { Job } from "@/shared/types/job";
 import type { DispatchJob } from "@/shared/types/dispatch";
+import type { DispatchAssignmentStatus } from "@/lib/database/types/enums";
 
 type JobRowWithDispatch = JobRow & {
   customers: { name: string; email?: string; phone?: string } | null;
@@ -124,6 +125,40 @@ export async function getDispatchJobById(
   return mapJobRowToDispatchJob(data as JobRowWithDispatch);
 }
 
+export async function finalizeActiveDispatchAssignments(
+  companyId: string,
+  jobId: string,
+  finalStatus: Extract<DispatchAssignmentStatus, "completed" | "cancelled">,
+): Promise<void> {
+  const supabase = await createClient();
+  const now = new Date().toISOString();
+
+  const updatePayload: {
+    status: DispatchAssignmentStatus;
+    unassigned_at?: string;
+  } =
+    finalStatus === "completed"
+      ? { status: "completed" }
+      : { status: "cancelled", unassigned_at: now };
+
+  const { error } = await supabase
+    .from("dispatch_assignments")
+    .update(updatePayload)
+    .eq("company_id", companyId)
+    .eq("job_id", jobId)
+    .eq("status", "active");
+
+  if (error) {
+    console.error("[finalizeActiveDispatchAssignments] update failed:", {
+      companyId,
+      jobId,
+      finalStatus,
+      code: error.code,
+      message: error.message,
+    });
+  }
+}
+
 export async function assignJobToTechnician(
   companyId: string,
   jobId: string,
@@ -151,6 +186,13 @@ export async function assignJobToTechnician(
 
   if (!jobRow) {
     return { job: null, error: "Job was not found." };
+  }
+
+  if (jobRow.status === "cancelled") {
+    return {
+      job: null,
+      error: "Cancelled jobs cannot be reassigned.",
+    };
   }
 
   const statusBeforeAssignment = jobRow.status;
