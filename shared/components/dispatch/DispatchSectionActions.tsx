@@ -98,7 +98,11 @@ export function DispatchSectionActions({
           badge={
             filtersActive || unassignedCount > 0 ? (
               <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-slate-700 sm:px-2 sm:text-xs">
-                {unassignedCount > 0 ? unassignedCount : "•"}
+                {unassignedCount > 0
+                  ? unassignedCount
+                  : filtersActive
+                    ? "On"
+                    : null}
               </span>
             ) : null
           }

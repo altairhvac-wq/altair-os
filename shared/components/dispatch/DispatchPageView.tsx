@@ -101,7 +101,9 @@ export function DispatchPageView({
   const [showUnassignedModal, setShowUnassignedModal] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
   const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [pendingJobId, setPendingJobId] = useState<string | null>(null);
+  const [showAllTechnicians, setShowAllTechnicians] = useState(false);
+  const [, startTransition] = useTransition();
   const isBelowLg = useIsBelowLg();
 
   const filteredJobs = useMemo(
@@ -145,12 +147,13 @@ export function DispatchPageView({
 
   const handleAssign = useCallback(
     (jobId: string, technicianId: string) => {
-      if (isPending) {
+      if (pendingJobId) {
         return;
       }
 
       setAssignError(null);
       setAssignSuccess(null);
+      setPendingJobId(jobId);
       pendingAssignJobIdsRef.current.add(jobId);
 
       startTransition(async () => {
@@ -172,36 +175,42 @@ export function DispatchPageView({
           );
         } finally {
           pendingAssignJobIdsRef.current.delete(jobId);
+          setPendingJobId(null);
         }
       });
     },
-    [isPending, technicians],
+    [pendingJobId, technicians],
   );
 
   const handleUnassign = useCallback(
     (jobId: string) => {
-      if (isPending) {
+      if (pendingJobId) {
         return;
       }
 
       setAssignError(null);
       setAssignSuccess(null);
+      setPendingJobId(jobId);
 
       startTransition(async () => {
-        const result = await unassignJobAction(jobId);
+        try {
+          const result = await unassignJobAction(jobId);
 
-        if (result.error || !result.job) {
-          setAssignError(result.error ?? "Failed to unassign job.");
-          return;
+          if (result.error || !result.job) {
+            setAssignError(result.error ?? "Failed to unassign job.");
+            return;
+          }
+
+          setAssignSuccess("Technician unassigned.");
+          setJobs((previous) =>
+            previous.map((job) => (job.id === result.job!.id ? result.job! : job)),
+          );
+        } finally {
+          setPendingJobId(null);
         }
-
-        setAssignSuccess("Technician unassigned.");
-        setJobs((previous) =>
-          previous.map((job) => (job.id === result.job!.id ? result.job! : job)),
-        );
       });
     },
-    [isPending],
+    [pendingJobId],
   );
 
   const handleStatusUpdated = useCallback(
@@ -254,6 +263,19 @@ export function DispatchPageView({
     setShowUnassignedModal(false);
   }, []);
 
+  const handleTechnicianWorkloadClick = useCallback((technicianId: string) => {
+    setTechnicianFilter(technicianId);
+    setOpenSection(null);
+    setShowUnassignedModal(false);
+  }, []);
+
+  const handleToggleShowAllTechnicians = useCallback(() => {
+    setShowAllTechnicians((current) => !current);
+  }, []);
+
+  const isAssignmentBusyForSelected =
+    selectedJob !== null && pendingJobId === selectedJob.id;
+
   const boardTitle =
     dispatchPageFocus?.boardEyebrow ?? "Today's scheduled jobs";
   const boardSubtitle =
@@ -290,6 +312,7 @@ export function DispatchPageView({
             jobs={jobs}
             emphasized={dispatchPageFocus?.emphasizeWorkload}
             highlightedTechnicianIds={dispatchPageFocus?.overloadedTechnicianIds}
+            onTechnicianClick={handleTechnicianWorkloadClick}
           />
         ),
       };
@@ -333,6 +356,7 @@ export function DispatchPageView({
     summary,
     technicianFilter,
     technicians,
+    handleTechnicianWorkloadClick,
     unassignedJobs.length,
   ]);
 
@@ -360,6 +384,22 @@ export function DispatchPageView({
         dispatchPageFocus={dispatchPageFocus}
       />
 
+      {!hasNoJobs && !isBelowLg ? (
+        <DispatchSearchFilterBar
+          search={search}
+          statusFilter={statusFilter}
+          technicianFilter={technicianFilter}
+          technicians={technicians}
+          onSearchChange={setSearch}
+          onStatusFilterChange={setStatusFilter}
+          onTechnicianFilterChange={setTechnicianFilter}
+          resultCount={filteredJobs.length}
+          unassignedCount={unassignedJobs.length}
+          onOpenUnassigned={handleOpenUnassigned}
+          compact
+        />
+      ) : null}
+
       <div className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col gap-2 sm:gap-4 lg:flex-row lg:items-stretch">
         <section
           className={`flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ${
@@ -368,13 +408,27 @@ export function DispatchPageView({
               : "border-slate-200"
           }`}
         >
-          <div className="shrink-0 border-b border-slate-100 px-3 py-2 sm:px-4 sm:py-3.5">
-            <h2 className="text-sm font-bold text-slate-900 sm:text-base">
-              {boardTitle}
-            </h2>
-            <p className="mt-0.5 text-[11px] text-slate-500 sm:text-xs">
-              {boardSubtitle}
-            </p>
+          <div className="flex shrink-0 flex-wrap items-start justify-between gap-2 border-b border-slate-100 px-3 py-2 sm:px-4 sm:py-3">
+            <div className="min-w-0">
+              <h2 className="text-sm font-bold text-slate-900 sm:text-base">
+                {boardTitle}
+              </h2>
+              <p className="mt-0.5 hidden text-[11px] text-slate-500 sm:block sm:text-xs">
+                {boardSubtitle}
+              </p>
+            </div>
+            {unassignedJobs.length > 0 ? (
+              <button
+                type="button"
+                onClick={handleOpenUnassigned}
+                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100"
+              >
+                Unassigned
+                <span className="rounded-full bg-amber-200/80 px-1.5 py-0.5 text-[10px] font-bold tabular-nums">
+                  {unassignedJobs.length}
+                </span>
+              </button>
+            ) : null}
           </div>
 
           <div className="min-h-0 min-w-0 max-w-full flex-1 overflow-y-auto overscroll-contain p-2 sm:p-4">
@@ -391,7 +445,11 @@ export function DispatchPageView({
                 technicians={technicians}
                 technicianFilter={technicianFilter}
                 selectedJobId={selectedJobId}
+                pendingJobId={pendingJobId}
+                hideEmptyTechnicianLanes
+                showAllTechnicians={showAllTechnicians}
                 onSelectJob={handleSelectJob}
+                onToggleShowAllTechnicians={handleToggleShowAllTechnicians}
                 highlightUnassignedPanel={
                   dispatchPageFocus?.highlightUnassignedPanel ?? false
                 }
@@ -410,7 +468,7 @@ export function DispatchPageView({
               canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
               assignError={assignError}
               assignSuccess={assignSuccess}
-              isAssignmentBusy={isPending}
+              isAssignmentBusy={isAssignmentBusyForSelected}
               lockBodyScroll={false}
               onClose={handleClosePanel}
               onAssign={handleAssign}
@@ -461,7 +519,7 @@ export function DispatchPageView({
       {selectedJob && isBelowLg ? (
         <MobileSheet
           onClose={handleClosePanel}
-          closeDisabled={isPending}
+          closeDisabled={isAssignmentBusyForSelected}
           ariaLabelledBy="dispatch-job-modal-title"
           variant="responsive"
           zIndex={50}
@@ -475,7 +533,7 @@ export function DispatchPageView({
               canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
               assignError={assignError}
               assignSuccess={assignSuccess}
-              isAssignmentBusy={isPending}
+              isAssignmentBusy={isAssignmentBusyForSelected}
               lockBodyScroll={false}
               onClose={handleClosePanel}
               onAssign={handleAssign}

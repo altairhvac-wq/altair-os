@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Briefcase, Square } from "lucide-react";
@@ -23,6 +24,7 @@ export function TechnicianJobLaborControls({
   timeState,
   onTimeStateChange,
 }: TechnicianJobLaborControlsProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const isWorkingThisJob =
@@ -49,6 +51,7 @@ export function TechnicianJobLaborControls({
       if (result.state) {
         onTimeStateChange?.(result.state);
       }
+      router.refresh();
     });
   }
 
@@ -68,6 +71,7 @@ export function TechnicianJobLaborControls({
       if (result.state) {
         onTimeStateChange?.(result.state);
       }
+      router.refresh();
     });
   }
 
@@ -98,7 +102,7 @@ export function TechnicianJobLaborControls({
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-semibold text-cyan-800 transition-colors hover:bg-cyan-100 disabled:opacity-50"
         >
           <Square className="h-4 w-4" />
-          Stop job work
+          {isPending ? "Stopping…" : "Stop job work"}
         </button>
       ) : (
         <button
@@ -108,7 +112,7 @@ export function TechnicianJobLaborControls({
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-200 bg-white px-4 py-3 text-sm font-semibold text-cyan-800 transition-colors hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Briefcase className="h-4 w-4" />
-          Start job work
+          {isPending ? "Starting…" : "Start job work"}
         </button>
       )}
       {isOnBreak ? (

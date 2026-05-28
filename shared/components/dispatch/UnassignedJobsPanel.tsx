@@ -5,6 +5,7 @@ import { DispatchJobCard } from "./DispatchJobCard";
 type UnassignedJobsPanelProps = {
   jobs: DispatchJob[];
   selectedJobId: string | null;
+  pendingJobId?: string | null;
   onSelectJob: (job: DispatchJob) => void;
   emphasized?: boolean;
 };
@@ -12,6 +13,7 @@ type UnassignedJobsPanelProps = {
 export function UnassignedJobsPanel({
   jobs,
   selectedJobId,
+  pendingJobId = null,
   onSelectJob,
   emphasized = false,
 }: UnassignedJobsPanelProps) {
@@ -41,7 +43,7 @@ export function UnassignedJobsPanel({
           </span>
         </header>
 
-        <div className="flex min-h-[4.5rem] min-w-0 flex-1 gap-1.5 overflow-x-auto p-1.5 sm:min-h-[5.5rem] sm:gap-2 sm:p-2" data-no-pull-refresh>
+        <div className="flex min-h-[4.5rem] min-w-0 flex-1 snap-x snap-mandatory gap-1.5 overflow-x-auto p-1.5 sm:min-h-[5.5rem] sm:gap-2 sm:p-2" data-no-pull-refresh>
           {jobs.length === 0 ? (
             <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-amber-200 bg-white/70 px-3 py-3 text-center sm:rounded-xl sm:px-4 sm:py-4">
               <p className="text-[11px] font-medium text-slate-600">
@@ -55,6 +57,7 @@ export function UnassignedJobsPanel({
                 job={job}
                 compact
                 isSelected={selectedJobId === job.id}
+                isAssigning={pendingJobId === job.id}
                 onSelect={onSelectJob}
               />
             ))

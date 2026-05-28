@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Calendar, Clock, MapPin, User } from "lucide-react";
+import { Calendar, Clock, Loader2, MapPin, User } from "lucide-react";
 import {
   formatDispatchDate,
   formatDispatchTime,
@@ -12,6 +12,7 @@ type DispatchJobCardProps = {
   job: DispatchJob;
   technicianName?: string;
   isSelected?: boolean;
+  isAssigning?: boolean;
   compact?: boolean;
   hideTechnician?: boolean;
   className?: string;
@@ -22,6 +23,7 @@ export const DispatchJobCard = memo(function DispatchJobCard({
   job,
   technicianName,
   isSelected = false,
+  isAssigning = false,
   compact = false,
   hideTechnician = false,
   className = "",
@@ -33,12 +35,16 @@ export const DispatchJobCard = memo(function DispatchJobCard({
     <button
       type="button"
       onClick={() => onSelect(job)}
-      className={`rounded-xl border text-left transition-all ${
+      disabled={isAssigning}
+      aria-busy={isAssigning}
+      className={`snap-start rounded-xl border text-left transition-all ${
         compact ? "w-[11.5rem] shrink-0 p-2 sm:w-52 sm:p-2.5" : "w-full p-3.5"
       } ${
-        isSelected
-          ? "border-cyan-500 bg-cyan-50/60 shadow-md ring-2 ring-cyan-500/20"
-          : "border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md"
+        isAssigning
+          ? "border-cyan-300 bg-cyan-50/40 opacity-80"
+          : isSelected
+            ? "border-cyan-500 bg-cyan-50/60 shadow-md ring-2 ring-cyan-500/20"
+            : "border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md"
       } ${className}`}
     >
       <div className="flex items-start justify-between gap-1.5">
@@ -63,10 +69,18 @@ export const DispatchJobCard = memo(function DispatchJobCard({
             <p className="truncate text-[11px] text-slate-500">{job.jobType}</p>
           )}
         </div>
-        <DispatchPriorityBadge
-          priority={job.priority}
-          className={compact ? "px-1.5 py-0 text-[10px]" : ""}
-        />
+        <div className="flex shrink-0 items-center gap-1">
+          {isAssigning ? (
+            <Loader2
+              className="h-3.5 w-3.5 animate-spin text-cyan-600"
+              aria-hidden="true"
+            />
+          ) : null}
+          <DispatchPriorityBadge
+            priority={job.priority}
+            className={compact ? "px-1.5 py-0 text-[10px]" : ""}
+          />
+        </div>
       </div>
 
       <div

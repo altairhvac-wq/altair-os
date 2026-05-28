@@ -20,7 +20,7 @@ export function DispatchFocusBanner({
         </div>
         <div className="min-w-0">
           <p className="text-xs font-bold text-slate-900 sm:text-sm">{title}</p>
-          <p className="mt-0.5 text-[11px] leading-snug text-slate-600 sm:mt-1 sm:text-xs sm:leading-relaxed">
+          <p className="mt-0.5 hidden text-[11px] leading-snug text-slate-600 sm:mt-1 sm:block sm:text-xs sm:leading-relaxed">
             {description}
           </p>
         </div>

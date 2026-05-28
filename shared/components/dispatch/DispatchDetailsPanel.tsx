@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useScrollLock, useSheetEscape } from "@/shared/hooks/useScrollLock";
-import { Calendar, Mail, MapPin, Phone, User, UserMinus, X } from "lucide-react";
+import { MapPin, Phone, User, UserMinus, X } from "lucide-react";
 import {
   canUnassignJobTechnician,
   formatDispatchDate,
@@ -13,6 +13,7 @@ import {
   type DispatchJob,
   type Technician,
 } from "@/shared/types/dispatch";
+import { JobCustomerQuickActions } from "@/shared/components/jobs/JobCustomerQuickActions";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
 import { DispatchPriorityBadge } from "./DispatchPriorityBadge";
 import { DispatchStatusBadge } from "./DispatchStatusBadge";
@@ -66,7 +67,7 @@ export function DispatchDetailsPanel({
     (job.technicianId ? hasSelectionChanged : selectedTechnicianId.length > 0);
 
   useEffect(() => {
-    setSelectedTechnicianId("");
+    setSelectedTechnicianId(job.technicianId ?? "");
   }, [job.id, job.technicianId]);
 
   useScrollLock(lockBodyScroll);
@@ -110,60 +111,61 @@ export function DispatchDetailsPanel({
         </button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-5">
-        <div className="space-y-6">
-            <section className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-5">
+        <div className="space-y-5">
+            <section className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 sm:p-4">
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm text-slate-600">{job.jobType}</p>
                 <DispatchPriorityBadge priority={job.priority} />
               </div>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 <DispatchStatusBadge status={job.status} />
+                <span className="text-xs text-slate-500">
+                  {formatDispatchDate(job.scheduledDate)} ·{" "}
+                  {formatDispatchTime(job.scheduledDate)}
+                </span>
               </div>
             </section>
 
-            {job.customerPhone || job.customerEmail ? (
-              <section>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Customer contact
-                </h3>
-                <div className="mt-2 space-y-1.5 text-sm text-slate-700">
-                  {job.customerPhone ? (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 shrink-0 text-slate-400" />
-                      <a
-                        href={`tel:${job.customerPhone}`}
-                        className="hover:text-cyan-700 hover:underline"
-                      >
-                        {job.customerPhone}
-                      </a>
-                    </div>
-                  ) : null}
-                  {job.customerEmail ? (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 shrink-0 text-slate-400" />
-                      <a
-                        href={`mailto:${job.customerEmail}`}
-                        className="truncate hover:text-cyan-700 hover:underline"
-                      >
-                        {job.customerEmail}
-                      </a>
-                    </div>
-                  ) : null}
-                </div>
-              </section>
-            ) : null}
-
-            <section>
+            <div className="space-y-3 border-b border-slate-100 pb-4">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Schedule
+                Workflow
               </h3>
-              <div className="mt-2 flex items-center gap-2 text-sm text-slate-700">
-                <Calendar className="h-4 w-4 text-slate-400" />
-                {formatDispatchDate(job.scheduledDate)} at{" "}
-                {formatDispatchTime(job.scheduledDate)}
-              </div>
-            </section>
+              {canUpdateJobWorkflow ? (
+                <JobWorkflowControls
+                  jobId={job.id}
+                  customerId={job.customerId}
+                  initialStatus={job.status}
+                  serviceAddress={job.serviceAddress}
+                  city={job.city}
+                  state={job.state}
+                  zip={job.zip}
+                  canUpdateStatus={canUpdateJobWorkflow}
+                  canCorrectStatus={canDispatchJobs}
+                  canReopenJob={canDispatchJobs}
+                  reopenSnapshot={{
+                    workStartedAt: job.workStartedAt,
+                    arrivedAt: job.arrivedAt,
+                    assignedTechnicianId: job.technicianId,
+                  }}
+                  layout="stack"
+                  onStatusUpdated={(status) => onStatusUpdated?.(job.id, status)}
+                />
+              ) : (
+                <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  You do not have permission to update this job&apos;s workflow.
+                </p>
+              )}
+            </div>
+
+            <JobCustomerQuickActions
+              customerPhone={job.customerPhone}
+              customerEmail={job.customerEmail}
+              serviceAddress={job.serviceAddress}
+              city={job.city}
+              state={job.state}
+              zip={job.zip}
+            />
 
             <section>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -343,40 +345,7 @@ export function DispatchDetailsPanel({
               </section>
             ) : null}
 
-            <div className="space-y-3 border-t border-slate-100 pt-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Workflow
-              </h3>
-              {canUpdateJobWorkflow ? (
-                <JobWorkflowControls
-                  jobId={job.id}
-                  customerId={job.customerId}
-                  initialStatus={job.status}
-                  serviceAddress={job.serviceAddress}
-                  city={job.city}
-                  state={job.state}
-                  zip={job.zip}
-                  canUpdateStatus={canUpdateJobWorkflow}
-                  canCorrectStatus={canDispatchJobs}
-                  canReopenJob={canDispatchJobs}
-                  reopenSnapshot={{
-                    workStartedAt: job.workStartedAt,
-                    arrivedAt: job.arrivedAt,
-                    assignedTechnicianId: job.technicianId,
-                  }}
-                  layout="stack"
-                  onStatusUpdated={(status) => onStatusUpdated?.(job.id, status)}
-                />
-              ) : (
-                <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                  You do not have permission to update this job&apos;s workflow.
-                  Dispatch staff and the assigned technician can advance job
-                  status.
-                </p>
-              )}
-            </div>
-
-          <div className="flex gap-2 border-t border-slate-100 pt-4">
+          <div className="flex gap-2 border-t border-slate-100 pt-3">
             <Link
               href={`/jobs/${job.id}`}
               className="flex min-h-11 flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 sm:py-2"

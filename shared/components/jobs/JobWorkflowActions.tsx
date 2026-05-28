@@ -157,7 +157,7 @@ export function JobWorkflowActions({
                 ?.label ?? "Status");
         setSuccessMessage(`${actionLabel} updated successfully.`);
         onStatusUpdated?.(result.job.status);
-        router.refresh();
+        window.setTimeout(() => router.refresh(), 500);
       } finally {
         setPendingAction(null);
       }

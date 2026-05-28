@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { getCustomerInitials, type Customer } from "@/shared/types/customer";
 import type { Technician } from "@/shared/types/dispatch";
+import { JobCustomerQuickActions } from "./JobCustomerQuickActions";
 import { JobDetailHeaderSection } from "./JobDetailHeaderSection";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
@@ -142,6 +143,16 @@ export function JobDetailPageView({
                 <p className="mt-0.5 text-sm text-slate-600">
                   {job.city}, {job.state} {job.zip}
                 </p>
+                <div className="mt-3">
+                  <JobCustomerQuickActions
+                    customerPhone={customerPhone}
+                    customerEmail={customerEmail}
+                    serviceAddress={job.serviceAddress}
+                    city={job.city}
+                    state={job.state}
+                    zip={job.zip}
+                  />
+                </div>
               </div>
             </div>
           </div>

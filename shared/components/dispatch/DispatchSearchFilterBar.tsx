@@ -16,6 +16,8 @@ type DispatchSearchFilterBarProps = {
   resultCount: number;
   unassignedCount: number;
   onOpenUnassigned: () => void;
+  /** Slim inline bar for desktop board header */
+  compact?: boolean;
 };
 
 export function DispatchSearchFilterBar({
@@ -29,9 +31,14 @@ export function DispatchSearchFilterBar({
   resultCount,
   unassignedCount,
   onOpenUnassigned,
+  compact = false,
 }: DispatchSearchFilterBarProps) {
+  const wrapperClass = compact
+    ? "px-0 py-0"
+    : "rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm sm:rounded-2xl sm:px-4 sm:py-3";
+
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm sm:rounded-2xl sm:px-4 sm:py-3">
+    <div className={wrapperClass}>
       <div className="flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-center">
         <div className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:left-3" />
@@ -95,9 +102,11 @@ export function DispatchSearchFilterBar({
         </div>
       </div>
 
-      <p className="mt-1 text-[11px] text-slate-500 sm:mt-2 sm:text-xs">
-        {resultCount} {resultCount === 1 ? "job" : "jobs"} on board
-      </p>
+      {!compact ? (
+        <p className="mt-1 text-[11px] text-slate-500 sm:mt-2 sm:text-xs">
+          {resultCount} {resultCount === 1 ? "job" : "jobs"} on board
+        </p>
+      ) : null}
     </div>
   );
 }

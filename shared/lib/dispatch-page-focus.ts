@@ -145,7 +145,7 @@ export function parseDispatchPageSearchParams(input: {
     emphasizeBoard = true;
     boardEyebrow = "Workload pressure";
     boardDescription =
-      "Compare technician lanes with workload cards above the board";
+      "Compare technician lanes with workload in the Workload sheet";
   }
 
   const bannerTemplate = resolveBannerCopy(focus, overloadedTechnicianIds);

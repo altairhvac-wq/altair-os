@@ -49,7 +49,7 @@ const fieldActionClass =
 const emptyStateClass = "text-sm text-slate-500";
 
 const stickyFooterClass =
-  "sticky bottom-0 z-10 shrink-0 space-y-3 border-t border-slate-200 bg-white/95 p-3 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]";
+  "sticky bottom-0 z-10 shrink-0 space-y-2 border-t border-slate-200 bg-white/95 p-2.5 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:space-y-3 sm:p-4 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]";
 
 export function TechnicianJobCard({
   job,
@@ -273,7 +273,7 @@ export function TechnicianJobCard({
                   timeState={timeState}
                   onTimeStateChange={onTimeStateChange}
                 />
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                   <button
                     type="button"
                     disabled={fieldActionsDisabled}
@@ -324,10 +324,10 @@ export function TechnicianJobCard({
                   </button>
                 </div>
                 {fieldActionsDisabled ? (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-[11px] text-slate-500 sm:text-xs">
                     {completeSheetOpen
-                      ? "Finish or cancel complete work before using other field actions."
-                      : "Close the open form to use other field actions."}
+                      ? "Finish complete work first."
+                      : "Close the open form first."}
                   </p>
                 ) : null}
               </>

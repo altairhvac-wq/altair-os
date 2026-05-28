@@ -8,6 +8,7 @@ type TechnicianWorkloadCardsProps = {
   jobs: DispatchJob[];
   emphasized?: boolean;
   highlightedTechnicianIds?: string[];
+  onTechnicianClick?: (technicianId: string) => void;
 };
 
 export function TechnicianWorkloadCards({
@@ -15,6 +16,7 @@ export function TechnicianWorkloadCards({
   jobs,
   emphasized = false,
   highlightedTechnicianIds = [],
+  onTechnicianClick,
 }: TechnicianWorkloadCardsProps) {
   const assignedCountByTechnicianId = useMemo(() => {
     const counts = new Map<string, number>();
@@ -51,15 +53,14 @@ export function TechnicianWorkloadCards({
         const assignedCount = assignedCountByTechnicianId.get(technician.id) ?? 0;
         const isHighlighted = highlightedTechnicianIds.includes(technician.id);
 
-        return (
-          <div
-            key={technician.id}
-            className={`rounded-xl border bg-white p-2.5 shadow-sm transition-shadow sm:rounded-2xl sm:p-4 ${
-              isHighlighted
-                ? "border-amber-300 ring-2 ring-amber-400/25 shadow-md"
-                : "border-slate-200"
-            }`}
-          >
+        const cardClassName = `rounded-xl border bg-white p-2.5 shadow-sm transition-shadow sm:rounded-2xl sm:p-4 ${
+          isHighlighted
+            ? "border-amber-300 ring-2 ring-amber-400/25 shadow-md"
+            : "border-slate-200"
+        } ${onTechnicianClick ? "cursor-pointer hover:border-cyan-300 hover:shadow-md" : ""}`;
+
+        const cardContent = (
+          <>
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-800 to-slate-600 text-xs font-bold text-white sm:h-10 sm:w-10 sm:rounded-xl sm:text-sm">
                 {technician.initials}
@@ -81,6 +82,25 @@ export function TechnicianWorkloadCards({
                 </p>
               </div>
             </div>
+          </>
+        );
+
+        if (onTechnicianClick) {
+          return (
+            <button
+              key={technician.id}
+              type="button"
+              onClick={() => onTechnicianClick(technician.id)}
+              className={`text-left ${cardClassName}`}
+            >
+              {cardContent}
+            </button>
+          );
+        }
+
+        return (
+          <div key={technician.id} className={cardClassName}>
+            {cardContent}
           </div>
         );
       })}
