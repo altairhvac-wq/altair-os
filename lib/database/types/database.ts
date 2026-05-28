@@ -16,6 +16,9 @@ import type {
   DispatchAssignmentInsert,
   DispatchAssignmentRow,
   DispatchAssignmentUpdate,
+  BillingSignatureInsert,
+  BillingSignatureRow,
+  BillingSignatureUpdate,
   EstimateActivityInsert,
   EstimateActivityRow,
   EstimateInsert,
@@ -452,6 +455,27 @@ export type Database = {
           {
             foreignKeyName: "expense_activities_actor_id_fkey";
             columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      billing_signatures: {
+        Row: BillingSignatureRow;
+        Insert: BillingSignatureInsert;
+        Update: BillingSignatureUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "billing_signatures_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "billing_signatures_created_by_fkey";
+            columns: ["created_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];

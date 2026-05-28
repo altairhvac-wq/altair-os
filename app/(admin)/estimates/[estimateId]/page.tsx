@@ -7,6 +7,7 @@ import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedA
 import { listEstimateActivitiesForEstimate } from "@/lib/database/queries/estimate-activities";
 import { getEstimateById } from "@/lib/database/queries/estimates";
 import { getInvoiceByEstimateId } from "@/lib/database/queries/invoices";
+import { getBillingSignatureForEntity } from "@/lib/database/queries/billing-signatures";
 import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
 import { EstimateDetailPageView } from "@/shared/components/estimates/EstimateDetailPageView";
 
@@ -39,10 +40,15 @@ export default async function EstimateDetailPage({
     );
   }
 
-  const [estimate, activities, linkedInvoice] = await Promise.all([
+  const [estimate, activities, linkedInvoice, signature] = await Promise.all([
     getEstimateById(companyContext.company.id, estimateId),
     listEstimateActivitiesForEstimate(companyContext.company.id, estimateId),
     getInvoiceByEstimateId(companyContext.company.id, estimateId),
+    getBillingSignatureForEntity(
+      companyContext.company.id,
+      "estimate",
+      estimateId,
+    ),
   ]);
 
   if (!estimate) {
@@ -57,6 +63,7 @@ export default async function EstimateDetailPage({
       company={mapCompanyRowToBillingContact(companyContext.company)}
       companyTimeZone={companyContext.company.timezone}
       canManageEstimates={companyContext.permissions.manageBilling}
+      signature={signature}
     />
   );
 }

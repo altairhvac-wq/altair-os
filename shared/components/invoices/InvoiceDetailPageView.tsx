@@ -26,6 +26,9 @@ import { InvoiceStatusActions } from "./InvoiceStatusActions";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { RecordPaymentForm } from "./RecordPaymentForm";
 
+import { BillingSignatureCaptureSheet } from "@/shared/components/billing/BillingSignatureCaptureSheet";
+import type { BillingSignature } from "@/shared/types/billing-signature";
+
 type InvoiceDetailPageViewProps = {
   invoice: InvoiceDetail;
   activities: InvoiceActivity[];
@@ -33,6 +36,7 @@ type InvoiceDetailPageViewProps = {
   company: BillingCompanyContact;
   companyTimeZone: string;
   canManageBilling: boolean;
+  signature?: BillingSignature | null;
 };
 
 export function InvoiceDetailPageView({
@@ -42,6 +46,7 @@ export function InvoiceDetailPageView({
   company,
   companyTimeZone,
   canManageBilling,
+  signature,
 }: InvoiceDetailPageViewProps) {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const customerEmail = invoice.customerEmail?.trim();
@@ -72,14 +77,26 @@ export function InvoiceDetailPageView({
           Back to invoices
         </Link>
 
-        <button
-          type="button"
-          onClick={handlePrint}
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-        >
-          <Printer className="h-4 w-4" />
-          Print / Save PDF
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          {canManageBilling ? (
+            <BillingSignatureCaptureSheet
+              entityType="invoice"
+              entityId={invoice.id}
+              documentNumber={invoice.invoiceNumber}
+              customerId={invoice.customerId}
+              jobId={invoice.jobId}
+              existingSignature={signature}
+            />
+          ) : null}
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            <Printer className="h-4 w-4" />
+            Print / Save PDF
+          </button>
+        </div>
       </div>
 
       <section className="no-print overflow-hidden admin-card">
@@ -219,7 +236,12 @@ export function InvoiceDetailPageView({
         </div>
       </section>
 
-      <InvoiceDocumentSection invoice={invoice} company={company} />
+      <InvoiceDocumentSection
+        invoice={invoice}
+        company={company}
+        signature={signature}
+        companyTimeZone={companyTimeZone}
+      />
 
       <section className="no-print min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

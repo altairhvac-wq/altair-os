@@ -7,9 +7,13 @@ import { BillingSignatureBlock } from "./BillingSignatureBlock";
 import { BillingTotalsSummary } from "./BillingTotalsSummary";
 import { InvoiceStatusBadge } from "@/shared/components/invoices/InvoiceStatusBadge";
 
+import type { BillingSignature } from "@/shared/types/billing-signature";
+
 type InvoiceDocumentSectionProps = {
   invoice: InvoiceDetail;
   company: BillingCompanyContact;
+  signature?: BillingSignature | null;
+  companyTimeZone?: string;
   className?: string;
   id?: string;
 };
@@ -17,6 +21,8 @@ type InvoiceDocumentSectionProps = {
 export function InvoiceDocumentSection({
   invoice,
   company,
+  signature,
+  companyTimeZone,
   className = "",
   id = "invoice-document",
 }: InvoiceDocumentSectionProps) {
@@ -114,7 +120,12 @@ export function InvoiceDocumentSection({
         </div>
       ) : null}
 
-      <BillingSignatureBlock variant="invoice" className="mt-6 print:mt-8" />
+      <BillingSignatureBlock
+        variant="invoice"
+        signature={signature}
+        companyTimeZone={companyTimeZone}
+        className="mt-6 print:mt-8"
+      />
     </section>
   );
 }

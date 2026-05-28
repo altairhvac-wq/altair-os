@@ -27,6 +27,9 @@ import { EstimateActivityTimeline } from "./EstimateActivityTimeline";
 import { EstimateStatusActions } from "./EstimateStatusActions";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
 
+import { BillingSignatureCaptureSheet } from "@/shared/components/billing/BillingSignatureCaptureSheet";
+import type { BillingSignature } from "@/shared/types/billing-signature";
+
 type EstimateDetailPageViewProps = {
   estimate: EstimateDetail;
   activities: EstimateActivity[];
@@ -34,6 +37,7 @@ type EstimateDetailPageViewProps = {
   company: BillingCompanyContact;
   companyTimeZone: string;
   canManageEstimates: boolean;
+  signature?: BillingSignature | null;
 };
 
 export function EstimateDetailPageView({
@@ -43,6 +47,7 @@ export function EstimateDetailPageView({
   company,
   companyTimeZone,
   canManageEstimates,
+  signature,
 }: EstimateDetailPageViewProps) {
   const customerEmail = estimate.customerEmail?.trim();
   const customerPhone = estimate.customerPhone?.trim();
@@ -70,14 +75,26 @@ export function EstimateDetailPageView({
           Back to estimates
         </Link>
 
-        <button
-          type="button"
-          onClick={handlePrint}
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-        >
-          <Printer className="h-4 w-4" />
-          Print / Save PDF
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          {canManageEstimates ? (
+            <BillingSignatureCaptureSheet
+              entityType="estimate"
+              entityId={estimate.id}
+              documentNumber={estimate.estimateNumber}
+              customerId={estimate.customerId}
+              jobId={estimate.jobId}
+              existingSignature={signature}
+            />
+          ) : null}
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            <Printer className="h-4 w-4" />
+            Print / Save PDF
+          </button>
+        </div>
       </div>
 
       <section className="no-print overflow-hidden admin-card">
@@ -209,7 +226,12 @@ export function EstimateDetailPageView({
         </div>
       </section>
 
-      <EstimateDocumentSection estimate={estimate} company={company} />
+      <EstimateDocumentSection
+        estimate={estimate}
+        company={company}
+        signature={signature}
+        companyTimeZone={companyTimeZone}
+      />
 
       <div className="no-print">
         <EstimateActivityTimeline activities={activities} />

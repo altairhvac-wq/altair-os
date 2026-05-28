@@ -754,6 +754,40 @@ export type InvoicePaymentInsert = {
   created_at?: Timestamp;
 };
 
+export type BillingSignatureEntityType = "estimate" | "invoice";
+
+export type BillingSignatureRow = {
+  id: UUID;
+  company_id: UUID;
+  entity_type: BillingSignatureEntityType;
+  entity_id: UUID;
+  signer_name: string;
+  signer_role: string;
+  signature_data: string;
+  signed_at: Timestamp;
+  created_by: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type BillingSignatureInsert = {
+  id?: UUID;
+  company_id: UUID;
+  entity_type: BillingSignatureEntityType;
+  entity_id: UUID;
+  signer_name: string;
+  signer_role?: string;
+  signature_data: string;
+  signed_at?: Timestamp;
+  created_by?: UUID | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type BillingSignatureUpdate = Partial<
+  Omit<BillingSignatureInsert, "company_id" | "entity_type" | "entity_id">
+>;
+
 export type TimeEntryRow = {
   id: UUID;
   company_id: UUID;

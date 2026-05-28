@@ -7,9 +7,13 @@ import { BillingSignatureBlock } from "./BillingSignatureBlock";
 import { BillingTotalsSummary } from "./BillingTotalsSummary";
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
 
+import type { BillingSignature } from "@/shared/types/billing-signature";
+
 type EstimateDocumentSectionProps = {
   estimate: EstimateDetail;
   company: BillingCompanyContact;
+  signature?: BillingSignature | null;
+  companyTimeZone?: string;
   className?: string;
   id?: string;
 };
@@ -17,6 +21,8 @@ type EstimateDocumentSectionProps = {
 export function EstimateDocumentSection({
   estimate,
   company,
+  signature,
+  companyTimeZone,
   className = "",
   id = "estimate-document",
 }: EstimateDocumentSectionProps) {
@@ -114,7 +120,12 @@ export function EstimateDocumentSection({
         </div>
       ) : null}
 
-      <BillingSignatureBlock variant="estimate" className="mt-6 print:mt-8" />
+      <BillingSignatureBlock
+        variant="estimate"
+        signature={signature}
+        companyTimeZone={companyTimeZone}
+        className="mt-6 print:mt-8"
+      />
     </section>
   );
 }
