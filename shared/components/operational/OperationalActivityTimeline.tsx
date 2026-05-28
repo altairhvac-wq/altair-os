@@ -22,15 +22,17 @@ import type {
   OperationalActivity,
   OperationalActivityEventType,
 } from "@/shared/types/operational-activity";
+import { filterOperationalActivitiesForBillingAccess } from "@/shared/lib/billing-activity-visibility";
 import {
-  formatOperationalActivityDetails,
   formatOperationalActivityAttribution,
-  formatOperationalActivityLabel,
+  formatOperationalActivityDetailsForAccess,
+  formatOperationalActivityLabelForAccess,
   formatOperationalActivityTimestamp,
 } from "@/shared/types/operational-activity";
 
 type OperationalActivityTimelineProps = {
   activities: OperationalActivity[];
+  canViewBilling?: boolean;
   title?: string;
   description?: string;
   emptyTitle?: string;
@@ -136,11 +138,17 @@ const WORKFLOW_ICON_OVERRIDES: Record<string, typeof History> = {
 
 export function OperationalActivityTimeline({
   activities,
+  canViewBilling = true,
   title = "Activity",
   description = "Operational timeline",
   emptyTitle = "No activity yet",
   emptyDescription = "Workflow events will appear here as work progresses.",
 }: OperationalActivityTimelineProps) {
+  const visibleActivities = filterOperationalActivitiesForBillingAccess(
+    activities,
+    canViewBilling,
+  );
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-center gap-2.5">
@@ -155,20 +163,23 @@ export function OperationalActivityTimeline({
         </div>
       </div>
 
-      {activities.length === 0 ? (
+      {visibleActivities.length === 0 ? (
         <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center">
           <p className="text-sm font-medium text-slate-700">{emptyTitle}</p>
           <p className="mt-1 text-xs text-slate-500">{emptyDescription}</p>
         </div>
       ) : (
         <ol className="mt-5 space-y-0">
-          {activities.map((activity, index) => {
+          {visibleActivities.map((activity, index) => {
             const Icon =
               WORKFLOW_ICON_OVERRIDES[activity.rawEventType] ??
               ACTIVITY_ICONS[activity.eventType];
-            const details = formatOperationalActivityDetails(activity);
+            const details = formatOperationalActivityDetailsForAccess(
+              activity,
+              canViewBilling,
+            );
             const attribution = formatOperationalActivityAttribution(activity);
-            const isLast = index === activities.length - 1;
+            const isLast = index === visibleActivities.length - 1;
 
             return (
               <li key={activity.id} className="relative flex gap-4 pb-5">
@@ -188,7 +199,10 @@ export function OperationalActivityTimeline({
                 <div className="min-w-0 flex-1 pt-0.5">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <p className="text-sm font-semibold text-slate-900">
-                      {formatOperationalActivityLabel(activity)}
+                      {formatOperationalActivityLabelForAccess(
+                        activity,
+                        canViewBilling,
+                      )}
                     </p>
                     <time
                       dateTime={activity.createdAt}

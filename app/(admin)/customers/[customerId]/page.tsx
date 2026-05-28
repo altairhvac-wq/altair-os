@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getCompanyAccessScope } from "@/lib/database/access-control";
+import { getCompanyAccessScope, canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCustomerById } from "@/lib/database/queries/customers";
 import { listEstimatesByCustomer } from "@/lib/database/queries/estimates";
@@ -32,13 +32,30 @@ export default async function CustomerDetailPage({
     );
   }
 
-  const [customer, jobs, estimates, invoices, activities, equipment, recentPhotos, recentReceipts] =
-    await Promise.all([
+  const access = getCompanyAccessScope(companyContext);
+  const canViewBillingData = canViewBilling(companyContext);
+
+  const [
+    customer,
+    jobs,
+    estimates,
+    invoices,
+    activities,
+    equipment,
+    recentPhotos,
+    recentReceipts,
+  ] = await Promise.all([
     getCustomerById(companyContext.company.id, customerId),
     listJobsByCustomer(companyContext.company.id, customerId),
-    listEstimatesByCustomer(companyContext.company.id, customerId),
-    listInvoicesByCustomer(companyContext.company.id, customerId),
-    listOperationalActivitiesForCustomer(companyContext.company.id, customerId),
+    canViewBillingData
+      ? listEstimatesByCustomer(companyContext.company.id, customerId)
+      : Promise.resolve([]),
+    canViewBillingData
+      ? listInvoicesByCustomer(companyContext.company.id, customerId)
+      : Promise.resolve([]),
+    listOperationalActivitiesForCustomer(companyContext.company.id, customerId, {
+      includeBillingActivities: canViewBillingData,
+    }),
     listCustomerEquipment(companyContext.company.id, customerId, {
       includeInactive: true,
     }),
@@ -46,10 +63,12 @@ export default async function CustomerDetailPage({
       limit: 6,
       imagesOnly: true,
     }),
-    listRecentExpensesForCustomer(companyContext.company.id, customerId, {
-      limit: 6,
-      withReceiptOnly: true,
-    }),
+    access.canViewCompanyExpenses
+      ? listRecentExpensesForCustomer(companyContext.company.id, customerId, {
+          limit: 6,
+          withReceiptOnly: true,
+        })
+      : Promise.resolve([]),
   ]);
 
   if (!customer) {
@@ -68,6 +87,8 @@ export default async function CustomerDetailPage({
       recentReceipts={recentReceipts}
       canCreateJob={companyContext.permissions.dispatchJobs}
       canManageEquipment={companyContext.permissions.manageCustomers}
+      canViewBilling={canViewBillingData}
+      canViewCompanyExpenses={access.canViewCompanyExpenses}
     />
   );
 }

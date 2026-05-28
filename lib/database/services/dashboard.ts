@@ -5,6 +5,7 @@ import {
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
+import { filterOperationalActivitiesForBillingAccess } from "@/shared/lib/billing-activity-visibility";
 import { listRecentOperationalActivitiesForCompany } from "@/lib/database/queries/dashboard";
 import { listEstimates } from "@/lib/database/queries/estimates";
 import { listExpenses } from "@/lib/database/queries/expenses";
@@ -238,6 +239,7 @@ export async function getDashboardData(
       ? listRecentOperationalActivitiesForCompany(
           companyId,
           RECENT_ACTIVITY_LIMIT,
+          { includeBillingActivities: access.canViewBilling },
         )
       : Promise.resolve([]),
     getUserNotifications(companyId, userId, {
@@ -403,6 +405,9 @@ export async function getDashboardData(
               .materialCostExceedsCollectedCount,
         })
       : EMPTY_OPERATIONAL_HEALTH,
-    recentActivity,
+    recentActivity: filterOperationalActivitiesForBillingAccess(
+      recentActivity,
+      access.canViewBilling,
+    ),
   };
 }

@@ -1,5 +1,10 @@
 import { notFound, redirect } from "next/navigation";
-import { canViewJob, canViewJobFinancials, getCompanyAccessScope } from "@/lib/database/access-control";
+import {
+  canViewBilling,
+  canViewJob,
+  canViewJobFinancials,
+  getCompanyAccessScope,
+} from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listCustomers } from "@/lib/database/queries/customers";
 import { listOperationalActivitiesForJob } from "@/lib/database/queries/operational-activities";
@@ -40,6 +45,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   }
 
   const canViewFinancials = canViewJobFinancials(companyContext);
+  const canViewBillingData = canViewBilling(companyContext);
   const canEditJob = companyContext.permissions.dispatchJobs;
   const access = getCompanyAccessScope(companyContext);
 
@@ -56,7 +62,9 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     access.canViewTechnicianRoster
       ? listTechnicians(companyContext.company.id, companyContext)
       : Promise.resolve([]),
-    listOperationalActivitiesForJob(companyContext.company.id, jobId),
+    listOperationalActivitiesForJob(companyContext.company.id, jobId, {
+      includeBillingActivities: canViewBillingData,
+    }),
     listCustomerEquipment(companyContext.company.id, job.customerId),
     listJobAttachmentsForJob(companyContext.company.id, jobId),
     listExpensesForJob(companyContext.company.id, jobId),
@@ -105,6 +113,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           job.assignedTechnicianId === companyContext.user.id)
       }
       canViewFinancials={canViewFinancials}
+      canViewBilling={canViewBillingData}
+      canManageCustomers={access.canManageCustomers}
       operationalInconsistencies={operationalInconsistencies}
     />
   );

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getCompanyAccessScope } from "@/lib/database/access-control";
+import { canViewBilling, getCompanyAccessScope } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listCustomers } from "@/lib/database/queries/customers";
 import { CustomersPageView } from "@/shared/components/customers/CustomersPageView";
@@ -24,6 +24,7 @@ export default async function CustomersPage() {
     <CustomersPageView
       initialCustomers={customers}
       canManageCustomers={companyContext.permissions.manageCustomers}
+      canViewBilling={canViewBilling(companyContext)}
     />
   );
 }

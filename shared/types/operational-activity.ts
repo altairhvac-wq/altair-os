@@ -641,16 +641,23 @@ export function formatOperationalActivityDetails(
 
 export function getOperationalActivityHref(
   activity: OperationalActivity,
+  access?: { canViewBilling?: boolean },
 ): string | null {
   if (activity.jobId) {
     return `/jobs/${activity.jobId}`;
   }
 
   if (activity.estimateId) {
+    if (access?.canViewBilling === false) {
+      return null;
+    }
     return `/estimates/${activity.estimateId}`;
   }
 
   if (activity.invoiceId) {
+    if (access?.canViewBilling === false) {
+      return null;
+    }
     return `/invoices/${activity.invoiceId}`;
   }
 
@@ -663,6 +670,35 @@ export function getOperationalActivityHref(
   }
 
   return null;
+}
+
+export function formatOperationalActivityLabelForAccess(
+  activity: OperationalActivity,
+  canViewBilling: boolean,
+): string {
+  return formatOperationalActivityLabel(activity);
+}
+
+export function formatOperationalActivityDetailsForAccess(
+  activity: OperationalActivity,
+  canViewBilling: boolean,
+): string | null {
+  if (!canViewBilling && activity.eventType === "job_material_added") {
+    const { metadata } = activity;
+    const parts: string[] = [];
+    if (metadata.name) {
+      parts.push(metadata.name);
+    }
+    if (typeof metadata.quantity === "number") {
+      parts.push(`Qty ${metadata.quantity}`);
+    }
+    if (metadata.job_number) {
+      parts.push(`Job ${metadata.job_number}`);
+    }
+    return parts.length > 0 ? parts.join(" · ") : null;
+  }
+
+  return formatOperationalActivityDetails(activity);
 }
 
 export function formatOperationalActivityTimestamp(

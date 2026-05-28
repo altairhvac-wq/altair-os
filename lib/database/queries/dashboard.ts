@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { filterOperationalActivitiesForBillingAccess } from "@/shared/lib/billing-activity-visibility";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
 import {
   buildOperationalActivity,
@@ -205,7 +206,9 @@ async function listRecentCustomerActivities(
 export async function listRecentOperationalActivitiesForCompany(
   companyId: string,
   limit = RECENT_ACTIVITY_LIMIT,
+  options?: { includeBillingActivities?: boolean },
 ): Promise<OperationalActivity[]> {
+  const includeBillingActivities = options?.includeBillingActivities ?? true;
   const perSource = RECENT_ACTIVITY_PER_SOURCE;
 
   const [
@@ -216,17 +219,26 @@ export async function listRecentOperationalActivitiesForCompany(
     customerActivities,
   ] = await Promise.all([
     listRecentJobActivities(companyId, perSource),
-    listRecentEstimateActivities(companyId, perSource),
-    listRecentInvoiceActivities(companyId, perSource),
+    includeBillingActivities
+      ? listRecentEstimateActivities(companyId, perSource)
+      : Promise.resolve([]),
+    includeBillingActivities
+      ? listRecentInvoiceActivities(companyId, perSource)
+      : Promise.resolve([]),
     listRecentExpenseActivities(companyId, perSource),
     listRecentCustomerActivities(companyId, perSource),
   ]);
 
-  return sortActivitiesNewestFirst([
+  const activities = sortActivitiesNewestFirst([
     ...jobActivities,
     ...estimateActivities,
     ...invoiceActivities,
     ...expenseActivities,
     ...customerActivities,
   ]).slice(0, limit);
+
+  return filterOperationalActivitiesForBillingAccess(
+    activities,
+    includeBillingActivities,
+  );
 }

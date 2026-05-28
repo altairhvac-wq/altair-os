@@ -35,6 +35,8 @@ type CustomerDetailPageViewProps = {
   recentReceipts: Expense[];
   canCreateJob: boolean;
   canManageEquipment: boolean;
+  canViewBilling: boolean;
+  canViewCompanyExpenses: boolean;
 };
 
 export function CustomerDetailPageView({
@@ -48,6 +50,8 @@ export function CustomerDetailPageView({
   recentReceipts,
   canCreateJob,
   canManageEquipment,
+  canViewBilling,
+  canViewCompanyExpenses,
 }: CustomerDetailPageViewProps) {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -60,7 +64,7 @@ export function CustomerDetailPageView({
       </Link>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <CustomerCard customer={customer} />
+        <CustomerCard customer={customer} showRevenueStats={canViewBilling} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -130,25 +134,38 @@ export function CustomerDetailPageView({
         canManage={canManageEquipment}
       />
 
-      <CustomerBillingHistorySection
-        estimates={estimates}
-        invoices={invoices}
-      />
+      {canViewBilling ? (
+        <CustomerBillingHistorySection
+          estimates={estimates}
+          invoices={invoices}
+        />
+      ) : null}
 
       <CustomerRecentPhotosSection
         customerId={customer.id}
         attachments={recentPhotos}
       />
 
-      <CustomerRecentReceiptsSection
-        customerId={customer.id}
-        expenses={recentReceipts}
-      />
+      {canViewCompanyExpenses ? (
+        <CustomerRecentReceiptsSection
+          customerId={customer.id}
+          expenses={recentReceipts}
+        />
+      ) : null}
 
       <OperationalActivityTimeline
         activities={activities}
-        description="Jobs, estimates, invoices, and account events"
-        emptyDescription="Customer creation, jobs, billing, and payments will appear here."
+        canViewBilling={canViewBilling}
+        description={
+          canViewBilling
+            ? "Jobs, estimates, invoices, and account events"
+            : "Jobs, equipment, and account events"
+        }
+        emptyDescription={
+          canViewBilling
+            ? "Customer creation, jobs, billing, and payments will appear here."
+            : "Customer creation, jobs, and equipment changes will appear here."
+        }
       />
     </div>
   );

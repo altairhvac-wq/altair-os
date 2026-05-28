@@ -2,6 +2,7 @@ import type {
   NotificationEntityType,
   NotificationType,
 } from "@/lib/database/types/enums";
+import { isBillingSensitiveNotificationType } from "@/shared/lib/billing-activity-visibility";
 
 export type Notification = {
   id: string;
@@ -55,7 +56,13 @@ export function formatNotificationTimestamp(value: string): string {
   });
 }
 
-export function getNotificationHref(notification: Notification): string | null {
+export function getNotificationHref(
+  notification: Notification,
+  access?: {
+    canManageCustomers?: boolean;
+    canViewBilling?: boolean;
+  },
+): string | null {
   if (!notification.entityType || !notification.entityId) {
     return null;
   }
@@ -64,12 +71,21 @@ export function getNotificationHref(notification: Notification): string | null {
     case "job":
       return `/jobs/${notification.entityId}`;
     case "estimate":
+      if (access?.canViewBilling === false) {
+        return null;
+      }
       return `/estimates/${notification.entityId}`;
     case "invoice":
+      if (access?.canViewBilling === false) {
+        return null;
+      }
       return `/invoices/${notification.entityId}`;
     case "expense":
       return `/expenses?selected=${notification.entityId}`;
     case "customer":
+      if (access?.canManageCustomers === false) {
+        return null;
+      }
       return `/customers/${notification.entityId}`;
     case "time_entry":
       return "/time";
@@ -94,6 +110,42 @@ export function getTechnicianNotificationHref(
       return "/tech/time";
     default:
       return null;
+  }
+}
+
+export function formatNotificationTitleForAccess(
+  notification: Notification,
+  canViewBilling: boolean,
+): string {
+  if (canViewBilling || !isBillingSensitiveNotificationType(notification.type)) {
+    return notification.title;
+  }
+
+  switch (notification.type) {
+    case "estimate_approved":
+      return "Estimate approved";
+    case "invoice_paid":
+      return "Invoice paid";
+    default:
+      return notification.title;
+  }
+}
+
+export function formatNotificationMessageForAccess(
+  notification: Notification,
+  canViewBilling: boolean,
+): string {
+  if (canViewBilling || !isBillingSensitiveNotificationType(notification.type)) {
+    return notification.message;
+  }
+
+  switch (notification.type) {
+    case "estimate_approved":
+      return "An estimate was approved.";
+    case "invoice_paid":
+      return "An invoice was paid in full.";
+    default:
+      return notification.message;
   }
 }
 

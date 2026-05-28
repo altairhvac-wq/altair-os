@@ -10,6 +10,7 @@ import {
 
 type CustomersTableProps = {
   customers: Customer[];
+  showRevenueStats?: boolean;
 };
 
 const statusStyles: Record<Customer["status"], string> = {
@@ -18,7 +19,10 @@ const statusStyles: Record<Customer["status"], string> = {
   inactive: "bg-slate-100 text-slate-600",
 };
 
-export function CustomersTable({ customers }: CustomersTableProps) {
+export function CustomersTable({
+  customers,
+  showRevenueStats = true,
+}: CustomersTableProps) {
   const router = useRouter();
 
   return (
@@ -30,7 +34,9 @@ export function CustomersTable({ customers }: CustomersTableProps) {
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3">Location</th>
             <th className="px-4 py-3 text-right">Jobs</th>
-            <th className="px-4 py-3 text-right">Revenue</th>
+            {showRevenueStats ? (
+              <th className="px-4 py-3 text-right">Revenue</th>
+            ) : null}
             <th className="hidden px-4 py-3 lg:table-cell">Last service</th>
           </tr>
         </thead>
@@ -69,9 +75,11 @@ export function CustomersTable({ customers }: CustomersTableProps) {
                 <td className="px-4 py-3 text-right font-medium text-slate-900">
                   {customer.totalJobs}
                 </td>
-                <td className="px-4 py-3 text-right font-medium text-slate-900">
-                  {formatCurrency(customer.totalRevenue)}
-                </td>
+                {showRevenueStats ? (
+                  <td className="px-4 py-3 text-right font-medium text-slate-900">
+                    {formatCurrency(customer.totalRevenue)}
+                  </td>
+                ) : null}
                 <td className="hidden px-4 py-3 text-slate-500 lg:table-cell">
                   {customer.lastServiceDate
                     ? formatDate(customer.lastServiceDate)

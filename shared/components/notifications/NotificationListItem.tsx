@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  formatNotificationMessageForAccess,
   formatNotificationTimestamp,
+  formatNotificationTitleForAccess,
   getNotificationHref,
   getTechnicianNotificationHref,
   isNotificationUnread,
@@ -15,19 +17,26 @@ type NotificationListItemProps = {
   notification: Notification;
   variant?: "admin" | "technician";
   onRead?: (notificationId: string) => void;
+  canManageCustomers?: boolean;
+  canViewBilling?: boolean;
 };
 
 export function NotificationListItem({
   notification,
   variant = "admin",
   onRead,
+  canManageCustomers = true,
+  canViewBilling = true,
 }: NotificationListItemProps) {
   const router = useRouter();
   const unread = isNotificationUnread(notification);
   const href =
     variant === "technician"
       ? getTechnicianNotificationHref(notification)
-      : getNotificationHref(notification);
+      : getNotificationHref(notification, {
+          canManageCustomers,
+          canViewBilling,
+        });
 
   async function handleClick(event?: React.MouseEvent) {
     if (!unread) {
@@ -58,12 +67,16 @@ export function NotificationListItem({
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold text-slate-900">{notification.title}</p>
+        <p className="text-sm font-semibold text-slate-900">
+          {formatNotificationTitleForAccess(notification, canViewBilling)}
+        </p>
         {unread ? (
           <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-cyan-500" />
         ) : null}
       </div>
-      <p className="mt-1 text-sm text-slate-600">{notification.message}</p>
+      <p className="mt-1 text-sm text-slate-600">
+        {formatNotificationMessageForAccess(notification, canViewBilling)}
+      </p>
       <p className="mt-2 text-xs text-slate-400">
         {formatNotificationTimestamp(notification.createdAt)}
       </p>

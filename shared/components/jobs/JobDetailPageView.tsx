@@ -54,6 +54,8 @@ type JobDetailPageViewProps = {
   canEditJob: boolean;
   canLogMaterials: boolean;
   canViewFinancials: boolean;
+  canViewBilling: boolean;
+  canManageCustomers: boolean;
   operationalInconsistencies?: OperationalInconsistencyEntry[];
 };
 
@@ -92,6 +94,8 @@ export function JobDetailPageView({
   canEditJob,
   canLogMaterials,
   canViewFinancials,
+  canViewBilling,
+  canManageCustomers,
   operationalInconsistencies = [],
 }: JobDetailPageViewProps) {
   const customerEmail = job.customerEmail?.trim();
@@ -180,12 +184,18 @@ export function JobDetailPageView({
           </div>
 
           <div className="min-w-0 flex-1">
-            <Link
-              href={`/customers/${job.customerId}`}
-              className="text-base font-bold text-slate-900 transition-colors hover:text-cyan-700"
-            >
-              {job.customerName}
-            </Link>
+            {canManageCustomers ? (
+              <Link
+                href={`/customers/${job.customerId}`}
+                className="text-base font-bold text-slate-900 transition-colors hover:text-cyan-700"
+              >
+                {job.customerName}
+              </Link>
+            ) : (
+              <p className="text-base font-bold text-slate-900">
+                {job.customerName}
+              </p>
+            )}
             {customerCompany ? (
               <div className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
                 <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
@@ -303,6 +313,7 @@ export function JobDetailPageView({
         customerId={job.customerId}
         jobId={job.id}
         equipment={equipment}
+        canViewCustomerProfile={canManageCustomers}
       />
 
       <JobAttachmentsSection
@@ -322,8 +333,17 @@ export function JobDetailPageView({
 
       <OperationalActivityTimeline
         activities={activities}
-        description="Job workflow, estimates, and billing events"
-        emptyDescription="Status changes, assignments, estimates, and invoices will appear here."
+        canViewBilling={canViewBilling}
+        description={
+          canViewBilling
+            ? "Job workflow, estimates, and billing events"
+            : "Job workflow and field events"
+        }
+        emptyDescription={
+          canViewBilling
+            ? "Status changes, assignments, estimates, and invoices will appear here."
+            : "Status changes, assignments, and field updates will appear here."
+        }
       />
     </div>
   );

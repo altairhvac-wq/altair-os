@@ -84,16 +84,7 @@ export function buildMobileDashboardSnapshot(
         : "success",
   });
 
-  if (access.canViewOperationalReports) {
-    items.push({
-      id: "collected-today",
-      label: "Collected",
-      value: formatCurrency(analytics.todayCollectedRevenue),
-      detail: `${analytics.todayPaymentCount} payment${analytics.todayPaymentCount === 1 ? "" : "s"}`,
-      href: "/reports",
-      tone: analytics.todayCollectedRevenue > 0 ? "success" : "neutral",
-    });
-  } else if (access.canViewBilling) {
+  if (access.canViewBilling) {
     items.push({
       id: "collected-today",
       label: "Collected",

@@ -56,12 +56,14 @@ import {
   formatExpenseDate,
 } from "@/shared/types/expense";
 import {
+  formatNotificationMessageForAccess,
+  formatNotificationTitleForAccess,
   formatNotificationTimestamp,
   getNotificationHref,
 } from "@/shared/types/notification";
 import {
-  formatOperationalActivityDetails,
-  formatOperationalActivityLabel,
+  formatOperationalActivityDetailsForAccess,
+  formatOperationalActivityLabelForAccess,
   formatOperationalActivityTimestamp,
   getOperationalActivityHref,
 } from "@/shared/types/operational-activity";
@@ -297,19 +299,25 @@ function OperationalInsightsSection({
 
 function AnalyticsSnapshotSection({
   analytics,
+  canViewBilling,
 }: {
   analytics: DashboardData["analytics"];
+  canViewBilling: boolean;
 }) {
   const metrics = [
-    {
-      label: "Collected today",
-      value: formatCurrency(analytics.todayCollectedRevenue),
-      description: `${analytics.todayPaymentCount} payment${analytics.todayPaymentCount === 1 ? "" : "s"}`,
-      icon: DollarSign,
-      iconClass: "text-emerald-600 bg-emerald-50",
-      accent: "border-emerald-100",
-      href: "/reports",
-    },
+    ...(canViewBilling
+      ? [
+          {
+            label: "Collected today",
+            value: formatCurrency(analytics.todayCollectedRevenue),
+            description: `${analytics.todayPaymentCount} payment${analytics.todayPaymentCount === 1 ? "" : "s"}`,
+            icon: DollarSign,
+            iconClass: "text-emerald-600 bg-emerald-50",
+            accent: "border-emerald-100",
+            href: "/reports",
+          },
+        ]
+      : []),
     {
       label: "Open jobs",
       value: analytics.openJobs,
@@ -350,7 +358,9 @@ function AnalyticsSnapshotSection({
             Live operations
           </h2>
           <p className="mt-0.5 hidden text-xs text-slate-300 lg:block lg:text-sm">
-            Today&apos;s collections and current workload
+            {canViewBilling
+              ? "Today's collections and current workload"
+              : "Current workload and team activity"}
           </p>
         </div>
         <Link
@@ -843,8 +853,12 @@ function ExpenseReviewSection({
 
 function NotificationsSummarySection({
   notifications,
+  canViewBilling,
+  canManageCustomers,
 }: {
   notifications: DashboardData["notifications"];
+  canViewBilling: boolean;
+  canManageCustomers: boolean;
 }) {
   return (
     <DashboardSection
@@ -864,21 +878,30 @@ function NotificationsSummarySection({
       ) : (
         <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
           {notifications.recent.map((notification) => {
-            const href = getNotificationHref(notification);
+            const href = getNotificationHref(notification, {
+              canViewBilling,
+              canManageCustomers,
+            });
 
             const content = (
               <>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-bold text-slate-900">
-                      {notification.title}
+                      {formatNotificationTitleForAccess(
+                        notification,
+                        canViewBilling,
+                      )}
                     </p>
                     {!notification.readAt ? (
                       <span className="inline-flex h-2 w-2 rounded-full bg-cyan-500" />
                     ) : null}
                   </div>
                   <p className="mt-1 line-clamp-2 text-xs text-slate-600">
-                    {notification.message}
+                    {formatNotificationMessageForAccess(
+                      notification,
+                      canViewBilling,
+                    )}
                   </p>
                 </div>
                 <time className="shrink-0 text-xs text-slate-400">
@@ -912,8 +935,10 @@ function NotificationsSummarySection({
 
 function RecentActivitySection({
   activities,
+  canViewBilling,
 }: {
   activities: DashboardData["recentActivity"];
+  canViewBilling: boolean;
 }) {
   return (
     <DashboardSection
@@ -929,8 +954,13 @@ function RecentActivitySection({
       ) : (
         <ol className="space-y-0">
           {activities.map((activity, index) => {
-            const href = getOperationalActivityHref(activity);
-            const details = formatOperationalActivityDetails(activity);
+            const href = getOperationalActivityHref(activity, {
+              canViewBilling,
+            });
+            const details = formatOperationalActivityDetailsForAccess(
+              activity,
+              canViewBilling,
+            );
             const isLast = index === activities.length - 1;
 
             const body = (
@@ -938,7 +968,10 @@ function RecentActivitySection({
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <p className="text-sm font-semibold text-slate-900">
-                      {formatOperationalActivityLabel(activity)}
+                      {formatOperationalActivityLabelForAccess(
+                        activity,
+                        canViewBilling,
+                      )}
                     </p>
                     <time className="shrink-0 text-xs text-slate-400">
                       {formatOperationalActivityTimestamp(activity.createdAt)}
@@ -1045,7 +1078,11 @@ function buildMobileDashboardTabs(
   }
   if (access.canViewOperationalReports) {
     overviewSections.push(
-      <AnalyticsSnapshotSection key="analytics" analytics={data.analytics} />,
+      <AnalyticsSnapshotSection
+        key="analytics"
+        analytics={data.analytics}
+        canViewBilling={access.canViewBilling}
+      />,
       <TodayNeedsAttentionSection key="attention" data={data} />,
       <NextBestActionsSection key="actions" data={data} />,
       <OperationalMomentumSection key="momentum" data={data} />,
@@ -1135,6 +1172,8 @@ function buildMobileDashboardTabs(
     <NotificationsSummarySection
       key="notifications"
       notifications={data.notifications}
+      canViewBilling={access.canViewBilling}
+      canManageCustomers={access.canManageCustomers}
     />,
   );
 
@@ -1149,7 +1188,11 @@ function buildMobileDashboardTabs(
   const moreSections: React.ReactNode[] = [];
   if (access.canViewOperationalReports) {
     moreSections.push(
-      <RecentActivitySection key="activity" activities={data.recentActivity} />,
+      <RecentActivitySection
+        key="activity"
+        activities={data.recentActivity}
+        canViewBilling={access.canViewBilling}
+      />,
     );
   }
   if (!access.canViewOperationalReports && access.canViewBilling) {
@@ -1197,7 +1240,10 @@ function DesktopDashboardLayout({
       ) : null}
 
       {access.canViewOperationalReports ? (
-        <AnalyticsSnapshotSection analytics={data.analytics} />
+        <AnalyticsSnapshotSection
+          analytics={data.analytics}
+          canViewBilling={access.canViewBilling}
+        />
       ) : null}
 
       <DashboardZone>
@@ -1261,11 +1307,18 @@ function DesktopDashboardLayout({
           {access.canViewCompanyExpenses ? (
             <ExpenseReviewSection expenses={data.expenses} />
           ) : null}
-          <NotificationsSummarySection notifications={data.notifications} />
+          <NotificationsSummarySection
+            notifications={data.notifications}
+            canViewBilling={access.canViewBilling}
+            canManageCustomers={access.canManageCustomers}
+          />
         </div>
 
         {access.canViewOperationalReports ? (
-          <RecentActivitySection activities={data.recentActivity} />
+          <RecentActivitySection
+            activities={data.recentActivity}
+            canViewBilling={access.canViewBilling}
+          />
         ) : null}
       </DashboardZone>
     </>

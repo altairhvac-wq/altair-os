@@ -20,6 +20,7 @@ type PanelMode = "detail" | "create" | "empty";
 type CustomersPageViewProps = {
   initialCustomers: Customer[];
   canManageCustomers: boolean;
+  canViewBilling: boolean;
 };
 
 function filterCustomers(
@@ -54,6 +55,7 @@ function filterCustomers(
 export function CustomersPageView({
   initialCustomers,
   canManageCustomers,
+  canViewBilling,
 }: CustomersPageViewProps) {
   const [customers, setCustomers] = useState(initialCustomers);
   const [search, setSearch] = useState("");
@@ -152,7 +154,10 @@ export function CustomersPageView({
           ) : hasNoResults ? (
             <CustomersEmptyState variant="no-results" />
           ) : (
-            <CustomersTable customers={filteredCustomers} />
+            <CustomersTable
+              customers={filteredCustomers}
+              showRevenueStats={canViewBilling}
+            />
           )}
         </div>
       </section>

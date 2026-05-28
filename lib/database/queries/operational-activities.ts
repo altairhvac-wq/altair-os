@@ -14,6 +14,7 @@ import {
   resolveActivityActorName,
   type ProfileSummary,
 } from "@/shared/lib/profile-attribution";
+import { filterOperationalActivitiesForBillingAccess } from "@/shared/lib/billing-activity-visibility";
 import { normalizeOperationalEventType } from "@/shared/types/operational-activity";
 
 type ActivityRowBase = {
@@ -323,7 +324,9 @@ export function sortActivitiesNewestFirst(
 export async function listOperationalActivitiesForCustomer(
   companyId: string,
   customerId: string,
+  options?: { includeBillingActivities?: boolean },
 ): Promise<OperationalActivity[]> {
+  const includeBillingActivities = options?.includeBillingActivities ?? true;
   const supabase = await createClient();
 
   const [customerActivities, jobRows, estimateRows, invoiceRows] =
@@ -334,16 +337,20 @@ export async function listOperationalActivitiesForCustomer(
         .select("id")
         .eq("company_id", companyId)
         .eq("customer_id", customerId),
-      supabase
-        .from("estimates")
-        .select("id")
-        .eq("company_id", companyId)
-        .eq("customer_id", customerId),
-      supabase
-        .from("invoices")
-        .select("id")
-        .eq("company_id", companyId)
-        .eq("customer_id", customerId),
+      includeBillingActivities
+        ? supabase
+            .from("estimates")
+            .select("id")
+            .eq("company_id", companyId)
+            .eq("customer_id", customerId)
+        : Promise.resolve({ data: [] as { id: string }[] }),
+      includeBillingActivities
+        ? supabase
+            .from("invoices")
+            .select("id")
+            .eq("company_id", companyId)
+            .eq("customer_id", customerId)
+        : Promise.resolve({ data: [] as { id: string }[] }),
     ]);
 
   const jobIds = (jobRows.data ?? []).map((row) => row.id);
@@ -353,8 +360,12 @@ export async function listOperationalActivitiesForCustomer(
   const [jobActivities, estimateActivities, invoiceActivities, expenseActivities] =
     await Promise.all([
       listJobActivitiesForJobIds(companyId, jobIds),
-      listEstimateActivitiesForEstimateIds(companyId, estimateIds),
-      listInvoiceActivitiesForInvoiceIds(companyId, invoiceIds),
+      includeBillingActivities
+        ? listEstimateActivitiesForEstimateIds(companyId, estimateIds)
+        : Promise.resolve([]),
+      includeBillingActivities
+        ? listInvoiceActivitiesForInvoiceIds(companyId, invoiceIds)
+        : Promise.resolve([]),
       listExpenseActivitiesForCustomer(companyId, customerId),
     ]);
 
@@ -383,13 +394,20 @@ export async function listOperationalActivitiesForCustomer(
     ),
   ];
 
-  return sortActivitiesNewestFirst(activities);
+  const sorted = sortActivitiesNewestFirst(activities);
+
+  return filterOperationalActivitiesForBillingAccess(
+    sorted,
+    includeBillingActivities,
+  );
 }
 
 export async function listOperationalActivitiesForJob(
   companyId: string,
   jobId: string,
+  options?: { includeBillingActivities?: boolean },
 ): Promise<OperationalActivity[]> {
+  const includeBillingActivities = options?.includeBillingActivities ?? true;
   const supabase = await createClient();
 
   const [jobRow, estimateRows, invoiceRows] = await Promise.all([
@@ -399,16 +417,20 @@ export async function listOperationalActivitiesForJob(
       .eq("company_id", companyId)
       .eq("id", jobId)
       .maybeSingle(),
-    supabase
-      .from("estimates")
-      .select("id")
-      .eq("company_id", companyId)
-      .eq("job_id", jobId),
-    supabase
-      .from("invoices")
-      .select("id")
-      .eq("company_id", companyId)
-      .eq("job_id", jobId),
+    includeBillingActivities
+      ? supabase
+          .from("estimates")
+          .select("id")
+          .eq("company_id", companyId)
+          .eq("job_id", jobId)
+      : Promise.resolve({ data: [] as { id: string }[] }),
+    includeBillingActivities
+      ? supabase
+          .from("invoices")
+          .select("id")
+          .eq("company_id", companyId)
+          .eq("job_id", jobId)
+      : Promise.resolve({ data: [] as { id: string }[] }),
   ]);
 
   if (!jobRow.data) {
@@ -422,8 +444,12 @@ export async function listOperationalActivitiesForJob(
   const [jobActivities, estimateActivities, invoiceActivities, expenseActivities] =
     await Promise.all([
       listJobActivitiesForJobIds(companyId, [jobId]),
-      listEstimateActivitiesForEstimateIds(companyId, estimateIds),
-      listInvoiceActivitiesForInvoiceIds(companyId, invoiceIds),
+      includeBillingActivities
+        ? listEstimateActivitiesForEstimateIds(companyId, estimateIds)
+        : Promise.resolve([]),
+      includeBillingActivities
+        ? listInvoiceActivitiesForInvoiceIds(companyId, invoiceIds)
+        : Promise.resolve([]),
       listExpenseActivitiesForJob(companyId, jobId),
     ]);
 
@@ -451,5 +477,10 @@ export async function listOperationalActivitiesForJob(
     ),
   ];
 
-  return sortActivitiesNewestFirst(activities);
+  const sorted = sortActivitiesNewestFirst(activities);
+
+  return filterOperationalActivitiesForBillingAccess(
+    sorted,
+    includeBillingActivities,
+  );
 }
