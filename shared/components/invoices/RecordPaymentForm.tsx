@@ -100,6 +100,10 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isPending) {
+      return;
+    }
+
     setError(null);
 
     const parsedAmount = Number.parseFloat(amount);

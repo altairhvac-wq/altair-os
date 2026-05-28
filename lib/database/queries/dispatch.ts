@@ -606,7 +606,7 @@ export async function reactivateDispatchAssignmentForReopenedJob(
   technicianId: string,
   assignedBy: string,
   scheduledStart: string,
-): Promise<{ error: string | null }> {
+): Promise<{ reactivated: boolean; error: string | null }> {
   const supabase = await createClient();
 
   const { data: activeAssignment, error: activeError } = await supabase
@@ -627,11 +627,11 @@ export async function reactivateDispatchAssignmentForReopenedJob(
         message: activeError.message,
       },
     );
-    return { error: mapDatabaseError(activeError) };
+    return { reactivated: false, error: mapDatabaseError(activeError) };
   }
 
   if (activeAssignment) {
-    return { error: null };
+    return { reactivated: false, error: null };
   }
 
   const now = new Date().toISOString();
@@ -660,10 +660,10 @@ export async function reactivateDispatchAssignmentForReopenedJob(
         message: insertError.message,
       },
     );
-    return { error: mapDatabaseError(insertError) };
+    return { reactivated: false, error: mapDatabaseError(insertError) };
   }
 
-  return { error: null };
+  return { reactivated: true, error: null };
 }
 
 export type DispatchAssignmentListRow = {

@@ -75,6 +75,10 @@ export function JobWorkflowActions({
   }
 
   function handleAction(actionId: JobWorkflowActionId) {
+    if (isPending) {
+      return;
+    }
+
     if (actionId === "complete") {
       setError(null);
       setSuccessMessage(null);
@@ -91,17 +95,21 @@ export function JobWorkflowActions({
 
       setPendingAction(null);
 
-      if (result.error || !result.job) {
+      if (!result.job) {
         setError(result.error ?? "Failed to update job status.");
         return;
       }
 
-      const actionLabel =
-        actionId === primaryAction?.id
-          ? primaryAction.label
-          : (secondaryActions.find((candidate) => candidate.id === actionId)
-              ?.label ?? "Status");
-      setSuccessMessage(`${actionLabel} updated successfully.`);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        const actionLabel =
+          actionId === primaryAction?.id
+            ? primaryAction.label
+            : (secondaryActions.find((candidate) => candidate.id === actionId)
+                ?.label ?? "Status");
+        setSuccessMessage(`${actionLabel} updated successfully.`);
+      }
 
       onStatusUpdated?.(result.job.status);
       router.refresh();

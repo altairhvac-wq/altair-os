@@ -520,6 +520,11 @@ export async function updateJobWorkflowStatus(
             error: finalizeResult.error,
           },
         );
+        return {
+          job: mapJobRowToJob(row as JobRowWithTechnician),
+          error:
+            "Job status updated but dispatch assignment could not be finalized. Refresh and contact support if the issue persists.",
+        };
       }
     }
 
@@ -604,7 +609,11 @@ export async function reopenCompletedJob(
   jobId: string,
   targetStatus: JobStatus,
   actorId: string,
-): Promise<{ job: Job | null; error: string | null }> {
+): Promise<{
+  job: Job | null;
+  error: string | null;
+  dispatchReactivated: boolean;
+}> {
   const supabase = await createClient();
 
   const { data: existingRow, error: existingError } = await supabase
@@ -623,21 +632,22 @@ export async function reopenCompletedJob(
       code: existingError.code,
       message: existingError.message,
     });
-    return { job: null, error: mapDatabaseError(existingError) };
+    return { job: null, error: mapDatabaseError(existingError), dispatchReactivated: false };
   }
 
   if (!existingRow) {
-    return { job: null, error: "Job not found." };
+    return { job: null, error: "Job not found.", dispatchReactivated: false };
   }
 
   if (existingRow.status === "cancelled") {
-    return { job: null, error: "Cancelled jobs cannot be reopened." };
+    return { job: null, error: "Cancelled jobs cannot be reopened.", dispatchReactivated: false };
   }
 
   if (existingRow.status !== "completed") {
     return {
       job: null,
       error: "Only completed jobs can be reopened.",
+      dispatchReactivated: false,
     };
   }
 
@@ -665,18 +675,21 @@ export async function reopenCompletedJob(
       details: error.details,
       hint: error.hint,
     });
-    return { job: null, error: mapDatabaseError(error) };
+    return { job: null, error: mapDatabaseError(error), dispatchReactivated: false };
   }
 
   if (!row) {
     return {
       job: null,
       error: "Job status has changed. Refresh the page and try again.",
+      dispatchReactivated: false,
     };
   }
 
+  let dispatchReactivated = false;
+
   if (existingRow.assigned_technician_id) {
-    const { error: dispatchError } =
+    const { reactivated, error: dispatchError } =
       await reactivateDispatchAssignmentForReopenedJob(
         companyId,
         jobId,
@@ -684,6 +697,8 @@ export async function reopenCompletedJob(
         actorId,
         existingRow.scheduled_at,
       );
+
+    dispatchReactivated = reactivated;
 
     if (dispatchError) {
       console.error("[reopenCompletedJob] dispatch reactivation failed:", {
@@ -712,12 +727,13 @@ export async function reopenCompletedJob(
         });
       }
 
-      return { job: null, error: dispatchError };
+      return { job: null, error: dispatchError, dispatchReactivated: false };
     }
   }
 
   return {
     job: mapJobRowToJob(row as JobRowWithTechnician),
     error: null,
+    dispatchReactivated,
   };
 }

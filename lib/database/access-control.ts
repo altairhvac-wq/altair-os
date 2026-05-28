@@ -249,7 +249,7 @@ export function canAccessAdminNavItem(
     case "/reports":
       return access.canViewOperationalReports;
     case "/alpha-tracker":
-      return true;
+      return permissions.manageCompany;
     case "/settings":
       return permissions.manageCompany;
     default:

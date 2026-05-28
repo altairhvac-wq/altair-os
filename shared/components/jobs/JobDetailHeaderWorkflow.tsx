@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Calendar, Pencil, Truck } from "lucide-react";
 import type { JobDetail } from "@/shared/types/job";
+import { shouldAcceptServerWorkflowStatus } from "@/shared/types/job-workflow";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
 import { JobWorkflowControls } from "./JobWorkflowControls";
@@ -26,7 +27,11 @@ export function JobDetailHeaderWorkflow({
   const [status, setStatus] = useState(job.status);
 
   useEffect(() => {
-    setStatus(job.status);
+    setStatus((current) =>
+      shouldAcceptServerWorkflowStatus(current, job.status)
+        ? job.status
+        : current,
+    );
   }, [job.status]);
 
   function handleStatusUpdated(nextStatus: typeof job.status) {

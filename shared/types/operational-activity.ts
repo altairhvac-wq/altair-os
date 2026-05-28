@@ -29,10 +29,18 @@ export type OperationalActivityEventType =
   | "technician_unassigned"
   | "job_labor_auto_closed"
   | "estimate_created"
+  | "estimate_sent"
+  | "estimate_email_resent"
   | "estimate_approved"
+  | "estimate_declined"
+  | "estimate_cancelled"
   | "estimate_converted_to_invoice"
   | "invoice_created"
   | "invoice_sent"
+  | "invoice_email_resent"
+  | "invoice_voided"
+  | "invoice_updated"
+  | "invoice_cancelled"
   | "payment_recorded"
   | "invoice_paid"
   | "job_attachment_uploaded"
@@ -143,10 +151,18 @@ const ACTIVITY_TYPE_LABELS: Record<OperationalActivityEventType, string> = {
   technician_unassigned: "Technician unassigned",
   job_labor_auto_closed: "Labor auto-closed",
   estimate_created: "Estimate created",
+  estimate_sent: "Estimate sent",
+  estimate_email_resent: "Estimate email resent",
   estimate_approved: "Estimate approved",
+  estimate_declined: "Estimate declined",
+  estimate_cancelled: "Estimate cancelled",
   estimate_converted_to_invoice: "Estimate converted to invoice",
   invoice_created: "Invoice created",
   invoice_sent: "Invoice sent",
+  invoice_email_resent: "Invoice email resent",
+  invoice_voided: "Invoice voided",
+  invoice_updated: "Invoice updated",
+  invoice_cancelled: "Invoice cancelled",
   payment_recorded: "Payment recorded",
   invoice_paid: "Invoice paid",
   job_attachment_uploaded: "Attachment uploaded",
@@ -429,6 +445,18 @@ export function formatOperationalActivityDetails(
         ? `Estimate ${metadata.estimate_number}`
         : null;
 
+    case "estimate_sent":
+    case "estimate_email_resent":
+      return metadata.estimate_number
+        ? `Estimate ${metadata.estimate_number}`
+        : "Email sent to customer";
+
+    case "estimate_declined":
+    case "estimate_cancelled":
+      return metadata.estimate_number
+        ? `Estimate ${metadata.estimate_number}`
+        : formatStatusTransition(metadata.from_status, metadata.to_status);
+
     case "estimate_converted_to_invoice":
       if (metadata.invoice_number && metadata.estimate_number) {
         return `Estimate ${metadata.estimate_number} → Invoice ${metadata.invoice_number}`;
@@ -445,6 +473,19 @@ export function formatOperationalActivityDetails(
       return metadata.invoice_number
         ? `Invoice ${metadata.invoice_number}`
         : null;
+
+    case "invoice_sent":
+    case "invoice_email_resent":
+      return metadata.invoice_number
+        ? `Invoice ${metadata.invoice_number}`
+        : "Email sent to customer";
+
+    case "invoice_voided":
+    case "invoice_cancelled":
+    case "invoice_updated":
+      return metadata.invoice_number
+        ? `Invoice ${metadata.invoice_number}`
+        : formatStatusTransition(metadata.from_status, metadata.to_status);
 
     case "payment_recorded": {
       const parts: string[] = [];

@@ -230,5 +230,9 @@ export async function resendEstimateEmailAction(
   revalidatePath("/estimates");
   revalidatePath(`/estimates/${estimateId}`);
 
+  if (currentEstimate.jobId) {
+    revalidatePath(`/jobs/${currentEstimate.jobId}`);
+  }
+
   return { estimate: currentEstimate };
 }

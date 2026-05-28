@@ -114,10 +114,14 @@ export function CompleteJobSheet({
         followUpNotes: followUpNotes.trim() || undefined,
       });
 
-      if (result.error || !result.job) {
+      if (!result.job) {
         setError(result.error ?? "Failed to complete job.");
         submitLockRef.current = false;
         return;
+      }
+
+      if (result.error) {
+        setError(result.error);
       }
 
       onCompleted?.(result.job.status);

@@ -161,7 +161,8 @@ export async function recordJobStatusChangedActivity(input: {
 
   if (
     input.actionId === "complete" &&
-    (await jobHasActivityEvent(input.companyId, input.jobId, "work_completed"))
+    ((await jobHasActivityEvent(input.companyId, input.jobId, "work_completed")) ||
+      (await jobHasActivityEvent(input.companyId, input.jobId, "complete_job")))
   ) {
     return;
   }

@@ -264,12 +264,23 @@ export async function sendInvoiceAction(
     };
   }
 
+  const { invoice: sentInvoice, error: statusError } = await updateInvoiceStatus(
+    context.company.id,
+    invoiceId,
+    "draft",
+    "sent",
+  );
+
+  if (statusError || !sentInvoice) {
+    return { error: statusError ?? "Failed to send invoice." };
+  }
+
   const emailResult = await sendInvoiceEmail({
     to: customerEmail,
     companyName: context.company.name,
     customerName: currentInvoice.customerName,
     invoiceNumber: currentInvoice.invoiceNumber,
-    total: currentInvoice.total,
+    amountDue: currentInvoice.balanceDue,
     dueDate: currentInvoice.dueDate,
     timeZone: context.company.timezone,
     lineItems: currentInvoice.lineItems.map((item) => ({
@@ -281,19 +292,24 @@ export async function sendInvoiceAction(
   });
 
   if (!emailResult.ok) {
+    const { error: revertError } = await updateInvoiceStatus(
+      context.company.id,
+      invoiceId,
+      "sent",
+      "draft",
+    );
+
+    if (revertError) {
+      console.error("[sendInvoiceAction] failed to revert invoice after email failure:", {
+        invoiceId,
+        revertError,
+      });
+    }
+
     return { emailDelivery: toBillingEmailDelivery(emailResult) };
   }
 
-  const { invoice, error } = await updateInvoiceStatus(
-    context.company.id,
-    invoiceId,
-    "draft",
-    "sent",
-  );
-
-  if (error || !invoice) {
-    return { error: error ?? "Failed to send invoice." };
-  }
+  const invoice = sentInvoice;
 
   await recordInvoiceStatusChangedActivity({
     companyId: context.company.id,
@@ -350,6 +366,20 @@ export async function resendInvoiceEmailAction(
     };
   }
 
+  if (currentInvoice.jobId) {
+    const linkedJob = await getJobById(
+      context.company.id,
+      currentInvoice.jobId,
+    );
+    const jobBlockReason = linkedJob
+      ? getSendInvoiceJobBlockReason(linkedJob.status)
+      : null;
+
+    if (jobBlockReason) {
+      return { error: jobBlockReason };
+    }
+  }
+
   const customerEmail = currentInvoice.customerEmail?.trim();
 
   if (!customerEmail || !customerEmail.includes("@")) {
@@ -364,7 +394,7 @@ export async function resendInvoiceEmailAction(
     companyName: context.company.name,
     customerName: currentInvoice.customerName,
     invoiceNumber: currentInvoice.invoiceNumber,
-    total: currentInvoice.total,
+    amountDue: currentInvoice.balanceDue,
     dueDate: currentInvoice.dueDate,
     timeZone: context.company.timezone,
     lineItems: currentInvoice.lineItems.map((item) => ({

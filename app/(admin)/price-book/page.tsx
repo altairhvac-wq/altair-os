@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
+import { canViewBilling } from "@/lib/database/access-control";
 import { shouldShowAlphaComingSoon } from "@/lib/beta/alpha-hardening";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { ComingSoonView } from "@/shared/components/layout/ComingSoonView";
+import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { listServiceItems } from "@/lib/database/queries/service-items";
 import { ServiceItemsPageView } from "@/shared/components/service-items/ServiceItemsPageView";
 
@@ -10,6 +12,12 @@ export default async function PriceBookPage() {
 
   if (!companyContext) {
     redirect("/setup");
+  }
+
+  if (!canViewBilling(companyContext)) {
+    return (
+      <UnauthorizedAccessView description="Price book access is limited to billing and admin roles." />
+    );
   }
 
   if (shouldShowAlphaComingSoon("/price-book")) {

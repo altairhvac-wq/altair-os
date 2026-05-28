@@ -1,7 +1,9 @@
 import { notFound, redirect } from "next/navigation";
+import { canViewBilling } from "@/lib/database/access-control";
 import { shouldShowAlphaComingSoon } from "@/lib/beta/alpha-hardening";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { ComingSoonView } from "@/shared/components/layout/ComingSoonView";
+import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { listEstimateActivitiesForEstimate } from "@/lib/database/queries/estimate-activities";
 import { getEstimateById } from "@/lib/database/queries/estimates";
 import { getInvoiceByEstimateId } from "@/lib/database/queries/invoices";
@@ -19,6 +21,12 @@ export default async function EstimateDetailPage({
 
   if (!companyContext) {
     redirect("/setup");
+  }
+
+  if (!canViewBilling(companyContext)) {
+    return (
+      <UnauthorizedAccessView description="Estimate records are limited to billing and admin roles." />
+    );
   }
 
   if (shouldShowAlphaComingSoon("/estimates")) {

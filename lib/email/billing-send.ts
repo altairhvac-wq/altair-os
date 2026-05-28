@@ -58,7 +58,7 @@ type SendInvoiceEmailInput = {
   companyName: string;
   customerName: string;
   invoiceNumber: string;
-  total: number;
+  amountDue: number;
   dueDate: string;
   timeZone?: string;
   lineItems: BillingLineItem[];
@@ -154,7 +154,7 @@ export async function sendInvoiceEmail(
     "",
     `${input.companyName} sent you invoice ${input.invoiceNumber}.`,
     "",
-    `Total due: ${formatCurrency(input.total)}`,
+    `Amount due: ${formatCurrency(input.amountDue)}`,
     `Due date: ${formatDate(input.dueDate, input.timeZone)}`,
     "",
     "Line items:",
@@ -169,7 +169,7 @@ export async function sendInvoiceEmail(
   const html = `
     <p>Hello ${escapeHtml(input.customerName)},</p>
     <p><strong>${escapeHtml(input.companyName)}</strong> sent you invoice <strong>${escapeHtml(input.invoiceNumber)}</strong>.</p>
-    <p>Total due: <strong>${escapeHtml(formatCurrency(input.total))}</strong></p>
+    <p>Amount due: <strong>${escapeHtml(formatCurrency(input.amountDue))}</strong></p>
     <p>Due date: ${escapeHtml(formatDate(input.dueDate, input.timeZone))}</p>
     <p>Line items:</p>
     ${formatLineItemsHtml(input.lineItems)}

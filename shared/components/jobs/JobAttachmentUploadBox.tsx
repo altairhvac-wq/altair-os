@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { FileImage, Loader2, Upload } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -23,6 +23,7 @@ type JobAttachmentUploadBoxProps = {
   showTypeSelector?: boolean;
   captureEnvironment?: boolean;
   onUploaded?: () => void;
+  onPendingChange?: (isPending: boolean) => void;
 };
 
 const selectClass =
@@ -35,6 +36,7 @@ export function JobAttachmentUploadBox({
   showTypeSelector = true,
   captureEnvironment = false,
   onUploaded,
+  onPendingChange,
 }: JobAttachmentUploadBoxProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -43,6 +45,10 @@ export function JobAttachmentUploadBox({
   const [attachmentType, setAttachmentType] = useState<JobAttachmentType>(
     defaultAttachmentType,
   );
+
+  useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
 
   function handlePickFile() {
     if (!isPending) {
@@ -54,7 +60,7 @@ export function JobAttachmentUploadBox({
     const file = event.target.files?.[0];
     event.target.value = "";
 
-    if (!file) {
+    if (!file || isPending) {
       return;
     }
 

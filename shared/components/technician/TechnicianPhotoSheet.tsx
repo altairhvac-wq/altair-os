@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Camera } from "lucide-react";
 import { JobAttachmentUploadBox } from "@/shared/components/jobs/JobAttachmentUploadBox";
 import {
@@ -25,14 +26,21 @@ export function TechnicianPhotoSheet({
   onClose,
   onUploaded,
 }: TechnicianPhotoSheetProps) {
+  const [isUploading, setIsUploading] = useState(false);
+
   return (
-    <MobileSheet onClose={onClose} ariaLabelledBy={TITLE_ID}>
+    <MobileSheet
+      onClose={onClose}
+      closeDisabled={isUploading}
+      ariaLabelledBy={TITLE_ID}
+    >
       <MobileSheetPanel>
         <MobileSheetHeader
           titleId={TITLE_ID}
           title="Add job photo"
           subtitle={`${jobNumber} — snap or upload on site`}
           onClose={onClose}
+          closeDisabled={isUploading}
           icon={
             <MobileSheetHeaderIcon className="bg-violet-50 ring-1 ring-violet-600/15">
               <Camera className="h-5 w-5 text-violet-600" />
@@ -46,6 +54,7 @@ export function TechnicianPhotoSheet({
             compact
             captureEnvironment
             showTypeSelector={false}
+            onPendingChange={setIsUploading}
             onUploaded={() => {
               onUploaded?.();
               onClose();

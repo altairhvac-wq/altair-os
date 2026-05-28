@@ -156,19 +156,6 @@ export async function updateJobStatusAction(
     return { error: "This status change is not allowed." };
   }
 
-  if (actionId === "complete" || actionId === "cancel") {
-    const { error: laborError } = await finalizeOpenJobLaborForTerminalJob({
-      companyId: context.company.id,
-      jobId,
-      terminalReason: actionId === "complete" ? "completed" : "cancelled",
-      actorId: context.user.id,
-    });
-
-    if (laborError) {
-      return { error: laborError };
-    }
-  }
-
   const { job, error } = await updateJobWorkflowStatus(
     context.company.id,
     jobId,
@@ -178,8 +165,21 @@ export async function updateJobStatusAction(
     payload,
   );
 
-  if (error || !job) {
+  if (!job) {
     return { error: error ?? "Failed to update job status." };
+  }
+
+  if (actionId === "complete" || actionId === "cancel") {
+    const { error: laborError } = await finalizeOpenJobLaborForTerminalJob({
+      companyId: context.company.id,
+      jobId,
+      terminalReason: actionId === "complete" ? "completed" : "cancelled",
+      actorId: context.user.id,
+    });
+
+    if (laborError) {
+      return { error: laborError, job };
+    }
   }
 
   await recordJobStatusChangedActivity({
@@ -202,6 +202,10 @@ export async function updateJobStatusAction(
   revalidatePath("/time");
   revalidatePath(`/jobs/${jobId}`);
   revalidatePath(`/customers/${job.customerId}`);
+
+  if (error) {
+    return { error, job };
+  }
 
   return { job };
 }
@@ -314,7 +318,7 @@ export async function reopenCompletedJobAction(
 
   const targetStatus = resolveReopenTargetStatus(existingJob);
 
-  const { job, error } = await reopenCompletedJob(
+  const { job, error, dispatchReactivated } = await reopenCompletedJob(
     context.company.id,
     jobId,
     targetStatus,
@@ -334,7 +338,7 @@ export async function reopenCompletedJobAction(
     customerId: job.customerId,
     jobNumber: job.jobNumber,
     technicianId: job.assignedTechnicianId,
-    dispatchReactivated: Boolean(existingJob.assignedTechnicianId),
+    dispatchReactivated,
   });
 
   revalidatePath("/jobs");

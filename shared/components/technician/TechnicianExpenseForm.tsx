@@ -72,9 +72,10 @@ export function TechnicianExpenseForm({
     }
 
     setError(null);
+    const formEl = event.currentTarget;
 
     startTransition(async () => {
-      const form = new FormData(event.currentTarget);
+      const form = new FormData(formEl);
       const amountValue = String(form.get("amount") ?? "").trim();
       const merchant = String(form.get("merchant") ?? "").trim();
 

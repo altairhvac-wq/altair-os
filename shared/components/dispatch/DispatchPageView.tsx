@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition, useCallback, useEffect } from "react";
+import { useMemo, useState, useTransition, useCallback, useEffect, useRef } from "react";
 import { BarChart3, SlidersHorizontal, Users } from "lucide-react";
 import { assignJobAction, unassignJobAction } from "@/app/actions/dispatch";
 import {
@@ -62,6 +62,7 @@ export function DispatchPageView({
     );
   }
   const [jobs, setJobs] = useState(initialJobs);
+  const pendingAssignJobIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     setJobs((previous) => {
@@ -71,6 +72,7 @@ export function DispatchPageView({
         const localJob = previousById.get(serverJob.id);
 
         if (
+          pendingAssignJobIdsRef.current.has(serverJob.id) &&
           localJob &&
           hasAssignedJobTechnician(localJob) &&
           !hasAssignedJobTechnician(serverJob) &&
@@ -149,23 +151,28 @@ export function DispatchPageView({
 
       setAssignError(null);
       setAssignSuccess(null);
+      pendingAssignJobIdsRef.current.add(jobId);
 
       startTransition(async () => {
-        const result = await assignJobAction(jobId, technicianId);
+        try {
+          const result = await assignJobAction(jobId, technicianId);
 
-        if (result.error || !result.job) {
-          setAssignError(result.error ?? "Failed to assign job.");
-          return;
+          if (result.error || !result.job) {
+            setAssignError(result.error ?? "Failed to assign job.");
+            return;
+          }
+
+          const assignedName =
+            technicians.find((technician) => technician.id === technicianId)
+              ?.name ?? "Technician";
+          setAssignSuccess(`Assigned to ${assignedName}.`);
+
+          setJobs((previous) =>
+            previous.map((job) => (job.id === result.job!.id ? result.job! : job)),
+          );
+        } finally {
+          pendingAssignJobIdsRef.current.delete(jobId);
         }
-
-        const assignedName =
-          technicians.find((technician) => technician.id === technicianId)
-            ?.name ?? "Technician";
-        setAssignSuccess(`Assigned to ${assignedName}.`);
-
-        setJobs((previous) =>
-          previous.map((job) => (job.id === result.job!.id ? result.job! : job)),
-        );
       });
     },
     [isPending, technicians],

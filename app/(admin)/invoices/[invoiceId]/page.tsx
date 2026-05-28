@@ -29,9 +29,10 @@ export default async function InvoiceDetailPage({
   }
 
   const [invoice, activities, payments] = await Promise.all([
-    ensureInvoiceBillingStatesSynced(companyContext.company.id).then(() =>
-      getInvoiceById(companyContext.company.id, invoiceId),
-    ),
+    ensureInvoiceBillingStatesSynced(
+      companyContext.company.id,
+      companyContext.company.timezone,
+    ).then(() => getInvoiceById(companyContext.company.id, invoiceId)),
     listInvoiceActivitiesForInvoice(companyContext.company.id, invoiceId),
     listPaymentsForInvoice(companyContext.company.id, invoiceId),
   ]);

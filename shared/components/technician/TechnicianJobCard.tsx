@@ -53,9 +53,9 @@ export function TechnicianJobCard({
 }: TechnicianJobCardProps) {
   const [status, setStatus] = useState(job.status);
   const [expanded, setExpanded] = useState(defaultExpanded);
-  const [showExpenseSheet, setShowExpenseSheet] = useState(false);
-  const [showMaterialSheet, setShowMaterialSheet] = useState(false);
-  const [showPhotoSheet, setShowPhotoSheet] = useState(false);
+  const [activeSheet, setActiveSheet] = useState<
+    "material" | "expense" | "photo" | null
+  >(null);
 
   useEffect(() => {
     setStatus((current) =>
@@ -65,9 +65,7 @@ export function TechnicianJobCard({
 
   useEffect(() => {
     if (status === "completed" || status === "cancelled") {
-      setShowMaterialSheet(false);
-      setShowExpenseSheet(false);
-      setShowPhotoSheet(false);
+      setActiveSheet(null);
     }
   }, [status]);
 
@@ -221,24 +219,27 @@ export function TechnicianJobCard({
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowMaterialSheet(true)}
-                    className={`${fieldActionClass} border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100`}
+                    disabled={activeSheet !== null}
+                    onClick={() => setActiveSheet("material")}
+                    className={`${fieldActionClass} border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60`}
                   >
                     <Package className="h-4 w-4 shrink-0" />
                     <span className="truncate">Material</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowExpenseSheet(true)}
-                    className={`${fieldActionClass} border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100`}
+                    disabled={activeSheet !== null}
+                    onClick={() => setActiveSheet("expense")}
+                    className={`${fieldActionClass} border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60`}
                   >
                     <Receipt className="h-4 w-4 shrink-0" />
                     <span className="truncate">Receipt</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowPhotoSheet(true)}
-                    className={`${fieldActionClass} border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100`}
+                    disabled={activeSheet !== null}
+                    onClick={() => setActiveSheet("photo")}
+                    className={`${fieldActionClass} border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60`}
                   >
                     <Camera className="h-4 w-4 shrink-0" />
                     <span className="truncate">Photo</span>
@@ -250,28 +251,28 @@ export function TechnicianJobCard({
         </>
       ) : null}
 
-      {showMaterialSheet ? (
+      {activeSheet === "material" ? (
         <TechnicianMaterialSheet
           jobId={job.id}
           jobNumber={job.jobNumber}
           serviceItems={serviceItems}
-          onClose={() => setShowMaterialSheet(false)}
+          onClose={() => setActiveSheet(null)}
         />
       ) : null}
 
-      {showExpenseSheet ? (
+      {activeSheet === "expense" ? (
         <TechnicianExpenseSheet
           jobId={job.id}
           jobNumber={job.jobNumber}
-          onClose={() => setShowExpenseSheet(false)}
+          onClose={() => setActiveSheet(null)}
         />
       ) : null}
 
-      {showPhotoSheet ? (
+      {activeSheet === "photo" ? (
         <TechnicianPhotoSheet
           jobId={job.id}
           jobNumber={job.jobNumber}
-          onClose={() => setShowPhotoSheet(false)}
+          onClose={() => setActiveSheet(null)}
         />
       ) : null}
     </article>

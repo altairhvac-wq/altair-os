@@ -26,7 +26,10 @@ export default async function InvoiceEditPage({ params }: InvoiceEditPageProps) 
     );
   }
 
-  await ensureInvoiceBillingStatesSynced(companyContext.company.id);
+  await ensureInvoiceBillingStatesSynced(
+    companyContext.company.id,
+    companyContext.company.timezone,
+  );
 
   const [invoice, payments, serviceItems] = await Promise.all([
     getInvoiceById(companyContext.company.id, invoiceId),
