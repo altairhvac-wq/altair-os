@@ -398,7 +398,7 @@ export function DispatchPageView({
         </section>
 
         {selectedJob ? (
-          <div className="hidden lg:block lg:w-[380px] lg:shrink-0">
+          <div className="hidden lg:flex lg:h-full lg:min-h-0 lg:w-[380px] lg:shrink-0 lg:flex-col lg:overflow-hidden">
             <DispatchDetailsPanel
               job={selectedJob}
               technician={selectedTechnician}
@@ -462,7 +462,7 @@ export function DispatchPageView({
           variant="responsive"
           zIndex={50}
         >
-          <MobileSheetPanel maxWidth="lg" unstyled>
+          <MobileSheetPanel maxWidth="lg" maxHeight="90" unstyled className="min-h-0">
             <DispatchDetailsPanel
               job={selectedJob}
               technician={selectedTechnician}

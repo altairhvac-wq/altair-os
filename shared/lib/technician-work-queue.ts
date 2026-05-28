@@ -36,6 +36,13 @@ export function isTechnicianJobCompletedToday(
     return false;
   }
 
+  // Today-scoped technician queues are scheduled for the reference day. A
+  // completed appointment belongs in "Completed today" even when completed_at is
+  // missing or normalizes to a different calendar day.
+  if (isTechnicianJobScheduledToday(job, reference, timeZone)) {
+    return true;
+  }
+
   const completedAt = job.completedAt ?? job.scheduledDate;
   return isSameCalendarDayInTimeZone(completedAt, reference, timeZone);
 }

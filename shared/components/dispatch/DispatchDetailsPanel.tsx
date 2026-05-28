@@ -89,7 +89,7 @@ export function DispatchDetailsPanel({
   }
 
   return (
-    <div className="flex min-h-0 flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-xl sm:rounded-2xl">
+    <div className="flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-xl sm:rounded-2xl">
       <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-4 py-4 sm:px-5">
         <div className="min-w-0 pr-3">
           <h2
@@ -110,7 +110,7 @@ export function DispatchDetailsPanel({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-5">
         <div className="space-y-6">
             <section className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
               <div className="flex items-start justify-between gap-3">
