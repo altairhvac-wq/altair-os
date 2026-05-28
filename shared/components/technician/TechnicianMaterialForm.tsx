@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createJobMaterialAction } from "@/app/actions/job-materials";
@@ -35,6 +35,7 @@ export function TechnicianMaterialForm({
   onSubmittingChange,
 }: TechnicianMaterialFormProps) {
   const router = useRouter();
+  const submitLockRef = useRef(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -96,7 +97,7 @@ export function TechnicianMaterialForm({
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (isPending) {
+    if (submitLockRef.current || isPending) {
       return;
     }
 
@@ -156,11 +157,14 @@ export function TechnicianMaterialForm({
       taxable,
     };
 
+    submitLockRef.current = true;
+
     startTransition(async () => {
       const result = await createJobMaterialAction({ data });
 
       if (result.error) {
         setError(result.error);
+        submitLockRef.current = false;
         return;
       }
 

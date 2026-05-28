@@ -17,15 +17,17 @@ export function TechnicianJobEquipmentSummary({
   const [equipment, setEquipment] = useState<CustomerEquipment[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     setEquipment(null);
     setError(null);
     setIsLoading(false);
+    setLoadAttempt(0);
   }, [customerId]);
 
   useEffect(() => {
-    if (!expanded || equipment !== null) {
+    if (!expanded) {
       return;
     }
 
@@ -63,7 +65,7 @@ export function TechnicianJobEquipmentSummary({
     return () => {
       cancelled = true;
     };
-  }, [customerId, expanded, equipment]);
+  }, [customerId, expanded, loadAttempt]);
 
   if (!expanded) {
     return null;
@@ -80,9 +82,19 @@ export function TechnicianJobEquipmentSummary({
 
   if (error) {
     return (
-      <p className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">
-        {error}
-      </p>
+      <div className="rounded-xl bg-red-50 px-3 py-2.5 text-xs text-red-700">
+        <p>{error}</p>
+        <button
+          type="button"
+          onClick={() => {
+            setEquipment(null);
+            setLoadAttempt((current) => current + 1);
+          }}
+          className="mt-2 min-h-9 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-red-800 ring-1 ring-red-200 transition-colors hover:bg-red-100/60"
+        >
+          Retry
+        </button>
+      </div>
     );
   }
 

@@ -33,6 +33,7 @@ import {
   getExpenseWorkflowActions,
   type ExpenseWorkflowAction,
 } from "@/shared/types/expense-workflow";
+import { isTerminalJobStatus } from "@/shared/types/job-workflow";
 
 export type ExpenseActionResult = {
   error?: string;
@@ -97,6 +98,12 @@ async function assertExpenseJobPermission(jobId: string): Promise<{
   if (job.assignedTechnicianId !== context.user.id) {
     return {
       error: "You can only log expenses on jobs assigned to you.",
+    };
+  }
+
+  if (isTerminalJobStatus(job.status)) {
+    return {
+      error: "Expenses cannot be logged on completed or cancelled jobs.",
     };
   }
 

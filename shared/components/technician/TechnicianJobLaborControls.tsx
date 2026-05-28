@@ -33,6 +33,10 @@ export function TechnicianJobLaborControls({
   const isOffClock = timeState.state === "off_clock";
 
   function handleStart() {
+    if (isPending) {
+      return;
+    }
+
     setError(null);
     startTransition(async () => {
       const result = await startJobLaborAction(jobId);
@@ -48,6 +52,10 @@ export function TechnicianJobLaborControls({
   }
 
   function handleStop() {
+    if (isPending) {
+      return;
+    }
+
     setError(null);
     startTransition(async () => {
       const result = await stopJobLaborAction(jobId);

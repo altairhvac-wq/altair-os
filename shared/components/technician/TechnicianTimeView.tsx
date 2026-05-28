@@ -72,6 +72,10 @@ export function TechnicianTimeView({
   }, [now, state.activeEntry]);
 
   function runAction(action: () => Promise<TimeEntryActionResult>) {
+    if (isPending) {
+      return;
+    }
+
     setError(null);
     startTransition(async () => {
       const result = await action();

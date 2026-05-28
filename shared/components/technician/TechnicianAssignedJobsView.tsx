@@ -42,10 +42,12 @@ function isCompletedToday(job: TechnicianJob, now = new Date()): boolean {
   return isSameCalendarDayInTimeZone(completedAt, now);
 }
 
+function getActiveStatusOrder(status: TechnicianJob["status"]): number {
+  return ACTIVE_STATUS_ORDER[status as ActiveJobStatus] ?? 99;
+}
+
 function compareActiveJobs(a: TechnicianJob, b: TechnicianJob): number {
-  const statusDiff =
-    ACTIVE_STATUS_ORDER[a.status as ActiveJobStatus] -
-    ACTIVE_STATUS_ORDER[b.status as ActiveJobStatus];
+  const statusDiff = getActiveStatusOrder(a.status) - getActiveStatusOrder(b.status);
 
   if (statusDiff !== 0) {
     return statusDiff;

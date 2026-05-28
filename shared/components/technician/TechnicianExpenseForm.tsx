@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getDefaultPaymentDate } from "@/shared/types/invoice-payment";
@@ -49,6 +49,7 @@ export function TechnicianExpenseForm({
   onSubmittingChange,
 }: TechnicianExpenseFormProps) {
   const router = useRouter();
+  const submitLockRef = useRef(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
@@ -67,12 +68,14 @@ export function TechnicianExpenseForm({
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (isPending) {
+    if (submitLockRef.current || isPending) {
       return;
     }
 
     setError(null);
     const formEl = event.currentTarget;
+
+    submitLockRef.current = true;
 
     startTransition(async () => {
       const form = new FormData(formEl);
@@ -81,7 +84,17 @@ export function TechnicianExpenseForm({
 
       if (!receiptFile && !amountValue) {
         setError("Add a receipt photo or enter an amount.");
+        submitLockRef.current = false;
         return;
+      }
+
+      if (amountValue) {
+        const parsedAmount = Number(amountValue);
+        if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
+          setError("Enter a valid amount of zero or greater.");
+          submitLockRef.current = false;
+          return;
+        }
       }
 
       const data: ExpenseFormData = {
@@ -97,6 +110,7 @@ export function TechnicianExpenseForm({
 
       if (result.error) {
         setError(result.error);
+        submitLockRef.current = false;
         return;
       }
 

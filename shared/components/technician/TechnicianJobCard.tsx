@@ -122,20 +122,18 @@ export function TechnicianJobCard({
         {!expanded ? (
           <div className="mt-3 space-y-2">
             <TechnicianCustomerQuickActions job={job} />
-            {isActive ? (
-              <JobWorkflowControls
-                jobId={job.id}
-                customerId={job.customerId}
-                initialStatus={status}
-                serviceAddress={job.serviceAddress}
-                city={job.city}
-                state={job.state}
-                zip={job.zip}
-                canUpdateStatus
-                layout="stack"
-                onStatusUpdated={setStatus}
-              />
-            ) : null}
+            <JobWorkflowControls
+              jobId={job.id}
+              customerId={job.customerId}
+              initialStatus={status}
+              serviceAddress={job.serviceAddress}
+              city={job.city}
+              state={job.state}
+              zip={job.zip}
+              canUpdateStatus
+              layout="stack"
+              onStatusUpdated={setStatus}
+            />
           </div>
         ) : null}
       </div>

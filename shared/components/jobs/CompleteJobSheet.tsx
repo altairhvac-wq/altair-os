@@ -13,6 +13,7 @@ import {
   EMPTY_COMPLETE_JOB_EQUIPMENT_PAYLOAD,
   type CompleteJobEquipmentPayload,
 } from "@/shared/components/equipment/CompleteJobEquipmentPanel";
+import { validateCustomerEquipmentFormData } from "@/shared/types/customer-equipment";
 import { CompleteJobPhotosPanel } from "@/shared/components/jobs/CompleteJobPhotosPanel";
 import {
   MobileSheet,
@@ -66,8 +67,11 @@ export function CompleteJobSheet({
 
     startTransition(async () => {
       if (equipmentPayload.mode === "create" && equipmentPayload.data) {
-        if (!equipmentPayload.data.name.trim()) {
-          setError("Equipment name is required when adding equipment.");
+        const validationError = validateCustomerEquipmentFormData(
+          equipmentPayload.data,
+        );
+        if (validationError) {
+          setError(validationError);
           submitLockRef.current = false;
           return;
         }
@@ -90,8 +94,11 @@ export function CompleteJobSheet({
         equipmentPayload.equipmentId &&
         equipmentPayload.data
       ) {
-        if (!equipmentPayload.data.name.trim()) {
-          setError("Equipment name is required when updating equipment.");
+        const validationError = validateCustomerEquipmentFormData(
+          equipmentPayload.data,
+        );
+        if (validationError) {
+          setError(validationError);
           submitLockRef.current = false;
           return;
         }
@@ -120,11 +127,14 @@ export function CompleteJobSheet({
         return;
       }
 
+      onCompleted?.(result.job.status);
+
       if (result.error) {
         setError(result.error);
+        submitLockRef.current = false;
+        return;
       }
 
-      onCompleted?.(result.job.status);
       onClose();
       router.refresh();
     });
@@ -191,25 +201,40 @@ export function CompleteJobSheet({
 
             <CompleteJobPhotosPanel jobId={jobId} />
 
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            {error ? (
+              <p className="text-sm text-red-600" role="alert" aria-live="polite">
+                {error}
+              </p>
+            ) : null}
           </MobileSheetBody>
 
-          <MobileSheetFooter>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isPending}
-              className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-emerald-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isPending ? "Completing..." : "Complete work"}
-            </button>
+          <MobileSheetFooter className={error ? "flex-col" : undefined}>
+            {error ? (
+              <p
+                className="w-full text-sm text-red-600"
+                role="alert"
+                aria-live="polite"
+              >
+                {error}
+              </p>
+            ) : null}
+            <div className="flex w-full gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isPending}
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isPending}
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-emerald-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isPending ? "Completing..." : "Complete work"}
+              </button>
+            </div>
           </MobileSheetFooter>
         </form>
       </MobileSheetPanel>
