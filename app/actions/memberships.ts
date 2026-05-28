@@ -19,7 +19,10 @@ import {
   emitTeamInviteCreatedEvent,
   type MembershipActivityTarget,
 } from "@/lib/database/services/operational-events";
+import { getAppBaseUrl, logInviteEmailEnvPresence } from "@/lib/email/env";
+import { sendTeamInviteEmail } from "@/lib/email/team-invite";
 import type { CompanyRole } from "@/lib/database/types/enums";
+import { buildTeamInviteAcceptUrl } from "@/shared/lib/team-invite-link";
 import type { TeamMember } from "@/shared/types/team-member";
 
 function toMembershipActivityTarget(member: TeamMember): MembershipActivityTarget {
@@ -43,9 +46,20 @@ export type UpdateMemberStatusActionResult = {
   member?: TeamMember;
 };
 
+export type TeamInviteEmailDeliveryStatus =
+  | "sent"
+  | "not_configured"
+  | "failed";
+
 export type InviteTeamMemberActionResult = {
   error?: string;
   member?: TeamMember;
+  emailDelivery?: {
+    status: TeamInviteEmailDeliveryStatus;
+    message?: string;
+    missingEnv?: string[];
+  };
+  inviteAcceptUrl?: string;
 };
 
 export type AcceptInviteActionResult = {
@@ -128,6 +142,11 @@ export async function inviteTeamMemberAction(
   email: string,
   role: CompanyRole,
 ): Promise<InviteTeamMemberActionResult> {
+  console.info("[team-invite-prod-debug] inviteTeamMemberAction entered", {
+    role,
+    toDomain: email.includes("@") ? email.split("@")[1] : "invalid",
+  });
+
   const context = await getActiveCompanyContext();
 
   if (!context) {
@@ -149,8 +168,55 @@ export async function inviteTeamMemberAction(
   );
 
   if (result.error || !result.member) {
-    return { error: result.error ?? "Failed to send invitation." };
+    return { error: result.error ?? "Failed to create invitation." };
   }
+
+  const appBaseUrl = getAppBaseUrl();
+  const inviteAcceptUrl = appBaseUrl
+    ? buildTeamInviteAcceptUrl(appBaseUrl)
+    : undefined;
+
+  console.info("[team-invite-prod-debug] env presence check", {
+    RESEND_API_KEY: Boolean(process.env.RESEND_API_KEY?.trim()),
+    RESEND_FROM_EMAIL: Boolean(process.env.RESEND_FROM_EMAIL?.trim()),
+    NEXT_PUBLIC_APP_URL: Boolean(process.env.NEXT_PUBLIC_APP_URL?.trim()),
+    VERCEL_URL: Boolean(process.env.VERCEL_URL?.trim()),
+    NODE_ENV: process.env.NODE_ENV ?? "unknown",
+  });
+
+  console.info("[team-invite-prod-debug] resolved app URL", {
+    appBaseUrl: appBaseUrl ?? null,
+    source: process.env.NEXT_PUBLIC_APP_URL?.trim()
+      ? "NEXT_PUBLIC_APP_URL"
+      : process.env.VERCEL_URL?.trim()
+        ? "VERCEL_URL"
+        : "none",
+  });
+
+  console.info("[team-invite-debug:inviteTeamMemberAction] invite saved, sending email", {
+    toDomain: result.member.email.split("@")[1] ?? "unknown",
+    membershipId: result.member.id,
+  });
+  logInviteEmailEnvPresence("inviteTeamMemberAction");
+
+  const emailResult = await sendTeamInviteEmail({
+    to: result.member.email,
+    companyName: context.company.name,
+    inviteEmail: result.member.email,
+    role: result.member.role,
+    inviterName: context.profile?.full_name,
+  });
+
+  console.info("[team-invite-debug:inviteTeamMemberAction] sendTeamInviteEmail result", {
+    ok: emailResult.ok,
+    reason: emailResult.ok ? undefined : emailResult.reason,
+    providerMessageId: emailResult.ok ? emailResult.providerMessageId : undefined,
+    missingEnv:
+      !emailResult.ok && emailResult.reason === "not_configured"
+        ? emailResult.missingEnv
+        : undefined,
+    message: emailResult.ok ? undefined : emailResult.message,
+  });
 
   await emitTeamInviteCreatedEvent({
     companyId: context.company.id,
@@ -161,7 +227,49 @@ export async function inviteTeamMemberAction(
 
   revalidatePath("/settings");
 
-  return { member: result.member };
+  if (emailResult.ok) {
+    const emailDelivery = { status: "sent" as const };
+    console.info("[team-invite-prod-debug] final emailDelivery status", {
+      emailDelivery,
+      membershipId: result.member.id,
+    });
+    return {
+      member: result.member,
+      inviteAcceptUrl,
+      emailDelivery,
+    };
+  }
+
+  if (emailResult.reason === "not_configured") {
+    const emailDelivery = {
+      status: "not_configured" as const,
+      message: emailResult.message,
+      missingEnv: emailResult.missingEnv,
+    };
+    console.info("[team-invite-prod-debug] final emailDelivery status", {
+      emailDelivery,
+      membershipId: result.member.id,
+    });
+    return {
+      member: result.member,
+      inviteAcceptUrl,
+      emailDelivery,
+    };
+  }
+
+  const emailDelivery = {
+    status: "failed" as const,
+    message: emailResult.message,
+  };
+  console.info("[team-invite-prod-debug] final emailDelivery status", {
+    emailDelivery,
+    membershipId: result.member.id,
+  });
+  return {
+    member: result.member,
+    inviteAcceptUrl,
+    emailDelivery,
+  };
 }
 
 export async function cancelTeamInviteAction(

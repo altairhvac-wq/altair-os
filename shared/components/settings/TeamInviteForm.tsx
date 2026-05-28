@@ -6,6 +6,7 @@ import { inviteTeamMemberAction } from "@/app/actions/memberships";
 import { getInvitableTeamRoles } from "@/lib/database/services/member-role-guard";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import type { TeamMember } from "@/shared/types/team-member";
+import { buildTeamInviteShareTextFromOrigin } from "@/shared/lib/team-invite-link";
 import { RoleSelectorField } from "./RoleSelectorField";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
 
@@ -13,6 +14,13 @@ type TeamInviteFormProps = {
   currentUserRole: CompanyRole;
   onMemberInvited: (member: TeamMember) => void;
 };
+
+type FeedbackTone = "success" | "warning" | "error";
+
+type FeedbackState = {
+  tone: FeedbackTone;
+  message: string;
+} | null;
 
 export function TeamInviteForm({
   currentUserRole,
@@ -23,8 +31,7 @@ export function TeamInviteForm({
     const roles = getInvitableTeamRoles(currentUserRole);
     return roles.includes("technician") ? "technician" : roles[0] ?? "technician";
   });
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -34,8 +41,7 @@ export function TeamInviteForm({
   );
 
   function clearFeedback() {
-    setError(null);
-    setSuccess(null);
+    setFeedback(null);
     setCopied(false);
   }
 
@@ -46,7 +52,7 @@ export function TeamInviteForm({
     const trimmedEmail = email.trim();
 
     if (!trimmedEmail.includes("@")) {
-      setError("Enter a valid email address.");
+      setFeedback({ tone: "error", message: "Enter a valid email address." });
       return;
     }
 
@@ -54,33 +60,67 @@ export function TeamInviteForm({
       const result = await inviteTeamMemberAction(trimmedEmail, role);
 
       if (result.error) {
-        setError(result.error);
+        setFeedback({ tone: "error", message: result.error });
         return;
       }
 
-      if (result.member) {
-        onMemberInvited(result.member);
-        setEmail("");
-        setSuccess(
-          `Invitation created for ${result.member.email}. They can sign up or log in with that email to accept.`,
-        );
-      } else {
-        setError("Failed to create invitation.");
+      if (!result.member) {
+        setFeedback({ tone: "error", message: "Failed to create invitation." });
+        return;
       }
+
+      onMemberInvited(result.member);
+      setEmail("");
+
+      if (result.emailDelivery?.status === "sent") {
+        setFeedback({ tone: "success", message: "Invite sent." });
+        return;
+      }
+
+      if (result.emailDelivery?.status === "not_configured") {
+        setFeedback({
+          tone: "warning",
+          message:
+            result.emailDelivery.message ??
+            "Invite created, but email could not be sent. Copy the invite link or check email setup.",
+        });
+        return;
+      }
+
+      setFeedback({
+        tone: "warning",
+        message:
+          result.emailDelivery?.message ??
+          "Invite created, but email could not be sent. Copy the invite link or check email setup.",
+      });
     });
   }
 
   async function handleCopyInstructions() {
     const trimmedEmail = email.trim();
-    const inviteText = trimmedEmail
-      ? `You've been invited to Altair OS. Sign up or log in at the app URL using ${trimmedEmail} to accept your team invitation.`
-      : "You've been invited to Altair OS. Sign up or log in at the app URL using the invited email to accept your team invitation.";
+
+    if (!trimmedEmail.includes("@")) {
+      setFeedback({
+        tone: "error",
+        message: "Enter an email address before copying invite instructions.",
+      });
+      return;
+    }
+
+    const inviteText = buildTeamInviteShareTextFromOrigin(
+      window.location.origin,
+      trimmedEmail,
+    );
 
     try {
       await navigator.clipboard.writeText(inviteText);
       setCopied(true);
     } catch {
       setCopied(false);
+      setFeedback({
+        tone: "error",
+        message: "Could not copy invite instructions. Copy the link manually.",
+      });
     }
   }
 
@@ -139,7 +179,7 @@ export function TeamInviteForm({
             disabled={isPending || email.trim().length === 0}
             className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isPending ? "Creating invite..." : "Create invite"}
+            {isPending ? "Sending invite..." : "Send invite"}
           </button>
 
           <button
@@ -148,22 +188,21 @@ export function TeamInviteForm({
             className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             <Copy className="h-4 w-4" aria-hidden="true" />
-            {copied ? "Copied invite message" : "Copy invite instructions"}
+            {copied ? "Copied invite link" : "Copy invite link"}
           </button>
         </div>
 
         <p className="text-xs leading-relaxed text-slate-500">
-          Email delivery is not enabled yet. Share the invite message manually,
-          or ask teammates to sign up with the invited email — pending invites
-          appear on their setup screen.
+          Invites are saved immediately. Email is sent only when Resend is
+          configured; otherwise copy the invite link for the teammate. Pending
+          invites also appear on their setup screen after they sign up with the
+          invited email.
         </p>
 
-        {error ? (
-          <SettingsAlertBanner tone="error">{error}</SettingsAlertBanner>
-        ) : null}
-
-        {success ? (
-          <SettingsAlertBanner tone="success">{success}</SettingsAlertBanner>
+        {feedback ? (
+          <SettingsAlertBanner tone={feedback.tone}>
+            {feedback.message}
+          </SettingsAlertBanner>
         ) : null}
       </form>
     </div>

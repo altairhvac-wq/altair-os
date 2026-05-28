@@ -24,6 +24,7 @@ import {
   suspendTeamMemberAction,
   updateMemberRoleAction,
 } from "@/app/actions/memberships";
+import { CopyTeamInviteLinkButton } from "./CopyTeamInviteLinkButton";
 import { MembershipStatusBadge } from "./MembershipStatusBadge";
 import { RoleSelectorField } from "./RoleSelectorField";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
@@ -417,20 +418,26 @@ export function TeamMemberMobileCards({
                       Reactivate access
                     </button>
                   ) : member.status === "invited" ? (
-                    <button
-                      type="button"
-                      disabled={!canCancelInvite || isRowPending}
-                      onClick={() => {
-                        if (!canCancelInvite) return;
-                        setConfirmingAction({
-                          membershipId: member.id,
-                          action: "cancelInvite",
-                        });
-                      }}
-                      className="inline-flex min-h-[44px] w-full items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:text-slate-400"
-                    >
-                      Cancel invite
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      <CopyTeamInviteLinkButton
+                        inviteEmail={member.email}
+                        className="w-full"
+                      />
+                      <button
+                        type="button"
+                        disabled={!canCancelInvite || isRowPending}
+                        onClick={() => {
+                          if (!canCancelInvite) return;
+                          setConfirmingAction({
+                            membershipId: member.id,
+                            action: "cancelInvite",
+                          });
+                        }}
+                        className="inline-flex min-h-[44px] w-full items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:text-slate-400"
+                      >
+                        Cancel invite
+                      </button>
+                    </div>
                   ) : null}
                 </div>
               ) : null}
