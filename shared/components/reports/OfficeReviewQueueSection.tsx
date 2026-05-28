@@ -130,6 +130,8 @@ const FILTER_EMPTY_MESSAGES: Record<
   attention: "No standard follow-up items match this filter.",
   invoicing: "No completed jobs awaiting invoicing match this filter.",
   stalled: "No stalled pipeline jobs match this filter.",
+  integrity:
+    "No data integrity issues match this filter — dispatch, labor, billing, and workflow fields are in sync.",
 };
 
 const GROUP_FILTER_MAP: Partial<

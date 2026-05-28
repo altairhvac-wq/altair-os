@@ -273,6 +273,41 @@ function resolveWorkflowReadinessWeaknessRisk(
   };
 }
 
+function resolveDataIntegrityRisk(
+  input: OperationalRiskDrilldownInput,
+): OperationalRiskExplanation | null {
+  const integrityItems = input.officeReviewQueue.summary.items.filter(
+    (item) => item.kind === "operational_inconsistency",
+  );
+
+  if (integrityItems.length === 0) {
+    return null;
+  }
+
+  const criticalCount = integrityItems.filter(
+    (item) => item.severity === "critical",
+  ).length;
+  const severity: OperationalRiskDrilldownSeverity =
+    criticalCount > 0 ? "critical" : "warning";
+  const officeQueueScore =
+    input.operationalHealth.areaScores.find((area) => area.id === "office_queue")
+      ?.score ?? 100;
+
+  return {
+    id: "data-integrity-drift",
+    title: "Operational data integrity drift",
+    severity,
+    affectedArea: "Office review queue",
+    reason: `${integrityItems.length} ${pluralize(integrityItems.length, "job")} ${integrityItems.length === 1 ? "has" : "have"} dispatch, labor, billing, or workflow fields out of sync with live records${criticalCount > 0 ? ` — ${criticalCount} critical` : ""}.`,
+    supportingMetric: `${integrityItems.length} integrity ${pluralize(integrityItems.length, "flag")} · queue health ${officeQueueScore}/100`,
+    recommendedFollowUp:
+      "Open the data integrity queue filter on Reports, follow recovery guidance per job, and re-check after dispatch or billing changes.",
+    href: criticalCount > 0 ? "/reports?queue=integrity" : "/reports?queue=integrity",
+    priorityScore: 920 + integrityItems.length * 10 + criticalCount * 12,
+    areaId: "office_queue",
+  };
+}
+
 function resolveCompletedWorkReviewRisk(
   input: OperationalRiskDrilldownInput,
 ): OperationalRiskExplanation | null {
@@ -314,6 +349,7 @@ const RISK_BUILDERS: ((
   input: OperationalRiskDrilldownInput,
 ) => OperationalRiskExplanation | null)[] = [
   resolveOfficeQueuePressureRisk,
+  resolveDataIntegrityRisk,
   resolveCashFlowBlockedRisk,
   resolveStalledJobBacklogRisk,
   resolveProfitabilityWarningRisk,

@@ -11,6 +11,7 @@ import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment
 import { getJobById } from "@/lib/database/queries/jobs";
 import { listTechnicians } from "@/lib/database/queries/technicians";
 import { getJobProfitabilitySnapshot } from "@/lib/database/services/job-profitability";
+import { getJobOperationalInconsistencies } from "@/lib/database/services/reports/operational-inconsistencies-report";
 import { JobDetailPageView } from "@/shared/components/jobs/JobDetailPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 
@@ -66,13 +67,17 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       : Promise.resolve([]),
   ]);
 
-  const profitability = canViewFinancials
-    ? await getJobProfitabilitySnapshot(
-        companyContext.company.id,
-        jobId,
-        { expenses, materials },
-      )
-    : null;
+  const [profitability, operationalInconsistencies] = await Promise.all([
+    canViewFinancials
+      ? getJobProfitabilitySnapshot(companyContext.company.id, jobId, {
+          expenses,
+          materials,
+        })
+      : Promise.resolve(null),
+    access.canViewOperationalReports
+      ? getJobOperationalInconsistencies(companyContext.company.id, job)
+      : Promise.resolve([]),
+  ]);
 
   return (
     <JobDetailPageView
@@ -100,6 +105,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           job.assignedTechnicianId === companyContext.user.id)
       }
       canViewFinancials={canViewFinancials}
+      operationalInconsistencies={operationalInconsistencies}
     />
   );
 }

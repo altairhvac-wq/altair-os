@@ -655,3 +655,68 @@ export async function reactivateDispatchAssignmentForReopenedJob(
 
   return { error: null };
 }
+
+export type DispatchAssignmentListRow = {
+  id: string;
+  jobId: string;
+  technicianId: string;
+  status: DispatchAssignmentStatus;
+};
+
+/** Company-scoped dispatch rows for read-only integrity scans. */
+export async function listDispatchAssignmentsForCompany(
+  companyId: string,
+): Promise<DispatchAssignmentListRow[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("dispatch_assignments")
+    .select("id, job_id, technician_id, status")
+    .eq("company_id", companyId);
+
+  if (error) {
+    console.error("[listDispatchAssignmentsForCompany] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    jobId: row.job_id,
+    technicianId: row.technician_id,
+    status: row.status as DispatchAssignmentStatus,
+  }));
+}
+
+export async function listDispatchAssignmentsForJob(
+  companyId: string,
+  jobId: string,
+): Promise<DispatchAssignmentListRow[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("dispatch_assignments")
+    .select("id, job_id, technician_id, status")
+    .eq("company_id", companyId)
+    .eq("job_id", jobId);
+
+  if (error) {
+    console.error("[listDispatchAssignmentsForJob] query failed:", {
+      companyId,
+      jobId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    jobId: row.job_id,
+    technicianId: row.technician_id,
+    status: row.status as DispatchAssignmentStatus,
+  }));
+}

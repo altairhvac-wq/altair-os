@@ -3,6 +3,7 @@ import { getCompanyCompletedWorkReport } from "@/lib/database/services/reports/c
 import { getCompanyCompletedWorkReviewReport } from "@/lib/database/services/reports/completed-work-review-report";
 import { getCompanyStalledJobsReport } from "@/lib/database/services/reports/stalled-jobs-report";
 import { getJobReviewBlockerResolutionTrendSummary } from "@/lib/database/services/job-review-resolution";
+import { getCompanyOperationalInconsistenciesReport } from "@/lib/database/services/reports/operational-inconsistencies-report";
 import {
   buildOfficeReviewQueueReport,
   type OfficeReviewQueueReport,
@@ -17,12 +18,14 @@ export async function getCompanyOfficeReviewQueueReport(
     completedWorkReview,
     awaitingInvoicing,
     stalledJobs,
+    operationalInconsistencies,
     resolutionTrend,
     jobs,
   ] = await Promise.all([
     getCompanyCompletedWorkReviewReport(companyId),
     getCompanyCompletedWorkReport(companyId),
     getCompanyStalledJobsReport(companyId),
+    getCompanyOperationalInconsistenciesReport(companyId),
     getJobReviewBlockerResolutionTrendSummary(companyId),
     listJobs(companyId),
   ]);
@@ -35,6 +38,7 @@ export async function getCompanyOfficeReviewQueueReport(
     completedWorkReview,
     awaitingInvoicing,
     stalledJobs,
+    operationalInconsistencies: operationalInconsistencies.summary.entries,
     resolutionTrend,
     customerIdByJobId,
     sortMode: options?.sortMode,

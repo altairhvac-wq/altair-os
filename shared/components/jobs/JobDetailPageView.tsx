@@ -21,6 +21,7 @@ import { JobExpenseReceiptsSection } from "./JobExpenseReceiptsSection";
 import { JobMaterialsSection } from "./JobMaterialsSection";
 import { JobProfitabilitySection } from "./JobProfitabilitySection";
 import { JobDetailHashScroll } from "./JobDetailHashScroll";
+import { JobOperationalRecoverySection } from "./JobOperationalRecoverySection";
 import { JobReviewChecklistSection } from "./JobReviewChecklistSection";
 import { OperationalActivityTimeline } from "@/shared/components/operational/OperationalActivityTimeline";
 import {
@@ -35,6 +36,7 @@ import type { JobMaterial } from "@/shared/types/job-material";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
 import type { ServiceItem } from "@/shared/types/service-item";
 import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
+import type { OperationalInconsistencyEntry } from "@/shared/types/operational-inconsistencies";
 
 type JobDetailPageViewProps = {
   job: JobDetail;
@@ -52,6 +54,7 @@ type JobDetailPageViewProps = {
   canEditJob: boolean;
   canLogMaterials: boolean;
   canViewFinancials: boolean;
+  operationalInconsistencies?: OperationalInconsistencyEntry[];
 };
 
 type ContentSectionProps = {
@@ -89,6 +92,7 @@ export function JobDetailPageView({
   canEditJob,
   canLogMaterials,
   canViewFinancials,
+  operationalInconsistencies = [],
 }: JobDetailPageViewProps) {
   const customerEmail = job.customerEmail?.trim();
   const customerPhone = job.customerPhone?.trim();
@@ -270,6 +274,13 @@ export function JobDetailPageView({
           />
         </ContentSection>
       </div>
+
+      {operationalInconsistencies.length > 0 ? (
+        <JobOperationalRecoverySection
+          jobId={job.id}
+          entries={operationalInconsistencies}
+        />
+      ) : null}
 
       {canViewFinancials && profitability ? (
         <>

@@ -16,6 +16,11 @@ import type {
   StalledJobsReport,
 } from "@/shared/types/reports";
 import {
+  formatOperationalInconsistencyKinds,
+  type OperationalInconsistencyEntry,
+  type OperationalInconsistencyKind,
+} from "@/shared/types/operational-inconsistencies";
+import {
   buildReportSectionMeta,
   formatCompletedWorkInvoiceStatus,
 } from "@/shared/types/reports";
@@ -33,6 +38,7 @@ export type OfficeReviewQueueAgingBucket = "fresh" | "aging" | "overdue";
 
 export type OfficeReviewQueueItemKind =
   | "completed_work_review"
+  | "operational_inconsistency"
   | "awaiting_invoicing"
   | "stalled_job";
 
@@ -57,12 +63,13 @@ export type OfficeReviewQueueFilter =
   | "aging"
   | "attention"
   | "invoicing"
-  | "stalled";
+  | "stalled"
+  | "integrity";
 
 const OFFICE_REVIEW_QUEUE_FILTER_VALUES: Exclude<
   OfficeReviewQueueFilter,
   "all"
->[] = ["critical", "aging", "attention", "invoicing", "stalled"];
+>[] = ["critical", "aging", "attention", "invoicing", "stalled", "integrity"];
 
 export const OFFICE_REVIEW_QUEUE_FILTER_OPTIONS: {
   value: OfficeReviewQueueFilter;
@@ -74,6 +81,7 @@ export const OFFICE_REVIEW_QUEUE_FILTER_OPTIONS: {
   { value: "attention", label: "Needs attention" },
   { value: "invoicing", label: "Needs invoice" },
   { value: "stalled", label: "Stalled jobs" },
+  { value: "integrity", label: "Data integrity" },
 ];
 
 export type OfficeReviewQueueActionId =
@@ -117,6 +125,8 @@ export type OfficeReviewQueueItem = {
   readinessLabel: string;
   readinessColor: OfficeReviewQueueReadinessColor;
   readinessExplanation: string;
+  /** Present when kind is operational_inconsistency. */
+  inconsistencyKinds?: OperationalInconsistencyKind[];
 };
 
 export type OfficeReviewQueueAgingBucketCounts = Record<
@@ -155,6 +165,7 @@ const GROUP_ORDER: Record<OfficeReviewQueueGroup, number> = {
 
 const KIND_LABELS: Record<OfficeReviewQueueItemKind, string> = {
   completed_work_review: "Needs review",
+  operational_inconsistency: "Data integrity",
   awaiting_invoicing: "Awaiting invoicing",
   stalled_job: "Stalled job",
 };
@@ -162,8 +173,9 @@ const KIND_LABELS: Record<OfficeReviewQueueItemKind, string> = {
 /** Lower rank wins when the same job appears in multiple source reports. */
 const KIND_PRIORITY: Record<OfficeReviewQueueItemKind, number> = {
   completed_work_review: 0,
-  awaiting_invoicing: 1,
-  stalled_job: 2,
+  operational_inconsistency: 1,
+  awaiting_invoicing: 2,
+  stalled_job: 3,
 };
 
 const FALLBACK_JOB_NUMBER = "Unknown job";
@@ -293,6 +305,8 @@ const OFFICE_REVIEW_QUEUE_FILTER_DESCRIPTIONS: Record<
   attention: "Review flags, invoicing backlog, and active pipeline stalls.",
   invoicing: "Completed jobs awaiting invoice — billing backlog from live records.",
   stalled: "Inactive pipeline jobs — flow stalls from existing job activity signals.",
+  integrity:
+    "Dispatch, labor, billing, or workflow fields out of sync — read-only integrity scan.",
 };
 
 export function getOfficeReviewQueueFilterDescription(
@@ -324,6 +338,8 @@ export function filterOfficeReviewQueueItems(
       return items.filter((item) => item.kind === "awaiting_invoicing");
     case "stalled":
       return items.filter((item) => item.kind === "stalled_job");
+    case "integrity":
+      return items.filter((item) => item.kind === "operational_inconsistency");
   }
 }
 
@@ -521,6 +537,66 @@ function toAwaitingInvoicingQueueItem(
     lastActivityAt: entry.completedAt,
     assignedTechnician: entry.assignedTechnician?.trim() || undefined,
     detail: "No active invoice on file",
+  });
+}
+
+function groupInconsistenciesByJobId(
+  entries: OperationalInconsistencyEntry[],
+): Map<string, OperationalInconsistencyEntry[]> {
+  const map = new Map<string, OperationalInconsistencyEntry[]>();
+
+  for (const entry of entries) {
+    const existing = map.get(entry.jobId);
+    if (existing) {
+      existing.push(entry);
+    } else {
+      map.set(entry.jobId, [entry]);
+    }
+  }
+
+  return map;
+}
+
+function toOperationalInconsistencyQueueItem(
+  jobId: string,
+  entries: OperationalInconsistencyEntry[],
+  customerIdByJobId: Map<string, string>,
+): OfficeReviewQueueItem | null {
+  if (!isValidOfficeReviewQueueJobId(jobId) || entries.length === 0) {
+    return null;
+  }
+
+  const primary = entries[0];
+  const kinds = [...new Set(entries.map((entry) => entry.kind))];
+  const severity: OfficeReviewQueueSeverity = entries.some(
+    (entry) => entry.severity === "critical",
+  )
+    ? "critical"
+    : "warning";
+  const daysAging = 0;
+
+  return enrichQueueItemWithAgingMetadata({
+    jobId: primary.jobId,
+    jobNumber: sanitizeOfficeReviewQueueLabel(
+      primary.jobNumber,
+      FALLBACK_JOB_NUMBER,
+    ),
+    customerId: customerIdByJobId.get(primary.jobId),
+    customerName: sanitizeOfficeReviewQueueLabel(
+      primary.customerName,
+      FALLBACK_CUSTOMER_NAME,
+    ),
+    kind: "operational_inconsistency",
+    severity,
+    group: resolveQueueGroup({ severity, daysAging }),
+    daysAging,
+    blockerCount: kinds.length,
+    reviewReasons: [],
+    lastActivityAt: null,
+    assignedTechnician: undefined,
+    jobStatus: primary.jobStatus,
+    detail: formatOperationalInconsistencyKinds(kinds),
+    inconsistencyKinds: kinds,
   });
 }
 
@@ -875,6 +951,41 @@ export function resolvePrimaryQueueAction(
     return buildOpenJobAction(jobId);
   }
 
+  if (item.kind === "operational_inconsistency") {
+    const kinds = item.inconsistencyKinds ?? [];
+    if (
+      kinds.some((kind) =>
+        [
+          "stale_active_dispatch_on_terminal_job",
+          "job_assigned_without_active_dispatch",
+          "active_dispatch_without_job_assignment",
+          "dispatch_technician_mismatch",
+          "invalid_assigned_technician",
+        ].includes(kind),
+      )
+    ) {
+      return buildOpenDispatchAction();
+    }
+
+    if (kinds.includes("open_labor_on_cancelled_job")) {
+      return buildReviewLaborAction(jobId);
+    }
+
+    if (kinds.includes("invoice_balance_mismatch")) {
+      const invoiceHref = safeBuildQueueActionHref("/invoices", { jobId });
+      if (invoiceHref) {
+        return {
+          id: "open_job",
+          label: "Review invoices",
+          href: invoiceHref,
+          external: true,
+        };
+      }
+    }
+
+    return buildOpenJobAction(jobId);
+  }
+
   if (item.kind === "awaiting_invoicing") {
     return buildCreateInvoiceAction(jobId, customerId);
   }
@@ -935,6 +1046,7 @@ export function buildOfficeReviewQueueReport(input: {
   completedWorkReview: CompletedWorkReviewReport;
   awaitingInvoicing: CompletedWorkAwaitingInvoicingReport;
   stalledJobs: StalledJobsReport;
+  operationalInconsistencies?: OperationalInconsistencyEntry[];
   resolutionTrend: QueueResolutionTrendSummary;
   customerIdByJobId: Map<string, string>;
   sortMode?: OfficeReviewQueueSortMode;
@@ -946,16 +1058,30 @@ export function buildOfficeReviewQueueReport(input: {
       .filter(isValidOfficeReviewQueueJobId),
   );
   const higherPriorityJobIds = new Set(reviewJobIds);
+  const inconsistenciesByJob = groupInconsistenciesByJobId(
+    input.operationalInconsistencies ?? [],
+  );
 
   const rawItems: OfficeReviewQueueItem[] = [
     ...input.completedWorkReview.summary.jobs
       .map((entry) => toReviewQueueItem(entry, input.customerIdByJobId))
       .filter((entry): entry is OfficeReviewQueueItem => entry != null),
+    ...[...inconsistenciesByJob.entries()]
+      .filter(([jobId]) => !higherPriorityJobIds.has(jobId))
+      .map(([jobId, entries]) => {
+        higherPriorityJobIds.add(jobId);
+        return toOperationalInconsistencyQueueItem(
+          jobId,
+          entries,
+          input.customerIdByJobId,
+        );
+      })
+      .filter((entry): entry is OfficeReviewQueueItem => entry != null),
     ...input.awaitingInvoicing.summary.jobs
       .filter(
         (entry) =>
           isValidOfficeReviewQueueJobId(entry.jobId) &&
-          !reviewJobIds.has(entry.jobId),
+          !higherPriorityJobIds.has(entry.jobId),
       )
       .map((entry) => {
         higherPriorityJobIds.add(entry.jobId);
@@ -986,7 +1112,7 @@ export function buildOfficeReviewQueueReport(input: {
 
   const limitations = [
     "Heuristic operational queue only — not a true approval workflow.",
-    "Combines completed-work review, invoicing backlog, and stalled-job signals from existing reports.",
+    "Combines completed-work review, data-integrity signals, invoicing backlog, and stalled-job signals from existing reports.",
     "Aging intelligence buckets (Fresh / Aging / Overdue) are read-only heuristics based on days since last relevant activity — not SLA enforcement.",
     "No business-hours awareness, staffing-aware routing, or automated escalation yet.",
     "No SLA enforcement, queue assignments, or scheduling intelligence yet.",

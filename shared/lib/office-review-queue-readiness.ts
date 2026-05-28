@@ -11,7 +11,11 @@ export type OfficeReviewQueueReadinessColor =
   | "rose";
 
 export type OfficeReviewQueueReadinessInput = {
-  kind: "completed_work_review" | "awaiting_invoicing" | "stalled_job";
+  kind:
+    | "completed_work_review"
+    | "operational_inconsistency"
+    | "awaiting_invoicing"
+    | "stalled_job";
   reviewReasons: CompletedWorkReviewReason[];
   agingBucket: "fresh" | "aging" | "overdue";
   blockerCount: number;
@@ -216,6 +220,29 @@ function scoreAwaitingInvoicing(
   return buildReadinessResult(score, explanation.trim());
 }
 
+function scoreOperationalInconsistency(
+  blockerCount: number,
+): OfficeReviewQueueReadiness {
+  let baseScore: OfficeReviewQueueReadinessScore;
+  let explanation: string;
+
+  if (blockerCount >= 3) {
+    baseScore = 25;
+    explanation =
+      "Multiple data integrity issues — dispatch, labor, billing, or workflow fields need manual reconciliation.";
+  } else if (blockerCount >= 2) {
+    baseScore = 50;
+    explanation =
+      "Several data integrity flags — follow recovery guidance on the job or dispatch board.";
+  } else {
+    baseScore = 75;
+    explanation =
+      "Single data integrity flag — reconcile dispatch, labor, or billing records before close-out.";
+  }
+
+  return buildReadinessResult(baseScore, explanation.trim());
+}
+
 function scoreStalledJob(
   agingBucket: OfficeReviewQueueReadinessInput["agingBucket"],
   daysAging: number,
@@ -255,6 +282,8 @@ export function resolveOfficeReviewQueueReadiness(
         agingBucket: item.agingBucket,
         blockerCount: item.blockerCount,
       });
+    case "operational_inconsistency":
+      return scoreOperationalInconsistency(item.blockerCount);
     case "awaiting_invoicing":
       return scoreAwaitingInvoicing(item.agingBucket);
     case "stalled_job":

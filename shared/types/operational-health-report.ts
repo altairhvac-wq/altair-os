@@ -66,6 +66,8 @@ export type OperationalHealthReportInput = {
   resolutionTrend: QueueResolutionTrendSummary;
   profitabilityWarningCount: number;
   materialCostExceedsCollectedCount?: number;
+  dataIntegrityIssueCount?: number;
+  criticalDataIntegrityCount?: number;
 };
 
 const OPERATIONAL_HEALTH_AREA_LABELS: Record<OperationalHealthAreaId, string> = {
@@ -113,8 +115,13 @@ function scoreOfficeQueue(
   criticalCount: number,
   needsAttentionCount: number,
   overdueCount: number,
+  criticalDataIntegrityCount: number,
 ): number {
-  const penalty = criticalCount * 12 + needsAttentionCount * 6 + overdueCount * 4;
+  const penalty =
+    criticalCount * 12 +
+    needsAttentionCount * 6 +
+    overdueCount * 4 +
+    criticalDataIntegrityCount * 8;
   return clampScore(100 - penalty);
 }
 
@@ -199,6 +206,7 @@ function buildAreaScores(input: OperationalHealthReportInput): OperationalHealth
         input.criticalCount,
         input.needsAttentionCount,
         input.overdueCount,
+        input.criticalDataIntegrityCount ?? 0,
       ),
     },
     {
@@ -241,6 +249,9 @@ function buildContributingFactors(
 ): OperationalHealthContributingFactor[] {
   const factors: OperationalHealthContributingFactor[] = [];
 
+  const dataIntegrityCount = input.dataIntegrityIssueCount ?? 0;
+  const criticalDataIntegrity = input.criticalDataIntegrityCount ?? 0;
+
   if (input.criticalCount > 0) {
     factors.push({
       id: "critical-queue-items",
@@ -248,6 +259,16 @@ function buildContributingFactors(
       impact: "negative",
       detail: `${input.criticalCount} critical office review item${input.criticalCount === 1 ? "" : "s"}`,
       points: -Math.min(36, input.criticalCount * 12),
+    });
+  }
+
+  if (dataIntegrityCount > 0) {
+    factors.push({
+      id: "data-integrity-issues",
+      label: "Data integrity drift",
+      impact: "negative",
+      detail: `${dataIntegrityCount} job${dataIntegrityCount === 1 ? "" : "s"} with dispatch, labor, billing, or workflow field mismatches${criticalDataIntegrity > 0 ? ` (${criticalDataIntegrity} critical)` : ""}`,
+      points: -Math.min(24, dataIntegrityCount * 6 + criticalDataIntegrity * 4),
     });
   }
 
@@ -438,6 +459,8 @@ export function buildOperationalHealthReportFromOfficeQueue(
   options?: {
     jobsWithWarnings?: number;
     materialCostExceedsCollectedCount?: number;
+    dataIntegrityIssueCount?: number;
+    criticalDataIntegrityCount?: number;
   },
 ): OperationalHealthReport {
   const { summary } = queue;
@@ -450,6 +473,10 @@ export function buildOperationalHealthReportFromOfficeQueue(
   const completedWorkReviewCount = summary.items.filter(
     (item) => item.kind === "completed_work_review",
   ).length;
+
+  const integrityItems = summary.items.filter(
+    (item) => item.kind === "operational_inconsistency",
+  );
 
   return buildOperationalHealthReport({
     criticalCount: summary.criticalCount,
@@ -464,6 +491,11 @@ export function buildOperationalHealthReportFromOfficeQueue(
       options?.jobsWithWarnings ?? countProfitabilityWarnings(summary.items),
     materialCostExceedsCollectedCount:
       options?.materialCostExceedsCollectedCount ?? 0,
+    dataIntegrityIssueCount:
+      options?.dataIntegrityIssueCount ?? integrityItems.length,
+    criticalDataIntegrityCount:
+      options?.criticalDataIntegrityCount ??
+      integrityItems.filter((item) => item.severity === "critical").length,
   });
 }
 

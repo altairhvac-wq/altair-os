@@ -12,6 +12,7 @@ import { getCompanyExpenseReport } from "@/lib/database/services/reports/expense
 import { getCompanyJobActivityReport } from "@/lib/database/services/reports/job-activity-report";
 import { getCompanyProfitabilityReport } from "@/lib/database/services/reports/profitability-report";
 import { getCompanyRevenueReport } from "@/lib/database/services/reports/revenue-report";
+import { getCompanyOperationalInconsistenciesReport } from "@/lib/database/services/reports/operational-inconsistencies-report";
 import { getCompanyStalledJobsReport } from "@/lib/database/services/reports/stalled-jobs-report";
 import { getCompanyTechnicianLaborReport } from "@/lib/database/services/reports/technician-labor-report";
 import {
@@ -135,6 +136,8 @@ function buildHighlights(input: {
   criticalCompletedWorkReviewCount: number;
   jobsWithWarnings: number;
   materialCostExceedsCollectedCount: number;
+  dataIntegrityJobCount: number;
+  criticalDataIntegrityCount: number;
   todayPaymentCount: number;
   activeLaborEntries: number;
 }): DailyOperationsSummaryHighlight[] {
@@ -207,6 +210,19 @@ function buildHighlights(input: {
       count: input.jobsWithWarnings,
       message: `${input.jobsWithWarnings} ${pluralize(input.jobsWithWarnings, "job")} ${input.jobsWithWarnings === 1 ? "has" : "have"} profitability data completeness warnings.`,
       href: "/reports",
+    });
+  }
+
+  if (input.dataIntegrityJobCount > 0) {
+    const severity: DailyOperationsSummarySeverity =
+      input.criticalDataIntegrityCount > 0 ? "critical" : "warning";
+    addHighlight(highlights, {
+      id: "data-integrity-drift",
+      severity,
+      category: "data_integrity",
+      count: input.dataIntegrityJobCount,
+      message: `${input.dataIntegrityJobCount} ${pluralize(input.dataIntegrityJobCount, "job")} ${input.dataIntegrityJobCount === 1 ? "has" : "have"} dispatch, labor, billing, or workflow data out of sync.`,
+      href: "/reports?queue=integrity",
     });
   }
 
@@ -290,6 +306,7 @@ export async function getDailyOperationsSummary(
     completedWorkReviewReport,
     jobLevelCounts,
     resolutionTrend,
+    operationalInconsistencies,
   ] = await Promise.all([
     getCompanyRevenueReport(companyId, REPORT_OPTIONS),
     getCompanyExpenseReport(companyId, REPORT_OPTIONS),
@@ -302,7 +319,17 @@ export async function getDailyOperationsSummary(
     getCompanyCompletedWorkReviewReport(companyId),
     deriveJobLevelOperationalCounts(companyId),
     getJobReviewBlockerResolutionTrendSummary(companyId),
+    getCompanyOperationalInconsistenciesReport(companyId),
   ]);
+
+  const integrityJobIds = new Set(
+    operationalInconsistencies.summary.entries.map((entry) => entry.jobId),
+  );
+  const criticalDataIntegrityCount = new Set(
+    operationalInconsistencies.summary.entries
+      .filter((entry) => entry.severity === "critical")
+      .map((entry) => entry.jobId),
+  ).size;
 
   const sections = {
     revenue: {
@@ -357,6 +384,8 @@ export async function getDailyOperationsSummary(
     jobsWithWarnings: sections.profitabilityWarnings.jobsWithWarnings,
     materialCostExceedsCollectedCount:
       sections.profitabilityWarnings.materialCostExceedsCollectedCount,
+    dataIntegrityJobCount: integrityJobIds.size,
+    criticalDataIntegrityCount,
     todayPaymentCount: sections.revenue.todayPaymentCount,
     activeLaborEntries: sections.activeTechnicians.activeLaborEntries,
   });
@@ -374,6 +403,7 @@ export async function getDailyOperationsSummary(
         technicianLaborReport.meta.limitations,
         completedWorkReport.meta.limitations,
         completedWorkReviewReport.meta.limitations,
+        operationalInconsistencies.meta.limitations,
       ],
       profitabilityWarnings: profitabilityReport.meta.completenessWarnings,
     }),

@@ -19,7 +19,8 @@ export type DailyOperationsSummaryHighlight = {
     | "labor"
     | "invoicing"
     | "profitability"
-    | "completed_work_review";
+    | "completed_work_review"
+    | "data_integrity";
   count?: number;
   href?: string;
 };
