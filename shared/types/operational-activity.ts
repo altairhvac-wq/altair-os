@@ -641,7 +641,7 @@ export function formatOperationalActivityDetails(
 
 export function getOperationalActivityHref(
   activity: OperationalActivity,
-  access?: { canViewBilling?: boolean },
+  access?: { canViewBilling?: boolean; canManageCustomers?: boolean },
 ): string | null {
   if (activity.jobId) {
     return `/jobs/${activity.jobId}`;
@@ -666,6 +666,9 @@ export function getOperationalActivityHref(
   }
 
   if (activity.customerId) {
+    if (access?.canManageCustomers === false) {
+      return null;
+    }
     return `/customers/${activity.customerId}`;
   }
 

@@ -19,6 +19,7 @@ import type { BillingEmailDelivery } from "@/lib/email/billing-send";
 import {
   canResendEstimateEmail,
   getSendEstimateJobBlockReason,
+  isAllowedEstimateStatusTransition,
   type EstimateDetail,
   type EstimateFormData,
   type EstimateStatus,
@@ -105,6 +106,10 @@ export async function updateEstimateStatusAction(
     return {
       error: "Estimate status has changed. Refresh the page and try again.",
     };
+  }
+
+  if (!isAllowedEstimateStatusTransition(fromStatus, toStatus)) {
+    return { error: "This estimate status change is not allowed." };
   }
 
   if (fromStatus === "draft" && toStatus === "sent") {

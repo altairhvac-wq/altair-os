@@ -158,6 +158,32 @@ export function canResendEstimateEmail(status: EstimateStatus): boolean {
   return status === "sent";
 }
 
+const ALLOWED_ESTIMATE_STATUS_TRANSITIONS: Readonly<
+  Partial<Record<EstimateStatus, readonly EstimateStatus[]>>
+> = {
+  draft: ["sent", "cancelled"],
+  sent: ["approved", "declined", "cancelled"],
+  approved: ["cancelled"],
+  declined: ["cancelled"],
+};
+
+/** Server-side guard mirroring EstimateStatusActions UI transitions. */
+export function isAllowedEstimateStatusTransition(
+  fromStatus: EstimateStatus,
+  toStatus: EstimateStatus,
+): boolean {
+  if (fromStatus === toStatus) {
+    return false;
+  }
+
+  if (toStatus === "converted") {
+    return false;
+  }
+
+  const allowed = ALLOWED_ESTIMATE_STATUS_TRANSITIONS[fromStatus];
+  return allowed?.includes(toStatus) ?? false;
+}
+
 export function getCreateEstimateJobBlockReason(
   jobStatus: JobStatus,
 ): string | null {

@@ -73,6 +73,46 @@ export async function listServiceItems(
   return ((data ?? []) as ServiceItemRow[]).map(mapServiceItemRow);
 }
 
+export async function validateServiceItemIdsBelongToCompany(
+  companyId: string,
+  serviceItemIds: readonly (string | undefined)[],
+): Promise<{ error: string | null }> {
+  const ids = [
+    ...new Set(
+      serviceItemIds
+        .map((id) => id?.trim())
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+
+  if (ids.length === 0) {
+    return { error: null };
+  }
+
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("service_items")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .in("id", ids);
+
+  if (error) {
+    console.error("[validateServiceItemIdsBelongToCompany] lookup failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return { error: mapDatabaseError(error) };
+  }
+
+  if ((count ?? 0) !== ids.length) {
+    return { error: "One or more price book items are invalid for this company." };
+  }
+
+  return { error: null };
+}
+
 export async function listActiveServiceItems(
   companyId: string,
 ): Promise<ServiceItem[]> {

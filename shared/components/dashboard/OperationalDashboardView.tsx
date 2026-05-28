@@ -894,9 +894,11 @@ function NotificationsSummarySection({
 function RecentActivitySection({
   activities,
   canViewBilling,
+  canManageCustomers,
 }: {
   activities: DashboardData["recentActivity"];
   canViewBilling: boolean;
+  canManageCustomers: boolean;
 }) {
   return (
     <DashboardSection
@@ -918,6 +920,7 @@ function RecentActivitySection({
           {activities.map((activity, index) => {
             const href = getOperationalActivityHref(activity, {
               canViewBilling,
+              canManageCustomers,
             });
             const details = formatOperationalActivityDetailsForAccess(
               activity,
@@ -1161,6 +1164,7 @@ function buildMobileDashboardTabs(
         key="activity"
         activities={data.recentActivity}
         canViewBilling={access.canViewBilling}
+        canManageCustomers={access.canManageCustomers}
       />,
     );
   }
@@ -1294,6 +1298,7 @@ function DesktopDashboardLayout({
           <RecentActivitySection
             activities={data.recentActivity}
             canViewBilling={access.canViewBilling}
+            canManageCustomers={access.canManageCustomers}
           />
         ) : null}
       </DashboardZone>

@@ -13,6 +13,7 @@ import type {
 } from "@/lib/database/types/core-tables";
 import { recordInvoiceActivity } from "@/lib/database/queries/invoice-activities";
 import { getEstimateById, updateEstimateStatus } from "@/lib/database/queries/estimates";
+import { validateServiceItemIdsBelongToCompany } from "@/lib/database/queries/service-items";
 import {
   calculateInvoiceTotals,
   canEditInvoice,
@@ -343,10 +344,31 @@ async function validateJob(
   return { error: null };
 }
 
-async function validateEstimateNotConverted(
+async function validateEstimateForInvoiceLink(
   companyId: string,
   estimateId: string,
+  customerId: string,
+  jobId?: string,
 ): Promise<{ error: string | null }> {
+  const estimate = await getEstimateById(companyId, estimateId);
+
+  if (!estimate) {
+    return { error: "Linked estimate not found." };
+  }
+
+  if (estimate.customerId !== customerId) {
+    return { error: "Estimate customer does not match this invoice." };
+  }
+
+  const normalizedJobId = jobId?.trim();
+  if (normalizedJobId && estimate.jobId && estimate.jobId !== normalizedJobId) {
+    return { error: "Estimate job does not match this invoice." };
+  }
+
+  if (estimate.status !== "approved") {
+    return { error: "Only approved estimates can be linked to an invoice." };
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -357,7 +379,7 @@ async function validateEstimateNotConverted(
     .maybeSingle();
 
   if (error) {
-    console.error("[validateEstimateNotConverted] lookup failed:", {
+    console.error("[validateEstimateForInvoiceLink] lookup failed:", {
       companyId,
       estimateId,
       code: error.code,
@@ -770,13 +792,23 @@ export async function createInvoice(
   }
 
   if (data.estimateId?.trim()) {
-    const estimateValidation = await validateEstimateNotConverted(
+    const estimateValidation = await validateEstimateForInvoiceLink(
       companyId,
       data.estimateId.trim(),
+      data.customerId,
+      data.jobId,
     );
     if (estimateValidation.error) {
       return { invoice: null, error: estimateValidation.error };
     }
+  }
+
+  const serviceItemValidation = await validateServiceItemIdsBelongToCompany(
+    companyId,
+    validLineItems.map((item) => item.serviceItemId),
+  );
+  if (serviceItemValidation.error) {
+    return { invoice: null, error: serviceItemValidation.error };
   }
 
   const supabase = await createClient();
@@ -898,6 +930,18 @@ export async function updateInvoice(
       invoice: null,
       previousTotal: null,
       error: "At least one line item is required.",
+    };
+  }
+
+  const serviceItemValidation = await validateServiceItemIdsBelongToCompany(
+    companyId,
+    validLineItems.map((item) => item.serviceItemId),
+  );
+  if (serviceItemValidation.error) {
+    return {
+      invoice: null,
+      previousTotal: null,
+      error: serviceItemValidation.error,
     };
   }
 
@@ -1032,9 +1076,11 @@ export async function convertEstimateToInvoice(
     };
   }
 
-  const duplicateCheck = await validateEstimateNotConverted(
+  const duplicateCheck = await validateEstimateForInvoiceLink(
     companyId,
     estimateId,
+    estimate.customerId,
+    estimate.jobId,
   );
   if (duplicateCheck.error) {
     return { invoice: null, error: duplicateCheck.error };

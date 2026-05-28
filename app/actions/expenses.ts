@@ -149,7 +149,15 @@ export async function prepareExpenseReceiptUploadAction(input: {
     return { error: "File name is required." };
   }
 
-  if (!input.forCreate) {
+  if (input.forCreate) {
+    if (
+      !context.permissions.manageBilling &&
+      !context.permissions.dispatchJobs &&
+      !context.permissions.viewAssignedJobs
+    ) {
+      return { error: "You do not have permission to upload expense receipts." };
+    }
+  } else {
     const existing = await getExpenseById(context.company.id, input.expenseId);
 
     if (!existing) {
@@ -193,6 +201,17 @@ export async function createExpenseAction(input: {
 
   if (jobContext.error) {
     return { error: jobContext.error };
+  }
+
+  if (!input.data.jobId?.trim()) {
+    if (
+      !context.permissions.manageBilling &&
+      !context.permissions.dispatchJobs
+    ) {
+      return {
+        error: "You do not have permission to create expenses without a linked job.",
+      };
+    }
   }
 
   if (input.receiptStoragePath) {

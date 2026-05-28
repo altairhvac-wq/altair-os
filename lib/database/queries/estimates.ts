@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import { validateServiceItemIdsBelongToCompany } from "@/lib/database/queries/service-items";
 import type {
   EstimateInsert,
   EstimateLineItemInsert,
@@ -437,6 +438,14 @@ export async function createEstimate(
     if (jobValidation.error) {
       return { estimate: null, error: jobValidation.error };
     }
+  }
+
+  const serviceItemValidation = await validateServiceItemIdsBelongToCompany(
+    companyId,
+    validLineItems.map((item) => item.serviceItemId),
+  );
+  if (serviceItemValidation.error) {
+    return { estimate: null, error: serviceItemValidation.error };
   }
 
   const supabase = await createClient();

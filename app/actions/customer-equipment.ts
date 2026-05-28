@@ -137,6 +137,10 @@ async function assertCustomerEquipmentReadPermission(
   }
 
   if (context.permissions.manageCustomers) {
+    const customer = await getCustomerById(context.company.id, customerId);
+    if (!customer) {
+      return "Customer not found.";
+    }
     return null;
   }
 
