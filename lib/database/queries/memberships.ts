@@ -1,6 +1,9 @@
+import { assertTeamRosterReadAccess } from "@/lib/database/access-control";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { validateMemberRoleChange, validateInviteRole, validateMemberSuspension, validateMemberReactivation, validatePendingInviteCancellation } from "@/lib/database/services/member-role-guard";
+import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
+import { hasCompanyPermission } from "@/lib/database/types/roles";
 import type {
   CompanyMembershipRow,
   CompanyRow,
@@ -32,7 +35,15 @@ export type ListCompanyMembersResult = {
   error?: string;
 };
 
-export async function listCompanyMembers(
+function assertTeamManagementActor(actor: MemberRoleActor): string | null {
+  if (!hasCompanyPermission(actor.role, "manageUsers")) {
+    return "You do not have permission to manage team members.";
+  }
+
+  return null;
+}
+
+async function fetchCompanyMemberRoster(
   companyId: string,
 ): Promise<ListCompanyMembersResult> {
   const supabase = await createClient();
@@ -69,6 +80,56 @@ export async function listCompanyMembers(
     });
 
   return { members };
+}
+
+async function fetchCompanyMemberById(
+  companyId: string,
+  membershipId: string,
+): Promise<TeamMember | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("company_memberships")
+    .select(
+      "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(*)",
+    )
+    .eq("company_id", companyId)
+    .eq("id", membershipId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[fetchCompanyMemberById] query failed:", {
+      companyId,
+      membershipId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const row = data as MembershipProfileRow;
+
+  return mapMembershipToTeamMember({
+    ...row,
+    profile: row.profile,
+    invite_email: row.invite_email,
+  });
+}
+
+export async function listCompanyMembers(
+  companyId: string,
+  context: ActiveCompanyContext,
+): Promise<ListCompanyMembersResult> {
+  const accessError = assertTeamRosterReadAccess(context, companyId);
+  if (accessError) {
+    return { members: [], error: accessError };
+  }
+
+  return fetchCompanyMemberRoster(companyId);
 }
 
 export async function countActiveCompanyOwners(
@@ -143,6 +204,11 @@ export async function updateMemberRole(
   newRole: CompanyRole,
   actor: MemberRoleActor,
 ): Promise<UpdateMemberRoleResult> {
+  const actorError = assertTeamManagementActor(actor);
+  if (actorError) {
+    return { error: actorError };
+  }
+
   const membership = await getCompanyMembershipById(companyId, membershipId);
 
   if (!membership) {
@@ -163,8 +229,7 @@ export async function updateMemberRole(
   }
 
   if (membership.role === newRole) {
-    const { members } = await listCompanyMembers(companyId);
-    const member = members.find((item) => item.id === membershipId);
+    const member = await fetchCompanyMemberById(companyId, membershipId);
     return member
       ? { member, audit: { previousRole: membership.role, changed: false } }
       : { error: "Team member not found." };
@@ -233,6 +298,11 @@ export async function updateMemberStatus(
   targetStatus: Extract<CompanyMembershipRow["status"], "active" | "suspended">,
   actor: MemberRoleActor,
 ): Promise<UpdateMemberStatusResult> {
+  const actorError = assertTeamManagementActor(actor);
+  if (actorError) {
+    return { error: actorError };
+  }
+
   const membership = await getCompanyMembershipById(companyId, membershipId);
 
   if (!membership) {
@@ -261,8 +331,7 @@ export async function updateMemberStatus(
   }
 
   if (membership.status === targetStatus) {
-    const { members } = await listCompanyMembers(companyId);
-    const member = members.find((item) => item.id === membershipId);
+    const member = await fetchCompanyMemberById(companyId, membershipId);
     return member
       ? { member, audit: { previousStatus: membership.status, changed: false } }
       : { error: "Team member not found." };
@@ -602,7 +671,7 @@ export type CreateTeamInviteResult = {
   error?: string;
 };
 
-export async function findExistingMembershipForEmail(
+async function findExistingMembershipForEmail(
   companyId: string,
   email: string,
 ): Promise<boolean> {
@@ -657,6 +726,11 @@ export async function createTeamInvite(
   role: CompanyRole,
   actor: MemberRoleActor,
 ): Promise<CreateTeamInviteResult> {
+  const actorError = assertTeamManagementActor(actor);
+  if (actorError) {
+    return { error: actorError };
+  }
+
   const normalizedEmail = normalizeInviteEmail(email);
 
   if (!normalizedEmail) {
@@ -759,6 +833,11 @@ export async function cancelPendingTeamInvite(
   membershipId: string,
   actor: MemberRoleActor,
 ): Promise<CancelPendingTeamInviteResult> {
+  const actorError = assertTeamManagementActor(actor);
+  if (actorError) {
+    return { error: actorError };
+  }
+
   const membership = await getCompanyMembershipById(companyId, membershipId);
 
   if (!membership) {

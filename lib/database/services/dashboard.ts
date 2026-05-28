@@ -219,7 +219,7 @@ export async function getDashboardData(
     officeReviewQueueReport,
   ] = await Promise.all([
     access.canViewTechnicianRoster
-      ? listTechnicians(companyId, todayJobs)
+      ? listTechnicians(companyId, context, todayJobs)
       : Promise.resolve([]),
     access.canViewTechnicianRoster
       ? listActiveTechnicianTimeEntries(companyId)

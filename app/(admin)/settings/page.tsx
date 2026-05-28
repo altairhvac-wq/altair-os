@@ -33,7 +33,7 @@ export default async function SettingsPage() {
 
   const [{ members, error: membersError }, pendingInvitesResult, onboardingSnapshot] =
     await Promise.all([
-      listCompanyMembers(companyContext.company.id),
+      listCompanyMembers(companyContext.company.id, companyContext),
       emailResolution.email
         ? listPendingInvitesForUserEmail(emailResolution.email)
         : Promise.resolve({ invites: [], error: undefined }),

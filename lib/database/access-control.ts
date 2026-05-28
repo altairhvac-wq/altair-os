@@ -41,6 +41,53 @@ export function canManageTeamMembers(context: ActiveCompanyContext): boolean {
   return getCompanyAccessScope(context).canManageTeamMembers;
 }
 
+export function canViewTechnicianRoster(context: ActiveCompanyContext): boolean {
+  return getCompanyAccessScope(context).canViewTechnicianRoster;
+}
+
+export function assertMatchingCompanyScope(
+  context: ActiveCompanyContext,
+  companyId: string,
+): string | null {
+  if (context.company.id !== companyId) {
+    return "Company workspace mismatch.";
+  }
+
+  return null;
+}
+
+export function assertTeamRosterReadAccess(
+  context: ActiveCompanyContext,
+  companyId: string,
+): string | null {
+  const scopeError = assertMatchingCompanyScope(context, companyId);
+  if (scopeError) {
+    return scopeError;
+  }
+
+  if (!canManageTeamMembers(context)) {
+    return "You do not have permission to view the team roster.";
+  }
+
+  return null;
+}
+
+export function assertTechnicianRosterReadAccess(
+  context: ActiveCompanyContext,
+  companyId: string,
+): string | null {
+  const scopeError = assertMatchingCompanyScope(context, companyId);
+  if (scopeError) {
+    return scopeError;
+  }
+
+  if (!canViewTechnicianRoster(context)) {
+    return "You do not have permission to view the technician roster.";
+  }
+
+  return null;
+}
+
 export function canAccessCompanySettings(
   context: ActiveCompanyContext,
 ): boolean {

@@ -36,7 +36,9 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
     parseDispatchPageSearchParams({ focus }),
     jobs,
   );
-  const technicians = await listTechnicians(companyContext.company.id, jobs);
+  const technicians = access.canViewTechnicianRoster
+    ? await listTechnicians(companyContext.company.id, companyContext, jobs)
+    : [];
 
   return (
     <DispatchPageView

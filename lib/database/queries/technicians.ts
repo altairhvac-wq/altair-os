@@ -1,5 +1,6 @@
+import { assertTechnicianRosterReadAccess } from "@/lib/database/access-control";
 import { createClient } from "@/lib/supabase/server";
-import type { ProfileRow } from "@/lib/database/types/core-tables";
+import type { ActiveCompanyContext, ProfileRow } from "@/lib/database/types/core-tables";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
@@ -61,8 +62,14 @@ export function mapProfileToTechnician(
 
 export async function listTechnicians(
   companyId: string,
+  context: ActiveCompanyContext,
   jobs: DispatchJob[] = [],
 ): Promise<Technician[]> {
+  const accessError = assertTechnicianRosterReadAccess(context, companyId);
+  if (accessError) {
+    return [];
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase

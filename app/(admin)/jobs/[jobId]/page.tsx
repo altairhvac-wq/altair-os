@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { canViewJob, canViewJobFinancials } from "@/lib/database/access-control";
+import { canViewJob, canViewJobFinancials, getCompanyAccessScope } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listCustomers } from "@/lib/database/queries/customers";
 import { listOperationalActivitiesForJob } from "@/lib/database/queries/operational-activities";
@@ -40,6 +40,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
   const canViewFinancials = canViewJobFinancials(companyContext);
   const canEditJob = companyContext.permissions.dispatchJobs;
+  const access = getCompanyAccessScope(companyContext);
 
   const [
     technicians,
@@ -51,7 +52,9 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     serviceItems,
     customers,
   ] = await Promise.all([
-    listTechnicians(companyContext.company.id),
+    access.canViewTechnicianRoster
+      ? listTechnicians(companyContext.company.id, companyContext)
+      : Promise.resolve([]),
     listOperationalActivitiesForJob(companyContext.company.id, jobId),
     listCustomerEquipment(companyContext.company.id, job.customerId),
     listJobAttachmentsForJob(companyContext.company.id, jobId),
