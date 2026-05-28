@@ -11,24 +11,14 @@ import type {
 } from "@/shared/types/estimate-activity";
 import type { EstimateStatus } from "@/shared/types/estimate";
 
-type ProfileSummary = {
-  full_name: string | null;
-  email: string;
-};
+import {
+  resolveActivityActorName,
+  type ProfileSummary,
+} from "@/shared/lib/profile-attribution";
 
 type EstimateActivityRowWithActor = EstimateActivityRow & {
   actor: ProfileSummary | null;
 };
-
-function formatProfileName(
-  profile: ProfileSummary | null | undefined,
-): string | undefined {
-  if (!profile) {
-    return undefined;
-  }
-
-  return profile.full_name?.trim() || profile.email;
-}
 
 function mapMetadata(
   value: EstimateActivityRow["metadata"],
@@ -43,13 +33,19 @@ function mapMetadata(
 function mapEstimateActivityRow(
   row: EstimateActivityRowWithActor,
 ): EstimateActivity {
+  const metadata = mapMetadata(row.metadata);
+
   return {
     id: row.id,
     estimateId: row.estimate_id,
     eventType: row.event_type,
-    metadata: mapMetadata(row.metadata),
+    metadata,
     actorId: row.actor_id ?? undefined,
-    actorName: formatProfileName(row.actor),
+    actorName: resolveActivityActorName({
+      profile: row.actor,
+      actorId: row.actor_id,
+      metadata,
+    }),
     createdAt: row.created_at,
   };
 }

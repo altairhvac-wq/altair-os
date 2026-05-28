@@ -1,4 +1,5 @@
 import { Package2 } from "lucide-react";
+import { resolveAttributionDisplayLabel } from "@/shared/lib/profile-attribution";
 import {
   calculateJobMaterialTotalBillable,
   calculateJobMaterialTotalCost,
@@ -144,7 +145,11 @@ export function JobMaterialsSection({
                   />
                   <MaterialMetaItem
                     label="Added by"
-                    value={material.addedByName ?? "Unknown"}
+                    value={resolveAttributionDisplayLabel({
+                      name: material.addedByName,
+                      subjectUserId: material.addedBy,
+                      emptyLabel: "—",
+                    })}
                   />
                   <MaterialMetaItem
                     label="Created"

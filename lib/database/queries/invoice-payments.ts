@@ -17,10 +17,10 @@ import {
   type InvoiceStatus,
 } from "@/shared/types/invoice";
 
-type ProfileSummary = {
-  full_name: string | null;
-  email: string;
-};
+import {
+  resolveOptionalSubjectAttributionName,
+  type ProfileSummary,
+} from "@/shared/lib/profile-attribution";
 
 type InvoicePaymentRowWithRecorder = InvoicePaymentRow & {
   recorder: ProfileSummary | null;
@@ -28,16 +28,6 @@ type InvoicePaymentRowWithRecorder = InvoicePaymentRow & {
 
 function toDateOnly(value: string): string {
   return value.split("T")[0] ?? value;
-}
-
-function formatProfileName(
-  profile: ProfileSummary | null | undefined,
-): string | undefined {
-  if (!profile) {
-    return undefined;
-  }
-
-  return profile.full_name?.trim() || profile.email;
 }
 
 function mapPaymentRow(row: InvoicePaymentRowWithRecorder): InvoicePayment {
@@ -50,7 +40,10 @@ function mapPaymentRow(row: InvoicePaymentRowWithRecorder): InvoicePayment {
     reference: row.reference?.trim() || undefined,
     notes: row.notes?.trim() || undefined,
     recordedById: row.recorded_by ?? undefined,
-    recordedByName: formatProfileName(row.recorder),
+    recordedByName: resolveOptionalSubjectAttributionName({
+      profile: row.recorder,
+      subjectUserId: row.recorded_by,
+    }),
     createdAt: row.created_at,
   };
 }

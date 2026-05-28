@@ -8,10 +8,10 @@ import type {
 } from "@/lib/database/types/core-tables";
 import type { TimeEntry, TimeEntryType } from "@/shared/types/time-entry";
 
-type ProfileSummary = {
-  full_name: string | null;
-  email: string;
-};
+import {
+  resolveSubjectAttributionName,
+  type ProfileSummary,
+} from "@/shared/lib/profile-attribution";
 
 type JobSummary = {
   job_number: string;
@@ -22,22 +22,15 @@ type TimeEntryRowWithRelations = TimeEntryRow & {
   job: JobSummary | null;
 };
 
-function formatProfileName(
-  profile: ProfileSummary | null | undefined,
-): string {
-  if (!profile) {
-    return "Unknown";
-  }
-
-  return profile.full_name?.trim() || profile.email;
-}
-
 export function mapTimeEntryRow(row: TimeEntryRowWithRelations): TimeEntry {
   return {
     id: row.id,
     companyId: row.company_id,
     technicianId: row.technician_id,
-    technicianName: formatProfileName(row.technician),
+    technicianName: resolveSubjectAttributionName({
+      profile: row.technician,
+      subjectUserId: row.technician_id,
+    }),
     jobId: row.job_id ?? undefined,
     jobNumber: row.job?.job_number,
     entryType: row.entry_type,

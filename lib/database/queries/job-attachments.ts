@@ -11,24 +11,14 @@ import type {
 } from "@/shared/types/job-attachment";
 import { isJobAttachmentImage } from "@/shared/types/job-attachment";
 
-type ProfileSummary = {
-  full_name: string | null;
-  email: string;
-};
+import {
+  resolveOptionalSubjectAttributionName,
+  type ProfileSummary,
+} from "@/shared/lib/profile-attribution";
 
 type JobAttachmentRowWithUploader = JobAttachmentRow & {
   uploader: ProfileSummary | null;
 };
-
-function formatProfileName(
-  profile: ProfileSummary | null | undefined,
-): string | undefined {
-  if (!profile) {
-    return undefined;
-  }
-
-  return profile.full_name?.trim() || profile.email;
-}
 
 function mapJobAttachmentRow(row: JobAttachmentRowWithUploader): JobAttachment {
   return {
@@ -37,7 +27,10 @@ function mapJobAttachmentRow(row: JobAttachmentRowWithUploader): JobAttachment {
     customerId: row.customer_id ?? undefined,
     jobId: row.job_id,
     uploadedBy: row.uploaded_by ?? undefined,
-    uploadedByName: formatProfileName(row.uploader),
+    uploadedByName: resolveOptionalSubjectAttributionName({
+      profile: row.uploader,
+      subjectUserId: row.uploaded_by,
+    }),
     fileName: row.file_name,
     filePath: row.file_path,
     fileType: row.file_type ?? undefined,

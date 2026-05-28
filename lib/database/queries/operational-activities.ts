@@ -10,12 +10,11 @@ import type {
   OperationalActivityMetadata,
   OperationalActivitySource,
 } from "@/shared/types/operational-activity";
+import {
+  resolveActivityActorName,
+  type ProfileSummary,
+} from "@/shared/lib/profile-attribution";
 import { normalizeOperationalEventType } from "@/shared/types/operational-activity";
-
-type ProfileSummary = {
-  full_name: string | null;
-  email: string;
-};
 
 type ActivityRowBase = {
   id: string;
@@ -25,16 +24,6 @@ type ActivityRowBase = {
   created_at: string;
   actor: ProfileSummary | null;
 };
-
-function formatProfileName(
-  profile: ProfileSummary | null | undefined,
-): string | undefined {
-  if (!profile) {
-    return undefined;
-  }
-
-  return profile.full_name?.trim() || profile.email;
-}
 
 function mapMetadata(value: unknown): OperationalActivityMetadata {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -66,7 +55,11 @@ export function buildOperationalActivity(input: {
     rawEventType: input.row.event_type,
     metadata,
     actorId: input.row.actor_id ?? undefined,
-    actorName: formatProfileName(input.row.actor),
+    actorName: resolveActivityActorName({
+      profile: input.row.actor,
+      actorId: input.row.actor_id,
+      metadata,
+    }),
     createdAt: input.row.created_at,
     customerId: input.customerId ?? metadata.customer_id,
     jobId: input.jobId ?? metadata.job_id,
@@ -214,7 +207,11 @@ export async function listJobActivitiesForJobIds(
     eventType: row.event_type,
     metadata: mapMetadata(row.metadata) as JobActivity["metadata"],
     actorId: row.actor_id ?? undefined,
-    actorName: formatProfileName(row.actor as ProfileSummary | null),
+    actorName: resolveActivityActorName({
+      profile: row.actor as ProfileSummary | null,
+      actorId: row.actor_id,
+      metadata: mapMetadata(row.metadata),
+    }),
     createdAt: row.created_at,
   }));
 }
@@ -257,7 +254,11 @@ async function listEstimateActivitiesForEstimateIds(
     eventType: row.event_type,
     metadata: mapMetadata(row.metadata) as EstimateActivity["metadata"],
     actorId: row.actor_id ?? undefined,
-    actorName: formatProfileName(row.actor as ProfileSummary | null),
+    actorName: resolveActivityActorName({
+      profile: row.actor as ProfileSummary | null,
+      actorId: row.actor_id,
+      metadata: mapMetadata(row.metadata),
+    }),
     createdAt: row.created_at,
   }));
 }
@@ -300,7 +301,11 @@ async function listInvoiceActivitiesForInvoiceIds(
     eventType: row.event_type,
     metadata: mapMetadata(row.metadata) as InvoiceActivity["metadata"],
     actorId: row.actor_id ?? undefined,
-    actorName: formatProfileName(row.actor as ProfileSummary | null),
+    actorName: resolveActivityActorName({
+      profile: row.actor as ProfileSummary | null,
+      actorId: row.actor_id,
+      metadata: mapMetadata(row.metadata),
+    }),
     createdAt: row.created_at,
   }));
 }

@@ -11,24 +11,14 @@ import type {
 } from "@/shared/types/job-activity";
 import { JOB_REVIEW_BLOCKER_RESOLUTION_EVENT_TYPES } from "@/shared/types/job-review-resolution";
 
-type ProfileSummary = {
-  full_name: string | null;
-  email: string;
-};
+import {
+  resolveActivityActorName,
+  type ProfileSummary,
+} from "@/shared/lib/profile-attribution";
 
 type JobActivityRowWithActor = JobActivityRow & {
   actor: ProfileSummary | null;
 };
-
-function formatProfileName(
-  profile: ProfileSummary | null | undefined,
-): string | undefined {
-  if (!profile) {
-    return undefined;
-  }
-
-  return profile.full_name?.trim() || profile.email;
-}
 
 function mapMetadata(value: JobActivityRow["metadata"]): JobActivityMetadata {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -39,13 +29,19 @@ function mapMetadata(value: JobActivityRow["metadata"]): JobActivityMetadata {
 }
 
 function mapJobActivityRow(row: JobActivityRowWithActor): JobActivity {
+  const metadata = mapMetadata(row.metadata);
+
   return {
     id: row.id,
     jobId: row.job_id,
     eventType: row.event_type,
-    metadata: mapMetadata(row.metadata),
+    metadata,
     actorId: row.actor_id ?? undefined,
-    actorName: formatProfileName(row.actor),
+    actorName: resolveActivityActorName({
+      profile: row.actor,
+      actorId: row.actor_id,
+      metadata,
+    }),
     createdAt: row.created_at,
   };
 }

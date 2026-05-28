@@ -11,10 +11,11 @@ import {
   type ExpensePaymentMethod,
 } from "@/shared/types/expense";
 
-type ProfileSummary = {
-  full_name: string | null;
-  email: string;
-};
+import {
+  resolveOptionalSubjectAttributionName,
+  resolveSubjectAttributionName,
+  type ProfileSummary,
+} from "@/shared/lib/profile-attribution";
 
 type JobSummary = {
   job_number: string;
@@ -25,16 +26,6 @@ type ExpenseRowWithRelations = ExpenseRow & {
   technician: ProfileSummary | null;
   job: JobSummary | null;
 };
-
-function formatProfileName(
-  profile: ProfileSummary | null | undefined,
-): string {
-  if (!profile) {
-    return "Unknown";
-  }
-
-  return profile.full_name?.trim() || profile.email;
-}
 
 function toDateOnly(value: string): string {
   return value.split("T")[0] ?? value;
@@ -51,7 +42,10 @@ function mapExpenseRow(row: ExpenseRowWithRelations): Expense {
     paymentMethod: row.payment_method,
     isReimbursable: row.is_reimbursable,
     technicianId: row.technician_id,
-    technician: formatProfileName(row.technician),
+    technician: resolveSubjectAttributionName({
+      profile: row.technician,
+      subjectUserId: row.technician_id,
+    }),
     customerId: row.customer_id ?? row.job?.customer_id ?? undefined,
     jobId: row.job_id ?? undefined,
     jobNumber: row.job?.job_number,

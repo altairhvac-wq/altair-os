@@ -7,24 +7,14 @@ import type {
 import type { JobMaterial, JobMaterialFormData } from "@/shared/types/job-material";
 import { roundJobMaterialAmount } from "@/shared/types/job-material";
 
-type ProfileSummary = {
-  full_name: string | null;
-  email: string;
-};
+import {
+  resolveOptionalSubjectAttributionName,
+  type ProfileSummary,
+} from "@/shared/lib/profile-attribution";
 
 type JobMaterialRowWithAddedBy = JobMaterialRow & {
   added_by_profile: ProfileSummary | null;
 };
-
-function formatProfileName(
-  profile: ProfileSummary | null | undefined,
-): string | undefined {
-  if (!profile) {
-    return undefined;
-  }
-
-  return profile.full_name?.trim() || profile.email;
-}
 
 function mapJobMaterialRow(row: JobMaterialRowWithAddedBy): JobMaterial {
   const quantity = Number(row.quantity);
@@ -46,7 +36,10 @@ function mapJobMaterialRow(row: JobMaterialRowWithAddedBy): JobMaterial {
     unitPrice: Number.isFinite(unitPrice) ? unitPrice : 0,
     taxable: row.taxable,
     addedBy: row.added_by ?? undefined,
-    addedByName: formatProfileName(row.added_by_profile),
+    addedByName: resolveOptionalSubjectAttributionName({
+      profile: row.added_by_profile,
+      subjectUserId: row.added_by,
+    }),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

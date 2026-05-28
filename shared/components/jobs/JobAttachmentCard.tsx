@@ -1,4 +1,5 @@
 import { FileText, ImageIcon } from "lucide-react";
+import { resolveAttributionDisplayLabel } from "@/shared/lib/profile-attribution";
 import {
   formatJobAttachmentFileSize,
   formatJobAttachmentType,
@@ -13,6 +14,11 @@ type JobAttachmentCardProps = {
 export function JobAttachmentCard({ attachment }: JobAttachmentCardProps) {
   const isImage = isJobAttachmentImage(attachment.mimeType);
   const fileSizeLabel = formatJobAttachmentFileSize(attachment.fileSize);
+  const uploaderLabel = resolveAttributionDisplayLabel({
+    name: attachment.uploadedByName,
+    subjectUserId: attachment.uploadedBy,
+    emptyLabel: "",
+  });
 
   return (
     <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -47,7 +53,7 @@ export function JobAttachmentCard({ attachment }: JobAttachmentCardProps) {
           {attachment.fileName}
         </p>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-500">
-          {attachment.uploadedByName ? <span>{attachment.uploadedByName}</span> : null}
+          {uploaderLabel ? <span>{uploaderLabel}</span> : null}
           {fileSizeLabel ? <span>{fileSizeLabel}</span> : null}
         </div>
         {attachment.caption ? (

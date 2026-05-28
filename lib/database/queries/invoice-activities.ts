@@ -8,24 +8,14 @@ import type {
 } from "@/shared/types/invoice-activity";
 import type { InvoiceStatus } from "@/shared/types/invoice";
 
-type ProfileSummary = {
-  full_name: string | null;
-  email: string;
-};
+import {
+  resolveActivityActorName,
+  type ProfileSummary,
+} from "@/shared/lib/profile-attribution";
 
 type InvoiceActivityRowWithActor = InvoiceActivityRow & {
   actor: ProfileSummary | null;
 };
-
-function formatProfileName(
-  profile: ProfileSummary | null | undefined,
-): string | undefined {
-  if (!profile) {
-    return undefined;
-  }
-
-  return profile.full_name?.trim() || profile.email;
-}
 
 function mapMetadata(
   value: InvoiceActivityRow["metadata"],
@@ -40,13 +30,19 @@ function mapMetadata(
 function mapInvoiceActivityRow(
   row: InvoiceActivityRowWithActor,
 ): InvoiceActivity {
+  const metadata = mapMetadata(row.metadata);
+
   return {
     id: row.id,
     invoiceId: row.invoice_id,
     eventType: row.event_type,
-    metadata: mapMetadata(row.metadata),
+    metadata,
     actorId: row.actor_id ?? undefined,
-    actorName: formatProfileName(row.actor),
+    actorName: resolveActivityActorName({
+      profile: row.actor,
+      actorId: row.actor_id,
+      metadata,
+    }),
     createdAt: row.created_at,
   };
 }

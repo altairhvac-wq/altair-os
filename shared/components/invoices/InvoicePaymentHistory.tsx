@@ -1,4 +1,5 @@
 import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { resolveAttributionDisplayLabel } from "@/shared/lib/profile-attribution";
 import {
   formatPaymentMethod,
   type InvoicePayment,
@@ -7,6 +8,13 @@ import {
 type InvoicePaymentHistoryProps = {
   payments: InvoicePayment[];
 };
+
+function formatRecordedByLabel(payment: InvoicePayment): string {
+  return resolveAttributionDisplayLabel({
+    name: payment.recordedByName,
+    subjectUserId: payment.recordedById,
+  });
+}
 
 export function InvoicePaymentHistory({ payments }: InvoicePaymentHistoryProps) {
   if (payments.length === 0) {
@@ -23,34 +31,36 @@ export function InvoicePaymentHistory({ payments }: InvoicePaymentHistoryProps) 
   return (
     <>
       <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white sm:hidden">
-        {payments.map((payment) => (
-          <li key={payment.id} className="px-4 py-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-emerald-700">
-                  {formatCurrency(payment.amount)}
-                </p>
-                <p className="mt-0.5 text-sm text-slate-700">
-                  {formatPaymentMethod(payment.paymentMethod)}
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {formatDate(payment.paymentDate)}
-                  {payment.recordedByName
-                    ? ` · ${payment.recordedByName}`
-                    : ""}
-                </p>
-                {payment.reference ? (
-                  <p className="mt-1 text-xs text-slate-500">
-                    Ref {payment.reference}
+        {payments.map((payment) => {
+          const recordedByLabel = formatRecordedByLabel(payment);
+
+          return (
+            <li key={payment.id} className="px-4 py-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-emerald-700">
+                    {formatCurrency(payment.amount)}
                   </p>
-                ) : null}
-                {payment.notes ? (
-                  <p className="mt-1 text-xs text-slate-500">{payment.notes}</p>
-                ) : null}
+                  <p className="mt-0.5 text-sm text-slate-700">
+                    {formatPaymentMethod(payment.paymentMethod)}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {formatDate(payment.paymentDate)}
+                    {recordedByLabel !== "—" ? ` · ${recordedByLabel}` : ""}
+                  </p>
+                  {payment.reference ? (
+                    <p className="mt-1 text-xs text-slate-500">
+                      Ref {payment.reference}
+                    </p>
+                  ) : null}
+                  {payment.notes ? (
+                    <p className="mt-1 text-xs text-slate-500">{payment.notes}</p>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
 
       <div className="hidden overflow-hidden rounded-xl border border-slate-200 sm:block">
@@ -90,7 +100,7 @@ export function InvoicePaymentHistory({ payments }: InvoicePaymentHistoryProps) 
                   {formatPaymentMethod(payment.paymentMethod)}
                 </td>
                 <td className="hidden px-4 py-3 text-sm text-slate-600 md:table-cell">
-                  {payment.recordedByName ?? "—"}
+                  {formatRecordedByLabel(payment)}
                 </td>
                 <td className="hidden px-4 py-3 text-sm text-slate-600 lg:table-cell">
                   {payment.reference ?? "—"}

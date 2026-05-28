@@ -28,6 +28,7 @@ export type JobActivityMetadata = {
   action_id?: string;
   technician_id?: string;
   technician_name?: string;
+  actor_name?: string;
   previous_technician_id?: string;
   previous_technician_name?: string;
   completion_notes?: string;

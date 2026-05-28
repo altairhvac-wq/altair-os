@@ -7,10 +7,10 @@ import type {
   JobWorkflowCompletionPayload,
 } from "@/shared/types/job-workflow";
 
-type ProfileSummary = {
-  full_name: string | null;
-  email: string;
-};
+import {
+  resolveOptionalSubjectAttributionName,
+  type ProfileSummary,
+} from "@/shared/lib/profile-attribution";
 
 type JobRowWithCustomer = JobRow & {
   customers: {
@@ -41,16 +41,6 @@ function toDateOnly(value: string): string {
   return value.split("T")[0] ?? value;
 }
 
-function formatProfileName(
-  profile: ProfileSummary | null | undefined,
-): string | undefined {
-  if (!profile) {
-    return undefined;
-  }
-
-  return profile.full_name?.trim() || profile.email;
-}
-
 function resolveAssignedTechnician(row: JobRowWithTechnician): {
   assignedTechnicianId?: string;
   assignedTechnician?: string;
@@ -61,7 +51,10 @@ function resolveAssignedTechnician(row: JobRowWithTechnician): {
 
   return {
     assignedTechnicianId: row.assigned_technician_id,
-    assignedTechnician: formatProfileName(row.assigned_technician),
+    assignedTechnician: resolveOptionalSubjectAttributionName({
+      profile: row.assigned_technician,
+      subjectUserId: row.assigned_technician_id,
+    }),
   };
 }
 
