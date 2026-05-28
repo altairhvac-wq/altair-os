@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowLeft,
   Briefcase,
   Mail,
   Phone,
+  Printer,
   Receipt,
   User,
 } from "lucide-react";
@@ -11,9 +14,9 @@ import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { EstimateDetail } from "@/shared/types/estimate";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 import type { EstimateActivity } from "@/shared/types/estimate-activity";
-import { BillingLineItemsList } from "@/shared/components/billing/BillingLineItemsList";
+import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact";
 import { BillingMobileAmountHeader } from "@/shared/components/billing/BillingMobileAmountHeader";
-import { BillingTotalsSummary } from "@/shared/components/billing/BillingTotalsSummary";
+import { EstimateDocumentSection } from "@/shared/components/billing/EstimateDocumentSection";
 import { EstimateActivityTimeline } from "./EstimateActivityTimeline";
 import { EstimateStatusActions } from "./EstimateStatusActions";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
@@ -22,6 +25,7 @@ type EstimateDetailPageViewProps = {
   estimate: EstimateDetail;
   activities: EstimateActivity[];
   linkedInvoice?: InvoiceDetail | null;
+  company: BillingCompanyContact;
   canManageEstimates: boolean;
 };
 
@@ -29,22 +33,38 @@ export function EstimateDetailPageView({
   estimate,
   activities,
   linkedInvoice,
+  company,
   canManageEstimates,
 }: EstimateDetailPageViewProps) {
   const customerEmail = estimate.customerEmail?.trim();
   const customerPhone = estimate.customerPhone?.trim();
 
-  return (
-    <div className="mx-auto min-w-0 max-w-5xl space-y-5 overflow-x-hidden pb-2">
-      <Link
-        href="/estimates"
-        className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-      >
-        <ArrowLeft className="h-4 w-4 shrink-0" />
-        Back to estimates
-      </Link>
+  function handlePrint() {
+    window.print();
+  }
 
-      <section className="overflow-hidden admin-card">
+  return (
+    <div className="mx-auto min-w-0 max-w-5xl space-y-5 overflow-x-hidden pb-2 print:max-w-none print:pb-0">
+      <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Link
+          href="/estimates"
+          className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+        >
+          <ArrowLeft className="h-4 w-4 shrink-0" />
+          Back to estimates
+        </Link>
+
+        <button
+          type="button"
+          onClick={handlePrint}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+        >
+          <Printer className="h-4 w-4" />
+          Print / Save PDF
+        </button>
+      </div>
+
+      <section className="no-print overflow-hidden admin-card">
         <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
@@ -168,39 +188,11 @@ export function EstimateDetailPageView({
         </div>
       </section>
 
-      <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Line items
-        </h2>
-        <div className="mt-4">
-          <BillingLineItemsList
-            items={estimate.lineItems}
-            documentLabel="estimate"
-          />
-        </div>
+      <EstimateDocumentSection estimate={estimate} company={company} />
 
-        <div className="mt-4">
-          <BillingTotalsSummary
-            subtotal={estimate.subtotal}
-            taxRate={estimate.taxRate}
-            taxAmount={estimate.tax ?? 0}
-            total={estimate.total}
-          />
-        </div>
-      </section>
-
-      {estimate.notes ? (
-        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Notes
-          </h2>
-          <p className="mt-3 break-words text-sm leading-relaxed text-slate-600">
-            {estimate.notes}
-          </p>
-        </section>
-      ) : null}
-
-      <EstimateActivityTimeline activities={activities} />
+      <div className="no-print">
+        <EstimateActivityTimeline activities={activities} />
+      </div>
 
       {canManageEstimates ? (
         <EstimateStatusActions

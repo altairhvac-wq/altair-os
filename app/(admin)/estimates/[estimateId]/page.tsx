@@ -7,6 +7,7 @@ import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedA
 import { listEstimateActivitiesForEstimate } from "@/lib/database/queries/estimate-activities";
 import { getEstimateById } from "@/lib/database/queries/estimates";
 import { getInvoiceByEstimateId } from "@/lib/database/queries/invoices";
+import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
 import { EstimateDetailPageView } from "@/shared/components/estimates/EstimateDetailPageView";
 
 type EstimateDetailPageProps = {
@@ -53,6 +54,7 @@ export default async function EstimateDetailPage({
       estimate={estimate}
       activities={activities}
       linkedInvoice={linkedInvoice}
+      company={mapCompanyRowToBillingContact(companyContext.company)}
       canManageEstimates={companyContext.permissions.manageBilling}
     />
   );

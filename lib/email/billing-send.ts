@@ -4,6 +4,10 @@ import {
   getBillingCompanyReplyTo,
   type BillingCompanyContact,
 } from "@/shared/lib/billing-company-contact";
+import {
+  formatBillingSignatureBlockHtml,
+  formatBillingSignatureBlockText,
+} from "@/shared/lib/billing-signature-block";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import {
   calculateLineItemTotal,
@@ -370,6 +374,8 @@ export async function sendEstimateEmail(
     "Line items:",
     formatLineItemsText(input.lineItems),
     notesText ? `\nNotes:\n${notesText}` : null,
+    "",
+    formatBillingSignatureBlockText("estimate"),
     companyContactText ? `\n${companyName}\n${companyContactText}` : null,
     "",
     footer.text,
@@ -405,6 +411,7 @@ export async function sendEstimateEmail(
       total: input.total,
     })}
     ${notesText ? `<div style="margin-top:20px;"><div style="color:#71717a;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Notes</div><div style="color:#3f3f46;font-size:14px;line-height:1.6;">${formatMultilineHtml(notesText)}</div></div>` : ""}
+    ${formatBillingSignatureBlockHtml("estimate")}
     ${formatCompanyContactHtml(input.company)}
     ${footer.html}
   `.trim();
@@ -456,6 +463,8 @@ export async function sendInvoiceEmail(
     "Line items:",
     formatLineItemsText(input.lineItems),
     notesText ? `\nNotes:\n${notesText}` : null,
+    "",
+    formatBillingSignatureBlockText("invoice"),
     companyContactText ? `\n${companyName}\n${companyContactText}` : null,
     "",
     footer.text,
@@ -494,6 +503,7 @@ export async function sendInvoiceEmail(
       highlightBalance: true,
     })}
     ${notesText ? `<div style="margin-top:20px;"><div style="color:#71717a;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Notes</div><div style="color:#3f3f46;font-size:14px;line-height:1.6;">${formatMultilineHtml(notesText)}</div></div>` : ""}
+    ${formatBillingSignatureBlockHtml("invoice")}
     ${formatCompanyContactHtml(input.company)}
     ${footer.html}
   `.trim();
