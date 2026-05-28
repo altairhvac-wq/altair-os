@@ -13,6 +13,7 @@ import { formatBillingEmailSuccessMessage } from "@/shared/lib/billing-email-sen
 import {
   formatActionError,
   formatBillingEmailDeliveryError,
+  formatBillingEmailRecipientRedirectWarning,
   getBillingActionFeedbackTone,
   hasValidCustomerEmailForSend,
 } from "@/shared/lib/operational-errors";
@@ -116,10 +117,20 @@ export function InvoiceStatusActions({
         return;
       }
 
+      const redirectWarning = result.emailDelivery
+        ? formatBillingEmailRecipientRedirectWarning(result.emailDelivery)
+        : null;
+
       setLocalStatus("sent");
-      setSuccessMessage(
-        formatBillingEmailSuccessMessage(customerEmail, "send", "invoice"),
-      );
+
+      if (redirectWarning) {
+        setEmailDelivery(result.emailDelivery);
+        setError(redirectWarning);
+      } else {
+        setSuccessMessage(
+          formatBillingEmailSuccessMessage(customerEmail, "send", "invoice"),
+        );
+      }
       router.refresh();
     });
   }
@@ -158,9 +169,18 @@ export function InvoiceStatusActions({
           return;
         }
 
-        setSuccessMessage(
-          formatBillingEmailSuccessMessage(customerEmail, "resend", "invoice"),
-        );
+        const redirectWarning = result.emailDelivery
+          ? formatBillingEmailRecipientRedirectWarning(result.emailDelivery)
+          : null;
+
+        if (redirectWarning) {
+          setEmailDelivery(result.emailDelivery);
+          setError(redirectWarning);
+        } else {
+          setSuccessMessage(
+            formatBillingEmailSuccessMessage(customerEmail, "resend", "invoice"),
+          );
+        }
         router.refresh();
       } finally {
         setResendPending(false);

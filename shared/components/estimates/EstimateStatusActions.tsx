@@ -12,6 +12,7 @@ import type { BillingEmailDelivery } from "@/lib/email/billing-send";
 import {
   formatActionError,
   formatBillingEmailDeliveryError,
+  formatBillingEmailRecipientRedirectWarning,
   getBillingActionFeedbackTone,
   hasValidCustomerEmailForSend,
 } from "@/shared/lib/operational-errors";
@@ -229,11 +230,20 @@ export function EstimateStatusActions({
         }
 
         setLocalStatus(toStatus);
-        if (toStatus === "sent" && customerEmail) {
-          setSuccessMessage(
-            formatBillingEmailSuccessMessage(customerEmail, "send", "estimate"),
-          );
-        } else if (toStatus !== "sent") {
+        if (toStatus === "sent") {
+          const redirectWarning = result.emailDelivery
+            ? formatBillingEmailRecipientRedirectWarning(result.emailDelivery)
+            : null;
+
+          if (redirectWarning) {
+            setEmailDelivery(result.emailDelivery);
+            setError(redirectWarning);
+          } else if (customerEmail) {
+            setSuccessMessage(
+              formatBillingEmailSuccessMessage(customerEmail, "send", "estimate"),
+            );
+          }
+        } else {
           setOutcomeSheetOpen(false);
         }
         router.refresh();
@@ -304,7 +314,14 @@ export function EstimateStatusActions({
           return;
         }
 
-        if (customerEmail) {
+        const redirectWarning = result.emailDelivery
+          ? formatBillingEmailRecipientRedirectWarning(result.emailDelivery)
+          : null;
+
+        if (redirectWarning) {
+          setEmailDelivery(result.emailDelivery);
+          setError(redirectWarning);
+        } else if (customerEmail) {
           setSuccessMessage(
             formatBillingEmailSuccessMessage(customerEmail, "resend", "estimate"),
           );

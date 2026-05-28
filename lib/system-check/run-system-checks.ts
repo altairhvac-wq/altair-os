@@ -71,6 +71,22 @@ function checkOptionalEnvVars(): SystemCheckResult {
 function checkOutboundEmailConfig(): SystemCheckResult {
   const hasApiKey = Boolean(process.env.RESEND_API_KEY?.trim());
   const hasFromEmail = Boolean(process.env.RESEND_FROM_EMAIL?.trim());
+  const recipientOverrideEnvs = [
+    "EMAIL_RECIPIENT_OVERRIDE",
+    "TEST_EMAIL",
+    "RESEND_TEST_EMAIL",
+    "EMAIL_OVERRIDE_TO",
+  ].filter((name) => Boolean(process.env[name]?.trim()));
+
+  if (recipientOverrideEnvs.length > 0 && process.env.NODE_ENV === "production") {
+    return {
+      id: "env-outbound-email",
+      label: "Outbound email (Resend)",
+      status: "warn",
+      message: `Billing email recipient override is active (${recipientOverrideEnvs.join(", ")}).`,
+      hint: "Remove these Vercel env vars so estimate and invoice emails go to customer addresses.",
+    };
+  }
 
   if (hasApiKey && hasFromEmail) {
     return {

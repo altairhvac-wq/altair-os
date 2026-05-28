@@ -356,7 +356,14 @@ export async function sendInvoiceAction(
     revalidatePath(`/jobs/${invoice.jobId}`);
   }
 
-  return { invoice };
+  const emailDelivery = toBillingEmailDelivery(emailResult);
+
+  return {
+    invoice,
+    emailDelivery: emailDelivery.recipientRedirect?.redirected
+      ? emailDelivery
+      : undefined,
+  };
 }
 
 export type ResendInvoiceEmailActionResult = {
@@ -458,7 +465,14 @@ export async function resendInvoiceEmailAction(
     revalidatePath(`/jobs/${currentInvoice.jobId}`);
   }
 
-  return { invoice: currentInvoice };
+  const emailDelivery = toBillingEmailDelivery(emailResult);
+
+  return {
+    invoice: currentInvoice,
+    emailDelivery: emailDelivery.recipientRedirect?.redirected
+      ? emailDelivery
+      : undefined,
+  };
 }
 
 export type VoidInvoiceActionResult = {

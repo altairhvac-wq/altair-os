@@ -44,6 +44,20 @@ export function formatActionError(
 export const AUTH_CALLBACK_ERROR_MESSAGE =
   "Sign-in could not be completed. Try signing in again with your email and password.";
 
+export function formatBillingEmailRecipientRedirectWarning(
+  delivery: BillingEmailDelivery,
+): string | null {
+  if (delivery.status !== "sent" || !delivery.recipientRedirect?.redirected) {
+    return null;
+  }
+
+  return (
+    delivery.recipientRedirect.warning ??
+    delivery.message ??
+    "Email was sent to a test override address instead of the customer."
+  );
+}
+
 export function formatBillingEmailDeliveryError(
   delivery: BillingEmailDelivery,
   documentLabel: "estimate" | "invoice",
@@ -68,6 +82,13 @@ export function getBillingActionFeedbackTone(
   message: string,
   delivery?: BillingEmailDelivery,
 ): "error" | "warning" {
+  if (
+    delivery?.status === "sent" &&
+    delivery.recipientRedirect?.redirected
+  ) {
+    return "warning";
+  }
+
   if (delivery?.status === "not_configured") {
     return "warning";
   }

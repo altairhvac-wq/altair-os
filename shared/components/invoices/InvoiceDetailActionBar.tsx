@@ -13,6 +13,7 @@ import { formatBillingEmailSuccessMessage } from "@/shared/lib/billing-email-sen
 import {
   formatActionError,
   formatBillingEmailDeliveryError,
+  formatBillingEmailRecipientRedirectWarning,
   getBillingActionFeedbackTone,
   hasValidCustomerEmailForSend,
 } from "@/shared/lib/operational-errors";
@@ -117,11 +118,21 @@ export function InvoiceDetailActionBar({
         return;
       }
 
+      const redirectWarning = result.emailDelivery
+        ? formatBillingEmailRecipientRedirectWarning(result.emailDelivery)
+        : null;
+
       setLocalStatus("sent");
       setShowVoidConfirm(false);
-      setSuccessMessage(
-        formatBillingEmailSuccessMessage(customerEmail, "send", "invoice"),
-      );
+
+      if (redirectWarning) {
+        setEmailDelivery(result.emailDelivery);
+        setError(redirectWarning);
+      } else {
+        setSuccessMessage(
+          formatBillingEmailSuccessMessage(customerEmail, "send", "invoice"),
+        );
+      }
       router.refresh();
     });
   }
@@ -160,10 +171,20 @@ export function InvoiceDetailActionBar({
           return;
         }
 
+        const redirectWarning = result.emailDelivery
+          ? formatBillingEmailRecipientRedirectWarning(result.emailDelivery)
+          : null;
+
         setShowVoidConfirm(false);
-        setSuccessMessage(
-          formatBillingEmailSuccessMessage(customerEmail, "resend", "invoice"),
-        );
+
+        if (redirectWarning) {
+          setEmailDelivery(result.emailDelivery);
+          setError(redirectWarning);
+        } else {
+          setSuccessMessage(
+            formatBillingEmailSuccessMessage(customerEmail, "resend", "invoice"),
+          );
+        }
         router.refresh();
       } finally {
         setResendPending(false);

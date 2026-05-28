@@ -1,4 +1,8 @@
-import { sendViaResend, type ResendSendResult } from "@/lib/email/resend";
+import {
+  sendViaResend,
+  type EmailRecipientRedirect,
+  type ResendSendResult,
+} from "@/lib/email/resend";
 import {
   formatBillingCompanyContactLines,
   getBillingCompanyReplyTo,
@@ -25,13 +29,18 @@ export type BillingEmailDelivery = {
   status: BillingEmailDeliveryStatus;
   message?: string;
   missingEnv?: string[];
+  recipientRedirect?: EmailRecipientRedirect;
 };
 
 export function toBillingEmailDelivery(
   emailResult: SendBillingEmailResult,
 ): BillingEmailDelivery {
   if (emailResult.ok) {
-    return { status: "sent" };
+    return {
+      status: "sent",
+      recipientRedirect: emailResult.recipientRedirect,
+      message: emailResult.recipientRedirect?.warning,
+    };
   }
 
   if (emailResult.reason === "not_configured") {

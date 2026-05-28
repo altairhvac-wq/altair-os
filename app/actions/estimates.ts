@@ -269,7 +269,14 @@ export async function updateEstimateStatusAction(
     revalidatePath("/estimates");
     revalidatePath(`/estimates/${estimateId}`);
 
-    return { estimate: sentEstimate };
+    const emailDelivery = toBillingEmailDelivery(emailResult);
+
+    return {
+      estimate: sentEstimate,
+      emailDelivery: emailDelivery.recipientRedirect?.redirected
+        ? emailDelivery
+        : undefined,
+    };
   }
 
   const { estimate, error } = await updateEstimateStatus(
@@ -409,5 +416,12 @@ export async function resendEstimateEmailAction(
     revalidatePath(`/jobs/${currentEstimate.jobId}`);
   }
 
-  return { estimate: currentEstimate };
+  const emailDelivery = toBillingEmailDelivery(emailResult);
+
+  return {
+    estimate: currentEstimate,
+    emailDelivery: emailDelivery.recipientRedirect?.redirected
+      ? emailDelivery
+      : undefined,
+  };
 }

@@ -80,5 +80,11 @@ export function logInviteEmailEnvPresence(context: string): void {
     NEXT_PUBLIC_APP_URL: Boolean(process.env.NEXT_PUBLIC_APP_URL?.trim()),
     VERCEL_URL: Boolean(process.env.VERCEL_URL?.trim()),
     NODE_ENV: process.env.NODE_ENV ?? "unknown",
+    EMAIL_RECIPIENT_OVERRIDE: Boolean(
+      process.env.EMAIL_RECIPIENT_OVERRIDE?.trim(),
+    ),
+    TEST_EMAIL: Boolean(process.env.TEST_EMAIL?.trim()),
+    RESEND_TEST_EMAIL: Boolean(process.env.RESEND_TEST_EMAIL?.trim()),
+    EMAIL_OVERRIDE_TO: Boolean(process.env.EMAIL_OVERRIDE_TO?.trim()),
   });
 }

@@ -3,9 +3,22 @@ import {
   getMissingResendEnvVars,
   getResendEmailEnv,
 } from "@/lib/email/env";
+import {
+  resolveEmailRecipient,
+  type ResolvedEmailRecipient,
+} from "@/lib/email/recipient";
+
+export type EmailRecipientRedirect = Pick<
+  ResolvedEmailRecipient,
+  "intendedRecipient" | "redirected" | "warning" | "overrideEnv"
+>;
 
 export type ResendSendResult =
-  | { ok: true; providerMessageId: string }
+  | {
+      ok: true;
+      providerMessageId: string;
+      recipientRedirect?: EmailRecipientRedirect;
+    }
   | {
       ok: false;
       reason: "not_configured";
@@ -63,7 +76,23 @@ export async function sendViaResend(
     };
   }
 
-  const toDomain = input.to.split("@")[1] ?? "unknown";
+  const resolved = resolveEmailRecipient(input.to);
+
+  if (!resolved.ok) {
+    console.error(`[${input.logContext}] invalid recipient:`, {
+      error: resolved.error,
+    });
+
+    return {
+      ok: false,
+      reason: "provider_error",
+      message: resolved.error,
+    };
+  }
+
+  const { recipient } = resolved;
+  const toDomain = recipient.to.split("@")[1] ?? "unknown";
+  const intendedDomain = recipient.intendedRecipient.split("@")[1] ?? "unknown";
 
   try {
     const response = await fetch("https://api.resend.com/emails", {
@@ -74,7 +103,7 @@ export async function sendViaResend(
       },
       body: JSON.stringify({
         from: buildFromAddress(env.resend.from, input.fromDisplayName),
-        to: [input.to],
+        to: [recipient.to],
         subject: input.subject,
         text: input.text,
         html: input.html,
@@ -121,9 +150,23 @@ export async function sendViaResend(
       providerMessageId,
       status: response.status,
       toDomain,
+      intendedDomain,
+      redirected: recipient.redirected,
+      overrideEnv: recipient.overrideEnv ?? null,
     });
 
-    return { ok: true, providerMessageId };
+    return {
+      ok: true,
+      providerMessageId,
+      recipientRedirect: recipient.redirected
+        ? {
+            intendedRecipient: recipient.intendedRecipient,
+            redirected: recipient.redirected,
+            warning: recipient.warning,
+            overrideEnv: recipient.overrideEnv,
+          }
+        : undefined,
+    };
   } catch (error) {
     console.error(`[${input.logContext}] provider request failed:`, {
       toDomain,
