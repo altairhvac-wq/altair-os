@@ -795,6 +795,13 @@ export type Database = {
         };
         Returns: string;
       };
+      list_active_member_user_ids_by_roles: {
+        Args: {
+          p_company_id: string;
+          p_roles: CompanyMembershipRow["role"][];
+        };
+        Returns: string[];
+      };
     };
     Enums: {
       company_role: CompanyMembershipRow["role"];
