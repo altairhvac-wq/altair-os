@@ -519,6 +519,22 @@ export async function updateJobWorkflowStatus(
         );
       }
     }
+
+    if (actionId === "cancel") {
+      const { data: refreshed, error: refreshError } = await supabase
+        .from("jobs")
+        .select(JOB_TECHNICIAN_SELECT)
+        .eq("company_id", companyId)
+        .eq("id", jobId)
+        .maybeSingle();
+
+      if (!refreshError && refreshed) {
+        return {
+          job: mapJobRowToJob(refreshed as JobRowWithTechnician),
+          error: null,
+        };
+      }
+    }
   }
 
   return {

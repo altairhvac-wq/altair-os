@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition, useCallback } from "react";
+import { useMemo, useState, useTransition, useCallback, useEffect } from "react";
 import { BarChart3, SlidersHorizontal, Users } from "lucide-react";
 import { assignJobAction } from "@/app/actions/dispatch";
 import {
@@ -61,6 +61,11 @@ export function DispatchPageView({
     );
   }
   const [jobs, setJobs] = useState(initialJobs);
+
+  useEffect(() => {
+    setJobs(initialJobs);
+  }, [initialJobs]);
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<DispatchJobStatus | "all">(
     "all",
@@ -147,9 +152,15 @@ export function DispatchPageView({
 
   const handleStatusUpdated = useCallback(
     (jobId: string, status: DispatchJobStatus) => {
-      setJobs((previous) =>
-        previous.map((job) => (job.id === jobId ? { ...job, status } : job)),
-      );
+      setJobs((previous) => {
+        if (status === "cancelled") {
+          return previous.filter((job) => job.id !== jobId);
+        }
+
+        return previous.map((job) =>
+          job.id === jobId ? { ...job, status } : job,
+        );
+      });
     },
     [],
   );

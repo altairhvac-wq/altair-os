@@ -7,8 +7,8 @@ import { COMPANY_FILES_BUCKET } from "@/lib/storage/company-files";
 import type { CompanyMembershipInsert } from "@/lib/database/types/core-tables";
 import type { SystemCheckReport, SystemCheckResult } from "./types";
 
-const EXPECTED_MIGRATION_COUNT = 41;
-const LATEST_MIGRATION_MARKER = "041_tighten_company_memberships_select_rls";
+const EXPECTED_MIGRATION_COUNT = 42;
+const LATEST_MIGRATION_MARKER = "042_dispatch_assignment_atomic_assign";
 const MIGRATION_PROBE_NIL_UUID = "00000000-0000-0000-0000-000000000000";
 
 function buildSummary(checks: SystemCheckResult[]): SystemCheckReport["summary"] {
