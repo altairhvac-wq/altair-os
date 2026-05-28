@@ -45,6 +45,22 @@ function buildPermissionsForRole(role: CompanyRole) {
   );
 }
 
+const PREVIEW_PERMISSIONS_BY_ROLE = new Map<
+  CompanyRole,
+  ActiveCompanyContext["permissions"]
+>();
+
+function getPermissionsForPreviewRole(role: CompanyRole) {
+  const cached = PREVIEW_PERMISSIONS_BY_ROLE.get(role);
+  if (cached) {
+    return cached;
+  }
+
+  const permissions = buildPermissionsForRole(role);
+  PREVIEW_PERMISSIONS_BY_ROLE.set(role, permissions);
+  return permissions;
+}
+
 export function isOwnerViewModeEligible(
   role: CompanyRole | string | null | undefined,
 ): boolean {
@@ -63,7 +79,7 @@ export function getNavigationContextForOwnerViewMode(
 
   return {
     ...context,
-    permissions: buildPermissionsForRole(previewRole),
+    permissions: getPermissionsForPreviewRole(previewRole),
   };
 }
 

@@ -1,3 +1,6 @@
+"use client";
+
+import { memo, useMemo } from "react";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 import { TechnicianColumn } from "./TechnicianColumn";
 import { UnassignedJobsPanel } from "./UnassignedJobsPanel";
@@ -24,7 +27,7 @@ function groupJobsByTechnician(jobs: DispatchJob[]): Map<string, DispatchJob[]> 
   return grouped;
 }
 
-export function DispatchBoard({
+export const DispatchBoard = memo(function DispatchBoard({
   jobs,
   technicians,
   technicianFilter,
@@ -32,13 +35,19 @@ export function DispatchBoard({
   onSelectJob,
   highlightUnassignedPanel = false,
 }: DispatchBoardProps) {
-  const unassignedJobs = jobs.filter((job) => !job.technicianId);
-  const grouped = groupJobsByTechnician(jobs);
+  const unassignedJobs = useMemo(
+    () => jobs.filter((job) => !job.technicianId),
+    [jobs],
+  );
+  const grouped = useMemo(() => groupJobsByTechnician(jobs), [jobs]);
 
-  const visibleTechnicians =
-    technicianFilter === "all" || technicianFilter === "unassigned"
-      ? technicians
-      : technicians.filter((tech) => tech.id === technicianFilter);
+  const visibleTechnicians = useMemo(
+    () =>
+      technicianFilter === "all" || technicianFilter === "unassigned"
+        ? technicians
+        : technicians.filter((tech) => tech.id === technicianFilter),
+    [technicianFilter, technicians],
+  );
 
   const showUnassignedInline =
     technicianFilter === "unassigned" ||
@@ -69,4 +78,4 @@ export function DispatchBoard({
         : null}
     </div>
   );
-}
+});

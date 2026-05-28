@@ -1,3 +1,6 @@
+"use client";
+
+import { useMemo } from "react";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 
 type TechnicianWorkloadCardsProps = {
@@ -13,6 +16,20 @@ export function TechnicianWorkloadCards({
   emphasized = false,
   highlightedTechnicianIds = [],
 }: TechnicianWorkloadCardsProps) {
+  const assignedCountByTechnicianId = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    for (const job of jobs) {
+      if (!job.technicianId) continue;
+      counts.set(
+        job.technicianId,
+        (counts.get(job.technicianId) ?? 0) + 1,
+      );
+    }
+
+    return counts;
+  }, [jobs]);
+
   if (technicians.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2.5 sm:rounded-2xl sm:px-4 sm:py-4">
@@ -31,9 +48,7 @@ export function TechnicianWorkloadCards({
   const grid = (
     <div className="grid shrink-0 grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {technicians.map((technician) => {
-        const assignedCount = jobs.filter(
-          (job) => job.technicianId === technician.id,
-        ).length;
+        const assignedCount = assignedCountByTechnicianId.get(technician.id) ?? 0;
         const isHighlighted = highlightedTechnicianIds.includes(technician.id);
 
         return (

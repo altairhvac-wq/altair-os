@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Calendar, Clock, MapPin, User } from "lucide-react";
 import {
   formatDispatchDate,
@@ -17,7 +18,7 @@ type DispatchJobCardProps = {
   onSelect: (job: DispatchJob) => void;
 };
 
-export function DispatchJobCard({
+export const DispatchJobCard = memo(function DispatchJobCard({
   job,
   technicianName,
   isSelected = false,
@@ -123,4 +124,4 @@ export function DispatchJobCard({
       </div>
     </button>
   );
-}
+});

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 import { DispatchJobCard } from "./DispatchJobCard";
 
@@ -20,7 +21,7 @@ const statusLabel: Record<Technician["status"], string> = {
   off_duty: "Off duty",
 };
 
-export function TechnicianColumn({
+export const TechnicianColumn = memo(function TechnicianColumn({
   technician,
   jobs,
   selectedJobId,
@@ -81,4 +82,4 @@ export function TechnicianColumn({
       </div>
     </section>
   );
-}
+});

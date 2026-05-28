@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import type { MobileDashboardSnapshotItem } from "@/shared/lib/mobile-dashboard-snapshot";
 
 export type MobileDashboardTabId =
@@ -44,7 +44,7 @@ const SNAPSHOT_TONE_STYLES: Record<
   },
 };
 
-function MobileDashboardSnapshot({
+const MobileDashboardSnapshot = memo(function MobileDashboardSnapshot({
   items,
 }: {
   items: MobileDashboardSnapshotItem[];
@@ -112,7 +112,7 @@ function MobileDashboardSnapshot({
       </div>
     </section>
   );
-}
+});
 
 function MobileDashboardTabBar({
   tabs,
@@ -161,9 +161,24 @@ export function MobileDashboardShell({
   snapshot,
   tabs,
 }: MobileDashboardShellProps) {
-  const [activeTab, setActiveTab] = useState<MobileDashboardTabId>(
-    tabs[0]?.id ?? "overview",
+  const initialTabId = tabs[0]?.id ?? "overview";
+  const [activeTab, setActiveTab] = useState<MobileDashboardTabId>(initialTabId);
+  const [visitedTabs, setVisitedTabs] = useState<Set<MobileDashboardTabId>>(
+    () => new Set([initialTabId]),
   );
+
+  const handleSelectTab = useCallback((tabId: MobileDashboardTabId) => {
+    setActiveTab(tabId);
+    setVisitedTabs((current) => {
+      if (current.has(tabId)) {
+        return current;
+      }
+
+      const next = new Set(current);
+      next.add(tabId);
+      return next;
+    });
+  }, []);
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
@@ -174,11 +189,15 @@ export function MobileDashboardShell({
           <MobileDashboardTabBar
             tabs={tabs}
             activeTab={activeTab}
-            onSelect={setActiveTab}
+            onSelect={handleSelectTab}
           />
 
           {tabs.map((tab) => {
             const isActive = tab.id === activeTab;
+
+            if (!visitedTabs.has(tab.id)) {
+              return null;
+            }
 
             return (
               <div

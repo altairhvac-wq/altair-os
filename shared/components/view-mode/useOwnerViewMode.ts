@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ActiveCompanyContext } from "@/lib/database/types";
 import {
@@ -45,20 +45,30 @@ export function useOwnerViewMode(companyContext: ActiveCompanyContext) {
 
   const setViewMode = useCallback(
     (nextMode: OwnerViewMode) => {
-      if (!isOwner || nextMode === viewMode) {
+      if (!isOwner) {
         return;
       }
 
-      persistOwnerViewMode(companyId, nextMode);
-      setViewModeState(nextMode);
-      router.push(OWNER_VIEW_MODE_LANDING[nextMode]);
+      setViewModeState((current) => {
+        if (current === nextMode) {
+          return current;
+        }
+
+        persistOwnerViewMode(companyId, nextMode);
+        router.push(OWNER_VIEW_MODE_LANDING[nextMode]);
+        return nextMode;
+      });
     },
-    [companyId, isOwner, router, viewMode],
+    [companyId, isOwner, router],
   );
 
-  const navigationContext = getNavigationContextForOwnerViewMode(
-    companyContext,
-    isOwner ? viewMode : "owner_admin",
+  const navigationContext = useMemo(
+    () =>
+      getNavigationContextForOwnerViewMode(
+        companyContext,
+        isOwner ? viewMode : "owner_admin",
+      ),
+    [companyContext, isOwner, viewMode],
   );
 
   return {
