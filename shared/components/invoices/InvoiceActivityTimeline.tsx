@@ -14,6 +14,7 @@ import type {
   InvoiceActivityType,
 } from "@/shared/types/invoice-activity";
 import {
+  formatInvoiceActivityAttribution,
   formatInvoiceActivityDetails,
   formatInvoiceActivityLabel,
   formatInvoiceActivityTimestamp,
@@ -117,11 +118,12 @@ export function InvoiceActivityTimeline({
                     <p className="mt-1 text-sm text-slate-600">{details}</p>
                   ) : null}
 
-                  {activity.actorName ? (
-                    <p className="mt-1.5 text-xs text-slate-500">
-                      by {activity.actorName}
-                    </p>
-                  ) : null}
+                  {(() => {
+                    const attribution = formatInvoiceActivityAttribution(activity);
+                    return attribution ? (
+                      <p className="mt-1.5 text-xs text-slate-500">{attribution}</p>
+                    ) : null;
+                  })()}
                 </div>
               </li>
             );

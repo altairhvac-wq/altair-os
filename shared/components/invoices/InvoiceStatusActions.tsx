@@ -8,11 +8,14 @@ import {
   sendInvoiceAction,
   voidInvoiceAction,
 } from "@/app/actions/invoices";
+import type { BillingEmailDelivery } from "@/lib/email/billing-send";
 import {
   formatActionError,
   formatBillingEmailDeliveryError,
+  getBillingActionFeedbackTone,
   MISSING_CUSTOMER_EMAIL_SEND_REASON,
 } from "@/shared/lib/operational-errors";
+import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import {
   canEditInvoice,
   canResendInvoiceEmail,
@@ -39,6 +42,9 @@ export function InvoiceStatusActions({
   const [resendPending, setResendPending] = useState(false);
   const [showVoidConfirm, setShowVoidConfirm] = useState(false);
   const [localStatus, setLocalStatus] = useState(invoice.status);
+  const [emailDelivery, setEmailDelivery] = useState<
+    BillingEmailDelivery | undefined
+  >(undefined);
   const router = useRouter();
 
   useEffect(() => {
@@ -83,6 +89,7 @@ export function InvoiceStatusActions({
     }
 
     setError(null);
+    setEmailDelivery(undefined);
 
     startTransition(async () => {
       const result = await sendInvoiceAction(invoice.id);
@@ -94,6 +101,7 @@ export function InvoiceStatusActions({
       }
 
       if (result.emailDelivery && result.emailDelivery.status !== "sent") {
+        setEmailDelivery(result.emailDelivery);
         setError(formatBillingEmailDeliveryError(result.emailDelivery, "invoice", "send"));
         router.refresh();
         return;
@@ -115,6 +123,7 @@ export function InvoiceStatusActions({
     }
 
     setError(null);
+    setEmailDelivery(undefined);
     setResendPending(true);
 
     startTransition(async () => {
@@ -130,6 +139,7 @@ export function InvoiceStatusActions({
           result.emailDelivery &&
           result.emailDelivery.status !== "sent"
         ) {
+          setEmailDelivery(result.emailDelivery);
           setError(formatBillingEmailDeliveryError(result.emailDelivery, "invoice", "resend"));
           return;
         }
@@ -162,6 +172,17 @@ export function InvoiceStatusActions({
     });
   }
 
+  const feedbackBanner = error ? (
+    <SettingsAlertBanner tone={getBillingActionFeedbackTone(error, emailDelivery)}>
+      {error}
+      {getBillingActionFeedbackTone(error, emailDelivery) === "warning" ? (
+        <span className="mt-1 block text-xs opacity-90">
+          Refresh this page to confirm the current status before retrying.
+        </span>
+      ) : null}
+    </SettingsAlertBanner>
+  ) : null;
+
   if (showVoidConfirm) {
     return (
       <div className="w-full max-w-sm rounded-xl border border-red-200 bg-red-50/70 p-4">
@@ -190,9 +211,7 @@ export function InvoiceStatusActions({
           </button>
         </div>
         {error ? (
-          <p className="mt-2 text-sm text-red-600" role="alert">
-            {error}
-          </p>
+          <div className="mt-2">{feedbackBanner}</div>
         ) : null}
       </div>
     );
@@ -269,11 +288,7 @@ export function InvoiceStatusActions({
         </p>
       ) : null}
 
-      {error ? (
-        <p className="text-sm text-red-600" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {feedbackBanner}
     </div>
   );
 }

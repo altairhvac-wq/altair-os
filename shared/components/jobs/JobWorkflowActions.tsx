@@ -132,33 +132,35 @@ export function JobWorkflowActions({
     setPendingAction(actionId);
 
     startTransition(async () => {
-      const result = await updateJobStatusAction(jobId, actionId, status);
+      try {
+        const result = await updateJobStatusAction(jobId, actionId, status);
 
-      setPendingAction(null);
-
-      if (!result.job) {
-        setError(formatActionError(result.error, "We couldn't update this job's status. Try again."));
-        if (result.error?.includes("assigned")) {
-          router.refresh();
+        if (!result.job) {
+          setError(formatActionError(result.error, "We couldn't update this job's status. Try again."));
+          if (result.error?.includes("assigned")) {
+            router.refresh();
+          }
+          return;
         }
-        return;
-      }
 
-      if (result.error) {
-        setError(formatActionError(result.error, "We couldn't update this job's status. Try again."));
+        if (result.error) {
+          setError(formatActionError(result.error, "We couldn't update this job's status. Try again."));
+          onStatusUpdated?.(result.job.status);
+          router.refresh();
+          return;
+        }
+
+        const actionLabel =
+          actionId === primaryAction?.id
+            ? primaryAction.label
+            : (secondaryActions.find((candidate) => candidate.id === actionId)
+                ?.label ?? "Status");
+        setSuccessMessage(`${actionLabel} updated successfully.`);
         onStatusUpdated?.(result.job.status);
         router.refresh();
-        return;
+      } finally {
+        setPendingAction(null);
       }
-
-      const actionLabel =
-        actionId === primaryAction?.id
-          ? primaryAction.label
-          : (secondaryActions.find((candidate) => candidate.id === actionId)
-              ?.label ?? "Status");
-      setSuccessMessage(`${actionLabel} updated successfully.`);
-      onStatusUpdated?.(result.job.status);
-      router.refresh();
     });
   }
 
@@ -179,11 +181,6 @@ export function JobWorkflowActions({
             {competingSheetActive
               ? "Close the open field form before completing work."
               : mobileHint}
-          </p>
-        ) : null}
-        {isPending && !pendingAction ? (
-          <p className="text-xs text-slate-500" aria-live="polite">
-            Saving your last status change…
           </p>
         ) : null}
         <div className={actionRowClass}>{renderActionButton(primaryAction)}</div>

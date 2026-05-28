@@ -206,7 +206,9 @@ export function formatJobActivityDetails(activity: JobActivity): string | null {
       if (metadata.file_name) {
         parts.push(metadata.file_name);
       }
-      return parts.length > 0 ? parts.join(" · ") : null;
+      return parts.length > 0
+        ? `Uploaded · ${parts.join(" · ")}`
+        : "Uploaded to job";
     }
 
     case "job_material_added": {
@@ -225,7 +227,9 @@ export function formatJobActivityDetails(activity: JobActivity): string | null {
           }).format(metadata.unit_price),
         );
       }
-      return parts.length > 0 ? parts.join(" · ") : null;
+      return parts.length > 0
+        ? `Logged on site · ${parts.join(" · ")}`
+        : "Logged on site";
     }
 
     case "invoice_created_for_completed_job":

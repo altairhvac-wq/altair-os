@@ -28,6 +28,7 @@ export type OperationalActivityEventType =
   | "technician_assigned"
   | "technician_unassigned"
   | "job_labor_auto_closed"
+  | "work_completed"
   | "estimate_created"
   | "estimate_sent"
   | "estimate_email_resent"
@@ -133,7 +134,6 @@ const JOB_STATUS_CHANGE_EVENTS = new Set([
   "complete_job",
   "technician_arrived",
   "work_started",
-  "work_completed",
   "status_changed",
   "job_cancelled",
 ]);
@@ -150,6 +150,7 @@ const ACTIVITY_TYPE_LABELS: Record<OperationalActivityEventType, string> = {
   technician_assigned: "Technician assigned",
   technician_unassigned: "Technician unassigned",
   job_labor_auto_closed: "Labor auto-closed",
+  work_completed: "Work completed",
   estimate_created: "Estimate created",
   estimate_sent: "Estimate sent",
   estimate_email_resent: "Estimate email resent",
@@ -195,6 +196,10 @@ export function normalizeOperationalEventType(
     if (metadata?.action_id === "reopen") {
       return "job_reopened";
     }
+  }
+
+  if (source === "job" && rawEventType === "work_completed") {
+    return "work_completed";
   }
 
   if (source === "job" && JOB_STATUS_CHANGE_EVENTS.has(rawEventType)) {
@@ -445,10 +450,15 @@ export function formatOperationalActivityDetails(
         : null;
 
     case "estimate_sent":
+      return metadata.estimate_number
+        ? `Email sent to customer · Estimate ${metadata.estimate_number}`
+        : formatStatusTransition(metadata.from_status, metadata.to_status) ??
+            "Email sent to customer";
+
     case "estimate_email_resent":
       return metadata.estimate_number
-        ? `Estimate ${metadata.estimate_number}`
-        : "Email sent to customer";
+        ? `Email resent to customer · Estimate ${metadata.estimate_number}`
+        : "Email resent to customer";
 
     case "estimate_declined":
     case "estimate_cancelled":
@@ -474,10 +484,15 @@ export function formatOperationalActivityDetails(
         : null;
 
     case "invoice_sent":
+      return metadata.invoice_number
+        ? `Email sent to customer · Invoice ${metadata.invoice_number}`
+        : formatStatusTransition(metadata.from_status, metadata.to_status) ??
+            "Email sent to customer";
+
     case "invoice_email_resent":
       return metadata.invoice_number
-        ? `Invoice ${metadata.invoice_number}`
-        : "Email sent to customer";
+        ? `Email resent to customer · Invoice ${metadata.invoice_number}`
+        : "Email resent to customer";
 
     case "invoice_voided":
     case "invoice_cancelled":
@@ -512,19 +527,31 @@ export function formatOperationalActivityDetails(
       return parts.length > 0 ? parts.join(" · ") : null;
     }
 
-    case "invoice_paid":
+    case "invoice_paid": {
+      const parts: string[] = ["Paid in full"];
       if (typeof metadata.amount === "number") {
-        return new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
-        }).format(metadata.amount);
+        parts.push(
+          new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(metadata.amount),
+        );
       }
       if (metadata.invoice_number) {
-        return `Invoice ${metadata.invoice_number}`;
+        parts.push(`Invoice ${metadata.invoice_number}`);
       }
-      return formatStatusTransition(metadata.from_status, metadata.to_status);
+      const statusLine = formatStatusTransition(
+        metadata.from_status,
+        metadata.to_status,
+      );
+      if (statusLine) {
+        parts.push(statusLine);
+      }
+      return parts.length > 0 ? parts.join(" · ") : null;
+    }
 
-    case "job_status_changed": {
+    case "job_status_changed":
+    case "work_completed": {
       const statusLine = formatStatusTransition(
         metadata.from_status,
         metadata.to_status,
@@ -556,7 +583,9 @@ export function formatOperationalActivityDetails(
       if (metadata.job_number) {
         parts.push(`Job ${metadata.job_number}`);
       }
-      return parts.length > 0 ? parts.join(" · ") : null;
+      return parts.length > 0
+        ? `Uploaded · ${parts.join(" · ")}`
+        : "Uploaded to job";
     }
 
     case "job_material_added": {
@@ -578,11 +607,13 @@ export function formatOperationalActivityDetails(
       if (metadata.job_number) {
         parts.push(`Job ${metadata.job_number}`);
       }
-      return parts.length > 0 ? parts.join(" · ") : null;
+      return parts.length > 0
+        ? `Logged on site · ${parts.join(" · ")}`
+        : "Logged on site";
     }
 
     case "expense_receipt_uploaded": {
-      const parts: string[] = [];
+      const parts: string[] = ["Receipt attached"];
       if (metadata.merchant?.trim()) {
         parts.push(metadata.merchant.trim());
       }
@@ -600,7 +631,7 @@ export function formatOperationalActivityDetails(
       if (metadata.expense_number) {
         parts.push(metadata.expense_number);
       }
-      return parts.length > 0 ? parts.join(" · ") : null;
+      return parts.join(" · ");
     }
 
     case "expense_created":
@@ -687,7 +718,7 @@ export function formatOperationalActivityDetailsForAccess(
 ): string | null {
   if (!canViewBilling && activity.eventType === "job_material_added") {
     const { metadata } = activity;
-    const parts: string[] = [];
+    const parts: string[] = ["Logged on site"];
     if (metadata.name) {
       parts.push(metadata.name);
     }
@@ -697,7 +728,40 @@ export function formatOperationalActivityDetailsForAccess(
     if (metadata.job_number) {
       parts.push(`Job ${metadata.job_number}`);
     }
-    return parts.length > 0 ? parts.join(" · ") : null;
+    return parts.join(" · ");
+  }
+
+  if (
+    !canViewBilling &&
+    (activity.eventType === "expense_created" ||
+      activity.eventType === "expense_submitted" ||
+      activity.eventType === "expense_approved" ||
+      activity.eventType === "expense_rejected" ||
+      activity.eventType === "expense_reimbursed" ||
+      activity.eventType === "expense_receipt_uploaded")
+  ) {
+    const { metadata } = activity;
+    const parts: string[] = [];
+    if (metadata.merchant?.trim()) {
+      parts.push(metadata.merchant.trim());
+    }
+    if (metadata.expense_number) {
+      parts.push(metadata.expense_number);
+    }
+    const statusLine = formatStatusTransition(
+      metadata.from_status,
+      metadata.to_status,
+    );
+    if (statusLine) {
+      parts.push(statusLine);
+    }
+    if (metadata.rejection_reason?.trim()) {
+      parts.push(metadata.rejection_reason.trim());
+    }
+    if (metadata.file_name && activity.eventType === "expense_receipt_uploaded") {
+      parts.push(metadata.file_name);
+    }
+    return parts.length > 0 ? parts.join(" · ") : "Expense activity";
   }
 
   return formatOperationalActivityDetails(activity);
@@ -710,6 +774,7 @@ export function formatOperationalActivityTimestamp(
   return formatDateTimeInTimeZone(isoDate, timeZone, {
     month: "short",
     day: "numeric",
+    year: "numeric",
     hour: "numeric",
     minute: "2-digit",
   });

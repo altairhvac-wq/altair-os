@@ -27,6 +27,18 @@ export const BILLING_SENSITIVE_OPERATIONAL_EVENT_TYPES = new Set<
   "invoice_created_for_completed_job",
 ]);
 
+/** Expense events that expose dollar amounts or reimbursement details. */
+const EXPENSE_BILLING_SENSITIVE_OPERATIONAL_EVENT_TYPES = new Set<
+  OperationalActivityEventType
+>([
+  "expense_created",
+  "expense_submitted",
+  "expense_approved",
+  "expense_rejected",
+  "expense_reimbursed",
+  "expense_receipt_uploaded",
+]);
+
 const BILLING_SENSITIVE_OPERATIONAL_SOURCES = new Set<OperationalActivitySource>([
   "estimate",
   "invoice",
@@ -42,6 +54,10 @@ export function isBillingSensitiveOperationalActivity(
   activity: OperationalActivity,
 ): boolean {
   if (BILLING_SENSITIVE_OPERATIONAL_SOURCES.has(activity.source)) {
+    return true;
+  }
+
+  if (EXPENSE_BILLING_SENSITIVE_OPERATIONAL_EVENT_TYPES.has(activity.eventType)) {
     return true;
   }
 

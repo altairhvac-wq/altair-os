@@ -7,8 +7,8 @@ import { COMPANY_FILES_BUCKET } from "@/lib/storage/company-files";
 import type { CompanyMembershipInsert } from "@/lib/database/types/core-tables";
 import type { SystemCheckReport, SystemCheckResult } from "./types";
 
-const EXPECTED_MIGRATION_COUNT = 45;
-const LATEST_MIGRATION_MARKER = "045_tighten_customer_equipment_rls";
+const EXPECTED_MIGRATION_COUNT = 46;
+const LATEST_MIGRATION_MARKER = "046_final_beta_rls_hardening";
 const MIGRATION_PROBE_NIL_UUID = "00000000-0000-0000-0000-000000000000";
 
 function buildSummary(checks: SystemCheckResult[]): SystemCheckReport["summary"] {
@@ -65,6 +65,36 @@ function checkOptionalEnvVars(): SystemCheckResult {
     status: "warn",
     message: "SUPABASE_SERVICE_ROLE_KEY is not set.",
     hint: "Not required for the web app runtime. Only needed for local workflow scripts.",
+  };
+}
+
+function checkOutboundEmailConfig(): SystemCheckResult {
+  const hasApiKey = Boolean(process.env.RESEND_API_KEY?.trim());
+  const hasFromEmail = Boolean(process.env.RESEND_FROM_EMAIL?.trim());
+
+  if (hasApiKey && hasFromEmail) {
+    return {
+      id: "env-outbound-email",
+      label: "Outbound email (Resend)",
+      status: "pass",
+      message: "RESEND_API_KEY and RESEND_FROM_EMAIL are configured.",
+    };
+  }
+
+  const missing: string[] = [];
+  if (!hasApiKey) {
+    missing.push("RESEND_API_KEY");
+  }
+  if (!hasFromEmail) {
+    missing.push("RESEND_FROM_EMAIL");
+  }
+
+  return {
+    id: "env-outbound-email",
+    label: "Outbound email (Resend)",
+    status: "warn",
+    message: `Outbound email is not fully configured (${missing.join(", ")} missing).`,
+    hint: "Estimate and invoice sends will stay in draft until email is set up in Vercel env vars.",
   };
 }
 
@@ -470,6 +500,7 @@ export async function runSystemChecks(): Promise<SystemCheckReport> {
   const checks: SystemCheckResult[] = [
     checkRequiredEnvVars(),
     checkOptionalEnvVars(),
+    checkOutboundEmailConfig(),
     checkAlphaHardening(),
     await checkSupabaseConnection(),
     await checkActiveCompanyContext(),

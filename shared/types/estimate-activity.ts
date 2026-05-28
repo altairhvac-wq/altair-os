@@ -74,7 +74,7 @@ export function formatEstimateActivityDetails(
 
     case "estimate_email_resent":
       return metadata.estimate_number
-        ? `Estimate ${metadata.estimate_number}`
+        ? `Email resent to customer · Estimate ${metadata.estimate_number}`
         : "Email resent to customer";
 
     case "estimate_sent":
@@ -82,6 +82,21 @@ export function formatEstimateActivityDetails(
     case "estimate_declined":
     case "estimate_cancelled":
     case "status_changed": {
+      if (eventType === "estimate_sent") {
+        const statusLine =
+          metadata.from_status && metadata.to_status
+            ? `${formatEstimateStatus(metadata.from_status)} → ${formatEstimateStatus(metadata.to_status)}`
+            : null;
+        const parts: string[] = ["Email sent to customer"];
+        if (metadata.estimate_number) {
+          parts.push(`Estimate ${metadata.estimate_number}`);
+        }
+        if (statusLine) {
+          parts.push(statusLine);
+        }
+        return parts.join(" · ");
+      }
+
       if (metadata.from_status && metadata.to_status) {
         return `${formatEstimateStatus(metadata.from_status)} → ${formatEstimateStatus(metadata.to_status)}`;
       }
@@ -94,6 +109,15 @@ export function formatEstimateActivityDetails(
     default:
       return null;
   }
+}
+
+export function formatEstimateActivityAttribution(
+  activity: EstimateActivity,
+): string | null {
+  if (activity.actorName) {
+    return `by ${activity.actorName}`;
+  }
+  return null;
 }
 
 export function formatEstimateActivityTimestamp(

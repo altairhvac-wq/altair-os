@@ -81,7 +81,7 @@ function PendingInvitesCardContent({
       setItems((previous) =>
         previous.filter((invite) => invite.id !== membershipId),
       );
-      setSuccess(`You joined ${companyName}.`);
+      setSuccess(`Invite accepted · You joined ${companyName}.`);
       setAcceptingId(null);
       router.refresh();
 

@@ -12,6 +12,7 @@ import type {
   EstimateActivityType,
 } from "@/shared/types/estimate-activity";
 import {
+  formatEstimateActivityAttribution,
   formatEstimateActivityDetails,
   formatEstimateActivityLabel,
   formatEstimateActivityTimestamp,
@@ -111,11 +112,12 @@ export function EstimateActivityTimeline({
                     <p className="mt-1 text-sm text-slate-600">{details}</p>
                   ) : null}
 
-                  {activity.actorName ? (
-                    <p className="mt-1.5 text-xs text-slate-500">
-                      by {activity.actorName}
-                    </p>
-                  ) : null}
+                  {(() => {
+                    const attribution = formatEstimateActivityAttribution(activity);
+                    return attribution ? (
+                      <p className="mt-1.5 text-xs text-slate-500">{attribution}</p>
+                    ) : null;
+                  })()}
                 </div>
               </li>
             );

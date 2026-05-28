@@ -53,10 +53,29 @@ export function formatBillingEmailDeliveryError(
   }
 
   if (mode === "resend") {
-    return `${documentLabel === "estimate" ? "Estimate" : "Invoice"} email could not be resent. Check the customer's email on their profile and try again.`;
+    return `${documentLabel === "estimate" ? "Estimate" : "Invoice"} email could not be resent. The ${documentLabel} status is unchanged — check the customer's email on their profile and try again.`;
   }
 
   return `${documentLabel === "estimate" ? "Estimate" : "Invoice"} could not be sent by email. It remains a draft — review the customer's email and try again.`;
+}
+
+export function isBillingEmailRevertFailureMessage(message: string): boolean {
+  return message.includes("could not be reverted safely");
+}
+
+export function getBillingActionFeedbackTone(
+  message: string,
+  delivery?: BillingEmailDelivery,
+): "error" | "warning" {
+  if (delivery?.status === "not_configured") {
+    return "warning";
+  }
+
+  if (isBillingEmailRevertFailureMessage(message)) {
+    return "warning";
+  }
+
+  return "error";
 }
 
 export function formatUploadError(): string {

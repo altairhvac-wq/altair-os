@@ -12,7 +12,7 @@ import {
   MobileSheetPanel,
 } from "@/shared/components/ui/mobile-sheet";
 import { recordInvoicePaymentAction } from "@/app/actions/invoice-payments";
-import { formatActionError } from "@/shared/lib/operational-errors";
+import { formatActionError, formatRetryGuidance } from "@/shared/lib/operational-errors";
 import { formatCurrency } from "@/shared/types/customer";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 import {
@@ -132,7 +132,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
       const result = await recordInvoicePaymentAction(invoice.id, data);
 
       if (result.error) {
-        setError(formatActionError(result.error, "We couldn't record this payment. Try again."));
+        setError(formatRetryGuidance(formatActionError(result.error, "We couldn't record this payment. Try again.")));
         return;
       }
 
@@ -140,7 +140,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
       setShowSuccess(true);
       window.setTimeout(() => {
         onClose();
-      }, 700);
+      }, 1500);
     });
   }
 
@@ -263,6 +263,10 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
             {error ? (
               <p className="mt-3 text-sm text-red-600" role="alert">
                 {error}
+              </p>
+            ) : showSuccess ? (
+              <p className="mt-3 text-sm font-medium text-emerald-700" role="status">
+                Payment recorded. Balance and activity timeline will update when this closes.
               </p>
             ) : null}
           </MobileSheetBody>

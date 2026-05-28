@@ -118,7 +118,7 @@ export function formatInvoiceActivityDetails(
 
     case "invoice_email_resent":
       return metadata.invoice_number
-        ? `Invoice ${metadata.invoice_number}`
+        ? `Email resent to customer · Invoice ${metadata.invoice_number}`
         : "Email resent to customer";
 
     case "invoice_sent":
@@ -126,6 +126,12 @@ export function formatInvoiceActivityDetails(
     case "invoice_cancelled":
     case "status_changed": {
       const parts: string[] = [];
+      if (eventType === "invoice_sent") {
+        parts.push("Email sent to customer");
+        if (metadata.invoice_number) {
+          parts.push(`Invoice ${metadata.invoice_number}`);
+        }
+      }
       if (metadata.from_status && metadata.to_status) {
         parts.push(
           `${formatInvoiceStatus(metadata.from_status)} → ${formatInvoiceStatus(metadata.to_status)}`,
@@ -164,24 +170,52 @@ export function formatInvoiceActivityDetails(
     }
 
     case "invoice_paid": {
+      const parts: string[] = ["Paid in full"];
       if (typeof metadata.amount === "number") {
-        return new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
-        }).format(metadata.amount);
+        parts.push(
+          new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(metadata.amount),
+        );
       }
       if (metadata.invoice_number) {
-        return `Invoice ${metadata.invoice_number}`;
+        parts.push(`Invoice ${metadata.invoice_number}`);
       }
       if (metadata.from_status && metadata.to_status) {
-        return `${formatInvoiceStatus(metadata.from_status)} → ${formatInvoiceStatus(metadata.to_status)}`;
+        parts.push(
+          `${formatInvoiceStatus(metadata.from_status)} → ${formatInvoiceStatus(metadata.to_status)}`,
+        );
       }
-      return null;
+      return parts.length > 0 ? parts.join(" · ") : null;
     }
 
     default:
       return null;
   }
+}
+
+export function formatInvoiceActivityAttribution(
+  activity: InvoiceActivity,
+): string | null {
+  if (activity.actorName) {
+    if (
+      activity.eventType === "payment_recorded" ||
+      activity.eventType === "invoice_paid"
+    ) {
+      return `Recorded by ${activity.actorName}`;
+    }
+    if (activity.metadata.automated && activity.metadata.source === "automatic") {
+      return "System · automatic";
+    }
+    return `by ${activity.actorName}`;
+  }
+
+  if (activity.metadata.automated || activity.metadata.source === "automatic") {
+    return "System · automatic";
+  }
+
+  return null;
 }
 
 export function formatInvoiceActivityTimestamp(

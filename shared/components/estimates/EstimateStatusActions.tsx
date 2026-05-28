@@ -8,11 +8,14 @@ import {
   resendEstimateEmailAction,
   updateEstimateStatusAction,
 } from "@/app/actions/estimates";
+import type { BillingEmailDelivery } from "@/lib/email/billing-send";
 import {
   formatActionError,
   formatBillingEmailDeliveryError,
+  getBillingActionFeedbackTone,
   MISSING_CUSTOMER_EMAIL_SEND_REASON,
 } from "@/shared/lib/operational-errors";
+import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import {
   canResendEstimateEmail,
   type EstimateDetail,
@@ -130,6 +133,9 @@ export function EstimateStatusActions({
   );
   const [convertPending, setConvertPending] = useState(false);
   const [localStatus, setLocalStatus] = useState(estimate.status);
+  const [emailDelivery, setEmailDelivery] = useState<
+    BillingEmailDelivery | undefined
+  >(undefined);
   const router = useRouter();
 
   useEffect(() => {
@@ -167,6 +173,7 @@ export function EstimateStatusActions({
     }
 
     setError(null);
+    setEmailDelivery(undefined);
     setPendingStatus(toStatus);
 
     startTransition(async () => {
@@ -188,6 +195,7 @@ export function EstimateStatusActions({
           result.emailDelivery &&
           result.emailDelivery.status !== "sent"
         ) {
+          setEmailDelivery(result.emailDelivery);
           setError(formatBillingEmailDeliveryError(result.emailDelivery, "estimate", "send"));
           router.refresh();
           return;
@@ -239,6 +247,7 @@ export function EstimateStatusActions({
     }
 
     setError(null);
+    setEmailDelivery(undefined);
     setResendPending(true);
 
     startTransition(async () => {
@@ -254,6 +263,7 @@ export function EstimateStatusActions({
           result.emailDelivery &&
           result.emailDelivery.status !== "sent"
         ) {
+          setEmailDelivery(result.emailDelivery);
           setError(formatBillingEmailDeliveryError(result.emailDelivery, "estimate", "resend"));
           return;
         }
@@ -367,6 +377,17 @@ export function EstimateStatusActions({
         ? "Resend sends another copy to the customer's email on file."
         : null);
 
+  const feedbackBanner = error ? (
+    <SettingsAlertBanner tone={getBillingActionFeedbackTone(error, emailDelivery)}>
+      {error}
+      {getBillingActionFeedbackTone(error, emailDelivery) === "warning" ? (
+        <span className="mt-1 block text-xs opacity-90">
+          Refresh this page to confirm the current status before retrying.
+        </span>
+      ) : null}
+    </SettingsAlertBanner>
+  ) : null;
+
   if (isSticky) {
     const hasActions =
       canConvertToInvoice || canResendEmail || actions.length > 0;
@@ -379,10 +400,8 @@ export function EstimateStatusActions({
       <>
         <div className={containerClass}>
           {actionButtons}
-          {error ? (
-            <p className="mt-2 text-sm text-red-600" role="alert">
-              {error}
-            </p>
+          {feedbackBanner ? (
+            <div className="mt-2 w-full">{feedbackBanner}</div>
           ) : helperText ? (
             <p className="mt-2 text-xs text-slate-500">{helperText}</p>
           ) : null}
@@ -398,11 +417,7 @@ export function EstimateStatusActions({
       {helperText ? (
         <p className="text-xs text-slate-500">{helperText}</p>
       ) : null}
-      {error ? (
-        <p className="text-sm text-red-600" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {feedbackBanner}
     </div>
   );
 }
