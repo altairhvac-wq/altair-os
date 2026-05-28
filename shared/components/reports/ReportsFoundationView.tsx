@@ -63,6 +63,15 @@ function highlightSeverityStyles(
 
 export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
   const { jobs, invoices, estimates, timeClock, operations } = data;
+  const estimateTotal =
+    estimates.draftCount + estimates.sentCount + estimates.approvedCount;
+  const isLowDataCompany =
+    jobs.openJobs === 0 &&
+    jobs.completedJobs === 0 &&
+    estimateTotal === 0 &&
+    invoices.unpaidCount === 0 &&
+    invoices.paidTotal === 0 &&
+    timeClock.recentEntries.length === 0;
 
   return (
     <div className="flex flex-col gap-6 pb-8">
@@ -79,6 +88,25 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
           </p>
         </div>
       </div>
+
+      {isLowDataCompany ? (
+        <div
+          className="flex items-start gap-3 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3"
+          role="note"
+        >
+          <Briefcase className="mt-0.5 h-4 w-4 shrink-0 text-cyan-700" aria-hidden="true" />
+          <div>
+            <p className="text-sm font-semibold text-cyan-900">
+              Your workspace is just getting started
+            </p>
+            <p className="mt-0.5 text-xs text-cyan-800">
+              Reports will populate as you add customers, schedule jobs, send
+              estimates, and record invoices. Empty counts here mean no activity
+              yet — not a loading or permission issue.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       <ReportsSection
         title="Jobs summary"
@@ -287,7 +315,8 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
           </div>
         ) : (
           <p className="mt-4 text-sm text-slate-500">
-            No time clock entries yet.
+            No time clock entries yet. Team clock-ins will appear here once time
+            tracking is used.
           </p>
         )}
       </ReportsSection>

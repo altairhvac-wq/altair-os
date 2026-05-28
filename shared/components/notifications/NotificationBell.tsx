@@ -25,6 +25,7 @@ export function NotificationBell({
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -61,10 +62,20 @@ export function NotificationBell({
   }
 
   function handleMarkAllRead() {
+    if (isPending) {
+      return;
+    }
+
+    setActionError(null);
+
     startTransition(async () => {
       const result = await markAllNotificationsReadAction();
 
       if (result.error) {
+        setActionError(
+          result.error ??
+            "Could not mark notifications as read. Please try again.",
+        );
         return;
       }
 
@@ -107,10 +118,20 @@ export function NotificationBell({
           </div>
 
           <div className="max-h-[min(24rem,calc(100dvh-6rem-env(safe-area-inset-top,0px)))] space-y-2 overflow-y-auto overscroll-contain p-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
-            {notifications.length === 0 ? (
-              <p className="px-2 py-6 text-center text-sm text-slate-500">
-                No notifications yet.
+            {actionError ? (
+              <p className="break-words px-2 text-sm text-red-600" role="alert">
+                {actionError}
               </p>
+            ) : null}
+            {notifications.length === 0 ? (
+              <div className="px-2 py-6 text-center">
+                <p className="text-sm font-medium text-slate-700">
+                  No notifications yet
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Job updates and billing activity will appear here.
+                </p>
+              </div>
             ) : (
               notifications.map((notification) => (
                 <NotificationListItem

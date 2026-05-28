@@ -20,6 +20,7 @@ export function TechnicianNotificationsView({
     useTechnicianNotificationBadge();
   const [notifications, setNotifications] = useState(initialNotifications);
   const [unreadCount, setLocalUnreadCount] = useState(initialUnreadCount);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -43,10 +44,20 @@ export function TechnicianNotificationsView({
   }
 
   function handleMarkAllRead() {
+    if (isPending) {
+      return;
+    }
+
+    setActionError(null);
+
     startTransition(async () => {
       const result = await markAllNotificationsReadAction();
 
       if (result.error) {
+        setActionError(
+          result.error ??
+            "Could not mark notifications as read. Please try again.",
+        );
         return;
       }
 
@@ -84,6 +95,12 @@ export function TechnicianNotificationsView({
           </button>
         ) : null}
       </div>
+
+      {actionError ? (
+        <p className="break-words text-sm text-red-600" role="alert">
+          {actionError}
+        </p>
+      ) : null}
 
       {notifications.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-10 text-center">

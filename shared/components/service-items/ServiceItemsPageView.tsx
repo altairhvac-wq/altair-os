@@ -109,6 +109,10 @@ export function ServiceItemsPageView({
   }
 
   function handleCreateSubmit(data: ServiceItemFormData) {
+    if (isPending) {
+      return;
+    }
+
     setFormError(null);
 
     startTransition(async () => {
@@ -125,7 +129,7 @@ export function ServiceItemsPageView({
   }
 
   function handleEditSubmit(data: ServiceItemFormData) {
-    if (!selectedItem) return;
+    if (!selectedItem || isPending) return;
 
     const editingItemId = selectedItem.id;
     setFormError(null);

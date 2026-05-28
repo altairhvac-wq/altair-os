@@ -8,6 +8,7 @@ import {
   type Customer,
   type CustomerFormData,
   type CustomerStatus,
+  validateCustomerFormData,
 } from "@/shared/types/customer";
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import { CustomerDetailPanel } from "./CustomerDetailPanel";
@@ -87,7 +88,19 @@ export function CustomersPageView({
   }
 
   function handleCreateSubmit(data: CustomerFormData) {
+    if (isPending) {
+      return;
+    }
+
     setCreateError(null);
+
+    const validationError = validateCustomerFormData(data, {
+      requireContact: false,
+    });
+    if (validationError) {
+      setCreateError(validationError);
+      return;
+    }
 
     startTransition(async () => {
       const result = await createCustomerAction(data);

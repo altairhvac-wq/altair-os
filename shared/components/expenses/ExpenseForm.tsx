@@ -47,6 +47,11 @@ export function ExpenseForm({
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isPending) {
+      return;
+    }
+
     setError(null);
 
     startTransition(async () => {
@@ -199,7 +204,11 @@ export function ExpenseForm({
         />
       </section>
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? (
+        <p className="break-words text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       <div className="flex gap-2 border-t border-slate-100 pt-4">
         <button

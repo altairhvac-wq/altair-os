@@ -101,6 +101,10 @@ export function EstimateStatusActions({
   }
 
   function handleStatusChange(toStatus: EstimateStatus) {
+    if (isPending || resendPending) {
+      return;
+    }
+
     setError(null);
 
     startTransition(async () => {
@@ -132,12 +136,24 @@ export function EstimateStatusActions({
   }
 
   function handleConvertToInvoice() {
+    if (isPending || resendPending) {
+      return;
+    }
+
+    setError(null);
+
     startTransition(async () => {
       const result = await convertEstimateToInvoiceAction(estimate.id);
 
-      if (!result.error && result.invoice) {
-        router.push(`/invoices/${result.invoice.id}`);
+      if (result.error || !result.invoice) {
+        setError(
+          result.error ??
+            "Could not convert this estimate to an invoice. Refresh and try again.",
+        );
+        return;
       }
+
+      router.push(`/invoices/${result.invoice.id}`);
     });
   }
 

@@ -200,18 +200,12 @@ export function CompleteJobSheet({
             />
 
             <CompleteJobPhotosPanel jobId={jobId} />
-
-            {error ? (
-              <p className="text-sm text-red-600" role="alert" aria-live="polite">
-                {error}
-              </p>
-            ) : null}
           </MobileSheetBody>
 
           <MobileSheetFooter className={error ? "flex-col" : undefined}>
             {error ? (
               <p
-                className="w-full text-sm text-red-600"
+                className="w-full break-words text-sm text-red-600"
                 role="alert"
                 aria-live="polite"
               >

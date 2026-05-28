@@ -137,6 +137,10 @@ export function JobsPageView({
   }
 
   function handleCreateSubmit(data: JobFormData) {
+    if (isPending) {
+      return;
+    }
+
     setCreateError(null);
 
     startTransition(async () => {

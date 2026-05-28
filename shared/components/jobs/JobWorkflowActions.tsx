@@ -102,15 +102,17 @@ export function JobWorkflowActions({
 
       if (result.error) {
         setError(result.error);
-      } else {
-        const actionLabel =
-          actionId === primaryAction?.id
-            ? primaryAction.label
-            : (secondaryActions.find((candidate) => candidate.id === actionId)
-                ?.label ?? "Status");
-        setSuccessMessage(`${actionLabel} updated successfully.`);
+        onStatusUpdated?.(result.job.status);
+        router.refresh();
+        return;
       }
 
+      const actionLabel =
+        actionId === primaryAction?.id
+          ? primaryAction.label
+          : (secondaryActions.find((candidate) => candidate.id === actionId)
+              ?.label ?? "Status");
+      setSuccessMessage(`${actionLabel} updated successfully.`);
       onStatusUpdated?.(result.job.status);
       router.refresh();
     });
@@ -131,7 +133,11 @@ export function JobWorkflowActions({
           </div>
         ) : null}
 
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {error ? (
+          <p className="break-words text-sm text-red-600" role="alert">
+            {error}
+          </p>
+        ) : null}
         {successMessage ? (
           <p className="text-sm text-emerald-700">{successMessage}</p>
         ) : null}

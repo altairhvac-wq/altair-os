@@ -240,7 +240,7 @@ export function DispatchDetailsPanel({
                         ))}
                       </select>
                       {assignError ? (
-                        <p className="text-xs text-red-600">{assignError}</p>
+                        <p className="break-words text-xs text-red-600" role="alert">{assignError}</p>
                       ) : null}
                       {assignSuccess ? (
                         <p className="text-xs text-emerald-700">{assignSuccess}</p>
@@ -257,7 +257,7 @@ export function DispatchDetailsPanel({
                   ) : canDispatchJobs && (assignError || assignSuccess) ? (
                     <div className="space-y-2 border-t border-slate-100 pt-3">
                       {assignError ? (
-                        <p className="text-xs text-red-600">{assignError}</p>
+                        <p className="break-words text-xs text-red-600" role="alert">{assignError}</p>
                       ) : null}
                       {assignSuccess ? (
                         <p className="text-xs text-emerald-700">{assignSuccess}</p>
@@ -297,7 +297,7 @@ export function DispatchDetailsPanel({
                         ))}
                       </select>
                       {assignError ? (
-                        <p className="text-xs text-red-600">{assignError}</p>
+                        <p className="break-words text-xs text-red-600" role="alert">{assignError}</p>
                       ) : null}
                       {assignSuccess ? (
                         <p className="text-xs text-emerald-700">{assignSuccess}</p>

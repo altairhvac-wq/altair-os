@@ -26,6 +26,35 @@ export function mapDatabaseError(error: DatabaseErrorLike): string {
     return "Your session expired. Please sign in again.";
   }
 
+  if (message.includes("was not found") || message.includes("not found or")) {
+    if (message.includes("job")) {
+      return "Job not found. It may have been removed or you no longer have access.";
+    }
+
+    if (message.includes("customer")) {
+      return "Customer not found. They may have been removed or you no longer have access.";
+    }
+
+    if (message.includes("invoice")) {
+      return "Invoice not found. It may have been removed or you no longer have access.";
+    }
+
+    if (message.includes("invitation")) {
+      return "Invitation not found or no longer available.";
+    }
+  }
+
+  if (
+    message.includes("cannot be reassigned") ||
+    message.includes("cannot be assigned")
+  ) {
+    return rawMessage.endsWith(".") ? rawMessage : `${rawMessage}.`;
+  }
+
+  if (message.includes("already completed") || message.includes("already paid")) {
+    return rawMessage.endsWith(".") ? rawMessage : `${rawMessage}.`;
+  }
+
   if (message.includes("company name is required")) {
     return "Company name is required.";
   }

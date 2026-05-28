@@ -46,6 +46,10 @@ export function ReopenCompletedJobControl({
   }
 
   function handleReopen() {
+    if (isPending) {
+      return;
+    }
+
     setError(null);
     setSuccessMessage(null);
 
@@ -87,7 +91,11 @@ export function ReopenCompletedJobControl({
         {isPending ? "Reopening…" : "Reopen job"}
       </button>
 
-      {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
+      {error ? (
+        <p className="mt-2 break-words text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      ) : null}
       {successMessage ? (
         <p className="mt-2 text-sm text-emerald-700">{successMessage}</p>
       ) : null}

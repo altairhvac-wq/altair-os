@@ -80,7 +80,7 @@ export function JobTechnicianAssignment({
   }
 
   function handleAssign() {
-    if (!selectedTechnicianId || !hasSelectionChanged) {
+    if (!selectedTechnicianId || !hasSelectionChanged || isPending) {
       return;
     }
 
@@ -177,7 +177,11 @@ export function JobTechnicianAssignment({
                 </option>
               ))}
             </select>
-            {error ? <p className="text-xs text-red-600">{error}</p> : null}
+            {error ? (
+              <p className="break-words text-xs text-red-600" role="alert">
+                {error}
+              </p>
+            ) : null}
             {successMessage ? (
               <p className="text-xs text-emerald-700">{successMessage}</p>
             ) : null}
