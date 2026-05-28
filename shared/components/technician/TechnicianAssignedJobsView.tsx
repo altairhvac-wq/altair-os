@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Briefcase, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
-import { isSameCalendarDayInTimeZone } from "@/shared/lib/datetime";
-import type { DispatchJobStatus } from "@/shared/types/dispatch";
+import {
+  groupTechnicianWorkQueue,
+  sortActiveTechnicianJobs,
+  sortCompletedTodayTechnicianJobs,
+} from "@/shared/lib/technician-work-queue";
 import type { TechnicianJob } from "@/shared/types/technician";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import type { ServiceItem } from "@/shared/types/service-item";
@@ -16,62 +19,6 @@ type TechnicianAssignedJobsViewProps = {
   timeState: TechnicianTimeStateSnapshot;
   serviceItems: ServiceItem[];
 };
-
-type ActiveJobStatus = Extract<
-  DispatchJobStatus,
-  "in_progress" | "arrived" | "dispatched" | "scheduled"
->;
-
-const ACTIVE_STATUS_ORDER: Record<ActiveJobStatus, number> = {
-  in_progress: 0,
-  arrived: 1,
-  dispatched: 2,
-  scheduled: 3,
-};
-
-function isActiveTechnicianJob(job: TechnicianJob): boolean {
-  return job.status !== "completed" && job.status !== "cancelled";
-}
-
-function isCompletedToday(job: TechnicianJob, now = new Date()): boolean {
-  if (job.status !== "completed") {
-    return false;
-  }
-
-  const completedAt = job.completedAt ?? job.scheduledDate;
-  return isSameCalendarDayInTimeZone(completedAt, now);
-}
-
-function getActiveStatusOrder(status: TechnicianJob["status"]): number {
-  return ACTIVE_STATUS_ORDER[status as ActiveJobStatus] ?? 99;
-}
-
-function compareActiveJobs(a: TechnicianJob, b: TechnicianJob): number {
-  const statusDiff = getActiveStatusOrder(a.status) - getActiveStatusOrder(b.status);
-
-  if (statusDiff !== 0) {
-    return statusDiff;
-  }
-
-  return (
-    new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime()
-  );
-}
-
-function sortActiveJobs(jobs: TechnicianJob[]): TechnicianJob[] {
-  return jobs.filter(isActiveTechnicianJob).sort(compareActiveJobs);
-}
-
-function groupWorkQueue(jobs: TechnicianJob[]) {
-  const sorted = sortActiveJobs(jobs);
-
-  return {
-    currentJobs: sorted.filter((job) => job.status === "in_progress"),
-    onSiteJobs: sorted.filter((job) => job.status === "arrived"),
-    enRouteJobs: sorted.filter((job) => job.status === "dispatched"),
-    upNextJobs: sorted.filter((job) => job.status === "scheduled"),
-  };
-}
 
 type WorkQueueSectionProps = {
   label: string;
@@ -147,13 +94,7 @@ function TechnicianJobsEmptyState({
 
 function CompletedTodaySection({ jobs }: { jobs: TechnicianJob[] }) {
   const [expanded, setExpanded] = useState(false);
-  const completedToday = jobs
-    .filter((job) => isCompletedToday(job))
-    .sort(
-      (a, b) =>
-        new Date(b.completedAt ?? b.scheduledDate).getTime() -
-        new Date(a.completedAt ?? a.scheduledDate).getTime(),
-    );
+  const completedToday = sortCompletedTodayTechnicianJobs(jobs);
 
   if (completedToday.length === 0) {
     return null;
@@ -213,9 +154,9 @@ export function TechnicianAssignedJobsView({
     setTimeState(initialTimeState);
   }, [initialTimeState]);
 
-  const activeJobs = sortActiveJobs(jobs);
+  const activeJobs = sortActiveTechnicianJobs(jobs);
   const { currentJobs, onSiteJobs, enRouteJobs, upNextJobs } =
-    groupWorkQueue(jobs);
+    groupTechnicianWorkQueue(jobs);
   const primaryJobId = currentJobs[0]?.id ?? onSiteJobs[0]?.id;
 
   if (activeJobs.length === 0) {

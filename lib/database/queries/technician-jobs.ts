@@ -1,6 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import type { JobRow } from "@/lib/database/types/core-tables";
+import { getDayBoundsInTimeZone } from "@/shared/lib/datetime";
 import type { TechnicianJob } from "@/shared/types/technician";
+
+type ListAssignedJobsForTechnicianOptions = {
+  reference?: Date;
+  timeZone?: string;
+};
 
 type JobRowWithCustomer = JobRow & {
   customers: {
@@ -40,8 +46,14 @@ function mapJobRowToTechnicianJob(row: JobRowWithCustomer): TechnicianJob {
 export async function listAssignedJobsForTechnician(
   companyId: string,
   technicianId: string,
+  options?: ListAssignedJobsForTechnicianOptions,
 ): Promise<TechnicianJob[]> {
   const supabase = await createClient();
+  const reference = options?.reference ?? new Date();
+  const { start, end } = getDayBoundsInTimeZone(
+    options?.timeZone,
+    reference,
+  );
 
   const { data, error } = await supabase
     .from("jobs")
@@ -49,6 +61,8 @@ export async function listAssignedJobsForTechnician(
     .eq("company_id", companyId)
     .eq("assigned_technician_id", technicianId)
     .neq("status", "cancelled")
+    .gte("scheduled_at", start)
+    .lte("scheduled_at", end)
     .order("scheduled_at", { ascending: true });
 
   if (error) {

@@ -111,7 +111,7 @@ export function TechnicianJobCard({
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <TechnicianJobStatusBadge status={status} />
+          <TechnicianJobStatusBadge status={job.status} />
           <span
             className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${getPriorityStyles(job.priority)}`}
           >
