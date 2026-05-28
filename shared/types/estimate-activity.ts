@@ -1,3 +1,4 @@
+import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { formatEstimateStatus, type EstimateStatus } from "@/shared/types/estimate";
 
 export type EstimateActivityType =
@@ -85,14 +86,15 @@ export function formatEstimateActivityDetails(
   }
 }
 
-export function formatEstimateActivityTimestamp(isoDate: string): string {
-  const date = new Date(isoDate);
-
-  return new Intl.DateTimeFormat("en-US", {
+export function formatEstimateActivityTimestamp(
+  isoDate: string,
+  timeZone?: string,
+): string {
+  return formatDateTimeInTimeZone(isoDate, timeZone, {
     month: "short",
     day: "numeric",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  }).format(date);
+  });
 }

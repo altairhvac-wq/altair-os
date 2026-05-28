@@ -1,3 +1,4 @@
+import { formatTimeInTimeZone } from "@/shared/lib/datetime";
 import type { Technician } from "@/shared/types/dispatch";
 import type {
   DispatchJobPriority,
@@ -47,11 +48,8 @@ export type TechnicianQuickAction =
   | "photo"
   | "complete";
 
-export function formatTechnicianJobTime(date: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(date));
+export function formatTechnicianJobTime(date: string, timeZone?: string): string {
+  return formatTimeInTimeZone(date, timeZone);
 }
 
 export function formatTechnicianJobAddress(job: TechnicianJob): string {

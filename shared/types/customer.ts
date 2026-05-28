@@ -1,3 +1,5 @@
+import { formatDateInTimeZone } from "@/shared/lib/datetime";
+
 export type CustomerStatus = "active" | "inactive" | "lead";
 
 export type Customer = {
@@ -56,10 +58,9 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-export function formatDate(date: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(date));
+export function formatDate(
+  date: string,
+  timeZone?: string,
+): string {
+  return formatDateInTimeZone(date, timeZone);
 }

@@ -139,6 +139,10 @@ export function InvoicesPageView({
   }
 
   function handleCreateSubmit(data: InvoiceFormData) {
+    if (isPending) {
+      return;
+    }
+
     setCreateError(null);
 
     startTransition(async () => {

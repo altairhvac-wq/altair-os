@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
+import { CompanyTimezoneProvider } from "@/shared/lib/company-timezone";
 import { PullToRefresh } from "@/shared/components/mobile/PullToRefresh";
 import { isPullToRefreshRoute } from "@/shared/components/mobile/is-pull-to-refresh-route";
 import { useMobileViewport } from "@/shared/components/mobile/use-mobile-viewport";
@@ -36,7 +37,8 @@ export function AdminShell({
   const current = getNavItemForPath(pathname, navigationContext);
 
   return (
-    <div className="admin-canvas flex min-h-dvh w-full min-w-0 max-w-full flex-col md:h-dvh md:overflow-hidden">
+    <CompanyTimezoneProvider timeZone={companyContext.company.timezone}>
+      <div className="admin-canvas flex min-h-dvh w-full min-w-0 max-w-full flex-col md:h-dvh md:overflow-hidden">
       <Header
         title={current.label}
         description={current.description}
@@ -57,6 +59,7 @@ export function AdminShell({
           {children}
         </PullToRefresh>
       </main>
-    </div>
+      </div>
+    </CompanyTimezoneProvider>
   );
 }

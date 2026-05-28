@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import { getDayBoundsInTimeZone } from "@/shared/lib/datetime";
 import type {
   TimeEntryInsert,
   TimeEntryRow,
@@ -55,10 +56,9 @@ const TIME_ENTRY_SELECT = `
   job:jobs(job_number)
 `;
 
-function getStartOfTodayIso(): string {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  return now.toISOString();
+function getStartOfTodayIso(timeZone?: string): string {
+  const { start } = getDayBoundsInTimeZone(timeZone);
+  return start;
 }
 
 export async function getActiveTimeEntryForTechnician(
@@ -94,6 +94,7 @@ export async function getActiveTimeEntryForTechnician(
 export async function getTodayTimeEntriesForTechnician(
   companyId: string,
   technicianId: string,
+  timeZone?: string,
 ): Promise<{ entries: TimeEntry[]; error: string | null }> {
   const supabase = await createClient();
 
@@ -102,7 +103,7 @@ export async function getTodayTimeEntriesForTechnician(
     .select(TIME_ENTRY_SELECT)
     .eq("company_id", companyId)
     .eq("technician_id", technicianId)
-    .gte("started_at", getStartOfTodayIso())
+    .gte("started_at", getStartOfTodayIso(timeZone))
     .order("started_at", { ascending: false });
 
   if (error) {

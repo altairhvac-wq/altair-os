@@ -17,6 +17,7 @@ export default async function TechnicianTimePage() {
   const { entries, summary } = await getTodayTimeEntries(
     context.company.id,
     context.user.id,
+    context.company.timezone,
   );
 
   return (

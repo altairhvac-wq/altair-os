@@ -47,6 +47,10 @@ export function PendingInvitesCard({
   }
 
   function handleAccept(membershipId: string, companyName: string) {
+    if (isPending) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
     setAcceptingId(membershipId);
@@ -94,7 +98,7 @@ export function PendingInvitesCard({
         </div>
       </div>
 
-      <div className="space-y-3 px-4 py-4 sm:px-6">
+      <div className="space-y-3 px-4 py-4 sm:px-6" aria-busy={isPending}>
         {items.map((invite) => {
           const invitedAt = formatInvitedAt(invite.invitedAt);
           const isAccepting = isPending && acceptingId === invite.id;

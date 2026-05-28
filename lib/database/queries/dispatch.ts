@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import { getDayBoundsInTimeZone } from "@/shared/lib/datetime";
 import type {
   DispatchAssignmentInsert,
   JobRow,
@@ -20,17 +21,11 @@ const DISPATCH_JOB_SELECT = `
   assigned_technician:profiles!jobs_assigned_technician_id_fkey(full_name, email)
 `;
 
-function getTodayBounds(reference = new Date()): { start: string; end: string } {
-  const start = new Date(reference);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(reference);
-  end.setHours(23, 59, 59, 999);
-
-  return {
-    start: start.toISOString(),
-    end: end.toISOString(),
-  };
+function getTodayBounds(
+  reference = new Date(),
+  timeZone?: string,
+): { start: string; end: string } {
+  return getDayBoundsInTimeZone(timeZone, reference);
 }
 
 export function mapJobRowToDispatchJob(row: JobRowWithDispatch): DispatchJob {
@@ -70,10 +65,11 @@ export function mapJobRowToDispatchJob(row: JobRowWithDispatch): DispatchJob {
 
 export async function listDispatchJobsForToday(
   companyId: string,
-  reference = new Date(),
+  options?: { reference?: Date; timeZone?: string },
 ): Promise<DispatchJob[]> {
   const supabase = await createClient();
-  const { start, end } = getTodayBounds(reference);
+  const reference = options?.reference ?? new Date();
+  const { start, end } = getTodayBounds(reference, options?.timeZone);
 
   const { data, error } = await supabase
     .from("jobs")

@@ -1,4 +1,5 @@
 import type { CompanyAccessScope } from "@/lib/database/access-control";
+import { isSameCalendarDayInTimeZone } from "@/shared/lib/datetime";
 import type { DispatchJob } from "@/shared/types/dispatch";
 import { getDispatchSummary } from "@/shared/types/dispatch";
 import type { Estimate } from "@/shared/types/estimate";
@@ -166,11 +167,11 @@ export function getTodayOperationsSummary(
 export function isPaymentToday(
   paymentDate: string,
   reference = new Date(),
+  timeZone?: string,
 ): boolean {
-  const payment = new Date(`${paymentDate}T12:00:00`);
-  return (
-    payment.getFullYear() === reference.getFullYear() &&
-    payment.getMonth() === reference.getMonth() &&
-    payment.getDate() === reference.getDate()
+  return isSameCalendarDayInTimeZone(
+    `${paymentDate}T12:00:00.000Z`,
+    reference,
+    timeZone,
   );
 }

@@ -152,9 +152,9 @@ function computeTotals(
   return { subtotal, taxRate: normalizedTaxRate, tax, total };
 }
 
-function resolveValidUntil(validUntil: string): string {
+function resolveValidUntil(validUntil: string, timeZone?: string): string {
   const trimmed = validUntil.trim();
-  return trimmed || getDefaultValidUntilDate();
+  return trimmed || getDefaultValidUntilDate(new Date(), timeZone);
 }
 
 function isValidLineItem(item: EstimateFormData["lineItems"][number]): boolean {
@@ -168,6 +168,7 @@ function mapEstimateFormDataToInsert(
   companyId: string,
   estimateNumber: string,
   data: EstimateFormData,
+  timeZone?: string,
 ): EstimateInsert {
   const { subtotal, taxRate, tax, total } = computeTotals(
     data.lineItems,
@@ -184,7 +185,7 @@ function mapEstimateFormDataToInsert(
     tax_rate: taxRate,
     tax,
     total,
-    valid_until: resolveValidUntil(data.validUntil),
+    valid_until: resolveValidUntil(data.validUntil, timeZone),
     notes: data.notes.trim() || null,
   };
 }
@@ -405,6 +406,7 @@ export async function getEstimateById(
 export async function createEstimate(
   companyId: string,
   data: EstimateFormData,
+  timeZone?: string,
 ): Promise<{ estimate: EstimateDetail | null; error: string | null }> {
   const validLineItems = data.lineItems.filter(isValidLineItem);
 
@@ -430,10 +432,15 @@ export async function createEstimate(
 
   const supabase = await createClient();
   const estimateNumber = await generateEstimateNumber(companyId);
-  const insert = mapEstimateFormDataToInsert(companyId, estimateNumber, {
-    ...data,
-    lineItems: validLineItems,
-  });
+  const insert = mapEstimateFormDataToInsert(
+    companyId,
+    estimateNumber,
+    {
+      ...data,
+      lineItems: validLineItems,
+    },
+    timeZone,
+  );
 
   const { data: row, error } = await supabase
     .from("estimates")

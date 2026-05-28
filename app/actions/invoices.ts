@@ -66,7 +66,11 @@ export async function createInvoiceAction(
     }
   }
 
-  const { invoice, error } = await createInvoice(context.company.id, data);
+  const { invoice, error } = await createInvoice(
+    context.company.id,
+    data,
+    context.company.timezone,
+  );
 
   if (error || !invoice) {
     return { error: error ?? "Failed to create invoice." };
@@ -139,6 +143,7 @@ export async function convertEstimateToInvoiceAction(
   const { invoice, error } = await convertEstimateToInvoice(
     context.company.id,
     estimateId,
+    context.company.timezone,
   );
 
   if (error || !invoice) {
@@ -247,6 +252,7 @@ export async function sendInvoiceAction(
     invoiceNumber: currentInvoice.invoiceNumber,
     total: currentInvoice.total,
     dueDate: currentInvoice.dueDate,
+    timeZone: context.company.timezone,
     lineItems: currentInvoice.lineItems.map((item) => ({
       name: item.name,
       quantity: item.quantity,

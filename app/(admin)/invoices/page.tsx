@@ -42,7 +42,7 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
   });
 
   const [invoices, customers, jobs, serviceItems] = await Promise.all([
-    listInvoicesWithBillingSync(companyContext.company.id),
+    listInvoicesWithBillingSync(companyContext.company.id, companyContext.company.timezone),
     listCustomers(companyContext.company.id),
     listJobs(companyContext.company.id),
     listActiveServiceItems(companyContext.company.id),

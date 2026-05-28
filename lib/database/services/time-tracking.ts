@@ -175,10 +175,12 @@ export async function getCurrentTimeState(
 export async function getTodayTimeEntries(
   companyId: string,
   technicianId: string,
+  timeZone?: string,
 ): Promise<{ entries: TimeEntry[]; summary: TodayTimeSummary }> {
   const { entries } = await getTodayTimeEntriesForTechnician(
     companyId,
     technicianId,
+    timeZone,
   );
 
   return {

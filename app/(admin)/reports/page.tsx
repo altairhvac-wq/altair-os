@@ -18,7 +18,10 @@ export default async function ReportsPage() {
     );
   }
 
-  const data = await getReportsFoundationData(companyContext.company.id);
+  const data = await getReportsFoundationData(
+    companyContext.company.id,
+    companyContext.company.timezone,
+  );
 
   return <ReportsFoundationView data={data} />;
 }

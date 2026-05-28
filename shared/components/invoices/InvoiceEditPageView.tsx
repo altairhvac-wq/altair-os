@@ -38,6 +38,10 @@ export function InvoiceEditPageView({
     : "You do not have permission to edit invoices.";
 
   function handleSubmit(data: InvoiceEditFormData) {
+    if (isPending) {
+      return;
+    }
+
     setError(null);
     setSuccessMessage(null);
 

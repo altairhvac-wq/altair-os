@@ -1,3 +1,4 @@
+import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {
@@ -208,9 +209,10 @@ function mapInvoiceFormDataToInsert(
   companyId: string,
   invoiceNumber: string,
   data: InvoiceFormData,
+  timeZone?: string,
 ): InvoiceInsert {
-  const issueDate = data.issueDate.trim() || getDefaultIssueDate();
-  const dueDate = resolveDueDate(issueDate, data.dueDate);
+  const issueDate = data.issueDate.trim() || getDefaultIssueDate(new Date(), timeZone);
+  const dueDate = resolveDueDate(issueDate, data.dueDate, timeZone);
   const { subtotal, taxRate, taxAmount, total, balanceDue } = computeTotals(
     data.lineItems,
     data.taxRate,
@@ -520,12 +522,8 @@ export async function updateInvoiceStatus(
   };
 }
 
-function getTodayDateOnly(reference = new Date()): string {
-  const year = reference.getFullYear();
-  const month = String(reference.getMonth() + 1).padStart(2, "0");
-  const day = String(reference.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+function getTodayDateOnly(reference = new Date(), timeZone?: string): string {
+  return getDateOnlyInTimeZone(reference, timeZone);
 }
 
 type OverdueInvoiceCandidate = {
@@ -543,9 +541,10 @@ type OverdueInvoiceCandidate = {
  */
 export async function syncOverdueInvoiceStatuses(
   companyId: string,
+  timeZone?: string,
 ): Promise<number> {
   const supabase = await createClient();
-  const today = getTodayDateOnly();
+  const today = getTodayDateOnly(new Date(), timeZone);
 
   const { data, error } = await supabase
     .from("invoices")
@@ -731,6 +730,7 @@ export async function getInvoiceByEstimateId(
 export async function createInvoice(
   companyId: string,
   data: InvoiceFormData,
+  timeZone?: string,
 ): Promise<{ invoice: InvoiceDetail | null; error: string | null }> {
   const validLineItems = data.lineItems.filter(isValidLineItem);
 
@@ -766,10 +766,15 @@ export async function createInvoice(
 
   const supabase = await createClient();
   const invoiceNumber = await generateInvoiceNumber(companyId);
-  const insert = mapInvoiceFormDataToInsert(companyId, invoiceNumber, {
-    ...data,
-    lineItems: validLineItems,
-  });
+  const insert = mapInvoiceFormDataToInsert(
+    companyId,
+    invoiceNumber,
+    {
+      ...data,
+      lineItems: validLineItems,
+    },
+    timeZone,
+  );
 
   const { data: row, error } = await supabase
     .from("invoices")
@@ -996,6 +1001,7 @@ export async function updateInvoice(
 export async function convertEstimateToInvoice(
   companyId: string,
   estimateId: string,
+  timeZone?: string,
 ): Promise<{ invoice: InvoiceDetail | null; error: string | null }> {
   const estimate = await getEstimateById(companyId, estimateId);
 
@@ -1023,8 +1029,8 @@ export async function convertEstimateToInvoice(
     jobId: estimate.jobId,
     estimateId: estimate.id,
     status: "draft",
-    issueDate: getDefaultIssueDate(),
-    dueDate: getDefaultDueDate(),
+    issueDate: getDefaultIssueDate(new Date(), timeZone),
+    dueDate: getDefaultDueDate(new Date(), timeZone),
     notes: estimate.notes ?? "",
     taxRate: estimate.taxRate,
     lineItems: estimate.lineItems.map((item) => ({
@@ -1037,7 +1043,7 @@ export async function convertEstimateToInvoice(
     })),
   };
 
-  const { invoice, error } = await createInvoice(companyId, formData);
+  const { invoice, error } = await createInvoice(companyId, formData, timeZone);
 
   if (error || !invoice) {
     return { invoice: null, error: error ?? "Failed to create invoice." };

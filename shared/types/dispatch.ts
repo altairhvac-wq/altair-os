@@ -1,3 +1,9 @@
+import {
+  formatDateInTimeZone,
+  formatTimeInTimeZone,
+  isSameCalendarDayInTimeZone,
+} from "@/shared/lib/datetime";
+
 export type DispatchJobStatus =
   | "scheduled"
   | "dispatched"
@@ -73,32 +79,28 @@ export function formatDispatchStatus(status: DispatchJobStatus): string {
   return DISPATCH_STATUS_LABELS[status];
 }
 
-export function formatDispatchTime(date: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(date));
+export function formatDispatchTime(date: string, timeZone?: string): string {
+  return formatTimeInTimeZone(date, timeZone);
 }
 
-export function formatDispatchDate(date: string): string {
-  return new Intl.DateTimeFormat("en-US", {
+export function formatDispatchDate(date: string, timeZone?: string): string {
+  return formatDateInTimeZone(date, timeZone, {
     weekday: "short",
     month: "short",
     day: "numeric",
-  }).format(new Date(date));
+  });
 }
 
 export function formatFullAddress(job: DispatchJob): string {
   return `${job.serviceAddress}, ${job.city}, ${job.state} ${job.zip}`;
 }
 
-export function isScheduledToday(date: string, reference = new Date()): boolean {
-  const scheduled = new Date(date);
-  return (
-    scheduled.getFullYear() === reference.getFullYear() &&
-    scheduled.getMonth() === reference.getMonth() &&
-    scheduled.getDate() === reference.getDate()
-  );
+export function isScheduledToday(
+  date: string,
+  reference = new Date(),
+  timeZone?: string,
+): boolean {
+  return isSameCalendarDayInTimeZone(date, reference, timeZone);
 }
 
 export function getDispatchSummary(

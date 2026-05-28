@@ -48,6 +48,7 @@ type SendEstimateEmailInput = {
   estimateNumber: string;
   total: number;
   validUntil?: string;
+  timeZone?: string;
   lineItems: BillingLineItem[];
   notes?: string;
 };
@@ -59,6 +60,7 @@ type SendInvoiceEmailInput = {
   invoiceNumber: string;
   total: number;
   dueDate: string;
+  timeZone?: string;
   lineItems: BillingLineItem[];
   notes?: string;
 };
@@ -96,7 +98,7 @@ export async function sendEstimateEmail(
 ): Promise<SendBillingEmailResult> {
   const subject = `Estimate ${input.estimateNumber} from ${input.companyName}`;
   const validUntilLine = input.validUntil
-    ? `Valid until: ${formatDate(input.validUntil)}`
+    ? `Valid until: ${formatDate(input.validUntil, input.timeZone)}`
     : null;
   const notesLine = input.notes?.trim()
     ? `Notes:\n${input.notes.trim()}`
@@ -153,7 +155,7 @@ export async function sendInvoiceEmail(
     `${input.companyName} sent you invoice ${input.invoiceNumber}.`,
     "",
     `Total due: ${formatCurrency(input.total)}`,
-    `Due date: ${formatDate(input.dueDate)}`,
+    `Due date: ${formatDate(input.dueDate, input.timeZone)}`,
     "",
     "Line items:",
     formatLineItemsText(input.lineItems),
@@ -168,7 +170,7 @@ export async function sendInvoiceEmail(
     <p>Hello ${escapeHtml(input.customerName)},</p>
     <p><strong>${escapeHtml(input.companyName)}</strong> sent you invoice <strong>${escapeHtml(input.invoiceNumber)}</strong>.</p>
     <p>Total due: <strong>${escapeHtml(formatCurrency(input.total))}</strong></p>
-    <p>Due date: ${escapeHtml(formatDate(input.dueDate))}</p>
+    <p>Due date: ${escapeHtml(formatDate(input.dueDate, input.timeZone))}</p>
     <p>Line items:</p>
     ${formatLineItemsHtml(input.lineItems)}
     ${notesLine ? `<p><strong>Notes</strong><br />${escapeHtml(input.notes!.trim()).replaceAll("\n", "<br />")}</p>` : ""}

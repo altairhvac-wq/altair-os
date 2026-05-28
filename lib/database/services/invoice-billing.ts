@@ -10,13 +10,15 @@ import type { Invoice } from "@/shared/types/invoice";
  */
 export async function ensureInvoiceBillingStatesSynced(
   companyId: string,
+  timeZone?: string,
 ): Promise<void> {
-  await syncOverdueInvoiceStatuses(companyId);
+  await syncOverdueInvoiceStatuses(companyId, timeZone);
 }
 
 export async function listInvoicesWithBillingSync(
   companyId: string,
+  timeZone?: string,
 ): Promise<Invoice[]> {
-  await ensureInvoiceBillingStatesSynced(companyId);
+  await ensureInvoiceBillingStatesSynced(companyId, timeZone);
   return listInvoices(companyId);
 }

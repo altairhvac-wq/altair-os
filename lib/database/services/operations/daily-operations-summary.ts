@@ -272,6 +272,7 @@ function collectLimitations(input: {
  */
 export async function getDailyOperationsSummary(
   companyId: string,
+  timeZone?: string,
 ): Promise<DailyOperationsSummary> {
   const [
     revenueReport,
@@ -292,7 +293,7 @@ export async function getDailyOperationsSummary(
     getCompanyStalledJobsReport(companyId),
     getCompanyTechnicianLaborReport(companyId, REPORT_OPTIONS),
     getCompanyProfitabilityReport(companyId, REPORT_OPTIONS),
-    getPaymentsTodaySummary(companyId),
+    getPaymentsTodaySummary(companyId, timeZone),
     getCompanyCompletedWorkReport(companyId),
     getCompanyCompletedWorkReviewReport(companyId),
     deriveJobLevelOperationalCounts(companyId),

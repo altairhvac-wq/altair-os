@@ -105,6 +105,10 @@ export function EstimatesPageView({
   }
 
   function handleCreateSubmit(data: EstimateFormData) {
+    if (isPending) {
+      return;
+    }
+
     setCreateError(null);
 
     startTransition(async () => {

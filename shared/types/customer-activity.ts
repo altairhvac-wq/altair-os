@@ -1,3 +1,4 @@
+import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import type { CustomerStatus } from "@/shared/types/customer";
 
 export type CustomerActivityType =
@@ -63,14 +64,15 @@ export function formatCustomerActivityDetails(
   }
 }
 
-export function formatCustomerActivityTimestamp(isoDate: string): string {
-  const date = new Date(isoDate);
-
-  return new Intl.DateTimeFormat("en-US", {
+export function formatCustomerActivityTimestamp(
+  isoDate: string,
+  timeZone?: string,
+): string {
+  return formatDateTimeInTimeZone(isoDate, timeZone, {
     month: "short",
     day: "numeric",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  }).format(date);
+  });
 }

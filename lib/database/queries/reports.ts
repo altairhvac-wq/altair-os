@@ -23,15 +23,16 @@ const TIME_CLOCK_FETCH_LIMIT = 100;
 
 export async function getReportsFoundationData(
   companyId: string,
+  timeZone?: string,
 ): Promise<ReportsFoundationData> {
   const [jobs, invoices, estimates, timeClockEntries, todayJobs, operations] =
     await Promise.all([
       listJobs(companyId),
-      listInvoicesWithBillingSync(companyId),
+      listInvoicesWithBillingSync(companyId, timeZone),
       listEstimates(companyId),
       listTimeClockEntries(companyId, { limit: TIME_CLOCK_FETCH_LIMIT }),
-      listDispatchJobsForToday(companyId),
-      getDailyOperationsSummary(companyId),
+      listDispatchJobsForToday(companyId, { timeZone }),
+      getDailyOperationsSummary(companyId, timeZone),
     ]);
 
   const todaySummary = getTodayOperationsSummary(todayJobs);

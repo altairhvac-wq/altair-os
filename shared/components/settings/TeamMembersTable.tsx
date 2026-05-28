@@ -109,6 +109,10 @@ export function TeamMembersTable({
     newRole: CompanyRole,
     memberName: string,
   ) {
+    if (isPending) {
+      return;
+    }
+
     setPendingMembershipId(membershipId);
     setPendingRoleChange(null);
 
@@ -133,7 +137,7 @@ export function TeamMembersTable({
   }
 
   function handleRoleChange(member: TeamMember, newRole: CompanyRole) {
-    if (newRole === member.role) {
+    if (isPending || newRole === member.role) {
       return;
     }
 
@@ -150,6 +154,10 @@ export function TeamMembersTable({
   }
 
   function handleStatusAction(membershipId: string, action: PendingStatusAction) {
+    if (isPending) {
+      return;
+    }
+
     setPendingMembershipId(membershipId);
     setConfirmingAction(null);
 
@@ -292,6 +300,7 @@ export function TeamMembersTable({
               : null;
             const isRowPending =
               isPending && pendingMembershipId === member.id;
+            const isActionLocked = isPending;
             const isConfirming =
               confirmingAction?.membershipId === member.id;
             const confirmingStatusAction = isConfirming
@@ -329,7 +338,7 @@ export function TeamMembersTable({
                   {canEditRole ? (
                     <select
                       value={member.role}
-                      disabled={isRowPending}
+                      disabled={isActionLocked}
                       onChange={(event) => {
                         handleRoleChange(
                           member,
@@ -375,7 +384,7 @@ export function TeamMembersTable({
                         </span>
                         <button
                           type="button"
-                          disabled={isRowPending}
+                          disabled={isActionLocked}
                           onClick={() => setConfirmingAction(null)}
                           className="inline-flex min-h-[44px] items-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                         >
@@ -383,7 +392,7 @@ export function TeamMembersTable({
                         </button>
                         <button
                           type="button"
-                          disabled={isRowPending}
+                          disabled={isActionLocked}
                           onClick={() =>
                             handleStatusAction(member.id, confirmingStatusAction)
                           }
@@ -411,10 +420,10 @@ export function TeamMembersTable({
                     ) : member.status === "active" ? (
                       <button
                         type="button"
-                        disabled={!canSuspend || isRowPending}
+                        disabled={!canSuspend || isActionLocked}
                         title={suspendBlockReason ?? undefined}
                         onClick={() => {
-                          if (!canSuspend) {
+                          if (!canSuspend || isPending) {
                             return;
                           }
 
@@ -430,10 +439,10 @@ export function TeamMembersTable({
                     ) : member.status === "suspended" ? (
                       <button
                         type="button"
-                        disabled={!canReactivate || isRowPending}
+                        disabled={!canReactivate || isActionLocked}
                         title={reactivateBlockReason ?? undefined}
                         onClick={() => {
-                          if (!canReactivate) {
+                          if (!canReactivate || isPending) {
                             return;
                           }
 
@@ -448,12 +457,15 @@ export function TeamMembersTable({
                       </button>
                     ) : member.status === "invited" ? (
                       <div className="flex flex-wrap items-center justify-end gap-2">
-                        <CopyTeamInviteLinkButton inviteEmail={member.email} />
+                        <CopyTeamInviteLinkButton
+                          inviteEmail={member.email}
+                          disabled={isActionLocked}
+                        />
                         <button
                           type="button"
-                          disabled={!canCancelInvite || isRowPending}
+                          disabled={!canCancelInvite || isActionLocked}
                           onClick={() => {
-                            if (!canCancelInvite) {
+                            if (!canCancelInvite || isPending) {
                               return;
                             }
 

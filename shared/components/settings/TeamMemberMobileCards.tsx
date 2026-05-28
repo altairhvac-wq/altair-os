@@ -111,6 +111,10 @@ export function TeamMemberMobileCards({
     newRole: CompanyRole,
     memberName: string,
   ) {
+    if (isPending) {
+      return;
+    }
+
     setPendingMembershipId(membershipId);
     setPendingRoleChange(null);
 
@@ -135,7 +139,7 @@ export function TeamMemberMobileCards({
   }
 
   function handleRoleChange(member: TeamMember, newRole: CompanyRole) {
-    if (newRole === member.role) {
+    if (isPending || newRole === member.role) {
       return;
     }
 
@@ -155,6 +159,10 @@ export function TeamMemberMobileCards({
     membershipId: string,
     action: PendingStatusAction,
   ) {
+    if (isPending) {
+      return;
+    }
+
     setPendingMembershipId(membershipId);
     setConfirmingAction(null);
 
@@ -285,6 +293,7 @@ export function TeamMemberMobileCards({
             })
           : null;
         const isRowPending = isPending && pendingMembershipId === member.id;
+        const isActionLocked = isPending;
         const isConfirming = confirmingAction?.membershipId === member.id;
         const confirmingStatusAction = isConfirming
           ? confirmingAction?.action
@@ -331,7 +340,7 @@ export function TeamMemberMobileCards({
                   value={member.role}
                   roles={roleOptions}
                   onChange={(nextRole) => handleRoleChange(member, nextRole)}
-                  disabled={isRowPending}
+                  disabled={isActionLocked}
                   showDescription={false}
                   aria-label={`Role for ${member.name}`}
                 />
@@ -355,15 +364,15 @@ export function TeamMemberMobileCards({
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
-                          disabled={isRowPending}
+                          disabled={isActionLocked}
                           onClick={() => setConfirmingAction(null)}
-                          className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
+                          className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60"
                         >
                           Cancel
                         </button>
                         <button
                           type="button"
-                          disabled={isRowPending}
+                          disabled={isActionLocked}
                           onClick={() =>
                             handleStatusAction(member.id, confirmingStatusAction)
                           }
@@ -388,10 +397,10 @@ export function TeamMemberMobileCards({
                   ) : member.status === "active" ? (
                     <button
                       type="button"
-                      disabled={!canSuspend || isRowPending}
+                      disabled={!canSuspend || isActionLocked}
                       title={suspendBlockReason ?? undefined}
                       onClick={() => {
-                        if (!canSuspend) return;
+                        if (!canSuspend || isPending) return;
                         setConfirmingAction({
                           membershipId: member.id,
                           action: "suspend",
@@ -404,10 +413,10 @@ export function TeamMemberMobileCards({
                   ) : member.status === "suspended" ? (
                     <button
                       type="button"
-                      disabled={!canReactivate || isRowPending}
+                      disabled={!canReactivate || isActionLocked}
                       title={reactivateBlockReason ?? undefined}
                       onClick={() => {
-                        if (!canReactivate) return;
+                        if (!canReactivate || isPending) return;
                         setConfirmingAction({
                           membershipId: member.id,
                           action: "reactivate",
@@ -422,12 +431,13 @@ export function TeamMemberMobileCards({
                       <CopyTeamInviteLinkButton
                         inviteEmail={member.email}
                         className="w-full"
+                        disabled={isActionLocked}
                       />
                       <button
                         type="button"
-                        disabled={!canCancelInvite || isRowPending}
+                        disabled={!canCancelInvite || isActionLocked}
                         onClick={() => {
-                          if (!canCancelInvite) return;
+                          if (!canCancelInvite || isPending) return;
                           setConfirmingAction({
                             membershipId: member.id,
                             action: "cancelInvite",

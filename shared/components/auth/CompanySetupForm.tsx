@@ -39,7 +39,7 @@ export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
       description="One last step — name your company to unlock dispatch, jobs, and your field team."
       aboveCard={aboveCard}
     >
-      <form action={formAction} className="space-y-5">
+      <form action={formAction} className="space-y-5" aria-busy={pending}>
         <Suspense fallback={null}>
           <NextRedirectField />
         </Suspense>
@@ -78,6 +78,7 @@ export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
             placeholder="Your company name"
             required
             minLength={2}
+            disabled={pending}
           />
         </AuthField>
 

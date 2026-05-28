@@ -1,3 +1,9 @@
+import {
+  addDaysToDateOnly,
+  getCompanyTimeZone,
+  getDateOnlyInTimeZone,
+} from "@/shared/lib/datetime";
+
 export type EstimateStatus =
   | "draft"
   | "sent"
@@ -132,10 +138,10 @@ export function calculateEstimateTotal(
 
 export function getDefaultValidUntilDate(
   fromDate: Date = new Date(),
+  timeZone: string = getCompanyTimeZone(),
 ): string {
-  const date = new Date(fromDate);
-  date.setDate(date.getDate() + ESTIMATE_VALIDITY_DAYS);
-  return date.toISOString().split("T")[0] ?? "";
+  const startDateOnly = getDateOnlyInTimeZone(fromDate, timeZone);
+  return addDaysToDateOnly(startDateOnly, ESTIMATE_VALIDITY_DAYS, timeZone);
 }
 
 export function roundCurrency(value: number): number {

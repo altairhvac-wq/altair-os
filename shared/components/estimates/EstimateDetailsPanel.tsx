@@ -52,7 +52,8 @@ export function EstimateDetailsPanel({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            disabled={isSubmitting}
+            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-60"
             aria-label="Close panel"
           >
             <X className="h-4 w-4" />

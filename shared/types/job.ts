@@ -1,3 +1,8 @@
+import {
+  formatDateInTimeZone,
+  formatTimeInTimeZone,
+} from "@/shared/lib/datetime";
+
 export type JobStatus =
   | "scheduled"
   | "dispatched"
@@ -101,18 +106,15 @@ export function formatJobStatus(status: JobStatus): string {
   return JOB_STATUS_LABELS[status];
 }
 
-export function formatScheduledDate(date: string): string {
-  return new Intl.DateTimeFormat("en-US", {
+export function formatScheduledDate(date: string, timeZone?: string): string {
+  return formatDateInTimeZone(date, timeZone, {
     weekday: "short",
     month: "short",
     day: "numeric",
     year: "numeric",
-  }).format(new Date(date));
+  });
 }
 
-export function formatScheduledTime(date: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(date));
+export function formatScheduledTime(date: string, timeZone?: string): string {
+  return formatTimeInTimeZone(date, timeZone);
 }

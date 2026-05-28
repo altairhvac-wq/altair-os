@@ -1,3 +1,4 @@
+import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { formatEstimateStatus } from "@/shared/types/estimate";
 import { formatExpenseStatus } from "@/shared/types/expense";
 import { formatInvoiceStatus } from "@/shared/types/invoice";
@@ -518,17 +519,14 @@ export function getOperationalActivityHref(
   return null;
 }
 
-export function formatOperationalActivityTimestamp(isoDate: string): string {
-  const date = new Date(isoDate);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
+export function formatOperationalActivityTimestamp(
+  isoDate: string,
+  timeZone?: string,
+): string {
+  return formatDateTimeInTimeZone(isoDate, timeZone, {
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  }).format(date);
+  });
 }

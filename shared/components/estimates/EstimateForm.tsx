@@ -84,6 +84,10 @@ export function EstimateForm({
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (isSubmitting) {
+      return;
+    }
+
     const form = new FormData(e.currentTarget);
 
     const validLineItems = lineItems.filter(
@@ -112,13 +116,17 @@ export function EstimateForm({
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5" aria-busy={isSubmitting}>
       {error ? (
         <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
+      <fieldset
+        disabled={isSubmitting}
+        className="m-0 min-w-0 space-y-5 border-0 p-0"
+      >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label htmlFor="customerId" className={labelClass}>
@@ -237,6 +245,7 @@ export function EstimateForm({
         taxRate={taxRate}
         onChange={setLineItems}
       />
+      </fieldset>
 
       <div className="flex gap-2 border-t border-slate-100 pt-4">
         <button

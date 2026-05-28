@@ -199,7 +199,9 @@ export async function getDashboardData(
   const companyId = context.company.id;
   const userId = context.user.id;
 
-  const allTodayJobs = await listDispatchJobsForToday(companyId);
+  const allTodayJobs = await listDispatchJobsForToday(companyId, {
+    timeZone: context.company.timezone,
+  });
   const todayJobs = filterJobsForAccess(allTodayJobs, access, userId);
   const todayOperationsSummary = getTodayOperationsSummary(todayJobs);
 
@@ -222,7 +224,9 @@ export async function getDashboardData(
     access.canViewTechnicianRoster
       ? listActiveTechnicianTimeEntries(companyId)
       : Promise.resolve([]),
-    access.canViewBilling ? listInvoicesWithBillingSync(companyId) : Promise.resolve([]),
+    access.canViewBilling
+      ? listInvoicesWithBillingSync(companyId, context.company.timezone)
+      : Promise.resolve([]),
     access.canViewBilling ? listEstimates(companyId) : Promise.resolve([]),
     access.canViewCompanyExpenses
       ? listExpenses(companyId)
@@ -241,7 +245,7 @@ export async function getDashboardData(
     }),
     getUnreadNotificationCount(companyId, userId),
     access.canViewOperationalReports
-      ? getDailyOperationsSummary(companyId)
+      ? getDailyOperationsSummary(companyId, context.company.timezone)
       : Promise.resolve(EMPTY_OPERATIONAL_INSIGHTS),
     access.canViewOperationalReports
       ? getCompanyOfficeReviewQueueReport(companyId)

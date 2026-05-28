@@ -44,6 +44,7 @@ async function finalizeOwnTimeAction(
   const { entries, summary } = await getTodayTimeEntries(
     context.company.id,
     context.user.id,
+    context.company.timezone,
   );
 
   return {
@@ -85,6 +86,7 @@ export async function getTechnicianTimeDashboardAction(): Promise<TimeEntryActio
   const { entries, summary } = await getTodayTimeEntries(
     context.company.id,
     context.user.id,
+    context.company.timezone,
   );
 
   return { state, entries, summary };

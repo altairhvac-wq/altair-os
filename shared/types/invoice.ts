@@ -1,3 +1,10 @@
+import {
+  addDaysToDateOnly,
+  getCompanyTimeZone,
+  getDateOnlyInTimeZone,
+  parseDateInput,
+} from "@/shared/lib/datetime";
+
 export type InvoiceStatus =
   | "draft"
   | "sent"
@@ -146,27 +153,36 @@ export function calculateInvoiceTotals(
   return { subtotal, taxableSubtotal, taxAmount, total };
 }
 
-export function getDefaultIssueDate(fromDate: Date = new Date()): string {
-  return fromDate.toISOString().split("T")[0] ?? "";
+export function getDefaultIssueDate(
+  fromDate: Date = new Date(),
+  timeZone: string = getCompanyTimeZone(),
+): string {
+  return getDateOnlyInTimeZone(fromDate, timeZone);
 }
 
-export function getDefaultDueDate(fromDate: Date = new Date()): string {
-  const date = new Date(fromDate);
-  date.setDate(date.getDate() + INVOICE_DUE_DAYS);
-  return date.toISOString().split("T")[0] ?? "";
+export function getDefaultDueDate(
+  fromDate: Date = new Date(),
+  timeZone: string = getCompanyTimeZone(),
+): string {
+  const issueDateOnly = getDateOnlyInTimeZone(fromDate, timeZone);
+  return addDaysToDateOnly(issueDateOnly, INVOICE_DUE_DAYS, timeZone);
 }
 
-export function resolveDueDate(issueDate: string, dueDate: string): string {
+export function resolveDueDate(
+  issueDate: string,
+  dueDate: string,
+  timeZone: string = getCompanyTimeZone(),
+): string {
   const trimmedDueDate = dueDate.trim();
   if (trimmedDueDate) {
     return trimmedDueDate;
   }
 
   const parsedIssueDate = issueDate.trim()
-    ? new Date(`${issueDate.trim()}T00:00:00`)
+    ? parseDateInput(issueDate.trim())
     : new Date();
 
-  return getDefaultDueDate(parsedIssueDate);
+  return getDefaultDueDate(parsedIssueDate, timeZone);
 }
 
 export function roundCurrency(value: number): number {

@@ -1,3 +1,4 @@
+import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { formatInvoiceStatus, type InvoiceStatus } from "@/shared/types/invoice";
 import {
   formatPaymentMethod,
@@ -159,14 +160,15 @@ export function formatInvoiceActivityDetails(
   }
 }
 
-export function formatInvoiceActivityTimestamp(isoDate: string): string {
-  const date = new Date(isoDate);
-
-  return new Intl.DateTimeFormat("en-US", {
+export function formatInvoiceActivityTimestamp(
+  isoDate: string,
+  timeZone?: string,
+): string {
+  return formatDateTimeInTimeZone(isoDate, timeZone, {
     month: "short",
     day: "numeric",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  }).format(date);
+  });
 }

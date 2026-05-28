@@ -33,7 +33,11 @@ export async function createEstimateAction(
     return { error: "You do not have permission to create estimates." };
   }
 
-  const { estimate, error } = await createEstimate(context.company.id, data);
+  const { estimate, error } = await createEstimate(
+    context.company.id,
+    data,
+    context.company.timezone,
+  );
 
   if (error || !estimate) {
     return { error: error ?? "Failed to create estimate." };
@@ -103,6 +107,7 @@ export async function updateEstimateStatusAction(
       estimateNumber: currentEstimate.estimateNumber,
       total: currentEstimate.total,
       validUntil: currentEstimate.validUntil,
+      timeZone: context.company.timezone,
       lineItems: currentEstimate.lineItems.map((item) => ({
         name: item.name,
         quantity: item.quantity,

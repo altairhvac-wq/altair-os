@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Briefcase, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { isSameCalendarDayInTimeZone } from "@/shared/lib/datetime";
 import type { DispatchJobStatus } from "@/shared/types/dispatch";
 import type { TechnicianJob } from "@/shared/types/technician";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
@@ -38,12 +39,7 @@ function isCompletedToday(job: TechnicianJob, now = new Date()): boolean {
   }
 
   const completedAt = job.completedAt ?? job.scheduledDate;
-  const completedDate = new Date(completedAt);
-  return (
-    completedDate.getFullYear() === now.getFullYear() &&
-    completedDate.getMonth() === now.getMonth() &&
-    completedDate.getDate() === now.getDate()
-  );
+  return isSameCalendarDayInTimeZone(completedAt, now);
 }
 
 function compareActiveJobs(a: TechnicianJob, b: TechnicianJob): number {

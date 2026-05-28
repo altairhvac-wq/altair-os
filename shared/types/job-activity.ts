@@ -1,3 +1,4 @@
+import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { formatJobStatus, type JobStatus } from "@/shared/types/job";
 
 export type JobActivityType =
@@ -180,14 +181,15 @@ function formatStatusTransition(
   return null;
 }
 
-export function formatJobActivityTimestamp(isoDate: string): string {
-  const date = new Date(isoDate);
-
-  return new Intl.DateTimeFormat("en-US", {
+export function formatJobActivityTimestamp(
+  isoDate: string,
+  timeZone?: string,
+): string {
+  return formatDateTimeInTimeZone(isoDate, timeZone, {
     month: "short",
     day: "numeric",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  }).format(date);
+  });
 }

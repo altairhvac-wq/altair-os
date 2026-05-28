@@ -47,6 +47,10 @@ export function TeamInviteForm({
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isPending) {
+      return;
+    }
+
     clearFeedback();
 
     const trimmedEmail = email.trim();
@@ -97,6 +101,10 @@ export function TeamInviteForm({
   }
 
   async function handleCopyInstructions() {
+    if (isPending) {
+      return;
+    }
+
     const trimmedEmail = email.trim();
 
     if (!trimmedEmail.includes("@")) {
@@ -134,6 +142,7 @@ export function TeamInviteForm({
         onSubmit={handleSubmit}
         className="space-y-4"
         aria-label="Invite team member"
+        aria-busy={isPending}
       >
         <div className="flex items-center gap-2">
           <UserPlus className="h-4 w-4 text-cyan-600" aria-hidden="true" />
@@ -185,7 +194,8 @@ export function TeamInviteForm({
           <button
             type="button"
             onClick={handleCopyInstructions}
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            disabled={isPending}
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Copy className="h-4 w-4" aria-hidden="true" />
             {copied ? "Copied invite link" : "Copy invite link"}

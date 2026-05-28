@@ -2,6 +2,7 @@
 
 import { Wrench } from "lucide-react";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
+import { CompanyTimezoneProvider } from "@/shared/lib/company-timezone";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { PullToRefresh } from "@/shared/components/mobile/PullToRefresh";
 import { TechnicianNotificationBadgeProvider } from "@/shared/components/notifications/TechnicianNotificationBadgeContext";
@@ -27,9 +28,10 @@ export function TechnicianMobileShell({
     useOwnerViewMode(companyContext);
 
   return (
-    <TechnicianNotificationBadgeProvider
-      initialUnreadCount={unreadNotificationCount}
-    >
+    <CompanyTimezoneProvider timeZone={companyContext.company.timezone}>
+      <TechnicianNotificationBadgeProvider
+        initialUnreadCount={unreadNotificationCount}
+      >
       <div className="min-h-dvh max-w-full overflow-x-clip bg-slate-100">
         <div className="mx-auto flex min-h-dvh w-full min-w-0 max-w-md flex-col border-x border-slate-200 bg-slate-100 shadow-xl">
           <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm">
@@ -63,5 +65,6 @@ export function TechnicianMobileShell({
         </div>
       </div>
     </TechnicianNotificationBadgeProvider>
+    </CompanyTimezoneProvider>
   );
 }

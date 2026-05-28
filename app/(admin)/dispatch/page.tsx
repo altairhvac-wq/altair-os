@@ -24,7 +24,9 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
 
   const { focus } = await searchParams;
   const access = getCompanyAccessScope(companyContext);
-  const allJobs = await listDispatchJobsForToday(companyContext.company.id);
+  const allJobs = await listDispatchJobsForToday(companyContext.company.id, {
+    timeZone: companyContext.company.timezone,
+  });
   const jobs = access.canViewAllJobs
     ? allJobs
     : allJobs.filter(

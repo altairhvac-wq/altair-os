@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
 import type {
   InvoicePaymentInsert,
   InvoicePaymentRow,
@@ -168,19 +169,16 @@ export async function listRecentPayments(
   }));
 }
 
-function getTodayDateOnly(reference = new Date()): string {
-  const year = reference.getFullYear();
-  const month = String(reference.getMonth() + 1).padStart(2, "0");
-  const day = String(reference.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+function getTodayDateOnly(reference = new Date(), timeZone?: string): string {
+  return getDateOnlyInTimeZone(reference, timeZone);
 }
 
 export async function getPaymentsTodaySummary(
   companyId: string,
+  timeZone?: string,
 ): Promise<{ count: number; total: number }> {
   const supabase = await createClient();
-  const today = getTodayDateOnly();
+  const today = getTodayDateOnly(new Date(), timeZone);
 
   const { data, error } = await supabase
     .from("invoice_payments")

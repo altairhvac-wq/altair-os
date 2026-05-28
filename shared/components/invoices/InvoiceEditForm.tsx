@@ -55,6 +55,10 @@ export function InvoiceEditForm({
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (isSubmitting) {
+      return;
+    }
+
     const form = new FormData(e.currentTarget);
 
     const validLineItems = lineItems.filter(
@@ -73,7 +77,7 @@ export function InvoiceEditForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5" aria-busy={isSubmitting}>
       {error ? (
         <div
           className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
@@ -83,6 +87,10 @@ export function InvoiceEditForm({
         </div>
       ) : null}
 
+      <fieldset
+        disabled={isSubmitting}
+        className="m-0 min-w-0 space-y-5 border-0 p-0"
+      >
       <div className="rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Invoice
@@ -131,6 +139,7 @@ export function InvoiceEditForm({
         taxRate={invoice.taxRate}
         onChange={setLineItems}
       />
+      </fieldset>
 
       <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row">
         <button

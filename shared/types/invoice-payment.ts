@@ -1,3 +1,5 @@
+import { getCompanyTimeZone, getDateOnlyInTimeZone } from "@/shared/lib/datetime";
+
 export type PaymentMethod =
   | "cash"
   | "check"
@@ -44,8 +46,11 @@ export function formatPaymentMethod(method: PaymentMethod): string {
   );
 }
 
-export function getDefaultPaymentDate(fromDate: Date = new Date()): string {
-  return fromDate.toISOString().split("T")[0] ?? "";
+export function getDefaultPaymentDate(
+  fromDate: Date = new Date(),
+  timeZone: string = getCompanyTimeZone(),
+): string {
+  return getDateOnlyInTimeZone(fromDate, timeZone);
 }
 
 export const PAYABLE_INVOICE_STATUSES = [

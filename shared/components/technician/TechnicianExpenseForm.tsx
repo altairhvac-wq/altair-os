@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { getDefaultPaymentDate } from "@/shared/types/invoice-payment";
 import {
   EXPENSE_CATEGORY_OPTIONS,
   type ExpenseCategory,
@@ -84,7 +85,7 @@ export function TechnicianExpenseForm({
 
       const data: ExpenseFormData = {
         amount: amountValue ? Number(amountValue) : undefined,
-        purchaseDate: new Date().toISOString().slice(0, 10),
+        purchaseDate: getDefaultPaymentDate(),
         merchant: merchant || undefined,
         category,
         paymentMethod: parseExpensePaymentMethod(form.get("paymentMethod")),
