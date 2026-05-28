@@ -4,12 +4,12 @@ import {
 } from "@/lib/database/types/roles";
 import type { CompanyRole, Json } from "@/lib/database/types/enums";
 import type { NotificationEntityType, NotificationType } from "@/lib/database/types/enums";
+import { listActiveMemberUserIdsByRoles } from "@/lib/database/queries/notification-role-targeting";
 import {
   getUnreadNotificationCount,
   getUserNotifications,
   insertNotification,
   insertNotifications,
-  listActiveMemberUserIdsByRoles,
   markAllNotificationsRead,
   markNotificationRead,
 } from "@/lib/database/queries/notifications";
@@ -71,6 +71,7 @@ export async function createNotification(
   }
 }
 
+/** Fan-out to active members by role; resolves recipients via notification-role-targeting. */
 export async function createNotificationsForRole(
   input: CreateNotificationsForRoleInput,
 ): Promise<void> {

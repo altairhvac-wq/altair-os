@@ -4,7 +4,6 @@ import type {
   NotificationInsert,
   NotificationRow,
 } from "@/lib/database/types/core-tables";
-import type { CompanyRole } from "@/lib/database/types/enums";
 import type { Notification } from "@/shared/types/notification";
 
 function mapNotificationRow(row: NotificationRow): Notification {
@@ -61,37 +60,6 @@ export async function insertNotifications(
   }
 
   return { error: null };
-}
-
-export async function listActiveMemberUserIdsByRoles(
-  companyId: string,
-  roles: readonly CompanyRole[],
-  options?: { excludeUserIds?: string[] },
-): Promise<string[]> {
-  const supabase = await createClient();
-  const exclude = new Set(options?.excludeUserIds ?? []);
-
-  const { data, error } = await supabase
-    .from("company_memberships")
-    .select("user_id, role")
-    .eq("company_id", companyId)
-    .eq("status", "active")
-    .in("role", [...roles]);
-
-  if (error) {
-    console.error("[listActiveMemberUserIdsByRoles] query failed:", {
-      companyId,
-      error,
-    });
-    return [];
-  }
-
-  return (data ?? [])
-    .map((row) => row.user_id)
-    .filter(
-      (userId): userId is string =>
-        userId != null && !exclude.has(userId),
-    );
 }
 
 export const getUserNotifications = cache(async function getUserNotifications(

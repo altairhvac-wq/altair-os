@@ -103,3 +103,4 @@ export {
   markAllNotificationsRead,
   markNotificationRead,
 } from "./notifications";
+export { listActiveMemberUserIdsByRoles } from "./notification-role-targeting";
