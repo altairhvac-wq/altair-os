@@ -36,6 +36,7 @@ type ExpensesPageViewProps = {
   initialCustomerId?: string;
   initialSelectedId?: string;
   initialCreate?: boolean;
+  initialStatusFilter?: ExpenseStatus | "all";
 };
 
 const DEFAULT_FILTERS = {
@@ -59,9 +60,10 @@ export function ExpensesPageView({
   initialCustomerId,
   initialSelectedId,
   initialCreate = false,
+  initialStatusFilter = DEFAULT_FILTERS.statusFilter,
 }: ExpensesPageViewProps) {
   const [search, setSearch] = useState(DEFAULT_FILTERS.search);
-  const [statusFilter, setStatusFilter] = useState(DEFAULT_FILTERS.statusFilter);
+  const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
   const [categoryFilter, setCategoryFilter] = useState(DEFAULT_FILTERS.categoryFilter);
   const [technicianFilter, setTechnicianFilter] = useState(
     DEFAULT_FILTERS.technicianFilter,

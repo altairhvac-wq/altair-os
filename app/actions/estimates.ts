@@ -8,6 +8,7 @@ import {
   getEstimateById,
   updateEstimateStatus,
 } from "@/lib/database/queries/estimates";
+import { getJobById } from "@/lib/database/queries/jobs";
 import {
   recordEstimateCreatedActivity,
   recordEstimateEmailResentActivity,
@@ -17,6 +18,7 @@ import { sendEstimateEmail, toBillingEmailDelivery } from "@/lib/email/billing-s
 import type { BillingEmailDelivery } from "@/lib/email/billing-send";
 import {
   canResendEstimateEmail,
+  getSendEstimateJobBlockReason,
   type EstimateDetail,
   type EstimateFormData,
   type EstimateStatus,
@@ -106,6 +108,20 @@ export async function updateEstimateStatusAction(
   }
 
   if (fromStatus === "draft" && toStatus === "sent") {
+    if (currentEstimate.jobId) {
+      const linkedJob = await getJobById(
+        context.company.id,
+        currentEstimate.jobId,
+      );
+      const jobBlockReason = linkedJob
+        ? getSendEstimateJobBlockReason(linkedJob.status)
+        : null;
+
+      if (jobBlockReason) {
+        return { error: jobBlockReason };
+      }
+    }
+
     const customerEmail = currentEstimate.customerEmail?.trim();
 
     if (!customerEmail || !customerEmail.includes("@")) {
@@ -113,6 +129,18 @@ export async function updateEstimateStatusAction(
         error:
           "A valid customer email is required to send this estimate. Add an email on the customer record and try again.",
       };
+    }
+
+    const { estimate: sentEstimate, error: statusError } =
+      await updateEstimateStatus(
+        context.company.id,
+        estimateId,
+        fromStatus,
+        toStatus,
+      );
+
+    if (statusError || !sentEstimate) {
+      return { error: statusError ?? "Failed to update estimate status." };
     }
 
     const emailResult = await sendEstimateEmail({
@@ -132,8 +160,44 @@ export async function updateEstimateStatusAction(
     });
 
     if (!emailResult.ok) {
+      const { error: revertError } = await updateEstimateStatus(
+        context.company.id,
+        estimateId,
+        "sent",
+        "draft",
+      );
+
+      if (revertError) {
+        console.error(
+          "[updateEstimateStatusAction] failed to revert estimate after email failure:",
+          { estimateId, revertError },
+        );
+        return {
+          error:
+            "Estimate could not be sent by email, and the status could not be reverted safely. Refresh the page and verify the estimate status before retrying.",
+          emailDelivery: toBillingEmailDelivery(emailResult),
+        };
+      }
+
       return { emailDelivery: toBillingEmailDelivery(emailResult) };
     }
+
+    await recordEstimateStatusChangedActivity({
+      companyId: context.company.id,
+      estimateId,
+      actorId: context.user.id,
+      fromStatus,
+      toStatus,
+      customerId: sentEstimate.customerId,
+      jobId: sentEstimate.jobId,
+      jobNumber: sentEstimate.jobNumber,
+      estimateNumber: sentEstimate.estimateNumber,
+    });
+
+    revalidatePath("/estimates");
+    revalidatePath(`/estimates/${estimateId}`);
+
+    return { estimate: sentEstimate };
   }
 
   const { estimate, error } = await updateEstimateStatus(
@@ -195,6 +259,20 @@ export async function resendEstimateEmailAction(
       error:
         "Only sent estimates can be resent by email. Refresh the page and try again.",
     };
+  }
+
+  if (currentEstimate.jobId) {
+    const linkedJob = await getJobById(
+      context.company.id,
+      currentEstimate.jobId,
+    );
+    const jobBlockReason = linkedJob
+      ? getSendEstimateJobBlockReason(linkedJob.status)
+      : null;
+
+    if (jobBlockReason) {
+      return { error: jobBlockReason };
+    }
   }
 
   const customerEmail = currentEstimate.customerEmail?.trim();

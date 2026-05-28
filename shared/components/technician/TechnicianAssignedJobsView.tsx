@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Briefcase, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import {
   groupTechnicianWorkQueue,
   sortActiveTechnicianJobs,
   sortCompletedTodayTechnicianJobs,
 } from "@/shared/lib/technician-work-queue";
+import type { JobStatus } from "@/shared/types/job";
 import type { TechnicianJob } from "@/shared/types/technician";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import type { ServiceItem } from "@/shared/types/service-item";
@@ -27,6 +29,7 @@ type WorkQueueSectionProps = {
   timeState: TechnicianTimeStateSnapshot;
   serviceItems: ServiceItem[];
   onTimeStateChange: (state: TechnicianTimeStateSnapshot) => void;
+  onJobStatusUpdated: (jobId: string, status: JobStatus) => void;
   defaultExpanded?: boolean;
   emphasized?: boolean;
 };
@@ -38,6 +41,7 @@ function WorkQueueSection({
   timeState,
   serviceItems,
   onTimeStateChange,
+  onJobStatusUpdated,
   defaultExpanded = false,
   emphasized = false,
 }: WorkQueueSectionProps) {
@@ -60,6 +64,7 @@ function WorkQueueSection({
               timeState={timeState}
               serviceItems={serviceItems}
               onTimeStateChange={onTimeStateChange}
+              onStatusUpdated={(status) => onJobStatusUpdated(job.id, status)}
               defaultExpanded={defaultExpanded}
               emphasized={emphasized}
             />
@@ -144,15 +149,40 @@ function CompletedTodaySection({ jobs }: { jobs: TechnicianJob[] }) {
 }
 
 export function TechnicianAssignedJobsView({
-  jobs,
+  jobs: initialJobs,
   timeState: initialTimeState,
   serviceItems,
 }: TechnicianAssignedJobsViewProps) {
+  const router = useRouter();
+  const [jobs, setJobs] = useState(initialJobs);
   const [timeState, setTimeState] = useState(initialTimeState);
+
+  useEffect(() => {
+    setJobs(initialJobs);
+  }, [initialJobs]);
 
   useEffect(() => {
     setTimeState(initialTimeState);
   }, [initialTimeState]);
+
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        router.refresh();
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [router]);
+
+  function handleJobStatusUpdated(jobId: string, status: JobStatus) {
+    setJobs((current) =>
+      current.map((job) => (job.id === jobId ? { ...job, status } : job)),
+    );
+  }
 
   const activeJobs = sortActiveTechnicianJobs(jobs);
   const { currentJobs, onSiteJobs, enRouteJobs, upNextJobs } =
@@ -197,6 +227,7 @@ export function TechnicianAssignedJobsView({
           timeState={timeState}
           serviceItems={serviceItems}
           onTimeStateChange={setTimeState}
+          onJobStatusUpdated={handleJobStatusUpdated}
           defaultExpanded
           emphasized
         />
@@ -207,6 +238,7 @@ export function TechnicianAssignedJobsView({
           timeState={timeState}
           serviceItems={serviceItems}
           onTimeStateChange={setTimeState}
+          onJobStatusUpdated={handleJobStatusUpdated}
           defaultExpanded={onSiteJobs.some((job) => job.id === primaryJobId)}
         />
         <WorkQueueSection
@@ -215,6 +247,7 @@ export function TechnicianAssignedJobsView({
           timeState={timeState}
           serviceItems={serviceItems}
           onTimeStateChange={setTimeState}
+          onJobStatusUpdated={handleJobStatusUpdated}
         />
         <WorkQueueSection
           label="Up Next"
@@ -222,6 +255,7 @@ export function TechnicianAssignedJobsView({
           timeState={timeState}
           serviceItems={serviceItems}
           onTimeStateChange={setTimeState}
+          onJobStatusUpdated={handleJobStatusUpdated}
         />
       </div>
 

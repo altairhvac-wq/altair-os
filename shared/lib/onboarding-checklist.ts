@@ -81,6 +81,6 @@ export function filterOnboardingChecklistForContext(
     items,
     completedCount,
     totalCount: items.length,
-    isComplete: items.length > 0 && completedCount === items.length,
+    isComplete: checklist.isComplete,
   };
 }

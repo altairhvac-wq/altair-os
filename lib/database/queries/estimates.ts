@@ -6,6 +6,8 @@ import type {
   EstimateLineItemRow,
   EstimateRow,
 } from "@/lib/database/types/core-tables";
+import type { JobStatus } from "@/shared/types/job";
+import { getCreateEstimateJobBlockReason } from "@/shared/types/estimate";
 import {
   calculateEstimateTotals,
   getDefaultValidUntilDate,
@@ -252,7 +254,7 @@ async function validateJob(
 
   const { data, error } = await supabase
     .from("jobs")
-    .select("id, customer_id")
+    .select("id, customer_id, status")
     .eq("company_id", companyId)
     .eq("id", jobId)
     .maybeSingle();
@@ -273,6 +275,13 @@ async function validateJob(
 
   if (data.customer_id !== customerId) {
     return { error: "Selected job does not belong to this customer." };
+  }
+
+  const jobBlockReason = getCreateEstimateJobBlockReason(
+    data.status as JobStatus,
+  );
+  if (jobBlockReason) {
+    return { error: jobBlockReason };
   }
 
   return { error: null };

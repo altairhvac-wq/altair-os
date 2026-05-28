@@ -13,6 +13,7 @@ import {
   User,
 } from "lucide-react";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
+import type { JobStatus } from "@/shared/types/job";
 import {
   formatJobPriority,
   formatTechnicianJobAddress,
@@ -38,6 +39,7 @@ type TechnicianJobCardProps = {
   defaultExpanded?: boolean;
   emphasized?: boolean;
   onTimeStateChange?: (state: TechnicianTimeStateSnapshot) => void;
+  onStatusUpdated?: (status: JobStatus) => void;
 };
 
 const fieldActionClass =
@@ -50,6 +52,7 @@ export function TechnicianJobCard({
   defaultExpanded = true,
   emphasized = false,
   onTimeStateChange,
+  onStatusUpdated,
 }: TechnicianJobCardProps) {
   const [status, setStatus] = useState(job.status);
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -68,6 +71,11 @@ export function TechnicianJobCard({
       setActiveSheet(null);
     }
   }, [status]);
+
+  function handleStatusUpdated(nextStatus: JobStatus) {
+    setStatus(nextStatus);
+    onStatusUpdated?.(nextStatus);
+  }
 
   const hasJobNotes = Boolean(job.description?.trim() || job.notes?.trim());
   const isActive = status !== "completed" && status !== "cancelled";
@@ -111,7 +119,7 @@ export function TechnicianJobCard({
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <TechnicianJobStatusBadge status={job.status} />
+          <TechnicianJobStatusBadge status={status} />
           <span
             className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${getPriorityStyles(job.priority)}`}
           >
@@ -132,7 +140,7 @@ export function TechnicianJobCard({
               zip={job.zip}
               canUpdateStatus
               layout="stack"
-              onStatusUpdated={setStatus}
+              onStatusUpdated={handleStatusUpdated}
             />
           </div>
         ) : null}
@@ -204,7 +212,7 @@ export function TechnicianJobCard({
               zip={job.zip}
               canUpdateStatus
               layout="stack"
-              onStatusUpdated={setStatus}
+              onStatusUpdated={handleStatusUpdated}
             />
             {isActive ? (
               <>

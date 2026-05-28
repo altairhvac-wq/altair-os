@@ -29,6 +29,7 @@ import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { ExpenseStatusBadge } from "@/shared/components/expenses/ExpenseStatusBadge";
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
 import { CashFlowCommandSection } from "@/shared/components/dashboard/CashFlowCommandSection";
+import { DashboardNotificationsList } from "@/shared/components/dashboard/DashboardNotificationsList";
 import { DispatchPressureSection } from "@/shared/components/dashboard/DispatchPressureSection";
 import { hasCashFlowPressure } from "@/shared/lib/dashboard-cash-flow-command";
 import {
@@ -57,10 +58,6 @@ import {
   formatExpenseDate,
 } from "@/shared/types/expense";
 import {
-  formatNotificationMessageForAccess,
-  formatNotificationTitleForAccess,
-  formatNotificationTimestamp,
-  getNotificationHref,
   buildNotificationAccess,
   type NotificationAccess,
 } from "@/shared/types/notification";
@@ -343,7 +340,7 @@ function AnalyticsSnapshotSection({
       icon: Receipt,
       iconClass: "text-amber-600 bg-amber-50",
       accent: "border-amber-100",
-      href: "/expenses",
+      href: "/expenses?status=submitted",
     },
     {
       label: "Active labor",
@@ -754,7 +751,7 @@ function ExpenseReviewSection({
       title="Expense Review"
       description="Receipts and approvals needing attention"
       icon={Receipt}
-      href="/expenses"
+      href="/expenses?status=submitted"
       linkLabel="Open expenses"
     >
       <div className="grid grid-cols-2 gap-2 max-lg:gap-2 lg:gap-3">
@@ -867,8 +864,6 @@ function NotificationsSummarySection({
   notifications: DashboardData["notifications"];
   notificationAccess: NotificationAccess;
 }) {
-  const canViewBilling = notificationAccess.canViewBilling !== false;
-
   return (
     <DashboardSection
       title="Notifications"
@@ -887,55 +882,10 @@ function NotificationsSummarySection({
           description="Operational alerts will appear here as work happens."
         />
       ) : (
-        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
-          {notifications.recent.map((notification) => {
-            const href = getNotificationHref(notification, notificationAccess);
-
-            const content = (
-              <>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="break-words text-sm font-bold text-slate-900">
-                      {formatNotificationTitleForAccess(
-                        notification,
-                        canViewBilling,
-                      )}
-                    </p>
-                    {!notification.readAt ? (
-                      <span className="inline-flex h-2 w-2 rounded-full bg-cyan-500" />
-                    ) : null}
-                  </div>
-                  <p className="mt-1 line-clamp-2 break-words text-xs text-slate-600">
-                    {formatNotificationMessageForAccess(
-                      notification,
-                      canViewBilling,
-                    )}
-                  </p>
-                </div>
-                <time className="shrink-0 text-xs text-slate-400">
-                  {formatNotificationTimestamp(notification.createdAt)}
-                </time>
-              </>
-            );
-
-            return (
-              <li key={notification.id}>
-                {href ? (
-                  <Link
-                    href={href}
-                    className="flex items-start justify-between gap-3 px-3 py-2.5 transition-colors hover:bg-slate-50 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3"
-                  >
-                    {content}
-                  </Link>
-                ) : (
-                  <div className="flex items-start justify-between gap-3 px-3 py-2.5 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3">
-                    {content}
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <DashboardNotificationsList
+          notifications={notifications.recent}
+          notificationAccess={notificationAccess}
+        />
       )}
     </DashboardSection>
   );

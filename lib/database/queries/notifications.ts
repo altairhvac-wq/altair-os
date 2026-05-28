@@ -159,15 +159,22 @@ export async function markNotificationRead(
 export async function markAllNotificationsRead(
   companyId: string,
   userId: string,
+  options?: { types?: readonly NotificationType[] },
 ): Promise<{ error: string | null }> {
   const supabase = await createClient();
 
-  const { error } = await supabase
+  let query = supabase
     .from("notifications")
     .update({ read_at: new Date().toISOString() })
     .eq("company_id", companyId)
     .eq("user_id", userId)
     .is("read_at", null);
+
+  if (options?.types && options.types.length > 0) {
+    query = query.in("type", [...options.types]);
+  }
+
+  const { error } = await query;
 
   if (error) {
     return { error: error.message ?? "Failed to mark all notifications as read." };

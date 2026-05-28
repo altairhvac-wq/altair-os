@@ -676,7 +676,7 @@ export type CreateTeamInviteResult = {
 async function findExistingMembershipForEmail(
   companyId: string,
   email: string,
-): Promise<boolean> {
+): Promise<{ exists: boolean; error?: string }> {
   const normalizedEmail = normalizeInviteEmail(email);
   const supabase = await createClient();
 
@@ -694,11 +694,14 @@ async function findExistingMembershipForEmail(
       code: inviteError.code,
       message: inviteError.message,
     });
-    return true;
+    return {
+      exists: false,
+      error: "Could not verify existing memberships. Please try again.",
+    };
   }
 
   if ((inviteMatches ?? []).length > 0) {
-    return true;
+    return { exists: true };
   }
 
   const { data: profileMatches, error: profileError } = await supabase
@@ -713,13 +716,18 @@ async function findExistingMembershipForEmail(
       code: profileError.code,
       message: profileError.message,
     });
-    return true;
+    return {
+      exists: false,
+      error: "Could not verify existing memberships. Please try again.",
+    };
   }
 
-  return (profileMatches ?? []).some((row) => {
+  const exists = (profileMatches ?? []).some((row) => {
     const profile = row.profile as { email?: string } | null;
     return profile?.email?.trim().toLowerCase() === normalizedEmail;
   });
+
+  return { exists };
 }
 
 export async function createTeamInvite(
@@ -752,12 +760,16 @@ export async function createTeamInvite(
     return { error: validationError };
   }
 
-  const alreadyMember = await findExistingMembershipForEmail(
+  const membershipLookup = await findExistingMembershipForEmail(
     companyId,
     normalizedEmail,
   );
 
-  if (alreadyMember) {
+  if (membershipLookup.error) {
+    return { error: membershipLookup.error };
+  }
+
+  if (membershipLookup.exists) {
     return {
       error: "This email already has an active or pending membership in this company.",
     };

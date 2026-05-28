@@ -315,6 +315,11 @@ export async function sendInvoiceAction(
         invoiceId,
         revertError,
       });
+      return {
+        error:
+          "Invoice could not be sent by email, and the status could not be reverted safely. Refresh the page and verify the invoice status before retrying.",
+        emailDelivery: toBillingEmailDelivery(emailResult),
+      };
     }
 
     return { emailDelivery: toBillingEmailDelivery(emailResult) };

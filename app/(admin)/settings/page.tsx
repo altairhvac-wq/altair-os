@@ -17,6 +17,7 @@ import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@
 import { PendingInvitesCard } from "@/shared/components/settings/PendingInvitesCard";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { SettingsPageView } from "@/shared/components/settings/SettingsPageView";
+import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import type { CompanyProfileSummary } from "@/shared/types/team-member";
 
 export default async function SettingsPage() {
@@ -25,6 +26,12 @@ export default async function SettingsPage() {
 
   if (!companyContext) {
     redirect("/setup");
+  }
+
+  if (!canAccessCompanySettings(companyContext)) {
+    return (
+      <UnauthorizedAccessView description="Company settings are limited to owner and admin roles." />
+    );
   }
 
   const profile = await getCurrentProfile();

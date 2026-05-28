@@ -3,6 +3,7 @@ import {
   getCompanyTimeZone,
   getDateOnlyInTimeZone,
 } from "@/shared/lib/datetime";
+import type { JobStatus } from "@/shared/types/job";
 
 export type EstimateStatus =
   | "draft"
@@ -155,6 +156,26 @@ export function formatEstimateStatus(status: EstimateStatus): string {
 /** Sent estimates can be emailed again without changing status. */
 export function canResendEstimateEmail(status: EstimateStatus): boolean {
   return status === "sent";
+}
+
+export function getCreateEstimateJobBlockReason(
+  jobStatus: JobStatus,
+): string | null {
+  if (jobStatus === "cancelled") {
+    return "Estimates cannot be created for cancelled jobs.";
+  }
+
+  return null;
+}
+
+export function getSendEstimateJobBlockReason(
+  jobStatus: JobStatus,
+): string | null {
+  if (jobStatus === "cancelled") {
+    return "Estimates cannot be sent for cancelled jobs.";
+  }
+
+  return null;
 }
 
 export function formatTaxRate(taxRate: number): string {

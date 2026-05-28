@@ -21,6 +21,12 @@ const TECHNICIAN_JOB_SELECT = `
   customers(name, email, phone)
 `;
 
+const ACTIVE_CARRYOVER_STATUSES = [
+  "dispatched",
+  "arrived",
+  "in_progress",
+] as const;
+
 function mapJobRowToTechnicianJob(row: JobRowWithCustomer): TechnicianJob {
   return {
     id: row.id,
@@ -43,6 +49,22 @@ function mapJobRowToTechnicianJob(row: JobRowWithCustomer): TechnicianJob {
   };
 }
 
+function mergeTechnicianJobRows(
+  rows: JobRowWithCustomer[],
+): TechnicianJob[] {
+  const byId = new Map<string, TechnicianJob>();
+
+  for (const row of rows) {
+    byId.set(row.id, mapJobRowToTechnicianJob(row));
+  }
+
+  return Array.from(byId.values()).sort(
+    (left, right) =>
+      new Date(left.scheduledDate).getTime() -
+      new Date(right.scheduledDate).getTime(),
+  );
+}
+
 export async function listAssignedJobsForTechnician(
   companyId: string,
   technicianId: string,
@@ -55,27 +77,50 @@ export async function listAssignedJobsForTechnician(
     reference,
   );
 
-  const { data, error } = await supabase
-    .from("jobs")
-    .select(TECHNICIAN_JOB_SELECT)
-    .eq("company_id", companyId)
-    .eq("assigned_technician_id", technicianId)
-    .neq("status", "cancelled")
-    .gte("scheduled_at", start)
-    .lte("scheduled_at", end)
-    .order("scheduled_at", { ascending: true });
+  const baseQuery = () =>
+    supabase
+      .from("jobs")
+      .select(TECHNICIAN_JOB_SELECT)
+      .eq("company_id", companyId)
+      .eq("assigned_technician_id", technicianId)
+      .neq("status", "cancelled");
 
-  if (error) {
+  const [scheduledTodayResult, carryoverResult, completedTodayResult] =
+    await Promise.all([
+      baseQuery()
+        .gte("scheduled_at", start)
+        .lte("scheduled_at", end)
+        .order("scheduled_at", { ascending: true }),
+      baseQuery()
+        .in("status", [...ACTIVE_CARRYOVER_STATUSES])
+        .order("scheduled_at", { ascending: true }),
+      baseQuery()
+        .eq("status", "completed")
+        .gte("completed_at", start)
+        .lte("completed_at", end)
+        .order("completed_at", { ascending: false }),
+    ]);
+
+  const queryError =
+    scheduledTodayResult.error ??
+    carryoverResult.error ??
+    completedTodayResult.error;
+
+  if (queryError) {
     console.error("[listAssignedJobsForTechnician] query failed:", {
       companyId,
       technicianId,
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
+      code: queryError.code,
+      message: queryError.message,
+      details: queryError.details,
+      hint: queryError.hint,
     });
     return [];
   }
 
-  return ((data ?? []) as JobRowWithCustomer[]).map(mapJobRowToTechnicianJob);
+  return mergeTechnicianJobRows([
+    ...((scheduledTodayResult.data ?? []) as JobRowWithCustomer[]),
+    ...((carryoverResult.data ?? []) as JobRowWithCustomer[]),
+    ...((completedTodayResult.data ?? []) as JobRowWithCustomer[]),
+  ]);
 }

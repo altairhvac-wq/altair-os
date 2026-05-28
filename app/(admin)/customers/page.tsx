@@ -19,12 +19,16 @@ export default async function CustomersPage() {
   }
 
   const customers = await listCustomers(companyContext.company.id);
+  const canViewCustomerBilling = canViewBilling(companyContext);
+  const visibleCustomers = canViewCustomerBilling
+    ? customers
+    : customers.map((customer) => ({ ...customer, totalRevenue: 0 }));
 
   return (
     <CustomersPageView
-      initialCustomers={customers}
+      initialCustomers={visibleCustomers}
       canManageCustomers={companyContext.permissions.manageCustomers}
-      canViewBilling={canViewBilling(companyContext)}
+      canViewBilling={canViewCustomerBilling}
     />
   );
 }

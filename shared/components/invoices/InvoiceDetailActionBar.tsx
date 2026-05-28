@@ -66,6 +66,7 @@ export function InvoiceDetailActionBar({
 
       if (result.error) {
         setError(result.error);
+        router.refresh();
         return;
       }
 
@@ -74,6 +75,7 @@ export function InvoiceDetailActionBar({
           result.emailDelivery.message ??
             "Invoice could not be sent by email. It remains a draft.",
         );
+        router.refresh();
         return;
       }
 

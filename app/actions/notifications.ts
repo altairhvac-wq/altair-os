@@ -8,6 +8,7 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
 } from "@/lib/database/services/notifications";
+import type { NotificationType } from "@/lib/database/types/enums";
 import type { Notification } from "@/shared/types/notification";
 
 export type NotificationActionResult = {
@@ -57,7 +58,9 @@ export async function markNotificationReadAction(
   return { notifications, unreadCount };
 }
 
-export async function markAllNotificationsReadAction(): Promise<NotificationActionResult> {
+export async function markAllNotificationsReadAction(options?: {
+  types?: readonly NotificationType[];
+}): Promise<NotificationActionResult> {
   const context = await getActiveCompanyContext();
 
   if (!context) {
@@ -67,6 +70,7 @@ export async function markAllNotificationsReadAction(): Promise<NotificationActi
   const { error } = await markAllNotificationsRead(
     context.company.id,
     context.user.id,
+    options,
   );
 
   if (error) {
@@ -76,8 +80,13 @@ export async function markAllNotificationsReadAction(): Promise<NotificationActi
   revalidateNotificationPaths();
 
   const [notifications, unreadCount] = await Promise.all([
-    getUserNotifications(context.company.id, context.user.id, { limit: 20 }),
-    getUnreadNotificationCount(context.company.id, context.user.id),
+    getUserNotifications(context.company.id, context.user.id, {
+      limit: 20,
+      types: options?.types,
+    }),
+    getUnreadNotificationCount(context.company.id, context.user.id, {
+      types: options?.types,
+    }),
   ]);
 
   return { notifications, unreadCount };

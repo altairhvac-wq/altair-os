@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { Bell } from "lucide-react";
 import { markAllNotificationsReadAction } from "@/app/actions/notifications";
 import type { Notification } from "@/shared/types/notification";
+import { TECHNICIAN_NOTIFICATION_TYPES } from "@/shared/types/notification";
 import { useTechnicianNotificationBadge } from "./TechnicianNotificationBadgeContext";
 import { NotificationListItem } from "./NotificationListItem";
 
@@ -51,7 +52,9 @@ export function TechnicianNotificationsView({
     setActionError(null);
 
     startTransition(async () => {
-      const result = await markAllNotificationsReadAction();
+      const result = await markAllNotificationsReadAction({
+        types: TECHNICIAN_NOTIFICATION_TYPES,
+      });
 
       if (result.error) {
         setActionError(

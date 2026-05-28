@@ -97,6 +97,9 @@ export function JobWorkflowActions({
 
       if (!result.job) {
         setError(result.error ?? "Failed to update job status.");
+        if (result.error?.includes("assigned")) {
+          router.refresh();
+        }
         return;
       }
 

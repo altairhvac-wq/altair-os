@@ -116,6 +116,7 @@ export function EstimateStatusActions({
 
       if (result.error) {
         setError(result.error);
+        router.refresh();
         return;
       }
 
@@ -128,6 +129,7 @@ export function EstimateStatusActions({
           result.emailDelivery.message ??
             "Estimate could not be sent by email. It remains a draft.",
         );
+        router.refresh();
         return;
       }
 
