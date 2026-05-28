@@ -32,6 +32,10 @@ export async function createAlphaTrackerItemAction(
     return { error: "No active company workspace." };
   }
 
+  if (!context.permissions.manageCompany) {
+    return { error: "You do not have permission to manage alpha tracker items." };
+  }
+
   if (!data.title.trim()) {
     return { error: "Title is required." };
   }
@@ -60,6 +64,10 @@ export async function updateAlphaTrackerItemAction(
     return { error: "No active company workspace." };
   }
 
+  if (!context.permissions.manageCompany) {
+    return { error: "You do not have permission to manage alpha tracker items." };
+  }
+
   if (!data.title.trim()) {
     return { error: "Title is required." };
   }
@@ -86,6 +94,10 @@ export async function updateAlphaTrackerItemStatusAction(
 
   if (!context) {
     return { error: "No active company workspace." };
+  }
+
+  if (!context.permissions.manageCompany) {
+    return { error: "You do not have permission to manage alpha tracker items." };
   }
 
   const { item, error } = await updateAlphaTrackerItemStatus(

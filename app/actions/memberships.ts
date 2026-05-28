@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { assertTeamManagementAccess } from "@/lib/database/access-control";
 import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import {
   acceptPendingInvite,
   cancelPendingTeamInvite,
@@ -23,7 +25,34 @@ import { getAppBaseUrl, logInviteEmailEnvPresence } from "@/lib/email/env";
 import { sendTeamInviteEmail } from "@/lib/email/team-invite";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import { buildTeamInviteAcceptUrl } from "@/shared/lib/team-invite-link";
+import { isValidEmail } from "@/shared/lib/email-validation";
 import type { TeamMember } from "@/shared/types/team-member";
+
+function normalizeMembershipId(membershipId: string): string | null {
+  const trimmed = membershipId.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+async function requireTeamManagementContext(): Promise<
+  { context: ActiveCompanyContext } | { error: string }
+> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." };
+  }
+
+  const accessError = assertTeamManagementAccess(
+    context,
+    context.company.id,
+  );
+
+  if (accessError) {
+    return { error: accessError };
+  }
+
+  return { context };
+}
 
 function toMembershipActivityTarget(member: TeamMember): MembershipActivityTarget {
   return {
@@ -76,6 +105,12 @@ export type CancelTeamInviteActionResult = {
 export async function acceptInviteAction(
   membershipId: string,
 ): Promise<AcceptInviteActionResult> {
+  const normalizedMembershipId = normalizeMembershipId(membershipId);
+
+  if (!normalizedMembershipId) {
+    return { error: "A valid invitation is required." };
+  }
+
   const user = await getCurrentUser();
 
   if (!user) {
@@ -104,7 +139,11 @@ export async function acceptInviteAction(
     };
   }
 
-  const result = await acceptPendingInvite(membershipId, user.id, email);
+  const result = await acceptPendingInvite(
+    normalizedMembershipId,
+    user.id,
+    email,
+  );
 
   if (result.error || !result.companyId) {
     return { error: result.error ?? "Failed to accept invitation." };
@@ -147,19 +186,22 @@ export async function inviteTeamMemberAction(
     toDomain: email.includes("@") ? email.split("@")[1] : "invalid",
   });
 
-  const context = await getActiveCompanyContext();
+  const access = await requireTeamManagementContext();
 
-  if (!context) {
-    return { error: "No active company workspace." };
+  if ("error" in access) {
+    return { error: access.error };
   }
 
-  if (!context.permissions.manageUsers) {
-    return { error: "You do not have permission to invite team members." };
+  const { context } = access;
+  const trimmedEmail = email.trim();
+
+  if (!isValidEmail(trimmedEmail)) {
+    return { error: "Enter a valid email address." };
   }
 
   const result = await createTeamInvite(
     context.company.id,
-    email,
+    trimmedEmail,
     role,
     {
       userId: context.user.id,
@@ -275,19 +317,23 @@ export async function inviteTeamMemberAction(
 export async function cancelTeamInviteAction(
   membershipId: string,
 ): Promise<CancelTeamInviteActionResult> {
-  const context = await getActiveCompanyContext();
+  const normalizedMembershipId = normalizeMembershipId(membershipId);
 
-  if (!context) {
-    return { error: "No active company workspace." };
+  if (!normalizedMembershipId) {
+    return { error: "A valid invitation is required." };
   }
 
-  if (!context.permissions.manageUsers) {
-    return { error: "You do not have permission to cancel team invitations." };
+  const access = await requireTeamManagementContext();
+
+  if ("error" in access) {
+    return { error: access.error };
   }
+
+  const { context } = access;
 
   const result = await cancelPendingTeamInvite(
     context.company.id,
-    membershipId,
+    normalizedMembershipId,
     {
       userId: context.user.id,
       role: context.role,
@@ -310,19 +356,23 @@ export async function updateMemberRoleAction(
   membershipId: string,
   newRole: CompanyRole,
 ): Promise<UpdateMemberRoleActionResult> {
-  const context = await getActiveCompanyContext();
+  const normalizedMembershipId = normalizeMembershipId(membershipId);
 
-  if (!context) {
-    return { error: "No active company workspace." };
+  if (!normalizedMembershipId) {
+    return { error: "A valid team member is required." };
   }
 
-  if (!context.permissions.manageUsers) {
-    return { error: "You do not have permission to manage team members." };
+  const access = await requireTeamManagementContext();
+
+  if ("error" in access) {
+    return { error: access.error };
   }
+
+  const { context } = access;
 
   const result = await updateMemberRole(
     context.company.id,
-    membershipId,
+    normalizedMembershipId,
     newRole,
     {
       userId: context.user.id,
@@ -354,24 +404,23 @@ async function runMemberStatusAction(
   membershipId: string,
   targetStatus: "active" | "suspended",
 ): Promise<UpdateMemberStatusActionResult> {
-  const context = await getActiveCompanyContext();
+  const normalizedMembershipId = normalizeMembershipId(membershipId);
 
-  if (!context) {
-    return { error: "No active company workspace." };
+  if (!normalizedMembershipId) {
+    return { error: "A valid team member is required." };
   }
 
-  if (!context.permissions.manageUsers) {
-    return {
-      error:
-        targetStatus === "suspended"
-          ? "You do not have permission to suspend team members."
-          : "You do not have permission to reactivate team members.",
-    };
+  const access = await requireTeamManagementContext();
+
+  if ("error" in access) {
+    return { error: access.error };
   }
+
+  const { context } = access;
 
   const result = await updateMemberStatus(
     context.company.id,
-    membershipId,
+    normalizedMembershipId,
     targetStatus,
     {
       userId: context.user.id,

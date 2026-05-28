@@ -1,3 +1,5 @@
+import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
+import { canAccessAppRedirectPath } from "@/lib/database/access-control";
 import type {
   OnboardingChecklist,
   OnboardingChecklistItem,
@@ -60,4 +62,21 @@ export function shouldShowOnboardingChecklist(
   checklist: OnboardingChecklist,
 ): boolean {
   return !checklist.isComplete;
+}
+
+export function filterOnboardingChecklistForContext(
+  checklist: OnboardingChecklist,
+  context: ActiveCompanyContext,
+): OnboardingChecklist {
+  const items = checklist.items.filter(
+    (item) => item.completed || canAccessAppRedirectPath(context, item.href),
+  );
+  const completedCount = items.filter((item) => item.completed).length;
+
+  return {
+    items,
+    completedCount,
+    totalCount: items.length,
+    isComplete: items.length > 0 && completedCount === items.length,
+  };
 }

@@ -56,6 +56,7 @@ export const COMPANY_ROLE_PERMISSIONS = {
     "admin",
     "dispatcher",
     "technician",
+    "subcontractor",
   ] as const satisfies readonly CompanyRole[],
   manageBilling: [
     "owner",

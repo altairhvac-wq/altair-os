@@ -9,7 +9,7 @@ import {
   setCustomerEquipmentActive,
   updateCustomerEquipment,
 } from "@/lib/database/queries/customer-equipment";
-import { getJobById } from "@/lib/database/queries/jobs";
+import { getJobById, listAssignedJobs } from "@/lib/database/queries/jobs";
 import {
   recordEquipmentAddedActivity,
   recordEquipmentUpdatedActivity,
@@ -118,6 +118,38 @@ async function assertEquipmentWritePermission(input: {
   return { jobNumber: job.jobNumber };
 }
 
+async function assertCustomerEquipmentReadPermission(
+  customerId: string,
+): Promise<string | null> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return "No active company workspace.";
+  }
+
+  if (context.permissions.manageCustomers) {
+    return null;
+  }
+
+  if (!context.permissions.viewAssignedJobs) {
+    return "You do not have permission to view equipment.";
+  }
+
+  const assignedJobs = await listAssignedJobs(
+    context.company.id,
+    context.user.id,
+  );
+  const hasAssignedJobForCustomer = assignedJobs.some(
+    (job) => job.customerId === customerId,
+  );
+
+  if (!hasAssignedJobForCustomer) {
+    return "You can only view equipment for customers on your assigned jobs.";
+  }
+
+  return null;
+}
+
 export async function listCustomerEquipmentAction(
   customerId: string,
   options?: { includeInactive?: boolean },
@@ -126,6 +158,12 @@ export async function listCustomerEquipmentAction(
 
   if (!context) {
     return { error: "No active company workspace." };
+  }
+
+  const readError = await assertCustomerEquipmentReadPermission(customerId);
+
+  if (readError) {
+    return { error: readError };
   }
 
   const equipment = await listCustomerEquipment(

@@ -14,6 +14,10 @@ import {
   mapMembershipToTeamMember,
   type TeamMember,
 } from "@/shared/types/team-member";
+import {
+  isValidEmail,
+  normalizeEmail,
+} from "@/shared/lib/email-validation";
 
 type MembershipProfileRow = {
   id: string;
@@ -379,10 +383,8 @@ export async function updateMemberStatus(
   };
 }
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 function normalizeInviteEmail(email: string): string {
-  return email.trim().toLowerCase();
+  return normalizeEmail(email);
 }
 
 export type InviteEmailResolution = {
@@ -737,7 +739,7 @@ export async function createTeamInvite(
     return { error: "Email is required." };
   }
 
-  if (!EMAIL_PATTERN.test(normalizedEmail)) {
+  if (!isValidEmail(normalizedEmail)) {
     return { error: "Please enter a valid email address." };
   }
 

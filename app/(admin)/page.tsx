@@ -4,7 +4,7 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
 import { getDashboardData } from "@/lib/database/services/dashboard";
 import { OperationalDashboardView } from "@/shared/components/dashboard/OperationalDashboardView";
-import { buildOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
+import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@/shared/lib/onboarding-checklist";
 
 export default async function DashboardPage() {
   const companyContext = await getActiveCompanyContext();
@@ -22,7 +22,10 @@ export default async function DashboardPage() {
     getOnboardingSnapshot(companyContext.company.id, companyContext),
   ]);
 
-  const onboardingChecklist = buildOnboardingChecklist(onboardingSnapshot);
+  const onboardingChecklist = filterOnboardingChecklistForContext(
+    buildOnboardingChecklist(onboardingSnapshot),
+    companyContext,
+  );
 
   return (
     <OperationalDashboardView

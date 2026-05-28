@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
-import { getCompanyAccessScope } from "@/lib/database/access-control";
+import { getCompanyAccessScope, canAccessOperationalJobsArea } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
 import { listTechnicians } from "@/lib/database/queries/technicians";
 import { DispatchPageView } from "@/shared/components/dispatch/DispatchPageView";
+import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import {
   enrichDispatchPageFocusState,
   parseDispatchPageSearchParams,
@@ -20,6 +21,12 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
 
   if (!companyContext) {
     redirect("/setup");
+  }
+
+  if (!canAccessOperationalJobsArea(companyContext)) {
+    return (
+      <UnauthorizedAccessView description="Dispatch access is limited to roles that can view or manage jobs." />
+    );
   }
 
   const { focus } = await searchParams;

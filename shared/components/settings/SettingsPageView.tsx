@@ -201,7 +201,7 @@ export function SettingsPageView({
             <p className="text-sm text-slate-600">
               {canManageTeam
                 ? "Invite teammates, assign roles, and manage workspace access."
-                : "View members in your company workspace."}
+                : "Team roster is limited to owner and admin roles."}
             </p>
           </div>
           <input
@@ -315,7 +315,7 @@ export function SettingsPageView({
           />
           <SettingsFutureCard
             title="Company Preferences"
-            description="Branding, defaults, and operational configuration."
+            description="Company profile, branding, invoice defaults, and operational configuration."
             icon={Settings2}
           />
         </div>

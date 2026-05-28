@@ -11,7 +11,7 @@ import {
   resolveUserEmailForInvite,
 } from "@/lib/database/queries/memberships";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
-import { buildOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
+import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@/shared/lib/onboarding-checklist";
 import { PendingInvitesCard } from "@/shared/components/settings/PendingInvitesCard";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { SettingsPageView } from "@/shared/components/settings/SettingsPageView";
@@ -57,10 +57,13 @@ export default async function SettingsPage() {
     currentUserRole: companyContext.role,
   };
 
-  const onboardingChecklist = buildOnboardingChecklist(onboardingSnapshot);
+  const onboardingChecklist = filterOnboardingChecklistForContext(
+    buildOnboardingChecklist(onboardingSnapshot),
+    companyContext,
+  );
 
   return (
-    <div className="min-w-0 max-w-full space-y-6">
+    <div className="min-w-0 max-w-full space-y-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
       {emailResolution.mismatch ? (
         <SettingsAlertBanner tone="warning">
           Your profile email and sign-in email do not match. Update them to the

@@ -6,6 +6,7 @@ import { inviteTeamMemberAction } from "@/app/actions/memberships";
 import { getInvitableTeamRoles } from "@/lib/database/services/member-role-guard";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import type { TeamMember } from "@/shared/types/team-member";
+import { isValidEmail } from "@/shared/lib/email-validation";
 import { buildTeamInviteShareTextFromOrigin } from "@/shared/lib/team-invite-link";
 import { RoleSelectorField } from "./RoleSelectorField";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
@@ -55,7 +56,7 @@ export function TeamInviteForm({
 
     const trimmedEmail = email.trim();
 
-    if (!trimmedEmail.includes("@")) {
+    if (!isValidEmail(trimmedEmail)) {
       setFeedback({ tone: "error", message: "Enter a valid email address." });
       return;
     }
@@ -107,7 +108,7 @@ export function TeamInviteForm({
 
     const trimmedEmail = email.trim();
 
-    if (!trimmedEmail.includes("@")) {
+    if (!isValidEmail(trimmedEmail)) {
       setFeedback({
         tone: "error",
         message: "Enter an email address before copying invite instructions.",
@@ -182,7 +183,7 @@ export function TeamInviteForm({
           />
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           <button
             type="submit"
             disabled={isPending || email.trim().length === 0}

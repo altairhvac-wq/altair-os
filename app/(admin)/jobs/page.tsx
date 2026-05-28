@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
-import { canViewAllJobs } from "@/lib/database/access-control";
+import { canAccessOperationalJobsArea, canViewAllJobs } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listCustomers } from "@/lib/database/queries/customers";
 import { listAssignedJobs, listJobs } from "@/lib/database/queries/jobs";
 import { JobsPageView } from "@/shared/components/jobs/JobsPageView";
+import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import type { JobFormData } from "@/shared/types/job";
 
 type JobsPageProps = {
@@ -15,6 +16,12 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
 
   if (!companyContext) {
     redirect("/setup");
+  }
+
+  if (!canAccessOperationalJobsArea(companyContext)) {
+    return (
+      <UnauthorizedAccessView description="Job records are limited to roles that can view or manage jobs." />
+    );
   }
 
   const { customerId, create } = await searchParams;

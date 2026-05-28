@@ -94,6 +94,37 @@ export function canAccessCompanySettings(
   return canAccessAdminNavItem(context, "/settings");
 }
 
+export function assertCompanySettingsAccess(
+  context: ActiveCompanyContext,
+): string | null {
+  if (!canAccessCompanySettings(context)) {
+    return "You do not have permission to access company settings.";
+  }
+
+  return null;
+}
+
+export function assertTeamManagementAccess(
+  context: ActiveCompanyContext,
+  companyId: string,
+): string | null {
+  const settingsError = assertCompanySettingsAccess(context);
+  if (settingsError) {
+    return settingsError;
+  }
+
+  const scopeError = assertMatchingCompanyScope(context, companyId);
+  if (scopeError) {
+    return scopeError;
+  }
+
+  if (!canManageTeamMembers(context)) {
+    return "You do not have permission to manage team members.";
+  }
+
+  return null;
+}
+
 export function canAccessSystemCheck(context: ActiveCompanyContext): boolean {
   return hasCompanyRole(context.role, ["owner"]);
 }
@@ -110,6 +141,13 @@ export function canViewOperationalReports(
 
 export function canViewAllJobs(context: ActiveCompanyContext): boolean {
   return getCompanyAccessScope(context).canViewAllJobs;
+}
+
+export function canAccessOperationalJobsArea(
+  context: ActiveCompanyContext,
+): boolean {
+  const access = getCompanyAccessScope(context);
+  return access.canViewAllJobs || context.permissions.viewAssignedJobs;
 }
 
 export function canViewCompanyExpenses(context: ActiveCompanyContext): boolean {
@@ -224,18 +262,15 @@ export function canAccessAdminNavItem(
 ): boolean {
   const permissions = context.permissions;
   const access = getCompanyAccessScope(context);
-  const canViewJobs =
-    access.canViewAllJobs || permissions.viewAssignedJobs;
 
   switch (href) {
     case "/":
       return true;
     case "/dispatch":
-      return canViewJobs;
+    case "/jobs":
+      return canAccessOperationalJobsArea(context);
     case "/customers":
       return access.canManageCustomers;
-    case "/jobs":
-      return canViewJobs;
     case "/estimates":
     case "/price-book":
     case "/invoices":
@@ -309,4 +344,66 @@ export function canAccessTechnicianNavItem(
     default:
       return false;
   }
+}
+
+export function canAccessAppRedirectPath(
+  context: ActiveCompanyContext,
+  path: string,
+): boolean {
+  if (
+    path === "/" ||
+    path.startsWith("/technician") ||
+    path.startsWith("/tech/") ||
+    path.startsWith("/setup") ||
+    path.startsWith("/expenses") ||
+    path.startsWith("/time-clock") ||
+    path.startsWith("/time")
+  ) {
+    return true;
+  }
+
+  if (path.startsWith("/settings")) {
+    if (
+      path === "/settings/system-check" ||
+      path.startsWith("/settings/system-check/")
+    ) {
+      return (
+        canAccessCompanySettings(context) && canAccessSystemCheck(context)
+      );
+    }
+
+    return canAccessCompanySettings(context);
+  }
+
+  if (path.startsWith("/dispatch") || path.startsWith("/jobs")) {
+    return canAccessOperationalJobsArea(context);
+  }
+
+  if (path.startsWith("/customers")) {
+    return context.permissions.manageCustomers;
+  }
+
+  if (
+    path.startsWith("/estimates") ||
+    path.startsWith("/price-book") ||
+    path.startsWith("/invoices")
+  ) {
+    return canViewBilling(context);
+  }
+
+  if (path.startsWith("/reports")) {
+    return canViewOperationalReports(context);
+  }
+
+  if (path.startsWith("/network")) {
+    return (
+      context.permissions.dispatchJobs || context.permissions.manageCompany
+    );
+  }
+
+  if (path.startsWith("/alpha-tracker")) {
+    return context.permissions.manageCompany;
+  }
+
+  return false;
 }

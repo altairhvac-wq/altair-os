@@ -2,8 +2,8 @@ import type { ActiveCompanyContext } from "@/lib/database/types";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import { isAlphaComingSoonPath } from "@/lib/beta/alpha-hardening";
 import {
+  canAccessAppRedirectPath,
   canAccessCompanySettings,
-  canAccessSystemCheck,
 } from "@/lib/database/access-control";
 
 const AUTH_PATH_PREFIXES = ["/login", "/signup", "/auth"] as const;
@@ -18,8 +18,10 @@ const ALLOWED_NEXT_PATH_PREFIXES = [
   "/invoices",
   "/expenses",
   "/time",
+  "/time-clock",
   "/network",
   "/reports",
+  "/alpha-tracker",
   "/settings",
   "/settings/system-check",
   "/technician",
@@ -122,22 +124,15 @@ export function resolvePostLoginRedirect(
       return getDefaultPostLoginPath(context);
     }
 
-    if (
-      safeNext === "/settings" ||
-      safeNext.startsWith("/settings/")
-    ) {
-      if (!canAccessCompanySettings(context)) {
-        return getDefaultPostLoginPath(context);
+    if (!canAccessAppRedirectPath(context, safeNext)) {
+      if (
+        safeNext.startsWith("/settings") &&
+        canAccessCompanySettings(context)
+      ) {
+        return "/settings";
       }
 
-      if (
-        safeNext === "/settings/system-check" ||
-        safeNext.startsWith("/settings/system-check/")
-      ) {
-        if (!canAccessSystemCheck(context)) {
-          return "/settings";
-        }
-      }
+      return getDefaultPostLoginPath(context);
     }
 
     return safeNext;
