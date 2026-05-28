@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Mail } from "lucide-react";
+import { ClipboardCheck, Mail } from "lucide-react";
 import { convertEstimateToInvoiceAction } from "@/app/actions/invoices";
 import {
   resendEstimateEmailAction,
@@ -17,6 +17,13 @@ import {
 } from "@/shared/lib/operational-errors";
 import { formatBillingEmailSuccessMessage } from "@/shared/lib/billing-email-sent";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
+import {
+  MobileSheet,
+  MobileSheetBody,
+  MobileSheetHeader,
+  MobileSheetHeaderIcon,
+  MobileSheetPanel,
+} from "@/shared/components/ui/mobile-sheet";
 import {
   canResendEstimateEmail,
   type EstimateDetail,
@@ -38,6 +45,8 @@ type StatusAction = {
   toStatus: EstimateStatus;
   className: string;
 };
+
+const OUTCOME_SHEET_TITLE_ID = "estimate-outcome-sheet-title";
 
 function getAvailableActions(status: EstimateStatus): StatusAction[] {
   switch (status) {
@@ -139,6 +148,7 @@ export function EstimateStatusActions({
   );
   const [convertPending, setConvertPending] = useState(false);
   const [localStatus, setLocalStatus] = useState(estimate.status);
+  const [outcomeSheetOpen, setOutcomeSheetOpen] = useState(false);
   const [emailDelivery, setEmailDelivery] = useState<
     BillingEmailDelivery | undefined
   >(undefined);
@@ -147,6 +157,12 @@ export function EstimateStatusActions({
   useEffect(() => {
     setLocalStatus(estimate.status);
   }, [estimate.status]);
+
+  useEffect(() => {
+    if (localStatus !== "sent") {
+      setOutcomeSheetOpen(false);
+    }
+  }, [localStatus]);
 
   const customerEmail = estimate.customerEmail?.trim();
   const hasValidCustomerEmail = hasValidCustomerEmailForSend(customerEmail);
@@ -157,6 +173,7 @@ export function EstimateStatusActions({
     Boolean(customerEmailBlockReason) &&
     (canResendEmail || localStatus === "draft");
   const isSticky = variant === "sticky";
+  const isSentStickyWorkflow = isSticky && localStatus === "sent";
   const workflowBusy = isPending || resendPending || convertPending;
   const primaryAction = actions.find(
     (action) =>
@@ -216,6 +233,8 @@ export function EstimateStatusActions({
           setSuccessMessage(
             formatBillingEmailSuccessMessage(customerEmail, "send", "estimate"),
           );
+        } else if (toStatus !== "sent") {
+          setOutcomeSheetOpen(false);
         }
         router.refresh();
       } finally {
@@ -345,60 +364,76 @@ export function EstimateStatusActions({
               : "Resend to customer"}
         </button>
       ) : null}
-      {isSticky && primaryAction ? (
+      {isSentStickyWorkflow ? (
         <button
-          key={primaryAction.toStatus}
           type="button"
-          disabled={
-            workflowBusy ||
-            (primaryAction.toStatus === "sent" && !hasValidCustomerEmail)
-          }
-          title={
-            primaryAction.toStatus === "sent" && !hasValidCustomerEmail
-              ? customerEmailBlockReason ?? undefined
-              : undefined
-          }
-          onClick={() => handleStatusChange(primaryAction.toStatus)}
-          className={`${buttonClass} ${primaryAction.className}`}
+          disabled={workflowBusy}
+          onClick={() => setOutcomeSheetOpen(true)}
+          className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-800`}
         >
-          {isPending && pendingStatus === primaryAction.toStatus
-            ? getStatusPendingLabel(primaryAction.toStatus)
-            : (primaryAction.shortLabel ?? primaryAction.label)}
+          Record outcome
         </button>
-      ) : null}
-      {(isSticky ? secondaryActions : actions).map((action) => (
-        <button
-          key={action.toStatus}
-          type="button"
-          disabled={
-            workflowBusy ||
-            (action.toStatus === "sent" && !hasValidCustomerEmail)
-          }
-          title={
-            action.toStatus === "sent" && !hasValidCustomerEmail
-              ? customerEmailBlockReason ?? undefined
-              : undefined
-          }
-          onClick={() => handleStatusChange(action.toStatus)}
-          className={`${buttonClass} ${action.className}`}
-        >
-          {isPending && pendingStatus === action.toStatus
-            ? getStatusPendingLabel(action.toStatus)
-            : isSticky
-              ? (action.shortLabel ?? action.label)
-              : action.label}
-        </button>
-      ))}
+      ) : (
+        <>
+          {isSticky && primaryAction ? (
+            <button
+              key={primaryAction.toStatus}
+              type="button"
+              disabled={
+                workflowBusy ||
+                (primaryAction.toStatus === "sent" && !hasValidCustomerEmail)
+              }
+              title={
+                primaryAction.toStatus === "sent" && !hasValidCustomerEmail
+                  ? customerEmailBlockReason ?? undefined
+                  : undefined
+              }
+              onClick={() => handleStatusChange(primaryAction.toStatus)}
+              className={`${buttonClass} ${primaryAction.className}`}
+            >
+              {isPending && pendingStatus === primaryAction.toStatus
+                ? getStatusPendingLabel(primaryAction.toStatus)
+                : (primaryAction.shortLabel ?? primaryAction.label)}
+            </button>
+          ) : null}
+          {(isSticky ? secondaryActions : actions).map((action) => (
+            <button
+              key={action.toStatus}
+              type="button"
+              disabled={
+                workflowBusy ||
+                (action.toStatus === "sent" && !hasValidCustomerEmail)
+              }
+              title={
+                action.toStatus === "sent" && !hasValidCustomerEmail
+                  ? customerEmailBlockReason ?? undefined
+                  : undefined
+              }
+              onClick={() => handleStatusChange(action.toStatus)}
+              className={`${buttonClass} ${action.className}`}
+            >
+              {isPending && pendingStatus === action.toStatus
+                ? getStatusPendingLabel(action.toStatus)
+                : isSticky
+                  ? (action.shortLabel ?? action.label)
+                  : action.label}
+            </button>
+          ))}
+        </>
+      )}
     </div>
   );
 
   const helperText = emailSendBlocked
     ? customerEmailBlockReason
-    : primaryAction?.helper ??
-      (canResendEmail
-        ? lastEmailSentMessage ??
-          "Resend sends another copy to the customer's email on file."
-        : null);
+    : isSentStickyWorkflow
+      ? lastEmailSentMessage ??
+        "Awaiting customer decision. You can leave and return anytime."
+      : primaryAction?.helper ??
+        (canResendEmail
+          ? lastEmailSentMessage ??
+            "Resend sends another copy to the customer's email on file."
+          : null);
 
   const feedbackBanner = error ? (
     <SettingsAlertBanner tone={getBillingActionFeedbackTone(error, emailDelivery)}>
@@ -436,6 +471,53 @@ export function EstimateStatusActions({
           ) : null}
         </div>
         <div className="admin-sticky-footer-spacer" aria-hidden />
+        {outcomeSheetOpen ? (
+          <MobileSheet
+            onClose={() => setOutcomeSheetOpen(false)}
+            closeDisabled={workflowBusy}
+            ariaLabelledBy={OUTCOME_SHEET_TITLE_ID}
+            zIndex={50}
+          >
+            <MobileSheetPanel maxWidth="lg">
+              <MobileSheetHeader
+                titleId={OUTCOME_SHEET_TITLE_ID}
+                title="Record customer outcome"
+                subtitle="Update when the customer responds. You can return to this estimate anytime."
+                onClose={() => setOutcomeSheetOpen(false)}
+                closeDisabled={workflowBusy}
+                icon={
+                  <MobileSheetHeaderIcon className="bg-slate-100 text-slate-700">
+                    <ClipboardCheck className="h-4 w-4" />
+                  </MobileSheetHeaderIcon>
+                }
+              />
+              <MobileSheetBody>
+                <div className="flex flex-col gap-2">
+                  {actions.map((action) => (
+                    <button
+                      key={action.toStatus}
+                      type="button"
+                      disabled={workflowBusy}
+                      onClick={() => handleStatusChange(action.toStatus)}
+                      className={`inline-flex min-h-11 w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${action.className}`}
+                    >
+                      {isPending && pendingStatus === action.toStatus
+                        ? getStatusPendingLabel(action.toStatus)
+                        : action.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs text-slate-500">
+                  Record the customer&apos;s response when you hear back. You can
+                  close this and return later.
+                </p>
+                {feedbackBanner ? (
+                  <div className="mt-3">{feedbackBanner}</div>
+                ) : null}
+              </MobileSheetBody>
+            </MobileSheetPanel>
+          </MobileSheet>
+        ) : null}
       </>
     );
   }
