@@ -1,5 +1,9 @@
 import { formatCurrency } from "@/shared/types/customer";
 import { calculateLineItemTotal } from "@/shared/types/estimate";
+import {
+  isPremiumBillingDocumentStyle,
+  type BillingDocumentStyle,
+} from "@/shared/lib/billing-document-style";
 
 export type BillingLineItemDisplay = {
   id: string;
@@ -9,8 +13,6 @@ export type BillingLineItemDisplay = {
   unitPrice: number;
   taxable?: boolean;
 };
-
-type BillingDocumentStyle = "default" | "invoice";
 
 type BillingLineItemsListProps = {
   items: BillingLineItemDisplay[];
@@ -25,7 +27,7 @@ export function BillingLineItemsList({
   variant = "cards",
   documentStyle = "default",
 }: BillingLineItemsListProps) {
-  const isInvoiceStyle = documentStyle === "invoice";
+  const isPremiumStyle = isPremiumBillingDocumentStyle(documentStyle);
   if (items.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center print:border-slate-300 print:bg-white">
@@ -38,21 +40,21 @@ export function BillingLineItemsList({
   }
 
   if (variant === "table") {
-    const headerCellClass = isInvoiceStyle
+    const headerCellClass = isPremiumStyle
       ? "px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600"
       : "px-3 py-2 font-semibold";
-    const bodyCellClass = isInvoiceStyle ? "px-4 py-4" : "px-3 py-3";
-    const headerRowClass = isInvoiceStyle
+    const bodyCellClass = isPremiumStyle ? "px-4 py-4" : "px-3 py-3";
+    const headerRowClass = isPremiumStyle
       ? "border-b-2 border-slate-900 bg-slate-50 text-left print:bg-white"
       : "border-b border-slate-300 text-left text-xs font-semibold uppercase tracking-wide text-slate-500";
-    const bodyRowClass = isInvoiceStyle
+    const bodyRowClass = isPremiumStyle
       ? "border-b border-slate-200 last:border-b-0"
       : "border-b border-slate-200";
 
     return (
       <div className="overflow-x-auto print:overflow-visible">
         <table
-          className={`min-w-full border-collapse ${isInvoiceStyle ? "text-sm" : "text-sm print:text-xs"}`}
+          className={`min-w-full border-collapse ${isPremiumStyle ? "text-sm" : "text-sm print:text-xs"}`}
         >
           <thead>
             <tr className={headerRowClass}>
@@ -66,13 +68,13 @@ export function BillingLineItemsList({
             {items.map((item) => (
               <tr key={item.id} className={bodyRowClass}>
                 <td className={`${bodyCellClass} align-top text-slate-900`}>
-                  <p className={isInvoiceStyle ? "font-semibold" : "font-medium"}>
+                  <p className={isPremiumStyle ? "font-semibold" : "font-medium"}>
                     {item.name}
                   </p>
                   {item.description ? (
                     <p
                       className={
-                        isInvoiceStyle
+                        isPremiumStyle
                           ? "mt-1 text-sm leading-relaxed text-slate-600"
                           : "mt-0.5 text-xs text-slate-500"
                       }

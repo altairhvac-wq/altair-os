@@ -567,4 +567,28 @@ a[href] {
   #invoice-document .invoice-thank-you-footer {
     break-inside: avoid;
   }
+
+  /* Estimate document: preserve total hero hierarchy on print */
+  #estimate-document .estimate-total-hero {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 2px solid #0f172a !important;
+  }
+
+  #estimate-document .estimate-total-hero p {
+    color: #0f172a !important;
+  }
+
+  #estimate-document .estimate-total-hero .text-3xl,
+  #estimate-document .estimate-total-hero .text-4xl,
+  #estimate-document .estimate-total-hero .text-5xl {
+    font-weight: 700 !important;
+  }
+
+  #estimate-document .invoice-company-hero,
+  #estimate-document .estimate-identity-card,
+  #estimate-document .invoice-notes-block,
+  #estimate-document .estimate-thank-you-footer {
+    break-inside: avoid;
+  }
 }

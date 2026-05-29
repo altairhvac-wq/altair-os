@@ -231,6 +231,7 @@ export function EstimateDetailPageView({
         company={company}
         signature={signature}
         companyTimeZone={companyTimeZone}
+        logoUrl={company.logoUrl}
       />
 
       <div className="no-print">

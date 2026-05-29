@@ -454,12 +454,12 @@ export async function sendEstimateEmail(
     <p style="margin:0 0 16px;color:#18181b;font-size:15px;line-height:1.5;">Hello ${escapeHtml(input.customerName)},</p>
     <p style="margin:0 0 16px;color:#3f3f46;font-size:14px;line-height:1.6;">${approvalUrl ? "Please review the estimate below, then use the secure button to sign and approve online." : `Please review the estimate details below. If you have questions, ${deliveryOptions.hasReplyTo ? "reply to this email" : "use the contact information below"}.`}</p>
     ${approvalCtaHtml}
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fafafa;border:1px solid #e4e4e7;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#0f172a;border:2px solid #0f172a;border-radius:12px;">
       <tr>
-        <td style="padding:14px 16px;">
-          <div style="color:#71717a;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Estimate total</div>
-          <div style="margin-top:4px;color:#18181b;font-size:22px;font-weight:700;">${escapeHtml(formatCurrency(input.total))}</div>
-          <div style="margin-top:8px;color:#52525b;font-size:13px;line-height:1.5;">
+        <td style="padding:18px 20px;">
+          <div style="color:#cbd5e1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Estimated total</div>
+          <div style="margin-top:6px;color:#ffffff;font-size:28px;font-weight:700;line-height:1.2;">${escapeHtml(formatCurrency(input.total))}</div>
+          <div style="margin-top:10px;color:#cbd5e1;font-size:13px;line-height:1.5;">
             Issued ${escapeHtml(formatDate(input.issuedDate, input.timeZone))}
             ${validUntilLine ? `<br />${escapeHtml(validUntilLine)}` : ""}
           </div>

@@ -1,7 +1,6 @@
 import { formatCurrency } from "@/shared/types/customer";
 import { formatTaxRate } from "@/shared/types/estimate";
-
-type BillingDocumentStyle = "default" | "invoice";
+import type { BillingDocumentStyle } from "@/shared/lib/billing-document-style";
 
 type BillingTotalsSummaryProps = {
   subtotal: number;
@@ -63,17 +62,21 @@ export function BillingTotalsSummary({
   documentStyle = "default",
 }: BillingTotalsSummaryProps) {
   const isInvoiceStyle = documentStyle === "invoice";
+  const isEstimateStyle = documentStyle === "estimate";
+  const isPremiumStyle = isInvoiceStyle || isEstimateStyle;
   const showTax = taxRate > 0 || taxAmount > 0;
   const showPaymentSummary = amountPaid > 0 || balanceDue > 0;
   const showBalanceInTotals = balanceDue > 0;
 
-  const containerClass = isInvoiceStyle
+  const containerClass = isPremiumStyle
     ? "rounded-xl border border-slate-200 bg-white px-5 py-4 sm:px-6 sm:py-5 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white"
     : "rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-3 sm:px-5 sm:py-4 print:break-inside-avoid print:border-slate-300 print:bg-white";
 
   const rowClass = "text-sm text-slate-600";
 
-  if (isInvoiceStyle) {
+  if (isPremiumStyle) {
+    const totalLabel = isEstimateStyle ? "Estimated total" : "Total";
+
     return (
       <div className={containerClass}>
         <div className="ml-auto w-full max-w-[280px] space-y-1.5 print:max-w-[240px]">
@@ -91,14 +94,14 @@ export function BillingTotalsSummary({
 
           <div className="!mt-4 grid grid-cols-[1fr_auto] items-baseline gap-x-4 border-t-2 border-slate-900 pt-4">
             <span className="text-right text-sm font-bold uppercase tracking-[0.08em] text-slate-900">
-              Total
+              {totalLabel}
             </span>
             <span className="text-2xl font-bold tabular-nums text-slate-900 sm:text-3xl print:text-2xl">
               {formatCurrency(total)}
             </span>
           </div>
 
-          {showPaymentSummary ? (
+          {isInvoiceStyle && showPaymentSummary ? (
             <div className="!mt-4 space-y-2 border-t border-slate-200 pt-4">
               {amountPaid > 0 ? (
                 <InvoiceTotalsRow
