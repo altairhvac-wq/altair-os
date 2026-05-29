@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import { listAssignedJobsForTechnician } from "@/lib/database/queries/technician-jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import {
@@ -16,6 +17,10 @@ export default async function TechnicianPage() {
   }
 
   const canManageTime = context.permissions.viewAssignedJobs;
+  const canCreateEstimate =
+    context.permissions.manageBilling ||
+    context.permissions.createFieldEstimates;
+  const billingDefaults = getCompanyBillingDefaultsFromRow(context.company);
 
   const [jobs, timeState, serviceItems, todayTime] = await Promise.all([
     listAssignedJobsForTechnician(context.company.id, context.user.id, {
@@ -39,6 +44,8 @@ export default async function TechnicianPage() {
       todaySummary={todayTime.summary}
       serviceItems={serviceItems}
       canManageTime={canManageTime}
+      canCreateEstimate={canCreateEstimate}
+      defaultTaxRate={billingDefaults.defaultTaxRate}
     />
   );
 }

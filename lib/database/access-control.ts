@@ -199,6 +199,28 @@ export function canViewJob(
   return job.assignedTechnicianId === context.user.id;
 }
 
+export function canCreateFieldEstimate(
+  context: ActiveCompanyContext,
+  job: {
+    customerId?: string | null;
+    assignedTechnicianId?: string | null;
+  },
+): boolean {
+  if (!job.customerId?.trim()) {
+    return false;
+  }
+
+  if (context.permissions.manageBilling) {
+    return true;
+  }
+
+  if (!context.permissions.createFieldEstimates) {
+    return false;
+  }
+
+  return job.assignedTechnicianId === context.user.id;
+}
+
 export function canViewJobFinancials(context: ActiveCompanyContext): boolean {
   const permissions = context.permissions;
 

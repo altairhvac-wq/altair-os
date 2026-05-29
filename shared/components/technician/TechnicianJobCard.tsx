@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   Camera,
+  Calculator,
   ChevronDown,
   ChevronUp,
   Clock,
@@ -25,7 +26,9 @@ import {
 import { shouldAcceptServerWorkflowStatus } from "@/shared/types/job-workflow";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
+import { getCreateEstimateJobBlockReason } from "@/shared/types/estimate";
 import { TechnicianCustomerQuickActions } from "./TechnicianCustomerQuickActions";
+import { TechnicianEstimateSheet } from "./TechnicianEstimateSheet";
 import { TechnicianExpenseSheet } from "./TechnicianExpenseSheet";
 import { TechnicianJobEquipmentSummary } from "./TechnicianJobEquipmentSummary";
 import { TechnicianJobLaborControls } from "./TechnicianJobLaborControls";
@@ -37,6 +40,8 @@ type TechnicianJobCardProps = {
   job: TechnicianJob;
   timeState: TechnicianTimeStateSnapshot;
   serviceItems: ServiceItem[];
+  defaultTaxRate: number;
+  canCreateEstimate: boolean;
   defaultExpanded?: boolean;
   emphasized?: boolean;
   onTimeStateChange?: (state: TechnicianTimeStateSnapshot) => void;
@@ -55,6 +60,8 @@ export function TechnicianJobCard({
   job,
   timeState,
   serviceItems,
+  defaultTaxRate,
+  canCreateEstimate,
   defaultExpanded = true,
   emphasized = false,
   onTimeStateChange,
@@ -63,7 +70,7 @@ export function TechnicianJobCard({
   const [status, setStatus] = useState(job.status);
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [activeSheet, setActiveSheet] = useState<
-    "material" | "expense" | "photo" | null
+    "material" | "expense" | "photo" | "estimate" | null
   >(null);
   const [completeSheetOpen, setCompleteSheetOpen] = useState(false);
 
@@ -96,6 +103,10 @@ export function TechnicianJobCard({
   const isActive = status !== "completed" && status !== "cancelled";
   const fieldActionsDisabled = activeSheet !== null || completeSheetOpen;
   const hasOpenSheet = activeSheet !== null || completeSheetOpen;
+  const showCreateEstimate =
+    canCreateEstimate &&
+    Boolean(job.customerId?.trim()) &&
+    getCreateEstimateJobBlockReason(status) === null;
 
   return (
     <article
@@ -273,7 +284,7 @@ export function TechnicianJobCard({
                   timeState={timeState}
                   onTimeStateChange={onTimeStateChange}
                 />
-                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                   <button
                     type="button"
                     disabled={fieldActionsDisabled}
@@ -322,6 +333,24 @@ export function TechnicianJobCard({
                     <Camera className="h-4 w-4 shrink-0" />
                     <span className="truncate">Photo</span>
                   </button>
+                  {showCreateEstimate ? (
+                    <button
+                      type="button"
+                      disabled={fieldActionsDisabled}
+                      onClick={() => setActiveSheet("estimate")}
+                      className={`${fieldActionClass} border-indigo-200 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60`}
+                      title={
+                        fieldActionsDisabled
+                          ? completeSheetOpen
+                            ? "Finish or cancel complete work before creating an estimate"
+                            : "Finish the open form before creating an estimate"
+                          : undefined
+                      }
+                    >
+                      <Calculator className="h-4 w-4 shrink-0" />
+                      <span className="truncate">Estimate</span>
+                    </button>
+                  ) : null}
                 </div>
                 {fieldActionsDisabled ? (
                   <p className="text-[11px] text-slate-500 sm:text-xs">
@@ -357,6 +386,17 @@ export function TechnicianJobCard({
         <TechnicianPhotoSheet
           jobId={job.id}
           jobNumber={job.jobNumber}
+          onClose={() => setActiveSheet(null)}
+        />
+      ) : null}
+
+      {activeSheet === "estimate" ? (
+        <TechnicianEstimateSheet
+          jobId={job.id}
+          jobNumber={job.jobNumber}
+          customerName={job.customerName}
+          serviceItems={serviceItems}
+          defaultTaxRate={defaultTaxRate}
           onClose={() => setActiveSheet(null)}
         />
       ) : null}

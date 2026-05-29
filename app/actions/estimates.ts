@@ -31,11 +31,13 @@ import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-cont
 import { isValidEmail } from "@/shared/lib/email-validation";
 import {
   canResendEstimateEmail,
+  getCreateEstimateJobBlockReason,
   getSendEstimateJobBlockReason,
   isAllowedEstimateStatusTransition,
   type EstimateDetail,
   type EstimateFormData,
   type EstimateStatus,
+  type FieldEstimateFormData,
 } from "@/shared/types/estimate";
 import { applyEstimateCreationDefaults } from "@/shared/lib/company-billing-defaults";
 
@@ -132,9 +134,136 @@ export async function createEstimateAction(
     customerId: estimate.customerId,
     jobId: estimate.jobId,
     jobNumber: estimate.jobNumber,
+    creationSource: "office",
   });
 
   revalidatePath("/estimates");
+  return { estimate };
+}
+
+export type CreateFieldEstimateActionResult = {
+  error?: string;
+  estimate?: EstimateDetail;
+};
+
+async function assertFieldEstimateWritePermission(jobId: string): Promise<{
+  error?: string;
+  jobId?: string;
+  customerId?: string;
+  customerName?: string;
+  jobNumber?: string;
+}> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
+  }
+
+  const job = await getJobById(context.company.id, jobId);
+
+  if (!job) {
+    return { error: "Linked job not found." };
+  }
+
+  if (!job.customerId?.trim()) {
+    return { error: "This job does not have a customer assigned." };
+  }
+
+  const jobBlockReason = getCreateEstimateJobBlockReason(job.status);
+  if (jobBlockReason) {
+    return { error: jobBlockReason };
+  }
+
+  if (context.permissions.manageBilling) {
+    return {
+      jobId: job.id,
+      customerId: job.customerId,
+      customerName: job.customerName,
+      jobNumber: job.jobNumber,
+    };
+  }
+
+  if (!context.permissions.createFieldEstimates) {
+    return { error: "You do not have permission to create estimates." };
+  }
+
+  if (job.assignedTechnicianId !== context.user.id) {
+    return {
+      error: "You can only create estimates for jobs assigned to you.",
+    };
+  }
+
+  return {
+    jobId: job.id,
+    customerId: job.customerId,
+    customerName: job.customerName,
+    jobNumber: job.jobNumber,
+  };
+}
+
+export async function createFieldEstimateFromJobAction(
+  jobId: string,
+  data: FieldEstimateFormData,
+): Promise<CreateFieldEstimateActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
+  }
+
+  const permission = await assertFieldEstimateWritePermission(jobId);
+  if (permission.error || !permission.jobId || !permission.customerId) {
+    return { error: permission.error ?? "Unable to create estimate for this job." };
+  }
+
+  const billingDefaults = getCompanyBillingDefaultsFromRow(context.company);
+  const estimateData: EstimateFormData = {
+    customerId: permission.customerId,
+    jobId: permission.jobId,
+    status: "draft",
+    validUntil: "",
+    notes: data.notes?.trim() ?? "",
+    taxRate: billingDefaults.defaultTaxRate,
+    lineItems: data.lineItems,
+  };
+
+  const normalizedData = applyEstimateCreationDefaults(
+    estimateData,
+    billingDefaults,
+    context.company.timezone,
+  );
+
+  normalizedData.status = "draft";
+
+  const { estimate, error } = await createEstimate(
+    context.company.id,
+    normalizedData,
+    context.company.timezone,
+    {
+      customerName: permission.customerName ?? "Customer",
+      jobNumber: permission.jobNumber,
+    },
+  );
+
+  if (error || !estimate) {
+    return { error: error ?? "Failed to create estimate." };
+  }
+
+  await recordEstimateCreatedActivity({
+    companyId: context.company.id,
+    estimateId: estimate.id,
+    actorId: context.user.id,
+    estimateNumber: estimate.estimateNumber,
+    customerId: estimate.customerId,
+    jobId: estimate.jobId,
+    jobNumber: estimate.jobNumber,
+    creationSource: context.permissions.manageBilling ? "office" : "field",
+  });
+
+  revalidatePath("/estimates");
+  revalidatePath("/technician");
+  revalidatePath(`/jobs/${permission.jobId}`);
+
   return { estimate };
 }
 

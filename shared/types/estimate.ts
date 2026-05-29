@@ -56,6 +56,11 @@ export type EstimateLineItemFormData = {
   taxable: boolean;
 };
 
+export type FieldEstimateFormData = {
+  lineItems: EstimateLineItemFormData[];
+  notes?: string;
+};
+
 export type EstimateFormData = {
   customerId: string;
   jobId?: string;

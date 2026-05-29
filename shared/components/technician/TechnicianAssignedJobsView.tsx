@@ -29,6 +29,8 @@ type TechnicianAssignedJobsViewProps = {
   todaySummary: TodayTimeSummary;
   serviceItems: ServiceItem[];
   canManageTime: boolean;
+  canCreateEstimate: boolean;
+  defaultTaxRate: number;
 };
 
 type WorkQueueSectionProps = {
@@ -37,6 +39,8 @@ type WorkQueueSectionProps = {
   jobs: TechnicianJob[];
   timeState: TechnicianTimeStateSnapshot;
   serviceItems: ServiceItem[];
+  canCreateEstimate: boolean;
+  defaultTaxRate: number;
   onTimeStateChange: (state: TechnicianTimeStateSnapshot) => void;
   onJobStatusUpdated: (jobId: string, status: JobStatus) => void;
   defaultExpanded?: boolean;
@@ -50,6 +54,8 @@ function WorkQueueSection({
   jobs,
   timeState,
   serviceItems,
+  canCreateEstimate,
+  defaultTaxRate,
   onTimeStateChange,
   onJobStatusUpdated,
   defaultExpanded = false,
@@ -74,6 +80,8 @@ function WorkQueueSection({
               job={job}
               timeState={timeState}
               serviceItems={serviceItems}
+              canCreateEstimate={canCreateEstimate}
+              defaultTaxRate={defaultTaxRate}
               onTimeStateChange={onTimeStateChange}
               onStatusUpdated={(status) => onJobStatusUpdated(job.id, status)}
               defaultExpanded={defaultExpanded}
@@ -223,6 +231,8 @@ export function TechnicianAssignedJobsView({
   todaySummary: initialTodaySummary,
   serviceItems,
   canManageTime,
+  canCreateEstimate,
+  defaultTaxRate,
 }: TechnicianAssignedJobsViewProps) {
   const router = useRouter();
   const [jobs, setJobs] = useState(initialJobs);
@@ -341,6 +351,8 @@ export function TechnicianAssignedJobsView({
           jobs={currentJobs}
           timeState={timeState}
           serviceItems={serviceItems}
+          canCreateEstimate={canCreateEstimate}
+          defaultTaxRate={defaultTaxRate}
           onTimeStateChange={setTimeState}
           onJobStatusUpdated={handleJobStatusUpdated}
           defaultExpanded
@@ -353,6 +365,8 @@ export function TechnicianAssignedJobsView({
           jobs={upNextJobs}
           timeState={timeState}
           serviceItems={serviceItems}
+          canCreateEstimate={canCreateEstimate}
+          defaultTaxRate={defaultTaxRate}
           onTimeStateChange={setTimeState}
           onJobStatusUpdated={handleJobStatusUpdated}
           defaultExpanded={currentJobs.length === 0 && upNextJobs.length === 1}

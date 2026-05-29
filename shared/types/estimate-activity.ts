@@ -21,6 +21,7 @@ export type EstimateActivityMetadata = {
   invoice_id?: string;
   invoice_number?: string;
   approval_source?: "public_link";
+  creation_source?: "field" | "office";
   signer_name?: string;
 };
 
@@ -61,6 +62,13 @@ export function formatEstimateActivityDetails(
 
   switch (eventType) {
     case "estimate_created":
+      if (metadata.creation_source === "field") {
+        const parts = ["Created from field"];
+        if (metadata.estimate_number) {
+          parts.push(`Estimate ${metadata.estimate_number}`);
+        }
+        return parts.join(" · ");
+      }
       return metadata.estimate_number
         ? `Estimate ${metadata.estimate_number}`
         : null;

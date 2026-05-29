@@ -16,6 +16,7 @@ import {
   type Estimate,
   type EstimateDetail,
   type EstimateFormData,
+  type EstimateLineItemFormData,
   type EstimateLineItem,
   type EstimateStatus,
 } from "@/shared/types/estimate";
@@ -413,10 +414,49 @@ export async function getEstimateById(
   });
 }
 
+function mapInsertRowToEstimateDetail(input: {
+  row: EstimateRow;
+  lineItems: EstimateLineItemFormData[];
+  customerName: string;
+  jobNumber?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+}): EstimateDetail {
+  const mappedLineItems: EstimateLineItem[] = input.lineItems.map((item, index) => ({
+    id: `temp-${index}`,
+    serviceItemId: item.serviceItemId,
+    name: item.name.trim() || item.description.trim(),
+    description: item.description.trim() || undefined,
+    quantity: item.quantity,
+    unitPrice: item.unitPrice,
+    taxable: item.taxable,
+  }));
+
+  const estimate = mapEstimateRowToEstimate({
+    ...input.row,
+    customers: { name: input.customerName },
+    jobs: input.jobNumber ? { job_number: input.jobNumber } : null,
+    estimate_line_items: [],
+  });
+
+  return {
+    ...estimate,
+    lineItems: mappedLineItems,
+    customerEmail: input.customerEmail,
+    customerPhone: input.customerPhone,
+  };
+}
+
 export async function createEstimate(
   companyId: string,
   data: EstimateFormData,
   timeZone?: string,
+  detailContext?: {
+    customerName?: string;
+    jobNumber?: string;
+    customerEmail?: string;
+    customerPhone?: string;
+  },
 ): Promise<{ estimate: EstimateDetail | null; error: string | null }> {
   const validLineItems = data.lineItems.filter(isValidLineItem);
 
@@ -463,7 +503,7 @@ export async function createEstimate(
   const { data: row, error } = await supabase
     .from("estimates")
     .insert(insert)
-    .select("id")
+    .select("*")
     .single();
 
   if (error || !row) {
@@ -503,9 +543,27 @@ export async function createEstimate(
 
   const estimate = await getEstimateById(companyId, row.id);
 
+  if (estimate) {
+    return { estimate, error: null };
+  }
+
+  if (detailContext?.customerName) {
+    return {
+      estimate: mapInsertRowToEstimateDetail({
+        row: row as EstimateRow,
+        lineItems: validLineItems,
+        customerName: detailContext.customerName,
+        jobNumber: detailContext.jobNumber,
+        customerEmail: detailContext.customerEmail,
+        customerPhone: detailContext.customerPhone,
+      }),
+      error: null,
+    };
+  }
+
   return {
-    estimate,
-    error: estimate ? null : "Failed to load created estimate.",
+    estimate: null,
+    error: "Failed to load created estimate.",
   };
 }
 

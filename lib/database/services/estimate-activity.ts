@@ -13,6 +13,7 @@ export async function recordEstimateCreatedActivity(input: {
   customerId?: string;
   jobId?: string;
   jobNumber?: string;
+  creationSource?: "field" | "office";
 }): Promise<void> {
   const { error } = await recordEstimateActivity({
     company_id: input.companyId,
@@ -24,6 +25,7 @@ export async function recordEstimateCreatedActivity(input: {
       customer_id: input.customerId,
       job_id: input.jobId,
       job_number: input.jobNumber,
+      creation_source: input.creationSource,
     },
   });
 

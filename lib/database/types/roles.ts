@@ -63,6 +63,10 @@ export const COMPANY_ROLE_PERMISSIONS = {
     "admin",
     "office_staff",
   ] as const satisfies readonly CompanyRole[],
+  createFieldEstimates: [
+    "technician",
+    "subcontractor",
+  ] as const satisfies readonly CompanyRole[],
 } as const;
 
 export type CompanyPermission = keyof typeof COMPANY_ROLE_PERMISSIONS;
