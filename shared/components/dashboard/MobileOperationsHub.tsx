@@ -4,13 +4,8 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
-  Briefcase,
   ChevronRight,
-  ClipboardList,
-  FileText,
-  Navigation,
   Sparkles,
-  Users,
 } from "lucide-react";
 import { useDashboardDrilldown } from "@/shared/components/dashboard/dashboard-drilldown-context";
 import { DashboardNotificationsList } from "@/shared/components/dashboard/DashboardNotificationsList";
@@ -64,7 +59,85 @@ const INSIGHT_SEVERITY_STYLES: Record<
   info: "border-slate-100 bg-slate-50/60 text-slate-900",
 };
 
-function OperationsStatusHero({
+function formatMobileCashAmount(amount: number): string {
+  const safeAmount = Number.isFinite(amount) ? amount : 0;
+  if (safeAmount >= 1_000_000) {
+    return `$${(safeAmount / 1_000_000).toFixed(1)}M`;
+  }
+  if (safeAmount >= 1_000) {
+    return `$${(safeAmount / 1_000).toFixed(1)}k`;
+  }
+  return formatCurrency(safeAmount);
+}
+
+type StatusStripProps = {
+  label: string;
+  ariaLabel: string;
+  summary: string;
+  canDrilldown: boolean;
+  onDrilldown?: () => void;
+  fallbackHref?: string;
+  fallbackLinkLabel?: string;
+};
+
+function StatusStrip({
+  label,
+  ariaLabel,
+  summary,
+  canDrilldown,
+  onDrilldown,
+  fallbackHref,
+  fallbackLinkLabel,
+}: StatusStripProps) {
+  const trailing = canDrilldown ? (
+    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+  ) : fallbackHref && fallbackLinkLabel ? (
+    <Link
+      href={fallbackHref}
+      className="shrink-0 text-[10px] font-semibold text-cyan-600"
+    >
+      {fallbackLinkLabel}
+    </Link>
+  ) : null;
+
+  const body = (
+    <div className="flex min-w-0 items-center justify-between gap-2">
+      <div className="min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+          {label}
+        </p>
+        <p className="mt-0.5 truncate text-sm font-semibold tabular-nums text-slate-900">
+          {summary}
+        </p>
+      </div>
+      {trailing}
+    </div>
+  );
+
+  if (canDrilldown && onDrilldown) {
+    return (
+      <button
+        type="button"
+        onClick={onDrilldown}
+        aria-label={ariaLabel}
+        className="w-full rounded-lg border border-slate-200/80 bg-white px-2.5 py-2 text-left transition-colors hover:bg-slate-50/80"
+      >
+        {body}
+      </button>
+    );
+  }
+
+  return (
+    <section
+      aria-label={ariaLabel}
+      className="rounded-lg border border-slate-200/80 bg-white px-2.5 py-2"
+    >
+      {body}
+    </section>
+  );
+}
+
+function OperationsStatusSection({
   data,
   issues,
 }: {
@@ -80,50 +153,45 @@ function OperationsStatusHero({
 
   const body = (
     <>
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/90">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
             Operations status
           </p>
-          <div className="mt-1 flex flex-wrap items-end gap-2">
+          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
             <p
-              className={`text-3xl font-black tabular-nums leading-none tracking-tight ${labelStyles.scoreClass}`}
+              className={`text-xl font-black tabular-nums leading-none tracking-tight ${labelStyles.scoreClass}`}
             >
               {operationalHealth.operationalHealthScore}
             </p>
             <span
-              className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${labelStyles.badgeClass}`}
+              className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${labelStyles.badgeClass}`}
             >
               {operationalHealth.operationalHealthLabel}
             </span>
           </div>
         </div>
         {canDrilldown ? (
-          <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
         ) : null}
       </div>
 
       {issues.length > 0 ? (
-        <div className="mt-2.5 border-t border-white/10 pt-2.5">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-300">
-            Needs attention
-          </p>
-          <ul className="mt-1 space-y-0.5">
-            {issues.map((issue) => (
-              <li
-                key={issue.id}
-                className="flex items-center gap-1.5 text-xs font-medium text-white/90"
-              >
-                <span className="text-amber-300" aria-hidden="true">
-                  •
-                </span>
-                {issue.text}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ul className="mt-1.5 space-y-0.5 border-t border-slate-100 pt-1.5">
+          {issues.map((issue) => (
+            <li
+              key={issue.id}
+              className="flex items-center gap-1.5 text-xs font-medium text-slate-700"
+            >
+              <span className="text-amber-500" aria-hidden="true">
+                •
+              </span>
+              {issue.text}
+            </li>
+          ))}
+        </ul>
       ) : (
-        <p className="mt-2 text-xs font-medium text-emerald-200/90">
+        <p className="mt-1 text-xs font-medium text-emerald-700">
           No urgent issues flagged
         </p>
       )}
@@ -136,7 +204,7 @@ function OperationsStatusHero({
         type="button"
         onClick={() => openDashboardPanel("health")}
         aria-label="View operational health details"
-        className="admin-command-surface w-full overflow-hidden p-2.5 text-left transition-opacity hover:opacity-95"
+        className="w-full rounded-lg border border-slate-200/80 bg-white px-2.5 py-2 text-left transition-colors hover:bg-slate-50/80"
       >
         {body}
       </button>
@@ -146,14 +214,14 @@ function OperationsStatusHero({
   return (
     <section
       aria-label="Operations status"
-      className="admin-command-surface overflow-hidden p-2.5"
+      className="rounded-lg border border-slate-200/80 bg-white px-2.5 py-2"
     >
       {body}
     </section>
   );
 }
 
-function AttentionQueueRow({ item }: { item: MobileAttentionQueueItem }) {
+function NeedsAttentionRow({ item }: { item: MobileAttentionQueueItem }) {
   const { openDashboardPanel, hasPanel } = useDashboardDrilldown();
   const styles = ATTENTION_SEVERITY_STYLES[item.severity];
 
@@ -185,7 +253,7 @@ function AttentionQueueRow({ item }: { item: MobileAttentionQueueItem }) {
         <button
           type="button"
           onClick={() => openDashboardPanel(item.panelId!)}
-          className={`flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left transition-colors hover:opacity-90 ${styles.row}`}
+          className={`flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors hover:opacity-90 ${styles.row}`}
         >
           {content}
         </button>
@@ -198,7 +266,7 @@ function AttentionQueueRow({ item }: { item: MobileAttentionQueueItem }) {
       <li>
         <Link
           href={item.href}
-          className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2 transition-colors hover:opacity-90 ${styles.row}`}
+          className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2.5 transition-colors hover:opacity-90 ${styles.row}`}
         >
           {content}
         </Link>
@@ -208,30 +276,30 @@ function AttentionQueueRow({ item }: { item: MobileAttentionQueueItem }) {
 
   return (
     <li
-      className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2 ${styles.row}`}
+      className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2.5 ${styles.row}`}
     >
       {content}
     </li>
   );
 }
 
-const ATTENTION_QUEUE_VISIBLE_LIMIT = 5;
+const NEEDS_ATTENTION_VISIBLE_LIMIT = 6;
 
-function AttentionQueueSection({
+function NeedsAttentionSection({
   queue,
 }: {
   queue: MobileAttentionQueueItem[];
 }) {
   const { openDashboardPanel, hasPanel } = useDashboardDrilldown();
-  const visibleQueue = queue.slice(0, ATTENTION_QUEUE_VISIBLE_LIMIT);
+  const visibleQueue = queue.slice(0, NEEDS_ATTENTION_VISIBLE_LIMIT);
   const hiddenCount = queue.length - visibleQueue.length;
   const canViewAll = hiddenCount > 0 && hasPanel("attention");
 
   return (
-    <section aria-label="Attention queue" className="min-w-0">
+    <section aria-label="Needs attention" className="min-w-0 flex-1">
       <header className="mb-1 flex items-center justify-between gap-2">
         <h2 className="text-xs font-black uppercase tracking-wide text-slate-900">
-          Attention queue
+          Needs attention
         </h2>
         {queue.length > 0 ? (
           <span className="text-[10px] font-semibold text-slate-500">
@@ -241,7 +309,7 @@ function AttentionQueueSection({
       </header>
 
       {queue.length === 0 ? (
-        <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 px-3 py-2">
+        <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 px-3 py-2.5">
           <p className="text-xs font-semibold text-emerald-900">
             All clear — nothing needs action right now
           </p>
@@ -250,7 +318,7 @@ function AttentionQueueSection({
         <>
           <ul className="space-y-1">
             {visibleQueue.map((item) => (
-              <AttentionQueueRow key={item.id} item={item} />
+              <NeedsAttentionRow key={item.id} item={item} />
             ))}
           </ul>
           {canViewAll ? (
@@ -269,72 +337,25 @@ function AttentionQueueSection({
   );
 }
 
-function TodayCard({ operations }: { operations: DashboardData["operations"] }) {
+function TodayStrip({ operations }: { operations: DashboardData["operations"] }) {
   const { openDashboardPanel, hasPanel } = useDashboardDrilldown();
   const canDrilldown = hasPanel("today");
-
-  const metrics = [
-    { label: "Jobs today", value: operations.totalJobsToday },
-    { label: "In progress", value: operations.inProgress },
-    { label: "Completed", value: operations.completedToday },
-  ];
-
-  const body = (
-    <>
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-xs font-black uppercase tracking-wide text-slate-900">
-          Today
-        </h2>
-        {canDrilldown ? (
-          <ChevronRight className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-        ) : (
-          <Link
-            href={DISPATCH_PAGE_TODAY_HREF}
-            className="text-[10px] font-semibold text-cyan-600"
-          >
-            Dispatch
-          </Link>
-        )}
-      </div>
-      <div className="mt-1.5 grid grid-cols-3 gap-1">
-        {metrics.map((metric) => (
-          <div
-            key={metric.label}
-            className="min-w-0 rounded-lg border border-slate-100 bg-slate-50/60 px-1.5 py-1.5 text-center"
-          >
-            <p className="text-lg font-black tabular-nums leading-none text-slate-900">
-              {metric.value}
-            </p>
-            <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              {metric.label}
-            </p>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-
-  if (canDrilldown) {
-    return (
-      <button
-        type="button"
-        onClick={() => openDashboardPanel("today")}
-        aria-label="View today's operations breakdown"
-        className="admin-card w-full p-2.5 text-left transition-colors hover:bg-slate-50/50"
-      >
-        {body}
-      </button>
-    );
-  }
+  const summary = `${operations.totalJobsToday} Jobs · ${operations.inProgress} Active · ${operations.completedToday} Done`;
 
   return (
-    <section aria-label="Today's operations" className="admin-card p-2.5">
-      {body}
-    </section>
+    <StatusStrip
+      label="Today"
+      ariaLabel="View today's operations breakdown"
+      summary={summary}
+      canDrilldown={canDrilldown}
+      onDrilldown={canDrilldown ? () => openDashboardPanel("today") : undefined}
+      fallbackHref={DISPATCH_PAGE_TODAY_HREF}
+      fallbackLinkLabel="Dispatch"
+    />
   );
 }
 
-function CashCard({ data }: { data: DashboardData }) {
+function CashStrip({ data }: { data: DashboardData }) {
   const { access, money, completedWorkAwaitingInvoicing } = data;
   const { openDashboardPanel, hasPanel } = useDashboardDrilldown();
   const canDrilldown = access.canViewBilling && hasPanel("cash-flow");
@@ -343,111 +364,20 @@ function CashCard({ data }: { data: DashboardData }) {
     return null;
   }
 
-  const metrics = [
-    {
-      label: "Collected today",
-      value: formatCurrency(money.paymentsTodayTotal),
-    },
-    {
-      label: "Outstanding",
-      value: formatCurrency(money.unpaidTotal),
-    },
-    {
-      label: "Ready to invoice",
-      value: completedWorkAwaitingInvoicing.count,
-    },
-  ];
-
-  const body = (
-    <>
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-xs font-black uppercase tracking-wide text-slate-900">
-          Cash
-        </h2>
-        {canDrilldown ? (
-          <ChevronRight className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-        ) : (
-          <Link
-            href={INVOICE_PAGE_CASH_FLOW_HREF}
-            className="text-[10px] font-semibold text-cyan-600"
-          >
-            Invoices
-          </Link>
-        )}
-      </div>
-      <div className="mt-2 grid grid-cols-3 gap-1.5">
-        {metrics.map((metric) => (
-          <div key={metric.label} className="min-w-0 text-center">
-            <p className="truncate text-base font-black tabular-nums leading-none text-slate-900">
-              {metric.value}
-            </p>
-            <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              {metric.label}
-            </p>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-
-  if (canDrilldown) {
-    return (
-      <button
-        type="button"
-        onClick={() => openDashboardPanel("cash-flow")}
-        aria-label="View cash flow breakdown"
-        className="admin-card w-full p-2.5 text-left transition-colors hover:bg-slate-50/50"
-      >
-        {body}
-      </button>
-    );
-  }
+  const summary = `${formatMobileCashAmount(money.paymentsTodayTotal)} Collected · ${formatMobileCashAmount(money.unpaidTotal)} AR · ${completedWorkAwaitingInvoicing.count} Ready`;
 
   return (
-    <section aria-label="Cash position" className="admin-card p-2.5">
-      {body}
-    </section>
-  );
-}
-
-const QUICK_ACTIONS = [
-  { label: "Dispatch", href: "/dispatch", icon: Navigation },
-  { label: "Jobs", href: "/jobs", icon: Briefcase },
-  { label: "Invoices", href: "/invoices", icon: FileText },
-  { label: "Customers", href: "/customers", icon: Users },
-  { label: "Estimates", href: "/estimates", icon: ClipboardList },
-] as const;
-
-function QuickActionsSection({ canViewBilling }: { canViewBilling: boolean }) {
-  const actions = QUICK_ACTIONS.filter(
-    (action) => canViewBilling || action.label !== "Invoices",
-  );
-
-  return (
-    <section aria-label="Quick actions" className="min-w-0">
-      <h2 className="mb-1.5 text-xs font-black uppercase tracking-wide text-slate-900">
-        Quick actions
-      </h2>
-      <div className="grid grid-cols-2 gap-1.5">
-        {actions.map((action) => {
-          const Icon = action.icon;
-          return (
-            <Link
-              key={action.href}
-              href={action.href}
-              className="admin-card-interactive flex min-h-[3.25rem] items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white">
-                <Icon className="h-4 w-4" aria-hidden="true" />
-              </div>
-              <span className="text-sm font-bold text-slate-900">
-                {action.label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    </section>
+    <StatusStrip
+      label="Cash"
+      ariaLabel="View cash flow breakdown"
+      summary={summary}
+      canDrilldown={canDrilldown}
+      onDrilldown={
+        canDrilldown ? () => openDashboardPanel("cash-flow") : undefined
+      }
+      fallbackHref={INVOICE_PAGE_CASH_FLOW_HREF}
+      fallbackLinkLabel="Invoices"
+    />
   );
 }
 
@@ -546,10 +476,9 @@ function LimitedRoleHub({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-2">
-      <AttentionQueueSection queue={attentionQueue} />
-      <TodayCard operations={data.operations} />
-      <CashCard data={data} />
-      <QuickActionsSection canViewBilling={data.access.canViewBilling} />
+      <TodayStrip operations={data.operations} />
+      <CashStrip data={data} />
+      <NeedsAttentionSection queue={attentionQueue} />
 
       {data.notifications.recent.length > 0 ? (
         <details className="admin-card group overflow-hidden">
@@ -598,11 +527,10 @@ export function MobileOperationsHub({
 
   return (
     <div className="flex min-w-0 flex-col gap-2">
-      <OperationsStatusHero data={data} issues={heroIssues} />
-      <AttentionQueueSection queue={attentionQueue} />
-      <TodayCard operations={data.operations} />
-      <CashCard data={data} />
-      <QuickActionsSection canViewBilling={access.canViewBilling} />
+      <TodayStrip operations={data.operations} />
+      <CashStrip data={data} />
+      <NeedsAttentionSection queue={attentionQueue} />
+      <OperationsStatusSection data={data} issues={heroIssues} />
       <SecondaryInsightsSection
         data={data}
         notificationAccess={notificationAccess}

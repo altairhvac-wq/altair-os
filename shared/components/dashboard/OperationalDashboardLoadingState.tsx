@@ -49,43 +49,19 @@ function DesktopLoadingSkeleton() {
 
 function MobileLoadingSkeleton() {
   return (
-    <div className="space-y-2.5">
-      <section className="admin-command-surface overflow-hidden p-3">
-        <Skeleton className="h-2.5 w-24" />
-        <Skeleton className="mt-2 h-8 w-16" />
-        <Skeleton className="mt-2 h-3 w-40" />
-      </section>
+    <div className="space-y-2">
+      <Skeleton className="h-[3.25rem] w-full rounded-lg" />
+      <Skeleton className="h-[3.25rem] w-full rounded-lg" />
 
       <div className="space-y-1">
         <Skeleton className="h-3 w-28" />
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full rounded-lg" />
-        ))}
-      </div>
-
-      <div className="admin-card p-3">
-        <Skeleton className="h-3 w-16" />
-        <div className="mt-2 grid grid-cols-3 gap-1.5">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 rounded-lg" />
-          ))}
-        </div>
-      </div>
-
-      <div className="admin-card p-3">
-        <Skeleton className="h-3 w-12" />
-        <div className="mt-2 grid grid-cols-3 gap-1.5">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={`cash-${i}`} className="h-10 rounded-lg" />
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-1.5">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={`action-${i}`} className="h-[3.25rem] rounded-xl" />
+          <Skeleton key={i} className="h-11 w-full rounded-lg" />
         ))}
       </div>
+
+      <Skeleton className="h-[4.5rem] w-full rounded-lg" />
+      <Skeleton className="h-10 w-full rounded-lg" />
     </div>
   );
 }
