@@ -116,6 +116,11 @@ export function formatDurationMinutes(totalMinutes: number): string {
   return `${hours}h ${minutes}m`;
 }
 
+export function formatTodayHoursDecimal(totalMinutes: number): string {
+  const hours = Math.round((totalMinutes / 60) * 10) / 10;
+  return `${hours.toFixed(1)} hrs`;
+}
+
 export function summarizeTodayEntries(
   entries: TimeEntry[],
   now = Date.now(),

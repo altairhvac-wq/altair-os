@@ -14,16 +14,21 @@ import {
 } from "@/shared/lib/technician-refresh";
 import type { JobStatus } from "@/shared/types/job";
 import type { TechnicianJob } from "@/shared/types/technician";
-import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
+import type {
+  TechnicianTimeStateSnapshot,
+  TodayTimeSummary,
+} from "@/shared/types/time-entry";
 import type { ServiceItem } from "@/shared/types/service-item";
-import { TechnicianClockStatusBanner } from "./TechnicianClockStatusBanner";
+import { TechnicianJobsTimeClock } from "./TechnicianJobsTimeClock";
 import { TechnicianJobCard } from "./TechnicianJobCard";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 
 type TechnicianAssignedJobsViewProps = {
   jobs: TechnicianJob[];
   timeState: TechnicianTimeStateSnapshot;
+  todaySummary: TodayTimeSummary;
   serviceItems: ServiceItem[];
+  canManageTime: boolean;
 };
 
 type WorkQueueSectionProps = {
@@ -215,11 +220,14 @@ function TechnicianQueueSummary({
 export function TechnicianAssignedJobsView({
   jobs: initialJobs,
   timeState: initialTimeState,
+  todaySummary: initialTodaySummary,
   serviceItems,
+  canManageTime,
 }: TechnicianAssignedJobsViewProps) {
   const router = useRouter();
   const [jobs, setJobs] = useState(initialJobs);
   const [timeState, setTimeState] = useState(initialTimeState);
+  const [todaySummary, setTodaySummary] = useState(initialTodaySummary);
   const [lastUpdatedAt, setLastUpdatedAt] = useState(() => new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -241,6 +249,10 @@ export function TechnicianAssignedJobsView({
   useEffect(() => {
     setTimeState(initialTimeState);
   }, [initialTimeState]);
+
+  useEffect(() => {
+    setTodaySummary(initialTodaySummary);
+  }, [initialTodaySummary]);
 
   useEffect(() => {
     if (!isRefreshing) {
@@ -286,10 +298,19 @@ export function TechnicianAssignedJobsView({
   const activeJobs = sortActiveTechnicianJobs(jobs);
   const { currentJobs, upNextJobs } = groupTechnicianWorkQueue(jobs);
 
+  const timeClockBanner = canManageTime ? (
+    <TechnicianJobsTimeClock
+      initialTimeState={timeState}
+      initialSummary={todaySummary}
+      onTimeStateChange={setTimeState}
+      onSummaryChange={setTodaySummary}
+    />
+  ) : null;
+
   if (activeJobs.length === 0) {
     return (
       <div className="space-y-4">
-        <TechnicianClockStatusBanner timeState={timeState} />
+        {timeClockBanner}
         <TechnicianJobsEmptyState
           title={jobs.length === 0 ? "Nothing on your schedule" : "All caught up"}
           description={
@@ -305,7 +326,7 @@ export function TechnicianAssignedJobsView({
 
   return (
     <div className="space-y-4">
-      <TechnicianClockStatusBanner timeState={timeState} />
+      {timeClockBanner}
 
       <TechnicianQueueSummary
         activeCount={activeJobs.length}
