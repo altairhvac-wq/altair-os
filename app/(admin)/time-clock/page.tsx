@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
+import { canViewCompanyTimeEntries } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
   getOpenTimeClockEntryForUser,
   listTimeClockEntries,
 } from "@/lib/database/queries/time-clock";
 import { TimeClockFoundationView } from "@/shared/components/time-clock/TimeClockFoundationView";
-import { canViewCompanyTimeClockEntries } from "@/shared/types/time-clock";
 
 export default async function TimeClockPage() {
   const context = await getActiveCompanyContext();
@@ -14,7 +14,7 @@ export default async function TimeClockPage() {
     redirect("/setup");
   }
 
-  const canViewCompanyEntries = canViewCompanyTimeClockEntries(context.role);
+  const canViewCompanyEntries = canViewCompanyTimeEntries(context);
   const userName =
     context.profile.full_name?.trim() || context.user.email || "You";
 

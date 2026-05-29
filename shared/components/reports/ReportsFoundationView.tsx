@@ -223,7 +223,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
 
       <ReportsSection
         title="Time clock"
-        description="Shift clock-ins from time clock entries"
+        description="Shift clock-ins from company time entries"
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <ReportsSummaryCard

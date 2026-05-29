@@ -8,8 +8,8 @@ import {
   getOpenTimeClockEntryForUser,
   listTimeClockEntries,
 } from "@/lib/database/queries/time-clock";
+import { canViewCompanyTimeEntries } from "@/lib/database/access-control";
 import type { TimeClockEntry } from "@/shared/types/time-clock";
-import { canViewCompanyTimeClockEntries } from "@/shared/types/time-clock";
 
 export type TimeClockActionResult = {
   error?: string;
@@ -20,6 +20,10 @@ export type TimeClockActionResult = {
 
 function revalidateTimeClockPaths() {
   revalidatePath("/time-clock");
+  revalidatePath("/time");
+  revalidatePath("/reports");
+  revalidatePath("/technician");
+  revalidatePath("/tech/time");
 }
 
 export async function clockInAction(
@@ -72,7 +76,7 @@ export async function getTimeClockDashboardAction(): Promise<TimeClockActionResu
     return { error: "No active company workspace." };
   }
 
-  const canViewAll = canViewCompanyTimeClockEntries(context.role);
+  const canViewAll = canViewCompanyTimeEntries(context);
   const [{ entry: openEntry }, entries] = await Promise.all([
     getOpenTimeClockEntryForUser(context.company.id, context.user.id),
     listTimeClockEntries(context.company.id, {

@@ -29,6 +29,8 @@ export type TimeEntryActionResult = {
 
 function revalidateTimePaths() {
   revalidatePath("/time");
+  revalidatePath("/time-clock");
+  revalidatePath("/reports");
   revalidatePath("/technician");
   revalidatePath("/tech/time");
 }
