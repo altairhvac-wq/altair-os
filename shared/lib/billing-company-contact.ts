@@ -10,6 +10,8 @@ export type BillingCompanyContact = {
   city?: string | null;
   state?: string | null;
   postalCode?: string | null;
+  /** Optional logo URL for invoice letterhead (future settings wiring). */
+  logoUrl?: string | null;
 };
 
 export function mapCompanyRowToBillingContact(

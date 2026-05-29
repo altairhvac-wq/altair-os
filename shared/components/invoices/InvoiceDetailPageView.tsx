@@ -241,6 +241,7 @@ export function InvoiceDetailPageView({
         company={company}
         signature={signature}
         companyTimeZone={companyTimeZone}
+        logoUrl={company.logoUrl}
       />
 
       <section className="no-print min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

@@ -10,17 +10,22 @@ export type BillingLineItemDisplay = {
   taxable?: boolean;
 };
 
+type BillingDocumentStyle = "default" | "invoice";
+
 type BillingLineItemsListProps = {
   items: BillingLineItemDisplay[];
   documentLabel?: string;
   variant?: "cards" | "table";
+  documentStyle?: BillingDocumentStyle;
 };
 
 export function BillingLineItemsList({
   items,
   documentLabel = "document",
   variant = "cards",
+  documentStyle = "default",
 }: BillingLineItemsListProps) {
+  const isInvoiceStyle = documentStyle === "invoice";
   if (items.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center print:border-slate-300 print:bg-white">
@@ -33,38 +38,67 @@ export function BillingLineItemsList({
   }
 
   if (variant === "table") {
+    const headerCellClass = isInvoiceStyle
+      ? "px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600"
+      : "px-3 py-2 font-semibold";
+    const bodyCellClass = isInvoiceStyle ? "px-4 py-4" : "px-3 py-3";
+    const headerRowClass = isInvoiceStyle
+      ? "border-b-2 border-slate-900 bg-slate-50 text-left print:bg-white"
+      : "border-b border-slate-300 text-left text-xs font-semibold uppercase tracking-wide text-slate-500";
+    const bodyRowClass = isInvoiceStyle
+      ? "border-b border-slate-200 last:border-b-0"
+      : "border-b border-slate-200";
+
     return (
       <div className="overflow-x-auto print:overflow-visible">
-        <table className="min-w-full border-collapse text-sm print:text-xs">
+        <table
+          className={`min-w-full border-collapse ${isInvoiceStyle ? "text-sm" : "text-sm print:text-xs"}`}
+        >
           <thead>
-            <tr className="border-b border-slate-300 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <th className="px-3 py-2 font-semibold">Item</th>
-              <th className="px-3 py-2 text-center font-semibold">Qty</th>
-              <th className="px-3 py-2 text-right font-semibold">Rate</th>
-              <th className="px-3 py-2 text-right font-semibold">Amount</th>
+            <tr className={headerRowClass}>
+              <th className={`${headerCellClass} text-left`}>Description</th>
+              <th className={`${headerCellClass} text-center`}>Qty</th>
+              <th className={`${headerCellClass} text-right`}>Rate</th>
+              <th className={`${headerCellClass} text-right`}>Amount</th>
             </tr>
           </thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.id} className="border-b border-slate-200">
-                <td className="px-3 py-3 align-top text-slate-900">
-                  <p className="font-medium">{item.name}</p>
+              <tr key={item.id} className={bodyRowClass}>
+                <td className={`${bodyCellClass} align-top text-slate-900`}>
+                  <p className={isInvoiceStyle ? "font-semibold" : "font-medium"}>
+                    {item.name}
+                  </p>
                   {item.description ? (
-                    <p className="mt-0.5 text-xs text-slate-500">{item.description}</p>
+                    <p
+                      className={
+                        isInvoiceStyle
+                          ? "mt-1 text-sm leading-relaxed text-slate-600"
+                          : "mt-0.5 text-xs text-slate-500"
+                      }
+                    >
+                      {item.description}
+                    </p>
                   ) : null}
                   {item.taxable === false ? (
-                    <span className="mt-1 inline-block rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 print:border print:border-slate-300 print:bg-white">
+                    <span className="mt-1.5 inline-block rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 print:border print:border-slate-300 print:bg-white">
                       Non-taxable
                     </span>
                   ) : null}
                 </td>
-                <td className="px-3 py-3 text-center tabular-nums text-slate-600">
+                <td
+                  className={`${bodyCellClass} text-center tabular-nums text-slate-600`}
+                >
                   {item.quantity}
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums text-slate-600">
+                <td
+                  className={`${bodyCellClass} text-right tabular-nums text-slate-600`}
+                >
                   {formatCurrency(item.unitPrice)}
                 </td>
-                <td className="px-3 py-3 text-right font-semibold tabular-nums text-slate-900">
+                <td
+                  className={`${bodyCellClass} text-right font-semibold tabular-nums text-slate-900`}
+                >
                   {formatCurrency(
                     calculateLineItemTotal(item.quantity, item.unitPrice),
                   )}

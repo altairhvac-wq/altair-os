@@ -541,4 +541,22 @@ a[href] {
   [class*="ring-blue-"] {
     --tw-ring-color: #94a3b8 !important;
   }
+
+  /* Invoice document: preserve amount-due hierarchy on print */
+  #invoice-document .invoice-amount-due-hero {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 2px solid #0f172a !important;
+  }
+
+  #invoice-document .invoice-amount-due-hero p,
+  #invoice-document .invoice-amount-due-hero dt,
+  #invoice-document .invoice-amount-due-hero dd {
+    color: #0f172a !important;
+  }
+
+  #invoice-document .invoice-amount-due-hero .text-3xl,
+  #invoice-document .invoice-amount-due-hero .text-4xl {
+    font-weight: 700 !important;
+  }
 }
