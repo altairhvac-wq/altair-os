@@ -59,6 +59,7 @@ Production:
 
 ```
 https://<PRODUCTION_DOMAIN>/auth/callback
+https://<PRODUCTION_DOMAIN>/auth/callback**
 https://<PRODUCTION_DOMAIN>/login
 https://<PRODUCTION_DOMAIN>/signup
 https://<PRODUCTION_DOMAIN>/setup
@@ -84,7 +85,8 @@ https://<preview-deployment>.vercel.app/auth/callback
 If Supabase email confirmation is enabled:
 
 - [ ] Confirmation emails redirect to a URL on your deployed domain
-- [ ] `/auth/callback` is listed in Redirect URLs
+- [ ] `/auth/callback` is listed in Redirect URLs (wildcard `**` optional if you add `?next=` query params)
+- [ ] Password reset uses `redirectTo` = `https://<domain>/auth/callback` (recovery is detected via `type=recovery` on the email link)
 - [ ] Test signup → email confirm → login → `/setup` or dashboard
 
 ---

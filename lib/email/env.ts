@@ -89,10 +89,9 @@ export function resolveAppBaseUrl(): AppBaseUrlResolution {
 
   if (explicit) {
     const normalized = normalizeAppBaseUrl(explicit);
-    if (!normalized) {
-      return { ok: false, reason: "invalid" };
+    if (normalized) {
+      return { ok: true, url: normalized };
     }
-    return { ok: true, url: normalized };
   }
 
   const vercel = process.env.VERCEL_URL?.trim();

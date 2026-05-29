@@ -2,13 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import {
-  PASSWORD_RESET_SUCCESS_MESSAGE,
-  RESET_PASSWORD_PATH,
-} from "@/lib/auth/constants";
+import { PASSWORD_RESET_SUCCESS_MESSAGE } from "@/lib/auth/constants";
 import { validateNewPassword } from "@/lib/auth/password";
-import { buildAuthCallbackUrl, getRequestOrigin } from "@/lib/auth/request-origin";
+import {
+  buildAuthCallbackUrl,
+  resolveAuthRedirectOrigin,
+} from "@/lib/auth/request-origin";
 import { resolvePostLoginRedirect } from "@/lib/auth/redirects";
+import { createAuthEmailClient } from "@/lib/supabase/auth-email";
 import { createClient } from "@/lib/supabase/server";
 import {
   bootstrapCompanyForNewUser,
@@ -104,7 +105,7 @@ export async function signupAction(
   }
 
   const supabase = await createClient();
-  const origin = await getRequestOrigin();
+  const { origin } = await resolveAuthRedirectOrigin();
   const emailRedirectTo = origin
     ? buildAuthCallbackUrl(origin)
     : undefined;
@@ -212,6 +213,19 @@ export async function logoutAction() {
   redirect("/login");
 }
 
+function isPasswordResetConfigError(message: string, code?: string): boolean {
+  const lower = message.toLowerCase();
+
+  return (
+    (code === "unexpected_failure" && lower.includes("api key")) ||
+    lower.includes("invalid api key") ||
+    lower.includes("redirect") ||
+    lower.includes("redirect_to") ||
+    lower.includes("redirect url") ||
+    lower.includes("missing supabase env")
+  );
+}
+
 export async function requestPasswordResetAction(
   _prevState: AuthActionState,
   formData: FormData,
@@ -222,17 +236,43 @@ export async function requestPasswordResetAction(
     return { error: "Email is required." };
   }
 
-  const origin = await getRequestOrigin();
+  const { origin, source } = await resolveAuthRedirectOrigin();
 
   if (!origin) {
-    console.error("[requestPasswordResetAction] missing request origin for redirect URL");
+    console.error(
+      "[requestPasswordResetAction] missing request origin for redirect URL",
+      { source },
+    );
     return {
       error: "Password reset is temporarily unavailable. Please try again later.",
     };
   }
 
-  const supabase = await createClient();
-  const redirectTo = buildAuthCallbackUrl(origin, RESET_PASSWORD_PATH);
+  let redirectTo: string;
+
+  try {
+    // Match Supabase allowlist path exactly; recovery flow uses type=recovery on the link.
+    redirectTo = buildAuthCallbackUrl(origin);
+  } catch (error) {
+    console.error("[requestPasswordResetAction] invalid redirect URL:", {
+      origin,
+      source,
+      error,
+    });
+    return {
+      error: "Password reset is temporarily unavailable. Please try again later.",
+    };
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    console.info("[requestPasswordResetAction] sending recovery email:", {
+      origin,
+      source,
+      redirectTo,
+    });
+  }
+
+  const supabase = createAuthEmailClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo,
   });
@@ -241,10 +281,24 @@ export async function requestPasswordResetAction(
     console.error("[requestPasswordResetAction] resetPasswordForEmail failed:", {
       message: error.message,
       code: error.code,
+      status: error.status,
+      origin,
+      source,
+      redirectTo,
     });
-    return {
-      error: "Could not start password reset. Please try again in a moment.",
-    };
+
+    if (error.code === "validation_failed") {
+      return { error: "Enter a valid email address." };
+    }
+
+    if (isPasswordResetConfigError(error.message, error.code)) {
+      return {
+        error: "Password reset is temporarily unavailable. Please try again later.",
+      };
+    }
+
+    // Do not reveal delivery/account status (rate limits, SMTP, unknown addresses).
+    return { success: PASSWORD_RESET_SUCCESS_MESSAGE };
   }
 
   return { success: PASSWORD_RESET_SUCCESS_MESSAGE };
