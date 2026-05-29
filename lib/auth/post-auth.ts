@@ -16,8 +16,21 @@ function isPasswordRecoveryFlow(
   nextParam: string | null | undefined,
   typeParam: string | null | undefined,
 ): boolean {
-  const safeNext = sanitizeNextPath(nextParam);
-  return safeNext === RESET_PASSWORD_PATH || typeParam === "recovery";
+  if (typeParam === "recovery") {
+    return true;
+  }
+
+  const rawNext = nextParam?.trim();
+
+  if (!rawNext) {
+    return false;
+  }
+
+  return (
+    rawNext === RESET_PASSWORD_PATH ||
+    rawNext.startsWith(`${RESET_PASSWORD_PATH}?`) ||
+    rawNext.startsWith(`${RESET_PASSWORD_PATH}/`)
+  );
 }
 
 /**

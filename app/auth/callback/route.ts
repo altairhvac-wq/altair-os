@@ -1,14 +1,35 @@
 import { createServerClient } from "@supabase/ssr";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveAuthCallbackDestination } from "@/lib/auth/post-auth";
 import type { Database } from "@/lib/database/types";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
+const EMAIL_OTP_TYPES = new Set<EmailOtpType>([
+  "signup",
+  "invite",
+  "magiclink",
+  "recovery",
+  "email",
+  "email_change",
+]);
+
+function isEmailOtpType(value: string | null): value is EmailOtpType {
+  return value !== null && EMAIL_OTP_TYPES.has(value as EmailOtpType);
+}
+
+function authCallbackErrorRedirect(origin: string) {
+  return NextResponse.redirect(`${origin}/login?error=auth_callback`);
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const origin = requestUrl.origin;
   const code = requestUrl.searchParams.get("code");
+  const tokenHash = requestUrl.searchParams.get("token_hash");
+  const accessToken = requestUrl.searchParams.get("access_token");
+  const refreshToken = requestUrl.searchParams.get("refresh_token");
   const nextParam = requestUrl.searchParams.get("next");
   const redirectToParam = requestUrl.searchParams.get("redirect_to");
   const typeParam = requestUrl.searchParams.get("type");
@@ -20,11 +41,7 @@ export async function GET(request: NextRequest) {
       error: errorParam,
       description: errorDescription,
     });
-    return NextResponse.redirect(`${origin}/login?error=auth_callback`);
-  }
-
-  if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=auth_callback`);
+    return authCallbackErrorRedirect(origin);
   }
 
   const cookieStore = await cookies();
@@ -43,11 +60,35 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-  if (error) {
-    console.error("[auth/callback] exchangeCodeForSession failed:", error.message);
-    return NextResponse.redirect(`${origin}/login?error=auth_callback`);
+    if (error) {
+      console.error("[auth/callback] exchangeCodeForSession failed:", error.message);
+      return authCallbackErrorRedirect(origin);
+    }
+  } else if (tokenHash && isEmailOtpType(typeParam)) {
+    const { error } = await supabase.auth.verifyOtp({
+      type: typeParam,
+      token_hash: tokenHash,
+    });
+
+    if (error) {
+      console.error("[auth/callback] verifyOtp failed:", error.message);
+      return authCallbackErrorRedirect(origin);
+    }
+  } else if (accessToken && refreshToken) {
+    const { error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (error) {
+      console.error("[auth/callback] setSession failed:", error.message);
+      return authCallbackErrorRedirect(origin);
+    }
+  } else {
+    return authCallbackErrorRedirect(origin);
   }
 
   const destination = await resolveAuthCallbackDestination(
