@@ -41,6 +41,9 @@ import type {
   InvoiceLineItemRow,
   InvoicePaymentInsert,
   InvoicePaymentRow,
+  InvoicePaymentTokenInsert,
+  InvoicePaymentTokenRow,
+  InvoicePaymentTokenUpdate,
   InvoiceRow,
   InvoiceUpdate,
   ServiceItemInsert,
@@ -730,6 +733,34 @@ export type Database = {
           },
         ];
       };
+      invoice_payment_tokens: {
+        Row: InvoicePaymentTokenRow;
+        Insert: InvoicePaymentTokenInsert;
+        Update: InvoicePaymentTokenUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "invoice_payment_tokens_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoice_payment_tokens_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoice_payment_tokens_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       time_entries: {
         Row: TimeEntryRow;
         Insert: TimeEntryInsert;
@@ -875,6 +906,12 @@ export type Database = {
         Returns: undefined;
       };
       get_public_estimate_approval_view: {
+        Args: {
+          p_raw_token: string;
+        };
+        Returns: Json;
+      };
+      get_public_invoice_payment_view: {
         Args: {
           p_raw_token: string;
         };

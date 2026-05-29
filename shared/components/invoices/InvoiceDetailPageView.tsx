@@ -4,13 +4,16 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Briefcase, FileText, Mail, Phone, Printer, User } from "lucide-react";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
-import type { InvoiceDetail } from "@/shared/types/invoice";
 import {
   canRecordInvoicePayment,
   getRecordPaymentBlockReason,
 } from "@/shared/types/invoice-payment";
 import type { InvoiceActivity } from "@/shared/types/invoice-activity";
 import type { InvoicePayment } from "@/shared/types/invoice-payment";
+import {
+  canShowInvoicePaymentLink,
+  type InvoiceDetail,
+} from "@/shared/types/invoice";
 import {
   formatBillingEmailSentMessage,
   getLastInvoiceEmailSentInfo,
@@ -25,6 +28,7 @@ import { InvoicePaymentHistory } from "./InvoicePaymentHistory";
 import { InvoiceStatusActions } from "./InvoiceStatusActions";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { RecordPaymentForm } from "./RecordPaymentForm";
+import { InvoicePaymentLinkCard } from "./InvoicePaymentLinkCard";
 
 import { BillingSignatureCaptureSheet } from "@/shared/components/billing/BillingSignatureCaptureSheet";
 import type { BillingSignature } from "@/shared/types/billing-signature";
@@ -231,6 +235,10 @@ export function InvoiceDetailPageView({
                   View the original estimate this invoice was created from.
                 </p>
               </section>
+            ) : null}
+
+            {canManageBilling && canShowInvoicePaymentLink(invoice.status) ? (
+              <InvoicePaymentLinkCard invoiceId={invoice.id} />
             ) : null}
           </div>
         </div>

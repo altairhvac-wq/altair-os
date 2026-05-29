@@ -4,6 +4,7 @@ export type BillingEmailFailureCode =
   | "invalid_customer_email"
   | "recipient_override_invalid"
   | "approval_link_generation_failed"
+  | "payment_link_generation_failed"
   | "email_configuration_missing"
   | "email_sender_not_verified"
   | "email_invalid_from_address"
@@ -135,6 +136,8 @@ export function getBillingEmailFailureMessageForCode(
       return `A valid customer email is required to ${input.mode} this ${input.document}. Update the email on the customer record and try again.`;
     case "approval_link_generation_failed":
       return "Estimate approval link could not be created. Refresh and try again, or contact your office admin if this keeps happening.";
+    case "payment_link_generation_failed":
+      return "Invoice payment link could not be created. Refresh and try again, or contact your office admin if this keeps happening.";
     case "email_provider_failed":
       if (input.mode === "resend") {
         return `${documentLabel} email could not be resent. Try again in a moment or contact your office admin.`;
@@ -196,7 +199,7 @@ export function logBillingEmailFailure(
 }
 
 export const MISSING_APP_URL_USER_MESSAGE =
-  "App URL is not configured. Set NEXT_PUBLIC_APP_URL to your production site URL (including https://) in Vercel before sending estimate approval links.";
+  "App URL is not configured. Set NEXT_PUBLIC_APP_URL to your production site URL (including https://) in Vercel before sending customer billing links.";
 
 export const INVALID_APP_URL_USER_MESSAGE =
   "NEXT_PUBLIC_APP_URL is set but is not a valid URL. Use a full URL with https:// (for example, https://your-app.vercel.app) in Vercel.";
@@ -211,4 +214,8 @@ export function getApprovalLinkFailureUserMessage(error: string): string {
   }
 
   return error;
+}
+
+export function getPaymentLinkFailureUserMessage(error: string): string {
+  return getApprovalLinkFailureUserMessage(error);
 }

@@ -29,10 +29,16 @@ import {
 import { recordEstimateStatusChangedActivity } from "@/lib/database/services/estimate-activity";
 import {
   getBillingEmailFailureUserMessage,
+  getPaymentLinkFailureUserMessage,
   logBillingEmailFailure,
+  INVALID_APP_URL_USER_MESSAGE,
+  MISSING_APP_URL_USER_MESSAGE,
 } from "@/lib/email/billing-failure";
+import { resolveAppBaseUrl } from "@/lib/email/env";
 import { sendInvoiceEmail, toBillingEmailDelivery } from "@/lib/email/billing-send";
 import type { BillingEmailDelivery } from "@/lib/email/billing-send";
+import { createInvoicePaymentTokenForEmail } from "@/lib/database/queries/invoice-payment-tokens";
+import { buildInvoicePaymentUrl } from "@/shared/lib/invoice-payment-link";
 import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
 import { isValidEmail } from "@/shared/lib/email-validation";
 import type {
@@ -47,6 +53,55 @@ import {
 import { applyInvoiceCreationDefaults } from "@/shared/lib/company-billing-defaults";
 
 export type { BillingEmailDelivery } from "@/lib/email/billing-send";
+
+async function buildInvoicePaymentEmailUrl(input: {
+  companyId: string;
+  invoiceId: string;
+  customerEmail: string;
+  createdBy: string;
+}): Promise<{ paymentUrl?: string; error?: string }> {
+  const appUrl = resolveAppBaseUrl();
+
+  if (!appUrl.ok) {
+    const error =
+      appUrl.reason === "invalid"
+        ? INVALID_APP_URL_USER_MESSAGE
+        : MISSING_APP_URL_USER_MESSAGE;
+
+    console.error("[buildInvoicePaymentEmailUrl] app URL not configured:", {
+      invoiceId: input.invoiceId,
+      reason: appUrl.reason,
+      hasExplicitAppUrl: Boolean(process.env.NEXT_PUBLIC_APP_URL?.trim()),
+      hasVercelUrl: Boolean(process.env.VERCEL_URL?.trim()),
+    });
+
+    return { error };
+  }
+
+  const { rawToken, error } = await createInvoicePaymentTokenForEmail({
+    companyId: input.companyId,
+    invoiceId: input.invoiceId,
+    customerEmail: input.customerEmail,
+    createdBy: input.createdBy,
+  });
+
+  if (error || !rawToken) {
+    console.error("[buildInvoicePaymentEmailUrl] payment token creation failed:", {
+      invoiceId: input.invoiceId,
+      error: error ?? "missing raw token",
+    });
+
+    return {
+      error: getPaymentLinkFailureUserMessage(
+        error ?? "Failed to create invoice payment link.",
+      ),
+    };
+  }
+
+  return {
+    paymentUrl: buildInvoicePaymentUrl(appUrl.url, rawToken),
+  };
+}
 
 export type CreateInvoiceActionResult = {
   error?: string;
@@ -293,6 +348,44 @@ export async function sendInvoiceAction(
     return { error: statusError ?? "We couldn't send this invoice. Try again." };
   }
 
+  const paymentLink = await buildInvoicePaymentEmailUrl({
+    companyId: context.company.id,
+    invoiceId,
+    customerEmail,
+    createdBy: context.user.id,
+  });
+
+  if (paymentLink.error) {
+    console.error(
+      "[sendInvoiceAction] payment link generation failed before email send:",
+      {
+        invoiceId,
+        error: paymentLink.error,
+      },
+    );
+
+    const { error: revertError } = await updateInvoiceStatus(
+      context.company.id,
+      invoiceId,
+      "sent",
+      "draft",
+    );
+
+    if (revertError) {
+      console.error(
+        "[sendInvoiceAction] failed to revert invoice after payment link failure:",
+        {
+          invoiceId,
+          revertError,
+        },
+      );
+    }
+
+    return {
+      error: getPaymentLinkFailureUserMessage(paymentLink.error),
+    };
+  }
+
   const emailResult = await sendInvoiceEmail({
     to: customerEmail,
     company: mapCompanyRowToBillingContact(context.company),
@@ -313,6 +406,7 @@ export async function sendInvoiceAction(
       unitPrice: item.unitPrice,
     })),
     notes: currentInvoice.notes,
+    paymentUrl: paymentLink.paymentUrl,
   });
 
   if (!emailResult.ok) {
@@ -433,6 +527,25 @@ export async function resendInvoiceEmailAction(
     };
   }
 
+  const paymentLink = await buildInvoicePaymentEmailUrl({
+    companyId: context.company.id,
+    invoiceId,
+    customerEmail,
+    createdBy: context.user.id,
+  });
+
+  if (paymentLink.error) {
+    console.error(
+      "[resendInvoiceEmailAction] payment link generation failed before email send:",
+      {
+        invoiceId,
+        error: paymentLink.error,
+      },
+    );
+
+    return { error: getPaymentLinkFailureUserMessage(paymentLink.error) };
+  }
+
   const emailResult = await sendInvoiceEmail({
     to: customerEmail,
     company: mapCompanyRowToBillingContact(context.company),
@@ -453,6 +566,7 @@ export async function resendInvoiceEmailAction(
       unitPrice: item.unitPrice,
     })),
     notes: currentInvoice.notes,
+    paymentUrl: paymentLink.paymentUrl,
   });
 
   if (!emailResult.ok) {

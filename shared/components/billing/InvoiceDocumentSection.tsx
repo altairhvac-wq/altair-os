@@ -19,6 +19,7 @@ type InvoiceDocumentSectionProps = {
   logoUrl?: string | null;
   className?: string;
   id?: string;
+  showSignature?: boolean;
 };
 
 export function InvoiceDocumentSection({
@@ -29,6 +30,7 @@ export function InvoiceDocumentSection({
   logoUrl,
   className = "",
   id = "invoice-document",
+  showSignature = true,
 }: InvoiceDocumentSectionProps) {
   const customerEmail = invoice.customerEmail?.trim();
   const customerPhone = invoice.customerPhone?.trim();
@@ -108,13 +110,15 @@ export function InvoiceDocumentSection({
         </div>
       ) : null}
 
-      <BillingSignatureBlock
-        variant="invoice"
-        signature={signature}
-        companyTimeZone={companyTimeZone}
-        documentStyle="invoice"
-        className="mt-8 print:mt-8"
-      />
+      {showSignature ? (
+        <BillingSignatureBlock
+          variant="invoice"
+          signature={signature}
+          companyTimeZone={companyTimeZone}
+          documentStyle="invoice"
+          className="mt-8 print:mt-8"
+        />
+      ) : null}
 
       <InvoiceThankYouFooter company={company} />
     </section>

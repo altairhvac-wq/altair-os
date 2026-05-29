@@ -821,6 +821,37 @@ export type EstimateApprovalTokenUpdate = Partial<
   >
 >;
 
+export type InvoicePaymentTokenRow = {
+  id: UUID;
+  company_id: UUID;
+  invoice_id: UUID;
+  token_hash: string;
+  customer_email: string;
+  expires_at: Timestamp;
+  revoked_at: Timestamp | null;
+  created_by: UUID | null;
+  created_at: Timestamp;
+};
+
+export type InvoicePaymentTokenInsert = {
+  id?: UUID;
+  company_id: UUID;
+  invoice_id: UUID;
+  token_hash: string;
+  customer_email: string;
+  expires_at: Timestamp;
+  revoked_at?: Timestamp | null;
+  created_by?: UUID | null;
+  created_at?: Timestamp;
+};
+
+export type InvoicePaymentTokenUpdate = Partial<
+  Omit<
+    InvoicePaymentTokenInsert,
+    "company_id" | "invoice_id" | "token_hash"
+  >
+>;
+
 export type TimeEntryRow = {
   id: UUID;
   company_id: UUID;

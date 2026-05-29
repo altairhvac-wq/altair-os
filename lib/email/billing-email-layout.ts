@@ -247,6 +247,50 @@ export function formatEstimateApprovalCtaText(approvalUrl: string): string {
   ].join("\n");
 }
 
+export function formatInvoicePaymentCtaHtml(input: {
+  paymentUrl: string;
+  balanceDue: number;
+}): string {
+  const safeUrl = escapeBillingEmailHtml(input.paymentUrl);
+  const isPaidInFull = input.balanceDue <= 0;
+  const buttonLabel = isPaidInFull ? "View Invoice" : "View &amp; Pay Invoice";
+  const helperText = isPaidInFull
+    ? "Secure link to view this paid invoice."
+    : "Secure link to view this invoice and contact the office to pay.";
+
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 0;border-collapse:collapse;">
+      <tr>
+        <td align="center" style="padding:0;">
+          <a href="${safeUrl}" style="display:inline-block;background:#0f766e;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:16px 28px;border-radius:8px;">
+            ${buttonLabel}
+          </a>
+        </td>
+      </tr>
+      <tr>
+        <td align="center" style="padding:12px 0 0;color:#64748b;font-size:12px;line-height:1.55;">
+          ${helperText}
+        </td>
+      </tr>
+      <tr>
+        <td align="center" style="padding:8px 0 0;color:#71717a;font-size:11px;line-height:1.5;word-break:break-all;">
+          ${safeUrl}
+        </td>
+      </tr>
+    </table>
+  `.trim();
+}
+
+export function formatInvoicePaymentCtaText(input: {
+  paymentUrl: string;
+  balanceDue: number;
+}): string {
+  const label =
+    input.balanceDue <= 0 ? "View invoice online:" : "View and pay online:";
+
+  return ["", label, input.paymentUrl].join("\n");
+}
+
 export function formatInvoicePaymentGuidanceHtml(input: {
   company: Pick<BillingCompanyContact, "name" | "phone" | "email">;
   dueDate: string;

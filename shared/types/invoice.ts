@@ -247,6 +247,11 @@ export function canResendInvoiceEmail(status: InvoiceStatus): boolean {
   );
 }
 
+/** Sent/post-sent invoices eligible for a public customer payment link. */
+export function canShowInvoicePaymentLink(status: InvoiceStatus): boolean {
+  return canResendInvoiceEmail(status);
+}
+
 export function isInvoiceBalanceConsistent(invoice: {
   total: number;
   amountPaid: number;

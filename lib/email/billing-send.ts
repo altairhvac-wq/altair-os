@@ -19,6 +19,8 @@ import {
   formatEstimateApprovalCtaText,
   formatEstimateTotalHeroHtml,
   formatInvoiceAmountDueHeroHtml,
+  formatInvoicePaymentCtaHtml,
+  formatInvoicePaymentCtaText,
   formatInvoicePaymentGuidanceHtml,
   formatInvoicePaymentGuidanceText,
   wrapBillingEmailHtml,
@@ -134,6 +136,7 @@ type SendInvoiceEmailInput = {
   lineItems: BillingEmailLineItem[];
   notes?: string;
   signature?: BillingSignature | null;
+  paymentUrl?: string;
 };
 
 function buildBillingEmailDeliveryOptions(
@@ -273,6 +276,19 @@ export async function sendInvoiceEmail(
     signature: input.signature,
     timeZone: input.timeZone,
   };
+  const paymentUrl = input.paymentUrl?.trim();
+  const paymentCtaText = paymentUrl
+    ? formatInvoicePaymentCtaText({
+        paymentUrl,
+        balanceDue: input.balanceDue,
+      })
+    : null;
+  const paymentCtaHtml = paymentUrl
+    ? formatInvoicePaymentCtaHtml({
+        paymentUrl,
+        balanceDue: input.balanceDue,
+      })
+    : "";
   const paymentGuidanceText = formatInvoicePaymentGuidanceText({
     company: input.company,
     dueDate: input.dueDate,
@@ -291,12 +307,19 @@ export async function sendInvoiceEmail(
   const intro =
     input.balanceDue <= 0
       ? "Please find your invoice below. This invoice is paid in full."
-      : `Please find your invoice below. Payment of ${formatCurrency(input.balanceDue)} is due by ${formatDate(input.dueDate, input.timeZone)}.`;
+      : paymentUrl
+        ? `Please find your invoice below. Payment of ${formatCurrency(input.balanceDue)} is due by ${formatDate(input.dueDate, input.timeZone)}. Use the secure link to view your invoice and contact us to pay.`
+        : `Please find your invoice below. Payment of ${formatCurrency(input.balanceDue)} is due by ${formatDate(input.dueDate, input.timeZone)}.`;
 
   const text = [
     `Hello ${input.customerName},`,
     "",
     `${companyName} sent you invoice ${input.invoiceNumber}.`,
+    paymentUrl
+      ? input.balanceDue <= 0
+        ? "Use the secure link below to view this paid invoice online."
+        : "Use the secure link below to view this invoice and contact us to pay."
+      : null,
     "",
     `Amount due: ${formatCurrency(input.balanceDue)}`,
     `Issued: ${formatDate(input.issuedDate, input.timeZone)}`,
@@ -307,7 +330,8 @@ export async function sendInvoiceEmail(
     "Line items:",
     formatBillingEmailLineItemsText(input.lineItems),
     notesText ? `\nNotes:\n${notesText}` : null,
-    paymentGuidanceText ? `\n${paymentGuidanceText}` : null,
+    paymentCtaText,
+    paymentUrl ? null : paymentGuidanceText ? `\n${paymentGuidanceText}` : null,
     "",
     formatBillingSignatureBlockText("invoice", signatureEmailInput),
     companyContactText ? `\n${companyContactText}` : null,
@@ -333,6 +357,7 @@ export async function sendInvoiceEmail(
       dueDate: input.dueDate,
       timeZone: input.timeZone,
     })}
+    ${paymentCtaHtml}
     ${formatBillingEmailLineItemsHtml(input.lineItems)}
     ${formatBillingEmailTotalsHtml({
       subtotal: input.subtotal,
@@ -344,13 +369,17 @@ export async function sendInvoiceEmail(
       highlightBalance: true,
     })}
     ${notesText ? formatBillingEmailNotesHtml(notesText) : ""}
-    ${formatInvoicePaymentGuidanceHtml({
-      company: input.company,
-      dueDate: input.dueDate,
-      balanceDue: input.balanceDue,
-      timeZone: input.timeZone,
-      hasReplyTo: deliveryOptions.hasReplyTo,
-    })}
+    ${
+      paymentUrl
+        ? ""
+        : formatInvoicePaymentGuidanceHtml({
+            company: input.company,
+            dueDate: input.dueDate,
+            balanceDue: input.balanceDue,
+            timeZone: input.timeZone,
+            hasReplyTo: deliveryOptions.hasReplyTo,
+          })
+    }
     ${formatBillingSignatureBlockHtml("invoice", signatureEmailInput)}
     ${formatBillingEmailCompanyContactHtml(input.company)}
     ${footer.html}
