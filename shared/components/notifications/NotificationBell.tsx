@@ -102,22 +102,24 @@ export function NotificationBell({
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg sm:w-80">
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-            <p className="text-sm font-semibold text-slate-900">Notifications</p>
+        <div className="fixed left-1/2 top-[calc(4.25rem+env(safe-area-inset-top,0px))] z-50 w-[calc(100vw-1rem)] max-w-none -translate-x-1/2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 sm:max-w-md sm:translate-x-0">
+          <div className="flex min-w-0 items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
+            <p className="min-w-0 truncate text-sm font-semibold text-slate-900">
+              Notifications
+            </p>
             {unreadCount > 0 ? (
               <button
                 type="button"
                 onClick={handleMarkAllRead}
                 disabled={isPending}
-                className="text-xs font-semibold text-cyan-700 transition-colors hover:text-cyan-800 disabled:opacity-50"
+                className="shrink-0 text-xs font-semibold text-cyan-700 transition-colors hover:text-cyan-800 disabled:opacity-50"
               >
                 Mark all read
               </button>
             ) : null}
           </div>
 
-          <div className="max-h-[min(24rem,calc(100dvh-6rem-env(safe-area-inset-top,0px)))] space-y-2 overflow-y-auto overscroll-contain p-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
+          <div className="max-h-[min(70vh,32rem)] min-w-0 space-y-2 overflow-x-hidden overflow-y-auto overscroll-contain p-3">
             {actionError ? (
               <p className="break-words px-2 text-sm text-red-600" role="alert">
                 {actionError}
