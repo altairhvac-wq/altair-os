@@ -5,6 +5,7 @@ import {
 import {
   getMissingResendEnvVars,
   getResendEmailEnv,
+  logResendEnvDiagnostics,
 } from "@/lib/email/env";
 import {
   resolveEmailRecipient,
@@ -89,9 +90,18 @@ function buildFromAddress(from: string, displayName?: string): string {
 export async function sendViaResend(
   input: SendViaResendInput,
 ): Promise<ResendSendResult> {
-  const missingEnv = getMissingResendEnvVars();
+  const envDiagnostics = logResendEnvDiagnostics(input.logContext);
+  const missingEnv = envDiagnostics.missing;
 
   if (missingEnv.length > 0) {
+    console.info(`[${input.logContext}] resend env missing before provider call:`, {
+      missingEnv,
+      hasResendApiKey: envDiagnostics.hasResendApiKey,
+      hasResendFromEmail: envDiagnostics.hasResendFromEmail,
+      resendFromEmail: envDiagnostics.resendFromEmail,
+      reachedProvider: false,
+    });
+
     return {
       ok: false,
       reason: "not_configured",
@@ -180,6 +190,19 @@ export async function sendViaResend(
 
     if (!response.ok) {
       const classified = classifyResendProviderError(response.status, payload);
+
+      if (response.status === 401 || response.status === 403) {
+        console.error(
+          `[${input.logContext}] resend API auth rejected (not missing env — key may be invalid or revoked):`,
+          {
+            status: response.status,
+            hasResendApiKey: envDiagnostics.hasResendApiKey,
+            hasResendFromEmail: envDiagnostics.hasResendFromEmail,
+            resendFromEmail: envDiagnostics.resendFromEmail,
+            providerMessage: classified.providerMessage,
+          },
+        );
+      }
 
       console.error(`[${input.logContext}] provider rejected request:`, {
         status: response.status,

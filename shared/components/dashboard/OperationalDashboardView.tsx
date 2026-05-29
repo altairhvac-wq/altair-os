@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DashboardCommandStrip } from "@/shared/components/dashboard/DashboardCommandStrip";
+import { MobileOperationsHub } from "@/shared/components/dashboard/MobileOperationsHub";
 import {
   DashboardCompactAttentionSummary,
   DashboardCompactBillingSection,
@@ -1290,26 +1291,36 @@ function DashboardContentLayout({
         />
       ) : null}
 
-      <DashboardCommandStrip data={data} />
+      <div className="hidden min-w-0 flex-col gap-3 lg:flex">
+        <DashboardCommandStrip data={data} />
 
-      {sectionOrder.map((sectionId) => {
-        const content = sectionContent[sectionId];
-        if (!content) {
-          return null;
-        }
+        {sectionOrder.map((sectionId) => {
+          const content = sectionContent[sectionId];
+          if (!content) {
+            return null;
+          }
 
-        const labels = DASHBOARD_SECTION_LABELS[sectionId];
+          const labels = DASHBOARD_SECTION_LABELS[sectionId];
 
-        return (
-          <DashboardPriorityGroup
-            key={sectionId}
-            title={labels.title}
-            description={labels.description}
-          >
-            {content}
-          </DashboardPriorityGroup>
-        );
-      })}
+          return (
+            <DashboardPriorityGroup
+              key={sectionId}
+              title={labels.title}
+              description={labels.description}
+            >
+              {content}
+            </DashboardPriorityGroup>
+          );
+        })}
+      </div>
+
+      <div className="min-w-0 lg:hidden">
+        <MobileOperationsHub
+          data={data}
+          notificationAccess={notificationAccess}
+          showLiveMetrics={showLiveMetrics}
+        />
+      </div>
     </DashboardDrilldownProvider>
   );
 }

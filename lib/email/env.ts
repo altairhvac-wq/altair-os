@@ -139,3 +139,30 @@ export function logInviteEmailEnvPresence(context: string): void {
     EMAIL_OVERRIDE_TO: Boolean(process.env.EMAIL_OVERRIDE_TO?.trim()),
   });
 }
+
+/** Temporary diagnostics for billing/resend sends — never logs the API key. */
+export function logResendEnvDiagnostics(context: string): {
+  hasResendApiKey: boolean;
+  hasResendFromEmail: boolean;
+  resendFromEmail: string | null;
+  missing: string[];
+} {
+  const resendFromEmail = process.env[RESEND_FROM_EMAIL_ENV]?.trim() || null;
+  const diagnostics = {
+    hasResendApiKey: Boolean(process.env[RESEND_API_KEY_ENV]?.trim()),
+    hasResendFromEmail: Boolean(resendFromEmail),
+    resendFromEmail,
+    missing: getMissingResendEnvVars(),
+    nodeEnv: process.env.NODE_ENV ?? "unknown",
+    vercelEnv: process.env.VERCEL_ENV ?? null,
+  };
+
+  console.info(`[resend-env:${context}]`, diagnostics);
+
+  return {
+    hasResendApiKey: diagnostics.hasResendApiKey,
+    hasResendFromEmail: diagnostics.hasResendFromEmail,
+    resendFromEmail: diagnostics.resendFromEmail,
+    missing: diagnostics.missing,
+  };
+}
