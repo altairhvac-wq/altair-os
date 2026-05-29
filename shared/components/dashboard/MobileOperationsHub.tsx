@@ -136,7 +136,7 @@ function OperationsStatusHero({
         type="button"
         onClick={() => openDashboardPanel("health")}
         aria-label="View operational health details"
-        className="admin-command-surface w-full overflow-hidden p-3 text-left transition-opacity hover:opacity-95"
+        className="admin-command-surface w-full overflow-hidden p-2.5 text-left transition-opacity hover:opacity-95"
       >
         {body}
       </button>
@@ -146,7 +146,7 @@ function OperationsStatusHero({
   return (
     <section
       aria-label="Operations status"
-      className="admin-command-surface overflow-hidden p-3"
+      className="admin-command-surface overflow-hidden p-2.5"
     >
       {body}
     </section>
@@ -185,7 +185,7 @@ function AttentionQueueRow({ item }: { item: MobileAttentionQueueItem }) {
         <button
           type="button"
           onClick={() => openDashboardPanel(item.panelId!)}
-          className={`flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors hover:opacity-90 ${styles.row}`}
+          className={`flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left transition-colors hover:opacity-90 ${styles.row}`}
         >
           {content}
         </button>
@@ -198,7 +198,7 @@ function AttentionQueueRow({ item }: { item: MobileAttentionQueueItem }) {
       <li>
         <Link
           href={item.href}
-          className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2.5 transition-colors hover:opacity-90 ${styles.row}`}
+          className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2 transition-colors hover:opacity-90 ${styles.row}`}
         >
           {content}
         </Link>
@@ -208,19 +208,28 @@ function AttentionQueueRow({ item }: { item: MobileAttentionQueueItem }) {
 
   return (
     <li
-      className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2.5 ${styles.row}`}
+      className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2 ${styles.row}`}
     >
       {content}
     </li>
   );
 }
 
-function AttentionQueueSection({ data }: { data: DashboardData }) {
-  const queue = buildMobileAttentionQueue(data);
+const ATTENTION_QUEUE_VISIBLE_LIMIT = 5;
+
+function AttentionQueueSection({
+  queue,
+}: {
+  queue: MobileAttentionQueueItem[];
+}) {
+  const { openDashboardPanel, hasPanel } = useDashboardDrilldown();
+  const visibleQueue = queue.slice(0, ATTENTION_QUEUE_VISIBLE_LIMIT);
+  const hiddenCount = queue.length - visibleQueue.length;
+  const canViewAll = hiddenCount > 0 && hasPanel("attention");
 
   return (
     <section aria-label="Attention queue" className="min-w-0">
-      <header className="mb-1.5 flex items-center justify-between gap-2">
+      <header className="mb-1 flex items-center justify-between gap-2">
         <h2 className="text-xs font-black uppercase tracking-wide text-slate-900">
           Attention queue
         </h2>
@@ -232,17 +241,29 @@ function AttentionQueueSection({ data }: { data: DashboardData }) {
       </header>
 
       {queue.length === 0 ? (
-        <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 px-3 py-2.5">
+        <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 px-3 py-2">
           <p className="text-xs font-semibold text-emerald-900">
             All clear — nothing needs action right now
           </p>
         </div>
       ) : (
-        <ul className="space-y-1">
-          {queue.map((item) => (
-            <AttentionQueueRow key={item.id} item={item} />
-          ))}
-        </ul>
+        <>
+          <ul className="space-y-1">
+            {visibleQueue.map((item) => (
+              <AttentionQueueRow key={item.id} item={item} />
+            ))}
+          </ul>
+          {canViewAll ? (
+            <button
+              type="button"
+              onClick={() => openDashboardPanel("attention")}
+              className="mt-1 flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold text-cyan-600 hover:text-cyan-700"
+            >
+              View all {queue.length} items
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          ) : null}
+        </>
       )}
     </section>
   );
@@ -275,11 +296,11 @@ function TodayCard({ operations }: { operations: DashboardData["operations"] }) 
           </Link>
         )}
       </div>
-      <div className="mt-2 grid grid-cols-3 gap-1.5">
+      <div className="mt-1.5 grid grid-cols-3 gap-1">
         {metrics.map((metric) => (
           <div
             key={metric.label}
-            className="min-w-0 rounded-lg border border-slate-100 bg-slate-50/60 px-2 py-2 text-center"
+            className="min-w-0 rounded-lg border border-slate-100 bg-slate-50/60 px-1.5 py-1.5 text-center"
           >
             <p className="text-lg font-black tabular-nums leading-none text-slate-900">
               {metric.value}
@@ -299,7 +320,7 @@ function TodayCard({ operations }: { operations: DashboardData["operations"] }) 
         type="button"
         onClick={() => openDashboardPanel("today")}
         aria-label="View today's operations breakdown"
-        className="admin-card w-full p-3 text-left transition-colors hover:bg-slate-50/50"
+        className="admin-card w-full p-2.5 text-left transition-colors hover:bg-slate-50/50"
       >
         {body}
       </button>
@@ -307,7 +328,7 @@ function TodayCard({ operations }: { operations: DashboardData["operations"] }) 
   }
 
   return (
-    <section aria-label="Today's operations" className="admin-card p-3">
+    <section aria-label="Today's operations" className="admin-card p-2.5">
       {body}
     </section>
   );
@@ -375,7 +396,7 @@ function CashCard({ data }: { data: DashboardData }) {
         type="button"
         onClick={() => openDashboardPanel("cash-flow")}
         aria-label="View cash flow breakdown"
-        className="admin-card w-full p-3 text-left transition-colors hover:bg-slate-50/50"
+        className="admin-card w-full p-2.5 text-left transition-colors hover:bg-slate-50/50"
       >
         {body}
       </button>
@@ -383,7 +404,7 @@ function CashCard({ data }: { data: DashboardData }) {
   }
 
   return (
-    <section aria-label="Cash position" className="admin-card p-3">
+    <section aria-label="Cash position" className="admin-card p-2.5">
       {body}
     </section>
   );
@@ -517,13 +538,15 @@ function SecondaryInsightsSection({
 function LimitedRoleHub({
   data,
   notificationAccess,
+  attentionQueue,
 }: {
   data: DashboardData;
   notificationAccess: NotificationAccess;
+  attentionQueue: MobileAttentionQueueItem[];
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-2.5">
-      <AttentionQueueSection data={data} />
+    <div className="flex min-w-0 flex-col gap-2">
+      <AttentionQueueSection queue={attentionQueue} />
       <TodayCard operations={data.operations} />
       <CashCard data={data} />
       <QuickActionsSection canViewBilling={data.access.canViewBilling} />
@@ -559,8 +582,14 @@ export function MobileOperationsHub({
   const { access } = data;
 
   if (!access.canViewOperationalReports) {
+    const attentionQueue = buildMobileAttentionQueue(data);
+
     return (
-      <LimitedRoleHub data={data} notificationAccess={notificationAccess} />
+      <LimitedRoleHub
+        data={data}
+        notificationAccess={notificationAccess}
+        attentionQueue={attentionQueue}
+      />
     );
   }
 
@@ -568,9 +597,9 @@ export function MobileOperationsHub({
   const heroIssues = buildMobileHeroIssues(attentionQueue);
 
   return (
-    <div className="flex min-w-0 flex-col gap-2.5">
+    <div className="flex min-w-0 flex-col gap-2">
       <OperationsStatusHero data={data} issues={heroIssues} />
-      <AttentionQueueSection data={data} />
+      <AttentionQueueSection queue={attentionQueue} />
       <TodayCard operations={data.operations} />
       <CashCard data={data} />
       <QuickActionsSection canViewBilling={access.canViewBilling} />
