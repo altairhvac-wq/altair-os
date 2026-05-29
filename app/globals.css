@@ -556,7 +556,15 @@ a[href] {
   }
 
   #invoice-document .invoice-amount-due-hero .text-3xl,
-  #invoice-document .invoice-amount-due-hero .text-4xl {
+  #invoice-document .invoice-amount-due-hero .text-4xl,
+  #invoice-document .invoice-amount-due-hero .text-5xl {
     font-weight: 700 !important;
+  }
+
+  #invoice-document .invoice-company-hero,
+  #invoice-document .invoice-identity-card,
+  #invoice-document .invoice-notes-block,
+  #invoice-document .invoice-thank-you-footer {
+    break-inside: avoid;
   }
 }

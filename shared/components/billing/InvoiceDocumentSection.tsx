@@ -1,4 +1,3 @@
-import { formatDate } from "@/shared/types/customer";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact";
 import { BillingLineItemsList } from "./BillingLineItemsList";
@@ -6,6 +5,8 @@ import { BillingSignatureBlock } from "./BillingSignatureBlock";
 import { BillingTotalsSummary } from "./BillingTotalsSummary";
 import { InvoiceAmountDueHero } from "./InvoiceAmountDueHero";
 import { InvoiceCompanyHeroHeader } from "./InvoiceCompanyHeroHeader";
+import { InvoiceIdentityCard } from "./InvoiceIdentityCard";
+import { InvoiceNotesBlock } from "./InvoiceNotesBlock";
 import { InvoiceThankYouFooter } from "./InvoiceThankYouFooter";
 
 import type { BillingSignature } from "@/shared/types/billing-signature";
@@ -19,23 +20,6 @@ type InvoiceDocumentSectionProps = {
   className?: string;
   id?: string;
 };
-
-function InvoiceIdentityMeta({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 print:text-slate-600">
-        {label}
-      </dt>
-      <dd className="mt-0.5 text-sm font-semibold text-slate-900">{value}</dd>
-    </div>
-  );
-}
 
 export function InvoiceDocumentSection({
   invoice,
@@ -56,25 +40,12 @@ export function InvoiceDocumentSection({
     >
       <InvoiceCompanyHeroHeader company={company} logoUrl={logoUrl} />
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_min(100%,320px)] lg:items-start lg:gap-8 print:mt-8 print:grid-cols-[1fr_240px] print:gap-8">
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 print:text-slate-600">
-            Invoice
-          </p>
-          <h2 className="mt-1 break-words text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl print:text-2xl">
-            {invoice.invoiceNumber}
-          </h2>
-          <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:max-w-md">
-            <InvoiceIdentityMeta
-              label="Issue date"
-              value={formatDate(invoice.issueDate)}
-            />
-            <InvoiceIdentityMeta
-              label="Due date"
-              value={formatDate(invoice.dueDate)}
-            />
-          </dl>
-        </div>
+      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_min(100%,360px)] lg:items-stretch lg:gap-8 print:mt-8 print:grid-cols-[1fr_260px] print:gap-8">
+        <InvoiceIdentityCard
+          invoiceNumber={invoice.invoiceNumber}
+          issueDate={invoice.issueDate}
+          dueDate={invoice.dueDate}
+        />
 
         <InvoiceAmountDueHero
           balanceDue={invoice.balanceDue}
@@ -85,15 +56,15 @@ export function InvoiceDocumentSection({
       </div>
 
       <div className="mt-8 border-t border-slate-200 pt-8 print:mt-8 print:pt-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 print:text-slate-600">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 print:text-slate-600">
           Bill to
         </p>
-        <div className="mt-4 rounded-xl bg-slate-50/80 px-5 py-4 ring-1 ring-slate-200/80 print:rounded-none print:bg-white print:px-0 print:py-0 print:ring-0">
-          <p className="break-words text-lg font-semibold text-slate-900 print:text-base">
+        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 px-5 py-5 ring-1 ring-slate-100 print:rounded-none print:border-0 print:bg-white print:px-0 print:py-0 print:ring-0">
+          <p className="break-words text-xl font-semibold text-slate-900 print:text-base">
             {invoice.customerName}
           </p>
           {(customerEmail || customerPhone) ? (
-            <div className="mt-3 space-y-1.5 text-sm text-slate-600">
+            <div className="mt-3 space-y-1.5 text-sm leading-relaxed text-slate-600">
               {customerEmail ? (
                 <p className="break-all">{customerEmail}</p>
               ) : null}
@@ -104,8 +75,8 @@ export function InvoiceDocumentSection({
       </div>
 
       <div className="mt-8 print:mt-8">
-        <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 print:text-slate-600">
-          Services
+        <h3 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 print:text-slate-600">
+          Services performed
         </h3>
         <div className="mt-5">
           <BillingLineItemsList
@@ -116,27 +87,24 @@ export function InvoiceDocumentSection({
           />
         </div>
 
-        <div className="mt-6 max-w-md sm:ml-auto print:mt-6 print:max-w-sm print:ml-auto">
-          <BillingTotalsSummary
-            subtotal={invoice.subtotal}
-            taxRate={invoice.taxRate}
-            taxAmount={invoice.taxAmount ?? 0}
-            total={invoice.total}
-            amountPaid={invoice.amountPaid}
-            balanceDue={invoice.balanceDue}
-            documentStyle="invoice"
-          />
+        <div className="mt-6 flex justify-end print:mt-6">
+          <div className="w-full max-w-md print:max-w-sm">
+            <BillingTotalsSummary
+              subtotal={invoice.subtotal}
+              taxRate={invoice.taxRate}
+              taxAmount={invoice.taxAmount ?? 0}
+              total={invoice.total}
+              amountPaid={invoice.amountPaid}
+              balanceDue={invoice.balanceDue}
+              documentStyle="invoice"
+            />
+          </div>
         </div>
       </div>
 
       {invoice.notes ? (
         <div className="mt-8 border-t border-slate-200 pt-8 print:mt-8 print:pt-8">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 print:text-slate-600">
-            Notes
-          </h3>
-          <p className="mt-4 break-words text-sm leading-relaxed text-slate-700">
-            {invoice.notes}
-          </p>
+          <InvoiceNotesBlock notes={invoice.notes} />
         </div>
       ) : null}
 

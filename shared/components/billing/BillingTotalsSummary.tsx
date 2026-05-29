@@ -34,6 +34,25 @@ function TotalsRow({
   );
 }
 
+function InvoiceTotalsRow({
+  label,
+  value,
+  labelClassName = "text-xs text-slate-500",
+  valueClassName = "text-xs font-medium tabular-nums text-slate-700",
+}: {
+  label: string;
+  value: string;
+  labelClassName?: string;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-4">
+      <span className={`text-right ${labelClassName}`}>{label}</span>
+      <span className={valueClassName}>{value}</span>
+    </div>
+  );
+}
+
 export function BillingTotalsSummary({
   subtotal,
   taxRate = 0,
@@ -46,15 +65,65 @@ export function BillingTotalsSummary({
   const isInvoiceStyle = documentStyle === "invoice";
   const showTax = taxRate > 0 || taxAmount > 0;
   const showPaymentSummary = amountPaid > 0 || balanceDue > 0;
-  const showBalanceInTotals = !isInvoiceStyle && balanceDue > 0;
+  const showBalanceInTotals = balanceDue > 0;
 
   const containerClass = isInvoiceStyle
     ? "rounded-xl border border-slate-200 bg-white px-5 py-4 sm:px-6 sm:py-5 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white"
     : "rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-3 sm:px-5 sm:py-4 print:break-inside-avoid print:border-slate-300 print:bg-white";
 
-  const rowClass = isInvoiceStyle
-    ? "text-sm text-slate-600"
-    : "text-sm text-slate-600";
+  const rowClass = "text-sm text-slate-600";
+
+  if (isInvoiceStyle) {
+    return (
+      <div className={containerClass}>
+        <div className="ml-auto w-full max-w-[280px] space-y-1.5 print:max-w-[240px]">
+          <InvoiceTotalsRow
+            label="Subtotal"
+            value={formatCurrency(subtotal)}
+          />
+
+          {showTax ? (
+            <InvoiceTotalsRow
+              label={`Tax${taxRate > 0 ? ` (${formatTaxRate(taxRate)}%)` : ""}`}
+              value={formatCurrency(taxAmount)}
+            />
+          ) : null}
+
+          <div className="!mt-4 grid grid-cols-[1fr_auto] items-baseline gap-x-4 border-t-2 border-slate-900 pt-4">
+            <span className="text-right text-sm font-bold uppercase tracking-[0.08em] text-slate-900">
+              Total
+            </span>
+            <span className="text-2xl font-bold tabular-nums text-slate-900 sm:text-3xl print:text-2xl">
+              {formatCurrency(total)}
+            </span>
+          </div>
+
+          {showPaymentSummary ? (
+            <div className="!mt-4 space-y-2 border-t border-slate-200 pt-4">
+              {amountPaid > 0 ? (
+                <InvoiceTotalsRow
+                  label="Paid"
+                  value={formatCurrency(amountPaid)}
+                  labelClassName="text-xs font-medium text-emerald-800 print:text-slate-700"
+                  valueClassName="text-xs font-semibold tabular-nums text-emerald-800 print:text-slate-900"
+                />
+              ) : null}
+              {showBalanceInTotals ? (
+                <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 rounded-lg bg-slate-50 px-3 py-3 ring-1 ring-slate-200/80 print:rounded-none print:border print:border-slate-400 print:bg-white print:px-0 print:py-2 print:ring-0">
+                  <span className="text-right text-sm font-bold uppercase tracking-[0.06em] text-slate-900">
+                    Balance due
+                  </span>
+                  <span className="text-xl font-bold tabular-nums text-slate-900 sm:text-2xl print:text-xl">
+                    {formatCurrency(balanceDue)}
+                  </span>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={containerClass}>
@@ -74,41 +143,15 @@ export function BillingTotalsSummary({
         </div>
       ) : null}
 
-      <div
-        className={
-          isInvoiceStyle
-            ? "mt-4 flex items-center justify-between gap-3 border-t-2 border-slate-900 pt-4"
-            : "mt-3 flex items-center justify-between gap-3 border-t border-slate-200 pt-3"
-        }
-      >
-        <span
-          className={
-            isInvoiceStyle
-              ? "text-sm font-bold uppercase tracking-[0.06em] text-slate-900"
-              : "text-sm font-semibold text-slate-700"
-          }
-        >
-          Total
-        </span>
-        <span
-          className={
-            isInvoiceStyle
-              ? "shrink-0 text-xl font-bold tabular-nums text-slate-900 sm:text-2xl"
-              : "shrink-0 text-lg font-bold tabular-nums text-slate-900 sm:text-xl"
-          }
-        >
+      <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
+        <span className="text-sm font-semibold text-slate-700">Total</span>
+        <span className="shrink-0 text-lg font-bold tabular-nums text-slate-900 sm:text-xl">
           {formatCurrency(total)}
         </span>
       </div>
 
       {showPaymentSummary ? (
-        <div
-          className={
-            isInvoiceStyle
-              ? "mt-4 space-y-2 border-t border-slate-100 pt-4"
-              : "mt-3 space-y-2 border-t border-slate-100 pt-3"
-          }
-        >
+        <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
           {amountPaid > 0 ? (
             <TotalsRow
               label="Paid"
