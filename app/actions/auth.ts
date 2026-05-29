@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { PASSWORD_RESET_SUCCESS_MESSAGE } from "@/lib/auth/constants";
+import { PASSWORD_RESET_RATE_LIMIT_MESSAGE, PASSWORD_RESET_SUCCESS_MESSAGE } from "@/lib/auth/constants";
 import { validateNewPassword } from "@/lib/auth/password";
 import {
   buildAuthCallbackUrl,
@@ -297,7 +297,14 @@ export async function requestPasswordResetAction(
       };
     }
 
-    // Do not reveal delivery/account status (rate limits, SMTP, unknown addresses).
+    if (
+      error.code === "over_email_send_rate_limit" ||
+      error.status === 429
+    ) {
+      return { error: PASSWORD_RESET_RATE_LIMIT_MESSAGE };
+    }
+
+    // Do not reveal delivery/account status (SMTP, unknown addresses, etc.).
     return { success: PASSWORD_RESET_SUCCESS_MESSAGE };
   }
 
