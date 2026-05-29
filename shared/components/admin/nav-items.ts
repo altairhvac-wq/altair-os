@@ -108,12 +108,14 @@ export const adminNavItems: NavItem[] = [
   },
 ];
 
-export const PRIMARY_MOBILE_ADMIN_NAV_HREFS = [
-  "/",
-  "/customers",
-  "/jobs",
-  "/dispatch",
+/** Two-row mobile nav: row 1 = ops hub, row 2 = billing + overflow. */
+export const PRIMARY_MOBILE_ADMIN_NAV_ROWS = [
+  ["/", "/jobs", "/dispatch", "/customers"],
+  ["/estimates", "/invoices", "/price-book"],
 ] as const;
+
+export const PRIMARY_MOBILE_ADMIN_NAV_HREFS =
+  PRIMARY_MOBILE_ADMIN_NAV_ROWS.flat();
 
 /** Left-to-right desktop tab order (workflow-first, admin items last). */
 export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
@@ -145,24 +147,22 @@ export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {
 }
 
 export function splitAdminNavItemsForMobile(context: ActiveCompanyContext): {
-  primary: NavItem[];
+  primaryRows: NavItem[][];
   secondary: NavItem[];
 } {
   const items = getAdminNavItems(context);
+  const itemsByHref = new Map(items.map((item) => [item.href, item]));
   const primaryHrefs = new Set<string>(PRIMARY_MOBILE_ADMIN_NAV_HREFS);
-  const primary: NavItem[] = [];
 
-  for (const href of PRIMARY_MOBILE_ADMIN_NAV_HREFS) {
-    const item = items.find((entry) => entry.href === href);
-
-    if (item) {
-      primary.push(item);
-    }
-  }
+  const primaryRows = PRIMARY_MOBILE_ADMIN_NAV_ROWS.map((row) =>
+    row
+      .map((href) => itemsByHref.get(href))
+      .filter((item): item is NavItem => item !== undefined),
+  );
 
   const secondary = items.filter((item) => !primaryHrefs.has(item.href));
 
-  return { primary, secondary };
+  return { primaryRows, secondary };
 }
 
 export function getOrderedAdminNavItemsForDesktop(

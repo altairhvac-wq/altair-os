@@ -28,7 +28,7 @@ function MobileNavLink({ item, active, onNavigate }: MobileNavLinkProps) {
     <Link
       href={item.href}
       onClick={onNavigate}
-      className={`flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${
+      className={`flex min-h-14 min-w-0 flex-1 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${
         active
           ? "bg-cyan-500/12 text-cyan-800 ring-1 ring-cyan-500/15"
           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
@@ -50,8 +50,9 @@ export function MobileNav({ companyContext }: MobileNavProps) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
-  const { primary, secondary } = splitAdminNavItemsForMobile(companyContext);
+  const { primaryRows, secondary } = splitAdminNavItemsForMobile(companyContext);
   const moreActive = secondary.some((item) => isActivePath(pathname, item.href));
+  const showSecondRow = primaryRows[1].length > 0 || secondary.length > 0;
 
   useEffect(() => {
     setMoreOpen(false);
@@ -91,40 +92,55 @@ export function MobileNav({ companyContext }: MobileNavProps) {
         moreOpen ? "z-50" : "z-30"
       }`}
     >
-      <ul className="flex w-full items-stretch gap-0.5 px-1 py-1.5">
-        {primary.map((item) => (
-          <li key={item.href} className="flex min-w-0 flex-1">
-            <MobileNavLink
-              item={item}
-              active={isActivePath(pathname, item.href)}
-            />
-          </li>
-        ))}
-
-        {secondary.length > 0 ? (
-          <li className="flex min-w-0 flex-1">
-            <button
-              type="button"
-              aria-expanded={moreOpen}
-              aria-haspopup="menu"
-              aria-label="More navigation"
-              onClick={() => setMoreOpen((open) => !open)}
-              className={`flex min-h-14 w-full min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${
-                moreActive || moreOpen
-                  ? "bg-cyan-500/12 text-cyan-800 ring-1 ring-cyan-500/15"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              <MoreHorizontal
-                className={`h-5 w-5 shrink-0 ${moreActive || moreOpen ? "stroke-[2.5] text-cyan-700" : ""}`}
+      <div className="flex flex-col gap-0.5 px-1 py-1.5">
+        <ul className="flex w-full items-stretch gap-0.5">
+          {primaryRows[0].map((item) => (
+            <li key={item.href} className="flex min-w-0 flex-1">
+              <MobileNavLink
+                item={item}
+                active={isActivePath(pathname, item.href)}
               />
-              <span className="w-full truncate text-center text-[11px] font-semibold leading-tight">
-                More
-              </span>
-            </button>
-          </li>
+            </li>
+          ))}
+        </ul>
+
+        {showSecondRow ? (
+          <ul className="flex w-full items-stretch gap-0.5">
+            {primaryRows[1].map((item) => (
+              <li key={item.href} className="flex min-w-0 flex-1">
+                <MobileNavLink
+                  item={item}
+                  active={isActivePath(pathname, item.href)}
+                />
+              </li>
+            ))}
+
+            {secondary.length > 0 ? (
+              <li className="flex min-w-0 flex-1">
+                <button
+                  type="button"
+                  aria-expanded={moreOpen}
+                  aria-haspopup="menu"
+                  aria-label="More navigation"
+                  onClick={() => setMoreOpen((open) => !open)}
+                  className={`flex min-h-14 w-full min-w-0 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${
+                    moreActive || moreOpen
+                      ? "bg-cyan-500/12 text-cyan-800 ring-1 ring-cyan-500/15"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  <MoreHorizontal
+                    className={`h-5 w-5 shrink-0 ${moreActive || moreOpen ? "stroke-[2.5] text-cyan-700" : ""}`}
+                  />
+                  <span className="w-full truncate text-center text-[11px] font-semibold leading-tight">
+                    More
+                  </span>
+                </button>
+              </li>
+            ) : null}
+          </ul>
         ) : null}
-      </ul>
+      </div>
 
       {moreOpen && secondary.length > 0 ? (
         <>
