@@ -1,16 +1,27 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
+import { resolveAuthCallbackDestination } from "@/lib/auth/post-auth";
 import type { Database } from "@/lib/database/types";
-import { resolvePostLoginRedirect, sanitizeNextPath } from "@/lib/auth/redirects";
-import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
+  const origin = requestUrl.origin;
   const code = requestUrl.searchParams.get("code");
   const nextParam = requestUrl.searchParams.get("next");
-  const origin = requestUrl.origin;
+  const redirectToParam = requestUrl.searchParams.get("redirect_to");
+  const typeParam = requestUrl.searchParams.get("type");
+  const errorParam = requestUrl.searchParams.get("error");
+  const errorDescription = requestUrl.searchParams.get("error_description");
+
+  if (errorParam) {
+    console.error("[auth/callback] provider error:", {
+      error: errorParam,
+      description: errorDescription,
+    });
+    return NextResponse.redirect(`${origin}/login?error=auth_callback`);
+  }
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login?error=auth_callback`);
@@ -39,20 +50,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=auth_callback`);
   }
 
-  const companyContext = await getActiveCompanyContext();
-
-  if (!companyContext) {
-    const setupUrl = new URL("/setup", origin);
-    const safeNext = sanitizeNextPath(nextParam);
-    if (safeNext) {
-      setupUrl.searchParams.set("next", safeNext);
-    }
-    return NextResponse.redirect(setupUrl);
-  }
-
-  const destination = resolvePostLoginRedirect(
-    companyContext,
-    nextParam ?? requestUrl.searchParams.get("redirect_to"),
+  const destination = await resolveAuthCallbackDestination(
+    nextParam,
+    redirectToParam,
+    typeParam,
   );
 
   return NextResponse.redirect(`${origin}${destination}`);

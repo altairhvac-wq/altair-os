@@ -2,6 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import {
+  PASSWORD_RESET_SUCCESS_MESSAGE,
+  RESET_PASSWORD_PATH,
+} from "@/lib/auth/constants";
+import { validateNewPassword } from "@/lib/auth/password";
+import { buildAuthCallbackUrl, getRequestOrigin } from "@/lib/auth/request-origin";
 import { resolvePostLoginRedirect } from "@/lib/auth/redirects";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -98,6 +104,11 @@ export async function signupAction(
   }
 
   const supabase = await createClient();
+  const origin = await getRequestOrigin();
+  const emailRedirectTo = origin
+    ? buildAuthCallbackUrl(origin)
+    : undefined;
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -106,6 +117,7 @@ export async function signupAction(
         full_name: fullName,
         company_name: companyName,
       },
+      emailRedirectTo,
     },
   });
 
@@ -198,4 +210,74 @@ export async function logoutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");
+}
+
+export async function requestPasswordResetAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const email = String(formData.get("email") ?? "").trim();
+
+  if (!email) {
+    return { error: "Email is required." };
+  }
+
+  const origin = await getRequestOrigin();
+
+  if (!origin) {
+    console.error("[requestPasswordResetAction] missing request origin for redirect URL");
+    return {
+      error: "Password reset is temporarily unavailable. Please try again later.",
+    };
+  }
+
+  const supabase = await createClient();
+  const redirectTo = buildAuthCallbackUrl(origin, RESET_PASSWORD_PATH);
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  });
+
+  if (error) {
+    console.error("[requestPasswordResetAction] resetPasswordForEmail failed:", {
+      message: error.message,
+      code: error.code,
+    });
+    return {
+      error: "Could not start password reset. Please try again in a moment.",
+    };
+  }
+
+  return { success: PASSWORD_RESET_SUCCESS_MESSAGE };
+}
+
+export async function updatePasswordAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+  const next = String(formData.get("next") ?? "").trim() || null;
+
+  const validationError = validateNewPassword(password, confirmPassword);
+
+  if (validationError) {
+    return { error: validationError };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login?error=auth_callback");
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return { error: mapAuthError(error) };
+  }
+
+  return redirectAfterAuth(next);
 }

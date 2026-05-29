@@ -8,7 +8,7 @@ import {
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getSupabaseEnv } from "./env";
 
-const AUTH_ROUTES = ["/login", "/signup"];
+const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
 const AUTH_CALLBACK_ROUTE = "/auth/callback";
 const ESTIMATE_APPROVAL_ROUTE_PREFIX = "/estimate-approval";
 

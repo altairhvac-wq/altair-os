@@ -6,7 +6,13 @@ import {
   canAccessCompanySettings,
 } from "@/lib/database/access-control";
 
-const AUTH_PATH_PREFIXES = ["/login", "/signup", "/auth"] as const;
+const AUTH_PATH_PREFIXES = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/auth",
+] as const;
 
 const ALLOWED_NEXT_PATH_PREFIXES = [
   "/",
@@ -29,6 +35,7 @@ const ALLOWED_NEXT_PATH_PREFIXES = [
   "/tech/receipts",
   "/tech/notifications",
   "/setup",
+  "/reset-password",
 ] as const;
 
 function isAuthPath(path: string): boolean {

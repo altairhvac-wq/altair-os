@@ -70,6 +70,10 @@ function LoginFormFields() {
           />
         </AuthField>
 
+        <div className="flex justify-end">
+          <AuthLink href="/forgot-password">Forgot password?</AuthLink>
+        </div>
+
         <div className="pt-1">
           <AuthSubmitButton pending={pending}>Sign in</AuthSubmitButton>
         </div>
