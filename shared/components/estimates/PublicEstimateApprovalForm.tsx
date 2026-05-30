@@ -63,24 +63,21 @@ export function PublicEstimateApprovalForm({
     <form
       id="estimate-approval-form"
       onSubmit={handleSubmit}
-      className="min-w-0 rounded-lg border border-teal-200 bg-teal-50/40 p-3"
+      className="min-w-0"
     >
       <button
         type="submit"
         disabled={isPending}
-        className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-teal-800 disabled:opacity-60"
+        className="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-teal-800 disabled:opacity-60"
       >
-        {isPending ? "Submitting…" : "Approve & Sign Estimate"}
+        {isPending ? "Submitting…" : "Approve Estimate"}
       </button>
-      <p className="mt-2 text-center text-[11px] leading-snug text-slate-600">
-        Review &amp; sign below to accept this estimate.
-      </p>
 
-      <details className="group mt-3 rounded-lg border border-slate-200 bg-white">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-xs font-semibold text-slate-700 marker:content-none [&::-webkit-details-marker]:hidden">
-          Signature details
+      <details className="group mt-2 rounded-lg border border-slate-200 bg-white">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-xs font-semibold text-slate-700 marker:content-none [&::-webkit-details-marker]:hidden">
+          Signature &amp; authorization
           <span className="text-[10px] font-medium text-slate-500 group-open:hidden">
-            Tap to expand
+            Required to approve
           </span>
         </summary>
         <div className="space-y-3 border-t border-slate-100 px-3 pb-3 pt-3">

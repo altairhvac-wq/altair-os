@@ -26,7 +26,7 @@ export function PublicEstimateApprovalDocument({
       showSignature={false}
       showFooter
       customerSectionLabel="Prepared for"
-      showApprovalGuidance
+      showApprovalGuidance={false}
       afterCustomer={afterCustomer}
       layoutVariant="public"
     />

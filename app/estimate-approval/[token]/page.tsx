@@ -193,7 +193,7 @@ function PublicApprovalShell({
   companyName?: string;
 }) {
   return (
-    <main className="min-h-full overflow-x-hidden bg-slate-50 px-3 py-4 sm:px-6 sm:py-8">
+    <main className="min-h-full overflow-x-hidden bg-slate-50 px-3 py-2 sm:px-6 sm:py-8">
       <div className="mx-auto w-full min-w-0 max-w-lg sm:max-w-2xl">
         {children}
       </div>

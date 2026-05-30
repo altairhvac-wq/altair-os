@@ -10,6 +10,8 @@ type BillingTotalsSummaryProps = {
   amountPaid?: number;
   balanceDue?: number;
   documentStyle?: BillingDocumentStyle;
+  /** Hide the total row when the amount is already shown above the fold. */
+  hideTotal?: boolean;
 };
 
 function TotalsRow({
@@ -60,6 +62,7 @@ export function BillingTotalsSummary({
   amountPaid = 0,
   balanceDue = 0,
   documentStyle = "default",
+  hideTotal = false,
 }: BillingTotalsSummaryProps) {
   const isInvoiceStyle = documentStyle === "invoice";
   const isEstimateStyle = documentStyle === "estimate";
@@ -146,12 +149,14 @@ export function BillingTotalsSummary({
         </div>
       ) : null}
 
-      <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
-        <span className="text-sm font-semibold text-slate-700">Total</span>
-        <span className="shrink-0 text-lg font-bold tabular-nums text-slate-900 sm:text-xl">
-          {formatCurrency(total)}
-        </span>
-      </div>
+      {!hideTotal ? (
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
+          <span className="text-sm font-semibold text-slate-700">Total</span>
+          <span className="shrink-0 text-lg font-bold tabular-nums text-slate-900 sm:text-xl">
+            {formatCurrency(total)}
+          </span>
+        </div>
+      ) : null}
 
       {showPaymentSummary ? (
         <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
