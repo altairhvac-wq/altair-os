@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Calendar, Pencil, Truck } from "lucide-react";
 import type { JobDetail } from "@/shared/types/job";
+import {
+  type JobEstimateSummary,
+  type JobInvoiceSummary,
+} from "@/shared/lib/job-next-business-action";
 import { shouldAcceptServerWorkflowStatus } from "@/shared/types/job-workflow";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
@@ -14,6 +18,12 @@ type JobDetailHeaderWorkflowProps = {
   scheduledLabel: string;
   canUpdateStatus: boolean;
   canEditJob: boolean;
+  canCreateEstimate?: boolean;
+  canViewBilling?: boolean;
+  billingContext?: {
+    estimates: JobEstimateSummary[];
+    invoices: JobInvoiceSummary[];
+  };
   onEdit: () => void;
 };
 
@@ -22,6 +32,9 @@ export function JobDetailHeaderWorkflow({
   scheduledLabel,
   canUpdateStatus,
   canEditJob,
+  canCreateEstimate = false,
+  canViewBilling = false,
+  billingContext,
   onEdit,
 }: JobDetailHeaderWorkflowProps) {
   const [status, setStatus] = useState(job.status);
@@ -79,6 +92,11 @@ export function JobDetailHeaderWorkflow({
           canUpdateStatus={canUpdateStatus}
           canCorrectStatus={canEditJob}
           canReopenJob={canEditJob}
+          businessContext={billingContext}
+          businessActionOptions={{
+            canCreateEstimate,
+            canViewBilling,
+          }}
           reopenSnapshot={{
             workStartedAt: job.workStartedAt,
             arrivedAt: job.arrivedAt,

@@ -17,6 +17,10 @@ import {
 } from "lucide-react";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
 import { buildGoogleMapsDirectionsUrl, hasCompleteServiceAddress } from "@/shared/lib/maps";
+import {
+  type JobEstimateSummary,
+  type JobInvoiceSummary,
+} from "@/shared/lib/job-next-business-action";
 import type { JobStatus } from "@/shared/types/job";
 import {
   formatJobPriority,
@@ -44,6 +48,11 @@ type TechnicianJobCardProps = {
   serviceItems: ServiceItem[];
   defaultTaxRate: number;
   canCreateEstimate: boolean;
+  canViewBilling?: boolean;
+  billingContext?: {
+    estimates: JobEstimateSummary[];
+    invoices: JobInvoiceSummary[];
+  };
   canManageTime?: boolean;
   defaultExpanded?: boolean;
   emphasized?: boolean;
@@ -69,6 +78,8 @@ export function TechnicianJobCard({
   serviceItems,
   defaultTaxRate,
   canCreateEstimate,
+  canViewBilling = false,
+  billingContext,
   canManageTime = false,
   defaultExpanded = true,
   emphasized = false,
@@ -125,6 +136,9 @@ export function TechnicianJobCard({
     canCreateEstimate &&
     Boolean(job.customerId?.trim()) &&
     getCreateEstimateJobBlockReason(status) === null;
+  const useBillingGuidance = Boolean(billingContext);
+  const showLegacyEstimateButton =
+    showCreateEstimate && !useBillingGuidance;
 
   const isActiveDeckJob = deckBadge === "active";
 
@@ -141,6 +155,14 @@ export function TechnicianJobCard({
       layout="stack"
       showMobileHint={false}
       competingSheetActive={activeSheet !== null}
+      businessContext={billingContext}
+      businessActionOptions={{
+        canCreateEstimate: showCreateEstimate,
+        canViewBilling,
+      }}
+      onFieldEstimateClick={
+        showCreateEstimate ? () => setActiveSheet("estimate") : undefined
+      }
       onCompleteSheetOpenChange={setCompleteSheetOpen}
       onStatusUpdated={handleStatusUpdated}
     />
@@ -148,9 +170,9 @@ export function TechnicianJobCard({
 
   const secondaryActionsRow =
     isActive &&
-    (showCreateEstimate || hasPhone || hasEmail || hasMaps) ? (
+    (showLegacyEstimateButton || hasPhone || hasEmail || hasMaps) ? (
       <div className="flex gap-1.5">
-        {showCreateEstimate ? (
+        {showLegacyEstimateButton ? (
           <button
             type="button"
             disabled={fieldActionsDisabled}

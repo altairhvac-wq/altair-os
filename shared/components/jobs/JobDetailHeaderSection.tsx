@@ -4,6 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { updateJobAction } from "@/app/actions/jobs";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import type {
+  JobEstimateSummary,
+  JobInvoiceSummary,
+} from "@/shared/lib/job-next-business-action";
 import type { Customer } from "@/shared/types/customer";
 import type { JobDetail, JobFormData } from "@/shared/types/job";
 import { JobDetailHeaderWorkflow } from "./JobDetailHeaderWorkflow";
@@ -15,6 +19,12 @@ type JobDetailHeaderSectionProps = {
   scheduledLabel: string;
   canUpdateStatus: boolean;
   canEditJob: boolean;
+  canCreateEstimate?: boolean;
+  canViewBilling?: boolean;
+  billingContext?: {
+    estimates: JobEstimateSummary[];
+    invoices: JobInvoiceSummary[];
+  };
 };
 
 export function JobDetailHeaderSection({
@@ -23,6 +33,9 @@ export function JobDetailHeaderSection({
   scheduledLabel,
   canUpdateStatus,
   canEditJob,
+  canCreateEstimate,
+  canViewBilling,
+  billingContext,
 }: JobDetailHeaderSectionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -90,6 +103,9 @@ export function JobDetailHeaderSection({
       scheduledLabel={scheduledLabel}
       canUpdateStatus={canUpdateStatus}
       canEditJob={canEditJob}
+      canCreateEstimate={canCreateEstimate}
+      canViewBilling={canViewBilling}
+      billingContext={billingContext}
       onEdit={handleEditClick}
     />
   );

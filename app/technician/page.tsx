@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
+import { listJobBillingSummariesForJobs } from "@/lib/database/queries/job-billing-summaries";
 import { listAssignedJobsForTechnician } from "@/lib/database/queries/technician-jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import {
@@ -19,6 +21,7 @@ export default async function TechnicianPage() {
   const canCreateEstimate =
     context.permissions.manageBilling ||
     context.permissions.createFieldEstimates;
+  const canViewBillingData = canViewBilling(context);
   const billingDefaults = getCompanyBillingDefaultsFromRow(context.company);
 
   const [jobs, timeState, serviceItems] = await Promise.all([
@@ -29,6 +32,12 @@ export default async function TechnicianPage() {
     listActiveServiceItems(context.company.id),
   ]);
 
+  const billingSummaries = await listJobBillingSummariesForJobs(
+    context.company.id,
+    jobs.map((job) => job.id),
+    { includeInvoices: canViewBillingData },
+  );
+
   return (
     <TechnicianAssignedJobsView
       jobs={jobs}
@@ -36,6 +45,8 @@ export default async function TechnicianPage() {
       serviceItems={serviceItems}
       canManageTime={canManageTime}
       canCreateEstimate={canCreateEstimate}
+      canViewBilling={canViewBillingData}
+      billingSummaries={billingSummaries}
       defaultTaxRate={billingDefaults.defaultTaxRate}
       companyTimeZone={context.company.timezone}
     />

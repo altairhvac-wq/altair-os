@@ -11,6 +11,7 @@ import {
   formatTechnicianLastUpdated,
   TECHNICIAN_PULL_REFRESH_EVENT,
 } from "@/shared/lib/technician-refresh";
+import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
 import type { JobStatus } from "@/shared/types/job";
 import type { TechnicianJob } from "@/shared/types/technician";
 import type {
@@ -27,6 +28,8 @@ type TechnicianAssignedJobsViewProps = {
   serviceItems: ServiceItem[];
   canManageTime: boolean;
   canCreateEstimate: boolean;
+  canViewBilling: boolean;
+  billingSummaries: JobBillingSummariesByJobId;
   defaultTaxRate: number;
   companyTimeZone: string;
 };
@@ -161,6 +164,8 @@ export function TechnicianAssignedJobsView({
   serviceItems,
   canManageTime,
   canCreateEstimate,
+  canViewBilling,
+  billingSummaries,
   defaultTaxRate,
   companyTimeZone,
 }: TechnicianAssignedJobsViewProps) {
@@ -265,6 +270,8 @@ export function TechnicianAssignedJobsView({
         timeState={timeState}
         serviceItems={serviceItems}
         canCreateEstimate={canCreateEstimate}
+        canViewBilling={canViewBilling}
+        billingSummaries={billingSummaries}
         canManageTime={canManageTime}
         defaultTaxRate={defaultTaxRate}
         onTimeStateChange={setTimeState}

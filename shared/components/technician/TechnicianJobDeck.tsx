@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
 import type { JobStatus } from "@/shared/types/job";
 import type { TechnicianJob } from "@/shared/types/technician";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
@@ -17,6 +18,8 @@ type TechnicianJobDeckProps = {
   timeState: TechnicianTimeStateSnapshot;
   serviceItems: ServiceItem[];
   canCreateEstimate: boolean;
+  canViewBilling: boolean;
+  billingSummaries: JobBillingSummariesByJobId;
   canManageTime: boolean;
   defaultTaxRate: number;
   onTimeStateChange: (state: TechnicianTimeStateSnapshot) => void;
@@ -84,6 +87,8 @@ export function TechnicianJobDeck({
   timeState,
   serviceItems,
   canCreateEstimate,
+  canViewBilling,
+  billingSummaries,
   canManageTime,
   defaultTaxRate,
   onTimeStateChange,
@@ -287,6 +292,11 @@ export function TechnicianJobDeck({
             timeState={timeState}
             serviceItems={serviceItems}
             canCreateEstimate={canCreateEstimate}
+            canViewBilling={canViewBilling}
+            billingContext={{
+              estimates: billingSummaries.estimatesByJobId[activeJob.id] ?? [],
+              invoices: billingSummaries.invoicesByJobId[activeJob.id] ?? [],
+            }}
             canManageTime={canManageTime}
             defaultTaxRate={defaultTaxRate}
             onTimeStateChange={onTimeStateChange}

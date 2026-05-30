@@ -14,6 +14,7 @@ import { listJobMaterialsForJob } from "@/lib/database/queries/job-materials";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment";
 import { getJobById } from "@/lib/database/queries/jobs";
+import { listJobBillingSummariesForJob } from "@/lib/database/queries/job-billing-summaries";
 import { listTechnicians } from "@/lib/database/queries/technicians";
 import { getJobProfitabilitySnapshot } from "@/lib/database/services/job-profitability";
 import { getJobOperationalInconsistencies } from "@/lib/database/services/reports/operational-inconsistencies-report";
@@ -75,7 +76,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       : Promise.resolve([]),
   ]);
 
-  const [profitability, operationalInconsistencies] = await Promise.all([
+  const [profitability, operationalInconsistencies, billingContext] =
+    await Promise.all([
     canViewFinancials
       ? getJobProfitabilitySnapshot(companyContext.company.id, jobId, {
           expenses,
@@ -85,6 +87,11 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     access.canViewOperationalReports
       ? getJobOperationalInconsistencies(companyContext.company.id, job)
       : Promise.resolve([]),
+    canViewBillingData || companyContext.permissions.createFieldEstimates
+      ? listJobBillingSummariesForJob(companyContext.company.id, jobId, {
+          includeInvoices: canViewBillingData,
+        })
+      : Promise.resolve(null),
   ]);
 
   return (
@@ -116,6 +123,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       canViewBilling={canViewBillingData}
       canManageCustomers={access.canManageCustomers}
       operationalInconsistencies={operationalInconsistencies}
+      billingContext={billingContext ?? undefined}
     />
   );
 }

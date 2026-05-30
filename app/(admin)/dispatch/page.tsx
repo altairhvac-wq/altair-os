@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
-import { getCompanyAccessScope, canAccessOperationalJobsArea } from "@/lib/database/access-control";
+import { getCompanyAccessScope, canAccessOperationalJobsArea, canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
+import { listJobBillingSummariesForJobs } from "@/lib/database/queries/job-billing-summaries";
 import { listTechnicians } from "@/lib/database/queries/technicians";
 import { DispatchPageView } from "@/shared/components/dispatch/DispatchPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
@@ -46,6 +47,13 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
   const technicians = access.canViewTechnicianRoster
     ? await listTechnicians(companyContext.company.id, companyContext, jobs)
     : [];
+  const canViewBillingData = canViewBilling(companyContext);
+  const billingSummaries = canViewBillingData
+    ? await listJobBillingSummariesForJobs(
+        companyContext.company.id,
+        jobs.map((job) => job.id),
+      )
+    : { estimatesByJobId: {}, invoicesByJobId: {} };
 
   return (
     <DispatchPageView
@@ -53,6 +61,8 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
       technicians={technicians}
       canDispatchJobs={companyContext.permissions.dispatchJobs}
       canViewAssignedJobs={companyContext.permissions.viewAssignedJobs}
+      canViewBilling={canViewBillingData}
+      billingSummaries={billingSummaries}
       currentUserId={companyContext.user.id}
       dispatchPageFocus={pageFocus}
     />

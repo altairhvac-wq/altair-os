@@ -15,6 +15,10 @@ import {
 } from "@/shared/types/dispatch";
 import { JobCustomerQuickActions } from "@/shared/components/jobs/JobCustomerQuickActions";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
+import type {
+  JobEstimateSummary,
+  JobInvoiceSummary,
+} from "@/shared/lib/job-next-business-action";
 import { DispatchPriorityBadge } from "./DispatchPriorityBadge";
 import { DispatchStatusBadge } from "./DispatchStatusBadge";
 
@@ -24,6 +28,11 @@ type DispatchDetailsPanelProps = {
   technicians: Technician[];
   canDispatchJobs: boolean;
   canUpdateJobWorkflow: boolean;
+  canViewBilling?: boolean;
+  billingContext?: {
+    estimates: JobEstimateSummary[];
+    invoices: JobInvoiceSummary[];
+  };
   assignError: string | null;
   assignSuccess?: string | null;
   isAssignmentBusy: boolean;
@@ -40,6 +49,8 @@ export function DispatchDetailsPanel({
   technicians,
   canDispatchJobs,
   canUpdateJobWorkflow,
+  canViewBilling = false,
+  billingContext,
   assignError,
   assignSuccess = null,
   isAssignmentBusy,
@@ -143,6 +154,11 @@ export function DispatchDetailsPanel({
                   canUpdateStatus={canUpdateJobWorkflow}
                   canCorrectStatus={canDispatchJobs}
                   canReopenJob={canDispatchJobs}
+                  businessContext={billingContext}
+                  businessActionOptions={{
+                    canCreateEstimate: canViewBilling,
+                    canViewBilling,
+                  }}
                   reopenSnapshot={{
                     workStartedAt: job.workStartedAt,
                     arrivedAt: job.arrivedAt,

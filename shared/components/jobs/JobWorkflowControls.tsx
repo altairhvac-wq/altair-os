@@ -1,7 +1,13 @@
 "use client";
 
 import { CheckCircle2, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  getJobNextBusinessAction,
+  type JobBusinessActionOptions,
+  type JobEstimateSummary,
+  type JobInvoiceSummary,
+} from "@/shared/lib/job-next-business-action";
 import type { JobStatus } from "@/shared/types/job";
 import { formatJobStatus } from "@/shared/types/job";
 import {
@@ -9,6 +15,7 @@ import {
   shouldAcceptServerWorkflowStatus,
   type ReopenTargetJobSnapshot,
 } from "@/shared/types/job-workflow";
+import { JobBusinessActionGuide } from "./JobBusinessActionGuide";
 import { JobWorkflowActions } from "./JobWorkflowActions";
 import { JobStatusCorrectionControl } from "./JobStatusCorrectionControl";
 import { ReopenCompletedJobControl } from "./ReopenCompletedJobControl";
@@ -29,6 +36,12 @@ type JobWorkflowControlsProps = {
   layout?: "header" | "stack";
   showMobileHint?: boolean;
   competingSheetActive?: boolean;
+  businessContext?: {
+    estimates: JobEstimateSummary[];
+    invoices: JobInvoiceSummary[];
+  };
+  businessActionOptions?: JobBusinessActionOptions;
+  onFieldEstimateClick?: () => void;
   onCompleteSheetOpenChange?: (open: boolean) => void;
   onStatusUpdated?: (status: JobStatus) => void;
 };
@@ -80,6 +93,9 @@ export function JobWorkflowControls({
   layout = "header",
   showMobileHint = true,
   competingSheetActive = false,
+  businessContext,
+  businessActionOptions,
+  onFieldEstimateClick,
   onCompleteSheetOpenChange,
   onStatusUpdated,
 }: JobWorkflowControlsProps) {
@@ -99,12 +115,43 @@ export function JobWorkflowControls({
   }
 
   const isCompact = layout === "stack";
+  const businessAction = useMemo(() => {
+    if (!businessContext) {
+      return null;
+    }
+
+    return getJobNextBusinessAction(
+      {
+        jobId,
+        customerId,
+        jobStatus: status,
+        estimates: businessContext.estimates,
+        invoices: businessContext.invoices,
+      },
+      businessActionOptions,
+    );
+  }, [
+    businessActionOptions,
+    businessContext,
+    customerId,
+    jobId,
+    status,
+  ]);
+  const businessGuide = businessAction ? (
+    <JobBusinessActionGuide
+      action={businessAction}
+      layout={isCompact ? "compact" : "default"}
+      disabled={competingSheetActive}
+      onFieldEstimateClick={onFieldEstimateClick}
+    />
+  ) : null;
 
   if (isTerminalJobStatus(status)) {
     if (status === "completed") {
       return (
         <div className="space-y-3">
           <JobWorkflowTerminalState status={status} compact={isCompact} />
+          {businessGuide}
           <ReopenCompletedJobControl
             jobId={jobId}
             status={status}
@@ -138,6 +185,7 @@ export function JobWorkflowControls({
         onCompleteSheetOpenChange={onCompleteSheetOpenChange}
         onStatusUpdated={handleStatusUpdated}
       />
+      {businessGuide}
       <StartRouteButton
         jobId={jobId}
         status={status}

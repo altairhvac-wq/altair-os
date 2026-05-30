@@ -12,6 +12,7 @@ import {
   type Technician,
 } from "@/shared/types/dispatch";
 import type { DispatchPageFocusState } from "@/shared/lib/dispatch-page-focus";
+import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
 import { canUpdateJobWorkflowStatus } from "@/lib/database/access-control";
 import { useIsBelowLg } from "@/shared/components/mobile/use-mobile-viewport";
 import { DispatchBoard } from "./DispatchBoard";
@@ -35,6 +36,8 @@ type DispatchPageViewProps = {
   technicians: Technician[];
   canDispatchJobs: boolean;
   canViewAssignedJobs: boolean;
+  canViewBilling: boolean;
+  billingSummaries: JobBillingSummariesByJobId;
   currentUserId: string;
   dispatchPageFocus?: DispatchPageFocusState;
 };
@@ -44,6 +47,8 @@ export function DispatchPageView({
   technicians,
   canDispatchJobs,
   canViewAssignedJobs,
+  canViewBilling,
+  billingSummaries,
   currentUserId,
   dispatchPageFocus,
 }: DispatchPageViewProps) {
@@ -467,6 +472,13 @@ export function DispatchPageView({
               technicians={technicians}
               canDispatchJobs={canDispatchJobs}
               canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
+              canViewBilling={canViewBilling}
+              billingContext={{
+                estimates:
+                  billingSummaries.estimatesByJobId[selectedJob.id] ?? [],
+                invoices:
+                  billingSummaries.invoicesByJobId[selectedJob.id] ?? [],
+              }}
               assignError={assignError}
               assignSuccess={assignSuccess}
               isAssignmentBusy={isAssignmentBusyForSelected}
@@ -532,6 +544,13 @@ export function DispatchPageView({
               technicians={technicians}
               canDispatchJobs={canDispatchJobs}
               canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
+              canViewBilling={canViewBilling}
+              billingContext={{
+                estimates:
+                  billingSummaries.estimatesByJobId[selectedJob.id] ?? [],
+                invoices:
+                  billingSummaries.invoicesByJobId[selectedJob.id] ?? [],
+              }}
               assignError={assignError}
               assignSuccess={assignSuccess}
               isAssignmentBusy={isAssignmentBusyForSelected}

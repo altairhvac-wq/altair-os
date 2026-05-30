@@ -42,6 +42,10 @@ import {
   adminCardSectionClass,
   adminPageStackClass,
 } from "@/shared/lib/admin-density";
+import type {
+  JobEstimateSummary,
+  JobInvoiceSummary,
+} from "@/shared/lib/job-next-business-action";
 
 type JobDetailPageViewProps = {
   job: JobDetail;
@@ -62,6 +66,10 @@ type JobDetailPageViewProps = {
   canViewBilling: boolean;
   canManageCustomers: boolean;
   operationalInconsistencies?: OperationalInconsistencyEntry[];
+  billingContext?: {
+    estimates: JobEstimateSummary[];
+    invoices: JobInvoiceSummary[];
+  };
 };
 
 type ContentSectionProps = {
@@ -102,6 +110,7 @@ export function JobDetailPageView({
   canViewBilling,
   canManageCustomers,
   operationalInconsistencies = [],
+  billingContext,
 }: JobDetailPageViewProps) {
   const customerEmail = job.customerEmail?.trim();
   const customerPhone = job.customerPhone?.trim();
@@ -128,6 +137,9 @@ export function JobDetailPageView({
             scheduledLabel={scheduledLabel}
             canUpdateStatus={canUpdateStatus}
             canEditJob={canEditJob}
+            canCreateEstimate={canViewBilling}
+            canViewBilling={canViewBilling}
+            billingContext={billingContext}
           />
         </div>
 
