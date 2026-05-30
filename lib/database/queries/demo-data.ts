@@ -132,7 +132,7 @@ export async function markCompanyDemoDataSeeded(
       code: error.code,
       message: error.message,
     });
-    return { error: mapDemoDataError(error, "seed") };
+    return { error: mapDemoDataError(error, "seed", { accessVerified: true }) };
   }
 
   return { error: null };
@@ -153,7 +153,7 @@ export async function clearCompanyDemoData(
       code: error.code,
       message: error.message,
     });
-    return { error: mapDemoDataError(error, "clear") };
+    return { error: mapDemoDataError(error, "clear", { accessVerified: true }) };
   }
 
   return { error: null };

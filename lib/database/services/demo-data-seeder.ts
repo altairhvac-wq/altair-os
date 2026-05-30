@@ -71,7 +71,7 @@ async function insertRow(
     });
     return {
       id: null,
-      error: error ? mapDemoDataError(error, "seed") : `Failed to insert ${table}.`,
+      error: error ? mapDemoDataError(error, "seed", { accessVerified: true }) : `Failed to insert ${table}.`,
     };
   }
 

@@ -21,6 +21,23 @@ type DemoDataContextResult =
   | { error: string }
   | { context: ActiveCompanyContext };
 
+async function resolveDemoDataManagementContext(
+  companyId: string,
+): Promise<ActiveCompanyContext | null> {
+  const trimmedCompanyId = companyId.trim();
+  const activeContext = await getActiveCompanyContext();
+
+  if (
+    activeContext &&
+    activeContext.company.id.trim().toLowerCase() ===
+      trimmedCompanyId.toLowerCase()
+  ) {
+    return activeContext;
+  }
+
+  return getActiveCompanyContext({ companyId: trimmedCompanyId });
+}
+
 async function requireDemoDataManagementContext(
   companyId: string,
   action: "seed" | "clear" = "seed",
@@ -31,7 +48,7 @@ async function requireDemoDataManagementContext(
     return { error: "Company workspace is required." as const };
   }
 
-  const context = await getActiveCompanyContext({ companyId: trimmedCompanyId });
+  const context = await resolveDemoDataManagementContext(trimmedCompanyId);
 
   if (!context) {
     return { error: NO_ACTIVE_COMPANY_MESSAGE };
@@ -43,6 +60,14 @@ async function requireDemoDataManagementContext(
     action,
   );
   if (accessError) {
+    console.error("[requireDemoDataManagementContext] demo data access denied", {
+      userId: context.user.id,
+      requestedCompanyId: trimmedCompanyId,
+      activeCompanyId: context.company.id,
+      membershipCompanyId: context.membership.company_id,
+      membershipRole: context.membership.role,
+      membershipStatus: context.membership.status,
+    });
     return { error: accessError };
   }
 

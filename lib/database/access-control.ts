@@ -48,11 +48,18 @@ export function canViewTechnicianRoster(context: ActiveCompanyContext): boolean 
   return getCompanyAccessScope(context).canViewTechnicianRoster;
 }
 
+function normalizeCompanyIdForScope(companyId: string): string {
+  return companyId.trim().toLowerCase();
+}
+
 export function assertMatchingCompanyScope(
   context: ActiveCompanyContext,
   companyId: string,
 ): string | null {
-  if (context.company.id !== companyId) {
+  if (
+    normalizeCompanyIdForScope(context.company.id) !==
+    normalizeCompanyIdForScope(companyId)
+  ) {
     return "Company workspace mismatch.";
   }
 
@@ -112,8 +119,9 @@ const DEMO_DATA_MANAGER_ROLES = ["owner", "admin"] as const satisfies readonly C
 export function canManageDemoData(context: ActiveCompanyContext): boolean {
   return (
     context.membership.status === "active" &&
-    context.membership.company_id === context.company.id &&
-    hasCompanyRole(context.role, DEMO_DATA_MANAGER_ROLES)
+    normalizeCompanyIdForScope(context.membership.company_id) ===
+      normalizeCompanyIdForScope(context.company.id) &&
+    hasCompanyRole(context.membership.role, DEMO_DATA_MANAGER_ROLES)
   );
 }
 
@@ -133,11 +141,14 @@ export function assertDemoDataManagementAccess(
     return "Your company membership is not active.";
   }
 
-  if (context.membership.company_id !== context.company.id) {
+  if (
+    normalizeCompanyIdForScope(context.membership.company_id) !==
+    normalizeCompanyIdForScope(context.company.id)
+  ) {
     return "Company workspace mismatch.";
   }
 
-  if (!hasCompanyRole(context.role, DEMO_DATA_MANAGER_ROLES)) {
+  if (!hasCompanyRole(context.membership.role, DEMO_DATA_MANAGER_ROLES)) {
     return action === "clear"
       ? "Only company owners and admins can clear demo data."
       : "Only company owners and admins can load demo data.";

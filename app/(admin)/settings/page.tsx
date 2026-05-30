@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import {
   canAccessCompanySettings,
   canAccessSystemCheck,
+  canManageDemoData,
   canManageTeamMembers,
 } from "@/lib/database/access-control";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
@@ -49,7 +50,9 @@ export default async function SettingsPage() {
         ? listPendingInvitesForUserEmail(emailResolution.email)
         : Promise.resolve({ invites: [], error: undefined }),
       getOnboardingSnapshot(companyContext.company.id, companyContext),
-      getDemoDataStatus(companyContext.company.id, companyContext),
+      canManageDemoData(companyContext)
+        ? getDemoDataStatus(companyContext.company.id, companyContext)
+        : Promise.resolve(null),
     ]);
 
   const pendingInvites = pendingInvitesResult.invites.filter(
@@ -106,7 +109,7 @@ export default async function SettingsPage() {
         showBillingDefaultsSetupHint={
           !hasSavedCompanyBillingDefaults(companyContext.company.settings)
         }
-        demoDataStatus={demoDataStatus}
+        demoDataStatus={demoDataStatus ?? undefined}
       />
     </div>
   );

@@ -111,9 +111,15 @@ function demoDataPermissionMessage(action: DemoDataActionKind): string {
     : "Only company owners and admins can load demo data.";
 }
 
+export type MapDemoDataErrorOptions = {
+  /** Set when app-level owner/admin access was already verified. */
+  accessVerified?: boolean;
+};
+
 export function mapDemoDataError(
   error: DatabaseErrorLike,
   action: DemoDataActionKind,
+  options: MapDemoDataErrorOptions = {},
 ): string {
   const rawMessage = error.message?.trim() ?? "";
   const message = rawMessage.toLowerCase();
@@ -122,18 +128,31 @@ export function mapDemoDataError(
     return demoDataPermissionMessage("clear");
   }
 
-  if (
+  const isPermissionFailure =
     message.includes("permission denied") ||
     error.code === "42501" ||
     message.includes("row-level security") ||
-    message.includes("you do not have permission to perform this action")
-  ) {
+    message.includes("you do not have permission to perform this action");
+
+  if (isPermissionFailure) {
+    if (options.accessVerified) {
+      return action === "clear"
+        ? "Unable to clear demo data for this workspace. Please try again."
+        : "Unable to load demo data into this workspace. Please try again.";
+    }
+
     return demoDataPermissionMessage(action);
   }
 
   const mapped = mapDatabaseError(error);
 
   if (mapped === "You do not have permission to perform this action.") {
+    if (options.accessVerified) {
+      return action === "clear"
+        ? "Unable to clear demo data for this workspace. Please try again."
+        : "Unable to load demo data into this workspace. Please try again.";
+    }
+
     return demoDataPermissionMessage(action);
   }
 

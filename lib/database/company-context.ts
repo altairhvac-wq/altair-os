@@ -182,7 +182,7 @@ async function resolveActiveCompanyContext(
 ): Promise<ActiveCompanyContext | null> {
   const { data: membershipRow, error: membershipError } = await supabase
     .from("company_memberships")
-    .select("*, company:companies(*)")
+    .select("*")
     .eq("user_id", user.id)
     .eq("company_id", companyId)
     .eq("status", "active")
@@ -204,14 +204,34 @@ async function resolveActiveCompanyContext(
     return null;
   }
 
-  const row = membershipRow as MembershipWithCompanyRow;
-  const { company, ...membership } = row;
+  const { data: company, error: companyError } = await supabase
+    .from("companies")
+    .select("*")
+    .eq("id", companyId)
+    .maybeSingle();
+
+  if (companyError) {
+    console.error("[getActiveCompanyContext] company lookup failed:", {
+      userId: user.id,
+      companyId,
+      code: companyError.code,
+      message: companyError.message,
+      details: companyError.details,
+      hint: companyError.hint,
+    });
+    return null;
+  }
 
   if (!company) {
     return null;
   }
 
-  return toActiveCompanyContext(user, profile, membership, company);
+  return toActiveCompanyContext(
+    user,
+    profile,
+    membershipRow as CompanyMembershipRow,
+    company as CompanyRow,
+  );
 }
 
 /** @deprecated Use getUserCompanies instead */
