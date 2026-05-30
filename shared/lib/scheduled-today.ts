@@ -1,4 +1,9 @@
-import { getDayBoundsInTimeZone } from "@/shared/lib/datetime";
+import {
+  addDaysToDateOnly,
+  DEFAULT_COMPANY_TIMEZONE,
+  getDateOnlyInTimeZone,
+  getDayBoundsInTimeZone,
+} from "@/shared/lib/datetime";
 import type { JobStatus } from "@/shared/types/job";
 
 /** Field-active jobs that stay on today's board until completed or rescheduled. */
@@ -36,6 +41,70 @@ export function getScheduledTodayBounds(
     options?.timeZone,
     options?.reference ?? new Date(),
   );
+}
+
+export type OperationalWeekBounds = {
+  start: string;
+  end: string;
+  weekStartDateOnly: string;
+  weekEndDateOnly: string;
+};
+
+function getDayOfWeekInTimeZone(
+  reference: Date,
+  timeZone: string,
+): number {
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "short",
+  }).format(reference);
+
+  const map: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  };
+
+  return map[weekday] ?? 0;
+}
+
+/** Monday–Sunday window in company timezone (Monday week start). */
+export function getOperationalWeekBounds(
+  options?: ScheduledTodayOptions,
+): OperationalWeekBounds {
+  const reference = options?.reference ?? new Date();
+  const timeZone = options?.timeZone ?? DEFAULT_COMPANY_TIMEZONE;
+  const todayDateOnly = getDateOnlyInTimeZone(reference, timeZone);
+  const daysFromMonday = (getDayOfWeekInTimeZone(reference, timeZone) + 6) % 7;
+  const weekStartDateOnly = addDaysToDateOnly(
+    todayDateOnly,
+    -daysFromMonday,
+    timeZone,
+  );
+  const weekEndDateOnly = addDaysToDateOnly(weekStartDateOnly, 6, timeZone);
+  const { start: weekStart } = getDayBoundsInTimeZone(
+    timeZone,
+    parseDateOnlyAtNoonUtc(weekStartDateOnly),
+  );
+  const { end: weekEnd } = getDayBoundsInTimeZone(
+    timeZone,
+    parseDateOnlyAtNoonUtc(weekEndDateOnly),
+  );
+
+  return {
+    start: weekStart,
+    end: weekEnd,
+    weekStartDateOnly,
+    weekEndDateOnly,
+  };
+}
+
+function parseDateOnlyAtNoonUtc(dateOnly: string): Date {
+  return new Date(`${dateOnly}T12:00:00.000Z`);
 }
 
 function isTimestampWithinOperationalDayBounds(

@@ -1,10 +1,15 @@
 import type { JobRow } from "@/lib/database/types/core-tables";
-import { fetchOperationalDayJobRows } from "@/lib/database/queries/scheduled-today-jobs";
+import {
+  fetchOperationalDayJobRows,
+  fetchOperationalWeekJobRows,
+} from "@/lib/database/queries/scheduled-today-jobs";
 import type { TechnicianJob } from "@/shared/types/technician";
 
 type ListAssignedJobsForTechnicianOptions = {
   reference?: Date;
   timeZone?: string;
+  /** `operational_week` loads Mon–Sun scheduled work plus today's carryover/completions. */
+  scope?: "operational_day" | "operational_week";
 };
 
 type JobRowWithCustomer = JobRow & {
@@ -47,15 +52,17 @@ export async function listAssignedJobsForTechnician(
   technicianId: string,
   options?: ListAssignedJobsForTechnicianOptions,
 ): Promise<TechnicianJob[]> {
-  const { rows, error } = await fetchOperationalDayJobRows<JobRowWithCustomer>(
-    TECHNICIAN_JOB_SELECT,
-    {
-      companyId,
-      assignedTechnicianId: technicianId,
-      reference: options?.reference,
-      timeZone: options?.timeZone,
-    },
-  );
+  const fetchRows =
+    options?.scope === "operational_week"
+      ? fetchOperationalWeekJobRows<JobRowWithCustomer>
+      : fetchOperationalDayJobRows<JobRowWithCustomer>;
+
+  const { rows, error } = await fetchRows(TECHNICIAN_JOB_SELECT, {
+    companyId,
+    assignedTechnicianId: technicianId,
+    reference: options?.reference,
+    timeZone: options?.timeZone,
+  });
 
   if (error) {
     console.error("[listAssignedJobsForTechnician] query failed:", {

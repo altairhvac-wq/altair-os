@@ -27,6 +27,7 @@ export default async function TechnicianPage() {
   const [jobs, timeState, serviceItems] = await Promise.all([
     listAssignedJobsForTechnician(context.company.id, context.user.id, {
       timeZone: context.company.timezone,
+      scope: "operational_week",
     }),
     getCurrentTimeState(context.company.id, context.user.id),
     listActiveServiceItems(context.company.id),

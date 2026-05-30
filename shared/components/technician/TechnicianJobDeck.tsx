@@ -15,6 +15,8 @@ const MAX_PEEK_CARDS = 2;
 
 type TechnicianJobDeckProps = {
   jobs: TechnicianJob[];
+  /** Resets carousel to the first job when the schedule day changes. */
+  deckKey?: string;
   timeState: TechnicianTimeStateSnapshot;
   serviceItems: ServiceItem[];
   canCreateEstimate: boolean;
@@ -84,6 +86,7 @@ function TechnicianJobDeckPeekCard({ job }: { job: TechnicianJob }) {
 
 export function TechnicianJobDeck({
   jobs,
+  deckKey,
   timeState,
   serviceItems,
   canCreateEstimate,
@@ -117,6 +120,15 @@ export function TechnicianJobDeck({
       totalJobs === 0 ? 0 : Math.min(current, totalJobs - 1),
     );
   }, [totalJobs]);
+
+  useEffect(() => {
+    if (!deckKey) {
+      return;
+    }
+
+    setActiveIndex(0);
+    setDragOffsetX(0);
+  }, [deckKey]);
 
   const goToPrevious = useCallback(() => {
     setActiveIndex((current) => Math.max(0, current - 1));

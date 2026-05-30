@@ -4,6 +4,17 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Briefcase, CheckCircle2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import {
+  filterJobsForTechnicianScheduleDay,
+  formatTechnicianScheduleDayHeading,
+  formatTechnicianScheduleCaughtUpDescription,
+  formatTechnicianScheduleEmptyDescription,
+  formatTechnicianScheduleEmptyTitle,
+  formatTechnicianScheduleQueueLabel,
+  getTechnicianTodayDateOnly,
+  isSelectedTechnicianScheduleDayToday,
+  type TechnicianScheduleDayContext,
+} from "@/shared/lib/technician-week-schedule";
+import {
   getTechnicianJobDeckOrder,
   sortCompletedTodayTechnicianJobs,
 } from "@/shared/lib/technician-work-queue";
@@ -21,6 +32,7 @@ import type { ServiceItem } from "@/shared/types/service-item";
 import { TechnicianClockStatusBanner } from "./TechnicianClockStatusBanner";
 import { TechnicianJobDeck } from "./TechnicianJobDeck";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
+import { TechnicianWeekStrip } from "./TechnicianWeekStrip";
 
 type TechnicianAssignedJobsViewProps = {
   jobs: TechnicianJob[];
@@ -121,11 +133,13 @@ function CompletedTodaySection({
 }
 
 function TechnicianQueueSummary({
-  activeCount,
+  dayHeading,
+  queueLabel,
   lastUpdatedAt,
   isRefreshing,
 }: {
-  activeCount: number;
+  dayHeading: string;
+  queueLabel: string;
   lastUpdatedAt: Date;
   isRefreshing: boolean;
 }) {
@@ -137,13 +151,10 @@ function TechnicianQueueSummary({
   }, []);
 
   return (
-    <div
-      className="flex min-h-8 items-center justify-between gap-2 px-1 text-xs"
-      aria-live="polite"
-    >
-      <p className="font-medium text-slate-600">
-        {activeCount} open job{activeCount === 1 ? "" : "s"}
-      </p>
+    <div className="space-y-0.5 px-1" aria-live="polite">
+      <p className="text-sm font-semibold text-slate-900">{dayHeading}</p>
+      <div className="flex min-h-8 items-center justify-between gap-2 text-xs">
+      <p className="font-medium text-slate-600">{queueLabel}</p>
       <p className="shrink-0 text-slate-400">
         {isRefreshing ? (
           <span className="inline-flex items-center gap-1 font-medium text-slate-600">
@@ -154,6 +165,7 @@ function TechnicianQueueSummary({
           formatTechnicianLastUpdated(lastUpdatedAt, now)
         )}
       </p>
+      </div>
     </div>
   );
 }
@@ -174,6 +186,14 @@ export function TechnicianAssignedJobsView({
   const [timeState, setTimeState] = useState(initialTimeState);
   const [lastUpdatedAt, setLastUpdatedAt] = useState(() => new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const scheduleContext: TechnicianScheduleDayContext = {
+    timeZone: companyTimeZone,
+    todayDateOnly: getTechnicianTodayDateOnly(companyTimeZone),
+    reference: new Date(),
+  };
+  const [selectedDateOnly, setSelectedDateOnly] = useState(
+    () => scheduleContext.todayDateOnly,
+  );
 
   const markRefreshComplete = useCallback(() => {
     setIsRefreshing(false);
@@ -235,39 +255,84 @@ export function TechnicianAssignedJobsView({
     );
   }
 
-  const deckJobs = getTechnicianJobDeckOrder(jobs);
-
-  if (deckJobs.length === 0) {
-    return (
-      <div className="space-y-3">
-        <TechnicianJobsEmptyState
-          title={jobs.length === 0 ? "Nothing on your schedule" : "All caught up"}
-          description={
-            jobs.length === 0
-              ? "When dispatch assigns you work, it will appear here automatically."
-              : "No jobs need action right now. Finished work is listed below."
-          }
-        />
-        <CompletedTodaySection jobs={jobs} companyTimeZone={companyTimeZone} />
-      </div>
-    );
-  }
+  const selectedDayJobs = filterJobsForTechnicianScheduleDay(
+    jobs,
+    selectedDateOnly,
+    scheduleContext,
+  );
+  const deckJobs = getTechnicianJobDeckOrder(selectedDayJobs);
+  const dayHeading = formatTechnicianScheduleDayHeading(
+    selectedDateOnly,
+    scheduleContext,
+  );
+  const queueLabel = formatTechnicianScheduleQueueLabel({
+    dateOnly: selectedDateOnly,
+    activeCount: deckJobs.length,
+    context: scheduleContext,
+  });
+  const showCompletedToday = isSelectedTechnicianScheduleDayToday(
+    selectedDateOnly,
+    scheduleContext,
+  );
 
   return (
     <div className="space-y-3">
-      {canManageTime ? (
-        <TechnicianClockStatusBanner timeState={timeState} />
-      ) : null}
-
-      <TechnicianQueueSummary
-        activeCount={deckJobs.length}
-        lastUpdatedAt={lastUpdatedAt}
-        isRefreshing={isRefreshing}
+      <TechnicianWeekStrip
+        jobs={jobs}
+        selectedDateOnly={selectedDateOnly}
+        scheduleContext={scheduleContext}
+        onSelectDateOnly={setSelectedDateOnly}
       />
 
-      <TechnicianJobDeck
-        jobs={deckJobs}
-        timeState={timeState}
+      {deckJobs.length === 0 ? (
+        <>
+          <TechnicianJobsEmptyState
+            title={
+              jobs.length === 0
+                ? "Nothing on your schedule"
+                : formatTechnicianScheduleEmptyTitle(
+                    selectedDateOnly,
+                    scheduleContext,
+                  )
+            }
+            description={
+              jobs.length === 0
+                ? "When dispatch assigns you work, it will appear here automatically."
+                : selectedDayJobs.length > 0
+                  ? formatTechnicianScheduleCaughtUpDescription(
+                      selectedDateOnly,
+                      scheduleContext,
+                    )
+                  : formatTechnicianScheduleEmptyDescription(
+                      selectedDateOnly,
+                      scheduleContext,
+                    )
+            }
+          />
+          {showCompletedToday ? (
+            <CompletedTodaySection
+              jobs={jobs}
+              companyTimeZone={companyTimeZone}
+            />
+          ) : null}
+        </>
+      ) : (
+        <>
+          {canManageTime ? (
+            <TechnicianClockStatusBanner timeState={timeState} />
+          ) : null}
+
+          <TechnicianQueueSummary
+            dayHeading={dayHeading}
+            queueLabel={queueLabel}
+            lastUpdatedAt={lastUpdatedAt}
+            isRefreshing={isRefreshing}
+          />
+
+          <TechnicianJobDeck
+            deckKey={selectedDateOnly}
+            jobs={deckJobs}
+            timeState={timeState}
         serviceItems={serviceItems}
         canCreateEstimate={canCreateEstimate}
         canViewBilling={canViewBilling}
@@ -275,10 +340,17 @@ export function TechnicianAssignedJobsView({
         canManageTime={canManageTime}
         defaultTaxRate={defaultTaxRate}
         onTimeStateChange={setTimeState}
-        onJobStatusUpdated={handleJobStatusUpdated}
-      />
+            onJobStatusUpdated={handleJobStatusUpdated}
+          />
 
-      <CompletedTodaySection jobs={jobs} companyTimeZone={companyTimeZone} />
+          {showCompletedToday ? (
+            <CompletedTodaySection
+              jobs={jobs}
+              companyTimeZone={companyTimeZone}
+            />
+          ) : null}
+        </>
+      )}
     </div>
   );
 }

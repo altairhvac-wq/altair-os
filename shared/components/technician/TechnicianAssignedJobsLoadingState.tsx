@@ -9,6 +9,14 @@ function SectionLabelSkeleton() {
 export function TechnicianAssignedJobsLoadingState() {
   return (
     <div className="space-y-4 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
+      <div className="rounded-lg border border-slate-200/80 bg-white px-1 py-2 shadow-sm">
+        <div className="grid grid-cols-7 gap-0.5">
+          {Array.from({ length: 7 }).map((_, index) => (
+            <Skeleton key={index} className="mx-auto h-14 w-full max-w-[2.75rem] rounded-md" />
+          ))}
+        </div>
+      </div>
+
       <Skeleton className="h-16 rounded-xl" />
 
       <div className="rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200 sm:px-4 sm:py-3">
