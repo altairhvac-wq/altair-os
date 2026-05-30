@@ -28,6 +28,7 @@ type TechnicianAssignedJobsViewProps = {
   canManageTime: boolean;
   canCreateEstimate: boolean;
   defaultTaxRate: number;
+  companyTimeZone: string;
 };
 
 function TechnicianJobsEmptyState({
@@ -52,9 +53,17 @@ function TechnicianJobsEmptyState({
   );
 }
 
-function CompletedTodaySection({ jobs }: { jobs: TechnicianJob[] }) {
+function CompletedTodaySection({
+  jobs,
+  companyTimeZone,
+}: {
+  jobs: TechnicianJob[];
+  companyTimeZone: string;
+}) {
   const [expanded, setExpanded] = useState(false);
-  const completedToday = sortCompletedTodayTechnicianJobs(jobs);
+  const completedToday = sortCompletedTodayTechnicianJobs(jobs, {
+    timeZone: companyTimeZone,
+  });
 
   if (completedToday.length === 0) {
     return null;
@@ -153,6 +162,7 @@ export function TechnicianAssignedJobsView({
   canManageTime,
   canCreateEstimate,
   defaultTaxRate,
+  companyTimeZone,
 }: TechnicianAssignedJobsViewProps) {
   const router = useRouter();
   const [jobs, setJobs] = useState(initialJobs);
@@ -233,7 +243,7 @@ export function TechnicianAssignedJobsView({
               : "No jobs need action right now. Finished work is listed below."
           }
         />
-        <CompletedTodaySection jobs={jobs} />
+        <CompletedTodaySection jobs={jobs} companyTimeZone={companyTimeZone} />
       </div>
     );
   }
@@ -261,7 +271,7 @@ export function TechnicianAssignedJobsView({
         onJobStatusUpdated={handleJobStatusUpdated}
       />
 
-      <CompletedTodaySection jobs={jobs} />
+      <CompletedTodaySection jobs={jobs} companyTimeZone={companyTimeZone} />
     </div>
   );
 }

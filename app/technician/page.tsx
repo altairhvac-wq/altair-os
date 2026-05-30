@@ -37,6 +37,7 @@ export default async function TechnicianPage() {
       canManageTime={canManageTime}
       canCreateEstimate={canCreateEstimate}
       defaultTaxRate={billingDefaults.defaultTaxRate}
+      companyTimeZone={context.company.timezone}
     />
   );
 }

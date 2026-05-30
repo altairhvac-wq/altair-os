@@ -1,7 +1,7 @@
 import type { CompanyAccessScope } from "@/lib/database/access-control";
 import { isSameCalendarDayInTimeZone } from "@/shared/lib/datetime";
+import { getOperationalDayJobCounts } from "@/shared/lib/scheduled-today";
 import type { DispatchJob } from "@/shared/types/dispatch";
-import { getDispatchSummary } from "@/shared/types/dispatch";
 import type { Estimate } from "@/shared/types/estimate";
 import type { Expense } from "@/shared/types/expense";
 import type { Notification } from "@/shared/types/notification";
@@ -149,18 +149,15 @@ export function getTodayOperationsSummary(
   | "totalJobsToday"
   | "overloadedTechnicianCount"
 > {
-  const dispatchSummary = getDispatchSummary(jobs);
-  const activeBoardJobs = jobs.filter((job) => job.status !== "cancelled");
+  const counts = getOperationalDayJobCounts(jobs);
 
   return {
-    scheduledToday: jobs.filter((job) => job.status === "scheduled").length,
-    dispatched: jobs.filter((job) => job.status === "dispatched").length,
-    inProgress: jobs.filter(
-      (job) => job.status === "in_progress" || job.status === "arrived",
-    ).length,
-    completedToday: jobs.filter((job) => job.status === "completed").length,
-    unassignedToday: dispatchSummary.unassigned,
-    totalJobsToday: activeBoardJobs.length,
+    scheduledToday: counts.scheduled,
+    dispatched: counts.dispatched,
+    inProgress: counts.onSiteOrWorking,
+    completedToday: counts.completed,
+    unassignedToday: counts.unassigned,
+    totalJobsToday: counts.activeTotal,
     overloadedTechnicianCount: countOverloadedTechnicians(jobs),
   };
 }

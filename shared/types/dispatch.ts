@@ -3,6 +3,7 @@ import {
   formatTimeInTimeZone,
   isSameCalendarDayInTimeZone,
 } from "@/shared/lib/datetime";
+import { getOperationalDayJobCounts } from "@/shared/lib/scheduled-today";
 
 export type DispatchJobStatus =
   | "scheduled"
@@ -130,13 +131,13 @@ export function isScheduledToday(
 }
 
 export function getDispatchSummary(jobs: DispatchJob[]): DispatchSummary {
+  const counts = getOperationalDayJobCounts(jobs);
+
   return {
-    scheduledToday: jobs.filter((job) => job.status === "scheduled").length,
-    inProgress: jobs.filter((job) => job.status === "in_progress").length,
-    unassigned: jobs.filter(
-      (job) => !job.technicianId && job.status !== "cancelled",
-    ).length,
-    completed: jobs.filter((job) => job.status === "completed").length,
+    scheduledToday: counts.scheduled,
+    inProgress: counts.onSiteOrWorking,
+    unassigned: counts.unassigned,
+    completed: counts.completed,
   };
 }
 

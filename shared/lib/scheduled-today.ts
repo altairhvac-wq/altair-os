@@ -103,3 +103,68 @@ export function dedupeJobRowsById<T extends { id: string; scheduled_at: string }
 
   return sortRowsByScheduledAtAsc([...byId.values()]);
 }
+
+export type OperationalDayJobCounts = {
+  scheduled: number;
+  dispatched: number;
+  /** On site or actively working (`arrived` + `in_progress`). */
+  onSiteOrWorking: number;
+  unassigned: number;
+  completed: number;
+  /** Non-cancelled jobs on today's board. */
+  activeTotal: number;
+};
+
+/** Status breakdown for jobs already scoped to the operational day. */
+export function getOperationalDayJobCounts<
+  T extends OperationalDayJobFields & {
+    technicianId?: string | null;
+    assignedTechnicianId?: string | null;
+  },
+>(jobs: T[]): OperationalDayJobCounts {
+  let scheduled = 0;
+  let dispatched = 0;
+  let onSiteOrWorking = 0;
+  let unassigned = 0;
+  let completed = 0;
+  let activeTotal = 0;
+
+  for (const job of jobs) {
+    if (job.status === "cancelled") {
+      continue;
+    }
+
+    activeTotal += 1;
+
+    switch (job.status) {
+      case "scheduled":
+        scheduled += 1;
+        break;
+      case "dispatched":
+        dispatched += 1;
+        break;
+      case "arrived":
+      case "in_progress":
+        onSiteOrWorking += 1;
+        break;
+      case "completed":
+        completed += 1;
+        break;
+      default:
+        break;
+    }
+
+    if (!job.technicianId && !job.assignedTechnicianId) {
+      unassigned += 1;
+    }
+  }
+
+  return {
+    scheduled,
+    dispatched,
+    onSiteOrWorking,
+    unassigned,
+    completed,
+    activeTotal,
+  };
+}

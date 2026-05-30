@@ -4,6 +4,7 @@ import {
   finalizeActiveDispatchAssignments,
   reactivateDispatchAssignmentForReopenedJob,
 } from "@/lib/database/queries/dispatch";
+import { fetchOperationalDayJobRows } from "@/lib/database/queries/scheduled-today-jobs";
 import type { JobInsert, JobRow, JobUpdate } from "@/lib/database/types/core-tables";
 import type { Job, JobDetail, JobFormData, JobStatus } from "@/shared/types/job";
 import type {
@@ -163,6 +164,37 @@ export async function listJobs(companyId: string): Promise<Job[]> {
   }
 
   return ((data ?? []) as JobRowWithTechnician[]).map(mapJobRowToJob);
+}
+
+type ListJobsForOperationalDayOptions = {
+  reference?: Date;
+  timeZone?: string;
+  assignedTechnicianId?: string;
+};
+
+export async function listJobsForOperationalDay(
+  companyId: string,
+  options?: ListJobsForOperationalDayOptions,
+): Promise<Job[]> {
+  const { rows, error } = await fetchOperationalDayJobRows<JobRowWithTechnician>(
+    JOB_TECHNICIAN_SELECT,
+    {
+      companyId,
+      assignedTechnicianId: options?.assignedTechnicianId,
+      reference: options?.reference,
+      timeZone: options?.timeZone,
+    },
+  );
+
+  if (error) {
+    console.error("[listJobsForOperationalDay] query failed:", {
+      companyId,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return rows.map(mapJobRowToJob);
 }
 
 export async function listAssignedJobs(

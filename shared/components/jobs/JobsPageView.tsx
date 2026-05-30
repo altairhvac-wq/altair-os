@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createJobAction } from "@/app/actions/jobs";
@@ -28,6 +28,8 @@ type JobsViewTab = "today" | "all";
 
 type JobsPageViewProps = {
   initialJobs: Job[];
+  initialTodayJobs: Job[];
+  companyTimeZone: string;
   customers: Customer[];
   canDispatchJobs: boolean;
   canManageCustomers?: boolean;
@@ -79,6 +81,8 @@ function filterCustomers(customers: Customer[], search: string): Customer[] {
 
 export function JobsPageView({
   initialJobs,
+  initialTodayJobs,
+  companyTimeZone: companyTimeZoneProp,
   customers,
   canDispatchJobs,
   canManageCustomers = false,
@@ -86,6 +90,7 @@ export function JobsPageView({
   createInitialData,
 }: JobsPageViewProps) {
   const [jobs, setJobs] = useState(initialJobs);
+  const [todayJobs, setTodayJobs] = useState(initialTodayJobs);
   const [search, setSearch] = useState("");
   const [viewTab, setViewTab] = useState<JobsViewTab>("today");
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
@@ -96,19 +101,17 @@ export function JobsPageView({
   const [createError, setCreateError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
-  const companyTimeZone = useCompanyTimezone();
+  const companyTimeZoneFromContext = useCompanyTimezone();
+  const companyTimeZone = companyTimeZoneProp || companyTimeZoneFromContext;
 
-  const todayJobs = useMemo(
-    () =>
-      sortJobsByScheduledTime(
-        jobs.filter((job) =>
-          isJobOnOperationalDay(job, {
-            reference: new Date(),
-            timeZone: companyTimeZone,
-          }),
-        ),
-      ),
-    [companyTimeZone, jobs],
+  useEffect(() => {
+    setJobs(initialJobs);
+    setTodayJobs(initialTodayJobs);
+  }, [initialJobs, initialTodayJobs]);
+
+  const sortedTodayJobs = useMemo(
+    () => sortJobsByScheduledTime(todayJobs),
+    [todayJobs],
   );
 
   const filteredAllJobs = useMemo(
@@ -157,6 +160,16 @@ export function JobsPageView({
       }
 
       setJobs((previous) => [result.job!, ...previous]);
+      if (
+        isJobOnOperationalDay(result.job!, {
+          reference: new Date(),
+          timeZone: companyTimeZone,
+        })
+      ) {
+        setTodayJobs((previous) =>
+          sortJobsByScheduledTime([result.job!, ...previous]),
+        );
+      }
       setPanelMode("empty");
       router.push(`/jobs/${result.job.id}`);
     });
@@ -211,7 +224,7 @@ export function JobsPageView({
         );
       }
 
-      return <JobsTodayCardList jobs={todayJobs} onSelect={handleSelectJob} />;
+      return <JobsTodayCardList jobs={sortedTodayJobs} onSelect={handleSelectJob} />;
     }
 
     if (hasNoJobs) {

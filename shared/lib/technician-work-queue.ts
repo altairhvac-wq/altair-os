@@ -1,5 +1,8 @@
-import { isSameCalendarDayInTimeZone } from "@/shared/lib/datetime";
-import { ACTIVE_CARRYOVER_JOB_STATUSES } from "@/shared/lib/scheduled-today";
+import {
+  ACTIVE_CARRYOVER_JOB_STATUSES,
+  isJobOnOperationalDay,
+  type ScheduledTodayOptions,
+} from "@/shared/lib/scheduled-today";
 import type { DispatchJobStatus } from "@/shared/types/dispatch";
 import { isScheduledToday } from "@/shared/types/dispatch";
 import type { TechnicianJob } from "@/shared/types/technician";
@@ -44,22 +47,9 @@ export function isTechnicianJobCarryover(
 
 export function isTechnicianJobCompletedToday(
   job: TechnicianJob,
-  reference = new Date(),
-  timeZone?: string,
+  options?: ScheduledTodayOptions,
 ): boolean {
-  if (job.status !== "completed") {
-    return false;
-  }
-
-  // Today-scoped technician queues are scheduled for the reference day. A
-  // completed appointment belongs in "Completed today" even when completed_at is
-  // missing or normalizes to a different calendar day.
-  if (isTechnicianJobScheduledToday(job, reference, timeZone)) {
-    return true;
-  }
-
-  const completedAt = job.completedAt ?? job.scheduledDate;
-  return isSameCalendarDayInTimeZone(completedAt, reference, timeZone);
+  return job.status === "completed" && isJobOnOperationalDay(job, options);
 }
 
 function getActiveStatusOrder(status: TechnicianJob["status"]): number {
@@ -102,11 +92,10 @@ export function groupTechnicianWorkQueue(jobs: TechnicianJob[]) {
 
 export function sortCompletedTodayTechnicianJobs(
   jobs: TechnicianJob[],
-  reference = new Date(),
-  timeZone?: string,
+  options?: ScheduledTodayOptions,
 ): TechnicianJob[] {
   return jobs
-    .filter((job) => isTechnicianJobCompletedToday(job, reference, timeZone))
+    .filter((job) => isTechnicianJobCompletedToday(job, options))
     .sort(
       (a, b) =>
         new Date(b.completedAt ?? b.scheduledDate).getTime() -
