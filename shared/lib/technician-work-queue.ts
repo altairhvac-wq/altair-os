@@ -71,6 +71,11 @@ export function sortActiveTechnicianJobs(jobs: TechnicianJob[]): TechnicianJob[]
   return jobs.filter(isActiveTechnicianJob).sort(compareActiveJobs);
 }
 
+/** Active jobs in deck order: in-progress first, then status priority, then schedule time. */
+export function getTechnicianJobDeckOrder(jobs: TechnicianJob[]): TechnicianJob[] {
+  return sortActiveTechnicianJobs(jobs);
+}
+
 export function groupTechnicianWorkQueue(jobs: TechnicianJob[]) {
   const sorted = sortActiveTechnicianJobs(jobs);
 

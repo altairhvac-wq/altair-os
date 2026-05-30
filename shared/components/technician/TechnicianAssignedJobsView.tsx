@@ -4,8 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Briefcase, CheckCircle2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import {
-  groupTechnicianWorkQueue,
-  sortActiveTechnicianJobs,
+  getTechnicianJobDeckOrder,
   sortCompletedTodayTechnicianJobs,
 } from "@/shared/lib/technician-work-queue";
 import {
@@ -20,7 +19,7 @@ import type {
 } from "@/shared/types/time-entry";
 import type { ServiceItem } from "@/shared/types/service-item";
 import { TechnicianJobsTimeClock } from "./TechnicianJobsTimeClock";
-import { TechnicianJobCard } from "./TechnicianJobCard";
+import { TechnicianJobDeck } from "./TechnicianJobDeck";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 
 type TechnicianAssignedJobsViewProps = {
@@ -32,75 +31,6 @@ type TechnicianAssignedJobsViewProps = {
   canCreateEstimate: boolean;
   defaultTaxRate: number;
 };
-
-type WorkQueueSectionProps = {
-  label: string;
-  labelClassName?: string;
-  jobs: TechnicianJob[];
-  timeState: TechnicianTimeStateSnapshot;
-  serviceItems: ServiceItem[];
-  canCreateEstimate: boolean;
-  defaultTaxRate: number;
-  onTimeStateChange: (state: TechnicianTimeStateSnapshot) => void;
-  onJobStatusUpdated: (jobId: string, status: JobStatus) => void;
-  defaultExpanded?: boolean;
-  emphasized?: boolean;
-  wrapperClassName?: string;
-};
-
-function WorkQueueSection({
-  label,
-  labelClassName = "text-slate-500",
-  jobs,
-  timeState,
-  serviceItems,
-  canCreateEstimate,
-  defaultTaxRate,
-  onTimeStateChange,
-  onJobStatusUpdated,
-  defaultExpanded = false,
-  emphasized = false,
-  wrapperClassName,
-}: WorkQueueSectionProps) {
-  if (jobs.length === 0) {
-    return null;
-  }
-
-  const content = (
-    <>
-      <p
-        className={`px-1 text-xs font-semibold uppercase tracking-wide ${labelClassName}`}
-      >
-        {label}
-      </p>
-      <ul className="space-y-2">
-        {jobs.map((job) => (
-          <li key={job.id}>
-            <TechnicianJobCard
-              job={job}
-              timeState={timeState}
-              serviceItems={serviceItems}
-              canCreateEstimate={canCreateEstimate}
-              defaultTaxRate={defaultTaxRate}
-              onTimeStateChange={onTimeStateChange}
-              onStatusUpdated={(status) => onJobStatusUpdated(job.id, status)}
-              defaultExpanded={defaultExpanded}
-              emphasized={emphasized}
-            />
-          </li>
-        ))}
-      </ul>
-    </>
-  );
-
-  if (wrapperClassName) {
-    return (
-      <section className={`space-y-3 ${wrapperClassName}`}>{content}</section>
-    );
-  }
-
-  return <section className="space-y-2">{content}</section>;
-}
 
 function TechnicianJobsEmptyState({
   title,
@@ -305,8 +235,7 @@ export function TechnicianAssignedJobsView({
     );
   }
 
-  const activeJobs = sortActiveTechnicianJobs(jobs);
-  const { currentJobs, upNextJobs } = groupTechnicianWorkQueue(jobs);
+  const deckJobs = getTechnicianJobDeckOrder(jobs);
 
   const timeClockBanner = canManageTime ? (
     <TechnicianJobsTimeClock
@@ -317,7 +246,7 @@ export function TechnicianAssignedJobsView({
     />
   ) : null;
 
-  if (activeJobs.length === 0) {
+  if (deckJobs.length === 0) {
     return (
       <div className="space-y-3">
         {timeClockBanner}
@@ -339,39 +268,20 @@ export function TechnicianAssignedJobsView({
       {timeClockBanner}
 
       <TechnicianQueueSummary
-        activeCount={activeJobs.length}
+        activeCount={deckJobs.length}
         lastUpdatedAt={lastUpdatedAt}
         isRefreshing={isRefreshing}
       />
 
-      <div className="space-y-3">
-        <WorkQueueSection
-          label="Current"
-          labelClassName="text-cyan-700"
-          jobs={currentJobs}
-          timeState={timeState}
-          serviceItems={serviceItems}
-          canCreateEstimate={canCreateEstimate}
-          defaultTaxRate={defaultTaxRate}
-          onTimeStateChange={setTimeState}
-          onJobStatusUpdated={handleJobStatusUpdated}
-          defaultExpanded
-          emphasized
-          wrapperClassName="rounded-xl border-2 border-cyan-200/90 bg-gradient-to-b from-cyan-50/70 to-white p-2.5 shadow-sm ring-1 ring-cyan-500/15"
-        />
-        <WorkQueueSection
-          label="Next"
-          labelClassName="text-slate-500"
-          jobs={upNextJobs}
-          timeState={timeState}
-          serviceItems={serviceItems}
-          canCreateEstimate={canCreateEstimate}
-          defaultTaxRate={defaultTaxRate}
-          onTimeStateChange={setTimeState}
-          onJobStatusUpdated={handleJobStatusUpdated}
-          defaultExpanded={currentJobs.length === 0 && upNextJobs.length === 1}
-        />
-      </div>
+      <TechnicianJobDeck
+        jobs={deckJobs}
+        timeState={timeState}
+        serviceItems={serviceItems}
+        canCreateEstimate={canCreateEstimate}
+        defaultTaxRate={defaultTaxRate}
+        onTimeStateChange={setTimeState}
+        onJobStatusUpdated={handleJobStatusUpdated}
+      />
 
       <CompletedTodaySection jobs={jobs} />
     </div>
