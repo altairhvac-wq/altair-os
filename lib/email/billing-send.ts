@@ -21,6 +21,7 @@ import {
   formatInvoiceAmountDueHeroHtml,
   formatInvoicePaymentCtaHtml,
   formatInvoicePaymentCtaText,
+  formatBillingEmailSecureLinkFallbackHtml,
   formatInvoicePaymentGuidanceHtml,
   formatInvoicePaymentGuidanceText,
   wrapBillingEmailHtml,
@@ -190,8 +191,8 @@ export async function sendEstimateEmail(
     total: input.total,
   });
   const intro = approvalUrl
-    ? "Please review the estimate below, then use the secure button to review and sign online."
-    : `Please review the estimate details below. If you have questions, ${deliveryOptions.hasReplyTo ? "reply to this email" : "use the contact information below"}.`;
+    ? "here is your estimate."
+    : "here is your estimate for review.";
 
   const text = [
     `Hello ${input.customerName},`,
@@ -245,6 +246,7 @@ export async function sendEstimateEmail(
     ${approvalUrl ? "" : formatBillingSignatureBlockHtml("estimate", signatureEmailInput)}
     ${formatBillingEmailCompanyContactHtml(input.company)}
     ${footer.html}
+    ${approvalUrl ? formatBillingEmailSecureLinkFallbackHtml(approvalUrl) : ""}
   `.trim();
 
   return sendViaResend({
@@ -306,10 +308,8 @@ export async function sendInvoiceEmail(
   });
   const intro =
     input.balanceDue <= 0
-      ? "Please find your invoice below. This invoice is paid in full."
-      : paymentUrl
-        ? `Please find your invoice below. Payment of ${formatCurrency(input.balanceDue)} is due by ${formatDate(input.dueDate, input.timeZone)}. Use the secure link to view your invoice and contact us to pay.`
-        : `Please find your invoice below. Payment of ${formatCurrency(input.balanceDue)} is due by ${formatDate(input.dueDate, input.timeZone)}.`;
+      ? "here is your invoice — paid in full."
+      : "here is your invoice.";
 
   const text = [
     `Hello ${input.customerName},`,
@@ -383,6 +383,7 @@ export async function sendInvoiceEmail(
     ${formatBillingSignatureBlockHtml("invoice", signatureEmailInput)}
     ${formatBillingEmailCompanyContactHtml(input.company)}
     ${footer.html}
+    ${paymentUrl ? formatBillingEmailSecureLinkFallbackHtml(paymentUrl) : ""}
   `.trim();
 
   return sendViaResend({

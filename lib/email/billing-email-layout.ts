@@ -42,13 +42,13 @@ export function wrapBillingEmailHtml(content: string): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Altair OS</title>
   </head>
-  <body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;">
+  <body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;">
       <tr>
-        <td align="center" style="padding:24px 16px;">
+        <td align="center" style="padding:20px 16px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #e4e4e7;">
             <tr>
-              <td style="padding:28px 24px;">
+              <td style="padding:16px;">
                 ${content}
               </td>
             </tr>
@@ -64,31 +64,14 @@ export function wrapBillingEmailHtml(content: string): string {
 export function formatBillingEmailCompanyHeaderHtml(
   company: Pick<BillingCompanyContact, "name" | "phone" | "email" | "addressLine1" | "addressLine2" | "city" | "state" | "postalCode">,
 ): string {
-  const contactLines = formatBillingCompanyContactLines(company);
-  const addressLines = formatBillingCompanyAddressLines(company);
-  const detailLines = [
-    ...addressLines,
-    ...contactLines.filter((line) => !addressLines.includes(line)),
-  ];
-
-  const detailsHtml =
-    detailLines.length > 0
-      ? detailLines
-          .map(
-            (line) =>
-              `<div style="color:#52525b;font-size:13px;line-height:1.6;">${escapeBillingEmailHtml(line)}</div>`,
-          )
-          .join("")
-      : "";
-
   return `
-    <div style="padding-bottom:20px;border-bottom:2px solid #0f172a;margin-bottom:24px;">
-      <div style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.16em;">Service provider</div>
-      <div style="margin-top:8px;padding-left:16px;border-left:4px solid #0f172a;">
-        <div style="color:#0f172a;font-size:28px;font-weight:700;line-height:1.15;letter-spacing:-0.02em;">${escapeBillingEmailHtml(company.name)}</div>
-        ${detailsHtml ? `<div style="margin-top:12px;">${detailsHtml}</div>` : ""}
-      </div>
-    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+      <tr>
+        <td style="padding:0 0 12px;color:#18181b;font-size:18px;font-weight:700;line-height:1.3;">
+          ${escapeBillingEmailHtml(company.name)}
+        </td>
+      </tr>
+    </table>
   `.trim();
 }
 
@@ -99,16 +82,26 @@ export function formatBillingEmailDocumentMetaHtml(input: {
 }): string {
   const documentLabel = input.documentKind === "estimate" ? "Estimate" : "Invoice";
   const preparedLabel =
-    input.documentKind === "estimate" ? "Prepared for" : "Bill to";
+    input.documentKind === "estimate" ? "For" : "Bill to";
 
   return `
-    <div style="margin-bottom:20px;">
-      <div style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;">${documentLabel}</div>
-      <div style="margin-top:6px;color:#0f172a;font-size:22px;font-weight:700;line-height:1.2;">${escapeBillingEmailHtml(input.documentNumber)}</div>
-      <div style="margin-top:8px;color:#52525b;font-size:14px;line-height:1.5;">
-        ${escapeBillingEmailHtml(preparedLabel)} <strong style="color:#18181b;">${escapeBillingEmailHtml(input.customerName)}</strong>
-      </div>
-    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:12px;">
+      <tr>
+        <td style="padding:0;color:#71717a;font-size:12px;line-height:1.4;text-transform:uppercase;letter-spacing:0.04em;">
+          ${documentLabel}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:2px 0 0;color:#18181b;font-size:16px;font-weight:700;line-height:1.3;">
+          ${escapeBillingEmailHtml(input.documentNumber)}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0 0;color:#52525b;font-size:14px;line-height:1.4;">
+          ${escapeBillingEmailHtml(preparedLabel)} ${escapeBillingEmailHtml(input.customerName)}
+        </td>
+      </tr>
+    </table>
   `.trim();
 }
 
@@ -117,8 +110,13 @@ export function formatBillingEmailGreetingHtml(
   intro: string,
 ): string {
   return `
-    <p style="margin:0 0 12px;color:#18181b;font-size:15px;line-height:1.5;">Hello ${escapeBillingEmailHtml(customerName)},</p>
-    <p style="margin:0 0 20px;color:#3f3f46;font-size:14px;line-height:1.65;">${intro}</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:12px;">
+      <tr>
+        <td style="padding:0;color:#3f3f46;font-size:14px;line-height:1.5;">
+          Hello ${escapeBillingEmailHtml(customerName)}, ${escapeBillingEmailHtml(intro)}
+        </td>
+      </tr>
+    </table>
   `.trim();
 }
 
@@ -128,20 +126,31 @@ export function formatEstimateTotalHeroHtml(input: {
   validUntil?: string;
   timeZone?: string;
 }): string {
-  const validUntilLine = input.validUntil
-    ? `Valid until ${formatDate(input.validUntil, input.timeZone)}`
-    : "Proposed investment for the described scope of work";
+  const metaLines: string[] = [
+    `Issued ${formatDate(input.issuedDate, input.timeZone)}`,
+  ];
+
+  if (input.validUntil) {
+    metaLines.push(`Valid until ${formatDate(input.validUntil, input.timeZone)}`);
+  }
 
   return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#0f172a;border:2px solid #0f172a;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:12px;border:1px solid #e4e4e7;background:#fafafa;">
       <tr>
-        <td style="padding:22px 20px;">
-          <div style="color:#cbd5e1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.16em;">Estimated total</div>
-          <div style="margin-top:8px;color:#ffffff;font-size:32px;font-weight:700;line-height:1.15;letter-spacing:-0.02em;">${escapeBillingEmailHtml(formatCurrency(input.total))}</div>
-          <div style="margin-top:12px;color:#cbd5e1;font-size:13px;line-height:1.55;">
-            Issued ${escapeBillingEmailHtml(formatDate(input.issuedDate, input.timeZone))}
-            <br />${escapeBillingEmailHtml(validUntilLine)}
-          </div>
+        <td style="padding:12px 14px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+            <tr>
+              <td style="padding:0;color:#71717a;font-size:12px;line-height:1.4;">Estimated total</td>
+              <td align="right" style="padding:0;color:#18181b;font-size:20px;font-weight:700;line-height:1.2;white-space:nowrap;">
+                ${escapeBillingEmailHtml(formatCurrency(input.total))}
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2" style="padding:6px 0 0;color:#71717a;font-size:12px;line-height:1.45;">
+                ${escapeBillingEmailHtml(metaLines.join(" · "))}
+              </td>
+            </tr>
+          </table>
         </td>
       </tr>
     </table>
@@ -157,56 +166,56 @@ export function formatInvoiceAmountDueHeroHtml(input: {
   timeZone?: string;
 }): string {
   const isPaidInFull = input.balanceDue <= 0;
-  const hasPartialPayment = input.amountPaid > 0 && input.balanceDue > 0;
-  const heroLabel = isPaidInFull ? "Payment status" : "Amount due";
+  const heroLabel = isPaidInFull ? "Status" : "Amount due";
   const heroValue = isPaidInFull
     ? "Paid in full"
     : formatCurrency(input.balanceDue);
 
-  const paymentMeta = isPaidInFull
-    ? `Issued ${formatDate(input.issuedDate, input.timeZone)}`
-    : `Payment due by ${formatDate(input.dueDate, input.timeZone)}`;
+  const metaLines: string[] = [
+    `Issued ${formatDate(input.issuedDate, input.timeZone)}`,
+  ];
+
+  if (!isPaidInFull) {
+    metaLines.push(`Due ${formatDate(input.dueDate, input.timeZone)}`);
+  }
 
   const breakdownRows: string[] = [];
 
-  if (hasPartialPayment || (input.amountPaid > 0 && isPaidInFull)) {
+  if (input.amountPaid > 0) {
     breakdownRows.push(`
       <tr>
-        <td style="padding:8px 0 0;color:#94a3b8;font-size:13px;">Invoice total</td>
-        <td align="right" style="padding:8px 0 0;color:#f8fafc;font-size:13px;font-weight:600;">${escapeBillingEmailHtml(formatCurrency(input.total))}</td>
+        <td style="padding:4px 0 0;color:#71717a;font-size:12px;line-height:1.4;">Invoice total</td>
+        <td align="right" style="padding:4px 0 0;color:#52525b;font-size:12px;line-height:1.4;white-space:nowrap;">
+          ${escapeBillingEmailHtml(formatCurrency(input.total))}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:2px 0 0;color:#71717a;font-size:12px;line-height:1.4;">Amount paid</td>
+        <td align="right" style="padding:2px 0 0;color:#52525b;font-size:12px;line-height:1.4;white-space:nowrap;">
+          ${escapeBillingEmailHtml(formatCurrency(input.amountPaid))}
+        </td>
       </tr>
     `.trim());
-
-    if (input.amountPaid > 0) {
-      breakdownRows.push(`
-        <tr>
-          <td style="padding:4px 0 0;color:#94a3b8;font-size:13px;">Amount paid</td>
-          <td align="right" style="padding:4px 0 0;color:#86efac;font-size:13px;font-weight:600;">${escapeBillingEmailHtml(formatCurrency(input.amountPaid))}</td>
-        </tr>
-      `.trim());
-    }
   }
 
-  const breakdownHtml =
-    breakdownRows.length > 0
-      ? `
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:16px;padding-top:16px;border-top:1px solid #334155;">
-          <tbody>${breakdownRows.join("")}</tbody>
-        </table>
-      `.trim()
-      : "";
-
   return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#0f172a;border:2px solid #0f172a;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:12px;border:1px solid #e4e4e7;background:#fafafa;">
       <tr>
-        <td style="padding:22px 20px;">
-          <div style="color:#cbd5e1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.16em;">${escapeBillingEmailHtml(heroLabel)}</div>
-          <div style="margin-top:8px;color:#ffffff;font-size:32px;font-weight:700;line-height:1.15;letter-spacing:-0.02em;">${escapeBillingEmailHtml(heroValue)}</div>
-          <div style="margin-top:12px;color:#cbd5e1;font-size:13px;line-height:1.55;">
-            Issued ${escapeBillingEmailHtml(formatDate(input.issuedDate, input.timeZone))}
-            <br />${escapeBillingEmailHtml(paymentMeta)}
-          </div>
-          ${breakdownHtml}
+        <td style="padding:12px 14px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+            <tr>
+              <td style="padding:0;color:#71717a;font-size:12px;line-height:1.4;">${escapeBillingEmailHtml(heroLabel)}</td>
+              <td align="right" style="padding:0;color:#18181b;font-size:20px;font-weight:700;line-height:1.2;white-space:nowrap;">
+                ${escapeBillingEmailHtml(heroValue)}
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2" style="padding:6px 0 0;color:#71717a;font-size:12px;line-height:1.45;">
+                ${escapeBillingEmailHtml(metaLines.join(" · "))}
+              </td>
+            </tr>
+            ${breakdownRows.join("")}
+          </table>
         </td>
       </tr>
     </table>
@@ -217,22 +226,12 @@ export function formatEstimateApprovalCtaHtml(approvalUrl: string): string {
   const safeUrl = escapeBillingEmailHtml(approvalUrl);
 
   return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 0;border-collapse:collapse;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:16px;">
       <tr>
         <td align="center" style="padding:0;">
-          <a href="${safeUrl}" style="display:inline-block;background:#0f766e;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:16px 28px;border-radius:8px;">
+          <a href="${safeUrl}" style="display:inline-block;background:#0f766e;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:12px 24px;border-radius:6px;">
             Review &amp; Sign Estimate
           </a>
-        </td>
-      </tr>
-      <tr>
-        <td align="center" style="padding:12px 0 0;color:#64748b;font-size:12px;line-height:1.55;">
-          Secure link to review this estimate and approve with your signature.
-        </td>
-      </tr>
-      <tr>
-        <td align="center" style="padding:8px 0 0;color:#71717a;font-size:11px;line-height:1.5;word-break:break-all;">
-          ${safeUrl}
         </td>
       </tr>
     </table>
@@ -254,27 +253,14 @@ export function formatInvoicePaymentCtaHtml(input: {
   const safeUrl = escapeBillingEmailHtml(input.paymentUrl);
   const isPaidInFull = input.balanceDue <= 0;
   const buttonLabel = isPaidInFull ? "View Invoice" : "View &amp; Pay Invoice";
-  const helperText = isPaidInFull
-    ? "Secure link to view this paid invoice."
-    : "Secure link to view this invoice and contact the office to pay.";
 
   return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 0;border-collapse:collapse;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:16px;">
       <tr>
         <td align="center" style="padding:0;">
-          <a href="${safeUrl}" style="display:inline-block;background:#0f766e;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:16px 28px;border-radius:8px;">
+          <a href="${safeUrl}" style="display:inline-block;background:#0f766e;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:12px 24px;border-radius:6px;">
             ${buttonLabel}
           </a>
-        </td>
-      </tr>
-      <tr>
-        <td align="center" style="padding:12px 0 0;color:#64748b;font-size:12px;line-height:1.55;">
-          ${helperText}
-        </td>
-      </tr>
-      <tr>
-        <td align="center" style="padding:8px 0 0;color:#71717a;font-size:11px;line-height:1.5;word-break:break-all;">
-          ${safeUrl}
         </td>
       </tr>
     </table>
@@ -291,6 +277,23 @@ export function formatInvoicePaymentCtaText(input: {
   return ["", label, input.paymentUrl].join("\n");
 }
 
+export function formatBillingEmailSecureLinkFallbackHtml(
+  secureUrl: string,
+): string {
+  const safeUrl = escapeBillingEmailHtml(secureUrl);
+
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:12px;">
+      <tr>
+        <td align="center" style="padding:0;color:#a1a1aa;font-size:10px;line-height:1.45;word-break:break-all;">
+          If the button above does not work, copy and paste this link:<br />
+          <a href="${safeUrl}" style="color:#71717a;text-decoration:underline;">${safeUrl}</a>
+        </td>
+      </tr>
+    </table>
+  `.trim();
+}
+
 export function formatInvoicePaymentGuidanceHtml(input: {
   company: Pick<BillingCompanyContact, "name" | "phone" | "email">;
   dueDate: string;
@@ -304,13 +307,13 @@ export function formatInvoicePaymentGuidanceHtml(input: {
 
   if (isPaidInFull) {
     return `
-      <div style="margin-top:24px;padding:18px 16px;border:1px solid #e4e4e7;background:#fafafa;">
-        <div style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;">Payment status</div>
-        <p style="margin:10px 0 0;color:#3f3f46;font-size:14px;line-height:1.65;">
-          This invoice is paid in full. Retain it for your records.
-          ${phone || email ? " Contact us if you have any questions." : ""}
-        </p>
-      </div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:12px;">
+        <tr>
+          <td style="padding:10px 12px;border:1px solid #e4e4e7;background:#fafafa;color:#3f3f46;font-size:13px;line-height:1.5;">
+            This invoice is paid in full. Retain it for your records.
+          </td>
+        </tr>
+      </table>
     `.trim();
   }
 
@@ -318,13 +321,13 @@ export function formatInvoicePaymentGuidanceHtml(input: {
 
   if (phone) {
     contactParts.push(
-      `call <strong style="color:#18181b;">${escapeBillingEmailHtml(phone)}</strong>`,
+      `call ${escapeBillingEmailHtml(phone)}`,
     );
   }
 
   if (email) {
     contactParts.push(
-      `email <strong style="color:#18181b;">${escapeBillingEmailHtml(email)}</strong>`,
+      `email ${escapeBillingEmailHtml(email)}`,
     );
   }
 
@@ -336,14 +339,15 @@ export function formatInvoicePaymentGuidanceHtml(input: {
         : `Contact ${escapeBillingEmailHtml(input.company.name)} to arrange payment.`;
 
   return `
-    <div style="margin-top:24px;padding:18px 16px;border:1px solid #e4e4e7;background:#fafafa;">
-      <div style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;">How to pay</div>
-      <p style="margin:10px 0 0;color:#3f3f46;font-size:14px;line-height:1.65;">
-        ${contactSentence}
-        Payment of <strong style="color:#18181b;">${escapeBillingEmailHtml(formatCurrency(input.balanceDue))}</strong>
-        is due by <strong style="color:#18181b;">${escapeBillingEmailHtml(formatDate(input.dueDate, input.timeZone))}</strong>.
-      </p>
-    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:12px;">
+      <tr>
+        <td style="padding:10px 12px;border:1px solid #e4e4e7;background:#fafafa;color:#3f3f46;font-size:13px;line-height:1.5;">
+          ${contactSentence}
+          Payment of ${escapeBillingEmailHtml(formatCurrency(input.balanceDue))}
+          is due by ${escapeBillingEmailHtml(formatDate(input.dueDate, input.timeZone))}.
+        </td>
+      </tr>
+    </table>
   `.trim();
 }
 
@@ -405,39 +409,59 @@ export function formatBillingEmailLineItemsHtml(
   lineItems: BillingEmailLineItem[],
 ): string {
   if (lineItems.length === 0) {
-    return `<p style="margin:0;color:#52525b;font-size:14px;">No line items.</p>`;
+    return `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:12px;">
+        <tr>
+          <td style="padding:0;color:#71717a;font-size:13px;line-height:1.4;">No line items.</td>
+        </tr>
+      </table>
+    `.trim();
   }
 
   const rows = lineItems
     .map((item) => {
       const lineTotal = calculateLineItemTotal(item.quantity, item.unitPrice);
+      const qtyRate = `${item.quantity} × ${formatCurrency(item.unitPrice)}`;
 
       return `
         <tr>
-          <td style="padding:10px 12px;border-bottom:1px solid #e4e4e7;color:#18181b;font-size:14px;line-height:1.4;">${escapeBillingEmailHtml(item.name)}</td>
-          <td style="padding:10px 8px;border-bottom:1px solid #e4e4e7;color:#52525b;font-size:14px;text-align:center;white-space:nowrap;">${item.quantity}</td>
-          <td style="padding:10px 8px;border-bottom:1px solid #e4e4e7;color:#52525b;font-size:14px;text-align:right;white-space:nowrap;">${escapeBillingEmailHtml(formatCurrency(item.unitPrice))}</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #e4e4e7;color:#18181b;font-size:14px;font-weight:600;text-align:right;white-space:nowrap;">${escapeBillingEmailHtml(formatCurrency(lineTotal))}</td>
+          <td style="padding:8px 0;border-bottom:1px solid #e4e4e7;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+              <tr>
+                <td style="padding:0;color:#18181b;font-size:14px;line-height:1.4;font-weight:600;">
+                  ${escapeBillingEmailHtml(item.name)}
+                </td>
+                <td align="right" valign="top" style="padding:0 0 0 12px;color:#18181b;font-size:14px;line-height:1.4;font-weight:600;white-space:nowrap;">
+                  ${escapeBillingEmailHtml(formatCurrency(lineTotal))}
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2" style="padding:2px 0 0;color:#71717a;font-size:12px;line-height:1.4;">
+                  ${escapeBillingEmailHtml(qtyRate)}
+                </td>
+              </tr>
+            </table>
+          </td>
         </tr>
       `.trim();
     })
     .join("");
 
   return `
-    <div style="margin-top:20px;">
-      <div style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:8px;">Line items</div>
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e4e4e7;">
-        <thead>
-          <tr style="background:#fafafa;">
-            <th align="left" style="padding:10px 12px;border-bottom:1px solid #e4e4e7;color:#52525b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Item</th>
-            <th align="center" style="padding:10px 8px;border-bottom:1px solid #e4e4e7;color:#52525b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Qty</th>
-            <th align="right" style="padding:10px 8px;border-bottom:1px solid #e4e4e7;color:#52525b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Rate</th>
-            <th align="right" style="padding:10px 12px;border-bottom:1px solid #e4e4e7;color:#52525b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Amount</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:12px;">
+      <tr>
+        <td style="padding:0 0 6px;color:#71717a;font-size:12px;line-height:1.4;text-transform:uppercase;letter-spacing:0.04em;">
+          Line items
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+            <tbody>${rows}</tbody>
+          </table>
+        </td>
+      </tr>
+    </table>
   `.trim();
 }
 
@@ -485,11 +509,11 @@ export function formatBillingEmailTotalsHtml(input: {
     options?: { strong?: boolean; highlight?: boolean },
   ) => {
     const labelStyle =
-      "padding:4px 0;color:#52525b;font-size:14px;text-align:left;";
+      "padding:2px 0;color:#71717a;font-size:13px;line-height:1.4;text-align:left;";
     const valueStyle = [
-      "padding:4px 0;color:#18181b;font-size:14px;text-align:right;white-space:nowrap;",
+      "padding:2px 0;color:#18181b;font-size:13px;line-height:1.4;text-align:right;white-space:nowrap;",
       options?.strong ? "font-weight:700;" : "",
-      options?.highlight ? "font-size:16px;font-weight:700;" : "",
+      options?.highlight ? "font-size:15px;font-weight:700;" : "",
     ].join("");
 
     return `
@@ -528,8 +552,14 @@ export function formatBillingEmailTotalsHtml(input: {
   }
 
   return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:16px;">
-      <tbody>${rows.join("")}</tbody>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:12px;">
+      <tr>
+        <td align="right" style="padding:0;">
+          <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;min-width:220px;">
+            <tbody>${rows.join("")}</tbody>
+          </table>
+        </td>
+      </tr>
     </table>
   `.trim();
 }
@@ -564,16 +594,24 @@ export function formatBillingEmailCompanyContactHtml(
   const body = lines
     .map(
       (line) =>
-        `<div style="color:#52525b;font-size:13px;line-height:1.6;">${escapeBillingEmailHtml(line)}</div>`,
+        `<tr><td style="padding:0;color:#71717a;font-size:12px;line-height:1.5;">${escapeBillingEmailHtml(line)}</td></tr>`,
     )
     .join("");
 
   return `
-    <div style="margin-top:24px;padding-top:18px;border-top:1px solid #e4e4e7;">
-      <div style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Questions?</div>
-      <div style="color:#18181b;font-size:14px;font-weight:600;margin-bottom:8px;">${escapeBillingEmailHtml(company.name)}</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:16px;padding-top:12px;border-top:1px solid #e4e4e7;">
+      <tr>
+        <td style="padding:12px 0 6px;color:#71717a;font-size:12px;line-height:1.4;text-transform:uppercase;letter-spacing:0.04em;">
+          Questions?
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 0 4px;color:#18181b;font-size:13px;font-weight:600;line-height:1.4;">
+          ${escapeBillingEmailHtml(company.name)}
+        </td>
+      </tr>
       ${body}
-    </div>
+    </table>
   `.trim();
 }
 
@@ -585,16 +623,32 @@ export function formatBillingEmailFooter(
     ? `Reply to this email to reach ${companyName}.`
     : `Contact ${companyName} using the information above.`;
 
-  const html = `<p style="margin:24px 0 0;color:#71717a;font-size:12px;line-height:1.55;">${escapeBillingEmailHtml(text)}</p>`;
+  const html = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:12px;">
+      <tr>
+        <td style="padding:0;color:#a1a1aa;font-size:11px;line-height:1.45;">
+          ${escapeBillingEmailHtml(text)}
+        </td>
+      </tr>
+    </table>
+  `.trim();
 
   return { text, html };
 }
 
 export function formatBillingEmailNotesHtml(notesText: string): string {
   return `
-    <div style="margin-top:20px;">
-      <div style="color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:6px;">Notes</div>
-      <div style="color:#3f3f46;font-size:14px;line-height:1.65;">${formatBillingEmailMultilineHtml(notesText)}</div>
-    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:12px;">
+      <tr>
+        <td style="padding:0 0 4px;color:#71717a;font-size:12px;line-height:1.4;text-transform:uppercase;letter-spacing:0.04em;">
+          Notes
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0;color:#3f3f46;font-size:13px;line-height:1.5;">
+          ${formatBillingEmailMultilineHtml(notesText)}
+        </td>
+      </tr>
+    </table>
   `.trim();
 }
