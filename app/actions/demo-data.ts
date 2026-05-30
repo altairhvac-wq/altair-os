@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertCompanySettingsAccess } from "@/lib/database/access-control";
+import { assertDemoDataManagementAccess } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import {
   clearCompanyDemoData,
   getDemoDataStatus,
@@ -16,14 +17,31 @@ import type {
 
 const NO_ACTIVE_COMPANY_MESSAGE = "No active company workspace.";
 
-async function requireDemoDataManagementContext() {
-  const context = await getActiveCompanyContext();
+type DemoDataContextResult =
+  | { error: string }
+  | { context: ActiveCompanyContext };
 
-  if (!context) {
-    return { error: "No active company workspace." as const };
+async function requireDemoDataManagementContext(
+  companyId: string,
+  action: "seed" | "clear" = "seed",
+): Promise<DemoDataContextResult> {
+  const trimmedCompanyId = companyId.trim();
+
+  if (!trimmedCompanyId) {
+    return { error: "Company workspace is required." as const };
   }
 
-  const accessError = assertCompanySettingsAccess(context);
+  const context = await getActiveCompanyContext({ companyId: trimmedCompanyId });
+
+  if (!context) {
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
+  }
+
+  const accessError = assertDemoDataManagementAccess(
+    context,
+    trimmedCompanyId,
+    action,
+  );
   if (accessError) {
     return { error: accessError };
   }
@@ -31,20 +49,21 @@ async function requireDemoDataManagementContext() {
   return { context };
 }
 
-export async function getDemoDataStatusAction(): Promise<
-  DemoDataStatus | { error: string }
-> {
-  const context = await getActiveCompanyContext();
-
-  if (!context) {
-    return { error: NO_ACTIVE_COMPANY_MESSAGE };
+export async function getDemoDataStatusAction(
+  companyId: string,
+): Promise<DemoDataStatus | { error: string }> {
+  const contextResult = await requireDemoDataManagementContext(companyId);
+  if ("error" in contextResult) {
+    return { error: contextResult.error };
   }
 
-  return getDemoDataStatus(context.company.id, context);
+  return getDemoDataStatus(contextResult.context.company.id, contextResult.context);
 }
 
-export async function seedDemoDataAction(): Promise<SeedDemoDataResult> {
-  const contextResult = await requireDemoDataManagementContext();
+export async function seedDemoDataAction(
+  companyId: string,
+): Promise<SeedDemoDataResult> {
+  const contextResult = await requireDemoDataManagementContext(companyId);
   if ("error" in contextResult) {
     return { error: contextResult.error };
   }
@@ -68,8 +87,10 @@ export async function seedDemoDataAction(): Promise<SeedDemoDataResult> {
   return { seededAt: result.seededAt };
 }
 
-export async function clearDemoDataAction(): Promise<ClearDemoDataResult> {
-  const contextResult = await requireDemoDataManagementContext();
+export async function clearDemoDataAction(
+  companyId: string,
+): Promise<ClearDemoDataResult> {
+  const contextResult = await requireDemoDataManagementContext(companyId, "clear");
   if ("error" in contextResult) {
     return { error: contextResult.error };
   }

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { mapDatabaseError } from "@/lib/database/errors";
+import { mapDemoDataError } from "@/lib/database/errors";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import {
   parseCompanyDemoDataSettings,
@@ -132,7 +132,7 @@ export async function markCompanyDemoDataSeeded(
       code: error.code,
       message: error.message,
     });
-    return { error: mapDatabaseError(error) };
+    return { error: mapDemoDataError(error, "seed") };
   }
 
   return { error: null };
@@ -153,7 +153,7 @@ export async function clearCompanyDemoData(
       code: error.code,
       message: error.message,
     });
-    return { error: mapDatabaseError(error) };
+    return { error: mapDemoDataError(error, "clear") };
   }
 
   return { error: null };

@@ -1,5 +1,6 @@
 import { isAlphaHiddenAdminNavHref } from "@/lib/beta/alpha-hardening";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
+import type { CompanyRole } from "@/lib/database/types/enums";
 import { hasCompanyRole } from "@/lib/database/types/roles";
 
 export type CompanyAccessScope = {
@@ -101,6 +102,45 @@ export function assertCompanySettingsAccess(
 ): string | null {
   if (!canAccessCompanySettings(context)) {
     return "You do not have permission to access company settings.";
+  }
+
+  return null;
+}
+
+const DEMO_DATA_MANAGER_ROLES = ["owner", "admin"] as const satisfies readonly CompanyRole[];
+
+export function canManageDemoData(context: ActiveCompanyContext): boolean {
+  return (
+    context.membership.status === "active" &&
+    context.membership.company_id === context.company.id &&
+    hasCompanyRole(context.role, DEMO_DATA_MANAGER_ROLES)
+  );
+}
+
+export function assertDemoDataManagementAccess(
+  context: ActiveCompanyContext,
+  companyId?: string,
+  action: "seed" | "clear" = "seed",
+): string | null {
+  if (companyId) {
+    const scopeError = assertMatchingCompanyScope(context, companyId);
+    if (scopeError) {
+      return scopeError;
+    }
+  }
+
+  if (context.membership.status !== "active") {
+    return "Your company membership is not active.";
+  }
+
+  if (context.membership.company_id !== context.company.id) {
+    return "Company workspace mismatch.";
+  }
+
+  if (!hasCompanyRole(context.role, DEMO_DATA_MANAGER_ROLES)) {
+    return action === "clear"
+      ? "Only company owners and admins can clear demo data."
+      : "Only company owners and admins can load demo data.";
   }
 
   return null;

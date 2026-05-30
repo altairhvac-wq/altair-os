@@ -103,6 +103,43 @@ export function mapDatabaseError(error: DatabaseErrorLike): string {
   return "Something went wrong. Please try again.";
 }
 
+export type DemoDataActionKind = "seed" | "clear";
+
+function demoDataPermissionMessage(action: DemoDataActionKind): string {
+  return action === "clear"
+    ? "Only company owners and admins can clear demo data."
+    : "Only company owners and admins can load demo data.";
+}
+
+export function mapDemoDataError(
+  error: DatabaseErrorLike,
+  action: DemoDataActionKind,
+): string {
+  const rawMessage = error.message?.trim() ?? "";
+  const message = rawMessage.toLowerCase();
+
+  if (message.includes("insufficient permissions to clear demo data")) {
+    return demoDataPermissionMessage("clear");
+  }
+
+  if (
+    message.includes("permission denied") ||
+    error.code === "42501" ||
+    message.includes("row-level security") ||
+    message.includes("you do not have permission to perform this action")
+  ) {
+    return demoDataPermissionMessage(action);
+  }
+
+  const mapped = mapDatabaseError(error);
+
+  if (mapped === "You do not have permission to perform this action.") {
+    return demoDataPermissionMessage(action);
+  }
+
+  return mapped;
+}
+
 export function mapAuthError(error: { message?: string; code?: string }): string {
   const message = error.message?.toLowerCase() ?? "";
 

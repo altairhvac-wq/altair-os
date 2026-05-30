@@ -1274,8 +1274,12 @@ function DashboardContentLayout({
 
   return (
     <DashboardDrilldownProvider panels={drilldownPanels}>
-      {showDemoDataSection ? (
-        <DemoDataSection status={demoDataStatus} variant="dashboard" />
+      {showDemoDataSection && companyId ? (
+        <DemoDataSection
+          companyId={companyId}
+          status={demoDataStatus}
+          variant="dashboard"
+        />
       ) : null}
 
       {showOnboarding ? (

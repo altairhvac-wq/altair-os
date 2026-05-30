@@ -10,11 +10,13 @@ import {
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 
 type DemoDataSectionProps = {
+  companyId: string;
   status: DemoDataStatus;
   variant?: "dashboard" | "settings";
 };
 
 export function DemoDataSection({
+  companyId,
   status,
   variant = "dashboard",
 }: DemoDataSectionProps) {
@@ -37,7 +39,7 @@ export function DemoDataSection({
     setSuccessMessage(null);
 
     startTransition(async () => {
-      const result = await seedDemoDataAction();
+      const result = await seedDemoDataAction(companyId);
 
       if (result.error) {
         setError(result.error);
@@ -56,7 +58,7 @@ export function DemoDataSection({
     setSuccessMessage(null);
 
     startTransition(async () => {
-      const result = await clearDemoDataAction();
+      const result = await clearDemoDataAction(companyId);
 
       if (result.error) {
         setError(result.error);

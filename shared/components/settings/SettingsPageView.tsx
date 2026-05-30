@@ -185,7 +185,11 @@ export function SettingsPageView({
 
       {demoDataStatus &&
       (demoDataStatus.isEligibleForSeed || demoDataStatus.hasDemoData) ? (
-        <DemoDataSection status={demoDataStatus} variant="settings" />
+        <DemoDataSection
+          companyId={companyProfile.id}
+          status={demoDataStatus}
+          variant="settings"
+        />
       ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

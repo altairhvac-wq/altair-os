@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { shouldUseTechnicianHome } from "@/lib/auth/redirects";
-import { canAccessCompanySettings } from "@/lib/database/access-control";
+import { canManageDemoData } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getDemoDataStatus } from "@/lib/database/queries/demo-data";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
@@ -22,7 +22,7 @@ export default async function DashboardPage() {
   const [data, onboardingSnapshot, demoDataStatus] = await Promise.all([
     getDashboardData(companyContext),
     getOnboardingSnapshot(companyContext.company.id, companyContext),
-    canAccessCompanySettings(companyContext)
+    canManageDemoData(companyContext)
       ? getDemoDataStatus(companyContext.company.id, companyContext)
       : Promise.resolve(null),
   ]);

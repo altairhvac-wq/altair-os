@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { mapDatabaseError } from "@/lib/database/errors";
+import { mapDemoDataError } from "@/lib/database/errors";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import {
   clearCompanyDemoData,
@@ -69,7 +69,10 @@ async function insertRow(
       code: error?.code,
       message: error?.message,
     });
-    return { id: null, error: error ? mapDatabaseError(error) : `Failed to insert ${table}.` };
+    return {
+      id: null,
+      error: error ? mapDemoDataError(error, "seed") : `Failed to insert ${table}.`,
+    };
   }
 
   return { id: (data as { id: string }).id, error: null };
