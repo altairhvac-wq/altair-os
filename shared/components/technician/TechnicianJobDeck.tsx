@@ -17,6 +17,7 @@ type TechnicianJobDeckProps = {
   timeState: TechnicianTimeStateSnapshot;
   serviceItems: ServiceItem[];
   canCreateEstimate: boolean;
+  canManageTime: boolean;
   defaultTaxRate: number;
   onTimeStateChange: (state: TechnicianTimeStateSnapshot) => void;
   onJobStatusUpdated: (jobId: string, status: JobStatus) => void;
@@ -82,6 +83,7 @@ export function TechnicianJobDeck({
   timeState,
   serviceItems,
   canCreateEstimate,
+  canManageTime,
   defaultTaxRate,
   onTimeStateChange,
   onJobStatusUpdated,
@@ -284,6 +286,7 @@ export function TechnicianJobDeck({
             timeState={timeState}
             serviceItems={serviceItems}
             canCreateEstimate={canCreateEstimate}
+            canManageTime={canManageTime}
             defaultTaxRate={defaultTaxRate}
             onTimeStateChange={onTimeStateChange}
             onStatusUpdated={(status) => onJobStatusUpdated(activeJob.id, status)}

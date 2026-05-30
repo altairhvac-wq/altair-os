@@ -15,17 +15,15 @@ import type { JobStatus } from "@/shared/types/job";
 import type { TechnicianJob } from "@/shared/types/technician";
 import type {
   TechnicianTimeStateSnapshot,
-  TodayTimeSummary,
 } from "@/shared/types/time-entry";
 import type { ServiceItem } from "@/shared/types/service-item";
-import { TechnicianJobsTimeClock } from "./TechnicianJobsTimeClock";
+import { TechnicianJobClockInline } from "./TechnicianJobClockInline";
 import { TechnicianJobDeck } from "./TechnicianJobDeck";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 
 type TechnicianAssignedJobsViewProps = {
   jobs: TechnicianJob[];
   timeState: TechnicianTimeStateSnapshot;
-  todaySummary: TodayTimeSummary;
   serviceItems: ServiceItem[];
   canManageTime: boolean;
   canCreateEstimate: boolean;
@@ -158,7 +156,6 @@ function TechnicianQueueSummary({
 export function TechnicianAssignedJobsView({
   jobs: initialJobs,
   timeState: initialTimeState,
-  todaySummary: initialTodaySummary,
   serviceItems,
   canManageTime,
   canCreateEstimate,
@@ -167,7 +164,6 @@ export function TechnicianAssignedJobsView({
   const router = useRouter();
   const [jobs, setJobs] = useState(initialJobs);
   const [timeState, setTimeState] = useState(initialTimeState);
-  const [todaySummary, setTodaySummary] = useState(initialTodaySummary);
   const [lastUpdatedAt, setLastUpdatedAt] = useState(() => new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -189,10 +185,6 @@ export function TechnicianAssignedJobsView({
   useEffect(() => {
     setTimeState(initialTimeState);
   }, [initialTimeState]);
-
-  useEffect(() => {
-    setTodaySummary(initialTodaySummary);
-  }, [initialTodaySummary]);
 
   useEffect(() => {
     if (!isRefreshing) {
@@ -237,19 +229,9 @@ export function TechnicianAssignedJobsView({
 
   const deckJobs = getTechnicianJobDeckOrder(jobs);
 
-  const timeClockBanner = canManageTime ? (
-    <TechnicianJobsTimeClock
-      initialTimeState={timeState}
-      initialSummary={todaySummary}
-      onTimeStateChange={setTimeState}
-      onSummaryChange={setTodaySummary}
-    />
-  ) : null;
-
   if (deckJobs.length === 0) {
     return (
       <div className="space-y-3">
-        {timeClockBanner}
         <TechnicianJobsEmptyState
           title={jobs.length === 0 ? "Nothing on your schedule" : "All caught up"}
           description={
@@ -258,6 +240,14 @@ export function TechnicianAssignedJobsView({
               : "No jobs need action right now. Finished work is listed below."
           }
         />
+        {canManageTime ? (
+          <div className="rounded-lg bg-white px-2.5 py-2 shadow-sm ring-1 ring-slate-200">
+            <TechnicianJobClockInline
+              timeState={timeState}
+              onTimeStateChange={setTimeState}
+            />
+          </div>
+        ) : null}
         <CompletedTodaySection jobs={jobs} />
       </div>
     );
@@ -265,8 +255,6 @@ export function TechnicianAssignedJobsView({
 
   return (
     <div className="space-y-3">
-      {timeClockBanner}
-
       <TechnicianQueueSummary
         activeCount={deckJobs.length}
         lastUpdatedAt={lastUpdatedAt}
@@ -278,6 +266,7 @@ export function TechnicianAssignedJobsView({
         timeState={timeState}
         serviceItems={serviceItems}
         canCreateEstimate={canCreateEstimate}
+        canManageTime={canManageTime}
         defaultTaxRate={defaultTaxRate}
         onTimeStateChange={setTimeState}
         onJobStatusUpdated={handleJobStatusUpdated}

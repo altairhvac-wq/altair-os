@@ -28,6 +28,7 @@ import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import { getCreateEstimateJobBlockReason } from "@/shared/types/estimate";
 import { TechnicianCustomerQuickActions } from "./TechnicianCustomerQuickActions";
+import { TechnicianJobClockInline } from "./TechnicianJobClockInline";
 import { TechnicianEstimateSheet } from "./TechnicianEstimateSheet";
 import { TechnicianExpenseSheet } from "./TechnicianExpenseSheet";
 import { TechnicianJobEquipmentSummary } from "./TechnicianJobEquipmentSummary";
@@ -42,6 +43,7 @@ type TechnicianJobCardProps = {
   serviceItems: ServiceItem[];
   defaultTaxRate: number;
   canCreateEstimate: boolean;
+  canManageTime?: boolean;
   defaultExpanded?: boolean;
   emphasized?: boolean;
   /** Deck context label for the visible card in TechnicianJobDeck. */
@@ -64,6 +66,7 @@ export function TechnicianJobCard({
   serviceItems,
   defaultTaxRate,
   canCreateEstimate,
+  canManageTime = false,
   defaultExpanded = true,
   emphasized = false,
   deckBadge,
@@ -188,6 +191,15 @@ export function TechnicianJobCard({
             {formatJobPriority(job.priority)}
           </span>
         </div>
+
+        {canManageTime && deckBadge ? (
+          <div className="mt-2 min-w-0">
+            <TechnicianJobClockInline
+              timeState={timeState}
+              onTimeStateChange={onTimeStateChange}
+            />
+          </div>
+        ) : null}
 
         {!expanded ? (
           <div className="mt-2 space-y-2">
