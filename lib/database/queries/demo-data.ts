@@ -10,7 +10,7 @@ import type {
   DemoDataStatus,
 } from "@/shared/types/demo-data";
 
-const DEMO_DATA_VERSION = 2;
+const DEMO_DATA_VERSION = 3;
 
 async function countNonDemoRows(
   table:
