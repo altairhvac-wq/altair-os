@@ -137,30 +137,30 @@ function getDashboardSectionOrder(
   switch (roleFocus) {
     case "dispatch": {
       const sections: DashboardPrioritySectionId[] = [
-        "needs-attention",
-        "todays-work",
         "operational-health",
+        "todays-work",
+        "needs-attention",
         "next-steps",
       ];
       if (access.canViewCompanyExpenses) {
-        sections.splice(3, 0, "revenue-billing");
+        sections.splice(2, 0, "revenue-billing");
       }
       return sections;
     }
     case "office":
       return [
-        "needs-attention",
-        "revenue-billing",
-        "todays-work",
         "operational-health",
+        "todays-work",
+        "revenue-billing",
+        "needs-attention",
         "next-steps",
       ];
     default:
       return [
-        "needs-attention",
+        "operational-health",
         "todays-work",
         "revenue-billing",
-        "operational-health",
+        "needs-attention",
         "next-steps",
       ];
   }
@@ -1333,7 +1333,7 @@ export function OperationalDashboardView({
   demoDataStatus,
 }: OperationalDashboardViewProps) {
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-2.5 pb-2 xl:max-w-[1440px]">
+    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-2 pb-2 xl:max-w-[1440px]">
       <DashboardContentLayout
         data={data}
         onboardingChecklist={onboardingChecklist}

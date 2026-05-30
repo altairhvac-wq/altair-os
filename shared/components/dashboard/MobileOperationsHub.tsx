@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import {
+  AlertCircle,
   AlertTriangle,
   ArrowRight,
   ChevronRight,
+  Info,
   Sparkles,
 } from "lucide-react";
 import { useDashboardDrilldown } from "@/shared/components/dashboard/dashboard-drilldown-context";
@@ -31,22 +33,25 @@ type MobileOperationsHubProps = {
 
 const ATTENTION_SEVERITY_STYLES: Record<
   MobileAttentionSeverity,
-  { row: string; badge: string; icon: string }
+  { row: string; badge: string; icon: typeof AlertTriangle; iconClass: string }
 > = {
   critical: {
-    row: "border-rose-200 bg-rose-50/60",
+    row: "border-slate-200/90 bg-white border-l-[3px] border-l-rose-500",
     badge: "bg-rose-100 text-rose-800",
-    icon: "text-rose-600",
+    icon: AlertTriangle,
+    iconClass: "text-rose-600",
   },
   warning: {
-    row: "border-amber-200 bg-amber-50/60",
+    row: "border-slate-200/90 bg-white border-l-[3px] border-l-amber-400",
     badge: "bg-amber-100 text-amber-800",
-    icon: "text-amber-600",
+    icon: AlertCircle,
+    iconClass: "text-amber-600",
   },
   info: {
-    row: "border-slate-200 bg-white",
-    badge: "bg-slate-100 text-slate-700",
-    icon: "text-slate-500",
+    row: "border-slate-200/80 bg-white",
+    badge: "bg-slate-100 text-slate-600",
+    icon: Info,
+    iconClass: "text-slate-400",
   },
 };
 
@@ -204,7 +209,7 @@ function OperationsStatusSection({
         type="button"
         onClick={() => openDashboardPanel("health")}
         aria-label="View operational health details"
-        className="w-full rounded-lg border border-slate-200/80 bg-white px-2.5 py-2 text-left transition-colors hover:bg-slate-50/80"
+        className="w-full rounded-lg border border-slate-200/90 bg-white px-2.5 py-2.5 text-left shadow-sm transition-colors hover:bg-slate-50/80"
       >
         {body}
       </button>
@@ -214,7 +219,7 @@ function OperationsStatusSection({
   return (
     <section
       aria-label="Operations status"
-      className="rounded-lg border border-slate-200/80 bg-white px-2.5 py-2"
+      className="rounded-lg border border-slate-200/90 bg-white px-2.5 py-2.5 shadow-sm"
     >
       {body}
     </section>
@@ -224,21 +229,29 @@ function OperationsStatusSection({
 function NeedsAttentionRow({ item }: { item: MobileAttentionQueueItem }) {
   const { openDashboardPanel, hasPanel } = useDashboardDrilldown();
   const styles = ATTENTION_SEVERITY_STYLES[item.severity];
+  const Icon = styles.icon;
 
   const content = (
     <>
       <div className="flex min-w-0 items-center gap-2">
-        <AlertTriangle
-          className={`h-3.5 w-3.5 shrink-0 ${styles.icon}`}
+        <Icon
+          className={`h-3.5 w-3.5 shrink-0 ${styles.iconClass}`}
           aria-hidden="true"
         />
-        <span className="truncate text-sm font-semibold text-slate-900">
-          {item.label}
-        </span>
+        <div className="min-w-0">
+          <span className="block truncate text-sm font-semibold text-slate-900">
+            {item.label}
+          </span>
+          {item.subtitle ? (
+            <span className="block truncate text-[11px] font-medium text-slate-500">
+              {item.subtitle}
+            </span>
+          ) : null}
+        </div>
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
         <span
-          className={`inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-2 py-0.5 text-xs font-black tabular-nums ${styles.badge}`}
+          className={`inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ${styles.badge}`}
         >
           {item.count}
         </span>
@@ -247,13 +260,15 @@ function NeedsAttentionRow({ item }: { item: MobileAttentionQueueItem }) {
     </>
   );
 
+  const rowClass = `flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-slate-50/80 ${styles.row}`;
+
   if (item.panelId && hasPanel(item.panelId)) {
     return (
       <li>
         <button
           type="button"
           onClick={() => openDashboardPanel(item.panelId!)}
-          className={`flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors hover:opacity-90 ${styles.row}`}
+          className={rowClass}
         >
           {content}
         </button>
@@ -264,10 +279,7 @@ function NeedsAttentionRow({ item }: { item: MobileAttentionQueueItem }) {
   if (item.href) {
     return (
       <li>
-        <Link
-          href={item.href}
-          className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2.5 transition-colors hover:opacity-90 ${styles.row}`}
-        >
+        <Link href={item.href} className={rowClass}>
           {content}
         </Link>
       </li>
@@ -275,9 +287,7 @@ function NeedsAttentionRow({ item }: { item: MobileAttentionQueueItem }) {
   }
 
   return (
-    <li
-      className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2.5 ${styles.row}`}
-    >
+    <li className={rowClass}>
       {content}
     </li>
   );
@@ -298,7 +308,7 @@ function NeedsAttentionSection({
   return (
     <section aria-label="Needs attention" className="min-w-0 flex-1">
       <header className="mb-1 flex items-center justify-between gap-2">
-        <h2 className="text-xs font-black uppercase tracking-wide text-slate-900">
+        <h2 className="text-[11px] font-bold uppercase tracking-wide text-slate-700">
           Needs attention
         </h2>
         {queue.length > 0 ? (
@@ -527,10 +537,10 @@ export function MobileOperationsHub({
 
   return (
     <div className="flex min-w-0 flex-col gap-2">
+      <OperationsStatusSection data={data} issues={heroIssues} />
       <TodayStrip operations={data.operations} />
       <CashStrip data={data} />
       <NeedsAttentionSection queue={attentionQueue} />
-      <OperationsStatusSection data={data} issues={heroIssues} />
       <SecondaryInsightsSection
         data={data}
         notificationAccess={notificationAccess}

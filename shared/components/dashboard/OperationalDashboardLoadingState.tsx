@@ -50,17 +50,17 @@ function DesktopLoadingSkeleton() {
 function MobileLoadingSkeleton() {
   return (
     <div className="space-y-2">
+      <Skeleton className="h-[4.5rem] w-full rounded-lg" />
       <Skeleton className="h-[3.25rem] w-full rounded-lg" />
       <Skeleton className="h-[3.25rem] w-full rounded-lg" />
 
       <div className="space-y-1">
         <Skeleton className="h-3 w-28" />
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-11 w-full rounded-lg" />
+          <Skeleton key={i} className="h-12 w-full rounded-lg" />
         ))}
       </div>
 
-      <Skeleton className="h-[4.5rem] w-full rounded-lg" />
       <Skeleton className="h-10 w-full rounded-lg" />
     </div>
   );
