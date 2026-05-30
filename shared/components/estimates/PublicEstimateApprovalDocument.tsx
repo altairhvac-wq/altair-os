@@ -28,6 +28,7 @@ export function PublicEstimateApprovalDocument({
       customerSectionLabel="Prepared for"
       showApprovalGuidance
       afterCustomer={afterCustomer}
+      layoutVariant="public"
     />
   );
 }

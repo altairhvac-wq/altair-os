@@ -177,20 +177,7 @@ export default async function EstimateApprovalPage({
   const approvalForm = <PublicEstimateApprovalForm rawToken={rawToken} />;
 
   return (
-    <PublicApprovalShell companyName={companyName}>
-      <div className="mb-3 sm:mb-6">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-xs">
-          Secure customer approval
-        </p>
-        <h1 className="mt-1 text-xl font-bold text-slate-900 sm:mt-2 sm:text-2xl md:text-3xl">
-          Review &amp; sign your estimate
-        </h1>
-        <p className="mt-1 max-w-2xl text-xs leading-snug text-slate-600 sm:mt-2 sm:text-sm sm:leading-relaxed">
-          Review the estimate from {companyName}, then sign below to approve the
-          proposed work.
-        </p>
-      </div>
-
+    <PublicApprovalShell>
       <PublicEstimateApprovalDocument
         view={view}
         afterCustomer={approvalForm}
@@ -201,24 +188,13 @@ export default async function EstimateApprovalPage({
 
 function PublicApprovalShell({
   children,
-  companyName,
 }: {
   children: React.ReactNode;
   companyName?: string;
 }) {
   return (
-    <main className="min-h-full bg-slate-100 px-3 py-5 sm:px-6 sm:py-8 md:py-10">
-      <div className="mx-auto w-full max-w-3xl">
-        <header className="mb-3 text-center sm:mb-6 sm:text-left">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-xs">
-            Altair OS
-          </p>
-          {companyName ? (
-            <p className="mt-0.5 text-xs text-slate-600 sm:mt-1 sm:text-sm">
-              {companyName}
-            </p>
-          ) : null}
-        </header>
+    <main className="min-h-full overflow-x-hidden bg-slate-50 px-3 py-4 sm:px-6 sm:py-8">
+      <div className="mx-auto w-full min-w-0 max-w-lg sm:max-w-2xl">
         {children}
       </div>
     </main>

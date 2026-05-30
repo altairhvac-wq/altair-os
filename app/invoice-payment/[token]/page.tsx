@@ -1,4 +1,3 @@
-import { CheckCircle2 } from "lucide-react";
 import { getPublicInvoicePaymentView } from "@/lib/database/queries/invoice-payment-tokens";
 import { PublicInvoicePaymentContactPanel } from "@/shared/components/invoices/PublicInvoicePaymentContactPanel";
 import { PublicInvoicePaymentDocument } from "@/shared/components/invoices/PublicInvoicePaymentDocument";
@@ -39,7 +38,6 @@ export default async function InvoicePaymentPage({
   const view = await getPublicInvoicePaymentView(rawToken);
 
   const companyName = view.company?.name ?? "the company";
-  const invoiceNumber = view.invoice?.invoiceNumber;
 
   if (view.state === "invalid") {
     return (
@@ -115,43 +113,7 @@ export default async function InvoicePaymentPage({
   ) : undefined;
 
   return (
-    <PublicPaymentShell companyName={companyName}>
-      <div className="mb-3 sm:mb-6">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-xs">
-          Secure customer invoice
-        </p>
-        <h1 className="mt-1 text-xl font-bold text-slate-900 sm:mt-2 sm:text-2xl md:text-3xl">
-          {isPaidInFull ? "View your invoice" : "View & pay your invoice"}
-        </h1>
-        <p className="mt-1 max-w-2xl text-xs leading-snug text-slate-600 sm:mt-2 sm:text-sm sm:leading-relaxed">
-          {invoiceNumber
-            ? `Invoice ${invoiceNumber} from ${companyName}.`
-            : `Invoice from ${companyName}.`}{" "}
-          {isPaidInFull
-            ? "This invoice is paid in full."
-            : "Review the details below, then contact the office to arrange payment."}
-        </p>
-      </div>
-
-      {isPaidInFull ? (
-        <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 shadow-sm sm:mb-6 sm:rounded-2xl sm:p-5">
-          <div className="flex items-start gap-2.5 sm:gap-3">
-            <CheckCircle2
-              className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700 sm:h-6 sm:w-6"
-              aria-hidden
-            />
-            <div>
-              <h2 className="text-base font-bold text-emerald-950 sm:text-lg">
-                Paid in full
-              </h2>
-              <p className="mt-1 text-xs leading-snug text-emerald-900 sm:text-sm sm:leading-relaxed">
-                No payment is required. Retain this invoice for your records.
-              </p>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
+    <PublicPaymentShell>
       <PublicInvoicePaymentDocument
         view={view}
         afterCustomer={paymentPanel}
@@ -162,24 +124,13 @@ export default async function InvoicePaymentPage({
 
 function PublicPaymentShell({
   children,
-  companyName,
 }: {
   children: React.ReactNode;
   companyName?: string;
 }) {
   return (
-    <main className="min-h-full bg-slate-100 px-3 py-5 sm:px-6 sm:py-8 md:py-10">
-      <div className="mx-auto w-full max-w-3xl">
-        <header className="mb-3 text-center sm:mb-6 sm:text-left">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-xs">
-            Altair OS
-          </p>
-          {companyName ? (
-            <p className="mt-0.5 text-xs text-slate-600 sm:mt-1 sm:text-sm">
-              {companyName}
-            </p>
-          ) : null}
-        </header>
+    <main className="min-h-full overflow-x-hidden bg-slate-50 px-3 py-4 sm:px-6 sm:py-8">
+      <div className="mx-auto w-full min-w-0 max-w-lg sm:max-w-2xl">
         {children}
       </div>
     </main>

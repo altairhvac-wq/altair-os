@@ -6,12 +6,15 @@ type EstimateThankYouFooterProps = {
   validUntil?: string | null;
   /** When true, include guidance about online approval. */
   showApprovalGuidance?: boolean;
+  /** Nested inside a collapsible section (no extra top rule/spacing). */
+  embedded?: boolean;
 };
 
 export function EstimateThankYouFooter({
   company,
   validUntil,
   showApprovalGuidance = false,
+  embedded = false,
 }: EstimateThankYouFooterProps) {
   const phone = company.phone?.trim();
   const email = company.email?.trim();
@@ -19,7 +22,13 @@ export function EstimateThankYouFooter({
   const trimmedValidUntil = validUntil?.trim();
 
   return (
-    <footer className="estimate-thank-you-footer mt-4 border-t-2 border-slate-900 pt-4 text-center sm:mt-8 sm:pt-8 print:mt-8 print:border-slate-800 print:pt-8 print:break-inside-avoid">
+    <footer
+      className={
+        embedded
+          ? "estimate-thank-you-footer text-center"
+          : "estimate-thank-you-footer mt-4 border-t-2 border-slate-900 pt-4 text-center sm:mt-8 sm:pt-8 print:mt-8 print:border-slate-800 print:pt-8 print:break-inside-avoid"
+      }
+    >
       <p className="text-base font-semibold tracking-tight text-slate-900 sm:text-lg md:text-xl">
         Thank you for considering {company.name}
       </p>

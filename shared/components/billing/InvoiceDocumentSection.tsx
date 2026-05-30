@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact";
+import type { BillingDocumentLayoutVariant } from "@/shared/lib/billing-document-style";
+import { BillingCollapsibleSection } from "./BillingCollapsibleSection";
 import { BillingLineItemsList } from "./BillingLineItemsList";
 import { BillingSignatureBlock } from "./BillingSignatureBlock";
 import { BillingTotalsSummary } from "./BillingTotalsSummary";
@@ -9,6 +11,8 @@ import { InvoiceCompanyHeroHeader } from "./InvoiceCompanyHeroHeader";
 import { InvoiceIdentityCard } from "./InvoiceIdentityCard";
 import { InvoiceNotesBlock } from "./InvoiceNotesBlock";
 import { InvoiceThankYouFooter } from "./InvoiceThankYouFooter";
+import { PublicBillingCompactAmount } from "./PublicBillingCompactAmount";
+import { PublicBillingCompactHeader } from "./PublicBillingCompactHeader";
 
 import type { BillingSignature } from "@/shared/types/billing-signature";
 
@@ -23,6 +27,8 @@ type InvoiceDocumentSectionProps = {
   showSignature?: boolean;
   /** Renders after customer on mobile, after footer on sm+ (e.g. public payment panel). */
   afterCustomer?: ReactNode;
+  /** Compact customer-facing layout for public payment links. */
+  layoutVariant?: BillingDocumentLayoutVariant;
 };
 
 export function InvoiceDocumentSection({
@@ -35,9 +41,87 @@ export function InvoiceDocumentSection({
   id = "invoice-document",
   showSignature = true,
   afterCustomer,
+  layoutVariant = "default",
 }: InvoiceDocumentSectionProps) {
   const customerEmail = invoice.customerEmail?.trim();
   const customerPhone = invoice.customerPhone?.trim();
+  const isPublicLayout = layoutVariant === "public";
+  const isPaidInFull = invoice.balanceDue <= 0;
+
+  if (isPublicLayout) {
+    return (
+      <section
+        id={id}
+        className={`flex min-w-0 flex-col overflow-x-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5 ${className}`}
+      >
+        <PublicBillingCompactHeader
+          company={company}
+          logoUrl={logoUrl}
+          documentKind="invoice"
+          documentNumber={invoice.invoiceNumber}
+          customerLabel="Bill to"
+          customerName={invoice.customerName}
+          issueDate={invoice.issueDate}
+          secondaryDate={invoice.dueDate}
+          secondaryDateLabel="Due"
+          companyTimeZone={companyTimeZone}
+        />
+
+        <div className="mt-3">
+          <PublicBillingCompactAmount
+            label={isPaidInFull ? "Status" : "Balance due"}
+            amount={invoice.balanceDue}
+            displayValue={isPaidInFull ? "Paid in full" : undefined}
+          />
+        </div>
+
+        {afterCustomer ? (
+          <div className="mt-3 min-w-0 print:hidden">{afterCustomer}</div>
+        ) : null}
+
+        <div className="mt-4 min-w-0 border-t border-slate-100 pt-3">
+          <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Line items
+          </h3>
+          <div className="mt-2">
+            <BillingLineItemsList
+              items={invoice.lineItems}
+              documentLabel="invoice"
+              variant="cards"
+              compactDescriptions
+            />
+          </div>
+          <div className="mt-3">
+            <BillingTotalsSummary
+              subtotal={invoice.subtotal}
+              taxRate={invoice.taxRate}
+              taxAmount={invoice.taxAmount ?? 0}
+              total={invoice.total}
+              amountPaid={invoice.amountPaid}
+              balanceDue={invoice.balanceDue}
+              documentStyle="default"
+            />
+          </div>
+        </div>
+
+        {invoice.notes ? (
+          <div className="mt-3">
+            <BillingCollapsibleSection title="Notes">
+              <p className="whitespace-pre-wrap break-words text-xs leading-relaxed text-slate-700 sm:text-sm">
+                {invoice.notes.trim()}
+              </p>
+            </BillingCollapsibleSection>
+          </div>
+        ) : null}
+
+        <div className="mt-3">
+          <BillingCollapsibleSection title="Questions & contact">
+            <InvoiceThankYouFooter company={company} embedded />
+          </BillingCollapsibleSection>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section

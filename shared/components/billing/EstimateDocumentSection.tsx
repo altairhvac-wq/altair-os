@@ -1,6 +1,8 @@
 import type { EstimateDetail } from "@/shared/types/estimate";
 import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact";
+import type { BillingDocumentLayoutVariant } from "@/shared/lib/billing-document-style";
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
+import { BillingCollapsibleSection } from "./BillingCollapsibleSection";
 import { BillingLineItemsList } from "./BillingLineItemsList";
 import { BillingSignatureBlock } from "./BillingSignatureBlock";
 import { BillingTotalsSummary } from "./BillingTotalsSummary";
@@ -9,6 +11,8 @@ import { EstimateThankYouFooter } from "./EstimateThankYouFooter";
 import { EstimateTotalHero } from "./EstimateTotalHero";
 import { InvoiceCompanyHeroHeader } from "./InvoiceCompanyHeroHeader";
 import { InvoiceNotesBlock } from "./InvoiceNotesBlock";
+import { PublicBillingCompactAmount } from "./PublicBillingCompactAmount";
+import { PublicBillingCompactHeader } from "./PublicBillingCompactHeader";
 
 import type { BillingSignature } from "@/shared/types/billing-signature";
 import type { ReactNode } from "react";
@@ -50,6 +54,8 @@ type EstimateDocumentSectionProps = {
   showApprovalGuidance?: boolean;
   /** Renders after customer on mobile, after footer on sm+ (e.g. public approval form). */
   afterCustomer?: ReactNode;
+  /** Compact customer-facing layout for public approval links. */
+  layoutVariant?: BillingDocumentLayoutVariant;
 };
 
 export function EstimateDocumentSection({
@@ -66,9 +72,87 @@ export function EstimateDocumentSection({
   customerSectionLabel = "Bill to",
   showApprovalGuidance = false,
   afterCustomer,
+  layoutVariant = "default",
 }: EstimateDocumentSectionProps) {
   const customerEmail = estimate.customerEmail?.trim();
   const customerPhone = estimate.customerPhone?.trim();
+  const isPublicLayout = layoutVariant === "public";
+
+  if (isPublicLayout) {
+    return (
+      <section
+        id={id}
+        className={`flex min-w-0 flex-col overflow-x-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5 ${className}`}
+      >
+        <PublicBillingCompactHeader
+          company={company}
+          logoUrl={logoUrl}
+          documentKind="estimate"
+          documentNumber={estimate.estimateNumber}
+          customerLabel={customerSectionLabel}
+          customerName={estimate.customerName}
+          issueDate={estimate.createdAt}
+          secondaryDate={estimate.validUntil}
+          secondaryDateLabel="Valid until"
+          companyTimeZone={companyTimeZone}
+        />
+
+        <div className="mt-3">
+          <PublicBillingCompactAmount label="Total" amount={estimate.total} />
+        </div>
+
+        {afterCustomer ? (
+          <div className="mt-3 min-w-0 print:hidden">{afterCustomer}</div>
+        ) : null}
+
+        <div className="mt-4 min-w-0 border-t border-slate-100 pt-3">
+          <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Line items
+          </h3>
+          <div className="mt-2">
+            <BillingLineItemsList
+              items={estimate.lineItems}
+              documentLabel="estimate"
+              variant="cards"
+              compactDescriptions
+            />
+          </div>
+          <div className="mt-3">
+            <BillingTotalsSummary
+              subtotal={estimate.subtotal}
+              taxRate={estimate.taxRate}
+              taxAmount={estimate.tax ?? 0}
+              total={estimate.total}
+              documentStyle="default"
+            />
+          </div>
+        </div>
+
+        {estimate.notes ? (
+          <div className="mt-3">
+            <BillingCollapsibleSection title="Notes">
+              <p className="whitespace-pre-wrap break-words text-xs leading-relaxed text-slate-700 sm:text-sm">
+                {estimate.notes.trim()}
+              </p>
+            </BillingCollapsibleSection>
+          </div>
+        ) : null}
+
+        {showFooter ? (
+          <div className="mt-3">
+            <BillingCollapsibleSection title="Terms & contact">
+              <EstimateThankYouFooter
+                company={company}
+                validUntil={estimate.validUntil}
+                showApprovalGuidance={showApprovalGuidance}
+                embedded
+              />
+            </BillingCollapsibleSection>
+          </div>
+        ) : null}
+      </section>
+    );
+  }
 
   return (
     <section

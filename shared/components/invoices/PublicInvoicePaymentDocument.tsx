@@ -55,6 +55,7 @@ export function PublicInvoicePaymentDocument({
       company={company}
       showSignature={false}
       afterCustomer={afterCustomer}
+      layoutVariant="public"
     />
   );
 }

@@ -10,9 +10,9 @@ type PublicEstimateApprovalFormProps = {
 };
 
 const inputClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20";
+  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20";
 
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
+const labelClass = "mb-1 block text-xs font-semibold text-slate-600";
 
 export function PublicEstimateApprovalForm({
   rawToken,
@@ -61,78 +61,89 @@ export function PublicEstimateApprovalForm({
 
   return (
     <form
+      id="estimate-approval-form"
       onSubmit={handleSubmit}
-      className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5 md:p-6"
+      className="min-w-0 rounded-lg border border-teal-200 bg-teal-50/40 p-3"
     >
-      <h2 className="text-base font-bold text-slate-900 sm:text-lg">
-        Sign &amp; approve
-      </h2>
-      <p className="mt-1.5 text-xs leading-relaxed text-slate-600 sm:mt-2 sm:text-sm">
-        {content.supportingText}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-teal-800 disabled:opacity-60"
+      >
+        {isPending ? "Submitting…" : "Approve & Sign Estimate"}
+      </button>
+      <p className="mt-2 text-center text-[11px] leading-snug text-slate-600">
+        Review &amp; sign below to accept this estimate.
       </p>
 
-      <div className="mt-3 sm:mt-5">
-        <label htmlFor="signer-name" className={labelClass}>
-          Printed name
-        </label>
-        <input
-          id="signer-name"
-          name="signerName"
-          type="text"
-          autoComplete="name"
-          value={signerName}
-          onChange={(event) => setSignerName(event.target.value)}
-          className={inputClass}
-          placeholder="Your full name"
-          disabled={isPending}
-          required
-        />
-      </div>
+      <details className="group mt-3 rounded-lg border border-slate-200 bg-white">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-xs font-semibold text-slate-700 marker:content-none [&::-webkit-details-marker]:hidden">
+          Signature details
+          <span className="text-[10px] font-medium text-slate-500 group-open:hidden">
+            Tap to expand
+          </span>
+        </summary>
+        <div className="space-y-3 border-t border-slate-100 px-3 pb-3 pt-3">
+          <p className="text-xs leading-relaxed text-slate-600">
+            {content.supportingText}
+          </p>
 
-      <div className="mt-3 sm:mt-5">
-        <label className={labelClass}>Signature</label>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <SignaturePad ref={signaturePadRef} disabled={isPending} />
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={handleClearSignature}
-            disabled={isPending}
-            className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
-          >
-            Clear signature
-          </button>
-        </div>
-      </div>
+          <div>
+            <label htmlFor="signer-name" className={labelClass}>
+              Printed name
+            </label>
+            <input
+              id="signer-name"
+              name="signerName"
+              type="text"
+              autoComplete="name"
+              value={signerName}
+              onChange={(event) => setSignerName(event.target.value)}
+              className={inputClass}
+              placeholder="Your full name"
+              disabled={isPending}
+              required
+            />
+          </div>
 
-      <label className="mt-3 flex items-start gap-2.5 text-xs leading-relaxed text-slate-700 sm:mt-5 sm:gap-3 sm:text-sm">
-        <input
-          type="checkbox"
-          checked={authorized}
-          onChange={(event) => setAuthorized(event.target.checked)}
-          disabled={isPending}
-          className="mt-1 h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-600"
-        />
-        <span>I authorize the proposed work described in this estimate.</span>
-      </label>
+          <div>
+            <label className={labelClass}>Signature</label>
+            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <SignaturePad ref={signaturePadRef} disabled={isPending} />
+            </div>
+            <button
+              type="button"
+              onClick={handleClearSignature}
+              disabled={isPending}
+              className="mt-2 inline-flex min-h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
+            >
+              Clear signature
+            </button>
+          </div>
+
+          <label className="flex items-start gap-2.5 text-xs leading-relaxed text-slate-700">
+            <input
+              type="checkbox"
+              checked={authorized}
+              onChange={(event) => setAuthorized(event.target.checked)}
+              disabled={isPending}
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-600"
+            />
+            <span>
+              I authorize the proposed work described in this estimate.
+            </span>
+          </label>
+        </div>
+      </details>
 
       {error ? (
         <p
           role="alert"
-          className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+          className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
         >
           {error}
         </p>
       ) : null}
-
-      <button
-        type="submit"
-        disabled={isPending}
-        className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-teal-800 disabled:opacity-60 sm:mt-5 sm:min-h-12 sm:w-auto sm:py-3 sm:min-w-[220px]"
-      >
-        {isPending ? "Submitting…" : "Approve & Sign"}
-      </button>
     </form>
   );
 }

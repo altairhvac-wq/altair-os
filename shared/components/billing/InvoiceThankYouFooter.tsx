@@ -6,12 +6,15 @@ type InvoiceThankYouFooterProps = {
   warrantyText?: string | null;
   /** Reserved for future tenant license number wiring. */
   licenseNumber?: string | null;
+  /** Nested inside a collapsible section (no extra top rule/spacing). */
+  embedded?: boolean;
 };
 
 export function InvoiceThankYouFooter({
   company,
   warrantyText,
   licenseNumber,
+  embedded = false,
 }: InvoiceThankYouFooterProps) {
   const phone = company.phone?.trim();
   const email = company.email?.trim();
@@ -21,7 +24,13 @@ export function InvoiceThankYouFooter({
   const hasTrustCredentials = Boolean(trimmedWarranty || trimmedLicense);
 
   return (
-    <footer className="invoice-thank-you-footer mt-4 border-t-2 border-slate-900 pt-4 text-center sm:mt-8 sm:pt-8 print:mt-8 print:border-slate-800 print:pt-8 print:break-inside-avoid">
+    <footer
+      className={
+        embedded
+          ? "invoice-thank-you-footer text-center"
+          : "invoice-thank-you-footer mt-4 border-t-2 border-slate-900 pt-4 text-center sm:mt-8 sm:pt-8 print:mt-8 print:border-slate-800 print:pt-8 print:break-inside-avoid"
+      }
+    >
       <p className="text-base font-semibold tracking-tight text-slate-900 sm:text-lg md:text-xl">
         Thank you for choosing {company.name}
       </p>
