@@ -134,9 +134,19 @@ export function EstimatesPageView({
   const hasNoEstimates = estimates.length === 0;
   const hasNoResults = !hasNoEstimates && filteredEstimates.length === 0;
 
+  const isCreateOpen = panelMode === "create";
+
   return (
-    <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:flex-row lg:overflow-hidden">
-      <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1`}>
+    <div
+      className={`flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:flex-row lg:overflow-hidden ${
+        isCreateOpen ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden" : ""
+      }`}
+    >
+      <section
+        className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1 ${
+          isCreateOpen ? "max-lg:hidden" : ""
+        }`}
+      >
         <div className="admin-panel-header flex shrink-0 flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
           <div className="min-w-0">
             <h2 className="admin-heading-section sm:text-base">All estimates</h2>
