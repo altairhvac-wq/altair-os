@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact";
 import { BillingLineItemsList } from "./BillingLineItemsList";
@@ -20,6 +21,8 @@ type InvoiceDocumentSectionProps = {
   className?: string;
   id?: string;
   showSignature?: boolean;
+  /** Renders after customer on mobile, after footer on sm+ (e.g. public payment panel). */
+  afterCustomer?: ReactNode;
 };
 
 export function InvoiceDocumentSection({
@@ -31,6 +34,7 @@ export function InvoiceDocumentSection({
   className = "",
   id = "invoice-document",
   showSignature = true,
+  afterCustomer,
 }: InvoiceDocumentSectionProps) {
   const customerEmail = invoice.customerEmail?.trim();
   const customerPhone = invoice.customerPhone?.trim();
@@ -38,11 +42,13 @@ export function InvoiceDocumentSection({
   return (
     <section
       id={id}
-      className={`rounded-2xl border border-slate-300 bg-white p-5 shadow-sm sm:p-8 print:rounded-none print:border print:border-slate-400 print:p-0 print:shadow-none ${className}`}
+      className={`flex flex-col rounded-xl border border-slate-300 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5 md:p-8 print:rounded-none print:border print:border-slate-400 print:p-0 print:shadow-none ${className}`}
     >
-      <InvoiceCompanyHeroHeader company={company} logoUrl={logoUrl} />
+      <div className="order-1">
+        <InvoiceCompanyHeroHeader company={company} logoUrl={logoUrl} />
+      </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_min(100%,360px)] lg:items-stretch lg:gap-8 print:mt-8 print:grid-cols-[1fr_260px] print:gap-8">
+      <div className="order-2 mt-4 grid grid-cols-[minmax(0,1fr)_minmax(0,42%)] items-start gap-2 sm:mt-8 sm:grid-cols-1 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_min(100%,360px)] lg:items-stretch lg:gap-8 print:mt-8 print:grid-cols-[1fr_260px] print:gap-8">
         <InvoiceIdentityCard
           invoiceNumber={invoice.invoiceNumber}
           issueDate={invoice.issueDate}
@@ -57,16 +63,16 @@ export function InvoiceDocumentSection({
         />
       </div>
 
-      <div className="mt-8 border-t border-slate-200 pt-8 print:mt-8 print:pt-8">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 print:text-slate-600">
+      <div className="order-3 mt-4 border-t border-slate-200 pt-4 sm:mt-8 sm:pt-8 print:mt-8 print:pt-8">
+        <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:text-[10px] sm:tracking-[0.14em] print:text-slate-600">
           Bill to
         </p>
-        <div className="mt-4 rounded-xl border border-slate-200 bg-white px-5 py-5 ring-1 ring-slate-100 print:rounded-none print:border-0 print:bg-white print:px-0 print:py-0 print:ring-0">
-          <p className="break-words text-xl font-semibold text-slate-900 print:text-base">
+        <div className="mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 ring-1 ring-slate-100 sm:mt-4 sm:rounded-xl sm:px-5 sm:py-5 print:rounded-none print:border-0 print:bg-white print:px-0 print:py-0 print:ring-0">
+          <p className="break-words text-base font-semibold text-slate-900 sm:text-xl print:text-base">
             {invoice.customerName}
           </p>
           {(customerEmail || customerPhone) ? (
-            <div className="mt-3 space-y-1.5 text-sm leading-relaxed text-slate-600">
+            <div className="mt-1.5 space-y-0.5 text-xs leading-snug text-slate-600 sm:mt-3 sm:space-y-1.5 sm:text-sm sm:leading-relaxed">
               {customerEmail ? (
                 <p className="break-all">{customerEmail}</p>
               ) : null}
@@ -76,11 +82,17 @@ export function InvoiceDocumentSection({
         </div>
       </div>
 
-      <div className="mt-8 print:mt-8">
-        <h3 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 print:text-slate-600">
+      {afterCustomer ? (
+        <div className="order-4 mt-3 sm:order-8 sm:mt-8 print:hidden">
+          {afterCustomer}
+        </div>
+      ) : null}
+
+      <div className="order-5 mt-4 sm:order-4 sm:mt-8 print:order-4 print:mt-8">
+        <h3 className="text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:text-[10px] sm:tracking-[0.14em] print:text-slate-600">
           Services performed
         </h3>
-        <div className="mt-5">
+        <div className="mt-2 sm:mt-5">
           <BillingLineItemsList
             items={invoice.lineItems}
             documentLabel="invoice"
@@ -89,7 +101,7 @@ export function InvoiceDocumentSection({
           />
         </div>
 
-        <div className="mt-6 flex justify-end print:mt-6">
+        <div className="mt-3 flex justify-end sm:mt-6 print:mt-6">
           <div className="w-full max-w-md print:max-w-sm">
             <BillingTotalsSummary
               subtotal={invoice.subtotal}
@@ -105,7 +117,7 @@ export function InvoiceDocumentSection({
       </div>
 
       {invoice.notes ? (
-        <div className="mt-8 border-t border-slate-200 pt-8 print:mt-8 print:pt-8">
+        <div className="order-6 mt-4 border-t border-slate-200 pt-4 sm:order-5 sm:mt-8 sm:pt-8 print:order-5 print:mt-8 print:pt-8">
           <InvoiceNotesBlock notes={invoice.notes} />
         </div>
       ) : null}
@@ -116,11 +128,13 @@ export function InvoiceDocumentSection({
           signature={signature}
           companyTimeZone={companyTimeZone}
           documentStyle="invoice"
-          className="mt-8 print:mt-8"
+          className="order-7 mt-4 sm:order-6 sm:mt-8 print:order-6 print:mt-8"
         />
       ) : null}
 
-      <InvoiceThankYouFooter company={company} />
+      <div className="order-8 sm:order-7 print:order-7">
+        <InvoiceThankYouFooter company={company} />
+      </div>
     </section>
   );
 }

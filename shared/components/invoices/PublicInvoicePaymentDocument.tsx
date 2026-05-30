@@ -1,9 +1,11 @@
+import type { ReactNode } from "react";
 import type { PublicInvoicePaymentView } from "@/shared/types/public-invoice-payment";
 import { InvoiceDocumentSection } from "@/shared/components/billing/InvoiceDocumentSection";
 import type { InvoiceDetail } from "@/shared/types/invoice";
 
 type PublicInvoicePaymentDocumentProps = {
   view: PublicInvoicePaymentView;
+  afterCustomer?: ReactNode;
 };
 
 function mapPublicViewToInvoiceDetail(
@@ -38,6 +40,7 @@ function mapPublicViewToInvoiceDetail(
 
 export function PublicInvoicePaymentDocument({
   view,
+  afterCustomer,
 }: PublicInvoicePaymentDocumentProps) {
   const company = view.company;
   const invoice = mapPublicViewToInvoiceDetail(view);
@@ -51,6 +54,7 @@ export function PublicInvoicePaymentDocument({
       invoice={invoice}
       company={company}
       showSignature={false}
+      afterCustomer={afterCustomer}
     />
   );
 }

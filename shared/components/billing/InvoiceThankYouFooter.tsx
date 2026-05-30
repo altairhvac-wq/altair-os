@@ -21,16 +21,16 @@ export function InvoiceThankYouFooter({
   const hasTrustCredentials = Boolean(trimmedWarranty || trimmedLicense);
 
   return (
-    <footer className="invoice-thank-you-footer mt-8 border-t-2 border-slate-900 pt-8 text-center print:mt-8 print:border-slate-800 print:pt-8 print:break-inside-avoid">
-      <p className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
+    <footer className="invoice-thank-you-footer mt-4 border-t-2 border-slate-900 pt-4 text-center sm:mt-8 sm:pt-8 print:mt-8 print:border-slate-800 print:pt-8 print:break-inside-avoid">
+      <p className="text-base font-semibold tracking-tight text-slate-900 sm:text-lg md:text-xl">
         Thank you for choosing {company.name}
       </p>
-      <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-slate-600 print:text-slate-700">
+      <p className="mx-auto mt-1.5 max-w-lg text-xs leading-relaxed text-slate-600 sm:mt-2 sm:text-sm print:text-slate-700">
         We appreciate your trust in our team. Please retain this invoice for your records.
       </p>
 
       {hasContact ? (
-        <div className="mx-auto mt-6 max-w-md rounded-xl border border-slate-200 bg-white px-5 py-4 print:max-w-none print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-3">
+        <div className="mx-auto mt-3 max-w-md rounded-lg border border-slate-200 bg-white px-3 py-3 sm:mt-6 sm:rounded-xl sm:px-5 sm:py-4 print:max-w-none print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 print:text-slate-600">
             Questions about this invoice
           </p>
@@ -51,7 +51,7 @@ export function InvoiceThankYouFooter({
       ) : null}
 
       {hasTrustCredentials ? (
-        <div className="mx-auto mt-6 max-w-md space-y-1 text-xs text-slate-500 print:text-slate-600">
+        <div className="mx-auto mt-3 max-w-md space-y-1 text-xs text-slate-500 sm:mt-6 print:text-slate-600">
           {trimmedLicense ? (
             <p>
               License{" "}

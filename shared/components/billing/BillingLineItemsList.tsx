@@ -51,7 +51,7 @@ export function BillingLineItemsList({
       ? "border-b border-slate-200 last:border-b-0"
       : "border-b border-slate-200";
 
-    if (documentStyle === "estimate") {
+    if (isPremiumStyle) {
       return (
         <>
           <div className="space-y-2 sm:hidden print:hidden">
