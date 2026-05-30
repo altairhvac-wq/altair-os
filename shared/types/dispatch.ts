@@ -129,16 +129,9 @@ export function isScheduledToday(
   return isSameCalendarDayInTimeZone(date, reference, timeZone);
 }
 
-export function getDispatchSummary(
-  jobs: DispatchJob[],
-  reference = new Date(),
-): DispatchSummary {
+export function getDispatchSummary(jobs: DispatchJob[]): DispatchSummary {
   return {
-    scheduledToday: jobs.filter(
-      (job) =>
-        isScheduledToday(job.scheduledDate, reference) &&
-        job.status !== "cancelled",
-    ).length,
+    scheduledToday: jobs.filter((job) => job.status === "scheduled").length,
     inProgress: jobs.filter((job) => job.status === "in_progress").length,
     unassigned: jobs.filter(
       (job) => !job.technicianId && job.status !== "cancelled",

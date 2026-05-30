@@ -8,6 +8,14 @@ export const ACTIVE_CARRYOVER_JOB_STATUSES = [
   "in_progress",
 ] as const satisfies readonly JobStatus[];
 
+const CARRYOVER_STATUS_SET = new Set<string>(ACTIVE_CARRYOVER_JOB_STATUSES);
+
+export type OperationalDayJobFields = {
+  status: JobStatus;
+  scheduledDate: string;
+  completedAt?: string | null;
+};
+
 export type ScheduledTodayOptions = {
   reference?: Date;
   timeZone?: string;
@@ -28,6 +36,50 @@ export function getScheduledTodayBounds(
     options?.timeZone,
     options?.reference ?? new Date(),
   );
+}
+
+function isTimestampWithinOperationalDayBounds(
+  timestamp: string,
+  options?: ScheduledTodayOptions,
+): boolean {
+  const { start, end } = getScheduledTodayBounds(options);
+  const value = new Date(timestamp).getTime();
+
+  if (Number.isNaN(value)) {
+    return false;
+  }
+
+  return (
+    value >= new Date(start).getTime() && value <= new Date(end).getTime()
+  );
+}
+
+/** Client-side mirror of `fetchOperationalDayJobRows` membership rules. */
+export function isJobOnOperationalDay(
+  job: OperationalDayJobFields,
+  options?: ScheduledTodayOptions,
+): boolean {
+  if (job.status === "cancelled") {
+    return false;
+  }
+
+  if (isTimestampWithinOperationalDayBounds(job.scheduledDate, options)) {
+    return true;
+  }
+
+  if (CARRYOVER_STATUS_SET.has(job.status)) {
+    return true;
+  }
+
+  if (
+    job.status === "completed" &&
+    job.completedAt &&
+    isTimestampWithinOperationalDayBounds(job.completedAt, options)
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 export function sortRowsByScheduledAtAsc<

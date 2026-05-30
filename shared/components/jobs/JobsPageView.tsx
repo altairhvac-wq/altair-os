@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { createJobAction } from "@/app/actions/jobs";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatActionError } from "@/shared/lib/operational-errors";
-import { isScheduledToday } from "@/shared/types/dispatch";
+import { isJobOnOperationalDay } from "@/shared/lib/scheduled-today";
 import type { Customer } from "@/shared/types/customer";
 import {
   type Job,
@@ -102,7 +102,10 @@ export function JobsPageView({
     () =>
       sortJobsByScheduledTime(
         jobs.filter((job) =>
-          isScheduledToday(job.scheduledDate, new Date(), companyTimeZone),
+          isJobOnOperationalDay(job, {
+            reference: new Date(),
+            timeZone: companyTimeZone,
+          }),
         ),
       ),
     [companyTimeZone, jobs],
