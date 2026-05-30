@@ -13,6 +13,7 @@ type SeedContext = {
   companyId: string;
   actorId: string;
   technicianId: string;
+  demoEmail: string;
   now: Date;
 };
 
@@ -27,7 +28,6 @@ type ServiceItemSeed = {
 type CustomerSeed = {
   key: string;
   name: string;
-  email: string;
   phone: string;
   companyName?: string;
   status: "active" | "inactive" | "lead";
@@ -37,9 +37,33 @@ type CustomerSeed = {
   postalCode: string;
   tags: string[];
   notes?: string;
-  totalJobs?: number;
-  totalRevenue?: number;
+  totalJobs: number;
+  totalRevenue: number;
   lastServiceDaysAgo?: number;
+  createdDaysAgo: number;
+};
+
+type JobSeed = {
+  key: string;
+  customerKey: string;
+  jobNumber: string;
+  serviceAddress: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  jobType: string;
+  scheduledDaysFromNow: number;
+  scheduledHour: number;
+  scheduledMinute?: number;
+  status: "scheduled" | "in_progress" | "completed";
+  priority?: "normal" | "high" | "urgent";
+  description: string;
+  notes?: string;
+  createdDaysAgo?: number;
+  arrivedMinutesAfterStart?: number;
+  workStartedMinutesAfterStart?: number;
+  completedMinutesAfterStart?: number;
+  completionNotes?: string;
 };
 
 function addDays(base: Date, days: number): Date {
@@ -61,6 +85,16 @@ function toDateOnly(value: Date): string {
 function roundCurrency(value: number): number {
   return Math.round(value * 100) / 100;
 }
+
+function resolveDemoCustomerEmail(context: ActiveCompanyContext): string {
+  return (
+    context.user.email?.trim() ||
+    context.profile.email?.trim() ||
+    ""
+  );
+}
+
+const TAX_RATE = 8.25;
 
 const SERVICE_ITEMS: ServiceItemSeed[] = [
   {
@@ -98,30 +132,40 @@ const SERVICE_ITEMS: ServiceItemSeed[] = [
     unitPrice: 95,
     category: "Labor",
   },
+  {
+    key: "water-heater",
+    name: "Water Heater Service",
+    description: "Diagnose and repair tank water heater issues.",
+    unitPrice: 245,
+    category: "Plumbing",
+  },
+  {
+    key: "electrical",
+    name: "Electrical Troubleshooting",
+    description: "Trace HVAC control circuit and low-voltage wiring faults.",
+    unitPrice: 149,
+    category: "Electrical",
+  },
+  {
+    key: "system-replacement",
+    name: "Packaged RTU Replacement",
+    description: "Remove and replace rooftop packaged HVAC unit.",
+    unitPrice: 7850,
+    category: "Installation",
+  },
+  {
+    key: "furnace-replacement",
+    name: "Gas Furnace Replacement",
+    description: "High-efficiency furnace replacement with permit and startup.",
+    unitPrice: 4200,
+    category: "Installation",
+  },
 ];
 
 const CUSTOMERS: CustomerSeed[] = [
   {
-    key: "sarah",
-    name: "Sarah Mitchell",
-    email: "sarah.mitchell@riversidehomes.com",
-    phone: "(512) 555-0142",
-    companyName: "Riverside Homes LLC",
-    status: "active",
-    address: "1842 Oak Valley Dr",
-    city: "Austin",
-    state: "TX",
-    postalCode: "78704",
-    tags: ["Commercial", "HVAC"],
-    notes: "Prefers morning appointments. Gate code: 4421.",
-    totalJobs: 14,
-    totalRevenue: 4825,
-    lastServiceDaysAgo: 19,
-  },
-  {
     key: "james",
     name: "James Chen",
-    email: "j.chen@gmail.com",
     phone: "(737) 555-0198",
     status: "active",
     address: "903 Willow Creek Ln",
@@ -129,55 +173,280 @@ const CUSTOMERS: CustomerSeed[] = [
     state: "TX",
     postalCode: "78664",
     tags: ["Residential", "HVAC"],
-    totalJobs: 6,
-    totalRevenue: 1280,
-    lastServiceDaysAgo: 37,
-  },
-  {
-    key: "greenfield",
-    name: "Greenfield Property Group",
-    email: "ops@greenfieldpg.com",
-    phone: "(512) 555-0234",
-    companyName: "Greenfield Property Group",
-    status: "active",
-    address: "5500 Business Park Blvd, Ste 200",
-    city: "Austin",
-    state: "TX",
-    postalCode: "78759",
-    tags: ["Commercial", "Multi-unit"],
-    notes: "Net-30 billing. Contact Maria for scheduling.",
-    totalJobs: 31,
-    totalRevenue: 12460,
-    lastServiceDaysAgo: 11,
+    notes: "Prefers afternoon appointments. Dog in backyard — knock first.",
+    totalJobs: 9,
+    totalRevenue: 4820,
+    lastServiceDaysAgo: 18,
+    createdDaysAgo: 210,
   },
   {
     key: "emily",
     name: "Emily Rodriguez",
-    email: "emily.r@outlook.com",
     phone: "(512) 555-0311",
-    status: "lead",
+    status: "active",
     address: "221 Sunset Ridge",
     city: "Cedar Park",
     state: "TX",
     postalCode: "78613",
-    tags: ["Residential"],
-    notes: "Requested estimate for capacitor replacement.",
+    tags: ["Residential", "HVAC"],
+    notes: "Older split system. Interested in furnace replacement this fall.",
+    totalJobs: 4,
+    totalRevenue: 1340,
+    lastServiceDaysAgo: 52,
+    createdDaysAgo: 160,
   },
   {
     key: "lakewood",
     name: "Lakewood Apartments",
-    email: "maintenance@lakewoodapt.com",
     phone: "(512) 555-0678",
-    companyName: "Lakewood Apartments",
+    companyName: "Lakewood Property Management",
     status: "active",
     address: "3200 Lakewood Dr",
     city: "Austin",
     state: "TX",
     postalCode: "78745",
-    tags: ["Commercial", "Property Management"],
-    totalJobs: 22,
-    totalRevenue: 8940,
-    lastServiceDaysAgo: 7,
+    tags: ["Property Management", "Multi-unit"],
+    notes: "Net-15 billing. Call maintenance line before arriving on-site.",
+    totalJobs: 26,
+    totalRevenue: 21480,
+    lastServiceDaysAgo: 4,
+    createdDaysAgo: 365,
+  },
+  {
+    key: "greenfield",
+    name: "Greenfield Dental Studio",
+    phone: "(512) 555-0234",
+    companyName: "Greenfield Dental Studio",
+    status: "active",
+    address: "5500 Business Park Blvd, Ste 200",
+    city: "Austin",
+    state: "TX",
+    postalCode: "78759",
+    tags: ["Commercial", "Small Business"],
+    notes: "Small commercial suite. After-hours access via loading dock.",
+    totalJobs: 12,
+    totalRevenue: 9680,
+    lastServiceDaysAgo: 0,
+    createdDaysAgo: 280,
+  },
+];
+
+const JOBS: JobSeed[] = [
+  {
+    key: "maintenanceToday",
+    customerKey: "james",
+    jobNumber: "JOB-DEMO-1001",
+    serviceAddress: "903 Willow Creek Ln",
+    city: "Round Rock",
+    state: "TX",
+    postalCode: "78664",
+    jobType: "HVAC Maintenance",
+    scheduledDaysFromNow: 0,
+    scheduledHour: 9,
+    status: "scheduled",
+    description: "Spring tune-up — filter change, coil cleaning, and performance check.",
+    notes: "Annual maintenance visit. Customer prefers afternoon if rescheduled.",
+    createdDaysAgo: 3,
+  },
+  {
+    key: "noCoolingActive",
+    customerKey: "greenfield",
+    jobNumber: "JOB-DEMO-1002",
+    serviceAddress: "5500 Business Park Blvd, Ste 200",
+    city: "Austin",
+    state: "TX",
+    postalCode: "78759",
+    jobType: "AC Repair — No Cooling",
+    scheduledDaysFromNow: 0,
+    scheduledHour: 8,
+    status: "in_progress",
+    priority: "urgent",
+    description: "Suite AC not cooling. Staff reported 82°F indoor temperature.",
+    notes: "Active emergency call. Check rooftop unit and thermostat wiring.",
+    createdDaysAgo: 0,
+    arrivedMinutesAfterStart: 15,
+    workStartedMinutesAfterStart: 35,
+  },
+  {
+    key: "waterHeaterToday",
+    customerKey: "lakewood",
+    jobNumber: "JOB-DEMO-1003",
+    serviceAddress: "3200 Lakewood Dr, Unit 8C",
+    city: "Austin",
+    state: "TX",
+    postalCode: "78745",
+    jobType: "Water Heater Repair",
+    scheduledDaysFromNow: 0,
+    scheduledHour: 11,
+    status: "scheduled",
+    priority: "high",
+    description: "Tenant reports lukewarm water and popping noises from tank.",
+    notes: "Property management work order #LM-4421.",
+    createdDaysAgo: 1,
+  },
+  {
+    key: "capacitorToday",
+    customerKey: "emily",
+    jobNumber: "JOB-DEMO-1004",
+    serviceAddress: "221 Sunset Ridge",
+    city: "Cedar Park",
+    state: "TX",
+    postalCode: "78613",
+    jobType: "Capacitor Replacement",
+    scheduledDaysFromNow: 0,
+    scheduledHour: 14,
+    status: "scheduled",
+    priority: "high",
+    description: "Replace failed run capacitor on outdoor condenser.",
+    notes: "Parts on truck. Confirm amp draw after startup.",
+    createdDaysAgo: 2,
+  },
+  {
+    key: "electricalToday",
+    customerKey: "lakewood",
+    jobNumber: "JOB-DEMO-1005",
+    serviceAddress: "3200 Lakewood Dr, Building C",
+    city: "Austin",
+    state: "TX",
+    postalCode: "78745",
+    jobType: "Electrical Troubleshooting",
+    scheduledDaysFromNow: 0,
+    scheduledHour: 15,
+    scheduledMinute: 30,
+    status: "scheduled",
+    description: "Intermittent thermostat power loss in common-area HVAC controller.",
+    notes: "Check low-voltage transformer and contactor coil.",
+    createdDaysAgo: 2,
+  },
+  {
+    key: "furnaceQuoteTomorrow",
+    customerKey: "emily",
+    jobNumber: "JOB-DEMO-1006",
+    serviceAddress: "221 Sunset Ridge",
+    city: "Cedar Park",
+    state: "TX",
+    postalCode: "78613",
+    jobType: "Furnace Replacement Quote",
+    scheduledDaysFromNow: 1,
+    scheduledHour: 10,
+    status: "scheduled",
+    description: "On-site measurement and quote for 80% AFUE furnace replacement.",
+    notes: "Bring replacement sizing worksheet. Draft estimate ready for review.",
+    createdDaysAgo: 5,
+  },
+  {
+    key: "completedJamesMaint",
+    customerKey: "james",
+    jobNumber: "JOB-DEMO-1007",
+    serviceAddress: "903 Willow Creek Ln",
+    city: "Round Rock",
+    state: "TX",
+    postalCode: "78664",
+    jobType: "Furnace Maintenance",
+    scheduledDaysFromNow: -18,
+    scheduledHour: 13,
+    status: "completed",
+    description: "Annual furnace maintenance and combustion safety check.",
+    createdDaysAgo: 22,
+    arrivedMinutesAfterStart: 10,
+    workStartedMinutesAfterStart: 25,
+    completedMinutesAfterStart: 115,
+    completionNotes: "Replaced dirty filter and cleaned flame sensor. System operating normally.",
+  },
+  {
+    key: "completedLakewoodDiag",
+    customerKey: "lakewood",
+    jobNumber: "JOB-DEMO-1008",
+    serviceAddress: "3200 Lakewood Dr, Unit 14B",
+    city: "Austin",
+    state: "TX",
+    postalCode: "78745",
+    jobType: "HVAC Diagnostic",
+    scheduledDaysFromNow: -25,
+    scheduledHour: 10,
+    status: "completed",
+    description: "Diagnose weak cooling in unit 14B and verify airflow balance.",
+    createdDaysAgo: 28,
+    arrivedMinutesAfterStart: 8,
+    workStartedMinutesAfterStart: 20,
+    completedMinutesAfterStart: 105,
+    completionNotes: "Found restricted return grille. Corrected and verified 18° delta-T.",
+  },
+  {
+    key: "completedGreenfieldMaint",
+    customerKey: "greenfield",
+    jobNumber: "JOB-DEMO-1009",
+    serviceAddress: "5500 Business Park Blvd, Ste 200",
+    city: "Austin",
+    state: "TX",
+    postalCode: "78759",
+    jobType: "Preventive Maintenance",
+    scheduledDaysFromNow: -42,
+    scheduledHour: 14,
+    status: "completed",
+    description: "Quarterly commercial maintenance on split system.",
+    createdDaysAgo: 45,
+    arrivedMinutesAfterStart: 5,
+    workStartedMinutesAfterStart: 15,
+    completedMinutesAfterStart: 135,
+    completionNotes: "Cleaned condenser coil and verified refrigerant charge.",
+  },
+  {
+    key: "completedJamesCap",
+    customerKey: "james",
+    jobNumber: "JOB-DEMO-1010",
+    serviceAddress: "903 Willow Creek Ln",
+    city: "Round Rock",
+    state: "TX",
+    postalCode: "78664",
+    jobType: "Capacitor Replacement",
+    scheduledDaysFromNow: -55,
+    scheduledHour: 11,
+    status: "completed",
+    description: "Replace failed run capacitor on heat pump condenser.",
+    createdDaysAgo: 58,
+    arrivedMinutesAfterStart: 12,
+    workStartedMinutesAfterStart: 22,
+    completedMinutesAfterStart: 75,
+    completionNotes: "Capacitor replaced. Compressor amp draw within spec.",
+  },
+  {
+    key: "completedLakewoodWater",
+    customerKey: "lakewood",
+    jobNumber: "JOB-DEMO-1011",
+    serviceAddress: "3200 Lakewood Dr, Unit 2A",
+    city: "Austin",
+    state: "TX",
+    postalCode: "78745",
+    jobType: "Water Heater Service",
+    scheduledDaysFromNow: -72,
+    scheduledHour: 9,
+    status: "completed",
+    description: "Replace faulty upper thermostat and flush sediment from tank.",
+    createdDaysAgo: 75,
+    arrivedMinutesAfterStart: 10,
+    workStartedMinutesAfterStart: 20,
+    completedMinutesAfterStart: 150,
+    completionNotes: "Thermostat replaced. Tank flushed. Stable hot water confirmed.",
+  },
+  {
+    key: "completedGreenfieldElectrical",
+    customerKey: "greenfield",
+    jobNumber: "JOB-DEMO-1012",
+    serviceAddress: "5500 Business Park Blvd, Ste 200",
+    city: "Austin",
+    state: "TX",
+    postalCode: "78759",
+    jobType: "Electrical Troubleshooting",
+    scheduledDaysFromNow: -95,
+    scheduledHour: 15,
+    status: "completed",
+    description: "Trace intermittent blower motor control circuit fault.",
+    createdDaysAgo: 98,
+    arrivedMinutesAfterStart: 8,
+    workStartedMinutesAfterStart: 18,
+    completedMinutesAfterStart: 120,
+    completionNotes: "Loose wire nut on relay coil. Repaired and load-tested.",
   },
 ];
 
@@ -186,8 +455,8 @@ async function insertRow(
   row: Record<string, unknown>,
 ): Promise<{ id: string | null; error: string | null }> {
   const supabase = await createClient();
-  const builder = supabase.from(table);
-  const { data, error } = await builder
+  const { data, error } = await supabase
+    .from(table)
     .insert(row as never)
     .select("id")
     .single();
@@ -201,6 +470,40 @@ async function insertRow(
   }
 
   return { id: (data as { id: string }).id, error: null };
+}
+
+function buildJobSchedule(seed: JobSeed, now: Date): Date {
+  const day = addDays(now, seed.scheduledDaysFromNow);
+  return atTime(day, seed.scheduledHour, seed.scheduledMinute ?? 0);
+}
+
+function buildJobTimestamps(
+  seed: JobSeed,
+  scheduledAt: Date,
+): {
+  arrivedAt?: string;
+  workStartedAt?: string;
+  completedAt?: string;
+} {
+  if (seed.status === "scheduled") {
+    return {};
+  }
+
+  const arrivedAt = seed.arrivedMinutesAfterStart
+    ? new Date(scheduledAt.getTime() + seed.arrivedMinutesAfterStart * 60_000)
+    : undefined;
+  const workStartedAt = seed.workStartedMinutesAfterStart
+    ? new Date(scheduledAt.getTime() + seed.workStartedMinutesAfterStart * 60_000)
+    : undefined;
+  const completedAt = seed.completedMinutesAfterStart
+    ? new Date(scheduledAt.getTime() + seed.completedMinutesAfterStart * 60_000)
+    : undefined;
+
+  return {
+    arrivedAt: arrivedAt?.toISOString(),
+    workStartedAt: workStartedAt?.toISOString(),
+    completedAt: completedAt?.toISOString(),
+  };
 }
 
 export async function seedCompanyDemoData(
@@ -220,15 +523,25 @@ export async function seedCompanyDemoData(
     };
   }
 
+  const demoEmail = resolveDemoCustomerEmail(context);
+  if (!demoEmail) {
+    return {
+      error:
+        "Your account needs an email address before demo data can be loaded. Demo customer emails route to the owner/admin for safe testing.",
+    };
+  }
+
   const seedContext: SeedContext = {
     companyId,
     actorId: context.user.id,
     technicianId: await resolveDemoTechnicianId(companyId, context.user.id),
+    demoEmail,
     now: new Date(),
   };
 
   const serviceItemIds: Record<string, string> = {};
   const customerIds: Record<string, string> = {};
+  const jobIds: Record<string, string> = {};
 
   try {
     for (const item of SERVICE_ITEMS) {
@@ -254,7 +567,7 @@ export async function seedCompanyDemoData(
       const result = await insertRow("customers", {
         company_id: companyId,
         name: withDemoName(customer.name),
-        email: customer.email,
+        email: seedContext.demoEmail,
         phone: customer.phone,
         company_name: customer.companyName ?? null,
         status: customer.status,
@@ -264,12 +577,13 @@ export async function seedCompanyDemoData(
         postal_code: customer.postalCode,
         tags: customer.tags,
         notes: customer.notes ?? null,
-        total_jobs: customer.totalJobs ?? 0,
-        total_revenue: customer.totalRevenue ?? 0,
+        total_jobs: customer.totalJobs,
+        total_revenue: customer.totalRevenue,
         last_service_date:
           customer.lastServiceDaysAgo !== undefined
             ? addDays(seedContext.now, -customer.lastServiceDaysAgo).toISOString()
             : null,
+        created_at: addDays(seedContext.now, -customer.createdDaysAgo).toISOString(),
         is_demo: true,
       });
 
@@ -282,15 +596,43 @@ export async function seedCompanyDemoData(
 
     await insertRow("customer_equipment", {
       company_id: companyId,
-      customer_id: customerIds.sarah,
-      name: withDemoName("Rooftop Package Unit RTU-4"),
-      equipment_type: "Packaged HVAC",
-      brand: "Carrier",
-      model_number: "48TCFD16A2M6A0A0",
-      serial_number: "DEMO-SN-4421",
-      install_date: toDateOnly(addDays(seedContext.now, -900)),
-      warranty_expires_at: toDateOnly(addDays(seedContext.now, 180)),
-      location: "Roof — north wing",
+      customer_id: customerIds.james,
+      name: withDemoName("Heat Pump Split System"),
+      equipment_type: "Split Heat Pump",
+      brand: "Lennox",
+      model_number: "XP16-036",
+      serial_number: "DEMO-SN-2208",
+      install_date: toDateOnly(addDays(seedContext.now, -820)),
+      warranty_expires_at: toDateOnly(addDays(seedContext.now, 120)),
+      location: "Backyard condenser / attic air handler",
+      is_active: true,
+      is_demo: true,
+    });
+
+    await insertRow("customer_equipment", {
+      company_id: companyId,
+      customer_id: customerIds.emily,
+      name: withDemoName("Gas Furnace & AC Split"),
+      equipment_type: "Split System",
+      brand: "Goodman",
+      model_number: "GMEC96 + GSX14",
+      serial_number: "DEMO-SN-5512",
+      install_date: toDateOnly(addDays(seedContext.now, -2400)),
+      location: "Garage furnace / side-yard condenser",
+      is_active: true,
+      is_demo: true,
+    });
+
+    await insertRow("customer_equipment", {
+      company_id: companyId,
+      customer_id: customerIds.lakewood,
+      name: withDemoName("Unit 14B Packaged AC"),
+      equipment_type: "Packaged AC",
+      brand: "Rheem",
+      model_number: "RALB-036",
+      serial_number: "DEMO-SN-7710",
+      install_date: toDateOnly(addDays(seedContext.now, -1100)),
+      location: "Roof — Building B",
       is_active: true,
       is_demo: true,
     });
@@ -309,139 +651,80 @@ export async function seedCompanyDemoData(
       is_demo: true,
     });
 
-    const todayMorning = atTime(seedContext.now, 9, 0);
-    const todayActiveStart = atTime(seedContext.now, 8, 0);
-    const tomorrowAfternoon = atTime(addDays(seedContext.now, 1), 13, 0);
-    const lastWeek = atTime(addDays(seedContext.now, -6), 14, 0);
+    for (const jobSeed of JOBS) {
+      const scheduledAt = buildJobSchedule(jobSeed, seedContext.now);
+      const timestamps = buildJobTimestamps(jobSeed, scheduledAt);
+      const customerId = customerIds[jobSeed.customerKey];
 
-    const jobScheduledToday = await insertRow("jobs", {
-      company_id: companyId,
-      customer_id: customerIds.sarah,
-      job_number: "JOB-DEMO-1001",
-      service_address: "1842 Oak Valley Dr",
-      city: "Austin",
-      state: "TX",
-      postal_code: "78704",
-      job_type: "HVAC Maintenance",
-      scheduled_at: todayMorning.toISOString(),
-      status: "scheduled",
-      priority: "normal",
-      description: "Spring tune-up for rooftop unit. Check refrigerant levels and filters.",
-      notes: "Gate code: 4421. Customer prefers morning slot.",
-      assigned_technician_id: seedContext.technicianId,
-      is_demo: true,
-    });
+      if (!customerId) {
+        throw new Error(`Missing demo customer for job ${jobSeed.jobNumber}.`);
+      }
 
-    const jobActive = await insertRow("jobs", {
-      company_id: companyId,
-      customer_id: customerIds.greenfield,
-      job_number: "JOB-DEMO-1002",
-      service_address: "5500 Business Park Blvd, Ste 200",
-      city: "Austin",
-      state: "TX",
-      postal_code: "78759",
-      job_type: "AC Repair",
-      scheduled_at: todayActiveStart.toISOString(),
-      status: "in_progress",
-      priority: "urgent",
-      description: "Suite 200 AC not cooling. Tenant reported 82°F indoor temp.",
-      notes: "Contact Maria on-site. Building access via loading dock.",
-      assigned_technician_id: seedContext.technicianId,
-      arrived_at: atTime(seedContext.now, 8, 15).toISOString(),
-      work_started_at: atTime(seedContext.now, 8, 35).toISOString(),
-      is_demo: true,
-    });
+      const result = await insertRow("jobs", {
+        company_id: companyId,
+        customer_id: customerId,
+        job_number: jobSeed.jobNumber,
+        service_address: jobSeed.serviceAddress,
+        city: jobSeed.city,
+        state: jobSeed.state,
+        postal_code: jobSeed.postalCode,
+        job_type: jobSeed.jobType,
+        scheduled_at: scheduledAt.toISOString(),
+        status: jobSeed.status,
+        priority: jobSeed.priority ?? "normal",
+        description: jobSeed.description,
+        notes: jobSeed.notes ?? null,
+        assigned_technician_id: seedContext.technicianId,
+        arrived_at: timestamps.arrivedAt ?? null,
+        work_started_at: timestamps.workStartedAt ?? null,
+        completed_at: timestamps.completedAt ?? null,
+        completion_notes: jobSeed.completionNotes ?? null,
+        created_at: addDays(
+          seedContext.now,
+          -(jobSeed.createdDaysAgo ?? Math.abs(jobSeed.scheduledDaysFromNow) + 1),
+        ).toISOString(),
+        is_demo: true,
+      });
 
-    const jobCompletedJames = await insertRow("jobs", {
-      company_id: companyId,
-      customer_id: customerIds.james,
-      job_number: "JOB-DEMO-1003",
-      service_address: "903 Willow Creek Ln",
-      city: "Round Rock",
-      state: "TX",
-      postal_code: "78664",
-      job_type: "Furnace Maintenance",
-      scheduled_at: lastWeek.toISOString(),
-      status: "completed",
-      priority: "normal",
-      description: "Annual furnace maintenance and combustion safety check.",
-      assigned_technician_id: seedContext.technicianId,
-      arrived_at: atTime(addDays(seedContext.now, -6), 14, 10).toISOString(),
-      work_started_at: atTime(addDays(seedContext.now, -6), 14, 25).toISOString(),
-      completed_at: atTime(addDays(seedContext.now, -6), 16, 5).toISOString(),
-      completion_notes: "Replaced dirty filter and cleaned flame sensor. System operating normally.",
-      is_demo: true,
-    });
+      if (result.error || !result.id) {
+        throw new Error(result.error ?? `Failed to seed job ${jobSeed.jobNumber}.`);
+      }
 
-    const jobScheduledTomorrow = await insertRow("jobs", {
-      company_id: companyId,
-      customer_id: customerIds.emily,
-      job_number: "JOB-DEMO-1004",
-      service_address: "221 Sunset Ridge",
-      city: "Cedar Park",
-      state: "TX",
-      postal_code: "78613",
-      job_type: "Capacitor Replacement",
-      scheduled_at: tomorrowAfternoon.toISOString(),
-      status: "scheduled",
-      priority: "high",
-      description: "Follow-up visit after approved estimate for failed run capacitor.",
-      assigned_technician_id: seedContext.technicianId,
-      is_demo: true,
-    });
-
-    const jobCompletedLakewood = await insertRow("jobs", {
-      company_id: companyId,
-      customer_id: customerIds.lakewood,
-      job_number: "JOB-DEMO-1005",
-      service_address: "3200 Lakewood Dr, Unit 14B",
-      city: "Austin",
-      state: "TX",
-      postal_code: "78745",
-      job_type: "HVAC Diagnostic",
-      scheduled_at: atTime(addDays(seedContext.now, -3), 10, 0).toISOString(),
-      status: "completed",
-      priority: "normal",
-      description: "Diagnose weak cooling in unit 14B and verify airflow balance.",
-      assigned_technician_id: seedContext.technicianId,
-      arrived_at: atTime(addDays(seedContext.now, -3), 10, 8).toISOString(),
-      work_started_at: atTime(addDays(seedContext.now, -3), 10, 20).toISOString(),
-      completed_at: atTime(addDays(seedContext.now, -3), 11, 45).toISOString(),
-      completion_notes: "Found restricted return grille. Corrected and verified 18° delta-T.",
-      is_demo: true,
-    });
-
-    const jobs = [
-      jobScheduledToday,
-      jobActive,
-      jobCompletedJames,
-      jobScheduledTomorrow,
-      jobCompletedLakewood,
-    ];
-
-    if (jobs.some((job) => job.error || !job.id)) {
-      throw new Error("Failed to seed jobs.");
+      jobIds[jobSeed.key] = result.id;
     }
 
-    const jobIds = {
-      scheduledToday: jobScheduledToday.id!,
-      active: jobActive.id!,
-      completedJames: jobCompletedJames.id!,
-      scheduledTomorrow: jobScheduledTomorrow.id!,
-      completedLakewood: jobCompletedLakewood.id!,
-    };
+    const todayDispatchKeys = [
+      "maintenanceToday",
+      "noCoolingActive",
+      "waterHeaterToday",
+      "capacitorToday",
+      "electricalToday",
+    ] as const;
+    const completedDispatchKeys = [
+      "completedJamesMaint",
+      "completedLakewoodDiag",
+      "completedGreenfieldMaint",
+      "completedJamesCap",
+      "completedLakewoodWater",
+      "completedGreenfieldElectrical",
+    ] as const;
 
-    for (const [jobId, start, end] of [
-      [jobIds.scheduledToday, todayMorning, atTime(seedContext.now, 11, 0)],
-      [jobIds.active, todayActiveStart, atTime(seedContext.now, 12, 0)],
-      [jobIds.scheduledTomorrow, tomorrowAfternoon, atTime(addDays(seedContext.now, 1), 15, 0)],
-    ] as const) {
+    for (const key of todayDispatchKeys) {
+      const jobSeed = JOBS.find((job) => job.key === key);
+      const jobId = jobIds[key];
+      if (!jobSeed || !jobId) {
+        continue;
+      }
+
+      const start = buildJobSchedule(jobSeed, seedContext.now);
+      const end = atTime(start, start.getHours() + 2);
+
       await insertRow("dispatch_assignments", {
         company_id: companyId,
         job_id: jobId,
         technician_id: seedContext.technicianId,
         assigned_by: seedContext.actorId,
-        status: "active",
+        status: jobSeed.status === "in_progress" ? "active" : "active",
         scheduled_start: start.toISOString(),
         scheduled_end: end.toISOString(),
         is_demo: true,
@@ -450,46 +733,51 @@ export async function seedCompanyDemoData(
 
     await insertRow("dispatch_assignments", {
       company_id: companyId,
-      job_id: jobIds.completedJames,
+      job_id: jobIds.furnaceQuoteTomorrow,
       technician_id: seedContext.technicianId,
       assigned_by: seedContext.actorId,
-      status: "completed",
-      scheduled_start: lastWeek.toISOString(),
-      scheduled_end: atTime(addDays(seedContext.now, -6), 16, 30).toISOString(),
+      status: "active",
+      scheduled_start: buildJobSchedule(
+        JOBS.find((job) => job.key === "furnaceQuoteTomorrow")!,
+        seedContext.now,
+      ).toISOString(),
+      scheduled_end: atTime(addDays(seedContext.now, 1), 12).toISOString(),
       is_demo: true,
     });
 
+    for (const key of completedDispatchKeys) {
+      const jobSeed = JOBS.find((job) => job.key === key);
+      const jobId = jobIds[key];
+      if (!jobSeed || !jobId) {
+        continue;
+      }
+
+      const start = buildJobSchedule(jobSeed, seedContext.now);
+      const end = jobSeed.completedMinutesAfterStart
+        ? new Date(start.getTime() + (jobSeed.completedMinutesAfterStart + 15) * 60_000)
+        : atTime(start, start.getHours() + 2);
+
+      await insertRow("dispatch_assignments", {
+        company_id: companyId,
+        job_id: jobId,
+        technician_id: seedContext.technicianId,
+        assigned_by: seedContext.actorId,
+        status: "completed",
+        scheduled_start: start.toISOString(),
+        scheduled_end: end.toISOString(),
+        is_demo: true,
+      });
+    }
+
     const jobActivities = [
-      {
-        job_id: jobIds.scheduledToday,
-        event_type: "job_created",
-        metadata: { source: "demo_seed" },
-      },
-      {
-        job_id: jobIds.scheduledToday,
-        event_type: "technician_assigned",
-        metadata: { technicianId: seedContext.technicianId },
-      },
-      {
-        job_id: jobIds.active,
-        event_type: "technician_arrived",
-        metadata: {},
-      },
-      {
-        job_id: jobIds.active,
-        event_type: "work_started",
-        metadata: {},
-      },
-      {
-        job_id: jobIds.completedJames,
-        event_type: "work_completed",
-        metadata: {},
-      },
-      {
-        job_id: jobIds.completedLakewood,
-        event_type: "work_completed",
-        metadata: {},
-      },
+      { job_id: jobIds.maintenanceToday, event_type: "job_created", metadata: { source: "demo_seed" } },
+      { job_id: jobIds.maintenanceToday, event_type: "technician_assigned", metadata: { technicianId: seedContext.technicianId } },
+      { job_id: jobIds.noCoolingActive, event_type: "technician_arrived", metadata: {} },
+      { job_id: jobIds.noCoolingActive, event_type: "work_started", metadata: {} },
+      { job_id: jobIds.completedJamesMaint, event_type: "work_completed", metadata: {} },
+      { job_id: jobIds.completedLakewoodDiag, event_type: "work_completed", metadata: {} },
+      { job_id: jobIds.completedGreenfieldMaint, event_type: "work_completed", metadata: {} },
+      { job_id: jobIds.completedJamesCap, event_type: "work_completed", metadata: {} },
     ];
 
     for (const activity of jobActivities) {
@@ -503,35 +791,79 @@ export async function seedCompanyDemoData(
       });
     }
 
-    await insertRow("job_materials", {
-      company_id: companyId,
-      customer_id: customerIds.james,
-      job_id: jobIds.completedJames,
-      service_item_id: serviceItemIds.furnace,
-      name: withDemoName("Furnace filter — 16x25x1"),
-      description: "Standard pleated filter",
-      quantity: 1,
-      unit_cost: 18,
-      unit_price: 32,
-      taxable: true,
-      added_by: seedContext.actorId,
-      is_demo: true,
-    });
+    const materialSeeds = [
+      {
+        customer_id: customerIds.james,
+        job_id: jobIds.completedJamesMaint,
+        service_item_id: serviceItemIds.furnace,
+        name: "Furnace filter — 16x25x1",
+        quantity: 1,
+        unit_cost: 18,
+        unit_price: 32,
+      },
+      {
+        customer_id: customerIds.james,
+        job_id: jobIds.completedJamesCap,
+        service_item_id: serviceItemIds.capacitor,
+        name: "45/5 MFD run capacitor",
+        quantity: 1,
+        unit_cost: 42,
+        unit_price: 275,
+      },
+      {
+        customer_id: customerIds.greenfield,
+        job_id: jobIds.completedGreenfieldMaint,
+        service_item_id: serviceItemIds["tune-up"],
+        name: "Condenser coil cleaner",
+        quantity: 2,
+        unit_cost: 12,
+        unit_price: 28,
+      },
+      {
+        customer_id: customerIds.lakewood,
+        job_id: jobIds.completedLakewoodWater,
+        service_item_id: serviceItemIds["water-heater"],
+        name: "Upper thermostat — 4500W",
+        quantity: 1,
+        unit_cost: 28,
+        unit_price: 95,
+      },
+    ];
 
-    const taxRate = 8.25;
+    for (const material of materialSeeds) {
+      await insertRow("job_materials", {
+        company_id: companyId,
+        customer_id: material.customer_id,
+        job_id: material.job_id,
+        service_item_id: material.service_item_id,
+        name: withDemoName(material.name),
+        description: "Demo material for profitability reporting.",
+        quantity: material.quantity,
+        unit_cost: material.unit_cost,
+        unit_price: material.unit_price,
+        taxable: true,
+        added_by: seedContext.actorId,
+        is_demo: true,
+      });
+    }
+
+    const estimateDraftReplacementSubtotal = 4200;
+    const estimateSentMaintenanceSubtotal = 314;
+    const estimateApprovedReplacementSubtotal = 7850;
 
     const estimateDraft = await insertRow("estimates", {
       company_id: companyId,
       customer_id: customerIds.emily,
-      job_id: jobIds.scheduledTomorrow,
+      job_id: jobIds.furnaceQuoteTomorrow,
       estimate_number: "EST-DEMO-2001",
       status: "draft",
-      subtotal: 275,
-      tax_rate: taxRate,
-      tax: roundCurrency(275 * (taxRate / 100)),
-      total: roundCurrency(275 * (1 + taxRate / 100)),
-      valid_until: toDateOnly(addDays(seedContext.now, 14)),
-      notes: "Draft estimate pending final review before sending.",
+      subtotal: estimateDraftReplacementSubtotal,
+      tax_rate: TAX_RATE,
+      tax: roundCurrency(estimateDraftReplacementSubtotal * (TAX_RATE / 100)),
+      total: roundCurrency(estimateDraftReplacementSubtotal * (1 + TAX_RATE / 100)),
+      valid_until: toDateOnly(addDays(seedContext.now, 21)),
+      notes: "Draft furnace replacement estimate — review before sending to customer.",
+      created_at: addDays(seedContext.now, -4).toISOString(),
       is_demo: true,
     });
 
@@ -540,27 +872,29 @@ export async function seedCompanyDemoData(
       customer_id: customerIds.james,
       estimate_number: "EST-DEMO-2002",
       status: "sent",
-      subtotal: 314,
-      tax_rate: taxRate,
-      tax: roundCurrency(314 * (taxRate / 100)),
-      total: roundCurrency(314 * (1 + taxRate / 100)),
+      subtotal: estimateSentMaintenanceSubtotal,
+      tax_rate: TAX_RATE,
+      tax: roundCurrency(estimateSentMaintenanceSubtotal * (TAX_RATE / 100)),
+      total: roundCurrency(estimateSentMaintenanceSubtotal * (1 + TAX_RATE / 100)),
       valid_until: toDateOnly(addDays(seedContext.now, 10)),
-      notes: "Annual maintenance package proposal.",
+      notes: "Annual maintenance package proposal — ready to resend for approval testing.",
+      created_at: addDays(seedContext.now, -12).toISOString(),
       is_demo: true,
     });
 
     const estimateApproved = await insertRow("estimates", {
       company_id: companyId,
-      customer_id: customerIds.sarah,
-      job_id: jobIds.scheduledToday,
+      customer_id: customerIds.greenfield,
+      job_id: jobIds.noCoolingActive,
       estimate_number: "EST-DEMO-2003",
       status: "approved",
-      subtotal: 189,
-      tax_rate: taxRate,
-      tax: roundCurrency(189 * (taxRate / 100)),
-      total: roundCurrency(189 * (1 + taxRate / 100)),
-      valid_until: toDateOnly(addDays(seedContext.now, 21)),
-      notes: "Approved spring tune-up for rooftop unit.",
+      subtotal: estimateApprovedReplacementSubtotal,
+      tax_rate: TAX_RATE,
+      tax: roundCurrency(estimateApprovedReplacementSubtotal * (TAX_RATE / 100)),
+      total: roundCurrency(estimateApprovedReplacementSubtotal * (1 + TAX_RATE / 100)),
+      valid_until: toDateOnly(addDays(seedContext.now, 30)),
+      notes: "Approved packaged RTU replacement after repeated no-cooling calls.",
+      created_at: addDays(seedContext.now, -35).toISOString(),
       is_demo: true,
     });
 
@@ -578,11 +912,11 @@ export async function seedCompanyDemoData(
     const estimateLineItems = [
       {
         estimate_id: estimateDraft.id,
-        service_item_id: serviceItemIds.capacitor,
-        name: withDemoName("Capacitor Replacement"),
-        description: "Replace failed run capacitor and verify amp draw.",
+        service_item_id: serviceItemIds["furnace-replacement"],
+        name: withDemoName("Gas Furnace Replacement"),
+        description: "80% AFUE furnace replacement with startup and permit.",
         quantity: 1,
-        unit_price: 275,
+        unit_price: 4200,
       },
       {
         estimate_id: estimateSent.id,
@@ -602,11 +936,11 @@ export async function seedCompanyDemoData(
       },
       {
         estimate_id: estimateApproved.id,
-        service_item_id: serviceItemIds["tune-up"],
-        name: withDemoName("HVAC Seasonal Tune-Up"),
-        description: "Approved spring tune-up service.",
+        service_item_id: serviceItemIds["system-replacement"],
+        name: withDemoName("Packaged RTU Replacement"),
+        description: "Remove existing rooftop unit and install new packaged system.",
         quantity: 1,
-        unit_price: 189,
+        unit_price: 7850,
       },
     ];
 
@@ -625,118 +959,264 @@ export async function seedCompanyDemoData(
       });
     }
 
-    const invoiceUnpaidTotal = roundCurrency(165 * (1 + taxRate / 100));
     const invoicePaidSubtotal = 129;
-    const invoicePaidTax = roundCurrency(invoicePaidSubtotal * (taxRate / 100));
+    const invoicePaidTax = roundCurrency(invoicePaidSubtotal * (TAX_RATE / 100));
     const invoicePaidTotal = roundCurrency(invoicePaidSubtotal + invoicePaidTax);
 
-    const invoiceUnpaid = await insertRow("invoices", {
-      company_id: companyId,
-      customer_id: customerIds.james,
-      job_id: jobIds.completedJames,
-      invoice_number: "INV-DEMO-3001",
-      status: "sent",
-      subtotal: 165,
-      tax_rate: taxRate,
-      tax_amount: roundCurrency(165 * (taxRate / 100)),
-      total: invoiceUnpaidTotal,
-      amount_paid: 0,
-      balance_due: invoiceUnpaidTotal,
-      issue_date: toDateOnly(addDays(seedContext.now, -2)),
-      due_date: toDateOnly(addDays(seedContext.now, 28)),
-      notes: "Furnace maintenance completed — payment outstanding.",
-      is_demo: true,
-    });
+    const invoicePartialSubtotal = 1890;
+    const invoicePartialTax = roundCurrency(invoicePartialSubtotal * (TAX_RATE / 100));
+    const invoicePartialTotal = roundCurrency(invoicePartialSubtotal + invoicePartialTax);
+    const invoicePartialPaid = 1000;
+    const invoicePartialBalance = roundCurrency(invoicePartialTotal - invoicePartialPaid);
+
+    const invoiceOverdueSubtotal = 165;
+    const invoiceOverdueTax = roundCurrency(invoiceOverdueSubtotal * (TAX_RATE / 100));
+    const invoiceOverdueTotal = roundCurrency(invoiceOverdueSubtotal + invoiceOverdueTax);
+
+    const invoiceHistoricalSubtotal = 275;
+    const invoiceHistoricalTax = roundCurrency(invoiceHistoricalSubtotal * (TAX_RATE / 100));
+    const invoiceHistoricalTotal = roundCurrency(invoiceHistoricalSubtotal + invoiceHistoricalTax);
 
     const invoicePaid = await insertRow("invoices", {
       company_id: companyId,
       customer_id: customerIds.lakewood,
-      job_id: jobIds.completedLakewood,
-      invoice_number: "INV-DEMO-3002",
+      job_id: jobIds.completedLakewoodDiag,
+      invoice_number: "INV-DEMO-3001",
       status: "paid",
       subtotal: invoicePaidSubtotal,
-      tax_rate: taxRate,
+      tax_rate: TAX_RATE,
       tax_amount: invoicePaidTax,
       total: invoicePaidTotal,
       amount_paid: invoicePaidTotal,
       balance_due: 0,
-      issue_date: toDateOnly(addDays(seedContext.now, -2)),
-      due_date: toDateOnly(addDays(seedContext.now, 28)),
-      paid_at: atTime(addDays(seedContext.now, -1), 15, 30).toISOString(),
+      issue_date: toDateOnly(addDays(seedContext.now, -24)),
+      due_date: toDateOnly(addDays(seedContext.now, 6)),
+      paid_at: atTime(addDays(seedContext.now, -20), 11, 15).toISOString(),
       notes: "Diagnostic visit — paid in full.",
+      created_at: addDays(seedContext.now, -24).toISOString(),
+      is_demo: true,
+    });
+
+    const invoicePartial = await insertRow("invoices", {
+      company_id: companyId,
+      customer_id: customerIds.greenfield,
+      job_id: jobIds.completedGreenfieldMaint,
+      invoice_number: "INV-DEMO-3002",
+      status: "partially_paid",
+      subtotal: invoicePartialSubtotal,
+      tax_rate: TAX_RATE,
+      tax_amount: invoicePartialTax,
+      total: invoicePartialTotal,
+      amount_paid: invoicePartialPaid,
+      balance_due: invoicePartialBalance,
+      issue_date: toDateOnly(addDays(seedContext.now, -38)),
+      due_date: toDateOnly(addDays(seedContext.now, 12)),
+      notes: "Quarterly maintenance — deposit received, balance due.",
+      created_at: addDays(seedContext.now, -38).toISOString(),
+      is_demo: true,
+    });
+
+    const invoiceOverdue = await insertRow("invoices", {
+      company_id: companyId,
+      customer_id: customerIds.james,
+      job_id: jobIds.completedJamesMaint,
+      invoice_number: "INV-DEMO-3003",
+      status: "sent",
+      subtotal: invoiceOverdueSubtotal,
+      tax_rate: TAX_RATE,
+      tax_amount: invoiceOverdueTax,
+      total: invoiceOverdueTotal,
+      amount_paid: 0,
+      balance_due: invoiceOverdueTotal,
+      issue_date: toDateOnly(addDays(seedContext.now, -20)),
+      due_date: toDateOnly(addDays(seedContext.now, -5)),
+      notes: "Furnace maintenance completed — payment overdue.",
+      created_at: addDays(seedContext.now, -20).toISOString(),
+      is_demo: true,
+    });
+
+    const invoiceHistoricalPaid = await insertRow("invoices", {
+      company_id: companyId,
+      customer_id: customerIds.james,
+      job_id: jobIds.completedJamesCap,
+      invoice_number: "INV-DEMO-3004",
+      status: "paid",
+      subtotal: invoiceHistoricalSubtotal,
+      tax_rate: TAX_RATE,
+      tax_amount: invoiceHistoricalTax,
+      total: invoiceHistoricalTotal,
+      amount_paid: invoiceHistoricalTotal,
+      balance_due: 0,
+      issue_date: toDateOnly(addDays(seedContext.now, -54)),
+      due_date: toDateOnly(addDays(seedContext.now, -24)),
+      paid_at: atTime(addDays(seedContext.now, -50), 16, 0).toISOString(),
+      notes: "Capacitor replacement — paid in full.",
+      created_at: addDays(seedContext.now, -54).toISOString(),
       is_demo: true,
     });
 
     if (
-      invoiceUnpaid.error ||
       invoicePaid.error ||
-      !invoiceUnpaid.id ||
-      !invoicePaid.id
+      invoicePartial.error ||
+      invoiceOverdue.error ||
+      invoiceHistoricalPaid.error ||
+      !invoicePaid.id ||
+      !invoicePartial.id ||
+      !invoiceOverdue.id ||
+      !invoiceHistoricalPaid.id
     ) {
       throw new Error("Failed to seed invoices.");
     }
 
-    await insertRow("invoice_line_items", {
-      company_id: companyId,
-      invoice_id: invoiceUnpaid.id,
-      service_item_id: serviceItemIds.furnace,
-      name: withDemoName("Furnace Maintenance"),
-      description: "Annual furnace maintenance service.",
-      quantity: 1,
-      unit_price: 165,
-      taxable: true,
-      line_total: 165,
-      sort_order: 0,
-      is_demo: true,
-    });
+    const invoiceLineItems = [
+      {
+        invoice_id: invoicePaid.id,
+        service_item_id: serviceItemIds.diagnostic,
+        name: withDemoName("AC System Diagnostic"),
+        description: "Cooling diagnostic and airflow verification.",
+        quantity: 1,
+        unit_price: invoicePaidSubtotal,
+        line_total: invoicePaidSubtotal,
+      },
+      {
+        invoice_id: invoicePartial.id,
+        service_item_id: serviceItemIds["tune-up"],
+        name: withDemoName("HVAC Seasonal Tune-Up"),
+        description: "Quarterly commercial maintenance service.",
+        quantity: 10,
+        unit_price: 189,
+        line_total: invoicePartialSubtotal,
+      },
+      {
+        invoice_id: invoiceOverdue.id,
+        service_item_id: serviceItemIds.furnace,
+        name: withDemoName("Furnace Maintenance"),
+        description: "Annual furnace maintenance service.",
+        quantity: 1,
+        unit_price: invoiceOverdueSubtotal,
+        line_total: invoiceOverdueSubtotal,
+      },
+      {
+        invoice_id: invoiceHistoricalPaid.id,
+        service_item_id: serviceItemIds.capacitor,
+        name: withDemoName("Capacitor Replacement"),
+        description: "Replace failed run capacitor.",
+        quantity: 1,
+        unit_price: invoiceHistoricalSubtotal,
+        line_total: invoiceHistoricalSubtotal,
+      },
+    ];
 
-    await insertRow("invoice_line_items", {
-      company_id: companyId,
-      invoice_id: invoicePaid.id,
-      service_item_id: serviceItemIds.diagnostic,
-      name: withDemoName("AC System Diagnostic"),
-      description: "Cooling diagnostic and airflow verification.",
-      quantity: 1,
-      unit_price: invoicePaidSubtotal,
-      taxable: true,
-      line_total: invoicePaidSubtotal,
-      sort_order: 0,
-      is_demo: true,
-    });
+    for (const [index, line] of invoiceLineItems.entries()) {
+      await insertRow("invoice_line_items", {
+        company_id: companyId,
+        invoice_id: line.invoice_id,
+        service_item_id: line.service_item_id,
+        name: line.name,
+        description: line.description,
+        quantity: line.quantity,
+        unit_price: line.unit_price,
+        taxable: true,
+        line_total: line.line_total,
+        sort_order: index,
+        is_demo: true,
+      });
+    }
 
-    await insertRow("invoice_payments", {
-      company_id: companyId,
-      invoice_id: invoicePaid.id,
-      amount: invoicePaidTotal,
-      payment_method: "card",
-      payment_date: toDateOnly(addDays(seedContext.now, -1)),
-      reference: "DEMO-PAY-8842",
-      notes: "Demo payment recorded for evaluator walkthrough.",
-      recorded_by: seedContext.actorId,
-      is_demo: true,
-    });
+    const paymentSeeds = [
+      {
+        invoice_id: invoicePaid.id,
+        amount: invoicePaidTotal,
+        payment_date: toDateOnly(addDays(seedContext.now, -20)),
+        reference: "DEMO-PAY-3001",
+        notes: "Paid in full — check.",
+      },
+      {
+        invoice_id: invoicePartial.id,
+        amount: 600,
+        payment_date: toDateOnly(addDays(seedContext.now, -35)),
+        reference: "DEMO-PAY-3002A",
+        notes: "Initial deposit.",
+      },
+      {
+        invoice_id: invoicePartial.id,
+        amount: 400,
+        payment_date: toDateOnly(addDays(seedContext.now, -8)),
+        reference: "DEMO-PAY-3002B",
+        notes: "Second installment.",
+      },
+      {
+        invoice_id: invoiceHistoricalPaid.id,
+        amount: invoiceHistoricalTotal,
+        payment_date: toDateOnly(addDays(seedContext.now, -50)),
+        reference: "DEMO-PAY-3004",
+        notes: "Historical paid invoice for revenue reporting.",
+      },
+    ];
+
+    for (const payment of paymentSeeds) {
+      await insertRow("invoice_payments", {
+        company_id: companyId,
+        invoice_id: payment.invoice_id,
+        amount: payment.amount,
+        payment_method: "card",
+        payment_date: payment.payment_date,
+        reference: payment.reference,
+        notes: payment.notes,
+        recorded_by: seedContext.actorId,
+        is_demo: true,
+      });
+    }
 
     const laborEntries = [
       {
-        job_id: jobIds.active,
+        job_id: jobIds.noCoolingActive,
         started_at: atTime(seedContext.now, 8, 35),
         ended_at: null,
         duration_minutes: null,
-        notes: "Active labor on AC repair.",
+        notes: "Active labor on no-cooling repair.",
       },
       {
-        job_id: jobIds.completedJames,
-        started_at: atTime(addDays(seedContext.now, -6), 14, 25),
-        ended_at: atTime(addDays(seedContext.now, -6), 16, 0),
-        duration_minutes: 95,
+        job_id: jobIds.completedJamesMaint,
+        started_at: atTime(addDays(seedContext.now, -18), 13, 25),
+        ended_at: atTime(addDays(seedContext.now, -18), 14, 55),
+        duration_minutes: 90,
         notes: "Furnace maintenance labor.",
       },
       {
-        job_id: jobIds.completedLakewood,
-        started_at: atTime(addDays(seedContext.now, -3), 10, 20),
-        ended_at: atTime(addDays(seedContext.now, -3), 11, 40),
+        job_id: jobIds.completedLakewoodDiag,
+        started_at: atTime(addDays(seedContext.now, -25), 10, 20),
+        ended_at: atTime(addDays(seedContext.now, -25), 11, 40),
         duration_minutes: 80,
         notes: "Diagnostic and airflow correction.",
+      },
+      {
+        job_id: jobIds.completedGreenfieldMaint,
+        started_at: atTime(addDays(seedContext.now, -42), 14, 15),
+        ended_at: atTime(addDays(seedContext.now, -42), 16, 0),
+        duration_minutes: 105,
+        notes: "Commercial preventive maintenance.",
+      },
+      {
+        job_id: jobIds.completedJamesCap,
+        started_at: atTime(addDays(seedContext.now, -55), 11, 22),
+        ended_at: atTime(addDays(seedContext.now, -55), 12, 10),
+        duration_minutes: 48,
+        notes: "Capacitor replacement labor.",
+      },
+      {
+        job_id: jobIds.completedLakewoodWater,
+        started_at: atTime(addDays(seedContext.now, -72), 9, 20),
+        ended_at: atTime(addDays(seedContext.now, -72), 11, 30),
+        duration_minutes: 130,
+        notes: "Water heater thermostat replacement.",
+      },
+      {
+        job_id: jobIds.completedGreenfieldElectrical,
+        started_at: atTime(addDays(seedContext.now, -95), 15, 18),
+        ended_at: atTime(addDays(seedContext.now, -95), 16, 45),
+        duration_minutes: 87,
+        notes: "Electrical troubleshooting on blower control.",
       },
     ];
 
@@ -761,7 +1241,7 @@ export async function seedCompanyDemoData(
       started_at: atTime(seedContext.now, 7, 45).toISOString(),
       ended_at: null,
       duration_minutes: null,
-      notes: "Demo shift clock-in for time tracking reports.",
+      notes: "Demo shift clock-in for labor hour reporting.",
       is_demo: true,
     });
 
@@ -769,21 +1249,21 @@ export async function seedCompanyDemoData(
       {
         type: "job_assigned",
         title: "Demo job assigned",
-        message: "You were assigned JOB-DEMO-1001 — HVAC Maintenance at Riverside Homes.",
+        message: "You were assigned JOB-DEMO-1001 — HVAC Maintenance for James Chen.",
         entity_type: "job",
-        entity_id: jobIds.scheduledToday,
+        entity_id: jobIds.maintenanceToday,
       },
       {
         type: "job_completed",
         title: "Demo job completed",
-        message: "JOB-DEMO-1003 furnace maintenance was marked complete.",
+        message: "JOB-DEMO-1007 furnace maintenance was marked complete.",
         entity_type: "job",
-        entity_id: jobIds.completedJames,
+        entity_id: jobIds.completedJamesMaint,
       },
       {
         type: "invoice_paid",
         title: "Demo payment received",
-        message: "INV-DEMO-3002 was paid in full ($" + invoicePaidTotal.toFixed(2) + ").",
+        message: `INV-DEMO-3001 was paid in full ($${invoicePaidTotal.toFixed(2)}).`,
         entity_type: "invoice",
         entity_id: invoicePaid.id,
       },

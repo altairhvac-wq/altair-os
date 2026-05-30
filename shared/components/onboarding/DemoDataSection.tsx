@@ -126,8 +126,10 @@ export function DemoDataSection({
               </p>
               <p className="mt-1 text-sm text-slate-600">
                 This adds sample customers, jobs, billing documents, dispatch
-                assignments, and time entries. It only works once on an empty
-                workspace and does not modify other companies.
+                assignments, and time entries. Demo customer emails use your
+                account address so estimate, invoice, and payment test emails
+                stay safe. It only works once on an empty workspace and does not
+                modify other companies.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
