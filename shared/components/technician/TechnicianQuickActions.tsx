@@ -35,11 +35,11 @@ const actions: {
 
 const variantStyles = {
   primary:
-    "bg-cyan-600 text-white hover:bg-cyan-700 active:bg-cyan-800",
+    "border border-slate-200/90 bg-white text-slate-800 shadow-sm hover:bg-slate-50 active:bg-slate-100 [&_svg]:text-cyan-700",
   secondary:
-    "bg-slate-100 text-slate-900 hover:bg-slate-200 active:bg-slate-300",
+    "border border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50 active:bg-slate-100 [&_svg]:text-slate-500",
   success:
-    "bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800",
+    "bg-cyan-600 text-white shadow-sm hover:bg-cyan-700 active:bg-cyan-800",
 };
 
 export function TechnicianQuickActions({
@@ -57,7 +57,7 @@ export function TechnicianQuickActions({
             key={action.id}
             type="button"
             onClick={() => onAction(action.id, job)}
-            className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold shadow-sm transition-colors ${variantStyles[action.variant]} ${isComplete ? "col-span-2" : ""}`}
+            className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-medium transition-colors ${variantStyles[action.variant]} ${isComplete ? "col-span-2 font-semibold" : ""}`}
           >
             <Icon className="h-5 w-5 shrink-0" />
             {action.label}

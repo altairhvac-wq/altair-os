@@ -5,15 +5,17 @@ import { ChevronDown, Loader2, Wrench } from "lucide-react";
 import { listCustomerEquipmentAction } from "@/app/actions/customer-equipment";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { CustomerEquipment } from "@/shared/types/customer-equipment";
+import {
+  technicianFieldJobDetailsClass,
+  technicianFieldJobDetailsSummaryClass,
+} from "./technician-field-styles";
 
 type TechnicianJobEquipmentSummaryProps = {
   customerId: string;
 };
 
-const detailsClass =
-  "rounded-lg border border-slate-200 bg-white";
-const summaryClass =
-  "flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-2.5 py-2 text-xs font-semibold text-slate-600 marker:content-none [&::-webkit-details-marker]:hidden";
+const detailsClass = technicianFieldJobDetailsClass;
+const summaryClass = `${technicianFieldJobDetailsSummaryClass} justify-between`;
 
 export function TechnicianJobEquipmentSummary({
   customerId,
@@ -133,9 +135,9 @@ export function TechnicianJobEquipmentSummary({
         {activeEquipment.slice(0, 4).map((item) => (
           <li
             key={item.id}
-            className="rounded-lg bg-white px-2.5 py-1.5 ring-1 ring-slate-200/80"
+            className="rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5"
           >
-            <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+            <p className="text-sm font-medium text-slate-900">{item.name}</p>
             {(item.brand || item.modelNumber || item.location) && (
               <p className="mt-0.5 text-xs text-slate-500">
                 {[item.brand, item.modelNumber, item.location]

@@ -141,12 +141,12 @@ function TechnicianQueueSummary({
       className="flex min-h-8 items-center justify-between gap-2 px-1 text-xs"
       aria-live="polite"
     >
-      <p className="font-semibold text-slate-600">
-        {activeCount} active job{activeCount === 1 ? "" : "s"}
+      <p className="font-medium text-slate-600">
+        {activeCount} open job{activeCount === 1 ? "" : "s"}
       </p>
       <p className="shrink-0 text-slate-400">
         {isRefreshing ? (
-          <span className="inline-flex items-center gap-1 font-medium text-cyan-700">
+          <span className="inline-flex items-center gap-1 font-medium text-slate-600">
             <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
             Updating…
           </span>

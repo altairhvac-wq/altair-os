@@ -14,6 +14,7 @@ import {
   Package,
   Phone,
   Receipt,
+  StickyNote,
 } from "lucide-react";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
 import { buildGoogleMapsDirectionsUrl, hasCompleteServiceAddress } from "@/shared/lib/maps";
@@ -41,6 +42,17 @@ import { TechnicianJobShiftStatus } from "./TechnicianJobShiftStatus";
 import { TechnicianMaterialSheet } from "./TechnicianMaterialSheet";
 import { TechnicianPhotoSheet } from "./TechnicianPhotoSheet";
 import type { ServiceItem } from "@/shared/types/service-item";
+import {
+  technicianFieldActiveCardClass,
+  technicianFieldActiveJobPillClass,
+  technicianFieldContactPrimaryClass,
+  technicianFieldContactSecondaryClass,
+  technicianFieldCurrentDeckCardClass,
+  technicianFieldEmphasizedCardClass,
+  technicianFieldJobDetailsClass,
+  technicianFieldJobDetailsSummaryClass,
+  technicianFieldUtilityActionClass,
+} from "./technician-field-styles";
 
 type TechnicianJobCardProps = {
   job: TechnicianJob;
@@ -62,15 +74,8 @@ type TechnicianJobCardProps = {
   onStatusUpdated?: (status: JobStatus) => void;
 };
 
-const secondaryActionClass =
-  "inline-flex min-h-10 min-w-0 touch-manipulation flex-1 items-center justify-center gap-1 rounded-lg border px-2 py-1.5 text-xs font-semibold transition-colors";
-
-const utilityActionClass =
-  "inline-flex min-h-10 min-w-0 touch-manipulation flex-1 flex-col items-center justify-center gap-0.5 rounded-lg border px-1.5 py-1.5 text-[11px] font-semibold transition-colors";
-
-const detailsClass = "rounded-lg border border-slate-200 bg-slate-50/80";
-const detailsSummaryClass =
-  "flex min-h-9 cursor-pointer list-none items-center gap-1.5 px-2 py-1.5 text-xs font-semibold text-slate-600 marker:content-none [&::-webkit-details-marker]:hidden";
+const detailsClass = technicianFieldJobDetailsClass;
+const detailsSummaryClass = technicianFieldJobDetailsSummaryClass;
 
 export function TechnicianJobCard({
   job,
@@ -177,7 +182,7 @@ export function TechnicianJobCard({
             type="button"
             disabled={fieldActionsDisabled}
             onClick={() => setActiveSheet("estimate")}
-            className={`${secondaryActionClass} border-indigo-200 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60`}
+            className={`${technicianFieldContactSecondaryClass} disabled:cursor-not-allowed disabled:opacity-60`}
             title={
               fieldActionsDisabled
                 ? completeSheetOpen
@@ -186,16 +191,16 @@ export function TechnicianJobCard({
                 : undefined
             }
           >
-            <Calculator className="h-3.5 w-3.5 shrink-0" />
+            <Calculator className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
             Estimate
           </button>
         ) : null}
         {hasPhone ? (
           <a
             href={`tel:${job.customerPhone}`}
-            className={`${secondaryActionClass} border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100`}
+            className={technicianFieldContactPrimaryClass}
           >
-            <Phone className="h-3.5 w-3.5 shrink-0" />
+            <Phone className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
             Call
           </a>
         ) : null}
@@ -204,18 +209,18 @@ export function TechnicianJobCard({
             href={mapsUrl!}
             target="_blank"
             rel="noopener noreferrer"
-            className={`${secondaryActionClass} border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}
+            className={technicianFieldContactPrimaryClass}
           >
-            <Navigation className="h-3.5 w-3.5 shrink-0" />
+            <Navigation className="h-3.5 w-3.5 shrink-0 text-cyan-700" />
             Maps
           </a>
         ) : null}
         {hasEmail ? (
           <a
             href={`mailto:${job.customerEmail}`}
-            className={`${secondaryActionClass} border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100`}
+            className={technicianFieldContactSecondaryClass}
           >
-            <Mail className="h-3.5 w-3.5 shrink-0" />
+            <Mail className="h-3.5 w-3.5 shrink-0 text-slate-500" />
             Email
           </a>
         ) : null}
@@ -228,7 +233,7 @@ export function TechnicianJobCard({
         type="button"
         disabled={fieldActionsDisabled}
         onClick={() => setActiveSheet("photo")}
-        className={`${utilityActionClass} border-violet-200/80 bg-violet-50/80 text-violet-800 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60`}
+        className={technicianFieldUtilityActionClass}
         title={
           fieldActionsDisabled
             ? completeSheetOpen
@@ -237,14 +242,14 @@ export function TechnicianJobCard({
             : undefined
         }
       >
-        <Camera className="h-4 w-4 shrink-0" />
+        <Camera className="h-4 w-4 shrink-0 text-violet-600" />
         Photos
       </button>
       <button
         type="button"
         disabled={fieldActionsDisabled}
         onClick={() => setActiveSheet("material")}
-        className={`${utilityActionClass} border-cyan-200/80 bg-cyan-50/80 text-cyan-800 hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60`}
+        className={technicianFieldUtilityActionClass}
         title={
           fieldActionsDisabled
             ? completeSheetOpen
@@ -253,14 +258,14 @@ export function TechnicianJobCard({
             : undefined
         }
       >
-        <Package className="h-4 w-4 shrink-0" />
+        <Package className="h-4 w-4 shrink-0 text-cyan-700" />
         Materials
       </button>
       <button
         type="button"
         disabled={fieldActionsDisabled}
         onClick={() => setActiveSheet("expense")}
-        className={`${utilityActionClass} border-amber-200/80 bg-amber-50/80 text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60`}
+        className={technicianFieldUtilityActionClass}
         title={
           fieldActionsDisabled
             ? completeSheetOpen
@@ -269,7 +274,7 @@ export function TechnicianJobCard({
             : undefined
         }
       >
-        <Receipt className="h-4 w-4 shrink-0" />
+        <Receipt className="h-4 w-4 shrink-0 text-amber-600" />
         Receipts
       </button>
     </div>
@@ -277,7 +282,7 @@ export function TechnicianJobCard({
 
   const jobDetailsBlock = expanded ? (
     <div className="space-y-1 px-2 pb-1.5 pt-0.5 text-sm text-slate-700">
-      <p className="truncate font-semibold text-slate-900">{job.customerName}</p>
+      <p className="truncate font-medium text-slate-900">{job.customerName}</p>
       <p className="flex items-start gap-1 text-xs leading-snug text-slate-600">
         <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-slate-400" aria-hidden />
         <span className="min-w-0 break-words">
@@ -292,13 +297,13 @@ export function TechnicianJobCard({
       </p>
     </div>
   ) : (
-    <p className="truncate px-2 pb-1 text-sm font-medium text-slate-700">
+    <p className="truncate px-2 pb-1 text-sm text-slate-700">
       {job.customerName}
     </p>
   );
 
   const referenceDetails = expanded ? (
-    <div className="space-y-1 border-t border-slate-100 px-2 py-1.5">
+    <div className="space-y-1.5 border-t border-slate-100/90 px-2 py-2">
       <TechnicianJobEquipmentSummary customerId={job.customerId} />
 
       {hasDescription ? (
@@ -315,7 +320,10 @@ export function TechnicianJobCard({
 
       {hasNotes ? (
         <details className={detailsClass}>
-          <summary className={detailsSummaryClass}>Office notes</summary>
+          <summary className={detailsSummaryClass}>
+            <StickyNote className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            Office notes
+          </summary>
           <p className="border-t border-slate-100 px-2 py-1.5 text-sm leading-snug text-slate-700">
             {job.notes}
           </p>
@@ -328,34 +336,30 @@ export function TechnicianJobCard({
     <article
       className={`relative flex flex-col overflow-hidden rounded-2xl border bg-white ${
         isActiveDeckJob
-          ? "border-cyan-500 shadow-lg ring-2 ring-cyan-500/30"
+          ? technicianFieldActiveCardClass
           : emphasized
-            ? "border-cyan-400 shadow-md ring-2 ring-cyan-500/20"
+            ? technicianFieldEmphasizedCardClass
             : deckBadge === "current"
-              ? "border-slate-300 shadow-md ring-1 ring-slate-200/80"
-              : "border-slate-200 shadow-sm"
+              ? technicianFieldCurrentDeckCardClass
+              : "border-slate-200/80 shadow-sm"
       }`}
     >
-      <div
-        className={`shrink-0 px-2 pt-2 ${
-          isActiveDeckJob ? "bg-gradient-to-b from-cyan-50/70 to-white" : ""
-        }`}
-      >
+      <div className="shrink-0 px-2 pt-2">
         <div className="flex items-start justify-between gap-1.5">
           <div className="min-w-0 flex-1">
             {deckBadge ? (
               <p
                 className={
                   isActiveDeckJob
-                    ? "inline-flex rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
-                    : "text-[10px] font-semibold uppercase tracking-wide text-slate-500"
+                    ? technicianFieldActiveJobPillClass
+                    : "text-[10px] font-medium uppercase tracking-wide text-slate-500"
                 }
               >
                 {isActiveDeckJob ? "Active Job" : "Current Job"}
               </p>
             ) : null}
             <h2
-              className={`truncate text-lg font-bold leading-tight text-slate-900 ${
+              className={`truncate text-lg font-semibold leading-tight text-slate-900 ${
                 deckBadge ? "mt-0.5" : ""
               }`}
             >

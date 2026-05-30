@@ -3,6 +3,10 @@
 import { Mail, Navigation, Phone } from "lucide-react";
 import { buildGoogleMapsDirectionsUrl } from "@/shared/lib/maps";
 import type { TechnicianJob } from "@/shared/types/technician";
+import {
+  technicianFieldContactPrimaryClass,
+  technicianFieldContactSecondaryClass,
+} from "./technician-field-styles";
 
 type TechnicianCustomerQuickActionsProps = {
   job: TechnicianJob;
@@ -11,7 +15,7 @@ type TechnicianCustomerQuickActionsProps = {
 };
 
 const actionClass =
-  "inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors disabled:pointer-events-none disabled:opacity-40";
+  "inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-40";
 
 export function TechnicianCustomerQuickActions({
   job,
@@ -57,18 +61,18 @@ export function TechnicianCustomerQuickActions({
       {hasPhone ? (
         <a
           href={`tel:${job.customerPhone}`}
-          className={`${actionClass} border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100`}
+          className={`${actionClass} ${technicianFieldContactPrimaryClass}`}
         >
-          <Phone className="h-4 w-4 shrink-0" />
+          <Phone className="h-4 w-4 shrink-0 text-emerald-600" />
           Call
         </a>
       ) : null}
       {hasEmail ? (
         <a
           href={`mailto:${job.customerEmail}`}
-          className={`${actionClass} border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100`}
+          className={`${actionClass} ${technicianFieldContactSecondaryClass}`}
         >
-          <Mail className="h-4 w-4 shrink-0" />
+          <Mail className="h-4 w-4 shrink-0 text-slate-500" />
           Email
         </a>
       ) : null}
@@ -77,9 +81,9 @@ export function TechnicianCustomerQuickActions({
           href={mapsUrl!}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${actionClass} border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}
+          className={`${actionClass} ${technicianFieldContactPrimaryClass}`}
         >
-          <Navigation className="h-4 w-4 shrink-0" />
+          <Navigation className="h-4 w-4 shrink-0 text-cyan-700" />
           Maps
         </a>
       ) : null}
