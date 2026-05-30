@@ -1,3 +1,4 @@
+import type { DbClient } from "@/lib/database/db-client";
 import { listEstimatesForJob } from "@/lib/database/queries/estimates";
 import { listExpensesForJob } from "@/lib/database/queries/expenses";
 import { listInvoicesForJob } from "@/lib/database/queries/invoices";
@@ -18,11 +19,12 @@ export async function getJobProfitabilitySnapshot(
   companyId: string,
   jobId: string,
   preloaded?: JobProfitabilityPreloaded,
+  db?: DbClient,
 ): Promise<JobProfitabilitySnapshot> {
   const [invoices, estimates, laborEntries, expenses, materials] =
     await Promise.all([
-      listInvoicesForJob(companyId, jobId),
-      listEstimatesForJob(companyId, jobId),
+      listInvoicesForJob(companyId, jobId, db),
+      listEstimatesForJob(companyId, jobId, db),
       listJobLaborEntriesForJob(companyId, jobId),
       preloaded?.expenses ?? listExpensesForJob(companyId, jobId),
       preloaded?.materials ?? listJobMaterialsForJob(companyId, jobId),

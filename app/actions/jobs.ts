@@ -228,9 +228,14 @@ export async function updateJobStatusAction(
 
       draftInvoiceOutcome = autoInvoiceResult.outcome;
 
-      if (autoInvoiceResult.outcome === "created") {
+      if (
+        autoInvoiceResult.outcome === "created" ||
+        autoInvoiceResult.outcome === "already_exists"
+      ) {
         revalidatePath("/invoices");
-        revalidatePath(`/invoices/${autoInvoiceResult.invoiceId}`);
+        if (autoInvoiceResult.invoiceId) {
+          revalidatePath(`/invoices/${autoInvoiceResult.invoiceId}`);
+        }
       } else if (autoInvoiceResult.outcome === "failed") {
         console.error("[updateJobStatusAction] auto draft invoice failed:", {
           jobId,

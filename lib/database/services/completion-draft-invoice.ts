@@ -15,7 +15,9 @@ import {
 } from "@/lib/database/services/job-review-resolution";
 import { getJobProfitabilitySnapshot } from "@/lib/database/services/job-profitability";
 import { notifyDraftInvoiceReady } from "@/lib/database/services/operational-notifications";
+import type { DbClient } from "@/lib/database/db-client";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import type {
   CompletionDraftInvoiceResult,
   CompletionDraftInvoiceSkipReason,
@@ -111,8 +113,26 @@ async function recordAutoDraftInvoiceJobActivity(input: {
 
 function skipped(
   reason: CompletionDraftInvoiceSkipReason,
+  context?: { companyId: string; jobId: string },
 ): CompletionDraftInvoiceResult {
+  console.info("[maybeAutoCreateDraftInvoiceForCompletedJob] skipped:", {
+    reason,
+    companyId: context?.companyId,
+    jobId: context?.jobId,
+  });
   return { outcome: "skipped", reason };
+}
+
+function resolvePrivilegedDbClient(): DbClient | null {
+  try {
+    return createServiceRoleClient();
+  } catch (error) {
+    console.error(
+      "[maybeAutoCreateDraftInvoiceForCompletedJob] service role client unavailable:",
+      error,
+    );
+    return null;
+  }
 }
 
 /**
@@ -125,25 +145,47 @@ export async function maybeAutoCreateDraftInvoiceForCompletedJob(input: {
   jobId: string;
   completedByUserId: string;
 }): Promise<CompletionDraftInvoiceResult> {
+  const logContext = {
+    companyId: input.companyId,
+    jobId: input.jobId,
+  };
+
   try {
+    const privilegedDb = resolvePrivilegedDbClient();
+
+    if (!privilegedDb) {
+      return {
+        outcome: "failed",
+        error: "Draft invoice automation is not configured on the server.",
+      };
+    }
+
     const job = await getJobById(input.companyId, input.jobId);
 
     if (!job) {
-      return skipped("job_not_found");
+      return skipped("job_not_found", logContext);
     }
 
     if (job.status !== "completed") {
-      return skipped("job_not_completed");
+      return skipped("job_not_completed", logContext);
     }
 
     if (!job.customerId) {
-      return skipped("no_customer");
+      return skipped("no_customer", logContext);
     }
 
-    const invoices = await listInvoicesForJob(input.companyId, input.jobId);
+    const invoices = await listInvoicesForJob(
+      input.companyId,
+      input.jobId,
+      privilegedDb,
+    );
     const activeInvoice = invoices.find((invoice) => isActiveInvoice(invoice));
 
     if (activeInvoice) {
+      console.info("[maybeAutoCreateDraftInvoiceForCompletedJob] already_exists:", {
+        ...logContext,
+        invoiceId: activeInvoice.id,
+      });
       return {
         outcome: "already_exists",
         invoiceId: activeInvoice.id,
@@ -153,29 +195,41 @@ export async function maybeAutoCreateDraftInvoiceForCompletedJob(input: {
     const profitability = await getJobProfitabilitySnapshot(
       input.companyId,
       input.jobId,
+      undefined,
+      privilegedDb,
     );
 
     if (profitability.completeness.openLaborEntryCount > 0) {
-      return skipped("open_labor_entries");
+      return skipped("open_labor_entries", logContext);
     }
 
-    const estimates = await listEstimatesForJob(input.companyId, input.jobId);
+    const estimates = await listEstimatesForJob(
+      input.companyId,
+      input.jobId,
+      privilegedDb,
+    );
     const approvedEstimate = selectApprovedEstimateForConversion(estimates);
 
     if (!approvedEstimate) {
-      return skipped("no_approved_estimate");
+      return skipped("no_approved_estimate", logContext);
     }
 
     if (!estimateHasBillableLineItems(approvedEstimate)) {
-      return skipped("estimate_missing_line_items");
+      return skipped("estimate_missing_line_items", logContext);
     }
 
     const existingEstimateInvoice = await getInvoiceByEstimateId(
       input.companyId,
       approvedEstimate.id,
+      privilegedDb,
     );
 
     if (existingEstimateInvoice && isActiveInvoice(existingEstimateInvoice)) {
+      console.info("[maybeAutoCreateDraftInvoiceForCompletedJob] already_exists:", {
+        ...logContext,
+        invoiceId: existingEstimateInvoice.id,
+        estimateId: approvedEstimate.id,
+      });
       return {
         outcome: "already_exists",
         invoiceId: existingEstimateInvoice.id,
@@ -199,6 +253,7 @@ export async function maybeAutoCreateDraftInvoiceForCompletedJob(input: {
       approvedEstimate.id,
       companyContext.timeZone,
       companyContext.billingDefaults,
+      privilegedDb,
     );
 
     if (error || !invoice) {
@@ -213,6 +268,13 @@ export async function maybeAutoCreateDraftInvoiceForCompletedJob(input: {
         error: error ?? "Failed to create draft invoice.",
       };
     }
+
+    console.info("[maybeAutoCreateDraftInvoiceForCompletedJob] created:", {
+      ...logContext,
+      invoiceId: invoice.id,
+      invoiceNumber: invoice.invoiceNumber,
+      estimateId: approvedEstimate.id,
+    });
 
     await Promise.all([
       recordInvoiceConvertedFromEstimateActivity({

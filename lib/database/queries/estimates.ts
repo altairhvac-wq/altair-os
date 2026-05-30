@@ -1,3 +1,4 @@
+import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { validateServiceItemIdsBelongToCompany } from "@/lib/database/queries/service-items";
@@ -349,8 +350,9 @@ export async function listEstimatesByCustomer(
 export async function listEstimatesForJob(
   companyId: string,
   jobId: string,
+  db?: DbClient,
 ): Promise<Estimate[]> {
-  const supabase = await createClient();
+  const supabase = await resolveDbClient(db);
 
   const { data, error } = await supabase
     .from("estimates")
@@ -379,8 +381,9 @@ export async function listEstimatesForJob(
 export async function getEstimateById(
   companyId: string,
   estimateId: string,
+  db?: DbClient,
 ): Promise<EstimateDetail | null> {
-  const supabase = await createClient();
+  const supabase = await resolveDbClient(db);
 
   const { data, error } = await supabase
     .from("estimates")
@@ -572,8 +575,9 @@ export async function updateEstimateStatus(
   estimateId: string,
   fromStatus: EstimateStatus,
   toStatus: EstimateStatus,
+  db?: DbClient,
 ): Promise<{ estimate: EstimateDetail | null; error: string | null }> {
-  const supabase = await createClient();
+  const supabase = await resolveDbClient(db);
 
   const { data: row, error } = await supabase
     .from("estimates")
@@ -603,7 +607,7 @@ export async function updateEstimateStatus(
     };
   }
 
-  const estimate = await getEstimateById(companyId, estimateId);
+  const estimate = await getEstimateById(companyId, estimateId, db);
 
   return {
     estimate,

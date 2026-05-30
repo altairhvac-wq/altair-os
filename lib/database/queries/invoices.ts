@@ -3,6 +3,7 @@ import {
   type CompanyBillingDefaults,
 } from "@/shared/lib/company-billing-defaults";
 import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
+import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {
@@ -146,8 +147,11 @@ function mapInvoiceRowToInvoiceDetail(
   };
 }
 
-async function generateInvoiceNumber(companyId: string): Promise<string> {
-  const supabase = await createClient();
+async function generateInvoiceNumber(
+  companyId: string,
+  db?: DbClient,
+): Promise<string> {
+  const supabase = await resolveDbClient(db);
 
   const { count, error } = await supabase
     .from("invoices")
@@ -349,8 +353,9 @@ async function validateEstimateForInvoiceLink(
   estimateId: string,
   customerId: string,
   jobId?: string,
+  db?: DbClient,
 ): Promise<{ error: string | null }> {
-  const estimate = await getEstimateById(companyId, estimateId);
+  const estimate = await getEstimateById(companyId, estimateId, db);
 
   if (!estimate) {
     return { error: "Linked estimate not found." };
@@ -369,7 +374,7 @@ async function validateEstimateForInvoiceLink(
     return { error: "Only approved estimates can be linked to an invoice." };
   }
 
-  const supabase = await createClient();
+  const supabase = await resolveDbClient(db);
 
   const { data, error } = await supabase
     .from("invoices")
@@ -451,8 +456,9 @@ export async function listInvoicesByCustomer(
 export async function listInvoicesForJob(
   companyId: string,
   jobId: string,
+  db?: DbClient,
 ): Promise<Invoice[]> {
-  const supabase = await createClient();
+  const supabase = await resolveDbClient(db);
 
   const { data, error } = await supabase
     .from("invoices")
@@ -479,8 +485,9 @@ export async function listInvoicesForJob(
 export async function getInvoiceById(
   companyId: string,
   invoiceId: string,
+  db?: DbClient,
 ): Promise<InvoiceDetail | null> {
-  const supabase = await createClient();
+  const supabase = await resolveDbClient(db);
 
   const { data, error } = await supabase
     .from("invoices")
@@ -731,8 +738,9 @@ export async function voidInvoice(
 export async function getInvoiceByEstimateId(
   companyId: string,
   estimateId: string,
+  db?: DbClient,
 ): Promise<InvoiceDetail | null> {
-  const supabase = await createClient();
+  const supabase = await resolveDbClient(db);
 
   const { data, error } = await supabase
     .from("invoices")
@@ -768,6 +776,7 @@ export async function createInvoice(
   companyId: string,
   data: InvoiceFormData,
   timeZone?: string,
+  db?: DbClient,
 ): Promise<{ invoice: InvoiceDetail | null; error: string | null }> {
   const validLineItems = data.lineItems.filter(isValidLineItem);
 
@@ -797,6 +806,7 @@ export async function createInvoice(
       data.estimateId.trim(),
       data.customerId,
       data.jobId,
+      db,
     );
     if (estimateValidation.error) {
       return { invoice: null, error: estimateValidation.error };
@@ -811,8 +821,8 @@ export async function createInvoice(
     return { invoice: null, error: serviceItemValidation.error };
   }
 
-  const supabase = await createClient();
-  const invoiceNumber = await generateInvoiceNumber(companyId);
+  const supabase = await resolveDbClient(db);
+  const invoiceNumber = await generateInvoiceNumber(companyId, db);
   const insert = mapInvoiceFormDataToInsert(
     companyId,
     invoiceNumber,
@@ -864,7 +874,7 @@ export async function createInvoice(
     return { invoice: null, error: mapDatabaseError(lineItemsError) };
   }
 
-  const invoice = await getInvoiceById(companyId, row.id);
+  const invoice = await getInvoiceById(companyId, row.id, db);
 
   return {
     invoice,
@@ -1062,8 +1072,9 @@ export async function convertEstimateToInvoice(
   estimateId: string,
   timeZone?: string,
   billingDefaults?: CompanyBillingDefaults,
+  db?: DbClient,
 ): Promise<{ invoice: InvoiceDetail | null; error: string | null }> {
-  const estimate = await getEstimateById(companyId, estimateId);
+  const estimate = await getEstimateById(companyId, estimateId, db);
 
   if (!estimate) {
     return { invoice: null, error: "Estimate not found." };
@@ -1081,6 +1092,7 @@ export async function convertEstimateToInvoice(
     estimateId,
     estimate.customerId,
     estimate.jobId,
+    db,
   );
   if (duplicateCheck.error) {
     return { invoice: null, error: duplicateCheck.error };
@@ -1113,7 +1125,7 @@ export async function convertEstimateToInvoice(
         dueDate: getDefaultDueDate(new Date(), timeZone),
       };
 
-  const { invoice, error } = await createInvoice(companyId, formData, timeZone);
+  const { invoice, error } = await createInvoice(companyId, formData, timeZone, db);
 
   if (error || !invoice) {
     return { invoice: null, error: error ?? "Failed to create invoice." };
@@ -1124,6 +1136,7 @@ export async function convertEstimateToInvoice(
     estimateId,
     "approved",
     "converted",
+    db,
   );
 
   if (statusError) {
@@ -1134,7 +1147,7 @@ export async function convertEstimateToInvoice(
       error: statusError,
     });
 
-    const supabase = await createClient();
+    const supabase = await resolveDbClient(db);
     await supabase.from("invoices").delete().eq("id", invoice.id);
 
     return {

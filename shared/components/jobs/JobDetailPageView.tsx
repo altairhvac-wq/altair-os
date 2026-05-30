@@ -320,6 +320,7 @@ export function JobDetailPageView({
             jobStatus={job.status}
             customerId={job.customerId}
             snapshot={profitability}
+            invoices={billingContext?.invoices ?? []}
           />
 
           <JobProfitabilitySection

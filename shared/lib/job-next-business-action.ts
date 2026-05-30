@@ -39,6 +39,7 @@ export type JobBusinessActionId =
   | "awaiting_approval"
   | "complete_work"
   | "create_invoice"
+  | "view_invoice"
   | "awaiting_payment";
 
 export type JobBusinessActionSecondaryId = "resend_estimate" | "resend_invoice";
@@ -174,6 +175,20 @@ export function getJobNextBusinessAction(
         emphasize: true,
         href,
         hint: "Work is finished — create an invoice to bill the customer.",
+      };
+    }
+
+    if (activeInvoice.status === "draft") {
+      const href = buildInvoiceHref(activeInvoice.id);
+
+      return {
+        id: "view_invoice",
+        label: "View Invoice",
+        kind: "cta",
+        emphasize: true,
+        invoiceId: activeInvoice.id,
+        href: href ?? undefined,
+        hint: "Draft invoice is ready for office review before sending.",
       };
     }
 

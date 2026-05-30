@@ -6,6 +6,8 @@ import {
   ClipboardCheck,
   ExternalLink,
 } from "lucide-react";
+import type { JobInvoiceSummary } from "@/shared/lib/job-next-business-action";
+import { isActiveInvoice } from "@/shared/types/invoice";
 import type { JobStatus } from "@/shared/types/job";
 import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
 import {
@@ -48,14 +50,33 @@ type JobReviewChecklistSectionProps = {
   jobStatus: JobStatus;
   customerId: string;
   snapshot: JobProfitabilitySnapshot;
+  invoices?: JobInvoiceSummary[];
 };
 
 type OfficeReviewAction = {
-  id: "create_invoice" | "review_expenses" | "review_labor" | "view_profitability";
+  id:
+    | "create_invoice"
+    | "view_invoice"
+    | "review_expenses"
+    | "review_labor"
+    | "view_profitability";
   label: string;
   href: string;
   external?: boolean;
 };
+
+function selectNewestActiveInvoiceSummary(
+  invoices: JobInvoiceSummary[],
+): JobInvoiceSummary | null {
+  return (
+    invoices
+      .filter((invoice) => isActiveInvoice(invoice))
+      .sort(
+        (left, right) =>
+          Date.parse(right.createdAt) - Date.parse(left.createdAt),
+      )[0] ?? null
+  );
+}
 
 function profitabilityAnchor(jobId: string): string {
   return jobProfitabilityHeadingAnchor(jobId);
@@ -188,6 +209,8 @@ function resolveOverallSeverity(
 function buildOfficeReviewActions(
   jobId: string,
   customerId: string,
+  snapshot: JobProfitabilitySnapshot,
+  invoices: JobInvoiceSummary[] = [],
 ): OfficeReviewAction[] {
   if (!isValidOfficeReviewQueueJobId(jobId)) {
     return [];
@@ -202,13 +225,35 @@ function buildOfficeReviewActions(
     invoiceParams.customerId = customerId;
   }
 
-  const candidates: OfficeReviewAction[] = [
-    {
+  const activeInvoice = selectNewestActiveInvoiceSummary(invoices);
+  const invoiceActions: OfficeReviewAction[] = [];
+
+  if (snapshot.completeness.noActiveInvoices) {
+    invoiceActions.push({
       id: "create_invoice",
       label: "Create invoice",
       href: safeBuildQueueActionHref("/invoices", invoiceParams) ?? "",
       external: true,
-    },
+    });
+  } else if (activeInvoice) {
+    const viewHref = safeBuildQueueActionHref(
+      `/invoices/${encodeURIComponent(activeInvoice.id)}`,
+    );
+    if (viewHref) {
+      invoiceActions.push({
+        id: "view_invoice",
+        label:
+          activeInvoice.status === "draft"
+            ? "View draft invoice"
+            : "View invoice",
+        href: viewHref,
+        external: true,
+      });
+    }
+  }
+
+  const candidates: OfficeReviewAction[] = [
+    ...invoiceActions,
     {
       id: "review_expenses",
       label: "Review expenses",
@@ -279,6 +324,7 @@ export function JobReviewChecklistSection({
   jobStatus,
   customerId,
   snapshot,
+  invoices = [],
 }: JobReviewChecklistSectionProps) {
   if (jobStatus !== "completed") {
     return null;
@@ -289,7 +335,7 @@ export function JobReviewChecklistSection({
     (item) => item.status === "needs_attention",
   ).length;
   const overallSeverity = resolveOverallSeverity(snapshot);
-  const actions = buildOfficeReviewActions(jobId, customerId);
+  const actions = buildOfficeReviewActions(jobId, customerId, snapshot, invoices);
 
   return (
     <section
