@@ -16,6 +16,7 @@ export type JobActivityType =
   | "job_attachment_uploaded"
   | "job_material_added"
   | "invoice_created_for_completed_job"
+  | "invoice_auto_created_from_completion"
   | "labor_entries_closed"
   | "job_labor_auto_closed"
   | "pending_expenses_resolved"
@@ -50,6 +51,10 @@ export type JobActivityMetadata = {
   unit_price?: number;
   taxable?: boolean;
   review_blocker?: string;
+  invoice_id?: string;
+  invoice_number?: string;
+  estimate_id?: string;
+  estimate_number?: string;
 };
 
 export type JobActivity = {
@@ -77,6 +82,8 @@ const ACTIVITY_TYPE_LABELS: Record<JobActivityType, string> = {
   job_attachment_uploaded: "Attachment uploaded",
   job_material_added: "Material logged",
   invoice_created_for_completed_job: "Invoice created (office review complete)",
+  invoice_auto_created_from_completion:
+    "Draft invoice auto-created after completion",
   labor_entries_closed: "Labor entries closed (office review complete)",
   job_labor_auto_closed: "Labor auto-closed",
   pending_expenses_resolved: "Pending expenses resolved (office review complete)",
@@ -233,6 +240,20 @@ export function formatJobActivityDetails(activity: JobActivity): string | null {
     }
 
     case "invoice_created_for_completed_job":
+    case "invoice_auto_created_from_completion": {
+      const parts: string[] = [];
+      if (metadata.invoice_number) {
+        parts.push(`Invoice ${metadata.invoice_number}`);
+      }
+      if (metadata.estimate_number) {
+        parts.push(`from estimate ${metadata.estimate_number}`);
+      }
+      if (metadata.automated) {
+        parts.push("automatic");
+      }
+      return parts.length > 0 ? parts.join(" · ") : "Draft invoice ready for office review";
+    }
+
     case "labor_entries_closed":
     case "pending_expenses_resolved":
     case "material_costs_completed":

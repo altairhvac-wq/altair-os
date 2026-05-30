@@ -54,6 +54,7 @@ export type OperationalActivityEventType =
   | "expense_reimbursed"
   | "status_changed"
   | "invoice_created_for_completed_job"
+  | "invoice_auto_created_from_completion"
   | "labor_entries_closed"
   | "pending_expenses_resolved"
   | "material_costs_completed";
@@ -177,6 +178,8 @@ const ACTIVITY_TYPE_LABELS: Record<OperationalActivityEventType, string> = {
   status_changed: "Status changed",
   invoice_created_for_completed_job:
     "Invoice created (office review complete)",
+  invoice_auto_created_from_completion:
+    "Draft invoice auto-created after completion",
   labor_entries_closed: "Labor entries closed (office review complete)",
   pending_expenses_resolved:
     "Pending expenses resolved (office review complete)",
@@ -642,6 +645,20 @@ export function formatOperationalActivityDetails(
       return formatExpenseActivityDetails(metadata);
 
     case "invoice_created_for_completed_job":
+    case "invoice_auto_created_from_completion": {
+      const parts: string[] = [];
+      if (metadata.invoice_number) {
+        parts.push(`Invoice ${metadata.invoice_number}`);
+      }
+      if (metadata.estimate_number) {
+        parts.push(`from estimate ${metadata.estimate_number}`);
+      }
+      if (metadata.automated) {
+        parts.push("automatic");
+      }
+      return parts.length > 0 ? parts.join(" · ") : "Draft invoice ready for office review";
+    }
+
     case "labor_entries_closed":
     case "pending_expenses_resolved":
     case "material_costs_completed":

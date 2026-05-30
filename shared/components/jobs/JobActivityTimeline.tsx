@@ -42,6 +42,7 @@ const ACTIVITY_ICONS: Record<
   job_attachment_uploaded: Camera,
   job_material_added: Package,
   invoice_created_for_completed_job: CheckCircle2,
+  invoice_auto_created_from_completion: CheckCircle2,
   labor_entries_closed: CheckCircle2,
   job_labor_auto_closed: CheckCircle2,
   pending_expenses_resolved: CheckCircle2,
@@ -63,6 +64,8 @@ const ACTIVITY_ICON_STYLES: Record<JobActivityType, string> = {
   job_attachment_uploaded: "bg-blue-50 text-blue-700 ring-blue-600/15",
   job_material_added: "bg-amber-50 text-amber-700 ring-amber-600/15",
   invoice_created_for_completed_job:
+    "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
+  invoice_auto_created_from_completion:
     "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
   labor_entries_closed: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
   job_labor_auto_closed: "bg-slate-100 text-slate-600 ring-slate-500/15",

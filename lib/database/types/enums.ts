@@ -58,6 +58,7 @@ export type JobActivityType =
   | "job_attachment_uploaded"
   | "job_material_added"
   | "invoice_created_for_completed_job"
+  | "invoice_auto_created_from_completion"
   | "labor_entries_closed"
   | "job_labor_auto_closed"
   | "pending_expenses_resolved"
@@ -160,7 +161,8 @@ export type NotificationType =
   | "expense_submitted"
   | "expense_rejected"
   | "time_clocked_in"
-  | "time_clocked_out";
+  | "time_clocked_out"
+  | "draft_invoice_ready";
 
 export type NotificationEntityType =
   | "job"

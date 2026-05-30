@@ -221,6 +221,45 @@ export function notifyInvoicePaid(input: {
   });
 }
 
+export function notifyDraftInvoiceReady(input: {
+  companyId: string;
+  actorId: string;
+  invoiceId: string;
+  invoiceNumber?: string;
+  jobId: string;
+  jobNumber?: string;
+  customerId?: string;
+}): void {
+  if (
+    !isNonEmptyId(input.companyId) ||
+    !isNonEmptyId(input.invoiceId) ||
+    !isNonEmptyId(input.jobId) ||
+    !isNonEmptyId(input.actorId)
+  ) {
+    return;
+  }
+
+  const jobLabel = formatJobLabel(input.jobNumber, input.jobId);
+
+  dispatchNotificationsForPermission({
+    companyId: input.companyId,
+    permission: "manageBilling",
+    type: "draft_invoice_ready",
+    title: "Draft invoice ready",
+    message: `${jobLabel} was completed and a draft invoice is ready for review.`,
+    entityType: "invoice",
+    entityId: input.invoiceId,
+    excludeUserIds: [input.actorId],
+    metadata: sanitizeNotificationMetadata({
+      invoice_id: input.invoiceId,
+      invoice_number: input.invoiceNumber,
+      job_id: input.jobId,
+      job_number: input.jobNumber,
+      customer_id: input.customerId,
+    }),
+  });
+}
+
 export function notifyEstimateApproved(input: {
   companyId: string;
   actorId: string;

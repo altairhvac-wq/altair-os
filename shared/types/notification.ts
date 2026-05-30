@@ -172,6 +172,8 @@ export function formatNotificationTitleForAccess(
       return "Estimate approved";
     case "invoice_paid":
       return "Invoice paid";
+    case "draft_invoice_ready":
+      return "Draft invoice ready";
     case "expense_submitted":
       return "Expense submitted";
     default:
@@ -192,6 +194,8 @@ export function formatNotificationMessageForAccess(
       return "An estimate was approved.";
     case "invoice_paid":
       return "An invoice was paid in full.";
+    case "draft_invoice_ready":
+      return "A draft invoice is ready for office review.";
     case "expense_submitted":
       return "A technician submitted an expense for review.";
     default:
@@ -209,6 +213,8 @@ export function getNotificationTypeLabel(type: NotificationType): string {
       return "Estimate approved";
     case "invoice_paid":
       return "Invoice paid";
+    case "draft_invoice_ready":
+      return "Draft invoice ready";
     case "expense_submitted":
       return "Expense submitted";
     case "expense_rejected":

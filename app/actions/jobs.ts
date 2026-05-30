@@ -12,12 +12,14 @@ import {
 } from "@/lib/database/queries/jobs";
 import { listInvoicesForJob } from "@/lib/database/queries/invoices";
 import type { JobDetail } from "@/shared/types/job";
+import { maybeAutoCreateDraftInvoiceForCompletedJob } from "@/lib/database/services/completion-draft-invoice";
 import {
   recordJobCreatedActivity,
   recordJobReopenedActivity,
   recordJobStatusChangedActivity,
   recordJobStatusCorrectedActivity,
 } from "@/lib/database/services/job-activity";
+import type { CompletionDraftInvoiceOutcome } from "@/shared/types/completion-draft-invoice";
 import {
   ensureTimeTrackingForStartWork,
   finalizeOpenJobLaborForTerminalJob,
@@ -107,6 +109,8 @@ export async function updateJobAction(
 export type UpdateJobStatusActionResult = {
   error?: string;
   job?: Job;
+  /** Set when work is completed; invoice automation never blocks completion. */
+  draftInvoiceOutcome?: CompletionDraftInvoiceOutcome;
 };
 
 export async function updateJobStatusAction(
@@ -212,6 +216,41 @@ export async function updateJobStatusAction(
     followUpNotes: payload?.followUpNotes,
   });
 
+  let draftInvoiceOutcome: CompletionDraftInvoiceOutcome | undefined;
+
+  if (actionId === "complete") {
+    try {
+      const autoInvoiceResult = await maybeAutoCreateDraftInvoiceForCompletedJob({
+        companyId: context.company.id,
+        jobId,
+        completedByUserId: context.user.id,
+      });
+
+      draftInvoiceOutcome = autoInvoiceResult.outcome;
+
+      if (autoInvoiceResult.outcome === "created") {
+        revalidatePath("/invoices");
+        revalidatePath(`/invoices/${autoInvoiceResult.invoiceId}`);
+      } else if (autoInvoiceResult.outcome === "failed") {
+        console.error("[updateJobStatusAction] auto draft invoice failed:", {
+          jobId,
+          error: autoInvoiceResult.error,
+        });
+      } else if (autoInvoiceResult.outcome === "skipped") {
+        console.info("[updateJobStatusAction] auto draft invoice skipped:", {
+          jobId,
+          reason: autoInvoiceResult.reason,
+        });
+      }
+    } catch (autoInvoiceError) {
+      draftInvoiceOutcome = "failed";
+      console.error("[updateJobStatusAction] auto draft invoice threw:", {
+        jobId,
+        autoInvoiceError,
+      });
+    }
+  }
+
   revalidatePath("/jobs");
   revalidatePath("/dispatch");
   revalidatePath("/technician");
@@ -223,10 +262,10 @@ export async function updateJobStatusAction(
   revalidatePath(`/customers/${job.customerId}`);
 
   if (error) {
-    return { error, job };
+    return { error, job, draftInvoiceOutcome };
   }
 
-  return { job };
+  return { job, draftInvoiceOutcome };
 }
 
 export type CorrectJobStatusActionResult = {

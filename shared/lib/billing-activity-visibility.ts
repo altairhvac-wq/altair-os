@@ -25,6 +25,7 @@ export const BILLING_SENSITIVE_OPERATIONAL_EVENT_TYPES = new Set<
   "payment_recorded",
   "invoice_paid",
   "invoice_created_for_completed_job",
+  "invoice_auto_created_from_completion",
 ]);
 
 /** Expense events that expose dollar amounts or reimbursement details. */
@@ -48,6 +49,7 @@ const BILLING_SENSITIVE_NOTIFICATION_TYPES = new Set<NotificationType>([
   "estimate_approved",
   "invoice_paid",
   "expense_submitted",
+  "draft_invoice_ready",
 ]);
 
 export function isBillingSensitiveOperationalActivity(

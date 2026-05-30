@@ -63,6 +63,9 @@ export function CompleteJobSheet({
   const hadPartialSuccessRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successSubtitle, setSuccessSubtitle] = useState(
+    "Saved for office review",
+  );
   const [showClockOutPrompt, setShowClockOutPrompt] = useState(false);
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
   const [completionNotes, setCompletionNotes] = useState("");
@@ -220,7 +223,7 @@ export function CompleteJobSheet({
         {showSuccess ? (
           <MobileSheetSuccess
             title="Job completed"
-            subtitle="Saved for office review"
+            subtitle={successSubtitle}
           />
         ) : (
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
