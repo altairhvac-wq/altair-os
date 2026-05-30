@@ -3,6 +3,7 @@ export type ServiceItemSeed = {
   name: string;
   description: string;
   unitPrice: number;
+  unitCost?: number;
   category: string;
 };
 
@@ -81,6 +82,7 @@ export const DEMO_SERVICE_ITEMS: ServiceItemSeed[] = [
     name: "Capacitor Replacement",
     description: "Replace failed run capacitor and verify compressor startup.",
     unitPrice: 275,
+    unitCost: 18,
     category: "Repair",
   },
   {

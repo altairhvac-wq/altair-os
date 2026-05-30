@@ -16,6 +16,7 @@ type JobMaterialsSectionProps = {
   materials: JobMaterial[];
   serviceItems: ServiceItem[];
   canLogMaterials: boolean;
+  canViewMaterialCosts?: boolean;
 };
 
 function MaterialMetaItem({
@@ -40,6 +41,7 @@ export function JobMaterialsSection({
   materials,
   serviceItems,
   canLogMaterials,
+  canViewMaterialCosts = true,
 }: JobMaterialsSectionProps) {
   return (
     <section
@@ -119,26 +121,30 @@ export function JobMaterialsSection({
                     label="Quantity"
                     value={formatJobMaterialQuantity(material.quantity)}
                   />
-                  <MaterialMetaItem
-                    label="Unit cost"
-                    value={
-                      material.unitCost == null
-                        ? "—"
-                        : formatJobMaterialCurrency(material.unitCost)
-                    }
-                  />
+                  {canViewMaterialCosts ? (
+                    <MaterialMetaItem
+                      label="Unit cost"
+                      value={
+                        material.unitCost == null
+                          ? "—"
+                          : formatJobMaterialCurrency(material.unitCost)
+                      }
+                    />
+                  ) : null}
                   <MaterialMetaItem
                     label="Unit price"
                     value={formatJobMaterialCurrency(material.unitPrice)}
                   />
-                  <MaterialMetaItem
-                    label="Total cost"
-                    value={
-                      totalCost == null
-                        ? "—"
-                        : formatJobMaterialCurrency(totalCost)
-                    }
-                  />
+                  {canViewMaterialCosts ? (
+                    <MaterialMetaItem
+                      label="Total cost"
+                      value={
+                        totalCost == null
+                          ? "—"
+                          : formatJobMaterialCurrency(totalCost)
+                      }
+                    />
+                  ) : null}
                   <MaterialMetaItem
                     label="Total billable"
                     value={formatJobMaterialCurrency(totalBillable)}

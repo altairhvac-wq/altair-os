@@ -11,10 +11,15 @@ import type {
 } from "@/shared/types/service-item";
 
 function mapServiceItemRow(row: ServiceItemRow): ServiceItem {
+  const unitCost =
+    row.unit_cost == null ? undefined : Number(row.unit_cost);
+
   return {
     id: row.id,
     name: row.name,
     description: row.description ?? undefined,
+    unitCost:
+      unitCost == null || Number.isFinite(unitCost) ? unitCost : undefined,
     unitPrice: Number(row.unit_price),
     taxable: row.taxable,
     category: row.category ?? undefined,
@@ -30,6 +35,8 @@ export function mapServiceItemFormDataToInsert(
     company_id: companyId,
     name: data.name.trim(),
     description: data.description.trim() || null,
+    unit_cost:
+      data.unitCost == null ? null : Math.max(data.unitCost, 0),
     unit_price: Math.max(data.unitPrice, 0),
     taxable: data.taxable,
     category: data.category.trim() || null,
@@ -43,6 +50,8 @@ export function mapServiceItemFormDataToUpdate(
   return {
     name: data.name.trim(),
     description: data.description.trim() || null,
+    unit_cost:
+      data.unitCost == null ? null : Math.max(data.unitCost, 0),
     unit_price: Math.max(data.unitPrice, 0),
     taxable: data.taxable,
     category: data.category.trim() || null,
@@ -135,6 +144,37 @@ export async function listActiveServiceItems(
   }
 
   return ((data ?? []) as ServiceItemRow[]).map(mapServiceItemRow);
+}
+
+export async function getActiveServiceItemForCompany(
+  companyId: string,
+  serviceItemId: string,
+): Promise<ServiceItem | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("service_items")
+    .select("*")
+    .eq("company_id", companyId)
+    .eq("id", serviceItemId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getActiveServiceItemForCompany] lookup failed:", {
+      companyId,
+      serviceItemId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapServiceItemRow(data as ServiceItemRow);
 }
 
 export async function createServiceItem(

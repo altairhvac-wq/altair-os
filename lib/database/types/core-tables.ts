@@ -621,6 +621,7 @@ export type ServiceItemRow = {
   company_id: UUID;
   name: string;
   description: string | null;
+  unit_cost: number | null;
   unit_price: number;
   taxable: boolean;
   category: string | null;
@@ -635,6 +636,7 @@ export type ServiceItemInsert = {
   company_id: UUID;
   name: string;
   description?: string | null;
+  unit_cost?: number | null;
   unit_price?: number;
   taxable?: boolean;
   category?: string | null;

@@ -350,6 +350,7 @@ export function JobDetailPageView({
         materials={materials}
         serviceItems={serviceItems}
         canLogMaterials={canLogMaterials}
+        canViewMaterialCosts={canViewFinancials}
       />
 
       <OperationalActivityTimeline

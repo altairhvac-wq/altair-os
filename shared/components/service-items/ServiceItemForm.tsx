@@ -17,6 +17,7 @@ type ServiceItemFormProps = {
 const emptyForm: ServiceItemFormData = {
   name: "",
   description: "",
+  unitCost: null,
   unitPrice: 0,
   taxable: true,
   category: "",
@@ -42,10 +43,16 @@ export function ServiceItemForm({
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const unitPriceValue = parseFloat(String(form.get("unitPrice") ?? "0"));
+    const unitCostRaw = String(form.get("unitCost") ?? "").trim();
+    const unitCostValue = unitCostRaw ? parseFloat(unitCostRaw) : null;
 
     onSubmit({
       name: String(form.get("name") ?? ""),
       description: String(form.get("description") ?? ""),
+      unitCost:
+        unitCostValue == null || Number.isNaN(unitCostValue)
+          ? null
+          : unitCostValue,
       unitPrice: Number.isNaN(unitPriceValue) ? 0 : unitPriceValue,
       taxable: form.get("taxable") === "on",
       category: String(form.get("category") ?? ""),
@@ -91,7 +98,7 @@ export function ServiceItemForm({
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <div>
           <label htmlFor="category" className={labelClass}>
             Category
@@ -107,8 +114,26 @@ export function ServiceItemForm({
         </div>
 
         <div>
+          <label htmlFor="unitCost" className={labelClass}>
+            Internal unit cost
+          </label>
+          <input
+            id="unitCost"
+            name="unitCost"
+            type="number"
+            min="0"
+            step="0.01"
+            defaultValue={
+              defaults.unitCost == null ? "" : defaults.unitCost || ""
+            }
+            placeholder="Optional"
+            className={inputClass}
+          />
+        </div>
+
+        <div>
           <label htmlFor="unitPrice" className={labelClass}>
-            Unit price
+            Customer price
           </label>
           <input
             id="unitPrice"
@@ -170,6 +195,7 @@ export function serviceItemToFormData(item: ServiceItem): ServiceItemFormData {
   return {
     name: item.name,
     description: item.description ?? "",
+    unitCost: item.unitCost ?? null,
     unitPrice: item.unitPrice,
     taxable: item.taxable,
     category: item.category ?? "",

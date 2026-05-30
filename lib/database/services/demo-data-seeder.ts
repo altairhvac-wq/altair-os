@@ -165,6 +165,7 @@ export async function seedCompanyDemoData(
         company_id: companyId,
         name: withDemoName(item.name),
         description: item.description,
+        unit_cost: item.unitCost ?? null,
         unit_price: item.unitPrice,
         taxable: true,
         category: item.category,

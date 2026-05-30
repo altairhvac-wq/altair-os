@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { createJobMaterial } from "@/lib/database/queries/job-materials";
 import { getJobById } from "@/lib/database/queries/jobs";
+import { getActiveServiceItemForCompany } from "@/lib/database/queries/service-items";
 import { recordJobMaterialAddedActivity } from "@/lib/database/services/job-activity";
 import {
   captureCompletedJobReviewSnapshot,
@@ -127,6 +128,41 @@ function validateJobMaterialFormData(
   return null;
 }
 
+async function resolveJobMaterialFormData(input: {
+  companyId: string;
+  data: JobMaterialFormData;
+}): Promise<{ data?: JobMaterialFormData; error?: string }> {
+  const serviceItemId = input.data.serviceItemId?.trim();
+
+  if (!serviceItemId) {
+    return { data: input.data };
+  }
+
+  const serviceItem = await getActiveServiceItemForCompany(
+    input.companyId,
+    serviceItemId,
+  );
+
+  if (!serviceItem) {
+    return {
+      error:
+        "Selected price book item is invalid, inactive, or not available for this company.",
+    };
+  }
+
+  return {
+    data: {
+      ...input.data,
+      serviceItemId: serviceItem.id,
+      name: serviceItem.name,
+      description: serviceItem.description,
+      unitCost: serviceItem.unitCost ?? null,
+      unitPrice: serviceItem.unitPrice,
+      taxable: serviceItem.taxable,
+    },
+  };
+}
+
 export async function createJobMaterialAction(input: {
   data: JobMaterialFormData;
 }): Promise<JobMaterialActionResult> {
@@ -149,6 +185,15 @@ export async function createJobMaterialAction(input: {
     return { error: permission.error ?? "Linked job not found." };
   }
 
+  const resolved = await resolveJobMaterialFormData({
+    companyId: context.company.id,
+    data: normalizedData,
+  });
+
+  if (resolved.error || !resolved.data) {
+    return { error: resolved.error ?? "Failed to resolve material details." };
+  }
+
   const reviewSnapshotBefore =
     permission.jobStatus != null
       ? await captureCompletedJobReviewSnapshot(
@@ -163,7 +208,7 @@ export async function createJobMaterialAction(input: {
     customerId: permission.customerId ?? null,
     addedBy: context.user.id,
     data: {
-      ...normalizedData,
+      ...resolved.data,
       jobId: permission.jobId,
     },
   });

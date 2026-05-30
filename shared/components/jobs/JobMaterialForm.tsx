@@ -4,9 +4,14 @@ import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createJobMaterialAction } from "@/app/actions/job-materials";
+import { ServiceItemMaterialPicker } from "@/shared/components/service-items/ServiceItemMaterialPicker";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { formatCurrency } from "@/shared/types/customer";
-import type { JobMaterialFormData } from "@/shared/types/job-material";
+import {
+  calculateJobMaterialTotalBillable,
+  calculateJobMaterialTotalCost,
+  type JobMaterialFormData,
+} from "@/shared/types/job-material";
 import type { ServiceItem } from "@/shared/types/service-item";
 
 type JobMaterialFormProps = {
@@ -14,8 +19,6 @@ type JobMaterialFormProps = {
   serviceItems: ServiceItem[];
   onSuccess?: () => void;
 };
-
-const CUSTOM_SERVICE_ITEM_ID = "";
 
 const inputClass =
   "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
@@ -30,9 +33,9 @@ export function JobMaterialForm({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [selectedServiceItemId, setSelectedServiceItemId] = useState(
-    CUSTOM_SERVICE_ITEM_ID,
-  );
+  const [selectedServiceItemId, setSelectedServiceItemId] = useState<
+    string | null
+  >(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState("1");
@@ -40,8 +43,18 @@ export function JobMaterialForm({
   const [unitPrice, setUnitPrice] = useState("");
   const [taxable, setTaxable] = useState(true);
 
+  const isCustomMaterial = selectedServiceItemId == null;
+  const parsedQuantity = parseFloat(quantity);
+  const parsedUnitCost = unitCost.trim() ? parseFloat(unitCost) : null;
+  const parsedUnitPrice = parseFloat(unitPrice);
+  const hasValidPreview =
+    Number.isFinite(parsedQuantity) &&
+    parsedQuantity > 0 &&
+    Number.isFinite(parsedUnitPrice) &&
+    parsedUnitPrice >= 0;
+
   function resetForm() {
-    setSelectedServiceItemId(CUSTOM_SERVICE_ITEM_ID);
+    setSelectedServiceItemId(null);
     setName("");
     setDescription("");
     setQuantity("1");
@@ -51,7 +64,7 @@ export function JobMaterialForm({
     setError(null);
   }
 
-  function handleServiceItemChange(serviceItemId: string) {
+  function handleServiceItemSelect(serviceItemId: string | null) {
     setSelectedServiceItemId(serviceItemId);
 
     if (!serviceItemId) {
@@ -75,7 +88,9 @@ export function JobMaterialForm({
     setName(serviceItem.name);
     setDescription(serviceItem.description ?? "");
     setQuantity("1");
-    setUnitCost("");
+    setUnitCost(
+      serviceItem.unitCost != null ? String(serviceItem.unitCost) : "",
+    );
     setUnitPrice(String(serviceItem.unitPrice));
     setTaxable(serviceItem.taxable);
   }
@@ -96,8 +111,6 @@ export function JobMaterialForm({
       return;
     }
 
-    const parsedQuantity = parseFloat(quantity);
-
     if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
       setError("Quantity must be greater than zero.");
       return;
@@ -110,20 +123,18 @@ export function JobMaterialForm({
       return;
     }
 
-    const parsedUnitPrice = parseFloat(trimmedUnitPrice);
-
     if (!Number.isFinite(parsedUnitPrice) || parsedUnitPrice < 0) {
       setError("Unit price cannot be negative.");
       return;
     }
 
     const trimmedUnitCost = unitCost.trim();
-    let parsedUnitCost: number | null = null;
+    let resolvedUnitCost: number | null = null;
 
-    if (trimmedUnitCost) {
-      parsedUnitCost = parseFloat(trimmedUnitCost);
+    if (isCustomMaterial && trimmedUnitCost) {
+      resolvedUnitCost = parseFloat(trimmedUnitCost);
 
-      if (!Number.isFinite(parsedUnitCost) || parsedUnitCost < 0) {
+      if (!Number.isFinite(resolvedUnitCost) || resolvedUnitCost < 0) {
         setError("Unit cost cannot be negative.");
         return;
       }
@@ -131,11 +142,11 @@ export function JobMaterialForm({
 
     const data: JobMaterialFormData = {
       jobId,
-      serviceItemId: selectedServiceItemId || undefined,
+      serviceItemId: selectedServiceItemId ?? undefined,
       name: trimmedName,
       description: description.trim() || undefined,
       quantity: parsedQuantity,
-      unitCost: parsedUnitCost,
+      unitCost: isCustomMaterial ? resolvedUnitCost : null,
       unitPrice: parsedUnitPrice,
       taxable,
     };
@@ -164,30 +175,15 @@ export function JobMaterialForm({
       </h3>
 
       <div className="mt-3 space-y-3">
-        <div>
-          <label htmlFor={`material-service-item-${jobId}`} className={labelClass}>
-            Price book item
-          </label>
-          <select
-            id={`material-service-item-${jobId}`}
-            value={selectedServiceItemId}
-            onChange={(event) => handleServiceItemChange(event.target.value)}
-            disabled={isPending}
-            className={inputClass}
-          >
-            <option value={CUSTOM_SERVICE_ITEM_ID}>Custom material</option>
-            {serviceItems.map((serviceItem) => (
-              <option key={serviceItem.id} value={serviceItem.id}>
-                {serviceItem.name} — {formatCurrency(serviceItem.unitPrice)}
-              </option>
-            ))}
-          </select>
-          {serviceItems.length === 0 ? (
-            <p className="mt-1 text-xs text-slate-500">
-              No price book items yet. Enter a custom material name below.
-            </p>
-          ) : null}
-        </div>
+        <ServiceItemMaterialPicker
+          serviceItems={serviceItems}
+          selectedServiceItemId={selectedServiceItemId}
+          onSelect={handleServiceItemSelect}
+          disabled={isPending}
+          inputClass={inputClass}
+          labelClass={labelClass}
+          showUnitCost
+        />
 
         <div>
           <label htmlFor={`material-name-${jobId}`} className={labelClass}>
@@ -199,9 +195,10 @@ export function JobMaterialForm({
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="Part or supply used on this job"
-            disabled={isPending}
+            disabled={isPending || !isCustomMaterial}
+            readOnly={!isCustomMaterial}
             required
-            className={inputClass}
+            className={`${inputClass} ${!isCustomMaterial ? "bg-slate-50 text-slate-700" : ""}`}
           />
         </div>
 
@@ -215,8 +212,9 @@ export function JobMaterialForm({
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             placeholder="Optional details"
-            disabled={isPending}
-            className={inputClass}
+            disabled={isPending || !isCustomMaterial}
+            readOnly={!isCustomMaterial}
+            className={`${inputClass} ${!isCustomMaterial ? "bg-slate-50 text-slate-700" : ""}`}
           />
         </div>
 
@@ -239,7 +237,7 @@ export function JobMaterialForm({
           </div>
           <div>
             <label htmlFor={`material-unit-cost-${jobId}`} className={labelClass}>
-              Unit cost
+              Internal unit cost
             </label>
             <input
               id={`material-unit-cost-${jobId}`}
@@ -248,14 +246,15 @@ export function JobMaterialForm({
               step="0.01"
               value={unitCost}
               onChange={(event) => setUnitCost(event.target.value)}
-              placeholder="Optional"
-              disabled={isPending}
-              className={inputClass}
+              placeholder={isCustomMaterial ? "Optional" : "From price book"}
+              disabled={isPending || !isCustomMaterial}
+              readOnly={!isCustomMaterial}
+              className={`${inputClass} ${!isCustomMaterial ? "bg-slate-50 text-slate-700" : ""}`}
             />
           </div>
           <div>
             <label htmlFor={`material-unit-price-${jobId}`} className={labelClass}>
-              Unit price
+              Customer unit price
             </label>
             <input
               id={`material-unit-price-${jobId}`}
@@ -264,12 +263,41 @@ export function JobMaterialForm({
               step="0.01"
               value={unitPrice}
               onChange={(event) => setUnitPrice(event.target.value)}
-              disabled={isPending}
+              disabled={isPending || !isCustomMaterial}
+              readOnly={!isCustomMaterial}
               required
-              className={inputClass}
+              className={`${inputClass} ${!isCustomMaterial ? "bg-slate-50 text-slate-700" : ""}`}
             />
           </div>
         </div>
+
+        {hasValidPreview ? (
+          <p className="text-xs text-slate-500">
+            Total customer charge:{" "}
+            <span className="font-semibold text-slate-700">
+              {formatCurrency(
+                calculateJobMaterialTotalBillable({
+                  quantity: parsedQuantity,
+                  unitPrice: parsedUnitPrice,
+                }),
+              )}
+            </span>
+            {parsedUnitCost != null && Number.isFinite(parsedUnitCost) ? (
+              <>
+                {" "}
+                · Total internal cost:{" "}
+                <span className="font-semibold text-slate-700">
+                  {formatCurrency(
+                    calculateJobMaterialTotalCost({
+                      quantity: parsedQuantity,
+                      unitCost: parsedUnitCost,
+                    }) ?? 0,
+                  )}
+                </span>
+              </>
+            ) : null}
+          </p>
+        ) : null}
       </div>
 
       {error ? (

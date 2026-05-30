@@ -21,12 +21,13 @@ export function ServiceItemsTable({
 }: ServiceItemsTableProps) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[640px] text-left text-sm">
+      <table className="w-full min-w-[720px] text-left text-sm">
         <thead>
           <tr className="border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500">
             <th className="px-4 py-3">Item</th>
             <th className="px-4 py-3">Category</th>
-            <th className="px-4 py-3 text-right">Unit price</th>
+            <th className="px-4 py-3 text-right">Internal cost</th>
+            <th className="px-4 py-3 text-right">Customer price</th>
             <th className="px-4 py-3">Taxable</th>
             <th className="px-4 py-3">Status</th>
           </tr>
@@ -57,6 +58,9 @@ export function ServiceItemsTable({
                 </td>
                 <td className="px-4 py-3 text-slate-600">
                   {item.category ?? "—"}
+                </td>
+                <td className="px-4 py-3 text-right font-medium text-slate-700">
+                  {item.unitCost == null ? "—" : formatCurrency(item.unitCost)}
                 </td>
                 <td className="px-4 py-3 text-right font-medium text-slate-900">
                   {formatCurrency(item.unitPrice)}
