@@ -89,10 +89,10 @@ export function StartRouteButton({
 
   const linkClassName = isEnRoute
     ? layout === "block"
-      ? "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3.5 text-base font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+      ? "inline-flex w-full min-h-10 touch-manipulation items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
       : "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 sm:w-auto sm:px-3.5 sm:py-2 text-base sm:text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
     : layout === "block"
-      ? "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg bg-cyan-600 px-4 py-3.5 text-base font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+      ? "inline-flex w-full min-h-10 touch-manipulation items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
       : "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg bg-cyan-600 px-4 py-3 sm:w-auto sm:px-3.5 sm:py-2 text-base sm:text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
@@ -113,7 +113,7 @@ export function StartRouteButton({
         <Navigation className="h-4 w-4" />
         {buttonLabel}
       </a>
-      {isEnRoute ? (
+      {isEnRoute && layout !== "block" ? (
         <p className="text-xs text-slate-500">
           You&apos;re en route. Tap &quot;Arrived on site&quot; when you reach the job.
         </p>

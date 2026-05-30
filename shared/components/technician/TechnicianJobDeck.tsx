@@ -61,14 +61,14 @@ function TechnicianJobDeckPeekCard({ job }: { job: TechnicianJob }) {
   return (
     <div
       aria-hidden
-      className="rounded-2xl border border-slate-200/80 bg-white px-3 py-2 shadow-sm"
+      className="rounded-xl border border-slate-200/70 bg-white px-2.5 py-1.5 shadow-sm"
     >
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-slate-600">
+          <p className="truncate text-xs font-semibold text-slate-500">
             {job.jobNumber}
           </p>
-          <p className="truncate text-xs text-slate-400">{job.customerName}</p>
+          <p className="truncate text-[11px] text-slate-400">{job.customerName}</p>
         </div>
         <TechnicianJobStatusBadge
           status={job.status}
@@ -211,24 +211,24 @@ export function TechnicianJobDeck({
   const countLabel = `${activeIndex + 1} of ${totalJobs}`;
 
   return (
-    <section className="w-full min-w-0 max-w-full space-y-2 overflow-x-hidden">
-      <div className="flex min-h-11 items-center justify-between gap-2 px-0.5">
+    <section className="w-full min-w-0 max-w-full space-y-1 overflow-x-hidden">
+      <div className="flex min-h-9 items-center justify-between gap-2 px-0.5">
         {showNav ? (
           <button
             type="button"
             onClick={goToPrevious}
             disabled={activeIndex === 0}
             aria-label="Previous job"
-            className="inline-flex min-h-11 min-w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex min-h-9 min-w-9 shrink-0 touch-manipulation items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <ChevronLeft className="h-5 w-5" aria-hidden />
+            <ChevronLeft className="h-4 w-4" aria-hidden />
           </button>
         ) : (
-          <span className="w-11 shrink-0" aria-hidden />
+          <span className="w-9 shrink-0" aria-hidden />
         )}
 
         <p
-          className="min-w-0 flex-1 text-center text-sm font-semibold tabular-nums text-slate-700"
+          className="min-w-0 flex-1 text-center text-xs font-medium tabular-nums text-slate-500"
           aria-live="polite"
         >
           {countLabel}
@@ -240,12 +240,12 @@ export function TechnicianJobDeck({
             onClick={goToNext}
             disabled={activeIndex >= totalJobs - 1}
             aria-label="Next job"
-            className="inline-flex min-h-11 min-w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex min-h-9 min-w-9 shrink-0 touch-manipulation items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <ChevronRight className="h-5 w-5" aria-hidden />
+            <ChevronRight className="h-4 w-4" aria-hidden />
           </button>
         ) : (
-          <span className="w-11 shrink-0" aria-hidden />
+          <span className="w-9 shrink-0" aria-hidden />
         )}
       </div>
 

@@ -12,11 +12,13 @@ import {
 type TechnicianJobLaborStatusProps = {
   jobId: string;
   timeState: TechnicianTimeStateSnapshot;
+  compact?: boolean;
 };
 
 export function TechnicianJobLaborStatus({
   jobId,
   timeState,
+  compact = false,
 }: TechnicianJobLaborStatusProps) {
   const [now, setNow] = useState(() => Date.now());
   const laborEntry =
@@ -55,6 +57,21 @@ export function TechnicianJobLaborStatus({
 
   if (!laborEntry) {
     return null;
+  }
+
+  if (compact) {
+    return (
+      <div
+        className="flex items-center gap-1.5 rounded-md bg-cyan-50 px-2 py-1 ring-1 ring-cyan-200/80"
+        aria-live="polite"
+      >
+        <Timer className="h-3 w-3 shrink-0 text-cyan-600" aria-hidden />
+        <p className="min-w-0 truncate text-[11px] font-semibold tabular-nums text-cyan-900">
+          {elapsedLabel ? `${elapsedLabel} on job` : "Working on this job"}
+          {shiftElapsedLabel ? ` · Shift ${shiftElapsedLabel}` : ""}
+        </p>
+      </div>
+    );
   }
 
   return (

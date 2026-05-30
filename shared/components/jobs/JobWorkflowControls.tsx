@@ -126,7 +126,7 @@ export function JobWorkflowControls({
   }
 
   return (
-    <div className={isCompact ? "space-y-2" : "space-y-3"}>
+    <div className={isCompact ? "space-y-1.5" : "space-y-3"}>
       <JobWorkflowActions
         jobId={jobId}
         customerId={customerId}

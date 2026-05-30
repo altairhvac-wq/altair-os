@@ -12,11 +12,13 @@ import {
 type TechnicianJobShiftStatusProps = {
   jobId: string;
   timeState: TechnicianTimeStateSnapshot;
+  compact?: boolean;
 };
 
 export function TechnicianJobShiftStatus({
   jobId,
   timeState,
+  compact = false,
 }: TechnicianJobShiftStatusProps) {
   const [now, setNow] = useState(() => Date.now());
   const isWorkingThisJob =
@@ -68,7 +70,7 @@ export function TechnicianJobShiftStatus({
 
   return (
     <div
-      className={`mt-2 flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-[11px] ring-1 ring-inset ${getTechnicianTimeStateStyles(timeState.state)}`}
+      className={`flex items-center justify-between gap-2 rounded-md px-2 py-1 text-[11px] ring-1 ring-inset ${getTechnicianTimeStateStyles(timeState.state)} ${compact ? "" : "mt-2 py-2"}`}
       aria-live="polite"
     >
       <p className="min-w-0 truncate font-semibold tabular-nums">{statusLabel}</p>

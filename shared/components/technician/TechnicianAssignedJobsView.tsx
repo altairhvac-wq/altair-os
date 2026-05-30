@@ -125,30 +125,23 @@ function TechnicianQueueSummary({
   }, []);
 
   return (
-    <div className="rounded-lg bg-white px-2.5 py-2 shadow-sm ring-1 ring-slate-200">
-      <div className="flex min-h-11 items-center justify-between gap-2">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-            Queue
-          </p>
-          <p className="text-sm font-bold text-slate-900">
-            {activeCount} active
-          </p>
-        </div>
-        <p
-          className="shrink-0 text-right text-xs text-slate-500"
-          aria-live="polite"
-        >
-          {isRefreshing ? (
-            <span className="inline-flex items-center gap-1.5 font-medium text-cyan-700">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-              Updating…
-            </span>
-          ) : (
-            formatTechnicianLastUpdated(lastUpdatedAt, now)
-          )}
-        </p>
-      </div>
+    <div
+      className="flex min-h-8 items-center justify-between gap-2 px-1 text-xs"
+      aria-live="polite"
+    >
+      <p className="font-semibold text-slate-600">
+        {activeCount} active job{activeCount === 1 ? "" : "s"}
+      </p>
+      <p className="shrink-0 text-slate-400">
+        {isRefreshing ? (
+          <span className="inline-flex items-center gap-1 font-medium text-cyan-700">
+            <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+            Updating…
+          </span>
+        ) : (
+          formatTechnicianLastUpdated(lastUpdatedAt, now)
+        )}
+      </p>
     </div>
   );
 }
@@ -247,15 +240,15 @@ export function TechnicianAssignedJobsView({
 
   return (
     <div className="space-y-3">
+      {canManageTime ? (
+        <TechnicianClockStatusBanner timeState={timeState} />
+      ) : null}
+
       <TechnicianQueueSummary
         activeCount={deckJobs.length}
         lastUpdatedAt={lastUpdatedAt}
         isRefreshing={isRefreshing}
       />
-
-      {canManageTime ? (
-        <TechnicianClockStatusBanner timeState={timeState} />
-      ) : null}
 
       <TechnicianJobDeck
         jobs={deckJobs}
