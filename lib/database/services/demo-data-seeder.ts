@@ -54,6 +54,8 @@ function resolveDemoCustomerEmail(context: ActiveCompanyContext): string {
 }
 
 async function insertRow(
+  step: string,
+  companyId: string,
   table: string,
   row: Record<string, unknown>,
 ): Promise<{ id: string | null; error: string | null }> {
@@ -65,9 +67,12 @@ async function insertRow(
     .single();
 
   if (error || !data) {
-    console.error(`[seedDemoData] ${table} insert failed:`, {
-      code: error?.code,
-      message: error?.message,
+    console.error("[seedDemoData] insert failed", {
+      step,
+      table,
+      companyId,
+      code: error?.code ?? null,
+      message: error?.message ?? null,
     });
     return {
       id: null,
@@ -156,7 +161,7 @@ export async function seedCompanyDemoData(
 
   try {
     for (const item of DEMO_SERVICE_ITEMS) {
-      const result = await insertRow("service_items", {
+      const result = await insertRow("seed_service_items", companyId, "service_items", {
         company_id: companyId,
         name: withDemoName(item.name),
         description: item.description,
@@ -175,7 +180,7 @@ export async function seedCompanyDemoData(
     }
 
     for (const customer of DEMO_CUSTOMERS) {
-      const result = await insertRow("customers", {
+      const result = await insertRow("seed_customers", companyId, "customers", {
         company_id: companyId,
         name: withDemoName(customer.name),
         email: seedContext.demoEmail,
@@ -211,7 +216,7 @@ export async function seedCompanyDemoData(
         continue;
       }
 
-      await insertRow("customer_equipment", {
+      await insertRow("seed_customer_equipment", companyId, "customer_equipment", {
         company_id: companyId,
         customer_id: customerId,
         name: withDemoName(equipment.name),
@@ -238,7 +243,7 @@ export async function seedCompanyDemoData(
         throw new Error(`Missing demo customer for job ${jobSeed.jobNumber}.`);
       }
 
-      const result = await insertRow("jobs", {
+      const result = await insertRow("seed_jobs", companyId, "jobs", {
         company_id: companyId,
         customer_id: customerId,
         job_number: jobSeed.jobNumber,
@@ -289,7 +294,7 @@ export async function seedCompanyDemoData(
           : "active";
 
       if (jobSeed.status === "completed" || jobSeed.scheduledDaysFromNow >= 0) {
-        await insertRow("dispatch_assignments", {
+        await insertRow("seed_dispatch_assignments", companyId, "dispatch_assignments", {
           company_id: companyId,
           job_id: jobId,
           technician_id: seedContext.technicianId,
@@ -309,7 +314,7 @@ export async function seedCompanyDemoData(
       }
 
       if (jobSeed.status === "completed") {
-        await insertRow("job_activities", {
+        await insertRow("seed_job_activities", companyId, "job_activities", {
           company_id: companyId,
           job_id: jobId,
           actor_id: seedContext.actorId,
@@ -318,7 +323,7 @@ export async function seedCompanyDemoData(
           is_demo: true,
         });
       } else if (jobSeed.status === "in_progress") {
-        await insertRow("job_activities", {
+        await insertRow("seed_job_activities", companyId, "job_activities", {
           company_id: companyId,
           job_id: jobId,
           actor_id: seedContext.actorId,
@@ -326,7 +331,7 @@ export async function seedCompanyDemoData(
           metadata: {},
           is_demo: true,
         });
-        await insertRow("job_activities", {
+        await insertRow("seed_job_activities", companyId, "job_activities", {
           company_id: companyId,
           job_id: jobId,
           actor_id: seedContext.actorId,
@@ -335,7 +340,7 @@ export async function seedCompanyDemoData(
           is_demo: true,
         });
       } else if (jobSeed.scheduledDaysFromNow === 0) {
-        await insertRow("job_activities", {
+        await insertRow("seed_job_activities", companyId, "job_activities", {
           company_id: companyId,
           job_id: jobId,
           actor_id: seedContext.actorId,
@@ -343,7 +348,7 @@ export async function seedCompanyDemoData(
           metadata: { source: "demo_seed" },
           is_demo: true,
         });
-        await insertRow("job_activities", {
+        await insertRow("seed_job_activities", companyId, "job_activities", {
           company_id: companyId,
           job_id: jobId,
           actor_id: seedContext.actorId,
@@ -466,7 +471,7 @@ export async function seedCompanyDemoData(
     ];
 
     for (const material of materialSeeds) {
-      await insertRow("job_materials", {
+      await insertRow("seed_job_materials", companyId, "job_materials", {
         company_id: companyId,
         customer_id: material.customer_id,
         job_id: material.job_id,
@@ -708,7 +713,7 @@ export async function seedCompanyDemoData(
 
     for (const estimate of estimateSeeds) {
       const { tax, total } = computeTax(estimate.subtotal);
-      const result = await insertRow("estimates", {
+      const result = await insertRow("seed_estimates", companyId, "estimates", {
         company_id: companyId,
         customer_id: customerIds[estimate.customerKey],
         job_id: estimate.jobKey ? jobIds[estimate.jobKey] : null,
@@ -725,13 +730,13 @@ export async function seedCompanyDemoData(
       });
 
       if (result.error || !result.id) {
-        throw new Error("Failed to seed estimates.");
+        throw new Error(result.error ?? "Failed to seed estimates.");
       }
 
       estimateIds[estimate.key] = result.id;
 
       for (const [index, line] of estimate.lineItems.entries()) {
-        await insertRow("estimate_line_items", {
+        await insertRow("seed_estimate_line_items", companyId, "estimate_line_items", {
           company_id: companyId,
           estimate_id: result.id,
           service_item_id: serviceItemIds[line.serviceItemKey],
@@ -1055,7 +1060,7 @@ export async function seedCompanyDemoData(
           : invoice.amountPaid;
       const balanceDue = roundCurrency(total - amountPaid);
 
-      const result = await insertRow("invoices", {
+      const result = await insertRow("seed_invoices", companyId, "invoices", {
         company_id: companyId,
         customer_id: customerIds[invoice.customerKey],
         job_id: invoice.jobKey ? jobIds[invoice.jobKey] : null,
@@ -1079,14 +1084,14 @@ export async function seedCompanyDemoData(
       });
 
       if (result.error || !result.id) {
-        throw new Error("Failed to seed invoices.");
+        throw new Error(result.error ?? "Failed to seed invoices.");
       }
 
       invoiceIds[invoice.key] = result.id;
       invoiceTotals[invoice.key] = total;
 
       for (const [index, line] of invoice.lineItems.entries()) {
-        await insertRow("invoice_line_items", {
+        await insertRow("seed_invoice_line_items", companyId, "invoice_line_items", {
           company_id: companyId,
           invoice_id: result.id,
           service_item_id: serviceItemIds[line.serviceItemKey],
@@ -1106,7 +1111,7 @@ export async function seedCompanyDemoData(
           const paymentAmount =
             payment.amount > 0 ? payment.amount : total;
 
-          await insertRow("invoice_payments", {
+          await insertRow("seed_invoice_payments", companyId, "invoice_payments", {
             company_id: companyId,
             invoice_id: result.id,
             amount: paymentAmount,
@@ -1128,7 +1133,7 @@ export async function seedCompanyDemoData(
       }
 
       if (jobSeed.status === "in_progress") {
-        await insertRow("time_entries", {
+        await insertRow("seed_time_entries", companyId, "time_entries", {
           company_id: companyId,
           technician_id: seedContext.technicianId,
           job_id: jobId,
@@ -1155,7 +1160,7 @@ export async function seedCompanyDemoData(
           (completed.getTime() - workStarted.getTime()) / 60_000,
         );
 
-        await insertRow("time_entries", {
+        await insertRow("seed_time_entries", companyId, "time_entries", {
           company_id: companyId,
           technician_id: seedContext.technicianId,
           job_id: jobId,
@@ -1169,7 +1174,7 @@ export async function seedCompanyDemoData(
       }
     }
 
-    await insertRow("time_entries", {
+    await insertRow("seed_time_entries_clock", companyId, "time_entries", {
       company_id: companyId,
       technician_id: seedContext.technicianId,
       entry_type: "clock",
@@ -1180,7 +1185,7 @@ export async function seedCompanyDemoData(
       is_demo: true,
     });
 
-    await insertRow("time_entries", {
+    await insertRow("seed_time_entries_clock", companyId, "time_entries", {
       company_id: companyId,
       technician_id: seedContext.technicianId,
       entry_type: "clock",
@@ -1237,7 +1242,7 @@ export async function seedCompanyDemoData(
     ] as const;
 
     for (const notification of notifications) {
-      await insertRow("notifications", {
+      await insertRow("seed_notifications", companyId, "notifications", {
         company_id: companyId,
         user_id: seedContext.actorId,
         type: notification.type,
@@ -1262,7 +1267,21 @@ export async function seedCompanyDemoData(
 
     return { error: null, seededAt: new Date().toISOString() };
   } catch (error) {
-    await clearCompanyDemoData(companyId);
+    console.error("[seedDemoData] seed aborted, rolling back demo data", {
+      companyId,
+      message: error instanceof Error ? error.message : String(error),
+    });
+
+    const clearResult = await clearCompanyDemoData(companyId);
+    if (clearResult.error) {
+      console.error("[seedDemoData] rollback clear failed", {
+        step: "rollback_clear_demo_data",
+        table: "clear_company_demo_data",
+        companyId,
+        message: clearResult.error,
+      });
+    }
+
     const message =
       error instanceof Error ? error.message : "Failed to load demo data.";
     return { error: message };

@@ -127,7 +127,9 @@ export async function markCompanyDemoDataSeeded(
     .eq("id", companyId);
 
   if (error) {
-    console.error("[demo-data] mark seeded failed:", {
+    console.error("[demo-data] mark seeded failed", {
+      step: "mark_demo_seeded",
+      table: "companies",
       companyId,
       code: error.code,
       message: error.message,
@@ -148,7 +150,9 @@ export async function clearCompanyDemoData(
   });
 
   if (error) {
-    console.error("[demo-data] clear RPC failed:", {
+    console.error("[demo-data] clear RPC failed", {
+      step: "clear_demo_data",
+      table: "clear_company_demo_data",
       companyId,
       code: error.code,
       message: error.message,
