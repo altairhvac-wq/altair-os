@@ -356,7 +356,7 @@ export function TeamMemberMobileCards({
               {canManageTeam ? (
                 <div>
                   {isConfirming && confirmingStatusAction ? (
-                    <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
                       <p className="text-sm font-medium text-slate-700">
                         {confirmingStatusAction === "suspend"
                           ? "Suspend this member's access?"

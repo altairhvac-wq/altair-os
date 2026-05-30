@@ -41,7 +41,7 @@ export function NetworkPageHeader({
       </div>
 
       <nav
-        className="mt-4 flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/80 p-1"
+        className="mt-4 flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1"
         aria-label="Network sections"
       >
         {NETWORK_TAB_OPTIONS.map((tab) => (

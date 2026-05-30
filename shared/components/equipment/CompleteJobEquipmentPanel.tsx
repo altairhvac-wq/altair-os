@@ -117,7 +117,7 @@ export function CompleteJobEquipmentPanel({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50/70">
+    <div className="rounded-xl border border-slate-200 bg-white">
       <button
         type="button"
         onClick={handleExpand}

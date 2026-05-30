@@ -69,7 +69,7 @@ export function TechnicianJobDetailsPanel({
         </div>
 
         <MobileSheetBody unstyled className="space-y-2.5 p-3">
-          <div className="rounded-lg bg-slate-50 px-2.5 py-2 text-sm text-slate-700">
+          <div className="rounded-lg bg-white px-2.5 py-2 text-sm text-slate-700">
             <div className={adminMetaRowClass}>
               <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
               <span className="font-semibold text-slate-900">{job.customerName}</span>

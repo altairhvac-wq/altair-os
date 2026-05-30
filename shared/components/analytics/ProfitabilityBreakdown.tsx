@@ -122,7 +122,7 @@ export function ProfitabilityBreakdown({
           {profitByJobType.map((item) => (
             <li
               key={item.type}
-              className="rounded-xl border border-slate-100 bg-slate-50/60 p-3"
+              className="rounded-xl border border-slate-100 bg-white p-3"
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-bold text-slate-900">{item.type}</p>

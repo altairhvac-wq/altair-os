@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 /** Matches `.admin-canvas` shell background in globals.css */
-const APP_SHELL_BACKGROUND = "#eef1f5";
+const APP_SHELL_BACKGROUND = "#f1f5f9";
 /** Premium slate accent used across auth/admin surfaces */
 const APP_THEME_COLOR = "#0f172a";
 

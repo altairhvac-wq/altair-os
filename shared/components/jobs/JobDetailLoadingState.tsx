@@ -12,7 +12,7 @@ export function JobDetailLoadingState() {
       <Skeleton className="h-5 w-28" />
 
       <div className="overflow-hidden admin-card">
-        <div className="space-y-4 border-b border-slate-100 bg-slate-50/70 px-5 py-5 sm:px-6">
+        <div className="space-y-4 border-b border-slate-100 bg-white px-5 py-5 sm:px-6">
           <div className="space-y-2">
             <Skeleton className="h-3 w-10" />
             <Skeleton className="h-9 w-48 sm:h-10" />

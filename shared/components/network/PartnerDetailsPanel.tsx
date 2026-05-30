@@ -84,7 +84,7 @@ export function PartnerDetailsPanel({
           <div className="space-y-6">
             <PartnerCompanyCard partner={partner} compact />
 
-            <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+            <div className="space-y-3 rounded-xl border border-slate-100 bg-white p-4">
               <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">
                 Contact
               </h3>

@@ -216,7 +216,7 @@ function readinessProgressBarClassName(
 function ReadinessLegend({ compact = false }: { compact?: boolean }) {
   return (
     <details
-      className={`rounded-lg border border-slate-200 bg-slate-50/80 ${
+      className={`rounded-lg border border-slate-200 bg-white ${
         compact ? "px-3 py-2" : "px-3 py-2.5"
       }`}
     >
@@ -312,7 +312,7 @@ function groupAccentClassName(group: OfficeReviewQueueGroup): string {
     case "needs_attention":
       return "border-amber-200 bg-amber-50/30";
     case "aging":
-      return "border-slate-200 bg-slate-50/60";
+      return "border-slate-200 bg-white";
   }
 }
 
@@ -407,7 +407,7 @@ function getTrendStyles(direction: QueueResolutionTrendSummary["direction"]): {
       };
     case "stable":
       return {
-        chipClassName: "border-slate-200 bg-slate-50 text-slate-800",
+        chipClassName: "border-slate-200 bg-white text-slate-800",
         icon: Minus,
         iconClassName: "text-slate-600",
       };
@@ -516,7 +516,7 @@ function QueueResolutionTrendBanner({
 
 function QueueEmptyState() {
   return (
-    <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center sm:py-10">
+    <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center sm:py-10">
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 ring-1 ring-emerald-600/10">
         <Sparkles className="h-6 w-6 text-emerald-600" />
       </div>
@@ -568,7 +568,7 @@ function FilterEmptyState({
   clearHref: string;
 }) {
   return (
-    <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center sm:py-10">
+    <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center sm:py-10">
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 ring-1 ring-slate-200">
         <Inbox className="h-6 w-6 text-slate-500" />
       </div>
@@ -1116,7 +1116,7 @@ function QueueBatchPreviewModal({
                 {preview.blockedCount}
               </p>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-center">
+            <div className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-center">
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-600">
                 Selected
               </p>
@@ -1146,7 +1146,7 @@ function QueueBatchPreviewModal({
                 {preview.blockedReasons.map((entry) => (
                   <li
                     key={entry.reason}
-                    className="rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2"
+                    className="rounded-lg border border-slate-100 bg-white px-3 py-2"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-xs font-semibold text-slate-800">

@@ -186,7 +186,7 @@ export function OperationalHealthSection({
             {topFactors.map((factor) => (
               <li
                 key={factor.id}
-                className="rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3"
+                className="rounded-xl border border-slate-100 bg-white px-4 py-3"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>

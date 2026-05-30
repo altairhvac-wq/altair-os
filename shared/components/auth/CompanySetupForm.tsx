@@ -45,7 +45,7 @@ export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
         </Suspense>
         {state.error ? <AuthMessage tone="error">{state.error}</AuthMessage> : null}
 
-        <div className="rounded-lg border border-slate-100 bg-slate-50/80 px-4 py-3.5">
+        <div className="rounded-lg border border-slate-100 bg-white px-4 py-3.5">
           <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
             What happens next
           </p>

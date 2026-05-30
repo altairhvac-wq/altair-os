@@ -31,7 +31,7 @@ export function ExpenseReceiptPreview({
     return (
       <div className="space-y-3">
         <div
-          className={`flex items-center gap-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 text-slate-500 ${
+          className={`flex items-center gap-3 rounded-xl border border-dashed border-slate-200 bg-white text-slate-500 ${
             compact ? "px-3 py-4" : "px-4 py-6"
           }`}
         >
@@ -185,7 +185,7 @@ function ExpenseReceiptPreviewModal({
           </button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-4">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-white p-4">
           {isImage && expense.receiptSignedUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

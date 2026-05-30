@@ -121,7 +121,7 @@ export function JobDetailPageView({
       </Link>
 
       <section className="overflow-hidden admin-card">
-        <div className="border-b border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-5 sm:py-4">
+        <div className="border-b border-slate-100 bg-white px-4 py-3 sm:px-5 sm:py-4">
           <JobDetailHeaderSection
             job={job}
             customers={customers}
@@ -268,7 +268,7 @@ export function JobDetailPageView({
                 <p className="font-semibold text-slate-900">{scheduledLabel}</p>
               </div>
             </div>
-            <div className="rounded-lg border border-slate-100 bg-slate-50/70 px-3 py-2.5">
+            <div className="rounded-lg border border-slate-100 bg-white px-3 py-2.5">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Job type
               </p>

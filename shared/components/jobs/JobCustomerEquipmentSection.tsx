@@ -49,7 +49,7 @@ export function JobCustomerEquipmentSection({
       </div>
 
       {equipment.length === 0 ? (
-        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-8 text-center">
+        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
           <p className="text-sm font-medium text-slate-700">No equipment on file</p>
           <p className="mt-1 text-xs text-slate-500">
             Technicians can add equipment when completing a job.

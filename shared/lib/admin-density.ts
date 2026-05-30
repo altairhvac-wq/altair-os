@@ -23,7 +23,7 @@ export const adminFormActionsClass =
 
 /** Collapsible low-priority blocks (native details, 44px summary touch target) */
 export const adminDetailsClass =
-  "group rounded-lg border border-slate-200 bg-slate-50/60 overflow-hidden";
+  "group rounded-lg border border-slate-200 bg-white overflow-hidden";
 
 export const adminDetailsSummaryClass =
   "flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-2.5 py-2 text-xs font-semibold text-slate-600 marker:content-none [&::-webkit-details-marker]:hidden";
@@ -39,6 +39,6 @@ export const adminMetaLabelClass =
 
 /** Compact line-item card shell */
 export const adminLineItemShellClass =
-  "rounded-lg border border-slate-200 bg-slate-50/50 p-2";
+  "rounded-lg border border-slate-200 bg-white p-2";
 
 export const adminLineItemGridClass = "grid gap-2 sm:grid-cols-12";

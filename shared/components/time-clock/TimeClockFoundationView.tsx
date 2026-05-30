@@ -225,7 +225,7 @@ export function TimeClockFoundationView({
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-100">
-              <thead className="bg-slate-50">
+              <thead className="bg-white">
                 <tr>
                   {canViewCompanyEntries ? (
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">

@@ -27,7 +27,7 @@ export function EstimateIdentityCard({
   const trimmedValidUntil = validUntil?.trim();
 
   return (
-    <div className="estimate-identity-card rounded-xl border border-slate-200 bg-slate-50/60 px-5 py-5 ring-1 ring-slate-100 sm:px-6 sm:py-6 print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-0 print:ring-0">
+    <div className="estimate-identity-card rounded-xl border border-slate-200 bg-white px-5 py-5 ring-1 ring-slate-100 sm:px-6 sm:py-6 print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-0 print:ring-0">
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 print:text-slate-600">
         Estimate details
       </p>

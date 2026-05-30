@@ -35,7 +35,7 @@ export function InvoicePaymentLinkCard({ invoiceId }: InvoicePaymentLinkCardProp
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+    <section className="rounded-xl border border-slate-200 bg-white p-4">
       <div className="flex items-start gap-3">
         <Link2 className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden />
         <div className="min-w-0 flex-1">

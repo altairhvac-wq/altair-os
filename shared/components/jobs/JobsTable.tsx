@@ -16,7 +16,7 @@ export function JobsTable({ jobs, onSelect }: JobsTableProps) {
     <div className="max-w-full overflow-x-auto">
       <table className="w-full min-w-[760px] text-left text-sm">
         <thead>
-          <tr className="border-b border-slate-100/90 bg-slate-50/60 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <tr className="border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500">
             <th className="px-4 py-3">Job</th>
             <th className="px-4 py-3">Customer</th>
             <th className="hidden px-4 py-3 md:table-cell">Service address</th>

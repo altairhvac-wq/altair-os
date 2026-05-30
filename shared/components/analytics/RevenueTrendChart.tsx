@@ -112,7 +112,7 @@ export function RevenueTrendChart({ data }: RevenueTrendChartProps) {
           {data.slice(-3).map((point) => (
             <div
               key={point.label}
-              className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2"
+              className="rounded-xl border border-slate-100 bg-white px-3 py-2"
             >
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                 {point.label}

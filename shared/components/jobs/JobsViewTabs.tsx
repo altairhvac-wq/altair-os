@@ -19,7 +19,7 @@ export function JobsViewTabs({
   ];
 
   return (
-    <div className="flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+    <div className="flex gap-1 rounded-lg border border-slate-200 bg-white p-1">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
 

@@ -19,7 +19,7 @@ function formatRecordedByLabel(payment: InvoicePayment): string {
 export function InvoicePaymentHistory({ payments }: InvoicePaymentHistoryProps) {
   if (payments.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center">
+      <div className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
         <p className="text-sm font-medium text-slate-700">No payments recorded</p>
         <p className="mt-1 text-xs text-slate-500">
           Payments you record will show up here with date, amount, and method.
@@ -67,7 +67,7 @@ export function InvoicePaymentHistory({ payments }: InvoicePaymentHistoryProps) 
 
       <div className="hidden overflow-hidden rounded-xl border border-slate-200 sm:block">
         <table className="min-w-full divide-y divide-slate-200">
-          <thead className="bg-slate-50">
+          <thead className="bg-white">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Date

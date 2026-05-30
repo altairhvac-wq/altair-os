@@ -11,7 +11,7 @@ type TechnicianJobEquipmentSummaryProps = {
 };
 
 const detailsClass =
-  "rounded-lg border border-slate-200 bg-slate-50/60";
+  "rounded-lg border border-slate-200 bg-white";
 const summaryClass =
   "flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-2.5 py-2 text-xs font-semibold text-slate-600 marker:content-none [&::-webkit-details-marker]:hidden";
 

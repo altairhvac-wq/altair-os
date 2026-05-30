@@ -25,7 +25,7 @@ export function MobileSheetHeader({
 }: MobileSheetHeaderProps) {
   return (
     <header
-      className={`flex shrink-0 items-center gap-3 border-b border-slate-100 bg-slate-50/70 px-4 py-3.5 sm:px-5 ${headerClassName ?? ""}`}
+      className={`flex shrink-0 items-center gap-3 border-b border-slate-100 bg-white px-4 py-3.5 sm:px-5 ${headerClassName ?? ""}`}
     >
       {icon}
       <div className="min-w-0 flex-1">

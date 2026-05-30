@@ -61,7 +61,7 @@ const primaryActionClass =
 const secondaryActionClass =
   "inline-flex min-h-11 min-w-0 touch-manipulation flex-1 items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2 text-sm font-semibold transition-colors";
 
-const detailsClass = "rounded-lg border border-slate-200 bg-slate-50/60";
+const detailsClass = "rounded-lg border border-slate-200 bg-white";
 const detailsSummaryClass =
   "flex min-h-11 cursor-pointer list-none items-center gap-1.5 px-2.5 py-2 text-xs font-semibold text-slate-600 marker:content-none [&::-webkit-details-marker]:hidden";
 

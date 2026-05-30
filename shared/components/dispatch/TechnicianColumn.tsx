@@ -70,7 +70,7 @@ export const TechnicianColumn = memo(function TechnicianColumn({
           </div>
         </header>
 
-        <div className="flex min-h-[4.25rem] min-w-0 flex-1 snap-x snap-mandatory gap-1.5 overflow-x-auto bg-slate-50/40 p-1.5 sm:min-h-[5.25rem] sm:gap-2 sm:p-2" data-no-pull-refresh>
+        <div className="flex min-h-[4.25rem] min-w-0 flex-1 snap-x snap-mandatory gap-1.5 overflow-x-auto bg-white p-1.5 sm:min-h-[5.25rem] sm:gap-2 sm:p-2" data-no-pull-refresh>
           {jobs.length === 0 ? (
             <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-slate-200/90 bg-white/80 px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3">
               <p className="text-[11px] font-medium text-slate-500">

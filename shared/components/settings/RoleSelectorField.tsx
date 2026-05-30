@@ -55,7 +55,7 @@ export function RoleSelectorField({
       </label>
 
       {showDescription && description ? (
-        <div className="rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2.5">
+        <div className="rounded-lg border border-slate-100 bg-white px-3 py-2.5">
           <p className="text-xs font-medium text-slate-700">
             {description.summary}
           </p>

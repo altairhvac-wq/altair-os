@@ -216,7 +216,7 @@ export function BillingSignatureBlock({
       className={`border-t border-slate-200 pt-8 print:mt-8 print:pt-8 print:break-inside-avoid ${className}`}
     >
       {isPremiumStyle ? (
-        <div className="rounded-xl border border-slate-200 bg-slate-50/50 px-5 py-5 sm:px-6 sm:py-6 print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-0">
+        <div className="rounded-xl border border-slate-200 bg-white px-5 py-5 sm:px-6 sm:py-6 print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-0">
           {innerContent}
         </div>
       ) : (

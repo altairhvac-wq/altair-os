@@ -61,7 +61,7 @@ export function InvoiceDocumentSection({
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 print:text-slate-600">
           Bill to
         </p>
-        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 px-5 py-5 ring-1 ring-slate-100 print:rounded-none print:border-0 print:bg-white print:px-0 print:py-0 print:ring-0">
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white px-5 py-5 ring-1 ring-slate-100 print:rounded-none print:border-0 print:bg-white print:px-0 print:py-0 print:ring-0">
           <p className="break-words text-xl font-semibold text-slate-900 print:text-base">
             {invoice.customerName}
           </p>

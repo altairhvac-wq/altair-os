@@ -191,7 +191,7 @@ export function TodayNeedsAttentionSection({
             </div>
 
             {healthyCards.length > 0 ? (
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3">
+              <div className="rounded-xl border border-slate-100 bg-white px-3 py-2.5 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                   Healthy
                 </p>

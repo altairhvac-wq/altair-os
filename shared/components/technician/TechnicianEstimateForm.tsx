@@ -111,7 +111,7 @@ export function TechnicianEstimateForm({
       aria-busy={isPending}
     >
       <p
-        className="rounded-md bg-slate-50 px-2.5 py-1.5 text-sm text-slate-700"
+        className="rounded-md bg-white px-2.5 py-1.5 text-sm text-slate-700"
         title="Saved as draft for office review"
       >
         <span className="font-semibold text-slate-900">{customerName}</span>

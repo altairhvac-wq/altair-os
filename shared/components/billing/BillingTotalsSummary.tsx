@@ -70,7 +70,7 @@ export function BillingTotalsSummary({
 
   const containerClass = isPremiumStyle
     ? "rounded-xl border border-slate-200 bg-white px-5 py-4 sm:px-6 sm:py-5 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white"
-    : "rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-3 sm:px-5 sm:py-4 print:break-inside-avoid print:border-slate-300 print:bg-white";
+    : "rounded-lg border border-slate-200 bg-white px-4 py-3 sm:px-5 sm:py-4 print:break-inside-avoid print:border-slate-300 print:bg-white";
 
   const rowClass = "text-sm text-slate-600";
 
@@ -112,7 +112,7 @@ export function BillingTotalsSummary({
                 />
               ) : null}
               {showBalanceInTotals ? (
-                <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 rounded-lg bg-slate-50 px-3 py-3 ring-1 ring-slate-200/80 print:rounded-none print:border print:border-slate-400 print:bg-white print:px-0 print:py-2 print:ring-0">
+                <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 rounded-lg bg-white px-3 py-3 ring-1 ring-slate-200/80 print:rounded-none print:border print:border-slate-400 print:bg-white print:px-0 print:py-2 print:ring-0">
                   <span className="text-right text-sm font-bold uppercase tracking-[0.06em] text-slate-900">
                     Balance due
                   </span>

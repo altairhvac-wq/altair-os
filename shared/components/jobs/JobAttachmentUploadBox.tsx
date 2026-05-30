@@ -157,7 +157,7 @@ export function JobAttachmentUploadBox({
       ) : null}
 
       <div
-        className={`rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 text-center transition-colors hover:border-cyan-300 hover:bg-cyan-50/30 ${
+        className={`rounded-xl border-2 border-dashed border-slate-200 bg-white text-center transition-colors hover:border-cyan-300 hover:bg-cyan-50/30 ${
           compact ? "px-4 py-5" : "px-6 py-8"
         } ${isPending ? "pointer-events-none opacity-70" : "cursor-pointer"}`}
         onClick={handlePickFile}

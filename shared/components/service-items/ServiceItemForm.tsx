@@ -123,7 +123,7 @@ export function ServiceItemForm({
         </div>
       </div>
 
-      <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 px-3 py-3">
+      <div className="space-y-2 rounded-lg border border-slate-200 bg-white px-3 py-3">
         <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
           <input
             type="checkbox"

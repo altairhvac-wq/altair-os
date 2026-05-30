@@ -221,7 +221,7 @@ function DashboardSection({
 }) {
   return (
     <section className="admin-card overflow-hidden">
-      <div className="admin-section-header flex min-w-0 items-start justify-between gap-2 border-b border-slate-100/90 bg-slate-50/40">
+      <div className="admin-section-header flex min-w-0 items-start justify-between gap-2 border-b border-slate-100/90 bg-white">
         <div className="flex min-w-0 items-start gap-2">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200/80">
             <Icon className="h-3.5 w-3.5 text-slate-600" />
@@ -339,7 +339,7 @@ function getHighlightSeverityStyles(
       return {
         icon: Info,
         iconClass: "text-cyan-700 bg-cyan-50",
-        rowClass: "border-slate-100 bg-slate-50/60",
+        rowClass: "border-slate-100 bg-white",
       };
   }
 }

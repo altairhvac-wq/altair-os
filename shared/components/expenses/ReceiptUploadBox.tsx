@@ -172,7 +172,7 @@ export function ReceiptUploadBox({
         className={`relative overflow-hidden rounded-xl border-2 border-dashed text-center transition-colors ${
           showImagePreview
             ? "border-emerald-300 bg-emerald-50/30"
-            : "border-slate-200 bg-slate-50/50 hover:border-cyan-300 hover:bg-cyan-50/30"
+            : "border-slate-200 bg-white hover:border-cyan-300 hover:bg-cyan-50/30"
         } ${compact ? "min-h-[140px]" : "min-h-[180px]"} ${
           isPending ? "pointer-events-none opacity-70" : "cursor-pointer"
         }`}

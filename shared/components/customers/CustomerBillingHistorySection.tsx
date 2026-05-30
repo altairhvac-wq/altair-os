@@ -13,7 +13,7 @@ type CustomerBillingHistorySectionProps = {
 
 function BillingEmptyState({ message }: { message: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-8 text-center">
+    <div className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
       <p className="text-sm font-medium text-slate-700">{message}</p>
     </div>
   );

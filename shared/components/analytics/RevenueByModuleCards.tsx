@@ -45,7 +45,7 @@ export function RevenueByModuleCards({ modules }: RevenueByModuleCardsProps) {
           return (
             <article
               key={module.module}
-              className="rounded-xl border border-slate-100 bg-slate-50/50 p-4"
+              className="rounded-xl border border-slate-100 bg-white p-4"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm">

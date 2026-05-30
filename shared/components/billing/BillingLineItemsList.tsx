@@ -30,7 +30,7 @@ export function BillingLineItemsList({
   const isPremiumStyle = isPremiumBillingDocumentStyle(documentStyle);
   if (items.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center print:border-slate-300 print:bg-white">
+      <div className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center print:border-slate-300 print:bg-white">
         <p className="text-sm font-medium text-slate-700">No line items yet</p>
         <p className="mt-1 text-xs text-slate-500">
           Services and parts on this {documentLabel} will appear here.
@@ -45,7 +45,7 @@ export function BillingLineItemsList({
       : "px-3 py-2 font-semibold";
     const bodyCellClass = isPremiumStyle ? "px-4 py-4" : "px-3 py-3";
     const headerRowClass = isPremiumStyle
-      ? "border-b-2 border-slate-900 bg-slate-50 text-left print:bg-white"
+      ? "border-b-2 border-slate-900 bg-white text-left print:bg-white"
       : "border-b border-slate-300 text-left text-xs font-semibold uppercase tracking-wide text-slate-500";
     const bodyRowClass = isPremiumStyle
       ? "border-b border-slate-200 last:border-b-0"

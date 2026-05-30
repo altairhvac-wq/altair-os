@@ -92,7 +92,7 @@ export function InvoiceEditForm({
         disabled={isSubmitting}
         className={`m-0 min-w-0 border-0 p-0 ${adminFormStackClass}`}
       >
-      <div className="rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5">
+      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Invoice
         </p>

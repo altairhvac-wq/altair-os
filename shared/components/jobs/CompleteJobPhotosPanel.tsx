@@ -12,7 +12,7 @@ export function CompleteJobPhotosPanel({
   onPendingChange,
 }: CompleteJobPhotosPanelProps) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
       <div className="mb-3">
         <p className="text-sm font-semibold text-slate-900">Job photos</p>
         <p className="mt-0.5 text-xs text-slate-500">

@@ -26,7 +26,7 @@ export function CustomerCard({
   const location = `${customer.city}, ${customer.state}`;
 
   return (
-    <div className={compact ? "space-y-4" : "rounded-xl border border-slate-100 bg-slate-50/50 p-4"}>
+    <div className={compact ? "space-y-4" : "rounded-xl border border-slate-100 bg-white p-4"}>
       <div className="flex items-start gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-sm font-bold text-white">
           {getCustomerInitials(customer.name)}

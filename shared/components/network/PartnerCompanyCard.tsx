@@ -66,7 +66,7 @@ export function PartnerCompanyCard({
       }
       className={`rounded-xl border p-4 transition-all ${
         compact
-          ? "border-slate-100 bg-slate-50/50"
+          ? "border-slate-100 bg-white"
           : selected
             ? "border-cyan-300 bg-cyan-50/40 shadow-sm ring-1 ring-cyan-200"
             : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"

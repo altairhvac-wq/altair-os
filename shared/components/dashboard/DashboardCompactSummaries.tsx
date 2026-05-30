@@ -61,7 +61,7 @@ function CompactSectionShell({
 }) {
   return (
     <section className="admin-card overflow-hidden">
-      <div className="flex flex-col gap-2 border-b border-slate-100/90 bg-slate-50/40 px-3 py-2.5 max-lg:px-3 sm:flex-row sm:items-center sm:justify-between lg:px-4 lg:py-3">
+      <div className="flex flex-col gap-2 border-b border-slate-100/90 bg-white px-3 py-2.5 max-lg:px-3 sm:flex-row sm:items-center sm:justify-between lg:px-4 lg:py-3">
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
             {eyebrow}
@@ -151,7 +151,7 @@ export function DashboardCompactAttentionSummary({
           {issueCards.map((card) => (
             <li
               key={card.id}
-              className="rounded-lg border border-slate-100 bg-slate-50/60 px-2.5 py-2"
+              className="rounded-lg border border-slate-100 bg-white px-2.5 py-2"
             >
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
                 {card.label}
@@ -288,7 +288,7 @@ export function DashboardCompactTechnicianSummary({
           {technicians.slice(0, 4).map((technician) => (
             <li
               key={technician.id}
-              className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-2"
+              className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-white px-2.5 py-2"
             >
               <div className="flex min-w-0 items-center gap-2">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">
@@ -500,7 +500,7 @@ export function DashboardCompactNextStepsSection({
               <li key={action.id}>
                 <Link
                   href={action.href}
-                  className="block rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-2 transition-colors hover:border-slate-200 hover:bg-white"
+                  className="block rounded-lg border border-slate-100 bg-white px-2.5 py-2 transition-colors hover:border-slate-200 hover:bg-white"
                 >
                   <p className="text-xs font-bold text-slate-900">{action.title}</p>
                   <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-600">

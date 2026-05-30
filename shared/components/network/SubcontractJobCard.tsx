@@ -46,7 +46,7 @@ export function SubcontractJobCard({
       className={
         compact
           ? "space-y-4"
-          : "rounded-xl border border-slate-100 bg-slate-50/50 p-4"
+          : "rounded-xl border border-slate-100 bg-white p-4"
       }
     >
       <div className="flex items-start justify-between gap-3">

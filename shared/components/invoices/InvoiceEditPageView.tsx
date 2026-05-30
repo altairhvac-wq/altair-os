@@ -71,7 +71,7 @@ export function InvoiceEditPageView({
       </Link>
 
       <section className="overflow-hidden admin-card">
-        <div className="admin-panel-header admin-section-header border-b border-slate-100 bg-slate-50/70">
+        <div className="admin-panel-header admin-section-header border-b border-slate-100 bg-white">
           <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Edit invoice</h1>
           {paymentCount > 0 ? (
             <p className="admin-text-helper mt-0.5">

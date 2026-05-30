@@ -105,7 +105,7 @@ export function InvoiceDetailPageView({
       </div>
 
       <section className="no-print overflow-hidden admin-card">
-        <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-5 sm:px-6">
+        <div className="border-b border-slate-100 bg-white px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -151,7 +151,7 @@ export function InvoiceDetailPageView({
         </div>
 
         <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-3">
-          <section className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 lg:col-span-2">
+          <section className="rounded-xl border border-slate-200 bg-white p-4 lg:col-span-2">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Customer
             </h2>
@@ -191,7 +191,7 @@ export function InvoiceDetailPageView({
 
           <div className="space-y-5">
             {invoice.jobId ? (
-              <section className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+              <section className="rounded-xl border border-slate-200 bg-white p-4">
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Related job
                 </h2>
@@ -207,7 +207,7 @@ export function InvoiceDetailPageView({
                 </p>
               </section>
             ) : (
-              <section className="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 p-4">
+              <section className="rounded-xl border border-dashed border-slate-200 bg-white p-4">
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Related job
                 </h2>
@@ -221,7 +221,7 @@ export function InvoiceDetailPageView({
             )}
 
             {invoice.estimateId ? (
-              <section className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+              <section className="rounded-xl border border-slate-200 bg-white p-4">
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Source estimate
                 </h2>

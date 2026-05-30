@@ -55,7 +55,7 @@ export function PublicInvoicePaymentContactPanel({
         .
       </p>
 
-      <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+      <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Office contact
         </p>

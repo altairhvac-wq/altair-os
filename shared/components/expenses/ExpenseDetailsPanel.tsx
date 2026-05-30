@@ -113,7 +113,7 @@ export function ExpenseDetailsPanel({
 
         {mode === "detail" && expense ? (
           <div className="space-y-6">
-            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-lg font-bold text-slate-900">

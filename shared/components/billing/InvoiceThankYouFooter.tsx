@@ -30,7 +30,7 @@ export function InvoiceThankYouFooter({
       </p>
 
       {hasContact ? (
-        <div className="mx-auto mt-6 max-w-md rounded-xl border border-slate-200 bg-slate-50/70 px-5 py-4 print:max-w-none print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-3">
+        <div className="mx-auto mt-6 max-w-md rounded-xl border border-slate-200 bg-white px-5 py-4 print:max-w-none print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 print:text-slate-600">
             Questions about this invoice
           </p>

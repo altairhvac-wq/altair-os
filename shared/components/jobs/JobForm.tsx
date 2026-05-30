@@ -202,7 +202,7 @@ export function JobForm({
             <>
               <input type="hidden" name="status" value={defaults.status} />
               <p
-                className="flex min-h-11 items-center rounded-md border border-slate-200 bg-slate-50 px-2.5 text-sm text-slate-700"
+                className="flex min-h-11 items-center rounded-md border border-slate-200 bg-white px-2.5 text-sm text-slate-700"
                 title="Use workflow actions to change status"
               >
                 {JOB_STATUS_OPTIONS.find((option) => option.value === defaults.status)

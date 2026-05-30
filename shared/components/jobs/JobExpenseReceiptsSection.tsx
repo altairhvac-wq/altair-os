@@ -62,7 +62,7 @@ export function JobExpenseReceiptsSection({
       </div>
 
       {receiptExpenses.length === 0 ? (
-        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-8 text-center">
+        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
           <p className="text-sm font-medium text-slate-700">No receipts linked yet</p>
           <p className="mt-1 text-xs text-slate-500">
             Snap a receipt from the job card or add one from the expenses page.

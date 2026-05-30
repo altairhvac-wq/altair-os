@@ -102,7 +102,7 @@ export function JobAttachmentsSection({
       ) : null}
 
       {filteredAttachments.length === 0 ? (
-        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-8 text-center">
+        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
           <p className="text-sm font-medium text-slate-700">
             {attachments.length === 0
               ? "No attachments yet"

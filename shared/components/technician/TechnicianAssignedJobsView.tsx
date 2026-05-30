@@ -69,7 +69,7 @@ function CompletedTodaySection({ jobs }: { jobs: TechnicianJob[] }) {
         type="button"
         onClick={() => setExpanded((current) => !current)}
         aria-expanded={expanded}
-        className="flex min-h-11 w-full touch-manipulation items-center justify-between rounded-lg bg-slate-50/80 px-3 py-2.5 ring-1 ring-slate-200/60"
+        className="flex min-h-11 w-full touch-manipulation items-center justify-between rounded-lg bg-white px-3 py-2.5 ring-1 ring-slate-200/60"
       >
         <div className="flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 text-slate-400" />
@@ -89,7 +89,7 @@ function CompletedTodaySection({ jobs }: { jobs: TechnicianJob[] }) {
           {completedToday.map((job) => (
             <li
               key={job.id}
-              className="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-slate-50/60 px-3 py-2.5 ring-1 ring-slate-200/50"
+              className="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-white px-3 py-2.5 ring-1 ring-slate-200/50"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-slate-700">

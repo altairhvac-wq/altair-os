@@ -70,7 +70,7 @@ export function InvoiceActivityTimeline({
       </div>
 
       {activities.length === 0 ? (
-        <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center">
+        <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
           <p className="text-sm font-medium text-slate-700">No activity yet</p>
           <p className="mt-1 text-xs text-slate-500">
             Sends, payments, and status changes will appear here.

@@ -50,7 +50,7 @@ function MetricTile({
         ? "border-rose-100 bg-rose-50/50"
         : tone === "info"
           ? "border-cyan-100 bg-cyan-50/40"
-          : "border-slate-100 bg-slate-50/70";
+          : "border-slate-100 bg-white";
 
   return (
     <div className={`rounded-xl border px-2.5 py-2.5 max-lg:px-2.5 max-lg:py-2.5 sm:px-4 lg:py-3 ${toneClass}`}>

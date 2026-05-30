@@ -545,7 +545,7 @@ export function getOperationalHealthTrendStyles(trend: OperationalHealthTrend): 
     case "stable":
       return {
         label: "Stable",
-        className: "border-slate-200 bg-slate-50 text-slate-700",
+        className: "border-slate-200 bg-white text-slate-700",
       };
   }
 }

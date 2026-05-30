@@ -33,7 +33,7 @@ export function TimeClockWidget({
           <TechnicianTimeCard session={activeSession} />
         </div>
       ) : (
-        <div className="mb-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-6 text-center">
+        <div className="mb-4 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-6 text-center">
           <p className="text-sm font-medium text-slate-700">Not clocked in</p>
           <p className="mt-1 text-xs text-slate-500">
             No active technician session. Clock in to start tracking time.

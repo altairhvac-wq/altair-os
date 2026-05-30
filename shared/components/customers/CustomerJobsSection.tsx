@@ -39,7 +39,7 @@ export function CustomerJobsSection({
       </div>
 
       {jobs.length === 0 ? (
-        <div className="mt-2 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-5 text-center">
+        <div className="mt-2 rounded-lg border border-dashed border-slate-200 bg-white px-3 py-5 text-center">
           <p className="text-sm font-medium text-slate-700">No jobs yet</p>
           {canCreateJob ? (
             <Link

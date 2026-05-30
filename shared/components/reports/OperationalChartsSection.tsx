@@ -153,7 +153,7 @@ function ReportTimeSeriesChartCard({ chart }: { chart: ReportOperationalChart })
 
       <div className="p-4 sm:p-5">
         {!hasData ? (
-          <div className="flex min-h-[180px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center">
+          <div className="flex min-h-[180px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
             <p className="text-sm text-slate-500">
               No {chart.valueFormat === "count" ? "activity" : "data"} in this
               period.
@@ -253,7 +253,7 @@ function ReportTimeSeriesChartCard({ chart }: { chart: ReportOperationalChart })
                 {recentPoints.map((point) => (
                   <div
                     key={point.bucketStart}
-                    className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2"
+                    className="rounded-xl border border-slate-100 bg-white px-3 py-2"
                   >
                     <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                       {point.label}

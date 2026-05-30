@@ -58,7 +58,7 @@ function highlightSeverityStyles(
     case "warning":
       return "border-amber-200 bg-amber-50 text-amber-900";
     default:
-      return "border-slate-200 bg-slate-50 text-slate-800";
+      return "border-slate-200 bg-white text-slate-800";
   }
 }
 
@@ -77,7 +77,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
   return (
     <div className="flex flex-col gap-6 pb-8">
       <div
-        className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+        className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3"
         role="note"
       >
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
@@ -346,7 +346,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
         {timeClock.recentEntries.length > 0 ? (
           <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
             <table className="min-w-full divide-y divide-slate-100">
-              <thead className="bg-slate-50">
+              <thead className="bg-white">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Employee

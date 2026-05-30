@@ -16,7 +16,7 @@ export function EstimatesTable({ estimates, onSelect }: EstimatesTableProps) {
       <div className="hidden overflow-x-auto md:block">
       <table className="w-full min-w-[720px] text-left text-sm">
         <thead>
-          <tr className="border-b border-slate-100/90 bg-slate-50/60 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <tr className="border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500">
             <th className="px-4 py-3">Estimate</th>
             <th className="px-4 py-3">Customer</th>
             <th className="hidden px-4 py-3 md:table-cell">Line items</th>

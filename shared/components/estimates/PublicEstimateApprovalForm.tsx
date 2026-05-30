@@ -89,7 +89,7 @@ export function PublicEstimateApprovalForm({
 
       <div className="mt-5">
         <label className={labelClass}>Signature</label>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
           <SignaturePad ref={signaturePadRef} disabled={isPending} />
         </div>
         <div className="mt-3 flex flex-wrap gap-2">

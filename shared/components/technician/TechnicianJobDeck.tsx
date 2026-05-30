@@ -61,7 +61,7 @@ function TechnicianJobDeckPeekCard({ job }: { job: TechnicianJob }) {
   return (
     <div
       aria-hidden
-      className="rounded-2xl border border-slate-200/80 bg-slate-50 px-3 py-2 shadow-sm"
+      className="rounded-2xl border border-slate-200/80 bg-white px-3 py-2 shadow-sm"
     >
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">

@@ -29,7 +29,7 @@ export function InvoiceCompanyHeroHeader({
           ) : (
             <div
               aria-hidden="true"
-              className="invoice-company-logo flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 sm:h-20 sm:w-20 print:h-14 print:w-14 print:rounded-lg print:border print:border-slate-300 print:border-solid print:bg-white"
+              className="invoice-company-logo flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-white sm:h-20 sm:w-20 print:h-14 print:w-14 print:rounded-lg print:border print:border-slate-300 print:border-solid print:bg-white"
             >
               <Building2 className="h-8 w-8 text-slate-300 sm:h-9 sm:w-9 print:h-6 print:w-6 print:text-slate-400" />
             </div>

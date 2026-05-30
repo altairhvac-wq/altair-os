@@ -56,7 +56,7 @@ export function PartnerInviteQrCard() {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <div className="mx-auto shrink-0 sm:mx-0">
           <MockQrPlaceholder />

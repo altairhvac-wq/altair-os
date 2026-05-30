@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #eef1f5;
+  --background: #f1f5f9;
   --foreground: #0f172a;
-  --surface-canvas: #eef1f5;
+  --surface-canvas: #f1f5f9;
   --surface-card: #ffffff;
-  --surface-muted: #f4f6f8;
+  --surface-muted: #f1f5f9;
   --border-subtle: rgb(203 213 225 / 0.72);
   --border-strong: rgb(148 163 184 / 0.45);
   --shadow-card:
@@ -208,9 +208,6 @@ a[href] {
 /* Admin experience — operational surfaces with calm depth hierarchy */
 .admin-canvas {
   background-color: var(--surface-canvas);
-  background-image:
-    radial-gradient(ellipse 100% 55% at 50% -12%, rgb(148 163 184 / 0.1), transparent 52%),
-    linear-gradient(180deg, #e8ecf1 0%, #f4f6f8 44%, #eef1f5 100%);
 }
 
 .admin-card {
@@ -228,8 +225,8 @@ a[href] {
 }
 
 .admin-panel-header {
-  border-bottom: 1px solid rgb(241 245 249 / 0.95);
-  background: linear-gradient(180deg, rgb(248 250 252 / 0.9), rgb(255 255 255 / 0.35));
+  border-bottom: 1px solid rgb(226 232 240 / 0.95);
+  background-color: var(--surface-card);
 }
 
 .admin-card-interactive {
@@ -287,7 +284,7 @@ a[href] {
 .admin-empty-state {
   border-radius: 0.75rem;
   border: 1px dashed rgb(203 213 225);
-  background: linear-gradient(180deg, rgb(248 250 252 / 0.95), rgb(241 245 249 / 0.65));
+  background-color: var(--surface-card);
   padding: 1rem 0.875rem;
   text-align: center;
 }
@@ -360,7 +357,7 @@ a[href] {
 .admin-hero {
   border-radius: 0.875rem;
   border: 1px solid var(--border-subtle);
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 48%, #f1f5f9 100%);
+  background-color: var(--surface-card);
   box-shadow: var(--shadow-card);
   padding: 1rem 1.25rem;
 }
@@ -440,7 +437,7 @@ a[href] {
 .admin-dispatch-lane {
   border-radius: 0.75rem;
   border: 1px solid rgb(203 213 225 / 0.72);
-  background-color: rgb(248 250 252 / 0.78);
+  background-color: var(--surface-card);
 }
 
 .admin-dispatch-lane-header {
@@ -460,12 +457,12 @@ a[href] {
 }
 
 .tech-canvas {
-  background-color: #e8ecf0;
+  background-color: var(--surface-canvas);
 }
 
 .tech-shell {
   border-color: rgb(203 213 225 / 0.72);
-  background-color: #f4f6f8;
+  background-color: var(--surface-canvas);
   box-shadow:
     0 0 0 1px rgb(15 23 42 / 0.04),
     0 24px 48px -12px rgb(15 23 42 / 0.1);

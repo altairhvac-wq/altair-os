@@ -113,7 +113,7 @@ export function DispatchDetailsPanel({
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-5">
         <div className="space-y-5">
-            <section className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 sm:p-4">
+            <section className="rounded-xl border border-slate-100 bg-white p-3 sm:p-4">
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm text-slate-600">{job.jobType}</p>
                 <DispatchPriorityBadge priority={job.priority} />
@@ -152,7 +152,7 @@ export function DispatchDetailsPanel({
                   onStatusUpdated={(status) => onStatusUpdated?.(job.id, status)}
                 />
               ) : (
-                <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
                   You do not have permission to update this job&apos;s workflow.
                 </p>
               )}

@@ -157,7 +157,7 @@ export function JobMaterialForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-xl border border-slate-200 bg-slate-50/50 p-4"
+      className="rounded-xl border border-slate-200 bg-white p-4"
     >
       <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         Log material

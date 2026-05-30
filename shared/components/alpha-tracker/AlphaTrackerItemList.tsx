@@ -225,7 +225,7 @@ export function AlphaTrackerItemList({
                 </div>
 
                 {item.notes ? (
-                  <p className="break-words rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                  <p className="break-words rounded-lg bg-white px-3 py-2 text-xs text-slate-600">
                     {item.notes}
                   </p>
                 ) : null}

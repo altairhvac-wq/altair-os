@@ -69,7 +69,7 @@ type ContextRowProps = {
 
 function ContextRow({ label, value, hint }: ContextRowProps) {
   return (
-    <div className="min-w-0 rounded-lg border border-slate-100 bg-slate-50/70 px-3 py-2.5">
+    <div className="min-w-0 rounded-lg border border-slate-100 bg-white px-3 py-2.5">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
         {label}
       </p>
@@ -103,7 +103,7 @@ function resolveGrossProfitStyles(grossProfit: number): {
   }
 
   return {
-    accentClassName: "border-slate-200 bg-slate-50/40",
+    accentClassName: "border-slate-200 bg-white",
     iconClassName: "bg-slate-100 text-slate-600",
     valueClassName: "text-slate-900",
   };
@@ -150,7 +150,7 @@ export function ProfitabilityReportSection({
             </p>
           </div>
         </div>
-        <div className="rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2 text-right">
+        <div className="rounded-lg border border-slate-100 bg-white px-3 py-2 text-right">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             Jobs in scope
           </p>
@@ -161,7 +161,7 @@ export function ProfitabilityReportSection({
       </div>
 
       {!hasFinancialActivity ? (
-        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-6 text-center">
+        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-6 text-center">
           <p className="text-sm font-medium text-slate-700">
             No profitability activity in scope
           </p>

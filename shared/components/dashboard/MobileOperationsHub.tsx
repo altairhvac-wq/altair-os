@@ -44,7 +44,7 @@ const ATTENTION_SEVERITY_STYLES: Record<
     icon: "text-amber-600",
   },
   info: {
-    row: "border-slate-200 bg-slate-50/60",
+    row: "border-slate-200 bg-white",
     badge: "bg-slate-100 text-slate-700",
     icon: "text-slate-500",
   },
@@ -56,7 +56,7 @@ const INSIGHT_SEVERITY_STYLES: Record<
 > = {
   critical: "border-rose-100 bg-rose-50/40 text-rose-900",
   warning: "border-amber-100 bg-amber-50/40 text-amber-900",
-  info: "border-slate-100 bg-slate-50/60 text-slate-900",
+  info: "border-slate-100 bg-white text-slate-900",
 };
 
 function formatMobileCashAmount(amount: number): string {

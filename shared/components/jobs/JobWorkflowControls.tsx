@@ -58,7 +58,7 @@ function JobWorkflowTerminalState({
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
+    <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600">
       <XCircle className="h-4 w-4 shrink-0" />
       {formatJobStatus(status)}
     </div>
