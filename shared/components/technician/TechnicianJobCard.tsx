@@ -56,7 +56,7 @@ type TechnicianJobCardProps = {
 };
 
 const primaryActionClass =
-  "inline-flex min-h-11 min-w-0 touch-manipulation flex-1 items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2 text-sm font-semibold transition-colors";
+  "inline-flex min-h-11 shrink-0 touch-manipulation items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border px-2.5 py-2 text-sm font-semibold transition-colors";
 
 const secondaryActionClass =
   "inline-flex min-h-11 min-w-0 touch-manipulation flex-1 items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2 text-sm font-semibold transition-colors";
@@ -167,7 +167,7 @@ export function TechnicianJobCard({
             }
           >
             <Calculator className="h-4 w-4 shrink-0" />
-            <span className="truncate">Create Estimate</span>
+            Quote
           </button>
         ) : null}
         {hasPhone ? (
@@ -176,7 +176,7 @@ export function TechnicianJobCard({
             className={`${primaryActionClass} border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100`}
           >
             <Phone className="h-4 w-4 shrink-0" />
-            <span className="truncate">Call Customer</span>
+            Call
           </a>
         ) : null}
         {hasEmail ? (
@@ -185,7 +185,7 @@ export function TechnicianJobCard({
             className={`${primaryActionClass} border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100`}
           >
             <Mail className="h-4 w-4 shrink-0" />
-            <span className="truncate">Email</span>
+            Email
           </a>
         ) : null}
         {hasMaps ? (
@@ -196,7 +196,7 @@ export function TechnicianJobCard({
             className={`${primaryActionClass} border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}
           >
             <Navigation className="h-4 w-4 shrink-0" />
-            <span className="truncate">Maps</span>
+            Maps
           </a>
         ) : null}
       </div>
