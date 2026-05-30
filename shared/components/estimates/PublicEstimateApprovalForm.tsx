@@ -62,14 +62,16 @@ export function PublicEstimateApprovalForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+      className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5 md:p-6"
     >
-      <h2 className="text-lg font-bold text-slate-900">Sign &amp; approve</h2>
-      <p className="mt-2 text-sm leading-relaxed text-slate-600">
+      <h2 className="text-base font-bold text-slate-900 sm:text-lg">
+        Sign &amp; approve
+      </h2>
+      <p className="mt-1.5 text-xs leading-relaxed text-slate-600 sm:mt-2 sm:text-sm">
         {content.supportingText}
       </p>
 
-      <div className="mt-5">
+      <div className="mt-3 sm:mt-5">
         <label htmlFor="signer-name" className={labelClass}>
           Printed name
         </label>
@@ -87,7 +89,7 @@ export function PublicEstimateApprovalForm({
         />
       </div>
 
-      <div className="mt-5">
+      <div className="mt-3 sm:mt-5">
         <label className={labelClass}>Signature</label>
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
           <SignaturePad ref={signaturePadRef} disabled={isPending} />
@@ -104,7 +106,7 @@ export function PublicEstimateApprovalForm({
         </div>
       </div>
 
-      <label className="mt-5 flex items-start gap-3 text-sm leading-relaxed text-slate-700">
+      <label className="mt-3 flex items-start gap-2.5 text-xs leading-relaxed text-slate-700 sm:mt-5 sm:gap-3 sm:text-sm">
         <input
           type="checkbox"
           checked={authorized}
@@ -127,7 +129,7 @@ export function PublicEstimateApprovalForm({
       <button
         type="submit"
         disabled={isPending}
-        className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-teal-800 disabled:opacity-60 sm:w-auto sm:min-w-[220px]"
+        className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-teal-800 disabled:opacity-60 sm:mt-5 sm:min-h-12 sm:w-auto sm:py-3 sm:min-w-[220px]"
       >
         {isPending ? "Submitting…" : "Approve & Sign"}
       </button>

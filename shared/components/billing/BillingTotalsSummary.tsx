@@ -69,7 +69,7 @@ export function BillingTotalsSummary({
   const showBalanceInTotals = balanceDue > 0;
 
   const containerClass = isPremiumStyle
-    ? "rounded-xl border border-slate-200 bg-white px-5 py-4 sm:px-6 sm:py-5 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white"
+    ? "rounded-lg border border-slate-200 bg-white px-3 py-3 sm:rounded-xl sm:px-5 sm:py-4 md:px-6 md:py-5 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white"
     : "rounded-lg border border-slate-200 bg-white px-4 py-3 sm:px-5 sm:py-4 print:break-inside-avoid print:border-slate-300 print:bg-white";
 
   const rowClass = "text-sm text-slate-600";

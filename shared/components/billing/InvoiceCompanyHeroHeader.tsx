@@ -14,39 +14,39 @@ export function InvoiceCompanyHeroHeader({
   const trimmedLogoUrl = logoUrl?.trim();
 
   return (
-    <header className="invoice-company-hero border-b-2 border-slate-900 pb-7 sm:pb-8 print:border-slate-800 print:pb-8">
+    <header className="invoice-company-hero border-b-2 border-slate-900 pb-4 sm:pb-7 md:pb-8 print:border-slate-800 print:pb-8">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between print:flex-row print:items-start print:justify-between">
-        <div className="flex min-w-0 items-start gap-5 sm:gap-6">
+        <div className="flex min-w-0 items-start gap-3 sm:gap-5 md:gap-6">
           {trimmedLogoUrl ? (
             <div className="invoice-company-logo shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={trimmedLogoUrl}
                 alt={`${company.name} logo`}
-                className="h-16 w-auto max-w-[180px] object-contain object-left sm:h-20 print:h-16 print:max-h-[72px]"
+                className="h-12 w-auto max-w-[140px] object-contain object-left sm:h-16 sm:max-w-[180px] md:h-20 print:h-16 print:max-h-[72px]"
               />
             </div>
           ) : (
             <div
               aria-hidden="true"
-              className="invoice-company-logo flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-white sm:h-20 sm:w-20 print:h-14 print:w-14 print:rounded-lg print:border print:border-slate-300 print:border-solid print:bg-white"
+              className="invoice-company-logo flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-white sm:h-16 sm:w-16 md:h-20 md:w-20 print:h-14 print:w-14 print:rounded-lg print:border print:border-slate-300 print:border-solid print:bg-white"
             >
-              <Building2 className="h-8 w-8 text-slate-300 sm:h-9 sm:w-9 print:h-6 print:w-6 print:text-slate-400" />
+              <Building2 className="h-6 w-6 text-slate-300 sm:h-8 sm:w-8 md:h-9 md:w-9 print:h-6 print:w-6 print:text-slate-400" />
             </div>
           )}
 
-          <div className="min-w-0 flex-1 border-l-4 border-slate-900 pl-4 sm:pl-5 print:border-slate-800">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 print:text-slate-600">
+          <div className="min-w-0 flex-1 border-l-2 border-slate-900 pl-3 sm:border-l-4 sm:pl-4 md:pl-5 print:border-slate-800">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500 sm:text-[10px] sm:tracking-[0.16em] print:text-slate-600">
               Service provider
             </p>
-            <h1 className="mt-1.5 break-words text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl print:mt-1 print:text-2xl">
+            <h1 className="mt-1 break-words text-xl font-bold tracking-tight text-slate-900 sm:mt-1.5 sm:text-3xl md:text-4xl print:mt-1 print:text-2xl">
               {company.name}
             </h1>
-            <div className="mt-3 sm:mt-4">
+            <div className="mt-2 sm:mt-3 md:mt-4">
               <BillingCompanyContactBlock
                 company={company}
                 showAddress
-                className="text-sm sm:text-[15px]"
+                className="space-y-1 text-xs leading-snug sm:space-y-1.5 sm:text-sm md:text-[15px]"
               />
             </div>
           </div>

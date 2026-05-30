@@ -142,7 +142,7 @@ export default async function EstimateApprovalPage({
         </div>
 
         {view.estimate && view.company ? (
-          <div className="mt-6 opacity-90">
+          <div className="mt-4 opacity-90 sm:mt-6">
             <PublicEstimateApprovalDocument view={view} />
           </div>
         ) : null}
@@ -174,26 +174,27 @@ export default async function EstimateApprovalPage({
     );
   }
 
+  const approvalForm = <PublicEstimateApprovalForm rawToken={rawToken} />;
+
   return (
     <PublicApprovalShell companyName={companyName}>
-      <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <div className="mb-3 sm:mb-6">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-xs">
           Secure customer approval
         </p>
-        <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
+        <h1 className="mt-1 text-xl font-bold text-slate-900 sm:mt-2 sm:text-2xl md:text-3xl">
           Review &amp; sign your estimate
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+        <p className="mt-1 max-w-2xl text-xs leading-snug text-slate-600 sm:mt-2 sm:text-sm sm:leading-relaxed">
           Review the estimate from {companyName}, then sign below to approve the
           proposed work.
         </p>
       </div>
 
-      <PublicEstimateApprovalDocument view={view} />
-
-      <div className="mt-6">
-        <PublicEstimateApprovalForm rawToken={rawToken} />
-      </div>
+      <PublicEstimateApprovalDocument
+        view={view}
+        afterCustomer={approvalForm}
+      />
     </PublicApprovalShell>
   );
 }
@@ -206,14 +207,16 @@ function PublicApprovalShell({
   companyName?: string;
 }) {
   return (
-    <main className="min-h-full bg-slate-100 px-4 py-8 sm:px-6 sm:py-10">
+    <main className="min-h-full bg-slate-100 px-3 py-5 sm:px-6 sm:py-8 md:py-10">
       <div className="mx-auto w-full max-w-3xl">
-        <header className="mb-6 text-center sm:text-left">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <header className="mb-3 text-center sm:mb-6 sm:text-left">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-xs">
             Altair OS
           </p>
           {companyName ? (
-            <p className="mt-1 text-sm text-slate-600">{companyName}</p>
+            <p className="mt-0.5 text-xs text-slate-600 sm:mt-1 sm:text-sm">
+              {companyName}
+            </p>
           ) : null}
         </header>
         {children}
