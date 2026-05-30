@@ -4,7 +4,9 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createJobAction } from "@/app/actions/jobs";
+import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import { isScheduledToday } from "@/shared/types/dispatch";
 import type { Customer } from "@/shared/types/customer";
 import {
   type Job,
@@ -32,15 +34,6 @@ type JobsPageViewProps = {
   initialPanelMode?: PanelMode;
   createInitialData?: Partial<JobFormData>;
 };
-
-function isJobScheduledToday(job: Job, reference = new Date()): boolean {
-  const scheduled = new Date(job.scheduledDate);
-  return (
-    scheduled.getFullYear() === reference.getFullYear() &&
-    scheduled.getMonth() === reference.getMonth() &&
-    scheduled.getDate() === reference.getDate()
-  );
-}
 
 function sortJobsByScheduledTime(jobs: Job[]): Job[] {
   return [...jobs].sort(
@@ -103,10 +96,16 @@ export function JobsPageView({
   const [createError, setCreateError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const companyTimeZone = useCompanyTimezone();
 
   const todayJobs = useMemo(
-    () => sortJobsByScheduledTime(jobs.filter((job) => isJobScheduledToday(job))),
-    [jobs],
+    () =>
+      sortJobsByScheduledTime(
+        jobs.filter((job) =>
+          isScheduledToday(job.scheduledDate, new Date(), companyTimeZone),
+        ),
+      ),
+    [companyTimeZone, jobs],
   );
 
   const filteredAllJobs = useMemo(

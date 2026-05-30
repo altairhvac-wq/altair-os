@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
-import { getDayBoundsInTimeZone } from "@/shared/lib/datetime";
+import { fetchOperationalDayJobRows } from "@/lib/database/queries/scheduled-today-jobs";
 import type {
   DispatchAssignmentInsert,
   JobRow,
@@ -44,13 +44,6 @@ function isRpcUnavailable(error: { code?: string; message?: string }): boolean {
   );
 }
 
-function getTodayBounds(
-  reference = new Date(),
-  timeZone?: string,
-): { start: string; end: string } {
-  return getDayBoundsInTimeZone(timeZone, reference);
-}
-
 export function mapJobRowToDispatchJob(row: JobRowWithDispatch): DispatchJob {
   const job: Job = mapJobRowToJob({
     ...row,
@@ -92,31 +85,24 @@ export async function listDispatchJobsForToday(
   companyId: string,
   options?: { reference?: Date; timeZone?: string },
 ): Promise<DispatchJob[]> {
-  const supabase = await createClient();
-  const reference = options?.reference ?? new Date();
-  const { start, end } = getTodayBounds(reference, options?.timeZone);
-
-  const { data, error } = await supabase
-    .from("jobs")
-    .select(DISPATCH_JOB_SELECT)
-    .eq("company_id", companyId)
-    .gte("scheduled_at", start)
-    .lte("scheduled_at", end)
-    .neq("status", "cancelled")
-    .order("scheduled_at", { ascending: true });
+  const { rows, error } = await fetchOperationalDayJobRows<JobRowWithDispatch>(
+    DISPATCH_JOB_SELECT,
+    {
+      companyId,
+      reference: options?.reference,
+      timeZone: options?.timeZone,
+    },
+  );
 
   if (error) {
     console.error("[listDispatchJobsForToday] query failed:", {
       companyId,
-      code: error.code,
       message: error.message,
-      details: error.details,
-      hint: error.hint,
     });
     return [];
   }
 
-  return ((data ?? []) as JobRowWithDispatch[]).map(mapJobRowToDispatchJob);
+  return rows.map(mapJobRowToDispatchJob);
 }
 
 export async function getDispatchJobById(

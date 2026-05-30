@@ -1,4 +1,5 @@
 import { isSameCalendarDayInTimeZone } from "@/shared/lib/datetime";
+import { ACTIVE_CARRYOVER_JOB_STATUSES } from "@/shared/lib/scheduled-today";
 import type { DispatchJobStatus } from "@/shared/types/dispatch";
 import { isScheduledToday } from "@/shared/types/dispatch";
 import type { TechnicianJob } from "@/shared/types/technician";
@@ -15,6 +16,8 @@ const ACTIVE_STATUS_ORDER: Record<ActiveJobStatus, number> = {
   scheduled: 3,
 };
 
+const CARRYOVER_STATUS_SET = new Set<string>(ACTIVE_CARRYOVER_JOB_STATUSES);
+
 export function isTechnicianJobScheduledToday(
   job: TechnicianJob,
   reference = new Date(),
@@ -25,6 +28,18 @@ export function isTechnicianJobScheduledToday(
 
 export function isActiveTechnicianJob(job: TechnicianJob): boolean {
   return job.status !== "completed" && job.status !== "cancelled";
+}
+
+/** True when the job is on today's board due to field carryover, not calendar schedule. */
+export function isTechnicianJobCarryover(
+  job: TechnicianJob,
+  reference = new Date(),
+  timeZone?: string,
+): boolean {
+  return (
+    CARRYOVER_STATUS_SET.has(job.status) &&
+    !isTechnicianJobScheduledToday(job, reference, timeZone)
+  );
 }
 
 export function isTechnicianJobCompletedToday(

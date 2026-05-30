@@ -150,6 +150,7 @@ export function getTodayOperationsSummary(
   | "overloadedTechnicianCount"
 > {
   const dispatchSummary = getDispatchSummary(jobs);
+  const activeBoardJobs = jobs.filter((job) => job.status !== "cancelled");
 
   return {
     scheduledToday: jobs.filter((job) => job.status === "scheduled").length,
@@ -159,7 +160,7 @@ export function getTodayOperationsSummary(
     ).length,
     completedToday: jobs.filter((job) => job.status === "completed").length,
     unassignedToday: dispatchSummary.unassigned,
-    totalJobsToday: dispatchSummary.scheduledToday,
+    totalJobsToday: activeBoardJobs.length,
     overloadedTechnicianCount: countOverloadedTechnicians(jobs),
   };
 }

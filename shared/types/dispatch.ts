@@ -120,6 +120,7 @@ export function canUnassignJobTechnician(
   );
 }
 
+/** Calendar-day match in company timezone. See `shared/lib/scheduled-today.ts` for board queries. */
 export function isScheduledToday(
   date: string,
   reference = new Date(),
