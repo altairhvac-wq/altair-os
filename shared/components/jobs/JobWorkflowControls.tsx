@@ -27,6 +27,7 @@ type JobWorkflowControlsProps = {
   canReopenJob?: boolean;
   reopenSnapshot?: ReopenTargetJobSnapshot;
   layout?: "header" | "stack";
+  showMobileHint?: boolean;
   competingSheetActive?: boolean;
   onCompleteSheetOpenChange?: (open: boolean) => void;
   onStatusUpdated?: (status: JobStatus) => void;
@@ -77,6 +78,7 @@ export function JobWorkflowControls({
   canReopenJob = false,
   reopenSnapshot,
   layout = "header",
+  showMobileHint = true,
   competingSheetActive = false,
   onCompleteSheetOpenChange,
   onStatusUpdated,
@@ -124,13 +126,14 @@ export function JobWorkflowControls({
   }
 
   return (
-    <div className="space-y-3">
+    <div className={isCompact ? "space-y-2" : "space-y-3"}>
       <JobWorkflowActions
         jobId={jobId}
         customerId={customerId}
         status={status}
         canUpdateStatus={canUpdateStatus}
         layout={layout === "stack" ? "stack" : "row"}
+        showMobileHint={showMobileHint}
         competingSheetActive={competingSheetActive}
         onCompleteSheetOpenChange={onCompleteSheetOpenChange}
         onStatusUpdated={handleStatusUpdated}

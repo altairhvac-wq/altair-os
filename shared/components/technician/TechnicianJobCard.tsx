@@ -8,13 +8,16 @@ import {
   ChevronUp,
   Clock,
   FileText,
+  Mail,
   MapPin,
+  Navigation,
   Package,
+  Phone,
   Receipt,
   User,
 } from "lucide-react";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
-import { hasCompleteServiceAddress } from "@/shared/lib/maps";
+import { buildGoogleMapsDirectionsUrl, hasCompleteServiceAddress } from "@/shared/lib/maps";
 import type { JobStatus } from "@/shared/types/job";
 import {
   formatJobPriority,
@@ -51,13 +54,15 @@ type TechnicianJobCardProps = {
   onStatusUpdated?: (status: JobStatus) => void;
 };
 
-const fieldActionClass =
-  "inline-flex min-h-11 min-w-11 touch-manipulation flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors";
+const primaryActionClass =
+  "inline-flex min-h-11 min-w-0 touch-manipulation flex-1 items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2 text-sm font-semibold transition-colors";
 
-const emptyStateClass = "text-sm text-slate-500";
+const secondaryActionClass =
+  "inline-flex min-h-11 min-w-0 touch-manipulation flex-1 items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2 text-sm font-semibold transition-colors";
 
-const stickyFooterClass =
-  "admin-sticky-footer-inline sticky bottom-0 z-10 shrink-0 space-y-2 p-2.5";
+const detailsClass = "rounded-lg border border-slate-200 bg-slate-50/60";
+const detailsSummaryClass =
+  "flex min-h-11 cursor-pointer list-none items-center gap-1.5 px-2.5 py-2 text-xs font-semibold text-slate-600 marker:content-none [&::-webkit-details-marker]:hidden";
 
 export function TechnicianJobCard({
   job,
@@ -105,6 +110,15 @@ export function TechnicianJobCard({
     state: job.state,
     zip: job.zip,
   });
+  const mapsUrl = buildGoogleMapsDirectionsUrl({
+    serviceAddress: job.serviceAddress,
+    city: job.city,
+    state: job.state,
+    zip: job.zip,
+  });
+  const hasPhone = Boolean(job.customerPhone?.trim());
+  const hasEmail = Boolean(job.customerEmail?.trim());
+  const hasMaps = Boolean(mapsUrl);
   const isActive = status !== "completed" && status !== "cancelled";
   const fieldActionsDisabled = activeSheet !== null || completeSheetOpen;
   const hasOpenSheet = activeSheet !== null || completeSheetOpen;
@@ -114,6 +128,131 @@ export function TechnicianJobCard({
     getCreateEstimateJobBlockReason(status) === null;
 
   const isActiveDeckJob = deckBadge === "active";
+
+  const workflowControls = (
+    <JobWorkflowControls
+      jobId={job.id}
+      customerId={job.customerId}
+      initialStatus={status}
+      serviceAddress={job.serviceAddress}
+      city={job.city}
+      state={job.state}
+      zip={job.zip}
+      canUpdateStatus
+      layout="stack"
+      showMobileHint={false}
+      competingSheetActive={activeSheet !== null}
+      onCompleteSheetOpenChange={setCompleteSheetOpen}
+      onStatusUpdated={handleStatusUpdated}
+    />
+  );
+
+  const primaryContactRow =
+    isActive &&
+    (showCreateEstimate || hasPhone || hasEmail || hasMaps) ? (
+      <div className="flex flex-wrap gap-1.5">
+        {showCreateEstimate ? (
+          <button
+            type="button"
+            disabled={fieldActionsDisabled}
+            onClick={() => setActiveSheet("estimate")}
+            className={`${primaryActionClass} border-indigo-200 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60`}
+            title={
+              fieldActionsDisabled
+                ? completeSheetOpen
+                  ? "Finish or cancel complete work before creating an estimate"
+                  : "Finish the open form before creating an estimate"
+                : undefined
+            }
+          >
+            <Calculator className="h-4 w-4 shrink-0" />
+            <span className="truncate">Create Estimate</span>
+          </button>
+        ) : null}
+        {hasPhone ? (
+          <a
+            href={`tel:${job.customerPhone}`}
+            className={`${primaryActionClass} border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100`}
+          >
+            <Phone className="h-4 w-4 shrink-0" />
+            <span className="truncate">Call Customer</span>
+          </a>
+        ) : null}
+        {hasEmail ? (
+          <a
+            href={`mailto:${job.customerEmail}`}
+            className={`${primaryActionClass} border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100`}
+          >
+            <Mail className="h-4 w-4 shrink-0" />
+            <span className="truncate">Email</span>
+          </a>
+        ) : null}
+        {hasMaps ? (
+          <a
+            href={mapsUrl!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${primaryActionClass} border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}
+          >
+            <Navigation className="h-4 w-4 shrink-0" />
+            <span className="truncate">Maps</span>
+          </a>
+        ) : null}
+      </div>
+    ) : null;
+
+  const secondaryFieldRow = isActive ? (
+    <div className="grid grid-cols-3 gap-1.5">
+      <button
+        type="button"
+        disabled={fieldActionsDisabled}
+        onClick={() => setActiveSheet("photo")}
+        className={`${secondaryActionClass} border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60`}
+        title={
+          fieldActionsDisabled
+            ? completeSheetOpen
+              ? "Finish or cancel complete work before adding a photo"
+              : "Finish the open form before adding a photo"
+            : undefined
+        }
+      >
+        <Camera className="h-4 w-4 shrink-0" />
+        <span className="truncate">Photos</span>
+      </button>
+      <button
+        type="button"
+        disabled={fieldActionsDisabled}
+        onClick={() => setActiveSheet("material")}
+        className={`${secondaryActionClass} border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60`}
+        title={
+          fieldActionsDisabled
+            ? completeSheetOpen
+              ? "Finish or cancel complete work before logging material"
+              : "Finish the open form before logging material"
+            : undefined
+        }
+      >
+        <Package className="h-4 w-4 shrink-0" />
+        <span className="truncate">Materials</span>
+      </button>
+      <button
+        type="button"
+        disabled={fieldActionsDisabled}
+        onClick={() => setActiveSheet("expense")}
+        className={`${secondaryActionClass} border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60`}
+        title={
+          fieldActionsDisabled
+            ? completeSheetOpen
+              ? "Finish or cancel complete work before logging a receipt"
+              : "Finish the open form before logging a receipt"
+            : undefined
+        }
+      >
+        <Receipt className="h-4 w-4 shrink-0" />
+        <span className="truncate">Receipts</span>
+      </button>
+    </div>
+  ) : null;
 
   return (
     <article
@@ -127,7 +266,7 @@ export function TechnicianJobCard({
               : "border-slate-200 shadow-sm"
       }`}
     >
-      <div className="shrink-0 border-b border-slate-100 p-2.5">
+      <div className="shrink-0 border-b border-slate-100 px-2.5 py-2">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {deckBadge ? (
@@ -143,19 +282,12 @@ export function TechnicianJobCard({
             ) : null}
             <h2
               className={`truncate text-base font-bold text-slate-900 ${
-                deckBadge ? "mt-1" : ""
+                deckBadge ? "mt-0.5" : ""
               }`}
             >
               {job.jobNumber}
             </h2>
-            <p className="truncate text-sm text-slate-600">
-              {job.jobType}
-            </p>
-            {!expanded ? (
-              <p className="mt-1 truncate text-sm text-slate-700">
-                {job.customerName}
-              </p>
-            ) : null}
+            <p className="truncate text-sm text-slate-600">{job.jobType}</p>
           </div>
           <button
             type="button"
@@ -179,8 +311,8 @@ export function TechnicianJobCard({
         </div>
 
         <div
-          className={`mt-2 flex flex-wrap items-center gap-1.5 ${
-            isActiveDeckJob ? "rounded-lg bg-cyan-50/70 px-1.5 py-1" : ""
+          className={`mt-1.5 flex flex-wrap items-center gap-1.5 ${
+            isActiveDeckJob ? "rounded-lg bg-cyan-50/70 px-1.5 py-0.5" : ""
           }`}
         >
           <TechnicianJobStatusBadge status={status} />
@@ -191,60 +323,59 @@ export function TechnicianJobCard({
           </span>
         </div>
 
+        {expanded ? (
+          <div className="mt-1.5 space-y-1 text-sm text-slate-700">
+            <div className="flex items-start gap-1.5">
+              <User className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+              <span className="min-w-0 font-semibold text-slate-900">
+                {job.customerName}
+              </span>
+            </div>
+            <div className="flex items-start gap-1.5">
+              <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+              {hasCompleteAddress ? (
+                <span className="min-w-0 break-words">
+                  {formatTechnicianJobAddress(job)}
+                </span>
+              ) : (
+                <span className="text-slate-500">No address — contact dispatch</span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+              <span>Scheduled {formatTechnicianJobTime(job.scheduledDate)}</span>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-1 truncate text-sm text-slate-700">{job.customerName}</p>
+        )}
+
         {canManageTime && deckBadge ? (
           <TechnicianJobLaborStatus jobId={job.id} timeState={timeState} />
-        ) : null}
-
-        {!expanded ? (
-          <div className="mt-2 space-y-2">
-            <TechnicianCustomerQuickActions job={job} showEmptyState />
-            <JobWorkflowControls
-              jobId={job.id}
-              customerId={job.customerId}
-              initialStatus={status}
-              serviceAddress={job.serviceAddress}
-              city={job.city}
-              state={job.state}
-              zip={job.zip}
-              canUpdateStatus
-              layout="stack"
-              competingSheetActive={activeSheet !== null}
-              onCompleteSheetOpenChange={setCompleteSheetOpen}
-              onStatusUpdated={handleStatusUpdated}
-            />
-          </div>
         ) : null}
       </div>
 
       {expanded ? (
         <>
-          <div className="min-h-0 space-y-2 p-2.5">
-            <div className="rounded-lg bg-slate-50 px-2.5 py-2 text-sm text-slate-700">
-              <div className="flex items-start gap-2">
-                <User className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-                <span className="font-semibold text-slate-900">{job.customerName}</span>
-              </div>
-              <div className="mt-1 flex items-start gap-2">
-                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-                {hasCompleteAddress ? (
-                  <span className="break-words">{formatTechnicianJobAddress(job)}</span>
-                ) : (
-                  <span className={emptyStateClass}>
-                    No address — contact dispatch
-                  </span>
-                )}
-              </div>
-              <div className="mt-1 flex items-center gap-2">
-                <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                <span>{formatTechnicianJobTime(job.scheduledDate)}</span>
-              </div>
-            </div>
+          <div className="space-y-2 px-2.5 py-2">
+            {workflowControls}
+            {primaryContactRow}
+            {fieldActionsDisabled ? (
+              <p className="text-[11px] text-slate-500">
+                {completeSheetOpen
+                  ? "Finish complete work first."
+                  : "Close the open form first."}
+              </p>
+            ) : null}
+            {secondaryFieldRow}
+          </div>
 
-            <TechnicianCustomerQuickActions job={job} showEmptyState />
+          <div className="space-y-1.5 px-2.5 pb-2">
+            <TechnicianJobEquipmentSummary customerId={job.customerId} />
 
             {hasDescription ? (
-              <details className="rounded-lg border border-slate-200 bg-slate-50/60" open>
-                <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 px-2.5 py-2 text-xs font-semibold text-slate-600 marker:content-none [&::-webkit-details-marker]:hidden">
+              <details className={detailsClass}>
+                <summary className={detailsSummaryClass}>
                   <FileText className="h-3.5 w-3.5 text-slate-400" />
                   Summary
                 </summary>
@@ -254,120 +385,22 @@ export function TechnicianJobCard({
               </details>
             ) : null}
 
-            <TechnicianJobEquipmentSummary
-              customerId={job.customerId}
-              expanded={expanded}
-            />
-
             {hasNotes ? (
-              <details className="rounded-lg border border-slate-200 bg-slate-50/60">
-                <summary className="flex min-h-11 cursor-pointer list-none items-center px-2.5 py-2 text-xs font-semibold text-slate-600 marker:content-none [&::-webkit-details-marker]:hidden">
-                  Office notes
-                </summary>
+              <details className={detailsClass}>
+                <summary className={detailsSummaryClass}>Office notes</summary>
                 <p className="border-t border-slate-100 px-2.5 py-2 text-sm leading-snug text-slate-700">
                   {job.notes}
                 </p>
               </details>
             ) : null}
           </div>
-
-          <div className={stickyFooterClass}>
-            <JobWorkflowControls
-              jobId={job.id}
-              customerId={job.customerId}
-              initialStatus={status}
-              serviceAddress={job.serviceAddress}
-              city={job.city}
-              state={job.state}
-              zip={job.zip}
-              canUpdateStatus
-              layout="stack"
-              competingSheetActive={activeSheet !== null}
-              onCompleteSheetOpenChange={setCompleteSheetOpen}
-              onStatusUpdated={handleStatusUpdated}
-            />
-            {isActive ? (
-              <>
-                <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-                  <button
-                    type="button"
-                    disabled={fieldActionsDisabled}
-                    onClick={() => setActiveSheet("material")}
-                    className={`${fieldActionClass} border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60`}
-                    title={
-                      fieldActionsDisabled
-                        ? completeSheetOpen
-                          ? "Finish or cancel complete work before logging material"
-                          : "Finish the open form before logging material"
-                        : undefined
-                    }
-                  >
-                    <Package className="h-4 w-4 shrink-0" />
-                    <span className="truncate">Material</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={fieldActionsDisabled}
-                    onClick={() => setActiveSheet("expense")}
-                    className={`${fieldActionClass} border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60`}
-                    title={
-                      fieldActionsDisabled
-                        ? completeSheetOpen
-                          ? "Finish or cancel complete work before logging a receipt"
-                          : "Finish the open form before logging a receipt"
-                        : undefined
-                    }
-                  >
-                    <Receipt className="h-4 w-4 shrink-0" />
-                    <span className="truncate">Receipt</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={fieldActionsDisabled}
-                    onClick={() => setActiveSheet("photo")}
-                    className={`${fieldActionClass} border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60`}
-                    title={
-                      fieldActionsDisabled
-                        ? completeSheetOpen
-                          ? "Finish or cancel complete work before adding a photo"
-                          : "Finish the open form before adding a photo"
-                        : undefined
-                    }
-                  >
-                    <Camera className="h-4 w-4 shrink-0" />
-                    <span className="truncate">Photo</span>
-                  </button>
-                  {showCreateEstimate ? (
-                    <button
-                      type="button"
-                      disabled={fieldActionsDisabled}
-                      onClick={() => setActiveSheet("estimate")}
-                      className={`${fieldActionClass} border-indigo-200 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60`}
-                      title={
-                        fieldActionsDisabled
-                          ? completeSheetOpen
-                            ? "Finish or cancel complete work before creating an estimate"
-                            : "Finish the open form before creating an estimate"
-                          : undefined
-                      }
-                    >
-                      <Calculator className="h-4 w-4 shrink-0" />
-                      <span className="truncate">Estimate</span>
-                    </button>
-                  ) : null}
-                </div>
-                {fieldActionsDisabled ? (
-                  <p className="text-[11px] text-slate-500 sm:text-xs">
-                    {completeSheetOpen
-                      ? "Finish complete work first."
-                      : "Close the open form first."}
-                  </p>
-                ) : null}
-              </>
-            ) : null}
-          </div>
         </>
-      ) : null}
+      ) : (
+        <div className="space-y-2 px-2.5 py-2">
+          <TechnicianCustomerQuickActions job={job} showEmptyState />
+          {workflowControls}
+        </div>
+      )}
 
       {activeSheet === "material" ? (
         <TechnicianMaterialSheet

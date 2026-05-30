@@ -43,6 +43,7 @@ type JobWorkflowActionsProps = {
   status: JobStatus;
   canUpdateStatus: boolean;
   layout?: "row" | "stack";
+  showMobileHint?: boolean;
   competingSheetActive?: boolean;
   onCompleteSheetOpenChange?: (open: boolean) => void;
   onStatusUpdated?: (status: JobStatus) => void;
@@ -54,6 +55,7 @@ export function JobWorkflowActions({
   status,
   canUpdateStatus,
   layout = "row",
+  showMobileHint = true,
   competingSheetActive = false,
   onCompleteSheetOpenChange,
   onStatusUpdated,
@@ -169,13 +171,14 @@ export function JobWorkflowActions({
       ? "flex flex-col gap-2"
       : "flex flex-col gap-2 sm:flex-row sm:flex-wrap";
 
-  const mobileHint = isCompact
-    ? getMobileWorkflowHint(status, primaryAction.id)
-    : null;
+  const mobileHint =
+    isCompact && showMobileHint
+      ? getMobileWorkflowHint(status, primaryAction.id)
+      : null;
 
   return (
     <>
-      <div className={layout === "stack" ? "space-y-3" : "space-y-2"}>
+      <div className={layout === "stack" ? "space-y-2" : "space-y-2"}>
         {mobileHint ? (
           <p className="text-xs leading-relaxed text-slate-500">
             {competingSheetActive

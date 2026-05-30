@@ -1,20 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Wrench } from "lucide-react";
+import { ChevronDown, Loader2, Wrench } from "lucide-react";
 import { listCustomerEquipmentAction } from "@/app/actions/customer-equipment";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { CustomerEquipment } from "@/shared/types/customer-equipment";
 
 type TechnicianJobEquipmentSummaryProps = {
   customerId: string;
-  expanded: boolean;
 };
+
+const detailsClass =
+  "rounded-lg border border-slate-200 bg-slate-50/60";
+const summaryClass =
+  "flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-2.5 py-2 text-xs font-semibold text-slate-600 marker:content-none [&::-webkit-details-marker]:hidden";
 
 export function TechnicianJobEquipmentSummary({
   customerId,
-  expanded,
 }: TechnicianJobEquipmentSummaryProps) {
+  const [open, setOpen] = useState(false);
   const [equipment, setEquipment] = useState<CustomerEquipment[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,10 +29,11 @@ export function TechnicianJobEquipmentSummary({
     setError(null);
     setIsLoading(false);
     setLoadAttempt(0);
+    setOpen(false);
   }, [customerId]);
 
   useEffect(() => {
-    if (!expanded) {
+    if (!open) {
       return;
     }
 
@@ -43,7 +48,12 @@ export function TechnicianJobEquipmentSummary({
         }
 
         if (result.error) {
-          setError(formatActionError(result.error, "Could not load equipment for this job. Try again."));
+          setError(
+            formatActionError(
+              result.error,
+              "Could not load equipment for this job. Try again.",
+            ),
+          );
           setEquipment([]);
         } else {
           setEquipment(result.equipment ?? []);
@@ -66,70 +76,64 @@ export function TechnicianJobEquipmentSummary({
     return () => {
       cancelled = true;
     };
-  }, [customerId, expanded, loadAttempt]);
+  }, [customerId, open, loadAttempt]);
 
-  if (!expanded) {
+  if (!customerId?.trim()) {
     return null;
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-xs text-slate-500">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        Loading equipment for this customer…
-      </div>
-    );
-  }
+  function renderContent() {
+    if (isLoading) {
+      return (
+        <div className="flex items-center gap-2 border-t border-slate-100 px-2.5 py-2 text-xs text-slate-500">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Loading equipment…
+        </div>
+      );
+    }
 
-  if (error) {
-    return (
-      <div className="rounded-xl bg-red-50 px-3 py-2.5 text-xs text-red-700">
-        <p>{error}</p>
-        <button
-          type="button"
-          onClick={() => {
-            setEquipment(null);
-            setLoadAttempt((current) => current + 1);
-          }}
-          className="mt-2 min-h-9 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-red-800 ring-1 ring-red-200 transition-colors hover:bg-red-100/60"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
+    if (error) {
+      return (
+        <div className="border-t border-slate-100 px-2.5 py-2 text-xs text-red-700">
+          <p>{error}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setEquipment(null);
+              setLoadAttempt((current) => current + 1);
+            }}
+            className="mt-2 min-h-9 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-red-800 ring-1 ring-red-200 transition-colors hover:bg-red-100/60"
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
 
-  if (!equipment || equipment.length === 0) {
-    return (
-      <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-xs text-slate-500">
-        No equipment recorded for this customer yet.
-      </div>
-    );
-  }
-
-  const activeEquipment = equipment.filter((item) => item.isActive);
-
-  if (activeEquipment.length === 0) {
-    return (
-      <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-xs text-slate-500">
-        No active equipment on file for this customer.
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
-      <div className="mb-2 flex items-center gap-1.5">
-        <Wrench className="h-3.5 w-3.5 text-slate-400" />
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Customer equipment
+    if (!equipment || equipment.length === 0) {
+      return (
+        <p className="border-t border-slate-100 px-2.5 py-2 text-xs text-slate-500">
+          No equipment recorded for this customer yet.
         </p>
-      </div>
-      <ul className="space-y-2">
+      );
+    }
+
+    const activeEquipment = equipment.filter((item) => item.isActive);
+
+    if (activeEquipment.length === 0) {
+      return (
+        <p className="border-t border-slate-100 px-2.5 py-2 text-xs text-slate-500">
+          No active equipment on file for this customer.
+        </p>
+      );
+    }
+
+    return (
+      <ul className="space-y-1.5 border-t border-slate-100 px-2.5 py-2">
         {activeEquipment.slice(0, 4).map((item) => (
           <li
             key={item.id}
-            className="rounded-lg bg-white px-3 py-2 ring-1 ring-slate-200/80"
+            className="rounded-lg bg-white px-2.5 py-1.5 ring-1 ring-slate-200/80"
           >
             <p className="text-sm font-semibold text-slate-900">{item.name}</p>
             {(item.brand || item.modelNumber || item.location) && (
@@ -141,12 +145,36 @@ export function TechnicianJobEquipmentSummary({
             )}
           </li>
         ))}
+        {activeEquipment.length > 4 ? (
+          <p className="text-xs text-slate-500">
+            +{activeEquipment.length - 4} more on file
+          </p>
+        ) : null}
       </ul>
-      {activeEquipment.length > 4 ? (
-        <p className="mt-2 text-xs text-slate-500">
-          +{activeEquipment.length - 4} more on file
-        </p>
-      ) : null}
-    </div>
+    );
+  }
+
+  return (
+    <details
+      className={detailsClass}
+      open={open}
+      onToggle={(event) => {
+        setOpen((event.currentTarget as HTMLDetailsElement).open);
+      }}
+    >
+      <summary className={summaryClass}>
+        <span className="inline-flex items-center gap-1.5">
+          <Wrench className="h-3.5 w-3.5 text-slate-400" />
+          Equipment
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+          aria-hidden
+        />
+      </summary>
+      {open ? renderContent() : null}
+    </details>
   );
 }
