@@ -73,7 +73,7 @@ function WorkQueueSection({
       >
         {label}
       </p>
-      <ul className="space-y-3">
+      <ul className="space-y-2">
         {jobs.map((job) => (
           <li key={job.id}>
             <TechnicianJobCard
@@ -99,7 +99,7 @@ function WorkQueueSection({
     );
   }
 
-  return <section className="space-y-3">{content}</section>;
+  return <section className="space-y-2">{content}</section>;
 }
 
 function TechnicianJobsEmptyState({
@@ -110,14 +110,14 @@ function TechnicianJobsEmptyState({
   description: string;
 }) {
   return (
-    <section className="min-h-[10rem] rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center shadow-sm">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
-        <Briefcase className="h-8 w-8 text-slate-400" />
+    <section className="min-h-[8rem] rounded-lg border border-dashed border-slate-300 bg-white px-3 py-6 text-center shadow-sm">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+        <Briefcase className="h-6 w-6 text-slate-400" />
       </div>
 
-      <h3 className="mt-5 text-lg font-bold text-slate-900">{title}</h3>
+      <h3 className="mt-3 text-base font-bold text-slate-900">{title}</h3>
 
-      <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-slate-500">
+      <p className="mx-auto mt-1 max-w-xs text-sm text-slate-500">
         {description}
       </p>
     </section>
@@ -133,9 +133,9 @@ function CompletedTodaySection({ jobs }: { jobs: TechnicianJob[] }) {
   }
 
   return (
-    <section className="space-y-2 border-t border-slate-200/80 pt-4">
-      <p className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-        Completed Today
+    <section className="space-y-1.5 border-t border-slate-200/80 pt-3">
+      <p className="px-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+        Done today
       </p>
       <button
         type="button"
@@ -197,14 +197,14 @@ function TechnicianQueueSummary({
   }, []);
 
   return (
-    <div className="rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200 sm:px-4 sm:py-3">
-      <div className="flex min-h-11 items-center justify-between gap-3">
+    <div className="rounded-lg bg-white px-2.5 py-2 shadow-sm ring-1 ring-slate-200">
+      <div className="flex min-h-11 items-center justify-between gap-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Today&apos;s queue
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Queue
           </p>
           <p className="text-sm font-bold text-slate-900">
-            {activeCount} active job{activeCount === 1 ? "" : "s"}
+            {activeCount} active
           </p>
         </div>
         <p
@@ -319,7 +319,7 @@ export function TechnicianAssignedJobsView({
 
   if (activeJobs.length === 0) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         {timeClockBanner}
         <TechnicianJobsEmptyState
           title={jobs.length === 0 ? "Nothing on your schedule" : "All caught up"}
@@ -335,7 +335,7 @@ export function TechnicianAssignedJobsView({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {timeClockBanner}
 
       <TechnicianQueueSummary
@@ -344,9 +344,9 @@ export function TechnicianAssignedJobsView({
         isRefreshing={isRefreshing}
       />
 
-      <div className="space-y-6">
+      <div className="space-y-3">
         <WorkQueueSection
-          label="Current Job"
+          label="Current"
           labelClassName="text-cyan-700"
           jobs={currentJobs}
           timeState={timeState}
@@ -357,10 +357,10 @@ export function TechnicianAssignedJobsView({
           onJobStatusUpdated={handleJobStatusUpdated}
           defaultExpanded
           emphasized
-          wrapperClassName="rounded-2xl border-2 border-cyan-200/90 bg-gradient-to-b from-cyan-50/70 to-white p-3 shadow-sm ring-1 ring-cyan-500/15 sm:p-4"
+          wrapperClassName="rounded-xl border-2 border-cyan-200/90 bg-gradient-to-b from-cyan-50/70 to-white p-2.5 shadow-sm ring-1 ring-cyan-500/15"
         />
         <WorkQueueSection
-          label="Up Next"
+          label="Next"
           labelClassName="text-slate-500"
           jobs={upNextJobs}
           timeState={timeState}

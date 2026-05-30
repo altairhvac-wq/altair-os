@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Camera } from "lucide-react";
 import { formatJobAttachmentType, type JobAttachment } from "@/shared/types/job-attachment";
 
 type CustomerRecentPhotosSectionProps = {
@@ -16,24 +15,12 @@ export function CustomerRecentPhotosSection({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 ring-1 ring-blue-600/10">
-            <Camera className="h-5 w-5 text-blue-600" />
-          </div>
-          <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Recent job photos
-            </h2>
-            <p className="mt-1 text-sm text-slate-600">
-              Latest field documentation across this customer&apos;s jobs
-            </p>
-          </div>
-        </div>
-      </div>
+    <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+      <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+        Recent photos
+      </h2>
 
-      <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+      <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
         {attachments.map((attachment) => (
           <Link
             key={attachment.id}

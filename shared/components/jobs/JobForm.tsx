@@ -12,6 +12,9 @@ import {
 } from "@/shared/types/job";
 import type { Customer } from "@/shared/types/customer";
 import {
+  adminDetailsBodyClass,
+  adminDetailsClass,
+  adminDetailsSummaryClass,
   adminFormActionsClass,
   adminFormGridClass,
   adminFormInputClass,
@@ -149,7 +152,7 @@ export function JobForm({
             className={adminFormInputClass}
           >
             <option value="" disabled>
-              Select a customer
+              Select…
             </option>
             {customers.map((customer) => (
               <option key={customer.id} value={customer.id}>
@@ -161,7 +164,7 @@ export function JobForm({
 
         <div>
           <label htmlFor="jobType" className={adminFormLabelClass}>
-            Job type
+            Type
           </label>
           <select
             id="jobType"
@@ -179,7 +182,7 @@ export function JobForm({
 
         <div>
           <label htmlFor="scheduledDate" className={adminFormLabelClass}>
-            Scheduled date & time
+            Scheduled
           </label>
           <input
             id="scheduledDate"
@@ -198,12 +201,12 @@ export function JobForm({
           {lockStatus ? (
             <>
               <input type="hidden" name="status" value={defaults.status} />
-              <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
+              <p
+                className="flex min-h-11 items-center rounded-md border border-slate-200 bg-slate-50 px-2.5 text-sm text-slate-700"
+                title="Use workflow actions to change status"
+              >
                 {JOB_STATUS_OPTIONS.find((option) => option.value === defaults.status)
                   ?.label ?? defaults.status}
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                Use workflow actions to change job status.
               </p>
             </>
           ) : (
@@ -245,120 +248,121 @@ export function JobForm({
         </div>
       </div>
 
-      <div>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Service address
-        </p>
-        <div className="grid gap-4">
+      <div className="grid gap-2">
+        <div>
+          <label htmlFor="serviceAddress" className={adminFormLabelClass}>
+            Address
+          </label>
+          <input
+            id="serviceAddress"
+            name="serviceAddress"
+            ref={serviceAddressRef}
+            required
+            defaultValue={defaults.serviceAddress}
+            placeholder="Street"
+            onInput={() => markAddressEdited("serviceAddress")}
+            className={adminFormInputClass}
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-2">
           <div>
-            <label htmlFor="serviceAddress" className={adminFormLabelClass}>
-              Street address
+            <label htmlFor="city" className={adminFormLabelClass}>
+              City
             </label>
             <input
-              id="serviceAddress"
-              name="serviceAddress"
-              ref={serviceAddressRef}
+              id="city"
+              name="city"
+              ref={cityRef}
               required
-              defaultValue={defaults.serviceAddress}
-              placeholder="123 Main St"
-              onInput={() => markAddressEdited("serviceAddress")}
+              defaultValue={defaults.city}
+              onInput={() => markAddressEdited("city")}
               className={adminFormInputClass}
             />
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <label htmlFor="city" className={adminFormLabelClass}>
-                City
-              </label>
-              <input
-                id="city"
-                name="city"
-                ref={cityRef}
-                required
-                defaultValue={defaults.city}
-                onInput={() => markAddressEdited("city")}
-                className={adminFormInputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="state" className={adminFormLabelClass}>
-                State
-              </label>
-              <input
-                id="state"
-                name="state"
-                ref={stateRef}
-                required
-                defaultValue={defaults.state}
-                onInput={() => markAddressEdited("state")}
-                className={adminFormInputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="zip" className={adminFormLabelClass}>
-                ZIP
-              </label>
-              <input
-                id="zip"
-                name="zip"
-                ref={zipRef}
-                required
-                defaultValue={defaults.zip}
-                onInput={() => markAddressEdited("zip")}
-                className={adminFormInputClass}
-              />
-            </div>
+          <div>
+            <label htmlFor="state" className={adminFormLabelClass}>
+              ST
+            </label>
+            <input
+              id="state"
+              name="state"
+              ref={stateRef}
+              required
+              defaultValue={defaults.state}
+              onInput={() => markAddressEdited("state")}
+              className={adminFormInputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="zip" className={adminFormLabelClass}>
+              ZIP
+            </label>
+            <input
+              id="zip"
+              name="zip"
+              ref={zipRef}
+              required
+              defaultValue={defaults.zip}
+              onInput={() => markAddressEdited("zip")}
+              className={adminFormInputClass}
+            />
           </div>
         </div>
       </div>
 
-      <div>
-        <label htmlFor="description" className={adminFormLabelClass}>
-          Description
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          rows={2}
-          defaultValue={defaults.description}
-          placeholder="Work to be performed..."
-          className={`${adminFormInputClass} resize-none`}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="notes" className={adminFormLabelClass}>
-          Notes
-        </label>
-        <textarea
-          id="notes"
-          name="notes"
-          rows={2}
-          defaultValue={defaults.notes}
-          placeholder="Access codes, customer preferences, etc."
-          className={`${adminFormInputClass} resize-none`}
-        />
-      </div>
+      <details className={adminDetailsClass}>
+        <summary className={adminDetailsSummaryClass}>
+          <span>Description & notes</span>
+        </summary>
+        <div className={`${adminDetailsBodyClass} space-y-2`}>
+          <div>
+            <label htmlFor="description" className={adminFormLabelClass}>
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              rows={2}
+              defaultValue={defaults.description}
+              placeholder="Work to perform"
+              className={`${adminFormInputClass} resize-none`}
+            />
+          </div>
+          <div>
+            <label htmlFor="notes" className={adminFormLabelClass}>
+              Notes
+            </label>
+            <textarea
+              id="notes"
+              name="notes"
+              rows={2}
+              defaultValue={defaults.notes}
+              placeholder="Access, preferences…"
+              className={`${adminFormInputClass} resize-none`}
+            />
+          </div>
+        </div>
+      </details>
 
       {error ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-700">
           {error}
         </p>
       ) : null}
 
-      <div className={`flex gap-2 ${adminFormActionsClass}`}>
+      <div className={adminFormActionsClass}>
         <button
           type="submit"
           disabled={isSubmitting || customers.length === 0}
-          className="flex-1 admin-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-11 flex-1 admin-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isSubmitting ? "Saving..." : "Save job"}
+          {isSubmitting ? "Saving…" : "Save job"}
         </button>
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Cancel
         </button>

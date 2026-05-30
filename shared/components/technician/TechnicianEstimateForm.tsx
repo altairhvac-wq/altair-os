@@ -8,8 +8,10 @@ import { formatActionError, formatRetryGuidance } from "@/shared/lib/operational
 import type { EstimateLineItemFormData } from "@/shared/types/estimate";
 import type { ServiceItem } from "@/shared/types/service-item";
 import {
+  adminDetailsBodyClass,
+  adminDetailsClass,
+  adminDetailsSummaryClass,
   adminFormInputClass,
-  adminFormLabelClass,
   adminFormStackClass,
 } from "@/shared/lib/admin-density";
 
@@ -108,16 +110,16 @@ export function TechnicianEstimateForm({
       className={`min-w-0 ${adminFormStackClass}`}
       aria-busy={isPending}
     >
-      <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
-        <p>
-          <span className="font-semibold text-slate-900">{customerName}</span>
-          <span className="text-slate-400"> · </span>
-          <span className="font-semibold text-slate-900">{jobNumber}</span>
-        </p>
-        <p className="mt-0.5 text-[11px] text-slate-500" title="Saved as draft for office review; not sent to customer">
-          Draft for office review
-        </p>
-      </div>
+      <p
+        className="rounded-md bg-slate-50 px-2.5 py-1.5 text-sm text-slate-700"
+        title="Saved as draft for office review"
+      >
+        <span className="font-semibold text-slate-900">{customerName}</span>
+        <span className="text-slate-400"> · </span>
+        <span className="font-semibold text-slate-900">{jobNumber}</span>
+        <span className="text-slate-400"> · </span>
+        <span className="text-xs text-slate-500">Draft</span>
+      </p>
 
       <LineItemsEditor
         lineItems={lineItems}
@@ -126,21 +128,25 @@ export function TechnicianEstimateForm({
         onChange={setLineItems}
       />
 
-      <div>
-        <label htmlFor="tech-estimate-notes" className={adminFormLabelClass}>
-          Notes{" "}
-          <span className="font-normal text-slate-400">(optional)</span>
-        </label>
-        <textarea
-          id="tech-estimate-notes"
-          rows={2}
-          value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-          placeholder="Site notes for the office"
-          disabled={isPending}
-          className={adminFormInputClass}
-        />
-      </div>
+      <details className={adminDetailsClass}>
+        <summary className={adminDetailsSummaryClass}>
+          <span>Notes (optional)</span>
+        </summary>
+        <div className={adminDetailsBodyClass}>
+          <label htmlFor="tech-estimate-notes" className="sr-only">
+            Notes
+          </label>
+          <textarea
+            id="tech-estimate-notes"
+            rows={2}
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+            placeholder="Site notes for office"
+            disabled={isPending}
+            className={adminFormInputClass}
+          />
+        </div>
+      </details>
 
       {error ? (
         <p className="text-sm text-red-600" role="alert" aria-live="polite">

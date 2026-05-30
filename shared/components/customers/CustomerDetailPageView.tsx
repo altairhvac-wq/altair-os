@@ -26,6 +26,10 @@ import type { JobAttachment } from "@/shared/types/job-attachment";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
 import {
   adminCardSectionClass,
+  adminDetailsBodyClass,
+  adminDetailsClass,
+  adminDetailsSummaryClass,
+  adminMetaRowClass,
   adminPageStackClass,
 } from "@/shared/lib/admin-density";
 
@@ -60,83 +64,65 @@ export function CustomerDetailPageView({
   canViewBilling,
   canViewCompanyExpenses,
 }: CustomerDetailPageViewProps) {
+  const hasNotes = Boolean(customer.notes?.trim());
+
   return (
     <div className={`mx-auto max-w-5xl ${adminPageStackClass}`}>
       <Link
         href="/customers"
-        className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+        className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to customers
+        Customers
       </Link>
 
       <div className={adminCardSectionClass}>
-        <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Customer profile
-          </h2>
+        <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
+          <CustomerCard customer={customer} showRevenueStats={canViewBilling} />
           <CustomerEditControl
             customer={customer}
             canManage={canManageCustomers}
           />
         </div>
-        <CustomerCard customer={customer} showRevenueStats={canViewBilling} />
-      </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section className={adminCardSectionClass}>
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Service address
-          </h2>
-          <div className="mt-3 flex gap-2 text-sm text-slate-700">
-            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-            <div>
-              <p>{customer.address}</p>
-              <p>
-                {customer.city}, {customer.state} {customer.zip}
-              </p>
+        <div className="mt-2 rounded-md border border-slate-100 bg-slate-50/60 px-2.5 py-2 text-sm text-slate-700">
+          <div className={adminMetaRowClass}>
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            <span>
+              {customer.address}, {customer.city}, {customer.state}{" "}
+              {customer.zip}
+            </span>
+          </div>
+          <div className={`mt-1 ${adminMetaRowClass}`}>
+            <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            <span>Since {formatDate(customer.createdAt)}</span>
+          </div>
+          {customer.tags.length > 0 ? (
+            <div className={`mt-1.5 flex flex-wrap gap-1.5 ${adminMetaRowClass}`}>
+              {customer.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-0.5 rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200"
+                >
+                  <Tag className="h-2.5 w-2.5 text-slate-400" />
+                  {tag}
+                </span>
+              ))}
             </div>
-          </div>
-        </section>
-
-        <section className={adminCardSectionClass}>
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Account info
-          </h2>
-          <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
-            <Calendar className="h-4 w-4 text-slate-400" />
-            Customer since {formatDate(customer.createdAt)}
-          </div>
-        </section>
+          ) : null}
+        </div>
       </div>
 
-      {customer.tags.length > 0 ? (
-        <section className={adminCardSectionClass}>
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Tags
-          </h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {customer.tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
-              >
-                <Tag className="h-3 w-3 text-slate-400" />
-                {tag}
-              </span>
-            ))}
+      {hasNotes ? (
+        <details className={adminDetailsClass}>
+          <summary className={adminDetailsSummaryClass}>
+            <span>Notes</span>
+          </summary>
+          <div className={adminDetailsBodyClass}>
+            <p className="text-sm leading-snug text-slate-600">{customer.notes}</p>
           </div>
-        </section>
+        </details>
       ) : null}
-
-      <section className={adminCardSectionClass}>
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Notes
-        </h2>
-        <p className="mt-2 text-sm leading-relaxed text-slate-600">
-          {customer.notes?.trim() ? customer.notes : "No notes on file."}
-        </p>
-      </section>
 
       <CustomerJobsSection
         customerId={customer.id}
@@ -174,13 +160,13 @@ export function CustomerDetailPageView({
         canViewBilling={canViewBilling}
         description={
           canViewBilling
-            ? "Jobs, estimates, invoices, and account events"
+            ? "Jobs, billing, and account events"
             : "Jobs, equipment, and account events"
         }
         emptyDescription={
           canViewBilling
-            ? "Customer creation, jobs, billing, and payments will appear here."
-            : "Customer creation, jobs, and equipment changes will appear here."
+            ? "Activity will appear here as work progresses."
+            : "Activity will appear here as work progresses."
         }
       />
     </div>

@@ -12,6 +12,9 @@ import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
 import type { ServiceItem } from "@/shared/types/service-item";
 import {
+  adminDetailsBodyClass,
+  adminDetailsClass,
+  adminDetailsSummaryClass,
   adminFormActionsClass,
   adminFormGridClass,
   adminFormInputClass,
@@ -122,7 +125,7 @@ export function InvoiceForm({
   return (
     <form onSubmit={handleSubmit} className={adminFormStackClass} aria-busy={isSubmitting}>
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+        <div className="rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-700">
           {error}
         </div>
       ) : null}
@@ -131,134 +134,135 @@ export function InvoiceForm({
         disabled={isSubmitting}
         className={`m-0 min-w-0 border-0 p-0 ${adminFormStackClass}`}
       >
-      <div className={adminFormGridClass}>
-        <div className="sm:col-span-2">
-          <label htmlFor="customerId" className={adminFormLabelClass}>
-            Customer
-          </label>
-          <select
-            id="customerId"
-            name="customerId"
-            required
-            value={customerId}
-            onChange={(e) => handleCustomerChange(e.target.value)}
-            className={adminFormInputClass}
-          >
-            <option value="">Select a customer</option>
-            {customers.map((customer) => (
-              <option key={customer.id} value={customer.id}>
-                {customer.name}
-              </option>
-            ))}
-          </select>
+        <div className={adminFormGridClass}>
+          <div>
+            <label htmlFor="customerId" className={adminFormLabelClass}>
+              Customer
+            </label>
+            <select
+              id="customerId"
+              name="customerId"
+              required
+              value={customerId}
+              onChange={(e) => handleCustomerChange(e.target.value)}
+              className={adminFormInputClass}
+            >
+              <option value="">Select…</option>
+              {customers.map((customer) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="jobId" className={adminFormLabelClass}>
+              Job
+            </label>
+            <select
+              id="jobId"
+              name="jobId"
+              value={jobId}
+              onChange={(e) => setJobId(e.target.value)}
+              disabled={!customerId}
+              className={adminFormInputClass}
+              title="Optional linked job"
+            >
+              <option value="">None</option>
+              {customerJobs.map((job) => (
+                <option key={job.id} value={job.id}>
+                  {job.jobNumber}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="taxRate" className={adminFormLabelClass}>
+              Tax %
+            </label>
+            <input
+              id="taxRate"
+              name="taxRate"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={taxRate || ""}
+              onChange={(e) => {
+                const nextTaxRate = parseFloat(e.target.value);
+                setTaxRate(Number.isNaN(nextTaxRate) ? 0 : nextTaxRate);
+              }}
+              className={adminFormInputClass}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="issueDate" className={adminFormLabelClass}>
+              Issued
+            </label>
+            <input
+              id="issueDate"
+              name="issueDate"
+              type="date"
+              defaultValue={defaults.issueDate}
+              className={adminFormInputClass}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="dueDate" className={adminFormLabelClass}>
+              Due
+            </label>
+            <input
+              id="dueDate"
+              name="dueDate"
+              type="date"
+              defaultValue={defaults.dueDate}
+              className={adminFormInputClass}
+              title="Defaults to 30 days from issue date"
+            />
+          </div>
         </div>
 
-        <div className="sm:col-span-2">
-          <label htmlFor="jobId" className={adminFormLabelClass}>
-            Linked job (optional)
-          </label>
-          <select
-            id="jobId"
-            name="jobId"
-            value={jobId}
-            onChange={(e) => setJobId(e.target.value)}
-            disabled={!customerId}
-            className={adminFormInputClass}
-          >
-            <option value="">No linked job</option>
-            {customerJobs.map((job) => (
-              <option key={job.id} value={job.id}>
-                {job.jobNumber}
-              </option>
-            ))}
-          </select>
-        </div>
+        <InvoiceLineItemsEditor
+          lineItems={lineItems}
+          serviceItems={serviceItems}
+          taxRate={taxRate}
+          onChange={setLineItems}
+        />
 
-        <div>
-          <label htmlFor="taxRate" className={adminFormLabelClass}>
-            Tax rate (%)
-          </label>
-          <input
-            id="taxRate"
-            name="taxRate"
-            type="number"
-            min="0"
-            max="100"
-            step="0.01"
-            value={taxRate || ""}
-            onChange={(e) => {
-              const nextTaxRate = parseFloat(e.target.value);
-              setTaxRate(Number.isNaN(nextTaxRate) ? 0 : nextTaxRate);
-            }}
-            className={adminFormInputClass}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="issueDate" className={adminFormLabelClass}>
-            Issue date
-          </label>
-          <input
-            id="issueDate"
-            name="issueDate"
-            type="date"
-            defaultValue={defaults.issueDate}
-            className={adminFormInputClass}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="dueDate" className={adminFormLabelClass}>
-            Due date
-          </label>
-          <input
-            id="dueDate"
-            name="dueDate"
-            type="date"
-            defaultValue={defaults.dueDate}
-            className={adminFormInputClass}
-          />
-          <p className="mt-1 text-xs text-slate-500">
-            Defaults to 30 days from issue date
-          </p>
-        </div>
-
-        <div className="sm:col-span-2">
-          <label htmlFor="notes" className={adminFormLabelClass}>
-            Notes
-          </label>
-          <textarea
-            id="notes"
-            name="notes"
-            rows={2}
-            defaultValue={defaults.notes}
-            placeholder="Optional notes for the customer or team"
-            className={adminFormInputClass}
-          />
-        </div>
-      </div>
-
-      <InvoiceLineItemsEditor
-        lineItems={lineItems}
-        serviceItems={serviceItems}
-        taxRate={taxRate}
-        onChange={setLineItems}
-      />
+        <details className={adminDetailsClass}>
+          <summary className={adminDetailsSummaryClass}>
+            <span>Notes</span>
+          </summary>
+          <div className={adminDetailsBodyClass}>
+            <textarea
+              id="notes"
+              name="notes"
+              rows={2}
+              defaultValue={defaults.notes}
+              placeholder="Customer or internal notes"
+              className={adminFormInputClass}
+            />
+          </div>
+        </details>
       </fieldset>
 
       <div className={adminFormActionsClass}>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 min-h-11 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-11 flex-1 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isSubmitting ? "Saving..." : "Save invoice"}
+          {isSubmitting ? "Saving…" : "Save invoice"}
         </button>
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="flex-1 min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-11 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Cancel
         </button>

@@ -27,25 +27,20 @@ export function CustomerRecentReceiptsSection({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Recent receipts
-          </h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Latest expense receipts for this customer
-          </p>
-        </div>
+    <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          Recent receipts
+        </h2>
         <Link
           href={`/expenses?customerId=${customerId}`}
-          className="text-sm font-semibold text-cyan-600 transition-colors hover:text-cyan-700"
+          className="min-h-11 inline-flex items-center text-xs font-semibold text-cyan-600 transition-colors hover:text-cyan-700"
         >
-          View all
+          All
         </Link>
       </div>
 
-      <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+      <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
         {expenses.map((expense) => (
           <article
             key={expense.id}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Briefcase, MapPin, Plus } from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 import {
   formatScheduledDate,
   formatScheduledTime,
@@ -25,41 +25,36 @@ export function CustomerJobsSection({
   return (
     <section className={adminCardSectionClass}>
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-            <Briefcase className="h-4 w-4 text-slate-500" />
-          </div>
-          <h2 className="text-sm font-bold text-slate-900">Jobs</h2>
-        </div>
+        <h2 className="text-sm font-bold text-slate-900">Jobs</h2>
 
         {canCreateJob ? (
           <Link
             href={createJobHref}
-            className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 admin-btn-primary px-2.5 text-xs"
           >
-            <Plus className="h-4 w-4" />
-            Create job for this customer
+            <Plus className="h-3.5 w-3.5" />
+            New job
           </Link>
         ) : null}
       </div>
 
       {jobs.length === 0 ? (
-        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-8 text-center">
+        <div className="mt-2 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-5 text-center">
           <p className="text-sm font-medium text-slate-700">No jobs yet</p>
           {canCreateJob ? (
             <Link
               href={createJobHref}
-              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-600 transition-colors hover:text-cyan-700"
+              className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-cyan-600 transition-colors hover:text-cyan-700"
             >
               <Plus className="h-4 w-4" />
-              Create job for this customer
+              New job
             </Link>
           ) : null}
         </div>
       ) : (
-        <ul className="mt-6 divide-y divide-slate-100">
+        <ul className="mt-3 divide-y divide-slate-100">
           {jobs.map((job) => (
-            <li key={job.id} className="py-4 first:pt-0 last:pb-0">
+            <li key={job.id} className="py-2.5 first:pt-0 last:pb-0">
               <Link
                 href={`/jobs/${job.id}`}
                 className="flex flex-wrap items-start justify-between gap-3 rounded-lg transition-colors hover:bg-slate-50 -mx-2 px-2 py-1"

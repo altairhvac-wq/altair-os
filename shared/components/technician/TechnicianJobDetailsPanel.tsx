@@ -1,11 +1,17 @@
 "use client";
 
-import { X } from "lucide-react";
+import { Clock, MapPin, User, X } from "lucide-react";
 import {
   MobileSheet,
   MobileSheetBody,
   MobileSheetPanel,
 } from "@/shared/components/ui/mobile-sheet";
+import {
+  adminDetailsBodyClass,
+  adminDetailsClass,
+  adminDetailsSummaryClass,
+  adminMetaRowClass,
+} from "@/shared/lib/admin-density";
 import {
   formatJobPriority,
   formatTechnicianJobAddress,
@@ -30,86 +36,77 @@ export function TechnicianJobDetailsPanel({
   onClose,
   onQuickAction,
 }: TechnicianJobDetailsPanelProps) {
+  const hasSummary = Boolean(job.description?.trim());
+  const hasNotes = Boolean(job.notes?.trim());
+
   return (
     <MobileSheet onClose={onClose} ariaLabelledBy={TITLE_ID}>
       <MobileSheetPanel maxWidth="md">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-3.5 py-2.5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Job Details
-            </p>
-            <h2 id={TITLE_ID} className="text-lg font-bold text-slate-900">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-3 py-2">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-slate-900">
               {job.jobNumber}
-            </h2>
+              <span className="font-normal text-slate-400"> · </span>
+              {job.jobType}
+            </p>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              <TechnicianJobStatusBadge status={job.status} />
+              <span
+                className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${getPriorityStyles(job.priority)}`}
+              >
+                {formatJobPriority(job.priority)}
+              </span>
+            </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200"
+            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <MobileSheetBody unstyled className="space-y-3 p-3.5">
-          <div className="flex flex-wrap gap-2">
-            <TechnicianJobStatusBadge status={job.status} />
-            <span
-              className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${getPriorityStyles(job.priority)}`}
-            >
-              {formatJobPriority(job.priority)} priority
-            </span>
-          </div>
-
-          <p className="text-sm font-bold text-slate-900">{job.jobType}</p>
-
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Customer
-            </p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">
-              {job.customerName}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Service address
-            </p>
-            <p className="mt-1 text-sm text-slate-700">
-              {formatTechnicianJobAddress(job)}
-            </p>
+        <MobileSheetBody unstyled className="space-y-2.5 p-3">
+          <div className="rounded-lg bg-slate-50 px-2.5 py-2 text-sm text-slate-700">
+            <div className={adminMetaRowClass}>
+              <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+              <span className="font-semibold text-slate-900">{job.customerName}</span>
+            </div>
+            <div className={`mt-1 ${adminMetaRowClass}`}>
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+              <span>{formatTechnicianJobAddress(job)}</span>
+            </div>
+            <div className={`mt-1 ${adminMetaRowClass}`}>
+              <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+              <span>{formatTechnicianJobTime(job.scheduledDate)}</span>
+            </div>
           </div>
 
           <TechnicianQuickActions job={job} onAction={onQuickAction} />
 
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Job summary
-            </p>
-            <p className="mt-1 text-sm text-slate-700">
-              {job.description?.trim() || "No job summary on file."}
-            </p>
-          </div>
+          {hasSummary ? (
+            <details className={adminDetailsClass} open>
+              <summary className={adminDetailsSummaryClass}>
+                <span>Summary</span>
+              </summary>
+              <div className={adminDetailsBodyClass}>
+                <p className="text-sm leading-snug text-slate-700">{job.description}</p>
+              </div>
+            </details>
+          ) : null}
 
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Notes
-            </p>
-            <p className="mt-1 text-sm text-slate-700">
-              {job.notes?.trim() || "No office notes for this job."}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Scheduled
-            </p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">
-              {formatTechnicianJobTime(job.scheduledDate)}
-            </p>
-          </div>
+          {hasNotes ? (
+            <details className={adminDetailsClass}>
+              <summary className={adminDetailsSummaryClass}>
+                <span>Office notes</span>
+              </summary>
+              <div className={adminDetailsBodyClass}>
+                <p className="text-sm leading-snug text-slate-700">{job.notes}</p>
+              </div>
+            </details>
+          ) : null}
         </MobileSheetBody>
       </MobileSheetPanel>
     </MobileSheet>
