@@ -77,10 +77,10 @@ export const adminNavItems: NavItem[] = [
     description: "Receipts, mileage, and expense categories",
   },
   {
-    label: "Labor & time",
+    label: "Labor & payroll",
     href: "/time-clock",
     icon: Clock,
-    description: "Review shift hours, labor, and time exceptions",
+    description: "Active technicians, time entries, and payroll review",
   },
   {
     label: "Network",

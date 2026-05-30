@@ -1,13 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   Coffee,
   LogIn,
   LogOut,
-  PauseCircle,
   PlayCircle,
-  Timer,
 } from "lucide-react";
 import {
   endBreakAction,
@@ -56,21 +55,49 @@ export function TechnicianTimeView({
   }, [initialEntries, initialState, initialSummary]);
 
   useEffect(() => {
-    if (!state.activeEntry?.startedAt || state.activeEntry.endedAt) {
+    if (state.state === "off_clock") {
       return;
     }
 
     const interval = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(interval);
-  }, [state.activeEntry?.endedAt, state.activeEntry?.startedAt]);
+  }, [state.state]);
 
-  const activeMinutes = useMemo(() => {
-    if (!state.activeEntry?.startedAt || state.activeEntry.endedAt) {
-      return 0;
+  const statusDetail = useMemo(() => {
+    if (state.state === "off_clock") {
+      return "Start work on a job to begin your shift automatically.";
     }
 
-    return getElapsedMinutes(state.activeEntry.startedAt, now);
-  }, [now, state.activeEntry]);
+    const segments: string[] = [];
+
+    if (state.openClockEntry) {
+      segments.push(
+        `Shift ${formatDurationMinutes(
+          getElapsedMinutes(state.openClockEntry.startedAt, now),
+        )}`,
+      );
+    }
+
+    if (state.openJobLaborEntry) {
+      segments.push(
+        `Job ${formatDurationMinutes(
+          getElapsedMinutes(state.openJobLaborEntry.startedAt, now),
+        )}${
+          state.activeJobNumber ? ` · ${state.activeJobNumber}` : ""
+        }`,
+      );
+    }
+
+    if (state.openBreakEntry) {
+      segments.push(
+        `Break ${formatDurationMinutes(
+          getElapsedMinutes(state.openBreakEntry.startedAt, now),
+        )}`,
+      );
+    }
+
+    return segments.join(" · ") || formatTechnicianTimeState(state.state);
+  }, [now, state]);
 
   function runAction(action: () => Promise<TimeEntryActionResult>) {
     if (isPending) {
@@ -106,60 +133,29 @@ export function TechnicianTimeView({
 
   return (
     <div className="space-y-4">
-      <div
-        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600"
-        role="note"
-      >
-        Time is tracked through{" "}
-        <span className="font-semibold text-slate-800">Start work</span> and{" "}
-        <span className="font-semibold text-slate-800">Complete work</span> on
-        your assigned jobs. Use this page only for breaks or time corrections.
+      <div className="space-y-1">
+        <h1 className="text-lg font-bold text-slate-900">Time review</h1>
+        <p className="text-sm text-slate-600">
+          Your shift and job labor are tracked through{" "}
+          <span className="font-semibold text-slate-800">Start work</span> and{" "}
+          <span className="font-semibold text-slate-800">Complete work</span> on
+          assigned jobs. Use this page for breaks or time corrections only.
+        </p>
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Current status
-            </p>
-            <p className="mt-1 text-lg font-bold text-slate-900">{technicianName}</p>
+      <div className="rounded-xl border border-slate-200 bg-white px-3.5 py-3 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-slate-900">{technicianName}</p>
+            <p className="mt-0.5 text-xs text-slate-500">{statusDetail}</p>
           </div>
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${getTechnicianTimeStateStyles(state.state)}`}
+            className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${getTechnicianTimeStateStyles(state.state)}`}
           >
             {formatTechnicianTimeState(state.state)}
           </span>
         </div>
-
-        {state.activeEntry ? (
-          <div className="mt-4 rounded-xl bg-slate-50 px-4 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Active timer
-                </p>
-                <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
-                  {formatDurationMinutes(activeMinutes)}
-                </p>
-              </div>
-              <Timer className="h-8 w-8 text-cyan-600" />
-            </div>
-            <p className="mt-2 text-sm text-slate-600">
-              {formatTimeEntryType(state.activeEntry.entryType)} since{" "}
-              {formatTime(state.activeEntry.startedAt)}
-            </p>
-            {state.activeJobNumber ? (
-              <p className="mt-1 text-sm font-medium text-cyan-700">
-                Job {state.activeJobNumber}
-              </p>
-            ) : null}
-          </div>
-        ) : (
-          <p className="mt-4 text-sm text-slate-500">
-            Start work on a job to begin your shift automatically.
-          </p>
-        )}
-      </section>
+      </div>
 
       {error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -167,72 +163,94 @@ export function TechnicianTimeView({
         </div>
       ) : null}
 
-      <section className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          disabled={isPending || !isOffClock}
-          onClick={() => runAction(startClockAction)}
-          className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <LogIn className="h-5 w-5" />
-          Clock In
-        </button>
-        <button
-          type="button"
-          disabled={isPending || !isClockedIn}
-          onClick={() => runAction(stopClockAction)}
-          className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <LogOut className="h-5 w-5" />
-          Clock Out
-        </button>
-        <button
-          type="button"
-          disabled={isPending || !(isClockedIn || isWorkingJob)}
-          onClick={() => runAction(startBreakAction)}
-          className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Coffee className="h-5 w-5" />
-          Start Break
-        </button>
-        <button
-          type="button"
-          disabled={isPending || !isOnBreak}
-          onClick={() => runAction(endBreakAction)}
-          className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <PlayCircle className="h-5 w-5" />
-          End Break
-        </button>
+      <section className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Breaks
+        </p>
+        <p className="mt-1 text-xs text-slate-500">
+          Pause your shift between jobs without completing work.
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            disabled={isPending || !(isClockedIn || isWorkingJob)}
+            onClick={() => runAction(startBreakAction)}
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Coffee className="h-4 w-4" />
+            Start break
+          </button>
+          <button
+            type="button"
+            disabled={isPending || !isOnBreak}
+            onClick={() => runAction(endBreakAction)}
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <PlayCircle className="h-4 w-4" />
+            End break
+          </button>
+        </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <details className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <summary className="cursor-pointer list-none px-3.5 py-3 text-sm font-semibold text-slate-700 marker:content-none [&::-webkit-details-marker]:hidden">
+          Shift corrections
+        </summary>
+        <div className="space-y-3 border-t border-slate-100 px-3.5 py-3">
+          <p className="text-xs text-slate-500">
+            Manual clock in/out is only for exceptions. Prefer Start work and
+            Complete work on your jobs.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              disabled={isPending || !isOffClock}
+              onClick={() => runAction(startClockAction)}
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <LogIn className="h-4 w-4" />
+              Clock in
+            </button>
+            <button
+              type="button"
+              disabled={isPending || !isClockedIn}
+              onClick={() => runAction(stopClockAction)}
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <LogOut className="h-4 w-4" />
+              Clock out
+            </button>
+          </div>
+        </div>
+      </details>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Today
         </p>
-        <div className="mt-3 grid grid-cols-3 gap-3">
-          <div className="rounded-xl bg-slate-50 px-3 py-2.5">
-            <p className="text-xs text-slate-500">Clock</p>
-            <p className="mt-1 text-lg font-bold text-slate-900">
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          <div className="rounded-lg bg-slate-50 px-2.5 py-2">
+            <p className="text-[11px] text-slate-500">Clock</p>
+            <p className="mt-0.5 text-sm font-bold tabular-nums text-slate-900">
               {formatDurationMinutes(summary.clockMinutes)}
             </p>
           </div>
-          <div className="rounded-xl bg-slate-50 px-3 py-2.5">
-            <p className="text-xs text-slate-500">Break</p>
-            <p className="mt-1 text-lg font-bold text-slate-900">
+          <div className="rounded-lg bg-slate-50 px-2.5 py-2">
+            <p className="text-[11px] text-slate-500">Break</p>
+            <p className="mt-0.5 text-sm font-bold tabular-nums text-slate-900">
               {formatDurationMinutes(summary.breakMinutes)}
             </p>
           </div>
-          <div className="rounded-xl bg-slate-50 px-3 py-2.5">
-            <p className="text-xs text-slate-500">Job labor</p>
-            <p className="mt-1 text-lg font-bold text-slate-900">
+          <div className="rounded-lg bg-slate-50 px-2.5 py-2">
+            <p className="text-[11px] text-slate-500">Labor</p>
+            <p className="mt-0.5 text-sm font-bold tabular-nums text-slate-900">
               {formatDurationMinutes(summary.jobLaborMinutes)}
             </p>
           </div>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm font-semibold text-slate-900">Today&apos;s entries</p>
           <span className="text-xs text-slate-500">{entries.length} total</span>
@@ -245,9 +263,9 @@ export function TechnicianTimeView({
             {entries.map((entry) => (
               <li
                 key={entry.id}
-                className="flex items-start justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2.5"
+                className="flex items-start justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2"
               >
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-900">
                     {formatTimeEntryType(entry.entryType)}
                   </p>
@@ -261,31 +279,32 @@ export function TechnicianTimeView({
                     </p>
                   ) : null}
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold tabular-nums text-slate-900">
-                    {formatDurationMinutes(
-                      entry.durationMinutes ??
-                        (entry.endedAt
-                          ? Math.max(
-                              0,
-                              Math.round(
-                                (new Date(entry.endedAt).getTime() -
-                                  new Date(entry.startedAt).getTime()) /
-                                  60000,
-                              ),
-                            )
-                          : getElapsedMinutes(entry.startedAt, now)),
-                    )}
-                  </p>
-                  {!entry.endedAt ? (
-                    <PauseCircle className="ml-auto h-4 w-4 text-cyan-600" />
-                  ) : null}
-                </div>
+                <p className="shrink-0 text-sm font-semibold tabular-nums text-slate-900">
+                  {formatDurationMinutes(
+                    entry.durationMinutes ??
+                      (entry.endedAt
+                        ? Math.max(
+                            0,
+                            Math.round(
+                              (new Date(entry.endedAt).getTime() -
+                                new Date(entry.startedAt).getTime()) /
+                                60000,
+                            ),
+                          )
+                        : getElapsedMinutes(entry.startedAt, now)),
+                  )}
+                </p>
               </li>
             ))}
           </ul>
         )}
       </section>
+
+      <p className="text-center text-sm text-slate-500">
+        <Link href="/technician" className="font-semibold text-cyan-700 hover:text-cyan-800">
+          Back to Today
+        </Link>
+      </p>
     </div>
   );
 }

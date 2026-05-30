@@ -17,6 +17,7 @@ import type {
   TechnicianTimeStateSnapshot,
 } from "@/shared/types/time-entry";
 import type { ServiceItem } from "@/shared/types/service-item";
+import { TechnicianClockStatusBanner } from "./TechnicianClockStatusBanner";
 import { TechnicianJobDeck } from "./TechnicianJobDeck";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 
@@ -251,6 +252,10 @@ export function TechnicianAssignedJobsView({
         lastUpdatedAt={lastUpdatedAt}
         isRefreshing={isRefreshing}
       />
+
+      {canManageTime ? (
+        <TechnicianClockStatusBanner timeState={timeState} />
+      ) : null}
 
       <TechnicianJobDeck
         jobs={deckJobs}

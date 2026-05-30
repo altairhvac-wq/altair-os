@@ -308,7 +308,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             href="/time-clock"
             className="font-semibold text-cyan-700 hover:text-cyan-800"
           >
-            Review shift time & exceptions
+            Shift exceptions
           </Link>
           <span className="text-slate-300" aria-hidden="true">
             ·
@@ -317,7 +317,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             href="/time"
             className="font-semibold text-cyan-700 hover:text-cyan-800"
           >
-            Full time entry log
+            Time entries
           </Link>
         </div>
 

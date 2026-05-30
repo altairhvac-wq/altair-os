@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   formatDateTime,
@@ -68,6 +69,31 @@ export function AdminTimeTrackingView({
 
   return (
     <div className="space-y-6">
+      <div className="space-y-1">
+        <h1 className="text-lg font-bold text-slate-900">Time & labor review</h1>
+        <p className="text-sm text-slate-600">
+          Canonical shift, break, and job-labor entries for payroll accuracy.
+          Technicians track time through Start work and Complete work on jobs.
+        </p>
+        <div className="flex flex-wrap items-center gap-3 pt-1 text-sm">
+          <Link
+            href="/reports"
+            className="font-semibold text-cyan-700 hover:text-cyan-800"
+          >
+            Payroll review
+          </Link>
+          <span className="text-slate-300" aria-hidden="true">
+            ·
+          </span>
+          <Link
+            href="/time-clock"
+            className="font-semibold text-cyan-700 hover:text-cyan-800"
+          >
+            Shift exceptions
+          </Link>
+        </div>
+      </div>
+
       {initialJobId && initialJobLabel ? (
         <JobContextFilterBanner
           jobLabel={initialJobLabel}
@@ -130,10 +156,11 @@ export function AdminTimeTrackingView({
       <section className="admin-card">
         <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">Recent time entries</h2>
+            <h2 className="text-sm font-semibold text-slate-900">Time</h2>
             <p className="text-xs text-slate-500">
+              Shift, break, and job-labor entries
+              {initialJobLabel ? ` for Job ${initialJobLabel}` : ""} ·{" "}
               {filteredEntries.length} entr{filteredEntries.length === 1 ? "y" : "ies"}
-              {initialJobLabel ? ` for Job ${initialJobLabel}` : ""}
             </p>
           </div>
           <label className="flex items-center gap-2 text-sm text-slate-600">

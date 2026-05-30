@@ -35,6 +35,7 @@ import { TechnicianEstimateSheet } from "./TechnicianEstimateSheet";
 import { TechnicianExpenseSheet } from "./TechnicianExpenseSheet";
 import { TechnicianJobEquipmentSummary } from "./TechnicianJobEquipmentSummary";
 import { TechnicianJobLaborStatus } from "./TechnicianJobLaborStatus";
+import { TechnicianJobShiftStatus } from "./TechnicianJobShiftStatus";
 import { TechnicianMaterialSheet } from "./TechnicianMaterialSheet";
 import { TechnicianPhotoSheet } from "./TechnicianPhotoSheet";
 import type { ServiceItem } from "@/shared/types/service-item";
@@ -351,7 +352,10 @@ export function TechnicianJobCard({
         )}
 
         {canManageTime && deckBadge ? (
-          <TechnicianJobLaborStatus jobId={job.id} timeState={timeState} />
+          <>
+            <TechnicianJobShiftStatus jobId={job.id} timeState={timeState} />
+            <TechnicianJobLaborStatus jobId={job.id} timeState={timeState} />
+          </>
         ) : null}
       </div>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { LogIn, LogOut, Timer } from "lucide-react";
 import {
@@ -112,16 +113,40 @@ export function TimeClockFoundationView({
 
   return (
     <div className="space-y-4">
+      <div className="space-y-1">
+        <h1 className="text-lg font-bold text-slate-900">Labor & payroll review</h1>
+        <p className="text-sm text-slate-600">
+          Admin tools for shift exceptions and payroll review. Field labor is
+          tracked automatically when technicians start and complete work on jobs.
+        </p>
+        <div className="flex flex-wrap items-center gap-3 pt-1 text-sm">
+          <Link
+            href="/time"
+            className="font-semibold text-cyan-700 hover:text-cyan-800"
+          >
+            Time entries
+          </Link>
+          <span className="text-slate-300" aria-hidden="true">
+            ·
+          </span>
+          <Link
+            href="/reports"
+            className="font-semibold text-cyan-700 hover:text-cyan-800"
+          >
+            Payroll review
+          </Link>
+        </div>
+      </div>
+
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="mb-4 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-50">
             <Timer className="h-4 w-4 text-cyan-600" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-900">Labor & time review</h2>
+            <h2 className="text-sm font-semibold text-slate-900">Shift exceptions</h2>
             <p className="text-xs text-slate-500">
-              Admin utility for shift exceptions and payroll review. Technicians
-              normally clock in via Start work on jobs.
+              Manual clock in/out for office staff or payroll corrections.
             </p>
           </div>
         </div>
@@ -186,10 +211,9 @@ export function TimeClockFoundationView({
 
       <section className="admin-card">
         <div className="border-b border-slate-100 px-4 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">
-            {canViewCompanyEntries ? "Company time entries" : "Your time entries"}
-          </h2>
+          <h2 className="text-sm font-semibold text-slate-900">Time</h2>
           <p className="text-xs text-slate-500">
+            {canViewCompanyEntries ? "Company shift clock entries" : "Your shift clock entries"} ·{" "}
             {visibleEntries.length} entr{visibleEntries.length === 1 ? "y" : "ies"}
           </p>
         </div>
