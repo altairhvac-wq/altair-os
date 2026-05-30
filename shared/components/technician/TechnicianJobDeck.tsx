@@ -44,7 +44,8 @@ function isLiveTechnicianJob(
   }
 
   return (
-    timeState.state !== "off_clock" && timeState.activeJobId === job.id
+    timeState.openJobLaborEntry?.jobId === job.id ||
+    (timeState.state !== "off_clock" && timeState.activeJobId === job.id)
   );
 }
 

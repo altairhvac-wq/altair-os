@@ -7,7 +7,9 @@ import {
   createCustomerEquipmentAction,
   updateCustomerEquipmentAction,
 } from "@/app/actions/customer-equipment";
+import { getTechnicianTimeDashboardAction } from "@/app/actions/time-entries";
 import { updateJobStatusAction } from "@/app/actions/jobs";
+import { CompleteWorkClockOutPrompt } from "@/shared/components/technician/CompleteWorkClockOutPrompt";
 import {
   CompleteJobEquipmentPanel,
   EMPTY_COMPLETE_JOB_EQUIPMENT_PAYLOAD,
@@ -61,6 +63,7 @@ export function CompleteJobSheet({
   const hadPartialSuccessRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showClockOutPrompt, setShowClockOutPrompt] = useState(false);
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
   const [completionNotes, setCompletionNotes] = useState("");
   const [followUpNotes, setFollowUpNotes] = useState("");
@@ -163,6 +166,15 @@ export function CompleteJobSheet({
 
       onCompleted?.(result.job.status, "success");
       router.refresh();
+
+      const timeResult = await getTechnicianTimeDashboardAction();
+      if (timeResult.state?.openClockEntry) {
+        setShowClockOutPrompt(true);
+        setShowSuccess(true);
+        submitLockRef.current = false;
+        return;
+      }
+
       setShowSuccess(true);
       window.setTimeout(() => {
         handleClose();
@@ -170,7 +182,13 @@ export function CompleteJobSheet({
     });
   }
 
+  function handleClockOutPromptClose() {
+    setShowClockOutPrompt(false);
+    handleClose();
+  }
+
   return (
+    <>
     <MobileSheet
       onClose={handleClose}
       closeDisabled={closeDisabled}
@@ -291,5 +309,13 @@ export function CompleteJobSheet({
         )}
       </MobileSheetPanel>
     </MobileSheet>
+
+    {showClockOutPrompt ? (
+      <CompleteWorkClockOutPrompt
+        onClose={handleClockOutPromptClose}
+        onStayClockedIn={handleClockOutPromptClose}
+      />
+    ) : null}
+    </>
   );
 }

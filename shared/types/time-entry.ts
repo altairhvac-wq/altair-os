@@ -24,7 +24,11 @@ export type TimeEntry = {
 
 export type TechnicianTimeStateSnapshot = {
   state: TechnicianTimeState;
+  /** Highest-priority open segment (break, then job labor, then clock). */
   activeEntry?: TimeEntry;
+  openClockEntry?: TimeEntry;
+  openJobLaborEntry?: TimeEntry;
+  openBreakEntry?: TimeEntry;
   activeJobId?: string;
   activeJobNumber?: string;
 };

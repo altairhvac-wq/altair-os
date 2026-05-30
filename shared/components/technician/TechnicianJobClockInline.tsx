@@ -64,17 +64,36 @@ export function TechnicianJobClockInline({
     return getElapsedMinutes(timeState.activeEntry.startedAt, now);
   }, [timeState.activeEntry, now]);
 
-  const statusText = useMemo(
-    () => buildStatusText(timeState, elapsedMinutes),
-    [timeState, elapsedMinutes],
-  );
+  const statusText = useMemo(() => {
+    if (timeState.openClockEntry) {
+      const clockMinutes = getElapsedMinutes(timeState.openClockEntry.startedAt, now);
+      const clockLabel = `Shift · ${formatDurationMinutes(clockMinutes)}`;
+      if (timeState.state === "working_job" && timeState.openJobLaborEntry) {
+        const jobMinutes = getElapsedMinutes(
+          timeState.openJobLaborEntry.startedAt,
+          now,
+        );
+        return `${clockLabel} · Job ${formatDurationMinutes(jobMinutes)}`;
+      }
+      if (timeState.state === "on_break") {
+        return `${clockLabel} · On break`;
+      }
+      return clockLabel;
+    }
 
-  const toggleAction =
-    timeState.state === "off_clock"
-      ? ("clock_in" as const)
-      : timeState.state === "clocked_in"
-        ? ("clock_out" as const)
-        : null;
+    return buildStatusText(timeState, elapsedMinutes);
+  }, [timeState, elapsedMinutes, now]);
+
+  const hasOpenShiftClock = Boolean(timeState.openClockEntry);
+  const canClockOut =
+    hasOpenShiftClock &&
+    !timeState.openJobLaborEntry &&
+    timeState.state !== "on_break";
+  const toggleAction = !hasOpenShiftClock
+    ? ("clock_in" as const)
+    : canClockOut
+      ? ("clock_out" as const)
+      : null;
 
   function runAction(action: () => Promise<TimeEntryActionResult>) {
     if (isPending) {

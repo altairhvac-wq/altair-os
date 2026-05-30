@@ -27,12 +27,15 @@ export type TimeEntryActionResult = {
   summary?: TodayTimeSummary;
 };
 
-function revalidateTimePaths() {
+function revalidateTimePaths(jobId?: string) {
   revalidatePath("/time");
   revalidatePath("/time-clock");
   revalidatePath("/reports");
   revalidatePath("/technician");
   revalidatePath("/tech/time");
+  if (jobId) {
+    revalidatePath(`/jobs/${jobId}`);
+  }
 }
 
 async function finalizeOwnTimeAction(
@@ -198,8 +201,7 @@ export async function startJobLaborAction(
     return { error: actionResult.error };
   }
 
-  revalidateTimePaths();
-  revalidatePath(`/jobs/${jobId}`);
+  revalidateTimePaths(jobId);
   return finalizeOwnTimeAction(context, actionResult);
 }
 
@@ -223,10 +225,7 @@ export async function stopJobLaborAction(
     return { error: actionResult.error };
   }
 
-  revalidateTimePaths();
-  if (jobId) {
-    revalidatePath(`/jobs/${jobId}`);
-  }
+  revalidateTimePaths(jobId);
   return finalizeOwnTimeAction(context, actionResult);
 }
 

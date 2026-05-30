@@ -1,10 +1,13 @@
 import {
   closeTimeEntry,
   createTimeEntry,
-  getActiveTimeEntryForTechnician,
+  getOpenBreakEntryForTechnician,
+  getOpenClockEntryForTechnician,
+  getOpenJobLaborEntryForTechnician,
+  getTechnicianOpenTimeEntries,
   getTodayTimeEntriesForTechnician,
   listOpenJobLaborEntriesForJob,
-  mapEntryTypeToTimeState,
+  resolvePrimaryOpenTimeEntry,
 } from "@/lib/database/queries/time-entries";
 import { getJobById } from "@/lib/database/queries/jobs";
 import {
@@ -36,17 +39,54 @@ type TimeTrackingResult = {
   summary?: TodayTimeSummary;
 };
 
-function buildStateSnapshot(activeEntry: TimeEntry | null): TechnicianTimeStateSnapshot {
-  if (!activeEntry) {
+function buildStateSnapshot(
+  openEntries: Awaited<
+    ReturnType<typeof getTechnicianOpenTimeEntries>
+  >["entries"],
+): TechnicianTimeStateSnapshot {
+  const primary = resolvePrimaryOpenTimeEntry(openEntries);
+
+  if (!primary) {
     return { state: "off_clock" };
   }
 
+  const jobLabor = openEntries.jobLabor;
+
   return {
-    state: mapEntryTypeToTimeState(activeEntry.entryType),
-    activeEntry,
-    activeJobId: activeEntry.jobId,
-    activeJobNumber: activeEntry.jobNumber,
+    state:
+      openEntries.breakEntry != null
+        ? "on_break"
+        : jobLabor != null
+          ? "working_job"
+          : "clocked_in",
+    activeEntry: primary,
+    openClockEntry: openEntries.clock ?? undefined,
+    openJobLaborEntry: jobLabor ?? undefined,
+    openBreakEntry: openEntries.breakEntry ?? undefined,
+    activeJobId: jobLabor?.jobId,
+    activeJobNumber: jobLabor?.jobNumber,
   };
+}
+
+async function loadTechnicianState(
+  companyId: string,
+  technicianId: string,
+): Promise<TechnicianTimeStateSnapshot> {
+  const { entries, error } = await getTechnicianOpenTimeEntries(
+    companyId,
+    technicianId,
+  );
+
+  if (error) {
+    console.error("[loadTechnicianState] query failed:", {
+      companyId,
+      technicianId,
+      error,
+    });
+    return { state: "off_clock" };
+  }
+
+  return buildStateSnapshot(entries);
 }
 
 async function closeActiveEntry(input: {
@@ -135,12 +175,21 @@ async function closeActiveEntry(input: {
   return { entry, error: null };
 }
 
-async function openClockEntry(input: {
+async function ensureOpenClockEntry(input: {
   companyId: string;
   technicianId: string;
   actorId: string;
   recordActivity?: boolean;
 }): Promise<{ entry: TimeEntry | null; error: string | null }> {
+  const { entry: existing } = await getOpenClockEntryForTechnician(
+    input.companyId,
+    input.technicianId,
+  );
+
+  if (existing) {
+    return { entry: existing, error: null };
+  }
+
   const { entry, error } = await createTimeEntry({
     company_id: input.companyId,
     technician_id: input.technicianId,
@@ -166,12 +215,7 @@ export async function getCurrentTimeState(
   companyId: string,
   technicianId: string,
 ): Promise<TechnicianTimeStateSnapshot> {
-  const { entry } = await getActiveTimeEntryForTechnician(
-    companyId,
-    technicianId,
-  );
-
-  return buildStateSnapshot(entry);
+  return loadTechnicianState(companyId, technicianId);
 }
 
 export async function getTodayTimeEntries(
@@ -196,24 +240,30 @@ export async function startClock(input: {
   technicianId: string;
   actorId: string;
 }): Promise<TimeTrackingResult> {
-  const { entry: activeEntry } = await getActiveTimeEntryForTechnician(
+  const { entry: existingClock } = await getOpenClockEntryForTechnician(
     input.companyId,
     input.technicianId,
   );
 
-  if (activeEntry) {
-    return { error: "You already have an active time entry." };
+  if (existingClock) {
+    return { error: "You already have an active shift clock entry." };
   }
 
-  const { entry, error } = await openClockEntry(input);
+  const { entry, error } = await ensureOpenClockEntry({
+    ...input,
+    recordActivity: true,
+  });
+
   if (error || !entry) {
     return { error: error ?? "Failed to clock in." };
   }
 
-  return {
-    entry,
-    state: buildStateSnapshot(entry),
-  };
+  const state = await loadTechnicianState(
+    input.companyId,
+    input.technicianId,
+  );
+
+  return { entry, state };
 }
 
 export async function stopClock(input: {
@@ -221,25 +271,31 @@ export async function stopClock(input: {
   technicianId: string;
   actorId: string;
 }): Promise<TimeTrackingResult> {
-  const { entry: activeEntry } = await getActiveTimeEntryForTechnician(
+  const { entries } = await getTechnicianOpenTimeEntries(
     input.companyId,
     input.technicianId,
   );
 
-  if (!activeEntry) {
-    return { error: "You are not clocked in." };
+  if (entries.jobLabor) {
+    return {
+      error: "Complete or stop job work before clocking out for the day.",
+    };
   }
 
-  if (activeEntry.entryType !== "clock") {
-    return {
-      error: "End your break or job work before clocking out.",
-    };
+  if (entries.breakEntry) {
+    return { error: "End your break before clocking out." };
+  }
+
+  const clockEntry = entries.clock;
+
+  if (!clockEntry) {
+    return { error: "You are not clocked in." };
   }
 
   const { entry, error } = await closeActiveEntry({
     companyId: input.companyId,
     actorId: input.actorId,
-    activeEntry,
+    activeEntry: clockEntry,
     activity: "technician_clocked_out",
   });
 
@@ -249,7 +305,11 @@ export async function stopClock(input: {
 
   return {
     entry,
-    state: buildStateSnapshot(null),
+    state: buildStateSnapshot({
+      clock: null,
+      jobLabor: null,
+      breakEntry: null,
+    }),
   };
 }
 
@@ -258,35 +318,24 @@ export async function startBreak(input: {
   technicianId: string;
   actorId: string;
 }): Promise<TimeTrackingResult> {
-  const { entry: activeEntry } = await getActiveTimeEntryForTechnician(
+  const { entries } = await getTechnicianOpenTimeEntries(
     input.companyId,
     input.technicianId,
   );
 
-  if (!activeEntry) {
+  if (!entries.clock) {
     return { error: "Clock in before starting a break." };
   }
 
-  if (activeEntry.entryType === "break") {
+  if (entries.breakEntry) {
     return { error: "You are already on break." };
   }
 
-  if (activeEntry.entryType === "clock") {
+  if (entries.jobLabor) {
     const { error: closeError } = await closeActiveEntry({
       companyId: input.companyId,
       actorId: input.actorId,
-      activeEntry,
-      activity: null,
-    });
-
-    if (closeError) {
-      return { error: closeError };
-    }
-  } else if (activeEntry.entryType === "job_labor") {
-    const { error: closeError } = await closeActiveEntry({
-      companyId: input.companyId,
-      actorId: input.actorId,
-      activeEntry,
+      activeEntry: entries.jobLabor,
       activity: "job_labor_ended",
     });
 
@@ -311,10 +360,12 @@ export async function startBreak(input: {
     entry,
   });
 
-  return {
-    entry,
-    state: buildStateSnapshot(entry),
-  };
+  const state = await loadTechnicianState(
+    input.companyId,
+    input.technicianId,
+  );
+
+  return { entry, state };
 }
 
 export async function endBreak(input: {
@@ -322,19 +373,19 @@ export async function endBreak(input: {
   technicianId: string;
   actorId: string;
 }): Promise<TimeTrackingResult> {
-  const { entry: activeEntry } = await getActiveTimeEntryForTechnician(
+  const { entry: breakEntry } = await getOpenBreakEntryForTechnician(
     input.companyId,
     input.technicianId,
   );
 
-  if (!activeEntry || activeEntry.entryType !== "break") {
+  if (!breakEntry) {
     return { error: "You are not currently on break." };
   }
 
   const { error: closeError } = await closeActiveEntry({
     companyId: input.companyId,
     actorId: input.actorId,
-    activeEntry,
+    activeEntry: breakEntry,
     activity: "break_ended",
   });
 
@@ -342,22 +393,28 @@ export async function endBreak(input: {
     return { error: closeError };
   }
 
-  const { entry, error } = await openClockEntry({
-    ...input,
-    recordActivity: false,
-  });
+  const state = await loadTechnicianState(
+    input.companyId,
+    input.technicianId,
+  );
 
-  if (error || !entry) {
-    return { error: error ?? "Failed to resume after break." };
-  }
-
-  return {
-    entry,
-    state: buildStateSnapshot(entry),
-  };
+  return { state };
 }
 
 export async function startJobLabor(input: {
+  companyId: string;
+  technicianId: string;
+  actorId: string;
+  jobId: string;
+}): Promise<TimeTrackingResult> {
+  return ensureTimeTrackingForStartWork(input);
+}
+
+/**
+ * Called when a technician taps Start Work: ensure payroll clock + job labor
+ * without closing the shift clock.
+ */
+export async function ensureTimeTrackingForStartWork(input: {
   companyId: string;
   technicianId: string;
   actorId: string;
@@ -377,40 +434,39 @@ export async function startJobLabor(input: {
     return { error: "This job is no longer active." };
   }
 
-  const { entry: activeEntry } = await getActiveTimeEntryForTechnician(
+  const { entries } = await getTechnicianOpenTimeEntries(
     input.companyId,
     input.technicianId,
   );
 
-  if (!activeEntry) {
-    return { error: "Clock in before starting job work." };
-  }
-
-  if (activeEntry.entryType === "job_labor") {
-    if (activeEntry.jobId === input.jobId) {
-      return { error: "You are already working this job." };
-    }
-
-    return { error: "Stop your current job work before starting another job." };
-  }
-
-  if (activeEntry.entryType === "break") {
+  if (entries.breakEntry) {
     return { error: "End your break before starting job work." };
   }
 
-  if (activeEntry.entryType !== "clock") {
-    return { error: "You must be clocked in to start job work." };
+  if (entries.jobLabor) {
+    if (entries.jobLabor.jobId === input.jobId) {
+      const state = await loadTechnicianState(
+        input.companyId,
+        input.technicianId,
+      );
+      return { state, entry: entries.jobLabor };
+    }
+
+    const otherJob = entries.jobLabor.jobNumber ?? "another job";
+    return {
+      error: `You are still working ${otherJob}. Complete that job or stop job work before starting this one.`,
+    };
   }
 
-  const { error: closeError } = await closeActiveEntry({
+  const { error: clockError } = await ensureOpenClockEntry({
     companyId: input.companyId,
+    technicianId: input.technicianId,
     actorId: input.actorId,
-    activeEntry,
-    activity: null,
+    recordActivity: true,
   });
 
-  if (closeError) {
-    return { error: closeError };
+  if (clockError) {
+    return { error: clockError };
   }
 
   const { entry, error } = await createTimeEntry({
@@ -430,10 +486,12 @@ export async function startJobLabor(input: {
     entry,
   });
 
-  return {
-    entry,
-    state: buildStateSnapshot(entry),
-  };
+  const state = await loadTechnicianState(
+    input.companyId,
+    input.technicianId,
+  );
+
+  return { entry, state };
 }
 
 export async function stopJobLabor(input: {
@@ -442,23 +500,23 @@ export async function stopJobLabor(input: {
   actorId: string;
   jobId?: string;
 }): Promise<TimeTrackingResult> {
-  const { entry: activeEntry } = await getActiveTimeEntryForTechnician(
+  const { entry: jobLabor } = await getOpenJobLaborEntryForTechnician(
     input.companyId,
     input.technicianId,
   );
 
-  if (!activeEntry || activeEntry.entryType !== "job_labor") {
+  if (!jobLabor) {
     return { error: "You are not currently working a job." };
   }
 
-  if (input.jobId && activeEntry.jobId !== input.jobId) {
+  if (input.jobId && jobLabor.jobId !== input.jobId) {
     return { error: "You are working a different job." };
   }
 
   const { error: closeError } = await closeActiveEntry({
     companyId: input.companyId,
     actorId: input.actorId,
-    activeEntry,
+    activeEntry: jobLabor,
     activity: "job_labor_ended",
   });
 
@@ -466,21 +524,12 @@ export async function stopJobLabor(input: {
     return { error: closeError };
   }
 
-  const { entry, error } = await openClockEntry({
-    companyId: input.companyId,
-    technicianId: input.technicianId,
-    actorId: input.actorId,
-    recordActivity: false,
-  });
+  const state = await loadTechnicianState(
+    input.companyId,
+    input.technicianId,
+  );
 
-  if (error || !entry) {
-    return { error: error ?? "Failed to resume after job work." };
-  }
-
-  return {
-    entry,
-    state: buildStateSnapshot(entry),
-  };
+  return { state };
 }
 
 const JOB_LABOR_AUTO_CLOSE_NOTES = {
@@ -541,25 +590,6 @@ export async function finalizeOpenJobLaborForTerminalJob(input: {
         closed_reason: input.terminalReason,
       },
     });
-
-    const { error: clockError } = await openClockEntry({
-      companyId: input.companyId,
-      technicianId: entry.technicianId,
-      actorId: input.actorId,
-      recordActivity: false,
-    });
-
-    if (clockError) {
-      console.error(
-        "[finalizeOpenJobLaborForTerminalJob] resume clock failed:",
-        {
-          companyId: input.companyId,
-          jobId: input.jobId,
-          technicianId: entry.technicianId,
-          error: clockError,
-        },
-      );
-    }
   }
 
   const job = await getJobById(input.companyId, input.jobId);

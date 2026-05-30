@@ -54,9 +54,16 @@ function getStartOfTodayIso(timeZone?: string): string {
   return start;
 }
 
-export async function getActiveTimeEntryForTechnician(
+export type TechnicianOpenTimeEntries = {
+  clock: TimeEntry | null;
+  jobLabor: TimeEntry | null;
+  breakEntry: TimeEntry | null;
+};
+
+async function getOpenTimeEntryForTechnicianByType(
   companyId: string,
   technicianId: string,
+  entryType: TimeEntryType,
 ): Promise<{ entry: TimeEntry | null; error: string | null }> {
   const supabase = await createClient();
 
@@ -65,13 +72,15 @@ export async function getActiveTimeEntryForTechnician(
     .select(TIME_ENTRY_SELECT)
     .eq("company_id", companyId)
     .eq("technician_id", technicianId)
+    .eq("entry_type", entryType)
     .is("ended_at", null)
     .maybeSingle();
 
   if (error) {
-    console.error("[getActiveTimeEntryForTechnician] query failed:", {
+    console.error("[getOpenTimeEntryForTechnicianByType] query failed:", {
       companyId,
       technicianId,
+      entryType,
       code: error.code,
       message: error.message,
     });
@@ -82,6 +91,81 @@ export async function getActiveTimeEntryForTechnician(
     entry: data ? mapTimeEntryRow(data as TimeEntryRowWithRelations) : null,
     error: null,
   };
+}
+
+export async function getOpenClockEntryForTechnician(
+  companyId: string,
+  technicianId: string,
+): Promise<{ entry: TimeEntry | null; error: string | null }> {
+  return getOpenTimeEntryForTechnicianByType(companyId, technicianId, "clock");
+}
+
+export async function getOpenJobLaborEntryForTechnician(
+  companyId: string,
+  technicianId: string,
+): Promise<{ entry: TimeEntry | null; error: string | null }> {
+  return getOpenTimeEntryForTechnicianByType(
+    companyId,
+    technicianId,
+    "job_labor",
+  );
+}
+
+export async function getOpenBreakEntryForTechnician(
+  companyId: string,
+  technicianId: string,
+): Promise<{ entry: TimeEntry | null; error: string | null }> {
+  return getOpenTimeEntryForTechnicianByType(companyId, technicianId, "break");
+}
+
+export async function getTechnicianOpenTimeEntries(
+  companyId: string,
+  technicianId: string,
+): Promise<{ entries: TechnicianOpenTimeEntries; error: string | null }> {
+  const [clockResult, jobLaborResult, breakResult] = await Promise.all([
+    getOpenClockEntryForTechnician(companyId, technicianId),
+    getOpenJobLaborEntryForTechnician(companyId, technicianId),
+    getOpenBreakEntryForTechnician(companyId, technicianId),
+  ]);
+
+  const error =
+    clockResult.error ?? jobLaborResult.error ?? breakResult.error ?? null;
+
+  if (error) {
+    return {
+      entries: { clock: null, jobLabor: null, breakEntry: null },
+      error,
+    };
+  }
+
+  return {
+    entries: {
+      clock: clockResult.entry,
+      jobLabor: jobLaborResult.entry,
+      breakEntry: breakResult.entry,
+    },
+    error: null,
+  };
+}
+
+/** @deprecated Use getTechnicianOpenTimeEntries — returns the highest-priority open segment. */
+export async function getActiveTimeEntryForTechnician(
+  companyId: string,
+  technicianId: string,
+): Promise<{ entry: TimeEntry | null; error: string | null }> {
+  const { entries, error } = await getTechnicianOpenTimeEntries(
+    companyId,
+    technicianId,
+  );
+
+  if (error) {
+    return { entry: null, error };
+  }
+
+  const entry =
+    entries.breakEntry ?? entries.jobLabor ?? entries.clock ?? null;
+
+  return { entry, error: null };
 }
 
 export async function getTodayTimeEntriesForTechnician(
@@ -208,6 +292,19 @@ export async function listActiveTechnicianTimeEntries(
   );
 }
 
+function mapActiveEntryConstraintError(entryType: TimeEntryType): string {
+  switch (entryType) {
+    case "clock":
+      return "You already have an open shift clock entry.";
+    case "break":
+      return "You are already on break.";
+    case "job_labor":
+      return "You already have open job work. Complete or stop it before starting another job.";
+    default:
+      return "You already have an active time entry.";
+  }
+}
+
 export async function createTimeEntry(
   input: TimeEntryInsert,
 ): Promise<{ entry: TimeEntry | null; error: string | null }> {
@@ -237,13 +334,10 @@ export async function createTimeEntry(
       message: error.message,
     });
 
-    if (
-      error.code === "23505" &&
-      error.message?.includes("time_entries_one_active_per_technician_idx")
-    ) {
+    if (error.code === "23505") {
       return {
         entry: null,
-        error: "You already have an active time entry.",
+        error: mapActiveEntryConstraintError(input.entry_type),
       };
     }
 
@@ -334,4 +428,10 @@ export function mapEntryTypeToTimeState(
     default:
       return "clocked_in";
   }
+}
+
+export function resolvePrimaryOpenTimeEntry(
+  entries: TechnicianOpenTimeEntries,
+): TimeEntry | null {
+  return entries.breakEntry ?? entries.jobLabor ?? entries.clock ?? null;
 }

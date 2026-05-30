@@ -17,7 +17,6 @@ import type {
   TechnicianTimeStateSnapshot,
 } from "@/shared/types/time-entry";
 import type { ServiceItem } from "@/shared/types/service-item";
-import { TechnicianJobClockInline } from "./TechnicianJobClockInline";
 import { TechnicianJobDeck } from "./TechnicianJobDeck";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 
@@ -240,14 +239,6 @@ export function TechnicianAssignedJobsView({
               : "No jobs need action right now. Finished work is listed below."
           }
         />
-        {canManageTime ? (
-          <div className="rounded-lg bg-white px-2.5 py-2 shadow-sm ring-1 ring-slate-200">
-            <TechnicianJobClockInline
-              timeState={timeState}
-              onTimeStateChange={setTimeState}
-            />
-          </div>
-        ) : null}
         <CompletedTodaySection jobs={jobs} />
       </div>
     );

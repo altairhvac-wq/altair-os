@@ -28,11 +28,10 @@ import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import { getCreateEstimateJobBlockReason } from "@/shared/types/estimate";
 import { TechnicianCustomerQuickActions } from "./TechnicianCustomerQuickActions";
-import { TechnicianJobClockInline } from "./TechnicianJobClockInline";
 import { TechnicianEstimateSheet } from "./TechnicianEstimateSheet";
 import { TechnicianExpenseSheet } from "./TechnicianExpenseSheet";
 import { TechnicianJobEquipmentSummary } from "./TechnicianJobEquipmentSummary";
-import { TechnicianJobLaborControls } from "./TechnicianJobLaborControls";
+import { TechnicianJobLaborStatus } from "./TechnicianJobLaborStatus";
 import { TechnicianMaterialSheet } from "./TechnicianMaterialSheet";
 import { TechnicianPhotoSheet } from "./TechnicianPhotoSheet";
 import type { ServiceItem } from "@/shared/types/service-item";
@@ -193,12 +192,7 @@ export function TechnicianJobCard({
         </div>
 
         {canManageTime && deckBadge ? (
-          <div className="mt-2 min-w-0">
-            <TechnicianJobClockInline
-              timeState={timeState}
-              onTimeStateChange={onTimeStateChange}
-            />
-          </div>
+          <TechnicianJobLaborStatus jobId={job.id} timeState={timeState} />
         ) : null}
 
         {!expanded ? (
@@ -294,12 +288,6 @@ export function TechnicianJobCard({
             />
             {isActive ? (
               <>
-                <TechnicianJobLaborControls
-                  jobId={job.id}
-                  jobNumber={job.jobNumber}
-                  timeState={timeState}
-                  onTimeStateChange={onTimeStateChange}
-                />
                 <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                   <button
                     type="button"

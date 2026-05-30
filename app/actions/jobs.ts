@@ -18,7 +18,10 @@ import {
   recordJobStatusChangedActivity,
   recordJobStatusCorrectedActivity,
 } from "@/lib/database/services/job-activity";
-import { finalizeOpenJobLaborForTerminalJob } from "@/lib/database/services/time-tracking";
+import {
+  ensureTimeTrackingForStartWork,
+  finalizeOpenJobLaborForTerminalJob,
+} from "@/lib/database/services/time-tracking";
 import type { Job, JobFormData, JobStatus } from "@/shared/types/job";
 import { getReopenCompletedJobBlockReason } from "@/shared/types/invoice";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
@@ -157,6 +160,19 @@ export async function updateJobStatusAction(
     return { error: "This status change is not allowed." };
   }
 
+  if (actionId === "start_work" && existingJob.assignedTechnicianId) {
+    const { error: timeError } = await ensureTimeTrackingForStartWork({
+      companyId: context.company.id,
+      technicianId: existingJob.assignedTechnicianId,
+      actorId: context.user.id,
+      jobId,
+    });
+
+    if (timeError) {
+      return { error: timeError };
+    }
+  }
+
   const { job, error } = await updateJobWorkflowStatus(
     context.company.id,
     jobId,
@@ -201,6 +217,8 @@ export async function updateJobStatusAction(
   revalidatePath("/technician");
   revalidatePath("/tech/time");
   revalidatePath("/time");
+  revalidatePath("/time-clock");
+  revalidatePath("/reports");
   revalidatePath(`/jobs/${jobId}`);
   revalidatePath(`/customers/${job.customerId}`);
 

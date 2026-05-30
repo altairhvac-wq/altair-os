@@ -1,7 +1,9 @@
 import {
   closeTimeEntry,
   createTimeEntry,
-  getActiveTimeEntryForTechnician,
+  getOpenBreakEntryForTechnician,
+  getOpenClockEntryForTechnician,
+  getOpenJobLaborEntryForTechnician,
   listTimeEntries,
 } from "@/lib/database/queries/time-entries";
 import {
@@ -31,7 +33,7 @@ export async function getOpenTimeClockEntryForUser(
   companyId: string,
   userId: string,
 ): Promise<{ entry: TimeClockEntry | null; error: string | null }> {
-  const { entry: activeEntry, error } = await getActiveTimeEntryForTechnician(
+  const { entry: clockEntry, error } = await getOpenClockEntryForTechnician(
     companyId,
     userId,
   );
@@ -40,12 +42,12 @@ export async function getOpenTimeClockEntryForUser(
     return { entry: null, error };
   }
 
-  if (!activeEntry || activeEntry.entryType !== "clock") {
+  if (!clockEntry) {
     return { entry: null, error: null };
   }
 
   return {
-    entry: mapClockTimeEntryToTimeClockEntry(activeEntry),
+    entry: mapClockTimeEntryToTimeClockEntry(clockEntry),
     error: null,
   };
 }
@@ -68,20 +70,13 @@ export async function clockInTimeClockEntry(
   userId: string,
   notes?: string,
 ): Promise<{ entry: TimeClockEntry | null; error: string | null }> {
-  const { entry: activeEntry } = await getActiveTimeEntryForTechnician(
+  const { entry: existingClock } = await getOpenClockEntryForTechnician(
     companyId,
     userId,
   );
 
-  if (activeEntry) {
-    if (activeEntry.entryType === "clock") {
-      return { entry: null, error: "You already have an open shift." };
-    }
-
-    return {
-      entry: null,
-      error: "End your break or job work before clocking in again.",
-    };
+  if (existingClock) {
+    return { entry: null, error: "You already have an open shift." };
   }
 
   const { entry, error } = await createTimeEntry({
@@ -111,33 +106,47 @@ export async function clockOutTimeClockEntry(
   companyId: string,
   userId: string,
 ): Promise<{ entry: TimeClockEntry | null; error: string | null }> {
-  const { entry: activeEntry, error: openError } =
-    await getActiveTimeEntryForTechnician(companyId, userId);
+  const { entry: jobLabor } = await getOpenJobLaborEntryForTechnician(
+    companyId,
+    userId,
+  );
+
+  if (jobLabor) {
+    return {
+      entry: null,
+      error: "Complete or stop job work before clocking out.",
+    };
+  }
+
+  const { entry: breakEntry } = await getOpenBreakEntryForTechnician(
+    companyId,
+    userId,
+  );
+
+  if (breakEntry) {
+    return { entry: null, error: "End your break before clocking out." };
+  }
+
+  const { entry: clockEntry, error: openError } =
+    await getOpenClockEntryForTechnician(companyId, userId);
 
   if (openError) {
     return { entry: null, error: openError };
   }
 
-  if (!activeEntry) {
+  if (!clockEntry) {
     return { entry: null, error: "You are not clocked in." };
-  }
-
-  if (activeEntry.entryType !== "clock") {
-    return {
-      entry: null,
-      error: "End your break or job work before clocking out.",
-    };
   }
 
   const endedAt = new Date().toISOString();
   const durationMinutes = calculateDurationMinutes(
-    activeEntry.startedAt,
+    clockEntry.startedAt,
     endedAt,
   );
 
   const { entry, error } = await closeTimeEntry(
     companyId,
-    activeEntry.id,
+    clockEntry.id,
     endedAt,
     durationMinutes,
   );

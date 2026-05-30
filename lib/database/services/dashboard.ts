@@ -154,29 +154,63 @@ const EMPTY_OPERATIONAL_INSIGHTS: DailyOperationsSummary = {
   limitations: [],
 };
 
+const TIME_STATE_PRIORITY: Record<
+  ReturnType<typeof mapEntryTypeToTimeState>,
+  number
+> = {
+  on_break: 3,
+  working_job: 2,
+  clocked_in: 1,
+};
+
+function pickPrimaryActiveEntryForTechnician(
+  entries: TimeEntry[],
+): TimeEntry | undefined {
+  return entries.reduce<TimeEntry | undefined>((best, entry) => {
+    if (!best) {
+      return entry;
+    }
+
+    const entryPriority = TIME_STATE_PRIORITY[mapEntryTypeToTimeState(entry.entryType)];
+    const bestPriority = TIME_STATE_PRIORITY[mapEntryTypeToTimeState(best.entryType)];
+
+    return entryPriority > bestPriority ? entry : best;
+  }, undefined);
+}
+
 function buildTechnicianStatuses(
   technicians: Awaited<ReturnType<typeof listTechnicians>>,
   activeEntries: TimeEntry[],
 ): DashboardData["technicians"] {
-  const entryByTechnician = new Map(
-    activeEntries.map((entry) => [entry.technicianId, entry]),
-  );
+  const entriesByTechnician = new Map<string, TimeEntry[]>();
+
+  for (const entry of activeEntries) {
+    const existing = entriesByTechnician.get(entry.technicianId) ?? [];
+    existing.push(entry);
+    entriesByTechnician.set(entry.technicianId, existing);
+  }
 
   return technicians
     .filter((technician) => technician.role === COMPANY_ROLE_LABELS.technician)
     .map((technician) => {
-      const activeEntry = entryByTechnician.get(technician.id);
+      const technicianEntries = entriesByTechnician.get(technician.id) ?? [];
+      const activeEntry = pickPrimaryActiveEntryForTechnician(technicianEntries);
+      const jobLaborEntry = technicianEntries.find(
+        (entry) => entry.entryType === "job_labor",
+      );
       const timeState: TechnicianTimeState = activeEntry
         ? mapEntryTypeToTimeState(activeEntry.entryType)
-        : "off_clock";
+        : technicianEntries.some((entry) => entry.entryType === "clock")
+          ? "clocked_in"
+          : "off_clock";
 
       return {
         id: technician.id,
         name: technician.name,
         initials: technician.initials,
         timeState,
-        currentJobId: activeEntry?.jobId,
-        currentJobNumber: activeEntry?.jobNumber,
+        currentJobId: jobLaborEntry?.jobId,
+        currentJobNumber: jobLaborEntry?.jobNumber,
       };
     });
 }
