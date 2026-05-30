@@ -12,6 +12,8 @@ type BillingTotalsSummaryProps = {
   documentStyle?: BillingDocumentStyle;
   /** Hide the total row when the amount is already shown above the fold. */
   hideTotal?: boolean;
+  /** Hide the balance due row when it is already shown above the fold. */
+  hideBalanceDue?: boolean;
 };
 
 function TotalsRow({
@@ -63,13 +65,15 @@ export function BillingTotalsSummary({
   balanceDue = 0,
   documentStyle = "default",
   hideTotal = false,
+  hideBalanceDue = false,
 }: BillingTotalsSummaryProps) {
   const isInvoiceStyle = documentStyle === "invoice";
   const isEstimateStyle = documentStyle === "estimate";
   const isPremiumStyle = isInvoiceStyle || isEstimateStyle;
   const showTax = taxRate > 0 || taxAmount > 0;
-  const showPaymentSummary = amountPaid > 0 || balanceDue > 0;
-  const showBalanceInTotals = balanceDue > 0;
+  const showPaymentSummary =
+    amountPaid > 0 || (balanceDue > 0 && !hideBalanceDue);
+  const showBalanceInTotals = balanceDue > 0 && !hideBalanceDue;
 
   const containerClass = isPremiumStyle
     ? "rounded-lg border border-slate-200 bg-white px-3 py-3 sm:rounded-xl sm:px-5 sm:py-4 md:px-6 md:py-5 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white"
