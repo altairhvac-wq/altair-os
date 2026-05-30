@@ -23,7 +23,7 @@ export function CurrentJobCard({
 }: CurrentJobCardProps) {
   return (
     <section className="rounded-2xl border border-cyan-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 p-4">
+      <div className="border-b border-slate-100 p-3">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-cyan-600">
@@ -57,7 +57,7 @@ export function CurrentJobCard({
         </div>
       </div>
 
-      <div className="space-y-3 p-4">
+      <div className="space-y-2.5 p-3">
         <div className="flex items-start gap-3">
           <User className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
           <div>

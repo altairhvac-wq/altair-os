@@ -12,6 +12,7 @@ import {
   type InvoiceEditFormData,
 } from "@/shared/types/invoice";
 import type { ServiceItem } from "@/shared/types/service-item";
+import { adminPageStackClass, adminPanelBodyClass } from "@/shared/lib/admin-density";
 import { InvoiceEditForm } from "./InvoiceEditForm";
 
 type InvoiceEditPageViewProps = {
@@ -60,7 +61,7 @@ export function InvoiceEditPageView({
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5 pb-8">
+    <div className={`mx-auto max-w-3xl ${adminPageStackClass} pb-6`}>
       <Link
         href={`/invoices/${invoice.id}`}
         className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
@@ -70,14 +71,16 @@ export function InvoiceEditPageView({
       </Link>
 
       <section className="overflow-hidden admin-card">
-        <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-5 sm:px-6">
-          <h1 className="text-2xl font-bold text-slate-900">Edit invoice</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Update due date, notes, and line items before payment is collected.
-          </p>
+        <div className="admin-panel-header admin-section-header border-b border-slate-100 bg-slate-50/70">
+          <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Edit invoice</h1>
+          {paymentCount > 0 ? (
+            <p className="admin-text-helper mt-0.5">
+              {paymentCount} payment{paymentCount === 1 ? "" : "s"} recorded — limited edits
+            </p>
+          ) : null}
         </div>
 
-        <div className="p-5 sm:p-6">
+        <div className={adminPanelBodyClass}>
           {successMessage ? (
             <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800">
               {successMessage}

@@ -8,6 +8,10 @@ import {
   type EstimateLineItemFormData,
 } from "@/shared/types/estimate";
 import type { ServiceItem } from "@/shared/types/service-item";
+import {
+  adminFormInputClass,
+  adminFormLabelClass,
+} from "@/shared/lib/admin-density";
 
 const CUSTOM_SERVICE_ITEM_ID = "";
 
@@ -25,11 +29,6 @@ const emptyLineItem: EstimateLineItemFormData = {
   unitPrice: 0,
   taxable: true,
 };
-
-const inputClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
-
-const labelClass = "mb-1 block text-xs font-semibold text-slate-600";
 
 export function LineItemsEditor({
   lineItems,
@@ -119,7 +118,7 @@ export function LineItemsEditor({
   const totals = calculateEstimateTotals(items, taxRate);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Line items
@@ -134,7 +133,7 @@ export function LineItemsEditor({
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {items.map((item, index) => {
           const lineTotal = calculateLineItemTotal(item.quantity, item.unitPrice);
           const selectedServiceId = item.serviceItemId ?? CUSTOM_SERVICE_ITEM_ID;
@@ -142,9 +141,9 @@ export function LineItemsEditor({
           return (
             <div
               key={index}
-              className="rounded-xl border border-slate-200 bg-slate-50/50 p-3"
+              className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5"
             >
-              <div className="mb-3 flex items-start justify-between gap-2">
+              <div className="mb-2 flex items-start justify-between gap-2">
                 <p className="text-xs font-semibold text-slate-500">
                   Item {index + 1}
                 </p>
@@ -158,15 +157,15 @@ export function LineItemsEditor({
                 </button>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <div>
-                  <label className={labelClass}>Price Book Item</label>
+                  <label className={adminFormLabelClass}>Price book item</label>
                   <select
                     value={selectedServiceId}
                     onChange={(e) =>
                       handleServiceItemChange(index, e.target.value)
                     }
-                    className={inputClass}
+                    className={adminFormInputClass}
                   >
                     <option value={CUSTOM_SERVICE_ITEM_ID}>Custom item</option>
                     {serviceItems.map((serviceItem) => (
@@ -176,14 +175,14 @@ export function LineItemsEditor({
                     ))}
                   </select>
                   {serviceItems.length === 0 ? (
-                    <p className="mt-1 text-xs text-slate-500">
-                      No price book items yet. Add items in Price Book first.
+                    <p className="mt-0.5 text-[11px] text-slate-500" title="Add items in Price Book first">
+                      No price book items
                     </p>
                   ) : null}
                 </div>
 
                 <div>
-                  <label className={labelClass}>Line Item Name</label>
+                  <label className={adminFormLabelClass}>Line item name</label>
                   <input
                     type="text"
                     value={item.name}
@@ -192,13 +191,13 @@ export function LineItemsEditor({
                     }
                     placeholder="Name shown on the estimate"
                     autoComplete="off"
-                    className={inputClass}
+                    className={adminFormInputClass}
                     required
                   />
                 </div>
 
                 <div>
-                  <label className={labelClass}>Description</label>
+                  <label className={adminFormLabelClass}>Description</label>
                   <input
                     type="text"
                     value={item.description}
@@ -206,13 +205,13 @@ export function LineItemsEditor({
                       handleItemChange(index, "description", e.target.value)
                     }
                     placeholder="Optional details"
-                    className={inputClass}
+                    className={adminFormInputClass}
                   />
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                   <div>
-                    <label className={labelClass}>Qty</label>
+                    <label className={adminFormLabelClass}>Qty</label>
                     <input
                       type="number"
                       min="1"
@@ -221,12 +220,12 @@ export function LineItemsEditor({
                       onChange={(e) =>
                         handleItemChange(index, "quantity", e.target.value)
                       }
-                      className={inputClass}
+                      className={adminFormInputClass}
                       required
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>Unit price</label>
+                    <label className={adminFormLabelClass}>Unit price</label>
                     <input
                       type="number"
                       min="0"
@@ -235,13 +234,13 @@ export function LineItemsEditor({
                       onChange={(e) =>
                         handleItemChange(index, "unitPrice", e.target.value)
                       }
-                      className={inputClass}
+                      className={adminFormInputClass}
                       required
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>Line total</label>
-                    <div className="flex h-[38px] items-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900">
+                    <label className={adminFormLabelClass}>Line total</label>
+                    <div className="flex min-h-11 items-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900">
                       {formatCurrency(lineTotal)}
                     </div>
                   </div>
@@ -264,7 +263,7 @@ export function LineItemsEditor({
         })}
       </div>
 
-      <div className="space-y-2 rounded-lg border border-slate-200 bg-white px-4 py-3">
+      <div className="space-y-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
         <div className="flex items-center justify-between text-sm text-slate-600">
           <span>Subtotal</span>
           <span>{formatCurrency(totals.subtotal)}</span>

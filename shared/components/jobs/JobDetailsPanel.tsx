@@ -13,6 +13,7 @@ import { JobCard } from "./JobCard";
 import { JobForm } from "./JobForm";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
+import { adminPanelBodyClass } from "@/shared/lib/admin-density";
 
 type PanelMode = "detail" | "create" | "empty";
 
@@ -50,16 +51,12 @@ export function JobDetailsPanel({
     <aside
       className={`${listDetailPanelClass(mode !== "empty")} flex min-h-0 min-w-0 flex-[1_1_45%] flex-col overflow-hidden admin-card max-lg:min-h-[12rem] lg:h-full lg:w-[400px] lg:flex-none lg:shrink-0`}
     >
-      <div className="admin-panel-header flex shrink-0 items-start justify-between px-4 py-3 sm:px-5 sm:py-4">
+      <div className="admin-panel-header admin-section-header flex shrink-0 items-start justify-between">
         <div className="min-w-0 pr-2">
           <h2 className="admin-heading-section sm:text-base">{title}</h2>
-          <p className="admin-text-helper mt-0.5">
-            {mode === "create"
-              ? "Schedule work and assign a technician"
-              : mode === "detail"
-                ? "Job details and assignment"
-                : "Select a job from the list"}
-          </p>
+          {mode === "empty" ? (
+            <p className="admin-text-helper mt-0.5">Select a job from the list</p>
+          ) : null}
         </div>
         {mode !== "empty" ? (
           <button
@@ -73,7 +70,7 @@ export function JobDetailsPanel({
         ) : null}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+      <div className={adminPanelBodyClass}>
         {mode === "empty" ? (
           <div className="flex h-full flex-col items-center justify-center px-4 py-8 text-center">
             <div className="admin-empty-state w-full max-w-xs">
@@ -100,7 +97,7 @@ export function JobDetailsPanel({
         ) : null}
 
         {mode === "detail" && job ? (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <JobCard job={job} />
 
             <section>

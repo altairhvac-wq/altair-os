@@ -117,18 +117,13 @@ export function CustomerEquipmentSection({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 ring-1 ring-violet-600/10">
-            <Settings2 className="h-5 w-5 text-violet-600" />
+    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 ring-1 ring-violet-600/10">
+            <Settings2 className="h-4 w-4 text-violet-600" />
           </div>
-          <div>
-            <h2 className="text-sm font-bold text-slate-900">Equipment</h2>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Installed assets and warranty details at this property
-            </p>
-          </div>
+          <h2 className="text-sm font-bold text-slate-900">Equipment</h2>
         </div>
 
         {canManage ? (

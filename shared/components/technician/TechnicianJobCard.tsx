@@ -116,7 +116,7 @@ export function TechnicianJobCard({
           : "border-slate-200"
       }`}
     >
-      <div className="shrink-0 border-b border-slate-100 p-3 sm:p-4">
+      <div className="shrink-0 border-b border-slate-100 p-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h2 className="truncate text-lg font-bold text-slate-900">
@@ -184,7 +184,7 @@ export function TechnicianJobCard({
 
       {expanded ? (
         <>
-          <div className="min-h-0 space-y-4 p-3 sm:p-4">
+          <div className="min-h-0 space-y-3 p-3">
             <div className="flex items-start gap-3">
               <User className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
               <div className="min-w-0">

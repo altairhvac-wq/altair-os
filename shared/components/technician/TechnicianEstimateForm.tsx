@@ -7,6 +7,11 @@ import { LineItemsEditor } from "@/shared/components/estimates/LineItemsEditor";
 import { formatActionError, formatRetryGuidance } from "@/shared/lib/operational-errors";
 import type { EstimateLineItemFormData } from "@/shared/types/estimate";
 import type { ServiceItem } from "@/shared/types/service-item";
+import {
+  adminFormInputClass,
+  adminFormLabelClass,
+  adminFormStackClass,
+} from "@/shared/lib/admin-density";
 
 type TechnicianEstimateFormProps = {
   jobId: string;
@@ -26,11 +31,6 @@ const emptyLineItem: EstimateLineItemFormData = {
   unitPrice: 0,
   taxable: true,
 };
-
-const inputClass =
-  "w-full min-h-11 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-base text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:text-sm";
-
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
 
 export function TechnicianEstimateForm({
   jobId,
@@ -105,20 +105,17 @@ export function TechnicianEstimateForm({
     <form
       id="technician-estimate-form"
       onSubmit={handleSubmit}
-      className="min-w-0 space-y-4"
+      className={`min-w-0 ${adminFormStackClass}`}
       aria-busy={isPending}
     >
-      <div className="space-y-2 rounded-xl bg-slate-50 px-3.5 py-3 text-sm text-slate-700">
+      <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
         <p>
-          Customer{" "}
           <span className="font-semibold text-slate-900">{customerName}</span>
-        </p>
-        <p>
-          Job{" "}
+          <span className="text-slate-400"> · </span>
           <span className="font-semibold text-slate-900">{jobNumber}</span>
         </p>
-        <p className="text-xs text-slate-500">
-          Saved as a draft for office review. Nothing is sent to the customer.
+        <p className="mt-0.5 text-[11px] text-slate-500" title="Saved as draft for office review; not sent to customer">
+          Draft for office review
         </p>
       </div>
 
@@ -130,18 +127,18 @@ export function TechnicianEstimateForm({
       />
 
       <div>
-        <label htmlFor="tech-estimate-notes" className={labelClass}>
+        <label htmlFor="tech-estimate-notes" className={adminFormLabelClass}>
           Notes{" "}
           <span className="font-normal text-slate-400">(optional)</span>
         </label>
         <textarea
           id="tech-estimate-notes"
-          rows={3}
+          rows={2}
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Site notes for the office"
           disabled={isPending}
-          className={inputClass}
+          className={adminFormInputClass}
         />
       </div>
 

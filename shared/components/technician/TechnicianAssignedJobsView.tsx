@@ -73,7 +73,7 @@ function WorkQueueSection({
       >
         {label}
       </p>
-      <ul className="space-y-4">
+      <ul className="space-y-3">
         {jobs.map((job) => (
           <li key={job.id}>
             <TechnicianJobCard
@@ -110,7 +110,7 @@ function TechnicianJobsEmptyState({
   description: string;
 }) {
   return (
-    <section className="min-h-[12rem] rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center shadow-sm">
+    <section className="min-h-[10rem] rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center shadow-sm">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
         <Briefcase className="h-8 w-8 text-slate-400" />
       </div>

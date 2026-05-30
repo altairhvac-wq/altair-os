@@ -89,7 +89,7 @@ export function TechnicianDashboardView() {
     dashboard.shift.status === "clocked_out" && !hasJobs;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {actionMessage ? (
         <div
           role="status"
@@ -106,7 +106,7 @@ export function TechnicianDashboardView() {
         onClockOut={handleClockOut}
       />
 
-      <div className="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-200">
+      <div className="flex items-center justify-between rounded-xl bg-white px-3.5 py-2.5 shadow-sm ring-1 ring-slate-200">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Today&apos;s Schedule

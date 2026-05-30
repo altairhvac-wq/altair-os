@@ -11,6 +11,13 @@ import {
 import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
 import type { ServiceItem } from "@/shared/types/service-item";
+import {
+  adminFormActionsClass,
+  adminFormGridClass,
+  adminFormInputClass,
+  adminFormLabelClass,
+  adminFormStackClass,
+} from "@/shared/lib/admin-density";
 import { InvoiceLineItemsEditor } from "./InvoiceLineItemsEditor";
 
 type InvoiceFormProps = {
@@ -42,11 +49,6 @@ const emptyForm: InvoiceFormData = {
   taxRate: 0,
   lineItems: [{ ...emptyLineItem }],
 };
-
-const inputClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
-
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
 
 export function InvoiceForm({
   customers,
@@ -118,7 +120,7 @@ export function InvoiceForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5" aria-busy={isSubmitting}>
+    <form onSubmit={handleSubmit} className={adminFormStackClass} aria-busy={isSubmitting}>
       {error ? (
         <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
           {error}
@@ -127,11 +129,11 @@ export function InvoiceForm({
 
       <fieldset
         disabled={isSubmitting}
-        className="m-0 min-w-0 space-y-5 border-0 p-0"
+        className={`m-0 min-w-0 border-0 p-0 ${adminFormStackClass}`}
       >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={adminFormGridClass}>
         <div className="sm:col-span-2">
-          <label htmlFor="customerId" className={labelClass}>
+          <label htmlFor="customerId" className={adminFormLabelClass}>
             Customer
           </label>
           <select
@@ -140,7 +142,7 @@ export function InvoiceForm({
             required
             value={customerId}
             onChange={(e) => handleCustomerChange(e.target.value)}
-            className={inputClass}
+            className={adminFormInputClass}
           >
             <option value="">Select a customer</option>
             {customers.map((customer) => (
@@ -152,7 +154,7 @@ export function InvoiceForm({
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor="jobId" className={labelClass}>
+          <label htmlFor="jobId" className={adminFormLabelClass}>
             Linked job (optional)
           </label>
           <select
@@ -161,7 +163,7 @@ export function InvoiceForm({
             value={jobId}
             onChange={(e) => setJobId(e.target.value)}
             disabled={!customerId}
-            className={inputClass}
+            className={adminFormInputClass}
           >
             <option value="">No linked job</option>
             {customerJobs.map((job) => (
@@ -173,7 +175,7 @@ export function InvoiceForm({
         </div>
 
         <div>
-          <label htmlFor="taxRate" className={labelClass}>
+          <label htmlFor="taxRate" className={adminFormLabelClass}>
             Tax rate (%)
           </label>
           <input
@@ -188,12 +190,12 @@ export function InvoiceForm({
               const nextTaxRate = parseFloat(e.target.value);
               setTaxRate(Number.isNaN(nextTaxRate) ? 0 : nextTaxRate);
             }}
-            className={inputClass}
+            className={adminFormInputClass}
           />
         </div>
 
         <div>
-          <label htmlFor="issueDate" className={labelClass}>
+          <label htmlFor="issueDate" className={adminFormLabelClass}>
             Issue date
           </label>
           <input
@@ -201,12 +203,12 @@ export function InvoiceForm({
             name="issueDate"
             type="date"
             defaultValue={defaults.issueDate}
-            className={inputClass}
+            className={adminFormInputClass}
           />
         </div>
 
         <div>
-          <label htmlFor="dueDate" className={labelClass}>
+          <label htmlFor="dueDate" className={adminFormLabelClass}>
             Due date
           </label>
           <input
@@ -214,7 +216,7 @@ export function InvoiceForm({
             name="dueDate"
             type="date"
             defaultValue={defaults.dueDate}
-            className={inputClass}
+            className={adminFormInputClass}
           />
           <p className="mt-1 text-xs text-slate-500">
             Defaults to 30 days from issue date
@@ -222,16 +224,16 @@ export function InvoiceForm({
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor="notes" className={labelClass}>
+          <label htmlFor="notes" className={adminFormLabelClass}>
             Notes
           </label>
           <textarea
             id="notes"
             name="notes"
-            rows={3}
+            rows={2}
             defaultValue={defaults.notes}
             placeholder="Optional notes for the customer or team"
-            className={inputClass}
+            className={adminFormInputClass}
           />
         </div>
       </div>
@@ -244,11 +246,11 @@ export function InvoiceForm({
       />
       </fieldset>
 
-      <div className="flex gap-2 border-t border-slate-100 pt-4">
+      <div className={adminFormActionsClass}>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 rounded-lg bg-cyan-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex-1 min-h-11 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting ? "Saving..." : "Save invoice"}
         </button>
@@ -256,7 +258,7 @@ export function InvoiceForm({
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="flex-1 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex-1 min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Cancel
         </button>

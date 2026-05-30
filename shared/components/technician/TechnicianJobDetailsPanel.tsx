@@ -33,7 +33,7 @@ export function TechnicianJobDetailsPanel({
   return (
     <MobileSheet onClose={onClose} ariaLabelledBy={TITLE_ID}>
       <MobileSheetPanel maxWidth="md">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-3.5 py-2.5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Job Details
@@ -52,7 +52,7 @@ export function TechnicianJobDetailsPanel({
           </button>
         </div>
 
-        <MobileSheetBody unstyled className="space-y-4 p-4">
+        <MobileSheetBody unstyled className="space-y-3 p-3.5">
           <div className="flex flex-wrap gap-2">
             <TechnicianJobStatusBadge status={job.status} />
             <span

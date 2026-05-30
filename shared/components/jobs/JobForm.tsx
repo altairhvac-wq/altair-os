@@ -11,6 +11,13 @@ import {
   type JobStatus,
 } from "@/shared/types/job";
 import type { Customer } from "@/shared/types/customer";
+import {
+  adminFormActionsClass,
+  adminFormGridClass,
+  adminFormInputClass,
+  adminFormLabelClass,
+  adminFormStackClass,
+} from "@/shared/lib/admin-density";
 
 type AddressField = "serviceAddress" | "city" | "state" | "zip";
 
@@ -37,11 +44,6 @@ const emptyForm: JobFormData = {
   description: "",
   notes: "",
 };
-
-const inputClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
-
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
 
 function toDatetimeLocal(iso: string): string {
   const date = new Date(iso);
@@ -132,10 +134,10 @@ export function JobForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className={adminFormStackClass}>
+      <div className={adminFormGridClass}>
         <div className="sm:col-span-2">
-          <label htmlFor="customerId" className={labelClass}>
+          <label htmlFor="customerId" className={adminFormLabelClass}>
             Customer
           </label>
           <select
@@ -144,7 +146,7 @@ export function JobForm({
             required
             defaultValue={defaults.customerId}
             onChange={handleCustomerChange}
-            className={inputClass}
+            className={adminFormInputClass}
           >
             <option value="" disabled>
               Select a customer
@@ -158,14 +160,14 @@ export function JobForm({
         </div>
 
         <div>
-          <label htmlFor="jobType" className={labelClass}>
+          <label htmlFor="jobType" className={adminFormLabelClass}>
             Job type
           </label>
           <select
             id="jobType"
             name="jobType"
             defaultValue={defaults.jobType}
-            className={inputClass}
+            className={adminFormInputClass}
           >
             {JOB_TYPE_OPTIONS.map((type) => (
               <option key={type} value={type}>
@@ -176,7 +178,7 @@ export function JobForm({
         </div>
 
         <div>
-          <label htmlFor="scheduledDate" className={labelClass}>
+          <label htmlFor="scheduledDate" className={adminFormLabelClass}>
             Scheduled date & time
           </label>
           <input
@@ -185,12 +187,12 @@ export function JobForm({
             type="datetime-local"
             required
             defaultValue={defaults.scheduledDate}
-            className={inputClass}
+            className={adminFormInputClass}
           />
         </div>
 
         <div>
-          <label htmlFor="status" className={labelClass}>
+          <label htmlFor="status" className={adminFormLabelClass}>
             Status
           </label>
           {lockStatus ? (
@@ -209,7 +211,7 @@ export function JobForm({
               id="status"
               name="status"
               defaultValue={defaults.status}
-              className={inputClass}
+              className={adminFormInputClass}
             >
               {JOB_STATUS_OPTIONS.filter((o) => o.value !== "all").map(
                 (option) => (
@@ -223,14 +225,14 @@ export function JobForm({
         </div>
 
         <div>
-          <label htmlFor="priority" className={labelClass}>
+          <label htmlFor="priority" className={adminFormLabelClass}>
             Priority
           </label>
           <select
             id="priority"
             name="priority"
             defaultValue={defaults.priority}
-            className={inputClass}
+            className={adminFormInputClass}
           >
             {JOB_PRIORITY_OPTIONS.filter((o) => o.value !== "all").map(
               (option) => (
@@ -249,7 +251,7 @@ export function JobForm({
         </p>
         <div className="grid gap-4">
           <div>
-            <label htmlFor="serviceAddress" className={labelClass}>
+            <label htmlFor="serviceAddress" className={adminFormLabelClass}>
               Street address
             </label>
             <input
@@ -260,12 +262,12 @@ export function JobForm({
               defaultValue={defaults.serviceAddress}
               placeholder="123 Main St"
               onInput={() => markAddressEdited("serviceAddress")}
-              className={inputClass}
+              className={adminFormInputClass}
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <label htmlFor="city" className={labelClass}>
+              <label htmlFor="city" className={adminFormLabelClass}>
                 City
               </label>
               <input
@@ -275,11 +277,11 @@ export function JobForm({
                 required
                 defaultValue={defaults.city}
                 onInput={() => markAddressEdited("city")}
-                className={inputClass}
+                className={adminFormInputClass}
               />
             </div>
             <div>
-              <label htmlFor="state" className={labelClass}>
+              <label htmlFor="state" className={adminFormLabelClass}>
                 State
               </label>
               <input
@@ -289,11 +291,11 @@ export function JobForm({
                 required
                 defaultValue={defaults.state}
                 onInput={() => markAddressEdited("state")}
-                className={inputClass}
+                className={adminFormInputClass}
               />
             </div>
             <div>
-              <label htmlFor="zip" className={labelClass}>
+              <label htmlFor="zip" className={adminFormLabelClass}>
                 ZIP
               </label>
               <input
@@ -303,7 +305,7 @@ export function JobForm({
                 required
                 defaultValue={defaults.zip}
                 onInput={() => markAddressEdited("zip")}
-                className={inputClass}
+                className={adminFormInputClass}
               />
             </div>
           </div>
@@ -311,7 +313,7 @@ export function JobForm({
       </div>
 
       <div>
-        <label htmlFor="description" className={labelClass}>
+        <label htmlFor="description" className={adminFormLabelClass}>
           Description
         </label>
         <textarea
@@ -320,12 +322,12 @@ export function JobForm({
           rows={2}
           defaultValue={defaults.description}
           placeholder="Work to be performed..."
-          className={`${inputClass} resize-none`}
+          className={`${adminFormInputClass} resize-none`}
         />
       </div>
 
       <div>
-        <label htmlFor="notes" className={labelClass}>
+        <label htmlFor="notes" className={adminFormLabelClass}>
           Notes
         </label>
         <textarea
@@ -334,7 +336,7 @@ export function JobForm({
           rows={2}
           defaultValue={defaults.notes}
           placeholder="Access codes, customer preferences, etc."
-          className={`${inputClass} resize-none`}
+          className={`${adminFormInputClass} resize-none`}
         />
       </div>
 
@@ -344,7 +346,7 @@ export function JobForm({
         </p>
       ) : null}
 
-      <div className="flex gap-3 border-t border-slate-100 pt-4">
+      <div className={`flex gap-2 ${adminFormActionsClass}`}>
         <button
           type="submit"
           disabled={isSubmitting || customers.length === 0}

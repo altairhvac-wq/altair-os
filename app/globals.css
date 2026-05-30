@@ -288,8 +288,39 @@ a[href] {
   border-radius: 0.75rem;
   border: 1px dashed rgb(203 213 225);
   background: linear-gradient(180deg, rgb(248 250 252 / 0.95), rgb(241 245 249 / 0.65));
-  padding: 1.5rem 1rem;
+  padding: 1rem 0.875rem;
   text-align: center;
+}
+
+/* Page / panel rhythm — compact density pass */
+.admin-page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-card-body {
+  padding: 0.875rem 1rem;
+}
+
+@media (min-width: 1024px) {
+  .admin-card-body {
+    padding: 1rem 1.25rem;
+  }
+}
+
+.admin-panel-body {
+  padding: 0.875rem 1rem;
+}
+
+.admin-section-header {
+  padding: 0.625rem 1rem;
+}
+
+@media (min-width: 1024px) {
+  .admin-section-header {
+    padding: 0.75rem 1.25rem;
+  }
 }
 
 .admin-section-link {
@@ -331,7 +362,7 @@ a[href] {
   border: 1px solid var(--border-subtle);
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 48%, #f1f5f9 100%);
   box-shadow: var(--shadow-card);
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.25rem;
 }
 
 .admin-heading-page {

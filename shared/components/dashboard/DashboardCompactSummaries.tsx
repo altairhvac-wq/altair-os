@@ -52,7 +52,7 @@ function CompactSectionShell({
 }: {
   eyebrow: string;
   title: string;
-  description: string;
+  description?: string;
   href?: string;
   linkLabel?: string;
   panelId?: CommandStripPanelId;
@@ -69,7 +69,9 @@ function CompactSectionShell({
           <h3 className="text-sm font-black tracking-tight text-slate-900 lg:text-base">
             {title}
           </h3>
-          <p className="mt-0.5 text-xs text-slate-500">{description}</p>
+          {description ? (
+            <p className="mt-0.5 text-xs text-slate-500">{description}</p>
+          ) : null}
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           {href && linkLabel ? (
@@ -322,7 +324,6 @@ export function DashboardCompactBillingSection({
     <CompactSectionShell
       eyebrow="Receivables"
       title="Revenue and billing"
-      description="Collections pressure and open invoices"
       href={INVOICE_PAGE_CASH_FLOW_HREF}
       linkLabel="Invoices"
       panelId="billing"
@@ -514,11 +515,7 @@ export function DashboardCompactNextStepsSection({
         )}
       </CompactSectionShell>
 
-      <CompactSectionShell
-        eyebrow="Activity"
-        title="Recent activity"
-        description="Latest operational events"
-      >
+      <CompactSectionShell eyebrow="Activity" title="Recent activity">
         {activities.length === 0 ? (
           <p className="text-xs text-slate-500">No recent activity yet.</p>
         ) : (

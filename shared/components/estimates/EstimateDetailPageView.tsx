@@ -29,6 +29,7 @@ import { EstimateStatusBadge } from "./EstimateStatusBadge";
 
 import { BillingSignatureCaptureSheet } from "@/shared/components/billing/BillingSignatureCaptureSheet";
 import type { BillingSignature } from "@/shared/types/billing-signature";
+import { adminPageStackClass } from "@/shared/lib/admin-density";
 
 type EstimateDetailPageViewProps = {
   estimate: EstimateDetail;
@@ -65,7 +66,7 @@ export function EstimateDetailPageView({
   }
 
   return (
-    <div className="mx-auto min-w-0 max-w-5xl space-y-5 overflow-x-hidden pb-2 print:max-w-none print:pb-0">
+    <div className={`mx-auto min-w-0 max-w-5xl ${adminPageStackClass} overflow-x-hidden pb-2 print:max-w-none print:pb-0`}>
       <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Link
           href="/estimates"

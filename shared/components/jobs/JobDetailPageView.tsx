@@ -38,6 +38,10 @@ import type { OperationalActivity } from "@/shared/types/operational-activity";
 import type { ServiceItem } from "@/shared/types/service-item";
 import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
 import type { OperationalInconsistencyEntry } from "@/shared/types/operational-inconsistencies";
+import {
+  adminCardSectionClass,
+  adminPageStackClass,
+} from "@/shared/lib/admin-density";
 
 type JobDetailPageViewProps = {
   job: JobDetail;
@@ -69,12 +73,12 @@ type ContentSectionProps = {
 function ContentSection({ title, children, className }: ContentSectionProps) {
   return (
     <section
-      className={`rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 ${className ?? ""}`}
+      className={`${adminCardSectionClass} ${className ?? ""}`}
     >
       <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         {title}
       </h2>
-      <div className="mt-3">{children}</div>
+      <div className="mt-2">{children}</div>
     </section>
   );
 }
@@ -106,7 +110,7 @@ export function JobDetailPageView({
   const scheduledLabel = `${formatScheduledDate(job.scheduledDate)} at ${formatScheduledTime(job.scheduledDate)}`;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
+    <div className={`mx-auto max-w-5xl ${adminPageStackClass}`}>
       <JobDetailHashScroll />
       <Link
         href="/jobs"
@@ -117,7 +121,7 @@ export function JobDetailPageView({
       </Link>
 
       <section className="overflow-hidden admin-card">
-        <div className="border-b border-slate-100 bg-slate-50/70 px-4 py-4 sm:px-6 sm:py-5">
+        <div className="border-b border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-5 sm:py-4">
           <JobDetailHeaderSection
             job={job}
             customers={customers}
@@ -127,7 +131,7 @@ export function JobDetailPageView({
           />
         </div>
 
-        <div className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-6 sm:py-5">
+        <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-4">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Service location
@@ -185,11 +189,11 @@ export function JobDetailPageView({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <section className={adminCardSectionClass}>
         <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Customer
         </h2>
-        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-sm font-bold text-white">
             {getCustomerInitials(job.customerName)}
           </div>
@@ -241,7 +245,7 @@ export function JobDetailPageView({
         </div>
       </section>
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <ContentSection title="Description" className="lg:col-span-2">
           <p className="text-sm leading-relaxed text-slate-600">
             {job.description?.trim()
@@ -262,7 +266,6 @@ export function JobDetailPageView({
               <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
               <div>
                 <p className="font-semibold text-slate-900">{scheduledLabel}</p>
-                <p className="mt-0.5 text-slate-500">Scheduled service window</p>
               </div>
             </div>
             <div className="rounded-lg border border-slate-100 bg-slate-50/70 px-3 py-2.5">
@@ -275,13 +278,10 @@ export function JobDetailPageView({
         </ContentSection>
 
         <ContentSection title="Status & priority" className="lg:col-span-2">
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <JobStatusBadge status={job.status} />
             <JobPriorityBadge priority={job.priority} />
           </div>
-          <p className="mt-3 text-sm text-slate-500">
-            Current workflow state and urgency for dispatch and field teams.
-          </p>
         </ContentSection>
 
         <ContentSection title="Technician assignment" className="lg:col-span-3">

@@ -24,6 +24,10 @@ import type { CustomerEquipment } from "@/shared/types/customer-equipment";
 import type { Expense } from "@/shared/types/expense";
 import type { JobAttachment } from "@/shared/types/job-attachment";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
+import {
+  adminCardSectionClass,
+  adminPageStackClass,
+} from "@/shared/lib/admin-density";
 
 type CustomerDetailPageViewProps = {
   customer: Customer;
@@ -57,7 +61,7 @@ export function CustomerDetailPageView({
   canViewCompanyExpenses,
 }: CustomerDetailPageViewProps) {
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className={`mx-auto max-w-5xl ${adminPageStackClass}`}>
       <Link
         href="/customers"
         className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
@@ -66,8 +70,8 @@ export function CustomerDetailPageView({
         Back to customers
       </Link>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+      <div className={adminCardSectionClass}>
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Customer profile
           </h2>
@@ -79,8 +83,8 @@ export function CustomerDetailPageView({
         <CustomerCard customer={customer} showRevenueStats={canViewBilling} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className={adminCardSectionClass}>
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Service address
           </h2>
@@ -95,7 +99,7 @@ export function CustomerDetailPageView({
           </div>
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className={adminCardSectionClass}>
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Account info
           </h2>
@@ -107,7 +111,7 @@ export function CustomerDetailPageView({
       </div>
 
       {customer.tags.length > 0 ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className={adminCardSectionClass}>
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Tags
           </h2>
@@ -125,11 +129,11 @@ export function CustomerDetailPageView({
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className={adminCardSectionClass}>
         <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Notes
         </h2>
-        <p className="mt-3 text-sm leading-relaxed text-slate-600">
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">
           {customer.notes?.trim() ? customer.notes : "No notes on file."}
         </p>
       </section>

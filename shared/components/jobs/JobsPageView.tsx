@@ -229,19 +229,19 @@ export function JobsPageView({
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 max-w-full flex-col gap-4 lg:h-[calc(100dvh-9.5rem)] lg:flex-row lg:overflow-hidden">
+    <div className="flex min-h-0 min-w-0 max-w-full flex-col gap-3 lg:h-[calc(100dvh-9.5rem)] lg:flex-row lg:overflow-hidden">
       <section
         className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col admin-card lg:min-h-0 lg:flex-1 lg:overflow-hidden ${panelMode === "create" ? "max-lg:hidden" : ""}`}
       >
-        <div className="admin-panel-header flex shrink-0 flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
+        <div className="admin-panel-header admin-section-header flex shrink-0 flex-wrap items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h2 className="admin-heading-section sm:text-base">Jobs</h2>
             <p className="admin-text-helper mt-0.5">
               {isSearching
-                ? "Find a customer to view their full job history"
+                ? "Customer search"
                 : viewTab === "today"
                   ? `${todayJobs.length} scheduled today`
-                  : "Browse all scheduled and completed work"}
+                  : `${jobs.length} total`}
             </p>
           </div>
           {canDispatchJobs ? (
@@ -257,7 +257,7 @@ export function JobsPageView({
           ) : null}
         </div>
 
-        <div className="shrink-0 space-y-3 px-4 pt-3">
+        <div className="shrink-0 space-y-2 px-4 pt-2">
           {!isSearching ? (
             <JobsViewTabs
               activeTab={viewTab}

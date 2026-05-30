@@ -96,28 +96,13 @@ type DashboardPrioritySectionId =
 
 const DASHBOARD_SECTION_LABELS: Record<
   DashboardPrioritySectionId,
-  { title: string; description: string }
+  { title: string; description?: string }
 > = {
-  "needs-attention": {
-    title: "Needs attention",
-    description: "Blockers, review queues, and alerts that need action now",
-  },
-  "todays-work": {
-    title: "Today's work",
-    description: "Live field activity, dispatch board, and technician status",
-  },
-  "revenue-billing": {
-    title: "Revenue and billing",
-    description: "Receivables, collections, and expense approvals",
-  },
-  "operational-health": {
-    title: "Operational health",
-    description: "Momentum, trends, and overall workload balance",
-  },
-  "next-steps": {
-    title: "Next steps",
-    description: "Recommended actions and recent company activity",
-  },
+  "needs-attention": { title: "Needs attention" },
+  "todays-work": { title: "Today's work" },
+  "revenue-billing": { title: "Revenue and billing" },
+  "operational-health": { title: "Operational health" },
+  "next-steps": { title: "Next steps" },
 };
 
 function getDashboardRoleFocus(access: DashboardData["access"]): DashboardRoleFocus {
@@ -184,7 +169,7 @@ function DashboardPriorityGroup({
   children,
 }: {
   title: string;
-  description: string;
+  description?: string;
   children: React.ReactNode;
 }) {
   const visibleChildren = Array.isArray(children)
@@ -203,9 +188,11 @@ function DashboardPriorityGroup({
         <h2 className="text-xs font-black uppercase tracking-wide text-slate-900 sm:text-sm">
           {title}
         </h2>
-        <p className="mt-0.5 text-[11px] leading-snug text-slate-500 sm:text-xs">
-          {description}
-        </p>
+        {description ? (
+          <p className="mt-0.5 text-[11px] leading-snug text-slate-500 sm:text-xs">
+            {description}
+          </p>
+        ) : null}
       </header>
       <div className="flex min-w-0 flex-col gap-2 lg:gap-3">{visibleChildren}</div>
     </section>
@@ -234,18 +221,18 @@ function DashboardSection({
 }) {
   return (
     <section className="admin-card overflow-hidden">
-      <div className="flex min-w-0 items-start justify-between gap-2 border-b border-slate-100/90 bg-slate-50/40 px-4 py-3 max-lg:gap-2 lg:gap-3 lg:px-5 lg:py-3.5">
-        <div className="flex min-w-0 items-start gap-2.5 lg:gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200/80 lg:h-9 lg:w-9 lg:rounded-xl">
-            <Icon className="h-3.5 w-3.5 text-slate-600 lg:h-4 lg:w-4" />
+      <div className="admin-section-header flex min-w-0 items-start justify-between gap-2 border-b border-slate-100/90 bg-slate-50/40">
+        <div className="flex min-w-0 items-start gap-2">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200/80">
+            <Icon className="h-3.5 w-3.5 text-slate-600" />
           </div>
           <div className="min-w-0">
             <h2 className="admin-heading-section">
               {title}
             </h2>
-            <p className="admin-text-helper">
-              {description}
-            </p>
+            {description ? (
+              <p className="admin-text-helper">{description}</p>
+            ) : null}
           </div>
         </div>
         {href && linkLabel ? (
@@ -255,7 +242,7 @@ function DashboardSection({
           </Link>
         ) : null}
       </div>
-      <div className="p-4 lg:p-5">{children}</div>
+      <div className="admin-card-body">{children}</div>
     </section>
   );
 }
@@ -367,7 +354,7 @@ function OperationalInsightsSection({
   return (
     <DashboardSection
       title="Operational insights"
-      description="Rules-based summary from live operational data"
+      description=""
       icon={Sparkles}
       href="/reports"
       linkLabel="View reports"
@@ -429,9 +416,6 @@ function OperationalInsightsSection({
         </ul>
       )}
 
-      <p className="mt-3 text-[11px] text-slate-500 lg:mt-4 lg:text-xs">
-        Deterministic counts only — no AI narrative or recommendations yet.
-      </p>
     </DashboardSection>
   );
 }
@@ -586,7 +570,7 @@ function TodayOperationsSection({
   return (
     <DashboardSection
       title="Today's Operations"
-      description="Live job board snapshot for today"
+      description=""
       icon={CalendarCheck}
       href="/dispatch?focus=today"
       linkLabel="Open dispatch"
@@ -728,7 +712,7 @@ function MoneySnapshotSection({ money }: { money: DashboardData["money"] }) {
   return (
     <DashboardSection
       title="Money Snapshot"
-      description="Receivables and recent collections"
+      description=""
       icon={DollarSign}
       href={INVOICE_PAGE_CASH_FLOW_HREF}
       linkLabel="Open invoices"
@@ -882,7 +866,7 @@ function ExpenseReviewSection({
   return (
     <DashboardSection
       title="Expense Review"
-      description="Receipts and approvals needing attention"
+      description=""
       icon={Receipt}
       href="/expenses?status=submitted"
       linkLabel="Open expenses"
@@ -1036,7 +1020,7 @@ function RecentActivitySection({
   return (
     <DashboardSection
       title="Recent Activity"
-      description="Latest operational events across the company"
+      description=""
       icon={FileText}
     >
       {activities.length === 0 ? (
