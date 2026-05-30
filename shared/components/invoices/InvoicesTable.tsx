@@ -17,13 +17,13 @@ export function InvoicesTable({ invoices, onSelect }: InvoicesTableProps) {
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead>
             <tr className="border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <th className="px-4 py-3">Invoice</th>
-              <th className="px-4 py-3">Customer</th>
-              <th className="hidden px-4 py-3 lg:table-cell">Job</th>
-              <th className="hidden px-4 py-3 xl:table-cell">Due date</th>
-              <th className="px-4 py-3">Total</th>
-              <th className="hidden px-4 py-3 sm:table-cell">Balance</th>
-              <th className="px-4 py-3">Status</th>
+              <th className="admin-table-cell">Invoice</th>
+              <th className="admin-table-cell">Customer</th>
+              <th className="hidden admin-table-cell lg:table-cell">Job</th>
+              <th className="hidden admin-table-cell xl:table-cell">Due date</th>
+              <th className="admin-table-cell">Total</th>
+              <th className="hidden admin-table-cell sm:table-cell">Balance</th>
+              <th className="admin-table-cell">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
@@ -33,7 +33,7 @@ export function InvoicesTable({ invoices, onSelect }: InvoicesTableProps) {
                 onClick={() => onSelect(invoice)}
                 className="cursor-pointer transition-colors hover:bg-slate-50"
               >
-                <td className="px-4 py-3">
+                <td className="admin-table-cell">
                   <p className="font-semibold text-slate-900">
                     {invoice.invoiceNumber}
                   </p>
@@ -41,24 +41,24 @@ export function InvoicesTable({ invoices, onSelect }: InvoicesTableProps) {
                     {formatDate(invoice.issueDate)}
                   </p>
                 </td>
-                <td className="px-4 py-3">
+                <td className="admin-table-cell">
                   <p className="truncate font-medium text-slate-900">
                     {invoice.customerName}
                   </p>
                 </td>
-                <td className="hidden px-4 py-3 text-slate-600 lg:table-cell">
+                <td className="hidden admin-table-cell text-slate-600 lg:table-cell">
                   {invoice.jobNumber ?? "—"}
                 </td>
-                <td className="hidden px-4 py-3 text-slate-600 xl:table-cell">
+                <td className="hidden admin-table-cell text-slate-600 xl:table-cell">
                   {formatDate(invoice.dueDate)}
                 </td>
-                <td className="px-4 py-3 font-semibold text-slate-900">
+                <td className="admin-table-cell font-semibold text-slate-900">
                   {formatCurrency(invoice.total)}
                 </td>
-                <td className="hidden px-4 py-3 font-medium text-slate-700 sm:table-cell">
+                <td className="hidden admin-table-cell font-medium text-slate-700 sm:table-cell">
                   {formatCurrency(invoice.balanceDue)}
                 </td>
-                <td className="px-4 py-3">
+                <td className="admin-table-cell">
                   <InvoiceStatusBadge status={invoice.status} />
                 </td>
               </tr>

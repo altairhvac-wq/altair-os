@@ -1,3 +1,4 @@
+import { adminListRowClass } from "@/shared/lib/admin-density";
 import { ChevronRight } from "lucide-react";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { Invoice } from "@/shared/types/invoice";
@@ -19,7 +20,7 @@ export function InvoicesMobileCardList({
           <button
             type="button"
             onClick={() => onSelect(invoice)}
-            className="flex w-full min-w-0 items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/20"
+            className={adminListRowClass}
           >
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">

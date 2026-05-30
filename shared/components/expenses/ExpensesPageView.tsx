@@ -207,7 +207,7 @@ export function ExpensesPageView({
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">
         <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1`}>
-          <div className="admin-panel-header flex shrink-0 flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
+          <div className="admin-panel-header admin-section-header flex shrink-0 flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">
               <h2 className="admin-heading-section sm:text-base">All expenses</h2>
               <p className="admin-text-helper mt-0.5">

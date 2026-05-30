@@ -17,12 +17,12 @@ export function EstimatesTable({ estimates, onSelect }: EstimatesTableProps) {
       <table className="w-full min-w-[720px] text-left text-sm">
         <thead>
           <tr className="border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <th className="px-4 py-3">Estimate</th>
-            <th className="px-4 py-3">Customer</th>
-            <th className="hidden px-4 py-3 md:table-cell">Line items</th>
-            <th className="hidden px-4 py-3 lg:table-cell">Valid until</th>
-            <th className="px-4 py-3">Total</th>
-            <th className="px-4 py-3">Status</th>
+            <th className="admin-table-cell">Estimate</th>
+            <th className="admin-table-cell">Customer</th>
+            <th className="hidden admin-table-cell md:table-cell">Line items</th>
+            <th className="hidden admin-table-cell lg:table-cell">Valid until</th>
+            <th className="admin-table-cell">Total</th>
+            <th className="admin-table-cell">Status</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50">
@@ -36,7 +36,7 @@ export function EstimatesTable({ estimates, onSelect }: EstimatesTableProps) {
                 onClick={() => onSelect(estimate)}
                 className="cursor-pointer transition-colors hover:bg-slate-50"
               >
-                <td className="px-4 py-3">
+                <td className="admin-table-cell">
                   <p className="font-semibold text-slate-900">
                     {estimate.estimateNumber}
                   </p>
@@ -44,23 +44,23 @@ export function EstimatesTable({ estimates, onSelect }: EstimatesTableProps) {
                     {formatDate(estimate.createdAt)}
                   </p>
                 </td>
-                <td className="px-4 py-3">
+                <td className="admin-table-cell">
                   <p className="truncate font-medium text-slate-900">
                     {estimate.customerName}
                   </p>
                 </td>
-                <td className="hidden px-4 py-3 text-slate-600 md:table-cell">
+                <td className="hidden admin-table-cell text-slate-600 md:table-cell">
                   {lineItemCount} {lineItemCount === 1 ? "item" : "items"}
                 </td>
-                <td className="hidden px-4 py-3 text-slate-600 lg:table-cell">
+                <td className="hidden admin-table-cell text-slate-600 lg:table-cell">
                   {estimate.validUntil
                     ? formatDate(estimate.validUntil)
                     : "—"}
                 </td>
-                <td className="px-4 py-3 font-semibold text-slate-900">
+                <td className="admin-table-cell font-semibold text-slate-900">
                   {formatCurrency(estimate.total)}
                 </td>
-                <td className="px-4 py-3">
+                <td className="admin-table-cell">
                   <EstimateStatusBadge status={estimate.status} />
                 </td>
               </tr>

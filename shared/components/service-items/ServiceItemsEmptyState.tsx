@@ -12,21 +12,21 @@ export function ServiceItemsEmptyState({
   const isNoResults = variant === "no-results";
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-14">
+    <div className="admin-empty-wrap">
       <div className="admin-empty-state w-full max-w-md text-center">
         <div className="admin-empty-icon mx-auto">
           {isNoResults ? (
-            <SearchX className="h-7 w-7 text-slate-400" />
+            <SearchX className="h-6 w-6 text-slate-400" />
           ) : (
-            <BookOpen className="h-7 w-7 text-slate-400" />
+            <BookOpen className="h-6 w-6 text-slate-400" />
           )}
         </div>
 
-        <h3 className="admin-heading-section mt-4 text-base">
+        <h3 className="admin-heading-section mt-3 text-base">
           {isNoResults ? "No items found" : "No price book items yet"}
         </h3>
 
-        <p className="admin-text-muted mt-2 text-sm">
+        <p className="admin-text-muted mt-1.5 text-sm">
           {isNoResults
             ? "Try adjusting your search or filter to find what you're looking for."
             : onCreateItem
@@ -38,7 +38,7 @@ export function ServiceItemsEmptyState({
           <button
             type="button"
             onClick={onCreateItem}
-            className="mt-6 inline-flex items-center gap-2 admin-btn-primary"
+            className="mt-4 inline-flex items-center gap-2 admin-btn-primary"
           >
             <Plus className="h-4 w-4" />
             Add your first item

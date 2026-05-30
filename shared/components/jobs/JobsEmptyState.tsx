@@ -56,20 +56,20 @@ export function JobsEmptyState({
   const Icon = icon;
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-14">
+    <div className="admin-empty-wrap">
       <div className="admin-empty-state w-full max-w-md text-center">
         <div className="admin-empty-icon mx-auto">
-          <Icon className="h-7 w-7 text-slate-400" />
+          <Icon className="h-6 w-6 text-slate-400" />
         </div>
 
-        <h3 className="admin-heading-section mt-4 text-base">{title}</h3>
+        <h3 className="admin-heading-section mt-3 text-base">{title}</h3>
 
-        <p className="admin-text-muted mt-2 text-sm">{description}</p>
+        <p className="admin-text-muted mt-1.5 text-sm">{description}</p>
 
         {isNoCompanyCustomers && canAddCustomer ? (
           <Link
             href="/customers"
-            className="mt-6 inline-flex items-center gap-2 admin-btn-primary"
+            className="mt-4 inline-flex items-center gap-2 admin-btn-primary"
           >
             <UserPlus className="h-4 w-4" />
             Go to Customers
@@ -80,7 +80,7 @@ export function JobsEmptyState({
           <button
             type="button"
             onClick={onCreateJob}
-            className="mt-6 inline-flex items-center gap-2 admin-btn-primary"
+            className="mt-4 inline-flex items-center gap-2 admin-btn-primary"
           >
             <Wrench className="h-4 w-4" />
             {variant === "no-jobs-today" ? "New Job" : "Create your first job"}

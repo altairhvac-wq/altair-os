@@ -52,18 +52,13 @@ export function JobDetailHeaderWorkflow({
   }
 
   return (
-    <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-      <div className="min-w-0 space-y-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Job
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            {job.jobNumber}
-          </h1>
-        </div>
+    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <div className="min-w-0 space-y-2">
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+          {job.jobNumber}
+        </h1>
 
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
           <span className="text-sm font-medium text-slate-700">{job.jobType}</span>
           <span className="hidden text-slate-300 sm:inline" aria-hidden>
             ·

@@ -47,7 +47,7 @@ export function DispatchSummaryCards({
   ];
 
   return (
-    <div className="grid shrink-0 grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid shrink-0 grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => {
         const isHighlighted = highlightedLabels.includes(
           card.label as DispatchSummaryHighlightLabel,
@@ -56,7 +56,7 @@ export function DispatchSummaryCards({
         return (
         <div
           key={card.label}
-          className={`admin-card p-2.5 transition-shadow sm:p-4 ${
+          className={`admin-card p-2 transition-shadow sm:p-3 ${
             isHighlighted
               ? "border-amber-300/70 ring-1 ring-amber-400/20"
               : card.accent
@@ -67,7 +67,7 @@ export function DispatchSummaryCards({
               <p className="truncate text-[11px] font-semibold text-slate-500 sm:text-sm">
                 {card.label}
               </p>
-              <p className="mt-0.5 text-xl font-bold tabular-nums tracking-tight text-slate-900 sm:mt-2 sm:text-3xl">
+              <p className="mt-0.5 text-xl font-bold tabular-nums tracking-tight text-slate-900 sm:mt-1 sm:text-2xl">
                 {card.value}
               </p>
               <p className="mt-0.5 hidden text-xs text-slate-500 sm:block">
@@ -75,7 +75,7 @@ export function DispatchSummaryCards({
               </p>
             </div>
             <div
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 sm:rounded-xl ${card.iconClass}`}
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8 ${card.iconClass}`}
             >
               <card.icon className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>

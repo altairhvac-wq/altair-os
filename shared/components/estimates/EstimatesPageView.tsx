@@ -147,7 +147,7 @@ export function EstimatesPageView({
           isCreateOpen ? "max-lg:hidden" : ""
         }`}
       >
-        <div className="admin-panel-header flex shrink-0 flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
+        <div className="admin-panel-header admin-section-header flex shrink-0 flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
             <h2 className="admin-heading-section sm:text-base">All estimates</h2>
             <p className="admin-text-helper mt-0.5">

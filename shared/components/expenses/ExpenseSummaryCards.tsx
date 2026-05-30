@@ -42,26 +42,26 @@ export function ExpenseSummaryCards({ expenses }: ExpenseSummaryCardsProps) {
   ];
 
   return (
-    <div className="grid shrink-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid shrink-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => (
         <div
           key={card.label}
-          className="admin-card p-2.5 sm:p-4"
+          className="admin-card p-2 sm:p-3"
         >
-          <div className="flex items-start justify-between gap-2 sm:gap-3">
+          <div className="flex items-start justify-between gap-2 sm:gap-2.5">
             <div className="min-w-0">
               <p className="truncate text-[11px] font-semibold text-slate-500 sm:text-sm">
                 {card.label}
               </p>
-              <p className="mt-0.5 text-xl font-bold tabular-nums tracking-tight text-slate-900 sm:mt-2 sm:text-3xl">
+              <p className="mt-0.5 text-xl font-bold tabular-nums tracking-tight text-slate-900 sm:mt-1 sm:text-2xl">
                 {card.value}
               </p>
-              <p className="admin-text-helper mt-0.5 sm:mt-1">{card.description}</p>
+              <p className="admin-text-helper mt-0.5">{card.description}</p>
             </div>
             <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.iconClass}`}
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${card.iconClass}`}
             >
-              <card.icon className="h-5 w-5" />
+              <card.icon className="h-4 w-4" />
             </div>
           </div>
         </div>

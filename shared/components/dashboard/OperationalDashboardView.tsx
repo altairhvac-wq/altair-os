@@ -299,7 +299,7 @@ function MetricCard({
     return (
       <Link
         href={href}
-        className={`admin-card-interactive block rounded-xl border bg-white p-3 shadow-sm max-lg:p-3 lg:p-4 ${accent}`}
+        className={`admin-card-interactive block rounded-xl border bg-white p-2.5 shadow-sm max-lg:p-2.5 lg:p-3 ${accent}`}
       >
         {content}
       </Link>
@@ -307,7 +307,7 @@ function MetricCard({
   }
 
   return (
-    <div className={`rounded-xl border bg-white p-3 shadow-sm max-lg:p-3 lg:p-4 ${accent}`}>
+    <div className={`rounded-xl border bg-white p-2.5 shadow-sm max-lg:p-2.5 lg:p-3 ${accent}`}>
       {content}
     </div>
   );
@@ -474,8 +474,8 @@ function AnalyticsSnapshotSection({
   ];
 
   return (
-    <section className="admin-command-surface p-4 max-lg:p-4 lg:p-5 xl:p-6">
-      <div className="mb-3 flex flex-col gap-2 max-lg:mb-3 sm:flex-row sm:items-end sm:justify-between lg:mb-5">
+    <section className="admin-command-surface p-3 max-lg:p-3 lg:p-4 xl:p-5">
+      <div className="mb-2 flex flex-col gap-1.5 max-lg:mb-2 sm:flex-row sm:items-end sm:justify-between lg:mb-3">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-300/90">
             Live snapshot
@@ -503,7 +503,7 @@ function AnalyticsSnapshotSection({
           <Link
             key={metric.label}
             href={metric.href}
-            className={`admin-card-interactive rounded-xl border bg-white/95 p-3 shadow-sm transition-colors hover:bg-white max-lg:p-3 lg:p-4 ${metric.accent}`}
+            className={`admin-card-interactive rounded-xl border bg-white/95 p-2.5 shadow-sm transition-colors hover:bg-white max-lg:p-2.5 lg:p-3 ${metric.accent}`}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
@@ -1333,7 +1333,7 @@ export function OperationalDashboardView({
   demoDataStatus,
 }: OperationalDashboardViewProps) {
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-3 pb-2 xl:max-w-[1440px]">
+    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-2.5 pb-2 xl:max-w-[1440px]">
       <DashboardContentLayout
         data={data}
         onboardingChecklist={onboardingChecklist}

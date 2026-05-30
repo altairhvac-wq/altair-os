@@ -84,24 +84,24 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => (
         <div
           key={card.label}
-          className={`admin-card admin-card-interactive p-4 sm:p-5 ${card.accent}`}
+          className={`admin-card admin-card-interactive p-3 sm:p-3.5 ${card.accent}`}
         >
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start justify-between gap-2.5">
             <div className="min-w-0">
               <p className="text-sm font-bold text-slate-500">{card.label}</p>
-              <p className="mt-2 truncate text-2xl font-black tabular-nums text-slate-900 sm:text-3xl">
+              <p className="mt-1 truncate text-xl font-black tabular-nums text-slate-900 sm:text-2xl">
                 {card.value}
               </p>
-              <p className="mt-1 text-xs text-slate-500">{card.description}</p>
+              <p className="mt-0.5 text-xs text-slate-500">{card.description}</p>
             </div>
             <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.iconClass}`}
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${card.iconClass}`}
             >
-              <card.icon className="h-5 w-5" />
+              <card.icon className="h-4 w-4" />
             </div>
           </div>
         </div>

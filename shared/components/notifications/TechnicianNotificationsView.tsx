@@ -77,7 +77,7 @@ export function TechnicianNotificationsView({
   }
 
   return (
-    <div className="space-y-4 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
+    <div className="space-y-3 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-lg font-bold text-slate-900">Notifications</h1>
@@ -106,9 +106,9 @@ export function TechnicianNotificationsView({
       ) : null}
 
       {notifications.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-10 text-center">
-          <Bell className="mx-auto h-8 w-8 text-slate-300" />
-          <p className="mt-3 text-sm font-medium text-slate-700">
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-7 text-center">
+          <Bell className="mx-auto h-7 w-7 text-slate-300" />
+          <p className="mt-2 text-sm font-medium text-slate-700">
             No notifications yet
           </p>
           <p className="mt-1 text-sm text-slate-500">

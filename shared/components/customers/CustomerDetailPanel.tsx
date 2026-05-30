@@ -43,7 +43,7 @@ export function CustomerDetailPanel({
     <aside
       className={`${listDetailPanelClass(mode !== "empty")} min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden admin-card lg:h-full lg:min-h-0 lg:w-[400px] lg:flex-none lg:shrink-0`}
     >
-      <div className="admin-panel-header flex shrink-0 items-start justify-between px-4 py-3 sm:px-5 sm:py-4">
+      <div className="admin-panel-header admin-section-header flex shrink-0 items-start justify-between">
         <div className="min-w-0 pr-2">
           <h2 className="admin-heading-section sm:text-base">{title}</h2>
           <p className="admin-text-helper mt-0.5">
@@ -67,7 +67,7 @@ export function CustomerDetailPanel({
         ) : null}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-5">
+      <div className="flex-1 overflow-y-auto px-3 py-3 sm:px-4">
         {mode === "empty" ? (
           <div className="flex h-full flex-col items-center justify-center px-4 py-8 text-center">
             <div className="admin-empty-state w-full max-w-xs">
@@ -94,7 +94,7 @@ export function CustomerDetailPanel({
         ) : null}
 
         {mode === "detail" && customer ? (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <CustomerCard customer={customer} />
 
             <section>

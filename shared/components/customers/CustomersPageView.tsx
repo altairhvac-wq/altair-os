@@ -120,11 +120,11 @@ export function CustomersPageView({
   const hasNoResults = !hasNoCustomers && filteredCustomers.length === 0;
 
   return (
-    <div className="flex min-h-0 min-w-0 max-w-full flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:flex-row lg:overflow-hidden">
+    <div className="flex min-h-0 min-w-0 max-w-full flex-col gap-3 lg:h-[calc(100dvh-6.5rem)] lg:flex-row lg:overflow-hidden">
       <section
         className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1 ${panelMode === "create" ? "max-lg:hidden" : ""}`}
       >
-        <div className="admin-panel-header flex shrink-0 flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
+        <div className="admin-panel-header admin-section-header flex shrink-0 flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
             <h2 className="admin-heading-section sm:text-base">
               All customers

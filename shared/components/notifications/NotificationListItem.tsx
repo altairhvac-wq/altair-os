@@ -67,7 +67,7 @@ export function NotificationListItem({
 
   const content = (
     <div
-      className={`rounded-lg border px-3 py-2.5 transition-colors ${
+      className={`rounded-lg border px-3 py-2 transition-colors ${
         unread
           ? "border-cyan-200 bg-cyan-50/70"
           : "border-slate-200 bg-white"
@@ -81,10 +81,10 @@ export function NotificationListItem({
           <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-cyan-500" />
         ) : null}
       </div>
-      <p className="mt-1 break-words text-sm text-slate-600">
+      <p className="mt-0.5 break-words text-sm text-slate-600">
         {formatNotificationMessageForAccess(notification, canViewBilling)}
       </p>
-      <p className="mt-2 text-xs text-slate-400">
+      <p className="mt-1 text-xs text-slate-400">
         {formatNotificationTimestamp(notification.createdAt)}
       </p>
     </div>
@@ -102,7 +102,7 @@ export function NotificationListItem({
 
           onNavigate?.();
         }}
-        className="block min-w-0 max-w-full"
+        className="block min-h-11 min-w-0 max-w-full"
       >
         {content}
       </Link>
@@ -115,7 +115,7 @@ export function NotificationListItem({
       onClick={() => {
         void markReadIfNeeded();
       }}
-      className="block w-full min-w-0 max-w-full text-left"
+      className="block w-full min-h-11 min-w-0 max-w-full text-left"
     >
       {content}
     </button>

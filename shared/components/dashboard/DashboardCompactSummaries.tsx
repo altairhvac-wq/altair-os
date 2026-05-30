@@ -61,7 +61,7 @@ function CompactSectionShell({
 }) {
   return (
     <section className="admin-card overflow-hidden">
-      <div className="flex flex-col gap-2 border-b border-slate-100/90 bg-white px-3 py-2.5 max-lg:px-3 sm:flex-row sm:items-center sm:justify-between lg:px-4 lg:py-3">
+      <div className="flex flex-col gap-1.5 border-b border-slate-100/90 bg-white px-3 py-2 max-lg:px-3 sm:flex-row sm:items-center sm:justify-between lg:px-3.5 lg:py-2.5">
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
             {eyebrow}
@@ -89,7 +89,7 @@ function CompactSectionShell({
           ) : null}
         </div>
       </div>
-      <div className="p-3 lg:p-4">{children}</div>
+      <div className="p-2.5 lg:p-3">{children}</div>
     </section>
   );
 }

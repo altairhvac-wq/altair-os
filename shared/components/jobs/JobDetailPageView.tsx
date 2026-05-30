@@ -130,7 +130,7 @@ export function JobDetailPageView({
       </Link>
 
       <section className="overflow-hidden admin-card">
-        <div className="border-b border-slate-100 bg-white px-4 py-3 sm:px-5 sm:py-4">
+        <div className="border-b border-slate-100 bg-white px-3 py-2.5 sm:px-4 sm:py-3">
           <JobDetailHeaderSection
             job={job}
             customers={customers}
@@ -143,23 +143,21 @@ export function JobDetailPageView({
           />
         </div>
 
-        <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-4">
+        <div className="flex flex-col gap-2.5 px-3 py-2.5 sm:flex-row sm:items-start sm:justify-between sm:px-4 sm:py-3">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Service location
-            </p>
-            <div className="mt-2 flex gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50 ring-1 ring-cyan-600/10">
-                <MapPin className="h-5 w-5 text-cyan-600" />
+            <div className="flex gap-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-50 ring-1 ring-cyan-600/10">
+                <MapPin className="h-4 w-4 text-cyan-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-base font-semibold text-slate-900">
+                <p className="text-sm font-semibold text-slate-900">
                   {job.serviceAddress}
+                  <span className="font-normal text-slate-600">
+                    {" · "}
+                    {job.city}, {job.state} {job.zip}
+                  </span>
                 </p>
-                <p className="mt-0.5 text-sm text-slate-600">
-                  {job.city}, {job.state} {job.zip}
-                </p>
-                <div className="mt-3">
+                <div className="mt-2">
                   <JobCustomerQuickActions
                     customerPhone={customerPhone}
                     customerEmail={customerEmail}
