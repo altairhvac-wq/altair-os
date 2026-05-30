@@ -19,7 +19,9 @@ import {
 } from "@/shared/types/team-member";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
+import { DemoDataSection } from "@/shared/components/onboarding/DemoDataSection";
 import { shouldShowOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
+import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { CompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
 import { BillingDocumentDefaultsCard } from "./BillingDocumentDefaultsCard";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
@@ -41,6 +43,7 @@ type SettingsPageViewProps = {
   billingDefaults: CompanyBillingDefaults;
   canManageBillingDefaults: boolean;
   showBillingDefaultsSetupHint?: boolean;
+  demoDataStatus?: DemoDataStatus;
 };
 
 function buildLocationLabel(profile: CompanyProfileSummary): string | null {
@@ -60,6 +63,7 @@ export function SettingsPageView({
   billingDefaults,
   canManageBillingDefaults,
   showBillingDefaultsSetupHint = false,
+  demoDataStatus,
 }: SettingsPageViewProps) {
   const [members, setMembers] = useState(initialMembers);
   const [search, setSearch] = useState("");
@@ -177,6 +181,11 @@ export function SettingsPageView({
           userId={currentUserId}
           variant="settings"
         />
+      ) : null}
+
+      {demoDataStatus &&
+      (demoDataStatus.isEligibleForSeed || demoDataStatus.hasDemoData) ? (
+        <DemoDataSection status={demoDataStatus} variant="settings" />
       ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

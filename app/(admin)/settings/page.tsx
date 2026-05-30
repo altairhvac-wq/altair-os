@@ -13,6 +13,7 @@ import {
   resolveUserEmailForInvite,
 } from "@/lib/database/queries/memberships";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
+import { getDemoDataStatus } from "@/lib/database/queries/demo-data";
 import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@/shared/lib/onboarding-checklist";
 import { hasSavedCompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
 import { PendingInvitesCard } from "@/shared/components/settings/PendingInvitesCard";
@@ -41,13 +42,14 @@ export default async function SettingsPage() {
     user?.email ?? undefined,
   );
 
-  const [{ members, error: membersError }, pendingInvitesResult, onboardingSnapshot] =
+  const [{ members, error: membersError }, pendingInvitesResult, onboardingSnapshot, demoDataStatus] =
     await Promise.all([
       listCompanyMembers(companyContext.company.id, companyContext),
       emailResolution.email
         ? listPendingInvitesForUserEmail(emailResolution.email)
         : Promise.resolve({ invites: [], error: undefined }),
       getOnboardingSnapshot(companyContext.company.id, companyContext),
+      getDemoDataStatus(companyContext.company.id, companyContext),
     ]);
 
   const pendingInvites = pendingInvitesResult.invites.filter(
@@ -104,6 +106,7 @@ export default async function SettingsPage() {
         showBillingDefaultsSetupHint={
           !hasSavedCompanyBillingDefaults(companyContext.company.settings)
         }
+        demoDataStatus={demoDataStatus}
       />
     </div>
   );

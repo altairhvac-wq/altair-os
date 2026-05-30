@@ -926,6 +926,12 @@ export type Database = {
         };
         Returns: Json;
       };
+      clear_company_demo_data: {
+        Args: {
+          p_company_id: string;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
       company_role: CompanyMembershipRow["role"];

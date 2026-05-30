@@ -165,6 +165,7 @@ export type CustomerRow = {
   total_jobs: number;
   total_revenue: number;
   last_service_date: Timestamp | null;
+  is_demo: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -187,6 +188,7 @@ export type CustomerInsert = {
   total_jobs?: number;
   total_revenue?: number;
   last_service_date?: Timestamp | null;
+  is_demo?: boolean;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };
@@ -230,6 +232,7 @@ export type CustomerEquipmentRow = {
   location: string | null;
   notes: string | null;
   is_active: boolean;
+  is_demo: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -249,6 +252,7 @@ export type CustomerEquipmentInsert = {
   location?: string | null;
   notes?: string | null;
   is_active?: boolean;
+  is_demo?: boolean;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };
@@ -281,6 +285,7 @@ export type JobRow = {
   completed_at: Timestamp | null;
   completion_notes: string | null;
   follow_up_notes: string | null;
+  is_demo: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -306,6 +311,7 @@ export type JobInsert = {
   completed_at?: Timestamp | null;
   completion_notes?: string | null;
   follow_up_notes?: string | null;
+  is_demo?: boolean;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };
@@ -327,6 +333,7 @@ export type DispatchAssignmentRow = {
   unassigned_at: Timestamp | null;
   sort_order: number;
   notes: string | null;
+  is_demo: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -344,6 +351,7 @@ export type DispatchAssignmentInsert = {
   unassigned_at?: Timestamp | null;
   sort_order?: number;
   notes?: string | null;
+  is_demo?: boolean;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };
@@ -362,6 +370,7 @@ export type JobActivityRow = {
   actor_id: UUID | null;
   event_type: JobActivityType;
   metadata: Json;
+  is_demo: boolean;
   created_at: Timestamp;
 };
 
@@ -372,6 +381,7 @@ export type JobActivityInsert = {
   actor_id?: UUID | null;
   event_type: JobActivityType;
   metadata?: Json;
+  is_demo?: boolean;
   created_at?: Timestamp;
 };
 
@@ -420,6 +430,7 @@ export type JobMaterialRow = {
   unit_price: number;
   taxable: boolean;
   added_by: UUID | null;
+  is_demo: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -437,6 +448,7 @@ export type JobMaterialInsert = {
   unit_price?: number;
   taxable?: boolean;
   added_by?: UUID | null;
+  is_demo?: boolean;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };
@@ -525,6 +537,7 @@ export type EstimateRow = {
   total: number;
   valid_until: string | null;
   notes: string | null;
+  is_demo: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -540,6 +553,7 @@ export type EstimateLineItemRow = {
   quantity: number;
   unit_price: number;
   taxable: boolean;
+  is_demo: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -557,6 +571,7 @@ export type EstimateInsert = {
   total?: number;
   valid_until?: string | null;
   notes?: string | null;
+  is_demo?: boolean;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };
@@ -572,6 +587,7 @@ export type EstimateLineItemInsert = {
   quantity: number;
   unit_price: number;
   taxable?: boolean;
+  is_demo?: boolean;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };
@@ -609,6 +625,7 @@ export type ServiceItemRow = {
   taxable: boolean;
   category: string | null;
   is_active: boolean;
+  is_demo: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -622,6 +639,7 @@ export type ServiceItemInsert = {
   taxable?: boolean;
   category?: string | null;
   is_active?: boolean;
+  is_demo?: boolean;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };
@@ -648,6 +666,7 @@ export type InvoiceRow = {
   due_date: string;
   paid_at: Timestamp | null;
   notes: string | null;
+  is_demo: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -664,6 +683,7 @@ export type InvoiceLineItemRow = {
   taxable: boolean;
   line_total: number;
   sort_order: number;
+  is_demo: boolean;
   created_at: Timestamp;
 };
 
@@ -685,6 +705,7 @@ export type InvoiceInsert = {
   due_date: string;
   paid_at?: Timestamp | null;
   notes?: string | null;
+  is_demo?: boolean;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };
@@ -701,6 +722,7 @@ export type InvoiceLineItemInsert = {
   taxable?: boolean;
   line_total: number;
   sort_order?: number;
+  is_demo?: boolean;
   created_at?: Timestamp;
 };
 
@@ -738,6 +760,7 @@ export type InvoicePaymentRow = {
   reference: string | null;
   notes: string | null;
   recorded_by: UUID | null;
+  is_demo: boolean;
   created_at: Timestamp;
 };
 
@@ -751,6 +774,7 @@ export type InvoicePaymentInsert = {
   reference?: string | null;
   notes?: string | null;
   recorded_by?: UUID | null;
+  is_demo?: boolean;
   created_at?: Timestamp;
 };
 
@@ -862,6 +886,7 @@ export type TimeEntryRow = {
   ended_at: Timestamp | null;
   duration_minutes: number | null;
   notes: string | null;
+  is_demo: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -876,6 +901,7 @@ export type TimeEntryInsert = {
   ended_at?: Timestamp | null;
   duration_minutes?: number | null;
   notes?: string | null;
+  is_demo?: boolean;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };
@@ -920,6 +946,7 @@ export type NotificationRow = {
   entity_id: UUID | null;
   read_at: Timestamp | null;
   metadata: Json;
+  is_demo: boolean;
   created_at: Timestamp;
 };
 
@@ -935,6 +962,7 @@ export type NotificationInsert = {
   entity_id?: UUID | null;
   read_at?: Timestamp | null;
   metadata?: Json;
+  is_demo?: boolean;
   created_at?: Timestamp;
 };
 

@@ -47,7 +47,9 @@ import {
   INVOICE_PAGE_UNPAID_HREF,
 } from "@/shared/lib/invoice-page-focus";
 import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
+import { DemoDataSection } from "@/shared/components/onboarding/DemoDataSection";
 import { shouldShowOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
+import type { DemoDataStatus } from "@/shared/types/demo-data";
 import { OperationalMomentumSection } from "@/shared/components/dashboard/OperationalMomentumSection";
 import { OperationalRiskDrilldownSection } from "@/shared/components/dashboard/OperationalRiskDrilldownSection";
 import { TodayNeedsAttentionSection } from "@/shared/components/dashboard/TodayNeedsAttentionSection";
@@ -83,6 +85,7 @@ type OperationalDashboardViewProps = {
   onboardingChecklist?: OnboardingChecklist;
   companyId?: string;
   userId?: string;
+  demoDataStatus?: DemoDataStatus | null;
 };
 
 type DashboardRoleFocus = "command" | "dispatch" | "office";
@@ -1104,6 +1107,7 @@ function DashboardContentLayout({
   onboardingChecklist,
   companyId,
   userId,
+  demoDataStatus,
 }: OperationalDashboardViewProps) {
   const { access } = data;
   const roleFocus = getDashboardRoleFocus(access);
@@ -1264,8 +1268,16 @@ function DashboardContentLayout({
     "next-steps": nextStepsContent,
   };
 
+  const showDemoDataSection =
+    demoDataStatus &&
+    (demoDataStatus.isEligibleForSeed || demoDataStatus.hasDemoData);
+
   return (
     <DashboardDrilldownProvider panels={drilldownPanels}>
+      {showDemoDataSection ? (
+        <DemoDataSection status={demoDataStatus} variant="dashboard" />
+      ) : null}
+
       {showOnboarding ? (
         <OnboardingChecklistSection
           checklist={onboardingChecklist}
@@ -1314,6 +1326,7 @@ export function OperationalDashboardView({
   onboardingChecklist,
   companyId,
   userId,
+  demoDataStatus,
 }: OperationalDashboardViewProps) {
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-3 pb-2 xl:max-w-[1440px]">
@@ -1322,6 +1335,7 @@ export function OperationalDashboardView({
         onboardingChecklist={onboardingChecklist}
         companyId={companyId}
         userId={userId}
+        demoDataStatus={demoDataStatus}
       />
     </div>
   );
