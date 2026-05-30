@@ -44,6 +44,8 @@ type TechnicianJobCardProps = {
   canCreateEstimate: boolean;
   defaultExpanded?: boolean;
   emphasized?: boolean;
+  /** Deck context label for the visible card in TechnicianJobDeck. */
+  deckBadge?: "current" | "active";
   onTimeStateChange?: (state: TechnicianTimeStateSnapshot) => void;
   onStatusUpdated?: (status: JobStatus) => void;
 };
@@ -64,6 +66,7 @@ export function TechnicianJobCard({
   canCreateEstimate,
   defaultExpanded = true,
   emphasized = false,
+  deckBadge,
   onTimeStateChange,
   onStatusUpdated,
 }: TechnicianJobCardProps) {
@@ -108,18 +111,39 @@ export function TechnicianJobCard({
     Boolean(job.customerId?.trim()) &&
     getCreateEstimateJobBlockReason(status) === null;
 
+  const isActiveDeckJob = deckBadge === "active";
+
   return (
     <article
-      className={`flex flex-col rounded-2xl border bg-white shadow-sm ${
-        emphasized
-          ? "border-cyan-300 ring-2 ring-cyan-500/20"
-          : "border-slate-200"
+      className={`relative flex flex-col rounded-2xl border bg-white ${
+        isActiveDeckJob
+          ? "border-cyan-400 shadow-md ring-2 ring-cyan-500/35"
+          : emphasized
+            ? "border-cyan-300 shadow-sm ring-2 ring-cyan-500/20"
+            : deckBadge === "current"
+              ? "border-slate-300 shadow-md ring-1 ring-slate-200/80"
+              : "border-slate-200 shadow-sm"
       }`}
     >
       <div className="shrink-0 border-b border-slate-100 p-2.5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-base font-bold text-slate-900">
+            {deckBadge ? (
+              <p
+                className={
+                  isActiveDeckJob
+                    ? "inline-flex rounded-full bg-cyan-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-cyan-800"
+                    : "text-[11px] font-semibold uppercase tracking-wide text-slate-500"
+                }
+              >
+                {isActiveDeckJob ? "Active Job" : "Current Job"}
+              </p>
+            ) : null}
+            <h2
+              className={`truncate text-base font-bold text-slate-900 ${
+                deckBadge ? "mt-1" : ""
+              }`}
+            >
               {job.jobNumber}
             </h2>
             <p className="truncate text-sm text-slate-600">
@@ -152,7 +176,11 @@ export function TechnicianJobCard({
           </button>
         </div>
 
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <div
+          className={`mt-2 flex flex-wrap items-center gap-1.5 ${
+            isActiveDeckJob ? "rounded-lg bg-cyan-50/70 px-1.5 py-1" : ""
+          }`}
+        >
           <TechnicianJobStatusBadge status={status} />
           <span
             className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${getPriorityStyles(job.priority)}`}

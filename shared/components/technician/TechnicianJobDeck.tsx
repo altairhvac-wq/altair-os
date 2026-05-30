@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { JobStatus } from "@/shared/types/job";
 import type { TechnicianJob } from "@/shared/types/technician";
@@ -34,20 +34,44 @@ function isInteractiveSwipeTarget(target: EventTarget | null): boolean {
   );
 }
 
+function isLiveTechnicianJob(
+  job: TechnicianJob,
+  timeState: TechnicianTimeStateSnapshot,
+): boolean {
+  if (job.status === "in_progress") {
+    return true;
+  }
+
+  return (
+    timeState.state !== "off_clock" && timeState.activeJobId === job.id
+  );
+}
+
+function getPeekCardStyle(depth: number): CSSProperties {
+  return {
+    zIndex: 30 - depth * 10,
+    transform: `translateY(${depth * 10}px) translateX(${depth * 5}px) scale(${1 - depth * 0.035})`,
+    opacity: Math.max(0.3, 0.7 - depth * 0.2),
+  };
+}
+
 function TechnicianJobDeckPeekCard({ job }: { job: TechnicianJob }) {
   return (
     <div
       aria-hidden
-      className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm"
+      className="rounded-2xl border border-slate-200/80 bg-slate-50 px-3 py-2 shadow-sm"
     >
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-slate-900">
+          <p className="truncate text-sm font-semibold text-slate-600">
             {job.jobNumber}
           </p>
-          <p className="truncate text-xs text-slate-600">{job.customerName}</p>
+          <p className="truncate text-xs text-slate-400">{job.customerName}</p>
         </div>
-        <TechnicianJobStatusBadge status={job.status} />
+        <TechnicianJobStatusBadge
+          status={job.status}
+          className="opacity-80"
+        />
       </div>
     </div>
   );
@@ -78,6 +102,7 @@ export function TechnicianJobDeck({
   );
   const showStack = totalJobs > 1;
   const showNav = totalJobs > 1;
+  const stackTailPadding = peekJobs.length * 12;
 
   useEffect(() => {
     setActiveIndex((current) =>
@@ -179,10 +204,8 @@ export function TechnicianJobDeck({
     return null;
   }
 
-  const countLabel =
-    totalJobs === 1
-      ? "1 job today"
-      : `${activeIndex + 1} of ${totalJobs} jobs`;
+  const isLiveJob = isLiveTechnicianJob(activeJob, timeState);
+  const countLabel = `${activeIndex + 1} of ${totalJobs}`;
 
   return (
     <section className="w-full min-w-0 max-w-full space-y-2 overflow-x-hidden">
@@ -202,7 +225,7 @@ export function TechnicianJobDeck({
         )}
 
         <p
-          className="min-w-0 flex-1 text-center text-sm font-semibold text-slate-700"
+          className="min-w-0 flex-1 text-center text-sm font-semibold tabular-nums text-slate-700"
           aria-live="polite"
         >
           {countLabel}
@@ -224,21 +247,18 @@ export function TechnicianJobDeck({
       </div>
 
       <div
-        className={`relative w-full min-w-0 max-w-full ${showStack ? "pt-3" : ""}`}
+        className="relative w-full min-w-0 max-w-full overflow-x-hidden"
+        style={{ paddingBottom: showStack ? stackTailPadding : undefined }}
       >
         {showStack
-          ? peekJobs.map((job, peekIndex) => {
-              const depth = peekIndex + 1;
+          ? [...peekJobs].reverse().map((job, reverseIndex) => {
+              const depth = peekJobs.length - reverseIndex;
 
               return (
                 <div
                   key={job.id}
-                  className="pointer-events-none absolute inset-x-2 origin-top"
-                  style={{
-                    top: 0,
-                    zIndex: 10 - depth,
-                    transform: `translateY(-${depth * 8}px) scale(${1 - depth * 0.03})`,
-                  }}
+                  className="pointer-events-none absolute inset-x-0 top-0 origin-top transition-[transform,opacity] duration-200 ease-out"
+                  style={getPeekCardStyle(depth)}
                 >
                   <TechnicianJobDeckPeekCard job={job} />
                 </div>
@@ -247,7 +267,7 @@ export function TechnicianJobDeck({
           : null}
 
         <div
-          className={`relative z-20 w-full min-w-0 touch-pan-y ${
+          className={`relative z-40 w-full min-w-0 touch-pan-y ${
             isDragging ? "" : "transition-transform duration-200 ease-out"
           }`}
           style={{
@@ -268,9 +288,10 @@ export function TechnicianJobDeck({
             onTimeStateChange={onTimeStateChange}
             onStatusUpdated={(status) => onJobStatusUpdated(activeJob.id, status)}
             defaultExpanded={
-              activeJob.status === "in_progress" || totalJobs === 1
+              isLiveJob || totalJobs === 1
             }
-            emphasized={activeJob.status === "in_progress"}
+            emphasized={isLiveJob}
+            deckBadge={isLiveJob ? "active" : "current"}
           />
         </div>
       </div>
