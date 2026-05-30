@@ -31,7 +31,7 @@ function getMobileWorkflowHint(
     case "dispatched":
       return "You are en route. Mark arrived on site when you reach the customer.";
     case "arrived":
-      return "On site. Start work when you are ready to begin service.";
+      return "On site. Start work clocks you in and begins job labor automatically.";
     default:
       return null;
   }

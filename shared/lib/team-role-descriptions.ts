@@ -28,7 +28,7 @@ export const TEAM_ROLE_DESCRIPTIONS: Record<
   technician: {
     label: "Technician",
     summary: "Field crew access to assigned jobs and mobile workflows.",
-    access: "Technician home · Assigned jobs · Time clock · No admin nav",
+    access: "Technician home · Start/complete work · No admin nav",
   },
   office_staff: {
     label: "Office Staff",

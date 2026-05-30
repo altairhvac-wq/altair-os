@@ -153,7 +153,7 @@ export function getTechnicianNotificationHref(
     case "expense":
       return `/tech/receipts?selected=${notification.entityId}`;
     case "time_entry":
-      return "/tech/time";
+      return "/technician";
     default:
       return null;
   }

@@ -201,6 +201,34 @@ export async function getTodayTimeEntriesForTechnician(
   };
 }
 
+export async function listTodayTimeEntriesForCompany(
+  companyId: string,
+  timeZone?: string,
+): Promise<TimeEntry[]> {
+  const supabase = await createClient();
+  const startOfToday = getStartOfTodayIso(timeZone);
+
+  const { data, error } = await supabase
+    .from("time_entries")
+    .select(TIME_ENTRY_SELECT)
+    .eq("company_id", companyId)
+    .gte("started_at", startOfToday)
+    .order("started_at", { ascending: false });
+
+  if (error) {
+    console.error("[listTodayTimeEntriesForCompany] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return (data ?? []).map((row) =>
+    mapTimeEntryRow(row as TimeEntryRowWithRelations),
+  );
+}
+
 export async function listTimeEntries(
   companyId: string,
   options: {

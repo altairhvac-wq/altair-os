@@ -2,7 +2,12 @@ import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
 import { listEstimates } from "@/lib/database/queries/estimates";
 import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
 import { listJobs } from "@/lib/database/queries/jobs";
+import {
+  listTimeEntries,
+  listTodayTimeEntriesForCompany,
+} from "@/lib/database/queries/time-entries";
 import { listTimeClockEntries } from "@/lib/database/queries/time-clock";
+import { getCompanyOperationalInconsistenciesReport } from "@/lib/database/services/reports/operational-inconsistencies-report";
 import { getDailyOperationsSummary } from "@/lib/database/services/operations/daily-operations-summary";
 import { getTodayOperationsSummary } from "@/shared/types/dashboard";
 import type { JobStatus } from "@/shared/types/job";
@@ -12,6 +17,12 @@ import {
   isActiveInvoice,
 } from "@/shared/types/invoice";
 import type { ReportsFoundationData } from "@/shared/types/reports-foundation";
+import { roundJobMaterialAmount } from "@/shared/types/job-material";
+import { summarizeTodayEntries } from "@/shared/types/time-entry";
+
+const TIME_RELATED_INCONSISTENCY_KINDS = new Set([
+  "open_labor_on_cancelled_job",
+]);
 
 const CLOSED_JOB_STATUSES: ReadonlySet<JobStatus> = new Set([
   "completed",
@@ -25,7 +36,7 @@ export async function getReportsFoundationData(
   companyId: string,
   timeZone?: string,
 ): Promise<ReportsFoundationData> {
-  const [jobs, invoices, estimates, timeClockEntries, todayJobs, operations] =
+  const [jobs, invoices, estimates, timeClockEntries, todayJobs, operations, laborEntries, todayTimeEntries, inconsistenciesReport] =
     await Promise.all([
       listJobs(companyId),
       listInvoicesWithBillingSync(companyId, timeZone),
@@ -33,9 +44,12 @@ export async function getReportsFoundationData(
       listTimeClockEntries(companyId, { limit: TIME_CLOCK_FETCH_LIMIT }),
       listDispatchJobsForToday(companyId, { timeZone }),
       getDailyOperationsSummary(companyId, timeZone),
+      listTimeEntries(companyId, { entryType: "job_labor" }),
+      listTodayTimeEntriesForCompany(companyId, timeZone),
+      getCompanyOperationalInconsistenciesReport(companyId),
     ]);
 
-  const todaySummary = getTodayOperationsSummary(todayJobs);
+  const todayJobsSummary = getTodayOperationsSummary(todayJobs);
   const openJobs = jobs.filter((job) => !CLOSED_JOB_STATUSES.has(job.status));
   const activeInvoices = invoices.filter(isActiveInvoice);
   const unpaidInvoices = activeInvoices.filter(hasInvoiceUnpaidBalance);
@@ -46,10 +60,26 @@ export async function getReportsFoundationData(
   const clockedInUsers = timeClockEntries.filter(
     (entry) => entry.status === "open",
   );
+  const activeLaborEntries = laborEntries.filter((entry) => entry.endedAt == null);
+  const openBreakEntries = todayTimeEntries.filter(
+    (entry) => entry.entryType === "break" && entry.endedAt == null,
+  );
+  const todayTimeSummary = summarizeTodayEntries(todayTimeEntries);
+  const totalHoursToday = roundJobMaterialAmount(
+    (todayTimeSummary.clockMinutes + todayTimeSummary.jobLaborMinutes) / 60,
+  );
+  const startedTodayTechnicians = new Set(
+    todayTimeEntries
+      .filter((entry) => entry.entryType === "clock")
+      .map((entry) => entry.technicianId),
+  );
+  const timeExceptions = inconsistenciesReport.summary.entries.filter(
+    (entry) => TIME_RELATED_INCONSISTENCY_KINDS.has(entry.kind),
+  );
 
   return {
     jobs: {
-      jobsToday: todaySummary.totalJobsToday,
+      jobsToday: todayJobsSummary.totalJobsToday,
       openJobs: openJobs.length,
       completedJobs: jobs.filter((job) => job.status === "completed").length,
       unassignedJobs: openJobs.filter((job) => !job.assignedTechnicianId).length,
@@ -69,6 +99,20 @@ export async function getReportsFoundationData(
       approvedCount: estimates.filter(
         (estimate) => estimate.status === "approved",
       ).length,
+    },
+    labor: {
+      currentlyWorkingCount: activeLaborEntries.length,
+      currentlyWorking: activeLaborEntries.map((entry) => ({
+        id: entry.id,
+        technicianName: entry.technicianName,
+        jobNumber: entry.jobNumber,
+        startedAt: entry.startedAt,
+      })),
+      startedTodayCount: startedTodayTechnicians.size,
+      totalHoursToday,
+      openEntryCount:
+        clockedInUsers.length + activeLaborEntries.length + openBreakEntries.length,
+      exceptionCount: timeExceptions.length,
     },
     timeClock: {
       clockedInCount: clockedInUsers.length,

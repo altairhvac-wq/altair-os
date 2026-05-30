@@ -33,7 +33,7 @@ export function CompleteWorkClockOutPrompt({
         console.error(
           formatActionError(
             result.error,
-            "Could not clock out. You can clock out from Time.",
+            "Could not clock out. Your shift clock is still running.",
           ),
         );
       }

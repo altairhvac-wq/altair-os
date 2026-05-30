@@ -22,6 +22,22 @@ export type ReportsEstimatesSummary = {
   approvedCount: number;
 };
 
+export type ReportsLaborActiveEntry = {
+  id: string;
+  technicianName: string;
+  jobNumber?: string;
+  startedAt: string;
+};
+
+export type ReportsLaborSummary = {
+  currentlyWorkingCount: number;
+  currentlyWorking: ReportsLaborActiveEntry[];
+  startedTodayCount: number;
+  totalHoursToday: number;
+  openEntryCount: number;
+  exceptionCount: number;
+};
+
 export type ReportsTimeClockSummary = {
   clockedInCount: number;
   clockedInUsers: TimeClockEntry[];
@@ -43,6 +59,7 @@ export type ReportsFoundationData = {
   jobs: ReportsJobsSummary;
   invoices: ReportsInvoicesSummary;
   estimates: ReportsEstimatesSummary;
+  labor: ReportsLaborSummary;
   timeClock: ReportsTimeClockSummary;
   operations: ReportsOperationsSnapshot;
 };

@@ -302,7 +302,7 @@ export function canAccessAdminNavItem(
     case "/expenses":
       return true;
     case "/time-clock":
-      return true;
+      return canViewCompanyTimeEntries(context);
     case "/network":
       return permissions.dispatchJobs || permissions.manageCompany;
     case "/reports":
@@ -380,10 +380,13 @@ export function canAccessAppRedirectPath(
     path.startsWith("/tech/") ||
     path.startsWith("/setup") ||
     path.startsWith("/expenses") ||
-    path.startsWith("/time-clock") ||
     path.startsWith("/time")
   ) {
     return true;
+  }
+
+  if (path.startsWith("/time-clock")) {
+    return canViewCompanyTimeEntries(context);
   }
 
   if (path.startsWith("/settings")) {

@@ -6,12 +6,19 @@ import {
   listTimeClockEntries,
 } from "@/lib/database/queries/time-clock";
 import { TimeClockFoundationView } from "@/shared/components/time-clock/TimeClockFoundationView";
+import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 
 export default async function TimeClockPage() {
   const context = await getActiveCompanyContext();
 
   if (!context) {
     redirect("/setup");
+  }
+
+  if (!canViewCompanyTimeEntries(context)) {
+    return (
+      <UnauthorizedAccessView description="Time review is for office and admin roles. Technicians track time through Start work and Complete work on assigned jobs." />
+    );
   }
 
   const canViewCompanyEntries = canViewCompanyTimeEntries(context);

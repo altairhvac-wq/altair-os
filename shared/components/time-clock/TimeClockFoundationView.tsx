@@ -118,9 +118,10 @@ export function TimeClockFoundationView({
             <Timer className="h-4 w-4 text-cyan-600" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-900">Time clock</h2>
+            <h2 className="text-base font-bold text-slate-900">Labor & time review</h2>
             <p className="text-xs text-slate-500">
-              Clock in and out for your shift
+              Admin utility for shift exceptions and payroll review. Technicians
+              normally clock in via Start work on jobs.
             </p>
           </div>
         </div>

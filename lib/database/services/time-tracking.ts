@@ -10,6 +10,8 @@ import {
   resolvePrimaryOpenTimeEntry,
 } from "@/lib/database/queries/time-entries";
 import { getJobById } from "@/lib/database/queries/jobs";
+import { listAssignedJobsForTechnician } from "@/lib/database/queries/technician-jobs";
+import { isActiveTechnicianJob } from "@/shared/lib/technician-work-queue";
 import {
   captureCompletedJobReviewSnapshot,
   trackJobReviewBlockerResolutions,
@@ -605,4 +607,34 @@ export async function finalizeOpenJobLaborForTerminalJob(input: {
   });
 
   return { closedCount: openEntries.length, error: null };
+}
+
+/**
+ * After completing a job, prompt shift clock-out only when the technician has
+ * no other active assignments and their payroll clock is still open.
+ */
+export async function shouldPromptShiftClockOutAfterJobComplete(input: {
+  companyId: string;
+  technicianId: string;
+  completedJobId: string;
+  timeZone?: string;
+}): Promise<boolean> {
+  const state = await getCurrentTimeState(input.companyId, input.technicianId);
+
+  if (!state.openClockEntry) {
+    return false;
+  }
+
+  const jobs = await listAssignedJobsForTechnician(
+    input.companyId,
+    input.technicianId,
+    { timeZone: input.timeZone },
+  );
+
+  const remainingActiveJobs = jobs.filter(
+    (job) =>
+      job.id !== input.completedJobId && isActiveTechnicianJob(job),
+  );
+
+  return remainingActiveJobs.length === 0;
 }

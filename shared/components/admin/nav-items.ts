@@ -77,10 +77,10 @@ export const adminNavItems: NavItem[] = [
     description: "Receipts, mileage, and expense categories",
   },
   {
-    label: "Time Clock",
+    label: "Labor & time",
     href: "/time-clock",
     icon: Clock,
-    description: "Clock in and out, view shift hours",
+    description: "Review shift hours, labor, and time exceptions",
   },
   {
     label: "Network",
@@ -128,10 +128,10 @@ export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/invoices",
   "/expenses",
   "/reports",
-  "/time-clock",
   "/network",
   "/alpha-tracker",
   "/settings",
+  "/time-clock",
 ] as const;
 
 export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {

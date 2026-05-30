@@ -7,7 +7,7 @@ import {
   createCustomerEquipmentAction,
   updateCustomerEquipmentAction,
 } from "@/app/actions/customer-equipment";
-import { getTechnicianTimeDashboardAction } from "@/app/actions/time-entries";
+import { getTechnicianTimeDashboardAction, shouldPromptShiftClockOutAfterJobCompleteAction } from "@/app/actions/time-entries";
 import { updateJobStatusAction } from "@/app/actions/jobs";
 import { CompleteWorkClockOutPrompt } from "@/shared/components/technician/CompleteWorkClockOutPrompt";
 import {
@@ -167,8 +167,15 @@ export function CompleteJobSheet({
       onCompleted?.(result.job.status, "success");
       router.refresh();
 
-      const timeResult = await getTechnicianTimeDashboardAction();
-      if (timeResult.state?.openClockEntry) {
+      const [timeResult, promptResult] = await Promise.all([
+        getTechnicianTimeDashboardAction(),
+        shouldPromptShiftClockOutAfterJobCompleteAction(jobId),
+      ]);
+
+      if (
+        timeResult.state?.openClockEntry &&
+        promptResult.shouldPrompt
+      ) {
         setShowClockOutPrompt(true);
         setShowSuccess(true);
         submitLockRef.current = false;

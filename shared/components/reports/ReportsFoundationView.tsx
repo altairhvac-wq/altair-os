@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 import {
   AlertCircle,
   Briefcase,
@@ -14,7 +15,7 @@ import {
   Send,
   Timer,
   UserX,
-  Users,
+  Wrench,
 } from "lucide-react";
 import { formatCurrency } from "@/shared/types/customer";
 import type { ReportsFoundationData } from "@/shared/types/reports-foundation";
@@ -62,7 +63,7 @@ function highlightSeverityStyles(
 }
 
 export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
-  const { jobs, invoices, estimates, timeClock, operations } = data;
+  const { jobs, invoices, estimates, labor, timeClock, operations } = data;
   const estimateTotal =
     estimates.draftCount + estimates.sentCount + estimates.approvedCount;
   const isLowDataCompany =
@@ -222,36 +223,108 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
       </ReportsSection>
 
       <ReportsSection
-        title="Time clock"
-        description="Shift clock-ins from company time entries"
+        title="Labor & payroll"
+        description="Field labor and shift time for payroll review. Technicians track time through Start work and Complete work on jobs."
       >
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <ReportsSummaryCard
-            label="Clocked in now"
-            value={String(timeClock.clockedInCount)}
+            label="Working now"
+            value={String(labor.currentlyWorkingCount)}
             description={
-              timeClock.clockedInCount === 1
-                ? "1 employee on shift"
-                : `${timeClock.clockedInCount} employees on shift`
+              labor.currentlyWorkingCount === 1
+                ? "Open job-labor entry"
+                : "Open job-labor entries"
             }
-            icon={Users}
+            icon={Wrench}
+            iconClassName="bg-cyan-50 text-cyan-600"
+            accentClassName="border-cyan-100"
+          />
+          <ReportsSummaryCard
+            label="Started today"
+            value={String(labor.startedTodayCount)}
+            description="Technicians with a shift clock today"
+            icon={CalendarDays}
+            iconClassName="bg-indigo-50 text-indigo-600"
+            accentClassName="border-indigo-100"
+          />
+          <ReportsSummaryCard
+            label="Total hours today"
+            value={`${labor.totalHoursToday}h`}
+            description="Shift clock + job labor"
+            icon={Timer}
             iconClassName="bg-violet-50 text-violet-600"
             accentClassName="border-violet-100"
           />
           <ReportsSummaryCard
-            label="Recent entries"
-            value={String(timeClock.recentEntries.length)}
-            description="Latest shift records"
-            icon={Timer}
-            iconClassName="bg-cyan-50 text-cyan-600"
-            accentClassName="border-cyan-100"
+            label="Open entries"
+            value={String(labor.openEntryCount)}
+            description="Shift, job labor, and break segments"
+            icon={Clock}
+            iconClassName="bg-amber-50 text-amber-600"
+            accentClassName="border-amber-100"
           />
+          <ReportsSummaryCard
+            label="Time exceptions"
+            value={String(labor.exceptionCount)}
+            description={
+              labor.exceptionCount === 0
+                ? "No labor integrity issues"
+                : "Needs admin review"
+            }
+            icon={AlertCircle}
+            iconClassName="bg-rose-50 text-rose-600"
+            accentClassName="border-rose-100"
+          />
+        </div>
+
+        {labor.currentlyWorking.length > 0 ? (
+          <div className="mt-4 rounded-xl border border-cyan-100 bg-cyan-50/50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-cyan-800">
+              Currently on job
+            </p>
+            <ul className="mt-2 space-y-1.5">
+              {labor.currentlyWorking.map((entry) => (
+                <li
+                  key={entry.id}
+                  className="flex flex-wrap items-center justify-between gap-2 text-sm text-cyan-900"
+                >
+                  <span className="font-medium">{entry.technicianName}</span>
+                  <span className="text-cyan-700">
+                    {entry.jobNumber ? `Job ${entry.jobNumber}` : "On site"} ·{" "}
+                    Since {formatDateTime(entry.startedAt)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-slate-500">
+            No technicians are actively working a job right now.
+          </p>
+        )}
+
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+          <Link
+            href="/time-clock"
+            className="font-semibold text-cyan-700 hover:text-cyan-800"
+          >
+            Review shift time & exceptions
+          </Link>
+          <span className="text-slate-300" aria-hidden="true">
+            ·
+          </span>
+          <Link
+            href="/time"
+            className="font-semibold text-cyan-700 hover:text-cyan-800"
+          >
+            Full time entry log
+          </Link>
         </div>
 
         {timeClock.clockedInUsers.length > 0 ? (
           <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
-              Currently clocked in
+              Clocked in for shift
             </p>
             <ul className="mt-2 space-y-1.5">
               {timeClock.clockedInUsers.map((entry) => (
@@ -268,11 +341,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
               ))}
             </ul>
           </div>
-        ) : (
-          <p className="mt-4 text-sm text-slate-500">
-            No employees are clocked in right now.
-          </p>
-        )}
+        ) : null}
 
         {timeClock.recentEntries.length > 0 ? (
           <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
@@ -313,12 +382,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
               </tbody>
             </table>
           </div>
-        ) : (
-          <p className="mt-4 text-sm text-slate-500">
-            No time clock entries yet. Team clock-ins will appear here once time
-            tracking is used.
-          </p>
-        )}
+        ) : null}
       </ReportsSection>
 
       <ReportsSection

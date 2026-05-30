@@ -7,6 +7,7 @@ import {
   endBreak,
   getCurrentTimeState,
   getTodayTimeEntries,
+  shouldPromptShiftClockOutAfterJobComplete,
   startBreak,
   startClock,
   startJobLabor,
@@ -95,6 +96,25 @@ export async function getTechnicianTimeDashboardAction(): Promise<TimeEntryActio
   );
 
   return { state, entries, summary };
+}
+
+export async function shouldPromptShiftClockOutAfterJobCompleteAction(
+  jobId: string,
+): Promise<{ shouldPrompt?: boolean; error?: string }> {
+  const result = await assertOwnTimePermission();
+  if (result.error || !result.context) {
+    return { error: result.error };
+  }
+
+  const { context } = result;
+  const shouldPrompt = await shouldPromptShiftClockOutAfterJobComplete({
+    companyId: context.company.id,
+    technicianId: context.user.id,
+    completedJobId: jobId,
+    timeZone: context.company.timezone,
+  });
+
+  return { shouldPrompt };
 }
 
 export async function startClockAction(): Promise<TimeEntryActionResult> {

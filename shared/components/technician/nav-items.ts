@@ -38,7 +38,7 @@ export const technicianNavItems: TechnicianNavItem[] = [
     label: "Time",
     href: "/tech/time",
     icon: Clock,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "receipts",
