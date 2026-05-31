@@ -59,6 +59,9 @@ export type JobActivityMetadata = {
   estimate_number?: string;
   approval_source?: "public_link" | "technician_device" | "admin_manual";
   signer_name?: string;
+  /** Completed/cancelled job that originated a follow-up work order. */
+  previous_job_id?: string;
+  previous_job_number?: string;
 };
 
 export type JobActivity = {

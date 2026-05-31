@@ -409,6 +409,41 @@ export async function linkEstimateToJob(
   return { linked: Boolean(data), error: null };
 }
 
+/**
+ * Points an approved estimate at follow-up work, replacing a terminal job link only.
+ */
+export async function linkEstimateToFollowUpJob(
+  companyId: string,
+  estimateId: string,
+  followUpJobId: string,
+  fromTerminalJobId: string,
+): Promise<{ linked: boolean; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("estimates")
+    .update({ job_id: followUpJobId })
+    .eq("company_id", companyId)
+    .eq("id", estimateId)
+    .or(`job_id.is.null,job_id.eq.${fromTerminalJobId}`)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[linkEstimateToFollowUpJob] update failed:", {
+      companyId,
+      estimateId,
+      followUpJobId,
+      fromTerminalJobId,
+      code: error.code,
+      message: error.message,
+    });
+    return { linked: false, error: mapDatabaseError(error) };
+  }
+
+  return { linked: Boolean(data), error: null };
+}
+
 export async function getEstimateById(
   companyId: string,
   estimateId: string,

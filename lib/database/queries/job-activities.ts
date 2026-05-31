@@ -9,6 +9,8 @@ import type {
   JobActivity,
   JobActivityMetadata,
 } from "@/shared/types/job-activity";
+import { isTerminalJobStatus } from "@/shared/types/job-workflow";
+import type { JobStatus } from "@/shared/types/job";
 import { JOB_REVIEW_BLOCKER_RESOLUTION_EVENT_TYPES } from "@/shared/types/job-review-resolution";
 
 import {
@@ -128,6 +130,80 @@ export async function countJobReviewBlockerResolutionsSince(
   }
 
   return count ?? 0;
+}
+
+export async function findFollowUpJobForApprovedEstimate(input: {
+  companyId: string;
+  estimateId: string;
+  terminalJobId: string;
+}): Promise<{ jobId: string; jobNumber: string } | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("job_activities")
+    .select("job_id, metadata")
+    .eq("company_id", input.companyId)
+    .eq("event_type", "job_created")
+    .contains("metadata", {
+      estimate_id: input.estimateId,
+      previous_job_id: input.terminalJobId,
+    })
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("[findFollowUpJobForApprovedEstimate] query failed:", {
+      companyId: input.companyId,
+      estimateId: input.estimateId,
+      terminalJobId: input.terminalJobId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  const candidateJobIds = [
+    ...new Set(
+      (data ?? [])
+        .map((row) => row.job_id)
+        .filter((jobId): jobId is string => Boolean(jobId)),
+    ),
+  ];
+
+  if (candidateJobIds.length === 0) {
+    return null;
+  }
+
+  const { data: jobs, error: jobsError } = await supabase
+    .from("jobs")
+    .select("id, job_number, status")
+    .eq("company_id", input.companyId)
+    .in("id", candidateJobIds);
+
+  if (jobsError) {
+    console.error("[findFollowUpJobForApprovedEstimate] jobs lookup failed:", {
+      companyId: input.companyId,
+      estimateId: input.estimateId,
+      code: jobsError.code,
+      message: jobsError.message,
+    });
+    return null;
+  }
+
+  for (const row of data ?? []) {
+    const job = (jobs ?? []).find((candidate) => candidate.id === row.job_id);
+
+    if (!job || isTerminalJobStatus(job.status as JobStatus)) {
+      continue;
+    }
+
+    return {
+      jobId: job.id,
+      jobNumber: job.job_number,
+    };
+  }
+
+  return null;
 }
 
 export async function jobHasActivityEvent(
