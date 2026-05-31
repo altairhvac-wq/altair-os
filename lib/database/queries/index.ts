@@ -6,6 +6,7 @@ export {
 export {
   createCustomer,
   getCustomerById,
+  getCustomerFinancialSummary,
   listCustomers,
   mapCustomerFormDataToInsert,
   mapCustomerFormDataToUpdate,

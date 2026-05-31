@@ -5,11 +5,13 @@ import {
   getCustomerInitials,
   type Customer,
 } from "@/shared/types/customer";
+import type { CustomerFinancialSummary } from "@/shared/types/customer-financial";
 
 type CustomerCardProps = {
   customer: Customer;
   compact?: boolean;
   showRevenueStats?: boolean;
+  financialSummary?: CustomerFinancialSummary;
 };
 
 const statusStyles: Record<Customer["status"], string> = {
@@ -22,8 +24,10 @@ export function CustomerCard({
   customer,
   compact = false,
   showRevenueStats = true,
+  financialSummary,
 }: CustomerCardProps) {
   const location = `${customer.city}, ${customer.state}`;
+  const showFinancialSummary = showRevenueStats && financialSummary != null;
 
   return (
     <div className={compact ? "space-y-4" : "rounded-xl border border-slate-100 bg-white p-4"}>
@@ -68,31 +72,56 @@ export function CustomerCard({
       </div>
 
       {!compact ? (
-        <div
-          className={`mt-4 grid gap-3 border-t border-slate-100 pt-4 ${showRevenueStats ? "grid-cols-3" : "grid-cols-2"}`}
-        >
-          <div>
-            <p className="text-xs font-medium text-slate-500">Jobs</p>
-            <p className="mt-0.5 text-lg font-bold text-slate-900">
-              {customer.totalJobs}
-            </p>
-          </div>
-          {showRevenueStats ? (
+        <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
+          <div
+            className={`grid gap-3 ${showFinancialSummary ? "grid-cols-2" : showRevenueStats ? "grid-cols-3" : "grid-cols-2"}`}
+          >
             <div>
-              <p className="text-xs font-medium text-slate-500">Revenue</p>
+              <p className="text-xs font-medium text-slate-500">Jobs</p>
               <p className="mt-0.5 text-lg font-bold text-slate-900">
-                {formatCurrency(customer.totalRevenue)}
+                {customer.totalJobs}
               </p>
             </div>
-          ) : null}
-          <div>
-            <p className="text-xs font-medium text-slate-500">Last service</p>
-            <p className="mt-0.5 text-sm font-semibold text-slate-900">
-              {customer.lastServiceDate
-                ? formatDate(customer.lastServiceDate)
-                : "—"}
-            </p>
+            {showFinancialSummary ? null : showRevenueStats ? (
+              <div>
+                <p className="text-xs font-medium text-slate-500">Revenue</p>
+                <p className="mt-0.5 text-lg font-bold text-slate-900">
+                  {formatCurrency(customer.totalRevenue)}
+                </p>
+              </div>
+            ) : null}
+            <div>
+              <p className="text-xs font-medium text-slate-500">Last service</p>
+              <p className="mt-0.5 text-sm font-semibold text-slate-900">
+                {customer.lastServiceDate
+                  ? formatDate(customer.lastServiceDate)
+                  : "—"}
+              </p>
+            </div>
           </div>
+
+          {showFinancialSummary ? (
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <p className="text-xs font-medium text-slate-500">Total invoiced</p>
+                <p className="mt-0.5 text-lg font-bold text-slate-900">
+                  {formatCurrency(financialSummary.totalInvoiced)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500">Total collected</p>
+                <p className="mt-0.5 text-lg font-bold text-slate-900">
+                  {formatCurrency(financialSummary.totalCollected)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500">Balance due</p>
+                <p className="mt-0.5 text-lg font-bold text-slate-900">
+                  {formatCurrency(financialSummary.outstandingBalance)}
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

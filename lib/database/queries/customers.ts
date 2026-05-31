@@ -5,7 +5,12 @@ import type {
   CustomerRow,
   CustomerUpdate,
 } from "@/lib/database/types/core-tables";
+import { listInvoicesByCustomer } from "@/lib/database/queries/invoices";
 import type { Customer, CustomerFormData } from "@/shared/types/customer";
+import {
+  computeCustomerFinancialSummary,
+  type CustomerFinancialSummary,
+} from "@/shared/types/customer-financial";
 
 function toDateOnly(value: string): string {
   return value.split("T")[0] ?? value;
@@ -166,6 +171,14 @@ export async function getCustomerById(
   }
 
   return mapCustomerRowToCustomer(data as CustomerRow);
+}
+
+export async function getCustomerFinancialSummary(
+  companyId: string,
+  customerId: string,
+): Promise<CustomerFinancialSummary> {
+  const invoices = await listInvoicesByCustomer(companyId, customerId);
+  return computeCustomerFinancialSummary(invoices);
 }
 
 export async function updateCustomer(

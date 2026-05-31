@@ -74,6 +74,7 @@ export async function recordInvoicePaymentAction(
 
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${invoiceId}`);
+  revalidatePath("/customers");
   revalidatePath(`/customers/${invoice.customerId}`);
 
   if (invoice.jobId) {

@@ -17,6 +17,7 @@ import {
   formatDate,
   type Customer,
 } from "@/shared/types/customer";
+import type { CustomerFinancialSummary } from "@/shared/types/customer-financial";
 import type { Estimate } from "@/shared/types/estimate";
 import type { Invoice } from "@/shared/types/invoice";
 import type { Job } from "@/shared/types/job";
@@ -47,6 +48,7 @@ type CustomerDetailPageViewProps = {
   canManageEquipment: boolean;
   canViewBilling: boolean;
   canViewCompanyExpenses: boolean;
+  financialSummary?: CustomerFinancialSummary;
 };
 
 export function CustomerDetailPageView({
@@ -63,6 +65,7 @@ export function CustomerDetailPageView({
   canManageEquipment,
   canViewBilling,
   canViewCompanyExpenses,
+  financialSummary,
 }: CustomerDetailPageViewProps) {
   const hasNotes = Boolean(customer.notes?.trim());
 
@@ -78,7 +81,11 @@ export function CustomerDetailPageView({
 
       <div className={adminCardSectionClass}>
         <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
-          <CustomerCard customer={customer} showRevenueStats={canViewBilling} />
+          <CustomerCard
+            customer={customer}
+            showRevenueStats={canViewBilling}
+            financialSummary={financialSummary}
+          />
           <CustomerEditControl
             customer={customer}
             canManage={canManageCustomers}

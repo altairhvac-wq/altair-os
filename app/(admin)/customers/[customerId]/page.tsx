@@ -11,6 +11,7 @@ import { listRecentJobAttachmentsForCustomer } from "@/lib/database/queries/job-
 import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment";
 import { CustomerDetailPageView } from "@/shared/components/customers/CustomerDetailPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
+import { computeCustomerFinancialSummary } from "@/shared/types/customer-financial";
 
 type CustomerDetailPageProps = {
   params: Promise<{ customerId: string }>;
@@ -75,6 +76,10 @@ export default async function CustomerDetailPage({
     notFound();
   }
 
+  const financialSummary = canViewBillingData
+    ? computeCustomerFinancialSummary(invoices)
+    : undefined;
+
   return (
     <CustomerDetailPageView
       customer={customer}
@@ -90,6 +95,7 @@ export default async function CustomerDetailPage({
       canManageEquipment={companyContext.permissions.manageCustomers}
       canViewBilling={canViewBillingData}
       canViewCompanyExpenses={access.canViewCompanyExpenses}
+      financialSummary={financialSummary}
     />
   );
 }
