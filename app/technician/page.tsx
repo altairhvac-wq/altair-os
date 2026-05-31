@@ -21,6 +21,9 @@ export default async function TechnicianPage() {
   const canCreateEstimate =
     context.permissions.manageBilling ||
     context.permissions.createFieldEstimates;
+  const canApproveOnSite =
+    context.permissions.manageBilling ||
+    context.permissions.createFieldEstimates;
   const canViewBillingData = canViewBilling(context);
   const billingDefaults = getCompanyBillingDefaultsFromRow(context.company);
 
@@ -46,6 +49,7 @@ export default async function TechnicianPage() {
       serviceItems={serviceItems}
       canManageTime={canManageTime}
       canCreateEstimate={canCreateEstimate}
+      canApproveOnSite={canApproveOnSite}
       canViewBilling={canViewBillingData}
       billingSummaries={billingSummaries}
       defaultTaxRate={billingDefaults.defaultTaxRate}

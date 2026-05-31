@@ -62,7 +62,9 @@ export type JobActivityType =
   | "labor_entries_closed"
   | "job_labor_auto_closed"
   | "pending_expenses_resolved"
-  | "material_costs_completed";
+  | "material_costs_completed"
+  | "estimate_routed_to_dispatch"
+  | "estimate_authorized_on_site";
 
 export type EstimateStatus =
   | "draft"

@@ -1,5 +1,6 @@
 import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { formatEstimateStatus, type EstimateStatus } from "@/shared/types/estimate";
+import type { EstimateApprovalSource } from "@/shared/types/estimate-approval";
 
 export type EstimateActivityType =
   | "estimate_created"
@@ -20,7 +21,10 @@ export type EstimateActivityMetadata = {
   job_number?: string;
   invoice_id?: string;
   invoice_number?: string;
-  approval_source?: "public_link";
+  approval_source?: EstimateApprovalSource;
+  routed_to_dispatch?: boolean;
+  stayed_with_technician?: boolean;
+  routing_note?: string;
   creation_source?: "field" | "office";
   signer_name?: string;
 };
@@ -92,13 +96,20 @@ export function formatEstimateActivityDetails(
     case "estimate_declined":
     case "estimate_cancelled":
     case "status_changed": {
-      if (
-        eventType === "estimate_approved" &&
-        metadata.approval_source === "public_link"
-      ) {
-        const parts: string[] = ["Approved by customer"];
+      if (eventType === "estimate_approved" && metadata.approval_source) {
+        const sourceLabel =
+          metadata.approval_source === "public_link"
+            ? "Approved by customer (remote link)"
+            : metadata.approval_source === "technician_device"
+              ? "Approved on site (technician device)"
+              : "Approved manually (office)";
+
+        const parts: string[] = [sourceLabel];
         if (metadata.signer_name) {
           parts.push(metadata.signer_name);
+        }
+        if (metadata.routing_note) {
+          parts.push(metadata.routing_note);
         }
         if (metadata.estimate_number) {
           parts.push(`Estimate ${metadata.estimate_number}`);

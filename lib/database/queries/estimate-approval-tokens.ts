@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import { applyEstimateApprovalRouting } from "@/lib/database/services/estimate-approval-routing";
 import type { EstimateApprovalTokenInsert } from "@/lib/database/types/core-tables";
 import {
   generateEstimateApprovalToken,
@@ -214,6 +215,9 @@ export type SubmitPublicEstimateApprovalResult = {
   estimateNumber?: string;
   customerName?: string;
   signedAt?: string;
+  companyId?: string;
+  customerId?: string;
+  jobId?: string | null;
 };
 
 export async function submitPublicEstimateApproval(input: {
@@ -249,19 +253,49 @@ export async function submitPublicEstimateApproval(input: {
     return { error: "Unexpected response while approving estimate." };
   }
 
+  const estimateId =
+    typeof payload.estimate_id === "string" ? payload.estimate_id : undefined;
+  const estimateNumber =
+    typeof payload.estimate_number === "string"
+      ? payload.estimate_number
+      : undefined;
+  const customerName =
+    typeof payload.customer_name === "string" ? payload.customer_name : undefined;
+  const signedAt =
+    typeof payload.signed_at === "string" ? payload.signed_at : undefined;
+
+  const companyId =
+    typeof payload.company_id === "string" ? payload.company_id : undefined;
+  const customerId =
+    typeof payload.customer_id === "string" ? payload.customer_id : undefined;
+  const jobId =
+    typeof payload.job_id === "string"
+      ? payload.job_id
+      : payload.job_id === null
+        ? null
+        : undefined;
+
+  if (estimateId && companyId) {
+    await applyEstimateApprovalRouting({
+      companyId,
+      estimateId,
+      approvalSource: "public_link",
+      actorId: null,
+      estimateNumber,
+      customerId,
+      jobId: jobId ?? null,
+      signerName: input.signerName,
+    });
+  }
+
   return {
     ok: true,
-    estimateId:
-      typeof payload.estimate_id === "string" ? payload.estimate_id : undefined,
-    estimateNumber:
-      typeof payload.estimate_number === "string"
-        ? payload.estimate_number
-        : undefined,
-    customerName:
-      typeof payload.customer_name === "string"
-        ? payload.customer_name
-        : undefined,
-    signedAt:
-      typeof payload.signed_at === "string" ? payload.signed_at : undefined,
+    estimateId,
+    estimateNumber,
+    customerName,
+    signedAt,
+    companyId,
+    customerId,
+    jobId,
   };
 }

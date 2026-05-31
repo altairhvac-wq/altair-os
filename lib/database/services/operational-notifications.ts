@@ -262,15 +262,19 @@ export function notifyDraftInvoiceReady(input: {
 
 export function notifyEstimateApproved(input: {
   companyId: string;
-  actorId: string;
+  actorId?: string;
   estimateId: string;
   estimateNumber?: string;
   customerId?: string;
   jobId?: string;
+  approvalSource?: "public_link" | "technician_device" | "admin_manual";
 }): void {
+  if (!isNonEmptyId(input.companyId) || !isNonEmptyId(input.estimateId)) {
+    return;
+  }
+
   if (
-    !isNonEmptyId(input.companyId) ||
-    !isNonEmptyId(input.estimateId) ||
+    input.approvalSource !== "public_link" &&
     !isNonEmptyId(input.actorId)
   ) {
     return;
@@ -278,20 +282,41 @@ export function notifyEstimateApproved(input: {
 
   const estimateLabel = input.estimateNumber?.trim() || "An estimate";
 
+  const { title, message } = (() => {
+    switch (input.approvalSource) {
+      case "public_link":
+        return {
+          title: "Estimate approved — ready to schedule",
+          message: `${estimateLabel} was approved remotely and routed to dispatch.`,
+        };
+      case "technician_device":
+        return {
+          title: "Estimate approved on site",
+          message: `${estimateLabel} was approved on site by the customer.`,
+        };
+      default:
+        return {
+          title: "Estimate approved",
+          message: `${estimateLabel} was approved.`,
+        };
+    }
+  })();
+
   dispatchNotificationsForPermission({
     companyId: input.companyId,
     permission: "dispatchJobs",
     type: "estimate_approved",
-    title: "Estimate approved",
-    message: `${estimateLabel} was approved.`,
+    title,
+    message,
     entityType: "estimate",
     entityId: input.estimateId,
-    excludeUserIds: [input.actorId],
+    excludeUserIds: input.actorId ? [input.actorId] : [],
     metadata: sanitizeNotificationMetadata({
       estimate_id: input.estimateId,
       estimate_number: input.estimateNumber,
       customer_id: input.customerId,
       job_id: input.jobId,
+      approval_source: input.approvalSource,
     }),
   });
 }

@@ -47,6 +47,8 @@ const ACTIVITY_ICONS: Record<
   job_labor_auto_closed: CheckCircle2,
   pending_expenses_resolved: CheckCircle2,
   material_costs_completed: CheckCircle2,
+  estimate_routed_to_dispatch: ClipboardList,
+  estimate_authorized_on_site: CheckCircle2,
 };
 
 const ACTIVITY_ICON_STYLES: Record<JobActivityType, string> = {
@@ -72,6 +74,10 @@ const ACTIVITY_ICON_STYLES: Record<JobActivityType, string> = {
   pending_expenses_resolved:
     "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
   material_costs_completed:
+    "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
+  estimate_routed_to_dispatch:
+    "bg-amber-50 text-amber-800 ring-amber-600/15",
+  estimate_authorized_on_site:
     "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
 };
 

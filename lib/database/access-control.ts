@@ -250,6 +250,23 @@ export function canViewJob(
   return job.assignedTechnicianId === context.user.id;
 }
 
+export function canApproveEstimateOnSite(
+  context: ActiveCompanyContext,
+  job: {
+    assignedTechnicianId?: string | null;
+  },
+): boolean {
+  if (context.permissions.manageBilling) {
+    return true;
+  }
+
+  if (!context.permissions.createFieldEstimates) {
+    return false;
+  }
+
+  return job.assignedTechnicianId === context.user.id;
+}
+
 export function canCreateFieldEstimate(
   context: ActiveCompanyContext,
   job: {

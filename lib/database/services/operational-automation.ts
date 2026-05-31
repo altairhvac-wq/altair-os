@@ -106,6 +106,7 @@ function runOperationalAutomation(event: OperationalAutomationEvent): void {
         estimateNumber: event.estimateNumber,
         customerId: event.customerId,
         jobId: event.jobId,
+        approvalSource: event.approvalSource,
       });
       return;
 

@@ -19,6 +19,7 @@ import {
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
 import { buildGoogleMapsDirectionsUrl, hasCompleteServiceAddress } from "@/shared/lib/maps";
 import {
+  selectActiveEstimate,
   type JobEstimateSummary,
   type JobInvoiceSummary,
 } from "@/shared/lib/job-next-business-action";
@@ -35,6 +36,7 @@ import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import { getCreateEstimateJobBlockReason } from "@/shared/types/estimate";
 import { TechnicianEstimateSheet } from "./TechnicianEstimateSheet";
+import { TechnicianEstimateApprovalSheet } from "./TechnicianEstimateApprovalSheet";
 import { TechnicianExpenseSheet } from "./TechnicianExpenseSheet";
 import { TechnicianJobEquipmentSummary } from "./TechnicianJobEquipmentSummary";
 import { TechnicianJobLaborStatus } from "./TechnicianJobLaborStatus";
@@ -60,6 +62,7 @@ type TechnicianJobCardProps = {
   serviceItems: ServiceItem[];
   defaultTaxRate: number;
   canCreateEstimate: boolean;
+  canApproveOnSite?: boolean;
   canViewBilling?: boolean;
   billingContext?: {
     estimates: JobEstimateSummary[];
@@ -83,6 +86,7 @@ export function TechnicianJobCard({
   serviceItems,
   defaultTaxRate,
   canCreateEstimate,
+  canApproveOnSite = false,
   canViewBilling = false,
   billingContext,
   canManageTime = false,
@@ -95,8 +99,11 @@ export function TechnicianJobCard({
   const [status, setStatus] = useState(job.status);
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [activeSheet, setActiveSheet] = useState<
-    "material" | "expense" | "photo" | "estimate" | null
+    "material" | "expense" | "photo" | "estimate" | "approve_estimate" | null
   >(null);
+  const sentEstimateForApproval = billingContext
+    ? selectActiveEstimate(billingContext.estimates.filter((e) => e.status === "sent"))
+    : null;
   const [completeSheetOpen, setCompleteSheetOpen] = useState(false);
 
   useEffect(() => {
@@ -164,9 +171,16 @@ export function TechnicianJobCard({
       businessActionOptions={{
         canCreateEstimate: showCreateEstimate,
         canViewBilling,
+        canApproveOnSite:
+          canApproveOnSite && Boolean(sentEstimateForApproval),
       }}
       onFieldEstimateClick={
         showCreateEstimate ? () => setActiveSheet("estimate") : undefined
+      }
+      onFieldApproveClick={
+        canApproveOnSite && sentEstimateForApproval
+          ? () => setActiveSheet("approve_estimate")
+          : undefined
       }
       onCompleteSheetOpenChange={setCompleteSheetOpen}
       onStatusUpdated={handleStatusUpdated}
@@ -447,6 +461,16 @@ export function TechnicianJobCard({
           customerName={job.customerName}
           serviceItems={serviceItems}
           defaultTaxRate={defaultTaxRate}
+          onClose={() => setActiveSheet(null)}
+        />
+      ) : null}
+
+      {activeSheet === "approve_estimate" && sentEstimateForApproval ? (
+        <TechnicianEstimateApprovalSheet
+          estimateId={sentEstimateForApproval.id}
+          estimateNumber={sentEstimateForApproval.estimateNumber}
+          jobNumber={job.jobNumber}
+          customerName={job.customerName}
           onClose={() => setActiveSheet(null)}
         />
       ) : null}

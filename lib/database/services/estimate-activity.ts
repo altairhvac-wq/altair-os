@@ -2,7 +2,8 @@ import {
   recordEstimateActivity,
   resolveEstimateStatusEventType,
 } from "@/lib/database/queries/estimate-activities";
-import { emitEstimateApprovedEvent } from "@/lib/database/services/operational-events";
+import { applyEstimateApprovalRouting } from "@/lib/database/services/estimate-approval-routing";
+import type { EstimateApprovalSource } from "@/shared/types/estimate-approval";
 import type { EstimateStatus } from "@/shared/types/estimate";
 
 export async function recordEstimateCreatedActivity(input: {
@@ -49,6 +50,8 @@ export async function recordEstimateStatusChangedActivity(input: {
   invoiceId?: string;
   invoiceNumber?: string;
   estimateNumber?: string;
+  approvalSource?: EstimateApprovalSource;
+  signerName?: string;
 }): Promise<void> {
   const { error } = await recordEstimateActivity({
     company_id: input.companyId,
@@ -64,6 +67,8 @@ export async function recordEstimateStatusChangedActivity(input: {
       invoice_id: input.invoiceId,
       invoice_number: input.invoiceNumber,
       estimate_number: input.estimateNumber,
+      approval_source: input.approvalSource,
+      signer_name: input.signerName,
     },
   });
 
@@ -77,13 +82,17 @@ export async function recordEstimateStatusChangedActivity(input: {
   }
 
   if (input.toStatus === "approved") {
-    await emitEstimateApprovedEvent({
+    const approvalSource = input.approvalSource ?? "admin_manual";
+
+    await applyEstimateApprovalRouting({
       companyId: input.companyId,
       estimateId: input.estimateId,
+      approvalSource,
       actorId: input.actorId,
       estimateNumber: input.estimateNumber,
       customerId: input.customerId,
       jobId: input.jobId,
+      signerName: input.signerName,
     });
   }
 }

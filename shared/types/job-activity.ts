@@ -20,7 +20,9 @@ export type JobActivityType =
   | "labor_entries_closed"
   | "job_labor_auto_closed"
   | "pending_expenses_resolved"
-  | "material_costs_completed";
+  | "material_costs_completed"
+  | "estimate_routed_to_dispatch"
+  | "estimate_authorized_on_site";
 
 export type JobActivityMetadata = {
   customer_id?: string;
@@ -55,6 +57,8 @@ export type JobActivityMetadata = {
   invoice_number?: string;
   estimate_id?: string;
   estimate_number?: string;
+  approval_source?: "public_link" | "technician_device" | "admin_manual";
+  signer_name?: string;
 };
 
 export type JobActivity = {
@@ -88,6 +92,8 @@ const ACTIVITY_TYPE_LABELS: Record<JobActivityType, string> = {
   job_labor_auto_closed: "Labor auto-closed",
   pending_expenses_resolved: "Pending expenses resolved (office review complete)",
   material_costs_completed: "Material costs completed (office review complete)",
+  estimate_routed_to_dispatch: "Approved estimate routed to dispatch",
+  estimate_authorized_on_site: "Estimate authorized on site",
 };
 
 function resolveStatusChangedLabel(metadata: JobActivityMetadata): string {
@@ -237,6 +243,28 @@ export function formatJobActivityDetails(activity: JobActivity): string | null {
       return parts.length > 0
         ? `Logged on site · ${parts.join(" · ")}`
         : "Logged on site";
+    }
+
+    case "estimate_routed_to_dispatch": {
+      const parts: string[] = ["Approved estimate ready to schedule"];
+      if (metadata.estimate_number) {
+        parts.push(`Estimate ${metadata.estimate_number}`);
+      }
+      if (metadata.signer_name) {
+        parts.push(`Signed by ${metadata.signer_name}`);
+      }
+      return parts.join(" · ");
+    }
+
+    case "estimate_authorized_on_site": {
+      const parts: string[] = ["Work authorized from approved estimate"];
+      if (metadata.estimate_number) {
+        parts.push(`Estimate ${metadata.estimate_number}`);
+      }
+      if (metadata.signer_name) {
+        parts.push(metadata.signer_name);
+      }
+      return parts.join(" · ");
     }
 
     case "invoice_created_for_completed_job":

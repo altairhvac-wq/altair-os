@@ -20,6 +20,7 @@ type TechnicianJobDeckProps = {
   timeState: TechnicianTimeStateSnapshot;
   serviceItems: ServiceItem[];
   canCreateEstimate: boolean;
+  canApproveOnSite: boolean;
   canViewBilling: boolean;
   billingSummaries: JobBillingSummariesByJobId;
   canManageTime: boolean;
@@ -90,6 +91,7 @@ export function TechnicianJobDeck({
   timeState,
   serviceItems,
   canCreateEstimate,
+  canApproveOnSite,
   canViewBilling,
   billingSummaries,
   canManageTime,
@@ -304,6 +306,7 @@ export function TechnicianJobDeck({
             timeState={timeState}
             serviceItems={serviceItems}
             canCreateEstimate={canCreateEstimate}
+            canApproveOnSite={canApproveOnSite}
             canViewBilling={canViewBilling}
             billingContext={{
               estimates: billingSummaries.estimatesByJobId[activeJob.id] ?? [],

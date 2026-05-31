@@ -274,15 +274,26 @@ export async function emitInvoicePaidEvent(input: {
 export async function emitEstimateApprovedEvent(input: {
   companyId: string;
   estimateId: string;
-  actorId: string;
+  actorId?: string | null;
   estimateNumber?: string;
   customerId?: string;
   jobId?: string;
+  approvalSource?: "public_link" | "technician_device" | "admin_manual";
 }): Promise<void> {
   // Activity is recorded upstream via recordEstimateStatusChangedActivity today.
 
-  if (!hasOperationalEmitContext(input) || !isNonEmptyId(input.estimateId)) {
+  if (!isNonEmptyId(input.companyId) || !isNonEmptyId(input.estimateId)) {
     console.warn("[emitEstimateApprovedEvent] skipped: missing context", {
+      estimateId: input.estimateId,
+    });
+    return;
+  }
+
+  if (
+    input.approvalSource !== "public_link" &&
+    !isNonEmptyId(input.actorId ?? undefined)
+  ) {
+    console.warn("[emitEstimateApprovedEvent] skipped: missing actor", {
       estimateId: input.estimateId,
     });
     return;
@@ -291,11 +302,12 @@ export async function emitEstimateApprovedEvent(input: {
   maybeRunOperationalAutomation({
     type: "estimate_approved",
     companyId: input.companyId,
-    actorId: input.actorId,
+    actorId: input.actorId ?? undefined,
     estimateId: input.estimateId,
     estimateNumber: input.estimateNumber,
     customerId: input.customerId,
     jobId: input.jobId,
+    approvalSource: input.approvalSource,
   });
 }
 

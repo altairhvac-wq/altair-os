@@ -285,9 +285,18 @@ export function DispatchDetailsPanel({
                 </div>
               ) : (
                 <div className="mt-2 space-y-3">
-                  <div className="flex items-center gap-2 text-sm text-amber-700">
-                    <User className="h-4 w-4" />
-                    Unassigned — awaiting dispatch
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm text-amber-700">
+                      <User className="h-4 w-4" />
+                      Unassigned — awaiting dispatch
+                    </div>
+                    {billingContext?.estimates.some(
+                      (estimate) => estimate.status === "approved",
+                    ) ? (
+                      <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-900">
+                        Approved estimate ready to schedule
+                      </p>
+                    ) : null}
                   </div>
 
                   {canDispatchJobs && technicians.length > 0 ? (

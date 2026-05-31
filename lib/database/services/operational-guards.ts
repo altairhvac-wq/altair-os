@@ -61,11 +61,12 @@ export type OperationalAutomationEvent =
   | {
       type: "estimate_approved";
       companyId: string;
-      actorId: string;
+      actorId?: string;
       estimateId: string;
       estimateNumber?: string;
       customerId?: string;
       jobId?: string;
+      approvalSource?: "public_link" | "technician_device" | "admin_manual";
     }
   | {
       type: "job_material_added";
@@ -154,7 +155,13 @@ export function isRunnableAutomationEvent(
       return isNonEmptyId(event.invoiceId) && isNonEmptyId(event.actorId);
 
     case "estimate_approved":
-      return isNonEmptyId(event.estimateId) && isNonEmptyId(event.actorId);
+      if (!isNonEmptyId(event.estimateId)) {
+        return false;
+      }
+      if (event.approvalSource === "public_link") {
+        return true;
+      }
+      return isNonEmptyId(event.actorId);
 
     case "job_material_added":
       return isNonEmptyId(event.jobId) && isNonEmptyId(event.actorId);

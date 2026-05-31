@@ -9,6 +9,7 @@ type JobBusinessActionGuideProps = {
   layout?: "compact" | "default";
   disabled?: boolean;
   onFieldEstimateClick?: () => void;
+  onFieldApproveClick?: () => void;
 };
 
 function statusBannerClassName(action: JobBusinessAction): string {
@@ -42,6 +43,7 @@ export function JobBusinessActionGuide({
   layout = "default",
   disabled = false,
   onFieldEstimateClick,
+  onFieldApproveClick,
 }: JobBusinessActionGuideProps) {
   if (!action) {
     return null;
@@ -51,6 +53,8 @@ export function JobBusinessActionGuide({
   const useFieldEstimateHandler =
     onFieldEstimateClick &&
     (action.id === "create_estimate" || action.id === "finish_send_estimate");
+  const useFieldApproveHandler =
+    onFieldApproveClick && action.id === "approve_estimate_on_site";
 
   if (action.kind === "status") {
     return (
@@ -87,7 +91,16 @@ export function JobBusinessActionGuide({
 
   return (
     <div className={compact ? "space-y-1.5" : "space-y-2"}>
-      {useFieldEstimateHandler ? (
+      {useFieldApproveHandler ? (
+        <button
+          type="button"
+          onClick={onFieldApproveClick}
+          disabled={disabled}
+          className={ctaClassName(compact, action.emphasize)}
+        >
+          {ctaLabel}
+        </button>
+      ) : useFieldEstimateHandler ? (
         <button
           type="button"
           onClick={onFieldEstimateClick}

@@ -37,6 +37,7 @@ export type JobBusinessActionId =
   | "create_estimate"
   | "finish_send_estimate"
   | "awaiting_approval"
+  | "approve_estimate_on_site"
   | "complete_work"
   | "create_invoice"
   | "view_invoice"
@@ -77,6 +78,7 @@ export type JobBusinessActionInput = {
 export type JobBusinessActionOptions = {
   canCreateEstimate?: boolean;
   canViewBilling?: boolean;
+  canApproveOnSite?: boolean;
 };
 
 const EXCLUDED_ESTIMATE_STATUSES = new Set<EstimateStatus>([
@@ -85,7 +87,7 @@ const EXCLUDED_ESTIMATE_STATUSES = new Set<EstimateStatus>([
   "declined",
 ]);
 
-function selectActiveEstimate(
+export function selectActiveEstimate(
   estimates: JobEstimateSummary[],
 ): JobEstimateSummary | null {
   return (
@@ -150,6 +152,7 @@ export function getJobNextBusinessAction(
   const { jobId, customerId, jobStatus, estimates, invoices } = input;
   const canCreateEstimate = options.canCreateEstimate ?? false;
   const canViewBilling = options.canViewBilling ?? false;
+  const canApproveOnSite = options.canApproveOnSite ?? false;
 
   if (jobStatus === "cancelled") {
     return null;
@@ -256,6 +259,17 @@ export function getJobNextBusinessAction(
       };
     }
     case "sent": {
+      if (canApproveOnSite) {
+        return {
+          id: "approve_estimate_on_site",
+          label: "Approve on site",
+          kind: "cta",
+          emphasize: true,
+          estimateId: estimate.id,
+          hint: "Capture customer signature and authorize work while on site.",
+        };
+      }
+
       const href = buildEstimateHref(estimate.id);
 
       return {
@@ -297,6 +311,8 @@ export function isFieldEstimateBusinessAction(
   action: JobBusinessAction | null,
 ): boolean {
   return (
-    action?.id === "create_estimate" || action?.id === "finish_send_estimate"
+    action?.id === "create_estimate" ||
+    action?.id === "finish_send_estimate" ||
+    action?.id === "approve_estimate_on_site"
   );
 }

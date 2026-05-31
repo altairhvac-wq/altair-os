@@ -42,6 +42,7 @@ type JobWorkflowControlsProps = {
   };
   businessActionOptions?: JobBusinessActionOptions;
   onFieldEstimateClick?: () => void;
+  onFieldApproveClick?: () => void;
   onCompleteSheetOpenChange?: (open: boolean) => void;
   onStatusUpdated?: (status: JobStatus) => void;
 };
@@ -96,6 +97,7 @@ export function JobWorkflowControls({
   businessContext,
   businessActionOptions,
   onFieldEstimateClick,
+  onFieldApproveClick,
   onCompleteSheetOpenChange,
   onStatusUpdated,
 }: JobWorkflowControlsProps) {
@@ -143,6 +145,7 @@ export function JobWorkflowControls({
       layout={isCompact ? "compact" : "default"}
       disabled={competingSheetActive}
       onFieldEstimateClick={onFieldEstimateClick}
+      onFieldApproveClick={onFieldApproveClick}
     />
   ) : null;
 

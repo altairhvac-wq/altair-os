@@ -134,8 +134,9 @@ export default async function EstimateApprovalPage({
                   : ""}
               </p>
               <p className="mt-3 text-sm text-emerald-800">
-                {companyName} has been notified. If you have questions, use the
-                contact information on your estimate email.
+                {companyName} has been notified and will contact you to schedule
+                the work. If you have questions, use the contact information on
+                your estimate email.
               </p>
             </div>
           </div>

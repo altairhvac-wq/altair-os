@@ -40,6 +40,7 @@ type TechnicianAssignedJobsViewProps = {
   serviceItems: ServiceItem[];
   canManageTime: boolean;
   canCreateEstimate: boolean;
+  canApproveOnSite: boolean;
   canViewBilling: boolean;
   billingSummaries: JobBillingSummariesByJobId;
   defaultTaxRate: number;
@@ -176,6 +177,7 @@ export function TechnicianAssignedJobsView({
   serviceItems,
   canManageTime,
   canCreateEstimate,
+  canApproveOnSite,
   canViewBilling,
   billingSummaries,
   defaultTaxRate,
@@ -335,6 +337,7 @@ export function TechnicianAssignedJobsView({
             timeState={timeState}
         serviceItems={serviceItems}
         canCreateEstimate={canCreateEstimate}
+        canApproveOnSite={canApproveOnSite}
         canViewBilling={canViewBilling}
         billingSummaries={billingSummaries}
         canManageTime={canManageTime}

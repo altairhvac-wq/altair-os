@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { canApproveEstimateOnSite } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import {
@@ -8,6 +9,7 @@ import {
   getEstimateById,
   updateEstimateStatus,
 } from "@/lib/database/queries/estimates";
+import { upsertBillingSignature } from "@/lib/database/queries/billing-signatures";
 import { getJobById } from "@/lib/database/queries/jobs";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
@@ -477,10 +479,16 @@ export async function updateEstimateStatusAction(
     jobId: estimate.jobId,
     jobNumber: estimate.jobNumber,
     estimateNumber: estimate.estimateNumber,
+    approvalSource: toStatus === "approved" ? "admin_manual" : undefined,
   });
 
   revalidatePath("/estimates");
   revalidatePath(`/estimates/${estimateId}`);
+  if (toStatus === "approved" && estimate.jobId) {
+    revalidatePath("/dispatch");
+    revalidatePath("/technician");
+    revalidatePath(`/jobs/${estimate.jobId}`);
+  }
 
   return { estimate };
 }
@@ -621,4 +629,143 @@ export async function resendEstimateEmailAction(
       ? emailDelivery
       : undefined,
   };
+}
+
+export type ApproveEstimateOnSiteActionResult = {
+  error?: string;
+  estimate?: EstimateDetail;
+};
+
+export async function approveEstimateOnSiteAction(
+  estimateId: string,
+  formData: FormData,
+): Promise<ApproveEstimateOnSiteActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
+  }
+
+  const signerName = String(formData.get("signerName") ?? "");
+  const signatureData = String(formData.get("signatureData") ?? "");
+  const authorized = formData.get("authorized") === "on";
+
+  if (!authorized) {
+    return {
+      error:
+        "Please confirm that the customer authorizes the proposed work before approving.",
+    };
+  }
+
+  const currentEstimate = await getEstimateById(context.company.id, estimateId);
+
+  if (!currentEstimate) {
+    return { error: "Estimate not found." };
+  }
+
+  if (currentEstimate.status !== "sent") {
+    return {
+      error: "Only sent estimates can be approved on site. Refresh and try again.",
+    };
+  }
+
+  if (!currentEstimate.jobId) {
+    return {
+      error: "This estimate must be linked to a job before on-site approval.",
+    };
+  }
+
+  const linkedJob = await getJobById(
+    context.company.id,
+    currentEstimate.jobId,
+  );
+
+  if (!linkedJob) {
+    return { error: "Linked job not found." };
+  }
+
+  if (!canApproveEstimateOnSite(context, linkedJob)) {
+    return {
+      error: "You do not have permission to approve this estimate on site.",
+    };
+  }
+
+  const { signature, error: signatureError } = await upsertBillingSignature(
+    context.company.id,
+    context.user.id,
+    "estimate",
+    estimateId,
+    { signerName, signatureData },
+  );
+
+  if (signatureError || !signature) {
+    return {
+      error: signatureError ?? "We couldn't save the customer signature.",
+    };
+  }
+
+  const { estimate, error: statusError } = await updateEstimateStatus(
+    context.company.id,
+    estimateId,
+    "sent",
+    "approved",
+  );
+
+  if (statusError || !estimate) {
+    return {
+      error: statusError ?? "We couldn't approve this estimate. Try again.",
+    };
+  }
+
+  await recordEstimateStatusChangedActivity({
+    companyId: context.company.id,
+    estimateId,
+    actorId: context.user.id,
+    fromStatus: "sent",
+    toStatus: "approved",
+    customerId: estimate.customerId,
+    jobId: estimate.jobId,
+    jobNumber: estimate.jobNumber,
+    estimateNumber: estimate.estimateNumber,
+    approvalSource: "technician_device",
+    signerName: signature.signerName,
+  });
+
+  const customerEmail = estimate.customerEmail?.trim();
+  if (customerEmail && isValidEmail(customerEmail)) {
+    const emailResult = await sendEstimateEmail({
+      to: customerEmail,
+      company: mapCompanyRowToBillingContact(context.company),
+      customerName: estimate.customerName,
+      estimateNumber: estimate.estimateNumber,
+      issuedDate: estimate.createdAt.slice(0, 10),
+      subtotal: estimate.subtotal,
+      taxRate: estimate.taxRate,
+      taxAmount: estimate.tax ?? 0,
+      total: estimate.total,
+      validUntil: estimate.validUntil,
+      timeZone: context.company.timezone,
+      lineItems: estimate.lineItems.map((item) => ({
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      })),
+      notes: estimate.notes,
+      signature,
+    });
+
+    if (!emailResult.ok) {
+      logBillingEmailFailure("approveEstimateOnSiteAction", emailResult, {
+        estimateId,
+      });
+    }
+  }
+
+  revalidatePath("/estimates");
+  revalidatePath(`/estimates/${estimateId}`);
+  revalidatePath("/technician");
+  revalidatePath("/dispatch");
+  revalidatePath(`/jobs/${estimate.jobId}`);
+
+  return { estimate };
 }
