@@ -378,6 +378,37 @@ export async function listEstimatesForJob(
   );
 }
 
+/** Links an approved estimate to a job when no link exists yet (idempotent). */
+export async function linkEstimateToJob(
+  companyId: string,
+  estimateId: string,
+  jobId: string,
+): Promise<{ linked: boolean; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("estimates")
+    .update({ job_id: jobId })
+    .eq("company_id", companyId)
+    .eq("id", estimateId)
+    .is("job_id", null)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[linkEstimateToJob] update failed:", {
+      companyId,
+      estimateId,
+      jobId,
+      code: error.code,
+      message: error.message,
+    });
+    return { linked: false, error: mapDatabaseError(error) };
+  }
+
+  return { linked: Boolean(data), error: null };
+}
+
 export async function getEstimateById(
   companyId: string,
   estimateId: string,

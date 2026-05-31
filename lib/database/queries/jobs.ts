@@ -6,6 +6,8 @@ import {
 } from "@/lib/database/queries/dispatch";
 import { fetchOperationalDayJobRows } from "@/lib/database/queries/scheduled-today-jobs";
 import type { JobInsert, JobRow, JobUpdate } from "@/lib/database/types/core-tables";
+import { getDayBoundsInTimeZone } from "@/shared/lib/datetime";
+import type { EstimateLineItem } from "@/shared/types/estimate";
 import type { Job, JobDetail, JobFormData, JobStatus } from "@/shared/types/job";
 import type {
   JobWorkflowActionId,
@@ -358,6 +360,124 @@ export async function createJob(
 
   return {
     job: mapJobRowToJob(row as JobRowWithTechnician),
+    error: null,
+  };
+}
+
+function resolveJobTypeFromEstimateLineItems(
+  lineItems: EstimateLineItem[],
+): string {
+  const firstNamed = lineItems.find(
+    (item) => item.name.trim().length > 0 || (item.description?.trim().length ?? 0) > 0,
+  );
+
+  if (!firstNamed) {
+    return "Service";
+  }
+
+  return (
+    firstNamed.name.trim() ||
+    firstNamed.description?.trim() ||
+    "Service"
+  );
+}
+
+export type CreateJobFromApprovedEstimateInput = {
+  companyId: string;
+  estimateId: string;
+  customerId: string;
+  estimateNumber: string;
+  notes?: string;
+  lineItems: EstimateLineItem[];
+  timeZone?: string;
+};
+
+/**
+ * Creates an unassigned scheduled job from a remotely approved estimate.
+ * Caller must verify the estimate has no job_id before invoking.
+ */
+export async function createJobFromApprovedEstimate(
+  input: CreateJobFromApprovedEstimateInput,
+): Promise<{ jobId: string | null; jobNumber: string | null; error: string | null }> {
+  const supabase = await createClient();
+  const timeZone = input.timeZone?.trim() || "America/New_York";
+  const { start: scheduledAt } = getDayBoundsInTimeZone(timeZone);
+
+  const { data: customer, error: customerError } = await supabase
+    .from("customers")
+    .select(
+      "id, address_line1, address_line2, city, state, postal_code",
+    )
+    .eq("company_id", input.companyId)
+    .eq("id", input.customerId)
+    .maybeSingle();
+
+  if (customerError) {
+    console.error("[createJobFromApprovedEstimate] customer lookup failed:", {
+      companyId: input.companyId,
+      customerId: input.customerId,
+      code: customerError.code,
+      message: customerError.message,
+    });
+    return { jobId: null, jobNumber: null, error: mapDatabaseError(customerError) };
+  }
+
+  if (!customer) {
+    return { jobId: null, jobNumber: null, error: "Customer not found." };
+  }
+
+  const serviceAddress = [customer.address_line1, customer.address_line2]
+    .map((value) => value?.trim())
+    .filter(Boolean)
+    .join(", ");
+
+  const jobNumber = await generateJobNumber(input.companyId);
+  const estimateLabel = input.estimateNumber.trim() || "estimate";
+  const description = `Approved estimate ${estimateLabel}`;
+  const notes = [input.notes?.trim(), `Created from approved estimate ${estimateLabel}.`]
+    .filter(Boolean)
+    .join("\n\n");
+
+  const insert: JobInsert = {
+    company_id: input.companyId,
+    customer_id: input.customerId,
+    job_number: jobNumber,
+    service_address: serviceAddress,
+    city: customer.city?.trim() || "",
+    state: customer.state?.trim() || "",
+    postal_code: customer.postal_code?.trim() || "",
+    job_type: resolveJobTypeFromEstimateLineItems(input.lineItems),
+    scheduled_at: scheduledAt,
+    status: "scheduled",
+    priority: "normal",
+    description,
+    notes: notes || null,
+    assigned_technician_id: null,
+  };
+
+  const { data: row, error } = await supabase
+    .from("jobs")
+    .insert(insert)
+    .select("id, job_number")
+    .single();
+
+  if (error) {
+    console.error("[createJobFromApprovedEstimate] insert failed:", {
+      companyId: input.companyId,
+      estimateId: input.estimateId,
+      code: error.code,
+      message: error.message,
+    });
+    return { jobId: null, jobNumber: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { jobId: null, jobNumber: null, error: "Failed to create job." };
+  }
+
+  return {
+    jobId: row.id,
+    jobNumber: row.job_number,
     error: null,
   };
 }

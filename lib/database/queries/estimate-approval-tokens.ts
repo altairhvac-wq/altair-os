@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import { getEstimateById } from "@/lib/database/queries/estimates";
 import { applyEstimateApprovalRouting } from "@/lib/database/services/estimate-approval-routing";
 import type { EstimateApprovalTokenInsert } from "@/lib/database/types/core-tables";
 import {
@@ -275,6 +276,8 @@ export async function submitPublicEstimateApproval(input: {
         ? null
         : undefined;
 
+  let resolvedJobId = jobId ?? null;
+
   if (estimateId && companyId) {
     await applyEstimateApprovalRouting({
       companyId,
@@ -286,6 +289,9 @@ export async function submitPublicEstimateApproval(input: {
       jobId: jobId ?? null,
       signerName: input.signerName,
     });
+
+    const refreshedEstimate = await getEstimateById(companyId, estimateId);
+    resolvedJobId = refreshedEstimate?.jobId ?? resolvedJobId;
   }
 
   return {
@@ -296,6 +302,6 @@ export async function submitPublicEstimateApproval(input: {
     signedAt,
     companyId,
     customerId,
-    jobId,
+    jobId: resolvedJobId,
   };
 }

@@ -484,10 +484,12 @@ export async function updateEstimateStatusAction(
 
   revalidatePath("/estimates");
   revalidatePath(`/estimates/${estimateId}`);
-  if (toStatus === "approved" && estimate.jobId) {
+  if (toStatus === "approved") {
     revalidatePath("/dispatch");
-    revalidatePath("/technician");
-    revalidatePath(`/jobs/${estimate.jobId}`);
+    if (estimate.jobId) {
+      revalidatePath("/technician");
+      revalidatePath(`/jobs/${estimate.jobId}`);
+    }
   }
 
   return { estimate };
