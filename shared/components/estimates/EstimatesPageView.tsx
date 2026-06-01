@@ -264,7 +264,8 @@ export function EstimatesPageView({
         createError={createError}
         isSubmitting={isPending}
         createInitialData={createInitialData}
-        aiFeaturesEnabled={aiFeaturesEnabled && canManageEstimates}
+        aiFeaturesEnabled={aiFeaturesEnabled}
+        canDraftDescription={canManageEstimates}
       />
     </ListCommandCenterLayout>
   );

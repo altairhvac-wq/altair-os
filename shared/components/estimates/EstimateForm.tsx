@@ -12,9 +12,6 @@ import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
 import type { ServiceItem } from "@/shared/types/service-item";
 import {
-  adminDetailsBodyClass,
-  adminDetailsClass,
-  adminDetailsSummaryClass,
   adminFormActionsClass,
   adminFormGridClass,
   adminFormInputClass,
@@ -33,6 +30,7 @@ type EstimateFormProps = {
   error?: string | null;
   isSubmitting?: boolean;
   aiFeaturesEnabled?: boolean;
+  canDraftDescription?: boolean;
 };
 
 type WizardStep = "info" | "line-items";
@@ -65,6 +63,7 @@ export function EstimateForm({
   error,
   isSubmitting = false,
   aiFeaturesEnabled = false,
+  canDraftDescription = true,
 }: EstimateFormProps) {
   const defaults = useMemo(
     () => ({
@@ -292,36 +291,35 @@ export function EstimateForm({
                 onChange={setLineItems}
               />
 
-              <details className={adminDetailsClass}>
-                <summary className={adminDetailsSummaryClass}>
-                  <span>Notes</span>
-                </summary>
-                <div className={adminDetailsBodyClass}>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    rows={2}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Customer or internal notes"
-                    className={adminFormInputClass}
-                  />
-                  <EstimateDescriptionAiAssistant
-                    enabled={aiFeaturesEnabled}
-                    context={{
-                      notes,
-                      customerName: selectedCustomer?.name,
-                      jobType: selectedJob?.jobType,
-                      jobTitle: selectedJob?.description,
-                      jobNumber: selectedJob?.jobNumber,
-                      lineItems,
-                      jobId: jobId.trim() || undefined,
-                    }}
-                    onApply={setNotes}
-                    disabled={isSubmitting}
-                  />
-                </div>
-              </details>
+              <div className="rounded-lg border border-slate-200 bg-white p-2.5">
+                <label htmlFor="notes" className={adminFormLabelClass}>
+                  Notes
+                </label>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  rows={3}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Customer-facing description or internal notes"
+                  className={`${adminFormInputClass} mt-1`}
+                />
+                <EstimateDescriptionAiAssistant
+                  aiFeaturesEnabled={aiFeaturesEnabled}
+                  canDraft={canDraftDescription}
+                  context={{
+                    notes,
+                    customerName: selectedCustomer?.name,
+                    jobType: selectedJob?.jobType,
+                    jobTitle: selectedJob?.description,
+                    jobNumber: selectedJob?.jobNumber,
+                    lineItems,
+                    jobId: jobId.trim() || undefined,
+                  }}
+                  onApply={setNotes}
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
           )}
         </fieldset>

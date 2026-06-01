@@ -465,7 +465,8 @@ export function TechnicianJobCard({
           jobTitle={job.description}
           serviceItems={serviceItems}
           defaultTaxRate={defaultTaxRate}
-          aiFeaturesEnabled={aiFeaturesEnabled && canCreateEstimate}
+          aiFeaturesEnabled={aiFeaturesEnabled}
+          canDraftDescription={canCreateEstimate}
           onClose={() => setActiveSheet(null)}
         />
       ) : null}

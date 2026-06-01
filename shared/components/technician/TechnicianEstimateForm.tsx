@@ -9,9 +9,6 @@ import { formatActionError, formatRetryGuidance } from "@/shared/lib/operational
 import type { EstimateLineItemFormData } from "@/shared/types/estimate";
 import type { ServiceItem } from "@/shared/types/service-item";
 import {
-  adminDetailsBodyClass,
-  adminDetailsClass,
-  adminDetailsSummaryClass,
   adminFormInputClass,
   adminFormStackClass,
 } from "@/shared/lib/admin-density";
@@ -25,6 +22,7 @@ type TechnicianEstimateFormProps = {
   serviceItems: ServiceItem[];
   defaultTaxRate: number;
   aiFeaturesEnabled?: boolean;
+  canDraftDescription?: boolean;
   onSuccess?: (estimateNumber: string) => void;
   onCancel: () => void;
   onSubmittingChange?: (isSubmitting: boolean) => void;
@@ -47,6 +45,7 @@ export function TechnicianEstimateForm({
   serviceItems,
   defaultTaxRate,
   aiFeaturesEnabled = false,
+  canDraftDescription = true,
   onSuccess,
   onCancel,
   onSubmittingChange,
@@ -135,39 +134,35 @@ export function TechnicianEstimateForm({
         onChange={setLineItems}
       />
 
-      <details className={adminDetailsClass}>
-        <summary className={adminDetailsSummaryClass}>
-          <span>Notes (optional)</span>
-        </summary>
-        <div className={adminDetailsBodyClass}>
-          <label htmlFor="tech-estimate-notes" className="sr-only">
-            Notes
-          </label>
-          <textarea
-            id="tech-estimate-notes"
-            rows={2}
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-            placeholder="Site notes for office"
-            disabled={isPending}
-            className={adminFormInputClass}
-          />
-          <EstimateDescriptionAiAssistant
-            enabled={aiFeaturesEnabled}
-            context={{
-              notes,
-              customerName,
-              jobType,
-              jobTitle,
-              jobNumber,
-              lineItems,
-              jobId,
-            }}
-            onApply={setNotes}
-            disabled={isPending}
-          />
-        </div>
-      </details>
+      <div className="rounded-lg border border-slate-200 bg-white p-2.5">
+        <label htmlFor="tech-estimate-notes" className="mb-0.5 block text-[11px] font-semibold leading-tight text-slate-600">
+          Notes (optional)
+        </label>
+        <textarea
+          id="tech-estimate-notes"
+          rows={3}
+          value={notes}
+          onChange={(event) => setNotes(event.target.value)}
+          placeholder="Site notes for office"
+          disabled={isPending}
+          className={`${adminFormInputClass} mt-1`}
+        />
+        <EstimateDescriptionAiAssistant
+          aiFeaturesEnabled={aiFeaturesEnabled}
+          canDraft={canDraftDescription}
+          context={{
+            notes,
+            customerName,
+            jobType,
+            jobTitle,
+            jobNumber,
+            lineItems,
+            jobId,
+          }}
+          onApply={setNotes}
+          disabled={isPending}
+        />
+      </div>
 
       {error ? (
         <p className="text-sm text-red-600" role="alert" aria-live="polite">

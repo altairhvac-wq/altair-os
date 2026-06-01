@@ -24,6 +24,7 @@ type TechnicianEstimateSheetProps = {
   serviceItems: ServiceItem[];
   defaultTaxRate: number;
   aiFeaturesEnabled?: boolean;
+  canDraftDescription?: boolean;
   onClose: () => void;
   onSaved?: () => void;
 };
@@ -39,6 +40,7 @@ export function TechnicianEstimateSheet({
   serviceItems,
   defaultTaxRate,
   aiFeaturesEnabled = false,
+  canDraftDescription = true,
   onClose,
   onSaved,
 }: TechnicianEstimateSheetProps) {
@@ -99,6 +101,7 @@ export function TechnicianEstimateSheet({
                 serviceItems={serviceItems}
                 defaultTaxRate={defaultTaxRate}
                 aiFeaturesEnabled={aiFeaturesEnabled}
+                canDraftDescription={canDraftDescription}
                 onSuccess={handleSaved}
                 onCancel={onClose}
                 onSubmittingChange={setIsSubmitting}

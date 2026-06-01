@@ -19,6 +19,7 @@ type EstimateDetailsPanelProps = {
   isSubmitting?: boolean;
   createInitialData?: Partial<EstimateFormData>;
   aiFeaturesEnabled?: boolean;
+  canDraftDescription?: boolean;
 };
 
 export function EstimateDetailsPanel({
@@ -33,6 +34,7 @@ export function EstimateDetailsPanel({
   isSubmitting = false,
   createInitialData,
   aiFeaturesEnabled = false,
+  canDraftDescription = true,
 }: EstimateDetailsPanelProps) {
   const isOpen = mode === "create";
 
@@ -58,6 +60,7 @@ export function EstimateDetailsPanel({
           error={createError}
           isSubmitting={isSubmitting}
           aiFeaturesEnabled={aiFeaturesEnabled}
+          canDraftDescription={canDraftDescription}
         />
       </div>
     </FocusedDocumentOverlay>
