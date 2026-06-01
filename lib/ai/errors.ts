@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { AiFeatureName, GenerateDraftTextErrorCode } from "@/lib/ai/types";
+import { COMPLETION_NOTES_AI_FEATURE } from "@/lib/ai/completion-notes";
 import { INVOICE_MESSAGE_AI_FEATURE } from "@/lib/ai/invoice-message";
 import { JOB_SUMMARY_AI_FEATURE } from "@/lib/ai/job-summary";
 
@@ -23,6 +24,8 @@ const FEATURE_INSUFFICIENT_CONTEXT: Partial<Record<AiFeatureName, string>> = {
     "There is not enough job information to summarize yet.",
   [INVOICE_MESSAGE_AI_FEATURE]:
     "There is not enough invoice information to draft a message yet.",
+  [COMPLETION_NOTES_AI_FEATURE]:
+    "Add completion notes before polishing.",
 };
 
 const FEATURE_CONFIG_ERROR: Partial<Record<AiFeatureName, string>> = {
@@ -33,6 +36,8 @@ const FEATURE_CONFIG_ERROR: Partial<Record<AiFeatureName, string>> = {
 const FEATURE_PROVIDER_ERROR: Partial<Record<AiFeatureName, string>> = {
   [INVOICE_MESSAGE_AI_FEATURE]:
     "Could not draft the invoice message. Try again.",
+  [COMPLETION_NOTES_AI_FEATURE]:
+    "Could not polish the completion notes. Try again.",
 };
 
 /**

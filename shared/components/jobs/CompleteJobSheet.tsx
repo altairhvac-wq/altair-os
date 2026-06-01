@@ -16,6 +16,7 @@ import {
   type CompleteJobEquipmentPayload,
 } from "@/shared/components/equipment/CompleteJobEquipmentPanel";
 import { validateCustomerEquipmentFormData } from "@/shared/types/customer-equipment";
+import { CompletionNotesAiAssistant } from "@/shared/components/jobs/CompletionNotesAiAssistant";
 import { CompleteJobPhotosPanel } from "@/shared/components/jobs/CompleteJobPhotosPanel";
 import {
   MobileSheet,
@@ -32,6 +33,7 @@ type CompleteJobSheetProps = {
   jobId: string;
   customerId: string;
   currentStatus: JobStatus;
+  aiFeaturesEnabled?: boolean;
   onClose: () => void;
   onCompleted?: (
     status: JobStatus,
@@ -54,6 +56,7 @@ export function CompleteJobSheet({
   jobId,
   customerId,
   currentStatus,
+  aiFeaturesEnabled = false,
   onClose,
   onCompleted,
 }: CompleteJobSheetProps) {
@@ -256,6 +259,14 @@ export function CompleteJobSheet({
                     onChange={(event) => setCompletionNotes(event.target.value)}
                     placeholder="What was done on site?"
                     className={inputClass}
+                  />
+                  <CompletionNotesAiAssistant
+                    jobId={jobId}
+                    notes={completionNotes}
+                    onNotesChange={setCompletionNotes}
+                    followUpNotes={followUpNotes}
+                    aiFeaturesEnabled={aiFeaturesEnabled}
+                    disabled={formDisabled}
                   />
                 </div>
 

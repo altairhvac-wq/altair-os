@@ -140,6 +140,7 @@ export function JobDetailPageView({
             scheduledLabel={scheduledLabel}
             canUpdateStatus={canUpdateStatus}
             canEditJob={canEditJob}
+            aiFeaturesEnabled={aiFeaturesEnabled}
             canCreateEstimate={canViewBilling}
             canViewBilling={canViewBilling}
             billingContext={billingContext}

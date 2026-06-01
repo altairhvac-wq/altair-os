@@ -6,6 +6,7 @@ import { listJobBillingSummariesForJobs } from "@/lib/database/queries/job-billi
 import { listTechnicians } from "@/lib/database/queries/technicians";
 import { DispatchPageView } from "@/shared/components/dispatch/DispatchPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
+import { isAiFeaturesEnabled } from "@/lib/ai/env";
 import {
   enrichDispatchPageFocusState,
   parseDispatchPageSearchParams,
@@ -66,6 +67,7 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
       canDispatchJobs={companyContext.permissions.dispatchJobs}
       canViewAssignedJobs={companyContext.permissions.viewAssignedJobs}
       canViewBilling={canViewBillingData}
+      aiFeaturesEnabled={isAiFeaturesEnabled()}
       billingSummaries={billingSummaries}
       currentUserId={companyContext.user.id}
       dispatchPageFocus={pageFocus}

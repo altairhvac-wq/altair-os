@@ -29,6 +29,7 @@ type DispatchDetailsPanelProps = {
   canDispatchJobs: boolean;
   canUpdateJobWorkflow: boolean;
   canViewBilling?: boolean;
+  aiFeaturesEnabled?: boolean;
   billingContext?: {
     estimates: JobEstimateSummary[];
     invoices: JobInvoiceSummary[];
@@ -50,6 +51,7 @@ export function DispatchDetailsPanel({
   canDispatchJobs,
   canUpdateJobWorkflow,
   canViewBilling = false,
+  aiFeaturesEnabled = false,
   billingContext,
   assignError,
   assignSuccess = null,
@@ -152,6 +154,7 @@ export function DispatchDetailsPanel({
                   state={job.state}
                   zip={job.zip}
                   canUpdateStatus={canUpdateJobWorkflow}
+                  aiFeaturesEnabled={aiFeaturesEnabled}
                   canCorrectStatus={canDispatchJobs}
                   canReopenJob={canDispatchJobs}
                   businessContext={billingContext}

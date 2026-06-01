@@ -18,6 +18,7 @@ type JobDetailHeaderWorkflowProps = {
   scheduledLabel: string;
   canUpdateStatus: boolean;
   canEditJob: boolean;
+  aiFeaturesEnabled?: boolean;
   canCreateEstimate?: boolean;
   canViewBilling?: boolean;
   billingContext?: {
@@ -32,6 +33,7 @@ export function JobDetailHeaderWorkflow({
   scheduledLabel,
   canUpdateStatus,
   canEditJob,
+  aiFeaturesEnabled = false,
   canCreateEstimate = false,
   canViewBilling = false,
   billingContext,
@@ -85,6 +87,7 @@ export function JobDetailHeaderWorkflow({
           state={job.state}
           zip={job.zip}
           canUpdateStatus={canUpdateStatus}
+          aiFeaturesEnabled={aiFeaturesEnabled}
           canCorrectStatus={canEditJob}
           canReopenJob={canEditJob}
           businessContext={billingContext}

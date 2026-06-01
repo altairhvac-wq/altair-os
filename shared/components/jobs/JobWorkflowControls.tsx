@@ -30,6 +30,7 @@ type JobWorkflowControlsProps = {
   state: string;
   zip: string;
   canUpdateStatus: boolean;
+  aiFeaturesEnabled?: boolean;
   canCorrectStatus?: boolean;
   canReopenJob?: boolean;
   reopenSnapshot?: ReopenTargetJobSnapshot;
@@ -88,6 +89,7 @@ export function JobWorkflowControls({
   state,
   zip,
   canUpdateStatus,
+  aiFeaturesEnabled = false,
   canCorrectStatus = false,
   canReopenJob = false,
   reopenSnapshot,
@@ -182,6 +184,7 @@ export function JobWorkflowControls({
         customerId={customerId}
         status={status}
         canUpdateStatus={canUpdateStatus}
+        aiFeaturesEnabled={aiFeaturesEnabled}
         layout={layout === "stack" ? "stack" : "row"}
         showMobileHint={showMobileHint}
         competingSheetActive={competingSheetActive}

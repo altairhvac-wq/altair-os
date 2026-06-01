@@ -42,6 +42,7 @@ type JobWorkflowActionsProps = {
   customerId: string;
   status: JobStatus;
   canUpdateStatus: boolean;
+  aiFeaturesEnabled?: boolean;
   layout?: "row" | "stack";
   showMobileHint?: boolean;
   competingSheetActive?: boolean;
@@ -54,6 +55,7 @@ export function JobWorkflowActions({
   customerId,
   status,
   canUpdateStatus,
+  aiFeaturesEnabled = false,
   layout = "row",
   showMobileHint = true,
   competingSheetActive = false,
@@ -208,6 +210,7 @@ export function JobWorkflowActions({
           jobId={jobId}
           customerId={customerId}
           currentStatus={status}
+          aiFeaturesEnabled={aiFeaturesEnabled}
           onClose={() => setShowCompleteSheet(false)}
           onCompleted={(nextStatus, outcome) => {
             if (outcome === "success") {

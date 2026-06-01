@@ -37,6 +37,7 @@ type DispatchPageViewProps = {
   canDispatchJobs: boolean;
   canViewAssignedJobs: boolean;
   canViewBilling: boolean;
+  aiFeaturesEnabled?: boolean;
   billingSummaries: JobBillingSummariesByJobId;
   currentUserId: string;
   dispatchPageFocus?: DispatchPageFocusState;
@@ -48,6 +49,7 @@ export function DispatchPageView({
   canDispatchJobs,
   canViewAssignedJobs,
   canViewBilling,
+  aiFeaturesEnabled = false,
   billingSummaries,
   currentUserId,
   dispatchPageFocus,
@@ -474,6 +476,7 @@ export function DispatchPageView({
               canDispatchJobs={canDispatchJobs}
               canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
               canViewBilling={canViewBilling}
+              aiFeaturesEnabled={aiFeaturesEnabled}
               billingContext={{
                 estimates:
                   billingSummaries.estimatesByJobId[selectedJob.id] ?? [],
@@ -532,6 +535,7 @@ export function DispatchPageView({
               canDispatchJobs={canDispatchJobs}
               canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
               canViewBilling={canViewBilling}
+              aiFeaturesEnabled={aiFeaturesEnabled}
               billingContext={{
                 estimates:
                   billingSummaries.estimatesByJobId[selectedJob.id] ?? [],

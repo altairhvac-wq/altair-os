@@ -184,6 +184,7 @@ export function TechnicianJobFieldDetail({
             state={job.state}
             zip={job.zip}
             canUpdateStatus
+            aiFeaturesEnabled={aiFeaturesEnabled}
             layout="stack"
             showMobileHint={false}
             competingSheetActive={activeSheet !== null}

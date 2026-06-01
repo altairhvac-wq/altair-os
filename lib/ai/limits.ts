@@ -24,6 +24,12 @@ export const INVOICE_MESSAGE_LINE_ITEMS_LIMIT = 8;
 /** Max characters for the full invoice message AI context payload. */
 export const INVOICE_MESSAGE_CONTEXT_MAX_CHARS = 4_500;
 
+/** Max characters for rough completion notes in completion-notes AI context. */
+export const COMPLETION_NOTES_MAX_CHARS = 2_500;
+
+/** Max characters for the full completion-notes AI context payload. */
+export const COMPLETION_NOTES_CONTEXT_MAX_CHARS = 3_000;
+
 const TRUNCATION_SUFFIX = "…";
 
 /**

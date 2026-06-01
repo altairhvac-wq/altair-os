@@ -19,6 +19,7 @@ type JobDetailHeaderSectionProps = {
   scheduledLabel: string;
   canUpdateStatus: boolean;
   canEditJob: boolean;
+  aiFeaturesEnabled?: boolean;
   canCreateEstimate?: boolean;
   canViewBilling?: boolean;
   billingContext?: {
@@ -33,6 +34,7 @@ export function JobDetailHeaderSection({
   scheduledLabel,
   canUpdateStatus,
   canEditJob,
+  aiFeaturesEnabled = false,
   canCreateEstimate,
   canViewBilling,
   billingContext,
@@ -103,6 +105,7 @@ export function JobDetailHeaderSection({
       scheduledLabel={scheduledLabel}
       canUpdateStatus={canUpdateStatus}
       canEditJob={canEditJob}
+      aiFeaturesEnabled={aiFeaturesEnabled}
       canCreateEstimate={canCreateEstimate}
       canViewBilling={canViewBilling}
       billingContext={billingContext}
