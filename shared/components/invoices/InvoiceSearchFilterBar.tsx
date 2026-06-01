@@ -1,6 +1,7 @@
 import { Filter, Search } from "lucide-react";
 import { INVOICE_STATUS_OPTIONS } from "@/shared/types/invoice";
 import type { InvoiceListStatusFilter } from "@/shared/lib/invoice-page-focus";
+import { InvoiceBatchSelectAllControl } from "./InvoiceBatchSelectAllControl";
 
 const INVOICE_LIST_STATUS_OPTIONS: {
   value: InvoiceListStatusFilter;
@@ -17,6 +18,12 @@ type InvoiceSearchFilterBarProps = {
   onStatusFilterChange: (value: InvoiceListStatusFilter) => void;
   resultCount: number;
   showStatusFilter?: boolean;
+  batchSelectAllControl?: {
+    selectableCount: number;
+    allEligibleSelected: boolean;
+    onCheckAll: () => void;
+    onClearSelection: () => void;
+  };
 };
 
 export function InvoiceSearchFilterBar({
@@ -26,6 +33,7 @@ export function InvoiceSearchFilterBar({
   onStatusFilterChange,
   resultCount,
   showStatusFilter = true,
+  batchSelectAllControl,
 }: InvoiceSearchFilterBarProps) {
   return (
     <div className="shrink-0 border-b border-slate-100/90 bg-slate-50/40 px-4 py-2.5">
@@ -59,6 +67,9 @@ export function InvoiceSearchFilterBar({
                 ))}
               </select>
             </div>
+          ) : null}
+          {batchSelectAllControl ? (
+            <InvoiceBatchSelectAllControl {...batchSelectAllControl} />
           ) : null}
           <p className="admin-text-helper hidden whitespace-nowrap sm:block">
             {resultCount} {resultCount === 1 ? "invoice" : "invoices"}

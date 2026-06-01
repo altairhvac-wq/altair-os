@@ -11,6 +11,7 @@ import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import {
   buildJobsByIdForBatchSend,
   formatBatchSendInvoicesResultMessage,
+  resolveInvoiceBatchSelectionState,
   toggleInvoiceBatchSelection,
   toggleInvoiceGroupBatchSelection,
 } from "@/shared/lib/invoice-batch-send";
@@ -205,6 +206,18 @@ export function InvoicesPageView({
 
   const selectionEnabled = canManageInvoices;
   const selectedCount = selectedInvoiceIds.size;
+
+  const visibleSelectionState = useMemo(
+    () =>
+      selectionEnabled
+        ? resolveInvoiceBatchSelectionState(
+            selectedInvoiceIds,
+            visibleInvoices,
+            jobsById,
+          )
+        : null,
+    [jobsById, selectedInvoiceIds, selectionEnabled, visibleInvoices],
+  );
 
   function handleToggleInvoiceSelection(invoiceId: string) {
     setSelectedInvoiceIds((previous) =>
@@ -443,6 +456,19 @@ export function InvoicesPageView({
             onStatusFilterChange={setStatusFilter}
             resultCount={filteredInvoices.length}
             showStatusFilter={viewTab === "all"}
+            batchSelectAllControl={
+              selectionEnabled &&
+              visibleSelectionState &&
+              visibleSelectionState.selectableCount > 0 &&
+              !hasNoResults
+                ? {
+                    selectableCount: visibleSelectionState.selectableCount,
+                    allEligibleSelected: visibleSelectionState.allSelected,
+                    onCheckAll: () => handleToggleAllVisibleSelection(true),
+                    onClearSelection: handleClearSelection,
+                  }
+                : undefined
+            }
           />
         ) : null}
 
