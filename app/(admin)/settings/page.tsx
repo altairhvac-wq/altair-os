@@ -17,7 +17,6 @@ import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapsho
 import { getDemoDataStatus } from "@/lib/database/queries/demo-data";
 import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@/shared/lib/onboarding-checklist";
 import { hasSavedCompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
-import { PendingInvitesCard } from "@/shared/components/settings/PendingInvitesCard";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { SettingsPageView } from "@/shared/components/settings/SettingsPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
@@ -93,8 +92,6 @@ export default async function SettingsPage() {
         </SettingsAlertBanner>
       ) : null}
 
-      <PendingInvitesCard invites={pendingInvites} variant="settings" />
-
       <SettingsPageView
         companyProfile={companyProfile}
         initialMembers={members}
@@ -110,6 +107,7 @@ export default async function SettingsPage() {
           !hasSavedCompanyBillingDefaults(companyContext.company.settings)
         }
         demoDataStatus={demoDataStatus ?? undefined}
+        pendingInvites={pendingInvites}
       />
     </div>
   );
