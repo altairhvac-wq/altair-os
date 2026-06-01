@@ -5,11 +5,14 @@ import {
   DISPATCH_PAGE_UNASSIGNED_HREF,
 } from "@/shared/lib/dispatch-page-focus";
 import {
+  INVOICE_PAGE_DRAFT_HREF,
   INVOICE_PAGE_OVERDUE_HREF,
 } from "@/shared/lib/invoice-page-focus";
 import type {
   DashboardData,
   DashboardOverdueInvoicePreview,
+  DashboardUnsentEstimatePreview,
+  DashboardUnsentInvoicePreview,
 } from "@/shared/types/dashboard";
 import type { DispatchJob } from "@/shared/types/dispatch";
 import type { CompletedWorkAwaitingInvoicingEntry } from "@/shared/types/reports";
@@ -26,7 +29,9 @@ export type MobileActionCategory =
 export type MobileActionSheetType =
   | "unassigned-jobs"
   | "ready-to-invoice"
-  | "overdue-invoices";
+  | "overdue-invoices"
+  | "invoices-not-sent"
+  | "estimates-not-sent";
 
 export type MobileActionCard = {
   id: string;
@@ -47,6 +52,8 @@ export type MobileActionSheetData = {
   unassignedJobs: DispatchJob[];
   readyToInvoiceJobs: CompletedWorkAwaitingInvoicingEntry[];
   overdueInvoices: DashboardOverdueInvoicePreview[];
+  unsentInvoices: DashboardUnsentInvoicePreview[];
+  unsentEstimates: DashboardUnsentEstimatePreview[];
   technicians: { id: string; name: string }[];
   access: CompanyAccessScope;
 };
@@ -80,6 +87,10 @@ function buildDescription(id: string, count: number): string {
       return `${count} ${pluralize(count, "invoice")} past due — follow up to collect`;
     case "ready-to-invoice":
       return `${count} completed ${pluralize(count, "job")} waiting for an invoice`;
+    case "invoices-not-sent":
+      return `${count} draft ${pluralize(count, "invoice")} ready to send to customers`;
+    case "estimates-not-sent":
+      return `${count} draft ${pluralize(count, "estimate")} ready to send to customers`;
     case "needs-review":
       return `${count} ${pluralize(count, "item")} need office review before billing`;
     case "stalled-jobs":
@@ -98,6 +109,8 @@ const PRIMARY_IDS = new Set([
   "overdue-invoices",
   "needs-review",
   "ready-to-invoice",
+  "invoices-not-sent",
+  "estimates-not-sent",
   "stalled-jobs",
   "expense-approvals",
 ]);
@@ -221,6 +234,42 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
     });
   }
 
+  if (access.canViewBilling && money.unsentInvoiceCount > 0) {
+    cards.push({
+      id: "invoices-not-sent",
+      label: "Invoices not sent",
+      count: money.unsentInvoiceCount,
+      severity: money.unsentInvoiceCount >= 5 ? "critical" : "warning",
+      description: buildDescription(
+        "invoices-not-sent",
+        money.unsentInvoiceCount,
+      ),
+      category: "money-actions",
+      sheetType: "invoices-not-sent",
+      href: INVOICE_PAGE_DRAFT_HREF,
+      panelId: "cash-flow",
+      canFix: access.canViewBilling,
+    });
+  }
+
+  if (access.canViewBilling && money.unsentEstimateCount > 0) {
+    cards.push({
+      id: "estimates-not-sent",
+      label: "Estimates not sent",
+      count: money.unsentEstimateCount,
+      severity: money.unsentEstimateCount >= 5 ? "critical" : "warning",
+      description: buildDescription(
+        "estimates-not-sent",
+        money.unsentEstimateCount,
+      ),
+      category: "money-actions",
+      sheetType: "estimates-not-sent",
+      href: "/estimates",
+      panelId: "cash-flow",
+      canFix: access.canViewBilling,
+    });
+  }
+
   if (access.canViewCompanyExpenses && expenses.submittedCount > 0) {
     cards.push({
       id: "expense-approvals",
@@ -309,6 +358,8 @@ export function buildMobileActionSheetData(
     unassignedJobs: data.operations.unassignedJobs,
     readyToInvoiceJobs: data.completedWorkAwaitingInvoicing.jobs,
     overdueInvoices: data.money.overdueInvoices,
+    unsentInvoices: data.money.unsentInvoices,
+    unsentEstimates: data.money.unsentEstimates,
     technicians: data.technicians.map((tech) => ({
       id: tech.id,
       name: tech.name,

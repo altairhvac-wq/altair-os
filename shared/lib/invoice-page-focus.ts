@@ -8,6 +8,7 @@ export const INVOICE_PAGE_CASH_FLOW_HREF = "/invoices?focus=cash-flow";
 export const INVOICE_PAGE_OVERDUE_HREF =
   "/invoices?focus=cash-flow&status=overdue";
 export const INVOICE_PAGE_UNPAID_HREF = "/invoices?focus=cash-flow&status=unpaid";
+export const INVOICE_PAGE_DRAFT_HREF = "/invoices?status=draft";
 
 export type InvoicePageFocus = "cash-flow";
 

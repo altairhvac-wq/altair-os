@@ -5,7 +5,9 @@ import {
   AlertTriangle,
   Briefcase,
   ChevronRight,
+  ClipboardList,
   DollarSign,
+  FileText,
   Info,
   Users,
 } from "lucide-react";
@@ -16,6 +18,8 @@ import {
   MobileSheetHeaderIcon,
   MobileSheetPanel,
 } from "@/shared/components/ui/mobile-sheet";
+import { EstimatesNotSentActionContent } from "@/shared/components/dashboard/mobile-action-sheets/EstimatesNotSentActionContent";
+import { InvoicesNotSentActionContent } from "@/shared/components/dashboard/mobile-action-sheets/InvoicesNotSentActionContent";
 import { OverdueInvoicesActionContent } from "@/shared/components/dashboard/mobile-action-sheets/OverdueInvoicesActionContent";
 import { ReadyToInvoiceActionContent } from "@/shared/components/dashboard/mobile-action-sheets/ReadyToInvoiceActionContent";
 import { UnassignedJobsActionContent } from "@/shared/components/dashboard/mobile-action-sheets/UnassignedJobsActionContent";
@@ -47,6 +51,14 @@ const SHEET_ICONS: Record<
     icon: DollarSign,
     className: "bg-rose-100 text-rose-700",
   },
+  "invoices-not-sent": {
+    icon: FileText,
+    className: "bg-amber-100 text-amber-700",
+  },
+  "estimates-not-sent": {
+    icon: ClipboardList,
+    className: "bg-cyan-100 text-cyan-700",
+  },
 };
 
 function MobileActionSheetContent({
@@ -74,6 +86,20 @@ function MobileActionSheetContent({
     case "overdue-invoices":
       return (
         <OverdueInvoicesActionContent
+          sheetData={sheetData}
+          totalCount={card.count}
+        />
+      );
+    case "invoices-not-sent":
+      return (
+        <InvoicesNotSentActionContent
+          sheetData={sheetData}
+          totalCount={card.count}
+        />
+      );
+    case "estimates-not-sent":
+      return (
+        <EstimatesNotSentActionContent
           sheetData={sheetData}
           totalCount={card.count}
         />

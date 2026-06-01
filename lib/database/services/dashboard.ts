@@ -50,6 +50,8 @@ const COMPLETED_WORK_DASHBOARD_LIMIT = 5;
 const COMPLETED_WORK_REVIEW_DASHBOARD_LIMIT = 5;
 const UNASSIGNED_JOBS_DASHBOARD_LIMIT = 10;
 const OVERDUE_INVOICES_DASHBOARD_LIMIT = 10;
+const UNSENT_INVOICES_DASHBOARD_LIMIT = 10;
+const UNSENT_ESTIMATES_DASHBOARD_LIMIT = 10;
 /** Match admin layout fetch so React cache dedupes within the request. */
 const NOTIFICATIONS_FETCH_LIMIT = 20;
 
@@ -63,6 +65,10 @@ const EMPTY_MONEY: DashboardData["money"] = {
   recentPayments: [],
   approvedEstimates: [],
   overdueInvoices: [],
+  unsentInvoiceCount: 0,
+  unsentInvoices: [],
+  unsentEstimateCount: 0,
+  unsentEstimates: [],
 };
 
 const EMPTY_EXPENSES: DashboardData["expenses"] = {
@@ -321,6 +327,14 @@ export async function getDashboardData(
         .slice(0, APPROVED_ESTIMATES_LIMIT)
     : [];
 
+  const unsentInvoices = access.canViewBilling
+    ? invoices.filter((invoice) => invoice.status === "draft")
+    : [];
+
+  const unsentEstimates = access.canViewBilling
+    ? estimates.filter((estimate) => estimate.status === "draft")
+    : [];
+
   const submittedExpenses = access.canViewCompanyExpenses
     ? expenses.filter((expense) => expense.status === "submitted")
     : [];
@@ -397,6 +411,30 @@ export async function getDashboardData(
               balanceDue: invoice.balanceDue,
               dueDate: invoice.dueDate,
               status: invoice.status,
+            })),
+          unsentInvoiceCount: unsentInvoices.length,
+          unsentInvoices: unsentInvoices
+            .slice(0, UNSENT_INVOICES_DASHBOARD_LIMIT)
+            .map((invoice) => ({
+              id: invoice.id,
+              invoiceNumber: invoice.invoiceNumber,
+              customerName: invoice.customerName,
+              customerEmail: invoice.customerEmail,
+              jobId: invoice.jobId,
+              total: invoice.total,
+              status: invoice.status,
+            })),
+          unsentEstimateCount: unsentEstimates.length,
+          unsentEstimates: unsentEstimates
+            .slice(0, UNSENT_ESTIMATES_DASHBOARD_LIMIT)
+            .map((estimate) => ({
+              id: estimate.id,
+              estimateNumber: estimate.estimateNumber,
+              customerName: estimate.customerName,
+              customerEmail: estimate.customerEmail,
+              jobId: estimate.jobId,
+              total: estimate.total,
+              status: estimate.status,
             })),
         }
       : EMPTY_MONEY,

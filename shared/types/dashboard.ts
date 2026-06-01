@@ -48,6 +48,26 @@ export type DashboardOverdueInvoicePreview = {
   status: InvoiceStatus;
 };
 
+export type DashboardUnsentInvoicePreview = {
+  id: string;
+  invoiceNumber: string;
+  customerName: string;
+  customerEmail?: string;
+  jobId?: string;
+  total: number;
+  status: InvoiceStatus;
+};
+
+export type DashboardUnsentEstimatePreview = {
+  id: string;
+  estimateNumber: string;
+  customerName: string;
+  customerEmail?: string;
+  jobId?: string;
+  total: number;
+  status: Estimate["status"];
+};
+
 export type DashboardRecentPayment = {
   id: string;
   invoiceId: string;
@@ -69,6 +89,12 @@ export type DashboardMoneySnapshot = {
   approvedEstimates: Estimate[];
   /** Overdue invoices (preview for mobile action sheets). */
   overdueInvoices: DashboardOverdueInvoicePreview[];
+  /** Draft invoices not yet sent (preview for mobile action sheets). */
+  unsentInvoiceCount: number;
+  unsentInvoices: DashboardUnsentInvoicePreview[];
+  /** Draft estimates not yet sent (preview for mobile action sheets). */
+  unsentEstimateCount: number;
+  unsentEstimates: DashboardUnsentEstimatePreview[];
 };
 
 export type DashboardExpenseReview = {
