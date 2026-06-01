@@ -4,13 +4,13 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { InvoiceDetailRoute } from "@/shared/components/invoices/InvoiceDetailRoute";
 
-type InvoiceDetailPageProps = {
+type InterceptedInvoiceDetailPageProps = {
   params: Promise<{ invoiceId: string }>;
 };
 
-export default async function InvoiceDetailPage({
+export default async function InterceptedInvoiceDetailPage({
   params,
-}: InvoiceDetailPageProps) {
+}: InterceptedInvoiceDetailPageProps) {
   const { invoiceId } = await params;
   const companyContext = await getActiveCompanyContext();
 
@@ -24,5 +24,5 @@ export default async function InvoiceDetailPage({
     );
   }
 
-  return <InvoiceDetailRoute invoiceId={invoiceId} presentation="page" />;
+  return <InvoiceDetailRoute invoiceId={invoiceId} presentation="overlay" />;
 }

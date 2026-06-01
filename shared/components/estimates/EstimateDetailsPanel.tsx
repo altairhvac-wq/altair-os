@@ -1,4 +1,4 @@
-import { DesktopConditionalDetailPanel } from "@/shared/components/layout/DesktopConditionalDetailPanel";
+import { FocusedDocumentOverlay } from "@/shared/components/layout/FocusedDocumentOverlay";
 import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
 import type { EstimateFormData } from "@/shared/types/estimate";
@@ -35,24 +35,27 @@ export function EstimateDetailsPanel({
   const isOpen = mode === "create";
 
   return (
-    <DesktopConditionalDetailPanel
+    <FocusedDocumentOverlay
       isOpen={isOpen}
       onClose={onClose}
       title="New estimate"
       subtitle="Add customer, line items, and pricing"
       closeDisabled={isSubmitting}
       ariaLabel="Create estimate"
+      bodyScroll="child"
     >
-      <EstimateForm
-        customers={customers}
-        jobs={jobs}
-        serviceItems={serviceItems}
-        initialData={createInitialData}
-        onSubmit={onCreateSubmit}
-        onCancel={onCreateCancel}
-        error={createError}
-        isSubmitting={isSubmitting}
-      />
-    </DesktopConditionalDetailPanel>
+      <div className="flex h-full min-h-0 flex-1 flex-col px-3 py-3 sm:px-4 sm:py-4">
+        <EstimateForm
+          customers={customers}
+          jobs={jobs}
+          serviceItems={serviceItems}
+          initialData={createInitialData}
+          onSubmit={onCreateSubmit}
+          onCancel={onCreateCancel}
+          error={createError}
+          isSubmitting={isSubmitting}
+        />
+      </div>
+    </FocusedDocumentOverlay>
   );
 }

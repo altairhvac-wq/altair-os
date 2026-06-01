@@ -42,6 +42,7 @@ type InvoiceDetailPageViewProps = {
   companyTimeZone: string;
   canManageBilling: boolean;
   signature?: BillingSignature | null;
+  presentation?: "page" | "overlay";
 };
 
 export function InvoiceDetailPageView({
@@ -52,7 +53,9 @@ export function InvoiceDetailPageView({
   companyTimeZone,
   canManageBilling,
   signature,
+  presentation = "page",
 }: InvoiceDetailPageViewProps) {
+  const isOverlay = presentation === "overlay";
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const customerEmail = invoice.customerEmail?.trim();
   const customerPhone = invoice.customerPhone?.trim();
@@ -71,57 +74,76 @@ export function InvoiceDetailPageView({
     window.print();
   }
 
-  return (
-    <div className={`mx-auto min-w-0 max-w-5xl ${adminPageStackClass} overflow-x-hidden pb-2 print:max-w-none print:pb-0`}>
-      <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Link
-          href="/invoices"
-          className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-        >
-          <ArrowLeft className="h-4 w-4 shrink-0" />
-          Back to invoices
-        </Link>
+  const headerActions = (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      {canManageBilling ? (
+        <BillingSignatureCaptureSheet
+          entityType="invoice"
+          entityId={invoice.id}
+          documentNumber={invoice.invoiceNumber}
+          customerId={invoice.customerId}
+          jobId={invoice.jobId}
+          existingSignature={signature}
+        />
+      ) : null}
+      <button
+        type="button"
+        onClick={handlePrint}
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+      >
+        <Printer className="h-4 w-4" />
+        Print / Save PDF
+      </button>
+    </div>
+  );
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          {canManageBilling ? (
-            <BillingSignatureCaptureSheet
-              entityType="invoice"
-              entityId={invoice.id}
-              documentNumber={invoice.invoiceNumber}
-              customerId={invoice.customerId}
-              jobId={invoice.jobId}
-              existingSignature={signature}
-            />
-          ) : null}
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+  return (
+    <div
+      className={`mx-auto min-w-0 max-w-5xl ${adminPageStackClass} overflow-x-hidden pb-2 print:max-w-none print:pb-0 ${
+        isOverlay ? "px-3 py-3 sm:px-4 sm:py-4" : ""
+      }`}
+    >
+      {!isOverlay ? (
+        <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Link
+            href="/invoices"
+            className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
           >
-            <Printer className="h-4 w-4" />
-            Print / Save PDF
-          </button>
+            <ArrowLeft className="h-4 w-4 shrink-0" />
+            Back to invoices
+          </Link>
+          {headerActions}
         </div>
-      </div>
+      ) : null}
 
       <section className="no-print overflow-hidden admin-card">
         <div className="border-b border-slate-100 bg-white px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Invoice
-              </p>
-              <h1 className="mt-1 break-words text-2xl font-bold text-slate-900">
-                {invoice.invoiceNumber}
-              </h1>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              {!isOverlay ? (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Invoice
+                  </p>
+                  <h1 className="mt-1 break-words text-2xl font-bold text-slate-900">
+                    {invoice.invoiceNumber}
+                  </h1>
+                </>
+              ) : null}
+              <div
+                className={`flex flex-wrap items-center gap-2 ${isOverlay ? "" : "mt-3"}`}
+              >
                 <InvoiceStatusBadge status={invoice.status} />
-                <span className="hidden text-sm font-semibold text-slate-900 sm:inline">
-                  {formatCurrency(invoice.total)}
-                </span>
-                <span className="hidden text-sm text-slate-500 sm:inline">
-                  Balance {formatCurrency(invoice.balanceDue)}
-                </span>
+                {!isOverlay ? (
+                  <>
+                    <span className="hidden text-sm font-semibold text-slate-900 sm:inline">
+                      {formatCurrency(invoice.total)}
+                    </span>
+                    <span className="hidden text-sm text-slate-500 sm:inline">
+                      Balance {formatCurrency(invoice.balanceDue)}
+                    </span>
+                  </>
+                ) : null}
                 <span className="text-sm text-slate-500">
                   Issued {formatDate(invoice.issueDate)}
                 </span>
@@ -138,7 +160,7 @@ export function InvoiceDetailPageView({
               ) : null}
             </div>
 
-            <div className="hidden sm:block">
+            <div className={`${isOverlay ? "w-full" : "hidden sm:block"}`}>
               <InvoiceStatusActions
                 invoice={invoice}
                 paymentCount={payments.length}

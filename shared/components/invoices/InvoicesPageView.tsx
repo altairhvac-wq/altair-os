@@ -221,7 +221,6 @@ export function InvoicesPageView({
   const hasNoInvoices = invoices.length === 0;
   const hasNoTodayInvoices = !hasNoInvoices && todayInvoices.length === 0;
   const hasNoResults = !hasNoInvoices && filteredInvoices.length === 0;
-  const isCreateOpen = panelMode === "create";
 
   const subtitle =
     viewTab === "today"
@@ -286,17 +285,8 @@ export function InvoicesPageView({
           </button>
         ) : undefined
       }
-      className={
-        isCreateOpen
-          ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
-          : undefined
-      }
     >
-      <section
-        className={`flex min-h-[16rem] min-w-0 flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
-          isCreateOpen ? "max-lg:hidden" : ""
-        }`}
-      >
+      <section className="flex min-h-[16rem] min-w-0 flex-1 flex-col overflow-hidden admin-card lg:min-h-0">
         {!hasNoInvoices ? (
           <div className="shrink-0 border-b border-slate-100/90 px-4 py-2.5">
             <JobsViewTabs

@@ -6,13 +6,13 @@ import { ComingSoonView } from "@/shared/components/layout/ComingSoonView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { EstimateDetailRoute } from "@/shared/components/estimates/EstimateDetailRoute";
 
-type EstimateDetailPageProps = {
+type InterceptedEstimateDetailPageProps = {
   params: Promise<{ estimateId: string }>;
 };
 
-export default async function EstimateDetailPage({
+export default async function InterceptedEstimateDetailPage({
   params,
-}: EstimateDetailPageProps) {
+}: InterceptedEstimateDetailPageProps) {
   const { estimateId } = await params;
   const companyContext = await getActiveCompanyContext();
 
@@ -35,5 +35,7 @@ export default async function EstimateDetailPage({
     );
   }
 
-  return <EstimateDetailRoute estimateId={estimateId} presentation="page" />;
+  return (
+    <EstimateDetailRoute estimateId={estimateId} presentation="overlay" />
+  );
 }
