@@ -14,7 +14,7 @@ import {
   type JobPriority,
   type JobStatus,
 } from "@/shared/types/job";
-import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
+import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
 import { CustomerSearchResultCard } from "./CustomerSearchResultCard";
 import { JobDetailsPanel } from "./JobDetailsPanel";
 import { JobSearchFilterBar } from "./JobSearchFilterBar";
@@ -23,7 +23,7 @@ import { JobsTable } from "./JobsTable";
 import { JobsTodayCardList } from "./JobsTodayCardList";
 import { JobsViewTabs } from "./JobsViewTabs";
 
-type PanelMode = "detail" | "create" | "empty";
+type PanelMode = "create" | "empty";
 type JobsViewTab = "today" | "all";
 
 type JobsPageViewProps = {
@@ -115,7 +115,10 @@ export function JobsPageView({
   );
 
   const filteredAllJobs = useMemo(
-    () => sortJobsByScheduledTime(filterAllJobs(jobs, statusFilter, priorityFilter)),
+    () =>
+      sortJobsByScheduledTime(
+        filterAllJobs(jobs, statusFilter, priorityFilter),
+      ),
     [jobs, statusFilter, priorityFilter],
   );
 
@@ -155,7 +158,12 @@ export function JobsPageView({
       const result = await createJobAction(data);
 
       if (result.error || !result.job) {
-        setCreateError(formatActionError(result.error, "We couldn't create this job. Check the customer and schedule, then try again."));
+        setCreateError(
+          formatActionError(
+            result.error,
+            "We couldn't create this job. Check the customer and schedule, then try again.",
+          ),
+        );
         return;
       }
 
@@ -178,6 +186,13 @@ export function JobsPageView({
   const hasNoJobs = jobs.length === 0;
   const showCustomerSearch = isSearching && customers.length > 0;
   const showCustomerSearchUnavailable = isSearching && customers.length === 0;
+  const isCreateOpen = panelMode === "create";
+
+  const subtitle = isSearching
+    ? "Customer search"
+    : viewTab === "today"
+      ? `${todayJobs.length} scheduled today`
+      : `${jobs.length} total jobs`;
 
   function renderMainContent() {
     if (showCustomerSearch) {
@@ -224,7 +239,9 @@ export function JobsPageView({
         );
       }
 
-      return <JobsTodayCardList jobs={sortedTodayJobs} onSelect={handleSelectJob} />;
+      return (
+        <JobsTodayCardList jobs={sortedTodayJobs} onSelect={handleSelectJob} />
+      );
     }
 
     if (hasNoJobs) {
@@ -244,60 +261,57 @@ export function JobsPageView({
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 max-w-full flex-col gap-3 lg:h-[calc(100dvh-9.5rem)] lg:flex-row lg:overflow-hidden">
+    <ListCommandCenterLayout
+      title="Jobs"
+      subtitle={subtitle}
+      primaryAction={
+        canDispatchJobs ? (
+          <button
+            type="button"
+            onClick={handleNewJob}
+            disabled={customers.length === 0}
+            className="inline-flex shrink-0 items-center gap-2 admin-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Plus className="h-4 w-4" />
+            New Job
+          </button>
+        ) : undefined
+      }
+      className={
+        isCreateOpen
+          ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
+          : undefined
+      }
+    >
       <section
-        className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col admin-card lg:min-h-0 lg:flex-1 lg:overflow-hidden ${panelMode === "create" ? "max-lg:hidden" : ""}`}
+        className={`flex min-h-[16rem] min-w-0 flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
+          isCreateOpen ? "max-lg:hidden" : ""
+        }`}
       >
-        <div className="admin-panel-header admin-section-header flex shrink-0 flex-wrap items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <h2 className="admin-heading-section sm:text-base">Jobs</h2>
-            <p className="admin-text-helper mt-0.5">
-              {isSearching
-                ? "Customer search"
-                : viewTab === "today"
-                  ? `${todayJobs.length} scheduled today`
-                  : `${jobs.length} total`}
-            </p>
-          </div>
-          {canDispatchJobs ? (
-            <button
-              type="button"
-              onClick={handleNewJob}
-              disabled={customers.length === 0}
-              className="inline-flex shrink-0 items-center gap-2 admin-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Plus className="h-4 w-4" />
-              New Job
-            </button>
-          ) : null}
-        </div>
-
-        <div className="shrink-0 space-y-2 px-4 pt-2">
-          {!isSearching ? (
+        {!isSearching && !hasNoJobs ? (
+          <div className="shrink-0 border-b border-slate-100/90 px-4 py-2.5">
             <JobsViewTabs
               activeTab={viewTab}
               onTabChange={setViewTab}
               todayCount={todayJobs.length}
               allCount={jobs.length}
             />
-          ) : null}
-        </div>
+          </div>
+        ) : null}
 
-        <div className="shrink-0">
-          <JobSearchFilterBar
-            search={search}
-            onSearchChange={setSearch}
-            resultCount={
-              isSearching ? filteredCustomers.length : filteredAllJobs.length
-            }
-            resultLabel={isSearching ? "customers" : "jobs"}
-            statusFilter={statusFilter}
-            priorityFilter={priorityFilter}
-            onStatusFilterChange={setStatusFilter}
-            onPriorityFilterChange={setPriorityFilter}
-            showJobFilters={!isSearching && viewTab === "all" && !hasNoJobs}
-          />
-        </div>
+        <JobSearchFilterBar
+          search={search}
+          onSearchChange={setSearch}
+          resultCount={
+            isSearching ? filteredCustomers.length : filteredAllJobs.length
+          }
+          resultLabel={isSearching ? "customers" : "jobs"}
+          statusFilter={statusFilter}
+          priorityFilter={priorityFilter}
+          onStatusFilterChange={setStatusFilter}
+          onPriorityFilterChange={setPriorityFilter}
+          showJobFilters={!isSearching && viewTab === "all" && !hasNoJobs}
+        />
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
           {renderMainContent()}
@@ -306,7 +320,6 @@ export function JobsPageView({
 
       <JobDetailsPanel
         mode={panelMode}
-        job={null}
         customers={customers}
         onClose={handleClosePanel}
         onCreateSubmit={handleCreateSubmit}
@@ -315,6 +328,6 @@ export function JobsPageView({
         isSubmitting={isPending}
         createInitialData={createInitialData}
       />
-    </div>
+    </ListCommandCenterLayout>
   );
 }

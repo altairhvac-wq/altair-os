@@ -10,7 +10,7 @@ import type {
   ExpenseReceiptFilter,
   ExpenseStatus,
 } from "@/shared/types/expense";
-import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
+import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
 import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
 import {
   filterExpenses,
@@ -64,14 +64,20 @@ export function ExpensesPageView({
 }: ExpensesPageViewProps) {
   const [search, setSearch] = useState(DEFAULT_FILTERS.search);
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
-  const [categoryFilter, setCategoryFilter] = useState(DEFAULT_FILTERS.categoryFilter);
+  const [categoryFilter, setCategoryFilter] = useState(
+    DEFAULT_FILTERS.categoryFilter,
+  );
   const [technicianFilter, setTechnicianFilter] = useState(
     DEFAULT_FILTERS.technicianFilter,
   );
   const [jobFilter, setJobFilter] = useState(DEFAULT_FILTERS.jobFilter);
-  const [paymentFilter, setPaymentFilter] = useState(DEFAULT_FILTERS.paymentFilter);
+  const [paymentFilter, setPaymentFilter] = useState(
+    DEFAULT_FILTERS.paymentFilter,
+  );
   const [dateFilter, setDateFilter] = useState(DEFAULT_FILTERS.dateFilter);
-  const [receiptFilter, setReceiptFilter] = useState(DEFAULT_FILTERS.receiptFilter);
+  const [receiptFilter, setReceiptFilter] = useState(
+    DEFAULT_FILTERS.receiptFilter,
+  );
   const [selectedId, setSelectedId] = useState<string | null>(
     initialSelectedId ?? null,
   );
@@ -88,7 +94,10 @@ export function ExpensesPageView({
   }, [expenses]);
 
   useEffect(() => {
-    if (initialSelectedId && expenses.some((expense) => expense.id === initialSelectedId)) {
+    if (
+      initialSelectedId &&
+      expenses.some((expense) => expense.id === initialSelectedId)
+    ) {
       setSelectedId(initialSelectedId);
       setPanelMode("detail");
     }
@@ -137,7 +146,8 @@ export function ExpensesPageView({
 
   const activeFilters = hasActiveExpenseFilters(listFilters);
 
-  const selectedExpense = localExpenses.find((exp) => exp.id === selectedId) ?? null;
+  const selectedExpense =
+    localExpenses.find((exp) => exp.id === selectedId) ?? null;
 
   function handleExpenseUpdated(updated: Expense) {
     setLocalExpenses((current) =>
@@ -169,7 +179,9 @@ export function ExpensesPageView({
   }
 
   function handleNeedsReview() {
-    setStatusFilter((current) => (current === "submitted" ? "all" : "submitted"));
+    setStatusFilter((current) =>
+      current === "submitted" ? "all" : "submitted",
+    );
   }
 
   const contextLabel =
@@ -193,100 +205,108 @@ export function ExpensesPageView({
 
   const hasNoExpenses = localExpenses.length === 0;
   const hasNoResults = !hasNoExpenses && filteredExpenses.length === 0;
+  const isPanelOpen = panelMode !== "empty";
+
+  const subtitle =
+    contextLabel ?? "Capture receipts and draft expenses for later review";
 
   return (
-    <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:overflow-hidden">
-      {initialJobId && initialJobLabel ? (
-        <JobContextFilterBanner
-          jobLabel={initialJobLabel}
-          clearHref="/expenses"
-        />
-      ) : null}
+    <ListCommandCenterLayout
+      title="Expenses"
+      subtitle={subtitle}
+      banners={
+        initialJobId && initialJobLabel ? (
+          <JobContextFilterBanner
+            jobLabel={initialJobLabel}
+            clearHref="/expenses"
+          />
+        ) : null
+      }
+      summary={
+        !hasNoExpenses ? (
+          <ExpenseSummaryCards expenses={localExpenses} />
+        ) : null
+      }
+      primaryAction={
+        <button
+          type="button"
+          onClick={handleNewExpense}
+          className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
+        >
+          <Plus className="h-4 w-4" />
+          New Expense
+        </button>
+      }
+      className={
+        isPanelOpen
+          ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
+          : undefined
+      }
+    >
+      <section
+        className={`flex min-h-[16rem] min-w-0 flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
+          isPanelOpen ? "max-lg:hidden" : ""
+        }`}
+      >
+        {!hasNoExpenses ? (
+          <ExpenseSearchFilterBar
+            search={search}
+            statusFilter={statusFilter}
+            categoryFilter={categoryFilter}
+            technicianFilter={technicianFilter}
+            jobFilter={jobFilter}
+            paymentFilter={paymentFilter}
+            dateFilter={dateFilter}
+            receiptFilter={receiptFilter}
+            technicianOptions={technicianOptions}
+            jobOptions={jobOptions}
+            showTechnicianFilter={technicianOptions.length > 1}
+            showJobFilter={!initialJobId && jobOptions.length > 0}
+            onSearchChange={setSearch}
+            onStatusFilterChange={setStatusFilter}
+            onCategoryFilterChange={setCategoryFilter}
+            onTechnicianFilterChange={setTechnicianFilter}
+            onJobFilterChange={setJobFilter}
+            onPaymentFilterChange={setPaymentFilter}
+            onDateFilterChange={setDateFilter}
+            onReceiptFilterChange={setReceiptFilter}
+            onNeedsReview={handleNeedsReview}
+            onClearFilters={handleClearFilters}
+            hasActiveFilters={activeFilters}
+            resultCount={filteredExpenses.length}
+          />
+        ) : null}
 
-      <ExpenseSummaryCards expenses={localExpenses} />
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
+          {hasNoExpenses ? (
+            <ExpensesEmptyState
+              variant="no-expenses"
+              onCreateExpense={handleNewExpense}
+            />
+          ) : hasNoResults ? (
+            <ExpensesEmptyState variant="no-results" />
+          ) : (
+            <ExpensesTable
+              expenses={filteredExpenses}
+              selectedId={selectedId}
+              onSelect={handleSelectExpense}
+            />
+          )}
+        </div>
+      </section>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">
-        <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1`}>
-          <div className="admin-panel-header admin-section-header flex shrink-0 flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h2 className="admin-heading-section sm:text-base">All expenses</h2>
-              <p className="admin-text-helper mt-0.5">
-                {contextLabel ??
-                  "Capture receipts and draft expenses for later review"}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleNewExpense}
-              className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
-            >
-              <Plus className="h-4 w-4" />
-              New Expense
-            </button>
-          </div>
-
-          {!hasNoExpenses ? (
-            <div className="shrink-0">
-              <ExpenseSearchFilterBar
-                search={search}
-                statusFilter={statusFilter}
-                categoryFilter={categoryFilter}
-                technicianFilter={technicianFilter}
-                jobFilter={jobFilter}
-                paymentFilter={paymentFilter}
-                dateFilter={dateFilter}
-                receiptFilter={receiptFilter}
-                technicianOptions={technicianOptions}
-                jobOptions={jobOptions}
-                showTechnicianFilter={technicianOptions.length > 1}
-                showJobFilter={!initialJobId && jobOptions.length > 0}
-                onSearchChange={setSearch}
-                onStatusFilterChange={setStatusFilter}
-                onCategoryFilterChange={setCategoryFilter}
-                onTechnicianFilterChange={setTechnicianFilter}
-                onJobFilterChange={setJobFilter}
-                onPaymentFilterChange={setPaymentFilter}
-                onDateFilterChange={setDateFilter}
-                onReceiptFilterChange={setReceiptFilter}
-                onNeedsReview={handleNeedsReview}
-                onClearFilters={handleClearFilters}
-                hasActiveFilters={activeFilters}
-                resultCount={filteredExpenses.length}
-              />
-            </div>
-          ) : null}
-
-          <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
-            {hasNoExpenses ? (
-              <ExpensesEmptyState
-                variant="no-expenses"
-                onCreateExpense={handleNewExpense}
-              />
-            ) : hasNoResults ? (
-              <ExpensesEmptyState variant="no-results" />
-            ) : (
-              <ExpensesTable
-                expenses={filteredExpenses}
-                selectedId={selectedId}
-                onSelect={handleSelectExpense}
-              />
-            )}
-          </div>
-        </section>
-
-        <ExpenseDetailsPanel
-          mode={panelMode}
-          expense={selectedExpense}
-          createJobId={createJobId}
-          currentUserId={currentUserId}
-          canManageBilling={canManageBilling}
-          canDispatchJobs={canDispatchJobs}
-          onClose={handleClosePanel}
-          onCreateSuccess={handleCreateSuccess}
-          onCreateCancel={handleClosePanel}
-          onExpenseUpdated={handleExpenseUpdated}
-        />
-      </div>
-    </div>
+      <ExpenseDetailsPanel
+        mode={panelMode}
+        expense={selectedExpense}
+        createJobId={createJobId}
+        currentUserId={currentUserId}
+        canManageBilling={canManageBilling}
+        canDispatchJobs={canDispatchJobs}
+        onClose={handleClosePanel}
+        onCreateSuccess={handleCreateSuccess}
+        onCreateCancel={handleClosePanel}
+        onExpenseUpdated={handleExpenseUpdated}
+      />
+    </ListCommandCenterLayout>
   );
 }

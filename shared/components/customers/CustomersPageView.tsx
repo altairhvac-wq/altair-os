@@ -11,13 +11,13 @@ import {
   type CustomerStatus,
   validateCustomerFormData,
 } from "@/shared/types/customer";
-import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
+import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
 import { CustomerDetailPanel } from "./CustomerDetailPanel";
 import { CustomerSearchFilterBar } from "./CustomerSearchFilterBar";
 import { CustomersEmptyState } from "./CustomersEmptyState";
 import { CustomersTable } from "./CustomersTable";
 
-type PanelMode = "detail" | "create" | "empty";
+type PanelMode = "create" | "empty";
 
 type CustomersPageViewProps = {
   initialCustomers: Customer[];
@@ -107,54 +107,60 @@ export function CustomersPageView({
       const result = await createCustomerAction(data);
 
       if (result.error || !result.customer) {
-        setCreateError(formatActionError(result.error, "We couldn't save this customer. Check the details and try again."));
+        setCreateError(
+          formatActionError(
+            result.error,
+            "We couldn't save this customer. Check the details and try again.",
+          ),
+        );
         return;
       }
 
       setCustomers((previous) => [result.customer!, ...previous]);
+      setPanelMode("empty");
       router.push(`/customers/${result.customer.id}`);
     });
   }
 
   const hasNoCustomers = customers.length === 0;
   const hasNoResults = !hasNoCustomers && filteredCustomers.length === 0;
+  const isCreateOpen = panelMode === "create";
 
   return (
-    <div className="flex min-h-0 min-w-0 max-w-full flex-col gap-3 lg:h-[calc(100dvh-6.5rem)] lg:flex-row lg:overflow-hidden">
+    <ListCommandCenterLayout
+      title="Customers"
+      subtitle="Manage profiles, locations, and service history"
+      primaryAction={
+        canManageCustomers ? (
+          <button
+            type="button"
+            onClick={handleNewCustomer}
+            className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
+          >
+            <UserPlus className="h-4 w-4" />
+            New Customer
+          </button>
+        ) : undefined
+      }
+      className={
+        isCreateOpen
+          ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
+          : undefined
+      }
+    >
       <section
-        className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1 ${panelMode === "create" ? "max-lg:hidden" : ""}`}
+        className={`flex min-h-[16rem] min-w-0 flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
+          isCreateOpen ? "max-lg:hidden" : ""
+        }`}
       >
-        <div className="admin-panel-header admin-section-header flex shrink-0 flex-wrap items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h2 className="admin-heading-section sm:text-base">
-              All customers
-            </h2>
-            <p className="admin-text-helper mt-0.5">
-              Manage profiles, locations, and service history
-            </p>
-          </div>
-          {canManageCustomers ? (
-            <button
-              type="button"
-              onClick={handleNewCustomer}
-              className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
-            >
-              <UserPlus className="h-4 w-4" />
-              New Customer
-            </button>
-          ) : null}
-        </div>
-
         {!hasNoCustomers ? (
-          <div className="shrink-0">
-            <CustomerSearchFilterBar
-              search={search}
-              statusFilter={statusFilter}
-              onSearchChange={setSearch}
-              onStatusFilterChange={setStatusFilter}
-              resultCount={filteredCustomers.length}
-            />
-          </div>
+          <CustomerSearchFilterBar
+            search={search}
+            statusFilter={statusFilter}
+            onSearchChange={setSearch}
+            onStatusFilterChange={setStatusFilter}
+            resultCount={filteredCustomers.length}
+          />
         ) : null}
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
@@ -178,13 +184,12 @@ export function CustomersPageView({
 
       <CustomerDetailPanel
         mode={panelMode}
-        customer={null}
         onClose={handleClosePanel}
         onCreateSubmit={handleCreateSubmit}
         onCreateCancel={handleClosePanel}
         createError={createError}
         isSubmitting={isPending}
       />
-    </div>
+    </ListCommandCenterLayout>
   );
 }

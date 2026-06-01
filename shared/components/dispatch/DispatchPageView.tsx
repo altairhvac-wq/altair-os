@@ -489,21 +489,7 @@ export function DispatchPageView({
               onStatusUpdated={handleStatusUpdated}
             />
           </div>
-        ) : (
-          <aside className="admin-panel hidden lg:flex lg:w-[380px] lg:shrink-0 lg:flex-col lg:overflow-hidden">
-            <div className="admin-panel-header shrink-0 px-5 py-4">
-              <h2 className="admin-heading-section text-base">Job details</h2>
-              <p className="admin-text-helper mt-0.5">
-                Select a job from the board
-              </p>
-            </div>
-            <div className="flex flex-1 flex-col items-center justify-center px-5 py-10 text-center">
-              <p className="max-w-xs text-sm text-slate-500">
-                Click a job card to view assignment details and workflow actions.
-              </p>
-            </div>
-          </aside>
-        )}
+        ) : null}
       </div>
 
       {openSectionSheet ? (

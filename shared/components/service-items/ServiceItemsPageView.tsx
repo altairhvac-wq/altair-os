@@ -10,7 +10,7 @@ import type {
   ServiceItem,
   ServiceItemFormData,
 } from "@/shared/types/service-item";
-import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
+import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
 import { ServiceItemDetailPanel } from "./ServiceItemDetailPanel";
 import { ServiceItemsEmptyState } from "./ServiceItemsEmptyState";
 import { ServiceItemsSearchFilterBar } from "./ServiceItemsSearchFilterBar";
@@ -150,39 +150,43 @@ export function ServiceItemsPageView({
 
   const hasNoItems = serviceItems.length === 0;
   const hasNoResults = !hasNoItems && filteredServiceItems.length === 0;
+  const isPanelOpen = panelMode !== "empty";
 
   return (
-    <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:flex-row lg:overflow-hidden">
-      <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1`}>
-        <div className="admin-panel-header admin-section-header flex shrink-0 flex-wrap items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h2 className="admin-heading-section sm:text-base">Price book</h2>
-            <p className="admin-text-helper mt-0.5">
-              Reusable services and parts for estimate line items
-            </p>
-          </div>
-          {canManagePriceBook ? (
-            <button
-              type="button"
-              onClick={handleNewItem}
-              className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
-            >
-              <Plus className="h-4 w-4" />
-              New item
-            </button>
-          ) : null}
-        </div>
-
+    <ListCommandCenterLayout
+      title="Price book"
+      subtitle="Reusable services and parts for estimate line items"
+      primaryAction={
+        canManagePriceBook ? (
+          <button
+            type="button"
+            onClick={handleNewItem}
+            className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
+          >
+            <Plus className="h-4 w-4" />
+            New item
+          </button>
+        ) : undefined
+      }
+      className={
+        isPanelOpen
+          ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
+          : undefined
+      }
+    >
+      <section
+        className={`flex min-h-[16rem] min-w-0 flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
+          isPanelOpen ? "max-lg:hidden" : ""
+        }`}
+      >
         {!hasNoItems ? (
-          <div className="shrink-0">
-            <ServiceItemsSearchFilterBar
-              search={search}
-              statusFilter={statusFilter}
-              onSearchChange={setSearch}
-              onStatusFilterChange={setStatusFilter}
-              resultCount={filteredServiceItems.length}
-            />
-          </div>
+          <ServiceItemsSearchFilterBar
+            search={search}
+            statusFilter={statusFilter}
+            onSearchChange={setSearch}
+            onStatusFilterChange={setStatusFilter}
+            resultCount={filteredServiceItems.length}
+          />
         ) : null}
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
@@ -214,6 +218,6 @@ export function ServiceItemsPageView({
         error={formError}
         isSubmitting={isPending}
       />
-    </div>
+    </ListCommandCenterLayout>
   );
 }
