@@ -74,6 +74,9 @@ export function OperationalResolutionQueueSheet({
         unsentInvoices: sheetData.unsentInvoices,
         unsentEstimates: sheetData.unsentEstimates,
         technicians: sheetData.technicians,
+        assignableTechnicians: sheetData.assignableTechnicians,
+        technicianStatuses: sheetData.technicianStatuses,
+        todayJobs: sheetData.todayJobs,
         access: sheetData.access,
         totalCount: card.count,
       }),
@@ -141,6 +144,9 @@ export function OperationalResolutionQueueSheet({
                 items,
                 access: sheetData.access,
                 technicians: sheetData.technicians,
+                assignableTechnicians: sheetData.assignableTechnicians,
+                technicianStatuses: sheetData.technicianStatuses,
+                todayJobs: sheetData.todayJobs,
                 hiddenCount,
               }}
               onResolved={handleResolved}

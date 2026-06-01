@@ -7,7 +7,8 @@ import type {
   DashboardUnsentInvoicePreview,
 } from "@/shared/types/dashboard";
 import { formatCurrency } from "@/shared/types/customer";
-import type { DispatchJob } from "@/shared/types/dispatch";
+import type { DispatchJob, Technician } from "@/shared/types/dispatch";
+import type { DashboardTechnicianStatus } from "@/shared/types/dashboard";
 import type { CompletedWorkAwaitingInvoicingEntry } from "@/shared/types/reports";
 
 /** Extensible queue identifiers for operational resolution workflows. */
@@ -85,6 +86,9 @@ export type OperationalResolutionQueueSheetData = {
   items: OperationalResolutionQueueItem[];
   access: CompanyAccessScope;
   technicians: { id: string; name: string }[];
+  assignableTechnicians: Technician[];
+  technicianStatuses: DashboardTechnicianStatus[];
+  todayJobs: DispatchJob[];
   /** Items in DB beyond the dashboard preview slice. */
   hiddenCount: number;
 };
@@ -357,6 +361,9 @@ export type BuildOperationalResolutionQueueInput = {
   unsentInvoices: DashboardUnsentInvoicePreview[];
   unsentEstimates: DashboardUnsentEstimatePreview[];
   technicians: { id: string; name: string }[];
+  assignableTechnicians: Technician[];
+  technicianStatuses: DashboardTechnicianStatus[];
+  todayJobs: DispatchJob[];
   access: CompanyAccessScope;
   totalCount: number;
 };
@@ -372,6 +379,9 @@ export function buildOperationalResolutionQueue(
     unsentInvoices,
     unsentEstimates,
     technicians,
+    assignableTechnicians,
+    technicianStatuses,
+    todayJobs,
     access,
     totalCount,
   } = input;
@@ -406,6 +416,9 @@ export function buildOperationalResolutionQueue(
     items,
     access,
     technicians,
+    assignableTechnicians,
+    technicianStatuses,
+    todayJobs,
     hiddenCount: Math.max(0, totalCount - items.length),
   };
 }

@@ -12,10 +12,11 @@ import {
 import type {
   DashboardData,
   DashboardOverdueInvoicePreview,
+  DashboardTechnicianStatus,
   DashboardUnsentEstimatePreview,
   DashboardUnsentInvoicePreview,
 } from "@/shared/types/dashboard";
-import type { DispatchJob } from "@/shared/types/dispatch";
+import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 import type { CompletedWorkAwaitingInvoicingEntry } from "@/shared/types/reports";
 
 export type MobileActionSeverity = "critical" | "warning" | "info";
@@ -48,6 +49,9 @@ export type MobileActionSheetData = {
   unsentInvoices: DashboardUnsentInvoicePreview[];
   unsentEstimates: DashboardUnsentEstimatePreview[];
   technicians: { id: string; name: string }[];
+  assignableTechnicians: Technician[];
+  technicianStatuses: DashboardTechnicianStatus[];
+  todayJobs: DispatchJob[];
   access: CompanyAccessScope;
 };
 
@@ -357,6 +361,9 @@ export function buildMobileActionSheetData(
       id: tech.id,
       name: tech.name,
     })),
+    assignableTechnicians: data.assignableTechnicians,
+    technicianStatuses: data.technicians,
+    todayJobs: data.operations.todayJobs,
     access: data.access,
   };
 }

@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { assignJobAction } from "@/app/actions/dispatch";
+import { DispatchTechnicianRecommendation } from "@/shared/components/dashboard/operational-resolution-queue/DispatchTechnicianRecommendation";
+import { recommendTechnicianForJob } from "@/shared/lib/dispatch-recommendations";
 import { updateEstimateStatusAction } from "@/app/actions/estimates";
 import { resendInvoiceEmailAction, sendInvoiceAction } from "@/app/actions/invoices";
 import {
@@ -84,9 +86,30 @@ function UnassignedJobQueueItemAdapter({
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [showTechnicianSelector, setShowTechnicianSelector] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { technicians } = sheetData;
   const canAssign = item.primaryAction.enabled;
+  const recommendation = useMemo(
+    () =>
+      canAssign
+        ? recommendTechnicianForJob({
+            job: item.job,
+            technicians: sheetData.assignableTechnicians,
+            technicianStatuses: sheetData.technicianStatuses,
+            todayJobs: sheetData.todayJobs,
+          })
+        : null,
+    [
+      canAssign,
+      item.job,
+      sheetData.assignableTechnicians,
+      sheetData.technicianStatuses,
+      sheetData.todayJobs,
+    ],
+  );
+  const showRecommendation =
+    Boolean(recommendation) && !showTechnicianSelector;
 
   function handleAssign(technicianId: string) {
     if (!technicianId || isPending) {
@@ -117,7 +140,16 @@ function UnassignedJobQueueItemAdapter({
       item={{ ...item, meta: formatDispatchStatus(item.job.status) }}
       error={error}
     >
-      {canAssign ? (
+      {showRecommendation && recommendation ? (
+        <DispatchTechnicianRecommendation
+          recommendation={recommendation}
+          canAssign={canAssign}
+          isPending={isPending}
+          onAccept={() => handleAssign(recommendation.technicianId)}
+          onChooseOther={() => setShowTechnicianSelector(true)}
+        />
+      ) : null}
+      {canAssign && (!recommendation || showTechnicianSelector) ? (
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             {item.primaryAction.label}

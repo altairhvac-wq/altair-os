@@ -1,7 +1,7 @@
 import type { CompanyAccessScope } from "@/lib/database/access-control";
 import { isSameCalendarDayInTimeZone } from "@/shared/lib/datetime";
 import { getOperationalDayJobCounts } from "@/shared/lib/scheduled-today";
-import type { DispatchJob } from "@/shared/types/dispatch";
+import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 import type { Estimate } from "@/shared/types/estimate";
 import type { InvoiceStatus } from "@/shared/types/invoice";
 import type { Expense } from "@/shared/types/expense";
@@ -142,6 +142,8 @@ export type DashboardData = {
   analytics: DashboardAnalyticsSnapshot;
   operations: DashboardOperationsSummary;
   technicians: DashboardTechnicianStatus[];
+  /** Full roster entries eligible for dispatch assignment recommendations. */
+  assignableTechnicians: Technician[];
   money: DashboardMoneySnapshot;
   expenses: DashboardExpenseReview;
   notifications: DashboardNotificationsSummary;

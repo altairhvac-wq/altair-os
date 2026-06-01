@@ -383,6 +383,11 @@ export async function getDashboardData(
     technicians: access.canViewTechnicianRoster
       ? buildTechnicianStatuses(technicians, activeTimeEntries)
       : [],
+    assignableTechnicians: access.canViewTechnicianRoster
+      ? technicians.filter(
+          (technician) => technician.role === COMPANY_ROLE_LABELS.technician,
+        )
+      : [],
     money: access.canViewBilling
       ? {
           unpaidCount: unpaidInvoices.length,
