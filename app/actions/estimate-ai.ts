@@ -19,14 +19,12 @@ export type GenerateEstimateDescriptionDraftResult = {
 function mapAiError(code: GenerateDraftTextErrorCode): string {
   switch (code) {
     case "ai_disabled":
-      return "Description drafting is not available right now.";
     case "missing_api_key":
-      return "Description drafting is not configured. Contact your administrator.";
+      return "AI drafting is not configured yet.";
     case "empty_response":
-      return "No description was generated. Try again or adjust your notes.";
     case "provider_error":
     default:
-      return "Could not generate a description. Try again in a moment.";
+      return "Could not rewrite the notes. Try again.";
   }
 }
 

@@ -6,22 +6,26 @@ import type { EstimateDescriptionDraftInput } from "@/shared/types/estimate-ai";
 export const ESTIMATE_DESCRIPTION_AI_FEATURE = "estimate-description";
 
 export const INSUFFICIENT_ESTIMATE_DESCRIPTION_CONTEXT_MESSAGE =
-  "Please add a few notes or line items so Altair can draft a customer-facing estimate description.";
+  "Add a few notes or line items before rewriting.";
 
 const ESTIMATE_DESCRIPTION_PROMPT = `You rewrite rough technician notes into polished, customer-facing estimate descriptions for a field service company (HVAC, electrical, plumbing, or general trades).
 
 Your job is to REWRITE and professionalize — not to repeat, lightly paraphrase, or preserve technician shorthand. Transform informal field notes into clear prose a homeowner can understand.
 
-Output: exactly 2-4 concise sentences in plain prose. Tone: professional, clear, and friendly (not salesy). Audience: homeowner or customer.
+Output requirements:
+- Exactly 2-4 concise sentences in plain prose
+- Tone: professional, clear, and friendly — not salesy or overly promotional
+- Audience: homeowner or customer reading an estimate
+- Correct spelling and grammar throughout
 
 When rough technician notes are provided:
-- Expand common trade shorthand when meaning is clear (e.g. "cap" → capacitor, "wash coil" → clean the condenser coil, "txv" → thermostatic expansion valve, "pull vac" → evacuate and test the refrigerant system)
-- Correct spelling and grammar
-- Turn fragments and abbreviations into complete sentences
-- Do NOT copy the notes verbatim or keep the same sentence structure unless the input is already polished customer-facing prose
+- Expand common trade shorthand when meaning is clear (e.g. "cap" → capacitor, "wash coil" → clean the condenser coil, "txv" → thermostatic expansion valve, "pull vac" → evacuate and test the refrigerant system, "comp" → compressor, "stat" → thermostat, "pan" → drain pan, "cond" → condenser)
+- Turn fragments, abbreviations, and bullet-style notes into complete sentences
+- Do NOT copy the notes verbatim, preserve shorthand, or keep the same sentence structure
+- If the input is already polished customer-facing prose, improve clarity and grammar while preserving meaning — do not simply echo it back
 
 When notes are brief, fragmentary, or mostly shorthand:
-- Use line items, job summary, job type, and trade context as primary scope references
+- Use line items, job summary, job type, and trade context as the primary scope references
 - Weave line-item work into natural prose; do not mechanically list every item unless the scope is clearly a multi-part checklist
 
 When the context says the technician only asked to rewrite/professionalize (not actual scope notes):
@@ -30,8 +34,8 @@ When the context says the technician only asked to rewrite/professionalize (not 
 
 Before you respond, check your draft:
 - If it closely mirrors the rough notes (same wording, order, or shorthand), rewrite again with fuller customer-friendly language
-- If the input is already polished customer-facing prose, you may preserve the meaning but still ensure grammar and clarity
-- Do not invent scope or output generic filler — describe only work supported by the context
+- Do not invent scope, parts, repairs, or outcomes not supported by the context
+- Do not output generic filler — every sentence should describe work present in the notes or line items
 
 Examples (rough notes → customer-facing description):
 
@@ -47,12 +51,11 @@ Examples (rough notes → customer-facing description):
 Rules:
 - Use only work supported by the context below (notes, line items, job details)
 - Do not invent major services, parts, repairs, or outcomes not implied by the context
-- Do not guarantee results, outcomes, or completion timing
-- Do not mention AI or that this was generated
+- Do not guarantee results, outcomes, or completion timing — use language like "recommend", "covers", or "includes" instead of promises
+- Do not mention AI, automation, or that this was generated
 - Do not make warranties, legal, or financial promises
 - Do not mention prices, totals, or dollar amounts unless explicitly provided in context
-- Plain text only — no markdown, headings, bullets, or salutation unless the work clearly needs a short inline list
-- Avoid overly promotional language`;
+- Plain text only — no markdown, headings, bullets, or salutation`;
 
 /** Whole-note phrases that ask for rewriting, not scope of work. */
 const META_INSTRUCTION_PATTERNS: RegExp[] = [
@@ -109,7 +112,7 @@ export function isInsufficientEstimateDescriptionResponse(
 
   return (
     normalized === INSUFFICIENT_ESTIMATE_DESCRIPTION_CONTEXT_MESSAGE.toLowerCase() ||
-    normalized.includes("please add a few notes or line items")
+    normalized.includes("add a few notes or line items")
   );
 }
 
