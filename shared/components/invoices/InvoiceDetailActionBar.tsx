@@ -36,7 +36,7 @@ type InvoiceDetailActionBarProps = {
   recordPaymentBlockReason: string | null;
   customerEmailBlockReason: string | null;
   lastEmailSentMessage?: string | null;
-  variant?: "inline" | "sticky";
+  variant?: "inline" | "sticky" | "overlay-footer";
 };
 
 export function InvoiceDetailActionBar({
@@ -234,7 +234,9 @@ export function InvoiceDetailActionBar({
   const containerClass =
     variant === "sticky"
       ? "admin-sticky-footer sm:hidden"
-      : "hidden sm:flex sm:flex-col sm:items-end sm:gap-2";
+      : variant === "overlay-footer"
+        ? "admin-sticky-footer-inline flex flex-col px-3 py-2.5 sm:hidden"
+        : "hidden sm:flex sm:flex-col sm:items-end sm:gap-2";
 
   return (
     <>
@@ -344,7 +346,7 @@ export function InvoiceDetailActionBar({
           <div className="mt-2">{feedbackBanner}</div>
         ) : null}
 
-        {variant === "sticky" ? (() => {
+        {variant === "sticky" || variant === "overlay-footer" ? (() => {
           const helperText = emailSendBlocked && customerEmailBlockReason
             ? customerEmailBlockReason
             : !canRecordPayment && recordPaymentBlockReason
@@ -363,7 +365,7 @@ export function InvoiceDetailActionBar({
           ) : null;
         })() : null}
 
-        {!canVoid && voidBlockReason && canSend === false && variant !== "sticky" ? (
+        {!canVoid && voidBlockReason && canSend === false && variant === "inline" ? (
           <p className="text-xs text-slate-500">{voidBlockReason}</p>
         ) : null}
       </div>

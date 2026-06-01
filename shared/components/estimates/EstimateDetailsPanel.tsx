@@ -41,6 +41,7 @@ export function EstimateDetailsPanel({
       title="New estimate"
       subtitle="Add customer, line items, and pricing"
       closeDisabled={isSubmitting}
+      closeVariant="back"
       ariaLabel="Create estimate"
       bodyScroll="child"
     >

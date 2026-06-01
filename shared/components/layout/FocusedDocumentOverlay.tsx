@@ -1,6 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import { ArrowLeft, X } from "lucide-react";
 import { ModalPortal } from "@/shared/components/ui/ModalPortal";
 import { useScrollLock, useSheetEscape } from "@/shared/hooks/useScrollLock";
@@ -28,6 +34,19 @@ type FocusedDocumentOverlayProps = {
   bodyScroll?: "overlay" | "child";
 };
 
+const OverlayFooterSlotContext = createContext<HTMLElement | null>(null);
+
+/** Renders into the overlay footer slot when nested inside FocusedDocumentOverlay. */
+export function FocusedDocumentOverlayFooter({ children }: { children: ReactNode }) {
+  const footerSlot = useContext(OverlayFooterSlotContext);
+
+  if (!footerSlot) {
+    return null;
+  }
+
+  return createPortal(children, footerSlot);
+}
+
 function OverlayHeader({
   title,
   subtitle,
@@ -46,10 +65,13 @@ function OverlayHeader({
         type="button"
         onClick={onClose}
         disabled={closeDisabled}
-        className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
         aria-label={closeLabel}
       >
-        <CloseIcon className="h-5 w-5" />
+        <CloseIcon className="h-5 w-5 shrink-0" />
+        {closeVariant === "back" ? (
+          <span>{closeLabel}</span>
+        ) : null}
       </button>
       <div className="min-w-0 flex-1 pt-0.5">
         <div className="flex flex-wrap items-center gap-2">
@@ -85,6 +107,8 @@ export function FocusedDocumentOverlay({
   closeVariant = "close",
   bodyScroll = "overlay",
 }: FocusedDocumentOverlayProps) {
+  const [footerSlot, setFooterSlot] = useState<HTMLElement | null>(null);
+
   useScrollLock(isOpen);
   useSheetEscape(() => {
     if (!closeDisabled) {
@@ -96,10 +120,14 @@ export function FocusedDocumentOverlay({
     return null;
   }
 
+  const resolvedFooter = footer ? (
+    <div className="admin-sticky-footer-inline px-3 py-2.5 sm:px-4">{footer}</div>
+  ) : null;
+
   return (
     <ModalPortal>
       <div
-        className="fixed inset-0 z-50 flex flex-col"
+        className="fixed inset-0 z-50 flex flex-col overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel ?? title}
@@ -111,7 +139,7 @@ export function FocusedDocumentOverlay({
           disabled={closeDisabled}
           className="absolute inset-0 hidden bg-slate-900/20 lg:block disabled:cursor-default"
         />
-        <div className="relative flex h-full min-h-0 w-full flex-col bg-white lg:mx-auto lg:max-w-6xl lg:shadow-2xl lg:ring-1 lg:ring-slate-200/80">
+        <div className="relative flex h-dvh max-h-dvh min-h-0 w-full flex-col overflow-hidden bg-white lg:mx-auto lg:max-w-6xl lg:shadow-2xl lg:ring-1 lg:ring-slate-200/80">
           <OverlayHeader
             title={title}
             subtitle={subtitle}
@@ -121,22 +149,25 @@ export function FocusedDocumentOverlay({
             closeDisabled={closeDisabled}
             closeVariant={closeVariant}
           />
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div
-              className={`min-h-0 flex-1 ${
-                bodyScroll === "child"
-                  ? "flex flex-col overflow-hidden"
-                  : "overflow-y-auto overscroll-contain"
-              }`}
-            >
-              {children}
-            </div>
-            {footer ? (
-              <div className="shrink-0 border-t border-slate-100 bg-white">
-                {footer}
+          <OverlayFooterSlotContext.Provider value={footerSlot}>
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <div
+                className={`min-h-0 flex-1 ${
+                  bodyScroll === "child"
+                    ? "flex flex-col overflow-hidden"
+                    : "overflow-y-auto overscroll-contain"
+                }`}
+              >
+                {children}
               </div>
-            ) : null}
-          </div>
+              <div
+                ref={setFooterSlot}
+                className="shrink-0 empty:hidden"
+                data-overlay-footer=""
+              />
+              {resolvedFooter}
+            </div>
+          </OverlayFooterSlotContext.Provider>
         </div>
       </div>
     </ModalPortal>

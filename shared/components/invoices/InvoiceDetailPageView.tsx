@@ -33,6 +33,7 @@ import { InvoicePaymentLinkCard } from "./InvoicePaymentLinkCard";
 import { BillingSignatureCaptureSheet } from "@/shared/components/billing/BillingSignatureCaptureSheet";
 import type { BillingSignature } from "@/shared/types/billing-signature";
 import { adminPageStackClass } from "@/shared/lib/admin-density";
+import { FocusedDocumentOverlayFooter } from "@/shared/components/layout/FocusedDocumentOverlay";
 
 type InvoiceDetailPageViewProps = {
   invoice: InvoiceDetail;
@@ -99,8 +100,8 @@ export function InvoiceDetailPageView({
 
   return (
     <div
-      className={`mx-auto min-w-0 max-w-5xl ${adminPageStackClass} overflow-x-hidden pb-2 print:max-w-none print:pb-0 ${
-        isOverlay ? "px-3 py-3 sm:px-4 sm:py-4" : ""
+      className={`mx-auto min-w-0 max-w-5xl ${adminPageStackClass} overflow-x-hidden print:max-w-none print:pb-0 ${
+        isOverlay ? "px-3 py-3 pb-4 sm:px-4 sm:py-4" : "pb-2"
       }`}
     >
       {!isOverlay ? (
@@ -318,17 +319,33 @@ export function InvoiceDetailPageView({
             onOpenChange={setPaymentModalOpen}
             showTrigger={false}
           />
-          <InvoiceDetailActionBar
-            invoice={invoice}
-            paymentCount={payments.length}
-            canManageBilling={canManageBilling}
-            onRecordPayment={() => setPaymentModalOpen(true)}
-            canRecordPayment={canRecordPayment}
-            recordPaymentBlockReason={recordPaymentBlockReason}
-            customerEmailBlockReason={customerEmailBlockReason}
-            lastEmailSentMessage={lastEmailSentMessage}
-            variant="sticky"
-          />
+          {isOverlay ? (
+            <FocusedDocumentOverlayFooter>
+              <InvoiceDetailActionBar
+                invoice={invoice}
+                paymentCount={payments.length}
+                canManageBilling={canManageBilling}
+                onRecordPayment={() => setPaymentModalOpen(true)}
+                canRecordPayment={canRecordPayment}
+                recordPaymentBlockReason={recordPaymentBlockReason}
+                customerEmailBlockReason={customerEmailBlockReason}
+                lastEmailSentMessage={lastEmailSentMessage}
+                variant="overlay-footer"
+              />
+            </FocusedDocumentOverlayFooter>
+          ) : (
+            <InvoiceDetailActionBar
+              invoice={invoice}
+              paymentCount={payments.length}
+              canManageBilling={canManageBilling}
+              onRecordPayment={() => setPaymentModalOpen(true)}
+              canRecordPayment={canRecordPayment}
+              recordPaymentBlockReason={recordPaymentBlockReason}
+              customerEmailBlockReason={customerEmailBlockReason}
+              lastEmailSentMessage={lastEmailSentMessage}
+              variant="sticky"
+            />
+          )}
         </>
       ) : null}
     </div>

@@ -36,7 +36,7 @@ type EstimateStatusActionsProps = {
   canManageEstimates: boolean;
   customerEmailBlockReason: string | null;
   lastEmailSentMessage?: string | null;
-  variant?: "inline" | "sticky";
+  variant?: "inline" | "sticky" | "overlay-footer";
 };
 
 type StatusAction = {
@@ -174,7 +174,9 @@ export function EstimateStatusActions({
     Boolean(customerEmailBlockReason) &&
     (canResendEmail || localStatus === "draft");
   const isSticky = variant === "sticky";
-  const isSentStickyWorkflow = isSticky && localStatus === "sent";
+  const isOverlayFooter = variant === "overlay-footer";
+  const isMobileFooter = isSticky || isOverlayFooter;
+  const isSentStickyWorkflow = isMobileFooter && localStatus === "sent";
   const workflowBusy = isPending || resendPending || convertPending;
   const primaryAction = actions.find(
     (action) =>
@@ -337,16 +339,18 @@ export function EstimateStatusActions({
     return null;
   }
 
-  const buttonClass = isSticky
+  const buttonClass = isMobileFooter
     ? "inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
     : "rounded-lg px-3 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60";
 
   const containerClass = isSticky
     ? "admin-sticky-footer sm:hidden"
-    : "flex flex-col items-start gap-2";
+    : isOverlayFooter
+      ? "admin-sticky-footer-inline flex flex-col px-3 py-2.5 sm:hidden"
+      : "flex flex-col items-start gap-2";
 
   const actionButtons = (
-    <div className={isSticky ? "flex min-w-0 flex-wrap gap-2" : "flex flex-wrap gap-2"}>
+    <div className={isMobileFooter ? "flex min-w-0 flex-wrap gap-2" : "flex flex-wrap gap-2"}>
       {canConvertToInvoice ? (
         <button
           type="button"
@@ -356,7 +360,7 @@ export function EstimateStatusActions({
         >
           {convertPending
             ? "Converting…"
-            : isSticky
+            : isMobileFooter
               ? "Convert"
               : "Convert to invoice"}
         </button>
@@ -376,7 +380,7 @@ export function EstimateStatusActions({
           <Mail className="h-4 w-4" />
           {resendPending
             ? "Resending…"
-            : isSticky
+            : isMobileFooter
               ? "Resend"
               : "Resend to customer"}
         </button>
@@ -392,7 +396,7 @@ export function EstimateStatusActions({
         </button>
       ) : (
         <>
-          {isSticky && primaryAction ? (
+          {isMobileFooter && primaryAction ? (
             <button
               key={primaryAction.toStatus}
               type="button"
@@ -413,7 +417,7 @@ export function EstimateStatusActions({
                 : (primaryAction.shortLabel ?? primaryAction.label)}
             </button>
           ) : null}
-          {(isSticky ? secondaryActions : actions).map((action) => (
+          {(isMobileFooter ? secondaryActions : actions).map((action) => (
             <button
               key={action.toStatus}
               type="button"
@@ -431,7 +435,7 @@ export function EstimateStatusActions({
             >
               {isPending && pendingStatus === action.toStatus
                 ? getStatusPendingLabel(action.toStatus)
-                : isSticky
+                : isMobileFooter
                   ? (action.shortLabel ?? action.label)
                   : action.label}
             </button>
@@ -467,7 +471,7 @@ export function EstimateStatusActions({
     <SettingsAlertBanner tone="success">{successMessage}</SettingsAlertBanner>
   ) : null;
 
-  if (isSticky) {
+  if (isMobileFooter) {
     const hasActions =
       canConvertToInvoice || canResendEmail || actions.length > 0;
 
@@ -487,7 +491,7 @@ export function EstimateStatusActions({
             <p className="mt-2 text-xs text-slate-500">{helperText}</p>
           ) : null}
         </div>
-        <div className="admin-sticky-footer-spacer" aria-hidden />
+        {isSticky ? <div className="admin-sticky-footer-spacer" aria-hidden /> : null}
         {outcomeSheetOpen ? (
           <MobileSheet
             onClose={() => setOutcomeSheetOpen(false)}

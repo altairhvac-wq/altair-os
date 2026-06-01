@@ -123,17 +123,22 @@ export function InvoiceForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className={adminFormStackClass} aria-busy={isSubmitting}>
+    <form
+      onSubmit={handleSubmit}
+      className="flex min-h-0 min-w-0 flex-1 flex-col"
+      aria-busy={isSubmitting}
+    >
       {error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-700">
+        <div className="mb-2 shrink-0 rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
-      <fieldset
-        disabled={isSubmitting}
-        className={`m-0 min-w-0 border-0 p-0 ${adminFormStackClass}`}
-      >
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+        <fieldset
+          disabled={isSubmitting}
+          className={`m-0 min-w-0 border-0 p-0 ${adminFormStackClass}`}
+        >
         <div className={adminFormGridClass}>
           <div>
             <label htmlFor="customerId" className={adminFormLabelClass}>
@@ -248,9 +253,10 @@ export function InvoiceForm({
             />
           </div>
         </details>
-      </fieldset>
+        </fieldset>
+      </div>
 
-      <div className={adminFormActionsClass}>
+      <div className={`${adminFormActionsClass} shrink-0 bg-white`}>
         <button
           type="submit"
           disabled={isSubmitting}

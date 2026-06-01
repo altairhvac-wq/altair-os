@@ -41,6 +41,7 @@ export function InvoiceDetailsPanel({
       title="New invoice"
       subtitle="Add customer, line items, and due date"
       closeDisabled={isSubmitting}
+      closeVariant="back"
       ariaLabel="Create invoice"
       bodyScroll="child"
     >
