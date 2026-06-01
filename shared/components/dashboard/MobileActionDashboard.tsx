@@ -5,10 +5,10 @@ import { useMemo, useState } from "react";
 import { useDashboardDrilldown } from "@/shared/components/dashboard/dashboard-drilldown-context";
 import {
   MobileActionCardChevron,
-  MobileActionSheet,
   MOBILE_ACTION_QUIET_TILE,
   MOBILE_ACTION_SEVERITY_STYLES,
 } from "@/shared/components/dashboard/mobile-action-sheets/MobileActionSheet";
+import { OperationalResolutionQueueSheet } from "@/shared/components/dashboard/operational-resolution-queue/OperationalResolutionQueueSheet";
 import {
   buildMobileActionCards,
   buildMobileActionSheetData,
@@ -73,7 +73,7 @@ function MobileActionTile({
     isQuiet ? MOBILE_ACTION_QUIET_TILE : styles.tile
   }`;
 
-  if (card.sheetType) {
+  if (card.queueType) {
     return (
       <li>
         <button type="button" onClick={() => onOpenSheet(card)} className={tileClass}>
@@ -205,8 +205,8 @@ export function MobileActionDashboard({ data }: MobileActionDashboardProps) {
         )}
       </section>
 
-      {activeCard?.sheetType ? (
-        <MobileActionSheet
+      {activeCard?.queueType ? (
+        <OperationalResolutionQueueSheet
           card={activeCard}
           sheetData={sheetData}
           onClose={() => setActiveCard(null)}

@@ -1,0 +1,415 @@
+import type { CompanyAccessScope } from "@/lib/database/access-control";
+import { INVOICE_PAGE_DRAFT_HREF } from "@/shared/lib/invoice-page-focus";
+import type { MobileActionSeverity } from "@/shared/lib/mobile-action-dashboard";
+import type {
+  DashboardOverdueInvoicePreview,
+  DashboardUnsentEstimatePreview,
+  DashboardUnsentInvoicePreview,
+} from "@/shared/types/dashboard";
+import { formatCurrency } from "@/shared/types/customer";
+import type { DispatchJob } from "@/shared/types/dispatch";
+import type { CompletedWorkAwaitingInvoicingEntry } from "@/shared/types/reports";
+
+/** Extensible queue identifiers for operational resolution workflows. */
+export type OperationalResolutionQueueType =
+  | "unassigned_job"
+  | "ready_to_invoice"
+  | "overdue_invoice"
+  | "unsent_invoice"
+  | "unsent_estimate"
+  | "needs_review"
+  | "stalled_job";
+
+export type OperationalResolutionActionKind =
+  | "assign_technician"
+  | "create_invoice"
+  | "send_invoice"
+  | "send_estimate"
+  | "record_payment"
+  | "resend_invoice"
+  | "open_record";
+
+/** Declarative primary action — adapters execute server/href behavior. */
+export type OperationalResolutionAction = {
+  kind: OperationalResolutionActionKind;
+  label: string;
+  /** When false, adapter hides the action (permissions / workflow). */
+  enabled: boolean;
+};
+
+export type OperationalResolutionQueueItemBase = {
+  id: string;
+  queueType: OperationalResolutionQueueType;
+  title: string;
+  subtitle?: string;
+  meta?: string;
+  severity: MobileActionSeverity;
+  primaryAction: OperationalResolutionAction;
+  secondaryActions: OperationalResolutionAction[];
+  openHref?: string;
+};
+
+export type UnassignedJobQueueItem = OperationalResolutionQueueItemBase & {
+  queueType: "unassigned_job";
+  job: DispatchJob;
+};
+
+export type ReadyToInvoiceQueueItem = OperationalResolutionQueueItemBase & {
+  queueType: "ready_to_invoice";
+  entry: CompletedWorkAwaitingInvoicingEntry;
+};
+
+export type OverdueInvoiceQueueItem = OperationalResolutionQueueItemBase & {
+  queueType: "overdue_invoice";
+  invoice: DashboardOverdueInvoicePreview;
+};
+
+export type UnsentInvoiceQueueItem = OperationalResolutionQueueItemBase & {
+  queueType: "unsent_invoice";
+  invoice: DashboardUnsentInvoicePreview;
+};
+
+export type UnsentEstimateQueueItem = OperationalResolutionQueueItemBase & {
+  queueType: "unsent_estimate";
+  estimate: DashboardUnsentEstimatePreview;
+};
+
+export type OperationalResolutionQueueItem =
+  | UnassignedJobQueueItem
+  | ReadyToInvoiceQueueItem
+  | OverdueInvoiceQueueItem
+  | UnsentInvoiceQueueItem
+  | UnsentEstimateQueueItem;
+
+export type OperationalResolutionQueueSheetData = {
+  items: OperationalResolutionQueueItem[];
+  access: CompanyAccessScope;
+  technicians: { id: string; name: string }[];
+  /** Items in DB beyond the dashboard preview slice. */
+  hiddenCount: number;
+};
+
+export type OperationalResolutionQueuePresentation = {
+  queueType: OperationalResolutionQueueType;
+  title: string;
+  subtitle?: string;
+  completionTitle: string;
+  completionSubtitle?: string;
+  relatedHref?: string;
+  relatedLabel?: string;
+  icon: "users" | "briefcase" | "dollar" | "file" | "clipboard";
+  iconClassName: string;
+};
+
+const QUEUE_PRESENTATION: Record<
+  OperationalResolutionQueueType,
+  Omit<
+    OperationalResolutionQueuePresentation,
+    "title" | "subtitle" | "queueType"
+  >
+> = {
+  unassigned_job: {
+    completionTitle: "All jobs assigned",
+    completionSubtitle: "Today's board has no unassigned jobs in this queue.",
+    relatedHref: "/dispatch?focus=unassigned",
+    relatedLabel: "Open dispatch board",
+    icon: "users",
+    iconClassName: "bg-amber-100 text-amber-700",
+  },
+  ready_to_invoice: {
+    completionTitle: "Invoicing queue clear",
+    completionSubtitle: "No completed jobs waiting for an invoice in this preview.",
+    relatedHref: "/reports?queue=invoicing",
+    relatedLabel: "View invoicing queue",
+    icon: "briefcase",
+    iconClassName: "bg-cyan-100 text-cyan-700",
+  },
+  overdue_invoice: {
+    completionTitle: "Overdue invoices processed",
+    completionSubtitle: "No overdue invoices remain in this preview.",
+    relatedHref: "/invoices?focus=overdue",
+    relatedLabel: "View all overdue",
+    icon: "dollar",
+    iconClassName: "bg-rose-100 text-rose-700",
+  },
+  unsent_invoice: {
+    completionTitle: "All invoices sent",
+    completionSubtitle: "No draft invoices waiting to send in this preview.",
+    relatedHref: INVOICE_PAGE_DRAFT_HREF,
+    relatedLabel: "View draft invoices",
+    icon: "file",
+    iconClassName: "bg-amber-100 text-amber-700",
+  },
+  unsent_estimate: {
+    completionTitle: "All estimates sent",
+    completionSubtitle: "No draft estimates waiting to send in this preview.",
+    relatedHref: "/estimates",
+    relatedLabel: "View all estimates",
+    icon: "clipboard",
+    iconClassName: "bg-cyan-100 text-cyan-700",
+  },
+  needs_review: {
+    completionTitle: "Review queue clear",
+    relatedHref: "/reports?queue=attention",
+    relatedLabel: "Open review queue",
+    icon: "clipboard",
+    iconClassName: "bg-amber-100 text-amber-700",
+  },
+  stalled_job: {
+    completionTitle: "Stalled jobs reviewed",
+    relatedHref: "/reports?queue=stalled",
+    relatedLabel: "View stalled jobs",
+    icon: "briefcase",
+    iconClassName: "bg-amber-100 text-amber-700",
+  },
+};
+
+export function getOperationalResolutionQueuePresentation(
+  queueType: OperationalResolutionQueueType,
+  title: string,
+  subtitle?: string,
+): OperationalResolutionQueuePresentation {
+  const config = QUEUE_PRESENTATION[queueType];
+  return {
+    queueType,
+    title,
+    subtitle,
+    ...config,
+  };
+}
+
+function buildCreateInvoiceHref(jobId: string): string {
+  const params = new URLSearchParams({ create: "1", jobId });
+  return `/invoices?${params.toString()}`;
+}
+
+function buildUnassignedJobItems(
+  jobs: DispatchJob[],
+  access: CompanyAccessScope,
+  technicians: { id: string; name: string }[],
+): UnassignedJobQueueItem[] {
+  const canAssign =
+    access.canViewTechnicianRoster && technicians.length > 0;
+
+  return jobs.map((job) => ({
+    id: job.id,
+    queueType: "unassigned_job",
+    title: `Job ${job.jobNumber}`,
+    subtitle: job.customerName,
+    meta: job.status,
+    severity: "warning",
+    openHref: `/jobs/${job.id}`,
+    job,
+    primaryAction: {
+      kind: "assign_technician",
+      label: "Assign technician",
+      enabled: canAssign,
+    },
+    secondaryActions: [
+      {
+        kind: "open_record",
+        label: "Open job",
+        enabled: true,
+      },
+    ],
+  }));
+}
+
+function buildReadyToInvoiceItems(
+  entries: CompletedWorkAwaitingInvoicingEntry[],
+  access: CompanyAccessScope,
+): ReadyToInvoiceQueueItem[] {
+  const canCreate = access.canViewBilling;
+
+  return entries.map((entry) => {
+    const revenueHint =
+      entry.approvedEstimateAmount != null
+        ? `Est. ${formatCurrency(entry.approvedEstimateAmount)}`
+        : entry.daysSinceCompletion > 0
+          ? `${entry.daysSinceCompletion}d since completion`
+          : undefined;
+
+    return {
+      id: entry.jobId,
+      queueType: "ready_to_invoice",
+      title: `Job ${entry.jobNumber}`,
+      subtitle: entry.customerName,
+      meta: revenueHint,
+      severity: "warning",
+      openHref: `/jobs/${entry.jobId}`,
+      entry,
+      primaryAction: {
+        kind: "create_invoice",
+        label: "Create invoice",
+        enabled: canCreate,
+      },
+      secondaryActions: [
+        {
+          kind: "open_record",
+          label: "Open job",
+          enabled: true,
+        },
+      ],
+    };
+  });
+}
+
+function buildOverdueInvoiceItems(
+  invoices: DashboardOverdueInvoicePreview[],
+  access: CompanyAccessScope,
+): OverdueInvoiceQueueItem[] {
+  const canManage = access.canViewBilling;
+
+  return invoices.map((invoice) => ({
+    id: invoice.id,
+    queueType: "overdue_invoice",
+    title: `Invoice ${invoice.invoiceNumber}`,
+    subtitle: invoice.customerName,
+    meta: `Due ${invoice.dueDate}`,
+    severity: "critical",
+    openHref: `/invoices/${invoice.id}`,
+    invoice,
+    primaryAction: {
+      kind: "record_payment",
+      label: "Record payment",
+      enabled: canManage,
+    },
+    secondaryActions: [
+      {
+        kind: "resend_invoice",
+        label: "Resend invoice",
+        enabled: canManage,
+      },
+      {
+        kind: "open_record",
+        label: "Open invoice",
+        enabled: true,
+      },
+    ],
+  }));
+}
+
+function buildUnsentInvoiceItems(
+  invoices: DashboardUnsentInvoicePreview[],
+  access: CompanyAccessScope,
+): UnsentInvoiceQueueItem[] {
+  const canManage = access.canViewBilling;
+
+  return invoices.map((invoice) => ({
+    id: invoice.id,
+    queueType: "unsent_invoice",
+    title: `Invoice ${invoice.invoiceNumber}`,
+    subtitle: invoice.customerName,
+    meta: formatCurrency(invoice.total),
+    severity: "warning",
+    openHref: `/invoices/${invoice.id}`,
+    invoice,
+    primaryAction: {
+      kind: "send_invoice",
+      label: "Send invoice",
+      enabled: canManage,
+    },
+    secondaryActions: [
+      {
+        kind: "open_record",
+        label: "Open invoice",
+        enabled: true,
+      },
+    ],
+  }));
+}
+
+function buildUnsentEstimateItems(
+  estimates: DashboardUnsentEstimatePreview[],
+  access: CompanyAccessScope,
+): UnsentEstimateQueueItem[] {
+  const canManage = access.canViewBilling;
+
+  return estimates.map((estimate) => ({
+    id: estimate.id,
+    queueType: "unsent_estimate",
+    title: `Estimate ${estimate.estimateNumber}`,
+    subtitle: estimate.customerName,
+    meta: formatCurrency(estimate.total),
+    severity: "warning",
+    openHref: `/estimates/${estimate.id}`,
+    estimate,
+    primaryAction: {
+      kind: "send_estimate",
+      label: "Send estimate",
+      enabled: canManage,
+    },
+    secondaryActions: [
+      {
+        kind: "open_record",
+        label: "Open estimate",
+        enabled: true,
+      },
+    ],
+  }));
+}
+
+export type BuildOperationalResolutionQueueInput = {
+  queueType: OperationalResolutionQueueType;
+  unassignedJobs: DispatchJob[];
+  readyToInvoiceJobs: CompletedWorkAwaitingInvoicingEntry[];
+  overdueInvoices: DashboardOverdueInvoicePreview[];
+  unsentInvoices: DashboardUnsentInvoicePreview[];
+  unsentEstimates: DashboardUnsentEstimatePreview[];
+  technicians: { id: string; name: string }[];
+  access: CompanyAccessScope;
+  totalCount: number;
+};
+
+export function buildOperationalResolutionQueue(
+  input: BuildOperationalResolutionQueueInput,
+): OperationalResolutionQueueSheetData {
+  const {
+    queueType,
+    unassignedJobs,
+    readyToInvoiceJobs,
+    overdueInvoices,
+    unsentInvoices,
+    unsentEstimates,
+    technicians,
+    access,
+    totalCount,
+  } = input;
+
+  let items: OperationalResolutionQueueItem[] = [];
+
+  switch (queueType) {
+    case "unassigned_job":
+      items = buildUnassignedJobItems(
+        unassignedJobs,
+        access,
+        technicians,
+      );
+      break;
+    case "ready_to_invoice":
+      items = buildReadyToInvoiceItems(readyToInvoiceJobs, access);
+      break;
+    case "overdue_invoice":
+      items = buildOverdueInvoiceItems(overdueInvoices, access);
+      break;
+    case "unsent_invoice":
+      items = buildUnsentInvoiceItems(unsentInvoices, access);
+      break;
+    case "unsent_estimate":
+      items = buildUnsentEstimateItems(unsentEstimates, access);
+      break;
+    default:
+      items = [];
+  }
+
+  return {
+    items,
+    access,
+    technicians,
+    hiddenCount: Math.max(0, totalCount - items.length),
+  };
+}
+
+export function getReadyToInvoiceHref(jobId: string): string {
+  return buildCreateInvoiceHref(jobId);
+}

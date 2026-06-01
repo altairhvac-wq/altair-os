@@ -1,6 +1,7 @@
 import type { CompanyAccessScope } from "@/lib/database/access-control";
 import { buildDashboardAttentionCards } from "@/shared/lib/dashboard-attention-cards";
 import type { CommandStripPanelId } from "@/shared/lib/dashboard-command-strip";
+import type { OperationalResolutionQueueType } from "@/shared/lib/operational-resolution-queue";
 import {
   DISPATCH_PAGE_UNASSIGNED_HREF,
 } from "@/shared/lib/dispatch-page-focus";
@@ -25,14 +26,6 @@ export type MobileActionCategory =
   | "today-operations"
   | "quiet-summary";
 
-/** Action types with dedicated mobile sheet content. */
-export type MobileActionSheetType =
-  | "unassigned-jobs"
-  | "ready-to-invoice"
-  | "overdue-invoices"
-  | "invoices-not-sent"
-  | "estimates-not-sent";
-
 export type MobileActionCard = {
   id: string;
   label: string;
@@ -40,8 +33,8 @@ export type MobileActionCard = {
   severity: MobileActionSeverity;
   description: string;
   category: MobileActionCategory;
-  /** Opens a mobile action sheet when set. */
-  sheetType?: MobileActionSheetType;
+  /** Opens the operational resolution queue when set. */
+  queueType?: OperationalResolutionQueueType;
   href?: string;
   panelId?: CommandStripPanelId;
   /** Whether direct fix actions are available in the sheet. */
@@ -152,7 +145,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
       severity: operations.unassignedToday >= 3 ? "critical" : "warning",
       description: buildDescription("unassigned-jobs", operations.unassignedToday),
       category: "critical-operations",
-      sheetType: "unassigned-jobs",
+      queueType: "unassigned_job",
       href: DISPATCH_PAGE_UNASSIGNED_HREF,
       panelId: access.canViewTechnicianRoster ? "dispatch" : undefined,
       canFix: access.canViewTechnicianRoster,
@@ -205,7 +198,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
       severity: "critical",
       description: buildDescription("overdue-invoices", money.overdueCount),
       category: "money-actions",
-      sheetType: "overdue-invoices",
+      queueType: "overdue_invoice",
       href: INVOICE_PAGE_OVERDUE_HREF,
       panelId: "cash-flow",
       canFix: access.canViewBilling,
@@ -227,7 +220,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
         completedWorkAwaitingInvoicing.count,
       ),
       category: "money-actions",
-      sheetType: "ready-to-invoice",
+      queueType: "ready_to_invoice",
       href: "/reports?queue=invoicing",
       panelId: access.canViewBilling ? "cash-flow" : undefined,
       canFix: access.canViewBilling,
@@ -245,7 +238,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
         money.unsentInvoiceCount,
       ),
       category: "money-actions",
-      sheetType: "invoices-not-sent",
+      queueType: "unsent_invoice",
       href: INVOICE_PAGE_DRAFT_HREF,
       panelId: "cash-flow",
       canFix: access.canViewBilling,
@@ -263,7 +256,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
         money.unsentEstimateCount,
       ),
       category: "money-actions",
-      sheetType: "estimates-not-sent",
+      queueType: "unsent_estimate",
       href: "/estimates",
       panelId: "cash-flow",
       canFix: access.canViewBilling,
@@ -368,9 +361,9 @@ export function buildMobileActionSheetData(
   };
 }
 
-export function getMobileActionCardBySheetType(
+export function getMobileActionCardByQueueType(
   cards: MobileActionCard[],
-  sheetType: MobileActionSheetType,
+  queueType: OperationalResolutionQueueType,
 ): MobileActionCard | undefined {
-  return cards.find((card) => card.sheetType === sheetType);
+  return cards.find((card) => card.queueType === queueType);
 }
