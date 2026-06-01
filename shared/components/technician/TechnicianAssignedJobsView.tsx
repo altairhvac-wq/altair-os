@@ -309,6 +309,7 @@ export function TechnicianAssignedJobsView({
           ) : null}
 
           <TechnicianJobList
+            deckKey={selectedDateOnly}
             jobs={deckJobs}
             selectedJobId={selectedJob?.id ?? null}
             timeState={timeState}
