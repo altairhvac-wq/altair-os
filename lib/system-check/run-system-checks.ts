@@ -1,3 +1,4 @@
+import { getAiConfig, isAiFeaturesEnabled } from "@/lib/ai/env";
 import { isAlphaHardeningEnabled } from "@/lib/beta/alpha-hardening";
 import { readEmailRecipientOverrideEnv } from "@/lib/email/recipient";
 import { resolveAppBaseUrl } from "@/lib/email/env";
@@ -138,6 +139,36 @@ function checkOutboundEmailConfig(): SystemCheckResult {
     status: "warn",
     message: `Outbound email is not fully configured (${missing.join(", ")} missing).`,
     hint: "Estimate and invoice sends will stay in draft until email is set up in Vercel env vars.",
+  };
+}
+
+function checkAiConfig(): SystemCheckResult {
+  if (!isAiFeaturesEnabled()) {
+    return {
+      id: "ai-config",
+      label: "AI features (optional)",
+      status: "info",
+      message: "AI features are disabled (AI_FEATURES_ENABLED is not true).",
+    };
+  }
+
+  const config = getAiConfig();
+
+  if (!config.hasApiKey) {
+    return {
+      id: "ai-config",
+      label: "AI features (optional)",
+      status: "warn",
+      message: "AI_FEATURES_ENABLED=true but OPENAI_API_KEY is missing.",
+      hint: "Set OPENAI_API_KEY in server env vars. Draft generation will fail until configured.",
+    };
+  }
+
+  return {
+    id: "ai-config",
+    label: "AI features (optional)",
+    status: "pass",
+    message: `AI is enabled (model: ${config.model}).`,
   };
 }
 
@@ -544,6 +575,7 @@ export async function runSystemChecks(): Promise<SystemCheckReport> {
     checkRequiredEnvVars(),
     checkOptionalEnvVars(),
     checkOutboundEmailConfig(),
+    checkAiConfig(),
     checkAlphaHardening(),
     await checkSupabaseConnection(),
     await checkActiveCompanyContext(),
