@@ -29,9 +29,11 @@ import type {
   TechnicianTimeStateSnapshot,
 } from "@/shared/types/time-entry";
 import type { ServiceItem } from "@/shared/types/service-item";
+import { DispatchJobCard } from "@/shared/components/dispatch/DispatchJobCard";
+import { technicianJobToDispatchJob } from "@/shared/lib/technician-dispatch-job";
 import { TechnicianClockStatusBanner } from "./TechnicianClockStatusBanner";
-import { TechnicianJobDeck } from "./TechnicianJobDeck";
-import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
+import { TechnicianJobDetailOverlay } from "./TechnicianJobDetailOverlay";
+import { TechnicianJobList } from "./TechnicianJobList";
 import { TechnicianWeekStrip } from "./TechnicianWeekStrip";
 
 type TechnicianAssignedJobsViewProps = {
@@ -73,9 +75,13 @@ function TechnicianJobsEmptyState({
 function CompletedTodaySection({
   jobs,
   companyTimeZone,
+  selectedJobId,
+  onSelectJob,
 }: {
   jobs: TechnicianJob[];
   companyTimeZone: string;
+  selectedJobId: string | null;
+  onSelectJob: (job: TechnicianJob) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const completedToday = sortCompletedTodayTechnicianJobs(jobs, {
@@ -111,21 +117,17 @@ function CompletedTodaySection({
         )}
       </button>
       {expanded ? (
-        <ul className="space-y-2">
+        <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
           {completedToday.map((job) => (
-            <li
-              key={job.id}
-              className="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-white px-3 py-2.5 ring-1 ring-slate-200/50"
-            >
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-slate-700">
-                  {job.jobNumber}
-                </p>
-                <p className="truncate text-xs text-slate-500">
-                  {job.customerName}
-                </p>
-              </div>
-              <TechnicianJobStatusBadge status={job.status} />
+            <li key={job.id} className="min-w-0">
+              <DispatchJobCard
+                job={technicianJobToDispatchJob(job)}
+                compact={false}
+                hideTechnician
+                isSelected={selectedJobId === job.id}
+                className="w-full opacity-90"
+                onSelect={() => onSelectJob(job)}
+              />
             </li>
           ))}
         </ul>
@@ -198,6 +200,7 @@ export function TechnicianAssignedJobsView({
   const [selectedDateOnly, setSelectedDateOnly] = useState(
     () => scheduleContext.todayDateOnly,
   );
+  const [selectedJob, setSelectedJob] = useState<TechnicianJob | null>(null);
 
   const markRefreshComplete = useCallback(() => {
     setIsRefreshing(false);
@@ -259,6 +262,18 @@ export function TechnicianAssignedJobsView({
     );
   }
 
+  function handleSelectJob(job: TechnicianJob) {
+    setSelectedJob(job);
+  }
+
+  function handleCloseJobDetail() {
+    setSelectedJob(null);
+  }
+
+  const selectedJobRecord = selectedJob
+    ? (jobs.find((job) => job.id === selectedJob.id) ?? selectedJob)
+    : null;
+
   const selectedDayJobs = filterJobsForTechnicianScheduleDay(
     jobs,
     selectedDateOnly,
@@ -317,6 +332,8 @@ export function TechnicianAssignedJobsView({
             <CompletedTodaySection
               jobs={jobs}
               companyTimeZone={companyTimeZone}
+              selectedJobId={selectedJob?.id ?? null}
+              onSelectJob={handleSelectJob}
             />
           ) : null}
         </>
@@ -333,30 +350,40 @@ export function TechnicianAssignedJobsView({
             isRefreshing={isRefreshing}
           />
 
-          <TechnicianJobDeck
-            deckKey={selectedDateOnly}
+          <TechnicianJobList
             jobs={deckJobs}
+            selectedJobId={selectedJob?.id ?? null}
             timeState={timeState}
-        serviceItems={serviceItems}
-        canCreateEstimate={canCreateEstimate}
-        canApproveOnSite={canApproveOnSite}
-        canViewBilling={canViewBilling}
-        aiFeaturesEnabled={aiFeaturesEnabled}
-        billingSummaries={billingSummaries}
-        canManageTime={canManageTime}
-        defaultTaxRate={defaultTaxRate}
-        onTimeStateChange={setTimeState}
-            onJobStatusUpdated={handleJobStatusUpdated}
+            onSelectJob={handleSelectJob}
           />
 
           {showCompletedToday ? (
             <CompletedTodaySection
               jobs={jobs}
               companyTimeZone={companyTimeZone}
+              selectedJobId={selectedJob?.id ?? null}
+              onSelectJob={handleSelectJob}
             />
           ) : null}
         </>
       )}
+
+      {selectedJobRecord ? (
+        <TechnicianJobDetailOverlay
+          job={selectedJobRecord}
+          timeState={timeState}
+          serviceItems={serviceItems}
+          canCreateEstimate={canCreateEstimate}
+          canApproveOnSite={canApproveOnSite}
+          canViewBilling={canViewBilling}
+          aiFeaturesEnabled={aiFeaturesEnabled}
+          billingSummaries={billingSummaries}
+          canManageTime={canManageTime}
+          defaultTaxRate={defaultTaxRate}
+          onClose={handleCloseJobDetail}
+          onJobStatusUpdated={handleJobStatusUpdated}
+        />
+      ) : null}
     </div>
   );
 }

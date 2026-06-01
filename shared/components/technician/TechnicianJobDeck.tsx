@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
+import { isLiveTechnicianJob } from "@/shared/lib/technician-dispatch-job";
 import type { JobStatus } from "@/shared/types/job";
 import type { TechnicianJob } from "@/shared/types/technician";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
@@ -39,20 +40,6 @@ function isInteractiveSwipeTarget(target: EventTarget | null): boolean {
     target.closest(
       "button, a, input, textarea, select, summary, label, [role='button']",
     ),
-  );
-}
-
-function isLiveTechnicianJob(
-  job: TechnicianJob,
-  timeState: TechnicianTimeStateSnapshot,
-): boolean {
-  if (job.status === "in_progress") {
-    return true;
-  }
-
-  return (
-    timeState.openJobLaborEntry?.jobId === job.id ||
-    (timeState.state !== "off_clock" && timeState.activeJobId === job.id)
   );
 }
 

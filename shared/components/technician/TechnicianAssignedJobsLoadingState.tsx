@@ -6,6 +6,28 @@ function SectionLabelSkeleton() {
   return <Skeleton className="h-3 w-24" />;
 }
 
+function DispatchCardSkeleton() {
+  return (
+    <div className="w-full rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-3 w-28" />
+        </div>
+        <Skeleton className="h-5 w-12 rounded-full" />
+      </div>
+      <div className="mt-3 space-y-1.5">
+        <Skeleton className="h-3 w-full max-w-[14rem]" />
+        <Skeleton className="h-3 w-full max-w-[10rem]" />
+      </div>
+      <div className="mt-3 border-t border-slate-100 pt-2.5">
+        <Skeleton className="h-5 w-20 rounded-full" />
+      </div>
+    </div>
+  );
+}
+
 export function TechnicianAssignedJobsLoadingState() {
   return (
     <div className="space-y-4 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
@@ -29,34 +51,9 @@ export function TechnicianAssignedJobsLoadingState() {
         </div>
       </div>
 
-      <div className="space-y-6">
-        <div className="space-y-3 rounded-2xl border-2 border-slate-200/80 bg-white p-3 sm:p-4">
-          <SectionLabelSkeleton />
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-5 w-40" />
-                <Skeleton className="h-3 w-32" />
-              </div>
-              <Skeleton className="h-11 w-11 rounded-lg" />
-            </div>
-            <Skeleton className="mt-4 h-11 w-full rounded-xl" />
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <SectionLabelSkeleton />
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-5 w-36" />
-              </div>
-              <Skeleton className="h-11 w-11 rounded-lg" />
-            </div>
-          </div>
-        </div>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+        <DispatchCardSkeleton />
+        <DispatchCardSkeleton />
       </div>
 
       <div className="space-y-2 border-t border-slate-200/80 pt-4">
