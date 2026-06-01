@@ -14,10 +14,11 @@ import {
   type EstimateFormData,
   type EstimateStatus,
 } from "@/shared/types/estimate";
-import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
+import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
 import { JobsViewTabs, type TodayAllViewTab } from "@/shared/components/jobs/JobsViewTabs";
 import { EstimateDetailsPanel } from "./EstimateDetailsPanel";
 import { EstimateSearchFilterBar } from "./EstimateSearchFilterBar";
+import { EstimateSummaryCards } from "./EstimateSummaryCards";
 import { EstimatesEmptyState } from "./EstimatesEmptyState";
 import { EstimatesTable } from "./EstimatesTable";
 import {
@@ -174,44 +175,46 @@ export function EstimatesPageView({
   const hasNoEstimates = estimates.length === 0;
   const hasNoTodayEstimates = !hasNoEstimates && todayEstimates.length === 0;
   const hasNoResults = !hasNoEstimates && filteredEstimates.length === 0;
-
   const isCreateOpen = panelMode === "create";
 
+  const subtitle =
+    viewTab === "today"
+      ? `${todayEstimates.length} need attention today`
+      : "Create quotes, track approvals, and convert to jobs";
+
   return (
-    <div
-      className={`flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:flex-row lg:overflow-hidden ${
-        isCreateOpen ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden" : ""
-      }`}
+    <ListCommandCenterLayout
+      title="Estimates"
+      subtitle={subtitle}
+      summary={
+        !hasNoEstimates ? <EstimateSummaryCards estimates={estimates} /> : null
+      }
+      primaryAction={
+        canManageEstimates ? (
+          <button
+            type="button"
+            onClick={handleNewEstimate}
+            disabled={customers.length === 0}
+            className="inline-flex shrink-0 items-center gap-2 admin-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Plus className="h-4 w-4" />
+            New Estimate
+          </button>
+        ) : undefined
+      }
+      className={
+        isCreateOpen
+          ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
+          : undefined
+      }
     >
       <section
-        className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1 ${
+        className={`flex min-h-[16rem] min-w-0 flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
           isCreateOpen ? "max-lg:hidden" : ""
         }`}
       >
-        <div className="admin-panel-header admin-section-header flex shrink-0 flex-wrap items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h2 className="admin-heading-section sm:text-base">Estimates</h2>
-            <p className="admin-text-helper mt-0.5">
-              {viewTab === "today"
-                ? `${todayEstimates.length} need attention today`
-                : "Create quotes, track approvals, and convert to jobs"}
-            </p>
-          </div>
-          {canManageEstimates ? (
-            <button
-              type="button"
-              onClick={handleNewEstimate}
-              disabled={customers.length === 0}
-              className="inline-flex shrink-0 items-center gap-2 admin-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Plus className="h-4 w-4" />
-              New Estimate
-            </button>
-          ) : null}
-        </div>
-
         {!hasNoEstimates ? (
-          <div className="shrink-0 space-y-2 px-4 pt-2">
+          <div className="shrink-0 border-b border-slate-100/90 px-4 py-2.5">
             <JobsViewTabs
               activeTab={viewTab}
               onTabChange={setViewTab}
@@ -223,16 +226,14 @@ export function EstimatesPageView({
         ) : null}
 
         {!hasNoEstimates ? (
-          <div className="shrink-0">
-            <EstimateSearchFilterBar
-              search={search}
-              statusFilter={statusFilter}
-              onSearchChange={setSearch}
-              onStatusFilterChange={setStatusFilter}
-              resultCount={filteredEstimates.length}
-              showStatusFilter={viewTab === "all"}
-            />
-          </div>
+          <EstimateSearchFilterBar
+            search={search}
+            statusFilter={statusFilter}
+            onSearchChange={setSearch}
+            onStatusFilterChange={setStatusFilter}
+            resultCount={filteredEstimates.length}
+            showStatusFilter={viewTab === "all"}
+          />
         ) : null}
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
@@ -272,6 +273,6 @@ export function EstimatesPageView({
         isSubmitting={isPending}
         createInitialData={createInitialData}
       />
-    </div>
+    </ListCommandCenterLayout>
   );
 }

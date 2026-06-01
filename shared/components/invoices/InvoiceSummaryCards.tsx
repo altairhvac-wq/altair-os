@@ -1,77 +1,127 @@
-import { AlertCircle, CheckCircle2, Clock } from "lucide-react";
+"use client";
+
+import { useMemo } from "react";
+import {
+  AlertCircle,
+  CalendarClock,
+  CheckCircle2,
+  Clock,
+} from "lucide-react";
+import { PageSummaryStrip } from "@/shared/components/layout/PageSummaryStrip";
+import { isDateOnlyOnOperationalDay } from "@/shared/lib/billing-workflow-list";
+import { getInvoiceWorkflowGroup } from "@/shared/lib/invoice-workflow-list";
+import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
 import { formatCurrency } from "@/shared/types/customer";
-import { getInvoiceSummary, type Invoice } from "@/shared/types/invoice";
+import {
+  hasInvoiceUnpaidBalance,
+  isActiveInvoice,
+  type Invoice,
+} from "@/shared/types/invoice";
 
 type InvoiceSummaryCardsProps = {
   invoices: Invoice[];
-  highlightedLabels?: Array<"Unpaid" | "Overdue" | "Paid">;
+  highlightedLabels?: Array<
+    "Needs attention" | "Overdue" | "Due today" | "Unpaid total" | "Paid this month"
+  >;
 };
 
 export function InvoiceSummaryCards({
   invoices,
   highlightedLabels = [],
 }: InvoiceSummaryCardsProps) {
-  const { unpaidTotal, paidTotal, overdueTotal } = getInvoiceSummary(invoices);
+  const timeZone = useCompanyTimezone();
+
+  const summary = useMemo(() => {
+    const currentMonth = getDateOnlyInTimeZone(new Date(), timeZone).slice(0, 7);
+    const todayContext = { timeZone };
+    let needsAttention = 0;
+    let overdue = 0;
+    let dueToday = 0;
+    let unpaidTotal = 0;
+    let paidThisMonth = 0;
+
+    for (const invoice of invoices) {
+      if (!isActiveInvoice(invoice)) {
+        continue;
+      }
+
+      if (getInvoiceWorkflowGroup(invoice.status) === "needs_attention") {
+        needsAttention += 1;
+      }
+
+      if (invoice.status === "overdue") {
+        overdue += 1;
+      }
+
+      if (isDateOnlyOnOperationalDay(invoice.dueDate, todayContext)) {
+        dueToday += 1;
+      }
+
+      if (hasInvoiceUnpaidBalance(invoice)) {
+        unpaidTotal += invoice.balanceDue;
+      }
+
+      if (invoice.status === "paid" && invoice.paidAt) {
+        const paidMonth = getDateOnlyInTimeZone(
+          new Date(invoice.paidAt),
+          timeZone,
+        ).slice(0, 7);
+
+        if (paidMonth === currentMonth) {
+          paidThisMonth += invoice.total;
+        }
+      }
+    }
+
+    return { needsAttention, overdue, dueToday, unpaidTotal, paidThisMonth };
+  }, [invoices, timeZone]);
 
   const cards = [
     {
-      label: "Unpaid",
-      value: formatCurrency(unpaidTotal),
+      label: "Needs attention" as const,
+      value: String(summary.needsAttention),
+      description: "Overdue, sent, or partial",
+      icon: AlertCircle,
+      iconClassName: "text-amber-600 bg-amber-50",
+    },
+    {
+      label: "Overdue" as const,
+      value: String(summary.overdue),
+      description: "Past due invoices",
+      icon: Clock,
+      iconClassName: "text-red-600 bg-red-50",
+    },
+    {
+      label: "Due today" as const,
+      value: String(summary.dueToday),
+      description: "Payments expected today",
+      icon: CalendarClock,
+      iconClassName: "text-orange-600 bg-orange-50",
+    },
+    {
+      label: "Unpaid total" as const,
+      value: formatCurrency(summary.unpaidTotal),
       description: "Outstanding balance",
       icon: Clock,
-      iconClass: "text-amber-600 bg-amber-50",
+      iconClassName: "text-amber-600 bg-amber-50",
     },
     {
-      label: "Paid",
-      value: formatCurrency(paidTotal),
+      label: "Paid this month" as const,
+      value: formatCurrency(summary.paidThisMonth),
       description: "Collected this period",
       icon: CheckCircle2,
-      iconClass: "text-emerald-600 bg-emerald-50",
-    },
-    {
-      label: "Overdue",
-      value: formatCurrency(overdueTotal),
-      description: "Past due balance",
-      icon: AlertCircle,
-      iconClass: "text-red-600 bg-red-50",
+      iconClassName: "text-emerald-600 bg-emerald-50",
     },
   ];
 
   return (
-    <div className="grid shrink-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {cards.map((card) => {
-        const isHighlighted = highlightedLabels.includes(
-          card.label as "Unpaid" | "Overdue" | "Paid",
-        );
-
-        return (
-        <div
-          key={card.label}
-          className={`admin-card p-2 transition-shadow sm:p-3 ${
-            isHighlighted
-              ? "border-amber-300/70 ring-1 ring-amber-400/20"
-              : ""
-          }`}
-        >
-          <div className="flex items-start justify-between gap-2 sm:gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-[11px] font-semibold text-slate-500 sm:text-sm">
-                {card.label}
-              </p>
-              <p className="mt-0.5 text-xl font-bold tabular-nums tracking-tight text-slate-900 sm:mt-1 sm:text-2xl">
-                {card.value}
-              </p>
-              <p className="admin-text-helper mt-0.5 sm:mt-1">{card.description}</p>
-            </div>
-            <div
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${card.iconClass}`}
-            >
-              <card.icon className="h-4 w-4" />
-            </div>
-          </div>
-        </div>
-      );
-      })}
-    </div>
+    <PageSummaryStrip
+      lgColumnsClass="lg:grid-cols-5"
+      cards={cards.map((card) => ({
+        ...card,
+        highlighted: highlightedLabels.includes(card.label),
+      }))}
+    />
   );
 }

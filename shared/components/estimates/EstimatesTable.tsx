@@ -28,7 +28,7 @@ export function EstimatesTable({
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
-            <tr className="border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <tr className="border-b border-slate-100/90 bg-slate-50/50 text-xs font-semibold uppercase tracking-wide text-slate-500">
               <th className="admin-table-cell">Estimate</th>
               <th className="admin-table-cell">Customer</th>
               <th className="hidden admin-table-cell md:table-cell">
