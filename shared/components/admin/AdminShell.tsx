@@ -92,7 +92,10 @@ export function AdminShell({
         </PullToRefresh>
       </main>
       </div>
-      {isBetaBugReportEnabled() ? <BetaBugReportButton /> : null}
+      {isBetaBugReportEnabled() &&
+      !(isMobile && pathname.startsWith("/settings")) ? (
+        <BetaBugReportButton />
+      ) : null}
     </CompanyTimezoneProvider>
   );
 }

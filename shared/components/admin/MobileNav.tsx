@@ -25,21 +25,37 @@ type MobileNavLinkProps = {
   onNavigate?: () => void;
 };
 
-function MobileNavLink({ item, active, onNavigate }: MobileNavLinkProps) {
+type MobileNavLinkDensity = "default" | "compact";
+
+function MobileNavLink({
+  item,
+  active,
+  onNavigate,
+  density = "default",
+}: MobileNavLinkProps & { density?: MobileNavLinkDensity }) {
   const Icon = item.icon;
+  const compact = density === "compact";
 
   return (
     <Link
       href={item.href}
       onClick={onNavigate}
-      className={`flex min-h-14 min-w-0 flex-1 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${
+      className={`flex min-w-0 flex-1 touch-manipulation flex-col items-center justify-center rounded-lg px-0.5 transition-colors ${
+        compact ? "min-h-10 gap-0.5" : "min-h-11 gap-0.5"
+      } ${
         active
           ? "bg-cyan-500/12 text-cyan-900 ring-1 ring-cyan-500/18 shadow-[0_1px_2px_rgb(6_182_212_/_0.08)]"
           : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
       }`}
     >
-      <Icon className={`h-5 w-5 shrink-0 ${active ? "stroke-[2.5] text-cyan-700" : ""}`} />
-      <span className="w-full truncate text-center text-[11px] font-semibold leading-tight">
+      <Icon
+        className={`shrink-0 ${compact ? "h-4 w-4" : "h-4 w-4"} ${active ? "stroke-[2.5] text-cyan-700" : ""}`}
+      />
+      <span
+        className={`w-full truncate text-center font-semibold leading-tight ${
+          compact ? "text-[10px]" : "text-[10px]"
+        }`}
+      >
         {item.label}
       </span>
     </Link>
@@ -63,8 +79,15 @@ export function MobileNav({
   const secondary = showPlatformAdminNav
     ? [...baseSecondary, platformAdminNavItem]
     : baseSecondary;
-  const moreActive = secondary.some((item) => isActivePath(pathname, item.href));
-  const showSecondRow = primaryRows[1].length > 0 || secondary.length > 0;
+  const moreActiveItem = secondary.find((item) =>
+    isActivePath(pathname, item.href),
+  );
+  const moreActive = Boolean(moreActiveItem);
+  const compactMoreMode = moreActive && !moreOpen;
+  const showSecondRow =
+    !compactMoreMode &&
+    (primaryRows[1].length > 0 || secondary.length > 0);
+  const navDensity: MobileNavLinkDensity = compactMoreMode ? "compact" : "default";
 
   useEffect(() => {
     setMoreOpen(false);
@@ -104,16 +127,51 @@ export function MobileNav({
         moreOpen ? "z-50" : "z-30"
       }`}
     >
-      <div className="flex flex-col gap-0.5 px-1 py-1.5">
+      <div
+        className={`flex flex-col px-1 ${compactMoreMode ? "gap-0 py-1" : "gap-0.5 py-1"}`}
+      >
         <ul className="flex w-full items-stretch gap-0.5">
           {primaryRows[0].map((item) => (
             <li key={item.href} className="flex min-w-0 flex-1">
               <MobileNavLink
                 item={item}
                 active={isActivePath(pathname, item.href)}
+                density={navDensity}
               />
             </li>
           ))}
+
+          {compactMoreMode && moreActiveItem ? (
+            <li className="flex min-w-0 flex-[1.15]">
+              <Link
+                href={moreActiveItem.href}
+                className="flex min-h-10 w-full min-w-0 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-lg bg-cyan-500/12 px-0.5 text-cyan-900 ring-1 ring-cyan-500/18"
+              >
+                <moreActiveItem.icon className="h-4 w-4 shrink-0 stroke-[2.5] text-cyan-700" />
+                <span className="w-full truncate text-center text-[10px] font-semibold leading-tight">
+                  {moreActiveItem.label}
+                </span>
+              </Link>
+            </li>
+          ) : null}
+
+          {compactMoreMode && secondary.length > 0 ? (
+            <li className="flex min-w-0 flex-none">
+              <button
+                type="button"
+                aria-expanded={moreOpen}
+                aria-haspopup="menu"
+                aria-label="More navigation"
+                onClick={() => setMoreOpen((open) => !open)}
+                className="flex min-h-10 min-w-[2.75rem] touch-manipulation flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+              >
+                <MoreHorizontal className="h-4 w-4 shrink-0" />
+                <span className="text-[10px] font-semibold leading-tight">
+                  More
+                </span>
+              </button>
+            </li>
+          ) : null}
         </ul>
 
         {showSecondRow ? (
@@ -123,6 +181,7 @@ export function MobileNav({
                 <MobileNavLink
                   item={item}
                   active={isActivePath(pathname, item.href)}
+                  density={navDensity}
                 />
               </li>
             ))}
@@ -135,16 +194,16 @@ export function MobileNav({
                   aria-haspopup="menu"
                   aria-label="More navigation"
                   onClick={() => setMoreOpen((open) => !open)}
-                  className={`flex min-h-14 w-full min-w-0 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${
+                  className={`flex min-h-11 w-full min-w-0 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 transition-colors ${
                     moreActive || moreOpen
                       ? "bg-cyan-500/12 text-cyan-800 ring-1 ring-cyan-500/15"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >
                   <MoreHorizontal
-                    className={`h-5 w-5 shrink-0 ${moreActive || moreOpen ? "stroke-[2.5] text-cyan-700" : ""}`}
+                    className={`h-4 w-4 shrink-0 ${moreActive || moreOpen ? "stroke-[2.5] text-cyan-700" : ""}`}
                   />
-                  <span className="w-full truncate text-center text-[11px] font-semibold leading-tight">
+                  <span className="w-full truncate text-center text-[10px] font-semibold leading-tight">
                     More
                   </span>
                 </button>

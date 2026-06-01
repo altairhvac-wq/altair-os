@@ -23,7 +23,7 @@ export function SettingsSection({
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
         <h2 className="admin-heading-section text-sm sm:text-base">{title}</h2>
         {description ? (
-          <p className="admin-text-helper">{description}</p>
+          <p className="admin-text-helper hidden sm:inline">{description}</p>
         ) : null}
       </div>
       {children}

@@ -9,9 +9,11 @@ import {
   Plug,
   Settings2,
   ShieldCheck,
+  UserPlus,
   Users,
 } from "lucide-react";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
+import { getInvitableTeamRoles } from "@/lib/database/services/member-role-guard";
 import type { PendingTeamInvite } from "@/lib/database/queries/memberships";
 import {
   formatCompanyStatus,
@@ -27,12 +29,14 @@ import type { CompanyBillingDefaults } from "@/shared/lib/company-billing-defaul
 import { BillingDocumentDefaultsCard } from "./BillingDocumentDefaultsCard";
 import { PendingInvitesCard } from "./PendingInvitesCard";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
-import { SettingsFutureCard } from "./SettingsFutureCard";
+import { SettingsComingSoonSection } from "./SettingsComingSoonSection";
 import { SettingsSection } from "./SettingsSection";
 import { TeamInviteForm } from "./TeamInviteForm";
 import { TeamMemberMobileCards } from "./TeamMemberMobileCards";
 import { TeamMembersEmptyState } from "./TeamMembersEmptyState";
 import { TeamMembersTable } from "./TeamMembersTable";
+import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
+import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 
 type SettingsPageViewProps = {
   companyProfile: CompanyProfileSummary;
@@ -74,6 +78,13 @@ export function SettingsPageView({
   const [search, setSearch] = useState("");
   const [roleError, setRoleError] = useState<string | null>(null);
   const [roleSuccess, setRoleSuccess] = useState<string | null>(null);
+  const [inviteExpanded, setInviteExpanded] = useState(false);
+
+  const invitableRoles = useMemo(
+    () => getInvitableTeamRoles(currentUserRole),
+    [currentUserRole],
+  );
+  const canInviteMembers = canManageTeam && invitableRoles.length > 0;
 
   const filteredMembers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -112,6 +123,7 @@ export function SettingsPageView({
     });
     setRoleError(null);
     setRoleSuccess(null);
+    setInviteExpanded(false);
   }
 
   function handleRoleChangeSuccess(message: string) {
@@ -139,15 +151,18 @@ export function SettingsPageView({
       iconClass: "text-cyan-600 bg-cyan-50",
     },
     {
-      label: "Your role",
+      label: "Role",
       value: COMPANY_ROLE_LABELS[companyProfile.currentUserRole],
       description: "Current workspace access",
       icon: Settings2,
       iconClass: "text-violet-600 bg-violet-50",
     },
     {
-      label: "Team size",
-      value: String(companyProfile.memberCount),
+      label: "Team",
+      value:
+        companyProfile.memberCount === 1
+          ? "1 member"
+          : `${companyProfile.memberCount} members`,
       description: "Active and invited members",
       icon: Users,
       iconClass: "text-emerald-600 bg-emerald-50",
@@ -161,6 +176,30 @@ export function SettingsPageView({
     },
   ];
 
+  const comingSoonItems = [
+    {
+      title: "Billing",
+      description:
+        "Subscription plans, payment methods, and invoice history.",
+      icon: CreditCard,
+    },
+    {
+      title: "Integrations",
+      description: "Connect accounting, payroll, and field service tools.",
+      icon: Plug,
+    },
+    {
+      title: "Notifications",
+      description: "Configure alerts for jobs, billing, and team activity.",
+      icon: Bell,
+    },
+    {
+      title: "Company Preferences",
+      description: "Company profile, branding, and operational configuration.",
+      icon: Settings2,
+    },
+  ];
+
   const showOnboarding =
     onboardingChecklist &&
     shouldShowOnboardingChecklist(onboardingChecklist);
@@ -171,32 +210,47 @@ export function SettingsPageView({
     showOnboarding || showDemoData || showSystemCheckLink;
 
   return (
-    <div className="min-w-0 max-w-full space-y-3 sm:space-y-4">
-      <header className="admin-page-header flex shrink-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+    <div className="min-w-0 max-w-full space-y-2 sm:space-y-4">
+      <header className="admin-page-header flex shrink-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <div className="min-w-0 flex flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <h1 className="shrink-0 text-base font-bold tracking-tight text-slate-900 sm:text-lg">
             Settings
           </h1>
-          <p className="min-w-0 text-xs text-slate-500">
+          <p className="min-w-0 hidden text-xs text-slate-500 sm:block">
             Workspace, team, and document defaults
           </p>
         </div>
         {hasContactInfo ? (
-          <p className="min-w-0 break-words text-xs text-slate-500 sm:max-w-xs sm:text-right">
+          <p className="min-w-0 hidden break-words text-xs text-slate-500 sm:block sm:max-w-xs sm:text-right">
             {contactLine}
           </p>
-        ) : (
-          <p className="text-xs text-slate-400 sm:text-right">
-            Contact details coming soon
-          </p>
-        )}
+        ) : null}
       </header>
 
       <SettingsSection
         title="Company"
         description="Profile, locale, and workspace status"
       >
-        <div className="grid min-w-0 gap-2.5 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
+        <div className="admin-card min-w-0 p-3 md:hidden">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Company Summary
+          </p>
+          <dl className="mt-1.5 divide-y divide-slate-100">
+            {summaryCards.map((row) => (
+              <div
+                key={row.label}
+                className="flex items-baseline justify-between gap-3 py-1.5 first:pt-0 last:pb-0"
+              >
+                <dt className="shrink-0 text-xs text-slate-500">{row.label}</dt>
+                <dd className="min-w-0 truncate text-right text-sm font-medium text-slate-900">
+                  {row.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <div className="hidden min-w-0 gap-2.5 md:grid md:grid-cols-2 md:gap-3 xl:grid-cols-4">
           {summaryCards.map((card) => (
             <div
               key={card.label}
@@ -236,14 +290,27 @@ export function SettingsPageView({
           id="team-members"
           className="admin-card min-w-0 max-w-full overflow-x-clip"
         >
-          <div className="admin-panel-header flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3">
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-slate-900">Members</h3>
-              <p className="admin-text-helper mt-0.5">
-                {canManageTeam
-                  ? "Invite teammates and assign roles."
-                  : "Roster is limited to owner and admin roles."}
-              </p>
+          <div className="admin-panel-header flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3">
+            <div className="flex min-w-0 items-center justify-between gap-2 sm:block">
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-slate-900">Members</h3>
+                <p className="admin-text-helper mt-0.5 hidden sm:block">
+                  {canManageTeam
+                    ? "Invite teammates and assign roles."
+                    : "Roster is limited to owner and admin roles."}
+                </p>
+              </div>
+              {canInviteMembers ? (
+                <button
+                  type="button"
+                  onClick={() => setInviteExpanded((open) => !open)}
+                  aria-expanded={inviteExpanded}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-cyan-200 bg-cyan-50/60 px-2.5 py-1.5 text-xs font-semibold text-cyan-800 transition-colors hover:bg-cyan-50 md:hidden"
+                >
+                  <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
+                  {inviteExpanded ? "Close" : "Invite member"}
+                </button>
+              ) : null}
             </div>
             <input
               type="search"
@@ -251,15 +318,28 @@ export function SettingsPageView({
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search members..."
               aria-label="Search team members"
-              className="w-full min-h-[44px] rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 shadow-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 sm:max-w-xs"
+              className="w-full min-h-10 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 sm:max-w-xs sm:min-h-[44px] sm:py-2.5"
             />
           </div>
 
-          {canManageTeam ? (
-            <TeamInviteForm
-              currentUserRole={currentUserRole}
-              onMemberInvited={handleMemberInvited}
-            />
+          {canInviteMembers ? (
+            <>
+              <div className="md:hidden">
+                <TeamInviteForm
+                  currentUserRole={currentUserRole}
+                  onMemberInvited={handleMemberInvited}
+                  collapsible
+                  expanded={inviteExpanded}
+                  onExpandedChange={setInviteExpanded}
+                />
+              </div>
+              <div className="hidden md:block">
+                <TeamInviteForm
+                  currentUserRole={currentUserRole}
+                  onMemberInvited={handleMemberInvited}
+                />
+              </div>
+            </>
           ) : null}
 
           {membersLoadError ? (
@@ -351,61 +431,45 @@ export function SettingsPageView({
           ) : null}
 
           {showSystemCheckLink ? (
-            <div className="grid min-w-0 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:max-w-xl">
-              <Link
-                href="/settings/system-check"
-                className="min-w-0 rounded-xl border border-cyan-200 bg-white p-3.5 transition-colors hover:border-cyan-300 hover:bg-cyan-50/40 sm:p-4"
-              >
-                <div className="flex items-start gap-2.5">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600">
-                    <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-semibold text-slate-900">
-                      System Check
-                    </h3>
-                    <p className="mt-0.5 text-xs leading-snug text-slate-600 sm:text-sm">
-                      Read-only production readiness checks for the internal
-                      alpha.
-                    </p>
-                    <p className="mt-1.5 text-[10px] font-medium uppercase tracking-wide text-cyan-700">
-                      Owner only
-                    </p>
-                  </div>
+            <Link
+              href="/settings/system-check"
+              className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 transition-colors hover:border-cyan-200 hover:bg-cyan-50/30 sm:max-w-xl sm:rounded-xl sm:border-cyan-200 sm:p-4"
+            >
+              <div className="flex min-w-0 items-center gap-2.5">
+                <ShieldCheck
+                  className="h-4 w-4 shrink-0 text-cyan-600 sm:hidden"
+                  aria-hidden="true"
+                />
+                <div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600 sm:flex">
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                 </div>
-              </Link>
-            </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    System Check
+                  </h3>
+                  <p className="hidden text-xs leading-snug text-slate-600 sm:mt-0.5 sm:block sm:text-sm">
+                    Read-only production readiness checks for the internal
+                    alpha.
+                  </p>
+                </div>
+              </div>
+              <span className="shrink-0 text-[10px] font-medium uppercase tracking-wide text-cyan-700">
+                Owner only
+              </span>
+            </Link>
           ) : null}
         </SettingsSection>
       ) : null}
 
-      <SettingsSection
-        title="Coming soon"
-        description="Planned settings areas"
-      >
-        <div className="grid min-w-0 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
-          <SettingsFutureCard
-            title="Billing"
-            description="Subscription plans, payment methods, and invoice history."
-            icon={CreditCard}
-          />
-          <SettingsFutureCard
-            title="Integrations"
-            description="Connect accounting, payroll, and field service tools."
-            icon={Plug}
-          />
-          <SettingsFutureCard
-            title="Notifications"
-            description="Configure alerts for jobs, billing, and team activity."
-            icon={Bell}
-          />
-          <SettingsFutureCard
-            title="Company Preferences"
-            description="Company profile, branding, and operational configuration."
-            icon={Settings2}
-          />
-        </div>
+      <SettingsSection title="Coming soon">
+        <SettingsComingSoonSection items={comingSoonItems} />
       </SettingsSection>
+
+      {isBetaBugReportEnabled() ? (
+        <div className="pt-1 md:hidden">
+          <BetaBugReportButton inlineOnly />
+        </div>
+      ) : null}
     </div>
   );
 }

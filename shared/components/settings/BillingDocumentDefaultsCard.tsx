@@ -22,12 +22,90 @@ type FeedbackState = {
 } | null;
 
 const inputClass =
-  "w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
+  "w-full min-h-10 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:min-h-[44px] sm:py-2.5";
 
 const textareaClass =
-  "w-full min-h-[96px] max-w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
+  "w-full min-h-[80px] max-w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:min-h-[96px] sm:py-2.5";
 
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
+const labelClass = "mb-1 block text-xs font-semibold text-slate-600";
+
+type CollapsibleNotesFieldProps = {
+  id: string;
+  label: string;
+  value: string;
+  placeholder: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+};
+
+function CollapsibleNotesField({
+  id,
+  label,
+  value,
+  placeholder,
+  disabled,
+  onChange,
+}: CollapsibleNotesFieldProps) {
+  const [expanded, setExpanded] = useState(Boolean(value.trim()));
+
+  return (
+    <>
+      <div className="md:hidden">
+        {!expanded ? (
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50"
+          >
+            <span className="font-medium text-slate-700">{label}</span>
+            <span className="shrink-0 text-xs text-slate-400">Optional</span>
+          </button>
+        ) : (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between gap-2">
+              <label htmlFor={id} className={labelClass}>
+                {label}
+              </label>
+              <button
+                type="button"
+                onClick={() => setExpanded(false)}
+                className="text-xs font-medium text-slate-500 hover:text-slate-700"
+              >
+                Collapse
+              </button>
+            </div>
+            <textarea
+              id={id}
+              name={id}
+              rows={3}
+              value={value}
+              onChange={(event) => onChange(event.target.value)}
+              disabled={disabled}
+              placeholder={placeholder}
+              className={textareaClass}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="hidden min-w-0 md:block">
+        <label htmlFor={`${id}-desktop`} className={labelClass}>
+          {label}
+        </label>
+        <textarea
+          id={`${id}-desktop`}
+          name={id}
+          rows={4}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          disabled={disabled}
+          placeholder={placeholder}
+          className={textareaClass}
+        />
+      </div>
+    </>
+  );
+}
 
 export function BillingDocumentDefaultsCard({
   initialDefaults,
@@ -76,16 +154,16 @@ export function BillingDocumentDefaultsCard({
   }
 
   return (
-    <div className="admin-card min-w-0 p-3.5 sm:p-4">
+    <div className="admin-card min-w-0 p-3 sm:p-4">
       <div className="flex items-start gap-2.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+        <div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600 sm:flex">
           <FileText className="h-4 w-4" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
           <h2 className="admin-heading-section text-sm sm:text-base">
             Billing Document Defaults
           </h2>
-          <p className="admin-text-helper mt-0.5">
+          <p className="admin-text-helper mt-0.5 hidden sm:block">
             Default tax rate, payment terms, and notes for new estimates and
             invoices.
           </p>
@@ -100,11 +178,11 @@ export function BillingDocumentDefaultsCard({
 
       <form
         onSubmit={handleSubmit}
-        className="mt-3 min-w-0 space-y-3 sm:mt-4"
+        className="mt-2.5 min-w-0 space-y-2.5 sm:mt-4 sm:space-y-3"
         aria-label="Billing document defaults"
         aria-busy={isPending}
       >
-        <div className="grid min-w-0 gap-3 sm:grid-cols-3">
+        <div className="grid min-w-0 gap-2.5 sm:grid-cols-3 sm:gap-3">
           <div className="min-w-0">
             <label htmlFor="defaultTaxRate" className={labelClass}>
               Default tax rate (%)
@@ -169,42 +247,24 @@ export function BillingDocumentDefaultsCard({
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-3 md:grid-cols-2">
-          <div className="min-w-0">
-            <label htmlFor="defaultEstimateNotes" className={labelClass}>
-              Default estimate notes
-            </label>
-            <textarea
-              id="defaultEstimateNotes"
-              name="defaultEstimateNotes"
-              rows={4}
-              value={formValues.defaultEstimateNotes}
-              onChange={(event) =>
-                updateField("defaultEstimateNotes", event.target.value)
-              }
-              disabled={!canManage || isPending}
-              placeholder="Optional notes pre-filled on new estimates"
-              className={textareaClass}
-            />
-          </div>
+        <div className="grid min-w-0 gap-2.5 md:grid-cols-2 md:gap-3">
+          <CollapsibleNotesField
+            id="defaultEstimateNotes"
+            label="Default estimate notes"
+            value={formValues.defaultEstimateNotes}
+            placeholder="Optional notes pre-filled on new estimates"
+            disabled={!canManage || isPending}
+            onChange={(value) => updateField("defaultEstimateNotes", value)}
+          />
 
-          <div className="min-w-0">
-            <label htmlFor="defaultInvoiceNotes" className={labelClass}>
-              Default invoice notes
-            </label>
-            <textarea
-              id="defaultInvoiceNotes"
-              name="defaultInvoiceNotes"
-              rows={4}
-              value={formValues.defaultInvoiceNotes}
-              onChange={(event) =>
-                updateField("defaultInvoiceNotes", event.target.value)
-              }
-              disabled={!canManage || isPending}
-              placeholder="Optional notes pre-filled on new invoices"
-              className={textareaClass}
-            />
-          </div>
+          <CollapsibleNotesField
+            id="defaultInvoiceNotes"
+            label="Default invoice notes"
+            value={formValues.defaultInvoiceNotes}
+            placeholder="Optional notes pre-filled on new invoices"
+            disabled={!canManage || isPending}
+            onChange={(value) => updateField("defaultInvoiceNotes", value)}
+          />
         </div>
 
         {feedback ? (
@@ -214,11 +274,11 @@ export function BillingDocumentDefaultsCard({
         ) : null}
 
         {canManage ? (
-          <div className="admin-sticky-footer-inline sticky bottom-0 -mx-3.5 px-3.5 py-2.5 supports-[padding:max(0px)]:pb-[max(0.625rem,env(safe-area-inset-bottom))] sm:-mx-4 sm:px-4">
+          <div className="border-t border-slate-100 pt-2.5 sm:admin-sticky-footer-inline sm:sticky sm:bottom-0 sm:-mx-4 sm:px-4 sm:py-2.5 sm:supports-[padding:max(0px)]:pb-[max(0.625rem,env(safe-area-inset-bottom))]">
             <button
               type="submit"
               disabled={isPending}
-              className="inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[44px] sm:w-auto sm:py-2.5"
             >
               {isPending ? "Saving..." : "Save billing defaults"}
             </button>

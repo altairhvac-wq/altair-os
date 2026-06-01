@@ -8,8 +8,6 @@ import {
   canActorReactivateMember,
   canActorSuspendMember,
   getInvitableTeamRoles,
-  validateMemberReactivation,
-  validateMemberSuspension,
 } from "@/lib/database/services/member-role-guard";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import {
@@ -215,7 +213,7 @@ export function TeamMemberMobileCards({
   }
 
   return (
-    <div className="min-w-0 space-y-3 p-4 md:hidden">
+    <div className="min-w-0 space-y-2 p-3 md:hidden">
       {pendingRoleChange ? (
         <SettingsAlertBanner tone="warning">
           <p className="font-semibold">
@@ -276,22 +274,6 @@ export function TeamMemberMobileCards({
           );
         const canCancelInvite =
           canManageTeam && canActorCancelInvite(memberSubject);
-        const suspendBlockReason = canManageTeam
-          ? validateMemberSuspension({
-              membership: memberSubject,
-              activeOwnerCount,
-              actorUserId: currentUserId,
-              actorRole: currentUserRole,
-            })
-          : null;
-        const reactivateBlockReason = canManageTeam
-          ? validateMemberReactivation({
-              membership: memberSubject,
-              activeOwnerCount,
-              actorUserId: currentUserId,
-              actorRole: currentUserRole,
-            })
-          : null;
         const isRowPending = isPending && pendingMembershipId === member.id;
         const isActionLocked = isPending;
         const isConfirming = confirmingAction?.membershipId === member.id;
@@ -307,37 +289,35 @@ export function TeamMemberMobileCards({
         return (
           <article
             key={member.id}
-            className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+            className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm"
           >
-            <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-sm font-bold text-white">
+            <div className="flex items-start gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-xs font-bold text-white">
                 {getTeamMemberInitials(member.name)}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <p className="min-w-0 truncate font-semibold text-slate-900">
+                <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                  <p className="min-w-0 truncate text-sm font-semibold text-slate-900">
                     {member.name}
                   </p>
                   {isCurrentUser ? (
-                    <span className="shrink-0 text-xs font-medium text-slate-500">
+                    <span className="shrink-0 text-[11px] font-medium text-slate-500">
                       (You)
                     </span>
                   ) : null}
                   <MembershipStatusBadge
                     status={member.status}
-                    className="shrink-0"
+                    className="shrink-0 scale-90 origin-left"
                   />
                 </div>
-                <p className="mt-0.5 truncate text-sm text-slate-500">
-                  {member.email}
-                </p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="truncate text-xs text-slate-500">{member.email}</p>
+                <p className="text-[11px] text-slate-400">
                   {getMemberDateCaption(member)} {getMemberDateLabel(member)}
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
+            <div className="mt-2 space-y-2 border-t border-slate-100 pt-2">
               {canEditRole ? (
                 <RoleSelectorField
                   value={member.role}
@@ -345,10 +325,11 @@ export function TeamMemberMobileCards({
                   onChange={(nextRole) => handleRoleChange(member, nextRole)}
                   disabled={isActionLocked}
                   showDescription={false}
+                  compact
                   aria-label={`Role for ${member.name}`}
                 />
               ) : (
-                <p className="text-sm font-medium text-slate-700">
+                <p className="text-xs font-medium text-slate-700">
                   {formatTeamMemberRole(member.role)}
                 </p>
               )}
@@ -356,7 +337,7 @@ export function TeamMemberMobileCards({
               {canManageTeam ? (
                 <div>
                   {isConfirming && confirmingStatusAction ? (
-                    <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
+                    <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-2.5">
                       <p className="text-sm font-medium text-slate-700">
                         {confirmingStatusAction === "suspend"
                           ? "Suspend this member's access?"
@@ -397,35 +378,33 @@ export function TeamMemberMobileCards({
                         </button>
                       </div>
                     </div>
-                  ) : member.status === "active" ? (
+                  ) : member.status === "active" && canSuspend ? (
                     <button
                       type="button"
-                      disabled={!canSuspend || isActionLocked}
-                      title={suspendBlockReason ?? undefined}
+                      disabled={isActionLocked}
                       onClick={() => {
-                        if (!canSuspend || isPending) return;
+                        if (isPending) return;
                         setConfirmingAction({
                           membershipId: member.id,
                           action: "suspend",
                         });
                       }}
-                      className="inline-flex min-h-[44px] w-full items-center justify-center rounded-lg border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+                      className="inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Suspend access
                     </button>
-                  ) : member.status === "suspended" ? (
+                  ) : member.status === "suspended" && canReactivate ? (
                     <button
                       type="button"
-                      disabled={!canReactivate || isActionLocked}
-                      title={reactivateBlockReason ?? undefined}
+                      disabled={isActionLocked}
                       onClick={() => {
-                        if (!canReactivate || isPending) return;
+                        if (isPending) return;
                         setConfirmingAction({
                           membershipId: member.id,
                           action: "reactivate",
                         });
                       }}
-                      className="inline-flex min-h-[44px] w-full items-center justify-center rounded-lg border border-emerald-200 px-4 py-2.5 text-sm font-semibold text-emerald-700 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+                      className="inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Reactivate access
                     </button>

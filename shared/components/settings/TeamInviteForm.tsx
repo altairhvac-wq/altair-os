@@ -14,6 +14,10 @@ import { SettingsAlertBanner } from "./SettingsAlertBanner";
 type TeamInviteFormProps = {
   currentUserRole: CompanyRole;
   onMemberInvited: (member: TeamMember) => void;
+  /** When true, form body is hidden until expanded (mobile settings). */
+  collapsible?: boolean;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
 };
 
 type FeedbackTone = "success" | "warning" | "error";
@@ -26,6 +30,9 @@ type FeedbackState = {
 export function TeamInviteForm({
   currentUserRole,
   onMemberInvited,
+  collapsible = false,
+  expanded = true,
+  onExpandedChange,
 }: TeamInviteFormProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<CompanyRole>(() => {
@@ -135,22 +142,32 @@ export function TeamInviteForm({
     return null;
   }
 
+  if (collapsible && !expanded) {
+    return null;
+  }
+
   return (
-    <div className="min-w-0 max-w-full border-b border-slate-100 px-4 py-4 sm:px-6">
+    <div
+      className={`min-w-0 max-w-full border-b border-slate-100 px-3 py-3 sm:px-6 sm:py-4 ${
+        collapsible ? "md:px-6 md:py-4" : ""
+      }`}
+    >
       <form
         onSubmit={handleSubmit}
-        className="min-w-0 space-y-4"
+        className="min-w-0 space-y-3 sm:space-y-4"
         aria-label="Invite team member"
         aria-busy={isPending}
       >
-        <div className="flex items-center gap-2">
-          <UserPlus className="h-4 w-4 text-cyan-600" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-slate-900">
-            Invite team member
-          </h3>
-        </div>
+        {!collapsible ? (
+          <div className="flex items-center gap-2">
+            <UserPlus className="h-4 w-4 text-cyan-600" aria-hidden="true" />
+            <h3 className="text-sm font-semibold text-slate-900">
+              Invite team member
+            </h3>
+          </div>
+        ) : null}
 
-        <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,220px)]">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,220px)]">
           <label className="block">
             <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
               Email
@@ -165,7 +182,7 @@ export function TeamInviteForm({
               placeholder="name@company.com"
               required
               disabled={isPending}
-              className="w-full min-h-[44px] rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 shadow-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60"
+              className="w-full min-h-10 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60 sm:min-h-[44px] sm:py-2.5"
             />
           </label>
 
@@ -178,14 +195,15 @@ export function TeamInviteForm({
               clearFeedback();
             }}
             disabled={isPending}
+            compact
           />
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           <button
             type="submit"
             disabled={isPending || email.trim().length === 0}
-            className="inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-cyan-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[44px] sm:w-auto sm:py-2.5"
           >
             {isPending ? "Sending invite..." : "Send invite"}
           </button>
@@ -194,14 +212,24 @@ export function TeamInviteForm({
             type="button"
             onClick={handleCopyInstructions}
             disabled={isPending}
-            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[44px] sm:w-auto sm:py-2.5"
           >
             <Copy className="h-4 w-4" aria-hidden="true" />
             {copied ? "Copied invite link" : "Copy invite link"}
           </button>
+
+          {collapsible && onExpandedChange ? (
+            <button
+              type="button"
+              onClick={() => onExpandedChange(false)}
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-50 sm:hidden"
+            >
+              Cancel
+            </button>
+          ) : null}
         </div>
 
-        <p className="text-xs leading-relaxed text-slate-500">
+        <p className="hidden text-xs leading-relaxed text-slate-500 sm:block">
           Invites are saved immediately. Email is sent only when Resend is
           configured; otherwise copy the invite link for the teammate. Pending
           invites also appear on their setup screen after they sign up with the

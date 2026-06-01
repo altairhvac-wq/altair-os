@@ -30,10 +30,15 @@ const textareaClassName =
 type BetaBugReportButtonProps = {
   /** Position above technician bottom nav when true. */
   aboveMobileBottomNav?: boolean;
+  /** Render as inline link/button instead of fixed floating pill. */
+  inlineOnly?: boolean;
+  className?: string;
 };
 
 export function BetaBugReportButton({
   aboveMobileBottomNav = false,
+  inlineOnly = false,
+  className = "",
 }: BetaBugReportButtonProps) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -113,10 +118,23 @@ export function BetaBugReportButton({
     ? "bottom-[max(5.5rem,calc(5rem+env(safe-area-inset-bottom,0px)))]"
     : "bottom-[max(1rem,env(safe-area-inset-bottom))]";
 
-  const showHint = hintHydrated && !hintDismissed && !open;
+  const showHint = hintHydrated && !hintDismissed && !open && !inlineOnly;
 
   return (
     <>
+      {inlineOnly ? (
+        <button
+          type="button"
+          onClick={handleOpen}
+          className={`inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-cyan-200 hover:bg-cyan-50/50 hover:text-cyan-900 ${className}`.trim()}
+        >
+          <MessageCircle
+            className="h-4 w-4 shrink-0 text-cyan-600"
+            aria-hidden="true"
+          />
+          Send feedback
+        </button>
+      ) : (
       <div
         className={`fixed right-4 z-40 flex flex-col items-end gap-2 ${positionClassName}`}
       >
@@ -154,6 +172,7 @@ export function BetaBugReportButton({
           Feedback
         </button>
       </div>
+      )}
 
       {open ? (
         <MobileSheet
