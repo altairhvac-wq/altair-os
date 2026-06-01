@@ -11,7 +11,7 @@ export function MobileSheetFooter({
 }: MobileSheetFooterProps) {
   return (
     <footer
-      className={`flex shrink-0 gap-2.5 admin-sticky-footer-inline px-3 py-2.5 sm:px-4 ${className ?? ""}`}
+      className={`overlay-form-actions flex shrink-0 gap-2.5 admin-sticky-footer-inline px-3 py-2.5 sm:px-4 ${className ?? ""}`}
     >
       {children}
     </footer>

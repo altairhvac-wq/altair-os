@@ -87,6 +87,16 @@ export function useOwnerViewMode(companyContext: ActiveCompanyContext) {
     [companyId, isOwner, router, viewMode],
   );
 
+  const redirectTarget = useMemo(
+    () =>
+      isOwner ? shouldRedirectForOwnerViewMode(pathname, viewMode) : null,
+    [isOwner, pathname, viewMode],
+  );
+
+  const redirectPending = Boolean(
+    redirectTarget && redirectTarget !== pathname,
+  );
+
   const navigationContext = useMemo(
     () =>
       getNavigationContextForOwnerViewMode(
@@ -101,6 +111,7 @@ export function useOwnerViewMode(companyContext: ActiveCompanyContext) {
     viewMode: isOwner ? viewMode : ("owner_admin" as const),
     setViewMode,
     navigationContext,
+    redirectPending,
     hydrated: true,
   };
 }

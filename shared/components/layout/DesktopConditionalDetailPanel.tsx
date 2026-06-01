@@ -88,11 +88,11 @@ function DesktopDrawer({
             closeDisabled={closeDisabled}
           />
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2.5">
+            <div className="overlay-form-shell min-h-0 overflow-hidden px-3 py-2.5">
               {children}
             </div>
             {footer ? (
-              <div className="shrink-0 border-t border-slate-100 bg-white px-3 py-2.5">
+              <div className="overlay-form-actions shrink-0 border-t border-slate-100 bg-white px-3 py-2.5">
                 {footer}
               </div>
             ) : null}
@@ -138,11 +138,11 @@ export function DesktopConditionalDetailPanel({
           closeDisabled={closeDisabled}
         />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2.5">
+          <div className="overlay-form-shell min-h-0 overflow-hidden px-3 py-2.5">
             {children}
           </div>
           {footer ? (
-            <div className="shrink-0 border-t border-slate-100 bg-white px-3 py-2.5">
+            <div className="overlay-form-actions shrink-0 border-t border-slate-100 bg-white px-3 py-2.5">
               {footer}
             </div>
           ) : null}

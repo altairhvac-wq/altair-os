@@ -850,6 +850,28 @@ a[href] {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Flex column shell for full-viewport forms with pinned footers. */
+.overlay-form-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.overlay-form-scroll {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.overlay-form-actions {
+  flex-shrink: 0;
+}
+
 .admin-dispatch-lane {
   border-radius: 0.75rem;
   border: 1px solid rgb(203 213 225 / 0.72);

@@ -49,8 +49,7 @@ export function EstimateDetailsPanel({
       ariaLabel="Create estimate"
       bodyScroll="child"
     >
-      <div className="flex h-full min-h-0 flex-1 flex-col px-3 py-3 sm:px-4 sm:py-4">
-        <EstimateForm
+      <EstimateForm
           customers={customers}
           jobs={jobs}
           serviceItems={serviceItems}
@@ -61,8 +60,7 @@ export function EstimateDetailsPanel({
           isSubmitting={isSubmitting}
           aiFeaturesEnabled={aiFeaturesEnabled}
           canDraftDescription={canDraftDescription}
-        />
-      </div>
+      />
     </FocusedDocumentOverlay>
   );
 }

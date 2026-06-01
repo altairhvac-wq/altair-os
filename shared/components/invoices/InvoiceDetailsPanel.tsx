@@ -45,8 +45,7 @@ export function InvoiceDetailsPanel({
       ariaLabel="Create invoice"
       bodyScroll="child"
     >
-      <div className="flex h-full min-h-0 flex-1 flex-col px-3 py-3 sm:px-4 sm:py-4">
-        <InvoiceForm
+      <InvoiceForm
           customers={customers}
           jobs={jobs}
           serviceItems={serviceItems}
@@ -55,8 +54,7 @@ export function InvoiceDetailsPanel({
           error={createError}
           isSubmitting={isSubmitting}
           initialData={createInitialData}
-        />
-      </div>
+      />
     </FocusedDocumentOverlay>
   );
 }

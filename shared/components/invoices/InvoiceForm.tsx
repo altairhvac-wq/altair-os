@@ -125,7 +125,7 @@ export function InvoiceForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex min-h-0 min-w-0 flex-1 flex-col"
+      className="overlay-form-shell px-3 py-3 sm:px-4 sm:py-4"
       aria-busy={isSubmitting}
     >
       {error ? (
@@ -134,7 +134,7 @@ export function InvoiceForm({
         </div>
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="overlay-form-scroll overflow-x-hidden">
         <fieldset
           disabled={isSubmitting}
           className={`m-0 min-w-0 border-0 p-0 ${adminFormStackClass}`}
@@ -256,7 +256,7 @@ export function InvoiceForm({
         </fieldset>
       </div>
 
-      <div className={`${adminFormActionsClass} shrink-0 bg-white`}>
+      <div className={`${adminFormActionsClass} overlay-form-actions bg-white`}>
         <button
           type="submit"
           disabled={isSubmitting}

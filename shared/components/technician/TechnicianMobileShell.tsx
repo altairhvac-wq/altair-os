@@ -11,6 +11,7 @@ import { TechnicianNotificationLink } from "@/shared/components/notifications/Te
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
 import { useOwnerViewMode } from "@/shared/components/view-mode/useOwnerViewMode";
 import { TechnicianBottomNav } from "./TechnicianBottomNav";
+import { TechnicianShellContentLoadingState } from "./TechnicianShellContentLoadingState";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 
@@ -27,7 +28,7 @@ export function TechnicianMobileShell({
   userCompanies,
   unreadNotificationCount = 0,
 }: TechnicianMobileShellProps) {
-  const { isOwner, viewMode, setViewMode, navigationContext } =
+  const { isOwner, viewMode, setViewMode, navigationContext, redirectPending } =
     useOwnerViewMode(companyContext);
 
   return (
@@ -71,7 +72,13 @@ export function TechnicianMobileShell({
           </header>
 
           <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 pb-[max(5.75rem,calc(5.25rem+env(safe-area-inset-bottom,0px)))] sm:px-4 sm:py-4">
-            <PullToRefresh>{children}</PullToRefresh>
+            <PullToRefresh>
+              {redirectPending ? (
+                <TechnicianShellContentLoadingState />
+              ) : (
+                children
+              )}
+            </PullToRefresh>
           </main>
 
           <TechnicianBottomNav companyContext={navigationContext} />

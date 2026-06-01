@@ -5,6 +5,7 @@ import {
   type CustomerFormData,
   type CustomerStatus,
 } from "@/shared/types/customer";
+import { adminFormActionsClass } from "@/shared/lib/admin-density";
 
 type CustomerFormProps = {
   initialData?: Partial<CustomerFormData>;
@@ -64,7 +65,8 @@ export function CustomerForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="overlay-form-shell">
+      <div className="overlay-form-scroll space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label htmlFor="name" className={labelClass}>
@@ -222,8 +224,9 @@ export function CustomerForm({
           {error}
         </p>
       ) : null}
+      </div>
 
-      <div className="flex gap-3 border-t border-slate-100 pt-4">
+      <div className={`${adminFormActionsClass} overlay-form-actions bg-white`}>
         <button
           type="submit"
           disabled={isSubmitting}

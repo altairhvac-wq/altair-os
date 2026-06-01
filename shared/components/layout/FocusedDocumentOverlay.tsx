@@ -60,7 +60,7 @@ function OverlayHeader({
   const closeLabel = closeVariant === "back" ? "Back" : "Close";
 
   return (
-    <header className="flex shrink-0 items-start gap-2 border-b border-slate-100/90 bg-white px-3 py-2.5 sm:px-4 sm:py-3">
+    <header className="overlay-header-safe-mobile flex shrink-0 items-start gap-2 border-b border-slate-100/90 bg-white px-3 py-2.5 sm:px-4 sm:py-3 lg:pt-3">
       <button
         type="button"
         onClick={onClose}
@@ -121,13 +121,20 @@ export function FocusedDocumentOverlay({
   }
 
   const resolvedFooter = footer ? (
-    <div className="admin-sticky-footer-inline px-3 py-2.5 sm:px-4">{footer}</div>
+    <div className="admin-sticky-footer-inline overlay-form-actions px-3 py-2.5 sm:px-4">
+      {footer}
+    </div>
   ) : null;
+
+  const bodyClassName =
+    bodyScroll === "child"
+      ? "overlay-form-shell"
+      : "overlay-form-scroll overlay-scroll-body touch-pan-y";
 
   return (
     <ModalPortal>
       <div
-        className="fixed inset-0 z-50 flex h-dvh min-h-dvh max-h-dvh flex-col overflow-hidden"
+        className="fixed inset-0 z-50 flex h-dvh max-h-dvh flex-col overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel ?? title}
@@ -139,7 +146,7 @@ export function FocusedDocumentOverlay({
           disabled={closeDisabled}
           className="absolute inset-0 z-0 hidden bg-slate-900/20 lg:block disabled:cursor-default"
         />
-        <div className="safe-area-top-mobile relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-white lg:mx-auto lg:max-w-6xl lg:pt-0 lg:shadow-2xl lg:ring-1 lg:ring-slate-200/80">
+        <div className="relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-white lg:mx-auto lg:max-w-6xl lg:shadow-2xl lg:ring-1 lg:ring-slate-200/80">
           <OverlayHeader
             title={title}
             subtitle={subtitle}
@@ -152,18 +159,14 @@ export function FocusedDocumentOverlay({
           <OverlayFooterSlotContext.Provider value={footerSlot}>
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <div
-                className={`overlay-scroll-body min-h-0 min-w-0 flex-1 ${
-                  bodyScroll === "child"
-                    ? "flex flex-col overflow-hidden"
-                    : "overflow-y-auto overscroll-y-contain touch-pan-y"
-                }`}
+                className={`${bodyClassName} min-w-0`}
                 data-no-pull-refresh
               >
                 {children}
               </div>
               <div
                 ref={setFooterSlot}
-                className="shrink-0 empty:hidden"
+                className="overlay-form-actions shrink-0 empty:hidden"
                 data-overlay-footer=""
               />
               {resolvedFooter}

@@ -137,7 +137,8 @@ export function JobForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className={adminFormStackClass}>
+    <form onSubmit={handleSubmit} className="overlay-form-shell">
+      <div className="overlay-form-scroll">
       <div className={adminFormGridClass}>
         <div className="sm:col-span-2">
           <label htmlFor="customerId" className={adminFormLabelClass}>
@@ -349,8 +350,9 @@ export function JobForm({
           {error}
         </p>
       ) : null}
+      </div>
 
-      <div className={adminFormActionsClass}>
+      <div className={`${adminFormActionsClass} overlay-form-actions bg-white`}>
         <button
           type="submit"
           disabled={isSubmitting || customers.length === 0}

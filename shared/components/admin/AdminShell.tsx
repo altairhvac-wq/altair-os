@@ -9,6 +9,7 @@ import { useMobileViewport } from "@/shared/components/mobile/use-mobile-viewpor
 import { useOwnerViewMode } from "@/shared/components/view-mode/useOwnerViewMode";
 import { getNavItemForPath } from "./nav-items";
 import { AdminNavSkeleton } from "./AdminNavSkeleton";
+import { AdminShellContentLoadingState } from "./AdminShellContentLoadingState";
 import { DesktopNav } from "./DesktopNav";
 import { MobileNav } from "./MobileNav";
 import { Header } from "./Header";
@@ -36,7 +37,7 @@ export function AdminShell({
 }: AdminShellProps) {
   const pathname = usePathname();
   const isMobile = useMobileViewport();
-  const { isOwner, viewMode, setViewMode, navigationContext } =
+  const { isOwner, viewMode, setViewMode, navigationContext, redirectPending } =
     useOwnerViewMode(companyContext);
   const hideAdminNavigation = shouldHideAdminNavigation(
     pathname,
@@ -87,7 +88,7 @@ export function AdminShell({
 
       <main className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-clip p-2.5 sm:p-4 lg:p-5 md:overflow-y-auto">
         <PullToRefresh enabled={pullToRefreshEnabled}>
-          {children}
+          {redirectPending ? <AdminShellContentLoadingState /> : children}
         </PullToRefresh>
       </main>
       </div>

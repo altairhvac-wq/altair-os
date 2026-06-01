@@ -50,7 +50,7 @@ export function MobileSheet({
   return (
     <ModalPortal>
       <div
-        className={`fixed inset-0 flex ${zIndexClass[zIndex]} ${rootVariantClass[variant]} ${rootClassName ?? ""}`}
+        className={`fixed inset-0 flex overflow-hidden ${zIndexClass[zIndex]} ${rootVariantClass[variant]} ${rootClassName ?? ""}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={ariaLabelledBy}
@@ -78,8 +78,8 @@ const maxWidthClass: Record<MobileSheetPanelMaxWidth, string> = {
 };
 
 const maxHeightClass: Record<MobileSheetPanelMaxHeight, string> = {
-  "85": "max-h-[85vh]",
-  "90": "max-h-[90vh] sm:max-h-[85vh]",
+  "85": "max-h-[85dvh]",
+  "90": "max-h-[90dvh] sm:max-h-[85dvh]",
 };
 
 export type MobileSheetPanelTone = "default" | "amber";
@@ -116,7 +116,7 @@ export function MobileSheetPanel({
 
   return (
     <div
-      className={`relative z-10 flex w-full ${maxWidthClass[maxWidth]} ${maxHeightClass[maxHeight]} flex-col overflow-hidden ${shellClass} ${className ?? ""}`}
+      className={`relative z-10 flex w-full min-h-0 ${maxWidthClass[maxWidth]} ${maxHeightClass[maxHeight]} flex-col overflow-hidden ${shellClass} ${className ?? ""}`}
     >
       {children}
     </div>
