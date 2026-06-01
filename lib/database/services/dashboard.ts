@@ -26,7 +26,11 @@ import { buildOperationalHealthReportFromOfficeQueue } from "@/shared/types/oper
 import type { DailyOperationsSummary } from "@/shared/types/daily-operations-summary";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { getTodayOperationsSummary } from "@/shared/types/dashboard";
-import { getInvoiceSummary, hasInvoiceUnpaidBalance } from "@/shared/types/invoice";
+import {
+  getInvoiceSummary,
+  hasInvoiceUnpaidBalance,
+} from "@/shared/types/invoice";
+import { hasAssignedJobTechnician } from "@/shared/types/dispatch";
 import type { OfficeReviewQueueReport } from "@/shared/types/office-review-queue";
 import type { OperationalHealthReport } from "@/shared/types/operational-health-report";
 import type { QueueResolutionTrendSummary } from "@/shared/types/queue-resolution-trends";
@@ -44,6 +48,8 @@ const RECENT_NOTIFICATIONS_LIMIT = 5;
 const STALLED_JOBS_DASHBOARD_LIMIT = 5;
 const COMPLETED_WORK_DASHBOARD_LIMIT = 5;
 const COMPLETED_WORK_REVIEW_DASHBOARD_LIMIT = 5;
+const UNASSIGNED_JOBS_DASHBOARD_LIMIT = 10;
+const OVERDUE_INVOICES_DASHBOARD_LIMIT = 10;
 /** Match admin layout fetch so React cache dedupes within the request. */
 const NOTIFICATIONS_FETCH_LIMIT = 20;
 
@@ -56,6 +62,7 @@ const EMPTY_MONEY: DashboardData["money"] = {
   paymentsTodayTotal: 0,
   recentPayments: [],
   approvedEstimates: [],
+  overdueInvoices: [],
 };
 
 const EMPTY_EXPENSES: DashboardData["expenses"] = {
@@ -239,6 +246,14 @@ export async function getDashboardData(
   });
   const todayJobs = filterJobsForAccess(allTodayJobs, access, userId);
   const todayOperationsSummary = getTodayOperationsSummary(todayJobs);
+  const unassignedJobs = todayJobs
+    .filter(
+      (job) =>
+        !hasAssignedJobTechnician(job) &&
+        job.status !== "cancelled" &&
+        job.status !== "completed",
+    )
+    .slice(0, UNASSIGNED_JOBS_DASHBOARD_LIMIT);
 
   const [
     technicians,
@@ -349,6 +364,7 @@ export async function getDashboardData(
     operations: {
       ...todayOperationsSummary,
       todayJobs: todayJobs.slice(0, TODAY_JOBS_LIMIT),
+      unassignedJobs,
     },
     technicians: access.canViewTechnicianRoster
       ? buildTechnicianStatuses(technicians, activeTimeEntries)
@@ -371,6 +387,17 @@ export async function getDashboardData(
             createdAt: payment.createdAt,
           })),
           approvedEstimates,
+          overdueInvoices: overdueInvoices
+            .slice(0, OVERDUE_INVOICES_DASHBOARD_LIMIT)
+            .map((invoice) => ({
+              id: invoice.id,
+              invoiceNumber: invoice.invoiceNumber,
+              customerName: invoice.customerName,
+              customerEmail: invoice.customerEmail,
+              balanceDue: invoice.balanceDue,
+              dueDate: invoice.dueDate,
+              status: invoice.status,
+            })),
         }
       : EMPTY_MONEY,
     expenses: access.canViewCompanyExpenses

@@ -3,6 +3,7 @@ import { isSameCalendarDayInTimeZone } from "@/shared/lib/datetime";
 import { getOperationalDayJobCounts } from "@/shared/lib/scheduled-today";
 import type { DispatchJob } from "@/shared/types/dispatch";
 import type { Estimate } from "@/shared/types/estimate";
+import type { InvoiceStatus } from "@/shared/types/invoice";
 import type { Expense } from "@/shared/types/expense";
 import type { Notification } from "@/shared/types/notification";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
@@ -24,6 +25,8 @@ export type DashboardOperationsSummary = {
   /** Technicians with two or more active jobs on today's board. */
   overloadedTechnicianCount: number;
   todayJobs: DispatchJob[];
+  /** Unassigned jobs on today's board (preview for mobile action sheets). */
+  unassignedJobs: DispatchJob[];
 };
 
 export type DashboardTechnicianStatus = {
@@ -33,6 +36,16 @@ export type DashboardTechnicianStatus = {
   timeState: TechnicianTimeState;
   currentJobId?: string;
   currentJobNumber?: string;
+};
+
+export type DashboardOverdueInvoicePreview = {
+  id: string;
+  invoiceNumber: string;
+  customerName: string;
+  customerEmail?: string;
+  balanceDue: number;
+  dueDate: string;
+  status: InvoiceStatus;
 };
 
 export type DashboardRecentPayment = {
@@ -54,6 +67,8 @@ export type DashboardMoneySnapshot = {
   paymentsTodayTotal: number;
   recentPayments: DashboardRecentPayment[];
   approvedEstimates: Estimate[];
+  /** Overdue invoices (preview for mobile action sheets). */
+  overdueInvoices: DashboardOverdueInvoicePreview[];
 };
 
 export type DashboardExpenseReview = {

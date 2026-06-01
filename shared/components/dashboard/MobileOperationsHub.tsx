@@ -2,20 +2,16 @@
 
 import Link from "next/link";
 import {
-  AlertCircle,
-  AlertTriangle,
   ArrowRight,
   ChevronRight,
-  Info,
   Sparkles,
 } from "lucide-react";
 import { useDashboardDrilldown } from "@/shared/components/dashboard/dashboard-drilldown-context";
+import { MobileActionDashboard } from "@/shared/components/dashboard/MobileActionDashboard";
 import { DashboardNotificationsList } from "@/shared/components/dashboard/DashboardNotificationsList";
 import {
   buildMobileAttentionQueue,
   buildMobileHeroIssues,
-  type MobileAttentionQueueItem,
-  type MobileAttentionSeverity,
 } from "@/shared/lib/mobile-operations-hub";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { formatCurrency } from "@/shared/types/customer";
@@ -29,30 +25,6 @@ type MobileOperationsHubProps = {
   data: DashboardData;
   notificationAccess: NotificationAccess;
   showLiveMetrics: boolean;
-};
-
-const ATTENTION_SEVERITY_STYLES: Record<
-  MobileAttentionSeverity,
-  { row: string; badge: string; icon: typeof AlertTriangle; iconClass: string }
-> = {
-  critical: {
-    row: "border-slate-200/90 bg-white border-l-[3px] border-l-rose-500",
-    badge: "bg-rose-100 text-rose-800",
-    icon: AlertTriangle,
-    iconClass: "text-rose-600",
-  },
-  warning: {
-    row: "border-slate-200/90 bg-white border-l-[3px] border-l-amber-400",
-    badge: "bg-amber-100 text-amber-800",
-    icon: AlertCircle,
-    iconClass: "text-amber-600",
-  },
-  info: {
-    row: "border-slate-200/80 bg-white",
-    badge: "bg-slate-100 text-slate-600",
-    icon: Info,
-    iconClass: "text-slate-400",
-  },
 };
 
 const INSIGHT_SEVERITY_STYLES: Record<
@@ -226,127 +198,6 @@ function OperationsStatusSection({
   );
 }
 
-function NeedsAttentionRow({ item }: { item: MobileAttentionQueueItem }) {
-  const { openDashboardPanel, hasPanel } = useDashboardDrilldown();
-  const styles = ATTENTION_SEVERITY_STYLES[item.severity];
-  const Icon = styles.icon;
-
-  const content = (
-    <>
-      <div className="flex min-w-0 items-center gap-2">
-        <Icon
-          className={`h-3.5 w-3.5 shrink-0 ${styles.iconClass}`}
-          aria-hidden="true"
-        />
-        <div className="min-w-0">
-          <span className="block truncate text-sm font-semibold text-slate-900">
-            {item.label}
-          </span>
-          {item.subtitle ? (
-            <span className="block truncate text-[11px] font-medium text-slate-500">
-              {item.subtitle}
-            </span>
-          ) : null}
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-1.5">
-        <span
-          className={`inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ${styles.badge}`}
-        >
-          {item.count}
-        </span>
-        <ChevronRight className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-      </div>
-    </>
-  );
-
-  const rowClass = `flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-slate-50/80 ${styles.row}`;
-
-  if (item.panelId && hasPanel(item.panelId)) {
-    return (
-      <li>
-        <button
-          type="button"
-          onClick={() => openDashboardPanel(item.panelId!)}
-          className={rowClass}
-        >
-          {content}
-        </button>
-      </li>
-    );
-  }
-
-  if (item.href) {
-    return (
-      <li>
-        <Link href={item.href} className={rowClass}>
-          {content}
-        </Link>
-      </li>
-    );
-  }
-
-  return (
-    <li className={rowClass}>
-      {content}
-    </li>
-  );
-}
-
-const NEEDS_ATTENTION_VISIBLE_LIMIT = 6;
-
-function NeedsAttentionSection({
-  queue,
-}: {
-  queue: MobileAttentionQueueItem[];
-}) {
-  const { openDashboardPanel, hasPanel } = useDashboardDrilldown();
-  const visibleQueue = queue.slice(0, NEEDS_ATTENTION_VISIBLE_LIMIT);
-  const hiddenCount = queue.length - visibleQueue.length;
-  const canViewAll = hiddenCount > 0 && hasPanel("attention");
-
-  return (
-    <section aria-label="Needs attention" className="min-w-0 flex-1">
-      <header className="mb-1 flex items-center justify-between gap-2">
-        <h2 className="text-[11px] font-bold uppercase tracking-wide text-slate-700">
-          Needs attention
-        </h2>
-        {queue.length > 0 ? (
-          <span className="text-[10px] font-semibold text-slate-500">
-            {queue.length} item{queue.length === 1 ? "" : "s"}
-          </span>
-        ) : null}
-      </header>
-
-      {queue.length === 0 ? (
-        <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 px-3 py-2.5">
-          <p className="text-xs font-semibold text-emerald-900">
-            All clear — nothing needs action right now
-          </p>
-        </div>
-      ) : (
-        <>
-          <ul className="space-y-1">
-            {visibleQueue.map((item) => (
-              <NeedsAttentionRow key={item.id} item={item} />
-            ))}
-          </ul>
-          {canViewAll ? (
-            <button
-              type="button"
-              onClick={() => openDashboardPanel("attention")}
-              className="mt-1 flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold text-cyan-600 hover:text-cyan-700"
-            >
-              View all {queue.length} items
-              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-            </button>
-          ) : null}
-        </>
-      )}
-    </section>
-  );
-}
-
 function TodayStrip({ operations }: { operations: DashboardData["operations"] }) {
   const { openDashboardPanel, hasPanel } = useDashboardDrilldown();
   const canDrilldown = hasPanel("today");
@@ -478,17 +329,15 @@ function SecondaryInsightsSection({
 function LimitedRoleHub({
   data,
   notificationAccess,
-  attentionQueue,
 }: {
   data: DashboardData;
   notificationAccess: NotificationAccess;
-  attentionQueue: MobileAttentionQueueItem[];
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-2">
       <TodayStrip operations={data.operations} />
       <CashStrip data={data} />
-      <NeedsAttentionSection queue={attentionQueue} />
+      <MobileActionDashboard data={data} />
 
       {data.notifications.recent.length > 0 ? (
         <details className="admin-card group overflow-hidden">
@@ -521,26 +370,22 @@ export function MobileOperationsHub({
   const { access } = data;
 
   if (!access.canViewOperationalReports) {
-    const attentionQueue = buildMobileAttentionQueue(data);
-
     return (
       <LimitedRoleHub
         data={data}
         notificationAccess={notificationAccess}
-        attentionQueue={attentionQueue}
       />
     );
   }
 
-  const attentionQueue = buildMobileAttentionQueue(data);
-  const heroIssues = buildMobileHeroIssues(attentionQueue);
+  const heroIssues = buildMobileHeroIssues(buildMobileAttentionQueue(data));
 
   return (
     <div className="flex min-w-0 flex-col gap-2">
       <OperationsStatusSection data={data} issues={heroIssues} />
       <TodayStrip operations={data.operations} />
       <CashStrip data={data} />
-      <NeedsAttentionSection queue={attentionQueue} />
+      <MobileActionDashboard data={data} />
       <SecondaryInsightsSection
         data={data}
         notificationAccess={notificationAccess}
