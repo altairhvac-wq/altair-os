@@ -1,9 +1,7 @@
-import { listEstimates } from "@/lib/database/queries/estimates";
-import { listExpenses } from "@/lib/database/queries/expenses";
-import { listInvoices } from "@/lib/database/queries/invoices";
-import { listJobMaterialsForCompany } from "@/lib/database/queries/job-materials";
-import { listJobs } from "@/lib/database/queries/jobs";
-import { listTimeEntries } from "@/lib/database/queries/time-entries";
+import {
+  loadCompanyOperationalDatasets,
+  type CompanyOperationalDatasets,
+} from "@/lib/database/services/operations/company-operational-datasets";
 import {
   daysSinceCompletion,
   resolveCompletedAt,
@@ -133,20 +131,19 @@ function compareReviewEntries(
   return right.daysSinceCompletion - left.daysSinceCompletion;
 }
 
+type CompletedWorkReviewReportOptions = {
+  /** When set, skips reloading the shared job-level operational datasets. */
+  datasets?: CompanyOperationalDatasets;
+};
+
 export async function getCompanyCompletedWorkReviewReport(
   companyId: string,
+  options: CompletedWorkReviewReportOptions = {},
 ): Promise<CompletedWorkReviewReport> {
   const reference = new Date();
 
-  const [jobs, invoices, estimates, expenses, laborEntries, materials] =
-    await Promise.all([
-      listJobs(companyId),
-      listInvoices(companyId),
-      listEstimates(companyId),
-      listExpenses(companyId),
-      listTimeEntries(companyId, { entryType: "job_labor" }),
-      listJobMaterialsForCompany(companyId),
-    ]);
+  const { jobs, invoices, estimates, expenses, laborEntries, materials } =
+    options.datasets ?? (await loadCompanyOperationalDatasets(companyId));
 
   const jobIds = new Set(jobs.map((job) => job.id));
   const invoicesByJob = groupByJobId(invoices, jobIds);

@@ -326,6 +326,17 @@ export function computeJobProfitability(
   };
 }
 
+export function jobMaterialCostExceedsCollectedRevenue(
+  snapshot: JobProfitabilitySnapshot,
+): boolean {
+  const { materialCogs } = snapshot.costs;
+  if (materialCogs <= 0) {
+    return false;
+  }
+
+  return materialCogs > snapshot.revenue.collected;
+}
+
 export function formatJobProfitabilityCurrency(amount: number): string {
   if (!Number.isFinite(amount)) {
     return "—";

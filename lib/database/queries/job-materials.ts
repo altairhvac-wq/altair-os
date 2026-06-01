@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {
@@ -74,28 +75,30 @@ export function mapJobMaterialFormDataToInsert(input: {
   };
 }
 
-export async function listJobMaterialsForCompany(
-  companyId: string,
-): Promise<JobMaterial[]> {
-  const supabase = await createClient();
+export const listJobMaterialsForCompany = cache(
+  async function listJobMaterialsForCompany(
+    companyId: string,
+  ): Promise<JobMaterial[]> {
+    const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("job_materials")
-    .select(JOB_MATERIAL_SELECT)
-    .eq("company_id", companyId)
-    .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("job_materials")
+      .select(JOB_MATERIAL_SELECT)
+      .eq("company_id", companyId)
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("[listJobMaterialsForCompany] query failed:", {
-      companyId,
-      code: error.code,
-      message: error.message,
-    });
-    return [];
-  }
+    if (error) {
+      console.error("[listJobMaterialsForCompany] query failed:", {
+        companyId,
+        code: error.code,
+        message: error.message,
+      });
+      return [];
+    }
 
-  return ((data ?? []) as JobMaterialRowWithAddedBy[]).map(mapJobMaterialRow);
-}
+    return ((data ?? []) as JobMaterialRowWithAddedBy[]).map(mapJobMaterialRow);
+  },
+);
 
 export async function listJobMaterialsForJob(
   companyId: string,

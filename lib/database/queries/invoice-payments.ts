@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
@@ -99,7 +100,7 @@ export type RecentInvoicePayment = InvoicePayment & {
   customerName: string;
 };
 
-export async function listInvoicePayments(
+export const listInvoicePayments = cache(async function listInvoicePayments(
   companyId: string,
 ): Promise<InvoicePayment[]> {
   const supabase = await createClient();
@@ -126,7 +127,7 @@ export async function listInvoicePayments(
   }
 
   return ((data ?? []) as InvoicePaymentRowWithRecorder[]).map(mapPaymentRow);
-}
+});
 
 export async function listRecentPayments(
   companyId: string,

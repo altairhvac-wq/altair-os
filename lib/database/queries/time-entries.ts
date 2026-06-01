@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { getDayBoundsInTimeZone } from "@/shared/lib/datetime";
@@ -278,6 +279,15 @@ export async function listTimeEntries(
     mapTimeEntryRow(row as TimeEntryRowWithRelations),
   );
 }
+
+/** Request-scoped dedupe for company-wide job-labor lists (reports, dashboard). */
+export const listCompanyJobLaborEntries = cache(
+  async function listCompanyJobLaborEntries(
+    companyId: string,
+  ): Promise<TimeEntry[]> {
+    return listTimeEntries(companyId, { entryType: "job_labor" });
+  },
+);
 
 export async function listJobLaborEntriesForJob(
   companyId: string,

@@ -1,22 +1,20 @@
-import { listEstimates } from "@/lib/database/queries/estimates";
-import { listExpenses } from "@/lib/database/queries/expenses";
 import { getPaymentsTodaySummary } from "@/lib/database/queries/invoice-payments";
-import { listInvoices } from "@/lib/database/queries/invoices";
-import { listJobMaterialsForCompany } from "@/lib/database/queries/job-materials";
-import { listJobs } from "@/lib/database/queries/jobs";
-import { listTimeEntries } from "@/lib/database/queries/time-entries";
+import { loadCompanyOperationalDatasets } from "@/lib/database/services/operations/company-operational-datasets";
 import { getCompanyCompletedWorkReport } from "@/lib/database/services/reports/completed-work-report";
 import { getCompanyCompletedWorkReviewReport } from "@/lib/database/services/reports/completed-work-review-report";
 import { getJobReviewBlockerResolutionTrendSummary } from "@/lib/database/services/job-review-resolution";
 import { getCompanyExpenseReport } from "@/lib/database/services/reports/expense-report";
 import { getCompanyJobActivityReport } from "@/lib/database/services/reports/job-activity-report";
-import { getCompanyProfitabilityReport } from "@/lib/database/services/reports/profitability-report";
+import {
+  getCompanyProfitabilityReportWithOperationalCounts,
+} from "@/lib/database/services/reports/profitability-report";
 import { getCompanyRevenueReport } from "@/lib/database/services/reports/revenue-report";
 import { getCompanyOperationalInconsistenciesReport } from "@/lib/database/services/reports/operational-inconsistencies-report";
 import { getCompanyStalledJobsReport } from "@/lib/database/services/reports/stalled-jobs-report";
 import { getCompanyTechnicianLaborReport } from "@/lib/database/services/reports/technician-labor-report";
 import {
   computeJobProfitability,
+  jobMaterialCostExceedsCollectedRevenue,
   type JobProfitabilityInputs,
 } from "@/shared/types/job-profitability";
 import type {
@@ -30,6 +28,7 @@ import type { Expense } from "@/shared/types/expense";
 import type { Invoice } from "@/shared/types/invoice";
 import type { JobMaterial } from "@/shared/types/job-material";
 import type { TimeEntry } from "@/shared/types/time-entry";
+import type { CompanyOperationalDatasets } from "@/lib/database/services/operations/company-operational-datasets";
 
 const REPORT_OPTIONS = { dateRange: "all" as const satisfies ProfitabilityReportDateRange };
 
@@ -59,29 +58,18 @@ function groupByJobId<T extends { jobId?: string }>(
   return map;
 }
 
-function jobMaterialCostExceedsCollectedRevenue(
-  snapshot: ReturnType<typeof computeJobProfitability>,
-): boolean {
-  const { materialCogs } = snapshot.costs;
-  if (materialCogs <= 0) {
-    return false;
-  }
-
-  return materialCogs > snapshot.revenue.collected;
-}
-
 async function deriveJobLevelOperationalCounts(
   companyId: string,
+  datasets?: CompanyOperationalDatasets,
 ): Promise<JobLevelOperationalCounts> {
-  const [jobs, invoices, estimates, expenses, laborEntries, materials] =
-    await Promise.all([
-      listJobs(companyId),
-      listInvoices(companyId),
-      listEstimates(companyId),
-      listExpenses(companyId),
-      listTimeEntries(companyId, { entryType: "job_labor" }),
-      listJobMaterialsForCompany(companyId),
-    ]);
+  const {
+    jobs,
+    invoices,
+    estimates,
+    expenses,
+    laborEntries,
+    materials,
+  } = datasets ?? (await loadCompanyOperationalDatasets(companyId));
 
   const jobIds = new Set(jobs.map((job) => job.id));
   const invoicesByJob = groupByJobId(invoices, jobIds);
@@ -294,17 +282,18 @@ export async function getDailyOperationsSummary(
   companyId: string,
   timeZone?: string,
 ): Promise<DailyOperationsSummary> {
+  const datasets = await loadCompanyOperationalDatasets(companyId);
+
   const [
     revenueReport,
     expenseReport,
     jobActivityReport,
     stalledJobsReport,
     technicianLaborReport,
-    profitabilityReport,
+    profitabilityResult,
     paymentsToday,
     completedWorkReport,
     completedWorkReviewReport,
-    jobLevelCounts,
     resolutionTrend,
     operationalInconsistencies,
   ] = await Promise.all([
@@ -313,14 +302,20 @@ export async function getDailyOperationsSummary(
     getCompanyJobActivityReport(companyId, REPORT_OPTIONS),
     getCompanyStalledJobsReport(companyId),
     getCompanyTechnicianLaborReport(companyId, REPORT_OPTIONS),
-    getCompanyProfitabilityReport(companyId, REPORT_OPTIONS),
+    getCompanyProfitabilityReportWithOperationalCounts(companyId, {
+      ...REPORT_OPTIONS,
+      datasets,
+    }),
     getPaymentsTodaySummary(companyId, timeZone),
-    getCompanyCompletedWorkReport(companyId),
-    getCompanyCompletedWorkReviewReport(companyId),
-    deriveJobLevelOperationalCounts(companyId),
+    getCompanyCompletedWorkReport(companyId, { datasets }),
+    getCompanyCompletedWorkReviewReport(companyId, { datasets }),
     getJobReviewBlockerResolutionTrendSummary(companyId),
     getCompanyOperationalInconsistenciesReport(companyId),
   ]);
+
+  const profitabilityReport = profitabilityResult.report;
+  const materialCostExceedsCollectedCount =
+    profitabilityResult.materialCostExceedsCollectedCount;
 
   const integrityJobIds = new Set(
     operationalInconsistencies.summary.entries.map((entry) => entry.jobId),
@@ -367,8 +362,7 @@ export async function getDailyOperationsSummary(
     },
     profitabilityWarnings: {
       jobsWithWarnings: profitabilityReport.summary.jobsWithWarnings,
-      materialCostExceedsCollectedCount:
-        jobLevelCounts.materialCostExceedsCollectedCount,
+      materialCostExceedsCollectedCount,
     },
   };
 
@@ -411,4 +405,7 @@ export async function getDailyOperationsSummary(
 }
 
 /** Exported for tests and future AI enrichment hooks. */
-export { deriveJobLevelOperationalCounts, jobMaterialCostExceedsCollectedRevenue };
+export {
+  deriveJobLevelOperationalCounts,
+  jobMaterialCostExceedsCollectedRevenue,
+};

@@ -1,4 +1,4 @@
-import { listTimeEntries } from "@/lib/database/queries/time-entries";
+import { listCompanyJobLaborEntries } from "@/lib/database/queries/time-entries";
 import { roundJobMaterialAmount } from "@/shared/types/job-material";
 import {
   buildReportSectionMeta,
@@ -21,9 +21,7 @@ export async function getCompanyTechnicianLaborReport(
   const dateBounds = resolveReportDateBounds(dateRange);
   const limitations: string[] = [];
 
-  const laborEntries = await listTimeEntries(companyId, {
-    entryType: "job_labor",
-  });
+  const laborEntries = await listCompanyJobLaborEntries(companyId);
 
   const activeLaborEntries = laborEntries.filter(
     (entry) => entry.endedAt == null,

@@ -3,7 +3,7 @@ import { listEstimates } from "@/lib/database/queries/estimates";
 import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
 import { listJobs } from "@/lib/database/queries/jobs";
 import {
-  listTimeEntries,
+  listCompanyJobLaborEntries,
   listTodayTimeEntriesForCompany,
 } from "@/lib/database/queries/time-entries";
 import { listTimeClockEntries } from "@/lib/database/queries/time-clock";
@@ -44,7 +44,7 @@ export async function getReportsFoundationData(
       listTimeClockEntries(companyId, { limit: TIME_CLOCK_FETCH_LIMIT }),
       listDispatchJobsForToday(companyId, { timeZone }),
       getDailyOperationsSummary(companyId, timeZone),
-      listTimeEntries(companyId, { entryType: "job_labor" }),
+      listCompanyJobLaborEntries(companyId),
       listTodayTimeEntriesForCompany(companyId, timeZone),
       getCompanyOperationalInconsistenciesReport(companyId),
     ]);

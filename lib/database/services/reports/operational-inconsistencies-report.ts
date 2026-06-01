@@ -5,7 +5,10 @@ import {
 } from "@/lib/database/queries/dispatch";
 import { listInvoices, listInvoicesForJob } from "@/lib/database/queries/invoices";
 import { listJobs } from "@/lib/database/queries/jobs";
-import { listTimeEntries } from "@/lib/database/queries/time-entries";
+import {
+  listCompanyJobLaborEntries,
+  listTimeEntries,
+} from "@/lib/database/queries/time-entries";
 import { createClient } from "@/lib/supabase/server";
 import {
   buildOperationalInconsistenciesReport,
@@ -51,7 +54,7 @@ export const getCompanyOperationalInconsistenciesReport = cache(
     await Promise.all([
       listJobs(companyId),
       listDispatchAssignmentsForCompany(companyId),
-      listTimeEntries(companyId, { entryType: "job_labor" }),
+      listCompanyJobLaborEntries(companyId),
       listInvoices(companyId),
       listActiveCompanyMemberUserIds(companyId),
     ]);
