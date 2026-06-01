@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { isAiFeaturesEnabled } from "@/lib/ai/env";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { ensureInvoiceBillingStatesSynced } from "@/lib/database/services/invoice-billing";
 import { listInvoiceActivitiesForInvoice } from "@/lib/database/queries/invoice-activities";
@@ -57,6 +58,7 @@ export async function InvoiceDetailRoute({
       canManageBilling={canManageBilling}
       signature={signature}
       presentation={presentation}
+      aiFeaturesEnabled={isAiFeaturesEnabled()}
     />
   );
 

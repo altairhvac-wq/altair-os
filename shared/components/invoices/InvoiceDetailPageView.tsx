@@ -29,6 +29,7 @@ import { InvoiceStatusActions } from "./InvoiceStatusActions";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { RecordPaymentForm } from "./RecordPaymentForm";
 import { InvoicePaymentLinkCard } from "./InvoicePaymentLinkCard";
+import { InvoiceMessageAiAssistant } from "./InvoiceMessageAiAssistant";
 
 import { BillingSignatureCaptureSheet } from "@/shared/components/billing/BillingSignatureCaptureSheet";
 import type { BillingSignature } from "@/shared/types/billing-signature";
@@ -44,6 +45,7 @@ type InvoiceDetailPageViewProps = {
   canManageBilling: boolean;
   signature?: BillingSignature | null;
   presentation?: "page" | "overlay";
+  aiFeaturesEnabled?: boolean;
 };
 
 export function InvoiceDetailPageView({
@@ -55,6 +57,7 @@ export function InvoiceDetailPageView({
   canManageBilling,
   signature,
   presentation = "page",
+  aiFeaturesEnabled = false,
 }: InvoiceDetailPageViewProps) {
   const isOverlay = presentation === "overlay";
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -263,6 +266,13 @@ export function InvoiceDetailPageView({
 
             {canManageBilling && canShowInvoicePaymentLink(invoice.status) ? (
               <InvoicePaymentLinkCard invoiceId={invoice.id} />
+            ) : null}
+
+            {canManageBilling ? (
+              <InvoiceMessageAiAssistant
+                invoiceId={invoice.id}
+                aiFeaturesEnabled={aiFeaturesEnabled}
+              />
             ) : null}
           </div>
         </div>

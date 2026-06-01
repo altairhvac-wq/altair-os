@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { AiFeatureName, GenerateDraftTextErrorCode } from "@/lib/ai/types";
+import { INVOICE_MESSAGE_AI_FEATURE } from "@/lib/ai/invoice-message";
 import { JOB_SUMMARY_AI_FEATURE } from "@/lib/ai/job-summary";
 
 export type AiUserErrorCode =
@@ -20,6 +21,18 @@ const DEFAULT_MESSAGES: Record<AiUserErrorCode, string> = {
 const FEATURE_INSUFFICIENT_CONTEXT: Partial<Record<AiFeatureName, string>> = {
   [JOB_SUMMARY_AI_FEATURE]:
     "There is not enough job information to summarize yet.",
+  [INVOICE_MESSAGE_AI_FEATURE]:
+    "There is not enough invoice information to draft a message yet.",
+};
+
+const FEATURE_CONFIG_ERROR: Partial<Record<AiFeatureName, string>> = {
+  [INVOICE_MESSAGE_AI_FEATURE]:
+    "AI invoice messages are not configured yet.",
+};
+
+const FEATURE_PROVIDER_ERROR: Partial<Record<AiFeatureName, string>> = {
+  [INVOICE_MESSAGE_AI_FEATURE]:
+    "Could not draft the invoice message. Try again.",
 };
 
 /**
@@ -35,6 +48,22 @@ export function mapAiErrorToMessage(
       FEATURE_INSUFFICIENT_CONTEXT[feature] ??
       DEFAULT_MESSAGES.insufficient_context
     );
+  }
+
+  if (
+    feature &&
+    (code === "ai_disabled" || code === "missing_api_key") &&
+    FEATURE_CONFIG_ERROR[feature]
+  ) {
+    return FEATURE_CONFIG_ERROR[feature]!;
+  }
+
+  if (
+    feature &&
+    (code === "provider_error" || code === "empty_response") &&
+    FEATURE_PROVIDER_ERROR[feature]
+  ) {
+    return FEATURE_PROVIDER_ERROR[feature]!;
   }
 
   return DEFAULT_MESSAGES[code];

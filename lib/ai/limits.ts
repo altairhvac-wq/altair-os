@@ -15,6 +15,15 @@ export const JOB_SUMMARY_CONTEXT_MAX_CHARS = 7_000;
 /** Recent activities included in job summary context. */
 export const JOB_SUMMARY_ACTIVITY_LIMIT = 8;
 
+/** Max characters per long text field in invoice message context. */
+export const INVOICE_MESSAGE_FIELD_MAX_CHARS = 1_500;
+
+/** Max line items summarized in invoice message context. */
+export const INVOICE_MESSAGE_LINE_ITEMS_LIMIT = 8;
+
+/** Max characters for the full invoice message AI context payload. */
+export const INVOICE_MESSAGE_CONTEXT_MAX_CHARS = 4_500;
+
 const TRUNCATION_SUFFIX = "…";
 
 /**
