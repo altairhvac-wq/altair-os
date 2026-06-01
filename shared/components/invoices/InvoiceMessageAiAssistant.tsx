@@ -126,7 +126,7 @@ export function InvoiceMessageAiAssistant({
 
         {!isPending && !showPanel ? (
           <p className="text-[11px] text-slate-500 sm:text-right">
-            Generate a customer-facing message to copy and send manually.
+            Create a customer-ready invoice message.
           </p>
         ) : null}
       </div>
@@ -161,7 +161,7 @@ export function InvoiceMessageAiAssistant({
                 ) : (
                   <Copy className="h-3 w-3" aria-hidden="true" />
                 )}
-                <span>{copied ? "Copied" : "Copy message"}</span>
+                <span>{copied ? "Copied" : "Copy"}</span>
               </button>
 
               <button

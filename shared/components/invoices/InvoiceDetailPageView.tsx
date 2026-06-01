@@ -176,6 +176,15 @@ export function InvoiceDetailPageView({
           </div>
         </div>
 
+        {canManageBilling ? (
+          <div className="border-b border-slate-100 px-5 py-4 sm:px-6">
+            <InvoiceMessageAiAssistant
+              invoiceId={invoice.id}
+              aiFeaturesEnabled={aiFeaturesEnabled}
+            />
+          </div>
+        ) : null}
+
         <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-3">
           <section className="rounded-xl border border-slate-200 bg-white p-4 lg:col-span-2">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -266,13 +275,6 @@ export function InvoiceDetailPageView({
 
             {canManageBilling && canShowInvoicePaymentLink(invoice.status) ? (
               <InvoicePaymentLinkCard invoiceId={invoice.id} />
-            ) : null}
-
-            {canManageBilling ? (
-              <InvoiceMessageAiAssistant
-                invoiceId={invoice.id}
-                aiFeaturesEnabled={aiFeaturesEnabled}
-              />
             ) : null}
           </div>
         </div>
