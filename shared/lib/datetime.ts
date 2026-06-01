@@ -1,9 +1,40 @@
-export const DEFAULT_COMPANY_TIMEZONE = "America/New_York";
+/** Legacy SQL/app default before Mountain-first fallback. */
+export const LEGACY_DEFAULT_COMPANY_TIMEZONE = "America/New_York";
+
+export const DEFAULT_COMPANY_TIMEZONE = "America/Denver";
 
 let activeCompanyTimeZone = DEFAULT_COMPANY_TIMEZONE;
 
+export function getBrowserTimeZone(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Prefer an explicit company timezone; treat the legacy Eastern default as unset
+ * and use the browser zone when available (client), then Mountain Time.
+ */
+export function resolveCompanyTimeZone(
+  companyTimeZone?: string | null,
+): string {
+  const trimmed = companyTimeZone?.trim();
+  if (trimmed && trimmed !== LEGACY_DEFAULT_COMPANY_TIMEZONE) {
+    return trimmed;
+  }
+
+  const browserTimeZone = getBrowserTimeZone();
+  if (browserTimeZone) {
+    return browserTimeZone;
+  }
+
+  return DEFAULT_COMPANY_TIMEZONE;
+}
+
 export function setCompanyTimeZone(timeZone: string): void {
-  activeCompanyTimeZone = timeZone || DEFAULT_COMPANY_TIMEZONE;
+  activeCompanyTimeZone = resolveCompanyTimeZone(timeZone);
 }
 
 export function getCompanyTimeZone(): string {

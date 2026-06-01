@@ -1,3 +1,9 @@
+import {
+  formatDateTimeInTimeZone,
+  formatTimeInTimeZone,
+  getCompanyTimeZone,
+} from "@/shared/lib/datetime";
+
 export type TimeEntryType = "clock" | "break" | "job_labor";
 
 export type TechnicianTimeState =
@@ -62,9 +68,8 @@ export function formatTechnicianTimeState(state: TechnicianTimeState): string {
   return TECHNICIAN_TIME_STATE_LABELS[state] ?? state;
 }
 
-export function formatDateTime(iso: string): string {
-  const date = new Date(iso);
-  return date.toLocaleString("en-US", {
+export function formatDateTime(iso: string, timeZone?: string): string {
+  return formatDateTimeInTimeZone(iso, timeZone ?? getCompanyTimeZone(), {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -73,12 +78,8 @@ export function formatDateTime(iso: string): string {
   });
 }
 
-export function formatTime(iso: string): string {
-  const date = new Date(iso);
-  return date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+export function formatTime(iso: string, timeZone?: string): string {
+  return formatTimeInTimeZone(iso, timeZone ?? getCompanyTimeZone());
 }
 
 export function calculateDurationMinutes(

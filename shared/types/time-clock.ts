@@ -1,3 +1,8 @@
+import {
+  formatDateTimeInTimeZone,
+  getCompanyTimeZone,
+} from "@/shared/lib/datetime";
+
 export type TimeClockShiftStatus = "open" | "closed";
 
 export type TimeClockEntry = {
@@ -23,13 +28,13 @@ export function getTimeClockStatusStyles(status: TimeClockShiftStatus): string {
     : "bg-slate-100 text-slate-700 ring-slate-500/20";
 }
 
-export function formatDateTime(value: string): string {
-  return new Intl.DateTimeFormat(undefined, {
+export function formatDateTime(value: string, timeZone?: string): string {
+  return formatDateTimeInTimeZone(value, timeZone ?? getCompanyTimeZone(), {
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  }).format(new Date(value));
+  });
 }
 
 export function formatDuration(clockInAt: string, clockOutAt?: string): string {

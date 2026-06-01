@@ -3,6 +3,7 @@
 import { createContext, useContext, useLayoutEffect } from "react";
 import {
   DEFAULT_COMPANY_TIMEZONE,
+  resolveCompanyTimeZone,
   setCompanyTimeZone,
 } from "@/shared/lib/datetime";
 
@@ -17,7 +18,7 @@ export function CompanyTimezoneProvider({
   timeZone,
   children,
 }: CompanyTimezoneProviderProps) {
-  const resolvedTimeZone = timeZone || DEFAULT_COMPANY_TIMEZONE;
+  const resolvedTimeZone = resolveCompanyTimeZone(timeZone);
 
   useLayoutEffect(() => {
     setCompanyTimeZone(resolvedTimeZone);

@@ -6,7 +6,10 @@ import {
 } from "@/lib/database/queries/dispatch";
 import { fetchOperationalDayJobRows } from "@/lib/database/queries/scheduled-today-jobs";
 import type { JobInsert, JobRow, JobUpdate } from "@/lib/database/types/core-tables";
-import { getDayBoundsInTimeZone } from "@/shared/lib/datetime";
+import {
+  getDayBoundsInTimeZone,
+  resolveCompanyTimeZone,
+} from "@/shared/lib/datetime";
 import type { EstimateLineItem } from "@/shared/types/estimate";
 import type { Job, JobDetail, JobFormData, JobStatus } from "@/shared/types/job";
 import type {
@@ -400,7 +403,7 @@ export async function createJobFromApprovedEstimate(
   input: CreateJobFromApprovedEstimateInput,
 ): Promise<{ jobId: string | null; jobNumber: string | null; error: string | null }> {
   const supabase = await createClient();
-  const timeZone = input.timeZone?.trim() || "America/New_York";
+  const timeZone = input.timeZone?.trim() || resolveCompanyTimeZone();
   const { start: scheduledAt } = getDayBoundsInTimeZone(timeZone);
 
   const { data: customer, error: customerError } = await supabase

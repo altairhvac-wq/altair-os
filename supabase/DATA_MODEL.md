@@ -48,7 +48,7 @@ Tenant root for all Altair OS business data.
 | `name` | text | Display name |
 | `slug` | text unique | URL-safe identifier |
 | `status` | enum | `active`, `trial`, `suspended` |
-| `timezone` | text | Default `America/New_York` |
+| `timezone` | text | Default `America/New_York` (legacy); app resolves unset to browser or `America/Denver` |
 | `phone`, `email` | text | Nullable contact info |
 | address fields | text | Nullable service business address |
 | `country` | text | Default `US` |

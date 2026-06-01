@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { resolveCompanyTimeZone } from "@/shared/lib/datetime";
 import type {
   ActiveCompanyContext,
   CompanyMembershipRow,
@@ -52,7 +53,10 @@ function toActiveCompanyContext(
     user,
     profile,
     membership: { ...membership, role },
-    company,
+    company: {
+      ...company,
+      timezone: resolveCompanyTimeZone(company.timezone),
+    },
     role,
     permissions: buildPermissions(role),
   };

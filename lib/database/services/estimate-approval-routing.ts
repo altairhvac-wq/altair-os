@@ -16,8 +16,10 @@ import {
 } from "@/lib/database/queries/job-activities";
 import { emitEstimateApprovedEvent } from "@/lib/database/services/operational-events";
 import {
+  DEFAULT_COMPANY_TIMEZONE,
   getDayBoundsInTimeZone,
   isSameCalendarDayInTimeZone,
+  resolveCompanyTimeZone,
 } from "@/shared/lib/datetime";
 import type { EstimateDetail } from "@/shared/types/estimate";
 import type { EstimateApprovalSource } from "@/shared/types/estimate-approval";
@@ -71,10 +73,10 @@ async function getCompanyTimeZone(companyId: string): Promise<string> {
     .maybeSingle();
 
   if (error || !data?.timezone?.trim()) {
-    return "America/New_York";
+    return DEFAULT_COMPANY_TIMEZONE;
   }
 
-  return data.timezone.trim();
+  return resolveCompanyTimeZone(data.timezone);
 }
 
 async function unassignJobForRemoteApproval(

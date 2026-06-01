@@ -1,3 +1,5 @@
+import { formatTimeInTimeZone, getCompanyTimeZone } from "@/shared/lib/datetime";
+
 export const TECHNICIAN_PULL_REFRESH_EVENT = "altair:technician-pull-refresh";
 
 export function notifyTechnicianPullRefresh() {
@@ -30,8 +32,5 @@ export function formatTechnicianLastUpdated(
     return `Updated ${minutes}m ago`;
   }
 
-  return `Updated at ${updatedAt.toLocaleTimeString(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  })}`;
+  return `Updated at ${formatTimeInTimeZone(updatedAt, getCompanyTimeZone())}`;
 }
