@@ -120,7 +120,7 @@ export function InvoiceDetailPageView({
         </div>
       ) : null}
 
-      <section className="no-print overflow-hidden admin-card">
+      <section className="no-print overflow-x-hidden admin-card">
         <div className="border-b border-slate-100 bg-white px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">

@@ -800,6 +800,11 @@ a[href] {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
 }
 
+/* Nested scroll regions inside body-locked overlays (invoice/estimate detail). */
+.overlay-scroll-body {
+  -webkit-overflow-scrolling: touch;
+}
+
 .admin-dispatch-lane {
   border-radius: 0.75rem;
   border: 1px solid rgb(203 213 225 / 0.72);

@@ -127,7 +127,7 @@ export function FocusedDocumentOverlay({
   return (
     <ModalPortal>
       <div
-        className="fixed inset-0 z-50 flex flex-col overflow-hidden"
+        className="fixed inset-0 z-50 flex h-dvh min-h-dvh max-h-dvh flex-col overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel ?? title}
@@ -137,9 +137,9 @@ export function FocusedDocumentOverlay({
           aria-label="Close"
           onClick={onClose}
           disabled={closeDisabled}
-          className="absolute inset-0 hidden bg-slate-900/20 lg:block disabled:cursor-default"
+          className="absolute inset-0 z-0 hidden bg-slate-900/20 lg:block disabled:cursor-default"
         />
-        <div className="relative flex h-dvh max-h-dvh min-h-0 w-full flex-col overflow-hidden bg-white lg:mx-auto lg:max-w-6xl lg:shadow-2xl lg:ring-1 lg:ring-slate-200/80">
+        <div className="relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-white lg:mx-auto lg:max-w-6xl lg:shadow-2xl lg:ring-1 lg:ring-slate-200/80">
           <OverlayHeader
             title={title}
             subtitle={subtitle}
@@ -152,11 +152,12 @@ export function FocusedDocumentOverlay({
           <OverlayFooterSlotContext.Provider value={footerSlot}>
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <div
-                className={`min-h-0 flex-1 ${
+                className={`overlay-scroll-body min-h-0 min-w-0 flex-1 ${
                   bodyScroll === "child"
                     ? "flex flex-col overflow-hidden"
-                    : "overflow-y-auto overscroll-contain"
+                    : "overflow-y-auto overscroll-y-contain touch-pan-y"
                 }`}
+                data-no-pull-refresh
               >
                 {children}
               </div>

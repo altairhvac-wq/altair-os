@@ -3,7 +3,64 @@
 import { useEffect, useRef } from "react";
 
 let lockCount = 0;
-let previousOverflow = "";
+let savedScrollY = 0;
+let savedBodyStyles: {
+  overflow: string;
+  position: string;
+  top: string;
+  left: string;
+  right: string;
+  width: string;
+  paddingRight: string;
+} | null = null;
+
+function lockBodyScroll() {
+  const body = document.body;
+  savedScrollY = window.scrollY;
+  savedBodyStyles = {
+    overflow: body.style.overflow,
+    position: body.style.position,
+    top: body.style.top,
+    left: body.style.left,
+    right: body.style.right,
+    width: body.style.width,
+    paddingRight: body.style.paddingRight,
+  };
+
+  const scrollbarWidth =
+    window.innerWidth - document.documentElement.clientWidth;
+
+  body.style.overflow = "hidden";
+  body.style.position = "fixed";
+  body.style.top = `-${savedScrollY}px`;
+  body.style.left = "0";
+  body.style.right = "0";
+  body.style.width = "100%";
+
+  if (scrollbarWidth > 0) {
+    body.style.paddingRight = `${scrollbarWidth}px`;
+  }
+}
+
+function unlockBodyScroll() {
+  if (!savedBodyStyles) {
+    return;
+  }
+
+  const body = document.body;
+  const scrollY = savedScrollY;
+
+  body.style.overflow = savedBodyStyles.overflow;
+  body.style.position = savedBodyStyles.position;
+  body.style.top = savedBodyStyles.top;
+  body.style.left = savedBodyStyles.left;
+  body.style.right = savedBodyStyles.right;
+  body.style.width = savedBodyStyles.width;
+  body.style.paddingRight = savedBodyStyles.paddingRight;
+  savedBodyStyles = null;
+
+  window.scrollTo(0, scrollY);
+}
 
 export function useScrollLock(active = true) {
   useEffect(() => {
@@ -13,14 +70,13 @@ export function useScrollLock(active = true) {
 
     lockCount += 1;
     if (lockCount === 1) {
-      previousOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
+      lockBodyScroll();
     }
 
     return () => {
       lockCount -= 1;
       if (lockCount === 0) {
-        document.body.style.overflow = previousOverflow;
+        unlockBodyScroll();
       }
     };
   }, [active]);
