@@ -2,19 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { LogIn, LogOut, Timer } from "lucide-react";
 import {
   clockInAction,
   clockOutAction,
 } from "@/app/actions/time-clock";
+import { CompactTimeClockBar } from "@/shared/components/time-clock/CompactTimeClockBar";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { TimeClockEntry } from "@/shared/types/time-clock";
 import {
   formatDateTime,
   formatDuration,
-  formatTimeClockStatus,
   getElapsedMinutes,
-  getTimeClockStatusStyles,
 } from "@/shared/types/time-clock";
 
 type TimeClockFoundationViewProps = {
@@ -52,7 +50,7 @@ export function TimeClockFoundationView({
     return () => window.clearInterval(interval);
   }, [openEntry]);
 
-  const elapsedLabel = useMemo(() => {
+  const activeDurationLabel = useMemo(() => {
     if (!openEntry) {
       return null;
     }
@@ -62,10 +60,10 @@ export function TimeClockFoundationView({
     const remainingMinutes = minutes % 60;
 
     if (hours === 0) {
-      return `${remainingMinutes}m elapsed`;
+      return `${remainingMinutes}m active`;
     }
 
-    return `${hours}h ${remainingMinutes}m elapsed`;
+    return `${hours}h ${remainingMinutes}m active`;
   }, [now, openEntry]);
 
   function upsertEntry(entry: TimeClockEntry) {
@@ -138,76 +136,18 @@ export function TimeClockFoundationView({
         </div>
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-50">
-            <Timer className="h-4 w-4 text-cyan-600" />
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900">Shift exceptions</h2>
-            <p className="text-xs text-slate-500">
-              Manual clock in/out for office staff or payroll corrections.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Current status
-            </p>
-            <p className="mt-1 text-lg font-bold text-slate-900">
-              {currentUserName}
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span
-                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${getTimeClockStatusStyles(
-                  openEntry ? "open" : "closed",
-                )}`}
-              >
-                {formatTimeClockStatus(openEntry ? "open" : "closed")}
-              </span>
-              {openEntry ? (
-                <span className="text-sm text-slate-600">
-                  Since {formatDateTime(openEntry.clockInAt)}
-                  {elapsedLabel ? ` · ${elapsedLabel}` : ""}
-                </span>
-              ) : (
-                <span className="text-sm text-slate-500">
-                  You are not clocked in.
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-            <button
-              type="button"
-              onClick={runClockIn}
-              disabled={isPending || openEntry != null}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-            >
-              <LogIn className="h-4 w-4" />
-              Clock In
-            </button>
-            <button
-              type="button"
-              onClick={runClockOut}
-              disabled={isPending || openEntry == null}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-            >
-              <LogOut className="h-4 w-4" />
-              Clock Out
-            </button>
-          </div>
-        </div>
-
-        {error ? (
-          <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </p>
-        ) : null}
-      </section>
+      <CompactTimeClockBar
+        statusLabel={openEntry ? activeDurationLabel ?? "Clocked in" : "Not clocked in"}
+        subtext={
+          openEntry
+            ? `${currentUserName} · Since ${formatDateTime(openEntry.clockInAt)}`
+            : `${currentUserName} · Manual clock in/out for shift exceptions`
+        }
+        toggleAction={openEntry ? "clock_out" : "clock_in"}
+        isPending={isPending}
+        error={error}
+        onToggle={openEntry ? runClockOut : runClockIn}
+      />
 
       <section className="admin-card">
         <div className="border-b border-slate-100 px-4 py-4">

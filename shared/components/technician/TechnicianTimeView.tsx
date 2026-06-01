@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   Coffee,
-  LogIn,
-  LogOut,
   PlayCircle,
 } from "lucide-react";
 import {
@@ -15,6 +13,7 @@ import {
   stopClockAction,
   type TimeEntryActionResult,
 } from "@/app/actions/time-entries";
+import { CompactTimeClockBar } from "@/shared/components/time-clock/CompactTimeClockBar";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import {
   formatDurationMinutes,
@@ -22,7 +21,6 @@ import {
   formatTime,
   formatTimeEntryType,
   getElapsedMinutes,
-  getTechnicianTimeStateStyles,
   type TechnicianTimeStateSnapshot,
   type TimeEntry,
   type TodayTimeSummary,
@@ -62,6 +60,32 @@ export function TechnicianTimeView({
     const interval = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(interval);
   }, [state.state]);
+
+  const statusLabel = useMemo(() => {
+    if (state.state === "off_clock") {
+      return "Not clocked in";
+    }
+
+    if (state.openClockEntry) {
+      return `${formatDurationMinutes(
+        getElapsedMinutes(state.openClockEntry.startedAt, now),
+      )} active`;
+    }
+
+    if (state.openJobLaborEntry) {
+      return `${formatDurationMinutes(
+        getElapsedMinutes(state.openJobLaborEntry.startedAt, now),
+      )} active`;
+    }
+
+    if (state.openBreakEntry) {
+      return `${formatDurationMinutes(
+        getElapsedMinutes(state.openBreakEntry.startedAt, now),
+      )} on break`;
+    }
+
+    return formatTechnicianTimeState(state.state);
+  }, [now, state]);
 
   const statusDetail = useMemo(() => {
     if (state.state === "off_clock") {
@@ -131,6 +155,20 @@ export function TechnicianTimeView({
   const isOnBreak = state.state === "on_break";
   const isWorkingJob = state.state === "working_job";
 
+  const clockToggleAction =
+    isOffClock ? "clock_in" : isClockedIn ? "clock_out" : null;
+
+  function handleClockToggle() {
+    if (isOffClock) {
+      runAction(startClockAction);
+      return;
+    }
+
+    if (isClockedIn) {
+      runAction(stopClockAction);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="space-y-1">
@@ -143,25 +181,14 @@ export function TechnicianTimeView({
         </p>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white px-3.5 py-3 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-900">{technicianName}</p>
-            <p className="mt-0.5 text-xs text-slate-500">{statusDetail}</p>
-          </div>
-          <span
-            className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${getTechnicianTimeStateStyles(state.state)}`}
-          >
-            {formatTechnicianTimeState(state.state)}
-          </span>
-        </div>
-      </div>
-
-      {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
+      <CompactTimeClockBar
+        statusLabel={statusLabel}
+        subtext={`${technicianName} · ${statusDetail}`}
+        toggleAction={clockToggleAction}
+        isPending={isPending}
+        error={error}
+        onToggle={clockToggleAction ? handleClockToggle : undefined}
+      />
 
       <section className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -191,38 +218,6 @@ export function TechnicianTimeView({
           </button>
         </div>
       </section>
-
-      <details className="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <summary className="cursor-pointer list-none px-3.5 py-3 text-sm font-semibold text-slate-700 marker:content-none [&::-webkit-details-marker]:hidden">
-          Shift corrections
-        </summary>
-        <div className="space-y-3 border-t border-slate-100 px-3.5 py-3">
-          <p className="text-xs text-slate-500">
-            Manual clock in/out is only for exceptions. Prefer Start work and
-            Complete work on your jobs.
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              disabled={isPending || !isOffClock}
-              onClick={() => runAction(startClockAction)}
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <LogIn className="h-4 w-4" />
-              Clock in
-            </button>
-            <button
-              type="button"
-              disabled={isPending || !isClockedIn}
-              onClick={() => runAction(stopClockAction)}
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <LogOut className="h-4 w-4" />
-              Clock out
-            </button>
-          </div>
-        </div>
-      </details>
 
       <section className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
