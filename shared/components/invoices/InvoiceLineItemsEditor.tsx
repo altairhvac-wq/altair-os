@@ -142,6 +142,7 @@ export function InvoiceLineItemsEditor({
         {items.map((item, index) => {
           const lineTotal = calculateLineItemTotal(item.quantity, item.unitPrice);
           const selectedServiceId = item.serviceItemId ?? CUSTOM_SERVICE_ITEM_ID;
+          const isCustomLineItem = selectedServiceId === CUSTOM_SERVICE_ITEM_ID;
 
           return (
             <div key={index} className={adminLineItemShellClass}>
@@ -174,20 +175,22 @@ export function InvoiceLineItemsEditor({
               </div>
 
               <div className={`${adminLineItemGridClass} sm:items-end`}>
-                <div className="sm:col-span-6">
-                  <label className={adminFormLabelClass}>Name</label>
-                  <input
-                    type="text"
-                    value={item.name}
-                    onChange={(e) =>
-                      handleItemChange(index, "name", e.target.value)
-                    }
-                    placeholder="Line name"
-                    className={adminFormInputClass}
-                    required
-                  />
-                </div>
-                <div className="sm:col-span-6">
+                {isCustomLineItem ? (
+                  <div className="sm:col-span-6">
+                    <label className={adminFormLabelClass}>Name</label>
+                    <input
+                      type="text"
+                      value={item.name}
+                      onChange={(e) =>
+                        handleItemChange(index, "name", e.target.value)
+                      }
+                      placeholder="Line name"
+                      className={adminFormInputClass}
+                      required
+                    />
+                  </div>
+                ) : null}
+                <div className={isCustomLineItem ? "sm:col-span-6" : "sm:col-span-12"}>
                   <label className={adminFormLabelClass}>Desc</label>
                   <input
                     type="text"
