@@ -20,14 +20,13 @@ export default async function AdminLayout({
     redirect("/login");
   }
 
-  const [companyContext, userCompanies] = await Promise.all([
-    getActiveCompanyContext(),
-    getUserCompanies(),
-  ]);
+  const companyContext = await getActiveCompanyContext();
 
   if (!companyContext) {
     redirect("/setup");
   }
+
+  const userCompanies = await getUserCompanies();
 
   if (shouldUseTechnicianHome(companyContext)) {
     redirect("/technician");

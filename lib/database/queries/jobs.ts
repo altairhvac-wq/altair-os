@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import {
@@ -148,7 +149,7 @@ export function mapJobFormDataToUpdate(data: JobFormData): JobUpdate {
   return mapJobFormDataFields(data);
 }
 
-export async function listJobs(companyId: string): Promise<Job[]> {
+export const listJobs = cache(async function listJobs(companyId: string): Promise<Job[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -169,7 +170,7 @@ export async function listJobs(companyId: string): Promise<Job[]> {
   }
 
   return ((data ?? []) as JobRowWithTechnician[]).map(mapJobRowToJob);
-}
+});
 
 type ListJobsForOperationalDayOptions = {
   reference?: Date;

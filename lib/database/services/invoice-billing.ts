@@ -1,3 +1,4 @@
+import { cache } from "react";
 import {
   listInvoices,
   syncOverdueInvoiceStatuses,
@@ -15,10 +16,12 @@ export async function ensureInvoiceBillingStatesSynced(
   await syncOverdueInvoiceStatuses(companyId, timeZone);
 }
 
-export async function listInvoicesWithBillingSync(
-  companyId: string,
-  timeZone?: string,
-): Promise<Invoice[]> {
-  await ensureInvoiceBillingStatesSynced(companyId, timeZone);
-  return listInvoices(companyId);
-}
+export const listInvoicesWithBillingSync = cache(
+  async function listInvoicesWithBillingSync(
+    companyId: string,
+    timeZone?: string,
+  ): Promise<Invoice[]> {
+    await ensureInvoiceBillingStatesSynced(companyId, timeZone);
+    return listInvoices(companyId);
+  },
+);

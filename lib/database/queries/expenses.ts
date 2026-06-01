@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {
@@ -102,7 +103,9 @@ async function generateExpenseNumber(companyId: string): Promise<string> {
   return `EXP-${1013 + (count ?? 0)}`;
 }
 
-export async function listExpenses(companyId: string): Promise<Expense[]> {
+export const listExpenses = cache(async function listExpenses(
+  companyId: string,
+): Promise<Expense[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -122,7 +125,7 @@ export async function listExpenses(companyId: string): Promise<Expense[]> {
 
   const expenses = ((data ?? []) as ExpenseRowWithRelations[]).map(mapExpenseRow);
   return attachReceiptSignedUrls(expenses);
-}
+});
 
 export async function listExpensesForTechnician(
   companyId: string,

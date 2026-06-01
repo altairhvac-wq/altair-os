@@ -1,3 +1,4 @@
+import { cache } from "react";
 import {
   applyInvoiceCreationDefaults,
   type CompanyBillingDefaults,
@@ -402,7 +403,9 @@ async function validateEstimateForInvoiceLink(
   return { error: null };
 }
 
-export async function listInvoices(companyId: string): Promise<Invoice[]> {
+export const listInvoices = cache(async function listInvoices(
+  companyId: string,
+): Promise<Invoice[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -423,7 +426,7 @@ export async function listInvoices(companyId: string): Promise<Invoice[]> {
   }
 
   return ((data ?? []) as InvoiceRowWithRelations[]).map(mapInvoiceRowToInvoice);
-}
+});
 
 export async function listInvoicesByCustomer(
   companyId: string,

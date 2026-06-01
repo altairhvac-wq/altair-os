@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { resolveCompanyTimeZone } from "@/shared/lib/datetime";
 import type {
@@ -62,7 +63,9 @@ function toActiveCompanyContext(
   };
 }
 
-export async function getUserCompanies(): Promise<MembershipWithCompany[]> {
+export const getUserCompanies = cache(async function getUserCompanies(): Promise<
+  MembershipWithCompany[]
+> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -91,11 +94,12 @@ export async function getUserCompanies(): Promise<MembershipWithCompany[]> {
       ...membership,
       company,
     }));
-}
+});
 
-export async function getActiveCompanyContext(
-  options: GetCompanyContextOptions = {},
-): Promise<ActiveCompanyContext | null> {
+const getActiveCompanyContextCached = cache(
+  async function getActiveCompanyContextCached(
+    companyId?: string,
+  ): Promise<ActiveCompanyContext | null> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -128,12 +132,12 @@ export async function getActiveCompanyContext(
 
   const typedProfile = profile as ProfileRow;
 
-  if (options.companyId) {
+  if (companyId) {
     return resolveActiveCompanyContext(
       supabase,
       { id: user.id, email: user.email },
       typedProfile,
-      options.companyId,
+      companyId,
     );
   }
 
@@ -176,6 +180,13 @@ export async function getActiveCompanyContext(
     preferredMembership,
     preferredMembership.company,
   );
+  },
+);
+
+export async function getActiveCompanyContext(
+  options: GetCompanyContextOptions = {},
+): Promise<ActiveCompanyContext | null> {
+  return getActiveCompanyContextCached(options.companyId);
 }
 
 async function resolveActiveCompanyContext(

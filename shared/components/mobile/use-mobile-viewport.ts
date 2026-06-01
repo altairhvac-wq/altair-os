@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 
 const MOBILE_MEDIA_QUERY = "(max-width: 767px)";
 const BELOW_LG_MEDIA_QUERY = "(max-width: 1023px)";
@@ -22,24 +22,11 @@ function getMediaQuerySnapshot(query: string): boolean {
 }
 
 export function useMobileViewport(): boolean {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(MOBILE_MEDIA_QUERY);
-
-    function update() {
-      setIsMobile(mediaQuery.matches);
-    }
-
-    update();
-    mediaQuery.addEventListener("change", update);
-
-    return () => {
-      mediaQuery.removeEventListener("change", update);
-    };
-  }, []);
-
-  return isMobile;
+  return useSyncExternalStore(
+    (callback) => subscribeToMediaQuery(MOBILE_MEDIA_QUERY, callback),
+    () => getMediaQuerySnapshot(MOBILE_MEDIA_QUERY),
+    () => true,
+  );
 }
 
 /** Matches Tailwind `lg:` — true when viewport is below the large breakpoint. */

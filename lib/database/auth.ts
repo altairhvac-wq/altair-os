@@ -1,4 +1,5 @@
 import type { User } from "@supabase/supabase-js";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { ProfileRow } from "@/lib/database/types/core-tables";
 import { mapDatabaseError } from "./errors";
@@ -8,7 +9,7 @@ export type BootstrapCompanyResult = {
   error: string | null;
 };
 
-export async function getCurrentUser(): Promise<User | null> {
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<User | null> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -20,9 +21,11 @@ export async function getCurrentUser(): Promise<User | null> {
   }
 
   return user;
-}
+});
 
-export async function getCurrentProfile(): Promise<ProfileRow | null> {
+export const getCurrentProfile = cache(async function getCurrentProfile(): Promise<
+  ProfileRow | null
+> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -43,7 +46,7 @@ export async function getCurrentProfile(): Promise<ProfileRow | null> {
   }
 
   return profile;
-}
+});
 
 export async function ensureProfileExists(
   user: User,

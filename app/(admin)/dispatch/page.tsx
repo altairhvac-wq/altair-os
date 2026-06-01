@@ -44,16 +44,20 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
     parseDispatchPageSearchParams({ focus }),
     jobs,
   );
-  const technicians = access.canViewTechnicianRoster
-    ? await listTechnicians(companyContext.company.id, companyContext, jobs)
-    : [];
   const canViewBillingData = canViewBilling(companyContext);
-  const billingSummaries = canViewBillingData
-    ? await listJobBillingSummariesForJobs(
+  const techniciansPromise = access.canViewTechnicianRoster
+    ? listTechnicians(companyContext.company.id, companyContext, jobs)
+    : Promise.resolve([]);
+  const billingSummariesPromise = canViewBillingData
+    ? listJobBillingSummariesForJobs(
         companyContext.company.id,
         jobs.map((job) => job.id),
       )
-    : { estimatesByJobId: {}, invoicesByJobId: {} };
+    : Promise.resolve({ estimatesByJobId: {}, invoicesByJobId: {} });
+  const [technicians, billingSummaries] = await Promise.all([
+    techniciansPromise,
+    billingSummariesPromise,
+  ]);
 
   return (
     <DispatchPageView

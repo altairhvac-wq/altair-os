@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
@@ -292,7 +293,9 @@ async function validateJob(
   return { error: null };
 }
 
-export async function listEstimates(companyId: string): Promise<Estimate[]> {
+export const listEstimates = cache(async function listEstimates(
+  companyId: string,
+): Promise<Estimate[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -315,7 +318,7 @@ export async function listEstimates(companyId: string): Promise<Estimate[]> {
   return ((data ?? []) as EstimateRowWithRelations[]).map(
     mapEstimateRowToEstimate,
   );
-}
+});
 
 export async function listEstimatesByCustomer(
   companyId: string,
