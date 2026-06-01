@@ -1,4 +1,5 @@
 import type { CompanyRole, MembershipStatus } from "@/lib/database/types/enums";
+import type { BetaFeedbackSeverity, BetaFeedbackStatus } from "@/shared/types/beta-feedback";
 
 export type PlatformAdminSummary = {
   totalAuthUsers: number;
@@ -68,4 +69,34 @@ export type PlatformAdminOverview = {
   users: PlatformAdminUserRow[];
   companies: PlatformAdminCompanyRow[];
   diagnostics: string[];
+};
+
+export type PlatformBugReport = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  status: BetaFeedbackStatus;
+  severity: BetaFeedbackSeverity;
+  message: string;
+  expectedBehavior: string | null;
+  pageUrl: string;
+  userEmail: string | null;
+  userRole: string | null;
+  companyId: string | null;
+  companyName: string | null;
+  userId: string | null;
+  userAgent: string | null;
+};
+
+export type PlatformBugReportSummary = {
+  open: number;
+  blockingOrHigh: number;
+  reviewing: number;
+  fixed: number;
+  total: number;
+};
+
+export type PlatformBugReportsLoadResult = {
+  reports: PlatformBugReport[];
+  error: string | null;
 };

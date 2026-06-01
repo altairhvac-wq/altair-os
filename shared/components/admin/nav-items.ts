@@ -215,6 +215,14 @@ export function getNavItemForPath(
   options?: { includePlatformAdmin?: boolean },
 ): NavItem {
   if (options?.includePlatformAdmin && isPlatformAdminPath(pathname)) {
+    if (pathname === "/platform/bugs" || pathname.startsWith("/platform/bugs/")) {
+      return {
+        ...platformAdminNavItem,
+        label: "Bug reports",
+        description: "Beta feedback submitted from inside the app",
+      };
+    }
+
     return platformAdminNavItem;
   }
 

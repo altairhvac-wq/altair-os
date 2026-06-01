@@ -4,6 +4,7 @@ import type { User } from "@supabase/supabase-js";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import type { CompanyRole, MembershipStatus } from "@/lib/database/types/enums";
 import { normalizeCompanyRole } from "@/lib/database/types/roles";
+import type { BetaFeedbackSeverity, BetaFeedbackStatus } from "@/shared/types/beta-feedback";
 import type {
   PlatformAdminCompanyRow,
   PlatformAdminOverview,
@@ -11,10 +12,21 @@ import type {
   PlatformAdminRecentCompany,
   PlatformAdminRecentUser,
   PlatformAdminUserRow,
+  PlatformBugReport,
+  PlatformBugReportsLoadResult,
 } from "@/shared/types/platform-admin";
 
 const RECENT_LIMIT = 8;
+const BUG_REPORT_PREVIEW_LIMIT = 5;
+const BUG_REPORT_LIST_LIMIT = 200;
 const BUG_REPORT_MESSAGE_PREVIEW_LENGTH = 120;
+
+const VALID_BUG_REPORT_STATUSES = new Set<BetaFeedbackStatus>([
+  "open",
+  "reviewing",
+  "fixed",
+  "ignored",
+]);
 
 type CompanyIdRow = { company_id: string };
 type CompanyActivityRow = { company_id: string; updated_at?: string | null; created_at?: string | null };
@@ -57,6 +69,55 @@ type BetaFeedbackReportQueryRow = {
   company: { name: string } | null;
 };
 
+type BetaFeedbackReportFullQueryRow = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  status: string;
+  severity: string;
+  message: string;
+  expected_behavior: string | null;
+  page_url: string;
+  user_email: string | null;
+  user_role: string | null;
+  company_id: string | null;
+  user_id: string | null;
+  user_agent: string | null;
+  company: { name: string } | null;
+};
+
+function normalizeBugReportStatus(status: string): BetaFeedbackStatus {
+  return VALID_BUG_REPORT_STATUSES.has(status as BetaFeedbackStatus)
+    ? (status as BetaFeedbackStatus)
+    : "open";
+}
+
+function normalizeBugReportSeverity(severity: string): BetaFeedbackSeverity {
+  const valid: BetaFeedbackSeverity[] = ["low", "medium", "high", "blocking"];
+  return valid.includes(severity as BetaFeedbackSeverity)
+    ? (severity as BetaFeedbackSeverity)
+    : "medium";
+}
+
+function mapBugReportRow(report: BetaFeedbackReportFullQueryRow): PlatformBugReport {
+  return {
+    id: report.id,
+    createdAt: report.created_at,
+    updatedAt: report.updated_at,
+    status: normalizeBugReportStatus(report.status),
+    severity: normalizeBugReportSeverity(report.severity),
+    message: report.message,
+    expectedBehavior: report.expected_behavior,
+    pageUrl: report.page_url,
+    userEmail: report.user_email,
+    userRole: report.user_role,
+    companyId: report.company_id,
+    companyName: report.company?.name ?? null,
+    userId: report.user_id,
+    userAgent: report.user_agent,
+  };
+}
+
 function truncateMessagePreview(message: string): string {
   const trimmed = message.trim();
 
@@ -78,7 +139,7 @@ async function fetchRecentBugReports(
       "id, created_at, user_email, severity, page_url, message, status, company:companies(name)",
     )
     .order("created_at", { ascending: false })
-    .limit(RECENT_LIMIT);
+    .limit(BUG_REPORT_PREVIEW_LIMIT);
 
   if (error) {
     const message = formatQueryError("beta_feedback_reports query failed", error);
@@ -95,8 +156,68 @@ async function fetchRecentBugReports(
     severity: report.severity,
     pageUrl: report.page_url,
     messagePreview: truncateMessagePreview(report.message),
-    status: report.status,
+    status: normalizeBugReportStatus(report.status),
   }));
+}
+
+export async function getPlatformBugReports(): Promise<PlatformBugReportsLoadResult> {
+  try {
+    const supabase = createServiceRoleClient();
+
+    const { data, error } = await supabase
+      .from("beta_feedback_reports")
+      .select(
+        "id, created_at, updated_at, status, severity, message, expected_behavior, page_url, user_email, user_role, company_id, user_id, user_agent, company:companies(name)",
+      )
+      .order("created_at", { ascending: false })
+      .limit(BUG_REPORT_LIST_LIMIT);
+
+    if (error) {
+      const message = formatQueryError("beta_feedback_reports query failed", error);
+      console.error(`[platform-admin] ${message}`);
+      return { reports: [], error: message };
+    }
+
+    return {
+      reports: ((data ?? []) as BetaFeedbackReportFullQueryRow[]).map(mapBugReportRow),
+      error: null,
+    };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to load platform bug reports.";
+    console.error(`[platform-admin] ${message}`);
+    return { reports: [], error: message };
+  }
+}
+
+export async function updatePlatformBugReportStatus(
+  reportId: string,
+  status: BetaFeedbackStatus,
+): Promise<{ error: string | null }> {
+  if (!VALID_BUG_REPORT_STATUSES.has(status)) {
+    return { error: "Invalid bug report status." };
+  }
+
+  const trimmedId = reportId.trim();
+
+  if (!trimmedId) {
+    return { error: "Bug report ID is required." };
+  }
+
+  const supabase = createServiceRoleClient();
+
+  const { error } = await supabase
+    .from("beta_feedback_reports")
+    .update({ status })
+    .eq("id", trimmedId);
+
+  if (error) {
+    const message = formatQueryError("beta_feedback_reports status update failed", error);
+    console.error(`[platform-admin] ${message}`);
+    return { error: message };
+  }
+
+  return { error: null };
 }
 
 function pushDiagnostic(diagnostics: string[], message: string): void {

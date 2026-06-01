@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { formatDate } from "@/shared/types/customer";
 import { formatMembershipStatus } from "@/shared/types/team-member";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
@@ -5,6 +6,7 @@ import type { PlatformAdminOverview } from "@/shared/types/platform-admin";
 import {
   Building2,
   Briefcase,
+  Bug,
   FileText,
   Receipt,
   Shield,
@@ -91,6 +93,14 @@ function RecentList({
   );
 }
 
+function formatSeverityLabel(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatStatusLabel(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 export function PlatformAdminPageView({ data }: PlatformAdminPageViewProps) {
   const { summary } = data;
 
@@ -163,6 +173,91 @@ export function PlatformAdminPageView({ data }: PlatformAdminPageViewProps) {
           }))}
         />
       </div>
+
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-100 px-4 py-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Bug className="h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
+                <h2 className="text-sm font-bold text-slate-900">Recent bug reports</h2>
+              </div>
+              <p className="text-xs text-slate-500">
+                Latest beta feedback from the in-app bug reporter.
+              </p>
+            </div>
+            <Link
+              href="/platform/bugs"
+              className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              View all bug reports
+            </Link>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <tr>
+                <th className="px-3 py-2">When</th>
+                <th className="px-3 py-2">Company</th>
+                <th className="px-3 py-2">User</th>
+                <th className="px-3 py-2">Severity</th>
+                <th className="px-3 py-2">Page</th>
+                <th className="px-3 py-2">Message</th>
+                <th className="px-3 py-2">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {data.recentBugReports.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-3 py-8 text-center">
+                    <p className="text-sm font-medium text-slate-700">No bug reports yet</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Reports from beta testers will appear here.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                data.recentBugReports.map((report) => (
+                  <tr key={report.id} className="text-slate-800">
+                    <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-600">
+                      {formatDate(report.createdAt)}
+                    </td>
+                    <td className="max-w-[10rem] truncate px-3 py-2.5">
+                      {report.companyName?.trim() || "—"}
+                    </td>
+                    <td className="max-w-[12rem] truncate px-3 py-2.5">
+                      {report.userEmail?.trim() || "—"}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className="inline-flex rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700 ring-1 ring-red-600/10">
+                        {formatSeverityLabel(report.severity)}
+                      </span>
+                    </td>
+                    <td className="max-w-[14rem] truncate px-3 py-2.5 text-xs">
+                      <a
+                        href={report.pageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-700 hover:underline"
+                        title={report.pageUrl}
+                      >
+                        {report.pageUrl}
+                      </a>
+                    </td>
+                    <td className="max-w-[16rem] truncate px-3 py-2.5 text-xs text-slate-600">
+                      {report.messagePreview}
+                    </td>
+                    <td className="px-3 py-2.5 text-xs">
+                      {formatStatusLabel(report.status)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 px-4 py-3">
