@@ -8,6 +8,10 @@ import {
   isManageableTeamRole,
   type InvitableTeamRole,
 } from "@/shared/types/team-member";
+import {
+  isJobEligibleTeamRole,
+  type TechnicianSpecialty,
+} from "@/shared/types/technician-specialties";
 
 type MemberRoleSubject = Pick<
   CompanyMembershipRow,
@@ -352,6 +356,61 @@ export function validateMemberReportsToChange({
     )
   ) {
     return "This reporting assignment would create a cycle.";
+  }
+
+  return null;
+}
+
+export function canActorEditMemberSpecialties(
+  actorRole: CompanyRole,
+  actorUserId: string,
+  member: MemberRoleSubject,
+): boolean {
+  if (member.status === "invited" && !member.user_id) {
+    return false;
+  }
+
+  if (member.user_id === actorUserId) {
+    return false;
+  }
+
+  if (member.status !== "active" || member.role === "customer") {
+    return false;
+  }
+
+  if (!isJobEligibleTeamRole(member.role)) {
+    return false;
+  }
+
+  if (
+    actorRole !== "owner" &&
+    compareCompanyRoles(member.role, actorRole)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+type ValidateMemberSpecialtiesChangeInput = {
+  membership: Pick<CompanyMembershipRow, "status" | "user_id" | "role">;
+  specialties: TechnicianSpecialty[];
+};
+
+export function validateMemberSpecialtiesChange({
+  membership,
+  specialties,
+}: ValidateMemberSpecialtiesChangeInput): string | null {
+  if (membership.status === "invited" && !membership.user_id) {
+    return "Pending invitations cannot be assigned specialties.";
+  }
+
+  if (membership.status !== "active") {
+    return "Only active members can be assigned specialties.";
+  }
+
+  if (!isJobEligibleTeamRole(membership.role)) {
+    return "Specialties can only be assigned to job-eligible team members.";
   }
 
   return null;

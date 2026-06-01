@@ -13,6 +13,7 @@ import {
   resolveUserEmailForInvite,
   updateMemberReportsTo,
   updateMemberRole,
+  updateMemberSpecialties,
   updateMemberStatus,
 } from "@/lib/database/queries/memberships";
 import {
@@ -527,6 +528,49 @@ export async function updateMemberReportsToAction(
   }
 
   revalidatePath("/settings");
+
+  return { member: result.member };
+}
+
+export type UpdateMemberSpecialtiesActionResult = {
+  error?: string;
+  member?: TeamMember;
+};
+
+export async function updateMemberSpecialtiesAction(
+  membershipId: string,
+  specialties: string[],
+): Promise<UpdateMemberSpecialtiesActionResult> {
+  const normalizedMembershipId = normalizeMembershipId(membershipId);
+
+  if (!normalizedMembershipId) {
+    return { error: "A valid team member is required." };
+  }
+
+  const access = await requireTeamManagementContext();
+
+  if ("error" in access) {
+    return { error: access.error };
+  }
+
+  const { context } = access;
+
+  const result = await updateMemberSpecialties(
+    context.company.id,
+    normalizedMembershipId,
+    specialties,
+    {
+      userId: context.user.id,
+      role: context.role,
+    },
+  );
+
+  if (result.error || !result.member) {
+    return { error: result.error ?? "Failed to update member specialties." };
+  }
+
+  revalidatePath("/settings");
+  revalidatePath("/dispatch");
 
   return { member: result.member };
 }

@@ -1,7 +1,7 @@
-import { assertTeamRosterReadAccess } from "@/lib/database/access-control";
+﻿import { assertTeamRosterReadAccess } from "@/lib/database/access-control";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
-import { validateMemberRoleChange, validateInviteRole, validateMemberSuspension, validateMemberReactivation, validatePendingInviteCancellation, validateMemberReportsToChange } from "@/lib/database/services/member-role-guard";
+import { validateMemberRoleChange, validateInviteRole, validateMemberSuspension, validateMemberReactivation, validatePendingInviteCancellation, validateMemberReportsToChange, validateMemberSpecialtiesChange } from "@/lib/database/services/member-role-guard";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import { hasCompanyPermission } from "@/lib/database/types/roles";
 import type {
@@ -14,6 +14,10 @@ import {
   mapMembershipToTeamMember,
   type TeamMember,
 } from "@/shared/types/team-member";
+import {
+  normalizeTechnicianSpecialties,
+  validateTechnicianSpecialties,
+} from "@/shared/types/technician-specialties";
 import {
   isValidEmail,
   normalizeEmail,
@@ -29,6 +33,7 @@ type MembershipProfileRow = {
   invited_at: string | null;
   joined_at: string | null;
   reports_to_member_id: string | null;
+  technician_specialties: string[];
   created_at: string;
   updated_at: string;
   company_id: string;
@@ -36,7 +41,7 @@ type MembershipProfileRow = {
 };
 
 const MEMBERSHIP_PROFILE_SELECT =
-  "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, reports_to_member_id, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(*)";
+  "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, reports_to_member_id, technician_specialties, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(*)";
 
 export type ListCompanyMembersResult = {
   members: TeamMember[];
@@ -822,6 +827,7 @@ export async function createTeamInvite(
     ...row,
     profile: null,
     invite_email: row.invite_email,
+    technician_specialties: row.technician_specialties ?? [],
   });
 
   if (!member) {
@@ -988,6 +994,92 @@ export async function updateMemberReportsTo(
       companyId,
       membershipId,
       reportsToMemberId: normalizedReportsToMemberId,
+      code: error.code,
+      message: error.message,
+    });
+    return { error: mapDatabaseError(error) };
+  }
+
+  const row = data as MembershipProfileRow;
+
+  const member = mapMembershipToTeamMember({
+    ...row,
+    profile: row.profile,
+    invite_email: row.invite_email,
+  });
+
+  if (!member) {
+    return { error: "Updated membership could not be loaded." };
+  }
+
+  return { member };
+}
+
+export type UpdateMemberSpecialtiesResult = {
+  member?: TeamMember;
+  error?: string;
+};
+
+export async function updateMemberSpecialties(
+  companyId: string,
+  membershipId: string,
+  specialties: string[],
+  actor: MemberRoleActor,
+): Promise<UpdateMemberSpecialtiesResult> {
+  const actorError = assertTeamManagementActor(actor);
+  if (actorError) {
+    return { error: actorError };
+  }
+
+  const membership = await getCompanyMembershipById(companyId, membershipId);
+
+  if (!membership) {
+    return { error: "Team member not found in this company." };
+  }
+
+  const specialtyValidationError = validateTechnicianSpecialties(specialties);
+  if (specialtyValidationError) {
+    return { error: specialtyValidationError };
+  }
+
+  const normalizedSpecialties = normalizeTechnicianSpecialties(specialties);
+  const validationError = validateMemberSpecialtiesChange({
+    membership,
+    specialties: normalizedSpecialties,
+  });
+
+  if (validationError) {
+    return { error: validationError };
+  }
+
+  const currentSpecialties = normalizeTechnicianSpecialties(
+    membership.technician_specialties,
+  );
+
+  if (
+    currentSpecialties.length === normalizedSpecialties.length &&
+    currentSpecialties.every(
+      (value, index) => value === normalizedSpecialties[index],
+    )
+  ) {
+    const member = await fetchCompanyMemberById(companyId, membershipId);
+    return member ? { member } : { error: "Team member not found." };
+  }
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("company_memberships")
+    .update({ technician_specialties: normalizedSpecialties })
+    .eq("company_id", companyId)
+    .eq("id", membershipId)
+    .select(MEMBERSHIP_PROFILE_SELECT)
+    .single();
+
+  if (error) {
+    console.error("[updateMemberSpecialties] update failed:", {
+      companyId,
+      membershipId,
       code: error.code,
       message: error.message,
     });

@@ -24,6 +24,7 @@ export type Technician = {
   initials: string;
   status: TechnicianStatus;
   specialty: string;
+  specialties: string[];
   phone: string;
 };
 

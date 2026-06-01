@@ -6,6 +6,7 @@ import {
   canActorCancelInvite,
   canActorEditMemberReportsTo,
   canActorEditMemberRole,
+  canActorEditMemberSpecialties,
   canActorReactivateMember,
   canActorSuspendMember,
   getInvitableTeamRoles,
@@ -17,6 +18,7 @@ import {
   getTeamMemberInitials,
   type TeamMember,
 } from "@/shared/types/team-member";
+import type { TechnicianSpecialty } from "@/shared/types/technician-specialties";
 import { isSensitiveTeamRole } from "@/shared/lib/team-role-descriptions";
 import {
   cancelTeamInviteAction,
@@ -24,11 +26,16 @@ import {
   suspendTeamMemberAction,
   updateMemberReportsToAction,
   updateMemberRoleAction,
+  updateMemberSpecialtiesAction,
 } from "@/app/actions/memberships";
 import { CopyTeamInviteLinkButton } from "./CopyTeamInviteLinkButton";
 import { MembershipStatusBadge } from "./MembershipStatusBadge";
 import { ReportsToSelectorField } from "./ReportsToSelectorField";
 import { RoleSelectorField } from "./RoleSelectorField";
+import {
+  shouldShowMemberSpecialties,
+  TeamMemberSpecialtiesField,
+} from "./TeamMemberSpecialtiesField";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
 
 type TeamMemberMobileCardsProps = {
@@ -194,6 +201,34 @@ export function TeamMemberMobileCards({
     });
   }
 
+  function handleSpecialtiesChange(
+    member: TeamMember,
+    specialties: TechnicianSpecialty[],
+  ) {
+    if (isPending) {
+      return;
+    }
+
+    setPendingMembershipId(member.id);
+
+    startTransition(async () => {
+      const result = await updateMemberSpecialtiesAction(member.id, specialties);
+      setPendingMembershipId(null);
+
+      if (result.error) {
+        onRoleChangeError?.(result.error);
+        return;
+      }
+
+      if (result.member) {
+        onMemberUpdated(result.member);
+        onRoleChangeSuccess?.(`${member.name}'s specialties have been updated.`);
+      } else {
+        onRoleChangeError?.("Failed to update member specialties.");
+      }
+    });
+  }
+
   function handleStatusAction(
     membershipId: string,
     action: PendingStatusAction,
@@ -305,6 +340,14 @@ export function TeamMemberMobileCards({
             currentUserId,
             memberSubject,
           );
+        const canEditSpecialties =
+          canManageTeam &&
+          canActorEditMemberSpecialties(
+            currentUserRole,
+            currentUserId,
+            memberSubject,
+          );
+        const showSpecialties = shouldShowMemberSpecialties(member.role);
         const reportsToOptions = getActiveReportsToOptions(
           allMembers,
           member.id,
@@ -406,6 +449,18 @@ export function TeamMemberMobileCards({
                     )?.name ?? "Unknown"}
                   </span>
                 </p>
+              ) : null}
+
+              {showSpecialties ? (
+                <TeamMemberSpecialtiesField
+                  specialties={member.technicianSpecialties}
+                  canEdit={canEditSpecialties}
+                  disabled={isActionLocked}
+                  compact
+                  onChange={(nextSpecialties) =>
+                    handleSpecialtiesChange(member, nextSpecialties)
+                  }
+                />
               ) : null}
 
               {canManageTeam ? (

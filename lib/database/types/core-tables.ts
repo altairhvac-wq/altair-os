@@ -69,6 +69,7 @@ export type CompanyMembershipRow = {
   invited_at: Timestamp | null;
   joined_at: Timestamp | null;
   reports_to_member_id: UUID | null;
+  technician_specialties: string[];
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -95,11 +96,12 @@ export type ProfileInsert = {
 
 export type CompanyMembershipInsert = Omit<
   CompanyMembershipRow,
-  "id" | "created_at" | "updated_at"
+  "id" | "created_at" | "updated_at" | "technician_specialties"
 > & {
   id?: UUID;
   created_at?: Timestamp;
   updated_at?: Timestamp;
+  technician_specialties?: string[];
 };
 
 export type CompanyUpdate = Partial<

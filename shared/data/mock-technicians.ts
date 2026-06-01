@@ -8,6 +8,7 @@ export const mockTechnicians: Technician[] = [
     initials: "MR",
     status: "on_job",
     specialty: "HVAC",
+    specialties: ["HVAC"],
     phone: "(512) 555-0142",
   },
   {
@@ -17,6 +18,7 @@ export const mockTechnicians: Technician[] = [
     initials: "DW",
     status: "available",
     specialty: "Plumbing",
+    specialties: ["Plumbing"],
     phone: "(512) 555-0187",
   },
   {
@@ -25,7 +27,8 @@ export const mockTechnicians: Technician[] = [
     role: "Lead AC Technician",
     initials: "LP",
     status: "on_job",
-    specialty: "AC & Refrigeration",
+    specialty: "Refrigeration",
+    specialties: ["Refrigeration", "HVAC"],
     phone: "(512) 555-0231",
   },
   {
@@ -35,6 +38,7 @@ export const mockTechnicians: Technician[] = [
     initials: "JK",
     status: "available",
     specialty: "Electrical",
+    specialties: ["Electrical"],
     phone: "(512) 555-0298",
   },
   {
@@ -44,6 +48,7 @@ export const mockTechnicians: Technician[] = [
     initials: "AC",
     status: "off_duty",
     specialty: "General Service",
+    specialties: ["General Service"],
     phone: "(512) 555-0315",
   },
   {
@@ -53,6 +58,7 @@ export const mockTechnicians: Technician[] = [
     initials: "RN",
     status: "available",
     specialty: "HVAC",
+    specialties: ["HVAC", "Service"],
     phone: "(512) 555-0374",
   },
 ];

@@ -11,6 +11,7 @@ import type {
 } from "@/shared/types/dispatch-recommendations";
 import type { DashboardTechnicianStatus } from "@/shared/types/dashboard";
 import type { TechnicianTimeState } from "@/shared/types/time-entry";
+import type { TechnicianSpecialty } from "@/shared/types/technician-specialties";
 
 const ACTIVE_JOB_STATUSES = new Set<DispatchJobStatus>([
   "scheduled",
@@ -19,11 +20,16 @@ const ACTIVE_JOB_STATUSES = new Set<DispatchJobStatus>([
   "in_progress",
 ]);
 
-const TRADE_KEYWORDS: { label: string; patterns: RegExp[] }[] = [
-  { label: "HVAC", patterns: [/hvac/i, /\bac\b/i, /heat/i, /cool/i, /refriger/i] },
+const TRADE_KEYWORDS: { label: TechnicianSpecialty; patterns: RegExp[] }[] = [
+  { label: "HVAC", patterns: [/hvac/i, /\bac\b/i, /heat/i, /cool/i] },
   { label: "Plumbing", patterns: [/plumb/i, /drain/i, /water heater/i, /sewer/i] },
   { label: "Electrical", patterns: [/electr/i, /wiring/i, /panel/i, /breaker/i] },
-  { label: "General Service", patterns: [/general/i, /service call/i, /maintenance/i] },
+  { label: "Refrigeration", patterns: [/refriger/i, /cooler/i, /freezer/i] },
+  { label: "Controls", patterns: [/control/i, /automation/i, /bms/i] },
+  { label: "Maintenance", patterns: [/maintenance/i, /preventive/i, /\bpm\b/i] },
+  { label: "Install", patterns: [/install/i, /replacement/i, /new unit/i] },
+  { label: "Service", patterns: [/service call/i, /repair/i, /troubleshoot/i] },
+  { label: "General Service", patterns: [/general/i] },
 ];
 
 export type DispatchRecommendationInput = {
@@ -37,6 +43,7 @@ type ScoredCandidate = {
   technician: Technician;
   score: number;
   reasonKeys: Set<ReasonKey>;
+  tradeMatchReason: string | null;
 };
 
 type ReasonKey =
@@ -50,7 +57,7 @@ type ReasonKey =
 
 const REASON_COPY: Record<ReasonKey, string> = {
   lowest_workload: "Lowest workload today",
-  trade_match: "Trade/service match",
+  trade_match: "Best trade match",
   available_now: "Available now",
   on_shift: "On shift today",
   schedule_window: "Available during scheduled window",
@@ -62,7 +69,7 @@ function isAssignableTechnician(technician: Technician): boolean {
   return technician.role === COMPANY_ROLE_LABELS.technician;
 }
 
-function detectTradeLabel(value: string): string | null {
+function detectTradeLabel(value: string): TechnicianSpecialty | null {
   const normalized = value.trim();
   if (!normalized) {
     return null;
@@ -75,6 +82,22 @@ function detectTradeLabel(value: string): string | null {
   }
 
   return null;
+}
+
+function specialtyLabelMatchesJob(
+  specialtyLabel: TechnicianSpecialty,
+  jobType: string,
+  jobTrade: TechnicianSpecialty | null,
+): boolean {
+  if (specialtyLabel === "General Service") {
+    return true;
+  }
+
+  if (jobTrade && jobTrade === specialtyLabel) {
+    return true;
+  }
+
+  return jobType.toLowerCase().includes(specialtyLabel.toLowerCase());
 }
 
 function specialtyMatchesJob(
@@ -104,6 +127,54 @@ function specialtyMatchesJob(
   }
 
   return false;
+}
+
+type SpecialtyMatchResult = {
+  matches: boolean;
+  reason: string | null;
+};
+
+function scoreTechnicianSpecialties(
+  specialties: readonly string[],
+  jobType: string,
+): SpecialtyMatchResult {
+  const hasSpecialtyData = specialties.length > 0;
+
+  if (!hasSpecialtyData) {
+    const matches = specialtyMatchesJob("General Service", jobType);
+    return {
+      matches,
+      reason: matches ? "General service fallback" : null,
+    };
+  }
+
+  const normalizedSpecialties = specialties.filter(
+    (value): value is TechnicianSpecialty =>
+      TRADE_KEYWORDS.some((trade) => trade.label === value),
+  );
+  const jobTrade = detectTradeLabel(jobType);
+
+  for (const specialty of normalizedSpecialties) {
+    if (specialty === "General Service") {
+      continue;
+    }
+
+    if (specialtyLabelMatchesJob(specialty, jobType, jobTrade)) {
+      return {
+        matches: true,
+        reason: `${specialty} specialty match`,
+      };
+    }
+  }
+
+  if (normalizedSpecialties.includes("General Service")) {
+    return {
+      matches: true,
+      reason: "General service fallback",
+    };
+  }
+
+  return { matches: false, reason: null };
 }
 
 function countActiveJobsToday(
@@ -178,7 +249,7 @@ function scoreTimeState(timeState: TechnicianTimeState | undefined): number {
   }
 }
 
-function buildReasons(reasonKeys: Set<ReasonKey>): string[] {
+function buildReasons(candidate: ScoredCandidate): string[] {
   const priority: ReasonKey[] = [
     "lowest_workload",
     "trade_match",
@@ -190,8 +261,14 @@ function buildReasons(reasonKeys: Set<ReasonKey>): string[] {
   ];
 
   const reasons = priority
-    .filter((key) => reasonKeys.has(key))
-    .map((key) => REASON_COPY[key]);
+    .filter((key) => candidate.reasonKeys.has(key))
+    .map((key) => {
+      if (key === "trade_match" && candidate.tradeMatchReason) {
+        return candidate.tradeMatchReason;
+      }
+
+      return REASON_COPY[key];
+    });
 
   return reasons.slice(0, 4);
 }
@@ -217,15 +294,6 @@ function resolveConfidence(
   return "low";
 }
 
-function formatTradeReason(specialty: string, jobType: string): string {
-  const trade = detectTradeLabel(jobType) ?? detectTradeLabel(specialty);
-  if (trade && trade !== "General Service") {
-    return `${trade} qualified`;
-  }
-
-  return REASON_COPY.trade_match;
-}
-
 export function recommendTechnicianForJob(
   input: DispatchRecommendationInput,
 ): DispatchTechnicianRecommendation | null {
@@ -247,6 +315,7 @@ export function recommendTechnicianForJob(
   const scored: ScoredCandidate[] = assignable.map((technician) => {
     const reasonKeys = new Set<ReasonKey>();
     let score = 0;
+    let tradeMatchReason: string | null = null;
 
     const workload = countActiveJobsToday(technician.id, todayJobs);
     const workloadScore = Math.max(0, 40 - workload * 12);
@@ -255,9 +324,14 @@ export function recommendTechnicianForJob(
       reasonKeys.add("lowest_workload");
     }
 
-    if (specialtyMatchesJob(technician.specialty, job.jobType)) {
+    const specialtyMatch = scoreTechnicianSpecialties(
+      technician.specialties,
+      job.jobType,
+    );
+    if (specialtyMatch.matches) {
       score += 22;
       reasonKeys.add("trade_match");
+      tradeMatchReason = specialtyMatch.reason;
     }
 
     const statusScore = scoreTechnicianStatus(technician.status);
@@ -307,7 +381,7 @@ export function recommendTechnicianForJob(
       }
     }
 
-    return { technician, score, reasonKeys };
+    return { technician, score, reasonKeys, tradeMatchReason };
   });
 
   const ranked = [...scored].sort((left, right) => {
@@ -325,15 +399,7 @@ export function recommendTechnicianForJob(
 
   const second = ranked[1]?.score ?? null;
   const confidence = resolveConfidence(top.score, second);
-  const reasons = buildReasons(top.reasonKeys);
-
-  if (reasons.includes(REASON_COPY.trade_match)) {
-    const tradeIndex = reasons.indexOf(REASON_COPY.trade_match);
-    reasons[tradeIndex] = formatTradeReason(
-      top.technician.specialty,
-      job.jobType,
-    );
-  }
+  const reasons = buildReasons(top);
 
   if (reasons.length === 0) {
     reasons.push("Best match among available technicians");

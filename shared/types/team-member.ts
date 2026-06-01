@@ -1,6 +1,7 @@
 import type { CompanyRole, MembershipStatus } from "@/lib/database/types/enums";
 import type { MembershipWithProfile } from "@/lib/database/types/core-tables";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
+import { normalizeTechnicianSpecialties } from "@/shared/types/technician-specialties";
 
 export type TeamMember = {
   id: string;
@@ -12,6 +13,7 @@ export type TeamMember = {
   joinedAt: string | null;
   createdAt: string;
   reportsToMemberId: string | null;
+  technicianSpecialties: string[];
 };
 
 export type CompanyProfileSummary = {
@@ -106,11 +108,15 @@ export function mapMembershipToTeamMember(
     | "joined_at"
     | "created_at"
     | "reports_to_member_id"
+    | "technician_specialties"
   > & {
     profile: MembershipWithProfile["profile"] | null;
     invite_email?: string | null;
   },
 ): TeamMember | null {
+  const technicianSpecialties = normalizeTechnicianSpecialties(
+    membership.technician_specialties,
+  );
   const inviteEmail = membership.invite_email?.trim();
 
   if (membership.user_id) {
@@ -129,6 +135,7 @@ export function mapMembershipToTeamMember(
       joinedAt: membership.joined_at,
       createdAt: membership.created_at,
       reportsToMemberId: membership.reports_to_member_id,
+      technicianSpecialties,
     };
   }
 
@@ -143,6 +150,7 @@ export function mapMembershipToTeamMember(
       joinedAt: membership.joined_at,
       createdAt: membership.created_at,
       reportsToMemberId: membership.reports_to_member_id,
+      technicianSpecialties,
     };
   }
 

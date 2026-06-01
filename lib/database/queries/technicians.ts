@@ -3,11 +3,16 @@ import { createClient } from "@/lib/supabase/server";
 import type { ActiveCompanyContext, ProfileRow } from "@/lib/database/types/core-tables";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
+import {
+  formatPrimaryTechnicianSpecialty,
+  normalizeTechnicianSpecialties,
+} from "@/shared/types/technician-specialties";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 
 type AssignableMembershipRow = {
   user_id: string;
   role: CompanyRole;
+  technician_specialties: string[];
   profile: ProfileRow | null;
 };
 
@@ -49,8 +54,10 @@ export function mapProfileToTechnician(
   profile: ProfileRow,
   membershipRole: CompanyRole = "technician",
   jobs: DispatchJob[] = [],
+  technicianSpecialties: string[] = [],
 ): Technician {
   const name = profile.full_name?.trim() || profile.email;
+  const specialties = normalizeTechnicianSpecialties(technicianSpecialties);
 
   return {
     id: profile.id,
@@ -58,7 +65,8 @@ export function mapProfileToTechnician(
     role: COMPANY_ROLE_LABELS[membershipRole] ?? "Team Member",
     initials: getInitials(name),
     status: deriveTechnicianStatus(profile.id, jobs),
-    specialty: "General Service",
+    specialty: formatPrimaryTechnicianSpecialty(specialties),
+    specialties,
     phone: profile.phone?.trim() || "—",
   };
 }
@@ -77,7 +85,7 @@ export async function listTechnicians(
 
   const { data, error } = await supabase
     .from("company_memberships")
-    .select("user_id, role, profile:profiles!company_memberships_user_id_fkey(*)")
+    .select("user_id, role, technician_specialties, profile:profiles!company_memberships_user_id_fkey(*)")
     .eq("company_id", companyId)
     .eq("status", "active")
     .neq("role", "customer")
@@ -100,7 +108,12 @@ export async function listTechnicians(
         return null;
       }
 
-      return mapProfileToTechnician(row.profile, row.role, jobs);
+      return mapProfileToTechnician(
+        row.profile,
+        row.role,
+        jobs,
+        row.technician_specialties,
+      );
     })
     .filter((technician): technician is Technician => Boolean(technician));
 }

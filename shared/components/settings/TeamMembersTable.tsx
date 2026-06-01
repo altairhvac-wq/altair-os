@@ -6,6 +6,7 @@ import {
   canActorCancelInvite,
   canActorEditMemberReportsTo,
   canActorEditMemberRole,
+  canActorEditMemberSpecialties,
   canActorReactivateMember,
   canActorSuspendMember,
   getInvitableTeamRoles,
@@ -19,6 +20,7 @@ import {
   getTeamMemberInitials,
   type TeamMember,
 } from "@/shared/types/team-member";
+import type { TechnicianSpecialty } from "@/shared/types/technician-specialties";
 import { isSensitiveTeamRole } from "@/shared/lib/team-role-descriptions";
 import {
   cancelTeamInviteAction,
@@ -26,10 +28,15 @@ import {
   suspendTeamMemberAction,
   updateMemberReportsToAction,
   updateMemberRoleAction,
+  updateMemberSpecialtiesAction,
 } from "@/app/actions/memberships";
 import { CopyTeamInviteLinkButton } from "./CopyTeamInviteLinkButton";
 import { MembershipStatusBadge } from "./MembershipStatusBadge";
 import { ReportsToSelectorField } from "./ReportsToSelectorField";
+import {
+  shouldShowMemberSpecialties,
+  TeamMemberSpecialtiesField,
+} from "./TeamMemberSpecialtiesField";
 
 type TeamMembersTableProps = {
   members: TeamMember[];
@@ -194,6 +201,34 @@ export function TeamMembersTable({
     });
   }
 
+  function handleSpecialtiesChange(
+    member: TeamMember,
+    specialties: TechnicianSpecialty[],
+  ) {
+    if (isPending) {
+      return;
+    }
+
+    setPendingMembershipId(member.id);
+
+    startTransition(async () => {
+      const result = await updateMemberSpecialtiesAction(member.id, specialties);
+      setPendingMembershipId(null);
+
+      if (result.error) {
+        onRoleChangeError?.(result.error);
+        return;
+      }
+
+      if (result.member) {
+        onMemberUpdated(result.member);
+        onRoleChangeSuccess?.(`${member.name}'s specialties have been updated.`);
+      } else {
+        onRoleChangeError?.("Failed to update member specialties.");
+      }
+    });
+  }
+
   function handleStatusAction(membershipId: string, action: PendingStatusAction) {
     if (isPending) {
       return;
@@ -293,6 +328,7 @@ export function TeamMembersTable({
           <tr className="border-b border-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <th className="px-4 py-3 lg:px-6">Member</th>
             <th className="px-4 py-3">Role</th>
+            <th className="hidden px-4 py-3 lg:table-cell">Specialties</th>
             {canManageTeam ? (
               <th className="hidden px-4 py-3 xl:table-cell">Reports to</th>
             ) : null}
@@ -316,6 +352,14 @@ export function TeamMembersTable({
                 currentUserId,
                 memberSubject,
               );
+            const canEditSpecialties =
+              canManageTeam &&
+              canActorEditMemberSpecialties(
+                currentUserRole,
+                currentUserId,
+                memberSubject,
+              );
+            const showSpecialties = shouldShowMemberSpecialties(member.role);
             const reportsToOptions = getActiveReportsToOptions(
               allMembers,
               member.id,
@@ -413,6 +457,21 @@ export function TeamMembersTable({
                     <span className="font-medium text-slate-700">
                       {formatTeamMemberRole(member.role)}
                     </span>
+                  )}
+                </td>
+                <td className="hidden px-4 py-3 lg:table-cell">
+                  {showSpecialties ? (
+                    <TeamMemberSpecialtiesField
+                      specialties={member.technicianSpecialties}
+                      canEdit={canEditSpecialties}
+                      disabled={isActionLocked}
+                      compact
+                      onChange={(nextSpecialties) =>
+                        handleSpecialtiesChange(member, nextSpecialties)
+                      }
+                    />
+                  ) : (
+                    <span className="text-sm text-slate-400">—</span>
                   )}
                 </td>
                 {canManageTeam ? (
