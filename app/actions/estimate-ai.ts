@@ -1,6 +1,6 @@
 "use server";
 
-import { buildEstimateDescriptionDraftRequest } from "@/lib/ai/estimate-description";
+import { prepareEstimateDescriptionDraft } from "@/lib/ai/estimate-description";
 import { generateDraftText } from "@/lib/ai/provider";
 import type { GenerateDraftTextErrorCode } from "@/lib/ai/types";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -73,13 +73,17 @@ export async function generateEstimateDescriptionDraftAction(
     return { error: permission.error };
   }
 
-  const outcome = await generateDraftText(
-    buildEstimateDescriptionDraftRequest(
-      input,
-      permission.context.company.id,
-      permission.context.user.id,
-    ),
+  const preparation = prepareEstimateDescriptionDraft(
+    input,
+    permission.context.company.id,
+    permission.context.user.id,
   );
+
+  if (preparation.kind === "static") {
+    return { draftText: preparation.draftText };
+  }
+
+  const outcome = await generateDraftText(preparation.request);
 
   if (!outcome.ok) {
     return { error: mapAiError(outcome.error.code) };

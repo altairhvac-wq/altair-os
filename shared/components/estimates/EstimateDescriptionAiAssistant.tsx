@@ -118,6 +118,9 @@ export function EstimateDescriptionAiAssistant({
 
   return (
     <div className="mt-2 space-y-2">
+      <p className="text-[11px] text-slate-500">
+        Turn rough notes and line items into a customer-facing description.
+      </p>
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -126,7 +129,7 @@ export function EstimateDescriptionAiAssistant({
           className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-cyan-200 bg-cyan-50 px-2.5 py-1.5 text-xs font-semibold text-cyan-800 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-          {isPending ? "Drafting…" : "AI draft"}
+          {isPending ? "Rewriting…" : "Rewrite with AI"}
         </button>
       </div>
 
@@ -159,7 +162,7 @@ export function EstimateDescriptionAiAssistant({
               disabled={controlsDisabled}
               className={secondaryButtonClass}
             >
-              {isPending ? "Drafting…" : "Regenerate"}
+              {isPending ? "Rewriting…" : "Regenerate"}
             </button>
             <button
               type="button"
