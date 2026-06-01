@@ -20,6 +20,10 @@ function trimToMax(value: string, maxLength: number): string {
   return value.trim().slice(0, maxLength);
 }
 
+/**
+ * Submits a beta bug report for the signed-in user.
+ * Identity fields (user_id, email, company_id, role) are resolved server-side only.
+ */
 export async function submitBetaFeedbackReportAction(
   data: BetaFeedbackReportFormData,
 ): Promise<BetaFeedbackActionResult> {
@@ -53,14 +57,18 @@ export async function submitBetaFeedbackReportAction(
     : undefined;
 
   const context = await getActiveCompanyContext();
+  const companyId = context?.company.id ?? null;
+  const userRole = context?.role ?? null;
+  const userEmail = user.email?.trim() || null;
+
   const headersList = await headers();
   const userAgent = headersList.get("user-agent");
 
-  const { error } = await createBetaFeedbackReport({
+  const { error, errorCode } = await createBetaFeedbackReport({
     userId: user.id,
-    userEmail: user.email?.trim() || context?.user.email?.trim() || null,
-    companyId: context?.company.id ?? null,
-    userRole: context?.role ?? null,
+    userEmail,
+    companyId,
+    userRole,
     pageUrl,
     severity: data.severity,
     message,
@@ -69,6 +77,14 @@ export async function submitBetaFeedbackReportAction(
   });
 
   if (error) {
+    console.error("[submitBetaFeedbackReportAction] failed:", {
+      userExists: true,
+      userId: user.id,
+      resolvedCompanyId: companyId,
+      resolvedRole: userRole,
+      code: errorCode,
+      message: error,
+    });
     return { error: error ?? "Could not send bug report. Please try again." };
   }
 

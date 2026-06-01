@@ -25,12 +25,21 @@ function normalizeSeverity(severity: BetaFeedbackSeverity): BetaFeedbackSeverity
   return VALID_SEVERITIES.has(severity) ? severity : "medium";
 }
 
-export async function createBetaFeedbackReport(
-  input: CreateBetaFeedbackReportInput,
-): Promise<{ reportId: string | null; error: string | null }> {
-  const supabase = await createClient();
+function isInsertPolicyFailure(error: { message?: string; code?: string }): boolean {
+  const message = error.message?.toLowerCase() ?? "";
 
-  const insert: BetaFeedbackReportInsert = {
+  return (
+    error.code === "42501" ||
+    message.includes("permission denied") ||
+    message.includes("row-level security") ||
+    message.includes("row level security")
+  );
+}
+
+function buildInsertPayload(
+  input: CreateBetaFeedbackReportInput,
+): BetaFeedbackReportInsert {
+  return {
     company_id: input.companyId,
     user_id: input.userId,
     user_email: input.userEmail,
@@ -42,22 +51,49 @@ export async function createBetaFeedbackReport(
     user_agent: input.userAgent,
     status: "open",
   };
+}
 
-  const { data, error } = await supabase
+/**
+ * Insert-only beta bug reports via the authenticated Supabase session.
+ * Do not chain `.select()` — there is no SELECT policy for authenticated users.
+ */
+async function insertBetaFeedbackReport(
+  input: CreateBetaFeedbackReportInput,
+): Promise<{ error: { message?: string; code?: string } | null }> {
+  const supabase = await createClient();
+  const { error } = await supabase
     .from("beta_feedback_reports")
-    .insert(insert)
-    .select("id")
-    .single();
+    .insert(buildInsertPayload(input));
 
-  if (error) {
-    console.error("[createBetaFeedbackReport] insert failed:", {
+  return { error };
+}
+
+export async function createBetaFeedbackReport(
+  input: CreateBetaFeedbackReportInput,
+): Promise<{ error: string | null; errorCode?: string }> {
+  let { error } = await insertBetaFeedbackReport(input);
+
+  if (error && input.companyId && isInsertPolicyFailure(error)) {
+    console.warn("[createBetaFeedbackReport] retrying without company_id:", {
       userId: input.userId,
       companyId: input.companyId,
       code: error.code,
       message: error.message,
     });
-    return { reportId: null, error: mapDatabaseError(error) };
+    ({ error } = await insertBetaFeedbackReport({ ...input, companyId: null }));
   }
 
-  return { reportId: data?.id ?? null, error: null };
+  if (error) {
+    console.error("[createBetaFeedbackReport] insert failed:", {
+      userExists: Boolean(input.userId),
+      userId: input.userId,
+      companyId: input.companyId,
+      userRole: input.userRole,
+      code: error.code,
+      message: error.message,
+    });
+    return { error: mapDatabaseError(error), errorCode: error.code };
+  }
+
+  return { error: null };
 }
