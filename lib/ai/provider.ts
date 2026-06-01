@@ -21,17 +21,21 @@ function buildUserMessage(request: GenerateDraftTextRequest): string {
   return request.prompt.trim();
 }
 
-function sanitizeProviderError(error: unknown): string {
+function logProviderError(error: unknown): void {
   if (error instanceof OpenAI.APIError) {
-    const status = error.status ?? "unknown";
-    return `OpenAI request failed (status ${status}). Check server logs for details.`;
+    console.error("[generateDraftText] provider API error:", {
+      status: error.status,
+      type: error.type,
+    });
+    return;
   }
 
-  if (error instanceof Error && error.message) {
-    return "AI provider request failed. Check server logs for details.";
+  if (error instanceof Error) {
+    console.error("[generateDraftText] provider error:", error.message);
+    return;
   }
 
-  return "AI provider request failed.";
+  console.error("[generateDraftText] provider error: unknown");
 }
 
 /**
@@ -47,8 +51,7 @@ export async function generateDraftText(
       ok: false,
       error: {
         code: "ai_disabled",
-        message:
-          "AI features are disabled. Set AI_FEATURES_ENABLED=true to enable draft generation.",
+        message: "AI features are disabled.",
       },
     };
   }
@@ -58,8 +61,7 @@ export async function generateDraftText(
       ok: false,
       error: {
         code: "missing_api_key",
-        message:
-          "OPENAI_API_KEY is not configured. Add it to server environment variables.",
+        message: "AI API key is not configured.",
       },
     };
   }
@@ -92,7 +94,7 @@ export async function generateDraftText(
         ok: false,
         error: {
           code: "empty_response",
-          message: "OpenAI returned an empty draft.",
+          message: "Provider returned an empty draft.",
         },
       };
     }
@@ -112,11 +114,12 @@ export async function generateDraftText(
 
     return { ok: true, result };
   } catch (error) {
+    logProviderError(error);
     return {
       ok: false,
       error: {
         code: "provider_error",
-        message: sanitizeProviderError(error),
+        message: "Provider request failed.",
       },
     };
   }

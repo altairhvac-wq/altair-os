@@ -1,5 +1,11 @@
 import "server-only";
 
+import {
+  ESTIMATE_CONTEXT_MAX_CHARS,
+  ESTIMATE_NOTES_MAX_CHARS,
+  trimAiContextText,
+  trimAiText,
+} from "@/lib/ai/limits";
 import type { GenerateDraftTextRequest } from "@/lib/ai/types";
 import type { EstimateDescriptionDraftInput } from "@/shared/types/estimate-ai";
 
@@ -205,6 +211,21 @@ function buildRewriteGuidance(input: EstimateDescriptionDraftInput): string | nu
   return null;
 }
 
+function applyEstimateInputLimits(
+  input: EstimateDescriptionDraftInput,
+): EstimateDescriptionDraftInput {
+  const notes = input.notes?.trim();
+  const limitedNotes = notes
+    ? trimAiText(notes, ESTIMATE_NOTES_MAX_CHARS)
+    : input.notes;
+
+  if (limitedNotes === input.notes) {
+    return input;
+  }
+
+  return { ...input, notes: limitedNotes || undefined };
+}
+
 export function formatEstimateDescriptionContext(
   input: EstimateDescriptionDraftInput,
 ): string {
@@ -253,7 +274,8 @@ export function formatEstimateDescriptionContext(
     sections.push(`Line items:\n${lineItems}`);
   }
 
-  return sections.join("\n\n") || "No estimate context provided.";
+  const context = sections.join("\n\n") || "No estimate context provided.";
+  return trimAiContextText(context, ESTIMATE_CONTEXT_MAX_CHARS);
 }
 
 export type EstimateDescriptionDraftPreparation =
@@ -265,7 +287,9 @@ export function prepareEstimateDescriptionDraft(
   companyId: string,
   userId: string,
 ): EstimateDescriptionDraftPreparation {
-  if (!hasUsefulWorkContext(input)) {
+  const limitedInput = applyEstimateInputLimits(input);
+
+  if (!hasUsefulWorkContext(limitedInput)) {
     return {
       kind: "static",
       draftText: INSUFFICIENT_ESTIMATE_DESCRIPTION_CONTEXT_MESSAGE,
@@ -274,7 +298,11 @@ export function prepareEstimateDescriptionDraft(
 
   return {
     kind: "request",
-    request: buildEstimateDescriptionDraftRequest(input, companyId, userId),
+    request: buildEstimateDescriptionDraftRequest(
+      limitedInput,
+      companyId,
+      userId,
+    ),
   };
 }
 

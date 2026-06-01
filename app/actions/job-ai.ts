@@ -1,8 +1,13 @@
 "use server";
 
-import { prepareJobSummaryDraft } from "@/lib/ai/job-summary";
+import { mapAiErrorToMessage } from "@/lib/ai/errors";
+import { checkAiRateLimit } from "@/lib/ai/guardrails";
+import { JOB_SUMMARY_ACTIVITY_LIMIT } from "@/lib/ai/limits";
+import {
+  JOB_SUMMARY_AI_FEATURE,
+  prepareJobSummaryDraft,
+} from "@/lib/ai/job-summary";
 import { generateDraftText } from "@/lib/ai/provider";
-import type { GenerateDraftTextErrorCode } from "@/lib/ai/types";
 import {
   canViewBilling,
   canViewJob,
@@ -17,18 +22,6 @@ export type GenerateJobSummaryResult = {
   error?: string;
   summaryText?: string;
 };
-
-function mapAiError(code: GenerateDraftTextErrorCode): string {
-  switch (code) {
-    case "ai_disabled":
-    case "missing_api_key":
-      return "AI job summaries are not configured yet.";
-    case "empty_response":
-    case "provider_error":
-    default:
-      return "Could not summarize this job. Try again.";
-  }
-}
 
 async function assertJobSummaryPermission(jobId: string) {
   const context = await getActiveCompanyContext();
@@ -67,6 +60,16 @@ export async function generateJobSummaryAction(
   }
 
   const { context, job } = permission;
+  const rateLimit = checkAiRateLimit({
+    companyId: context.company.id,
+    userId: context.user.id,
+    feature: JOB_SUMMARY_AI_FEATURE,
+  });
+
+  if (!rateLimit.ok) {
+    return { error: mapAiErrorToMessage(rateLimit.code) };
+  }
+
   const canViewBillingData = canViewBilling(context);
   const includeBillingActivities =
     canViewBillingData || context.permissions.createFieldEstimates;
@@ -83,7 +86,7 @@ export async function generateJobSummaryAction(
   const preparation = prepareJobSummaryDraft(
     {
       job,
-      recentActivities: activities.slice(0, 8),
+      recentActivities: activities.slice(0, JOB_SUMMARY_ACTIVITY_LIMIT),
       estimates: billingContext.estimates,
       invoices: billingContext.invoices,
       includeBillingDetails: canViewBillingData,
@@ -99,12 +102,16 @@ export async function generateJobSummaryAction(
   const outcome = await generateDraftText(preparation.request);
 
   if (!outcome.ok) {
-    return { error: mapAiError(outcome.error.code) };
+    return {
+      error: mapAiErrorToMessage(outcome.error.code, JOB_SUMMARY_AI_FEATURE),
+    };
   }
 
   const summaryText = outcome.result.draftText.trim();
   if (!summaryText) {
-    return { error: mapAiError("empty_response") };
+    return {
+      error: mapAiErrorToMessage("empty_response", JOB_SUMMARY_AI_FEATURE),
+    };
   }
 
   return { summaryText };

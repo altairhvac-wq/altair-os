@@ -1,11 +1,13 @@
 "use server";
 
+import { mapAiErrorToMessage } from "@/lib/ai/errors";
 import {
+  ESTIMATE_DESCRIPTION_AI_FEATURE,
   isInsufficientEstimateDescriptionResponse,
   prepareEstimateDescriptionDraft,
 } from "@/lib/ai/estimate-description";
+import { checkAiRateLimit } from "@/lib/ai/guardrails";
 import { generateDraftText } from "@/lib/ai/provider";
-import type { GenerateDraftTextErrorCode } from "@/lib/ai/types";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import { getJobById } from "@/lib/database/queries/jobs";
@@ -15,18 +17,6 @@ export type GenerateEstimateDescriptionDraftResult = {
   error?: string;
   draftText?: string;
 };
-
-function mapAiError(code: GenerateDraftTextErrorCode): string {
-  switch (code) {
-    case "ai_disabled":
-    case "missing_api_key":
-      return "AI drafting is not configured yet.";
-    case "empty_response":
-    case "provider_error":
-    default:
-      return "Could not rewrite the notes. Try again.";
-  }
-}
 
 async function assertEstimateDescriptionDraftPermission(jobId?: string) {
   const context = await getActiveCompanyContext();
@@ -74,10 +64,21 @@ export async function generateEstimateDescriptionDraftAction(
     return { error: permission.error };
   }
 
+  const { context } = permission;
+  const rateLimit = checkAiRateLimit({
+    companyId: context.company.id,
+    userId: context.user.id,
+    feature: ESTIMATE_DESCRIPTION_AI_FEATURE,
+  });
+
+  if (!rateLimit.ok) {
+    return { error: mapAiErrorToMessage(rateLimit.code) };
+  }
+
   const preparation = prepareEstimateDescriptionDraft(
     input,
-    permission.context.company.id,
-    permission.context.user.id,
+    context.company.id,
+    context.user.id,
   );
 
   if (preparation.kind === "static") {
@@ -87,12 +88,22 @@ export async function generateEstimateDescriptionDraftAction(
   const outcome = await generateDraftText(preparation.request);
 
   if (!outcome.ok) {
-    return { error: mapAiError(outcome.error.code) };
+    return {
+      error: mapAiErrorToMessage(
+        outcome.error.code,
+        ESTIMATE_DESCRIPTION_AI_FEATURE,
+      ),
+    };
   }
 
   const draftText = outcome.result.draftText.trim();
   if (!draftText) {
-    return { error: mapAiError("empty_response") };
+    return {
+      error: mapAiErrorToMessage(
+        "empty_response",
+        ESTIMATE_DESCRIPTION_AI_FEATURE,
+      ),
+    };
   }
 
   if (isInsufficientEstimateDescriptionResponse(draftText)) {

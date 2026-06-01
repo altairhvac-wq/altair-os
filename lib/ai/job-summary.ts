@@ -1,5 +1,12 @@
 import "server-only";
 
+import {
+  JOB_SUMMARY_ACTIVITY_LIMIT,
+  JOB_SUMMARY_CONTEXT_MAX_CHARS,
+  JOB_SUMMARY_FIELD_MAX_CHARS,
+  trimAiContextText,
+  trimAiText,
+} from "@/lib/ai/limits";
 import type { GenerateDraftTextRequest } from "@/lib/ai/types";
 import {
   formatOperationalActivityDetailsForAccess,
@@ -51,7 +58,7 @@ Rules:
 - Do not expose internal database IDs — job numbers and estimate/invoice numbers shown in context are fine
 - Plain text only — no markdown headings, no salutation`;
 
-const RECENT_ACTIVITY_LIMIT = 8;
+const RECENT_ACTIVITY_LIMIT = JOB_SUMMARY_ACTIVITY_LIMIT;
 
 function formatJobPriorityLabel(priority: JobPriority): string {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
@@ -138,6 +145,31 @@ function formatInvoiceSummaries(input: JobSummaryDraftInput): string | null {
       return `- ${invoice.invoiceNumber}: ${formatInvoiceStatus(invoice.status)}${balance}`;
     })
     .join("\n");
+}
+
+function trimJobTextField(value: string | undefined | null): string | undefined {
+  const trimmed = trimAiText(value, JOB_SUMMARY_FIELD_MAX_CHARS);
+  return trimmed || undefined;
+}
+
+function applyJobSummaryInputLimits(
+  input: JobSummaryDraftInput,
+): JobSummaryDraftInput {
+  const { job } = input;
+  const limitedJob = {
+    ...job,
+    description: trimJobTextField(job.description) ?? job.description,
+    notes: trimJobTextField(job.notes) ?? job.notes,
+    completionNotes:
+      trimJobTextField(job.completionNotes) ?? job.completionNotes,
+    followUpNotes: trimJobTextField(job.followUpNotes) ?? job.followUpNotes,
+  };
+
+  return {
+    ...input,
+    job: limitedJob,
+    recentActivities: input.recentActivities.slice(0, RECENT_ACTIVITY_LIMIT),
+  };
 }
 
 export function formatJobSummaryContext(input: JobSummaryDraftInput): string {
@@ -227,7 +259,8 @@ export function formatJobSummaryContext(input: JobSummaryDraftInput): string {
     sections.push("Invoices: not available for this user");
   }
 
-  return sections.join("\n\n");
+  const context = sections.join("\n\n");
+  return trimAiContextText(context, JOB_SUMMARY_CONTEXT_MAX_CHARS);
 }
 
 export type JobSummaryDraftPreparation =
@@ -239,7 +272,9 @@ export function prepareJobSummaryDraft(
   companyId: string,
   userId: string,
 ): JobSummaryDraftPreparation {
-  if (!hasUsefulJobSummaryContext(input)) {
+  const limitedInput = applyJobSummaryInputLimits(input);
+
+  if (!hasUsefulJobSummaryContext(limitedInput)) {
     return {
       kind: "static",
       draftText: INSUFFICIENT_JOB_SUMMARY_CONTEXT_MESSAGE,
@@ -248,7 +283,7 @@ export function prepareJobSummaryDraft(
 
   return {
     kind: "request",
-    request: buildJobSummaryDraftRequest(input, companyId, userId),
+    request: buildJobSummaryDraftRequest(limitedInput, companyId, userId),
   };
 }
 
