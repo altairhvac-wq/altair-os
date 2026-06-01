@@ -53,3 +53,18 @@ export const adminListRowClass =
 /** Table cell padding (pair with text-left text-sm on table) */
 export const adminTableHeadClass = "admin-table-head";
 export const adminTableCellClass = "admin-table-cell";
+
+/** Compact one-row summary strip for list pages on mobile */
+export const adminCompactSummaryStripClass =
+  "shrink-0 overflow-x-auto rounded-lg border border-slate-200/80 bg-white px-2.5 py-2 shadow-sm sm:hidden";
+
+export const adminCompactSummaryStripInnerClass =
+  "flex w-max min-w-full items-center gap-3";
+
+export const adminCompactSummaryMetricClass =
+  "flex shrink-0 items-baseline gap-1";
+
+export const adminCompactSummaryLabelClass = "text-xs text-slate-500";
+
+export const adminCompactSummaryValueClass =
+  "text-sm font-semibold tabular-nums text-slate-900";

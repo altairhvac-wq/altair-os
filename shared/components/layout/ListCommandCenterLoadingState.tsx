@@ -40,13 +40,16 @@ export function ListCommandCenterLoadingState({
       </header>
 
       {summaryCardCount > 0 ? (
-        <div
-          className={`grid shrink-0 gap-2.5 sm:grid-cols-2 ${summaryLgColumnsClass}`}
-        >
-          {Array.from({ length: summaryCardCount }).map((_, index) => (
-            <Skeleton key={index} className="admin-metric-card h-24" />
-          ))}
-        </div>
+        <>
+          <Skeleton className="h-10 shrink-0 rounded-lg sm:hidden" />
+          <div
+            className={`hidden shrink-0 gap-2.5 sm:grid sm:grid-cols-2 ${summaryLgColumnsClass}`}
+          >
+            {Array.from({ length: summaryCardCount }).map((_, index) => (
+              <Skeleton key={index} className="admin-metric-card h-24" />
+            ))}
+          </div>
+        </>
       ) : null}
 
       <section className="flex min-h-[16rem] min-w-0 flex-1 flex-col overflow-hidden admin-card lg:min-h-0">

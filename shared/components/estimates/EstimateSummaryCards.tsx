@@ -58,6 +58,7 @@ export function EstimateSummaryCards({ estimates }: EstimateSummaryCardsProps) {
       cards={[
         {
           label: "Needs action",
+          mobileLabel: "Action",
           value: String(summary.needsAction),
           description: "Drafts and pending follow-up",
           icon: Clock,
@@ -65,6 +66,7 @@ export function EstimateSummaryCards({ estimates }: EstimateSummaryCardsProps) {
         },
         {
           label: "Sent / waiting",
+          mobileLabel: "Sent",
           value: String(summary.sentWaiting),
           description: "Awaiting customer response",
           icon: Send,
@@ -72,6 +74,7 @@ export function EstimateSummaryCards({ estimates }: EstimateSummaryCardsProps) {
         },
         {
           label: "Approved this month",
+          mobileLabel: "Approved",
           value: String(summary.approvedThisMonth),
           description: "Closed wins this period",
           icon: CheckCircle2,
@@ -79,6 +82,7 @@ export function EstimateSummaryCards({ estimates }: EstimateSummaryCardsProps) {
         },
         {
           label: "Open value",
+          mobileLabel: "Value",
           value: formatCurrency(summary.openValue),
           description: "Estimated total in pipeline",
           icon: FileText,

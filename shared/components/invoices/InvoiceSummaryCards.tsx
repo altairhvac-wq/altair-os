@@ -80,6 +80,7 @@ export function InvoiceSummaryCards({
   const cards = [
     {
       label: "Needs attention" as const,
+      mobileLabel: "Attention",
       value: String(summary.needsAttention),
       description: "Overdue, sent, or partial",
       icon: AlertCircle,
@@ -87,6 +88,7 @@ export function InvoiceSummaryCards({
     },
     {
       label: "Overdue" as const,
+      mobileLabel: "Overdue",
       value: String(summary.overdue),
       description: "Past due invoices",
       icon: Clock,
@@ -94,6 +96,7 @@ export function InvoiceSummaryCards({
     },
     {
       label: "Due today" as const,
+      mobileLabel: "Today",
       value: String(summary.dueToday),
       description: "Payments expected today",
       icon: CalendarClock,
@@ -101,6 +104,7 @@ export function InvoiceSummaryCards({
     },
     {
       label: "Unpaid total" as const,
+      mobileLabel: "Unpaid",
       value: formatCurrency(summary.unpaidTotal),
       description: "Outstanding balance",
       icon: Clock,
@@ -108,6 +112,7 @@ export function InvoiceSummaryCards({
     },
     {
       label: "Paid this month" as const,
+      mobileLabel: "Paid",
       value: formatCurrency(summary.paidThisMonth),
       description: "Collected this period",
       icon: CheckCircle2,
