@@ -264,15 +264,16 @@ export function JobsPageView({
     <ListCommandCenterLayout
       title="Jobs"
       subtitle={subtitle}
+      density="compact"
       primaryAction={
         canDispatchJobs ? (
           <button
             type="button"
             onClick={handleNewJob}
             disabled={customers.length === 0}
-            className="inline-flex shrink-0 items-center gap-2 admin-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5" />
             New Job
           </button>
         ) : undefined
@@ -289,7 +290,7 @@ export function JobsPageView({
         }`}
       >
         {!isSearching && !hasNoJobs ? (
-          <div className="shrink-0 border-b border-slate-100/90 px-4 py-2.5">
+          <div className="shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4">
             <JobsViewTabs
               activeTab={viewTab}
               onTabChange={setViewTab}

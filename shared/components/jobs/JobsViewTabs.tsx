@@ -21,7 +21,7 @@ export function JobsViewTabs({
   ];
 
   return (
-    <div className="flex gap-1 rounded-lg border border-slate-200/90 bg-slate-100/60 p-1">
+    <div className="flex gap-0.5 rounded-lg border border-slate-200/90 bg-slate-100/60 p-0.5">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
 
@@ -30,7 +30,7 @@ export function JobsViewTabs({
             key={tab.id}
             type="button"
             onClick={() => onTabChange(tab.id)}
-            className={`min-w-0 flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-all ${
+            className={`min-h-9 min-w-0 flex-1 rounded-md px-2.5 py-1 text-sm font-semibold transition-all sm:px-3 sm:py-1.5 ${
               isActive
                 ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80"
                 : "text-slate-600 hover:text-slate-900"

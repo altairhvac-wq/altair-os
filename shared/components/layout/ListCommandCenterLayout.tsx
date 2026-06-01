@@ -10,6 +10,8 @@ type ListCommandCenterLayoutProps = {
   summary?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Slimmer title bar and tighter vertical rhythm for list pages on mobile */
+  density?: "default" | "compact";
 };
 
 export function ListCommandCenterLayout({
@@ -22,20 +24,41 @@ export function ListCommandCenterLayout({
   summary,
   children,
   className,
+  density = "default",
 }: ListCommandCenterLayoutProps) {
+  const isCompact = density === "compact";
+
   return (
     <div
-      className={`flex flex-col gap-3 lg:gap-4 lg:h-[calc(100dvh-7rem)] lg:min-h-0 lg:overflow-hidden ${className ?? ""}`}
+      className={`flex flex-col ${isCompact ? "gap-2 lg:gap-3" : "gap-3 lg:gap-4"} lg:h-[calc(100dvh-7rem)] lg:min-h-0 lg:overflow-hidden ${className ?? ""}`}
     >
       {banners}
 
-      <header className="admin-page-header flex shrink-0 flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
+      <header
+        className={`admin-page-header flex shrink-0 justify-between gap-2 ${
+          isCompact
+            ? "items-center px-3 py-2 sm:px-3.5"
+            : "flex-wrap items-start gap-3"
+        }`}
+      >
+        <div className={`min-w-0 ${isCompact ? "flex flex-1 items-baseline gap-2" : ""}`}>
           {eyebrow ? (
             <p className="admin-heading-eyebrow">{eyebrow}</p>
           ) : null}
-          <h1 className="admin-heading-page">{title}</h1>
-          <p className="admin-text-helper mt-1 max-w-2xl">{subtitle}</p>
+          <h1
+            className={
+              isCompact
+                ? "shrink-0 text-base font-bold tracking-tight text-slate-900 sm:text-lg"
+                : "admin-heading-page"
+            }
+          >
+            {title}
+          </h1>
+          {isCompact ? (
+            <p className="min-w-0 truncate text-xs text-slate-500">{subtitle}</p>
+          ) : (
+            <p className="admin-text-helper mt-1 max-w-2xl">{subtitle}</p>
+          )}
         </div>
         {primaryAction || secondaryAction ? (
           <div className="flex shrink-0 items-center gap-2">
