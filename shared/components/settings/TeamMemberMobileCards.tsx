@@ -4,12 +4,14 @@ import { useMemo, useState, useTransition } from "react";
 import { formatDate } from "@/shared/types/customer";
 import {
   canActorCancelInvite,
+  canActorEditMemberReportsTo,
   canActorEditMemberRole,
   canActorReactivateMember,
   canActorSuspendMember,
   getInvitableTeamRoles,
 } from "@/lib/database/services/member-role-guard";
 import type { CompanyRole } from "@/lib/database/types/enums";
+import { getActiveReportsToOptions } from "@/shared/lib/company-org-tree";
 import {
   formatTeamMemberRole,
   getTeamMemberInitials,
@@ -20,15 +22,18 @@ import {
   cancelTeamInviteAction,
   reactivateTeamMemberAction,
   suspendTeamMemberAction,
+  updateMemberReportsToAction,
   updateMemberRoleAction,
 } from "@/app/actions/memberships";
 import { CopyTeamInviteLinkButton } from "./CopyTeamInviteLinkButton";
 import { MembershipStatusBadge } from "./MembershipStatusBadge";
+import { ReportsToSelectorField } from "./ReportsToSelectorField";
 import { RoleSelectorField } from "./RoleSelectorField";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
 
 type TeamMemberMobileCardsProps = {
   members: TeamMember[];
+  allMembers: TeamMember[];
   currentUserId: string;
   currentUserRole: CompanyRole;
   canManageTeam: boolean;
@@ -74,6 +79,7 @@ function getMemberDateCaption(member: TeamMember): string {
 
 export function TeamMemberMobileCards({
   members,
+  allMembers,
   currentUserId,
   currentUserRole,
   canManageTeam,
@@ -151,6 +157,41 @@ export function TeamMemberMobileCards({
     }
 
     applyRoleChange(member.id, newRole, member.name);
+  }
+
+  function handleReportsToChange(
+    member: TeamMember,
+    reportsToMemberId: string | null,
+  ) {
+    if (isPending || reportsToMemberId === member.reportsToMemberId) {
+      return;
+    }
+
+    setPendingMembershipId(member.id);
+
+    startTransition(async () => {
+      const result = await updateMemberReportsToAction(
+        member.id,
+        reportsToMemberId,
+      );
+      setPendingMembershipId(null);
+
+      if (result.error) {
+        onRoleChangeError?.(result.error);
+        return;
+      }
+
+      if (result.member) {
+        onMemberUpdated(result.member);
+        onRoleChangeSuccess?.(
+          reportsToMemberId
+            ? `${member.name}'s reporting line has been updated.`
+            : `${member.name} no longer reports to a manager.`,
+        );
+      } else {
+        onRoleChangeError?.("Failed to update reporting relationship.");
+      }
+    });
   }
 
   function handleStatusAction(
@@ -257,6 +298,17 @@ export function TeamMemberMobileCards({
         const canEditRole =
           canManageTeam &&
           canActorEditMemberRole(currentUserRole, currentUserId, memberSubject);
+        const canEditReportsTo =
+          canManageTeam &&
+          canActorEditMemberReportsTo(
+            currentUserRole,
+            currentUserId,
+            memberSubject,
+          );
+        const reportsToOptions = getActiveReportsToOptions(
+          allMembers,
+          member.id,
+        );
         const canSuspend =
           canManageTeam &&
           canActorSuspendMember(
@@ -333,6 +385,28 @@ export function TeamMemberMobileCards({
                   {formatTeamMemberRole(member.role)}
                 </p>
               )}
+
+              {canEditReportsTo ? (
+                <ReportsToSelectorField
+                  value={member.reportsToMemberId}
+                  options={reportsToOptions}
+                  onChange={(nextReportsToMemberId) =>
+                    handleReportsToChange(member, nextReportsToMemberId)
+                  }
+                  disabled={isActionLocked}
+                  compact
+                  aria-label={`Reports to for ${member.name}`}
+                />
+              ) : canManageTeam && member.reportsToMemberId ? (
+                <p className="text-xs text-slate-600">
+                  Reports to{" "}
+                  <span className="font-medium">
+                    {allMembers.find(
+                      (item) => item.id === member.reportsToMemberId,
+                    )?.name ?? "Unknown"}
+                  </span>
+                </p>
+              ) : null}
 
               {canManageTeam ? (
                 <div>

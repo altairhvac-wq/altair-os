@@ -11,6 +11,7 @@ import {
   cancelPendingTeamInvite,
   createTeamInvite,
   resolveUserEmailForInvite,
+  updateMemberReportsTo,
   updateMemberRole,
   updateMemberStatus,
 } from "@/lib/database/queries/memberships";
@@ -485,4 +486,47 @@ export async function reactivateTeamMemberAction(
   membershipId: string,
 ): Promise<UpdateMemberStatusActionResult> {
   return runMemberStatusAction(membershipId, "active");
+}
+
+export type UpdateMemberReportsToActionResult = {
+  error?: string;
+  member?: TeamMember;
+};
+
+export async function updateMemberReportsToAction(
+  membershipId: string,
+  reportsToMemberId: string | null,
+): Promise<UpdateMemberReportsToActionResult> {
+  const normalizedMembershipId = normalizeMembershipId(membershipId);
+
+  if (!normalizedMembershipId) {
+    return { error: "A valid team member is required." };
+  }
+
+  const access = await requireTeamManagementContext();
+
+  if ("error" in access) {
+    return { error: access.error };
+  }
+
+  const { context } = access;
+  const normalizedReportsToMemberId = reportsToMemberId?.trim() || null;
+
+  const result = await updateMemberReportsTo(
+    context.company.id,
+    normalizedMembershipId,
+    normalizedReportsToMemberId,
+    {
+      userId: context.user.id,
+      role: context.role,
+    },
+  );
+
+  if (result.error || !result.member) {
+    return { error: result.error ?? "Failed to update reporting relationship." };
+  }
+
+  revalidatePath("/settings");
+
+  return { member: result.member };
 }

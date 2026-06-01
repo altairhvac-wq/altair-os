@@ -1,7 +1,7 @@
 import { assertTeamRosterReadAccess } from "@/lib/database/access-control";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
-import { validateMemberRoleChange, validateInviteRole, validateMemberSuspension, validateMemberReactivation, validatePendingInviteCancellation } from "@/lib/database/services/member-role-guard";
+import { validateMemberRoleChange, validateInviteRole, validateMemberSuspension, validateMemberReactivation, validatePendingInviteCancellation, validateMemberReportsToChange } from "@/lib/database/services/member-role-guard";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import { hasCompanyPermission } from "@/lib/database/types/roles";
 import type {
@@ -28,11 +28,15 @@ type MembershipProfileRow = {
   invited_by: string | null;
   invited_at: string | null;
   joined_at: string | null;
+  reports_to_member_id: string | null;
   created_at: string;
   updated_at: string;
   company_id: string;
   profile: MembershipWithProfile["profile"] | null;
 };
+
+const MEMBERSHIP_PROFILE_SELECT =
+  "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, reports_to_member_id, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(*)";
 
 export type ListCompanyMembersResult = {
   members: TeamMember[];
@@ -54,9 +58,7 @@ async function fetchCompanyMemberRoster(
 
   const { data, error } = await supabase
     .from("company_memberships")
-    .select(
-      "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(*)",
-    )
+    .select(MEMBERSHIP_PROFILE_SELECT)
     .eq("company_id", companyId)
     .order("created_at", { ascending: true });
 
@@ -94,9 +96,7 @@ async function fetchCompanyMemberById(
 
   const { data, error } = await supabase
     .from("company_memberships")
-    .select(
-      "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(*)",
-    )
+    .select(MEMBERSHIP_PROFILE_SELECT)
     .eq("company_id", companyId)
     .eq("id", membershipId)
     .maybeSingle();
@@ -248,9 +248,7 @@ export async function updateMemberRole(
     .update({ role: newRole })
     .eq("company_id", companyId)
     .eq("id", membershipId)
-    .select(
-      "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(*)",
-    )
+    .select(MEMBERSHIP_PROFILE_SELECT)
     .single();
 
   if (error) {
@@ -349,9 +347,7 @@ export async function updateMemberStatus(
     .update({ status: targetStatus })
     .eq("company_id", companyId)
     .eq("id", membershipId)
-    .select(
-      "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, created_at, updated_at, company_id, profile:profiles!company_memberships_user_id_fkey(*)",
-    )
+    .select(MEMBERSHIP_PROFILE_SELECT)
     .single();
 
   if (error) {
@@ -788,6 +784,7 @@ export async function createTeamInvite(
       invited_by: actor.userId,
       invited_at: new Date().toISOString(),
       joined_at: null,
+      reports_to_member_id: null,
     })
     .select(
       "id, user_id, role, status, invite_email, invited_by, invited_at, joined_at, created_at, updated_at, company_id",
@@ -907,4 +904,107 @@ export async function cancelPendingTeamInvite(
       inviteEmail: data.invite_email?.trim() ?? "",
     },
   };
+}
+
+export type UpdateMemberReportsToResult = {
+  member?: TeamMember;
+  error?: string;
+};
+
+async function fetchCompanyMembershipRoster(
+  companyId: string,
+): Promise<CompanyMembershipRow[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("company_memberships")
+    .select("id, reports_to_member_id")
+    .eq("company_id", companyId);
+
+  if (error) {
+    console.error("[fetchCompanyMembershipRoster] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return (data ?? []) as CompanyMembershipRow[];
+}
+
+export async function updateMemberReportsTo(
+  companyId: string,
+  membershipId: string,
+  reportsToMemberId: string | null,
+  actor: MemberRoleActor,
+): Promise<UpdateMemberReportsToResult> {
+  const actorError = assertTeamManagementActor(actor);
+  if (actorError) {
+    return { error: actorError };
+  }
+
+  const membership = await getCompanyMembershipById(companyId, membershipId);
+
+  if (!membership) {
+    return { error: "Team member not found in this company." };
+  }
+
+  const normalizedReportsToMemberId = reportsToMemberId?.trim() || null;
+
+  if (normalizedReportsToMemberId === membership.reports_to_member_id) {
+    const member = await fetchCompanyMemberById(companyId, membershipId);
+    return member ? { member } : { error: "Team member not found." };
+  }
+
+  const managerMembership = normalizedReportsToMemberId
+    ? await getCompanyMembershipById(companyId, normalizedReportsToMemberId)
+    : null;
+
+  const roster = await fetchCompanyMembershipRoster(companyId);
+  const validationError = validateMemberReportsToChange({
+    membership,
+    reportsToMemberId: normalizedReportsToMemberId,
+    managerMembership,
+    roster,
+  });
+
+  if (validationError) {
+    return { error: validationError };
+  }
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("company_memberships")
+    .update({ reports_to_member_id: normalizedReportsToMemberId })
+    .eq("company_id", companyId)
+    .eq("id", membershipId)
+    .select(MEMBERSHIP_PROFILE_SELECT)
+    .single();
+
+  if (error) {
+    console.error("[updateMemberReportsTo] update failed:", {
+      companyId,
+      membershipId,
+      reportsToMemberId: normalizedReportsToMemberId,
+      code: error.code,
+      message: error.message,
+    });
+    return { error: mapDatabaseError(error) };
+  }
+
+  const row = data as MembershipProfileRow;
+
+  const member = mapMembershipToTeamMember({
+    ...row,
+    profile: row.profile,
+    invite_email: row.invite_email,
+  });
+
+  if (!member) {
+    return { error: "Updated membership could not be loaded." };
+  }
+
+  return { member };
 }

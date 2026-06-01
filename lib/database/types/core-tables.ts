@@ -68,6 +68,7 @@ export type CompanyMembershipRow = {
   invited_by: UUID | null;
   invited_at: Timestamp | null;
   joined_at: Timestamp | null;
+  reports_to_member_id: UUID | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };

@@ -11,6 +11,7 @@ export type TeamMember = {
   status: MembershipStatus;
   joinedAt: string | null;
   createdAt: string;
+  reportsToMemberId: string | null;
 };
 
 export type CompanyProfileSummary = {
@@ -104,6 +105,7 @@ export function mapMembershipToTeamMember(
     | "status"
     | "joined_at"
     | "created_at"
+    | "reports_to_member_id"
   > & {
     profile: MembershipWithProfile["profile"] | null;
     invite_email?: string | null;
@@ -126,6 +128,7 @@ export function mapMembershipToTeamMember(
       status: membership.status,
       joinedAt: membership.joined_at,
       createdAt: membership.created_at,
+      reportsToMemberId: membership.reports_to_member_id,
     };
   }
 
@@ -139,6 +142,7 @@ export function mapMembershipToTeamMember(
       status: membership.status,
       joinedAt: membership.joined_at,
       createdAt: membership.created_at,
+      reportsToMemberId: membership.reports_to_member_id,
     };
   }
 

@@ -6,6 +6,7 @@ import {
   Bell,
   Building2,
   CreditCard,
+  GitBranch,
   Plug,
   Settings2,
   ShieldCheck,
@@ -35,6 +36,7 @@ import { TeamInviteForm } from "./TeamInviteForm";
 import { TeamMemberMobileCards } from "./TeamMemberMobileCards";
 import { TeamMembersEmptyState } from "./TeamMembersEmptyState";
 import { TeamMembersTable } from "./TeamMembersTable";
+import { CompanyOrgTreeSheet } from "./CompanyOrgTreeSheet";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 
@@ -79,6 +81,7 @@ export function SettingsPageView({
   const [roleError, setRoleError] = useState<string | null>(null);
   const [roleSuccess, setRoleSuccess] = useState<string | null>(null);
   const [inviteExpanded, setInviteExpanded] = useState(false);
+  const [orgTreeOpen, setOrgTreeOpen] = useState(false);
 
   const invitableRoles = useMemo(
     () => getInvitableTeamRoles(currentUserRole),
@@ -296,21 +299,32 @@ export function SettingsPageView({
                 <h3 className="text-sm font-semibold text-slate-900">Members</h3>
                 <p className="admin-text-helper mt-0.5 hidden sm:block">
                   {canManageTeam
-                    ? "Invite teammates and assign roles."
+                    ? "Invite teammates, assign roles, and map reporting lines."
                     : "Roster is limited to owner and admin roles."}
                 </p>
               </div>
-              {canInviteMembers ? (
+              <div className="flex shrink-0 items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setInviteExpanded((open) => !open)}
-                  aria-expanded={inviteExpanded}
-                  className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-cyan-200 bg-cyan-50/60 px-2.5 py-1.5 text-xs font-semibold text-cyan-800 transition-colors hover:bg-cyan-50 md:hidden"
+                  onClick={() => setOrgTreeOpen(true)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
                 >
-                  <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
-                  {inviteExpanded ? "Close" : "Invite member"}
+                  <GitBranch className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="hidden sm:inline">View company tree</span>
+                  <span className="sm:hidden">Org tree</span>
                 </button>
-              ) : null}
+                {canInviteMembers ? (
+                  <button
+                    type="button"
+                    onClick={() => setInviteExpanded((open) => !open)}
+                    aria-expanded={inviteExpanded}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-cyan-200 bg-cyan-50/60 px-2.5 py-1.5 text-xs font-semibold text-cyan-800 transition-colors hover:bg-cyan-50 md:hidden"
+                  >
+                    <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
+                    {inviteExpanded ? "Close" : "Invite member"}
+                  </button>
+                ) : null}
+              </div>
             </div>
             <input
               type="search"
@@ -369,6 +383,7 @@ export function SettingsPageView({
             <>
               <TeamMemberMobileCards
                 members={filteredMembers}
+                allMembers={members}
                 currentUserId={currentUserId}
                 currentUserRole={currentUserRole}
                 canManageTeam={canManageTeam}
@@ -379,6 +394,7 @@ export function SettingsPageView({
               />
               <TeamMembersTable
                 members={filteredMembers}
+                allMembers={members}
                 currentUserId={currentUserId}
                 currentUserRole={currentUserRole}
                 canManageTeam={canManageTeam}
@@ -389,6 +405,12 @@ export function SettingsPageView({
               />
             </>
           ) : null}
+
+          <CompanyOrgTreeSheet
+            open={orgTreeOpen}
+            onClose={() => setOrgTreeOpen(false)}
+            members={members}
+          />
         </section>
       </SettingsSection>
 

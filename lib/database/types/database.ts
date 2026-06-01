@@ -118,6 +118,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "company_memberships_reports_to_member_id_fkey";
+            columns: ["reports_to_member_id"];
+            isOneToOne: false;
+            referencedRelation: "company_memberships";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "company_memberships_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;

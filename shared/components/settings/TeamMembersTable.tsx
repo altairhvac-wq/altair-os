@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { formatDate } from "@/shared/types/customer";
 import {
   canActorCancelInvite,
+  canActorEditMemberReportsTo,
   canActorEditMemberRole,
   canActorReactivateMember,
   canActorSuspendMember,
@@ -12,6 +13,7 @@ import {
   validateMemberSuspension,
 } from "@/lib/database/services/member-role-guard";
 import type { CompanyRole } from "@/lib/database/types/enums";
+import { getActiveReportsToOptions } from "@/shared/lib/company-org-tree";
 import {
   formatTeamMemberRole,
   getTeamMemberInitials,
@@ -22,13 +24,16 @@ import {
   cancelTeamInviteAction,
   reactivateTeamMemberAction,
   suspendTeamMemberAction,
+  updateMemberReportsToAction,
   updateMemberRoleAction,
 } from "@/app/actions/memberships";
 import { CopyTeamInviteLinkButton } from "./CopyTeamInviteLinkButton";
 import { MembershipStatusBadge } from "./MembershipStatusBadge";
+import { ReportsToSelectorField } from "./ReportsToSelectorField";
 
 type TeamMembersTableProps = {
   members: TeamMember[];
+  allMembers: TeamMember[];
   currentUserId: string;
   currentUserRole: CompanyRole;
   canManageTeam: boolean;
@@ -74,6 +79,7 @@ function getMemberSubject(member: TeamMember) {
 
 export function TeamMembersTable({
   members,
+  allMembers,
   currentUserId,
   currentUserRole,
   canManageTeam,
@@ -151,6 +157,41 @@ export function TeamMembersTable({
     }
 
     applyRoleChange(member.id, newRole, member.name);
+  }
+
+  function handleReportsToChange(
+    member: TeamMember,
+    reportsToMemberId: string | null,
+  ) {
+    if (isPending || reportsToMemberId === member.reportsToMemberId) {
+      return;
+    }
+
+    setPendingMembershipId(member.id);
+
+    startTransition(async () => {
+      const result = await updateMemberReportsToAction(
+        member.id,
+        reportsToMemberId,
+      );
+      setPendingMembershipId(null);
+
+      if (result.error) {
+        onRoleChangeError?.(result.error);
+        return;
+      }
+
+      if (result.member) {
+        onMemberUpdated(result.member);
+        onRoleChangeSuccess?.(
+          reportsToMemberId
+            ? `${member.name}'s reporting line has been updated.`
+            : `${member.name} no longer reports to a manager.`,
+        );
+      } else {
+        onRoleChangeError?.("Failed to update reporting relationship.");
+      }
+    });
   }
 
   function handleStatusAction(membershipId: string, action: PendingStatusAction) {
@@ -252,6 +293,9 @@ export function TeamMembersTable({
           <tr className="border-b border-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <th className="px-4 py-3 lg:px-6">Member</th>
             <th className="px-4 py-3">Role</th>
+            {canManageTeam ? (
+              <th className="hidden px-4 py-3 xl:table-cell">Reports to</th>
+            ) : null}
             <th className="px-4 py-3">Status</th>
             <th className="hidden px-4 py-3 lg:table-cell">Date</th>
             {canManageTeam ? <th className="px-4 py-3 lg:px-6">Actions</th> : null}
@@ -265,6 +309,17 @@ export function TeamMembersTable({
             const canEditRole =
               canManageTeam &&
               canActorEditMemberRole(currentUserRole, currentUserId, memberSubject);
+            const canEditReportsTo =
+              canManageTeam &&
+              canActorEditMemberReportsTo(
+                currentUserRole,
+                currentUserId,
+                memberSubject,
+              );
+            const reportsToOptions = getActiveReportsToOptions(
+              allMembers,
+              member.id,
+            );
             const canSuspend =
               canManageTeam &&
               canActorSuspendMember(
@@ -360,6 +415,30 @@ export function TeamMembersTable({
                     </span>
                   )}
                 </td>
+                {canManageTeam ? (
+                  <td className="hidden px-4 py-3 xl:table-cell">
+                    {canEditReportsTo ? (
+                      <ReportsToSelectorField
+                        value={member.reportsToMemberId}
+                        options={reportsToOptions}
+                        onChange={(nextReportsToMemberId) =>
+                          handleReportsToChange(member, nextReportsToMemberId)
+                        }
+                        disabled={isActionLocked}
+                        compact
+                        aria-label={`Reports to for ${member.name}`}
+                      />
+                    ) : member.reportsToMemberId ? (
+                      <span className="text-sm text-slate-600">
+                        {allMembers.find(
+                          (item) => item.id === member.reportsToMemberId,
+                        )?.name ?? "Unknown"}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-slate-400">—</span>
+                    )}
+                  </td>
+                ) : null}
                 <td className="px-4 py-3">
                   <MembershipStatusBadge status={member.status} />
                 </td>

@@ -1,6 +1,7 @@
 import type { CompanyMembershipRow } from "@/lib/database/types/core-tables";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import { compareCompanyRoles } from "@/lib/database/types/roles";
+import { wouldCreateReportingCycle } from "@/shared/lib/company-org-tree";
 import {
   INVITABLE_TEAM_ROLES,
   isInvitableTeamRole,
@@ -265,6 +266,92 @@ export function validatePendingInviteCancellation({
 }): string | null {
   if (membership.status !== "invited" || membership.user_id) {
     return "Only pending invitations can be cancelled.";
+  }
+
+  return null;
+}
+
+export function canActorEditMemberReportsTo(
+  actorRole: CompanyRole,
+  actorUserId: string,
+  member: MemberRoleSubject,
+): boolean {
+  if (member.status === "invited" && !member.user_id) {
+    return false;
+  }
+
+  if (member.user_id === actorUserId) {
+    return false;
+  }
+
+  if (member.status === "suspended" || member.role === "customer") {
+    return false;
+  }
+
+  if (
+    actorRole !== "owner" &&
+    compareCompanyRoles(member.role, actorRole)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+type ValidateMemberReportsToChangeInput = {
+  membership: Pick<CompanyMembershipRow, "id" | "status" | "user_id" | "role">;
+  reportsToMemberId: string | null;
+  managerMembership: Pick<
+    CompanyMembershipRow,
+    "id" | "company_id" | "status" | "user_id"
+  > | null;
+  roster: Array<Pick<CompanyMembershipRow, "id" | "reports_to_member_id">>;
+};
+
+export function validateMemberReportsToChange({
+  membership,
+  reportsToMemberId,
+  managerMembership,
+  roster,
+}: ValidateMemberReportsToChangeInput): string | null {
+  if (membership.status === "invited" && !membership.user_id) {
+    return "Pending invitations cannot be assigned a manager.";
+  }
+
+  if (membership.status !== "active") {
+    return "Only active members can be assigned a manager.";
+  }
+
+  if (!reportsToMemberId) {
+    return null;
+  }
+
+  if (reportsToMemberId === membership.id) {
+    return "A member cannot report to themselves.";
+  }
+
+  if (!managerMembership) {
+    return "Selected manager was not found in this company.";
+  }
+
+  if (managerMembership.status !== "active" || !managerMembership.user_id) {
+    return "Reports-to must be an active team member.";
+  }
+
+  if (
+    wouldCreateReportingCycle(
+      roster.map((row) => ({
+        id: row.id,
+        reportsToMemberId:
+          row.id === membership.id
+            ? reportsToMemberId
+            : row.reports_to_member_id,
+      })),
+      membership.id,
+      reportsToMemberId,
+    )
+  ) {
+    return "This reporting assignment would create a cycle.";
   }
 
   return null;
