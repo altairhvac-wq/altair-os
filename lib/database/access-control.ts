@@ -372,7 +372,11 @@ export function canAccessAdminNavItem(
     case "/time-clock":
       return canViewCompanyTimeEntries(context);
     case "/network":
-      return permissions.dispatchJobs || permissions.manageCompany;
+      return (
+        permissions.dispatchJobs ||
+        permissions.manageCompany ||
+        permissions.manageBilling
+      );
     case "/reports":
       return access.canViewOperationalReports;
     case "/alpha-tracker":
@@ -491,8 +495,11 @@ export function canAccessAppRedirectPath(
   }
 
   if (path.startsWith("/network")) {
+    const permissions = context.permissions;
     return (
-      context.permissions.dispatchJobs || context.permissions.manageCompany
+      permissions.dispatchJobs ||
+      permissions.manageCompany ||
+      permissions.manageBilling
     );
   }
 

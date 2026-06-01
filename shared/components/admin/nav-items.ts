@@ -87,7 +87,7 @@ export const adminNavItems: NavItem[] = [
     label: "Network",
     href: "/network",
     icon: Network,
-    description: "Subcontractor networking and bids",
+    description: "Trusted partners, overflow work, and coverage (early access)",
   },
   {
     label: "Reports",

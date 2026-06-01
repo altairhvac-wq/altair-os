@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
-import { isAlphaHardeningEnabled } from "@/lib/beta/alpha-hardening";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { ComingSoonView } from "@/shared/components/layout/ComingSoonView";
+import { canAccessAdminNavItem } from "@/lib/database/access-control";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
-import { NetworkPageView } from "@/shared/components/network/NetworkPageView";
+import { NetworkBetaPageView } from "@/shared/components/network/NetworkBetaPageView";
 
 export default async function NetworkPage() {
   const companyContext = await getActiveCompanyContext();
@@ -12,23 +11,11 @@ export default async function NetworkPage() {
     redirect("/setup");
   }
 
-  if (
-    !companyContext.permissions.dispatchJobs &&
-    !companyContext.permissions.manageCompany
-  ) {
+  if (!canAccessAdminNavItem(companyContext, "/network")) {
     return (
-      <UnauthorizedAccessView description="Network access is limited to dispatchers and company admins." />
+      <UnauthorizedAccessView description="Network access is limited to company owners, admins, dispatchers, and office staff." />
     );
   }
 
-  if (isAlphaHardeningEnabled()) {
-    return (
-      <ComingSoonView
-        title="Network coming soon"
-        description="Subcontractor networking and bid workflows are in development and hidden during the internal alpha."
-      />
-    );
-  }
-
-  return <NetworkPageView />;
+  return <NetworkBetaPageView />;
 }

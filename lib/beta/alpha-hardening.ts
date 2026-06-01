@@ -11,7 +11,7 @@ export function isAlphaHardeningEnabled(): boolean {
 }
 
 /** Admin nav items hidden during internal alpha (routes remain reachable for dev). */
-export const ALPHA_HIDDEN_ADMIN_NAV_HREFS = ["/network"] as const;
+export const ALPHA_HIDDEN_ADMIN_NAV_HREFS = [] as const;
 
 /** Billing-adjacent pages shown as Coming Soon during alpha. */
 export const ALPHA_COMING_SOON_PATH_PREFIXES = [] as const;
