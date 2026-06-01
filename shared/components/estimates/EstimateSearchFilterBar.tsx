@@ -3,6 +3,7 @@ import {
   ESTIMATE_STATUS_OPTIONS,
   type EstimateStatus,
 } from "@/shared/types/estimate";
+import { InvoiceBatchSelectAllControl } from "@/shared/components/invoices/InvoiceBatchSelectAllControl";
 
 type EstimateSearchFilterBarProps = {
   search: string;
@@ -11,6 +12,12 @@ type EstimateSearchFilterBarProps = {
   onStatusFilterChange: (value: EstimateStatus | "all") => void;
   resultCount: number;
   showStatusFilter?: boolean;
+  batchSelectAllControl?: {
+    selectableCount: number;
+    allEligibleSelected: boolean;
+    onCheckAll: () => void;
+    onClearSelection: () => void;
+  };
 };
 
 export function EstimateSearchFilterBar({
@@ -20,6 +27,7 @@ export function EstimateSearchFilterBar({
   onStatusFilterChange,
   resultCount,
   showStatusFilter = true,
+  batchSelectAllControl,
 }: EstimateSearchFilterBarProps) {
   return (
     <div className="shrink-0 border-b border-slate-100/90 bg-slate-50/40 px-4 py-2.5">
@@ -53,6 +61,9 @@ export function EstimateSearchFilterBar({
                 ))}
               </select>
             </div>
+          ) : null}
+          {batchSelectAllControl ? (
+            <InvoiceBatchSelectAllControl {...batchSelectAllControl} />
           ) : null}
           <p className="admin-text-helper hidden whitespace-nowrap sm:block">
             {resultCount} {resultCount === 1 ? "estimate" : "estimates"}

@@ -42,6 +42,7 @@ import {
   type FieldEstimateFormData,
 } from "@/shared/types/estimate";
 import { applyEstimateCreationDefaults } from "@/shared/lib/company-billing-defaults";
+import { formatActionError } from "@/shared/lib/operational-errors";
 
 async function buildEstimateApprovalEmailUrl(input: {
   companyId: string;
@@ -493,6 +494,96 @@ export async function updateEstimateStatusAction(
   }
 
   return { estimate };
+}
+
+export type BatchSendEstimateResultItem = {
+  estimateId: string;
+  estimateNumber: string;
+  success: boolean;
+  error?: string;
+  estimate?: EstimateDetail;
+};
+
+export type BatchSendEstimatesActionResult = {
+  error?: string;
+  results: BatchSendEstimateResultItem[];
+  successCount: number;
+  failureCount: number;
+};
+
+export async function batchSendEstimatesAction(
+  estimateIds: string[],
+): Promise<BatchSendEstimatesActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return {
+      error: NO_ACTIVE_COMPANY_MESSAGE,
+      results: [],
+      successCount: 0,
+      failureCount: 0,
+    };
+  }
+
+  if (!context.permissions.manageBilling) {
+    return {
+      error: "You do not have permission to send estimates.",
+      results: [],
+      successCount: 0,
+      failureCount: 0,
+    };
+  }
+
+  const uniqueIds = [...new Set(estimateIds.map((id) => id.trim()).filter(Boolean))];
+
+  if (uniqueIds.length === 0) {
+    return {
+      error: "Select at least one estimate to send.",
+      results: [],
+      successCount: 0,
+      failureCount: 0,
+    };
+  }
+
+  const results: BatchSendEstimateResultItem[] = [];
+  let successCount = 0;
+  let failureCount = 0;
+
+  for (const estimateId of uniqueIds) {
+    const sendResult = await updateEstimateStatusAction(estimateId, "draft", "sent");
+
+    if (sendResult.error || !sendResult.estimate) {
+      const currentEstimate = await getEstimateById(context.company.id, estimateId);
+
+      results.push({
+        estimateId,
+        estimateNumber: currentEstimate?.estimateNumber ?? estimateId,
+        success: false,
+        error: formatActionError(
+          sendResult.error,
+          "We couldn't send this estimate. Try again.",
+        ),
+      });
+      failureCount += 1;
+      continue;
+    }
+
+    results.push({
+      estimateId,
+      estimateNumber: sendResult.estimate.estimateNumber,
+      success: true,
+      estimate: sendResult.estimate,
+    });
+    successCount += 1;
+  }
+
+  revalidatePath("/estimates");
+
+  return {
+    results,
+    successCount,
+    failureCount,
+  };
 }
 
 export type ResendEstimateEmailActionResult = {

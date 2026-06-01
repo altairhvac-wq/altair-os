@@ -42,7 +42,7 @@ type EstimateRowWithRelations = EstimateRow & {
 
 const ESTIMATE_LIST_SELECT = `
   *,
-  customers(name),
+  customers(name, email),
   jobs(job_number),
   estimate_line_items(id)
 `;
@@ -97,6 +97,7 @@ export function mapEstimateRowToEstimate(
     estimateNumber: row.estimate_number,
     customerId: row.customer_id,
     customerName: row.customers?.name ?? "Unknown customer",
+    customerEmail: row.customers?.email || undefined,
     jobId: row.job_id ?? undefined,
     jobNumber: row.jobs?.job_number ?? undefined,
     status: row.status,

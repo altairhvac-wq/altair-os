@@ -3,8 +3,18 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import { createEstimateAction } from "@/app/actions/estimates";
+import {
+  batchSendEstimatesAction,
+  createEstimateAction,
+} from "@/app/actions/estimates";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import {
+  buildJobsByIdForEstimateBatchSend,
+  formatBatchSendEstimatesResultMessage,
+  resolveEstimateBatchSelectionState,
+  toggleEstimateBatchSelection,
+  toggleEstimateGroupBatchSelection,
+} from "@/shared/lib/estimate-batch-send";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
@@ -16,6 +26,8 @@ import {
 } from "@/shared/types/estimate";
 import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
 import { JobsViewTabs, type TodayAllViewTab } from "@/shared/components/jobs/JobsViewTabs";
+import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
+import { EstimateBatchSelectionBar } from "./EstimateBatchSelectionBar";
 import { EstimateDetailsPanel } from "./EstimateDetailsPanel";
 import { EstimateSearchFilterBar } from "./EstimateSearchFilterBar";
 import { EstimateSummaryCards } from "./EstimateSummaryCards";
@@ -89,12 +101,28 @@ export function EstimatesPageView({
   );
   const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [selectedEstimateIds, setSelectedEstimateIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [batchSendMessage, setBatchSendMessage] = useState<string | null>(null);
+  const [batchSendFailureDetails, setBatchSendFailureDetails] = useState<
+    string[] | null
+  >(null);
+  const [batchSendTone, setBatchSendTone] = useState<
+    "success" | "warning" | "error"
+  >("success");
   const [isPending, startTransition] = useTransition();
+  const [isBatchSending, startBatchSendTransition] = useTransition();
   const router = useRouter();
   const companyTimeZone = useCompanyTimezone();
 
   const jobsById = useMemo(
     () => new Map(jobs.map((job) => [job.id, job])),
+    [jobs],
+  );
+
+  const batchJobsById = useMemo(
+    () => buildJobsByIdForEstimateBatchSend(jobs),
     [jobs],
   );
 
@@ -128,6 +156,132 @@ export function EstimatesPageView({
 
     return prepareEstimatesForListView(filteredEstimates, statusFilter);
   }, [filteredEstimates, statusFilter, viewTab]);
+
+  const visibleEstimates = useMemo(
+    () =>
+      estimateListPresentation.sections.flatMap((section) => section.items),
+    [estimateListPresentation.sections],
+  );
+
+  const selectionEnabled = canManageEstimates;
+  const selectedCount = selectedEstimateIds.size;
+
+  const visibleSelectionState = useMemo(
+    () =>
+      selectionEnabled
+        ? resolveEstimateBatchSelectionState(
+            selectedEstimateIds,
+            visibleEstimates,
+            batchJobsById,
+          )
+        : null,
+    [batchJobsById, selectedEstimateIds, selectionEnabled, visibleEstimates],
+  );
+
+  function handleToggleEstimateSelection(estimateId: string) {
+    setSelectedEstimateIds((previous) =>
+      toggleEstimateBatchSelection(previous, estimateId),
+    );
+    setBatchSendMessage(null);
+    setBatchSendFailureDetails(null);
+  }
+
+  function handleToggleAllVisibleSelection(selectAll: boolean) {
+    setSelectedEstimateIds((previous) =>
+      toggleEstimateGroupBatchSelection(
+        previous,
+        visibleEstimates,
+        selectAll,
+        batchJobsById,
+      ),
+    );
+    setBatchSendMessage(null);
+    setBatchSendFailureDetails(null);
+  }
+
+  function handleClearSelection() {
+    setSelectedEstimateIds(new Set());
+    setBatchSendMessage(null);
+    setBatchSendFailureDetails(null);
+  }
+
+  function handleBatchSendSelected() {
+    if (!selectionEnabled || selectedCount === 0 || isBatchSending) {
+      return;
+    }
+
+    const estimateIds = [...selectedEstimateIds];
+    setBatchSendMessage(null);
+    setBatchSendFailureDetails(null);
+
+    startBatchSendTransition(async () => {
+      const result = await batchSendEstimatesAction(estimateIds);
+
+      if (result.error && result.results.length === 0) {
+        setBatchSendTone("error");
+        setBatchSendMessage(
+          formatActionError(result.error, "We couldn't send the selected estimates."),
+        );
+        return;
+      }
+
+      const failedIds = new Set(
+        result.results.filter((item) => !item.success).map((item) => item.estimateId),
+      );
+      const successfulEstimates = result.results
+        .filter((item) => item.success && item.estimate)
+        .map((item) => item.estimate!);
+
+      if (successfulEstimates.length > 0) {
+        const sentById = new Map(
+          successfulEstimates.map((estimate) => [estimate.id, estimate]),
+        );
+
+        setEstimates((previous) =>
+          previous.map((estimate) => sentById.get(estimate.id) ?? estimate),
+        );
+      }
+
+      setSelectedEstimateIds((previous) => {
+        if (failedIds.size === 0) {
+          return new Set();
+        }
+
+        const next = new Set<string>();
+        for (const estimateId of previous) {
+          if (failedIds.has(estimateId)) {
+            next.add(estimateId);
+          }
+        }
+        return next;
+      });
+
+      const failureDetails = result.results
+        .filter((item) => !item.success)
+        .map(
+          (item) => `${item.estimateNumber}: ${item.error ?? "Could not be sent."}`,
+        );
+
+      setBatchSendFailureDetails(failureDetails.length > 0 ? failureDetails : null);
+      setBatchSendTone(
+        result.successCount > 0
+          ? result.failureCount > 0
+            ? "warning"
+            : "success"
+          : "error",
+      );
+      setBatchSendMessage(
+        formatBatchSendEstimatesResultMessage({
+          successCount: result.successCount,
+          failureCount: result.failureCount,
+        }),
+      );
+
+      if (result.successCount > 0) {
+        router.refresh();
+      }
+    });
+  }
 
   function handleSelectEstimate(estimate: Estimate) {
     router.push(`/estimates/${estimate.id}`);
@@ -225,7 +379,37 @@ export function EstimatesPageView({
             onStatusFilterChange={setStatusFilter}
             resultCount={filteredEstimates.length}
             showStatusFilter={viewTab === "all"}
+            batchSelectAllControl={
+              selectionEnabled &&
+              visibleSelectionState &&
+              visibleSelectionState.selectableCount > 0 &&
+              !hasNoResults
+                ? {
+                    selectableCount: visibleSelectionState.selectableCount,
+                    allEligibleSelected: visibleSelectionState.allSelected,
+                    onCheckAll: () => handleToggleAllVisibleSelection(true),
+                    onClearSelection: handleClearSelection,
+                  }
+                : undefined
+            }
           />
+        ) : null}
+
+        {batchSendMessage ? (
+          <div className="shrink-0 border-b border-slate-100/90 px-4 py-3 sm:px-5">
+            <SettingsAlertBanner tone={batchSendTone}>
+              <div>
+                <p>{batchSendMessage}</p>
+                {batchSendFailureDetails?.length ? (
+                  <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                    {batchSendFailureDetails.map((detail) => (
+                      <li key={detail}>{detail}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </SettingsAlertBanner>
+          </div>
         ) : null}
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
@@ -248,8 +432,22 @@ export function EstimatesPageView({
               sections={estimateListPresentation.sections}
               showSectionHeaders={estimateListPresentation.showSectionHeaders}
               onSelect={handleSelectEstimate}
+              selectionEnabled={selectionEnabled}
+              selectedIds={selectedEstimateIds}
+              jobsById={batchJobsById}
+              onToggleSelection={handleToggleEstimateSelection}
+              onToggleAllVisible={handleToggleAllVisibleSelection}
             />
           )}
+
+          {selectionEnabled ? (
+            <EstimateBatchSelectionBar
+              selectedCount={selectedCount}
+              isSending={isBatchSending}
+              onSendSelected={handleBatchSendSelected}
+              onClearSelection={handleClearSelection}
+            />
+          ) : null}
         </div>
       </section>
 
