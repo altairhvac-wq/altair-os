@@ -17,6 +17,8 @@ type JobSearchFilterBarProps = {
   onPriorityFilterChange?: (value: JobPriority | "all") => void;
   showJobFilters?: boolean;
   unassignedOnly?: boolean;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
 };
 
 const filterSelectClass =
@@ -33,6 +35,8 @@ export function JobSearchFilterBar({
   onPriorityFilterChange,
   showJobFilters = false,
   unassignedOnly = false,
+  hasActiveFilters = false,
+  onClearFilters,
 }: JobSearchFilterBarProps) {
   return (
     <div className="shrink-0 border-b border-slate-100/90 bg-white px-3 py-2 sm:px-4">
@@ -90,11 +94,22 @@ export function JobSearchFilterBar({
       </div>
 
       {search.trim() || showJobFilters || unassignedOnly ? (
-        <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">
-          {resultCount}{" "}
-          {resultCount === 1 ? resultLabel.replace(/s$/, "") : resultLabel}
-          {unassignedOnly ? " · Unassigned only" : ""}
-        </p>
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500 sm:text-xs">
+          <span>
+            {resultCount}{" "}
+            {resultCount === 1 ? resultLabel.replace(/s$/, "") : resultLabel}
+            {unassignedOnly ? " · Unassigned only" : ""}
+          </span>
+          {hasActiveFilters && onClearFilters ? (
+            <button
+              type="button"
+              onClick={onClearFilters}
+              className="font-medium text-cyan-700 hover:text-cyan-800"
+            >
+              Clear filters
+            </button>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

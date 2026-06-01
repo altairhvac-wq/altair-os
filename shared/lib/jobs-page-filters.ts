@@ -1,5 +1,6 @@
 import type { JobPriority, JobStatus } from "@/shared/types/job";
 import type { DispatchSummaryHighlightLabel } from "@/shared/lib/dispatch-page-focus";
+import type { Job } from "@/shared/types/job";
 
 export type JobsViewTab = "today" | "all";
 
@@ -66,20 +67,11 @@ export function parseJobsPageSearchParams(params: {
   unassigned?: string;
   priority?: string;
 }): JobsPageFilters {
-  const statusFilter = parseJobStatusParam(params.status);
-  const unassignedOnly = parseUnassignedParam(params.unassigned);
-  const priorityFilter = parseJobPriorityParam(params.priority);
-  const hasAllTabFilters =
-    statusFilter !== "all" || unassignedOnly || priorityFilter !== "all";
-
   return {
-    viewTab:
-      params.view === "all" || hasAllTabFilters
-        ? "all"
-        : parseJobsViewParam(params.view),
-    statusFilter,
-    priorityFilter,
-    unassignedOnly,
+    viewTab: parseJobsViewParam(params.view),
+    statusFilter: parseJobStatusParam(params.status),
+    priorityFilter: parseJobPriorityParam(params.priority),
+    unassignedOnly: parseUnassignedParam(params.unassigned),
   };
 }
 
@@ -101,9 +93,7 @@ export function buildJobsPageHref(
   const priorityFilter = filters.priorityFilter ?? "all";
   const unassignedOnly = filters.unassignedOnly ?? false;
 
-  if (viewTab === "all") {
-    params.set("view", "all");
-  }
+  params.set("view", viewTab === "all" ? "all" : "today");
 
   if (statusFilter !== "all") {
     params.set("status", statusFilter);
@@ -126,13 +116,51 @@ const DISPATCH_SUMMARY_CARD_FILTER_MAP: Record<
   Partial<JobsPageFilters>
 > = {
   "Scheduled Today": { viewTab: "today" },
-  "In Progress": { viewTab: "all", statusFilter: "in_progress" },
-  Unassigned: { viewTab: "all", unassignedOnly: true },
-  Completed: { viewTab: "all", statusFilter: "completed" },
+  "In Progress": { viewTab: "today", statusFilter: "in_progress" },
+  Unassigned: { viewTab: "today", unassignedOnly: true },
+  Completed: { viewTab: "today", statusFilter: "completed" },
 };
 
 export function getDispatchSummaryCardHref(
   label: DispatchSummaryHighlightLabel,
 ): string {
   return buildJobsPageHref(DISPATCH_SUMMARY_CARD_FILTER_MAP[label]);
+}
+
+/** Matches dispatch "In Progress" card: on site or actively working. */
+const IN_PROGRESS_DISPATCH_STATUSES = new Set<JobStatus>([
+  "arrived",
+  "in_progress",
+]);
+
+export function filterJobsByPageFilters(
+  jobs: Job[],
+  statusFilter: JobStatus | "all",
+  priorityFilter: JobPriority | "all",
+  unassignedOnly: boolean,
+  options?: { matchDispatchInProgressCard?: boolean },
+): Job[] {
+  return jobs.filter((job) => {
+    const matchesStatus =
+      statusFilter === "all"
+        ? true
+        : statusFilter === "in_progress" &&
+            options?.matchDispatchInProgressCard
+          ? IN_PROGRESS_DISPATCH_STATUSES.has(job.status)
+          : job.status === statusFilter;
+    const matchesPriority =
+      priorityFilter === "all" || job.priority === priorityFilter;
+    const matchesUnassigned =
+      !unassignedOnly || !job.assignedTechnicianId;
+
+    return matchesStatus && matchesPriority && matchesUnassigned;
+  });
+}
+
+export function hasActiveJobsPageFilters(filters: JobsPageFilters): boolean {
+  return (
+    filters.statusFilter !== "all" ||
+    filters.priorityFilter !== "all" ||
+    filters.unassignedOnly
+  );
 }

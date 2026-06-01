@@ -10,6 +10,8 @@ import { sortJobsForOwnerView } from "@/shared/lib/jobs-owner-view-sort";
 import { isJobOnOperationalDay } from "@/shared/lib/scheduled-today";
 import {
   buildJobsPageHref,
+  filterJobsByPageFilters,
+  hasActiveJobsPageFilters,
   parseJobsPageSearchParams,
   type JobsViewTab,
 } from "@/shared/lib/jobs-page-filters";
@@ -45,24 +47,6 @@ type JobsPageViewProps = {
   initialPriorityFilter?: JobPriority | "all";
   initialUnassignedOnly?: boolean;
 };
-
-function filterAllJobs(
-  jobs: Job[],
-  statusFilter: JobStatus | "all",
-  priorityFilter: JobPriority | "all",
-  unassignedOnly: boolean,
-): Job[] {
-  return jobs.filter((job) => {
-    const matchesStatus =
-      statusFilter === "all" || job.status === statusFilter;
-    const matchesPriority =
-      priorityFilter === "all" || job.priority === priorityFilter;
-    const matchesUnassigned =
-      !unassignedOnly || !job.assignedTechnicianId;
-
-    return matchesStatus && matchesPriority && matchesUnassigned;
-  });
-}
 
 function filterCustomers(customers: Customer[], search: string): Customer[] {
   const query = search.trim().toLowerCase();
@@ -154,16 +138,10 @@ export function JobsPageView({
       setViewTab(nextTab);
       syncFiltersToUrl({
         viewTab: nextTab,
-        statusFilter: nextTab === "today" ? "all" : statusFilter,
-        priorityFilter: nextTab === "today" ? "all" : priorityFilter,
-        unassignedOnly: nextTab === "today" ? false : unassignedOnly,
+        statusFilter,
+        priorityFilter,
+        unassignedOnly,
       });
-
-      if (nextTab === "today") {
-        setStatusFilter("all");
-        setPriorityFilter("all");
-        setUnassignedOnly(false);
-      }
     },
     [priorityFilter, statusFilter, syncFiltersToUrl, unassignedOnly],
   );
@@ -172,39 +150,58 @@ export function JobsPageView({
     (value: JobStatus | "all") => {
       setStatusFilter(value);
       syncFiltersToUrl({
-        viewTab: "all",
+        viewTab,
         statusFilter: value,
         priorityFilter,
         unassignedOnly,
       });
-      setViewTab("all");
     },
-    [priorityFilter, syncFiltersToUrl, unassignedOnly],
+    [priorityFilter, syncFiltersToUrl, unassignedOnly, viewTab],
   );
 
   const handlePriorityFilterChange = useCallback(
     (value: JobPriority | "all") => {
       setPriorityFilter(value);
       syncFiltersToUrl({
-        viewTab: "all",
+        viewTab,
         statusFilter,
         priorityFilter: value,
         unassignedOnly,
       });
-      setViewTab("all");
     },
-    [statusFilter, syncFiltersToUrl, unassignedOnly],
+    [statusFilter, syncFiltersToUrl, unassignedOnly, viewTab],
   );
 
-  const sortedTodayJobs = useMemo(
-    () => sortJobsForOwnerView(todayJobs),
-    [todayJobs],
+  const handleClearFilters = useCallback(() => {
+    setStatusFilter("all");
+    setPriorityFilter("all");
+    setUnassignedOnly(false);
+    syncFiltersToUrl({
+      viewTab,
+      statusFilter: "all",
+      priorityFilter: "all",
+      unassignedOnly: false,
+    });
+  }, [syncFiltersToUrl, viewTab]);
+
+  const filteredTodayJobs = useMemo(
+    () =>
+      sortJobsForOwnerView(
+        filterJobsByPageFilters(
+          todayJobs,
+          statusFilter,
+          priorityFilter,
+          unassignedOnly,
+          { matchDispatchInProgressCard: true },
+        ),
+      ),
+    [todayJobs, statusFilter, priorityFilter, unassignedOnly],
   );
 
   const filteredAllJobs = useMemo(
     () =>
       sortJobsForOwnerView(
-        filterAllJobs(
+        filterJobsByPageFilters(
           jobs,
           statusFilter,
           priorityFilter,
@@ -280,10 +277,19 @@ export function JobsPageView({
   const showCustomerSearchUnavailable = isSearching && customers.length === 0;
   const isCreateOpen = panelMode === "create";
 
+  const hasActiveFilters = hasActiveJobsPageFilters({
+    viewTab,
+    statusFilter,
+    priorityFilter,
+    unassignedOnly,
+  });
+
   const subtitle = isSearching
     ? "Customer search"
     : viewTab === "today"
-      ? `${todayJobs.length} scheduled today`
+      ? hasActiveFilters
+        ? `${filteredTodayJobs.length} of ${todayJobs.length} today`
+        : `${todayJobs.length} scheduled today`
       : `${jobs.length} total jobs`;
 
   function renderMainContent() {
@@ -331,8 +337,15 @@ export function JobsPageView({
         );
       }
 
+      if (filteredTodayJobs.length === 0) {
+        return <JobsEmptyState variant="no-results" />;
+      }
+
       return (
-        <JobsTodayCardList jobs={sortedTodayJobs} onSelect={handleSelectJob} />
+        <JobsTodayCardList
+          jobs={filteredTodayJobs}
+          onSelect={handleSelectJob}
+        />
       );
     }
 
@@ -396,15 +409,21 @@ export function JobsPageView({
           search={search}
           onSearchChange={setSearch}
           resultCount={
-            isSearching ? filteredCustomers.length : filteredAllJobs.length
+            isSearching
+              ? filteredCustomers.length
+              : viewTab === "today"
+                ? filteredTodayJobs.length
+                : filteredAllJobs.length
           }
           resultLabel={isSearching ? "customers" : "jobs"}
           statusFilter={statusFilter}
           priorityFilter={priorityFilter}
           onStatusFilterChange={handleStatusFilterChange}
           onPriorityFilterChange={handlePriorityFilterChange}
-          showJobFilters={!isSearching && viewTab === "all" && !hasNoJobs}
+          showJobFilters={!isSearching && !hasNoJobs}
           unassignedOnly={unassignedOnly}
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={handleClearFilters}
         />
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
