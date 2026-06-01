@@ -29,15 +29,13 @@ export function ListCommandCenterLayout({
     >
       {banners}
 
-      <header className="flex shrink-0 flex-wrap items-start justify-between gap-3">
+      <header className="admin-page-header flex shrink-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           {eyebrow ? (
-            <p className="mb-0.5 text-[10px] font-bold uppercase tracking-widest text-amber-700">
-              {eyebrow}
-            </p>
+            <p className="admin-heading-eyebrow">{eyebrow}</p>
           ) : null}
           <h1 className="admin-heading-page">{title}</h1>
-          <p className="admin-text-helper mt-0.5 max-w-2xl">{subtitle}</p>
+          <p className="admin-text-helper mt-1 max-w-2xl">{subtitle}</p>
         </div>
         {primaryAction || secondaryAction ? (
           <div className="flex shrink-0 items-center gap-2">

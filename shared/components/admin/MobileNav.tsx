@@ -34,8 +34,8 @@ function MobileNavLink({ item, active, onNavigate }: MobileNavLinkProps) {
       onClick={onNavigate}
       className={`flex min-h-14 min-w-0 flex-1 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${
         active
-          ? "bg-cyan-500/12 text-cyan-800 ring-1 ring-cyan-500/15"
-          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          ? "bg-cyan-500/12 text-cyan-900 ring-1 ring-cyan-500/18 shadow-[0_1px_2px_rgb(6_182_212_/_0.08)]"
+          : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
       }`}
     >
       <Icon className={`h-5 w-5 shrink-0 ${active ? "stroke-[2.5] text-cyan-700" : ""}`} />

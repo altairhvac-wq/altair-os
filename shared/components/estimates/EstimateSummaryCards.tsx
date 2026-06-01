@@ -61,28 +61,28 @@ export function EstimateSummaryCards({ estimates }: EstimateSummaryCardsProps) {
           value: String(summary.needsAction),
           description: "Drafts and pending follow-up",
           icon: Clock,
-          iconClassName: "text-amber-600 bg-amber-50",
+          iconClassName: "admin-metric-icon-amber",
         },
         {
           label: "Sent / waiting",
           value: String(summary.sentWaiting),
           description: "Awaiting customer response",
           icon: Send,
-          iconClassName: "text-sky-600 bg-sky-50",
+          iconClassName: "admin-metric-icon-teal",
         },
         {
           label: "Approved this month",
           value: String(summary.approvedThisMonth),
           description: "Closed wins this period",
           icon: CheckCircle2,
-          iconClassName: "text-emerald-600 bg-emerald-50",
+          iconClassName: "admin-metric-icon-emerald",
         },
         {
           label: "Open value",
           value: formatCurrency(summary.openValue),
           description: "Estimated total in pipeline",
           icon: FileText,
-          iconClassName: "text-indigo-600 bg-indigo-50",
+          iconClassName: "admin-metric-icon-slate",
         },
       ]}
     />

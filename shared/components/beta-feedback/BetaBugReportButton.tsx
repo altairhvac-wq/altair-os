@@ -123,7 +123,7 @@ export function BetaBugReportButton({
         {showHint ? (
           <div
             role="note"
-            className="relative max-w-[13.5rem] rounded-xl border border-slate-200 bg-white px-3 py-2.5 pr-8 text-xs leading-snug text-slate-600 shadow-md ring-1 ring-slate-900/5"
+            className="relative max-w-[13.5rem] rounded-xl border border-slate-200/80 bg-white/95 px-3 py-2.5 pr-8 text-xs leading-snug text-slate-600 shadow-md ring-1 ring-slate-900/5 backdrop-blur-sm"
           >
             <p>See something broken or confusing?</p>
             <button
@@ -145,10 +145,10 @@ export function BetaBugReportButton({
           type="button"
           onClick={handleOpen}
           aria-label="Send feedback"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-lg ring-1 ring-slate-900/5 transition-colors hover:border-sky-200 hover:bg-sky-50/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-cyan-200/80 bg-white/95 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-lg ring-1 ring-cyan-500/10 backdrop-blur-sm transition-all hover:border-cyan-300 hover:bg-cyan-50/70 hover:text-cyan-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"
         >
           <MessageCircle
-            className="h-4 w-4 shrink-0 text-sky-600"
+            className="h-4 w-4 shrink-0 text-cyan-600"
             aria-hidden="true"
           />
           Feedback

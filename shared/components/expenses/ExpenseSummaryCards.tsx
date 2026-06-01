@@ -19,28 +19,28 @@ export function ExpenseSummaryCards({ expenses }: ExpenseSummaryCardsProps) {
           value: formatCurrency(submittedTotal),
           description: "Awaiting approval",
           icon: Clock,
-          iconClassName: "text-blue-600 bg-blue-50",
+          iconClassName: "admin-metric-icon-amber",
         },
         {
           label: "Approved",
           value: formatCurrency(approvedTotal),
           description: "Approved this period",
           icon: CheckCircle2,
-          iconClassName: "text-emerald-600 bg-emerald-50",
+          iconClassName: "admin-metric-icon-emerald",
         },
         {
           label: "Reimbursable",
           value: formatCurrency(reimbursableTotal),
           description: "Pending reimbursement",
           icon: Wallet,
-          iconClassName: "text-amber-600 bg-amber-50",
+          iconClassName: "admin-metric-icon-teal",
         },
         {
           label: "Total Spent",
           value: formatCurrency(totalSpent),
           description: "Approved + reimbursed",
           icon: DollarSign,
-          iconClassName: "text-violet-600 bg-violet-50",
+          iconClassName: "admin-metric-icon-slate",
         },
       ]}
     />

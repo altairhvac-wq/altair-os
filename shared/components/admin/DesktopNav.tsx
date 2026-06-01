@@ -29,10 +29,10 @@ function DesktopNavLink({ item, active }: DesktopNavLinkProps) {
   return (
     <Link
       href={item.href}
-      className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
+      className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all ${
         active
-          ? "bg-cyan-500/14 text-cyan-900 ring-1 ring-cyan-500/20 shadow-[0_1px_2px_rgb(6_182_212_/_0.08)]"
-          : "text-slate-600 hover:bg-slate-200/55 hover:text-slate-900"
+          ? "bg-cyan-500/12 text-cyan-950 shadow-[0_1px_2px_rgb(6_182_212_/_0.1)] ring-1 ring-cyan-500/22"
+          : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
       }`}
     >
       <Icon
@@ -64,7 +64,7 @@ export function DesktopNav({
   return (
     <nav
       aria-label="Desktop navigation"
-      className="admin-premium-nav relative z-30 hidden w-full max-w-full shrink-0 border-b border-slate-200/90 bg-white shadow-[0_1px_2px_rgb(15_23_42_/_0.03)] md:block"
+      className="admin-premium-nav relative z-30 hidden w-full max-w-full shrink-0 md:block"
     >
       <div className="flex min-w-0 items-center gap-2 px-4 sm:px-6">
         <ul className="flex min-w-0 flex-1 flex-wrap items-center gap-0.5 py-1.5">

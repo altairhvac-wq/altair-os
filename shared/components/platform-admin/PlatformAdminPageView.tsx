@@ -27,17 +27,17 @@ type SummaryCardProps = {
 
 function SummaryCard({ label, value, icon: Icon }: SummaryCardProps) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="admin-metric-card">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            {label}
-          </p>
-          <p className="mt-1 text-2xl font-black tabular-nums tracking-tight text-slate-900">
+          <p className="admin-metric-label">{label}</p>
+          <p className="admin-metric-value mt-1 sm:text-2xl">
             {value.toLocaleString()}
           </p>
         </div>
-        <Icon className="h-5 w-5 shrink-0 text-cyan-700/80" aria-hidden="true" />
+        <div className="admin-metric-icon admin-metric-icon-teal">
+          <Icon className="h-4 w-4" aria-hidden="true" />
+        </div>
       </div>
     </div>
   );
@@ -67,7 +67,7 @@ function RecentList({
   items: { id: string; primary: string; secondary: string; meta: string }[];
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="admin-card admin-card-body">
       <h2 className="text-sm font-bold text-slate-900">{title}</h2>
       {items.length === 0 ? (
         <p className="mt-3 text-sm text-slate-500">No records yet.</p>
@@ -174,8 +174,8 @@ export function PlatformAdminPageView({ data }: PlatformAdminPageViewProps) {
         />
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-4 py-3">
+      <section className="admin-card overflow-hidden">
+        <div className="admin-panel-header px-4 py-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
@@ -188,7 +188,7 @@ export function PlatformAdminPageView({ data }: PlatformAdminPageViewProps) {
             </div>
             <Link
               href="/platform/bugs"
-              className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              className="admin-btn-secondary min-h-9 shrink-0 px-3 py-2 text-xs"
             >
               View all bug reports
             </Link>
@@ -259,8 +259,8 @@ export function PlatformAdminPageView({ data }: PlatformAdminPageViewProps) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-4 py-3">
+      <section className="admin-card overflow-hidden">
+        <div className="admin-panel-header px-4 py-3">
           <h2 className="text-sm font-bold text-slate-900">Platform users</h2>
           <p className="text-xs text-slate-500">
             One row per company membership (invites included).
@@ -313,8 +313,8 @@ export function PlatformAdminPageView({ data }: PlatformAdminPageViewProps) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-4 py-3">
+      <section className="admin-card overflow-hidden">
+        <div className="admin-panel-header px-4 py-3">
           <h2 className="text-sm font-bold text-slate-900">Platform companies</h2>
           <p className="text-xs text-slate-500">
             Usage counts and last activity per workspace.

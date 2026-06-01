@@ -119,7 +119,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={String(jobs.jobsToday)}
             description="Scheduled on today's board"
             icon={CalendarDays}
-            iconClassName="bg-indigo-50 text-indigo-600"
+            iconClassName="admin-metric-icon-teal"
             accentClassName="border-indigo-100"
           />
           <ReportsSummaryCard
@@ -127,7 +127,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={String(jobs.openJobs)}
             description="Not completed or cancelled"
             icon={Briefcase}
-            iconClassName="bg-cyan-50 text-cyan-600"
+            iconClassName="admin-metric-icon-teal"
             accentClassName="border-cyan-100"
           />
           <ReportsSummaryCard
@@ -135,7 +135,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={String(jobs.completedJobs)}
             description="All-time completed count"
             icon={CheckCircle2}
-            iconClassName="bg-emerald-50 text-emerald-600"
+            iconClassName="admin-metric-icon-emerald"
             accentClassName="border-emerald-100"
           />
           <ReportsSummaryCard
@@ -143,7 +143,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={String(jobs.unassignedJobs)}
             description="Open jobs without a technician"
             icon={UserX}
-            iconClassName="bg-amber-50 text-amber-600"
+            iconClassName="admin-metric-icon-amber"
             accentClassName="border-amber-100"
           />
         </div>
@@ -159,7 +159,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={String(invoices.unpaidCount)}
             description={`${formatCurrency(invoices.unpaidTotal)} outstanding`}
             icon={Receipt}
-            iconClassName="bg-amber-50 text-amber-600"
+            iconClassName="admin-metric-icon-amber"
             accentClassName="border-amber-100"
           />
           <ReportsSummaryCard
@@ -167,7 +167,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={formatCurrency(invoices.paidTotal)}
             description="Paid invoice totals"
             icon={DollarSign}
-            iconClassName="bg-emerald-50 text-emerald-600"
+            iconClassName="admin-metric-icon-emerald"
             accentClassName="border-emerald-100"
           />
           <ReportsSummaryCard
@@ -179,7 +179,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
                 : "No overdue balances"
             }
             icon={AlertCircle}
-            iconClassName="bg-rose-50 text-rose-600"
+            iconClassName="admin-metric-icon-rose"
             accentClassName="border-rose-100"
           />
         </div>
@@ -195,7 +195,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={String(estimates.draftCount)}
             description="Not yet sent to customers"
             icon={FileText}
-            iconClassName="bg-slate-100 text-slate-600"
+            iconClassName="admin-metric-icon-slate"
             accentClassName="border-slate-200"
           />
           <ReportsSummaryCard
@@ -203,7 +203,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={String(estimates.sentCount)}
             description="Awaiting customer response"
             icon={Send}
-            iconClassName="bg-blue-50 text-blue-600"
+            iconClassName="admin-metric-icon-teal"
             accentClassName="border-blue-100"
           />
           <ReportsSummaryCard
@@ -211,7 +211,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={String(estimates.approvedCount)}
             description="Accepted by customers"
             icon={CheckCircle2}
-            iconClassName="bg-emerald-50 text-emerald-600"
+            iconClassName="admin-metric-icon-emerald"
             accentClassName="border-emerald-100"
           />
         </div>
@@ -236,7 +236,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
                 : "Open job-labor entries"
             }
             icon={Wrench}
-            iconClassName="bg-cyan-50 text-cyan-600"
+            iconClassName="admin-metric-icon-teal"
             accentClassName="border-cyan-100"
           />
           <ReportsSummaryCard
@@ -244,7 +244,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={String(labor.startedTodayCount)}
             description="Technicians with a shift clock today"
             icon={CalendarDays}
-            iconClassName="bg-indigo-50 text-indigo-600"
+            iconClassName="admin-metric-icon-teal"
             accentClassName="border-indigo-100"
           />
           <ReportsSummaryCard
@@ -252,7 +252,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={`${labor.totalHoursToday}h`}
             description="Shift clock + job labor"
             icon={Timer}
-            iconClassName="bg-violet-50 text-violet-600"
+            iconClassName="admin-metric-icon-slate"
             accentClassName="border-violet-100"
           />
           <ReportsSummaryCard
@@ -260,7 +260,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={String(labor.openEntryCount)}
             description="Shift, job labor, and break segments"
             icon={Clock}
-            iconClassName="bg-amber-50 text-amber-600"
+            iconClassName="admin-metric-icon-amber"
             accentClassName="border-amber-100"
           />
           <ReportsSummaryCard
@@ -272,7 +272,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
                 : "Needs admin review"
             }
             icon={AlertCircle}
-            iconClassName="bg-rose-50 text-rose-600"
+            iconClassName="admin-metric-icon-rose"
             accentClassName="border-rose-100"
           />
         </div>
@@ -395,7 +395,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={formatCurrency(operations.todayCollectedRevenue)}
             description={`${operations.todayPaymentCount} payment${operations.todayPaymentCount === 1 ? "" : "s"} today`}
             icon={DollarSign}
-            iconClassName="bg-emerald-50 text-emerald-600"
+            iconClassName="admin-metric-icon-emerald"
             accentClassName="border-emerald-100"
           />
           <ReportsSummaryCard
@@ -403,7 +403,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={String(operations.stalledJobs)}
             description="Jobs needing follow-up"
             icon={Clock}
-            iconClassName="bg-amber-50 text-amber-600"
+            iconClassName="admin-metric-icon-amber"
             accentClassName="border-amber-100"
           />
           <ReportsSummaryCard
@@ -411,7 +411,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             value={String(operations.completedAwaitingInvoicing)}
             description="Completed work not yet invoiced"
             icon={Receipt}
-            iconClassName="bg-indigo-50 text-indigo-600"
+            iconClassName="admin-metric-icon-teal"
             accentClassName="border-indigo-100"
           />
         </div>

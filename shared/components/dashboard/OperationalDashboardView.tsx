@@ -224,9 +224,9 @@ function DashboardSection({
 }) {
   return (
     <section className="admin-card overflow-hidden">
-      <div className="admin-section-header flex min-w-0 items-start justify-between gap-2 border-b border-slate-100/90 bg-white">
+      <div className="admin-section-header flex min-w-0 items-start justify-between gap-2 border-b border-slate-200/70">
         <div className="flex min-w-0 items-start gap-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200/80">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 shadow-sm ring-1 ring-slate-200/70">
             <Icon className="h-3.5 w-3.5 text-slate-600" />
           </div>
           <div className="min-w-0">
@@ -299,7 +299,7 @@ function MetricCard({
     return (
       <Link
         href={href}
-        className={`admin-card-interactive block rounded-xl border bg-white p-2.5 shadow-sm max-lg:p-2.5 lg:p-3 ${accent}`}
+        className={`admin-metric-card admin-metric-card-interactive block ${accent}`}
       >
         {content}
       </Link>
@@ -307,7 +307,7 @@ function MetricCard({
   }
 
   return (
-    <div className={`rounded-xl border bg-white p-2.5 shadow-sm max-lg:p-2.5 lg:p-3 ${accent}`}>
+    <div className={`admin-metric-card ${accent}`}>
       {content}
     </div>
   );

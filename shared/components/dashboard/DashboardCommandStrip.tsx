@@ -19,23 +19,23 @@ const SEVERITY_STYLES: Record<
   { card: string; value: string; emphasized: boolean }
 > = {
   healthy: {
-    card: "border-slate-200/70 bg-white/95 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md focus-visible:ring-2 focus-visible:ring-slate-300/80",
-    value: "text-slate-700",
+    card: "border-slate-500/25 bg-slate-800/45 hover:border-slate-400/35 hover:bg-slate-800/55 focus-visible:ring-2 focus-visible:ring-slate-400/40",
+    value: "text-slate-100",
     emphasized: false,
   },
   info: {
-    card: "border-slate-200/70 bg-white/95 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md focus-visible:ring-2 focus-visible:ring-slate-300/80",
-    value: "text-slate-700",
+    card: "border-cyan-500/20 bg-cyan-950/25 hover:border-cyan-400/30 hover:bg-cyan-950/35 focus-visible:ring-2 focus-visible:ring-cyan-400/35",
+    value: "text-cyan-50",
     emphasized: false,
   },
   warning: {
-    card: "border-amber-300/90 bg-amber-50/70 hover:border-amber-400 hover:bg-amber-50 shadow-sm focus-visible:ring-2 focus-visible:ring-amber-300/80",
-    value: "text-amber-950",
+    card: "border-amber-400/35 bg-amber-950/30 hover:border-amber-400/45 hover:bg-amber-950/40 shadow-sm focus-visible:ring-2 focus-visible:ring-amber-400/40",
+    value: "text-amber-50",
     emphasized: true,
   },
   critical: {
-    card: "border-rose-300/90 bg-rose-50/70 ring-1 ring-rose-200/60 hover:border-rose-400 hover:bg-rose-50 hover:ring-rose-300/70 shadow-sm focus-visible:ring-2 focus-visible:ring-rose-300/80",
-    value: "text-rose-950",
+    card: "border-rose-400/40 bg-rose-950/35 ring-1 ring-rose-500/20 hover:border-rose-400/50 hover:bg-rose-950/45 hover:ring-rose-400/30 shadow-sm focus-visible:ring-2 focus-visible:ring-rose-400/40",
+    value: "text-rose-50",
     emphasized: true,
   },
 };
@@ -60,7 +60,7 @@ function CommandStripCardButton({
       type="button"
       onClick={onClick}
       aria-label={`View ${label} details`}
-      className={`group flex min-w-0 flex-col rounded-lg border p-2 text-left transition-colors lg:p-2.5 ${styles.card} ${styles.emphasized ? "shadow-sm" : ""}`}
+      className={`group flex min-w-0 flex-col rounded-lg border p-2 text-left transition-all lg:p-2.5 ${styles.card} ${styles.emphasized ? "shadow-sm" : ""}`}
     >
       <div className="flex items-start justify-between gap-1">
         <p
@@ -69,7 +69,11 @@ function CommandStripCardButton({
           {label}
         </p>
         <ChevronRight
-          className="h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-600"
+          className={`h-3.5 w-3.5 shrink-0 transition-transform ${
+            styles.emphasized
+              ? "text-white/50 group-hover:text-white/80"
+              : "text-slate-400 group-hover:translate-x-0.5 group-hover:text-slate-300"
+          }`}
           aria-hidden="true"
         />
       </div>
