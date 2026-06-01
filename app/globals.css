@@ -16,6 +16,13 @@
     0 1px 2px rgb(15 23 42 / 0.03),
     0 4px 16px -6px rgb(15 23 42 / 0.06);
   --shadow-sticky: 0 -4px 16px -4px rgb(15 23 42 / 0.08);
+  --shell-navy-base: #071827;
+  --shell-navy-mid: #0b1f33;
+  --shell-navy-highlight: #102a43;
+  --shell-navy-shine: rgb(255 255 255 / 0.07);
+  --shell-navy-border: rgb(255 255 255 / 0.08);
+  --shell-navy-text: #f1f5f9;
+  --shell-navy-text-muted: #94a3b8;
 }
 
 @theme inline {
@@ -208,6 +215,77 @@ a[href] {
 /* Admin experience — operational surfaces with calm depth hierarchy */
 .admin-canvas {
   background-color: var(--surface-canvas);
+}
+
+/* Premium navy top shell — authenticated desktop chrome only */
+@media (min-width: 768px) {
+  .admin-top-shell {
+    position: relative;
+    isolation: isolate;
+    flex-shrink: 0;
+    background: linear-gradient(
+      180deg,
+      var(--shell-navy-highlight) 0%,
+      var(--shell-navy-mid) 38%,
+      var(--shell-navy-base) 100%
+    );
+    border-bottom: 1px solid var(--shell-navy-border);
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.04) inset,
+      0 1px 3px rgb(0 0 0 / 0.18);
+  }
+
+  .admin-top-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        ellipse 72% 55% at 18% -8%,
+        var(--shell-navy-shine) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 42% 38% at 82% 0%,
+        rgb(56 189 248 / 0.05) 0%,
+        transparent 52%
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .admin-top-shell::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgb(255 255 255 / 0.14) 48%,
+      transparent 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .admin-top-shell > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .admin-premium-header {
+    border-bottom-color: rgb(255 255 255 / 0.06) !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .admin-premium-nav {
+    border-bottom: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+  }
 }
 
 .admin-card {

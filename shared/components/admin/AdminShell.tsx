@@ -45,7 +45,7 @@ export function AdminShell({
   return (
     <CompanyTimezoneProvider timeZone={companyContext.company.timezone}>
       <div className="admin-canvas flex min-h-dvh w-full min-w-0 max-w-full flex-col md:h-dvh md:overflow-hidden">
-      <div className="no-print">
+      <div className="admin-top-shell no-print">
         <Header
           title={current.label}
           description={current.description}
@@ -57,13 +57,13 @@ export function AdminShell({
           viewMode={viewMode}
           onViewModeChange={setViewMode}
         />
-      </div>
-
-      <div className="no-print">
         <DesktopNav
           companyContext={navigationContext}
           showPlatformAdminNav={showPlatformAdminNav}
         />
+      </div>
+
+      <div className="no-print md:hidden">
         <MobileNav
           companyContext={navigationContext}
           showPlatformAdminNav={showPlatformAdminNav}

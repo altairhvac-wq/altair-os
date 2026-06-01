@@ -14,6 +14,7 @@ type CompanySwitcherProps = {
   activeCompanyId: string;
   companies: MembershipWithCompany[];
   variant?: "admin" | "technician";
+  tone?: "light" | "dark";
   showRole?: boolean;
   className?: string;
 };
@@ -27,6 +28,7 @@ export function CompanySwitcher({
   activeCompanyId,
   companies,
   variant = "admin",
+  tone = "light",
   showRole = true,
   className = "",
 }: CompanySwitcherProps) {
@@ -93,11 +95,15 @@ export function CompanySwitcher({
 
     return (
       <div className={`hidden text-right md:block ${className}`}>
-        <p className="text-sm font-semibold text-slate-900">
+        <p
+          className={`text-sm font-semibold ${
+            tone === "dark" ? "text-slate-100" : "text-slate-900"
+          }`}
+        >
           {activeMembership.company.name}
         </p>
         {showRole ? (
-          <p className="text-xs text-slate-500">
+          <p className={tone === "dark" ? "text-xs text-slate-400" : "text-xs text-slate-500"}>
             {getRoleLabel(activeMembership)}
           </p>
         ) : null}
@@ -108,7 +114,9 @@ export function CompanySwitcher({
   const triggerClasses =
     variant === "technician"
       ? "flex w-full min-w-0 items-center gap-1 rounded-md px-1 py-0.5 text-left transition-colors hover:bg-slate-100 disabled:opacity-60"
-      : "flex max-w-[12rem] items-center gap-1 rounded-lg px-2 py-1 text-left transition-colors hover:bg-slate-100 disabled:opacity-60 sm:max-w-[14rem]";
+      : tone === "dark"
+        ? "flex max-w-[12rem] items-center gap-1 rounded-lg px-2 py-1 text-left transition-colors hover:bg-white/10 disabled:opacity-60 sm:max-w-[14rem]"
+        : "flex max-w-[12rem] items-center gap-1 rounded-lg px-2 py-1 text-left transition-colors hover:bg-slate-100 disabled:opacity-60 sm:max-w-[14rem]";
 
   return (
     <div ref={panelRef} className={`relative ${className}`}>
@@ -122,26 +130,38 @@ export function CompanySwitcher({
         className={triggerClasses}
       >
         {variant === "admin" ? (
-          <Building2 className="hidden h-4 w-4 shrink-0 text-slate-400 sm:block" />
+          <Building2
+            className={`hidden h-4 w-4 shrink-0 sm:block ${
+              tone === "dark" ? "text-slate-500" : "text-slate-400"
+            }`}
+          />
         ) : null}
         <span className="min-w-0 flex-1">
           <span
-            className={`block truncate font-semibold text-slate-900 ${
-              variant === "technician" ? "text-xs" : "text-sm"
+            className={`block truncate font-semibold ${
+              variant === "technician"
+                ? "text-xs"
+                : tone === "dark"
+                  ? "text-sm text-slate-100"
+                  : "text-sm text-slate-900"
             }`}
           >
             {activeMembership.company.name}
           </span>
           {showRole ? (
-            <span className="block truncate text-xs text-slate-500">
+            <span
+              className={`block truncate text-xs ${
+                tone === "dark" ? "text-slate-400" : "text-slate-500"
+              }`}
+            >
               {getRoleLabel(activeMembership)}
             </span>
           ) : null}
         </span>
         <ChevronDown
-          className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
+          className={`h-3.5 w-3.5 shrink-0 transition-transform ${
+            tone === "dark" ? "text-slate-500" : "text-slate-400"
+          } ${open ? "rotate-180" : ""}`}
         />
       </button>
 

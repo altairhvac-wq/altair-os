@@ -15,12 +15,14 @@ type NotificationBellProps = {
   initialNotifications: Notification[];
   initialUnreadCount: number;
   notificationAccess?: NotificationAccess;
+  tone?: "light" | "dark";
 };
 
 export function NotificationBell({
   initialNotifications,
   initialUnreadCount,
   notificationAccess,
+  tone = "light",
 }: NotificationBellProps) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -89,7 +91,11 @@ export function NotificationBell({
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="relative rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+        className={`relative rounded-lg p-2 transition-colors ${
+          tone === "dark"
+            ? "text-slate-400 hover:bg-white/10 hover:text-slate-200"
+            : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+        }`}
         aria-label="Notifications"
         aria-expanded={open}
       >

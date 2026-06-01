@@ -17,12 +17,14 @@ const VIEW_MODE_OPTIONS: OwnerViewMode[] = [
 type OwnerViewSwitcherProps = {
   viewMode: OwnerViewMode;
   onViewModeChange: (viewMode: OwnerViewMode) => void;
+  tone?: "light" | "dark";
   className?: string;
 };
 
 export function OwnerViewSwitcher({
   viewMode,
   onViewModeChange,
+  tone = "light",
   className = "",
 }: OwnerViewSwitcherProps) {
   const [open, setOpen] = useState(false);
@@ -53,21 +55,35 @@ export function OwnerViewSwitcher({
         aria-haspopup="listbox"
         aria-label="View as"
         title="Preview navigation as another role. Your permissions stay owner-level."
-        className="flex max-w-[9.5rem] items-center gap-1 rounded-lg px-2 py-1 text-left transition-colors hover:bg-slate-100 sm:max-w-[11rem]"
+        className={`flex max-w-[9.5rem] items-center gap-1 rounded-lg px-2 py-1 text-left transition-colors sm:max-w-[11rem] ${
+          tone === "dark" ? "hover:bg-white/10" : "hover:bg-slate-100"
+        }`}
       >
-        <Eye className="hidden h-3.5 w-3.5 shrink-0 text-slate-400 sm:block" />
+        <Eye
+          className={`hidden h-3.5 w-3.5 shrink-0 sm:block ${
+            tone === "dark" ? "text-slate-500" : "text-slate-400"
+          }`}
+        />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+          <span
+            className={`block truncate text-[10px] font-semibold uppercase tracking-wide ${
+              tone === "dark" ? "text-slate-500" : "text-slate-400"
+            }`}
+          >
             View as
           </span>
-          <span className="block truncate text-xs font-semibold text-slate-900">
+          <span
+            className={`block truncate text-xs font-semibold ${
+              tone === "dark" ? "text-slate-100" : "text-slate-900"
+            }`}
+          >
             {OWNER_VIEW_MODE_LABELS[viewMode]}
           </span>
         </span>
         <ChevronDown
-          className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
+          className={`h-3.5 w-3.5 shrink-0 transition-transform ${
+            tone === "dark" ? "text-slate-500" : "text-slate-400"
+          } ${open ? "rotate-180" : ""}`}
         />
       </button>
 
