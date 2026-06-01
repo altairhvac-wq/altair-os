@@ -8,14 +8,14 @@ import {
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
 
-type JobsTodayCardListProps = {
+type JobsMobileCardListProps = {
   jobs: Job[];
   onSelect: (job: Job) => void;
 };
 
-export function JobsTodayCardList({ jobs, onSelect }: JobsTodayCardListProps) {
+export function JobsMobileCardList({ jobs, onSelect }: JobsMobileCardListProps) {
   return (
-    <ul className="divide-y divide-slate-100">
+    <ul className="divide-y divide-slate-100 md:hidden">
       {jobs.map((job) => (
         <li key={job.id}>
           <button
