@@ -28,19 +28,19 @@ export async function submitBetaFeedbackReportAction(
   data: BetaFeedbackReportFormData,
 ): Promise<BetaFeedbackActionResult> {
   if (!isBetaBugReportEnabled()) {
-    return { error: "Bug reporting is not available right now." };
+    return { error: "Feedback is not available right now." };
   }
 
   const user = await getCurrentUser();
 
   if (!user) {
-    return { error: "You must be signed in to send a bug report." };
+    return { error: "You must be signed in to send feedback." };
   }
 
   const message = trimToMax(data.message, BETA_FEEDBACK_MESSAGE_MAX_LENGTH);
 
   if (!message) {
-    return { error: "Please describe what went wrong." };
+    return { error: "Please describe what happened or what could be smoother." };
   }
 
   const pageUrl = data.pageUrl.trim();
@@ -85,8 +85,8 @@ export async function submitBetaFeedbackReportAction(
       code: errorCode,
       message: error,
     });
-    return { error: error ?? "Could not send bug report. Please try again." };
+    return { error: error ?? "Could not send feedback. Please try again." };
   }
 
-  return { success: "Thanks — bug report sent." };
+  return { success: "Thanks — feedback sent." };
 }

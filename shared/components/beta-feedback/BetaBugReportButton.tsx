@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Bug } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Lightbulb, MessageCircle, X } from "lucide-react";
 import { submitBetaFeedbackReportAction } from "@/app/actions/beta-feedback";
 import {
   MobileSheet,
@@ -22,9 +22,10 @@ import {
 
 const TITLE_ID = "beta-bug-report-sheet-title";
 const FORM_ID = "beta-bug-report-form";
+const FEEDBACK_HINT_DISMISSED_KEY = "altair-feedback-hint-dismissed";
 
 const textareaClassName =
-  "mt-1.5 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none ring-slate-900/5 transition-shadow placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
+  "mt-1.5 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none ring-slate-900/5 transition-shadow placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20";
 
 type BetaBugReportButtonProps = {
   /** Position above technician bottom nav when true. */
@@ -41,8 +42,21 @@ export function BetaBugReportButton({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [hintDismissed, setHintDismissed] = useState(true);
+  const [hintHydrated, setHintHydrated] = useState(false);
 
   const closeDisabled = isSubmitting || showSuccess;
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(FEEDBACK_HINT_DISMISSED_KEY);
+    setHintDismissed(stored === "true");
+    setHintHydrated(true);
+  }, []);
+
+  function dismissHint() {
+    window.localStorage.setItem(FEEDBACK_HINT_DISMISSED_KEY, "true");
+    setHintDismissed(true);
+  }
 
   function resetForm() {
     setMessage("");
@@ -55,6 +69,7 @@ export function BetaBugReportButton({
   function handleOpen() {
     resetForm();
     setOpen(true);
+    dismissHint();
   }
 
   function handleClose() {
@@ -98,17 +113,47 @@ export function BetaBugReportButton({
     ? "bottom-[max(5.5rem,calc(5rem+env(safe-area-inset-bottom,0px)))]"
     : "bottom-[max(1rem,env(safe-area-inset-bottom))]";
 
+  const showHint = hintHydrated && !hintDismissed && !open;
+
   return (
     <>
-      <button
-        type="button"
-        onClick={handleOpen}
-        aria-label="Report a bug"
-        className={`fixed right-4 z-40 inline-flex min-h-11 items-center gap-1.5 rounded-full bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg ring-1 ring-red-700/25 transition-colors hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 ${positionClassName}`}
+      <div
+        className={`fixed right-4 z-40 flex flex-col items-end gap-2 ${positionClassName}`}
       >
-        <Bug className="h-4 w-4 shrink-0" aria-hidden="true" />
-        Bug
-      </button>
+        {showHint ? (
+          <div
+            role="note"
+            className="relative max-w-[13.5rem] rounded-xl border border-slate-200 bg-white px-3 py-2.5 pr-8 text-xs leading-snug text-slate-600 shadow-md ring-1 ring-slate-900/5"
+          >
+            <p>See something broken or confusing?</p>
+            <button
+              type="button"
+              onClick={dismissHint}
+              aria-label="Dismiss feedback hint"
+              className="absolute right-1.5 top-1.5 inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+            <span
+              aria-hidden="true"
+              className="absolute -bottom-1.5 right-6 h-3 w-3 rotate-45 border-b border-r border-slate-200 bg-white"
+            />
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={handleOpen}
+          aria-label="Send feedback"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-lg ring-1 ring-slate-900/5 transition-colors hover:border-sky-200 hover:bg-sky-50/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+        >
+          <MessageCircle
+            className="h-4 w-4 shrink-0 text-sky-600"
+            aria-hidden="true"
+          />
+          Feedback
+        </button>
+      </div>
 
       {open ? (
         <MobileSheet
@@ -121,20 +166,20 @@ export function BetaBugReportButton({
           <MobileSheetPanel maxWidth="lg" responsiveRounded>
             <MobileSheetHeader
               titleId={TITLE_ID}
-              title="Report a bug"
-              subtitle="Tell us what broke so we can fix it"
+              title="Help improve Altair"
+              subtitle="Notice something broken, confusing, or slower than it should be? Send it here and I'll review it."
               onClose={handleClose}
               closeDisabled={closeDisabled}
               icon={
-                <MobileSheetHeaderIcon className="bg-red-50 ring-1 ring-red-600/15">
-                  <Bug className="h-5 w-5 text-red-600" />
+                <MobileSheetHeaderIcon className="bg-sky-50 ring-1 ring-sky-600/15">
+                  <Lightbulb className="h-5 w-5 text-sky-600" />
                 </MobileSheetHeaderIcon>
               }
             />
 
             {showSuccess ? (
               <MobileSheetSuccess
-                title="Thanks — bug report sent."
+                title="Thanks — feedback sent."
                 subtitle="We'll review it soon."
               />
             ) : (
@@ -146,8 +191,8 @@ export function BetaBugReportButton({
                         htmlFor="beta-bug-message"
                         className="text-sm font-semibold text-slate-900"
                       >
-                        What went wrong?
-                        <span className="text-red-600"> *</span>
+                        What happened or what could be smoother?
+                        <span className="text-sky-600"> *</span>
                       </label>
                       <textarea
                         id="beta-bug-message"
@@ -157,7 +202,7 @@ export function BetaBugReportButton({
                         maxLength={BETA_FEEDBACK_MESSAGE_MAX_LENGTH}
                         value={message}
                         onChange={(event) => setMessage(event.target.value)}
-                        placeholder="Describe the problem you ran into"
+                        placeholder="Describe what felt off, slow, or unclear"
                         className={textareaClassName}
                       />
                     </div>
@@ -168,6 +213,9 @@ export function BetaBugReportButton({
                         className="text-sm font-semibold text-slate-900"
                       >
                         What were you trying to do?
+                        <span className="ml-1 text-xs font-normal text-slate-500">
+                          optional
+                        </span>
                       </label>
                       <textarea
                         id="beta-bug-expected"
@@ -176,14 +224,14 @@ export function BetaBugReportButton({
                         maxLength={BETA_FEEDBACK_EXPECTED_BEHAVIOR_MAX_LENGTH}
                         value={expectedBehavior}
                         onChange={(event) => setExpectedBehavior(event.target.value)}
-                        placeholder="Optional — what you expected to happen"
+                        placeholder="Optional — the task or goal you had in mind"
                         className={textareaClassName}
                       />
                     </div>
 
                     <fieldset>
                       <legend className="text-sm font-semibold text-slate-900">
-                        Severity
+                        How serious is it?
                       </legend>
                       <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                         {BETA_FEEDBACK_SEVERITY_OPTIONS.map((option) => {
@@ -197,7 +245,7 @@ export function BetaBugReportButton({
                               onClick={() => setSeverity(option.value)}
                               className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
                                 selected
-                                  ? "border-red-600 bg-red-50 text-red-700 ring-1 ring-red-600/20"
+                                  ? "border-sky-600 bg-sky-50 text-sky-700 ring-1 ring-sky-600/20"
                                   : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                               }`}
                             >
@@ -221,12 +269,12 @@ export function BetaBugReportButton({
                 <MobileSheetFooter>
                   <MobileSheetFooterActions
                     onCancel={handleClose}
-                    submitLabel="Send bug report"
+                    submitLabel="Send feedback"
                     submittingLabel="Sending..."
                     submitForm={FORM_ID}
                     isSubmitting={isSubmitting}
                     submitDisabled={!message.trim()}
-                    submitClassName="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-red-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    submitClassName="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-sky-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
                   />
                 </MobileSheetFooter>
               </>
