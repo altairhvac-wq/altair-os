@@ -16,6 +16,7 @@ import {
   Receipt,
   StickyNote,
 } from "lucide-react";
+import { JobSummaryAiAssistant } from "@/shared/components/jobs/JobSummaryAiAssistant";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
 import { buildGoogleMapsDirectionsUrl, hasCompleteServiceAddress } from "@/shared/lib/maps";
 import {
@@ -422,6 +423,15 @@ export function TechnicianJobCard({
           </div>
         ) : null}
       </div>
+
+      {expanded ? (
+        <div className="px-2 pb-1">
+          <JobSummaryAiAssistant
+            jobId={job.id}
+            aiFeaturesEnabled={aiFeaturesEnabled}
+          />
+        </div>
+      ) : null}
 
       <div className="space-y-1.5 px-2 py-2">
         {workflowControls}
