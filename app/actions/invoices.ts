@@ -51,6 +51,7 @@ import {
   getSendInvoiceJobBlockReason,
 } from "@/shared/types/invoice";
 import { applyInvoiceCreationDefaults } from "@/shared/lib/company-billing-defaults";
+import { formatActionError } from "@/shared/lib/operational-errors";
 
 export type { BillingEmailDelivery } from "@/lib/email/billing-send";
 
@@ -469,6 +470,96 @@ export async function sendInvoiceAction(
     emailDelivery: emailDelivery.recipientRedirect?.redirected
       ? emailDelivery
       : undefined,
+  };
+}
+
+export type BatchSendInvoiceResultItem = {
+  invoiceId: string;
+  invoiceNumber: string;
+  success: boolean;
+  error?: string;
+  invoice?: InvoiceDetail;
+};
+
+export type BatchSendInvoicesActionResult = {
+  error?: string;
+  results: BatchSendInvoiceResultItem[];
+  successCount: number;
+  failureCount: number;
+};
+
+export async function batchSendInvoicesAction(
+  invoiceIds: string[],
+): Promise<BatchSendInvoicesActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return {
+      error: NO_ACTIVE_COMPANY_MESSAGE,
+      results: [],
+      successCount: 0,
+      failureCount: 0,
+    };
+  }
+
+  if (!context.permissions.manageBilling) {
+    return {
+      error: "You do not have permission to send invoices.",
+      results: [],
+      successCount: 0,
+      failureCount: 0,
+    };
+  }
+
+  const uniqueIds = [...new Set(invoiceIds.map((id) => id.trim()).filter(Boolean))];
+
+  if (uniqueIds.length === 0) {
+    return {
+      error: "Select at least one invoice to send.",
+      results: [],
+      successCount: 0,
+      failureCount: 0,
+    };
+  }
+
+  const results: BatchSendInvoiceResultItem[] = [];
+  let successCount = 0;
+  let failureCount = 0;
+
+  for (const invoiceId of uniqueIds) {
+    const sendResult = await sendInvoiceAction(invoiceId);
+
+    if (sendResult.error || !sendResult.invoice) {
+      const currentInvoice = await getInvoiceById(context.company.id, invoiceId);
+
+      results.push({
+        invoiceId,
+        invoiceNumber: currentInvoice?.invoiceNumber ?? invoiceId,
+        success: false,
+        error: formatActionError(
+          sendResult.error,
+          "We couldn't send this invoice. Try again.",
+        ),
+      });
+      failureCount += 1;
+      continue;
+    }
+
+    results.push({
+      invoiceId,
+      invoiceNumber: sendResult.invoice.invoiceNumber,
+      success: true,
+      invoice: sendResult.invoice,
+    });
+    successCount += 1;
+  }
+
+  revalidatePath("/invoices");
+
+  return {
+    results,
+    successCount,
+    failureCount,
   };
 }
 

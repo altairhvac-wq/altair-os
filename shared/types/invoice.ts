@@ -31,6 +31,7 @@ export type Invoice = {
   invoiceNumber: string;
   customerId: string;
   customerName: string;
+  customerEmail?: string;
   jobId?: string;
   jobNumber?: string;
   estimateId?: string;

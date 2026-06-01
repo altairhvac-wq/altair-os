@@ -61,7 +61,7 @@ type InvoiceRowWithRelations = InvoiceRow & {
 
 const INVOICE_LIST_SELECT = `
   *,
-  customers(name),
+  customers(name, email),
   jobs(job_number),
   estimates(estimate_number),
   invoice_line_items(id)
@@ -114,6 +114,7 @@ export function mapInvoiceRowToInvoice(row: InvoiceRowWithRelations): Invoice {
     invoiceNumber: row.invoice_number,
     customerId: row.customer_id,
     customerName: row.customers?.name ?? "Unknown customer",
+    customerEmail: row.customers?.email || undefined,
     jobId: row.job_id ?? undefined,
     jobNumber: row.jobs?.job_number ?? undefined,
     estimateId: row.estimate_id ?? undefined,

@@ -3,8 +3,17 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import { createInvoiceAction } from "@/app/actions/invoices";
+import {
+  batchSendInvoicesAction,
+  createInvoiceAction,
+} from "@/app/actions/invoices";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import {
+  buildJobsByIdForBatchSend,
+  formatBatchSendInvoicesResultMessage,
+  toggleInvoiceBatchSelection,
+  toggleInvoiceGroupBatchSelection,
+} from "@/shared/lib/invoice-batch-send";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
@@ -29,6 +38,8 @@ import { formatCurrency } from "@/shared/types/customer";
 import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
 import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
 import { JobsViewTabs, type TodayAllViewTab } from "@/shared/components/jobs/JobsViewTabs";
+import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
+import { InvoiceBatchSelectionBar } from "./InvoiceBatchSelectionBar";
 import { InvoiceCashFlowFocusBanner } from "./InvoiceCashFlowFocusBanner";
 import { InvoiceDetailsPanel } from "./InvoiceDetailsPanel";
 import { InvoiceSearchFilterBar } from "./InvoiceSearchFilterBar";
@@ -120,7 +131,18 @@ export function InvoicesPageView({
     useState<InvoiceListStatusFilter>(initialStatusFilter);
   const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [batchSendMessage, setBatchSendMessage] = useState<string | null>(null);
+  const [batchSendFailureDetails, setBatchSendFailureDetails] = useState<
+    string[] | null
+  >(null);
+  const [batchSendTone, setBatchSendTone] = useState<
+    "success" | "warning" | "error"
+  >("success");
   const [isPending, startTransition] = useTransition();
+  const [isBatchSending, startBatchSendTransition] = useTransition();
   const router = useRouter();
   const companyTimeZone = useCompanyTimezone();
 
@@ -172,6 +194,120 @@ export function InvoicesPageView({
       prioritizeCashFlow,
     );
   }, [filteredInvoices, prioritizeCashFlow, statusFilter, viewTab]);
+
+  const jobsById = useMemo(() => buildJobsByIdForBatchSend(jobs), [jobs]);
+
+  const visibleInvoices = useMemo(
+    () =>
+      invoiceListPresentation.sections.flatMap((section) => section.items),
+    [invoiceListPresentation.sections],
+  );
+
+  const selectionEnabled = canManageInvoices;
+  const selectedCount = selectedInvoiceIds.size;
+
+  function handleToggleInvoiceSelection(invoiceId: string) {
+    setSelectedInvoiceIds((previous) =>
+      toggleInvoiceBatchSelection(previous, invoiceId),
+    );
+    setBatchSendMessage(null);
+    setBatchSendFailureDetails(null);
+  }
+
+  function handleToggleAllVisibleSelection(selectAll: boolean) {
+    setSelectedInvoiceIds((previous) =>
+      toggleInvoiceGroupBatchSelection(
+        previous,
+        visibleInvoices,
+        selectAll,
+        jobsById,
+      ),
+    );
+    setBatchSendMessage(null);
+    setBatchSendFailureDetails(null);
+  }
+
+  function handleClearSelection() {
+    setSelectedInvoiceIds(new Set());
+    setBatchSendMessage(null);
+    setBatchSendFailureDetails(null);
+  }
+
+  function handleBatchSendSelected() {
+    if (!selectionEnabled || selectedCount === 0 || isBatchSending) {
+      return;
+    }
+
+    const invoiceIds = [...selectedInvoiceIds];
+    setBatchSendMessage(null);
+    setBatchSendFailureDetails(null);
+
+    startBatchSendTransition(async () => {
+      const result = await batchSendInvoicesAction(invoiceIds);
+
+      if (result.error && result.results.length === 0) {
+        setBatchSendTone("error");
+        setBatchSendMessage(
+          formatActionError(result.error, "We couldn't send the selected invoices."),
+        );
+        return;
+      }
+
+      const failedIds = new Set(
+        result.results.filter((item) => !item.success).map((item) => item.invoiceId),
+      );
+      const successfulInvoices = result.results
+        .filter((item) => item.success && item.invoice)
+        .map((item) => item.invoice!);
+
+      if (successfulInvoices.length > 0) {
+        const sentById = new Map(
+          successfulInvoices.map((invoice) => [invoice.id, invoice]),
+        );
+
+        setInvoices((previous) =>
+          previous.map((invoice) => sentById.get(invoice.id) ?? invoice),
+        );
+      }
+
+      setSelectedInvoiceIds((previous) => {
+        if (failedIds.size === 0) {
+          return new Set();
+        }
+
+        const next = new Set<string>();
+        for (const invoiceId of previous) {
+          if (failedIds.has(invoiceId)) {
+            next.add(invoiceId);
+          }
+        }
+        return next;
+      });
+
+      const failureDetails = result.results
+        .filter((item) => !item.success)
+        .map((item) => `${item.invoiceNumber}: ${item.error ?? "Could not be sent."}`);
+
+      setBatchSendFailureDetails(failureDetails.length > 0 ? failureDetails : null);
+      setBatchSendTone(
+        result.successCount > 0
+          ? result.failureCount > 0
+            ? "warning"
+            : "success"
+          : "error",
+      );
+      setBatchSendMessage(
+        formatBatchSendInvoicesResultMessage({
+          successCount: result.successCount,
+          failureCount: result.failureCount,
+        }),
+      );
+
+      if (result.successCount > 0) {
+        router.refresh();
+      }
+    });
+  }
 
   function handleSelectInvoice(invoice: Invoice) {
     router.push(`/invoices/${invoice.id}`);
@@ -310,6 +446,23 @@ export function InvoicesPageView({
           />
         ) : null}
 
+        {batchSendMessage ? (
+          <div className="shrink-0 border-b border-slate-100/90 px-4 py-3 sm:px-5">
+            <SettingsAlertBanner tone={batchSendTone}>
+              <div>
+                <p>{batchSendMessage}</p>
+                {batchSendFailureDetails?.length ? (
+                  <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                    {batchSendFailureDetails.map((detail) => (
+                      <li key={detail}>{detail}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </SettingsAlertBanner>
+          </div>
+        ) : null}
+
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
           {hasNoInvoices ? (
             <InvoicesEmptyState
@@ -330,8 +483,22 @@ export function InvoicesPageView({
               sections={invoiceListPresentation.sections}
               showSectionHeaders={invoiceListPresentation.showSectionHeaders}
               onSelect={handleSelectInvoice}
+              selectionEnabled={selectionEnabled}
+              selectedIds={selectedInvoiceIds}
+              jobsById={jobsById}
+              onToggleSelection={handleToggleInvoiceSelection}
+              onToggleAllVisible={handleToggleAllVisibleSelection}
             />
           )}
+
+          {selectionEnabled ? (
+            <InvoiceBatchSelectionBar
+              selectedCount={selectedCount}
+              isSending={isBatchSending}
+              onSendSelected={handleBatchSendSelected}
+              onClearSelection={handleClearSelection}
+            />
+          ) : null}
         </div>
       </section>
 
