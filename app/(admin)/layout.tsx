@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AdminShell } from "@/shared/components/admin/AdminShell";
 import { getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext, getUserCompanies } from "@/lib/database/company-context";
+import { canAccessPlatformAdmin } from "@/lib/database/platform-admin";
 import {
   getUnreadNotificationCount,
   getUserNotifications,
@@ -37,12 +38,15 @@ export default async function AdminLayout({
     ),
   ]);
 
+  const showPlatformAdminNav = canAccessPlatformAdmin(user);
+
   return (
     <AdminShell
       companyContext={companyContext}
       userCompanies={userCompanies}
       notifications={notifications}
       unreadNotificationCount={unreadNotificationCount}
+      showPlatformAdminNav={showPlatformAdminNav}
     >
       {children}
     </AdminShell>

@@ -6,6 +6,7 @@ import type { ActiveCompanyContext } from "@/lib/database/types";
 import {
   getAdminNavItems,
   getOrderedAdminNavItemsForDesktop,
+  platformAdminNavItem,
   type NavItem,
 } from "./nav-items";
 
@@ -44,12 +45,19 @@ function DesktopNavLink({ item, active }: DesktopNavLinkProps) {
 
 type DesktopNavProps = {
   companyContext: ActiveCompanyContext;
+  showPlatformAdminNav?: boolean;
 };
 
-export function DesktopNav({ companyContext }: DesktopNavProps) {
+export function DesktopNav({
+  companyContext,
+  showPlatformAdminNav = false,
+}: DesktopNavProps) {
   const pathname = usePathname();
   const navItems = getAdminNavItems(companyContext);
-  const orderedNavItems = getOrderedAdminNavItemsForDesktop(companyContext);
+  const orderedNavItems = [
+    ...getOrderedAdminNavItemsForDesktop(companyContext),
+    ...(showPlatformAdminNav ? [platformAdminNavItem] : []),
+  ];
 
   return (
     <nav

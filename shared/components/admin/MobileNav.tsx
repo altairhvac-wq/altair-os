@@ -5,7 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
 import type { ActiveCompanyContext } from "@/lib/database/types";
-import { splitAdminNavItemsForMobile, type NavItem } from "./nav-items";
+import {
+  platformAdminNavItem,
+  splitAdminNavItemsForMobile,
+  type NavItem,
+} from "./nav-items";
 
 function isActivePath(pathname: string, href: string) {
   if (href === "/") {
@@ -44,13 +48,21 @@ function MobileNavLink({ item, active, onNavigate }: MobileNavLinkProps) {
 
 type MobileNavProps = {
   companyContext: ActiveCompanyContext;
+  showPlatformAdminNav?: boolean;
 };
 
-export function MobileNav({ companyContext }: MobileNavProps) {
+export function MobileNav({
+  companyContext,
+  showPlatformAdminNav = false,
+}: MobileNavProps) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
-  const { primaryRows, secondary } = splitAdminNavItemsForMobile(companyContext);
+  const { primaryRows, secondary: baseSecondary } =
+    splitAdminNavItemsForMobile(companyContext);
+  const secondary = showPlatformAdminNav
+    ? [...baseSecondary, platformAdminNavItem]
+    : baseSecondary;
   const moreActive = secondary.some((item) => isActivePath(pathname, item.href));
   const showSecondRow = primaryRows[1].length > 0 || secondary.length > 0;
 

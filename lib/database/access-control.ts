@@ -500,5 +500,9 @@ export function canAccessAppRedirectPath(
     return context.permissions.manageCompany;
   }
 
+  if (path === "/platform" || path.startsWith("/platform/")) {
+    return false;
+  }
+
   return false;
 }

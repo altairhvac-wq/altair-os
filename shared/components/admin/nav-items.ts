@@ -10,6 +10,7 @@ import {
   Network,
   Receipt,
   Settings,
+  Shield,
   Truck,
   Users,
   type LucideIcon,
@@ -108,6 +109,18 @@ export const adminNavItems: NavItem[] = [
   },
 ];
 
+/** Shown only to platform admins (server-gated); not part of tenant role nav. */
+export const platformAdminNavItem: NavItem = {
+  label: "Platform",
+  href: "/platform",
+  icon: Shield,
+  description: "Internal beta visibility (app owner only)",
+};
+
+export function isPlatformAdminPath(pathname: string): boolean {
+  return pathname === "/platform" || pathname.startsWith("/platform/");
+}
+
 /** Two-row mobile nav: row 1 = ops hub, row 2 = billing + overflow. */
 export const PRIMARY_MOBILE_ADMIN_NAV_ROWS = [
   ["/", "/jobs", "/dispatch", "/customers"],
@@ -199,7 +212,12 @@ export function getAdminMobileNavItems(context: ActiveCompanyContext): NavItem[]
 export function getNavItemForPath(
   pathname: string,
   context?: ActiveCompanyContext,
+  options?: { includePlatformAdmin?: boolean },
 ): NavItem {
+  if (options?.includePlatformAdmin && isPlatformAdminPath(pathname)) {
+    return platformAdminNavItem;
+  }
+
   const match = adminNavItems.find(
     (item) =>
       item.href === "/"

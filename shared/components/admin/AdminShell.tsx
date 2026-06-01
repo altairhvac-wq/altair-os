@@ -19,6 +19,7 @@ type AdminShellProps = {
   userCompanies: MembershipWithCompany[];
   notifications?: Notification[];
   unreadNotificationCount?: number;
+  showPlatformAdminNav?: boolean;
 };
 
 export function AdminShell({
@@ -27,6 +28,7 @@ export function AdminShell({
   userCompanies,
   notifications = [],
   unreadNotificationCount = 0,
+  showPlatformAdminNav = false,
 }: AdminShellProps) {
   const pathname = usePathname();
   const isMobile = useMobileViewport();
@@ -34,7 +36,9 @@ export function AdminShell({
     useOwnerViewMode(companyContext);
   const pullToRefreshEnabled =
     isMobile && isPullToRefreshRoute(pathname);
-  const current = getNavItemForPath(pathname, navigationContext);
+  const current = getNavItemForPath(pathname, navigationContext, {
+    includePlatformAdmin: showPlatformAdminNav,
+  });
 
   return (
     <CompanyTimezoneProvider timeZone={companyContext.company.timezone}>
@@ -54,8 +58,14 @@ export function AdminShell({
       </div>
 
       <div className="no-print">
-        <DesktopNav companyContext={navigationContext} />
-        <MobileNav companyContext={navigationContext} />
+        <DesktopNav
+          companyContext={navigationContext}
+          showPlatformAdminNav={showPlatformAdminNav}
+        />
+        <MobileNav
+          companyContext={navigationContext}
+          showPlatformAdminNav={showPlatformAdminNav}
+        />
       </div>
 
       <main className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-clip p-2.5 sm:p-4 lg:p-5 md:overflow-y-auto">
