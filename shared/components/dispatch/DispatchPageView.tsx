@@ -300,6 +300,7 @@ export function DispatchPageView({
           <DispatchSummaryCards
             summary={summary}
             highlightedLabels={dispatchPageFocus?.highlightedSummaryLabels}
+            linkToJobs
           />
         ),
       };

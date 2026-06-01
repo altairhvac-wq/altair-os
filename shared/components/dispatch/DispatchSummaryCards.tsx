@@ -1,40 +1,44 @@
+import Link from "next/link";
 import { CalendarCheck, CheckCircle2, Loader2, UserX } from "lucide-react";
 import type { DispatchSummary } from "@/shared/types/dispatch";
 import type { DispatchSummaryHighlightLabel } from "@/shared/lib/dispatch-page-focus";
+import { getDispatchSummaryCardHref } from "@/shared/lib/jobs-page-filters";
 
 type DispatchSummaryCardsProps = {
   summary: DispatchSummary;
   highlightedLabels?: DispatchSummaryHighlightLabel[];
+  linkToJobs?: boolean;
 };
 
 export function DispatchSummaryCards({
   summary,
   highlightedLabels = [],
+  linkToJobs = false,
 }: DispatchSummaryCardsProps) {
   const cards = [
     {
-      label: "Scheduled Today",
+      label: "Scheduled Today" as const,
       value: summary.scheduledToday,
       description: "Jobs on today's board",
       icon: CalendarCheck,
       iconClass: "admin-metric-icon-teal",
     },
     {
-      label: "In Progress",
+      label: "In Progress" as const,
       value: summary.inProgress,
       description: "Technicians actively working",
       icon: Loader2,
       iconClass: "admin-metric-icon-amber",
     },
     {
-      label: "Unassigned",
+      label: "Unassigned" as const,
       value: summary.unassigned,
       description: "Awaiting assignment",
       icon: UserX,
       iconClass: "admin-metric-icon-rose",
     },
     {
-      label: "Completed",
+      label: "Completed" as const,
       value: summary.completed,
       description: "Finished this period",
       icon: CheckCircle2,
@@ -45,17 +49,15 @@ export function DispatchSummaryCards({
   return (
     <div className="grid shrink-0 grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => {
-        const isHighlighted = highlightedLabels.includes(
-          card.label as DispatchSummaryHighlightLabel,
-        );
-
-        return (
-        <div
-          key={card.label}
-          className={`admin-metric-card ${
-            isHighlighted ? "admin-metric-card-highlight" : ""
-          }`}
-        >
+        const isHighlighted = highlightedLabels.includes(card.label);
+        const cardClassName = `admin-metric-card ${
+          isHighlighted ? "admin-metric-card-highlight" : ""
+        } ${
+          linkToJobs
+            ? "admin-metric-card-interactive cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/30"
+            : ""
+        }`;
+        const cardContent = (
           <div className="flex items-start justify-between gap-2 sm:gap-3">
             <div className="min-w-0">
               <p className="admin-metric-label truncate">{card.label}</p>
@@ -70,8 +72,26 @@ export function DispatchSummaryCards({
               <card.icon className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </div>
-        </div>
-      );
+        );
+
+        if (linkToJobs) {
+          return (
+            <Link
+              key={card.label}
+              href={getDispatchSummaryCardHref(card.label)}
+              className={`block min-h-11 ${cardClassName}`}
+              aria-label={`View ${card.value} ${card.label.toLowerCase()} jobs`}
+            >
+              {cardContent}
+            </Link>
+          );
+        }
+
+        return (
+          <div key={card.label} className={cardClassName}>
+            {cardContent}
+          </div>
+        );
       })}
     </div>
   );

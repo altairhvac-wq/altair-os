@@ -1,13 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createJobAction } from "@/app/actions/jobs";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { sortJobsForOwnerView } from "@/shared/lib/jobs-owner-view-sort";
 import { isJobOnOperationalDay } from "@/shared/lib/scheduled-today";
+import {
+  buildJobsPageHref,
+  parseJobsPageSearchParams,
+  type JobsViewTab,
+} from "@/shared/lib/jobs-page-filters";
 import type { Customer } from "@/shared/types/customer";
 import {
   type Job,
@@ -25,7 +30,6 @@ import { JobsTodayCardList } from "./JobsTodayCardList";
 import { JobsViewTabs } from "./JobsViewTabs";
 
 type PanelMode = "create" | "empty";
-type JobsViewTab = "today" | "all";
 
 type JobsPageViewProps = {
   initialJobs: Job[];
@@ -36,20 +40,27 @@ type JobsPageViewProps = {
   canManageCustomers?: boolean;
   initialPanelMode?: PanelMode;
   createInitialData?: Partial<JobFormData>;
+  initialViewTab?: JobsViewTab;
+  initialStatusFilter?: JobStatus | "all";
+  initialPriorityFilter?: JobPriority | "all";
+  initialUnassignedOnly?: boolean;
 };
 
 function filterAllJobs(
   jobs: Job[],
   statusFilter: JobStatus | "all",
   priorityFilter: JobPriority | "all",
+  unassignedOnly: boolean,
 ): Job[] {
   return jobs.filter((job) => {
     const matchesStatus =
       statusFilter === "all" || job.status === statusFilter;
     const matchesPriority =
       priorityFilter === "all" || job.priority === priorityFilter;
+    const matchesUnassigned =
+      !unassignedOnly || !job.assignedTechnicianId;
 
-    return matchesStatus && matchesPriority;
+    return matchesStatus && matchesPriority && matchesUnassigned;
   });
 }
 
@@ -82,19 +93,27 @@ export function JobsPageView({
   canManageCustomers = false,
   initialPanelMode = "empty",
   createInitialData,
+  initialViewTab = "today",
+  initialStatusFilter = "all",
+  initialPriorityFilter = "all",
+  initialUnassignedOnly = false,
 }: JobsPageViewProps) {
   const [jobs, setJobs] = useState(initialJobs);
   const [todayJobs, setTodayJobs] = useState(initialTodayJobs);
   const [search, setSearch] = useState("");
-  const [viewTab, setViewTab] = useState<JobsViewTab>("today");
-  const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
-  const [priorityFilter, setPriorityFilter] = useState<JobPriority | "all">(
-    "all",
+  const [viewTab, setViewTab] = useState<JobsViewTab>(initialViewTab);
+  const [statusFilter, setStatusFilter] = useState<JobStatus | "all">(
+    initialStatusFilter,
   );
+  const [priorityFilter, setPriorityFilter] = useState<JobPriority | "all">(
+    initialPriorityFilter,
+  );
+  const [unassignedOnly, setUnassignedOnly] = useState(initialUnassignedOnly);
   const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
   const [createError, setCreateError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const companyTimeZoneFromContext = useCompanyTimezone();
   const companyTimeZone = companyTimeZoneProp || companyTimeZoneFromContext;
 
@@ -102,6 +121,80 @@ export function JobsPageView({
     setJobs(initialJobs);
     setTodayJobs(initialTodayJobs);
   }, [initialJobs, initialTodayJobs]);
+
+  useEffect(() => {
+    const parsed = parseJobsPageSearchParams({
+      status: searchParams.get("status") ?? undefined,
+      view: searchParams.get("view") ?? undefined,
+      unassigned: searchParams.get("unassigned") ?? undefined,
+      priority: searchParams.get("priority") ?? undefined,
+    });
+
+    setViewTab(parsed.viewTab);
+    setStatusFilter(parsed.statusFilter);
+    setPriorityFilter(parsed.priorityFilter);
+    setUnassignedOnly(parsed.unassignedOnly);
+  }, [searchParams]);
+
+  const syncFiltersToUrl = useCallback(
+    (filters: {
+      viewTab: JobsViewTab;
+      statusFilter: JobStatus | "all";
+      priorityFilter: JobPriority | "all";
+      unassignedOnly: boolean;
+    }) => {
+      const href = buildJobsPageHref(filters, searchParams);
+      router.replace(href, { scroll: false });
+    },
+    [router, searchParams],
+  );
+
+  const handleViewTabChange = useCallback(
+    (nextTab: JobsViewTab) => {
+      setViewTab(nextTab);
+      syncFiltersToUrl({
+        viewTab: nextTab,
+        statusFilter: nextTab === "today" ? "all" : statusFilter,
+        priorityFilter: nextTab === "today" ? "all" : priorityFilter,
+        unassignedOnly: nextTab === "today" ? false : unassignedOnly,
+      });
+
+      if (nextTab === "today") {
+        setStatusFilter("all");
+        setPriorityFilter("all");
+        setUnassignedOnly(false);
+      }
+    },
+    [priorityFilter, statusFilter, syncFiltersToUrl, unassignedOnly],
+  );
+
+  const handleStatusFilterChange = useCallback(
+    (value: JobStatus | "all") => {
+      setStatusFilter(value);
+      syncFiltersToUrl({
+        viewTab: "all",
+        statusFilter: value,
+        priorityFilter,
+        unassignedOnly,
+      });
+      setViewTab("all");
+    },
+    [priorityFilter, syncFiltersToUrl, unassignedOnly],
+  );
+
+  const handlePriorityFilterChange = useCallback(
+    (value: JobPriority | "all") => {
+      setPriorityFilter(value);
+      syncFiltersToUrl({
+        viewTab: "all",
+        statusFilter,
+        priorityFilter: value,
+        unassignedOnly,
+      });
+      setViewTab("all");
+    },
+    [statusFilter, syncFiltersToUrl, unassignedOnly],
+  );
 
   const sortedTodayJobs = useMemo(
     () => sortJobsForOwnerView(todayJobs),
@@ -111,9 +204,14 @@ export function JobsPageView({
   const filteredAllJobs = useMemo(
     () =>
       sortJobsForOwnerView(
-        filterAllJobs(jobs, statusFilter, priorityFilter),
+        filterAllJobs(
+          jobs,
+          statusFilter,
+          priorityFilter,
+          unassignedOnly,
+        ),
       ),
-    [jobs, statusFilter, priorityFilter],
+    [jobs, statusFilter, priorityFilter, unassignedOnly],
   );
 
   const filteredCustomers = useMemo(
@@ -287,7 +385,7 @@ export function JobsPageView({
           <div className="shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4">
             <JobsViewTabs
               activeTab={viewTab}
-              onTabChange={setViewTab}
+              onTabChange={handleViewTabChange}
               todayCount={todayJobs.length}
               allCount={jobs.length}
             />
@@ -303,9 +401,10 @@ export function JobsPageView({
           resultLabel={isSearching ? "customers" : "jobs"}
           statusFilter={statusFilter}
           priorityFilter={priorityFilter}
-          onStatusFilterChange={setStatusFilter}
-          onPriorityFilterChange={setPriorityFilter}
+          onStatusFilterChange={handleStatusFilterChange}
+          onPriorityFilterChange={handlePriorityFilterChange}
           showJobFilters={!isSearching && viewTab === "all" && !hasNoJobs}
+          unassignedOnly={unassignedOnly}
         />
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">

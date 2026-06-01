@@ -16,6 +16,7 @@ type JobSearchFilterBarProps = {
   onStatusFilterChange?: (value: JobStatus | "all") => void;
   onPriorityFilterChange?: (value: JobPriority | "all") => void;
   showJobFilters?: boolean;
+  unassignedOnly?: boolean;
 };
 
 const filterSelectClass =
@@ -31,6 +32,7 @@ export function JobSearchFilterBar({
   onStatusFilterChange,
   onPriorityFilterChange,
   showJobFilters = false,
+  unassignedOnly = false,
 }: JobSearchFilterBarProps) {
   return (
     <div className="shrink-0 border-b border-slate-100/90 bg-white px-3 py-2 sm:px-4">
@@ -87,9 +89,11 @@ export function JobSearchFilterBar({
         ) : null}
       </div>
 
-      {search.trim() || showJobFilters ? (
+      {search.trim() || showJobFilters || unassignedOnly ? (
         <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">
-          {resultCount} {resultCount === 1 ? resultLabel.replace(/s$/, "") : resultLabel}
+          {resultCount}{" "}
+          {resultCount === 1 ? resultLabel.replace(/s$/, "") : resultLabel}
+          {unassignedOnly ? " · Unassigned only" : ""}
         </p>
       ) : null}
     </div>

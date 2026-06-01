@@ -5,10 +5,18 @@ import { listCustomers } from "@/lib/database/queries/customers";
 import { listAssignedJobs, listJobs, listJobsForOperationalDay } from "@/lib/database/queries/jobs";
 import { JobsPageView } from "@/shared/components/jobs/JobsPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
+import { parseJobsPageSearchParams } from "@/shared/lib/jobs-page-filters";
 import type { JobFormData } from "@/shared/types/job";
 
 type JobsPageProps = {
-  searchParams: Promise<{ customerId?: string; create?: string }>;
+  searchParams: Promise<{
+    customerId?: string;
+    create?: string;
+    status?: string;
+    view?: string;
+    unassigned?: string;
+    priority?: string;
+  }>;
 };
 
 export default async function JobsPage({ searchParams }: JobsPageProps) {
@@ -24,7 +32,14 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
     );
   }
 
-  const { customerId, create } = await searchParams;
+  const { customerId, create, status, view, unassigned, priority } =
+    await searchParams;
+  const pageFilters = parseJobsPageSearchParams({
+    status,
+    view,
+    unassigned,
+    priority,
+  });
 
   const canViewAll = canViewAllJobs(companyContext);
 
@@ -69,6 +84,10 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
       canManageCustomers={companyContext.permissions.manageCustomers}
       initialPanelMode={create === "1" && preselectedCustomer ? "create" : "empty"}
       createInitialData={createInitialData}
+      initialViewTab={pageFilters.viewTab}
+      initialStatusFilter={pageFilters.statusFilter}
+      initialPriorityFilter={pageFilters.priorityFilter}
+      initialUnassignedOnly={pageFilters.unassignedOnly}
     />
   );
 }
