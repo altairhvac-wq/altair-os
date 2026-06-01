@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createFieldEstimateFromJobAction } from "@/app/actions/estimates";
+import { EstimateDescriptionAiAssistant } from "@/shared/components/estimates/EstimateDescriptionAiAssistant";
 import { LineItemsEditor } from "@/shared/components/estimates/LineItemsEditor";
 import { formatActionError, formatRetryGuidance } from "@/shared/lib/operational-errors";
 import type { EstimateLineItemFormData } from "@/shared/types/estimate";
@@ -19,8 +20,11 @@ type TechnicianEstimateFormProps = {
   jobId: string;
   jobNumber: string;
   customerName: string;
+  jobType?: string;
+  jobTitle?: string;
   serviceItems: ServiceItem[];
   defaultTaxRate: number;
+  aiFeaturesEnabled?: boolean;
   onSuccess?: (estimateNumber: string) => void;
   onCancel: () => void;
   onSubmittingChange?: (isSubmitting: boolean) => void;
@@ -38,8 +42,11 @@ export function TechnicianEstimateForm({
   jobId,
   jobNumber,
   customerName,
+  jobType,
+  jobTitle,
   serviceItems,
   defaultTaxRate,
+  aiFeaturesEnabled = false,
   onSuccess,
   onCancel,
   onSubmittingChange,
@@ -144,6 +151,20 @@ export function TechnicianEstimateForm({
             placeholder="Site notes for office"
             disabled={isPending}
             className={adminFormInputClass}
+          />
+          <EstimateDescriptionAiAssistant
+            enabled={aiFeaturesEnabled}
+            context={{
+              notes,
+              customerName,
+              jobType,
+              jobTitle,
+              jobNumber,
+              lineItems,
+              jobId,
+            }}
+            onApply={setNotes}
+            disabled={isPending}
           />
         </div>
       </details>

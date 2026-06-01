@@ -45,6 +45,7 @@ type TechnicianAssignedJobsViewProps = {
   billingSummaries: JobBillingSummariesByJobId;
   defaultTaxRate: number;
   companyTimeZone: string;
+  aiFeaturesEnabled?: boolean;
 };
 
 function TechnicianJobsEmptyState({
@@ -182,6 +183,7 @@ export function TechnicianAssignedJobsView({
   billingSummaries,
   defaultTaxRate,
   companyTimeZone,
+  aiFeaturesEnabled = false,
 }: TechnicianAssignedJobsViewProps) {
   const router = useRouter();
   const [jobs, setJobs] = useState(initialJobs);
@@ -339,6 +341,7 @@ export function TechnicianAssignedJobsView({
         canCreateEstimate={canCreateEstimate}
         canApproveOnSite={canApproveOnSite}
         canViewBilling={canViewBilling}
+        aiFeaturesEnabled={aiFeaturesEnabled}
         billingSummaries={billingSummaries}
         canManageTime={canManageTime}
         defaultTaxRate={defaultTaxRate}

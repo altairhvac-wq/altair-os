@@ -22,6 +22,7 @@ type TechnicianJobDeckProps = {
   canCreateEstimate: boolean;
   canApproveOnSite: boolean;
   canViewBilling: boolean;
+  aiFeaturesEnabled?: boolean;
   billingSummaries: JobBillingSummariesByJobId;
   canManageTime: boolean;
   defaultTaxRate: number;
@@ -93,6 +94,7 @@ export function TechnicianJobDeck({
   canCreateEstimate,
   canApproveOnSite,
   canViewBilling,
+  aiFeaturesEnabled = false,
   billingSummaries,
   canManageTime,
   defaultTaxRate,
@@ -308,6 +310,7 @@ export function TechnicianJobDeck({
             canCreateEstimate={canCreateEstimate}
             canApproveOnSite={canApproveOnSite}
             canViewBilling={canViewBilling}
+            aiFeaturesEnabled={aiFeaturesEnabled}
             billingContext={{
               estimates: billingSummaries.estimatesByJobId[activeJob.id] ?? [],
               invoices: billingSummaries.invoicesByJobId[activeJob.id] ?? [],

@@ -39,6 +39,7 @@ type EstimatesPageViewProps = {
   canManageEstimates: boolean;
   initialPanelMode?: PanelMode;
   createInitialData?: Partial<EstimateFormData>;
+  aiFeaturesEnabled?: boolean;
 };
 
 function filterEstimates(
@@ -78,6 +79,7 @@ export function EstimatesPageView({
   canManageEstimates,
   initialPanelMode = "empty",
   createInitialData,
+  aiFeaturesEnabled = false,
 }: EstimatesPageViewProps) {
   const [estimates, setEstimates] = useState(initialEstimates);
   const [search, setSearch] = useState("");
@@ -262,6 +264,7 @@ export function EstimatesPageView({
         createError={createError}
         isSubmitting={isPending}
         createInitialData={createInitialData}
+        aiFeaturesEnabled={aiFeaturesEnabled && canManageEstimates}
       />
     </ListCommandCenterLayout>
   );

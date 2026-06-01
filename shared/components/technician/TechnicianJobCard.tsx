@@ -64,6 +64,7 @@ type TechnicianJobCardProps = {
   canCreateEstimate: boolean;
   canApproveOnSite?: boolean;
   canViewBilling?: boolean;
+  aiFeaturesEnabled?: boolean;
   billingContext?: {
     estimates: JobEstimateSummary[];
     invoices: JobInvoiceSummary[];
@@ -88,6 +89,7 @@ export function TechnicianJobCard({
   canCreateEstimate,
   canApproveOnSite = false,
   canViewBilling = false,
+  aiFeaturesEnabled = false,
   billingContext,
   canManageTime = false,
   defaultExpanded = true,
@@ -459,8 +461,11 @@ export function TechnicianJobCard({
           jobId={job.id}
           jobNumber={job.jobNumber}
           customerName={job.customerName}
+          jobType={job.jobType}
+          jobTitle={job.description}
           serviceItems={serviceItems}
           defaultTaxRate={defaultTaxRate}
+          aiFeaturesEnabled={aiFeaturesEnabled && canCreateEstimate}
           onClose={() => setActiveSheet(null)}
         />
       ) : null}

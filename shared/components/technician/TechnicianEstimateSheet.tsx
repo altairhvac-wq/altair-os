@@ -19,8 +19,11 @@ type TechnicianEstimateSheetProps = {
   jobId: string;
   jobNumber: string;
   customerName: string;
+  jobType?: string;
+  jobTitle?: string;
   serviceItems: ServiceItem[];
   defaultTaxRate: number;
+  aiFeaturesEnabled?: boolean;
   onClose: () => void;
   onSaved?: () => void;
 };
@@ -31,8 +34,11 @@ export function TechnicianEstimateSheet({
   jobId,
   jobNumber,
   customerName,
+  jobType,
+  jobTitle,
   serviceItems,
   defaultTaxRate,
+  aiFeaturesEnabled = false,
   onClose,
   onSaved,
 }: TechnicianEstimateSheetProps) {
@@ -88,8 +94,11 @@ export function TechnicianEstimateSheet({
                 jobId={jobId}
                 jobNumber={jobNumber}
                 customerName={customerName}
+                jobType={jobType}
+                jobTitle={jobTitle}
                 serviceItems={serviceItems}
                 defaultTaxRate={defaultTaxRate}
+                aiFeaturesEnabled={aiFeaturesEnabled}
                 onSuccess={handleSaved}
                 onCancel={onClose}
                 onSubmittingChange={setIsSubmitting}

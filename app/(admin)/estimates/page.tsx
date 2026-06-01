@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { isAiFeaturesEnabled } from "@/lib/ai/env";
 import { canViewBilling } from "@/lib/database/access-control";
 import { shouldShowAlphaComingSoon } from "@/lib/beta/alpha-hardening";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -68,6 +69,7 @@ export default async function EstimatesPage({
       canManageEstimates={companyContext.permissions.manageBilling}
       initialPanelMode={create === "1" && preselectedCustomer ? "create" : "empty"}
       createInitialData={createInitialData}
+      aiFeaturesEnabled={isAiFeaturesEnabled()}
     />
   );
 }

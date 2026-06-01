@@ -20,6 +20,7 @@ import {
   adminFormInputClass,
   adminFormLabelClass,
 } from "@/shared/lib/admin-density";
+import { EstimateDescriptionAiAssistant } from "./EstimateDescriptionAiAssistant";
 import { LineItemsEditor } from "./LineItemsEditor";
 
 type EstimateFormProps = {
@@ -31,6 +32,7 @@ type EstimateFormProps = {
   onCancel: () => void;
   error?: string | null;
   isSubmitting?: boolean;
+  aiFeaturesEnabled?: boolean;
 };
 
 type WizardStep = "info" | "line-items";
@@ -62,6 +64,7 @@ export function EstimateForm({
   onCancel,
   error,
   isSubmitting = false,
+  aiFeaturesEnabled = false,
 }: EstimateFormProps) {
   const defaults = useMemo(
     () => ({
@@ -86,6 +89,16 @@ export function EstimateForm({
   const customerJobs = useMemo(
     () => jobs.filter((job) => job.customerId === customerId),
     [jobs, customerId],
+  );
+
+  const selectedCustomer = useMemo(
+    () => customers.find((customer) => customer.id === customerId),
+    [customers, customerId],
+  );
+
+  const selectedJob = useMemo(
+    () => jobs.find((job) => job.id === jobId),
+    [jobs, jobId],
   );
 
   const statusOptions = ESTIMATE_STATUS_OPTIONS.filter(
@@ -292,6 +305,20 @@ export function EstimateForm({
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Customer or internal notes"
                     className={adminFormInputClass}
+                  />
+                  <EstimateDescriptionAiAssistant
+                    enabled={aiFeaturesEnabled}
+                    context={{
+                      notes,
+                      customerName: selectedCustomer?.name,
+                      jobType: selectedJob?.jobType,
+                      jobTitle: selectedJob?.description,
+                      jobNumber: selectedJob?.jobNumber,
+                      lineItems,
+                      jobId: jobId.trim() || undefined,
+                    }}
+                    onApply={setNotes}
+                    disabled={isSubmitting}
                   />
                 </div>
               </details>

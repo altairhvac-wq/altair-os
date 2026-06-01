@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { isAiFeaturesEnabled } from "@/lib/ai/env";
 import { canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
@@ -54,6 +55,7 @@ export default async function TechnicianPage() {
       billingSummaries={billingSummaries}
       defaultTaxRate={billingDefaults.defaultTaxRate}
       companyTimeZone={context.company.timezone}
+      aiFeaturesEnabled={isAiFeaturesEnabled()}
     />
   );
 }
