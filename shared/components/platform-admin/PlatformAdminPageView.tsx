@@ -111,11 +111,29 @@ export function PlatformAdminPageView({ data }: PlatformAdminPageViewProps) {
         </div>
       </div>
 
+      {data.diagnostics.length > 0 ? (
+        <section
+          className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3"
+          aria-label="Platform admin diagnostics"
+        >
+          <p className="text-sm font-semibold text-amber-950">Diagnostics</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-amber-900/90">
+            {data.diagnostics.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <SummaryCard label="Companies" value={summary.totalCompanies} icon={Building2} />
-        <SummaryCard label="Users" value={summary.totalUsers} icon={Users} />
         <SummaryCard
-          label="Active members"
+          label="Auth accounts"
+          value={summary.totalAuthUsers}
+          icon={Users}
+        />
+        <SummaryCard label="Companies" value={summary.totalCompanies} icon={Building2} />
+        <SummaryCard
+          label="Active memberships"
           value={summary.totalActiveMembers}
           icon={UserRound}
         />
@@ -136,7 +154,7 @@ export function PlatformAdminPageView({ data }: PlatformAdminPageViewProps) {
           }))}
         />
         <RecentList
-          title="Recent sign-ups"
+          title="Recent auth sign-ups"
           items={data.recentUsers.map((user) => ({
             id: user.id,
             primary: user.fullName?.trim() || user.email,

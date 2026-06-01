@@ -1,8 +1,8 @@
 import type { CompanyRole, MembershipStatus } from "@/lib/database/types/enums";
 
 export type PlatformAdminSummary = {
+  totalAuthUsers: number;
   totalCompanies: number;
-  totalUsers: number;
   totalActiveMembers: number;
   totalJobs: number;
   totalCustomers: number;
@@ -55,4 +55,5 @@ export type PlatformAdminOverview = {
   recentUsers: PlatformAdminRecentUser[];
   users: PlatformAdminUserRow[];
   companies: PlatformAdminCompanyRow[];
+  diagnostics: string[];
 };

@@ -1,3 +1,6 @@
+import "server-only";
+
+import type { User } from "@supabase/supabase-js";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import type { CompanyRole, MembershipStatus } from "@/lib/database/types/enums";
 import { normalizeCompanyRole } from "@/lib/database/types/roles";
@@ -14,6 +17,44 @@ const RECENT_LIMIT = 8;
 type CompanyIdRow = { company_id: string };
 type CompanyActivityRow = { company_id: string; updated_at?: string | null; created_at?: string | null };
 
+type CountResult = { count: number; error: string | null };
+
+type ProfileRow = {
+  id: string;
+  email: string;
+  full_name: string | null;
+  created_at: string;
+};
+
+type MembershipQueryRow = {
+  id: string;
+  company_id: string;
+  user_id: string | null;
+  role: string;
+  status: MembershipStatus;
+  invite_email: string | null;
+  created_at: string;
+  company: { name: string } | null;
+  profile: {
+    full_name: string | null;
+    email: string;
+    created_at: string;
+  } | null;
+};
+
+type MembershipBaseRow = Omit<MembershipQueryRow, "profile">;
+
+function pushDiagnostic(diagnostics: string[], message: string): void {
+  if (!diagnostics.includes(message)) {
+    diagnostics.push(message);
+  }
+}
+
+function formatQueryError(context: string, error: { message: string; code?: string }): string {
+  const code = error.code ? ` (${error.code})` : "";
+  return `${context}: ${error.message}${code}`;
+}
+
 function countByCompanyId(rows: CompanyIdRow[] | null): Map<string, number> {
   const counts = new Map<string, number>();
 
@@ -22,6 +63,18 @@ function countByCompanyId(rows: CompanyIdRow[] | null): Map<string, number> {
   }
 
   return counts;
+}
+
+function collectDistinctCompanyIds(...rowSets: (CompanyIdRow[] | null)[]): Set<string> {
+  const ids = new Set<string>();
+
+  for (const rows of rowSets) {
+    for (const row of rows ?? []) {
+      ids.add(row.company_id);
+    }
+  }
+
+  return ids;
 }
 
 function maxTimestampPerCompany(
@@ -73,9 +126,22 @@ function mergeActivityTimestamps(
   return result;
 }
 
-async function fetchAuthLastSignInByUserId(): Promise<Map<string, string | null>> {
+function authUserFullName(user: User): string | null {
+  const metadata = user.user_metadata as Record<string, unknown> | undefined;
+  const raw =
+    (typeof metadata?.full_name === "string" && metadata.full_name) ||
+    (typeof metadata?.name === "string" && metadata.name) ||
+    null;
+
+  const trimmed = raw?.trim();
+  return trimmed ? trimmed : null;
+}
+
+async function fetchAllAuthUsers(
+  diagnostics: string[],
+): Promise<{ users: User[]; error: string | null }> {
   const supabase = createServiceRoleClient();
-  const signInByUserId = new Map<string, string | null>();
+  const users: User[] = [];
   let page = 1;
   const perPage = 200;
 
@@ -83,16 +149,12 @@ async function fetchAuthLastSignInByUserId(): Promise<Map<string, string | null>
     const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
 
     if (error) {
-      console.error("[platform-admin] auth.admin.listUsers failed:", {
-        page,
-        message: error.message,
-      });
-      break;
+      const message = formatQueryError("auth.admin.listUsers failed", error);
+      console.error(`[platform-admin] ${message}`);
+      return { users, error: message };
     }
 
-    for (const authUser of data.users) {
-      signInByUserId.set(authUser.id, authUser.last_sign_in_at ?? null);
-    }
+    users.push(...data.users);
 
     if (data.users.length < perPage) {
       break;
@@ -101,13 +163,17 @@ async function fetchAuthLastSignInByUserId(): Promise<Map<string, string | null>
     page += 1;
   }
 
-  return signInByUserId;
+  if (users.length === 0) {
+    pushDiagnostic(diagnostics, "auth.admin.listUsers returned 0 accounts");
+  }
+
+  return { users, error: null };
 }
 
 async function countAll(
   table: "companies" | "profiles" | "company_memberships" | "jobs" | "customers" | "estimates" | "invoices",
   filters?: { column: string; value: string },
-): Promise<number> {
+): Promise<CountResult> {
   const supabase = createServiceRoleClient();
   let query = supabase.from(table).select("id", { count: "exact", head: true });
 
@@ -118,48 +184,85 @@ async function countAll(
   const { count, error } = await query;
 
   if (error) {
-    console.error(`[platform-admin] count ${table} failed:`, {
-      message: error.message,
-      code: error.code,
-    });
-    return 0;
+    const message = formatQueryError(`${table} count query failed`, error);
+    console.error(`[platform-admin] ${message}`);
+    return { count: 0, error: message };
   }
 
-  return count ?? 0;
+  return { count: count ?? 0, error: null };
 }
 
-type MembershipQueryRow = {
-  id: string;
-  company_id: string;
-  user_id: string | null;
-  role: string;
-  status: MembershipStatus;
-  invite_email: string | null;
-  created_at: string;
-  company: { name: string } | null;
-  profile: {
-    full_name: string | null;
-    email: string;
-    created_at: string;
-  } | null;
-};
-
-export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview> {
+async function fetchMembershipRows(
+  diagnostics: string[],
+): Promise<MembershipQueryRow[]> {
   const supabase = createServiceRoleClient();
 
+  const withProfile = await supabase
+    .from("company_memberships")
+    .select(
+      "id, company_id, user_id, role, status, invite_email, created_at, company:companies(name), profile:profiles!company_memberships_user_id_fkey(full_name, email, created_at)",
+    )
+    .order("created_at", { ascending: false });
+
+  if (!withProfile.error) {
+    return (withProfile.data ?? []) as MembershipQueryRow[];
+  }
+
+  const profileJoinMessage = formatQueryError("membership profile join query failed", withProfile.error);
+  console.error(`[platform-admin] ${profileJoinMessage}`);
+  pushDiagnostic(diagnostics, profileJoinMessage);
+
+  const withoutProfile = await supabase
+    .from("company_memberships")
+    .select(
+      "id, company_id, user_id, role, status, invite_email, created_at, company:companies(name)",
+    )
+    .order("created_at", { ascending: false });
+
+  if (withoutProfile.error) {
+    const message = formatQueryError("membership query failed", withoutProfile.error);
+    console.error(`[platform-admin] ${message}`);
+    pushDiagnostic(diagnostics, message);
+    return [];
+  }
+
+  pushDiagnostic(
+    diagnostics,
+    "membership rows loaded without profile join; profile names/emails may be missing",
+  );
+
+  return ((withoutProfile.data ?? []) as MembershipBaseRow[]).map((membership) => ({
+    ...membership,
+    profile: null,
+  }));
+}
+
+export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview> {
+  const diagnostics: string[] = [];
+  const supabase = createServiceRoleClient();
+
+  const authUsersPromise = fetchAllAuthUsers(diagnostics);
+
   const [
+    authUsersResult,
     companiesResult,
     profilesResult,
-    membershipsResult,
+    memberships,
     jobsCompanyIdsResult,
     customersCompanyIdsResult,
     estimatesCompanyIdsResult,
     invoicesCompanyIdsResult,
     jobActivityTimestampsResult,
     jobUpdatedTimestampsResult,
-    summaryCounts,
-    lastSignInByUserId,
+    companiesCount,
+    profilesCount,
+    activeMembersCount,
+    jobsCount,
+    customersCount,
+    estimatesCount,
+    invoicesCount,
   ] = await Promise.all([
+    authUsersPromise,
     supabase
       .from("companies")
       .select("id, name, created_at, updated_at")
@@ -168,45 +271,92 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
       .from("profiles")
       .select("id, email, full_name, created_at")
       .order("created_at", { ascending: false }),
-    supabase
-      .from("company_memberships")
-      .select(
-        "id, company_id, user_id, role, status, invite_email, created_at, company:companies(name), profile:profiles!company_memberships_user_id_fkey(full_name, email, created_at)",
-      )
-      .order("created_at", { ascending: false }),
+    fetchMembershipRows(diagnostics),
     supabase.from("jobs").select("company_id"),
     supabase.from("customers").select("company_id"),
     supabase.from("estimates").select("company_id"),
     supabase.from("invoices").select("company_id"),
     supabase.from("job_activities").select("company_id, created_at"),
     supabase.from("jobs").select("company_id, updated_at"),
-    Promise.all([
-      countAll("companies"),
-      countAll("profiles"),
-      countAll("company_memberships", { column: "status", value: "active" }),
-      countAll("jobs"),
-      countAll("customers"),
-      countAll("estimates"),
-      countAll("invoices"),
-    ]),
-    fetchAuthLastSignInByUserId(),
+    countAll("companies"),
+    countAll("profiles"),
+    countAll("company_memberships", { column: "status", value: "active" }),
+    countAll("jobs"),
+    countAll("customers"),
+    countAll("estimates"),
+    countAll("invoices"),
   ]);
 
+  const { users: authUsers, error: authUsersError } = authUsersResult;
+
+  if (authUsersError) {
+    pushDiagnostic(diagnostics, authUsersError);
+  }
+
   if (companiesResult.error) {
-    console.error("[platform-admin] companies query failed:", companiesResult.error);
+    const message = formatQueryError("companies query failed", companiesResult.error);
+    console.error(`[platform-admin] ${message}`);
+    pushDiagnostic(diagnostics, message);
   }
 
   if (profilesResult.error) {
-    console.error("[platform-admin] profiles query failed:", profilesResult.error);
+    const message = formatQueryError("profiles query failed", profilesResult.error);
+    console.error(`[platform-admin] ${message}`);
+    pushDiagnostic(diagnostics, message);
   }
 
-  if (membershipsResult.error) {
-    console.error("[platform-admin] memberships query failed:", membershipsResult.error);
+  for (const result of [
+    companiesCount,
+    profilesCount,
+    activeMembersCount,
+    jobsCount,
+    customersCount,
+    estimatesCount,
+    invoicesCount,
+  ]) {
+    if (result.error) {
+      pushDiagnostic(diagnostics, result.error);
+    }
   }
 
   const companies = companiesResult.data ?? [];
   const profiles = profilesResult.data ?? [];
-  const memberships = (membershipsResult.data ?? []) as MembershipQueryRow[];
+
+  if (profiles.length === 0 && authUsers.length > 0) {
+    pushDiagnostic(
+      diagnostics,
+      "profiles table returned 0 rows; using Supabase Auth users as source of truth for accounts",
+    );
+  } else if (profiles.length > 0 && profiles.length < authUsers.length) {
+    pushDiagnostic(
+      diagnostics,
+      `profiles (${profiles.length}) has fewer rows than auth accounts (${authUsers.length}); recent sign-ups use auth users`,
+    );
+  }
+
+  const usageCompanyIds = collectDistinctCompanyIds(
+    jobsCompanyIdsResult.data,
+    customersCompanyIdsResult.data,
+    estimatesCompanyIdsResult.data,
+    invoicesCompanyIdsResult.data,
+  );
+
+  if (companies.length === 0 && usageCompanyIds.size > 0) {
+    pushDiagnostic(
+      diagnostics,
+      "Usage data references company IDs, but no companies were returned",
+    );
+  }
+
+  const profileByUserId = new Map<string, ProfileRow>();
+  for (const profile of profiles as ProfileRow[]) {
+    profileByUserId.set(profile.id, profile);
+  }
+
+  const authUserById = new Map<string, User>();
+  for (const authUser of authUsers) {
+    authUserById.set(authUser.id, authUser);
+  }
 
   const jobCounts = countByCompanyId(jobsCompanyIdsResult.data);
   const customerCounts = countByCompanyId(customersCompanyIdsResult.data);
@@ -253,35 +403,43 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
       createdAt: company.created_at,
     }));
 
-  const recentUsers: PlatformAdminRecentUser[] = profiles
+  const recentUsers: PlatformAdminRecentUser[] = [...authUsers]
+    .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at))
     .slice(0, RECENT_LIMIT)
-    .map((profile) => ({
-      id: profile.id,
-      email: profile.email,
-      fullName: profile.full_name,
-      createdAt: profile.created_at,
-    }));
+    .map((authUser) => {
+      const profile = profileByUserId.get(authUser.id);
+
+      return {
+        id: authUser.id,
+        email: authUser.email?.trim() || profile?.email || "—",
+        fullName: profile?.full_name ?? authUserFullName(authUser),
+        createdAt: authUser.created_at,
+      };
+    });
 
   const users: PlatformAdminUserRow[] = memberships.map((membership) => {
     const role = normalizeCompanyRole(membership.role) ?? ("technician" as CompanyRole);
-    const profile = membership.profile;
+    const profile = membership.profile ?? (membership.user_id
+      ? profileByUserId.get(membership.user_id) ?? null
+      : null);
+    const authUser = membership.user_id ? authUserById.get(membership.user_id) : undefined;
     const email =
+      authUser?.email?.trim() ||
       profile?.email?.trim() ||
       membership.invite_email?.trim() ||
       "—";
-    const userId = membership.user_id;
 
     return {
       membershipId: membership.id,
-      userId,
+      userId: membership.user_id,
       companyId: membership.company_id,
-      name: profile?.full_name ?? null,
+      name: profile?.full_name ?? (authUser ? authUserFullName(authUser) : null),
       email,
       companyName: membership.company?.name ?? "Unknown company",
       role,
       membershipStatus: membership.status,
-      userCreatedAt: profile?.created_at ?? null,
-      lastSignInAt: userId ? (lastSignInByUserId.get(userId) ?? null) : null,
+      userCreatedAt: authUser?.created_at ?? profile?.created_at ?? null,
+      lastSignInAt: authUser?.last_sign_in_at ?? null,
     };
   });
 
@@ -298,29 +456,22 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     lastActivityAt: lastActivityByCompany.get(company.id) ?? company.updated_at,
   }));
 
-  const [
-    totalCompanies,
-    totalUsers,
-    totalActiveMembers,
-    totalJobs,
-    totalCustomers,
-    totalEstimates,
-    totalInvoices,
-  ] = summaryCounts;
+  const totalAuthUsers = authUsersError ? 0 : authUsers.length;
 
   return {
     summary: {
-      totalCompanies,
-      totalUsers,
-      totalActiveMembers,
-      totalJobs,
-      totalCustomers,
-      totalEstimates,
-      totalInvoices,
+      totalAuthUsers,
+      totalCompanies: companiesCount.error ? companies.length : companiesCount.count,
+      totalActiveMembers: activeMembersCount.count,
+      totalJobs: jobsCount.count,
+      totalCustomers: customersCount.count,
+      totalEstimates: estimatesCount.count,
+      totalInvoices: invoicesCount.count,
     },
     recentCompanies,
     recentUsers,
     users,
     companies: platformCompanies,
+    diagnostics,
   };
 }
