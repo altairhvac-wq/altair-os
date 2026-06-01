@@ -5,7 +5,7 @@ function Skeleton({ className }: { className?: string }) {
 function DesktopLoadingSkeleton() {
   return (
     <>
-      <section className="admin-command-surface overflow-hidden p-2.5 lg:p-3">
+      <section className="admin-command-strip-surface overflow-hidden p-2.5 lg:p-3">
         <Skeleton className="h-3 w-20" />
         <Skeleton className="mt-1.5 h-4 w-36" />
         <Skeleton className="mt-2 h-2.5 w-28" />

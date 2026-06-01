@@ -16,26 +16,34 @@ type DashboardCommandStripProps = {
 
 const SEVERITY_STYLES: Record<
   CommandStripSeverity,
-  { card: string; value: string; emphasized: boolean }
+  { card: string; label: string; value: string; chevron: string; emphasized: boolean }
 > = {
   healthy: {
-    card: "border-slate-500/25 bg-slate-800/45 hover:border-slate-400/35 hover:bg-slate-800/55 focus-visible:ring-2 focus-visible:ring-slate-400/40",
-    value: "text-slate-100",
+    card: "border border-emerald-200/90 border-l-4 border-l-emerald-500 bg-emerald-50/75 hover:border-emerald-300 hover:bg-emerald-50 focus-visible:ring-2 focus-visible:ring-emerald-400/40",
+    label: "text-emerald-700",
+    value: "text-emerald-900",
+    chevron: "text-emerald-400 group-hover:text-emerald-600",
     emphasized: false,
   },
   info: {
-    card: "border-cyan-500/20 bg-cyan-950/25 hover:border-cyan-400/30 hover:bg-cyan-950/35 focus-visible:ring-2 focus-visible:ring-cyan-400/35",
-    value: "text-cyan-50",
+    card: "border border-slate-200/90 border-l-4 border-l-cyan-400 bg-white/85 hover:border-cyan-200 hover:bg-white focus-visible:ring-2 focus-visible:ring-cyan-400/35",
+    label: "text-slate-500",
+    value: "text-slate-900",
+    chevron: "text-slate-400 group-hover:translate-x-0.5 group-hover:text-cyan-600",
     emphasized: false,
   },
   warning: {
-    card: "border-amber-400/35 bg-amber-950/30 hover:border-amber-400/45 hover:bg-amber-950/40 shadow-sm focus-visible:ring-2 focus-visible:ring-amber-400/40",
-    value: "text-amber-50",
+    card: "border border-amber-200/90 border-l-4 border-l-amber-500 bg-amber-50/80 hover:border-amber-300 hover:bg-amber-50 shadow-sm focus-visible:ring-2 focus-visible:ring-amber-400/40",
+    label: "text-amber-700",
+    value: "text-amber-900",
+    chevron: "text-amber-400 group-hover:text-amber-600",
     emphasized: true,
   },
   critical: {
-    card: "border-rose-400/40 bg-rose-950/35 ring-1 ring-rose-500/20 hover:border-rose-400/50 hover:bg-rose-950/45 hover:ring-rose-400/30 shadow-sm focus-visible:ring-2 focus-visible:ring-rose-400/40",
-    value: "text-rose-50",
+    card: "border border-rose-200/90 border-l-4 border-l-rose-500 bg-rose-50/85 hover:border-rose-300 hover:bg-rose-50 shadow-sm focus-visible:ring-2 focus-visible:ring-rose-400/40",
+    label: "text-rose-700",
+    value: "text-rose-900",
+    chevron: "text-rose-400 group-hover:text-rose-600",
     emphasized: true,
   },
 };
@@ -64,16 +72,12 @@ function CommandStripCardButton({
     >
       <div className="flex items-start justify-between gap-1">
         <p
-          className={`text-[10px] font-bold uppercase tracking-wide ${styles.emphasized ? "text-slate-600" : "text-slate-500"}`}
+          className={`text-[10px] font-bold uppercase tracking-wide ${styles.label}`}
         >
           {label}
         </p>
         <ChevronRight
-          className={`h-3.5 w-3.5 shrink-0 transition-transform ${
-            styles.emphasized
-              ? "text-white/50 group-hover:text-white/80"
-              : "text-slate-400 group-hover:translate-x-0.5 group-hover:text-slate-300"
-          }`}
+          className={`h-3.5 w-3.5 shrink-0 transition-transform ${styles.chevron}`}
           aria-hidden="true"
         />
       </div>
@@ -106,7 +110,7 @@ function CommandStripGroupSection({
 
   return (
     <div className="min-w-0">
-      <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+      <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
         {group.label}
       </p>
       <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:grid-cols-4">
@@ -140,14 +144,14 @@ export function DashboardCommandStrip({ data }: DashboardCommandStripProps) {
   return (
     <section
       aria-label="Operational command strip"
-      className="admin-command-surface min-w-0 overflow-hidden p-2.5 lg:p-3"
+      className="admin-command-strip-surface min-w-0 overflow-hidden p-2.5 lg:p-3"
     >
       <div className="mb-2 flex items-end justify-between gap-2">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/90">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-600">
             Command strip
           </p>
-          <h2 className="mt-0.5 text-sm font-black tracking-tight text-white lg:text-base">
+          <h2 className="mt-0.5 text-sm font-black tracking-tight text-slate-900 lg:text-base">
             Operations at a glance
           </h2>
         </div>
