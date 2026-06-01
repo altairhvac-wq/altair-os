@@ -6,6 +6,7 @@ import { useDashboardDrilldown } from "@/shared/components/dashboard/dashboard-d
 import {
   MobileActionCardChevron,
   MobileActionSheet,
+  MOBILE_ACTION_QUIET_TILE,
   MOBILE_ACTION_SEVERITY_STYLES,
 } from "@/shared/components/dashboard/mobile-action-sheets/MobileActionSheet";
 import {
@@ -21,14 +22,14 @@ type MobileActionDashboardProps = {
 };
 
 const CATEGORY_LABELS: Partial<Record<MobileActionCategory, string>> = {
-  "critical-operations": "Critical operations",
-  "money-actions": "Money actions",
+  "critical-operations": "Critical",
+  "money-actions": "Money",
   "quiet-summary": "Summary",
 };
 
 const VISIBLE_CARD_LIMIT = 8;
 
-function MobileActionCardRow({
+function MobileActionTile({
   card,
   onOpenSheet,
 }: {
@@ -38,40 +39,44 @@ function MobileActionCardRow({
   const { openDashboardPanel, hasPanel } = useDashboardDrilldown();
   const styles = MOBILE_ACTION_SEVERITY_STYLES[card.severity];
   const Icon = styles.icon;
+  const isQuiet = card.category === "quiet-summary";
 
   const content = (
     <>
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex items-start justify-between gap-1">
         <Icon
-          className={`h-3.5 w-3.5 shrink-0 ${styles.iconClass}`}
+          className={`h-3 w-3 shrink-0 ${isQuiet ? "text-slate-400" : styles.iconClass}`}
           aria-hidden="true"
         />
-        <div className="min-w-0">
-          <span className="block truncate text-sm font-semibold text-slate-900">
-            {card.label}
-          </span>
-          <span className="block truncate text-[11px] font-medium text-slate-500">
-            {card.description}
-          </span>
-        </div>
+        <MobileActionCardChevron />
       </div>
-      <div className="flex shrink-0 items-center gap-1.5">
+      <div className="flex min-h-0 flex-1 flex-col justify-end">
         <span
-          className={`inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ${styles.badge}`}
+          className={`text-2xl font-black tabular-nums leading-none tracking-tight ${
+            isQuiet ? "text-slate-700" : styles.count
+          }`}
         >
           {card.count}
         </span>
-        <MobileActionCardChevron />
+        <span
+          className={`mt-1 line-clamp-2 text-[11px] font-semibold leading-tight ${
+            isQuiet ? "text-slate-500" : "text-slate-800"
+          }`}
+        >
+          {card.label}
+        </span>
       </div>
     </>
   );
 
-  const rowClass = `flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-slate-50/80 ${styles.row}`;
+  const tileClass = `flex aspect-square w-full flex-col rounded-xl border p-2.5 text-left transition-colors hover:bg-slate-50/80 active:scale-[0.98] ${
+    isQuiet ? MOBILE_ACTION_QUIET_TILE : styles.tile
+  }`;
 
   if (card.sheetType) {
     return (
       <li>
-        <button type="button" onClick={() => onOpenSheet(card)} className={rowClass}>
+        <button type="button" onClick={() => onOpenSheet(card)} className={tileClass}>
           {content}
         </button>
       </li>
@@ -84,7 +89,7 @@ function MobileActionCardRow({
         <button
           type="button"
           onClick={() => openDashboardPanel(card.panelId!)}
-          className={rowClass}
+          className={tileClass}
         >
           {content}
         </button>
@@ -95,14 +100,18 @@ function MobileActionCardRow({
   if (card.href) {
     return (
       <li>
-        <Link href={card.href} className={rowClass}>
+        <Link href={card.href} className={tileClass}>
           {content}
         </Link>
       </li>
     );
   }
 
-  return <li className={rowClass}>{content}</li>;
+  return (
+    <li>
+      <div className={tileClass}>{content}</div>
+    </li>
+  );
 }
 
 function groupCardsByCategory(
@@ -170,9 +179,9 @@ export function MobileActionDashboard({ data }: MobileActionDashboardProps) {
                     {CATEGORY_LABELS[category]}
                   </p>
                 ) : null}
-                <ul className="space-y-1">
+                <ul className="grid grid-cols-2 gap-2">
                   {categoryCards.map((card) => (
-                    <MobileActionCardRow
+                    <MobileActionTile
                       key={card.id}
                       card={card}
                       onOpenSheet={setActiveCard}

@@ -147,7 +147,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   if (operations.unassignedToday > 0) {
     cards.push({
       id: "unassigned-jobs",
-      label: "Unassigned jobs",
+      label: "Unassigned",
       count: operations.unassignedToday,
       severity: operations.unassignedToday >= 3 ? "critical" : "warning",
       description: buildDescription("unassigned-jobs", operations.unassignedToday),
@@ -186,7 +186,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   if (access.canViewOperationalReports && stalledJobs.stalledCount > 0) {
     cards.push({
       id: "stalled-jobs",
-      label: "Stalled jobs",
+      label: "Stalled",
       count: stalledJobs.stalledCount,
       severity: stalledJobs.stalledCount >= 5 ? "critical" : "warning",
       description: buildDescription("stalled-jobs", stalledJobs.stalledCount),
@@ -200,7 +200,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   if (access.canViewBilling && money.overdueCount > 0) {
     cards.push({
       id: "overdue-invoices",
-      label: "Overdue invoices",
+      label: "Overdue",
       count: money.overdueCount,
       severity: "critical",
       description: buildDescription("overdue-invoices", money.overdueCount),
@@ -273,7 +273,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   if (access.canViewCompanyExpenses && expenses.submittedCount > 0) {
     cards.push({
       id: "expense-approvals",
-      label: "Expense approvals",
+      label: "Expenses",
       count: expenses.submittedCount,
       severity: "warning",
       description: buildDescription("expense-approvals", expenses.submittedCount),
@@ -321,7 +321,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   if (notifications.unreadCount > 0) {
     cards.push({
       id: "unread-notifications",
-      label: "Unread notifications",
+      label: "Alerts",
       count: notifications.unreadCount,
       severity: "info",
       description: buildDescription(
