@@ -1,6 +1,9 @@
 "use server";
 
-import { prepareEstimateDescriptionDraft } from "@/lib/ai/estimate-description";
+import {
+  isInsufficientEstimateDescriptionResponse,
+  prepareEstimateDescriptionDraft,
+} from "@/lib/ai/estimate-description";
 import { generateDraftText } from "@/lib/ai/provider";
 import type { GenerateDraftTextErrorCode } from "@/lib/ai/types";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -92,6 +95,10 @@ export async function generateEstimateDescriptionDraftAction(
   const draftText = outcome.result.draftText.trim();
   if (!draftText) {
     return { error: mapAiError("empty_response") };
+  }
+
+  if (isInsufficientEstimateDescriptionResponse(draftText)) {
+    return { error: draftText };
   }
 
   return { draftText };
