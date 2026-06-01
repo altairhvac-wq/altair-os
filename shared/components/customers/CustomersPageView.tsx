@@ -130,14 +130,15 @@ export function CustomersPageView({
     <ListCommandCenterLayout
       title="Customers"
       subtitle="Manage profiles, locations, and service history"
+      density="compact"
       primaryAction={
         canManageCustomers ? (
           <button
             type="button"
             onClick={handleNewCustomer}
-            className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm"
           >
-            <UserPlus className="h-4 w-4" />
+            <UserPlus className="h-3.5 w-3.5" />
             New Customer
           </button>
         ) : undefined
