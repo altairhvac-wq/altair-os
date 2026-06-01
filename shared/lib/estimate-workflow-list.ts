@@ -1,4 +1,13 @@
-import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
+import type {
+  BillingOperationalDayOptions,
+  BillingWorkflowListSection,
+} from "@/shared/lib/billing-workflow-list";
+import {
+  isDateOnlyOnOperationalDay,
+  isTimestampOnOperationalDay,
+} from "@/shared/lib/billing-workflow-list";
+import { isJobOnOperationalDay } from "@/shared/lib/scheduled-today";
+import type { Job } from "@/shared/types/job";
 import type { Estimate, EstimateStatus } from "@/shared/types/estimate";
 
 export type EstimateWorkflowGroup = "needs_action" | "approved" | "closed";
@@ -160,6 +169,102 @@ export function prepareEstimatesForListView(
     sections: [
       {
         id: "filtered",
+        label: "",
+        items: sortEstimatesForWorkflow(estimates),
+      },
+    ],
+    showSectionHeaders: false,
+  };
+}
+
+export type EstimateTodayContext = BillingOperationalDayOptions & {
+  jobsById?: ReadonlyMap<string, Job>;
+};
+
+function isDraftEstimateNeedingActionToday(
+  estimate: Estimate,
+  options?: EstimateTodayContext,
+): boolean {
+  if (estimate.status !== "draft") {
+    return false;
+  }
+
+  if (isDateOnlyOnOperationalDay(estimate.createdAt, options)) {
+    return true;
+  }
+
+  if (isTimestampOnOperationalDay(estimate.updatedAt, options)) {
+    return true;
+  }
+
+  if (estimate.jobId && options?.jobsById) {
+    const job = options.jobsById.get(estimate.jobId);
+
+    if (job && isJobOnOperationalDay(job, options)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function isEstimateRelevantToday(
+  estimate: Estimate,
+  context?: EstimateTodayContext,
+): boolean {
+  if (isDateOnlyOnOperationalDay(estimate.createdAt, context)) {
+    return true;
+  }
+
+  if (isTimestampOnOperationalDay(estimate.updatedAt, context)) {
+    return true;
+  }
+
+  if (estimate.sentAt && isTimestampOnOperationalDay(estimate.sentAt, context)) {
+    return true;
+  }
+
+  if (
+    estimate.approvedAt &&
+    isTimestampOnOperationalDay(estimate.approvedAt, context)
+  ) {
+    return true;
+  }
+
+  if (isDraftEstimateNeedingActionToday(estimate, context)) {
+    return true;
+  }
+
+  if (estimate.jobId && context?.jobsById) {
+    const job = context.jobsById.get(estimate.jobId);
+
+    if (job && isJobOnOperationalDay(job, context)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function filterEstimatesForTodayView(
+  estimates: Estimate[],
+  context?: EstimateTodayContext,
+): Estimate[] {
+  return estimates.filter((estimate) =>
+    isEstimateRelevantToday(estimate, context),
+  );
+}
+
+export function prepareEstimatesForTodayView(
+  estimates: Estimate[],
+): {
+  sections: BillingWorkflowListSection<Estimate>[];
+  showSectionHeaders: boolean;
+} {
+  return {
+    sections: [
+      {
+        id: "today",
         label: "",
         items: sortEstimatesForWorkflow(estimates),
       },

@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createInvoiceAction } from "@/app/actions/invoices";
+import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
@@ -19,10 +20,15 @@ import {
   type InvoiceListStatusFilter,
   type InvoicePageFocusState,
 } from "@/shared/lib/invoice-page-focus";
-import { prepareInvoicesForListView } from "@/shared/lib/invoice-workflow-list";
+import {
+  filterInvoicesForTodayView,
+  prepareInvoicesForListView,
+  prepareInvoicesForTodayView,
+} from "@/shared/lib/invoice-workflow-list";
 import { formatCurrency } from "@/shared/types/customer";
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
+import { JobsViewTabs, type TodayAllViewTab } from "@/shared/components/jobs/JobsViewTabs";
 import { InvoiceCashFlowFocusBanner } from "./InvoiceCashFlowFocusBanner";
 import { InvoiceDetailsPanel } from "./InvoiceDetailsPanel";
 import { InvoiceSearchFilterBar } from "./InvoiceSearchFilterBar";
@@ -100,36 +106,63 @@ export function InvoicesPageView({
 }: InvoicesPageViewProps) {
   const [invoices, setInvoices] = useState(initialInvoices);
   const [search, setSearch] = useState("");
+  const [viewTab, setViewTab] = useState<TodayAllViewTab>("today");
   const [statusFilter, setStatusFilter] =
     useState<InvoiceListStatusFilter>(initialStatusFilter);
   const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
   const [createError, setCreateError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const companyTimeZone = useCompanyTimezone();
 
   const prioritizeCashFlow = invoicePageFocus?.focus === "cash-flow";
+
+  const todayContext = useMemo(
+    () => ({
+      timeZone: companyTimeZone,
+    }),
+    [companyTimeZone],
+  );
+
+  const todayInvoices = useMemo(
+    () => filterInvoicesForTodayView(invoices, todayContext),
+    [invoices, todayContext],
+  );
+
+  const viewScopedInvoices = useMemo(
+    () => (viewTab === "today" ? todayInvoices : invoices),
+    [invoices, todayInvoices, viewTab],
+  );
 
   const filteredInvoices = useMemo(
     () =>
       filterInvoices(
-        invoices,
+        viewScopedInvoices,
         search,
         statusFilter,
         initialJobId,
         prioritizeCashFlow,
       ),
-    [invoices, search, statusFilter, initialJobId, prioritizeCashFlow],
+    [
+      viewScopedInvoices,
+      search,
+      statusFilter,
+      initialJobId,
+      prioritizeCashFlow,
+    ],
   );
 
-  const invoiceListPresentation = useMemo(
-    () =>
-      prepareInvoicesForListView(
-        filteredInvoices,
-        statusFilter,
-        prioritizeCashFlow,
-      ),
-    [filteredInvoices, statusFilter, prioritizeCashFlow],
-  );
+  const invoiceListPresentation = useMemo(() => {
+    if (viewTab === "today") {
+      return prepareInvoicesForTodayView(filteredInvoices);
+    }
+
+    return prepareInvoicesForListView(
+      filteredInvoices,
+      statusFilter,
+      prioritizeCashFlow,
+    );
+  }, [filteredInvoices, prioritizeCashFlow, statusFilter, viewTab]);
 
   function handleSelectInvoice(invoice: Invoice) {
     router.push(`/invoices/${invoice.id}`);
@@ -177,6 +210,7 @@ export function InvoicesPageView({
   }
 
   const hasNoInvoices = invoices.length === 0;
+  const hasNoTodayInvoices = !hasNoInvoices && todayInvoices.length === 0;
   const hasNoResults = !hasNoInvoices && filteredInvoices.length === 0;
 
   return (
@@ -211,10 +245,12 @@ export function InvoicesPageView({
                   {invoicePageFocus.sectionEyebrow}
                 </p>
               ) : null}
-              <h2 className="admin-heading-section sm:text-base">All invoices</h2>
+              <h2 className="admin-heading-section sm:text-base">Invoices</h2>
               <p className="admin-text-helper mt-0.5">
-                {invoicePageFocus?.sectionDescription ??
-                  "Track billing, payments, and outstanding balances"}
+                {viewTab === "today"
+                  ? `${todayInvoices.length} need attention today`
+                  : (invoicePageFocus?.sectionDescription ??
+                    "Track billing, payments, and outstanding balances")}
               </p>
             </div>
             {canManageInvoices ? (
@@ -231,6 +267,18 @@ export function InvoicesPageView({
           </div>
 
           {!hasNoInvoices ? (
+            <div className="shrink-0 space-y-2 px-4 pt-2">
+              <JobsViewTabs
+                activeTab={viewTab}
+                onTabChange={setViewTab}
+                todayCount={todayInvoices.length}
+                allCount={invoices.length}
+                allTabLabel="All"
+              />
+            </div>
+          ) : null}
+
+          {!hasNoInvoices ? (
             <div className="shrink-0">
               <InvoiceSearchFilterBar
                 search={search}
@@ -238,6 +286,7 @@ export function InvoicesPageView({
                 onSearchChange={setSearch}
                 onStatusFilterChange={setStatusFilter}
                 resultCount={filteredInvoices.length}
+                showStatusFilter={viewTab === "all"}
               />
             </div>
           ) : null}
@@ -253,6 +302,8 @@ export function InvoicesPageView({
                     : undefined
                 }
               />
+            ) : viewTab === "today" && hasNoTodayInvoices ? (
+              <InvoicesEmptyState variant="no-today" />
             ) : hasNoResults ? (
               <InvoicesEmptyState variant="no-results" />
             ) : (

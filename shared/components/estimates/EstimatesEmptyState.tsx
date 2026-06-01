@@ -2,7 +2,7 @@ import { FileText, SearchX } from "lucide-react";
 import Link from "next/link";
 
 type EstimatesEmptyStateProps = {
-  variant: "no-estimates" | "no-results";
+  variant: "no-estimates" | "no-results" | "no-today";
   onCreateEstimate?: () => void;
   needsCustomers?: boolean;
 };
@@ -13,6 +13,7 @@ export function EstimatesEmptyState({
   needsCustomers = false,
 }: EstimatesEmptyStateProps) {
   const isNoResults = variant === "no-results";
+  const isNoToday = variant === "no-today";
 
   const emptyDescription = needsCustomers
     ? "Estimates are linked to customers. Add a customer first, then create your first quote."
@@ -32,16 +33,22 @@ export function EstimatesEmptyState({
         </div>
 
         <h3 className="admin-heading-section mt-3 text-base">
-          {isNoResults ? "No estimates found" : "No estimates yet"}
+          {isNoResults
+            ? "No estimates found"
+            : isNoToday
+              ? "No estimates need attention today."
+              : "No estimates yet"}
         </h3>
 
         <p className="admin-text-muted mt-1.5 text-sm">
           {isNoResults
             ? "Try adjusting your search or filters to find what you're looking for."
-            : emptyDescription}
+            : isNoToday
+              ? "Check All for the full estimate list."
+              : emptyDescription}
         </p>
 
-        {!isNoResults && needsCustomers ? (
+        {!isNoResults && !isNoToday && needsCustomers ? (
           <Link
             href="/customers"
             className="mt-4 inline-flex items-center gap-2 admin-btn-primary"
@@ -51,7 +58,7 @@ export function EstimatesEmptyState({
           </Link>
         ) : null}
 
-        {!isNoResults && !needsCustomers && onCreateEstimate ? (
+        {!isNoResults && !isNoToday && !needsCustomers && onCreateEstimate ? (
           <button
             type="button"
             onClick={onCreateEstimate}

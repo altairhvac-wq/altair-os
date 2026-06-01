@@ -40,6 +40,9 @@ export type Estimate = {
   validUntil?: string;
   notes?: string;
   createdAt: string;
+  updatedAt?: string;
+  sentAt?: string;
+  approvedAt?: string;
 };
 
 export type EstimateDetail = Estimate & {

@@ -132,6 +132,7 @@ export function mapInvoiceRowToInvoice(row: InvoiceRowWithRelations): Invoice {
     paidAt: row.paid_at ? toDateOnly(row.paid_at) : undefined,
     notes: row.notes ?? undefined,
     createdAt: toDateOnly(row.created_at),
+    updatedAt: row.updated_at,
   };
 }
 

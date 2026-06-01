@@ -109,6 +109,7 @@ export function mapEstimateRowToEstimate(
     validUntil: row.valid_until ? toDateOnly(row.valid_until) : undefined,
     notes: row.notes ?? undefined,
     createdAt: toDateOnly(row.created_at),
+    updatedAt: row.updated_at,
   };
 }
 

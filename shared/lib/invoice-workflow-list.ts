@@ -1,4 +1,11 @@
-import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
+import type {
+  BillingOperationalDayOptions,
+  BillingWorkflowListSection,
+} from "@/shared/lib/billing-workflow-list";
+import {
+  isDateOnlyOnOperationalDay,
+  isTimestampOnOperationalDay,
+} from "@/shared/lib/billing-workflow-list";
 import type { Invoice, InvoiceStatus } from "@/shared/types/invoice";
 import type { InvoiceListStatusFilter } from "@/shared/lib/invoice-page-focus";
 
@@ -209,6 +216,68 @@ export function prepareInvoicesForListView(
         items: prioritizeCashFlow
           ? invoices
           : sortInvoicesForWorkflow(invoices),
+      },
+    ],
+    showSectionHeaders: false,
+  };
+}
+
+export type InvoiceTodayContext = BillingOperationalDayOptions;
+
+export function isInvoiceRelevantToday(
+  invoice: Invoice,
+  context?: InvoiceTodayContext,
+): boolean {
+  if (isDateOnlyOnOperationalDay(invoice.createdAt, context)) {
+    return true;
+  }
+
+  if (isTimestampOnOperationalDay(invoice.updatedAt, context)) {
+    return true;
+  }
+
+  if (invoice.sentAt && isTimestampOnOperationalDay(invoice.sentAt, context)) {
+    return true;
+  }
+
+  if (isDateOnlyOnOperationalDay(invoice.dueDate, context)) {
+    return true;
+  }
+
+  if (invoice.status === "overdue") {
+    return true;
+  }
+
+  if (invoice.status === "partially_paid") {
+    return true;
+  }
+
+  if (isDateOnlyOnOperationalDay(invoice.paidAt, context)) {
+    return true;
+  }
+
+  return false;
+}
+
+export function filterInvoicesForTodayView(
+  invoices: Invoice[],
+  context?: InvoiceTodayContext,
+): Invoice[] {
+  return invoices.filter((invoice) => isInvoiceRelevantToday(invoice, context));
+}
+
+export function prepareInvoicesForTodayView(
+  invoices: Invoice[],
+): {
+  sections: BillingWorkflowListSection<Invoice>[];
+  showSectionHeaders: boolean;
+} {
+  return {
+    sections: [
+      {
+        id: "today",
+        label: "",
+        items: sortInvoicesForWorkflow(invoices),
       },
     ],
     showSectionHeaders: false,

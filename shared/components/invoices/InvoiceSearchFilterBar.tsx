@@ -16,6 +16,7 @@ type InvoiceSearchFilterBarProps = {
   onSearchChange: (value: string) => void;
   onStatusFilterChange: (value: InvoiceListStatusFilter) => void;
   resultCount: number;
+  showStatusFilter?: boolean;
 };
 
 export function InvoiceSearchFilterBar({
@@ -24,6 +25,7 @@ export function InvoiceSearchFilterBar({
   onSearchChange,
   onStatusFilterChange,
   resultCount,
+  showStatusFilter = true,
 }: InvoiceSearchFilterBarProps) {
   return (
     <div className="shrink-0 border-b border-slate-100/90 bg-white px-4 py-3">
@@ -39,22 +41,24 @@ export function InvoiceSearchFilterBar({
           />
         </div>
 
-        <div className="relative shrink-0">
-          <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <select
-            value={statusFilter}
-            onChange={(e) =>
-              onStatusFilterChange(e.target.value as InvoiceListStatusFilter)
-            }
-            className="w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-10 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:w-auto"
-          >
-            {INVOICE_LIST_STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {showStatusFilter ? (
+          <div className="relative shrink-0">
+            <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <select
+              value={statusFilter}
+              onChange={(e) =>
+                onStatusFilterChange(e.target.value as InvoiceListStatusFilter)
+              }
+              className="w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-10 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:w-auto"
+            >
+              {INVOICE_LIST_STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
       </div>
 
       <p className="admin-text-helper mt-2">

@@ -1,10 +1,11 @@
-type JobsViewTab = "today" | "all";
+export type TodayAllViewTab = "today" | "all";
 
 type JobsViewTabsProps = {
-  activeTab: JobsViewTab;
-  onTabChange: (tab: JobsViewTab) => void;
+  activeTab: TodayAllViewTab;
+  onTabChange: (tab: TodayAllViewTab) => void;
   todayCount: number;
   allCount: number;
+  allTabLabel?: string;
 };
 
 export function JobsViewTabs({
@@ -12,10 +13,11 @@ export function JobsViewTabs({
   onTabChange,
   todayCount,
   allCount,
+  allTabLabel = "All Jobs",
 }: JobsViewTabsProps) {
-  const tabs: { id: JobsViewTab; label: string; count: number }[] = [
+  const tabs: { id: TodayAllViewTab; label: string; count: number }[] = [
     { id: "today", label: "Today", count: todayCount },
-    { id: "all", label: "All Jobs", count: allCount },
+    { id: "all", label: allTabLabel, count: allCount },
   ];
 
   return (

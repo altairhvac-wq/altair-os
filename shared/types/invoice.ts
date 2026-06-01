@@ -49,6 +49,8 @@ export type Invoice = {
   paidAt?: string;
   notes?: string;
   createdAt: string;
+  updatedAt?: string;
+  sentAt?: string;
 };
 
 export type InvoiceDetail = Invoice & {

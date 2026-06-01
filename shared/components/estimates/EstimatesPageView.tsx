@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createEstimateAction } from "@/app/actions/estimates";
+import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
@@ -14,11 +15,16 @@ import {
   type EstimateStatus,
 } from "@/shared/types/estimate";
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
+import { JobsViewTabs, type TodayAllViewTab } from "@/shared/components/jobs/JobsViewTabs";
 import { EstimateDetailsPanel } from "./EstimateDetailsPanel";
 import { EstimateSearchFilterBar } from "./EstimateSearchFilterBar";
 import { EstimatesEmptyState } from "./EstimatesEmptyState";
 import { EstimatesTable } from "./EstimatesTable";
-import { prepareEstimatesForListView } from "@/shared/lib/estimate-workflow-list";
+import {
+  filterEstimatesForTodayView,
+  prepareEstimatesForListView,
+  prepareEstimatesForTodayView,
+} from "@/shared/lib/estimate-workflow-list";
 import { formatEstimateStatus } from "@/shared/types/estimate";
 import { formatCurrency } from "@/shared/types/customer";
 
@@ -74,6 +80,7 @@ export function EstimatesPageView({
 }: EstimatesPageViewProps) {
   const [estimates, setEstimates] = useState(initialEstimates);
   const [search, setSearch] = useState("");
+  const [viewTab, setViewTab] = useState<TodayAllViewTab>("today");
   const [statusFilter, setStatusFilter] = useState<EstimateStatus | "all">(
     "all",
   );
@@ -81,16 +88,43 @@ export function EstimatesPageView({
   const [createError, setCreateError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const companyTimeZone = useCompanyTimezone();
+
+  const jobsById = useMemo(
+    () => new Map(jobs.map((job) => [job.id, job])),
+    [jobs],
+  );
+
+  const todayContext = useMemo(
+    () => ({
+      timeZone: companyTimeZone,
+      jobsById,
+    }),
+    [companyTimeZone, jobsById],
+  );
+
+  const todayEstimates = useMemo(
+    () => filterEstimatesForTodayView(estimates, todayContext),
+    [estimates, todayContext],
+  );
+
+  const viewScopedEstimates = useMemo(
+    () => (viewTab === "today" ? todayEstimates : estimates),
+    [estimates, todayEstimates, viewTab],
+  );
 
   const filteredEstimates = useMemo(
-    () => filterEstimates(estimates, search, statusFilter),
-    [estimates, search, statusFilter],
+    () => filterEstimates(viewScopedEstimates, search, statusFilter),
+    [viewScopedEstimates, search, statusFilter],
   );
 
-  const estimateListPresentation = useMemo(
-    () => prepareEstimatesForListView(filteredEstimates, statusFilter),
-    [filteredEstimates, statusFilter],
-  );
+  const estimateListPresentation = useMemo(() => {
+    if (viewTab === "today") {
+      return prepareEstimatesForTodayView(filteredEstimates);
+    }
+
+    return prepareEstimatesForListView(filteredEstimates, statusFilter);
+  }, [filteredEstimates, statusFilter, viewTab]);
 
   function handleSelectEstimate(estimate: Estimate) {
     router.push(`/estimates/${estimate.id}`);
@@ -138,6 +172,7 @@ export function EstimatesPageView({
   }
 
   const hasNoEstimates = estimates.length === 0;
+  const hasNoTodayEstimates = !hasNoEstimates && todayEstimates.length === 0;
   const hasNoResults = !hasNoEstimates && filteredEstimates.length === 0;
 
   const isCreateOpen = panelMode === "create";
@@ -155,9 +190,11 @@ export function EstimatesPageView({
       >
         <div className="admin-panel-header admin-section-header flex shrink-0 flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
-            <h2 className="admin-heading-section sm:text-base">All estimates</h2>
+            <h2 className="admin-heading-section sm:text-base">Estimates</h2>
             <p className="admin-text-helper mt-0.5">
-              Create quotes, track approvals, and convert to jobs
+              {viewTab === "today"
+                ? `${todayEstimates.length} need attention today`
+                : "Create quotes, track approvals, and convert to jobs"}
             </p>
           </div>
           {canManageEstimates ? (
@@ -174,6 +211,18 @@ export function EstimatesPageView({
         </div>
 
         {!hasNoEstimates ? (
+          <div className="shrink-0 space-y-2 px-4 pt-2">
+            <JobsViewTabs
+              activeTab={viewTab}
+              onTabChange={setViewTab}
+              todayCount={todayEstimates.length}
+              allCount={estimates.length}
+              allTabLabel="All"
+            />
+          </div>
+        ) : null}
+
+        {!hasNoEstimates ? (
           <div className="shrink-0">
             <EstimateSearchFilterBar
               search={search}
@@ -181,6 +230,7 @@ export function EstimatesPageView({
               onSearchChange={setSearch}
               onStatusFilterChange={setStatusFilter}
               resultCount={filteredEstimates.length}
+              showStatusFilter={viewTab === "all"}
             />
           </div>
         ) : null}
@@ -196,6 +246,8 @@ export function EstimatesPageView({
                   : undefined
               }
             />
+          ) : viewTab === "today" && hasNoTodayEstimates ? (
+            <EstimatesEmptyState variant="no-today" />
           ) : hasNoResults ? (
             <EstimatesEmptyState variant="no-results" />
           ) : (
