@@ -139,7 +139,7 @@ export function FocusedDocumentOverlay({
           disabled={closeDisabled}
           className="absolute inset-0 z-0 hidden bg-slate-900/20 lg:block disabled:cursor-default"
         />
-        <div className="relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-white lg:mx-auto lg:max-w-6xl lg:shadow-2xl lg:ring-1 lg:ring-slate-200/80">
+        <div className="safe-area-top-mobile relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-white lg:mx-auto lg:max-w-6xl lg:pt-0 lg:shadow-2xl lg:ring-1 lg:ring-slate-200/80">
           <OverlayHeader
             title={title}
             subtitle={subtitle}

@@ -11,6 +11,8 @@ type MobileSheetHeaderProps = {
   closeDisabled?: boolean;
   trailing?: React.ReactNode;
   headerClassName?: string;
+  /** Pad below the notch when the sheet can reach the top of the viewport (e.g. 90vh sheets). */
+  safeAreaTop?: boolean;
 };
 
 export function MobileSheetHeader({
@@ -22,10 +24,13 @@ export function MobileSheetHeader({
   closeDisabled = false,
   trailing,
   headerClassName,
+  safeAreaTop = false,
 }: MobileSheetHeaderProps) {
+  const safeTopClass = safeAreaTop ? "overlay-header-safe pb-2.5 sm:pb-2.5" : "py-2.5";
+
   return (
     <header
-      className={`flex shrink-0 items-center gap-2.5 border-b border-slate-100 bg-white px-3 py-2.5 sm:px-4 ${headerClassName ?? ""}`}
+      className={`flex shrink-0 items-center gap-2.5 border-b border-slate-100 bg-white px-3 sm:px-4 ${safeTopClass} ${headerClassName ?? ""}`}
     >
       {icon}
       <div className="min-w-0 flex-1">

@@ -75,6 +75,7 @@ function DashboardDrilldownSheet({
           title={panelTitle}
           subtitle="Full breakdown from live dashboard data"
           onClose={onClose}
+          safeAreaTop
           icon={
             <MobileSheetHeaderIcon className="bg-cyan-100 text-cyan-700">
               <LayoutDashboard className="h-4 w-4" />

@@ -89,7 +89,7 @@ export function CustomerEditControl({
             className="absolute inset-0 bg-slate-900/40"
           />
           <div className="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-xl sm:max-h-[85vh] sm:rounded-2xl">
-            <header className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-3.5 sm:px-5">
+            <header className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 pb-3.5 overlay-header-safe-mobile sm:px-5 sm:py-3.5">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
                   Edit customer

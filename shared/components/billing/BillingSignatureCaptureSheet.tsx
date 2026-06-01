@@ -233,6 +233,7 @@ function CaptureSignatureModal({
           subtitle={`${documentNumber} — have the customer sign below.`}
           onClose={onClose}
           closeDisabled={preventAccidentalDismiss}
+          safeAreaTop
           icon={
             <MobileSheetHeaderIcon className="h-9 w-9 bg-cyan-100 text-cyan-700">
               <PenLine className="h-4 w-4" />

@@ -29,7 +29,7 @@ function PanelHeader({
   closeDisabled?: boolean;
 }) {
   return (
-    <div className="admin-panel-header admin-section-header flex shrink-0 items-start justify-between border-b border-slate-100/90">
+    <div className="admin-panel-header admin-section-header overlay-header-safe-mobile flex shrink-0 items-start justify-between border-b border-slate-100/90">
       <div className="min-w-0 pr-2">
         <h2 className="admin-heading-section sm:text-base">{title}</h2>
         {subtitle ? (

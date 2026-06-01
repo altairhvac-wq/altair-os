@@ -161,6 +161,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
           subtitle={`Amount due: ${formatCurrency(invoice.balanceDue)}`}
           onClose={onClose}
           closeDisabled={closeDisabled}
+          safeAreaTop
           icon={
             <MobileSheetHeaderIcon className="h-9 w-9 bg-emerald-100 text-emerald-700">
               <CreditCard className="h-4 w-4" />

@@ -43,6 +43,7 @@ export function UnassignedJobsModal({
           title="Unassigned Jobs"
           subtitle={`${jobs.length} ${jobs.length === 1 ? "job" : "jobs"} need assignment`}
           onClose={onClose}
+          safeAreaTop
           headerClassName="border-amber-200/80 bg-amber-50/40"
           icon={
             <MobileSheetHeaderIcon className="h-9 w-9 bg-amber-100 text-amber-700">
