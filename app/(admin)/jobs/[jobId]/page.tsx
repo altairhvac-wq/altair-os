@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { isAiFeaturesEnabled } from "@/lib/ai/env";
 import {
   canViewBilling,
   canViewJob,
@@ -124,6 +125,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       canManageCustomers={access.canManageCustomers}
       operationalInconsistencies={operationalInconsistencies}
       billingContext={billingContext ?? undefined}
+      aiFeaturesEnabled={isAiFeaturesEnabled()}
     />
   );
 }

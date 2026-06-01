@@ -22,6 +22,7 @@ import { JobExpenseReceiptsSection } from "./JobExpenseReceiptsSection";
 import { JobMaterialsSection } from "./JobMaterialsSection";
 import { JobProfitabilitySection } from "./JobProfitabilitySection";
 import { JobDetailHashScroll } from "./JobDetailHashScroll";
+import { JobSummaryAiAssistant } from "./JobSummaryAiAssistant";
 import { JobOperationalRecoverySection } from "./JobOperationalRecoverySection";
 import { JobReviewChecklistSection } from "./JobReviewChecklistSection";
 import { OperationalActivityTimeline } from "@/shared/components/operational/OperationalActivityTimeline";
@@ -70,6 +71,7 @@ type JobDetailPageViewProps = {
     estimates: JobEstimateSummary[];
     invoices: JobInvoiceSummary[];
   };
+  aiFeaturesEnabled?: boolean;
 };
 
 type ContentSectionProps = {
@@ -111,6 +113,7 @@ export function JobDetailPageView({
   canManageCustomers,
   operationalInconsistencies = [],
   billingContext,
+  aiFeaturesEnabled = false,
 }: JobDetailPageViewProps) {
   const customerEmail = job.customerEmail?.trim();
   const customerPhone = job.customerPhone?.trim();
@@ -198,6 +201,11 @@ export function JobDetailPageView({
           </div>
         </div>
       </section>
+
+      <JobSummaryAiAssistant
+        jobId={job.id}
+        aiFeaturesEnabled={aiFeaturesEnabled}
+      />
 
       <section className={adminCardSectionClass}>
         <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
