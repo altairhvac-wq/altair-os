@@ -19,6 +19,7 @@ import {
   type InvoiceListStatusFilter,
   type InvoicePageFocusState,
 } from "@/shared/lib/invoice-page-focus";
+import { prepareInvoicesForListView } from "@/shared/lib/invoice-workflow-list";
 import { formatCurrency } from "@/shared/types/customer";
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
@@ -118,6 +119,16 @@ export function InvoicesPageView({
         prioritizeCashFlow,
       ),
     [invoices, search, statusFilter, initialJobId, prioritizeCashFlow],
+  );
+
+  const invoiceListPresentation = useMemo(
+    () =>
+      prepareInvoicesForListView(
+        filteredInvoices,
+        statusFilter,
+        prioritizeCashFlow,
+      ),
+    [filteredInvoices, statusFilter, prioritizeCashFlow],
   );
 
   function handleSelectInvoice(invoice: Invoice) {
@@ -246,7 +257,8 @@ export function InvoicesPageView({
               <InvoicesEmptyState variant="no-results" />
             ) : (
               <InvoicesTable
-                invoices={filteredInvoices}
+                sections={invoiceListPresentation.sections}
+                showSectionHeaders={invoiceListPresentation.showSectionHeaders}
                 onSelect={handleSelectInvoice}
               />
             )}

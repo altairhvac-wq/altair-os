@@ -18,6 +18,7 @@ import { EstimateDetailsPanel } from "./EstimateDetailsPanel";
 import { EstimateSearchFilterBar } from "./EstimateSearchFilterBar";
 import { EstimatesEmptyState } from "./EstimatesEmptyState";
 import { EstimatesTable } from "./EstimatesTable";
+import { prepareEstimatesForListView } from "@/shared/lib/estimate-workflow-list";
 import { formatEstimateStatus } from "@/shared/types/estimate";
 import { formatCurrency } from "@/shared/types/customer";
 
@@ -84,6 +85,11 @@ export function EstimatesPageView({
   const filteredEstimates = useMemo(
     () => filterEstimates(estimates, search, statusFilter),
     [estimates, search, statusFilter],
+  );
+
+  const estimateListPresentation = useMemo(
+    () => prepareEstimatesForListView(filteredEstimates, statusFilter),
+    [filteredEstimates, statusFilter],
   );
 
   function handleSelectEstimate(estimate: Estimate) {
@@ -194,7 +200,8 @@ export function EstimatesPageView({
             <EstimatesEmptyState variant="no-results" />
           ) : (
             <EstimatesTable
-              estimates={filteredEstimates}
+              sections={estimateListPresentation.sections}
+              showSectionHeaders={estimateListPresentation.showSectionHeaders}
               onSelect={handleSelectEstimate}
             />
           )}
