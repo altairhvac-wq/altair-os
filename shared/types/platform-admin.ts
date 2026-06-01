@@ -49,10 +49,22 @@ export type PlatformAdminCompanyRow = {
   lastActivityAt: string | null;
 };
 
+export type PlatformAdminRecentBugReport = {
+  id: string;
+  createdAt: string;
+  companyName: string | null;
+  userEmail: string | null;
+  severity: string;
+  pageUrl: string;
+  messagePreview: string;
+  status: string;
+};
+
 export type PlatformAdminOverview = {
   summary: PlatformAdminSummary;
   recentCompanies: PlatformAdminRecentCompany[];
   recentUsers: PlatformAdminRecentUser[];
+  recentBugReports: PlatformAdminRecentBugReport[];
   users: PlatformAdminUserRow[];
   companies: PlatformAdminCompanyRow[];
   diagnostics: string[];

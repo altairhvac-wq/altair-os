@@ -12,6 +12,8 @@ import { DesktopNav } from "./DesktopNav";
 import { MobileNav } from "./MobileNav";
 import { Header } from "./Header";
 import type { Notification } from "@/shared/types/notification";
+import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
+import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 
 type AdminShellProps = {
   children: React.ReactNode;
@@ -74,6 +76,7 @@ export function AdminShell({
         </PullToRefresh>
       </main>
       </div>
+      {isBetaBugReportEnabled() ? <BetaBugReportButton /> : null}
     </CompanyTimezoneProvider>
   );
 }

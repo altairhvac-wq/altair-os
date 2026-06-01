@@ -11,6 +11,8 @@ import { TechnicianNotificationLink } from "@/shared/components/notifications/Te
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
 import { useOwnerViewMode } from "@/shared/components/view-mode/useOwnerViewMode";
 import { TechnicianBottomNav } from "./TechnicianBottomNav";
+import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
+import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 
 type TechnicianMobileShellProps = {
   children: React.ReactNode;
@@ -73,6 +75,9 @@ export function TechnicianMobileShell({
           </main>
 
           <TechnicianBottomNav companyContext={navigationContext} />
+          {isBetaBugReportEnabled() ? (
+            <BetaBugReportButton aboveMobileBottomNav />
+          ) : null}
         </div>
       </div>
     </TechnicianNotificationBadgeProvider>

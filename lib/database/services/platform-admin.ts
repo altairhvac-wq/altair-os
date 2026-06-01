@@ -7,12 +7,14 @@ import { normalizeCompanyRole } from "@/lib/database/types/roles";
 import type {
   PlatformAdminCompanyRow,
   PlatformAdminOverview,
+  PlatformAdminRecentBugReport,
   PlatformAdminRecentCompany,
   PlatformAdminRecentUser,
   PlatformAdminUserRow,
 } from "@/shared/types/platform-admin";
 
 const RECENT_LIMIT = 8;
+const BUG_REPORT_MESSAGE_PREVIEW_LENGTH = 120;
 
 type CompanyIdRow = { company_id: string };
 type CompanyActivityRow = { company_id: string; updated_at?: string | null; created_at?: string | null };
@@ -43,6 +45,59 @@ type MembershipQueryRow = {
 };
 
 type MembershipBaseRow = Omit<MembershipQueryRow, "profile">;
+
+type BetaFeedbackReportQueryRow = {
+  id: string;
+  created_at: string;
+  user_email: string | null;
+  severity: string;
+  page_url: string;
+  message: string;
+  status: string;
+  company: { name: string } | null;
+};
+
+function truncateMessagePreview(message: string): string {
+  const trimmed = message.trim();
+
+  if (trimmed.length <= BUG_REPORT_MESSAGE_PREVIEW_LENGTH) {
+    return trimmed;
+  }
+
+  return `${trimmed.slice(0, BUG_REPORT_MESSAGE_PREVIEW_LENGTH).trimEnd()}…`;
+}
+
+async function fetchRecentBugReports(
+  diagnostics: string[],
+): Promise<PlatformAdminRecentBugReport[]> {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("beta_feedback_reports")
+    .select(
+      "id, created_at, user_email, severity, page_url, message, status, company:companies(name)",
+    )
+    .order("created_at", { ascending: false })
+    .limit(RECENT_LIMIT);
+
+  if (error) {
+    const message = formatQueryError("beta_feedback_reports query failed", error);
+    console.error(`[platform-admin] ${message}`);
+    pushDiagnostic(diagnostics, message);
+    return [];
+  }
+
+  return ((data ?? []) as BetaFeedbackReportQueryRow[]).map((report) => ({
+    id: report.id,
+    createdAt: report.created_at,
+    companyName: report.company?.name ?? null,
+    userEmail: report.user_email,
+    severity: report.severity,
+    pageUrl: report.page_url,
+    messagePreview: truncateMessagePreview(report.message),
+    status: report.status,
+  }));
+}
 
 function pushDiagnostic(diagnostics: string[], message: string): void {
   if (!diagnostics.includes(message)) {
@@ -248,6 +303,7 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     companiesResult,
     profilesResult,
     memberships,
+    recentBugReports,
     jobsCompanyIdsResult,
     customersCompanyIdsResult,
     estimatesCompanyIdsResult,
@@ -272,6 +328,7 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
       .select("id, email, full_name, created_at")
       .order("created_at", { ascending: false }),
     fetchMembershipRows(diagnostics),
+    fetchRecentBugReports(diagnostics),
     supabase.from("jobs").select("company_id"),
     supabase.from("customers").select("company_id"),
     supabase.from("estimates").select("company_id"),
@@ -470,6 +527,7 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     },
     recentCompanies,
     recentUsers,
+    recentBugReports,
     users,
     companies: platformCompanies,
     diagnostics,

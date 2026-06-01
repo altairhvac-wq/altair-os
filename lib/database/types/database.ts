@@ -74,6 +74,8 @@ import type {
   AlphaTrackerItemInsert,
   AlphaTrackerItemRow,
   AlphaTrackerItemUpdate,
+  BetaFeedbackReportInsert,
+  BetaFeedbackReportRow,
   TimeClockEntryInsert,
   TimeClockEntryRow,
   TimeClockEntryUpdate,
@@ -141,6 +143,20 @@ export type Database = {
             columns: ["created_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      beta_feedback_reports: {
+        Row: BetaFeedbackReportRow;
+        Insert: BetaFeedbackReportInsert;
+        Update: Partial<BetaFeedbackReportInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "beta_feedback_reports_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
             referencedColumns: ["id"];
           },
         ];

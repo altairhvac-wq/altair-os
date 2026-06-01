@@ -1027,6 +1027,42 @@ export type AlphaTrackerItemUpdate = Partial<
   >
 >;
 
+export type BetaFeedbackSeverity = "low" | "medium" | "high" | "blocking";
+
+export type BetaFeedbackStatus = "open" | "reviewing" | "fixed" | "ignored";
+
+export type BetaFeedbackReportRow = {
+  id: UUID;
+  company_id: UUID | null;
+  user_id: UUID | null;
+  user_email: string | null;
+  user_role: string | null;
+  page_url: string;
+  severity: BetaFeedbackSeverity;
+  message: string;
+  expected_behavior: string | null;
+  user_agent: string | null;
+  status: BetaFeedbackStatus;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type BetaFeedbackReportInsert = {
+  id?: UUID;
+  company_id?: UUID | null;
+  user_id?: UUID | null;
+  user_email?: string | null;
+  user_role?: string | null;
+  page_url: string;
+  severity?: BetaFeedbackSeverity;
+  message: string;
+  expected_behavior?: string | null;
+  user_agent?: string | null;
+  status?: BetaFeedbackStatus;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
 export type TimeClockShiftStatus = "open" | "closed";
 
 export type TimeClockEntryRow = {
