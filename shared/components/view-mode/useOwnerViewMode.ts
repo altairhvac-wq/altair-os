@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ActiveCompanyContext } from "@/lib/database/types";
 import {
@@ -15,24 +21,48 @@ import {
   persistOwnerViewMode,
 } from "@/shared/lib/owner-view-mode-preferences";
 
+const ownerViewModeListeners = new Set<() => void>();
+
+function subscribeOwnerViewMode(listener: () => void) {
+  ownerViewModeListeners.add(listener);
+
+  return () => {
+    ownerViewModeListeners.delete(listener);
+  };
+}
+
+function notifyOwnerViewModeListeners() {
+  ownerViewModeListeners.forEach((listener) => listener());
+}
+
+function useStoredOwnerViewMode(
+  companyId: string,
+  isOwner: boolean,
+): OwnerViewMode {
+  return useSyncExternalStore(
+    subscribeOwnerViewMode,
+    () => (isOwner ? loadOwnerViewMode(companyId) : "owner_admin"),
+    () => "owner_admin",
+  );
+}
+
 export function useOwnerViewMode(companyContext: ActiveCompanyContext) {
   const router = useRouter();
   const pathname = usePathname();
   const companyId = companyContext.company.id;
   const isOwner = isOwnerViewModeEligible(companyContext.role);
-  const [viewMode, setViewModeState] = useState<OwnerViewMode>("owner_admin");
-  const [hydrated, setHydrated] = useState(false);
+  const storedViewMode = useStoredOwnerViewMode(companyId, isOwner);
+  const [viewModeOverride, setViewModeOverride] = useState<OwnerViewMode | null>(
+    null,
+  );
+  const viewMode = viewModeOverride ?? storedViewMode;
 
   useEffect(() => {
-    if (isOwner) {
-      setViewModeState(loadOwnerViewMode(companyId));
-    }
-
-    setHydrated(true);
-  }, [companyId, isOwner]);
+    setViewModeOverride(null);
+  }, [companyId]);
 
   useEffect(() => {
-    if (!hydrated || !isOwner) {
+    if (!isOwner) {
       return;
     }
 
@@ -41,25 +71,20 @@ export function useOwnerViewMode(companyContext: ActiveCompanyContext) {
     if (redirectTarget && redirectTarget !== pathname) {
       router.replace(redirectTarget);
     }
-  }, [hydrated, isOwner, pathname, router, viewMode]);
+  }, [isOwner, pathname, router, viewMode]);
 
   const setViewMode = useCallback(
     (nextMode: OwnerViewMode) => {
-      if (!isOwner) {
+      if (!isOwner || viewMode === nextMode) {
         return;
       }
 
-      setViewModeState((current) => {
-        if (current === nextMode) {
-          return current;
-        }
-
-        persistOwnerViewMode(companyId, nextMode);
-        router.push(OWNER_VIEW_MODE_LANDING[nextMode]);
-        return nextMode;
-      });
+      persistOwnerViewMode(companyId, nextMode);
+      setViewModeOverride(nextMode);
+      notifyOwnerViewModeListeners();
+      router.push(OWNER_VIEW_MODE_LANDING[nextMode]);
     },
-    [companyId, isOwner, router],
+    [companyId, isOwner, router, viewMode],
   );
 
   const navigationContext = useMemo(
@@ -76,6 +101,6 @@ export function useOwnerViewMode(companyContext: ActiveCompanyContext) {
     viewMode: isOwner ? viewMode : ("owner_admin" as const),
     setViewMode,
     navigationContext,
-    hydrated,
+    hydrated: true,
   };
 }

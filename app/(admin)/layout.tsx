@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AdminShell } from "@/shared/components/admin/AdminShell";
+import { shouldUseTechnicianHome } from "@/lib/auth/redirects";
 import { getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext, getUserCompanies } from "@/lib/database/company-context";
 import { canAccessPlatformAdmin } from "@/lib/database/platform-admin";
@@ -26,6 +27,10 @@ export default async function AdminLayout({
 
   if (!companyContext) {
     redirect("/setup");
+  }
+
+  if (shouldUseTechnicianHome(companyContext)) {
+    redirect("/technician");
   }
 
   const [notifications, unreadNotificationCount] = await Promise.all([

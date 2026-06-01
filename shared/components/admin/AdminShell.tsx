@@ -8,9 +8,11 @@ import { isPullToRefreshRoute } from "@/shared/components/mobile/is-pull-to-refr
 import { useMobileViewport } from "@/shared/components/mobile/use-mobile-viewport";
 import { useOwnerViewMode } from "@/shared/components/view-mode/useOwnerViewMode";
 import { getNavItemForPath } from "./nav-items";
+import { AdminNavSkeleton } from "./AdminNavSkeleton";
 import { DesktopNav } from "./DesktopNav";
 import { MobileNav } from "./MobileNav";
 import { Header } from "./Header";
+import { shouldHideAdminNavigation } from "./should-hide-admin-navigation";
 import type { Notification } from "@/shared/types/notification";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
@@ -36,6 +38,11 @@ export function AdminShell({
   const isMobile = useMobileViewport();
   const { isOwner, viewMode, setViewMode, navigationContext } =
     useOwnerViewMode(companyContext);
+  const hideAdminNavigation = shouldHideAdminNavigation(
+    pathname,
+    companyContext,
+    viewMode,
+  );
   const pullToRefreshEnabled =
     isMobile && isPullToRefreshRoute(pathname);
   const current = getNavItemForPath(pathname, navigationContext, {
@@ -57,17 +64,25 @@ export function AdminShell({
           viewMode={viewMode}
           onViewModeChange={setViewMode}
         />
-        <DesktopNav
-          companyContext={navigationContext}
-          showPlatformAdminNav={showPlatformAdminNav}
-        />
+        {hideAdminNavigation ? (
+          <AdminNavSkeleton variant="desktop" />
+        ) : (
+          <DesktopNav
+            companyContext={navigationContext}
+            showPlatformAdminNav={showPlatformAdminNav}
+          />
+        )}
       </div>
 
       <div className="no-print md:hidden">
-        <MobileNav
-          companyContext={navigationContext}
-          showPlatformAdminNav={showPlatformAdminNav}
-        />
+        {hideAdminNavigation ? (
+          <AdminNavSkeleton variant="mobile" />
+        ) : (
+          <MobileNav
+            companyContext={navigationContext}
+            showPlatformAdminNav={showPlatformAdminNav}
+          />
+        )}
       </div>
 
       <main className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-clip p-2.5 sm:p-4 lg:p-5 md:overflow-y-auto">
