@@ -31,15 +31,13 @@ function DesktopNavLink({ item, active }: DesktopNavLinkProps) {
       href={item.href}
       className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
         active
-          ? "bg-cyan-500/12 text-cyan-800 ring-1 ring-cyan-500/15 md:bg-cyan-400/15 md:text-cyan-50 md:ring-cyan-300/20 md:backdrop-blur-sm"
-          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 md:text-slate-400 md:hover:bg-white/[0.07] md:hover:text-slate-200"
+          ? "bg-cyan-500/14 text-cyan-900 ring-1 ring-cyan-500/20 shadow-[0_1px_2px_rgb(6_182_212_/_0.08)]"
+          : "text-slate-600 hover:bg-slate-200/55 hover:text-slate-900"
       }`}
     >
       <Icon
         className={`h-4 w-4 shrink-0 ${
-          active
-            ? "text-cyan-700 md:text-cyan-200"
-            : "text-slate-500 md:text-slate-500 md:group-hover:text-slate-300"
+          active ? "text-cyan-700" : "text-slate-500 group-hover:text-slate-700"
         }`}
       />
       {item.label}
@@ -81,7 +79,7 @@ export function DesktopNav({
         </ul>
 
         {navItems.length <= 2 ? (
-          <p className="hidden max-w-xs shrink-0 truncate text-xs text-slate-500 md:text-slate-500/90 lg:block">
+          <p className="hidden max-w-xs shrink-0 truncate text-xs text-slate-500 lg:block">
             Limited workspace access
           </p>
         ) : null}

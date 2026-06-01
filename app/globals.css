@@ -23,6 +23,9 @@
   --shell-navy-border: rgb(255 255 255 / 0.08);
   --shell-navy-text: #f1f5f9;
   --shell-navy-text-muted: #94a3b8;
+  --shell-nav-surface: #edf3f8;
+  --shell-nav-border: rgb(203 213 225 / 0.92);
+  --shell-nav-divider: rgb(15 23 42 / 0.1);
 }
 
 @theme inline {
@@ -217,25 +220,29 @@ a[href] {
   background-color: var(--surface-canvas);
 }
 
-/* Premium navy top shell — authenticated desktop chrome only */
+/* Premium navy header + light nav band — authenticated desktop chrome only */
 @media (min-width: 768px) {
   .admin-top-shell {
     position: relative;
-    isolation: isolate;
     flex-shrink: 0;
+  }
+
+  .admin-premium-header {
+    position: relative;
+    isolation: isolate;
+    border-bottom: 1px solid var(--shell-nav-divider) !important;
     background: linear-gradient(
       180deg,
       var(--shell-navy-highlight) 0%,
       var(--shell-navy-mid) 38%,
       var(--shell-navy-base) 100%
-    );
-    border-bottom: 1px solid var(--shell-navy-border);
+    ) !important;
     box-shadow:
       0 1px 0 rgb(255 255 255 / 0.04) inset,
-      0 1px 3px rgb(0 0 0 / 0.18);
+      0 1px 3px rgb(0 0 0 / 0.14) !important;
   }
 
-  .admin-top-shell::before {
+  .admin-premium-header::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -254,7 +261,7 @@ a[href] {
     z-index: 0;
   }
 
-  .admin-top-shell::after {
+  .admin-premium-header::after {
     content: "";
     position: absolute;
     inset-inline: 0;
@@ -270,21 +277,16 @@ a[href] {
     z-index: 1;
   }
 
-  .admin-top-shell > * {
+  .admin-premium-header > * {
     position: relative;
     z-index: 2;
   }
 
-  .admin-premium-header {
-    border-bottom-color: rgb(255 255 255 / 0.06) !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
-  }
-
   .admin-premium-nav {
-    border-bottom: none !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
+    border-top: 1px solid rgb(255 255 255 / 0.04) !important;
+    border-bottom: 1px solid var(--shell-nav-border) !important;
+    background-color: var(--shell-nav-surface) !important;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.04) !important;
   }
 }
 
