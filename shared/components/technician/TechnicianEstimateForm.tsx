@@ -136,30 +136,28 @@ export function TechnicianEstimateForm({
 
       <div className="rounded-lg border border-slate-200 bg-white p-2.5">
         <label htmlFor="tech-estimate-notes" className="mb-0.5 block text-[11px] font-semibold leading-tight text-slate-600">
-          Notes (optional)
+          Notes / Description
         </label>
         <textarea
           id="tech-estimate-notes"
           rows={3}
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
-          placeholder="Site notes for office"
+          placeholder="Rough site notes — rewrite with AI for a customer-facing description"
           disabled={isPending}
           className={`${adminFormInputClass} mt-1`}
         />
         <EstimateDescriptionAiAssistant
+          notes={notes}
+          onNotesChange={setNotes}
+          lineItems={lineItems}
+          customerName={customerName}
+          jobType={jobType}
+          jobTitle={jobTitle}
+          jobNumber={jobNumber}
+          jobId={jobId}
           aiFeaturesEnabled={aiFeaturesEnabled}
           canDraft={canDraftDescription}
-          context={{
-            notes,
-            customerName,
-            jobType,
-            jobTitle,
-            jobNumber,
-            lineItems,
-            jobId,
-          }}
-          onApply={setNotes}
           disabled={isPending}
         />
       </div>

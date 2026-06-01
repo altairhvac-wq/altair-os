@@ -80,7 +80,7 @@ export async function generateEstimateDescriptionDraftAction(
   );
 
   if (preparation.kind === "static") {
-    return { draftText: preparation.draftText };
+    return { error: preparation.draftText };
   }
 
   const outcome = await generateDraftText(preparation.request);

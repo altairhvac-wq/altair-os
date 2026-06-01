@@ -293,7 +293,7 @@ export function EstimateForm({
 
               <div className="rounded-lg border border-slate-200 bg-white p-2.5">
                 <label htmlFor="notes" className={adminFormLabelClass}>
-                  Notes
+                  Notes / Description
                 </label>
                 <textarea
                   id="notes"
@@ -301,22 +301,20 @@ export function EstimateForm({
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Customer-facing description or internal notes"
+                  placeholder="Rough notes — rewrite with AI for a customer-facing description"
                   className={`${adminFormInputClass} mt-1`}
                 />
                 <EstimateDescriptionAiAssistant
+                  notes={notes}
+                  onNotesChange={setNotes}
+                  lineItems={lineItems}
+                  customerName={selectedCustomer?.name}
+                  jobType={selectedJob?.jobType}
+                  jobTitle={selectedJob?.description}
+                  jobNumber={selectedJob?.jobNumber}
+                  jobId={jobId.trim() || undefined}
                   aiFeaturesEnabled={aiFeaturesEnabled}
                   canDraft={canDraftDescription}
-                  context={{
-                    notes,
-                    customerName: selectedCustomer?.name,
-                    jobType: selectedJob?.jobType,
-                    jobTitle: selectedJob?.description,
-                    jobNumber: selectedJob?.jobNumber,
-                    lineItems,
-                    jobId: jobId.trim() || undefined,
-                  }}
-                  onApply={setNotes}
                   disabled={isSubmitting}
                 />
               </div>
