@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { createJobAction } from "@/app/actions/jobs";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import { sortJobsForOwnerView } from "@/shared/lib/jobs-owner-view-sort";
 import { isJobOnOperationalDay } from "@/shared/lib/scheduled-today";
 import type { Customer } from "@/shared/types/customer";
 import {
@@ -36,13 +37,6 @@ type JobsPageViewProps = {
   initialPanelMode?: PanelMode;
   createInitialData?: Partial<JobFormData>;
 };
-
-function sortJobsByScheduledTime(jobs: Job[]): Job[] {
-  return [...jobs].sort(
-    (a, b) =>
-      new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime(),
-  );
-}
 
 function filterAllJobs(
   jobs: Job[],
@@ -110,13 +104,13 @@ export function JobsPageView({
   }, [initialJobs, initialTodayJobs]);
 
   const sortedTodayJobs = useMemo(
-    () => sortJobsByScheduledTime(todayJobs),
+    () => sortJobsForOwnerView(todayJobs),
     [todayJobs],
   );
 
   const filteredAllJobs = useMemo(
     () =>
-      sortJobsByScheduledTime(
+      sortJobsForOwnerView(
         filterAllJobs(jobs, statusFilter, priorityFilter),
       ),
     [jobs, statusFilter, priorityFilter],
@@ -175,7 +169,7 @@ export function JobsPageView({
         })
       ) {
         setTodayJobs((previous) =>
-          sortJobsByScheduledTime([result.job!, ...previous]),
+          sortJobsForOwnerView([result.job!, ...previous]),
         );
       }
       setPanelMode("empty");
