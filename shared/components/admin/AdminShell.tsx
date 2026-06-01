@@ -46,6 +46,7 @@ export function AdminShell({
   );
   const pullToRefreshEnabled =
     isMobile && isPullToRefreshRoute(pathname);
+  const isMobileDashboard = isMobile && pathname === "/";
   const current = getNavItemForPath(pathname, navigationContext, {
     includePlatformAdmin: showPlatformAdminNav,
   });
@@ -93,7 +94,8 @@ export function AdminShell({
       </main>
       </div>
       {isBetaBugReportEnabled() &&
-      !(isMobile && pathname.startsWith("/settings")) ? (
+      !(isMobile && pathname.startsWith("/settings")) &&
+      !isMobileDashboard ? (
         <BetaBugReportButton />
       ) : null}
     </CompanyTimezoneProvider>

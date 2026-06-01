@@ -6,9 +6,12 @@ import {
   ChevronRight,
   Sparkles,
 } from "lucide-react";
+import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
+import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
 import { useDashboardDrilldown } from "@/shared/components/dashboard/dashboard-drilldown-context";
 import { MobileActionDashboard } from "@/shared/components/dashboard/MobileActionDashboard";
 import { DashboardNotificationsList } from "@/shared/components/dashboard/DashboardNotificationsList";
+import { buildMobileActionCards } from "@/shared/lib/mobile-action-dashboard";
 import {
   buildMobileAttentionQueue,
   buildMobileHeroIssues,
@@ -114,12 +117,14 @@ function StatusStrip({
   );
 }
 
-function OperationsStatusSection({
+function OperationsStatusStrip({
   data,
   issues,
+  hasActionItems,
 }: {
   data: DashboardData;
   issues: { id: string; text: string }[];
+  hasActionItems: boolean;
 }) {
   const { openDashboardPanel, hasPanel } = useDashboardDrilldown();
   const { operationalHealth } = data;
@@ -127,74 +132,72 @@ function OperationsStatusSection({
     operationalHealth.operationalHealthLabel,
   );
   const canDrilldown = hasPanel("health");
+  const summary = `${operationalHealth.operationalHealthScore} · ${operationalHealth.operationalHealthLabel}`;
+  const showIssueHints = !hasActionItems && issues.length > 0;
 
-  const body = (
-    <>
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
-            Operations status
-          </p>
-          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-            <p
-              className={`text-xl font-black tabular-nums leading-none tracking-tight ${labelStyles.scoreClass}`}
-            >
-              {operationalHealth.operationalHealthScore}
-            </p>
-            <span
-              className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${labelStyles.badgeClass}`}
-            >
-              {operationalHealth.operationalHealthLabel}
-            </span>
-          </div>
-        </div>
-        {canDrilldown ? (
-          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
-        ) : null}
-      </div>
-
-      {issues.length > 0 ? (
-        <ul className="mt-1.5 space-y-0.5 border-t border-slate-100 pt-1.5">
-          {issues.map((issue) => (
-            <li
-              key={issue.id}
-              className="flex items-center gap-1.5 text-xs font-medium text-slate-700"
-            >
-              <span className="text-amber-500" aria-hidden="true">
-                •
-              </span>
-              {issue.text}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-1 text-xs font-medium text-emerald-700">
-          No urgent issues flagged
-        </p>
-      )}
-    </>
+  const strip = (
+    <StatusStrip
+      label="Operations status"
+      ariaLabel="View operational health details"
+      summary={summary}
+      canDrilldown={canDrilldown}
+      onDrilldown={canDrilldown ? () => openDashboardPanel("health") : undefined}
+    />
   );
 
-  if (canDrilldown) {
-    return (
-      <button
-        type="button"
-        onClick={() => openDashboardPanel("health")}
-        aria-label="View operational health details"
-        className="w-full rounded-lg border border-slate-200/90 bg-white px-2.5 py-2.5 text-left shadow-sm transition-colors hover:bg-slate-50/80"
-      >
-        {body}
-      </button>
-    );
+  if (!showIssueHints) {
+    return strip;
   }
 
   return (
-    <section
-      aria-label="Operations status"
-      className="rounded-lg border border-slate-200/90 bg-white px-2.5 py-2.5 shadow-sm"
-    >
-      {body}
-    </section>
+    <div className="overflow-hidden rounded-lg border border-slate-200/80 bg-white">
+      {canDrilldown ? (
+        <button
+          type="button"
+          onClick={() => openDashboardPanel("health")}
+          aria-label="View operational health details"
+          className="w-full px-2.5 py-2 text-left transition-colors hover:bg-slate-50/80"
+        >
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                Operations status
+              </p>
+              <p
+                className={`mt-0.5 truncate text-sm font-semibold tabular-nums ${labelStyles.scoreClass}`}
+              >
+                {summary}
+              </p>
+            </div>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+          </div>
+        </button>
+      ) : (
+        <div className="px-2.5 py-2">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+            Operations status
+          </p>
+          <p
+            className={`mt-0.5 truncate text-sm font-semibold tabular-nums ${labelStyles.scoreClass}`}
+          >
+            {summary}
+          </p>
+        </div>
+      )}
+      <ul className="space-y-0.5 border-t border-slate-100 px-2.5 py-1.5">
+        {issues.slice(0, 3).map((issue) => (
+          <li
+            key={issue.id}
+            className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600"
+          >
+            <span className="text-amber-500" aria-hidden="true">
+              •
+            </span>
+            {issue.text}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -326,6 +329,18 @@ function SecondaryInsightsSection({
   );
 }
 
+function MobileFeedbackLink() {
+  if (!isBetaBugReportEnabled()) {
+    return null;
+  }
+
+  return (
+    <div className="pt-0.5">
+      <BetaBugReportButton inlineOnly />
+    </div>
+  );
+}
+
 function LimitedRoleHub({
   data,
   notificationAccess,
@@ -335,9 +350,9 @@ function LimitedRoleHub({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-2">
+      <MobileActionDashboard data={data} />
       <TodayStrip operations={data.operations} />
       <CashStrip data={data} />
-      <MobileActionDashboard data={data} />
 
       {data.notifications.recent.length > 0 ? (
         <details className="admin-card group overflow-hidden">
@@ -358,6 +373,8 @@ function LimitedRoleHub({
           </div>
         </details>
       ) : null}
+
+      <MobileFeedbackLink />
     </div>
   );
 }
@@ -378,19 +395,26 @@ export function MobileOperationsHub({
     );
   }
 
+  const actionCards = buildMobileActionCards(data);
+  const hasActionItems = actionCards.length > 0;
   const heroIssues = buildMobileHeroIssues(buildMobileAttentionQueue(data));
 
   return (
     <div className="flex min-w-0 flex-col gap-2">
-      <OperationsStatusSection data={data} issues={heroIssues} />
+      <MobileActionDashboard data={data} />
       <TodayStrip operations={data.operations} />
       <CashStrip data={data} />
-      <MobileActionDashboard data={data} />
+      <OperationsStatusStrip
+        data={data}
+        issues={heroIssues}
+        hasActionItems={hasActionItems}
+      />
       <SecondaryInsightsSection
         data={data}
         notificationAccess={notificationAccess}
         showLiveMetrics={showLiveMetrics}
       />
+      <MobileFeedbackLink />
     </div>
   );
 }

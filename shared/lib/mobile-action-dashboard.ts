@@ -140,7 +140,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   if (operations.unassignedToday > 0) {
     cards.push({
       id: "unassigned-jobs",
-      label: "Unassigned",
+      label: "Assign",
       count: operations.unassignedToday,
       severity: operations.unassignedToday >= 3 ? "critical" : "warning",
       description: buildDescription("unassigned-jobs", operations.unassignedToday),
@@ -160,7 +160,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
     if (needsReview > 0) {
       cards.push({
         id: "needs-review",
-        label: "Needs review",
+        label: "Review",
         count: needsReview,
         severity:
           officeReviewQueue.summary.criticalCount > 0 ? "critical" : "warning",
@@ -211,7 +211,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   ) {
     cards.push({
       id: "ready-to-invoice",
-      label: "Ready to invoice",
+      label: "Invoice",
       count: completedWorkAwaitingInvoicing.count,
       severity:
         completedWorkAwaitingInvoicing.count >= 5 ? "critical" : "warning",
@@ -230,7 +230,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   if (access.canViewBilling && money.unsentInvoiceCount > 0) {
     cards.push({
       id: "invoices-not-sent",
-      label: "Invoices not sent",
+      label: "Send invoices",
       count: money.unsentInvoiceCount,
       severity: money.unsentInvoiceCount >= 5 ? "critical" : "warning",
       description: buildDescription(
@@ -248,7 +248,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   if (access.canViewBilling && money.unsentEstimateCount > 0) {
     cards.push({
       id: "estimates-not-sent",
-      label: "Estimates not sent",
+      label: "Estimates",
       count: money.unsentEstimateCount,
       severity: money.unsentEstimateCount >= 5 ? "critical" : "warning",
       description: buildDescription(
