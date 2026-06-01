@@ -247,30 +247,58 @@ export function DemoDataSection({
     );
   }
 
+  const isSettingsCompact = variant === "settings";
+
   return (
     <section className="admin-card min-w-0 max-w-full overflow-x-clip">
-      <div className="flex items-start gap-3 border-b border-slate-100 bg-gradient-to-r from-violet-50/80 to-white px-4 py-4 sm:px-6">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-700">
+      <div
+        className={`flex items-start gap-2.5 border-b border-slate-100 bg-gradient-to-r from-violet-50/80 to-white ${
+          isSettingsCompact ? "px-3 py-3 sm:px-4" : "px-4 py-4 sm:px-6"
+        }`}
+      >
+        <div
+          className={`flex shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-700 ${
+            isSettingsCompact ? "h-9 w-9" : "h-11 w-11 rounded-xl"
+          }`}
+        >
           {showLoadedCard ? (
-            <Database className="h-5 w-5" aria-hidden="true" />
+            <Database className="h-4 w-4" aria-hidden="true" />
           ) : (
-            <Sparkles className="h-5 w-5" aria-hidden="true" />
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
           )}
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-bold uppercase tracking-widest text-violet-600/90">
             Demo company
           </p>
-          <h2 className="text-base font-black tracking-tight text-slate-900 sm:text-lg">
+          <h2
+            className={`font-black tracking-tight text-slate-900 ${
+              isSettingsCompact
+                ? "text-sm sm:text-base"
+                : "text-base sm:text-lg"
+            }`}
+          >
             {title}
           </h2>
           {showSeedCard ? (
-            <p className="mt-1 text-xs text-slate-600 sm:text-sm">
-              Want to explore Altair faster? Load realistic HVAC sample customers,
-              jobs, estimates, invoices, and time entries into this workspace.
+            <p
+              className={`text-slate-600 ${
+                isSettingsCompact
+                  ? "mt-0.5 text-xs leading-snug"
+                  : "mt-1 text-xs sm:text-sm"
+              }`}
+            >
+              Load realistic HVAC sample customers, jobs, estimates, invoices,
+              and time entries into this workspace.
             </p>
           ) : (
-            <p className="mt-1 text-xs text-slate-600 sm:text-sm">
+            <p
+              className={`text-slate-600 ${
+                isSettingsCompact
+                  ? "mt-0.5 text-xs leading-snug"
+                  : "mt-1 text-xs sm:text-sm"
+              }`}
+            >
               Demo data is loaded for evaluation. Records are tagged{" "}
               <span className="font-semibold">[Demo]</span> and stay scoped to this
               company only.
@@ -279,7 +307,11 @@ export function DemoDataSection({
         </div>
       </div>
 
-      <div className="space-y-3 px-4 py-4 sm:px-6">
+      <div
+        className={`space-y-2.5 ${
+          isSettingsCompact ? "px-3 py-3 sm:px-4" : "space-y-3 px-4 py-4 sm:px-6"
+        }`}
+      >
         {successMessage ? (
           <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
             {successMessage}

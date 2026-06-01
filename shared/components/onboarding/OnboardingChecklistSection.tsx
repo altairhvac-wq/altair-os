@@ -64,21 +64,45 @@ export function OnboardingChecklistSection({
       ? "Complete the required steps below to get your company operational for beta. Optional steps can wait."
       : `${checklist.completedCount} of ${checklist.totalCount} required steps done — finish the rest to start dispatching work.`;
 
+  const isSettingsCompact = variant === "settings";
+
   return (
     <section className="admin-card min-w-0 max-w-full overflow-x-clip">
-      <div className="flex items-start justify-between gap-3 border-b border-slate-100 bg-gradient-to-r from-cyan-50/80 to-white px-4 py-4 sm:px-6">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-100 text-cyan-700">
-            <Rocket className="h-5 w-5" aria-hidden="true" />
+      <div
+        className={`flex items-start justify-between gap-2.5 border-b border-slate-100 bg-gradient-to-r from-cyan-50/80 to-white ${
+          isSettingsCompact ? "px-3 py-3 sm:px-4" : "px-4 py-4 sm:px-6"
+        }`}
+      >
+        <div className="flex min-w-0 items-start gap-2.5">
+          <div
+            className={`flex shrink-0 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 ${
+              isSettingsCompact ? "h-9 w-9" : "h-11 w-11 rounded-xl"
+            }`}
+          >
+            <Rocket className="h-4 w-4" aria-hidden="true" />
           </div>
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600/90">
               Beta setup
             </p>
-            <h2 className="text-base font-black tracking-tight text-slate-900 sm:text-lg">
+            <h2
+              className={`font-black tracking-tight text-slate-900 ${
+                isSettingsCompact
+                  ? "text-sm sm:text-base"
+                  : "text-base sm:text-lg"
+              }`}
+            >
               {title}
             </h2>
-            <p className="mt-1 text-xs text-slate-600 sm:text-sm">{description}</p>
+            <p
+              className={`text-slate-600 ${
+                isSettingsCompact
+                  ? "mt-0.5 text-xs leading-snug"
+                  : "mt-1 text-xs sm:text-sm"
+              }`}
+            >
+              {description}
+            </p>
           </div>
         </div>
         {variant === "dashboard" ? (
@@ -93,8 +117,8 @@ export function OnboardingChecklistSection({
         ) : null}
       </div>
 
-      <div className="px-4 py-3 sm:px-6">
-        <div className="mb-4">
+      <div className={isSettingsCompact ? "px-3 py-2.5 sm:px-4" : "px-4 py-3 sm:px-6"}>
+        <div className={isSettingsCompact ? "mb-3" : "mb-4"}>
           <div className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-600">
             <span>{progressPercent}% complete</span>
             <span>
@@ -116,11 +140,15 @@ export function OnboardingChecklistSection({
           </div>
         </div>
 
-        <ul className="space-y-2">
+        <ul className={isSettingsCompact ? "space-y-1.5" : "space-y-2"}>
           {checklist.items.map((item) => (
             <li key={item.id}>
               {item.completed ? (
-                <div className="flex items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50/40 px-3 py-3 sm:px-4">
+                <div
+                  className={`flex items-start gap-2.5 rounded-lg border border-emerald-100 bg-emerald-50/40 ${
+                    isSettingsCompact ? "px-2.5 py-2 sm:px-3" : "rounded-xl px-3 py-3 sm:px-4"
+                  }`}
+                >
                   <CheckCircle2
                     className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600"
                     aria-hidden="true"
@@ -137,7 +165,11 @@ export function OnboardingChecklistSection({
               ) : (
                 <Link
                   href={item.href}
-                  className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 transition hover:border-cyan-200 hover:bg-cyan-50/30 sm:px-4"
+                  className={`flex items-start gap-2.5 border border-slate-200 bg-white transition hover:border-cyan-200 hover:bg-cyan-50/30 ${
+                    isSettingsCompact
+                      ? "rounded-lg px-2.5 py-2 sm:px-3"
+                      : "rounded-xl px-3 py-3 sm:px-4"
+                  }`}
                 >
                   <Circle
                     className="mt-0.5 h-5 w-5 shrink-0 text-slate-300"
@@ -171,7 +203,11 @@ export function OnboardingChecklistSection({
           ))}
         </ul>
 
-        <p className="mt-4 text-xs text-slate-500">
+        <p
+          className={`text-slate-500 ${
+            isSettingsCompact ? "mt-3 text-[11px] leading-snug" : "mt-4 text-xs"
+          }`}
+        >
           When required steps are done, this checklist hides automatically. Optional
           team and billing setup can be finished anytime in Settings.
         </p>

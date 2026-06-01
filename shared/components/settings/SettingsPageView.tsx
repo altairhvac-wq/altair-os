@@ -156,62 +156,76 @@ export function SettingsPageView({
     },
   ];
 
+  const showOnboarding =
+    onboardingChecklist &&
+    shouldShowOnboardingChecklist(onboardingChecklist);
+  const showDemoData =
+    demoDataStatus &&
+    (demoDataStatus.isEligibleForSeed || demoDataStatus.hasDemoData);
+
   return (
-    <div className="min-w-0 max-w-full space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Company Settings</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Manage your team, review workspace status, and prepare your company for
-          beta operations.
-        </p>
+    <div className="min-w-0 max-w-full space-y-3 sm:space-y-4">
+      <header className="admin-page-header flex shrink-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div className="min-w-0 flex flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <h1 className="shrink-0 text-base font-bold tracking-tight text-slate-900 sm:text-lg">
+            Company Settings
+          </h1>
+          <p className="min-w-0 text-xs text-slate-500">
+            Manage team, workspace status, and beta setup
+          </p>
+        </div>
         {hasContactInfo ? (
-          <p className="mt-2 break-words text-sm text-slate-500">{contactLine}</p>
+          <p className="min-w-0 break-words text-xs text-slate-500 sm:max-w-xs sm:text-right">
+            {contactLine}
+          </p>
         ) : (
-          <p className="mt-2 text-sm text-slate-400">
-            Company contact details can be added in a future update.
+          <p className="text-xs text-slate-400 sm:text-right">
+            Contact details coming soon
           </p>
         )}
-      </div>
+      </header>
 
-      {onboardingChecklist &&
-      shouldShowOnboardingChecklist(onboardingChecklist) ? (
-        <OnboardingChecklistSection
-          checklist={onboardingChecklist}
-          companyId={companyProfile.id}
-          userId={currentUserId}
-          variant="settings"
-        />
+      {showOnboarding || showDemoData ? (
+        <div className="grid min-w-0 gap-3 lg:grid-cols-2 lg:items-start lg:gap-4">
+          {showOnboarding ? (
+            <OnboardingChecklistSection
+              checklist={onboardingChecklist}
+              companyId={companyProfile.id}
+              userId={currentUserId}
+              variant="settings"
+            />
+          ) : null}
+
+          {showDemoData ? (
+            <DemoDataSection
+              companyId={companyProfile.id}
+              status={demoDataStatus}
+              variant="settings"
+            />
+          ) : null}
+        </div>
       ) : null}
 
-      {demoDataStatus &&
-      (demoDataStatus.isEligibleForSeed || demoDataStatus.hasDemoData) ? (
-        <DemoDataSection
-          companyId={companyProfile.id}
-          status={demoDataStatus}
-          variant="settings"
-        />
-      ) : null}
-
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-2.5 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
         {summaryCards.map((card) => (
           <div
             key={card.label}
-            className="admin-card min-w-0 p-4 sm:p-5"
+            className="admin-card min-w-0 p-3 sm:p-3.5"
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start justify-between gap-2.5">
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                   {card.label}
                 </p>
-                <p className="mt-2 truncate text-lg font-bold text-slate-900">
+                <p className="mt-1 truncate text-base font-bold text-slate-900">
                   {card.value}
                 </p>
-                <p className="mt-1 text-sm text-slate-600">{card.description}</p>
+                <p className="mt-0.5 text-xs text-slate-600">{card.description}</p>
               </div>
               <div
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.iconClass}`}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${card.iconClass}`}
               >
-                <card.icon className="h-5 w-5" aria-hidden="true" />
+                <card.icon className="h-4 w-4" aria-hidden="true" />
               </div>
             </div>
           </div>
@@ -219,10 +233,10 @@ export function SettingsPageView({
       </section>
 
       <section id="team-members" className="admin-card min-w-0 max-w-full overflow-x-clip">
-        <div className="admin-panel-header flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
+        <div className="admin-panel-header flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3">
           <div className="min-w-0">
-            <h2 className="admin-heading-section text-base sm:text-lg">Team Members</h2>
-            <p className="admin-text-helper mt-0.5 sm:text-sm">
+            <h2 className="admin-heading-section">Team Members</h2>
+            <p className="admin-text-helper mt-0.5">
               {canManageTeam
                 ? "Invite teammates, assign roles, and manage workspace access."
                 : "Team roster is limited to owner and admin roles."}
@@ -293,16 +307,7 @@ export function SettingsPageView({
         ) : null}
       </section>
 
-      <section id="billing-defaults" className="min-w-0 space-y-4">
-        <div>
-          <h2 className="mb-1 text-lg font-bold text-slate-900">
-            Billing Document Defaults
-          </h2>
-          <p className="text-sm text-slate-600">
-            Configure default values applied when new estimates and invoices are
-            created.
-          </p>
-        </div>
+      <section id="billing-defaults" className="min-w-0">
         <BillingDocumentDefaultsCard
           initialDefaults={billingDefaults}
           canManage={canManageBillingDefaults}
@@ -311,28 +316,30 @@ export function SettingsPageView({
       </section>
 
       <section>
-        <h2 className="mb-1 text-lg font-bold text-slate-900">
-          Workspace Preferences
-        </h2>
-        <p className="mb-4 text-sm text-slate-600">
-          Additional configuration areas coming after beta onboarding.
-        </p>
-        <div className="grid min-w-0 gap-4 md:grid-cols-2">
+        <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <h2 className="admin-heading-section text-sm sm:text-base">
+            Workspace Preferences
+          </h2>
+          <p className="admin-text-helper">
+            Additional configuration after beta onboarding
+          </p>
+        </div>
+        <div className="grid min-w-0 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
           {showSystemCheckLink ? (
             <Link
               href="/settings/system-check"
-              className="min-w-0 rounded-2xl border border-cyan-200 bg-white p-5 transition-colors hover:border-cyan-300 hover:bg-cyan-50/40"
+              className="min-w-0 rounded-xl border border-cyan-200 bg-white p-3.5 transition-colors hover:border-cyan-300 hover:bg-cyan-50/40 sm:p-4"
             >
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
-                  <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+              <div className="flex items-start gap-2.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600">
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-semibold text-slate-900">System Check</h3>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <h3 className="text-sm font-semibold text-slate-900">System Check</h3>
+                  <p className="mt-0.5 text-xs leading-snug text-slate-600 sm:text-sm">
                     Read-only production readiness checks for the internal alpha.
                   </p>
-                  <p className="mt-2 text-xs font-medium uppercase tracking-wide text-cyan-700">
+                  <p className="mt-1.5 text-[10px] font-medium uppercase tracking-wide text-cyan-700">
                     Owner only
                   </p>
                 </div>

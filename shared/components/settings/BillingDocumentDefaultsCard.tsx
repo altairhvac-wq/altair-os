@@ -76,19 +76,21 @@ export function BillingDocumentDefaultsCard({
   }
 
   return (
-    <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-          <FileText className="h-5 w-5" aria-hidden="true" />
+    <div className="admin-card min-w-0 p-3.5 sm:p-4">
+      <div className="flex items-start gap-2.5">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+          <FileText className="h-4 w-4" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-slate-900">Billing Document Defaults</h3>
-          <p className="mt-1 text-sm text-slate-600">
-            Default tax rate, payment terms, and notes applied when new estimates
-            and invoices are created.
+          <h2 className="admin-heading-section text-sm sm:text-base">
+            Billing Document Defaults
+          </h2>
+          <p className="admin-text-helper mt-0.5">
+            Default tax rate, payment terms, and notes for new estimates and
+            invoices.
           </p>
           {showSetupHint && canManage ? (
-            <p className="mt-2 rounded-lg border border-cyan-100 bg-cyan-50/60 px-3 py-2 text-sm text-cyan-900">
+            <p className="mt-2 rounded-lg border border-cyan-100 bg-cyan-50/60 px-2.5 py-1.5 text-xs text-cyan-900 sm:text-sm">
               Review these defaults before creating your first estimate or invoice.
               Save once to mark this setup step complete.
             </p>
@@ -98,11 +100,11 @@ export function BillingDocumentDefaultsCard({
 
       <form
         onSubmit={handleSubmit}
-        className="mt-5 min-w-0 space-y-4"
+        className="mt-3 min-w-0 space-y-3 sm:mt-4"
         aria-label="Billing document defaults"
         aria-busy={isPending}
       >
-        <div className="grid min-w-0 gap-4 sm:grid-cols-3">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-3">
           <div className="min-w-0">
             <label htmlFor="defaultTaxRate" className={labelClass}>
               Default tax rate (%)
@@ -167,7 +169,7 @@ export function BillingDocumentDefaultsCard({
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-4 md:grid-cols-2">
+        <div className="grid min-w-0 gap-3 md:grid-cols-2">
           <div className="min-w-0">
             <label htmlFor="defaultEstimateNotes" className={labelClass}>
               Default estimate notes
@@ -212,7 +214,7 @@ export function BillingDocumentDefaultsCard({
         ) : null}
 
         {canManage ? (
-          <div className="admin-sticky-footer-inline sticky bottom-0 -mx-5 px-5 py-3.5 supports-[padding:max(0px)]:pb-[max(0.875rem,env(safe-area-inset-bottom))]">
+          <div className="admin-sticky-footer-inline sticky bottom-0 -mx-3.5 px-3.5 py-2.5 supports-[padding:max(0px)]:pb-[max(0.625rem,env(safe-area-inset-bottom))] sm:-mx-4 sm:px-4">
             <button
               type="submit"
               disabled={isPending}

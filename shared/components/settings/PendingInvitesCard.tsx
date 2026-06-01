@@ -98,21 +98,50 @@ function PendingInvitesCardContent({
       ? "Accept to join an existing company, or create your own workspace below."
       : "Accept an invitation to join another company workspace.";
 
+  const isSettingsCompact = variant === "settings";
+
   return (
-    <section className="min-w-0 max-w-full rounded-2xl border border-cyan-200 bg-cyan-50/60 shadow-sm">
-      <div className="border-b border-cyan-100 px-4 py-4 sm:px-6">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-100 text-cyan-700">
-            <Mail className="h-5 w-5" aria-hidden="true" />
+    <section className="min-w-0 max-w-full rounded-xl border border-cyan-200 bg-cyan-50/60 shadow-sm">
+      <div
+        className={`border-b border-cyan-100 ${
+          isSettingsCompact ? "px-3 py-3 sm:px-4" : "px-4 py-4 sm:px-6"
+        }`}
+      >
+        <div className="flex items-start gap-2.5">
+          <div
+            className={`flex shrink-0 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 ${
+              isSettingsCompact ? "h-9 w-9" : "h-10 w-10 rounded-xl"
+            }`}
+          >
+            <Mail className="h-4 w-4" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-            <p className="mt-1 text-sm text-slate-600">{description}</p>
+            <h2
+              className={`font-bold text-slate-900 ${
+                isSettingsCompact ? "text-base" : "text-lg"
+              }`}
+            >
+              {title}
+            </h2>
+            <p
+              className={`text-slate-600 ${
+                isSettingsCompact
+                  ? "mt-0.5 text-xs leading-snug"
+                  : "mt-1 text-sm"
+              }`}
+            >
+              {description}
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="space-y-3 px-4 py-4 sm:px-6" aria-busy={isPending}>
+      <div
+        className={`space-y-2.5 ${
+          isSettingsCompact ? "px-3 py-3 sm:px-4" : "space-y-3 px-4 py-4 sm:px-6"
+        }`}
+        aria-busy={isPending}
+      >
         {items.map((invite) => {
           const invitedAt = formatInvitedAt(invite.invitedAt);
           const isAccepting = isPending && acceptingId === invite.id;
@@ -120,7 +149,9 @@ function PendingInvitesCardContent({
           return (
             <div
               key={invite.id}
-              className="flex min-w-0 flex-col gap-3 rounded-xl border border-white bg-white/90 p-4 sm:flex-row sm:items-center sm:justify-between"
+              className={`flex min-w-0 flex-col rounded-lg border border-white bg-white/90 p-3 sm:flex-row sm:items-center sm:justify-between ${
+                isSettingsCompact ? "gap-2.5" : "gap-3 rounded-xl p-4"
+              }`}
             >
               <div className="min-w-0">
                 <p className="truncate text-base font-semibold text-slate-900">

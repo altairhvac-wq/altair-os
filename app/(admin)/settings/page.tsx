@@ -79,7 +79,7 @@ export default async function SettingsPage() {
   const billingDefaults = getCompanyBillingDefaultsFromRow(companyContext.company);
 
   return (
-    <div className="min-w-0 max-w-full space-y-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div className="min-w-0 max-w-full space-y-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:space-y-4">
       {emailResolution.mismatch ? (
         <SettingsAlertBanner tone="warning">
           Your profile email and sign-in email do not match. Update them to the
