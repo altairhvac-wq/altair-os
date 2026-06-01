@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Briefcase, CheckCircle2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Briefcase, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import {
   filterJobsForTechnicianScheduleDay,
   formatTechnicianScheduleDayHeading,
@@ -18,10 +18,7 @@ import {
   getTechnicianJobDeckOrder,
   sortCompletedTodayTechnicianJobs,
 } from "@/shared/lib/technician-work-queue";
-import {
-  formatTechnicianLastUpdated,
-  TECHNICIAN_PULL_REFRESH_EVENT,
-} from "@/shared/lib/technician-refresh";
+import { TECHNICIAN_PULL_REFRESH_EVENT } from "@/shared/lib/technician-refresh";
 import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
 import type { JobStatus } from "@/shared/types/job";
 import type { TechnicianJob } from "@/shared/types/technician";
@@ -133,44 +130,6 @@ function CompletedTodaySection({
         </ul>
       ) : null}
     </section>
-  );
-}
-
-function TechnicianQueueSummary({
-  dayHeading,
-  queueLabel,
-  lastUpdatedAt,
-  isRefreshing,
-}: {
-  dayHeading: string;
-  queueLabel: string;
-  lastUpdatedAt: Date;
-  isRefreshing: boolean;
-}) {
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    const interval = window.setInterval(() => setNow(new Date()), 15_000);
-    return () => window.clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="space-y-0.5 px-1" aria-live="polite">
-      <p className="text-sm font-semibold text-slate-900">{dayHeading}</p>
-      <div className="flex min-h-8 items-center justify-between gap-2 text-xs">
-      <p className="font-medium text-slate-600">{queueLabel}</p>
-      <p className="shrink-0 text-slate-400">
-        {isRefreshing ? (
-          <span className="inline-flex items-center gap-1 font-medium text-slate-600">
-            <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
-            Updating…
-          </span>
-        ) : (
-          formatTechnicianLastUpdated(lastUpdatedAt, now)
-        )}
-      </p>
-      </div>
-    </div>
   );
 }
 
@@ -294,13 +253,19 @@ export function TechnicianAssignedJobsView({
     scheduleContext,
   );
 
+  const showQueueSummary = deckJobs.length > 0;
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <TechnicianWeekStrip
         jobs={jobs}
         selectedDateOnly={selectedDateOnly}
         scheduleContext={scheduleContext}
         onSelectDateOnly={setSelectedDateOnly}
+        dayHeading={showQueueSummary ? dayHeading : undefined}
+        queueLabel={showQueueSummary ? queueLabel : undefined}
+        lastUpdatedAt={showQueueSummary ? lastUpdatedAt : undefined}
+        isRefreshing={showQueueSummary ? isRefreshing : undefined}
       />
 
       {deckJobs.length === 0 ? (
@@ -342,13 +307,6 @@ export function TechnicianAssignedJobsView({
           {canManageTime ? (
             <TechnicianClockStatusBanner timeState={timeState} />
           ) : null}
-
-          <TechnicianQueueSummary
-            dayHeading={dayHeading}
-            queueLabel={queueLabel}
-            lastUpdatedAt={lastUpdatedAt}
-            isRefreshing={isRefreshing}
-          />
 
           <TechnicianJobList
             jobs={deckJobs}
