@@ -19,13 +19,22 @@
     0 1px 2px rgb(15 23 42 / 0.025),
     0 6px 20px -8px rgb(15 23 42 / 0.065);
   --shadow-sticky: 0 -4px 16px -4px rgb(15 23 42 / 0.08);
-  --shell-navy-base: #071827;
-  --shell-navy-mid: #0b1f33;
-  --shell-navy-highlight: #102a43;
-  --shell-navy-shine: rgb(255 255 255 / 0.07);
-  --shell-navy-border: rgb(255 255 255 / 0.08);
-  --shell-navy-text: #f1f5f9;
-  --shell-navy-text-muted: #94a3b8;
+  --shell-brand-base: #0a0a0a;
+  --shell-brand-mid: #111111;
+  --shell-brand-highlight: #1a1a1a;
+  --shell-brand-shine: rgb(212 175 55 / 0.07);
+  --shell-brand-gold-glow: rgb(212 175 55 / 0.05);
+  --shell-brand-border: rgb(255 255 255 / 0.08);
+  --shell-brand-text: #f5f5f4;
+  --shell-brand-text-muted: #a8a29e;
+  /* Legacy aliases — admin chrome only */
+  --shell-navy-base: var(--shell-brand-base);
+  --shell-navy-mid: var(--shell-brand-mid);
+  --shell-navy-highlight: var(--shell-brand-highlight);
+  --shell-navy-shine: var(--shell-brand-shine);
+  --shell-navy-border: var(--shell-brand-border);
+  --shell-navy-text: var(--shell-brand-text);
+  --shell-navy-text-muted: var(--shell-brand-text-muted);
   --shell-nav-surface: #f0f5f9;
   --shell-nav-border: rgb(186 203 220 / 0.75);
   --shell-nav-divider: rgb(15 23 42 / 0.08);
@@ -153,18 +162,64 @@ a[href] {
 .auth-glow-primary {
   background: radial-gradient(
     circle at center,
-    rgba(8, 145, 178, 0.14) 0%,
-    rgba(8, 145, 178, 0.04) 40%,
-    transparent 70%
+    rgb(212 175 55 / 0.14) 0%,
+    rgb(212 175 55 / 0.04) 38%,
+    transparent 68%
   );
 }
 
 .auth-glow-secondary {
   background: radial-gradient(
     circle at center,
-    rgba(14, 116, 144, 0.08) 0%,
-    transparent 65%
+    rgb(245 230 163 / 0.06) 0%,
+    transparent 62%
   );
+}
+
+.auth-gold-rule {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(212 175 55 / 0.45) 50%,
+    transparent 100%
+  );
+}
+
+.brand-surface-dark {
+  background-color: var(--shell-brand-base);
+  color: var(--shell-brand-text);
+}
+
+.brand-loader-pulse {
+  animation: brand-loader-pulse 2.4s ease-in-out infinite;
+}
+
+.brand-loader-shimmer {
+  animation: brand-loader-shimmer 2.8s ease-in-out infinite;
+}
+
+@keyframes brand-loader-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes brand-loader-shimmer {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 0.65;
+  }
 }
 
 .auth-panel-bg {
@@ -254,7 +309,9 @@ a[href] {
   .auth-panel-enter,
   .auth-hero-enter,
   .auth-tier,
-  .auth-metric-pulse {
+  .auth-metric-pulse,
+  .brand-loader-pulse,
+  .brand-loader-shimmer {
     animation: none;
   }
 
@@ -280,68 +337,70 @@ a[href] {
     linear-gradient(180deg, #f6f8fb 0%, var(--surface-canvas) 42%, #eef4f8 100%);
 }
 
-/* Premium navy header + light nav band — authenticated desktop chrome only */
-@media (min-width: 768px) {
-  .admin-top-shell {
-    position: relative;
-    flex-shrink: 0;
-  }
+/* Branded charcoal header + light nav band — admin chrome at all breakpoints */
+.admin-top-shell {
+  position: relative;
+  flex-shrink: 0;
+}
 
-  .admin-premium-header {
-    position: relative;
-    isolation: isolate;
-    border-bottom: 1px solid var(--shell-nav-divider) !important;
-    background: linear-gradient(
-      180deg,
-      var(--shell-navy-highlight) 0%,
-      var(--shell-navy-mid) 38%,
-      var(--shell-navy-base) 100%
-    ) !important;
-    box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.04) inset,
-      0 1px 3px rgb(0 0 0 / 0.14) !important;
-  }
+.admin-premium-header {
+  position: relative;
+  isolation: isolate;
+  border-bottom: 1px solid var(--shell-brand-border) !important;
+  background: linear-gradient(
+    180deg,
+    var(--shell-brand-highlight) 0%,
+    var(--shell-brand-mid) 42%,
+    var(--shell-brand-base) 100%
+  ) !important;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.04) inset,
+    0 1px 3px rgb(0 0 0 / 0.22) !important;
+}
 
-  .admin-premium-header::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(
-        ellipse 72% 55% at 18% -8%,
-        var(--shell-navy-shine) 0%,
-        transparent 58%
-      ),
-      radial-gradient(
-        ellipse 42% 38% at 82% 0%,
-        rgb(56 189 248 / 0.06) 0%,
-        transparent 52%
-      );
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .admin-premium-header::after {
-    content: "";
-    position: absolute;
-    inset-inline: 0;
-    top: 0;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgb(255 255 255 / 0.14) 48%,
-      transparent 100%
+.admin-premium-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 68% 52% at 14% -10%,
+      var(--shell-brand-shine) 0%,
+      transparent 56%
+    ),
+    radial-gradient(
+      ellipse 38% 34% at 88% 0%,
+      var(--shell-brand-gold-glow) 0%,
+      transparent 50%
     );
-    pointer-events: none;
-    z-index: 1;
-  }
+  pointer-events: none;
+  z-index: 0;
+}
 
-  .admin-premium-header > * {
-    position: relative;
-    z-index: 2;
-  }
+.admin-premium-header::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(212 175 55 / 0.22) 42%,
+    rgb(255 255 255 / 0.1) 50%,
+    rgb(212 175 55 / 0.22) 58%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
 
+.admin-premium-header > * {
+  position: relative;
+  z-index: 2;
+}
+
+@media (min-width: 768px) {
   .admin-premium-nav {
     border-top: 1px solid rgb(255 255 255 / 0.05) !important;
     border-bottom: 1px solid var(--shell-nav-border) !important;

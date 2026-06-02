@@ -1,10 +1,15 @@
 /**
  * Altair OS brand asset registry — canonical source paths live in `/branding`.
- * SVG mark geometry is shared between static files and the AltairLogo component.
  *
  * Approved identity: Version 1 luxury black-and-gold North Star (locked June 2026).
- * See `branding/BRAND_GUIDELINES.md` for usage rules. Do not introduce alternate
- * logo concepts without an explicit request.
+ * **Canonical primary asset:** `branding/altair-logo-concept-v1.png` — all high-impact
+ * UI surfaces should use `<AltairBrandMark />` (WebP crops derived from this file).
+ *
+ * Flat SVG variants and `<AltairLogo />` are secondary fallbacks for compact operational
+ * UI only (technician shell, document footers, favicon source). Do not use them for
+ * auth hero, admin header, or other primary brand moments.
+ *
+ * See `branding/BRAND_GUIDELINES.md` for usage rules.
  */
 
 /** Locked brand identity — Version 1 North Star concept. */
@@ -13,6 +18,8 @@ export const ALTAIR_BRAND_IDENTITY = {
   version: "v1" as const,
   name: "Luxury North Star",
   message: "Altair is the North Star for service companies.",
+  /** Canonical primary brand asset — source of truth for all production lockups. */
+  canonicalPrimary: "branding/altair-logo-concept-v1.png",
   approvedConceptReference: "branding/altair-logo-concept-v1.png",
   guidelines: "branding/BRAND_GUIDELINES.md",
   attributes: [
@@ -79,10 +86,11 @@ export const ALTAIR_WORDMARK = {
 /** Canonical on-disk asset library (repo root). */
 export const ALTAIR_BRAND_LIBRARY = {
   root: "branding",
-  /** Approved Version 1 concept reference — do not replace without explicit approval. */
-  approvedConcept: ALTAIR_BRAND_IDENTITY.approvedConceptReference,
+  /** Approved Version 1 concept — canonical primary; do not replace without explicit approval. */
+  approvedConcept: ALTAIR_BRAND_IDENTITY.canonicalPrimary,
   /** @deprecated Use `approvedConcept` — kept for backward compatibility. */
-  conceptReference: ALTAIR_BRAND_IDENTITY.approvedConceptReference,
+  conceptReference: ALTAIR_BRAND_IDENTITY.canonicalPrimary,
+  /** Secondary flat SVG lockups — not for primary brand moments. */
   primary: "branding/altair-primary.svg",
   icon: "branding/altair-icon.svg",
   gold: "branding/altair-gold.svg",
@@ -90,9 +98,18 @@ export const ALTAIR_BRAND_LIBRARY = {
   favicon: "branding/favicon.svg",
 } as const;
 
-/** Web-served copies under `/public` (mirrors of `branding/` SVGs). */
+/** Web-served brand assets under `/public/brand`. */
 export const ALTAIR_BRAND_PUBLIC_PATHS = {
   brand: "/brand",
+  /** Full approved concept reference sheet (repo mirror). */
+  conceptReference: "/brand/altair-logo-concept-v1.png",
+  /** Primary lockup crop — auth hero, mobile brand strip, branded loading. */
+  conceptHero: "/brand/altair-concept-v1-hero.webp",
+  /** Squircle mark crop — compact header / icon contexts. */
+  conceptMark: "/brand/altair-concept-v1-mark.webp",
+  /** Star + ALTAIR wordmark crop — desktop admin header. */
+  conceptWordmark: "/brand/altair-concept-v1-wordmark.webp",
+  /** @deprecated Secondary SVG lockups — compact operational UI only. */
   primary: "/brand/altair-primary.svg",
   icon: "/brand/altair-icon.svg",
   gold: "/brand/altair-gold.svg",
@@ -100,32 +117,90 @@ export const ALTAIR_BRAND_PUBLIC_PATHS = {
   favicon: "/favicon.svg",
 } as const;
 
+/** Presentations cropped from `altair-logo-concept-v1.png` for in-app use. */
+export type AltairBrandPresentation =
+  | "hero"
+  | "headerMark"
+  | "headerWordmark"
+  | "loader";
+
+export const ALTAIR_BRAND_MARK_PRESENTATIONS: Record<
+  AltairBrandPresentation,
+  {
+    src: string;
+    intrinsicWidth: number;
+    intrinsicHeight: number;
+    sizes: string;
+    notes: string;
+  }
+> = {
+  hero: {
+    src: ALTAIR_BRAND_PUBLIC_PATHS.conceptHero,
+    intrinsicWidth: 704,
+    intrinsicHeight: 580,
+    sizes: "(max-width: 768px) 200px, 240px",
+    notes: "Full primary lockup with black plate, mark, and ALTAIR wordmark.",
+  },
+  loader: {
+    src: ALTAIR_BRAND_PUBLIC_PATHS.conceptHero,
+    intrinsicWidth: 704,
+    intrinsicHeight: 580,
+    sizes: "(max-width: 768px) 180px, 220px",
+    notes: "Same primary lockup — used on auth/setup loading surfaces.",
+  },
+  headerMark: {
+    src: ALTAIR_BRAND_PUBLIC_PATHS.conceptMark,
+    intrinsicWidth: 210,
+    intrinsicHeight: 210,
+    sizes: "32px",
+    notes: "Squircle mark from concept sheet — mobile admin header.",
+  },
+  headerWordmark: {
+    src: ALTAIR_BRAND_PUBLIC_PATHS.conceptWordmark,
+    intrinsicWidth: 220,
+    intrinsicHeight: 210,
+    sizes: "128px",
+    notes: "Star + ALTAIR wordmark from concept sheet — desktop admin header.",
+  },
+};
+
 export type AltairBrandVariant = "primary" | "icon" | "gold" | "white";
 
 /** Recommended usage for each variant (for rollout planning). */
 export const ALTAIR_BRAND_USAGE: Record<
-  AltairBrandVariant | "favicon",
-  { surface: string; notes: string }
+  AltairBrandVariant | "favicon" | "concept",
+  { surface: string; notes: string; tier: "primary" | "secondary" }
 > = {
-  primary: {
-    surface: "Marketing, splash screens, light UI chrome",
+  concept: {
+    surface: "Auth hero, admin header, branded loading, marketing",
     notes:
-      "Full stacked mark + ALTAIR wordmark on black. Default brand lockup.",
+      "Approved concept-v1 PNG and WebP crops via <AltairBrandMark />. Canonical primary.",
+    tier: "primary",
+  },
+  primary: {
+    surface: "Legacy / export only",
+    notes:
+      "Flat SVG approximation. Secondary — do not use for auth, header, or splash.",
+    tier: "secondary",
   },
   icon: {
-    surface: "App icon source, compact headers, avatars",
-    notes: "Mark only on transparent background. Scales to small sizes.",
+    surface: "App icon source, compact operational UI",
+    notes: "Mark only on transparent background. Secondary vector fallback.",
+    tier: "secondary",
   },
   gold: {
-    surface: "Dark backgrounds (auth hero, admin desktop header, public footers)",
-    notes: "Gold gradient mark + wordmark without black plate.",
+    surface: "Public document footers, technician shell",
+    notes: "Gold gradient without black plate. Secondary vector fallback.",
+    tier: "secondary",
   },
   white: {
     surface: "Dark backgrounds requiring flat/mono treatment",
-    notes: "Single-color white lockup for max contrast on slate/black.",
+    notes: "Single-color white lockup. Secondary vector fallback.",
+    tier: "secondary",
   },
   favicon: {
     surface: "Browser tab, PWA shortcut, 32×32 contexts",
-    notes: "Mark on black rounded square. Thicker strokes for legibility.",
+    notes: "Mark on black rounded square. Simplified; keep for favicon/app icon.",
+    tier: "secondary",
   },
 };

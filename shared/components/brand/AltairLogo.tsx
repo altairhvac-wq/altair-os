@@ -107,6 +107,16 @@ function AltairWordmark({
   );
 }
 
+/**
+ * Secondary vector logo component — flat SVG geometry derived from concept-v1.
+ *
+ * **Do not use for primary brand moments** (auth hero, admin header, branded loading).
+ * Prefer `<AltairBrandMark />` which renders faithful crops from the approved
+ * `altair-logo-concept-v1.png` reference.
+ *
+ * Appropriate for: technician shell, public document footers, and other compact
+ * operational surfaces where raster detail cannot render well.
+ */
 export function AltairLogo({
   variant = "primary",
   size = "md",
