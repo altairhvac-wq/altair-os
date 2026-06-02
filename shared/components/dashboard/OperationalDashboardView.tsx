@@ -1269,13 +1269,11 @@ function DashboardContentLayout({
     "next-steps": nextStepsContent,
   };
 
-  const showDemoDataSection =
-    demoDataStatus &&
-    (demoDataStatus.isEligibleForSeed || demoDataStatus.hasDemoData);
+  const showDemoDataSection = Boolean(demoDataStatus);
 
   return (
     <DashboardDrilldownProvider panels={drilldownPanels}>
-      {showDemoDataSection && companyId ? (
+      {showDemoDataSection && companyId && demoDataStatus ? (
         <DemoDataSection
           companyId={companyId}
           status={demoDataStatus}

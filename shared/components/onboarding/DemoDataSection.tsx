@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Database, Loader2, Sparkles, Trash2 } from "lucide-react";
 import {
   clearDemoDataAction,
+  getDemoDataStatusAction,
   seedDemoDataAction,
 } from "@/app/actions/demo-data";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
@@ -17,24 +18,46 @@ type DemoDataSectionProps = {
 
 export function DemoDataSection({
   companyId,
-  status,
+  status: initialStatus,
   variant = "dashboard",
 }: DemoDataSectionProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [status, setStatus] = useState(initialStatus);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [confirmSeedOpen, setConfirmSeedOpen] = useState(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
-  const showSeedCard = status.isEligibleForSeed && !status.hasDemoData;
-  const showLoadedCard = status.hasDemoData;
+  useEffect(() => {
+    setStatus(initialStatus);
+  }, [initialStatus]);
 
-  if (!showSeedCard && !showLoadedCard) {
+  const showSeedCard = !status.hasDemoData;
+  const showLoadedCard = status.hasDemoData;
+  const canSeed = status.isEligibleForSeed;
+
+  async function refreshDemoDataStatus() {
+    const nextStatus = await getDemoDataStatusAction(companyId);
+    if (!("error" in nextStatus)) {
+      setStatus(nextStatus);
+    }
+    router.refresh();
+  }
+
+  if (
+    variant === "dashboard" &&
+    !showLoadedCard &&
+    !(showSeedCard && canSeed)
+  ) {
     return null;
   }
 
   function handleSeed() {
+    if (!canSeed) {
+      return;
+    }
+
     setError(null);
     setSuccessMessage(null);
 
@@ -49,7 +72,7 @@ export function DemoDataSection({
 
       setConfirmSeedOpen(false);
       setSuccessMessage("Demo data loaded. You can delete or reset it later.");
-      router.refresh();
+      await refreshDemoDataStatus();
     });
   }
 
@@ -68,7 +91,7 @@ export function DemoDataSection({
 
       setConfirmClearOpen(false);
       setSuccessMessage("Demo data cleared.");
-      router.refresh();
+      await refreshDemoDataStatus();
     });
   }
 
@@ -165,7 +188,7 @@ export function DemoDataSection({
     );
   }
 
-  if (isDashboardCompact && showSeedCard) {
+  if (isDashboardCompact && showSeedCard && canSeed) {
     return (
       <section
         aria-label="Load demo data"
@@ -238,7 +261,7 @@ export function DemoDataSection({
                 ) : (
                   <Sparkles className="h-3 w-3" aria-hidden="true" />
                 )}
-                Load demo data
+                Set up demo data
               </button>
             )}
           </div>
@@ -248,6 +271,8 @@ export function DemoDataSection({
   }
 
   const isSettingsCompact = variant === "settings";
+  const seedBlockedMessage =
+    "Demo data can only be loaded into an empty workspace without existing customers, jobs, estimates, or invoices.";
 
   return (
     <section className="admin-card min-w-0 max-w-full overflow-x-clip">
@@ -325,29 +350,33 @@ export function DemoDataSection({
         ) : null}
 
         {showSeedCard ? (
-          confirmSeedOpen ? (
+          !canSeed ? (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              {seedBlockedMessage}
+            </p>
+          ) : confirmSeedOpen ? (
             <div className="rounded-xl border border-violet-200 bg-violet-50/50 p-4">
               <p className="text-sm font-semibold text-slate-900">
-                Load demo data into this workspace?
+                Set up demo data in this workspace?
               </p>
               <p className="mt-1 text-sm text-slate-600">
                 This adds sample customers, jobs, billing documents, dispatch
                 assignments, and time entries. Demo customer emails use your
                 account address so estimate, invoice, and payment test emails
-                stay safe. It only works once on an empty workspace and does not
+                stay safe. It only works on an empty workspace and does not
                 modify other companies.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={handleSeed}
-                  disabled={isPending}
+                  disabled={isPending || !canSeed}
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:opacity-60"
                 >
                   {isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                   ) : null}
-                  Confirm load demo data
+                  Confirm set up demo data
                 </button>
                 <button
                   type="button"
@@ -363,7 +392,7 @@ export function DemoDataSection({
             <button
               type="button"
               onClick={() => setConfirmSeedOpen(true)}
-              disabled={isPending}
+              disabled={isPending || !canSeed}
               className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:opacity-60 sm:w-auto"
             >
               {isPending ? (
@@ -371,7 +400,7 @@ export function DemoDataSection({
               ) : (
                 <Sparkles className="h-4 w-4" aria-hidden="true" />
               )}
-              Load demo data
+              Set up demo data
             </button>
           )
         ) : null}

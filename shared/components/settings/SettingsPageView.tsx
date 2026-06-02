@@ -206,9 +206,7 @@ export function SettingsPageView({
   const showOnboarding =
     onboardingChecklist &&
     shouldShowOnboardingChecklist(onboardingChecklist);
-  const showDemoData =
-    demoDataStatus &&
-    (demoDataStatus.isEligibleForSeed || demoDataStatus.hasDemoData);
+  const showDemoData = Boolean(demoDataStatus);
   const showSetupSection =
     showOnboarding || showDemoData || showSystemCheckLink;
 
@@ -442,7 +440,7 @@ export function SettingsPageView({
                 />
               ) : null}
 
-              {showDemoData ? (
+              {showDemoData && demoDataStatus ? (
                 <DemoDataSection
                   companyId={companyProfile.id}
                   status={demoDataStatus}

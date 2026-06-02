@@ -12,25 +12,34 @@ import type {
 
 const DEMO_DATA_VERSION = 3;
 
-async function countNonDemoRows(
-  table:
-    | "customers"
-    | "jobs"
-    | "estimates"
-    | "invoices",
+type DemoCountableTable =
+  | "customers"
+  | "jobs"
+  | "estimates"
+  | "invoices";
+
+async function countCompanyRows(
+  table: DemoCountableTable,
   companyId: string,
+  options: { demoOnly?: boolean } = {},
 ): Promise<number> {
   const supabase = await createClient();
 
-  const { count, error } = await supabase
+  let query = supabase
     .from(table)
     .select("id", { count: "exact", head: true })
-    .eq("company_id", companyId)
-    .eq("is_demo", false);
+    .eq("company_id", companyId);
+
+  if (options.demoOnly) {
+    query = query.eq("is_demo", true);
+  }
+
+  const { count, error } = await query;
 
   if (error) {
     console.error(`[demo-data] ${table} count failed:`, {
       companyId,
+      demoOnly: options.demoOnly ?? false,
       code: error.code,
       message: error.message,
     });
@@ -40,59 +49,79 @@ async function countNonDemoRows(
   return count ?? 0;
 }
 
-async function countDemoRows(
-  table: "customers" | "jobs",
+async function fetchCompanySettingsMarker(
   companyId: string,
-): Promise<number> {
+): Promise<CompanyDemoDataSettings | null> {
   const supabase = await createClient();
 
-  const { count, error } = await supabase
-    .from(table)
-    .select("id", { count: "exact", head: true })
-    .eq("company_id", companyId)
-    .eq("is_demo", true);
+  const { data, error } = await supabase
+    .from("companies")
+    .select("settings")
+    .eq("id", companyId)
+    .maybeSingle();
 
   if (error) {
-    console.error(`[demo-data] demo ${table} count failed:`, {
+    console.error("[demo-data] company settings lookup failed:", {
       companyId,
       code: error.code,
       message: error.message,
     });
-    return 0;
+    return null;
   }
 
-  return count ?? 0;
+  return parseCompanyDemoDataSettings(data?.settings);
+}
+
+async function countDemoRows(
+  table: DemoCountableTable,
+  companyId: string,
+): Promise<number> {
+  return countCompanyRows(table, companyId, { demoOnly: true });
 }
 
 export async function getDemoDataStatus(
   companyId: string,
-  context: ActiveCompanyContext,
+  _context?: ActiveCompanyContext,
 ): Promise<DemoDataStatus> {
   const [
-    realCustomerCount,
-    realJobCount,
-    realEstimateCount,
-    realInvoiceCount,
+    totalCustomerCount,
+    totalJobCount,
+    totalEstimateCount,
+    totalInvoiceCount,
     demoCustomerCount,
     demoJobCount,
+    demoEstimateCount,
+    demoInvoiceCount,
+    settingsMarker,
   ] = await Promise.all([
-    countNonDemoRows("customers", companyId),
-    countNonDemoRows("jobs", companyId),
-    countNonDemoRows("estimates", companyId),
-    countNonDemoRows("invoices", companyId),
+    countCompanyRows("customers", companyId),
+    countCompanyRows("jobs", companyId),
+    countCompanyRows("estimates", companyId),
+    countCompanyRows("invoices", companyId),
     countDemoRows("customers", companyId),
     countDemoRows("jobs", companyId),
+    countDemoRows("estimates", companyId),
+    countDemoRows("invoices", companyId),
+    fetchCompanySettingsMarker(companyId),
   ]);
 
-  const settingsMarker = parseCompanyDemoDataSettings(context.company.settings);
   const hasDemoData =
-    settingsMarker !== null || demoCustomerCount > 0 || demoJobCount > 0;
+    settingsMarker !== null ||
+    demoCustomerCount > 0 ||
+    demoJobCount > 0 ||
+    demoEstimateCount > 0 ||
+    demoInvoiceCount > 0;
   const isEligibleForSeed =
     !hasDemoData &&
-    realCustomerCount === 0 &&
-    realJobCount === 0 &&
-    realEstimateCount === 0 &&
-    realInvoiceCount === 0;
+    totalCustomerCount === 0 &&
+    totalJobCount === 0 &&
+    totalEstimateCount === 0 &&
+    totalInvoiceCount === 0;
+
+  const realCustomerCount = Math.max(0, totalCustomerCount - demoCustomerCount);
+  const realJobCount = Math.max(0, totalJobCount - demoJobCount);
+  const realEstimateCount = Math.max(0, totalEstimateCount - demoEstimateCount);
+  const realInvoiceCount = Math.max(0, totalInvoiceCount - demoInvoiceCount);
 
   return {
     hasDemoData,
