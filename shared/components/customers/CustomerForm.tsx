@@ -65,8 +65,11 @@ export function CustomerForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="overlay-form-shell">
-      <div className="overlay-form-scroll space-y-5">
+    <form
+      onSubmit={handleSubmit}
+      className="overlay-form-shell min-h-0 flex-1"
+    >
+      <div className="overlay-form-scroll space-y-5 pb-1">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label htmlFor="name" className={labelClass}>
@@ -226,11 +229,13 @@ export function CustomerForm({
       ) : null}
       </div>
 
-      <div className={`${adminFormActionsClass} overlay-form-actions bg-white`}>
+      <div
+        className={`${adminFormActionsClass} overlay-form-actions admin-sticky-footer-inline bg-white`}
+      >
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 admin-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-11 flex-1 admin-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting
             ? "Saving..."
@@ -242,7 +247,7 @@ export function CustomerForm({
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-11 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Cancel
         </button>
