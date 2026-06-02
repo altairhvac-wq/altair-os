@@ -1,4 +1,5 @@
 import {
+  Archive,
   ArrowRightLeft,
   Ban,
   Camera,
@@ -44,6 +45,9 @@ const ACTIVITY_ICONS: Record<
   typeof History
 > = {
   customer_created: UserPlus,
+  customer_archived: Archive,
+  customer_restored: History,
+  customer_deleted: Ban,
   equipment_added: Settings2,
   equipment_updated: Settings2,
   warranty_expiration_recorded: ShieldCheck,
@@ -88,6 +92,9 @@ const ACTIVITY_ICONS: Record<
 
 const ACTIVITY_ICON_STYLES: Record<OperationalActivityEventType, string> = {
   customer_created: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
+  customer_archived: "bg-slate-100 text-slate-600 ring-slate-500/15",
+  customer_restored: "bg-blue-50 text-blue-700 ring-blue-600/15",
+  customer_deleted: "bg-rose-50 text-rose-700 ring-rose-600/15",
   equipment_added: "bg-violet-50 text-violet-700 ring-violet-600/15",
   equipment_updated: "bg-violet-50 text-violet-700 ring-violet-600/15",
   warranty_expiration_recorded: "bg-amber-50 text-amber-700 ring-amber-600/15",

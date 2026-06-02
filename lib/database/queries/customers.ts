@@ -7,6 +7,7 @@ import type {
 } from "@/lib/database/types/core-tables";
 import { listInvoicesByCustomer } from "@/lib/database/queries/invoices";
 import type { Customer, CustomerFormData } from "@/shared/types/customer";
+import type { CustomerDeleteDependencies } from "@/shared/lib/customer-lifecycle";
 import {
   computeCustomerFinancialSummary,
   type CustomerFinancialSummary,
@@ -36,6 +37,7 @@ export function mapCustomerRowToCustomer(row: CustomerRow): Customer {
     tags: row.tags,
     notes: row.notes ?? undefined,
     createdAt: toDateOnly(row.created_at),
+    archivedAt: row.archived_at ? row.archived_at : undefined,
   };
 }
 
@@ -84,17 +86,56 @@ export function mapCustomerFormDataToUpdate(
   return mapCustomerFormDataToRowFields(data);
 }
 
-export async function listCustomers(companyId: string): Promise<Customer[]> {
+export type ListCustomersOptions = {
+  includeArchived?: boolean;
+};
+
+export async function listCustomers(
+  companyId: string,
+  options?: ListCustomersOptions,
+): Promise<Customer[]> {
+  const supabase = await createClient();
+  const includeArchived = options?.includeArchived ?? false;
+
+  let query = supabase
+    .from("customers")
+    .select("*")
+    .eq("company_id", companyId);
+
+  if (!includeArchived) {
+    query = query.is("archived_at", null);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[listCustomers] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as CustomerRow[]).map(mapCustomerRowToCustomer);
+}
+
+export async function listArchivedCustomers(
+  companyId: string,
+): Promise<Customer[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("customers")
     .select("*")
     .eq("company_id", companyId)
-    .order("created_at", { ascending: false });
+    .not("archived_at", "is", null)
+    .order("archived_at", { ascending: false });
 
   if (error) {
-    console.error("[listCustomers] query failed:", {
+    console.error("[listArchivedCustomers] query failed:", {
       companyId,
       code: error.code,
       message: error.message,
@@ -217,4 +258,200 @@ export async function updateCustomer(
     customer: mapCustomerRowToCustomer(row as CustomerRow),
     error: null,
   };
+}
+
+async function countRelatedRecords(
+  companyId: string,
+  customerId: string,
+  table: "jobs" | "estimates" | "invoices",
+): Promise<number> {
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from(table)
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .eq("customer_id", customerId);
+
+  if (error) {
+    console.error(`[countRelatedRecords] ${table} count failed:`, {
+      companyId,
+      customerId,
+      code: error.code,
+      message: error.message,
+    });
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+async function countCustomerInvoicePayments(
+  companyId: string,
+  customerId: string,
+): Promise<number> {
+  const supabase = await createClient();
+
+  const { data: invoices, error: invoiceError } = await supabase
+    .from("invoices")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("customer_id", customerId);
+
+  if (invoiceError) {
+    console.error("[countCustomerInvoicePayments] invoice lookup failed:", {
+      companyId,
+      customerId,
+      code: invoiceError.code,
+      message: invoiceError.message,
+    });
+    return 0;
+  }
+
+  const invoiceIds = (invoices ?? []).map((invoice) => invoice.id);
+  if (invoiceIds.length === 0) {
+    return 0;
+  }
+
+  const { count, error } = await supabase
+    .from("invoice_payments")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .in("invoice_id", invoiceIds);
+
+  if (error) {
+    console.error("[countCustomerInvoicePayments] count failed:", {
+      companyId,
+      customerId,
+      code: error.code,
+      message: error.message,
+    });
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+export async function getCustomerDeleteDependencies(
+  companyId: string,
+  customerId: string,
+): Promise<CustomerDeleteDependencies> {
+  const [jobCount, estimateCount, invoiceCount, invoicePaymentCount] =
+    await Promise.all([
+      countRelatedRecords(companyId, customerId, "jobs"),
+      countRelatedRecords(companyId, customerId, "estimates"),
+      countRelatedRecords(companyId, customerId, "invoices"),
+      countCustomerInvoicePayments(companyId, customerId),
+    ]);
+
+  return {
+    jobCount,
+    estimateCount,
+    invoiceCount,
+    invoicePaymentCount,
+  };
+}
+
+export async function archiveCustomer(
+  companyId: string,
+  customerId: string,
+): Promise<{ customer: Customer | null; error: string | null }> {
+  const supabase = await createClient();
+  const archivedAt = new Date().toISOString();
+
+  const { data: row, error } = await supabase
+    .from("customers")
+    .update({ archived_at: archivedAt })
+    .eq("company_id", companyId)
+    .eq("id", customerId)
+    .is("archived_at", null)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[archiveCustomer] update failed:", {
+      companyId,
+      customerId,
+      code: error.code,
+      message: error.message,
+    });
+    return { customer: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    const existing = await getCustomerById(companyId, customerId);
+    if (!existing) {
+      return { customer: null, error: "Customer not found." };
+    }
+    return { customer: null, error: "This customer is already archived." };
+  }
+
+  return {
+    customer: mapCustomerRowToCustomer(row as CustomerRow),
+    error: null,
+  };
+}
+
+export async function restoreCustomer(
+  companyId: string,
+  customerId: string,
+): Promise<{ customer: Customer | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("customers")
+    .update({ archived_at: null })
+    .eq("company_id", companyId)
+    .eq("id", customerId)
+    .not("archived_at", "is", null)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[restoreCustomer] update failed:", {
+      companyId,
+      customerId,
+      code: error.code,
+      message: error.message,
+    });
+    return { customer: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    const existing = await getCustomerById(companyId, customerId);
+    if (!existing) {
+      return { customer: null, error: "Customer not found." };
+    }
+    return { customer: null, error: "This customer is not archived." };
+  }
+
+  return {
+    customer: mapCustomerRowToCustomer(row as CustomerRow),
+    error: null,
+  };
+}
+
+export async function deleteCustomer(
+  companyId: string,
+  customerId: string,
+): Promise<{ success: boolean; error: string | null }> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("customers")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("id", customerId);
+
+  if (error) {
+    console.error("[deleteCustomer] delete failed:", {
+      companyId,
+      customerId,
+      code: error.code,
+      message: error.message,
+    });
+    return { success: false, error: mapDatabaseError(error) };
+  }
+
+  return { success: true, error: null };
 }

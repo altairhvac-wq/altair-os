@@ -1,19 +1,33 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";
+import {
+  bulkArchiveCustomersAction,
+  bulkDeleteCustomersAction,
+  bulkRestoreCustomersAction,
+} from "@/app/actions/customers-bulk";
 import { createCustomerAction } from "@/app/actions/customers";
+import { usePageBulkSelection } from "@/shared/hooks/usePageBulkSelection";
+import { resolveSelectedItems } from "@/shared/lib/bulk-selection";
+import {
+  formatBulkCustomersResultMessage,
+  isCustomerArchived,
+} from "@/shared/lib/customer-lifecycle";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import {
   type Customer,
   type CustomerFormData,
+  type CustomerLifecycleState,
   type CustomerStatus,
   validateCustomerFormData,
 } from "@/shared/types/customer";
 import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
+import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { CustomerDetailPanel } from "./CustomerDetailPanel";
 import { CustomerSearchFilterBar } from "./CustomerSearchFilterBar";
+import { CustomersBulkActionBar } from "./CustomersBulkActionBar";
 import { CustomersEmptyState } from "./CustomersEmptyState";
 import { CustomersTable } from "./CustomersTable";
 
@@ -29,10 +43,18 @@ function filterCustomers(
   customers: Customer[],
   search: string,
   statusFilter: CustomerStatus | "all",
+  lifecycleFilter: CustomerLifecycleState,
 ): Customer[] {
   const query = search.trim().toLowerCase();
 
   return customers.filter((customer) => {
+    const matchesLifecycle =
+      lifecycleFilter === "archived"
+        ? isCustomerArchived(customer)
+        : !isCustomerArchived(customer);
+
+    if (!matchesLifecycle) return false;
+
     const matchesStatus =
       statusFilter === "all" || customer.status === statusFilter;
 
@@ -64,15 +86,161 @@ export function CustomersPageView({
   const [statusFilter, setStatusFilter] = useState<CustomerStatus | "all">(
     "all",
   );
+  const [lifecycleFilter, setLifecycleFilter] =
+    useState<CustomerLifecycleState>("active");
   const [panelMode, setPanelMode] = useState<PanelMode>("empty");
   const router = useRouter();
   const [createError, setCreateError] = useState<string | null>(null);
+  const [bulkActionMessage, setBulkActionMessage] = useState<string | null>(
+    null,
+  );
+  const [bulkActionFailureDetails, setBulkActionFailureDetails] = useState<
+    string[] | null
+  >(null);
+  const [bulkActionTone, setBulkActionTone] = useState<
+    "success" | "warning" | "error"
+  >("success");
   const [isPending, startTransition] = useTransition();
+  const [isBulkArchiving, startBulkArchiveTransition] = useTransition();
+  const [isBulkRestoring, startBulkRestoreTransition] = useTransition();
+  const [isBulkDeleting, startBulkDeleteTransition] = useTransition();
+
+  useEffect(() => {
+    setCustomers(initialCustomers);
+  }, [initialCustomers]);
 
   const filteredCustomers = useMemo(
-    () => filterCustomers(customers, search, statusFilter),
-    [customers, search, statusFilter],
+    () => filterCustomers(customers, search, statusFilter, lifecycleFilter),
+    [customers, search, statusFilter, lifecycleFilter],
   );
+
+  const selectionEnabled = canManageCustomers && !search.trim();
+  const {
+    selectedIds,
+    selectedCount,
+    toggleSelection,
+    toggleAllVisible,
+    clearSelection,
+    setSelectedIds,
+  } = usePageBulkSelection(filteredCustomers, [
+    search,
+    statusFilter,
+    lifecycleFilter,
+  ]);
+
+  const selectedCustomers = useMemo(
+    () => resolveSelectedItems(filteredCustomers, selectedIds),
+    [filteredCustomers, selectedIds],
+  );
+
+  function clearBulkActionFeedback() {
+    setBulkActionMessage(null);
+    setBulkActionFailureDetails(null);
+  }
+
+  function applyBulkActionResult(input: {
+    result: Awaited<ReturnType<typeof bulkArchiveCustomersAction>>;
+    actionLabel: string;
+  }) {
+    const { result, actionLabel } = input;
+
+    if (result.error && result.results.length === 0) {
+      setBulkActionTone("error");
+      setBulkActionMessage(
+        formatActionError(result.error, "We couldn't update the selected customers."),
+      );
+      return;
+    }
+
+    const failedIds = new Set(
+      result.results.filter((item) => !item.success).map((item) => item.customerId),
+    );
+
+    setSelectedIds((previous) => {
+      if (failedIds.size === 0) {
+        return new Set();
+      }
+
+      const next = new Set<string>();
+      for (const customerId of previous) {
+        if (failedIds.has(customerId)) {
+          next.add(customerId);
+        }
+      }
+      return next;
+    });
+
+    const failureDetails = result.results
+      .filter((item) => !item.success)
+      .map(
+        (item) =>
+          `${item.customerName}: ${item.error ?? "Could not be updated."}`,
+      );
+
+    setBulkActionFailureDetails(
+      failureDetails.length > 0 ? failureDetails : null,
+    );
+    setBulkActionTone(
+      result.successCount > 0
+        ? result.failureCount > 0
+          ? "warning"
+          : "success"
+        : "error",
+    );
+    setBulkActionMessage(
+      formatBulkCustomersResultMessage({
+        successCount: result.successCount,
+        failureCount: result.failureCount,
+        actionLabel,
+      }),
+    );
+
+    if (result.successCount > 0) {
+      router.refresh();
+    }
+  }
+
+  function handleBulkArchive() {
+    if (!selectionEnabled || selectedCount === 0 || isBulkArchiving) {
+      return;
+    }
+
+    clearBulkActionFeedback();
+    const customerIds = [...selectedIds];
+
+    startBulkArchiveTransition(async () => {
+      const result = await bulkArchiveCustomersAction(customerIds);
+      applyBulkActionResult({ result, actionLabel: "Archive" });
+    });
+  }
+
+  function handleBulkRestore() {
+    if (!selectionEnabled || selectedCount === 0 || isBulkRestoring) {
+      return;
+    }
+
+    clearBulkActionFeedback();
+    const customerIds = [...selectedIds];
+
+    startBulkRestoreTransition(async () => {
+      const result = await bulkRestoreCustomersAction(customerIds);
+      applyBulkActionResult({ result, actionLabel: "Restore" });
+    });
+  }
+
+  function handleBulkDelete() {
+    if (!selectionEnabled || selectedCount === 0 || isBulkDeleting) {
+      return;
+    }
+
+    clearBulkActionFeedback();
+    const customerIds = [...selectedIds];
+
+    startBulkDeleteTransition(async () => {
+      const result = await bulkDeleteCustomersAction(customerIds);
+      applyBulkActionResult({ result, actionLabel: "Delete" });
+    });
+  }
 
   function handleNewCustomer() {
     if (!canManageCustomers) {
@@ -149,6 +317,21 @@ export function CustomersPageView({
           : undefined
       }
     >
+      {bulkActionMessage ? (
+        <SettingsAlertBanner tone={bulkActionTone}>
+          <div>
+            <p>{bulkActionMessage}</p>
+            {bulkActionFailureDetails?.length ? (
+              <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                {bulkActionFailureDetails.map((detail) => (
+                  <li key={detail}>{detail}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        </SettingsAlertBanner>
+      ) : null}
+
       <section
         className={`flex min-h-[16rem] min-w-0 lg:flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
           isCreateOpen ? "max-lg:hidden" : ""
@@ -158,8 +341,10 @@ export function CustomersPageView({
           <CustomerSearchFilterBar
             search={search}
             statusFilter={statusFilter}
+            lifecycleFilter={lifecycleFilter}
             onSearchChange={setSearch}
             onStatusFilterChange={setStatusFilter}
+            onLifecycleFilterChange={setLifecycleFilter}
             resultCount={filteredCustomers.length}
           />
         ) : null}
@@ -178,9 +363,27 @@ export function CustomersPageView({
             <CustomersTable
               customers={filteredCustomers}
               showRevenueStats={canViewBilling}
+              selectionEnabled={selectionEnabled}
+              selectedIds={selectedIds}
+              onToggleSelection={toggleSelection}
+              onToggleAllVisible={toggleAllVisible}
             />
           )}
         </div>
+
+        {selectionEnabled ? (
+          <CustomersBulkActionBar
+            selectedCount={selectedCustomers.length}
+            lifecycleFilter={lifecycleFilter}
+            isArchiving={isBulkArchiving}
+            isRestoring={isBulkRestoring}
+            isDeleting={isBulkDeleting}
+            onArchive={handleBulkArchive}
+            onRestore={handleBulkRestore}
+            onDelete={handleBulkDelete}
+            onClearSelection={clearSelection}
+          />
+        ) : null}
       </section>
 
       <CustomerDetailPanel

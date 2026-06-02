@@ -18,6 +18,9 @@ export type OperationalActivitySource =
 
 export type OperationalActivityEventType =
   | "customer_created"
+  | "customer_archived"
+  | "customer_restored"
+  | "customer_deleted"
   | "equipment_added"
   | "equipment_updated"
   | "warranty_expiration_recorded"
@@ -141,6 +144,9 @@ const JOB_STATUS_CHANGE_EVENTS = new Set([
 
 const ACTIVITY_TYPE_LABELS: Record<OperationalActivityEventType, string> = {
   customer_created: "Customer created",
+  customer_archived: "Customer archived",
+  customer_restored: "Customer restored",
+  customer_deleted: "Customer deleted",
   equipment_added: "Equipment added",
   equipment_updated: "Equipment updated",
   warranty_expiration_recorded: "Warranty recorded",
@@ -372,6 +378,11 @@ export function formatOperationalActivityDetails(
 
   switch (eventType) {
     case "customer_created":
+      return metadata.customer_name ?? null;
+
+    case "customer_archived":
+    case "customer_restored":
+    case "customer_deleted":
       return metadata.customer_name ?? null;
 
     case "equipment_added":

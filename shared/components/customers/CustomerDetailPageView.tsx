@@ -10,6 +10,7 @@ import { CustomerRecentPhotosSection } from "./CustomerRecentPhotosSection";
 import { CustomerRecentReceiptsSection } from "./CustomerRecentReceiptsSection";
 import { CustomerCard } from "./CustomerCard";
 import { CustomerEditControl } from "./CustomerEditControl";
+import { CustomerLifecycleControl } from "./CustomerLifecycleControl";
 import { CustomerEquipmentSection } from "./CustomerEquipmentSection";
 import { CustomerJobsSection } from "./CustomerJobsSection";
 import { OperationalActivityTimeline } from "@/shared/components/operational/OperationalActivityTimeline";
@@ -17,6 +18,8 @@ import {
   formatDate,
   type Customer,
 } from "@/shared/types/customer";
+import type { CustomerDeleteDependencies } from "@/shared/lib/customer-lifecycle";
+import { isCustomerArchived } from "@/shared/lib/customer-lifecycle";
 import type { CustomerFinancialSummary } from "@/shared/types/customer-financial";
 import type { Estimate } from "@/shared/types/estimate";
 import type { Invoice } from "@/shared/types/invoice";
@@ -49,6 +52,7 @@ type CustomerDetailPageViewProps = {
   canViewBilling: boolean;
   canViewCompanyExpenses: boolean;
   financialSummary?: CustomerFinancialSummary;
+  deleteDependencies: CustomerDeleteDependencies;
 };
 
 export function CustomerDetailPageView({
@@ -66,8 +70,10 @@ export function CustomerDetailPageView({
   canViewBilling,
   canViewCompanyExpenses,
   financialSummary,
+  deleteDependencies,
 }: CustomerDetailPageViewProps) {
   const hasNotes = Boolean(customer.notes?.trim());
+  const archived = isCustomerArchived(customer);
 
   return (
     <div className={`mx-auto max-w-5xl ${adminPageStackClass}`}>
@@ -86,11 +92,24 @@ export function CustomerDetailPageView({
             showRevenueStats={canViewBilling}
             financialSummary={financialSummary}
           />
-          <CustomerEditControl
-            customer={customer}
-            canManage={canManageCustomers}
-          />
+          <div className="flex flex-col items-end gap-2">
+            <CustomerEditControl
+              customer={customer}
+              canManage={canManageCustomers}
+            />
+            <CustomerLifecycleControl
+              customer={customer}
+              deleteDependencies={deleteDependencies}
+              canManage={canManageCustomers}
+            />
+          </div>
         </div>
+
+        {archived ? (
+          <div className="mb-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            This customer is archived and hidden from active customer lists.
+          </div>
+        ) : null}
 
         <div className="mt-2 rounded-md border border-slate-100 bg-white px-2.5 py-2 text-sm text-slate-700">
           <div className={adminMetaRowClass}>

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getCompanyAccessScope, canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { getCustomerById } from "@/lib/database/queries/customers";
+import { getCustomerById, getCustomerDeleteDependencies } from "@/lib/database/queries/customers";
 import { listEstimatesByCustomer } from "@/lib/database/queries/estimates";
 import { listInvoicesByCustomer } from "@/lib/database/queries/invoices";
 import { listJobsByCustomer } from "@/lib/database/queries/jobs";
@@ -45,6 +45,7 @@ export default async function CustomerDetailPage({
     equipment,
     recentPhotos,
     recentReceipts,
+    deleteDependencies,
   ] = await Promise.all([
     getCustomerById(companyContext.company.id, customerId),
     listJobsByCustomer(companyContext.company.id, customerId),
@@ -70,6 +71,7 @@ export default async function CustomerDetailPage({
           withReceiptOnly: true,
         })
       : Promise.resolve([]),
+    getCustomerDeleteDependencies(companyContext.company.id, customerId),
   ]);
 
   if (!customer) {
@@ -96,6 +98,7 @@ export default async function CustomerDetailPage({
       canViewBilling={canViewBillingData}
       canViewCompanyExpenses={access.canViewCompanyExpenses}
       financialSummary={financialSummary}
+      deleteDependencies={deleteDependencies}
     />
   );
 }

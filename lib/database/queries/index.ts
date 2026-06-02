@@ -6,10 +6,14 @@ export {
 export {
   createCustomer,
   getCustomerById,
+  getCustomerDeleteDependencies,
   getCustomerFinancialSummary,
   listCustomers,
+  listArchivedCustomers,
+  archiveCustomer,
+  restoreCustomer,
+  deleteCustomer,
   mapCustomerFormDataToInsert,
-  mapCustomerFormDataToUpdate,
   mapCustomerRowToCustomer,
   updateCustomer,
 } from "./customers";

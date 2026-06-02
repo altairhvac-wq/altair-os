@@ -23,6 +23,9 @@ export type CustomerStatus = "active" | "inactive" | "lead";
 
 export type CustomerActivityType =
   | "customer_created"
+  | "customer_archived"
+  | "customer_restored"
+  | "customer_deleted"
   | "equipment_added"
   | "equipment_updated"
   | "warranty_expiration_recorded";

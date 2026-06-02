@@ -169,6 +169,7 @@ export type CustomerRow = {
   total_revenue: number;
   last_service_date: Timestamp | null;
   is_demo: boolean;
+  archived_at: Timestamp | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -192,6 +193,7 @@ export type CustomerInsert = {
   total_revenue?: number;
   last_service_date?: Timestamp | null;
   is_demo?: boolean;
+  archived_at?: Timestamp | null;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };

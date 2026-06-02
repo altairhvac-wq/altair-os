@@ -26,3 +26,75 @@ export async function recordCustomerCreatedActivity(input: {
     });
   }
 }
+
+export async function recordCustomerArchivedActivity(input: {
+  companyId: string;
+  customerId: string;
+  actorId: string;
+  customerName: string;
+}): Promise<void> {
+  const { error } = await recordCustomerActivity({
+    company_id: input.companyId,
+    customer_id: input.customerId,
+    actor_id: input.actorId,
+    event_type: "customer_archived",
+    metadata: {
+      customer_name: input.customerName,
+    },
+  });
+
+  if (error) {
+    console.error("[recordCustomerArchivedActivity] failed:", {
+      customerId: input.customerId,
+      error,
+    });
+  }
+}
+
+export async function recordCustomerRestoredActivity(input: {
+  companyId: string;
+  customerId: string;
+  actorId: string;
+  customerName: string;
+}): Promise<void> {
+  const { error } = await recordCustomerActivity({
+    company_id: input.companyId,
+    customer_id: input.customerId,
+    actor_id: input.actorId,
+    event_type: "customer_restored",
+    metadata: {
+      customer_name: input.customerName,
+    },
+  });
+
+  if (error) {
+    console.error("[recordCustomerRestoredActivity] failed:", {
+      customerId: input.customerId,
+      error,
+    });
+  }
+}
+
+export async function recordCustomerDeletedActivity(input: {
+  companyId: string;
+  customerId: string;
+  actorId: string;
+  customerName: string;
+}): Promise<void> {
+  const { error } = await recordCustomerActivity({
+    company_id: input.companyId,
+    customer_id: input.customerId,
+    actor_id: input.actorId,
+    event_type: "customer_deleted",
+    metadata: {
+      customer_name: input.customerName,
+    },
+  });
+
+  if (error) {
+    console.error("[recordCustomerDeletedActivity] failed:", {
+      customerId: input.customerId,
+      error,
+    });
+  }
+}

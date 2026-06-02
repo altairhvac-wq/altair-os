@@ -18,7 +18,9 @@ export default async function CustomersPage() {
     );
   }
 
-  const customers = await listCustomers(companyContext.company.id);
+  const customers = await listCustomers(companyContext.company.id, {
+    includeArchived: true,
+  });
   const canViewCustomerBilling = canViewBilling(companyContext);
   const visibleCustomers = canViewCustomerBilling
     ? customers

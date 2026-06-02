@@ -1,6 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
+import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
+import { isCustomerArchived } from "@/shared/lib/customer-lifecycle";
 import {
   formatCurrency,
   formatDate,
@@ -11,6 +15,10 @@ import {
 type CustomersTableProps = {
   customers: Customer[];
   showRevenueStats?: boolean;
+  selectionEnabled?: boolean;
+  selectedIds?: ReadonlySet<string>;
+  onToggleSelection?: (customerId: string) => void;
+  onToggleAllVisible?: (selectAll: boolean) => void;
 };
 
 const statusStyles: Record<Customer["status"], string> = {
@@ -22,14 +30,38 @@ const statusStyles: Record<Customer["status"], string> = {
 export function CustomersTable({
   customers,
   showRevenueStats = true,
+  selectionEnabled = false,
+  selectedIds,
+  onToggleSelection,
+  onToggleAllVisible,
 }: CustomersTableProps) {
   const router = useRouter();
+
+  const headerSelection = useMemo(
+    () =>
+      selectionEnabled && selectedIds
+        ? resolveBulkSelectionState(selectedIds, customers)
+        : null,
+    [customers, selectedIds, selectionEnabled],
+  );
 
   return (
     <div className="max-w-full overflow-x-auto">
       <table className="w-full min-w-[640px] text-left text-sm">
         <thead>
           <tr className="border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {selectionEnabled ? (
+              <th className="w-10 admin-table-cell">
+                {headerSelection && headerSelection.selectableCount > 0 ? (
+                  <BulkSelectCheckbox
+                    checked={headerSelection.allSelected}
+                    indeterminate={headerSelection.someSelected}
+                    ariaLabel="Select all visible customers"
+                    onChange={(checked) => onToggleAllVisible?.(checked)}
+                  />
+                ) : null}
+              </th>
+            ) : null}
             <th className="admin-table-cell">Customer</th>
             <th className="admin-table-cell">Status</th>
             <th className="admin-table-cell">Location</th>
@@ -42,50 +74,66 @@ export function CustomersTable({
         </thead>
         <tbody className="divide-y divide-slate-50">
           {customers.map((customer) => (
-              <tr
-                key={customer.id}
-                onClick={() => router.push(`/customers/${customer.id}`)}
-                className="cursor-pointer transition-colors hover:bg-slate-50"
-              >
+            <tr
+              key={customer.id}
+              onClick={() => router.push(`/customers/${customer.id}`)}
+              className="cursor-pointer transition-colors hover:bg-slate-50"
+            >
+              {selectionEnabled ? (
                 <td className="admin-table-cell">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-400 text-xs font-bold text-white">
-                      {getCustomerInitials(customer.name)}
-                    </div>
-                    <div className="min-w-0">
+                  <BulkSelectCheckbox
+                    checked={selectedIds?.has(customer.id) ?? false}
+                    ariaLabel={`Select ${customer.name}`}
+                    onChange={() => onToggleSelection?.(customer.id)}
+                  />
+                </td>
+              ) : null}
+              <td className="admin-table-cell">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-400 text-xs font-bold text-white">
+                    {getCustomerInitials(customer.name)}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
                       <p className="truncate font-semibold text-slate-900">
                         {customer.name}
                       </p>
-                      <p className="truncate text-xs text-slate-500">
-                        {customer.company ?? customer.email}
-                      </p>
+                      {isCustomerArchived(customer) ? (
+                        <span className="inline-flex shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                          Archived
+                        </span>
+                      ) : null}
                     </div>
+                    <p className="truncate text-xs text-slate-500">
+                      {customer.company ?? customer.email}
+                    </p>
                   </div>
-                </td>
-                <td className="admin-table-cell">
-                  <span
-                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${statusStyles[customer.status]}`}
-                  >
-                    {customer.status}
-                  </span>
-                </td>
-                <td className="admin-table-cell text-slate-600">
-                  {customer.city}, {customer.state}
-                </td>
+                </div>
+              </td>
+              <td className="admin-table-cell">
+                <span
+                  className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${statusStyles[customer.status]}`}
+                >
+                  {customer.status}
+                </span>
+              </td>
+              <td className="admin-table-cell text-slate-600">
+                {customer.city}, {customer.state}
+              </td>
+              <td className="admin-table-cell text-right font-medium text-slate-900">
+                {customer.totalJobs}
+              </td>
+              {showRevenueStats ? (
                 <td className="admin-table-cell text-right font-medium text-slate-900">
-                  {customer.totalJobs}
+                  {formatCurrency(customer.totalRevenue)}
                 </td>
-                {showRevenueStats ? (
-                  <td className="admin-table-cell text-right font-medium text-slate-900">
-                    {formatCurrency(customer.totalRevenue)}
-                  </td>
-                ) : null}
-                <td className="hidden admin-table-cell text-slate-500 lg:table-cell">
-                  {customer.lastServiceDate
-                    ? formatDate(customer.lastServiceDate)
-                    : "—"}
-                </td>
-              </tr>
+              ) : null}
+              <td className="hidden admin-table-cell text-slate-500 lg:table-cell">
+                {customer.lastServiceDate
+                  ? formatDate(customer.lastServiceDate)
+                  : "—"}
+              </td>
+            </tr>
           ))}
         </tbody>
       </table>
