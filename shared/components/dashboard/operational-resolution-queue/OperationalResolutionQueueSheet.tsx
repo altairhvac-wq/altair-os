@@ -70,6 +70,7 @@ export function OperationalResolutionQueueSheet({
         queueType,
         unassignedJobs: sheetData.unassignedJobs,
         readyToInvoiceJobs: sheetData.readyToInvoiceJobs,
+        completedWorkReviewJobs: sheetData.completedWorkReviewJobs,
         overdueInvoices: sheetData.overdueInvoices,
         unsentInvoices: sheetData.unsentInvoices,
         unsentEstimates: sheetData.unsentEstimates,
@@ -104,9 +105,8 @@ export function OperationalResolutionQueueSheet({
     <MobileSheet
       onClose={onClose}
       ariaLabelledBy={titleId}
-      variant="bottom"
+      variant="responsive"
       zIndex={60}
-      rootClassName="lg:hidden"
     >
       <MobileSheetPanel maxWidth="lg" maxHeight="90">
         <MobileSheetHeader

@@ -9,6 +9,7 @@ import {
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
 import { useDashboardDrilldown } from "@/shared/components/dashboard/dashboard-drilldown-context";
+import { AltairRecommendationsSection } from "@/shared/components/dashboard/AltairRecommendationsSection";
 import { MobileActionDashboard } from "@/shared/components/dashboard/MobileActionDashboard";
 import { DashboardNotificationsList } from "@/shared/components/dashboard/DashboardNotificationsList";
 import { buildMobileActionCards } from "@/shared/lib/mobile-action-dashboard";
@@ -350,6 +351,7 @@ function LimitedRoleHub({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-2">
+      <AltairRecommendationsSection data={data} variant="mobile" />
       <MobileActionDashboard data={data} />
       <TodayStrip operations={data.operations} />
       <CashStrip data={data} />
@@ -401,6 +403,7 @@ export function MobileOperationsHub({
 
   return (
     <div className="flex min-w-0 flex-col gap-2">
+      <AltairRecommendationsSection data={data} variant="mobile" />
       <MobileActionDashboard data={data} />
       <TodayStrip operations={data.operations} />
       <CashStrip data={data} />

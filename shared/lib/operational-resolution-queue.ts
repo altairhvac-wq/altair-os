@@ -9,7 +9,11 @@ import type {
 import { formatCurrency } from "@/shared/types/customer";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 import type { DashboardTechnicianStatus } from "@/shared/types/dashboard";
-import type { CompletedWorkAwaitingInvoicingEntry } from "@/shared/types/reports";
+import type {
+  CompletedWorkAwaitingInvoicingEntry,
+  CompletedWorkReviewEntry,
+} from "@/shared/types/reports";
+import { formatCompletedWorkReviewReasons } from "@/shared/types/reports";
 
 /** Extensible queue identifiers for operational resolution workflows. */
 export type OperationalResolutionQueueType =
@@ -75,12 +79,18 @@ export type UnsentEstimateQueueItem = OperationalResolutionQueueItemBase & {
   estimate: DashboardUnsentEstimatePreview;
 };
 
+export type NeedsReviewQueueItem = OperationalResolutionQueueItemBase & {
+  queueType: "needs_review";
+  entry: CompletedWorkReviewEntry;
+};
+
 export type OperationalResolutionQueueItem =
   | UnassignedJobQueueItem
   | ReadyToInvoiceQueueItem
   | OverdueInvoiceQueueItem
   | UnsentInvoiceQueueItem
-  | UnsentEstimateQueueItem;
+  | UnsentEstimateQueueItem
+  | NeedsReviewQueueItem;
 
 export type OperationalResolutionQueueSheetData = {
   items: OperationalResolutionQueueItem[];
@@ -323,6 +333,34 @@ function buildUnsentInvoiceItems(
   }));
 }
 
+function buildNeedsReviewItems(
+  entries: CompletedWorkReviewEntry[],
+): NeedsReviewQueueItem[] {
+  return entries.map((entry) => {
+    const reasonPreview =
+      entry.reviewReasons.length > 0
+        ? formatCompletedWorkReviewReasons(entry.reviewReasons)
+        : "Office review required";
+
+    return {
+      id: entry.jobId,
+      queueType: "needs_review",
+      title: `Job ${entry.jobNumber}`,
+      subtitle: entry.customerName,
+      meta: reasonPreview,
+      severity: entry.severity === "critical" ? "critical" : "warning",
+      openHref: `/jobs/${entry.jobId}`,
+      entry,
+      primaryAction: {
+        kind: "open_record",
+        label: "Open job",
+        enabled: true,
+      },
+      secondaryActions: [],
+    };
+  });
+}
+
 function buildUnsentEstimateItems(
   estimates: DashboardUnsentEstimatePreview[],
   access: CompanyAccessScope,
@@ -357,6 +395,7 @@ export type BuildOperationalResolutionQueueInput = {
   queueType: OperationalResolutionQueueType;
   unassignedJobs: DispatchJob[];
   readyToInvoiceJobs: CompletedWorkAwaitingInvoicingEntry[];
+  completedWorkReviewJobs: CompletedWorkReviewEntry[];
   overdueInvoices: DashboardOverdueInvoicePreview[];
   unsentInvoices: DashboardUnsentInvoicePreview[];
   unsentEstimates: DashboardUnsentEstimatePreview[];
@@ -375,6 +414,7 @@ export function buildOperationalResolutionQueue(
     queueType,
     unassignedJobs,
     readyToInvoiceJobs,
+    completedWorkReviewJobs,
     overdueInvoices,
     unsentInvoices,
     unsentEstimates,
@@ -407,6 +447,9 @@ export function buildOperationalResolutionQueue(
       break;
     case "unsent_estimate":
       items = buildUnsentEstimateItems(unsentEstimates, access);
+      break;
+    case "needs_review":
+      items = buildNeedsReviewItems(completedWorkReviewJobs);
       break;
     default:
       items = [];

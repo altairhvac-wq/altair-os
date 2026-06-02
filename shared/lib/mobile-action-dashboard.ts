@@ -17,7 +17,10 @@ import type {
   DashboardUnsentInvoicePreview,
 } from "@/shared/types/dashboard";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
-import type { CompletedWorkAwaitingInvoicingEntry } from "@/shared/types/reports";
+import type {
+  CompletedWorkAwaitingInvoicingEntry,
+  CompletedWorkReviewEntry,
+} from "@/shared/types/reports";
 
 export type MobileActionSeverity = "critical" | "warning" | "info";
 
@@ -45,6 +48,7 @@ export type MobileActionCard = {
 export type MobileActionSheetData = {
   unassignedJobs: DispatchJob[];
   readyToInvoiceJobs: CompletedWorkAwaitingInvoicingEntry[];
+  completedWorkReviewJobs: CompletedWorkReviewEntry[];
   overdueInvoices: DashboardOverdueInvoicePreview[];
   unsentInvoices: DashboardUnsentInvoicePreview[];
   unsentEstimates: DashboardUnsentEstimatePreview[];
@@ -135,6 +139,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
     money,
     officeReviewQueue,
     completedWorkAwaitingInvoicing,
+    completedWorkReview,
     expenses,
     stalledJobs,
     notifications,
@@ -157,9 +162,13 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   }
 
   if (access.canViewOperationalReports) {
-    const needsReview =
+    const officeReviewCount =
       officeReviewQueue.summary.criticalCount +
       officeReviewQueue.summary.needsAttentionCount;
+    const needsReview = Math.max(
+      officeReviewCount,
+      completedWorkReview.count,
+    );
 
     if (needsReview > 0) {
       cards.push({
@@ -170,6 +179,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
           officeReviewQueue.summary.criticalCount > 0 ? "critical" : "warning",
         description: buildDescription("needs-review", needsReview),
         category: "critical-operations",
+        queueType: "needs_review",
         href:
           officeReviewQueue.summary.criticalCount > 0
             ? "/reports?queue=critical"
@@ -354,6 +364,7 @@ export function buildMobileActionSheetData(
   return {
     unassignedJobs: data.operations.unassignedJobs,
     readyToInvoiceJobs: data.completedWorkAwaitingInvoicing.jobs,
+    completedWorkReviewJobs: data.completedWorkReview.jobs,
     overdueInvoices: data.money.overdueInvoices,
     unsentInvoices: data.money.unsentInvoices,
     unsentEstimates: data.money.unsentEstimates,

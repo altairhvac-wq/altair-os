@@ -70,6 +70,8 @@ export function OperationalResolutionQueueItemAdapter({
           onResolved={onResolved}
         />
       );
+    case "needs_review":
+      return <NeedsReviewQueueItemAdapter item={item} />;
     default:
       return null;
   }
@@ -207,6 +209,20 @@ function ReadyToInvoiceQueueItemAdapter({
           href={item.openHref}
           variant="secondary"
         />
+      ) : null}
+    </OperationalResolutionQueueItemView>
+  );
+}
+
+function NeedsReviewQueueItemAdapter({
+  item,
+}: {
+  item: Extract<OperationalResolutionQueueItem, { queueType: "needs_review" }>;
+}) {
+  return (
+    <OperationalResolutionQueueItemView item={item}>
+      {item.openHref ? (
+        <MobileActionButton label={item.primaryAction.label} href={item.openHref} />
       ) : null}
     </OperationalResolutionQueueItemView>
   );
