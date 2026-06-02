@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AltairBrandMark } from "@/shared/components/brand/AltairBrandMark";
-import { AltairBrandLoader } from "@/shared/components/brand/AltairBrandLoader";
 import {
   AlertCircle,
   BarChart3,
@@ -28,8 +26,8 @@ const PLATFORM_TIERS = [
   {
     tier: "Core Operations",
     tagline: "Dispatch & field execution",
-    accent: "border-amber-500/20 bg-amber-500/[0.04]",
-    labelColor: "text-amber-400/90",
+    accent: "border-cyan-500/20 bg-cyan-500/[0.04]",
+    labelColor: "text-cyan-400",
     features: [
       {
         icon: MapPin,
@@ -97,47 +95,48 @@ type AuthShellProps = {
 
 function AuthHeroPanel() {
   return (
-    <div className="brand-surface-dark relative flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="auth-grid pointer-events-none absolute inset-0 opacity-60" />
-      <div className="auth-grid-fine pointer-events-none absolute inset-0 opacity-40" />
-      <div className="auth-noise pointer-events-none absolute inset-0 opacity-35" />
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-slate-950">
+      <div className="auth-grid pointer-events-none absolute inset-0 opacity-70" />
+      <div className="auth-grid-fine pointer-events-none absolute inset-0 opacity-50" />
+      <div className="auth-noise pointer-events-none absolute inset-0 opacity-40" />
       <div className="auth-glow-primary pointer-events-none absolute -left-32 -top-24 h-[420px] w-[420px]" />
       <div className="auth-glow-secondary pointer-events-none absolute -bottom-32 right-0 h-80 w-80" />
 
       <div className="relative z-10 flex h-full min-h-0 flex-col px-8 py-8 lg:px-10 lg:py-10 xl:px-12">
         <div className="auth-hero-enter shrink-0">
-          <div className="flex flex-col items-start">
-            <AltairBrandMark
-              presentation="hero"
-              priority
-              className="w-[200px] xl:w-[240px]"
-            />
-            <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.16em] text-stone-500">
-              Field operations platform
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-600 shadow-lg shadow-cyan-900/50 ring-1 ring-cyan-400/20">
+              <span className="text-sm font-black tracking-tight text-white">A</span>
+            </div>
+            <div>
+              <p className="text-sm font-semibold tracking-tight text-white">
+                Altair OS
+              </p>
+              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500">
+                Field operations platform
+              </p>
+            </div>
           </div>
 
-          <div className="auth-gold-rule mt-8 h-px w-16 xl:mt-10" />
-
           <div className="mt-8 max-w-lg xl:mt-10">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-400/85">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-500/90">
               Operational command center
             </p>
-            <h2 className="mt-3 text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-stone-50 xl:text-[2rem]">
+            <h2 className="mt-3 text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-white xl:text-[2rem]">
               Run field operations with precision.
             </h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-stone-400">
+            <p className="mt-3 text-[15px] leading-relaxed text-slate-400">
               Dispatch crews, manage jobs, and keep every technician connected —
               from the office to the job site.
             </p>
           </div>
         </div>
 
-        <div className="auth-hero-enter mt-6 shrink-0 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-sm xl:mt-8">
+        <div className="auth-hero-enter mt-6 shrink-0 rounded-xl border border-white/[0.08] bg-slate-900/50 p-4 backdrop-blur-sm xl:mt-8">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Radio className="h-3.5 w-3.5 text-amber-400/90" aria-hidden="true" />
-              <span className="text-[11px] font-medium uppercase tracking-wider text-stone-500">
+              <Radio className="h-3.5 w-3.5 text-cyan-400" aria-hidden="true" />
+              <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
                 Live operations
               </span>
             </div>
@@ -188,7 +187,7 @@ function AuthHeroPanel() {
                   <div key={feature.title} className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <feature.icon
-                        className="h-3.5 w-3.5 shrink-0 text-amber-400/85"
+                        className="h-3.5 w-3.5 shrink-0 text-cyan-400/90"
                         aria-hidden="true"
                       />
                       <p className="truncate text-xs font-semibold text-white">
@@ -211,13 +210,14 @@ function AuthHeroPanel() {
 
 function AuthMobileBrand() {
   return (
-    <div className="relative -mx-5 mb-2 overflow-hidden bg-[#0A0A0A] px-5 py-7 sm:-mx-8 sm:px-8 lg:hidden">
-      <div className="auth-glow-primary pointer-events-none absolute -left-16 -top-12 h-48 w-48 opacity-80" />
-      <div className="auth-gold-rule pointer-events-none absolute inset-x-0 bottom-0 h-px opacity-70" />
-      <div className="relative flex flex-col items-center text-center">
-        <AltairBrandMark presentation="hero" className="w-[180px] sm:w-[200px]" />
-        <p className="mt-3 text-[10px] font-medium uppercase tracking-[0.16em] text-stone-500">
-          Field operations platform
+    <div className="flex items-center gap-2.5 lg:hidden">
+      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-600 ring-1 ring-cyan-500/20">
+        <span className="text-xs font-black text-white">A</span>
+      </div>
+      <div>
+        <span className="text-sm font-semibold text-slate-900">Altair OS</span>
+        <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
+          Field operations
         </p>
       </div>
     </div>
@@ -258,47 +258,43 @@ function OnboardingProgress({
 export function AuthPageSkeleton() {
   return (
     <div className="flex min-h-dvh flex-col bg-white lg:h-dvh lg:flex-row lg:overflow-hidden">
-      <div className="brand-surface-dark relative hidden min-h-0 flex-1 lg:block lg:max-w-[58%]">
-        <div className="auth-grid pointer-events-none absolute inset-0 opacity-35" />
-        <div className="auth-glow-primary pointer-events-none absolute -left-24 -top-20 h-72 w-72" />
+      <div className="relative hidden min-h-0 flex-1 bg-slate-950 lg:block lg:max-w-[58%]">
+        <div className="auth-grid pointer-events-none absolute inset-0 opacity-40" />
         <div className="relative flex h-full flex-col justify-between px-10 py-10">
           <div className="animate-pulse space-y-6">
-            <div className="flex flex-col items-start gap-2.5 opacity-70">
-              <AltairBrandMark presentation="hero" className="w-[200px] opacity-80" />
-              <div className="h-2 w-36 rounded bg-stone-800/70" />
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-slate-800" />
+              <div className="space-y-2">
+                <div className="h-3 w-20 rounded bg-slate-800" />
+                <div className="h-2 w-28 rounded bg-slate-800/70" />
+              </div>
             </div>
-            <div className="auth-gold-rule h-px w-14 opacity-50" />
-            <div className="space-y-3 pt-1">
-              <div className="h-2 w-32 rounded bg-stone-800/60" />
-              <div className="h-7 w-64 rounded bg-stone-800" />
-              <div className="h-4 w-full max-w-sm rounded bg-stone-800/50" />
+            <div className="space-y-3 pt-2">
+              <div className="h-2 w-32 rounded bg-slate-800/60" />
+              <div className="h-7 w-64 rounded bg-slate-800" />
+              <div className="h-4 w-full max-w-sm rounded bg-slate-800/50" />
             </div>
           </div>
           <div className="animate-pulse space-y-3">
-            <div className="h-24 rounded-xl border border-white/[0.06] bg-white/[0.03]" />
-            <div className="h-28 rounded-xl border border-white/[0.05] bg-white/[0.02]" />
-            <div className="h-28 rounded-xl border border-white/[0.05] bg-white/[0.02]" />
+            <div className="h-24 rounded-xl bg-slate-900/80" />
+            <div className="h-28 rounded-xl bg-slate-900/60" />
+            <div className="h-28 rounded-xl bg-slate-900/60" />
           </div>
         </div>
       </div>
 
       <div className="auth-panel-bg flex min-h-0 flex-1 flex-col">
         <div className="flex flex-1 items-center justify-center px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-          <div className="w-full max-w-[400px] space-y-5">
-            <div className="lg:hidden">
-              <AltairBrandLoader />
+          <div className="w-full max-w-[400px] animate-pulse space-y-5">
+            <div className="space-y-2">
+              <div className="h-7 w-44 rounded-lg bg-slate-100" />
+              <div className="h-4 w-full rounded bg-slate-50" />
             </div>
-            <div className="animate-pulse space-y-5">
-              <div className="hidden space-y-2 lg:block">
-                <div className="h-7 w-44 rounded-lg bg-slate-100" />
-                <div className="h-4 w-full rounded bg-slate-50" />
-              </div>
-              <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
-                <div className="space-y-4">
-                  <div className="h-10 rounded-lg bg-slate-50" />
-                  <div className="h-10 rounded-lg bg-slate-50" />
-                  <div className="h-11 rounded-lg bg-slate-100" />
-                </div>
+            <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
+              <div className="space-y-4">
+                <div className="h-10 rounded-lg bg-slate-50" />
+                <div className="h-10 rounded-lg bg-slate-50" />
+                <div className="h-11 rounded-lg bg-slate-100" />
               </div>
             </div>
           </div>
@@ -329,14 +325,14 @@ export function AuthShell({
             <AuthMobileBrand />
 
             {variant === "onboarding" && onboardingStep ? (
-              <div className="lg:mt-0">
+              <div className="mt-6 lg:mt-0">
                 <OnboardingProgress {...onboardingStep} />
               </div>
             ) : null}
 
             <div
               className={
-                variant === "onboarding" && onboardingStep ? "" : "lg:mt-0"
+                variant === "onboarding" && onboardingStep ? "" : "mt-6 lg:mt-0"
               }
             >
               <h1 className="text-[1.625rem] font-semibold tracking-tight text-slate-900">

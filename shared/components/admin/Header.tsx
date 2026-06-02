@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import { Search } from "lucide-react";
-import { AltairBrandMark } from "@/shared/components/brand/AltairBrandMark";
 import { getCompanyAccessScope } from "@/lib/database/access-control";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { logoutAction } from "@/app/actions/auth";
@@ -10,6 +8,7 @@ import { AlphaIndicator } from "@/shared/components/admin/AlphaIndicator";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
+import { useMobileViewport } from "@/shared/components/mobile/use-mobile-viewport";
 import type { OwnerViewMode } from "@/shared/lib/owner-view-mode";
 import { buildNotificationAccess } from "@/shared/types/notification";
 import type { Notification } from "@/shared/types/notification";
@@ -69,34 +68,21 @@ export function Header({
     canViewCompanyExpenses: accessScope.canViewCompanyExpenses,
     canViewAssignedJobs: companyContext.permissions.viewAssignedJobs,
   });
-  const chromeTone = "dark";
+  const isMobile = useMobileViewport();
+  const chromeTone = isMobile ? "light" : "dark";
 
   return (
-    <header className="admin-premium-header mobile-chrome-header-safe relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 px-3 sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0">
-      <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
-        <Link
-          href="/"
-          aria-label="Altair OS home"
-          className="shrink-0 rounded-md outline-none transition-opacity hover:opacity-85 focus-visible:ring-2 focus-visible:ring-amber-400/35"
-        >
-          <AltairBrandMark
-            presentation="headerMark"
-            className="h-7 w-7 md:hidden"
-          />
-          <AltairBrandMark
-            presentation="headerWordmark"
-            className="hidden h-8 w-auto md:block"
-          />
-        </Link>
+    <header className="admin-premium-header mobile-chrome-header-safe relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 border-b border-slate-200/90 bg-white px-3 shadow-[0_1px_3px_rgb(15_23_42_/_0.04)] sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
-            <h1 className="truncate text-base font-bold tracking-tight text-stone-50 sm:text-lg">
+            <h1 className="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg md:text-slate-50">
               {title}
             </h1>
             <AlphaIndicator tone={chromeTone} />
           </div>
           {description ? (
-            <p className="hidden truncate text-sm text-stone-400 sm:block">
+            <p className="hidden truncate text-sm text-slate-500 sm:block md:text-slate-400">
               {description}
             </p>
           ) : null}
@@ -106,7 +92,7 @@ export function Header({
       <div className="flex shrink-0 items-center gap-1 sm:gap-3">
         <button
           type="button"
-          className="hidden rounded-lg p-2 text-stone-500 transition-colors hover:bg-white/10 hover:text-stone-200 sm:inline-flex"
+          className="hidden rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 sm:inline-flex md:text-slate-400 md:hover:bg-white/10 md:hover:text-slate-200"
           aria-label="Search"
         >
           <Search className="h-5 w-5" />
@@ -117,7 +103,7 @@ export function Header({
           notificationAccess={notificationAccess}
           tone={chromeTone}
         />
-        <div className="flex items-center gap-2 border-l border-white/10 pl-2 sm:ml-2 sm:gap-3 sm:pl-4">
+        <div className="flex items-center gap-2 border-l border-slate-200 pl-2 sm:ml-2 sm:gap-3 sm:pl-4 md:border-white/10">
           <CompanySwitcher
             activeCompanyId={companyContext.company.id}
             companies={userCompanies}
@@ -135,7 +121,7 @@ export function Header({
             />
           ) : null}
           <div
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white/20"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white md:ring-white/25"
             title={displayName}
           >
             {initials}
@@ -143,7 +129,7 @@ export function Header({
           <form action={logoutAction}>
             <button
               type="submit"
-              className="rounded-lg px-2 py-1 text-xs font-semibold text-stone-400 transition-colors hover:bg-white/10 hover:text-white"
+              className="rounded-lg px-2 py-1 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 md:text-slate-300 md:hover:bg-white/10 md:hover:text-white"
             >
               Sign out
             </button>
