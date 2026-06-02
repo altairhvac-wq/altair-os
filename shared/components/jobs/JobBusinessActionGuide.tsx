@@ -4,13 +4,31 @@ import Link from "next/link";
 import { Clock3, ExternalLink } from "lucide-react";
 import type { JobBusinessAction } from "@/shared/lib/job-next-business-action";
 
+type JobBusinessActionPresentation = "full" | "status" | "cta";
+
 type JobBusinessActionGuideProps = {
   action: JobBusinessAction | null;
   layout?: "compact" | "default";
+  presentation?: JobBusinessActionPresentation;
   disabled?: boolean;
   onFieldEstimateClick?: () => void;
   onFieldApproveClick?: () => void;
 };
+
+function matchesPresentation(
+  action: JobBusinessAction,
+  presentation: JobBusinessActionPresentation,
+): boolean {
+  if (presentation === "full") {
+    return true;
+  }
+
+  if (presentation === "status") {
+    return action.kind === "status" || action.kind === "workflow_align";
+  }
+
+  return action.kind === "cta";
+}
 
 function statusBannerClassName(action: JobBusinessAction): string {
   if (action.id === "awaiting_payment") {
@@ -41,11 +59,12 @@ function secondaryLinkClassName(compact: boolean): string {
 export function JobBusinessActionGuide({
   action,
   layout = "default",
+  presentation = "full",
   disabled = false,
   onFieldEstimateClick,
   onFieldApproveClick,
 }: JobBusinessActionGuideProps) {
-  if (!action) {
+  if (!action || !matchesPresentation(action, presentation)) {
     return null;
   }
 

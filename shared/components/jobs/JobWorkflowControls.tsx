@@ -21,10 +21,14 @@ import { JobStatusCorrectionControl } from "./JobStatusCorrectionControl";
 import { ReopenCompletedJobControl } from "./ReopenCompletedJobControl";
 import { StartRouteButton } from "./StartRouteButton";
 
+type JobWorkflowControlsSection = "full" | "banners" | "actions";
+
 type JobWorkflowControlsProps = {
   jobId: string;
   customerId: string;
   initialStatus: JobStatus;
+  /** When provided, workflow state is controlled by the parent (for split header layout). */
+  status?: JobStatus;
   serviceAddress: string;
   city: string;
   state: string;
@@ -35,6 +39,7 @@ type JobWorkflowControlsProps = {
   canReopenJob?: boolean;
   reopenSnapshot?: ReopenTargetJobSnapshot;
   layout?: "header" | "stack";
+  section?: JobWorkflowControlsSection;
   showMobileHint?: boolean;
   competingSheetActive?: boolean;
   businessContext?: {
@@ -84,6 +89,7 @@ export function JobWorkflowControls({
   jobId,
   customerId,
   initialStatus,
+  status: controlledStatus,
   serviceAddress,
   city,
   state,
@@ -94,6 +100,7 @@ export function JobWorkflowControls({
   canReopenJob = false,
   reopenSnapshot,
   layout = "header",
+  section = "full",
   showMobileHint = true,
   competingSheetActive = false,
   businessContext,
@@ -103,22 +110,31 @@ export function JobWorkflowControls({
   onCompleteSheetOpenChange,
   onStatusUpdated,
 }: JobWorkflowControlsProps) {
-  const [status, setStatus] = useState(initialStatus);
+  const [internalStatus, setInternalStatus] = useState(initialStatus);
+  const isControlled = controlledStatus !== undefined;
+  const status = isControlled ? controlledStatus : internalStatus;
 
   useEffect(() => {
-    setStatus((current) =>
+    if (isControlled) {
+      return;
+    }
+
+    setInternalStatus((current) =>
       shouldAcceptServerWorkflowStatus(current, initialStatus)
         ? initialStatus
         : current,
     );
-  }, [initialStatus]);
+  }, [initialStatus, isControlled]);
 
   function handleStatusUpdated(nextStatus: JobStatus) {
-    setStatus(nextStatus);
+    if (!isControlled) {
+      setInternalStatus(nextStatus);
+    }
     onStatusUpdated?.(nextStatus);
   }
 
   const isCompact = layout === "stack";
+  const stackClassName = isCompact ? "space-y-1.5" : "space-y-3";
   const businessAction = useMemo(() => {
     if (!businessContext) {
       return null;
@@ -141,74 +157,170 @@ export function JobWorkflowControls({
     jobId,
     status,
   ]);
-  const businessGuide = businessAction ? (
-    <JobBusinessActionGuide
-      action={businessAction}
-      layout={isCompact ? "compact" : "default"}
-      disabled={competingSheetActive}
-      onFieldEstimateClick={onFieldEstimateClick}
-      onFieldApproveClick={onFieldApproveClick}
-    />
-  ) : null;
 
-  if (isTerminalJobStatus(status)) {
-    if (status === "completed") {
-      return (
-        <div className="space-y-3">
-          <JobWorkflowTerminalState status={status} compact={isCompact} />
-          {businessGuide}
-          <ReopenCompletedJobControl
-            jobId={jobId}
-            status={status}
-            canReopenJob={canReopenJob}
-            reopenSnapshot={
-              reopenSnapshot ?? {
-                workStartedAt: undefined,
-                arrivedAt: undefined,
-                assignedTechnicianId: undefined,
-              }
-            }
-            onStatusUpdated={handleStatusUpdated}
-          />
-        </div>
-      );
+  function renderBusinessGuide(
+    presentation: "full" | "status" | "cta",
+  ) {
+    if (!businessAction) {
+      return null;
     }
 
-    return <JobWorkflowTerminalState status={status} compact={isCompact} />;
+    return (
+      <JobBusinessActionGuide
+        action={businessAction}
+        layout={isCompact ? "compact" : "default"}
+        presentation={presentation}
+        disabled={competingSheetActive}
+        onFieldEstimateClick={onFieldEstimateClick}
+        onFieldApproveClick={onFieldApproveClick}
+      />
+    );
   }
 
-  return (
-    <div className={isCompact ? "space-y-1.5" : "space-y-3"}>
-      <JobWorkflowActions
-        jobId={jobId}
-        customerId={customerId}
-        status={status}
-        canUpdateStatus={canUpdateStatus}
-        aiFeaturesEnabled={aiFeaturesEnabled}
-        layout={layout === "stack" ? "stack" : "row"}
-        showMobileHint={showMobileHint}
-        competingSheetActive={competingSheetActive}
-        onCompleteSheetOpenChange={onCompleteSheetOpenChange}
-        onStatusUpdated={handleStatusUpdated}
-      />
-      {businessGuide}
-      <StartRouteButton
-        jobId={jobId}
-        status={status}
-        serviceAddress={serviceAddress}
-        city={city}
-        state={state}
-        zip={zip}
-        canUpdateStatus={canUpdateStatus}
-        layout={layout === "stack" ? "block" : "inline"}
-        onStatusUpdated={handleStatusUpdated}
-      />
-      <JobStatusCorrectionControl
-        jobId={jobId}
-        status={status}
-        canCorrectStatus={canCorrectStatus}
-        onStatusUpdated={handleStatusUpdated}
-      />
-    </div>
-  );
+  function renderBannersSection() {
+    if (isTerminalJobStatus(status)) {
+      if (status === "completed") {
+        return (
+          <div className={stackClassName}>
+            <JobWorkflowTerminalState status={status} compact={isCompact} />
+            {renderBusinessGuide("status")}
+            <ReopenCompletedJobControl
+              jobId={jobId}
+              status={status}
+              canReopenJob={canReopenJob}
+              reopenSnapshot={
+                reopenSnapshot ?? {
+                  workStartedAt: undefined,
+                  arrivedAt: undefined,
+                  assignedTechnicianId: undefined,
+                }
+              }
+              onStatusUpdated={handleStatusUpdated}
+            />
+          </div>
+        );
+      }
+
+      return <JobWorkflowTerminalState status={status} compact={isCompact} />;
+    }
+
+    const statusGuide = renderBusinessGuide("status");
+
+    return statusGuide ? <div className={stackClassName}>{statusGuide}</div> : null;
+  }
+
+  function renderActionsSection() {
+    if (isTerminalJobStatus(status)) {
+      const ctaGuide = renderBusinessGuide("cta");
+      return ctaGuide ? <div className={stackClassName}>{ctaGuide}</div> : null;
+    }
+
+    return (
+      <div className={stackClassName}>
+        <JobWorkflowActions
+          jobId={jobId}
+          customerId={customerId}
+          status={status}
+          canUpdateStatus={canUpdateStatus}
+          aiFeaturesEnabled={aiFeaturesEnabled}
+          layout={layout === "stack" ? "stack" : "row"}
+          showMobileHint={showMobileHint}
+          competingSheetActive={competingSheetActive}
+          onCompleteSheetOpenChange={onCompleteSheetOpenChange}
+          onStatusUpdated={handleStatusUpdated}
+        />
+        {renderBusinessGuide("cta")}
+        <StartRouteButton
+          jobId={jobId}
+          status={status}
+          serviceAddress={serviceAddress}
+          city={city}
+          state={state}
+          zip={zip}
+          canUpdateStatus={canUpdateStatus}
+          layout={layout === "stack" ? "block" : "inline"}
+          onStatusUpdated={handleStatusUpdated}
+        />
+        <JobStatusCorrectionControl
+          jobId={jobId}
+          status={status}
+          canCorrectStatus={canCorrectStatus}
+          onStatusUpdated={handleStatusUpdated}
+        />
+      </div>
+    );
+  }
+
+  function renderFullSection() {
+    if (isTerminalJobStatus(status)) {
+      if (status === "completed") {
+        return (
+          <div className={stackClassName}>
+            <JobWorkflowTerminalState status={status} compact={isCompact} />
+            {renderBusinessGuide("full")}
+            <ReopenCompletedJobControl
+              jobId={jobId}
+              status={status}
+              canReopenJob={canReopenJob}
+              reopenSnapshot={
+                reopenSnapshot ?? {
+                  workStartedAt: undefined,
+                  arrivedAt: undefined,
+                  assignedTechnicianId: undefined,
+                }
+              }
+              onStatusUpdated={handleStatusUpdated}
+            />
+          </div>
+        );
+      }
+
+      return <JobWorkflowTerminalState status={status} compact={isCompact} />;
+    }
+
+    return (
+      <div className={stackClassName}>
+        <JobWorkflowActions
+          jobId={jobId}
+          customerId={customerId}
+          status={status}
+          canUpdateStatus={canUpdateStatus}
+          aiFeaturesEnabled={aiFeaturesEnabled}
+          layout={layout === "stack" ? "stack" : "row"}
+          showMobileHint={showMobileHint}
+          competingSheetActive={competingSheetActive}
+          onCompleteSheetOpenChange={onCompleteSheetOpenChange}
+          onStatusUpdated={handleStatusUpdated}
+        />
+        {renderBusinessGuide("full")}
+        <StartRouteButton
+          jobId={jobId}
+          status={status}
+          serviceAddress={serviceAddress}
+          city={city}
+          state={state}
+          zip={zip}
+          canUpdateStatus={canUpdateStatus}
+          layout={layout === "stack" ? "block" : "inline"}
+          onStatusUpdated={handleStatusUpdated}
+        />
+        <JobStatusCorrectionControl
+          jobId={jobId}
+          status={status}
+          canCorrectStatus={canCorrectStatus}
+          onStatusUpdated={handleStatusUpdated}
+        />
+      </div>
+    );
+  }
+
+  if (section === "banners") {
+    return renderBannersSection();
+  }
+
+  if (section === "actions") {
+    return renderActionsSection();
+  }
+
+  return renderFullSection();
 }
