@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Altair V1 native app icon">
+  <defs>
+    <linearGradient id="plateBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#121212"/>
+      <stop offset="45%" stop-color="#0A0A0A"/>
+      <stop offset="100%" stop-color="#050505"/>
+    </linearGradient>
+    <radialGradient id="plateVignette" cx="50%" cy="38%" r="72%">
+      <stop offset="0%" stop-color="#1A1A1A" stop-opacity="0.35"/>
+      <stop offset="55%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.55"/>
+    </radialGradient>
+    <linearGradient id="rimGold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F8EEC8"/>
+      <stop offset="18%" stop-color="#E8C86A"/>
+      <stop offset="55%" stop-color="#C9A227"/>
+      <stop offset="100%" stop-color="#7A5A12"/>
+    </linearGradient>
+    <linearGradient id="rimSheen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.45"/>
+      <stop offset="35%" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="goldFace" x1="18%" y1="0%" x2="82%" y2="100%">
+      <stop offset="0%" stop-color="#FBF5B7"/>
+      <stop offset="28%" stop-color="#E8C86A"/>
+      <stop offset="62%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#8B6914"/>
+    </linearGradient>
+    <linearGradient id="goldBevel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF8D0" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="goldShadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.45"/>
+    </linearGradient>
+    <linearGradient id="flare" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#D4AF37" stop-opacity="0"/>
+      <stop offset="42%" stop-color="#F5E6A3" stop-opacity="0.15"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.85"/>
+      <stop offset="58%" stop-color="#F5E6A3" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#D4AF37" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="grain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.035"/>
+      </feComponentTransfer>
+    </filter>
+    <filter id="starGlint">
+      <feGaussianBlur stdDeviation="0.6" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#plateBg)"/>
+  <rect width="512" height="512" rx="112" fill="url(#plateVignette)"/>
+  <rect width="512" height="512" rx="112" filter="url(#grain)"/>
+
+  <rect x="2" y="2" width="508" height="508" rx="110" fill="none" stroke="url(#rimGold)" stroke-width="3"/>
+  <rect x="2" y="2" width="508" height="508" rx="110" fill="none" stroke="url(#rimSheen)" stroke-width="3" opacity="0.7"/>
+  <circle cx="430" cy="86" r="4" fill="#FFFFFF" opacity="0.55" filter="url(#starGlint)"/>
+
+  <g id="mark">
+    <g transform="translate(256 210) scale(5.05) translate(-40 -32)">
+      <path fill="url(#goldShadow)" d="M40 8L63 60H55L48 41H32L25 60H17L40 8Z" opacity="0.35"/>
+      <path fill="url(#goldFace)" d="M40 6L62 58H54L48 40H32L26 58H18L40 6Z"/>
+      <path fill="url(#goldBevel)" d="M40 6L62 58H54L48 40H32L26 58H18L40 6Z"/>
+      <path fill="url(#goldFace)" d="M40 26L43.2 36.5L54 38L43.2 39.5L40 50L36.8 39.5L26 38L36.8 36.5L40 26Z"/>
+      <path fill="none" stroke="url(#goldFace)" stroke-width="1.65" stroke-linecap="round" d="M28 38.5Q40 42.5 52 38.5"/>
+      <circle cx="40" cy="38" r="1.4" fill="#FFFFFF" opacity="0.95" filter="url(#starGlint)"/>
+      <path fill="#FFFFFF" opacity="0.35" d="M40 36.2L40.9 38L40 39.8L39.1 38Z"/>
+    </g>
+  </g>
+
+  <text
+    x="256"
+    y="404"
+    text-anchor="middle"
+    fill="url(#goldFace)"
+    font-family="Georgia, Times New Roman, Palatino Linotype, serif"
+    font-size="52"
+    font-weight="600"
+    letter-spacing="0.32em"
+  >ALTAIR</text>
+
+  <ellipse cx="256" cy="434" rx="132" ry="2.4" fill="url(#flare)"/>
+  <line x1="132" y1="434" x2="380" y2="434" stroke="url(#flare)" stroke-width="1.3" opacity="0.7"/>
+  <circle cx="256" cy="434" r="2.4" fill="#FFFFFF" opacity="0.9" filter="url(#starGlint)"/>
+</svg>

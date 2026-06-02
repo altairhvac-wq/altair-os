@@ -1,0 +1,26 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Altair icon - Champagne Edge">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0F0F0F"/>
+      <stop offset="100%" stop-color="#080808"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5E6A3" stop-opacity="0.35"/>
+      <stop offset="25%" stop-color="#D4AF37" stop-opacity="0.12"/>
+      <stop offset="50%" stop-color="#D4AF37" stop-opacity="0"/>
+      <stop offset="75%" stop-color="#9A7209" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#F5E6A3" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F5E6A3"/>
+      <stop offset="42%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#9A7209"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="3" y="3" width="506" height="506" rx="109" fill="none" stroke="url(#edge)" stroke-width="2.5"/>
+  <rect width="512" height="512" rx="112" fill="url(#edge)" opacity="0.15"/>
+  <g transform="translate(256 256) scale(5.5) translate(-40 -32)">
+    <path fill="url(#gold)" d="M37.5 2h5v20H37.5z M37.5 42h5v20H37.5z M40 29.5h25v5H40z M40 14.5l3.75 11.875 11.875 3.125-11.875 3.125-3.75 11.875-3.75-11.875-11.875-3.125 11.875-3.125z"/>
+  </g>
+</svg>

@@ -1,0 +1,23 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Altair icon - North Star Dawn">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="88%" r="95%">
+      <stop offset="0%" stop-color="#2A2010"/>
+      <stop offset="35%" stop-color="#141008"/>
+      <stop offset="100%" stop-color="#060606"/>
+    </radialGradient>
+    <radialGradient id="starlight" cx="50%" cy="42%" r="32%">
+      <stop offset="0%" stop-color="#F5E6A3" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#F5E6A3" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF4C4"/>
+      <stop offset="38%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#8B6914"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="112" fill="url(#starlight)"/>
+  <g transform="translate(256 256) scale(5.5) translate(-40 -32)">
+    <path fill="url(#gold)" d="M37.5 2h5v20H37.5z M37.5 42h5v20H37.5z M40 29.5h25v5H40z M40 14.5l3.75 11.875 11.875 3.125-11.875 3.125-3.75 11.875-3.75-11.875-11.875-3.125 11.875-3.125z"/>
+  </g>
+</svg>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Altair V1 App Icon — Native Square Preview</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+      margin: 0;
+      background: #1c1c1e;
+      color: #f5f5f7;
+    }
+    header {
+      padding: 32px 24px 16px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.375rem;
+      font-weight: 600;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      margin: 0;
+      color: #98989d;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      max-width: 760px;
+    }
+    .status {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      line-height: 1.45;
+      max-width: 760px;
+      background: #2c2c2e;
+      border: 1px solid #48484a;
+      color: #d1d1d6;
+    }
+    .status strong { color: #ff9f0a; }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 8px 24px 48px;
+      display: grid;
+      gap: 24px;
+    }
+    .panel {
+      background: #2c2c2e;
+      border: 1px solid #3a3a3c;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .panel h2 {
+      margin: 0 0 4px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+    }
+    .panel .note {
+      margin: 0 0 16px;
+      font-size: 0.8125rem;
+      color: #98989d;
+      line-height: 1.45;
+    }
+    .panel img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    .analysis {
+      margin: 0;
+      padding-left: 1.25rem;
+      font-size: 0.8125rem;
+      color: #d1d1d6;
+      line-height: 1.55;
+    }
+    .analysis li { margin-bottom: 6px; }
+    .analysis code {
+      font-size: 0.75rem;
+      background: #3a3a3c;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    .sizes {
+      display: flex;
+      align-items: flex-end;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .size { text-align: center; }
+    .size img {
+      display: block;
+      border-radius: 22%;
+      image-rendering: auto;
+    }
+    .size span {
+      display: block;
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: #98989d;
+    }
+    .size .dims {
+      font-size: 0.6875rem;
+      color: #636366;
+    }
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 720px) {
+      .compare { grid-template-columns: 1fr; }
+    }
+    .compare figcaption {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: #98989d;
+      text-align: center;
+    }
+    .on-checker {
+      display: inline-block;
+      padding: 16px;
+      border-radius: 8px;
+      background:
+        linear-gradient(45deg, #3a3a3c 25%, transparent 25%),
+        linear-gradient(-45deg, #3a3a3c 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #3a3a3c 75%),
+        linear-gradient(-45deg, transparent 75%, #3a3a3c 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      background-color: #2c2c2e;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Altair V1 App Icon — Native Square Rebuild</h1>
+    <p class="sub">
+      Pre-production review. The rectangular PNG reference is visual guidance only.
+      Production assets in <code>public/icons/</code> are unchanged.
+    </p>
+    <p class="status">
+      <strong>Pending approval.</strong>
+      Native 512×512 vector reconstruction — no letterboxing, no rectangular crop scaling.
+      Regenerate PNGs: <code>node branding/reference/render-native-previews.mjs</code>
+    </p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Reference analysis (from crop)</h2>
+      <p class="note">Elements extracted and rebuilt on a true square canvas.</p>
+      <ol class="analysis">
+        <li><strong>Container</strong> — Squircle plate (<code>rx=112</code> on 512) fills the canvas; matte black gradient + grain texture.</li>
+        <li><strong>Gold rim</strong> — 3px metallic stroke with top-lit sheen and upper-right specular glint.</li>
+        <li><strong>Stylized A</strong> — Approved mark geometry from <code>altair-icon.svg</code>; diagonal gold gradient + bevel/shadow layers.</li>
+        <li><strong>Center star</strong> — Four-point star + horizon arc; white glint at star center.</li>
+        <li><strong>ALTAIR wordmark</strong> — Georgia serif, tracked caps, gold gradient; scaled for square vertical rhythm.</li>
+        <li><strong>Lighting</strong> — Plate vignette, rim highlight, star glint, bottom horizontal flare with center hotspot.</li>
+      </ol>
+    </section>
+
+    <section class="panel">
+      <h2>Native square previews</h2>
+      <p class="note">
+        Source: <code>altair-v1-app-icon-native.svg</code> — artwork fills the squircle; no empty top/bottom bands.
+      </p>
+      <div class="sizes">
+        <div class="size">
+          <img src="previews/altair-v1-app-icon-native-512px.png" alt="Native 512px" width="256" height="256" />
+          <span>512 × 512</span>
+          <span class="dims">display 256px</span>
+        </div>
+        <div class="size">
+          <img src="previews/altair-v1-app-icon-native-180px.png" alt="Native 180px" width="180" height="180" />
+          <span>180 × 180</span>
+        </div>
+        <div class="size">
+          <img src="previews/altair-v1-app-icon-native-120px.png" alt="Native 120px" width="120" height="120" />
+          <span>120 × 120</span>
+        </div>
+        <div class="size">
+          <img src="previews/altair-v1-app-icon-native-60px.png" alt="Native 60px" width="60" height="60" />
+          <span>60 × 60</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Reference vs native (comparison)</h2>
+      <p class="note">Left: visual reference crop (non-square). Right: native square rebuild.</p>
+      <div class="compare">
+        <figure>
+          <div class="on-checker">
+            <img src="altair-v1-app-icon-reference.png" alt="Reference crop" width="240" />
+          </div>
+          <figcaption>Reference crop 1024×770</figcaption>
+        </figure>
+        <figure>
+          <img src="previews/altair-v1-app-icon-native-512px.png" alt="Native rebuild" width="240" height="240" style="border-radius:22%" />
+          <figcaption>Native rebuild 512×512</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Visual reference only (do not ship)</h2>
+      <p class="note">Rectangular crop from approved concept — not used as final icon geometry.</p>
+      <img src="altair-v1-app-icon-reference.png" alt="Reference crop" width="400" />
+    </section>
+  </main>
+</body>
+</html>

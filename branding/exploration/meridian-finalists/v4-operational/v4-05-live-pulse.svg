@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="V4-05 live pulse sketch">
+  <path fill="none" stroke="#000000" stroke-width="1.75" stroke-linecap="round" d="M32 12v40"/>
+  <path fill="none" stroke="#000000" stroke-width="1.25" stroke-linecap="round" d="M18 32h14" opacity="0.4"/>
+  <path fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" d="M32 32h16"/>
+  <path fill="#000000" d="M32 21l2.5 7.5 7.5 2-7.5 2-2.5 7.5-2.5-7.5-7.5-2 7.5-2z"/>
+  <circle cx="32" cy="14" r="2.5" fill="#000000"/>
+  <path fill="none" stroke="#000000" stroke-width="1.5" stroke-linecap="round" d="M36 44h5M36 48h5"/>
+</svg>

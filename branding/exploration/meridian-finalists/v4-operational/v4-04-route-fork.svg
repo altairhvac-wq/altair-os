@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="V4-04 route fork sketch">
+  <path fill="none" stroke="#000000" stroke-width="1.75" stroke-linecap="round" d="M32 10v44"/>
+  <path fill="none" stroke="#000000" stroke-width="2.25" stroke-linecap="round" d="M32 32h20"/>
+  <path fill="none" stroke="#000000" stroke-width="1.25" stroke-linecap="round" d="M32 32L22 48" opacity="0.55"/>
+  <path fill="#000000" d="M32 20l2.5 8 8 2-8 2-2.5 8-2.5-8-8-2 8-2z"/>
+  <circle cx="50" cy="32" r="2" fill="#000000"/>
+</svg>

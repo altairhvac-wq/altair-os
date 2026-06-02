@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="V4-03 queue stack sketch">
+  <path fill="none" stroke="#000000" stroke-width="1.75" stroke-linecap="round" d="M32 10v22"/>
+  <path fill="none" stroke="#000000" stroke-width="1.25" stroke-linecap="round" d="M20 32h12" opacity="0.35"/>
+  <path fill="none" stroke="#000000" stroke-width="2.25" stroke-linecap="round" d="M32 32h18"/>
+  <path fill="#000000" d="M32 22l2.5 7.5 7.5 2-7.5 2-2.5 7.5-2.5-7.5-7.5-2 7.5-2z"/>
+  <rect x="36" y="40" width="10" height="3" rx="0.5" fill="#000000"/>
+  <rect x="36" y="45" width="10" height="3" rx="0.5" fill="#000000" opacity="0.7"/>
+  <rect x="36" y="50" width="10" height="3" rx="0.5" fill="#000000" opacity="0.45"/>
+  <path fill="none" stroke="#000000" stroke-width="1.75" stroke-linecap="round" d="M32 36v18"/>
+</svg>

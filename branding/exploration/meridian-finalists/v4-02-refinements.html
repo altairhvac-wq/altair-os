@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>V4-02 Priority Spine — Fill Refinements</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 24px; background: #f8fafc; color: #0f172a; }
+    h1 { font-size: 1.25rem; margin: 0 0 8px; }
+    p { margin: 0 0 24px; color: #64748b; font-size: 0.875rem; max-width: 720px; line-height: 1.5; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .card h3 { margin: 0 0 4px; font-size: 0.875rem; }
+    .card .note { margin: 0 0 12px; font-size: 0.75rem; color: #64748b; }
+    .sizes { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+    .size { text-align: center; }
+    .size span { display: block; font-size: 10px; color: #94a3b8; margin-top: 4px; }
+    .on-dark { background: #0a0a0a; padding: 8px; border-radius: 4px; display: inline-block; margin-top: 12px; }
+    .on-dark span { color: #fff; }
+    object { display: block; image-rendering: pixelated; image-rendering: crisp-edges; pointer-events: none; }
+    .source { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
+    .source h2 { font-size: 1rem; margin: 0 0 12px; }
+    .compare { display: flex; gap: 24px; flex-wrap: wrap; }
+    .compare .card { min-width: 200px; }
+  </style>
+</head>
+<body>
+  <h1>V4-02 Priority Spine — Fill Refinements</h1>
+  <p>
+    Merge of V4-02 operational narrative (vertical spine, rightward vector, Altair star) with V5-04 fill geometry (4px bars, 16px-safe grid).
+    Fill only. No hairlines. No queue marks. No left stub.
+  </p>
+
+  <div class="grid" id="refinements"></div>
+
+  <div class="source compare">
+    <div class="card">
+      <h2>Source: V4-02</h2>
+      <object type="image/svg+xml" data="v4-operational/v4-02-priority-spine.svg" width="64" height="64"></object>
+    </div>
+    <div class="card">
+      <h2>Source: V5-04</h2>
+      <object type="image/svg+xml" data="v5-iconic/v5-04-thick-arm-signal.svg" width="64" height="64"></object>
+    </div>
+  </div>
+
+  <script>
+    const refinements = [
+      ["R01 Continuous Spine", "Unbroken 4px vertical pillar with standard right arm.", "v4-operational/refinements/v4-02-r01-continuous-spine.svg"],
+      ["R02 Split Spine", "V5-04 segmented vertical — open hub at junction.", "v4-operational/refinements/v4-02-r02-split-spine.svg"],
+      ["R03 Long Vector", "Extended 24px operational arm for stronger dispatch read.", "v4-operational/refinements/v4-02-r03-long-vector.svg"],
+      ["R04 Compact Star", "Tighter integer star for 16px legibility.", "v4-operational/refinements/v4-02-r04-compact-star.svg"],
+      ["R05 Chamfer Vector", "Split spine with directional chamfer on arm terminus.", "v4-operational/refinements/v4-02-r05-chamfer-vector.svg"],
+    ];
+    const sizes = [16, 32, 64, 180];
+    const container = document.getElementById("refinements");
+    for (const [name, note, path] of refinements) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `<h3>${name}</h3><p class="note">${note}</p><div class="sizes"></div><div class="on-dark"><div class="sizes dark"></div></div>`;
+      const light = card.querySelector(".sizes:not(.dark)");
+      const dark = card.querySelector(".sizes.dark");
+      for (const px of sizes) {
+        for (const parent of [light, dark]) {
+          const wrap = document.createElement("div");
+          wrap.className = "size";
+          const obj = document.createElement("object");
+          obj.type = "image/svg+xml";
+          obj.data = path;
+          obj.width = px;
+          obj.height = px;
+          if (parent === dark) obj.style.filter = "invert(1)";
+          wrap.appendChild(obj);
+          wrap.appendChild(document.createElement("span")).textContent = px + "px";
+          parent.appendChild(wrap);
+        }
+      }
+      container.appendChild(card);
+    }
+  </script>
+</body>
+</html>

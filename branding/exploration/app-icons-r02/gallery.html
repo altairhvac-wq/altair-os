@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>R02 App Icon Treatments — Premium Home Screen</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+      margin: 0;
+      background: #1c1c1e;
+      color: #f5f5f7;
+    }
+    header {
+      padding: 32px 24px 16px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 1.375rem; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .sub {
+      margin: 0;
+      color: #98989d;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      max-width: 720px;
+    }
+    .refs {
+      margin-top: 12px;
+      font-size: 0.75rem;
+      color: #636366;
+    }
+    .refs span {
+      display: inline-block;
+      padding: 3px 8px;
+      background: #2c2c2e;
+      border-radius: 6px;
+      margin: 2px 4px 2px 0;
+    }
+
+    /* iPhone home screen mockup */
+    .phone-section {
+      padding: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .phone {
+      width: 320px;
+      background: linear-gradient(160deg, #2a2a3a 0%, #1a1a24 40%, #0f0f14 100%);
+      border-radius: 44px;
+      padding: 14px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.08),
+        0 24px 64px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .phone-screen {
+      border-radius: 34px;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 120% 80% at 50% 0%, rgba(80,60,120,0.35) 0%, transparent 55%),
+        radial-gradient(ellipse 80% 60% at 80% 100%, rgba(40,30,60,0.4) 0%, transparent 50%),
+        linear-gradient(180deg, #3d3560 0%, #1e1830 35%, #12101a 100%);
+      min-height: 580px;
+      position: relative;
+    }
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 14px 24px 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .dynamic-island {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 34px;
+      background: #000;
+      border-radius: 20px;
+    }
+    .home-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px 12px;
+      padding: 48px 20px 24px;
+    }
+    .app-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .app-slot img, .app-slot object {
+      width: 60px;
+      height: 60px;
+      border-radius: 13.5px;
+      display: block;
+    }
+    .app-slot .label {
+      font-size: 10px;
+      color: rgba(255,255,255,0.85);
+      text-align: center;
+      max-width: 64px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .app-slot.placeholder img {
+      opacity: 0.35;
+      filter: saturate(0.3);
+    }
+    .dock {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: 28px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-around;
+    }
+    .dock .app-slot img { width: 54px; height: 54px; }
+
+    /* Treatment cards */
+    .gallery {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 8px 24px 48px;
+    }
+    .gallery h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 16px;
+      color: #e5e5ea;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    }
+    .card {
+      background: #2c2c2e;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #3a3a3c;
+    }
+    .card h3 {
+      margin: 0 0 4px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .card .note {
+      margin: 0 0 12px;
+      font-size: 0.75rem;
+      color: #98989d;
+      line-height: 1.45;
+    }
+    .card .ref {
+      font-size: 0.6875rem;
+      color: #636366;
+      margin-bottom: 12px;
+    }
+    .sizes {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .size {
+      text-align: center;
+    }
+    .size img, .size object {
+      display: block;
+      image-rendering: auto;
+    }
+    .size span {
+      display: block;
+      font-size: 10px;
+      color: #636366;
+      margin-top: 4px;
+    }
+    .size .ios { border-radius: 13.5px; }
+    .size .raw { border-radius: 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>R02 App Icon Treatments</h1>
+    <p class="sub">
+      Ten premium home-screen treatments using the approved R02 split-spine mark.
+      Logo geometry is locked — only container, gradients, lighting, depth, and background vary.
+    </p>
+    <div class="refs">
+      Reference quality:
+      <span>Linear</span><span>Stripe</span><span>Raycast</span><span>Arc Browser</span><span>Tesla</span>
+    </div>
+  </header>
+
+  <section class="phone-section">
+    <div class="phone" id="hero-phone">
+      <div class="phone-screen">
+        <div class="dynamic-island"></div>
+        <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+        <div class="home-grid" id="hero-grid"></div>
+        <div class="dock" id="hero-dock"></div>
+      </div>
+      <p style="text-align:center;font-size:11px;color:#98989d;margin:12px 0 0">All 10 treatments at 60px on iOS home screen</p>
+    </div>
+  </section>
+
+  <section class="gallery">
+    <h2>All treatments — detail view</h2>
+    <div class="grid" id="gallery"></div>
+  </section>
+
+  <script>
+    const icons = [
+      ["icon-01-obsidian-gold", "Obsidian Gold", "Linear-inspired. Clean obsidian plate, top rim highlight, canonical gold gradient.", "Linear"],
+      ["icon-02-midnight-forge", "Midnight Forge", "Stripe-inspired warmth. Radial forge glow, diagonal metallic gold, soft ambient bloom.", "Stripe"],
+      ["icon-03-raycast-pulse", "Raycast Pulse", "Centered gold pulse behind mark. High-contrast bright gold on near-black.", "Raycast"],
+      ["icon-04-arc-horizon", "Arc Horizon", "Dual aurora washes — warm gold upper-right, cool slate lower-left. Layered depth.", "Arc Browser"],
+      ["icon-05-tesla-precision", "Tesla Precision", "Matte black, no ornament. Diagonal metallic gold with surgical specular range.", "Tesla"],
+      ["icon-06-champagne-edge", "Champagne Edge", "Gold rim lighting on container edge. Subtle inner champagne wash.", "Luxury SaaS"],
+      ["icon-07-carbon-depth", "Carbon Depth", "Micro-weave texture, embossed mark with drop shadow and top highlight.", "Premium hardware"],
+      ["icon-08-north-star-dawn", "North Star Dawn", "Bottom-up warm radial — dawn horizon beneath the north star mark.", "Brand narrative"],
+      ["icon-09-frosted-vault", "Frosted Vault", "Glass top wash, inset panel, floating mark with gold-tinted shadow.", "iOS depth"],
+      ["icon-10-command-center", "Command Center", "Subtle ops grid, vignette, specular overlay on mark. Executive command aesthetic.", "Altair OS"],
+    ];
+
+    function makeAppSlot(name, src, isPlaceholder) {
+      const slot = document.createElement("div");
+      slot.className = "app-slot" + (isPlaceholder ? " placeholder" : "");
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = name;
+      img.width = 60;
+      img.height = 60;
+      slot.appendChild(img);
+      const label = document.createElement("span");
+      label.className = "label";
+      label.textContent = name;
+      slot.appendChild(label);
+      return slot;
+    }
+
+    // Hero phone — all 10 Altair treatments on home screen
+    const heroGrid = document.getElementById("hero-grid");
+    const heroDock = document.getElementById("hero-dock");
+    for (const [slug, name] of icons.map(([s, n]) => [s, n])) {
+      heroGrid.appendChild(makeAppSlot(name.split(" ")[0], `previews/${slug}-60px.png`, false));
+    }
+    for (let i = 0; i < 6; i++) {
+      heroGrid.appendChild(makeAppSlot("App", "previews/icon-01-obsidian-gold-60px.png", true));
+    }
+    const dockIcons = icons.slice(0, 4);
+    for (const [slug, name] of dockIcons) {
+      heroDock.appendChild(makeAppSlot(name.split(" ")[0], `previews/${slug}-60px.png`, false));
+    }
+
+    const gallery = document.getElementById("gallery");
+    for (const [slug, name, note, ref] of icons) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `<h3>${name}</h3><p class="note">${note}</p><p class="ref">Reference: ${ref}</p>`;
+      const sizes = document.createElement("div");
+      sizes.className = "sizes";
+      for (const [px, cls] of [[60, "ios"], [120, "ios"], [180, "ios"], [512, "raw"]]) {
+        const wrap = document.createElement("div");
+        wrap.className = "size";
+        const img = document.createElement("img");
+        img.src = `previews/${slug}-${px}px.png`;
+        img.width = px > 180 ? 120 : px;
+        img.height = px > 180 ? 120 : px;
+        img.className = cls;
+        img.alt = `${name} ${px}px`;
+        wrap.appendChild(img);
+        wrap.appendChild(document.createElement("span")).textContent = px + "px";
+        sizes.appendChild(wrap);
+      }
+      card.appendChild(sizes);
+      gallery.appendChild(card);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Meridian Finalists — 16px Visibility Test</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 24px; background: #f8fafc; color: #0f172a; }
+    h1 { font-size: 1.25rem; margin: 0 0 8px; }
+    p { margin: 0 0 24px; color: #64748b; font-size: 0.875rem; }
+    h2 { font-size: 1rem; margin: 32px 0 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .card h3 { margin: 0 0 12px; font-size: 0.875rem; }
+    .sizes { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+    .size { text-align: center; }
+    .size span { display: block; font-size: 10px; color: #94a3b8; margin-top: 4px; }
+    .on-dark { background: #0a0a0a; padding: 8px; border-radius: 4px; display: inline-block; margin-top: 12px; }
+    .on-dark span { color: #fff; }
+    img, object { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+    object { pointer-events: none; }
+  </style>
+</head>
+<body>
+  <h1>Meridian Command — Finalist Sketch Size Test</h1>
+  <p>Exploration only. Black on white + inverted. Sizes: 16, 32, 64, 180 px.</p>
+
+  <h2>Variation 4 — Operational</h2>
+  <div class="grid" id="v4"></div>
+
+  <h2>Variation 5 — Iconic</h2>
+  <div class="grid" id="v5"></div>
+
+  <script>
+    const concepts = {
+      v4: [
+        ["V4-01 Baseline Dispatch", "v4-operational/v4-01-baseline-dispatch.svg"],
+        ["V4-02 Priority Spine", "v4-operational/v4-02-priority-spine.svg"],
+        ["V4-03 Queue Stack", "v4-operational/v4-03-queue-stack.svg"],
+        ["V4-04 Route Fork", "v4-operational/v4-04-route-fork.svg"],
+        ["V4-05 Live Pulse", "v4-operational/v4-05-live-pulse.svg"],
+      ],
+      v5: [
+        ["V5-01 Star-Cross Fusion", "v5-iconic/v5-01-star-cross-fusion.svg"],
+        ["V5-02 Compact Hub", "v5-iconic/v5-02-compact-hub.svg"],
+        ["V5-03 Chamfer Burst", "v5-iconic/v5-03-chamfer-burst.svg"],
+        ["V5-04 Thick Arm Signal", "v5-iconic/v5-04-thick-arm-signal.svg"],
+        ["V5-05 Negative Cross", "v5-iconic/v5-05-negative-cross.svg"],
+      ],
+    };
+    const sizes = [16, 32, 64, 180];
+    for (const [group, items] of Object.entries(concepts)) {
+      const container = document.getElementById(group);
+      for (const [name, path] of items) {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `<h3>${name}</h3><div class="sizes"></div><div class="on-dark"><div class="sizes dark"></div></div>`;
+        const light = card.querySelector(".sizes:not(.dark)");
+        const dark = card.querySelector(".sizes.dark");
+        for (const px of sizes) {
+          for (const parent of [light, dark]) {
+            const wrap = document.createElement("div");
+            wrap.className = "size";
+            const obj = document.createElement("object");
+            obj.type = "image/svg+xml";
+            obj.data = path;
+            obj.width = px;
+            obj.height = px;
+            if (parent === dark) obj.style.filter = "invert(1)";
+            wrap.appendChild(obj);
+            wrap.appendChild(document.createElement("span")).textContent = px + "px";
+            parent.appendChild(wrap);
+          }
+        }
+        container.appendChild(card);
+      }
+    }
+  </script>
+</body>
+</html>

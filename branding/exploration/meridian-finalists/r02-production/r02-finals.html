@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>R02 Split Spine — Production Finals</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 24px; background: #f8fafc; color: #0f172a; }
+    h1 { font-size: 1.25rem; margin: 0 0 8px; }
+    p { margin: 0 0 24px; color: #64748b; font-size: 0.875rem; max-width: 760px; line-height: 1.5; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .card.recommended { border-color: #0ea5e9; box-shadow: 0 0 0 1px #0ea5e9; }
+    .card h3 { margin: 0 0 4px; font-size: 0.875rem; }
+    .card .note { margin: 0 0 12px; font-size: 0.75rem; color: #64748b; line-height: 1.4; }
+    .badge { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #0369a1; background: #e0f2fe; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+    .sizes { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+    .size { text-align: center; }
+    .size span { display: block; font-size: 10px; color: #94a3b8; margin-top: 4px; }
+    .row-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin: 0 0 8px; }
+    .on-dark { background: #0a0a0a; padding: 8px; border-radius: 4px; margin-top: 12px; }
+    .on-dark .row-label { color: #94a3b8; }
+    .on-dark span { color: #cbd5e1; }
+    object { display: block; image-rendering: pixelated; image-rendering: crisp-edges; pointer-events: none; }
+    .specs { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
+    .specs h2 { font-size: 1rem; margin: 0 0 12px; }
+    .specs table { border-collapse: collapse; font-size: 0.8125rem; width: 100%; max-width: 720px; }
+    .specs th, .specs td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
+    .specs th { color: #64748b; font-weight: 600; }
+    .verdict { margin-top: 24px; padding: 16px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; max-width: 760px; }
+    .verdict h2 { font-size: 0.9375rem; margin: 0 0 8px; color: #0c4a6e; }
+    .verdict p { margin: 0; color: #0c4a6e; font-size: 0.875rem; }
+    code { font-size: 0.8125rem; background: #f1f5f9; padding: 1px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <h1>R02 Split Spine — Production Micro-Variations</h1>
+  <p>
+    Selected production direction. Fill-only geometry on a 64×64 grid with 4px module.
+    Split vertical spine (open hub at junction), rightward dispatch vector, Altair star at center.
+    No app integration — exploration artifacts only.
+  </p>
+
+  <div class="grid" id="finals"></div>
+
+  <div class="specs">
+    <h2>Geometry delta</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Variant</th>
+          <th>Spine</th>
+          <th>Vector</th>
+          <th>Star extent</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>F01 Exact</td>
+          <td>y 8–24 / 40–56 (16px gap)</td>
+          <td>h20 → x52</td>
+          <td>y18–42, x19.5–44.5</td>
+        </tr>
+        <tr>
+          <td>F02 Larger star</td>
+          <td>unchanged</td>
+          <td>h20 → x52</td>
+          <td>y17–43, x18.5–45.5 (+2px each axis)</td>
+        </tr>
+        <tr>
+          <td>F03 Shorter vector</td>
+          <td>unchanged</td>
+          <td>h16 → x48 (−4px, one grid unit)</td>
+          <td>unchanged</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="verdict">
+    <h2>Recommendation: F01 Exact → <code>r02-production-final.svg</code></h2>
+    <p>
+      F01 preserves the open hub read at 16px without crowding the junction. F02’s +2px star bleeds into the spine gap and softens the split-spine silhouette at 16px. F03’s shorter arm weakens the dispatch vector cue and reads stubbier at favicon scale. F01 is grid-clean at all four test sizes on both light and dark backgrounds.
+    </p>
+  </div>
+
+  <script>
+    const finals = [
+      ["F01 Exact R02", "Baseline split spine — selected refinement, unchanged.", "r02-f01-exact.svg", true],
+      ["F02 Larger Star", "Star expanded +1px cardinal (+2px overall extent) for legibility test.", "r02-f02-larger-star.svg", false],
+      ["F03 Shorter Vector", "Right arm shortened one 4px grid unit (h20 → h16).", "r02-f03-shorter-vector.svg", false],
+    ];
+    const sizes = [16, 32, 64, 180];
+    const container = document.getElementById("finals");
+    for (const [name, note, path, recommended] of finals) {
+      const card = document.createElement("div");
+      card.className = "card" + (recommended ? " recommended" : "");
+      card.innerHTML = `<h3>${name}${recommended ? '<span class="badge">Recommended</span>' : ""}</h3><p class="note">${note}</p>`;
+      for (const [label, dark] of [["Black on white", false], ["White on dark", true]]) {
+        const section = document.createElement("div");
+        if (dark) section.className = "on-dark";
+        section.innerHTML = `<p class="row-label">${label}</p>`;
+        const row = document.createElement("div");
+        row.className = "sizes";
+        for (const px of sizes) {
+          const wrap = document.createElement("div");
+          wrap.className = "size";
+          const obj = document.createElement("object");
+          obj.type = "image/svg+xml";
+          obj.data = path;
+          obj.width = px;
+          obj.height = px;
+          if (dark) obj.style.filter = "invert(1)";
+          wrap.appendChild(obj);
+          wrap.appendChild(document.createElement("span")).textContent = px + "px";
+          row.appendChild(wrap);
+        }
+        section.appendChild(row);
+        card.appendChild(section);
+      }
+      container.appendChild(card);
+    }
+  </script>
+</body>
+</html>
