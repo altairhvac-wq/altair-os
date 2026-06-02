@@ -53,6 +53,62 @@ function resolveDemoCustomerEmail(context: ActiveCompanyContext): string {
   );
 }
 
+type TimeEntrySeedInput = {
+  company_id: string;
+  technician_id: string;
+  job_id?: string | null;
+  entry_type: "clock" | "break" | "job_labor";
+  started_at: string;
+  ended_at?: string | null;
+  duration_minutes?: number | null;
+  notes?: string | null;
+  is_demo?: boolean;
+};
+
+function validateTimeEntrySeed(input: TimeEntrySeedInput): string | null {
+  if (input.entry_type === "job_labor" && !input.job_id) {
+    return "Demo time entry seed error: job labor requires a job.";
+  }
+
+  const startedAt = Date.parse(input.started_at);
+  if (!Number.isFinite(startedAt)) {
+    return "Demo time entry seed error: invalid start time.";
+  }
+
+  if (input.ended_at) {
+    const endedAt = Date.parse(input.ended_at);
+    if (!Number.isFinite(endedAt)) {
+      return "Demo time entry seed error: invalid end time.";
+    }
+
+    if (endedAt < startedAt) {
+      return "Demo time entry seed error: end time must be after start time.";
+    }
+  }
+
+  if (input.duration_minutes != null && input.duration_minutes < 0) {
+    return "Demo time entry seed error: duration cannot be negative.";
+  }
+
+  return null;
+}
+
+async function insertTimeEntry(
+  step: string,
+  companyId: string,
+  row: TimeEntrySeedInput,
+): Promise<void> {
+  const validationError = validateTimeEntrySeed(row);
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
+  const result = await insertRow(step, companyId, "time_entries", row);
+  if (result.error || !result.id) {
+    throw new Error(result.error ?? "Failed to seed time entries.");
+  }
+}
+
 async function insertRow(
   step: string,
   companyId: string,
@@ -1134,12 +1190,19 @@ export async function seedCompanyDemoData(
       }
 
       if (jobSeed.status === "in_progress") {
-        await insertRow("seed_time_entries", companyId, "time_entries", {
+        const start = buildJobSchedule(jobSeed, seedContext.now);
+        const workStarted = jobSeed.workStartedMinutesAfterStart
+          ? new Date(
+              start.getTime() + jobSeed.workStartedMinutesAfterStart * 60_000,
+            )
+          : start;
+
+        await insertTimeEntry("seed_time_entries", companyId, {
           company_id: companyId,
           technician_id: seedContext.technicianId,
           job_id: jobId,
           entry_type: "job_labor",
-          started_at: atTime(seedContext.now, 8, 35).toISOString(),
+          started_at: workStarted.toISOString(),
           ended_at: null,
           duration_minutes: null,
           notes: "Active labor on no-cooling repair.",
@@ -1161,7 +1224,7 @@ export async function seedCompanyDemoData(
           (completed.getTime() - workStarted.getTime()) / 60_000,
         );
 
-        await insertRow("seed_time_entries", companyId, "time_entries", {
+        await insertTimeEntry("seed_time_entries", companyId, {
           company_id: companyId,
           technician_id: seedContext.technicianId,
           job_id: jobId,
@@ -1175,7 +1238,7 @@ export async function seedCompanyDemoData(
       }
     }
 
-    await insertRow("seed_time_entries_clock", companyId, "time_entries", {
+    await insertTimeEntry("seed_time_entries_clock", companyId, {
       company_id: companyId,
       technician_id: seedContext.technicianId,
       entry_type: "clock",
@@ -1186,7 +1249,7 @@ export async function seedCompanyDemoData(
       is_demo: true,
     });
 
-    await insertRow("seed_time_entries_clock", companyId, "time_entries", {
+    await insertTimeEntry("seed_time_entries_clock", companyId, {
       company_id: companyId,
       technician_id: seedContext.technicianId,
       entry_type: "clock",

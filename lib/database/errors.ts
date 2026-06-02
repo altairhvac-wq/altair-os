@@ -128,6 +128,17 @@ export function mapDemoDataError(
     return demoDataPermissionMessage("clear");
   }
 
+  if (
+    error.code === "23514" ||
+    message.includes("violates check constraint")
+  ) {
+    if (message.includes("time_entries")) {
+      return action === "clear"
+        ? "Demo data could not be fully cleared because linked time records are still attached to sample jobs. Please try again."
+        : "Demo time entry data is invalid. Please contact support if this continues.";
+    }
+  }
+
   const isPermissionFailure =
     message.includes("permission denied") ||
     error.code === "42501" ||
