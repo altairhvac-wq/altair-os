@@ -36,12 +36,10 @@ function resolveFill(
 
 function AltairMark({
   fill,
-  stroke,
   showGradient,
   gradientId,
 }: {
   fill: string;
-  stroke: string;
   showGradient: boolean;
   gradientId: string;
 }) {
@@ -60,15 +58,7 @@ function AltairMark({
           </linearGradient>
         </defs>
       ) : null}
-      <path fill={fill} d={ALTAIR_MARK_PATHS.letter} />
-      <path fill={fill} d={ALTAIR_MARK_PATHS.star} />
-      <path
-        fill="none"
-        stroke={stroke}
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        d={ALTAIR_MARK_PATHS.horizon}
-      />
+      <path fill={fill} d={ALTAIR_MARK_PATHS.mark} />
     </>
   );
 }
@@ -107,16 +97,6 @@ function AltairWordmark({
   );
 }
 
-/**
- * Secondary vector logo component — flat SVG geometry derived from concept-v1.
- *
- * **Do not use for primary brand moments** (auth hero, admin header, branded loading).
- * Prefer `<AltairBrandMark />` which renders faithful crops from the approved
- * `altair-logo-concept-v1.png` reference.
- *
- * Appropriate for: technician shell, public document footers, and other compact
- * operational surfaces where raster detail cannot render well.
- */
 export function AltairLogo({
   variant = "primary",
   size = "md",
@@ -129,7 +109,6 @@ export function AltairLogo({
     variant === "icon" ? "gold" : variant;
   const useGradient = resolvedVariant !== "white";
   const fill = resolveFill(resolvedVariant, gradientId);
-  const stroke = resolveFill(resolvedVariant, gradientId);
   const includeWordmark = variant !== "icon" && showWordmark;
   const includePrimaryBackground =
     resolvedVariant === "primary" && includeWordmark;
@@ -166,7 +145,6 @@ export function AltairLogo({
       <g transform={markTransform}>
         <AltairMark
           fill={fill}
-          stroke={stroke}
           showGradient={useGradient}
           gradientId={gradientId}
         />

@@ -21,7 +21,7 @@ export function AlphaIndicator({ tone = "light" }: AlphaIndicatorProps) {
       aria-label={ALPHA_DETAIL}
       className={`inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide sm:px-2 sm:text-[11px] ${
         tone === "dark"
-          ? "border-amber-400/30 bg-amber-400/10 text-amber-200/90"
+          ? "border-cyan-400/25 bg-cyan-400/10 text-cyan-200"
           : "border-sky-200/90 bg-sky-50 text-sky-700"
       }`}
     >
