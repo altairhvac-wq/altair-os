@@ -21,6 +21,7 @@ import {
   formatBulkExpensesResultMessage,
   getExpenseLifecycleState,
 } from "@/shared/lib/expense-lifecycle";
+import { filterOperationalActive } from "@/shared/lib/operational-lifecycle";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { EntityLifecycleBulkBar } from "@/shared/components/lifecycle/EntityLifecycleBulkBar";
 import type {
@@ -177,6 +178,11 @@ export function ExpensesPageView({
       initialJobId,
       initialCustomerId,
     ],
+  );
+
+  const activeExpenses = useMemo(
+    () => filterOperationalActive(localExpenses, getExpenseLifecycleState),
+    [localExpenses],
   );
 
   const lifecycleScopedExpenses = useMemo(
@@ -349,7 +355,7 @@ export function ExpensesPageView({
       }
       summary={
         !hasNoExpenses ? (
-          <ExpenseSummaryCards expenses={localExpenses} />
+          <ExpenseSummaryCards expenses={activeExpenses} />
         ) : null
       }
       primaryAction={

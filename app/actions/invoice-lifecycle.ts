@@ -1,8 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { voidInvoiceAction } from "@/app/actions/invoices";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { revalidateInvoiceOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
   archiveInvoice,
@@ -34,10 +34,7 @@ export type InvoiceLifecycleActionResult = {
 };
 
 function revalidateInvoicePaths(invoiceId?: string) {
-  revalidatePath("/invoices");
-  if (invoiceId) {
-    revalidatePath(`/invoices/${invoiceId}`);
-  }
+  revalidateInvoiceOperationalPages(invoiceId);
 }
 
 export async function archiveInvoiceAction(

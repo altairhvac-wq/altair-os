@@ -31,6 +31,10 @@ import {
   getInvoiceLifecycleState,
 } from "@/shared/lib/invoice-lifecycle";
 import {
+  countOperationalActive,
+  filterOperationalActive,
+} from "@/shared/lib/operational-lifecycle";
+import {
   buildJobsByIdForBatchSend,
   formatBatchSendInvoicesResultMessage,
   resolveInvoiceBatchSelectionState,
@@ -215,6 +219,16 @@ export function InvoicesPageView({
   const todayInvoices = useMemo(
     () => filterInvoicesForTodayView(invoices, todayContext),
     [invoices, todayContext],
+  );
+
+  const activeInvoices = useMemo(
+    () => filterOperationalActive(invoices, getInvoiceLifecycleState),
+    [invoices],
+  );
+
+  const activeTodayCount = useMemo(
+    () => countOperationalActive(todayInvoices, getInvoiceLifecycleState),
+    [todayInvoices],
   );
 
   const viewScopedInvoices = useMemo(
@@ -509,7 +523,7 @@ export function InvoicesPageView({
 
   const subtitle =
     viewTab === "today"
-      ? `${todayInvoices.length} need attention today`
+      ? `${activeTodayCount} need attention today`
       : (invoicePageFocus?.sectionDescription ??
         "Track billing, payments, and outstanding balances");
 
@@ -552,7 +566,7 @@ export function InvoicesPageView({
       summary={
         !hasNoInvoices ? (
           <InvoiceSummaryCards
-            invoices={invoices}
+            invoices={activeInvoices}
             highlightedLabels={highlightedSummaryLabels}
           />
         ) : null
@@ -577,8 +591,8 @@ export function InvoicesPageView({
             <JobsViewTabs
               activeTab={viewTab}
               onTabChange={setViewTab}
-              todayCount={todayInvoices.length}
-              allCount={invoices.length}
+              todayCount={activeTodayCount}
+              allCount={activeInvoices.length}
               allTabLabel="All"
             />
           </div>

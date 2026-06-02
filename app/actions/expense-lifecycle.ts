@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { revalidateExpenseOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
   archiveExpense,
@@ -32,7 +32,7 @@ export type ExpenseLifecycleActionResult = {
 };
 
 function revalidateExpensePaths() {
-  revalidatePath("/expenses");
+  revalidateExpenseOperationalPages();
 }
 
 export async function archiveExpenseAction(

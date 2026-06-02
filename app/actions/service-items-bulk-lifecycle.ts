@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateServiceItemOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import {
   archiveServiceItemAction,
   moveServiceItemToTrashAction,
@@ -74,7 +74,7 @@ export async function bulkArchiveServiceItemsAction(
     archiveServiceItemAction,
     (item) => getArchiveServiceItemBlockReason(item),
   );
-  if (result.successCount > 0) revalidatePath("/price-book");
+  if (result.successCount > 0) revalidateServiceItemOperationalPages();
   return result;
 }
 
@@ -86,7 +86,7 @@ export async function bulkRestoreServiceItemsAction(
     restoreServiceItemAction,
     (item) => getRestoreServiceItemBlockReason(item),
   );
-  if (result.successCount > 0) revalidatePath("/price-book");
+  if (result.successCount > 0) revalidateServiceItemOperationalPages();
   return result;
 }
 
@@ -100,7 +100,7 @@ export async function bulkMoveServiceItemsToTrashAction(
       dependencies ? getMoveServiceItemToTrashBlockReason(item, dependencies) : null,
     true,
   );
-  if (result.successCount > 0) revalidatePath("/price-book");
+  if (result.successCount > 0) revalidateServiceItemOperationalPages();
   return result;
 }
 
@@ -112,7 +112,7 @@ export async function bulkRestoreServiceItemsFromTrashAction(
     restoreServiceItemFromTrashAction,
     (item) => getRestoreServiceItemFromTrashBlockReason(item),
   );
-  if (result.successCount > 0) revalidatePath("/price-book");
+  if (result.successCount > 0) revalidateServiceItemOperationalPages();
   return result;
 }
 
@@ -128,6 +128,6 @@ export async function bulkPermanentlyDeleteServiceItemsAction(
         : null,
     true,
   );
-  if (result.successCount > 0) revalidatePath("/price-book");
+  if (result.successCount > 0) revalidateServiceItemOperationalPages();
   return result;
 }

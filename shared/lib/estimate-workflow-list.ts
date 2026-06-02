@@ -250,8 +250,11 @@ export function filterEstimatesForTodayView(
   estimates: Estimate[],
   context?: EstimateTodayContext,
 ): Estimate[] {
-  return estimates.filter((estimate) =>
-    isEstimateRelevantToday(estimate, context),
+  return estimates.filter(
+    (estimate) =>
+      !estimate.archivedAt &&
+      !estimate.deletedAt &&
+      isEstimateRelevantToday(estimate, context),
   );
 }
 

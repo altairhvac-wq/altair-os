@@ -278,6 +278,8 @@ export async function listJobsByCustomer(
     .select(JOB_TECHNICIAN_SELECT)
     .eq("company_id", companyId)
     .eq("customer_id", customerId)
+    .is("deleted_at", null)
+    .is("archived_at", null)
     .order("scheduled_at", { ascending: false })
     .limit(limit);
 

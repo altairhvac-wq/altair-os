@@ -263,7 +263,14 @@ export function filterInvoicesForTodayView(
   invoices: Invoice[],
   context?: InvoiceTodayContext,
 ): Invoice[] {
-  return invoices.filter((invoice) => isInvoiceRelevantToday(invoice, context));
+  return invoices.filter(
+    (invoice) =>
+      !invoice.archivedAt &&
+      !invoice.deletedAt &&
+      invoice.status !== "void" &&
+      invoice.status !== "cancelled" &&
+      isInvoiceRelevantToday(invoice, context),
+  );
 }
 
 export function prepareInvoicesForTodayView(

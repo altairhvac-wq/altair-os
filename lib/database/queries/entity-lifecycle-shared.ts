@@ -2,6 +2,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const TRASH_RETENTION_DAYS = 60;
 
+/** Default for operational lists, boards, pickers, and dashboard metrics. */
+export function applyOperationalLifecycleFilters<
+  Q extends { is: (column: string, value: null) => Q },
+>(query: Q): Q {
+  return query.is("deleted_at", null).is("archived_at", null);
+}
+
 export function buildTrashTimestampFields(): {
   deleted_at: string;
   delete_after: string;

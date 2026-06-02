@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { revalidateEstimateOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
   archiveEstimate,
@@ -36,11 +36,7 @@ export type EstimateLifecycleActionResult = {
 };
 
 function revalidateEstimatePaths(estimateId?: string) {
-  revalidatePath("/estimates");
-  revalidatePath("/invoices");
-  if (estimateId) {
-    revalidatePath(`/estimates/${estimateId}`);
-  }
+  revalidateEstimateOperationalPages(estimateId);
 }
 
 export async function archiveEstimateAction(

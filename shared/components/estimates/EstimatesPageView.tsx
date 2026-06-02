@@ -33,6 +33,10 @@ import {
   formatBulkEstimatesResultMessage,
   getEstimateLifecycleState,
 } from "@/shared/lib/estimate-lifecycle";
+import {
+  countOperationalActive,
+  filterOperationalActive,
+} from "@/shared/lib/operational-lifecycle";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { EntityLifecycleBulkBar } from "@/shared/components/lifecycle/EntityLifecycleBulkBar";
 import type { Customer } from "@/shared/types/customer";
@@ -180,6 +184,16 @@ export function EstimatesPageView({
   const todayEstimates = useMemo(
     () => filterEstimatesForTodayView(estimates, todayContext),
     [estimates, todayContext],
+  );
+
+  const activeEstimates = useMemo(
+    () => filterOperationalActive(estimates, getEstimateLifecycleState),
+    [estimates],
+  );
+
+  const activeTodayCount = useMemo(
+    () => countOperationalActive(todayEstimates, getEstimateLifecycleState),
+    [todayEstimates],
   );
 
   const viewScopedEstimates = useMemo(
@@ -445,7 +459,7 @@ export function EstimatesPageView({
 
   const subtitle =
     viewTab === "today"
-      ? `${todayEstimates.length} need attention today`
+      ? `${activeTodayCount} need attention today`
       : "Create quotes, track approvals, and convert to jobs";
 
   return (
@@ -453,7 +467,9 @@ export function EstimatesPageView({
       title="Estimates"
       subtitle={subtitle}
       summary={
-        !hasNoEstimates ? <EstimateSummaryCards estimates={estimates} /> : null
+        !hasNoEstimates ? (
+          <EstimateSummaryCards estimates={activeEstimates} />
+        ) : null
       }
       primaryAction={
         canManageEstimates ? (
@@ -475,8 +491,8 @@ export function EstimatesPageView({
             <JobsViewTabs
               activeTab={viewTab}
               onTabChange={setViewTab}
-              todayCount={todayEstimates.length}
-              allCount={estimates.length}
+              todayCount={activeTodayCount}
+              allCount={activeEstimates.length}
               allTabLabel="All"
             />
           </div>

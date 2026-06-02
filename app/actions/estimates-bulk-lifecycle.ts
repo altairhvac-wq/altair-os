@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import {
   archiveEstimateAction,
   moveEstimateToTrashAction,
@@ -10,6 +9,7 @@ import {
   voidEstimateAction,
 } from "@/app/actions/estimate-lifecycle";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { revalidateEstimateOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
   getEstimateById,
@@ -64,7 +64,7 @@ export async function bulkArchiveEstimatesAction(
     archiveEstimateAction,
     (estimate) => getArchiveEstimateBlockReason(estimate),
   );
-  if (result.successCount > 0) revalidatePath("/estimates");
+  if (result.successCount > 0) revalidateEstimateOperationalPages();
   return result;
 }
 
@@ -76,7 +76,7 @@ export async function bulkRestoreEstimatesAction(
     restoreEstimateAction,
     (estimate) => getRestoreEstimateBlockReason(estimate),
   );
-  if (result.successCount > 0) revalidatePath("/estimates");
+  if (result.successCount > 0) revalidateEstimateOperationalPages();
   return result;
 }
 
@@ -88,7 +88,7 @@ export async function bulkVoidEstimatesAction(
     voidEstimateAction,
     (estimate) => getVoidEstimateBlockReason(estimate),
   );
-  if (result.successCount > 0) revalidatePath("/estimates");
+  if (result.successCount > 0) revalidateEstimateOperationalPages();
   return result;
 }
 
@@ -100,7 +100,7 @@ export async function bulkMoveEstimatesToTrashAction(
     moveEstimateToTrashAction,
     (estimate) => getMoveEstimateToTrashBlockReason(estimate),
   );
-  if (result.successCount > 0) revalidatePath("/estimates");
+  if (result.successCount > 0) revalidateEstimateOperationalPages();
   return result;
 }
 
@@ -112,7 +112,7 @@ export async function bulkRestoreEstimatesFromTrashAction(
     restoreEstimateFromTrashAction,
     (estimate) => getRestoreEstimateFromTrashBlockReason(estimate),
   );
-  if (result.successCount > 0) revalidatePath("/estimates");
+  if (result.successCount > 0) revalidateEstimateOperationalPages();
   return result;
 }
 
@@ -128,6 +128,6 @@ export async function bulkPermanentlyDeleteEstimatesAction(
         : null,
     true,
   );
-  if (result.successCount > 0) revalidatePath("/estimates");
+  if (result.successCount > 0) revalidateEstimateOperationalPages();
   return result;
 }

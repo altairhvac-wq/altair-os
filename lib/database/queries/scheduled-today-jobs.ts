@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { applyOperationalLifecycleFilters } from "@/lib/database/queries/entity-lifecycle-shared";
 import {
   ACTIVE_CARRYOVER_JOB_STATUSES,
   dedupeJobRowsById,
@@ -22,11 +23,13 @@ export async function fetchOperationalDayJobRows<
   const { start, end } = getScheduledTodayBounds(options);
 
   const baseQuery = () => {
-    let query = supabase
-      .from("jobs")
-      .select(select)
-      .eq("company_id", options.companyId)
-      .neq("status", "cancelled");
+    let query = applyOperationalLifecycleFilters(
+      supabase
+        .from("jobs")
+        .select(select)
+        .eq("company_id", options.companyId)
+        .neq("status", "cancelled"),
+    );
 
     if (options.assignedTechnicianId) {
       query = query.eq(
@@ -90,11 +93,13 @@ export async function fetchOperationalWeekJobRows<
   const { start: todayStart, end: todayEnd } = getScheduledTodayBounds(options);
 
   const baseQuery = () => {
-    let query = supabase
-      .from("jobs")
-      .select(select)
-      .eq("company_id", options.companyId)
-      .neq("status", "cancelled");
+    let query = applyOperationalLifecycleFilters(
+      supabase
+        .from("jobs")
+        .select(select)
+        .eq("company_id", options.companyId)
+        .neq("status", "cancelled"),
+    );
 
     if (options.assignedTechnicianId) {
       query = query.eq(

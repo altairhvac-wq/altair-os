@@ -34,6 +34,7 @@ import {
   formatBulkJobsResultMessage as formatBulkJobLifecycleResultMessage,
   getJobLifecycleState,
 } from "@/shared/lib/job-lifecycle";
+import { countOperationalActive } from "@/shared/lib/operational-lifecycle";
 import { EntityLifecycleBulkBar } from "@/shared/components/lifecycle/EntityLifecycleBulkBar";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { sortJobsForOwnerView } from "@/shared/lib/jobs-owner-view-sort";
@@ -243,6 +244,16 @@ export function JobsPageView({
   const lifecycleFilteredJobs = useMemo(
     () => jobs.filter((job) => getJobLifecycleState(job) === lifecycleFilter),
     [jobs, lifecycleFilter],
+  );
+
+  const activeTodayCount = useMemo(
+    () => countOperationalActive(todayJobs, getJobLifecycleState),
+    [todayJobs],
+  );
+
+  const activeAllCount = useMemo(
+    () => countOperationalActive(jobs, getJobLifecycleState),
+    [jobs],
   );
 
   const lifecycleFilteredTodayJobs = useMemo(
@@ -688,9 +699,9 @@ export function JobsPageView({
     ? "Customer search"
     : viewTab === "today"
       ? hasActiveFilters
-        ? `${filteredTodayJobs.length} of ${todayJobs.length} today`
-        : `${todayJobs.length} scheduled today`
-      : `${jobs.length} total jobs`;
+        ? `${filteredTodayJobs.length} of ${activeTodayCount} today`
+        : `${activeTodayCount} scheduled today`
+      : `${activeAllCount} total jobs`;
 
   const showJobList = !isSearching && !hasNoJobs;
   const bulkSelectAllControl =
@@ -852,8 +863,8 @@ export function JobsPageView({
             <JobsViewTabs
               activeTab={viewTab}
               onTabChange={handleViewTabChange}
-              todayCount={todayJobs.length}
-              allCount={jobs.length}
+              todayCount={activeTodayCount}
+              allCount={activeAllCount}
             />
           </div>
         ) : null}

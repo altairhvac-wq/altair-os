@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { revalidateJobOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
   archiveJob,
@@ -36,12 +36,7 @@ export type JobLifecycleActionResult = {
 };
 
 function revalidateJobPaths(jobId?: string) {
-  revalidatePath("/jobs");
-  revalidatePath("/dispatch");
-  revalidatePath("/time");
-  if (jobId) {
-    revalidatePath(`/jobs/${jobId}`);
-  }
+  revalidateJobOperationalPages(jobId);
 }
 
 export async function archiveJobAction(

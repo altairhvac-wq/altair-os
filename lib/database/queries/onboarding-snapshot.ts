@@ -3,6 +3,12 @@ import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import { hasSavedCompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
 import type { OnboardingSnapshot } from "@/shared/types/onboarding";
 
+const LIFECYCLE_COUNT_TABLES = new Set([
+  "customers",
+  "jobs",
+  "service_items",
+]);
+
 async function countTableRows(
   table: "customers" | "jobs" | "service_items" | "company_memberships",
   companyId: string,
@@ -14,6 +20,10 @@ async function countTableRows(
     .from(table)
     .select("id", { count: "exact", head: true })
     .eq("company_id", companyId);
+
+  if (LIFECYCLE_COUNT_TABLES.has(table)) {
+    query = query.is("deleted_at", null).is("archived_at", null);
+  }
 
   if (extraFilters) {
     for (const [key, value] of Object.entries(extraFilters)) {

@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import {
   archiveJobAction,
   cancelJobAction,
@@ -10,6 +9,7 @@ import {
   restoreJobFromTrashAction,
 } from "@/app/actions/job-lifecycle";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { revalidateJobOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
   getJobById,
@@ -66,7 +66,7 @@ export async function bulkArchiveJobsAction(
   );
 
   if (result.successCount > 0) {
-    revalidatePath("/jobs");
+    revalidateJobOperationalPages();
   }
 
   return result;
@@ -82,7 +82,7 @@ export async function bulkRestoreJobsAction(
   );
 
   if (result.successCount > 0) {
-    revalidatePath("/jobs");
+    revalidateJobOperationalPages();
   }
 
   return result;
@@ -98,7 +98,7 @@ export async function bulkCancelJobsAction(
   );
 
   if (result.successCount > 0) {
-    revalidatePath("/jobs");
+    revalidateJobOperationalPages();
   }
 
   return result;
@@ -116,7 +116,7 @@ export async function bulkMoveJobsToTrashAction(
   );
 
   if (result.successCount > 0) {
-    revalidatePath("/jobs");
+    revalidateJobOperationalPages();
   }
 
   return result;
@@ -132,7 +132,7 @@ export async function bulkRestoreJobsFromTrashAction(
   );
 
   if (result.successCount > 0) {
-    revalidatePath("/jobs");
+    revalidateJobOperationalPages();
   }
 
   return result;
@@ -152,7 +152,7 @@ export async function bulkPermanentlyDeleteJobsAction(
   );
 
   if (result.successCount > 0) {
-    revalidatePath("/jobs");
+    revalidateJobOperationalPages();
   }
 
   return result;

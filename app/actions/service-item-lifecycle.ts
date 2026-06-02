@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { revalidateServiceItemOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
   archiveServiceItem,
@@ -33,8 +33,7 @@ export type ServiceItemLifecycleActionResult = {
 };
 
 function revalidateServiceItemPaths() {
-  revalidatePath("/price-book");
-  revalidatePath("/estimates");
+  revalidateServiceItemOperationalPages();
 }
 
 async function getServiceItemById(

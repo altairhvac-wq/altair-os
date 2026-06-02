@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateInvoiceOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import {
   archiveInvoiceAction,
   moveInvoiceToTrashAction,
@@ -64,7 +64,7 @@ export async function bulkArchiveInvoicesAction(
     archiveInvoiceAction,
     (invoice) => getArchiveInvoiceBlockReason(invoice),
   );
-  if (result.successCount > 0) revalidatePath("/invoices");
+  if (result.successCount > 0) revalidateInvoiceOperationalPages();
   return result;
 }
 
@@ -76,7 +76,7 @@ export async function bulkRestoreInvoicesAction(
     restoreInvoiceAction,
     (invoice) => getRestoreInvoiceBlockReason(invoice),
   );
-  if (result.successCount > 0) revalidatePath("/invoices");
+  if (result.successCount > 0) revalidateInvoiceOperationalPages();
   return result;
 }
 
@@ -88,7 +88,7 @@ export async function bulkVoidInvoicesAction(
     voidInvoiceAction,
     (invoice) => getVoidInvoiceLifecycleBlockReason(invoice),
   );
-  if (result.successCount > 0) revalidatePath("/invoices");
+  if (result.successCount > 0) revalidateInvoiceOperationalPages();
   return result;
 }
 
@@ -100,7 +100,7 @@ export async function bulkMoveInvoicesToTrashAction(
     moveInvoiceToTrashAction,
     (invoice) => getMoveInvoiceToTrashBlockReason(invoice),
   );
-  if (result.successCount > 0) revalidatePath("/invoices");
+  if (result.successCount > 0) revalidateInvoiceOperationalPages();
   return result;
 }
 
@@ -112,7 +112,7 @@ export async function bulkRestoreInvoicesFromTrashAction(
     restoreInvoiceFromTrashAction,
     (invoice) => getRestoreInvoiceFromTrashBlockReason(invoice),
   );
-  if (result.successCount > 0) revalidatePath("/invoices");
+  if (result.successCount > 0) revalidateInvoiceOperationalPages();
   return result;
 }
 
@@ -128,6 +128,6 @@ export async function bulkPermanentlyDeleteInvoicesAction(
         : null,
     true,
   );
-  if (result.successCount > 0) revalidatePath("/invoices");
+  if (result.successCount > 0) revalidateInvoiceOperationalPages();
   return result;
 }

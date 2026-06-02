@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateExpenseOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import {
   archiveExpenseAction,
   moveExpenseToTrashAction,
@@ -52,7 +52,7 @@ export async function bulkArchiveExpensesAction(
     archiveExpenseAction,
     (expense) => getArchiveExpenseBlockReason(expense),
   );
-  if (result.successCount > 0) revalidatePath("/expenses");
+  if (result.successCount > 0) revalidateExpenseOperationalPages();
   return result;
 }
 
@@ -64,7 +64,7 @@ export async function bulkRestoreExpensesAction(
     restoreExpenseAction,
     (expense) => getRestoreExpenseBlockReason(expense),
   );
-  if (result.successCount > 0) revalidatePath("/expenses");
+  if (result.successCount > 0) revalidateExpenseOperationalPages();
   return result;
 }
 
@@ -76,7 +76,7 @@ export async function bulkMoveExpensesToTrashAction(
     moveExpenseToTrashAction,
     (expense) => getMoveExpenseToTrashBlockReason(expense),
   );
-  if (result.successCount > 0) revalidatePath("/expenses");
+  if (result.successCount > 0) revalidateExpenseOperationalPages();
   return result;
 }
 
@@ -88,7 +88,7 @@ export async function bulkRestoreExpensesFromTrashAction(
     restoreExpenseFromTrashAction,
     (expense) => getRestoreExpenseFromTrashBlockReason(expense),
   );
-  if (result.successCount > 0) revalidatePath("/expenses");
+  if (result.successCount > 0) revalidateExpenseOperationalPages();
   return result;
 }
 
@@ -100,6 +100,6 @@ export async function bulkPermanentlyDeleteExpensesAction(
     permanentlyDeleteExpenseAction,
     (expense) => getPermanentDeleteExpenseBlockReason(expense),
   );
-  if (result.successCount > 0) revalidatePath("/expenses");
+  if (result.successCount > 0) revalidateExpenseOperationalPages();
   return result;
 }
