@@ -45,8 +45,8 @@ const PLATFORM_TIERS = [
   {
     tier: "Pro Analytics",
     tagline: "Operational intelligence",
-    accent: "border-[#D4AF37]/12",
-    labelColor: "text-slate-300",
+    accent: "border-[#D4AF37]/14",
+    labelColor: "text-[#9A7209]",
     features: [
       {
         icon: BarChart3,
@@ -63,8 +63,8 @@ const PLATFORM_TIERS = [
   {
     tier: "Network Platform",
     tagline: "Connected field ecosystem",
-    accent: "border-[#D4AF37]/12",
-    labelColor: "text-slate-300",
+    accent: "border-[#D4AF37]/14",
+    labelColor: "text-[#9A7209]",
     features: [
       {
         icon: Network,
@@ -122,7 +122,7 @@ function AuthHeroPanel() {
           </div>
         </div>
 
-        <div className="auth-hero-enter mt-6 shrink-0 rounded-xl border border-[#D4AF37]/22 bg-[#211F1B] p-4 shadow-[0_8px_32px_rgba(0,0,0,0.42),0_2px_8px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(245,230,163,0.12)] xl:mt-8">
+        <div className="auth-hero-enter mt-6 shrink-0 rounded-xl border border-[#D4AF37]/26 bg-[#1C1A17] p-4 shadow-[0_10px_40px_rgba(0,0,0,0.48),0_3px_10px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(245,230,163,0.14)] xl:mt-8">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Radio className="h-3.5 w-3.5 text-[#D4AF37]" aria-hidden="true" />
@@ -139,12 +139,12 @@ function AuthHeroPanel() {
             {OPERATIONAL_SNAPSHOT.map((metric) => (
               <div
                 key={metric.label}
-                className="rounded-lg border border-[#D4AF37]/10 bg-[#161412] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(245,230,163,0.06)]"
+                className="rounded-lg border border-[#D4AF37]/18 bg-[#FAF7F0] px-3 py-2.5 shadow-[0_8px_28px_rgba(0,0,0,0.38),0_2px_8px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.92)]"
               >
-                <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-stone-600">
                   {metric.label}
                 </p>
-                <p className="mt-1 font-mono text-lg font-semibold tabular-nums tracking-tight text-white">
+                <p className="mt-1 font-mono text-lg font-semibold tabular-nums tracking-tight text-[#0A0A0A]">
                   {metric.value}
                 </p>
               </div>
@@ -156,7 +156,7 @@ function AuthHeroPanel() {
           {PLATFORM_TIERS.map((platform) => (
             <div
               key={platform.tier}
-              className={`auth-tier auth-feature group rounded-xl border bg-[#1A1816] p-3.5 shadow-[0_4px_20px_rgba(0,0,0,0.36),0_1px_0_rgba(0,0,0,0.22),inset_0_1px_0_rgba(245,230,163,0.08)] transition-colors duration-200 hover:border-[#D4AF37]/22 ${platform.accent}`}
+              className={`auth-tier auth-feature group rounded-xl border border-[#D4AF37]/16 bg-[#FAF7F0] p-3.5 shadow-[0_10px_36px_rgba(0,0,0,0.36),0_3px_10px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.9)] transition-[border-color,box-shadow] duration-200 hover:border-[#D4AF37]/28 hover:shadow-[0_14px_44px_rgba(0,0,0,0.4),0_4px_12px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.95)] ${platform.accent}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -165,10 +165,10 @@ function AuthHeroPanel() {
                   >
                     {platform.tier}
                   </p>
-                  <p className="mt-0.5 text-xs text-slate-500">{platform.tagline}</p>
+                  <p className="mt-0.5 text-xs text-stone-500">{platform.tagline}</p>
                 </div>
                 <ClipboardList
-                  className="h-3.5 w-3.5 shrink-0 text-slate-600 transition-colors group-hover:text-slate-400"
+                  className="h-3.5 w-3.5 shrink-0 text-stone-400 transition-colors group-hover:text-[#9A7209]"
                   aria-hidden="true"
                 />
               </div>
@@ -180,11 +180,11 @@ function AuthHeroPanel() {
                         className="h-3.5 w-3.5 shrink-0 text-[#D4AF37]/90"
                         aria-hidden="true"
                       />
-                      <p className="truncate text-xs font-semibold text-white">
+                      <p className="truncate text-xs font-semibold text-[#0A0A0A]">
                         {feature.title}
                       </p>
                     </div>
-                    <p className="mt-1 text-[11px] leading-snug text-slate-500">
+                    <p className="mt-1 text-[11px] leading-snug text-stone-600">
                       {feature.description}
                     </p>
                   </div>
