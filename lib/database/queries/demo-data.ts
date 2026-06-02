@@ -111,12 +111,7 @@ export async function getDemoDataStatus(
     demoJobCount > 0 ||
     demoEstimateCount > 0 ||
     demoInvoiceCount > 0;
-  const isEligibleForSeed =
-    !hasDemoData &&
-    totalCustomerCount === 0 &&
-    totalJobCount === 0 &&
-    totalEstimateCount === 0 &&
-    totalInvoiceCount === 0;
+  const canSetupDemoData = !hasDemoData;
 
   const realCustomerCount = Math.max(0, totalCustomerCount - demoCustomerCount);
   const realJobCount = Math.max(0, totalJobCount - demoJobCount);
@@ -125,7 +120,7 @@ export async function getDemoDataStatus(
 
   return {
     hasDemoData,
-    isEligibleForSeed,
+    canSetupDemoData,
     seededAt: settingsMarker?.seededAt ?? null,
     realCustomerCount,
     realJobCount,

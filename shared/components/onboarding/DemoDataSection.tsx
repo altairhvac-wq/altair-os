@@ -35,7 +35,7 @@ export function DemoDataSection({
 
   const showSeedCard = !status.hasDemoData;
   const showLoadedCard = status.hasDemoData;
-  const canSeed = status.isEligibleForSeed;
+  const canSeed = status.canSetupDemoData;
 
   async function refreshDemoDataStatus() {
     const nextStatus = await getDemoDataStatusAction(companyId);
@@ -155,7 +155,8 @@ export function DemoDataSection({
                   Remove all demo data?
                 </p>
                 <p className="mt-0.5 text-[11px] text-slate-600">
-                  Deletes every record tagged as demo in this company.
+                  Removes demo-scoped records and anything attached to them. Your
+                  own records stay.
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <button
@@ -204,7 +205,8 @@ export function DemoDataSection({
               Try sample data
             </p>
             <p className="mt-0.5 text-xs text-slate-600">
-              Load realistic HVAC customers, jobs, and billing to explore faster.
+              Demo data can be added to your workspace and removed later without
+              affecting your own records.
             </p>
 
             {successMessage ? (
@@ -225,7 +227,7 @@ export function DemoDataSection({
                   Load demo data into this workspace?
                 </p>
                 <p className="mt-0.5 text-[11px] text-slate-600">
-                  Adds sample records once on an empty workspace. Safe for evaluation only.
+                  Adds sample records alongside your existing data. Safe for evaluation only.
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <button
@@ -271,8 +273,6 @@ export function DemoDataSection({
   }
 
   const isSettingsCompact = variant === "settings";
-  const seedBlockedMessage =
-    "Demo data can only be loaded into an empty workspace without existing customers, jobs, estimates, or invoices.";
 
   return (
     <section className="admin-card min-w-0 max-w-full overflow-x-clip">
@@ -313,8 +313,8 @@ export function DemoDataSection({
                   : "mt-1 text-xs sm:text-sm"
               }`}
             >
-              Load realistic HVAC sample customers, jobs, estimates, invoices,
-              and time entries into this workspace.
+              Demo data can be added to your workspace and removed later without
+              affecting your own records.
             </p>
           ) : (
             <p
@@ -350,21 +350,17 @@ export function DemoDataSection({
         ) : null}
 
         {showSeedCard ? (
-          !canSeed ? (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              {seedBlockedMessage}
-            </p>
-          ) : confirmSeedOpen ? (
+          confirmSeedOpen ? (
             <div className="rounded-xl border border-violet-200 bg-violet-50/50 p-4">
               <p className="text-sm font-semibold text-slate-900">
                 Set up demo data in this workspace?
               </p>
               <p className="mt-1 text-sm text-slate-600">
                 This adds sample customers, jobs, billing documents, dispatch
-                assignments, and time entries. Demo customer emails use your
-                account address so estimate, invoice, and payment test emails
-                stay safe. It only works on an empty workspace and does not
-                modify other companies.
+                assignments, and time entries alongside your existing records.
+                Demo customer emails use your account address so estimate,
+                invoice, and payment test emails stay safe. Clear demo data later
+                removes only demo-scoped records.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
@@ -418,8 +414,8 @@ export function DemoDataSection({
                   Remove all demo data?
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
-                  This deletes every record tagged as demo in this company. Your
-                  real data is not affected.
+                  Removes demo-scoped records and anything attached to demo
+                  customers or jobs. Your own records are not affected.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button

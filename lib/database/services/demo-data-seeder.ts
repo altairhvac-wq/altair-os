@@ -188,13 +188,6 @@ export async function seedCompanyDemoData(
     return { error: "Demo data has already been loaded for this company." };
   }
 
-  if (!status.isEligibleForSeed) {
-    return {
-      error:
-        "Demo data can only be loaded into an empty workspace without existing customers, jobs, estimates, or invoices.",
-    };
-  }
-
   const demoEmail = resolveDemoCustomerEmail(context);
   if (!demoEmail) {
     return {

@@ -6,7 +6,7 @@ export type CompanyDemoDataSettings = {
 
 export type DemoDataStatus = {
   hasDemoData: boolean;
-  isEligibleForSeed: boolean;
+  canSetupDemoData: boolean;
   seededAt: string | null;
   realCustomerCount: number;
   realJobCount: number;
