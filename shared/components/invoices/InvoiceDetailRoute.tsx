@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { canCaptureBillingSignature } from "@/lib/database/access-control";
 import { isAiFeaturesEnabled } from "@/lib/ai/env";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { ensureInvoiceBillingStatesSynced } from "@/lib/database/services/invoice-billing";
@@ -46,6 +47,10 @@ export async function InvoiceDetailRoute({
   }
 
   const canManageBilling = companyContext.permissions.manageBilling;
+  const canCaptureSignature = canCaptureBillingSignature(
+    companyContext,
+    "invoice",
+  );
   const company = mapCompanyRowToBillingContact(companyContext.company);
 
   const detailView = (
@@ -56,6 +61,7 @@ export async function InvoiceDetailRoute({
       company={company}
       companyTimeZone={companyContext.company.timezone}
       canManageBilling={canManageBilling}
+      canCaptureSignature={canCaptureSignature}
       signature={signature}
       presentation={presentation}
       aiFeaturesEnabled={isAiFeaturesEnabled()}
@@ -68,16 +74,7 @@ export async function InvoiceDetailRoute({
         title={invoice.invoiceNumber}
         subtitle={invoice.customerName}
         headerAside={<InvoiceStatusBadge status={invoice.status} />}
-        headerTrailing={
-          <InvoiceDetailHeaderActions
-            invoiceId={invoice.id}
-            invoiceNumber={invoice.invoiceNumber}
-            customerId={invoice.customerId}
-            jobId={invoice.jobId ?? null}
-            canManageBilling={canManageBilling}
-            signature={signature}
-          />
-        }
+        headerTrailing={<InvoiceDetailHeaderActions />}
       >
         {detailView}
       </InvoiceDetailOverlayShell>

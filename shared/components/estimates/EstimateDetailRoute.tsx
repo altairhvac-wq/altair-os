@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
+import { canCaptureBillingSignature } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listEstimateActivitiesForEstimate } from "@/lib/database/queries/estimate-activities";
 import { getEstimateById } from "@/lib/database/queries/estimates";
 import { getInvoiceByEstimateId } from "@/lib/database/queries/invoices";
 import { getBillingSignatureForEntity } from "@/lib/database/queries/billing-signatures";
+import { getJobById } from "@/lib/database/queries/jobs";
 import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
 import { EstimateDetailHeaderActions } from "./EstimateDetailHeaderActions";
 import { EstimateDetailOverlayShell } from "./EstimateDetailOverlayShell";
@@ -41,6 +43,17 @@ export async function EstimateDetailRoute({
   }
 
   const canManageEstimates = companyContext.permissions.manageBilling;
+  let canCaptureSignature = canManageEstimates;
+
+  if (!canCaptureSignature && estimate.jobId) {
+    const job = await getJobById(companyContext.company.id, estimate.jobId);
+    canCaptureSignature = canCaptureBillingSignature(
+      companyContext,
+      "estimate",
+      job,
+    );
+  }
+
   const company = mapCompanyRowToBillingContact(companyContext.company);
 
   const detailView = (
@@ -51,6 +64,7 @@ export async function EstimateDetailRoute({
       company={company}
       companyTimeZone={companyContext.company.timezone}
       canManageEstimates={canManageEstimates}
+      canCaptureSignature={canCaptureSignature}
       signature={signature}
       presentation={presentation}
     />
@@ -62,16 +76,7 @@ export async function EstimateDetailRoute({
         title={estimate.estimateNumber}
         subtitle={estimate.customerName}
         headerAside={<EstimateStatusBadge status={estimate.status} />}
-        headerTrailing={
-          <EstimateDetailHeaderActions
-            estimateId={estimate.id}
-            estimateNumber={estimate.estimateNumber}
-            customerId={estimate.customerId}
-            jobId={estimate.jobId ?? null}
-            canManageEstimates={canManageEstimates}
-            signature={signature}
-          />
-        }
+        headerTrailing={<EstimateDetailHeaderActions />}
       >
         {detailView}
       </EstimateDetailOverlayShell>

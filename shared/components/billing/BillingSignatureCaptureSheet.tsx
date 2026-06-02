@@ -225,6 +225,7 @@ function CaptureSignatureModal({
       closeDisabled={preventAccidentalDismiss}
       ariaLabelledBy={CAPTURE_SIGNATURE_TITLE_ID}
       variant="responsive"
+      zIndex={60}
     >
       <MobileSheetPanel maxWidth="2xl" maxHeight="90" responsiveRounded>
         <MobileSheetHeader

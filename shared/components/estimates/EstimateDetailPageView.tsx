@@ -27,7 +27,6 @@ import { EstimateActivityTimeline } from "./EstimateActivityTimeline";
 import { EstimateStatusActions } from "./EstimateStatusActions";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
 
-import { BillingSignatureCaptureSheet } from "@/shared/components/billing/BillingSignatureCaptureSheet";
 import type { BillingSignature } from "@/shared/types/billing-signature";
 import { adminPageStackClass } from "@/shared/lib/admin-density";
 import { FocusedDocumentOverlayFooter } from "@/shared/components/layout/FocusedDocumentOverlay";
@@ -39,6 +38,7 @@ type EstimateDetailPageViewProps = {
   company: BillingCompanyContact;
   companyTimeZone: string;
   canManageEstimates: boolean;
+  canCaptureSignature?: boolean;
   signature?: BillingSignature | null;
   presentation?: "page" | "overlay";
 };
@@ -50,6 +50,7 @@ export function EstimateDetailPageView({
   company,
   companyTimeZone,
   canManageEstimates,
+  canCaptureSignature = false,
   signature,
   presentation = "page",
 }: EstimateDetailPageViewProps) {
@@ -71,16 +72,6 @@ export function EstimateDetailPageView({
 
   const headerActions = (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-      {canManageEstimates ? (
-        <BillingSignatureCaptureSheet
-          entityType="estimate"
-          entityId={estimate.id}
-          documentNumber={estimate.estimateNumber}
-          customerId={estimate.customerId}
-          jobId={estimate.jobId}
-          existingSignature={signature}
-        />
-      ) : null}
       <button
         type="button"
         onClick={handlePrint}
@@ -258,6 +249,13 @@ export function EstimateDetailPageView({
         signature={signature}
         companyTimeZone={companyTimeZone}
         logoUrl={company.logoUrl}
+        canCaptureSignature={canCaptureSignature}
+        signatureCaptureContext={{
+          entityId: estimate.id,
+          documentNumber: estimate.estimateNumber,
+          customerId: estimate.customerId,
+          jobId: estimate.jobId,
+        }}
       />
 
       <div className="no-print">

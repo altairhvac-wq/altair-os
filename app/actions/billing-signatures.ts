@@ -6,6 +6,8 @@ import {
   deleteBillingSignature,
   upsertBillingSignature,
 } from "@/lib/database/queries/billing-signatures";
+import { getJobById } from "@/lib/database/queries/jobs";
+import { canCaptureBillingSignature } from "@/lib/database/access-control";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import type { BillingSignatureEntityType } from "@/lib/database/types/core-tables";
 import type {
@@ -41,6 +43,32 @@ function revalidateBillingSignaturePaths(
   }
 }
 
+async function assertCanCaptureBillingSignature(
+  context: NonNullable<Awaited<ReturnType<typeof getActiveCompanyContext>>>,
+  entityType: BillingSignatureEntityType,
+  jobId?: string | null,
+): Promise<{ error?: string }> {
+  if (context.permissions.manageBilling) {
+    return {};
+  }
+
+  if (!jobId) {
+    return { error: "You do not have permission to capture signatures." };
+  }
+
+  const job = await getJobById(context.company.id, jobId);
+
+  if (!job) {
+    return { error: "Linked job not found." };
+  }
+
+  if (!canCaptureBillingSignature(context, entityType, job)) {
+    return { error: "You do not have permission to capture signatures." };
+  }
+
+  return {};
+}
+
 export async function saveBillingSignatureAction(
   entityType: BillingSignatureEntityType,
   entityId: string,
@@ -56,8 +84,14 @@ export async function saveBillingSignatureAction(
     return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
-  if (!context.permissions.manageBilling) {
-    return { error: "You do not have permission to capture signatures." };
+  const permissionError = await assertCanCaptureBillingSignature(
+    context,
+    entityType,
+    options?.jobId,
+  );
+
+  if (permissionError.error) {
+    return permissionError;
   }
 
   const { signature, error } = await upsertBillingSignature(
@@ -96,8 +130,14 @@ export async function clearBillingSignatureAction(
     return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
-  if (!context.permissions.manageBilling) {
-    return { error: "You do not have permission to clear signatures." };
+  const permissionError = await assertCanCaptureBillingSignature(
+    context,
+    entityType,
+    options?.jobId,
+  );
+
+  if (permissionError.error) {
+    return permissionError;
   }
 
   const { error } = await deleteBillingSignature(

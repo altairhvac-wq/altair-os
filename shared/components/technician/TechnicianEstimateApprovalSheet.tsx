@@ -90,6 +90,7 @@ export function TechnicianEstimateApprovalSheet({
       onClose={onClose}
       closeDisabled={closeDisabled}
       ariaLabelledBy={TITLE_ID}
+      zIndex={60}
     >
       <MobileSheetPanel>
         <MobileSheetHeader

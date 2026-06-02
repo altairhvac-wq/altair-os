@@ -5,7 +5,8 @@ import { getBillingScopeSummary } from "@/shared/lib/billing-document-scope-summ
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
 import { BillingCollapsibleSection } from "./BillingCollapsibleSection";
 import { BillingLineItemsList } from "./BillingLineItemsList";
-import { BillingSignatureBlock } from "./BillingSignatureBlock";
+import { BillingSignatureSection } from "./BillingSignatureSection";
+import type { BillingSignatureCaptureContext } from "./BillingSignatureSection";
 import { BillingTotalsSummary } from "./BillingTotalsSummary";
 import { EstimateIdentityCard } from "./EstimateIdentityCard";
 import { EstimateThankYouFooter } from "./EstimateThankYouFooter";
@@ -47,6 +48,9 @@ type EstimateDocumentSectionProps = {
   showStatusBadge?: boolean;
   /** Show captured signature block. Default true. */
   showSignature?: boolean;
+  /** Allow in-app signature capture beside the signature block. */
+  canCaptureSignature?: boolean;
+  signatureCaptureContext?: BillingSignatureCaptureContext;
   /** Show customer-facing thank-you footer. Default true. */
   showFooter?: boolean;
   /** Label for the customer section. */
@@ -69,6 +73,8 @@ export function EstimateDocumentSection({
   id = "estimate-document",
   showStatusBadge = true,
   showSignature = true,
+  canCaptureSignature = false,
+  signatureCaptureContext,
   showFooter = true,
   customerSectionLabel = "Bill to",
   showApprovalGuidance = false,
@@ -254,12 +260,14 @@ export function EstimateDocumentSection({
       ) : null}
 
       {showSignature ? (
-        <BillingSignatureBlock
+        <BillingSignatureSection
           variant="estimate"
           signature={signature}
           companyTimeZone={companyTimeZone}
           documentStyle="estimate"
           className="order-7 mt-4 sm:order-6 sm:mt-8 print:order-6 print:mt-8"
+          canCaptureSignature={canCaptureSignature}
+          captureContext={signatureCaptureContext}
         />
       ) : null}
 

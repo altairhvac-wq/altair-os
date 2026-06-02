@@ -6,7 +6,8 @@ import { getBillingScopeSummary } from "@/shared/lib/billing-document-scope-summ
 import { formatDate } from "@/shared/types/customer";
 import { BillingCollapsibleSection } from "./BillingCollapsibleSection";
 import { BillingLineItemsList } from "./BillingLineItemsList";
-import { BillingSignatureBlock } from "./BillingSignatureBlock";
+import { BillingSignatureSection } from "./BillingSignatureSection";
+import type { BillingSignatureCaptureContext } from "./BillingSignatureSection";
 import { BillingTotalsSummary } from "./BillingTotalsSummary";
 import { InvoiceAmountDueHero } from "./InvoiceAmountDueHero";
 import { InvoiceCompanyHeroHeader } from "./InvoiceCompanyHeroHeader";
@@ -27,6 +28,9 @@ type InvoiceDocumentSectionProps = {
   className?: string;
   id?: string;
   showSignature?: boolean;
+  /** Allow in-app signature capture beside the signature block. */
+  canCaptureSignature?: boolean;
+  signatureCaptureContext?: BillingSignatureCaptureContext;
   /** Renders after customer on mobile, after footer on sm+ (e.g. public payment panel). */
   afterCustomer?: ReactNode;
   /** Compact customer-facing layout for public payment links. */
@@ -42,6 +46,8 @@ export function InvoiceDocumentSection({
   className = "",
   id = "invoice-document",
   showSignature = true,
+  canCaptureSignature = false,
+  signatureCaptureContext,
   afterCustomer,
   layoutVariant = "default",
 }: InvoiceDocumentSectionProps) {
@@ -224,12 +230,14 @@ export function InvoiceDocumentSection({
       ) : null}
 
       {showSignature ? (
-        <BillingSignatureBlock
+        <BillingSignatureSection
           variant="invoice"
           signature={signature}
           companyTimeZone={companyTimeZone}
           documentStyle="invoice"
           className="order-7 mt-4 sm:order-6 sm:mt-8 print:order-6 print:mt-8"
+          canCaptureSignature={canCaptureSignature}
+          captureContext={signatureCaptureContext}
         />
       ) : null}
 

@@ -1,5 +1,8 @@
 import { isAlphaHiddenAdminNavHref } from "@/lib/beta/alpha-hardening";
-import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
+import type {
+  ActiveCompanyContext,
+  BillingSignatureEntityType,
+} from "@/lib/database/types/core-tables";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import { hasCompanyRole } from "@/lib/database/types/roles";
 
@@ -265,6 +268,22 @@ export function canApproveEstimateOnSite(
   }
 
   return job.assignedTechnicianId === context.user.id;
+}
+
+export function canCaptureBillingSignature(
+  context: ActiveCompanyContext,
+  entityType: BillingSignatureEntityType,
+  job?: { assignedTechnicianId?: string | null } | null,
+): boolean {
+  if (context.permissions.manageBilling) {
+    return true;
+  }
+
+  if (entityType === "estimate" && job) {
+    return canApproveEstimateOnSite(context, job);
+  }
+
+  return false;
 }
 
 export function canCreateFieldEstimate(

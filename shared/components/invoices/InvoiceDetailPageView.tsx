@@ -31,7 +31,6 @@ import { RecordPaymentForm } from "./RecordPaymentForm";
 import { InvoicePaymentLinkCard } from "./InvoicePaymentLinkCard";
 import { InvoiceMessageAiAssistant } from "./InvoiceMessageAiAssistant";
 
-import { BillingSignatureCaptureSheet } from "@/shared/components/billing/BillingSignatureCaptureSheet";
 import type { BillingSignature } from "@/shared/types/billing-signature";
 import { adminPageStackClass } from "@/shared/lib/admin-density";
 import { FocusedDocumentOverlayFooter } from "@/shared/components/layout/FocusedDocumentOverlay";
@@ -43,6 +42,7 @@ type InvoiceDetailPageViewProps = {
   company: BillingCompanyContact;
   companyTimeZone: string;
   canManageBilling: boolean;
+  canCaptureSignature?: boolean;
   signature?: BillingSignature | null;
   presentation?: "page" | "overlay";
   aiFeaturesEnabled?: boolean;
@@ -55,6 +55,7 @@ export function InvoiceDetailPageView({
   company,
   companyTimeZone,
   canManageBilling,
+  canCaptureSignature = false,
   signature,
   presentation = "page",
   aiFeaturesEnabled = false,
@@ -80,16 +81,6 @@ export function InvoiceDetailPageView({
 
   const headerActions = (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-      {canManageBilling ? (
-        <BillingSignatureCaptureSheet
-          entityType="invoice"
-          entityId={invoice.id}
-          documentNumber={invoice.invoiceNumber}
-          customerId={invoice.customerId}
-          jobId={invoice.jobId}
-          existingSignature={signature}
-        />
-      ) : null}
       <button
         type="button"
         onClick={handlePrint}
@@ -286,6 +277,13 @@ export function InvoiceDetailPageView({
         signature={signature}
         companyTimeZone={companyTimeZone}
         logoUrl={company.logoUrl}
+        canCaptureSignature={canCaptureSignature}
+        signatureCaptureContext={{
+          entityId: invoice.id,
+          documentNumber: invoice.invoiceNumber,
+          customerId: invoice.customerId,
+          jobId: invoice.jobId,
+        }}
       />
 
       <section className="no-print min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
