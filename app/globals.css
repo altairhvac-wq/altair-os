@@ -827,7 +827,21 @@ a[href] {
 }
 
 .admin-sticky-footer-spacer {
-  height: 7.5rem;
+  height: calc(4.25rem + var(--safe-area-bottom));
+}
+
+/* Mobile admin shell — content-sized scroll; desktop keeps viewport fill. */
+@media (max-width: 767px) {
+  .admin-shell-main {
+    flex: 0 1 auto;
+    padding-bottom: max(0.625rem, var(--safe-area-bottom));
+  }
+}
+
+@media (min-width: 768px) {
+  .admin-shell-main {
+    flex: 1 1 0%;
+  }
 }
 
 @media (min-width: 640px) {

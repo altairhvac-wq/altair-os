@@ -95,7 +95,7 @@ export function AnalyticsPageView({
   }
 
   return (
-    <div className="flex flex-col gap-6 pb-8">
+    <div className="flex flex-col gap-6 pb-2">
       <DateRangeFilterBar range={range} onRangeChange={handleRangeChange} />
 
       {operationalReports ? (

@@ -409,9 +409,9 @@ export function DispatchPageView({
         />
       ) : null}
 
-      <div className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col gap-2 sm:gap-4 lg:flex-row lg:items-stretch">
+      <div className="flex min-h-0 min-w-0 max-w-full lg:flex-1 flex-col gap-2 sm:gap-4 lg:flex-row lg:items-stretch">
         <section
-          className={`admin-panel flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-hidden ${
+          className={`admin-panel flex min-h-0 min-w-0 max-w-full lg:flex-1 flex-col overflow-hidden ${
             dispatchPageFocus?.emphasizeBoard
               ? "ring-1 ring-cyan-500/20"
               : ""

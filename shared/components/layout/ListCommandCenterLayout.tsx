@@ -70,7 +70,7 @@ export function ListCommandCenterLayout({
 
       {summary}
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 lg:overflow-hidden">
+      <div className="flex min-h-0 min-w-0 lg:flex-1 flex-col gap-3 lg:overflow-hidden">
         {children}
       </div>
     </div>

@@ -2,7 +2,7 @@ import { Bug } from "lucide-react";
 
 export default function PlatformBugReportsLoading() {
   return (
-    <div className="mx-auto min-w-0 max-w-6xl space-y-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div className="mx-auto min-w-0 max-w-6xl space-y-6">
       <div>
         <div className="flex items-center gap-2">
           <Bug className="h-5 w-5 shrink-0 text-red-600" aria-hidden="true" />

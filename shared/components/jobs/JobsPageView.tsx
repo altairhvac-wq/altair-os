@@ -390,7 +390,7 @@ export function JobsPageView({
       }
     >
       <section
-        className={`flex min-h-[16rem] min-w-0 flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
+        className={`flex min-h-[16rem] min-w-0 lg:flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
           isCreateOpen ? "max-lg:hidden" : ""
         }`}
       >

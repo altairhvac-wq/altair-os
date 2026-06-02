@@ -4,7 +4,7 @@ function Skeleton({ className }: { className?: string }) {
 
 export function ReportsLoadingState() {
   return (
-    <div className="flex flex-col gap-6 pb-8">
+    <div className="flex flex-col gap-6 pb-2">
       <Skeleton className="h-16 rounded-xl" />
 
       {Array.from({ length: 4 }).map((_, sectionIndex) => (

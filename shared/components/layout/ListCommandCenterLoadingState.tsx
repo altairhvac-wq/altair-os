@@ -52,7 +52,7 @@ export function ListCommandCenterLoadingState({
         </>
       ) : null}
 
-      <section className="flex min-h-[16rem] min-w-0 flex-1 flex-col overflow-hidden admin-card lg:min-h-0">
+      <section className="flex min-h-[16rem] min-w-0 lg:flex-1 flex-col overflow-hidden admin-card lg:min-h-0">
         {showViewTabs ? (
           <div className="shrink-0 border-b border-slate-100/90 px-4 py-2.5">
             <div className="flex gap-2">

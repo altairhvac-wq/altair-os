@@ -75,7 +75,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
     timeClock.recentEntries.length === 0;
 
   return (
-    <div className="flex flex-col gap-6 pb-8">
+    <div className="flex flex-col gap-6 pb-2">
       <div
         className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3"
         role="note"

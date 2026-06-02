@@ -19,7 +19,7 @@ export function NetworkLoadingState() {
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
+      <div className="flex min-h-0 lg:flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
         <div className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1">
           <div className="border-b border-slate-100 p-4">
             <Skeleton className="h-10 w-64" />

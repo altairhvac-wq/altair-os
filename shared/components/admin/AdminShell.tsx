@@ -53,7 +53,7 @@ export function AdminShell({
 
   return (
     <CompanyTimezoneProvider timeZone={companyContext.company.timezone}>
-      <div className="admin-canvas flex min-h-dvh w-full min-w-0 max-w-full flex-col md:h-dvh md:overflow-hidden">
+      <div className="admin-canvas admin-shell-canvas flex w-full min-w-0 max-w-full flex-col md:min-h-dvh md:h-dvh md:overflow-hidden">
       <div className="admin-top-shell no-print">
         <Header
           title={current.label}
@@ -87,7 +87,7 @@ export function AdminShell({
         )}
       </div>
 
-      <main className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-clip p-2.5 sm:p-4 lg:p-5 md:overflow-y-auto">
+      <main className="admin-shell-main min-h-0 min-w-0 max-w-full overflow-x-clip px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5 md:overflow-y-auto">
         <PullToRefresh enabled={pullToRefreshEnabled}>
           {redirectPending ? <AdminShellContentLoadingState /> : children}
         </PullToRefresh>

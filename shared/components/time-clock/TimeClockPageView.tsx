@@ -215,7 +215,7 @@ export function TimeClockPageView() {
         onClockOut={handleClockOut}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">
+      <div className="flex min-h-0 lg:flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">
         <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1`}>
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
             <div>

@@ -105,7 +105,7 @@ export function PlatformAdminPageView({ data }: PlatformAdminPageViewProps) {
   const { summary } = data;
 
   return (
-    <div className="mx-auto min-w-0 max-w-6xl space-y-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div className="mx-auto min-w-0 max-w-6xl space-y-6">
       <div className="rounded-2xl border border-cyan-200/80 bg-cyan-50/50 px-4 py-3">
         <div className="flex items-start gap-2">
           <Shield className="mt-0.5 h-4 w-4 shrink-0 text-cyan-800" aria-hidden="true" />
