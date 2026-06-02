@@ -311,46 +311,42 @@ export function AuthShell({
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_10%_90%,rgba(154,114,9,0.05)_0%,transparent_50%)]" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/25 to-transparent lg:hidden" />
 
-        <div className="relative flex min-h-full flex-1 flex-col justify-center px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top,0px))] sm:px-8 sm:pb-8 sm:pt-8 lg:px-10 lg:py-12 xl:px-14">
-          <div className="mx-auto w-full min-w-0 max-w-[400px]">
+        <div className="relative flex min-h-full flex-1 flex-col justify-center px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top,0px))] sm:px-8 sm:pb-8 sm:pt-8 lg:justify-start lg:px-10 lg:pb-10 lg:pt-[clamp(2.5rem,11vh,5.5rem)] xl:px-14">
+          <div className="mx-auto w-full min-w-0 max-w-[420px]">
             <AuthMobileBrand />
 
-            <div className="mb-7 hidden shrink-0 lg:block">
-              <AltairLogo variant="primary" size="lg" showWordmark />
-            </div>
-
             {variant === "onboarding" && onboardingStep ? (
-              <div className="mt-7 lg:mt-0">
+              <div className="mt-5 lg:mt-0">
                 <OnboardingProgress {...onboardingStep} />
               </div>
             ) : null}
 
             <div
               className={
-                variant === "onboarding" && onboardingStep ? "" : "mt-7 lg:mt-0"
+                variant === "onboarding" && onboardingStep ? "" : "mt-5 lg:mt-0"
               }
             >
               <h1 className="text-[1.75rem] font-semibold tracking-tight text-[#0A0A0A] sm:text-[1.875rem]">
                 {title}
               </h1>
-              <p className="mt-2.5 text-sm leading-relaxed text-stone-500">
+              <p className="mt-1.5 text-sm leading-relaxed text-stone-500">
                 {description}
               </p>
             </div>
 
             {aboveCard ? (
-              <div className="mt-6 min-w-0 space-y-4">{aboveCard}</div>
+              <div className="mt-4 min-w-0 space-y-4">{aboveCard}</div>
             ) : null}
 
-            <div className="mt-6 rounded-2xl border border-stone-200/80 border-t-[3px] border-t-[#D4AF37]/65 bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] p-5 shadow-[0_4px_8px_rgba(10,10,10,0.06),0_12px_32px_rgba(10,10,10,0.1),0_32px_64px_rgba(154,114,9,0.1),0_0_28px_rgba(212,175,55,0.06)] ring-1 ring-[#D4AF37]/20 sm:p-6">
+            <div className="mt-4 rounded-2xl border border-stone-200/80 border-t-[3px] border-t-[#D4AF37]/65 bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] p-5 shadow-[0_4px_8px_rgba(10,10,10,0.06),0_12px_32px_rgba(10,10,10,0.1),0_32px_64px_rgba(154,114,9,0.1),0_0_28px_rgba(212,175,55,0.06)] ring-1 ring-[#D4AF37]/20 sm:p-6">
               {children}
             </div>
 
             {footer ? (
-              <div className="mt-6 text-center text-sm text-stone-500">{footer}</div>
+              <div className="mt-5 text-center text-sm text-stone-500">{footer}</div>
             ) : null}
 
-            <p className="mt-8 hidden text-center text-[11px] tracking-wide text-stone-400 lg:block">
+            <p className="mt-6 hidden text-center text-[11px] tracking-wide text-stone-400 lg:block">
               © {new Date().getFullYear()} Altair · Built for trades and field service
             </p>
           </div>
