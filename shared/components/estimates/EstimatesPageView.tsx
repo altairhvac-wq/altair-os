@@ -31,7 +31,10 @@ import {
 } from "@/shared/lib/bulk-lifecycle-runner";
 import {
   formatBulkEstimatesResultMessage,
+  formatEstimateBulkActionConfirmMessage,
+  formatEstimateBulkEligibilityHints,
   getEstimateLifecycleState,
+  summarizeEstimateBulkEligibility,
 } from "@/shared/lib/estimate-lifecycle";
 import {
   countOperationalActive,
@@ -255,6 +258,48 @@ export function EstimatesPageView({
     selectedEstimateIds,
     visibleEstimates,
   ]);
+
+  const selectedEstimates = useMemo(
+    () => resolveSelectedItems(visibleEstimates, selectedEstimateIds),
+    [selectedEstimateIds, visibleEstimates],
+  );
+
+  const selectedBulkEligibility = useMemo(
+    () =>
+      selectedCount === 0
+        ? null
+        : summarizeEstimateBulkEligibility(selectedEstimates, {
+            voidMode: lifecycleFilter === "active" ? "guide" : "lifecycle",
+          }),
+    [lifecycleFilter, selectedCount, selectedEstimates],
+  );
+
+  const activeBulkEligibilityHints = useMemo(
+    () =>
+      selectedBulkEligibility
+        ? formatEstimateBulkEligibilityHints(selectedBulkEligibility, "active")
+        : [],
+    [selectedBulkEligibility],
+  );
+
+  const lifecycleBulkEligibilityHints = useMemo(
+    () =>
+      selectedBulkEligibility && lifecycleFilter !== "active"
+        ? formatEstimateBulkEligibilityHints(
+            selectedBulkEligibility,
+            lifecycleFilter,
+          )
+        : [],
+    [lifecycleFilter, selectedBulkEligibility],
+  );
+
+  const isEstimateLifecycleBusy =
+    isBulkArchiving ||
+    isBulkRestoring ||
+    isBulkVoiding ||
+    isBulkMovingToTrash ||
+    isBulkRestoringFromTrash ||
+    isBulkPermanentlyDeleting;
 
   function clearBatchSendFeedback() {
     setBatchSendMessage(null);
@@ -604,38 +649,152 @@ export function EstimatesPageView({
             <EstimateBatchSelectionBar
               selectedCount={selectedCount}
               sendableCount={selectedSendableCount}
+              eligibilityHints={activeBulkEligibilityHints}
               isSending={isBatchSending}
+              isLifecycleBusy={isEstimateLifecycleBusy}
               onSendSelected={handleBatchSendSelected}
               onClearSelection={handleClearSelection}
+              archiveAction={
+                selectedBulkEligibility &&
+                selectedBulkEligibility.archiveEligibleCount > 0
+                  ? {
+                      eligibleCount: selectedBulkEligibility.archiveEligibleCount,
+                      isPending: isBulkArchiving,
+                      confirmMessage: formatEstimateBulkActionConfirmMessage(
+                        "archive",
+                        selectedBulkEligibility,
+                      ),
+                      onAction: () =>
+                        runBulkLifecycle(
+                          bulkArchiveEstimatesAction,
+                          "Archive",
+                          startBulkArchiveTransition,
+                        ),
+                    }
+                  : undefined
+              }
+              voidAction={
+                selectedBulkEligibility &&
+                selectedBulkEligibility.voidEligibleCount > 0
+                  ? {
+                      eligibleCount: selectedBulkEligibility.voidEligibleCount,
+                      isPending: isBulkVoiding,
+                      confirmMessage: formatEstimateBulkActionConfirmMessage(
+                        "void",
+                        selectedBulkEligibility,
+                      ),
+                      onAction: () =>
+                        runBulkLifecycle(
+                          bulkVoidEstimatesAction,
+                          "Void",
+                          startBulkVoidTransition,
+                        ),
+                    }
+                  : undefined
+              }
+              moveToTrashAction={
+                selectedBulkEligibility &&
+                selectedBulkEligibility.trashEligibleCount > 0
+                  ? {
+                      eligibleCount: selectedBulkEligibility.trashEligibleCount,
+                      isPending: isBulkMovingToTrash,
+                      confirmMessage: formatEstimateBulkActionConfirmMessage(
+                        "moveToTrash",
+                        selectedBulkEligibility,
+                      ),
+                      onAction: () =>
+                        runBulkLifecycle(
+                          bulkMoveEstimatesToTrashAction,
+                          "Move to Recently Deleted",
+                          startBulkMoveToTrashTransition,
+                        ),
+                    }
+                  : undefined
+              }
             />
           ) : null}
-          {selectionEnabled && selectedCount > 0 ? (
+          {selectionEnabled && selectedCount > 0 && lifecycleFilter !== "active" ? (
             <EntityLifecycleBulkBar
               entityLabel="estimate"
               selectedCount={selectedCount}
               lifecycleFilter={lifecycleFilter}
+              eligibilityHints={lifecycleBulkEligibilityHints}
               isArchiving={isBulkArchiving}
               isRestoring={isBulkRestoring}
               isVoiding={isBulkVoiding}
               isMovingToTrash={isBulkMovingToTrash}
               isRestoringFromTrash={isBulkRestoringFromTrash}
               isPermanentlyDeleting={isBulkPermanentlyDeleting}
-              showArchive={lifecycleFilter === "active"}
+              showArchive={false}
               showVoid={
-                lifecycleFilter === "active" || lifecycleFilter === "archived"
+                lifecycleFilter === "archived" &&
+                (selectedBulkEligibility?.voidEligibleCount ?? 0) > 0
               }
               showMoveToTrash={
-                lifecycleFilter === "active" || lifecycleFilter === "archived"
+                lifecycleFilter === "archived" &&
+                (selectedBulkEligibility?.trashEligibleCount ?? 0) > 0
               }
-              showRestore={lifecycleFilter === "archived"}
-              showRestoreFromTrash={lifecycleFilter === "deleted"}
-              showPermanentDelete={lifecycleFilter === "deleted"}
-              onArchive={() =>
-                runBulkLifecycle(
-                  bulkArchiveEstimatesAction,
-                  "Archive",
-                  startBulkArchiveTransition,
-                )
+              showRestore={
+                lifecycleFilter === "archived" &&
+                (selectedBulkEligibility?.restoreEligibleCount ?? 0) > 0
+              }
+              showRestoreFromTrash={
+                lifecycleFilter === "deleted" &&
+                (selectedBulkEligibility?.restoreFromTrashEligibleCount ?? 0) > 0
+              }
+              showPermanentDelete={
+                lifecycleFilter === "deleted" &&
+                (selectedBulkEligibility?.permanentDeleteEligibleCount ?? 0) > 0
+              }
+              archiveEligibleCount={selectedBulkEligibility?.archiveEligibleCount}
+              restoreEligibleCount={selectedBulkEligibility?.restoreEligibleCount}
+              voidEligibleCount={selectedBulkEligibility?.voidEligibleCount}
+              moveToTrashEligibleCount={selectedBulkEligibility?.trashEligibleCount}
+              restoreFromTrashEligibleCount={
+                selectedBulkEligibility?.restoreFromTrashEligibleCount
+              }
+              permanentDeleteEligibleCount={
+                selectedBulkEligibility?.permanentDeleteEligibleCount
+              }
+              restoreConfirmMessage={
+                selectedBulkEligibility
+                  ? formatEstimateBulkActionConfirmMessage(
+                      "restore",
+                      selectedBulkEligibility,
+                    )
+                  : undefined
+              }
+              voidConfirmMessage={
+                selectedBulkEligibility
+                  ? formatEstimateBulkActionConfirmMessage(
+                      "void",
+                      selectedBulkEligibility,
+                    )
+                  : undefined
+              }
+              moveToTrashConfirmMessage={
+                selectedBulkEligibility
+                  ? formatEstimateBulkActionConfirmMessage(
+                      "moveToTrash",
+                      selectedBulkEligibility,
+                    )
+                  : undefined
+              }
+              restoreFromTrashConfirmMessage={
+                selectedBulkEligibility
+                  ? formatEstimateBulkActionConfirmMessage(
+                      "restoreFromTrash",
+                      selectedBulkEligibility,
+                    )
+                  : undefined
+              }
+              permanentDeleteConfirmMessage={
+                selectedBulkEligibility
+                  ? formatEstimateBulkActionConfirmMessage(
+                      "permanentDelete",
+                      selectedBulkEligibility,
+                    )
+                  : undefined
               }
               onRestore={() =>
                 runBulkLifecycle(

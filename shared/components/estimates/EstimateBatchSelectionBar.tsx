@@ -1,25 +1,53 @@
 "use client";
 
-import { Loader2, Send, X } from "lucide-react";
+import { Archive, Ban, Loader2, Send, Trash2, X } from "lucide-react";
+
+type EstimateLifecycleActionProps = {
+  eligibleCount: number;
+  isPending: boolean;
+  confirmMessage: string;
+  onAction: () => void;
+};
 
 type EstimateBatchSelectionBarProps = {
   selectedCount: number;
   sendableCount: number;
+  eligibilityHints?: string[];
   isSending: boolean;
+  isLifecycleBusy?: boolean;
   onSendSelected: () => void;
   onClearSelection: () => void;
+  archiveAction?: EstimateLifecycleActionProps;
+  voidAction?: EstimateLifecycleActionProps;
+  moveToTrashAction?: EstimateLifecycleActionProps;
 };
 
 export function EstimateBatchSelectionBar({
   selectedCount,
   sendableCount,
+  eligibilityHints = [],
   isSending,
+  isLifecycleBusy = false,
   onSendSelected,
   onClearSelection,
+  archiveAction,
+  voidAction,
+  moveToTrashAction,
 }: EstimateBatchSelectionBarProps) {
+  const isBusy = isSending || isLifecycleBusy;
   const canSendSelected = sendableCount > 0;
+
   if (selectedCount === 0) {
     return null;
+  }
+
+  function confirmAndRun(
+    message: string,
+    action?: EstimateLifecycleActionProps,
+  ) {
+    if (isBusy || !action || action.eligibleCount === 0) return;
+    if (!window.confirm(message)) return;
+    action.onAction();
   }
 
   return (
@@ -28,28 +56,35 @@ export function EstimateBatchSelectionBar({
       role="region"
       aria-label="Batch estimate actions"
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm font-bold text-cyan-950">
-          {selectedCount} selected
-          {sendableCount > 0 && sendableCount < selectedCount
-            ? ` · ${sendableCount} can be sent`
-            : null}
-        </p>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-sm font-bold text-cyan-950">{selectedCount} selected</p>
+            {eligibilityHints.length > 0 ? (
+              <ul className="mt-1 space-y-0.5 text-xs font-medium text-cyan-800/90">
+                {eligibilityHints.map((hint) => (
+                  <li key={hint}>{hint}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
 
-        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={onClearSelection}
-            disabled={isSending}
-            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-cyan-200 bg-white px-3 py-2 text-xs font-semibold text-cyan-900 transition-colors hover:border-cyan-300 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9"
+            disabled={isBusy}
+            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 self-start rounded-lg border border-cyan-200 bg-white px-3 py-2 text-xs font-semibold text-cyan-900 transition-colors hover:border-cyan-300 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9"
           >
             <X className="h-3.5 w-3.5" aria-hidden="true" />
             Clear
           </button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={onSendSelected}
-            disabled={isSending || !canSendSelected}
+            disabled={isBusy || !canSendSelected}
             title={
               canSendSelected
                 ? undefined
@@ -64,6 +99,73 @@ export function EstimateBatchSelectionBar({
             )}
             {isSending ? "Sending…" : "Send selected"}
           </button>
+
+          {archiveAction ? (
+            <button
+              type="button"
+              onClick={() =>
+                confirmAndRun(archiveAction.confirmMessage, archiveAction)
+              }
+              disabled={isBusy || archiveAction.eligibleCount === 0}
+              title={
+                archiveAction.eligibleCount === 0
+                  ? "None of the selected estimates can be archived."
+                  : undefined
+              }
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9"
+            >
+              {archiveAction.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Archive className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              {archiveAction.isPending ? "Archiving…" : "Archive"}
+            </button>
+          ) : null}
+
+          {voidAction ? (
+            <button
+              type="button"
+              onClick={() => confirmAndRun(voidAction.confirmMessage, voidAction)}
+              disabled={isBusy || voidAction.eligibleCount === 0}
+              title={
+                voidAction.eligibleCount === 0
+                  ? "Void sent estimates. Draft estimates should move to Recently Deleted."
+                  : undefined
+              }
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9"
+            >
+              {voidAction.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Ban className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              {voidAction.isPending ? "Voiding…" : "Void"}
+            </button>
+          ) : null}
+
+          {moveToTrashAction ? (
+            <button
+              type="button"
+              onClick={() =>
+                confirmAndRun(moveToTrashAction.confirmMessage, moveToTrashAction)
+              }
+              disabled={isBusy || moveToTrashAction.eligibleCount === 0}
+              title={
+                moveToTrashAction.eligibleCount === 0
+                  ? "Only draft estimates can move to Recently Deleted."
+                  : undefined
+              }
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-900 transition-colors hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9"
+            >
+              {moveToTrashAction.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              {moveToTrashAction.isPending ? "Moving…" : "Move to Trash"}
+            </button>
+          ) : null}
         </div>
       </div>
     </div>

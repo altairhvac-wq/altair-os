@@ -215,3 +215,202 @@ export function resolveBulkEstimateLifecycleActions(
   }
   return ["archive", "void", "moveToTrash"];
 }
+
+/** Sent estimates eligible for bulk void on Active — excludes drafts (use trash instead). */
+export function canVoidEstimateBulkGuide(
+  estimate: Pick<Estimate, "status" | "deletedAt" | "archivedAt">,
+): boolean {
+  if (!SENT_STATUSES.has(estimate.status)) {
+    return false;
+  }
+
+  return canVoidEstimate(estimate);
+}
+
+export type EstimateBulkEligibilitySummary = {
+  selectedCount: number;
+  trashEligibleCount: number;
+  voidEligibleCount: number;
+  archiveEligibleCount: number;
+  restoreEligibleCount: number;
+  restoreFromTrashEligibleCount: number;
+  permanentDeleteEligibleCount: number;
+};
+
+export function summarizeEstimateBulkEligibility(
+  estimates: Estimate[],
+  options?: { voidMode?: "guide" | "lifecycle" },
+): EstimateBulkEligibilitySummary {
+  const voidMode = options?.voidMode ?? "guide";
+  let trashEligibleCount = 0;
+  let voidEligibleCount = 0;
+  let archiveEligibleCount = 0;
+  let restoreEligibleCount = 0;
+  let restoreFromTrashEligibleCount = 0;
+  let permanentDeleteEligibleCount = 0;
+
+  for (const estimate of estimates) {
+    if (canMoveEstimateToTrash(estimate)) {
+      trashEligibleCount += 1;
+    }
+    if (
+      voidMode === "guide"
+        ? canVoidEstimateBulkGuide(estimate)
+        : canVoidEstimate(estimate)
+    ) {
+      voidEligibleCount += 1;
+    }
+    if (canArchiveEstimate(estimate)) {
+      archiveEligibleCount += 1;
+    }
+    if (canRestoreEstimate(estimate)) {
+      restoreEligibleCount += 1;
+    }
+    if (canRestoreEstimateFromTrash(estimate)) {
+      restoreFromTrashEligibleCount += 1;
+    }
+    if (
+      canPermanentlyDeleteEstimate(estimate, {
+        linkedInvoiceCount: 0,
+      })
+    ) {
+      permanentDeleteEligibleCount += 1;
+    }
+  }
+
+  return {
+    selectedCount: estimates.length,
+    trashEligibleCount,
+    voidEligibleCount,
+    archiveEligibleCount,
+    restoreEligibleCount,
+    restoreFromTrashEligibleCount,
+    permanentDeleteEligibleCount,
+  };
+}
+
+function formatEstimateCountHint(count: number, phrase: string): string {
+  return `${count} ${phrase}`;
+}
+
+export function formatEstimateBulkEligibilityHints(
+  summary: EstimateBulkEligibilitySummary,
+  lifecycleFilter: EstimateLifecycleState,
+): string[] {
+  const hints: string[] = [];
+
+  if (lifecycleFilter === "active") {
+    if (summary.trashEligibleCount > 0) {
+      hints.push(formatEstimateCountHint(summary.trashEligibleCount, "can move to trash"));
+    }
+    if (summary.voidEligibleCount > 0) {
+      hints.push(formatEstimateCountHint(summary.voidEligibleCount, "can be voided"));
+    }
+    if (summary.archiveEligibleCount > 0) {
+      hints.push(formatEstimateCountHint(summary.archiveEligibleCount, "can be archived"));
+    }
+    return hints;
+  }
+
+  if (lifecycleFilter === "archived") {
+    if (summary.restoreEligibleCount > 0) {
+      hints.push(formatEstimateCountHint(summary.restoreEligibleCount, "can be restored"));
+    }
+    if (summary.voidEligibleCount > 0) {
+      hints.push(formatEstimateCountHint(summary.voidEligibleCount, "can be voided"));
+    }
+    if (summary.trashEligibleCount > 0) {
+      hints.push(formatEstimateCountHint(summary.trashEligibleCount, "can move to trash"));
+    }
+    return hints;
+  }
+
+  if (lifecycleFilter === "deleted") {
+    if (summary.restoreFromTrashEligibleCount > 0) {
+      hints.push(
+        formatEstimateCountHint(
+          summary.restoreFromTrashEligibleCount,
+          "can be restored from Recently Deleted",
+        ),
+      );
+    }
+    if (summary.permanentDeleteEligibleCount > 0) {
+      hints.push(
+        formatEstimateCountHint(
+          summary.permanentDeleteEligibleCount,
+          "can be permanently deleted",
+        ),
+      );
+    }
+  }
+
+  return hints;
+}
+
+function formatSkippedRecordsSuffix(skippedCount: number): string {
+  if (skippedCount <= 0) {
+    return "";
+  }
+
+  return ` ${skippedCount} selected estimate${
+    skippedCount === 1 ? "" : "s"
+  } will be skipped.`;
+}
+
+export function formatEstimateBulkActionConfirmMessage(
+  actionId: EstimateLifecycleActionId,
+  summary: EstimateBulkEligibilitySummary,
+): string {
+  const { selectedCount } = summary;
+
+  switch (actionId) {
+    case "archive": {
+      const eligible = summary.archiveEligibleCount;
+      return `Archive ${eligible} selected estimate${
+        eligible === 1 ? "" : "s"
+      }? Historical records will be preserved.${formatSkippedRecordsSuffix(
+        selectedCount - eligible,
+      )}`;
+    }
+    case "void": {
+      const eligible = summary.voidEligibleCount;
+      return `Void ${eligible} selected estimate${
+        eligible === 1 ? "" : "s"
+      }? This preserves audit history.${formatSkippedRecordsSuffix(
+        selectedCount - eligible,
+      )}`;
+    }
+    case "moveToTrash": {
+      const eligible = summary.trashEligibleCount;
+      return `Move ${eligible} draft estimate${
+        eligible === 1 ? "" : "s"
+      } to Recently Deleted? Sent estimates should be archived or voided instead.${formatSkippedRecordsSuffix(
+        selectedCount - eligible,
+      )}`;
+    }
+    case "restore": {
+      const eligible = summary.restoreEligibleCount;
+      return `Restore ${eligible} selected estimate${
+        eligible === 1 ? "" : "s"
+      } to Active?${formatSkippedRecordsSuffix(selectedCount - eligible)}`;
+    }
+    case "restoreFromTrash": {
+      const eligible = summary.restoreFromTrashEligibleCount;
+      return `Restore ${eligible} selected estimate${
+        eligible === 1 ? "" : "s"
+      } from Recently Deleted?${formatSkippedRecordsSuffix(selectedCount - eligible)}`;
+    }
+    case "permanentDelete": {
+      const eligible = summary.permanentDeleteEligibleCount;
+      return `Permanently delete ${eligible} selected estimate${
+        eligible === 1 ? "" : "s"
+      }? Records with billing or approval history will be skipped.${formatSkippedRecordsSuffix(
+        selectedCount - eligible,
+      )}`;
+    }
+    default:
+      return `Update ${selectedCount} selected estimate${
+        selectedCount === 1 ? "" : "s"
+      }?`;
+  }
+}
