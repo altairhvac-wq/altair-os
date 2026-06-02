@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
-import { isCustomerArchived } from "@/shared/lib/customer-lifecycle";
+import { isCustomerArchived, isCustomerDeleted } from "@/shared/lib/customer-lifecycle";
 import {
   formatCurrency,
   formatDate,
@@ -98,7 +98,11 @@ export function CustomersTable({
                       <p className="truncate font-semibold text-slate-900">
                         {customer.name}
                       </p>
-                      {isCustomerArchived(customer) ? (
+                      {isCustomerDeleted(customer) ? (
+                        <span className="inline-flex shrink-0 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-800">
+                          Deleted
+                        </span>
+                      ) : isCustomerArchived(customer) ? (
                         <span className="inline-flex shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
                           Archived
                         </span>

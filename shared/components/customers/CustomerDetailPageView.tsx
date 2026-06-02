@@ -19,7 +19,10 @@ import {
   type Customer,
 } from "@/shared/types/customer";
 import type { CustomerDeleteDependencies } from "@/shared/lib/customer-lifecycle";
-import { isCustomerArchived } from "@/shared/lib/customer-lifecycle";
+import {
+  isCustomerArchived,
+  isCustomerDeleted,
+} from "@/shared/lib/customer-lifecycle";
 import type { CustomerFinancialSummary } from "@/shared/types/customer-financial";
 import type { Estimate } from "@/shared/types/estimate";
 import type { Invoice } from "@/shared/types/invoice";
@@ -74,6 +77,7 @@ export function CustomerDetailPageView({
 }: CustomerDetailPageViewProps) {
   const hasNotes = Boolean(customer.notes?.trim());
   const archived = isCustomerArchived(customer);
+  const deleted = isCustomerDeleted(customer);
 
   return (
     <div className={`mx-auto max-w-5xl ${adminPageStackClass}`}>
@@ -105,7 +109,21 @@ export function CustomerDetailPageView({
           </div>
         </div>
 
-        {archived ? (
+        {deleted ? (
+          <div className="mb-2 rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-900">
+            This customer is in Recently Deleted and hidden from customer lists.
+            {customer.deletedAt ? (
+              <>
+                {" "}
+                Deleted {formatDate(customer.deletedAt)}
+                {customer.deleteAfter
+                  ? ` · eligible for permanent deletion after ${formatDate(customer.deleteAfter)}`
+                  : null}
+                .
+              </>
+            ) : null}
+          </div>
+        ) : archived ? (
           <div className="mb-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
             This customer is archived and hidden from active customer lists.
           </div>

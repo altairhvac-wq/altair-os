@@ -7,7 +7,21 @@ export type CustomerDeleteDependencies = {
   invoicePaymentCount: number;
 };
 
-export type CustomerLifecycleActionId = "archive" | "restore" | "delete";
+export type CustomerLifecycleActionId =
+  | "archive"
+  | "restore"
+  | "moveToTrash"
+  | "restoreFromTrash"
+  | "permanentDelete";
+
+export const PERMANENT_DELETE_BLOCKED_MESSAGE =
+  "This customer has historical records and cannot be permanently deleted. Keep it in Recently Deleted or restore it.";
+
+export function isCustomerDeleted(
+  customer: Pick<Customer, "deletedAt">,
+): boolean {
+  return Boolean(customer.deletedAt);
+}
 
 export function isCustomerArchived(
   customer: Pick<Customer, "archivedAt">,
@@ -16,14 +30,26 @@ export function isCustomerArchived(
 }
 
 export function getCustomerLifecycleState(
-  customer: Pick<Customer, "archivedAt">,
-): "active" | "archived" {
-  return isCustomerArchived(customer) ? "archived" : "active";
+  customer: Pick<Customer, "archivedAt" | "deletedAt">,
+): "active" | "archived" | "deleted" {
+  if (isCustomerDeleted(customer)) {
+    return "deleted";
+  }
+
+  if (isCustomerArchived(customer)) {
+    return "archived";
+  }
+
+  return "active";
 }
 
 export function getArchiveCustomerBlockReason(
-  customer: Pick<Customer, "archivedAt">,
+  customer: Pick<Customer, "archivedAt" | "deletedAt">,
 ): string | null {
+  if (isCustomerDeleted(customer)) {
+    return "This customer is in Recently Deleted. Restore it first.";
+  }
+
   if (isCustomerArchived(customer)) {
     return "This customer is already archived.";
   }
@@ -32,14 +58,18 @@ export function getArchiveCustomerBlockReason(
 }
 
 export function canArchiveCustomer(
-  customer: Pick<Customer, "archivedAt">,
+  customer: Pick<Customer, "archivedAt" | "deletedAt">,
 ): boolean {
   return getArchiveCustomerBlockReason(customer) === null;
 }
 
 export function getRestoreCustomerBlockReason(
-  customer: Pick<Customer, "archivedAt">,
+  customer: Pick<Customer, "archivedAt" | "deletedAt">,
 ): string | null {
+  if (isCustomerDeleted(customer)) {
+    return "This customer is in Recently Deleted. Use restore from Recently Deleted.";
+  }
+
   if (!isCustomerArchived(customer)) {
     return "This customer is not archived.";
   }
@@ -48,69 +78,121 @@ export function getRestoreCustomerBlockReason(
 }
 
 export function canRestoreCustomer(
-  customer: Pick<Customer, "archivedAt">,
+  customer: Pick<Customer, "archivedAt" | "deletedAt">,
 ): boolean {
   return getRestoreCustomerBlockReason(customer) === null;
 }
 
-export function getDeleteCustomerBlockReason(
+export function getMoveCustomerToTrashBlockReason(
+  customer: Pick<Customer, "deletedAt">,
+): string | null {
+  if (isCustomerDeleted(customer)) {
+    return "This customer is already in Recently Deleted.";
+  }
+
+  return null;
+}
+
+export function canMoveCustomerToTrash(
+  customer: Pick<Customer, "deletedAt">,
+): boolean {
+  return getMoveCustomerToTrashBlockReason(customer) === null;
+}
+
+export function getRestoreCustomerFromTrashBlockReason(
+  customer: Pick<Customer, "deletedAt">,
+): string | null {
+  if (!isCustomerDeleted(customer)) {
+    return "This customer is not in Recently Deleted.";
+  }
+
+  return null;
+}
+
+export function canRestoreCustomerFromTrash(
+  customer: Pick<Customer, "deletedAt">,
+): boolean {
+  return getRestoreCustomerFromTrashBlockReason(customer) === null;
+}
+
+export function getPermanentDeleteCustomerBlockReason(
+  customer: Pick<Customer, "deletedAt">,
   dependencies: CustomerDeleteDependencies,
 ): string | null {
-  const blockers: string[] = [];
+  const trashBlockReason = getRestoreCustomerFromTrashBlockReason(customer);
+  if (trashBlockReason) {
+    return "Move this customer to Recently Deleted before permanently deleting.";
+  }
+
+  const dependencyBlockers: string[] = [];
 
   if (dependencies.jobCount > 0) {
-    blockers.push(
+    dependencyBlockers.push(
       `${dependencies.jobCount} job${dependencies.jobCount === 1 ? "" : "s"}`,
     );
   }
 
   if (dependencies.estimateCount > 0) {
-    blockers.push(
+    dependencyBlockers.push(
       `${dependencies.estimateCount} estimate${dependencies.estimateCount === 1 ? "" : "s"}`,
     );
   }
 
   if (dependencies.invoiceCount > 0) {
-    blockers.push(
+    dependencyBlockers.push(
       `${dependencies.invoiceCount} invoice${dependencies.invoiceCount === 1 ? "" : "s"}`,
     );
   }
 
   if (dependencies.invoicePaymentCount > 0) {
-    blockers.push(
+    dependencyBlockers.push(
       `${dependencies.invoicePaymentCount} invoice payment${dependencies.invoicePaymentCount === 1 ? "" : "s"}`,
     );
   }
 
-  if (blockers.length === 0) {
-    return null;
+  if (dependencyBlockers.length > 0) {
+    return PERMANENT_DELETE_BLOCKED_MESSAGE;
   }
 
-  return `This customer has ${blockers.join(", ")}. Delete is only allowed when there are no jobs, estimates, invoices, or invoice payments.`;
+  return null;
 }
 
-export function canDeleteCustomer(
+export function canPermanentlyDeleteCustomer(
+  customer: Pick<Customer, "deletedAt">,
   dependencies: CustomerDeleteDependencies,
 ): boolean {
-  return getDeleteCustomerBlockReason(dependencies) === null;
+  return getPermanentDeleteCustomerBlockReason(customer, dependencies) === null;
 }
 
 export function getBulkArchiveCustomerBlockReason(
-  customer: Pick<Customer, "archivedAt">,
+  customer: Pick<Customer, "archivedAt" | "deletedAt">,
 ): string | null {
   return getArchiveCustomerBlockReason(customer);
 }
 
 export function getBulkRestoreCustomerBlockReason(
-  customer: Pick<Customer, "archivedAt">,
+  customer: Pick<Customer, "archivedAt" | "deletedAt">,
 ): string | null {
   return getRestoreCustomerBlockReason(customer);
 }
 
-export function getBulkDeleteCustomerBlockReason(
+export function getBulkMoveCustomerToTrashBlockReason(
+  customer: Pick<Customer, "deletedAt">,
+): string | null {
+  return getMoveCustomerToTrashBlockReason(customer);
+}
+
+export function getBulkRestoreCustomerFromTrashBlockReason(
+  customer: Pick<Customer, "deletedAt">,
+): string | null {
+  return getRestoreCustomerFromTrashBlockReason(customer);
+}
+
+export function getBulkPermanentDeleteCustomerBlockReason(
+  customer: Pick<Customer, "deletedAt">,
   dependencies: CustomerDeleteDependencies,
 ): string | null {
-  return getDeleteCustomerBlockReason(dependencies);
+  return getPermanentDeleteCustomerBlockReason(customer, dependencies);
 }
 
 export function formatBulkCustomersResultMessage(input: {
@@ -142,15 +224,19 @@ export function formatBulkCustomersResultMessage(input: {
 export function isBulkCustomerActionDestructive(
   actionId: CustomerLifecycleActionId,
 ): boolean {
-  return actionId === "delete";
+  return actionId === "permanentDelete";
 }
 
 export function resolveBulkCustomerLifecycleActions(
-  lifecycleFilter: "active" | "archived",
+  lifecycleFilter: "active" | "archived" | "deleted",
 ): CustomerLifecycleActionId[] {
   if (lifecycleFilter === "archived") {
-    return ["restore", "delete"];
+    return ["restore", "moveToTrash"];
   }
 
-  return ["archive", "delete"];
+  if (lifecycleFilter === "deleted") {
+    return ["restoreFromTrash", "permanentDelete"];
+  }
+
+  return ["archive", "moveToTrash"];
 }

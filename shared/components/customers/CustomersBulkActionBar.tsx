@@ -2,23 +2,30 @@
 
 import { Archive, Loader2, RotateCcw, Trash2, X } from "lucide-react";
 import type { CustomerLifecycleActionId } from "@/shared/lib/customer-lifecycle";
+import type { CustomerLifecycleState } from "@/shared/types/customer";
 
 type CustomersBulkActionBarProps = {
   selectedCount: number;
-  lifecycleFilter: "active" | "archived";
+  lifecycleFilter: CustomerLifecycleState;
   isArchiving: boolean;
   isRestoring: boolean;
-  isDeleting: boolean;
+  isMovingToTrash: boolean;
+  isRestoringFromTrash: boolean;
+  isPermanentlyDeleting: boolean;
   onArchive: () => void;
   onRestore: () => void;
-  onDelete: () => void;
+  onMoveToTrash: () => void;
+  onRestoreFromTrash: () => void;
+  onPermanentDelete: () => void;
   onClearSelection: () => void;
 };
 
 const ACTION_LABELS: Record<CustomerLifecycleActionId, string> = {
   archive: "Archive",
   restore: "Restore",
-  delete: "Delete",
+  moveToTrash: "Move to Trash",
+  restoreFromTrash: "Restore",
+  permanentDelete: "Permanently Delete",
 };
 
 export function CustomersBulkActionBar({
@@ -26,34 +33,43 @@ export function CustomersBulkActionBar({
   lifecycleFilter,
   isArchiving,
   isRestoring,
-  isDeleting,
+  isMovingToTrash,
+  isRestoringFromTrash,
+  isPermanentlyDeleting,
   onArchive,
   onRestore,
-  onDelete,
+  onMoveToTrash,
+  onRestoreFromTrash,
+  onPermanentDelete,
   onClearSelection,
 }: CustomersBulkActionBarProps) {
-  const isBusy = isArchiving || isRestoring || isDeleting;
+  const isBusy =
+    isArchiving ||
+    isRestoring ||
+    isMovingToTrash ||
+    isRestoringFromTrash ||
+    isPermanentlyDeleting;
 
   if (selectedCount === 0) {
     return null;
   }
 
-  function handleDeleteClick() {
+  function handleMoveToTrashClick() {
     if (isBusy) {
       return;
     }
 
     const confirmed = window.confirm(
-      `Permanently delete ${selectedCount} selected customer${
+      `Move ${selectedCount} selected customer${
         selectedCount === 1 ? "" : "s"
-      }? Customers with jobs, estimates, invoices, or payments will be skipped.`,
+      } to Recently Deleted? They will be hidden from customer lists for 60 days.`,
     );
 
     if (!confirmed) {
       return;
     }
 
-    onDelete();
+    onMoveToTrash();
   }
 
   function handleArchiveClick() {
@@ -72,6 +88,24 @@ export function CustomersBulkActionBar({
     }
 
     onArchive();
+  }
+
+  function handlePermanentDeleteClick() {
+    if (isBusy) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Permanently delete ${selectedCount} selected customer${
+        selectedCount === 1 ? "" : "s"
+      }? This cannot be undone. Customers with historical records will be skipped.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    onPermanentDelete();
   }
 
   return (
@@ -98,48 +132,99 @@ export function CustomersBulkActionBar({
 
         <div className="flex flex-wrap gap-2">
           {lifecycleFilter === "active" ? (
-            <button
-              type="button"
-              onClick={handleArchiveClick}
-              disabled={isBusy}
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isArchiving ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-              ) : (
-                <Archive className="h-3.5 w-3.5" aria-hidden="true" />
-              )}
-              {isArchiving ? "Archiving…" : ACTION_LABELS.archive}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={onRestore}
-              disabled={isBusy}
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-cyan-700 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isRestoring ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-              ) : (
-                <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-              )}
-              {isRestoring ? "Restoring…" : ACTION_LABELS.restore}
-            </button>
-          )}
+            <>
+              <button
+                type="button"
+                onClick={handleArchiveClick}
+                disabled={isBusy}
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isArchiving ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Archive className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                {isArchiving ? "Archiving…" : ACTION_LABELS.archive}
+              </button>
+              <button
+                type="button"
+                onClick={handleMoveToTrashClick}
+                disabled={isBusy}
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-900 transition-colors hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isMovingToTrash ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                {isMovingToTrash ? "Moving…" : ACTION_LABELS.moveToTrash}
+              </button>
+            </>
+          ) : null}
 
-          <button
-            type="button"
-            onClick={handleDeleteClick}
-            disabled={isBusy}
-            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isDeleting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-            ) : (
-              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-            )}
-            {isDeleting ? "Deleting…" : ACTION_LABELS.delete}
-          </button>
+          {lifecycleFilter === "archived" ? (
+            <>
+              <button
+                type="button"
+                onClick={onRestore}
+                disabled={isBusy}
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-cyan-700 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isRestoring ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                {isRestoring ? "Restoring…" : ACTION_LABELS.restore}
+              </button>
+              <button
+                type="button"
+                onClick={handleMoveToTrashClick}
+                disabled={isBusy}
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-900 transition-colors hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isMovingToTrash ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                {isMovingToTrash ? "Moving…" : ACTION_LABELS.moveToTrash}
+              </button>
+            </>
+          ) : null}
+
+          {lifecycleFilter === "deleted" ? (
+            <>
+              <button
+                type="button"
+                onClick={onRestoreFromTrash}
+                disabled={isBusy}
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-cyan-700 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isRestoringFromTrash ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                {isRestoringFromTrash ? "Restoring…" : ACTION_LABELS.restoreFromTrash}
+              </button>
+              <button
+                type="button"
+                onClick={handlePermanentDeleteClick}
+                disabled={isBusy}
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isPermanentlyDeleting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                {isPermanentlyDeleting
+                  ? "Deleting…"
+                  : ACTION_LABELS.permanentDelete}
+              </button>
+            </>
+          ) : null}
         </div>
       </div>
     </div>

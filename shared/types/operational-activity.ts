@@ -21,6 +21,9 @@ export type OperationalActivityEventType =
   | "customer_archived"
   | "customer_restored"
   | "customer_deleted"
+  | "customer_moved_to_trash"
+  | "customer_restored_from_trash"
+  | "customer_permanently_deleted"
   | "equipment_added"
   | "equipment_updated"
   | "warranty_expiration_recorded"
@@ -66,6 +69,7 @@ export type OperationalActivityMetadata = {
   customer_id?: string;
   customer_name?: string;
   status?: CustomerStatus;
+  delete_after?: string;
   job_id?: string;
   job_number?: string;
   estimate_id?: string;
@@ -147,6 +151,9 @@ const ACTIVITY_TYPE_LABELS: Record<OperationalActivityEventType, string> = {
   customer_archived: "Customer archived",
   customer_restored: "Customer restored",
   customer_deleted: "Customer deleted",
+  customer_moved_to_trash: "Moved to Recently Deleted",
+  customer_restored_from_trash: "Restored from Recently Deleted",
+  customer_permanently_deleted: "Permanently deleted",
   equipment_added: "Equipment added",
   equipment_updated: "Equipment updated",
   warranty_expiration_recorded: "Warranty recorded",
@@ -383,6 +390,9 @@ export function formatOperationalActivityDetails(
     case "customer_archived":
     case "customer_restored":
     case "customer_deleted":
+    case "customer_moved_to_trash":
+    case "customer_restored_from_trash":
+    case "customer_permanently_deleted":
       return metadata.customer_name ?? null;
 
     case "equipment_added":

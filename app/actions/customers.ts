@@ -5,24 +5,30 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
   archiveCustomer,
   createCustomer,
-  deleteCustomer,
   getCustomerById,
   getCustomerDeleteDependencies,
+  moveCustomerToTrash,
+  permanentlyDeleteCustomer,
   restoreCustomer,
+  restoreCustomerFromTrash,
   updateCustomer,
 } from "@/lib/database/queries/customers";
 import {
   recordCustomerArchivedActivity,
   recordCustomerCreatedActivity,
-  recordCustomerDeletedActivity,
+  recordCustomerMovedToTrashActivity,
+  recordCustomerPermanentlyDeletedActivity,
   recordCustomerRestoredActivity,
+  recordCustomerRestoredFromTrashActivity,
 } from "@/lib/database/services/customer-activity";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
-  canDeleteCustomer,
+  canPermanentlyDeleteCustomer,
   getArchiveCustomerBlockReason,
-  getDeleteCustomerBlockReason,
+  getMoveCustomerToTrashBlockReason,
+  getPermanentDeleteCustomerBlockReason,
   getRestoreCustomerBlockReason,
+  getRestoreCustomerFromTrashBlockReason,
 } from "@/shared/lib/customer-lifecycle";
 import {
   normalizeCustomerFormData,
@@ -225,7 +231,96 @@ export async function restoreCustomerAction(
   return { customer };
 }
 
-export async function deleteCustomerAction(
+export async function moveCustomerToTrashAction(
+  customerId: string,
+): Promise<CustomerLifecycleActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
+  }
+
+  if (!context.permissions.manageCustomers) {
+    return { error: "You do not have permission to delete customers." };
+  }
+
+  const existing = await getCustomerById(context.company.id, customerId);
+  if (!existing) {
+    return { error: "Customer not found." };
+  }
+
+  const blockReason = getMoveCustomerToTrashBlockReason(existing);
+  if (blockReason) {
+    return { error: blockReason };
+  }
+
+  const { customer, error } = await moveCustomerToTrash(
+    context.company.id,
+    customerId,
+  );
+
+  if (error || !customer) {
+    return {
+      error: error ?? "We couldn't move this customer to Recently Deleted. Try again.",
+    };
+  }
+
+  await recordCustomerMovedToTrashActivity({
+    companyId: context.company.id,
+    customerId: customer.id,
+    actorId: context.user.id,
+    customerName: customer.name,
+    deleteAfter: customer.deleteAfter,
+  });
+
+  revalidateCustomerPaths(customerId);
+  return { customer };
+}
+
+export async function restoreCustomerFromTrashAction(
+  customerId: string,
+): Promise<CustomerLifecycleActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
+  }
+
+  if (!context.permissions.manageCustomers) {
+    return { error: "You do not have permission to restore customers." };
+  }
+
+  const existing = await getCustomerById(context.company.id, customerId);
+  if (!existing) {
+    return { error: "Customer not found." };
+  }
+
+  const blockReason = getRestoreCustomerFromTrashBlockReason(existing);
+  if (blockReason) {
+    return { error: blockReason };
+  }
+
+  const { customer, error } = await restoreCustomerFromTrash(
+    context.company.id,
+    customerId,
+  );
+
+  if (error || !customer) {
+    return { error: error ?? "We couldn't restore this customer. Try again." };
+  }
+
+  await recordCustomerRestoredFromTrashActivity({
+    companyId: context.company.id,
+    customerId: customer.id,
+    actorId: context.user.id,
+    customerName: customer.name,
+  });
+
+  revalidateCustomerPaths(customerId);
+  return { customer };
+}
+
+export async function permanentlyDeleteCustomerAction(
   customerId: string,
 ): Promise<CustomerLifecycleActionResult> {
   const context = await getActiveCompanyContext();
@@ -247,25 +342,30 @@ export async function deleteCustomerAction(
     context.company.id,
     customerId,
   );
-  const blockReason = getDeleteCustomerBlockReason(dependencies);
-  if (blockReason || !canDeleteCustomer(dependencies)) {
-    return { error: blockReason ?? "This customer cannot be deleted." };
+  const blockReason = getPermanentDeleteCustomerBlockReason(
+    existing,
+    dependencies,
+  );
+  if (blockReason || !canPermanentlyDeleteCustomer(existing, dependencies)) {
+    return { error: blockReason ?? "This customer cannot be permanently deleted." };
   }
 
-  await recordCustomerDeletedActivity({
+  await recordCustomerPermanentlyDeletedActivity({
     companyId: context.company.id,
     customerId: existing.id,
     actorId: context.user.id,
     customerName: existing.name,
   });
 
-  const { success, error } = await deleteCustomer(
+  const { success, error } = await permanentlyDeleteCustomer(
     context.company.id,
     customerId,
   );
 
   if (!success || error) {
-    return { error: error ?? "We couldn't delete this customer. Try again." };
+    return {
+      error: error ?? "We couldn't permanently delete this customer. Try again.",
+    };
   }
 
   revalidateCustomerPaths();

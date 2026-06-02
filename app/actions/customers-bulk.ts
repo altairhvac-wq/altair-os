@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import {
   archiveCustomerAction,
-  deleteCustomerAction,
+  moveCustomerToTrashAction,
+  permanentlyDeleteCustomerAction,
   restoreCustomerAction,
+  restoreCustomerFromTrashAction,
 } from "@/app/actions/customers";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
@@ -15,8 +17,10 @@ import {
 import { formatActionError } from "@/shared/lib/operational-errors";
 import {
   getBulkArchiveCustomerBlockReason,
-  getBulkDeleteCustomerBlockReason,
+  getBulkMoveCustomerToTrashBlockReason,
+  getBulkPermanentDeleteCustomerBlockReason,
   getBulkRestoreCustomerBlockReason,
+  getBulkRestoreCustomerFromTrashBlockReason,
 } from "@/shared/lib/customer-lifecycle";
 
 export type BulkCustomerActionResultItem = {
@@ -174,15 +178,41 @@ export async function bulkRestoreCustomersAction(
   );
 }
 
-export async function bulkDeleteCustomersAction(
+export async function bulkMoveCustomersToTrashAction(
   customerIds: string[],
 ): Promise<BulkCustomersActionResult> {
   return runBulkCustomerLifecycleAction(
     customerIds,
-    deleteCustomerAction,
-    (_customer, dependencies) =>
-      dependencies
-        ? getBulkDeleteCustomerBlockReason(dependencies)
+    moveCustomerToTrashAction,
+    (customer) =>
+      customer
+        ? getBulkMoveCustomerToTrashBlockReason(customer)
+        : "Customer not found.",
+  );
+}
+
+export async function bulkRestoreCustomersFromTrashAction(
+  customerIds: string[],
+): Promise<BulkCustomersActionResult> {
+  return runBulkCustomerLifecycleAction(
+    customerIds,
+    restoreCustomerFromTrashAction,
+    (customer) =>
+      customer
+        ? getBulkRestoreCustomerFromTrashBlockReason(customer)
+        : "Customer not found.",
+  );
+}
+
+export async function bulkPermanentlyDeleteCustomersAction(
+  customerIds: string[],
+): Promise<BulkCustomersActionResult> {
+  return runBulkCustomerLifecycleAction(
+    customerIds,
+    permanentlyDeleteCustomerAction,
+    (customer, dependencies) =>
+      customer && dependencies
+        ? getBulkPermanentDeleteCustomerBlockReason(customer, dependencies)
         : "Unable to verify delete eligibility.",
     true,
   );

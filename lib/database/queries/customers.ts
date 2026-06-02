@@ -38,6 +38,8 @@ export function mapCustomerRowToCustomer(row: CustomerRow): Customer {
     notes: row.notes ?? undefined,
     createdAt: toDateOnly(row.created_at),
     archivedAt: row.archived_at ? row.archived_at : undefined,
+    deletedAt: row.deleted_at ? row.deleted_at : undefined,
+    deleteAfter: row.delete_after ? row.delete_after : undefined,
   };
 }
 
@@ -88,6 +90,7 @@ export function mapCustomerFormDataToUpdate(
 
 export type ListCustomersOptions = {
   includeArchived?: boolean;
+  includeDeleted?: boolean;
 };
 
 export async function listCustomers(
@@ -96,11 +99,16 @@ export async function listCustomers(
 ): Promise<Customer[]> {
   const supabase = await createClient();
   const includeArchived = options?.includeArchived ?? false;
+  const includeDeleted = options?.includeDeleted ?? false;
 
   let query = supabase
     .from("customers")
     .select("*")
     .eq("company_id", companyId);
+
+  if (!includeDeleted) {
+    query = query.is("deleted_at", null);
+  }
 
   if (!includeArchived) {
     query = query.is("archived_at", null);
@@ -132,10 +140,37 @@ export async function listArchivedCustomers(
     .select("*")
     .eq("company_id", companyId)
     .not("archived_at", "is", null)
+    .is("deleted_at", null)
     .order("archived_at", { ascending: false });
 
   if (error) {
     console.error("[listArchivedCustomers] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as CustomerRow[]).map(mapCustomerRowToCustomer);
+}
+
+export async function listDeletedCustomers(
+  companyId: string,
+): Promise<Customer[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("customers")
+    .select("*")
+    .eq("company_id", companyId)
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false });
+
+  if (error) {
+    console.error("[listDeletedCustomers] query failed:", {
       companyId,
       code: error.code,
       message: error.message,
@@ -365,6 +400,7 @@ export async function archiveCustomer(
     .eq("company_id", companyId)
     .eq("id", customerId)
     .is("archived_at", null)
+    .is("deleted_at", null)
     .select("*")
     .maybeSingle();
 
@@ -404,6 +440,7 @@ export async function restoreCustomer(
     .eq("company_id", companyId)
     .eq("id", customerId)
     .not("archived_at", "is", null)
+    .is("deleted_at", null)
     .select("*")
     .maybeSingle();
 
@@ -431,6 +468,129 @@ export async function restoreCustomer(
   };
 }
 
+const TRASH_RETENTION_DAYS = 60;
+
+export async function moveCustomerToTrash(
+  companyId: string,
+  customerId: string,
+): Promise<{ customer: Customer | null; error: string | null }> {
+  const supabase = await createClient();
+  const deletedAt = new Date();
+  const deleteAfter = new Date(deletedAt);
+  deleteAfter.setDate(deleteAfter.getDate() + TRASH_RETENTION_DAYS);
+
+  const { data: row, error } = await supabase
+    .from("customers")
+    .update({
+      deleted_at: deletedAt.toISOString(),
+      delete_after: deleteAfter.toISOString(),
+    })
+    .eq("company_id", companyId)
+    .eq("id", customerId)
+    .is("deleted_at", null)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[moveCustomerToTrash] update failed:", {
+      companyId,
+      customerId,
+      code: error.code,
+      message: error.message,
+    });
+    return { customer: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    const existing = await getCustomerById(companyId, customerId);
+    if (!existing) {
+      return { customer: null, error: "Customer not found." };
+    }
+    return {
+      customer: null,
+      error: "This customer is already in Recently Deleted.",
+    };
+  }
+
+  return {
+    customer: mapCustomerRowToCustomer(row as CustomerRow),
+    error: null,
+  };
+}
+
+export async function restoreCustomerFromTrash(
+  companyId: string,
+  customerId: string,
+): Promise<{ customer: Customer | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("customers")
+    .update({
+      deleted_at: null,
+      delete_after: null,
+      archived_at: null,
+    })
+    .eq("company_id", companyId)
+    .eq("id", customerId)
+    .not("deleted_at", "is", null)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[restoreCustomerFromTrash] update failed:", {
+      companyId,
+      customerId,
+      code: error.code,
+      message: error.message,
+    });
+    return { customer: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    const existing = await getCustomerById(companyId, customerId);
+    if (!existing) {
+      return { customer: null, error: "Customer not found." };
+    }
+    return {
+      customer: null,
+      error: "This customer is not in Recently Deleted.",
+    };
+  }
+
+  return {
+    customer: mapCustomerRowToCustomer(row as CustomerRow),
+    error: null,
+  };
+}
+
+export async function permanentlyDeleteCustomer(
+  companyId: string,
+  customerId: string,
+): Promise<{ success: boolean; error: string | null }> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("customers")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("id", customerId)
+    .not("deleted_at", "is", null);
+
+  if (error) {
+    console.error("[permanentlyDeleteCustomer] delete failed:", {
+      companyId,
+      customerId,
+      code: error.code,
+      message: error.message,
+    });
+    return { success: false, error: mapDatabaseError(error) };
+  }
+
+  return { success: true, error: null };
+}
+
+/** @deprecated Use permanentlyDeleteCustomer instead. */
 export async function deleteCustomer(
   companyId: string,
   customerId: string,

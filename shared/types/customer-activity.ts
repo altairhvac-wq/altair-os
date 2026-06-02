@@ -6,6 +6,9 @@ export type CustomerActivityType =
   | "customer_archived"
   | "customer_restored"
   | "customer_deleted"
+  | "customer_moved_to_trash"
+  | "customer_restored_from_trash"
+  | "customer_permanently_deleted"
   | "equipment_added"
   | "equipment_updated"
   | "warranty_expiration_recorded";
@@ -13,6 +16,7 @@ export type CustomerActivityType =
 export type CustomerActivityMetadata = {
   customer_name?: string;
   status?: CustomerStatus;
+  delete_after?: string;
   equipment_id?: string;
   equipment_name?: string;
   job_id?: string;
@@ -37,6 +41,9 @@ const ACTIVITY_TYPE_LABELS: Record<CustomerActivityType, string> = {
   customer_archived: "Customer archived",
   customer_restored: "Customer restored",
   customer_deleted: "Customer deleted",
+  customer_moved_to_trash: "Moved to Recently Deleted",
+  customer_restored_from_trash: "Restored from Recently Deleted",
+  customer_permanently_deleted: "Permanently deleted",
   equipment_added: "Equipment added",
   equipment_updated: "Equipment updated",
   warranty_expiration_recorded: "Warranty recorded",
@@ -57,6 +64,9 @@ export function formatCustomerActivityDetails(
     case "customer_archived":
     case "customer_restored":
     case "customer_deleted":
+    case "customer_moved_to_trash":
+    case "customer_restored_from_trash":
+    case "customer_permanently_deleted":
       return metadata.customer_name ?? null;
     case "equipment_added":
     case "equipment_updated":

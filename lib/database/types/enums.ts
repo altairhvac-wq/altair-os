@@ -26,6 +26,9 @@ export type CustomerActivityType =
   | "customer_archived"
   | "customer_restored"
   | "customer_deleted"
+  | "customer_moved_to_trash"
+  | "customer_restored_from_trash"
+  | "customer_permanently_deleted"
   | "equipment_added"
   | "equipment_updated"
   | "warranty_expiration_recorded";

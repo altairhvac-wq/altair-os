@@ -170,6 +170,8 @@ export type CustomerRow = {
   last_service_date: Timestamp | null;
   is_demo: boolean;
   archived_at: Timestamp | null;
+  deleted_at: Timestamp | null;
+  delete_after: Timestamp | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -194,6 +196,8 @@ export type CustomerInsert = {
   last_service_date?: Timestamp | null;
   is_demo?: boolean;
   archived_at?: Timestamp | null;
+  deleted_at?: Timestamp | null;
+  delete_after?: Timestamp | null;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };

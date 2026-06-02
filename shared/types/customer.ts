@@ -20,9 +20,11 @@ export type Customer = {
   notes?: string;
   createdAt: string;
   archivedAt?: string;
+  deletedAt?: string;
+  deleteAfter?: string;
 };
 
-export type CustomerLifecycleState = "active" | "archived";
+export type CustomerLifecycleState = "active" | "archived" | "deleted";
 
 export type CustomerFormData = {
   name: string;
@@ -50,6 +52,7 @@ export const CUSTOMER_LIFECYCLE_FILTER_OPTIONS: {
 }[] = [
   { value: "active", label: "Active customers" },
   { value: "archived", label: "Archived" },
+  { value: "deleted", label: "Recently Deleted" },
 ];
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

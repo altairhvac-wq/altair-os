@@ -5,15 +5,17 @@ import { useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";
 import {
   bulkArchiveCustomersAction,
-  bulkDeleteCustomersAction,
+  bulkMoveCustomersToTrashAction,
+  bulkPermanentlyDeleteCustomersAction,
   bulkRestoreCustomersAction,
+  bulkRestoreCustomersFromTrashAction,
 } from "@/app/actions/customers-bulk";
 import { createCustomerAction } from "@/app/actions/customers";
 import { usePageBulkSelection } from "@/shared/hooks/usePageBulkSelection";
 import { resolveSelectedItems } from "@/shared/lib/bulk-selection";
 import {
   formatBulkCustomersResultMessage,
-  isCustomerArchived,
+  getCustomerLifecycleState,
 } from "@/shared/lib/customer-lifecycle";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import {
@@ -49,9 +51,7 @@ function filterCustomers(
 
   return customers.filter((customer) => {
     const matchesLifecycle =
-      lifecycleFilter === "archived"
-        ? isCustomerArchived(customer)
-        : !isCustomerArchived(customer);
+      getCustomerLifecycleState(customer) === lifecycleFilter;
 
     if (!matchesLifecycle) return false;
 
@@ -103,7 +103,11 @@ export function CustomersPageView({
   const [isPending, startTransition] = useTransition();
   const [isBulkArchiving, startBulkArchiveTransition] = useTransition();
   const [isBulkRestoring, startBulkRestoreTransition] = useTransition();
-  const [isBulkDeleting, startBulkDeleteTransition] = useTransition();
+  const [isBulkMovingToTrash, startBulkMoveToTrashTransition] = useTransition();
+  const [isBulkRestoringFromTrash, startBulkRestoreFromTrashTransition] =
+    useTransition();
+  const [isBulkPermanentlyDeleting, startBulkPermanentDeleteTransition] =
+    useTransition();
 
   useEffect(() => {
     setCustomers(initialCustomers);
@@ -228,17 +232,45 @@ export function CustomersPageView({
     });
   }
 
-  function handleBulkDelete() {
-    if (!selectionEnabled || selectedCount === 0 || isBulkDeleting) {
+  function handleBulkMoveToTrash() {
+    if (!selectionEnabled || selectedCount === 0 || isBulkMovingToTrash) {
       return;
     }
 
     clearBulkActionFeedback();
     const customerIds = [...selectedIds];
 
-    startBulkDeleteTransition(async () => {
-      const result = await bulkDeleteCustomersAction(customerIds);
-      applyBulkActionResult({ result, actionLabel: "Delete" });
+    startBulkMoveToTrashTransition(async () => {
+      const result = await bulkMoveCustomersToTrashAction(customerIds);
+      applyBulkActionResult({ result, actionLabel: "Move to Trash" });
+    });
+  }
+
+  function handleBulkRestoreFromTrash() {
+    if (!selectionEnabled || selectedCount === 0 || isBulkRestoringFromTrash) {
+      return;
+    }
+
+    clearBulkActionFeedback();
+    const customerIds = [...selectedIds];
+
+    startBulkRestoreFromTrashTransition(async () => {
+      const result = await bulkRestoreCustomersFromTrashAction(customerIds);
+      applyBulkActionResult({ result, actionLabel: "Restore" });
+    });
+  }
+
+  function handleBulkPermanentDelete() {
+    if (!selectionEnabled || selectedCount === 0 || isBulkPermanentlyDeleting) {
+      return;
+    }
+
+    clearBulkActionFeedback();
+    const customerIds = [...selectedIds];
+
+    startBulkPermanentDeleteTransition(async () => {
+      const result = await bulkPermanentlyDeleteCustomersAction(customerIds);
+      applyBulkActionResult({ result, actionLabel: "Permanent delete" });
     });
   }
 
@@ -377,10 +409,14 @@ export function CustomersPageView({
             lifecycleFilter={lifecycleFilter}
             isArchiving={isBulkArchiving}
             isRestoring={isBulkRestoring}
-            isDeleting={isBulkDeleting}
+            isMovingToTrash={isBulkMovingToTrash}
+            isRestoringFromTrash={isBulkRestoringFromTrash}
+            isPermanentlyDeleting={isBulkPermanentlyDeleting}
             onArchive={handleBulkArchive}
             onRestore={handleBulkRestore}
-            onDelete={handleBulkDelete}
+            onMoveToTrash={handleBulkMoveToTrash}
+            onRestoreFromTrash={handleBulkRestoreFromTrash}
+            onPermanentDelete={handleBulkPermanentDelete}
             onClearSelection={clearSelection}
           />
         ) : null}

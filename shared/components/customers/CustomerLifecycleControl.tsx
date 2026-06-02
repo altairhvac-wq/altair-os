@@ -5,19 +5,23 @@ import { useRouter } from "next/navigation";
 import { Archive, Loader2, RotateCcw, Trash2 } from "lucide-react";
 import {
   archiveCustomerAction,
-  deleteCustomerAction,
+  moveCustomerToTrashAction,
+  permanentlyDeleteCustomerAction,
   restoreCustomerAction,
+  restoreCustomerFromTrashAction,
 } from "@/app/actions/customers";
 import {
   canArchiveCustomer,
-  canDeleteCustomer,
+  canMoveCustomerToTrash,
+  canPermanentlyDeleteCustomer,
   canRestoreCustomer,
-  getDeleteCustomerBlockReason,
-  isCustomerArchived,
+  canRestoreCustomerFromTrash,
+  getCustomerLifecycleState,
+  getPermanentDeleteCustomerBlockReason,
   type CustomerDeleteDependencies,
 } from "@/shared/lib/customer-lifecycle";
 import { formatActionError } from "@/shared/lib/operational-errors";
-import type { Customer } from "@/shared/types/customer";
+import { formatDate, type Customer } from "@/shared/types/customer";
 
 type CustomerLifecycleControlProps = {
   customer: Customer;
@@ -38,9 +42,15 @@ export function CustomerLifecycleControl({
     return null;
   }
 
-  const archived = isCustomerArchived(customer);
-  const deleteBlockReason = getDeleteCustomerBlockReason(deleteDependencies);
-  const canDelete = canDeleteCustomer(deleteDependencies);
+  const lifecycleState = getCustomerLifecycleState(customer);
+  const permanentDeleteBlockReason = getPermanentDeleteCustomerBlockReason(
+    customer,
+    deleteDependencies,
+  );
+  const canPermanentlyDelete = canPermanentlyDeleteCustomer(
+    customer,
+    deleteDependencies,
+  );
 
   function handleArchive() {
     if (!canArchiveCustomer(customer) || isPending) {
@@ -68,7 +78,7 @@ export function CustomerLifecycleControl({
     });
   }
 
-  function handleRestore() {
+  function handleRestoreFromArchive() {
     if (!canRestoreCustomer(customer) || isPending) {
       return;
     }
@@ -86,13 +96,13 @@ export function CustomerLifecycleControl({
     });
   }
 
-  function handleDelete() {
-    if (!canDelete || isPending) {
+  function handleMoveToTrash() {
+    if (!canMoveCustomerToTrash(customer) || isPending) {
       return;
     }
 
     const confirmed = window.confirm(
-      `Permanently delete ${customer.name}? This cannot be undone.`,
+      `Move ${customer.name} to Recently Deleted? They will be hidden from customer lists for 60 days.`,
     );
 
     if (!confirmed) {
@@ -101,10 +111,64 @@ export function CustomerLifecycleControl({
 
     setError(null);
     startTransition(async () => {
-      const result = await deleteCustomerAction(customer.id);
+      const result = await moveCustomerToTrashAction(customer.id);
 
       if (result.error) {
-        setError(formatActionError(result.error, "We couldn't delete this customer."));
+        setError(
+          formatActionError(
+            result.error,
+            "We couldn't move this customer to Recently Deleted.",
+          ),
+        );
+        return;
+      }
+
+      router.refresh();
+    });
+  }
+
+  function handleRestoreFromTrash() {
+    if (!canRestoreCustomerFromTrash(customer) || isPending) {
+      return;
+    }
+
+    setError(null);
+    startTransition(async () => {
+      const result = await restoreCustomerFromTrashAction(customer.id);
+
+      if (result.error) {
+        setError(formatActionError(result.error, "We couldn't restore this customer."));
+        return;
+      }
+
+      router.refresh();
+    });
+  }
+
+  function handlePermanentDelete() {
+    if (!canPermanentlyDelete || isPending) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Permanently delete ${customer.name}? This action cannot be undone and will remove this customer record entirely.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setError(null);
+    startTransition(async () => {
+      const result = await permanentlyDeleteCustomerAction(customer.id);
+
+      if (result.error) {
+        setError(
+          formatActionError(
+            result.error,
+            "We couldn't permanently delete this customer.",
+          ),
+        );
         return;
       }
 
@@ -115,56 +179,116 @@ export function CustomerLifecycleControl({
 
   return (
     <div className="flex flex-col items-end gap-2">
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        {archived ? (
-          <button
-            type="button"
-            onClick={handleRestore}
-            disabled={isPending}
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-2.5 text-sm font-semibold text-cyan-900 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <RotateCcw className="h-4 w-4" aria-hidden="true" />
-            )}
-            Restore
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleArchive}
-            disabled={isPending}
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Archive className="h-4 w-4" aria-hidden="true" />
-            )}
-            Archive
-          </button>
-        )}
+      {lifecycleState === "deleted" && customer.deletedAt ? (
+        <div className="max-w-sm rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-right text-xs text-orange-900">
+          <p>
+            Deleted {formatDate(customer.deletedAt)}
+            {customer.deleteAfter
+              ? ` · eligible for permanent deletion after ${formatDate(customer.deleteAfter)}`
+              : null}
+          </p>
+        </div>
+      ) : null}
 
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={isPending || !canDelete}
-          title={deleteBlockReason ?? undefined}
-          className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-800 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-          )}
-          Delete
-        </button>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {lifecycleState === "active" ? (
+          <>
+            <button
+              type="button"
+              onClick={handleArchive}
+              disabled={isPending}
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Archive className="h-4 w-4" aria-hidden="true" />
+              )}
+              Archive
+            </button>
+            <button
+              type="button"
+              onClick={handleMoveToTrash}
+              disabled={isPending}
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-semibold text-orange-900 transition-colors hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+              )}
+              Move to Trash
+            </button>
+          </>
+        ) : null}
+
+        {lifecycleState === "archived" ? (
+          <>
+            <button
+              type="button"
+              onClick={handleRestoreFromArchive}
+              disabled={isPending}
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-2.5 text-sm font-semibold text-cyan-900 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <RotateCcw className="h-4 w-4" aria-hidden="true" />
+              )}
+              Restore
+            </button>
+            <button
+              type="button"
+              onClick={handleMoveToTrash}
+              disabled={isPending}
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-semibold text-orange-900 transition-colors hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+              )}
+              Move to Trash
+            </button>
+          </>
+        ) : null}
+
+        {lifecycleState === "deleted" ? (
+          <>
+            <button
+              type="button"
+              onClick={handleRestoreFromTrash}
+              disabled={isPending}
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-2.5 text-sm font-semibold text-cyan-900 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <RotateCcw className="h-4 w-4" aria-hidden="true" />
+              )}
+              Restore
+            </button>
+            <button
+              type="button"
+              onClick={handlePermanentDelete}
+              disabled={isPending || !canPermanentlyDelete}
+              title={permanentDeleteBlockReason ?? undefined}
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-800 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+              )}
+              Permanently Delete
+            </button>
+          </>
+        ) : null}
       </div>
 
-      {deleteBlockReason ? (
+      {lifecycleState === "deleted" && permanentDeleteBlockReason ? (
         <p className="max-w-sm text-right text-xs text-slate-500">
-          {deleteBlockReason}
+          {permanentDeleteBlockReason}
         </p>
       ) : null}
 
