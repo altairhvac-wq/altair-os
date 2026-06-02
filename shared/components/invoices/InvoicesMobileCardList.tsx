@@ -1,9 +1,6 @@
 import { adminListRowClass } from "@/shared/lib/admin-density";
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
-import {
-  canBatchSendInvoice,
-  type InvoiceBatchSendJobLookup,
-} from "@/shared/lib/invoice-batch-send";
+import { canSelectInvoiceForBulkLifecycle } from "@/shared/lib/invoice-lifecycle";
 import { ChevronRight } from "lucide-react";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { Invoice } from "@/shared/types/invoice";
@@ -16,9 +13,7 @@ type InvoicesMobileCardListProps = {
   onSelect: (invoice: Invoice) => void;
   selectionEnabled?: boolean;
   selectedIds?: ReadonlySet<string>;
-  jobsById?: InvoiceBatchSendJobLookup;
   onToggleSelection?: (invoiceId: string) => void;
-  selectionScope?: "batchSend" | "all";
 };
 
 export function InvoicesMobileCardList({
@@ -27,12 +22,8 @@ export function InvoicesMobileCardList({
   onSelect,
   selectionEnabled = false,
   selectedIds,
-  jobsById,
   onToggleSelection,
-  selectionScope = "batchSend",
 }: InvoicesMobileCardListProps) {
-  const useAllRowSelection = selectionScope === "all";
-
   return (
     <ul className="divide-y divide-slate-100 md:hidden">
       {sections.map((section) => (
@@ -48,7 +39,7 @@ export function InvoicesMobileCardList({
             {section.items.map((invoice) => {
               const isSelectable =
                 selectionEnabled &&
-                (useAllRowSelection || canBatchSendInvoice(invoice, jobsById));
+                canSelectInvoiceForBulkLifecycle(invoice);
               const isSelected = selectedIds?.has(invoice.id) ?? false;
 
               return (

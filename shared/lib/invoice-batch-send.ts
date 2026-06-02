@@ -40,6 +40,9 @@ export function canBatchSendInvoice(
   return getBatchSendInvoiceBlockReason(invoice, jobsById) === null;
 }
 
+/** Draft/sendable invoices only — separate from bulk lifecycle selection. */
+export const canSelectInvoiceForBatchSend = canBatchSendInvoice;
+
 export function getBatchSendableInvoices(
   invoices: Invoice[],
   jobsById?: InvoiceBatchSendJobLookup,

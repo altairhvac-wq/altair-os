@@ -1,12 +1,8 @@
 import { Fragment, useEffect, useMemo, useRef, type ChangeEvent } from "react";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
-import {
-  canBatchSendInvoice,
-  resolveInvoiceBatchSelectionState,
-  type InvoiceBatchSendJobLookup,
-} from "@/shared/lib/invoice-batch-send";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
+import { canSelectInvoiceForBulkLifecycle } from "@/shared/lib/invoice-lifecycle";
 import type { Invoice } from "@/shared/types/invoice";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
@@ -18,10 +14,8 @@ type InvoicesTableProps = {
   onSelect: (invoice: Invoice) => void;
   selectionEnabled?: boolean;
   selectedIds?: ReadonlySet<string>;
-  jobsById?: InvoiceBatchSendJobLookup;
   onToggleSelection?: (invoiceId: string) => void;
   onToggleAllVisible?: (selectAll: boolean) => void;
-  selectionScope?: "batchSend" | "all";
 };
 
 function InvoiceSelectCheckbox({
@@ -71,31 +65,20 @@ export function InvoicesTable({
   onSelect,
   selectionEnabled = false,
   selectedIds,
-  jobsById,
   onToggleSelection,
   onToggleAllVisible,
-  selectionScope = "batchSend",
 }: InvoicesTableProps) {
   const visibleInvoices = useMemo(
     () => sections.flatMap((section) => section.items),
     [sections],
   );
 
-  const useAllRowSelection = selectionScope === "all";
-
   const headerSelection = useMemo(
-    () => {
-      if (!selectionEnabled || !selectedIds) return null;
-      if (useAllRowSelection) {
-        return resolveBulkSelectionState(selectedIds, visibleInvoices);
-      }
-      return resolveInvoiceBatchSelectionState(
-        selectedIds,
-        visibleInvoices,
-        jobsById,
-      );
-    },
-    [jobsById, selectedIds, selectionEnabled, useAllRowSelection, visibleInvoices],
+    () =>
+      selectionEnabled && selectedIds
+        ? resolveBulkSelectionState(selectedIds, visibleInvoices)
+        : null,
+    [selectedIds, selectionEnabled, visibleInvoices],
   );
 
   const tableColumnCount = selectionEnabled ? 8 : 7;
@@ -108,9 +91,7 @@ export function InvoicesTable({
         onSelect={onSelect}
         selectionEnabled={selectionEnabled}
         selectedIds={selectedIds}
-        jobsById={jobsById}
         onToggleSelection={onToggleSelection}
-        selectionScope={selectionScope}
       />
 
       <div className="hidden overflow-x-auto md:block">
@@ -123,11 +104,7 @@ export function InvoicesTable({
                     <InvoiceSelectCheckbox
                       checked={headerSelection.allSelected}
                       indeterminate={headerSelection.someSelected}
-                      ariaLabel={
-                        useAllRowSelection
-                          ? "Select all invoices on this page"
-                          : "Select all sendable invoices on this page"
-                      }
+                      ariaLabel="Select all invoices on this page"
                       onChange={(checked) => onToggleAllVisible?.(checked)}
                     />
                   ) : null}
@@ -158,8 +135,7 @@ export function InvoicesTable({
                 {section.items.map((invoice) => {
                   const isSelectable =
                     selectionEnabled &&
-                    (useAllRowSelection ||
-                      canBatchSendInvoice(invoice, jobsById));
+                    canSelectInvoiceForBulkLifecycle(invoice);
                   const isSelected = selectedIds?.has(invoice.id) ?? false;
 
                   return (

@@ -44,6 +44,13 @@ export function isInvoiceVoided(invoice: Pick<Invoice, "status">): boolean {
   return invoice.status === "void" || invoice.status === "cancelled";
 }
 
+/** Any invoice visible in the current lifecycle tab can be bulk-selected. */
+export function canSelectInvoiceForBulkLifecycle(
+  _invoice: Pick<Invoice, "id">,
+): boolean {
+  return true;
+}
+
 export function getInvoiceLifecycleState(
   invoice: Pick<Invoice, "archivedAt" | "deletedAt" | "status">,
 ): InvoiceLifecycleState {

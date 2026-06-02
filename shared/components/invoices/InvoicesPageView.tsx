@@ -17,8 +17,10 @@ import {
 } from "@/app/actions/invoices-bulk-lifecycle";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import {
-  toggleGroupBulkSelection,
   resolveBulkSelectionState,
+  resolveSelectedItems,
+  toggleBulkSelection,
+  toggleGroupBulkSelection,
 } from "@/shared/lib/bulk-selection";
 import {
   formatBulkLifecycleFailureDetails,
@@ -37,9 +39,7 @@ import {
 import {
   buildJobsByIdForBatchSend,
   formatBatchSendInvoicesResultMessage,
-  resolveInvoiceBatchSelectionState,
-  toggleInvoiceBatchSelection,
-  toggleInvoiceGroupBatchSelection,
+  getBatchSendableInvoices,
 } from "@/shared/lib/invoice-batch-send";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { EntityLifecycleBulkBar } from "@/shared/components/lifecycle/EntityLifecycleBulkBar";
@@ -278,32 +278,35 @@ export function InvoicesPageView({
 
   const selectionEnabled = canManageInvoices;
   const selectedCount = selectedInvoiceIds.size;
-  const useAllRowSelection = lifecycleFilter !== "active";
 
   const visibleSelectionState = useMemo(
-    () => {
-      if (!selectionEnabled) return null;
-      if (useAllRowSelection) {
-        return resolveBulkSelectionState(selectedInvoiceIds, visibleInvoices);
-      }
-      return resolveInvoiceBatchSelectionState(
-        selectedInvoiceIds,
-        visibleInvoices,
-        jobsById,
-      );
-    },
-    [
-      jobsById,
-      selectedInvoiceIds,
-      selectionEnabled,
-      useAllRowSelection,
-      visibleInvoices,
-    ],
+    () =>
+      selectionEnabled
+        ? resolveBulkSelectionState(selectedInvoiceIds, visibleInvoices)
+        : null,
+    [selectedInvoiceIds, selectionEnabled, visibleInvoices],
   );
+
+  const selectedSendableCount = useMemo(() => {
+    if (lifecycleFilter !== "active" || selectedCount === 0) {
+      return 0;
+    }
+
+    return getBatchSendableInvoices(
+      resolveSelectedItems(visibleInvoices, selectedInvoiceIds),
+      jobsById,
+    ).length;
+  }, [
+    jobsById,
+    lifecycleFilter,
+    selectedCount,
+    selectedInvoiceIds,
+    visibleInvoices,
+  ]);
 
   function handleToggleInvoiceSelection(invoiceId: string) {
     setSelectedInvoiceIds((previous) =>
-      toggleInvoiceBatchSelection(previous, invoiceId),
+      toggleBulkSelection(previous, invoiceId),
     );
     setBatchSendMessage(null);
     setBatchSendFailureDetails(null);
@@ -313,14 +316,7 @@ export function InvoicesPageView({
 
   function handleToggleAllVisibleSelection(selectAll: boolean) {
     setSelectedInvoiceIds((previous) =>
-      useAllRowSelection
-        ? toggleGroupBulkSelection(previous, visibleInvoices, selectAll)
-        : toggleInvoiceGroupBatchSelection(
-            previous,
-            visibleInvoices,
-            selectAll,
-            jobsById,
-          ),
+      toggleGroupBulkSelection(previous, visibleInvoices, selectAll),
     );
     setBatchSendMessage(null);
     setBatchSendFailureDetails(null);
@@ -681,16 +677,15 @@ export function InvoicesPageView({
               onSelect={handleSelectInvoice}
               selectionEnabled={selectionEnabled}
               selectedIds={selectedInvoiceIds}
-              jobsById={jobsById}
               onToggleSelection={handleToggleInvoiceSelection}
               onToggleAllVisible={handleToggleAllVisibleSelection}
-              selectionScope={useAllRowSelection ? "all" : "batchSend"}
             />
           )}
 
           {selectionEnabled && lifecycleFilter === "active" ? (
             <InvoiceBatchSelectionBar
               selectedCount={selectedCount}
+              sendableCount={selectedSendableCount}
               isSending={isBatchSending}
               onSendSelected={handleBatchSendSelected}
               onClearSelection={handleClearSelection}
