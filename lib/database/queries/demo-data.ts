@@ -2,6 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { mapDemoDataError } from "@/lib/database/errors";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import {
+  DEMO_ESTIMATE_NUMBER_PREFIX,
+  DEMO_INVOICE_NUMBER_PREFIX,
+  DEMO_JOB_NUMBER_PREFIX,
+  demoNameLikePattern,
+} from "@/shared/lib/demo-data-identifiers";
+import {
   parseCompanyDemoDataSettings,
   serializeCompanyDemoDataSettings,
 } from "@/shared/lib/demo-data-settings";
@@ -17,6 +23,10 @@ type DemoCountableTable =
   | "jobs"
   | "estimates"
   | "invoices";
+
+type DemoPatternTable =
+  | DemoCountableTable
+  | "service_items";
 
 async function countCompanyRows(
   table: DemoCountableTable,
@@ -79,6 +89,47 @@ async function countDemoRows(
   return countCompanyRows(table, companyId, { demoOnly: true });
 }
 
+async function countDemoIdentifierRows(
+  table: DemoPatternTable,
+  companyId: string,
+): Promise<number> {
+  const supabase = await createClient();
+
+  let query = supabase
+    .from(table)
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId);
+
+  switch (table) {
+    case "customers":
+    case "service_items":
+      query = query.ilike("name", demoNameLikePattern());
+      break;
+    case "jobs":
+      query = query.like("job_number", `${DEMO_JOB_NUMBER_PREFIX}%`);
+      break;
+    case "estimates":
+      query = query.like("estimate_number", `${DEMO_ESTIMATE_NUMBER_PREFIX}%`);
+      break;
+    case "invoices":
+      query = query.like("invoice_number", `${DEMO_INVOICE_NUMBER_PREFIX}%`);
+      break;
+  }
+
+  const { count, error } = await query;
+
+  if (error) {
+    console.error(`[demo-data] ${table} identifier count failed:`, {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
 export async function getDemoDataStatus(
   companyId: string,
   _context?: ActiveCompanyContext,
@@ -92,6 +143,11 @@ export async function getDemoDataStatus(
     demoJobCount,
     demoEstimateCount,
     demoInvoiceCount,
+    identifierCustomerCount,
+    identifierJobCount,
+    identifierEstimateCount,
+    identifierInvoiceCount,
+    identifierServiceItemCount,
     settingsMarker,
   ] = await Promise.all([
     countCompanyRows("customers", companyId),
@@ -102,6 +158,11 @@ export async function getDemoDataStatus(
     countDemoRows("jobs", companyId),
     countDemoRows("estimates", companyId),
     countDemoRows("invoices", companyId),
+    countDemoIdentifierRows("customers", companyId),
+    countDemoIdentifierRows("jobs", companyId),
+    countDemoIdentifierRows("estimates", companyId),
+    countDemoIdentifierRows("invoices", companyId),
+    countDemoIdentifierRows("service_items", companyId),
     fetchCompanySettingsMarker(companyId),
   ]);
 
@@ -110,7 +171,12 @@ export async function getDemoDataStatus(
     demoCustomerCount > 0 ||
     demoJobCount > 0 ||
     demoEstimateCount > 0 ||
-    demoInvoiceCount > 0;
+    demoInvoiceCount > 0 ||
+    identifierCustomerCount > 0 ||
+    identifierJobCount > 0 ||
+    identifierEstimateCount > 0 ||
+    identifierInvoiceCount > 0 ||
+    identifierServiceItemCount > 0;
   const canSetupDemoData = !hasDemoData;
 
   const realCustomerCount = Math.max(0, totalCustomerCount - demoCustomerCount);
@@ -181,6 +247,13 @@ export async function markCompanyDemoDataSeeded(
   }
 
   return { error: null };
+}
+
+/** Idempotent cleanup before seeding — removes demo-scoped and identifier-tagged rows. */
+export async function prepareCompanyDemoSeed(
+  companyId: string,
+): Promise<{ error: string | null }> {
+  return clearCompanyDemoData(companyId);
 }
 
 export async function clearCompanyDemoData(

@@ -5,8 +5,15 @@ import {
   clearCompanyDemoData,
   getDemoDataStatus,
   markCompanyDemoDataSeeded,
+  prepareCompanyDemoSeed,
   resolveDemoTechnicianId,
 } from "@/lib/database/queries/demo-data";
+import {
+  isDemoEstimateNumber,
+  isDemoInvoiceNumber,
+  isDemoJobNumber,
+  isDemoScopedName,
+} from "@/shared/lib/demo-data-identifiers";
 import { withDemoName } from "@/shared/lib/demo-data-settings";
 import {
   DEMO_CUSTOMERS,
@@ -65,6 +72,182 @@ type TimeEntrySeedInput = {
   is_demo?: boolean;
 };
 
+type DatabaseInsertError = {
+  message?: string;
+  code?: string;
+  details?: string;
+  hint?: string;
+};
+
+type DemoConflictLookup = {
+  matchOn: Record<string, unknown>;
+  isDemoScoped: (existing: Record<string, unknown>) => boolean;
+};
+
+function extractConstraintName(error: DatabaseInsertError): string | null {
+  const message = error.message ?? "";
+  const match = message.match(/unique constraint "([^"]+)"/i);
+  return match?.[1] ?? null;
+}
+
+function formatDemoSeedInsertError(
+  error: DatabaseInsertError,
+  step: string,
+  table: string,
+): string {
+  const constraint = extractConstraintName(error);
+  const mapped = mapDemoDataError(error, "seed", { accessVerified: true });
+
+  if (error.code === "23505") {
+    const constraintLabel = constraint ? ` (${constraint})` : "";
+    return `Demo seed failed at ${step} on ${table}: a matching record already exists${constraintLabel}. Clear demo data and try again.`;
+  }
+
+  return mapped;
+}
+
+function buildDemoConflictLookup(
+  table: string,
+  row: Record<string, unknown>,
+): DemoConflictLookup | undefined {
+  switch (table) {
+    case "service_items":
+      if (typeof row.name === "string") {
+        return {
+          matchOn: { name: row.name },
+          isDemoScoped: (existing) =>
+            isDemoScopedName(String(existing.name ?? "")),
+        };
+      }
+      break;
+    case "customers":
+      if (typeof row.name === "string") {
+        return {
+          matchOn: { name: row.name },
+          isDemoScoped: (existing) =>
+            isDemoScopedName(String(existing.name ?? "")),
+        };
+      }
+      break;
+    case "jobs":
+      if (typeof row.job_number === "string") {
+        return {
+          matchOn: { job_number: row.job_number },
+          isDemoScoped: (existing) =>
+            isDemoJobNumber(String(existing.job_number ?? "")),
+        };
+      }
+      break;
+    case "estimates":
+      if (typeof row.estimate_number === "string") {
+        return {
+          matchOn: { estimate_number: row.estimate_number },
+          isDemoScoped: (existing) =>
+            isDemoEstimateNumber(String(existing.estimate_number ?? "")),
+        };
+      }
+      break;
+    case "invoices":
+      if (typeof row.invoice_number === "string") {
+        return {
+          matchOn: { invoice_number: row.invoice_number },
+          isDemoScoped: (existing) =>
+            isDemoInvoiceNumber(String(existing.invoice_number ?? "")),
+        };
+      }
+      break;
+  }
+
+  return undefined;
+}
+
+async function findExistingDemoRow(
+  companyId: string,
+  table: string,
+  lookup: DemoConflictLookup,
+): Promise<Record<string, unknown> | null> {
+  const supabase = await createClient();
+
+  let query = supabase.from(table).select("*").eq("company_id", companyId);
+
+  for (const [column, value] of Object.entries(lookup.matchOn)) {
+    query = query.eq(column, value as string);
+  }
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error || !data) {
+    console.error("[seedDemoData] conflict lookup failed", {
+      table,
+      companyId,
+      matchOn: lookup.matchOn,
+      code: error?.code ?? null,
+      message: error?.message ?? null,
+    });
+    return null;
+  }
+
+  return data as Record<string, unknown>;
+}
+
+async function closeOpenDemoTimeEntries(
+  companyId: string,
+  technicianId: string,
+): Promise<void> {
+  const supabase = await createClient();
+  const endedAt = new Date().toISOString();
+
+  const { error } = await supabase
+    .from("time_entries")
+    .update({
+      ended_at: endedAt,
+      duration_minutes: 0,
+    } as never)
+    .eq("company_id", companyId)
+    .eq("technician_id", technicianId)
+    .eq("is_demo", true)
+    .is("ended_at", null);
+
+  if (error) {
+    console.error("[seedDemoData] close open demo time entries failed", {
+      companyId,
+      technicianId,
+      code: error.code,
+      message: error.message,
+    });
+  }
+}
+
+async function hasOpenRealTimeSegment(
+  companyId: string,
+  technicianId: string,
+  entryType: "clock" | "break" | "job_labor",
+): Promise<boolean> {
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("time_entries")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .eq("technician_id", technicianId)
+    .eq("entry_type", entryType)
+    .eq("is_demo", false)
+    .is("ended_at", null);
+
+  if (error) {
+    console.error("[seedDemoData] open time segment lookup failed", {
+      companyId,
+      technicianId,
+      entryType,
+      code: error.code,
+      message: error.message,
+    });
+    return false;
+  }
+
+  return (count ?? 0) > 0;
+}
+
 function validateTimeEntrySeed(input: TimeEntrySeedInput): string | null {
   if (input.entry_type === "job_labor" && !input.job_id) {
     return "Demo time entry seed error: job labor requires a job.";
@@ -97,10 +280,29 @@ async function insertTimeEntry(
   step: string,
   companyId: string,
   row: TimeEntrySeedInput,
+  options: { allowSkipOpenSegment?: boolean } = {},
 ): Promise<void> {
   const validationError = validateTimeEntrySeed(row);
   if (validationError) {
     throw new Error(validationError);
+  }
+
+  const isOpenSegment = row.ended_at == null;
+  if (options.allowSkipOpenSegment && isOpenSegment) {
+    const hasRealOpenSegment = await hasOpenRealTimeSegment(
+      companyId,
+      row.technician_id,
+      row.entry_type,
+    );
+    if (hasRealOpenSegment) {
+      console.warn("[seedDemoData] skipping open demo time segment", {
+        step,
+        companyId,
+        entryType: row.entry_type,
+        technicianId: row.technician_id,
+      });
+      return;
+    }
   }
 
   const result = await insertRow(step, companyId, "time_entries", row);
@@ -122,6 +324,33 @@ async function insertRow(
     .select("id")
     .single();
 
+  if (!error && data) {
+    return { id: (data as { id: string }).id, error: null };
+  }
+
+  const conflictLookup = buildDemoConflictLookup(table, row);
+  if (error?.code === "23505" && conflictLookup) {
+    const existing = await findExistingDemoRow(companyId, table, conflictLookup);
+    if (existing && conflictLookup.isDemoScoped(existing)) {
+      const existingId = String(existing.id ?? "");
+      if (existing.is_demo === false) {
+        await supabase
+          .from(table)
+          .update({ is_demo: true } as never)
+          .eq("id", existingId);
+      }
+
+      console.warn("[seedDemoData] reusing existing demo-scoped row", {
+        step,
+        table,
+        companyId,
+        id: existingId,
+        matchOn: conflictLookup.matchOn,
+      });
+      return { id: existingId, error: null };
+    }
+  }
+
   if (error || !data) {
     console.error("[seedDemoData] insert failed", {
       step,
@@ -129,10 +358,16 @@ async function insertRow(
       companyId,
       code: error?.code ?? null,
       message: error?.message ?? null,
+      details: error?.details ?? null,
+      hint: error?.hint ?? null,
+      constraint: error ? extractConstraintName(error) : null,
+      matchOn: conflictLookup?.matchOn ?? null,
     });
     return {
       id: null,
-      error: error ? mapDemoDataError(error, "seed", { accessVerified: true }) : `Failed to insert ${table}.`,
+      error: error
+        ? formatDemoSeedInsertError(error, step, table)
+        : `Failed to insert ${table}.`,
     };
   }
 
@@ -186,6 +421,11 @@ export async function seedCompanyDemoData(
 
   if (status.hasDemoData) {
     return { error: "Demo data has already been loaded for this company." };
+  }
+
+  const prepResult = await prepareCompanyDemoSeed(companyId);
+  if (prepResult.error) {
+    return { error: prepResult.error };
   }
 
   const demoEmail = resolveDemoCustomerEmail(context);
@@ -1176,6 +1416,8 @@ export async function seedCompanyDemoData(
       }
     }
 
+    await closeOpenDemoTimeEntries(companyId, seedContext.technicianId);
+
     for (const jobSeed of DEMO_JOBS) {
       const jobId = jobIds[jobSeed.key];
       if (!jobId) {
@@ -1190,17 +1432,22 @@ export async function seedCompanyDemoData(
             )
           : start;
 
-        await insertTimeEntry("seed_time_entries", companyId, {
-          company_id: companyId,
-          technician_id: seedContext.technicianId,
-          job_id: jobId,
-          entry_type: "job_labor",
-          started_at: workStarted.toISOString(),
-          ended_at: null,
-          duration_minutes: null,
-          notes: "Active labor on no-cooling repair.",
-          is_demo: true,
-        });
+        await insertTimeEntry(
+          "seed_time_entries",
+          companyId,
+          {
+            company_id: companyId,
+            technician_id: seedContext.technicianId,
+            job_id: jobId,
+            entry_type: "job_labor",
+            started_at: workStarted.toISOString(),
+            ended_at: null,
+            duration_minutes: null,
+            notes: "Active labor on no-cooling repair.",
+            is_demo: true,
+          },
+          { allowSkipOpenSegment: true },
+        );
       } else if (
         jobSeed.status === "completed" &&
         jobSeed.workStartedMinutesAfterStart &&
@@ -1231,16 +1478,21 @@ export async function seedCompanyDemoData(
       }
     }
 
-    await insertTimeEntry("seed_time_entries_clock", companyId, {
-      company_id: companyId,
-      technician_id: seedContext.technicianId,
-      entry_type: "clock",
-      started_at: atTime(seedContext.now, 7, 45).toISOString(),
-      ended_at: null,
-      duration_minutes: null,
-      notes: "Demo shift clock-in for labor hour reporting.",
-      is_demo: true,
-    });
+    await insertTimeEntry(
+      "seed_time_entries_clock",
+      companyId,
+      {
+        company_id: companyId,
+        technician_id: seedContext.technicianId,
+        entry_type: "clock",
+        started_at: atTime(seedContext.now, 7, 45).toISOString(),
+        ended_at: null,
+        duration_minutes: null,
+        notes: "Demo shift clock-in for labor hour reporting.",
+        is_demo: true,
+      },
+      { allowSkipOpenSegment: true },
+    );
 
     await insertTimeEntry("seed_time_entries_clock", companyId, {
       company_id: companyId,
