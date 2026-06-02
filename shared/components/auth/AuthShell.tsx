@@ -105,16 +105,11 @@ function AuthHeroPanel() {
 
       <div className="relative z-10 flex h-full min-h-0 flex-col px-8 py-8 lg:px-10 lg:py-10 xl:px-12">
         <div className="auth-hero-enter shrink-0">
-          <div className="flex items-center gap-3">
-            <AltairLogo variant="gold" size="md" showWordmark={false} />
-            <div>
-              <p className="text-sm font-semibold tracking-tight text-white">
-                Altair OS
-              </p>
-              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500">
-                Field operations platform
-              </p>
-            </div>
+          <div className="flex flex-col items-start">
+            <AltairLogo variant="gold" size="md" showWordmark />
+            <p className="mt-2.5 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500">
+              Field operations platform
+            </p>
           </div>
 
           <div className="mt-8 max-w-lg xl:mt-10">
@@ -209,14 +204,11 @@ function AuthHeroPanel() {
 
 function AuthMobileBrand() {
   return (
-    <div className="flex items-center gap-2.5 lg:hidden">
-      <AltairLogo variant="gold" size="sm" showWordmark={false} />
-      <div>
-        <span className="text-sm font-semibold text-slate-900">Altair OS</span>
-        <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
-          Field operations
-        </p>
-      </div>
+    <div className="mb-1 flex flex-col items-center text-center lg:hidden">
+      <AltairLogo variant="gold" size="md" showWordmark />
+      <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400">
+        Field operations platform
+      </p>
     </div>
   );
 }
@@ -259,12 +251,9 @@ export function AuthPageSkeleton() {
         <div className="auth-grid pointer-events-none absolute inset-0 opacity-40" />
         <div className="relative flex h-full flex-col justify-between px-10 py-10">
           <div className="animate-pulse space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-slate-800" />
-              <div className="space-y-2">
-                <div className="h-3 w-20 rounded bg-slate-800" />
-                <div className="h-2 w-28 rounded bg-slate-800/70" />
-              </div>
+            <div className="flex flex-col items-start gap-2.5 opacity-60">
+              <AltairLogo variant="gold" size="md" showWordmark />
+              <div className="h-2 w-36 rounded bg-slate-800/70" />
             </div>
             <div className="space-y-3 pt-2">
               <div className="h-2 w-32 rounded bg-slate-800/60" />
@@ -283,6 +272,10 @@ export function AuthPageSkeleton() {
       <div className="auth-panel-bg flex min-h-0 flex-1 flex-col">
         <div className="flex flex-1 items-center justify-center px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
           <div className="w-full max-w-[400px] animate-pulse space-y-5">
+            <div className="flex flex-col items-center opacity-50 lg:hidden">
+              <AltairLogo variant="gold" size="md" showWordmark />
+              <div className="mt-2 h-2 w-32 rounded bg-slate-100" />
+            </div>
             <div className="space-y-2">
               <div className="h-7 w-44 rounded-lg bg-slate-100" />
               <div className="h-4 w-full rounded bg-slate-50" />

@@ -88,9 +88,9 @@ export function Header({
             className="md:hidden"
           />
           <AltairLogo
-            variant="white"
+            variant="gold"
             size="sm"
-            showWordmark={false}
+            showWordmark
             className="hidden md:block"
           />
         </Link>
