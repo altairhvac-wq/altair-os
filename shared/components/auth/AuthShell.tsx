@@ -100,13 +100,21 @@ function AuthHeroPanel() {
       <div className="auth-grid pointer-events-none absolute inset-0 opacity-70" />
       <div className="auth-grid-fine pointer-events-none absolute inset-0 opacity-50" />
       <div className="auth-noise pointer-events-none absolute inset-0 opacity-40" />
-      <div className="pointer-events-none absolute -left-32 -top-24 h-[420px] w-[420px] bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.14)_0%,rgba(212,175,55,0.04)_40%,transparent_70%)]" />
-      <div className="pointer-events-none absolute -bottom-32 right-0 h-80 w-80 bg-[radial-gradient(circle_at_center,rgba(154,114,9,0.1)_0%,transparent_65%)]" />
+      <div className="pointer-events-none absolute -left-24 -top-20 h-[480px] w-[480px] bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.18)_0%,rgba(212,175,55,0.06)_38%,transparent_72%)]" />
+      <div className="pointer-events-none absolute left-[28%] top-[38%] h-72 w-72 -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.1)_0%,rgba(154,114,9,0.04)_45%,transparent_70%)]" />
+      <div className="pointer-events-none absolute -bottom-28 right-8 h-96 w-96 bg-[radial-gradient(circle_at_center,rgba(154,114,9,0.12)_0%,rgba(212,175,55,0.04)_40%,transparent_68%)]" />
+      <div className="pointer-events-none absolute bottom-[22%] left-[12%] h-56 w-56 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.08)_0%,transparent_65%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_75%_at_50%_42%,transparent_0%,rgba(10,10,10,0.35)_58%,rgba(10,10,10,0.82)_100%)]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/30 to-transparent" />
 
       <div className="relative z-10 flex h-full min-h-0 flex-col px-8 py-8 lg:px-10 lg:py-10 xl:px-12">
         <div className="auth-hero-enter shrink-0">
-          <AltairLogo variant="white" size="md" showWordmark />
+          <AltairLogo
+            variant="white"
+            size="lg"
+            showWordmark
+            className="drop-shadow-[0_2px_16px_rgba(212,175,55,0.18)]"
+          />
 
           <div className="mt-8 max-w-lg xl:mt-10">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#D4AF37]/90">
@@ -122,7 +130,7 @@ function AuthHeroPanel() {
           </div>
         </div>
 
-        <div className="auth-hero-enter mt-6 shrink-0 rounded-xl border border-[#D4AF37]/26 bg-[#1C1A17] p-4 shadow-[0_10px_40px_rgba(0,0,0,0.48),0_3px_10px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(245,230,163,0.14)] xl:mt-8">
+        <div className="auth-hero-enter mt-6 shrink-0 rounded-2xl border border-[#D4AF37]/34 bg-gradient-to-b from-[#242019] via-[#1C1A17] to-[#12100D] p-4 shadow-[0_16px_52px_rgba(0,0,0,0.58),0_6px_18px_rgba(0,0,0,0.38),0_0_0_1px_rgba(212,175,55,0.06),inset_0_1px_0_rgba(245,230,163,0.2)] xl:mt-8">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Radio className="h-3.5 w-3.5 text-[#D4AF37]" aria-hidden="true" />
@@ -139,7 +147,7 @@ function AuthHeroPanel() {
             {OPERATIONAL_SNAPSHOT.map((metric) => (
               <div
                 key={metric.label}
-                className="rounded-lg border border-[#D4AF37]/18 bg-[#FAF7F0] px-3 py-2.5 shadow-[0_8px_28px_rgba(0,0,0,0.38),0_2px_8px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.92)]"
+                className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-b from-[#FFFCF6] via-[#FAF7F0] to-[#F3EDE2] px-3 py-2.5 shadow-[inset_0_2px_5px_rgba(0,0,0,0.08),0_6px_16px_rgba(0,0,0,0.32),0_2px_6px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.94)]"
               >
                 <p className="text-[10px] font-medium uppercase tracking-wider text-stone-600">
                   {metric.label}
@@ -156,7 +164,7 @@ function AuthHeroPanel() {
           {PLATFORM_TIERS.map((platform) => (
             <div
               key={platform.tier}
-              className={`auth-tier auth-feature group rounded-xl border border-[#D4AF37]/16 bg-[#FAF7F0] p-3.5 shadow-[0_10px_36px_rgba(0,0,0,0.36),0_3px_10px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.9)] transition-[border-color,box-shadow] duration-200 hover:border-[#D4AF37]/28 hover:shadow-[0_14px_44px_rgba(0,0,0,0.4),0_4px_12px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.95)] ${platform.accent}`}
+              className={`auth-tier auth-feature group rounded-2xl border border-[#D4AF37]/22 bg-gradient-to-b from-[#FDF9F0] via-[#FAF7F0] to-[#F4EFE4] p-3.5 shadow-[0_14px_44px_rgba(0,0,0,0.42),0_5px_14px_rgba(0,0,0,0.24),0_0_0_1px_rgba(212,175,55,0.07),inset_0_1px_0_rgba(255,255,255,0.96)] transition-[border-color,box-shadow] duration-200 hover:border-[#D4AF37]/32 hover:shadow-[0_18px_50px_rgba(0,0,0,0.46),0_6px_16px_rgba(0,0,0,0.26),0_0_0_1px_rgba(212,175,55,0.1),inset_0_1px_0_rgba(255,255,255,0.98)] ${platform.accent}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -298,12 +306,18 @@ export function AuthShell({
         <AuthHeroPanel />
       </div>
 
-      <div className="auth-panel-enter auth-panel-bg relative flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-y-auto bg-gradient-to-b from-stone-50/90 via-white to-stone-100/50">
+      <div className="auth-panel-enter auth-panel-bg relative flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-y-auto bg-gradient-to-br from-[#FAF7F2] via-[#FFFBF7] to-[#EDE8DF]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_85%_15%,rgba(212,175,55,0.07)_0%,transparent_55%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_10%_90%,rgba(154,114,9,0.05)_0%,transparent_50%)]" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/25 to-transparent lg:hidden" />
 
-        <div className="flex min-h-full flex-1 flex-col justify-center px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top,0px))] sm:px-8 sm:pb-8 sm:pt-8 lg:px-10 lg:py-10 xl:px-14">
+        <div className="relative flex min-h-full flex-1 flex-col justify-center px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top,0px))] sm:px-8 sm:pb-8 sm:pt-8 lg:px-10 lg:py-12 xl:px-14">
           <div className="mx-auto w-full min-w-0 max-w-[400px]">
             <AuthMobileBrand />
+
+            <div className="mb-7 hidden shrink-0 lg:block">
+              <AltairLogo variant="primary" size="lg" showWordmark />
+            </div>
 
             {variant === "onboarding" && onboardingStep ? (
               <div className="mt-7 lg:mt-0">
@@ -328,7 +342,7 @@ export function AuthShell({
               <div className="mt-6 min-w-0 space-y-4">{aboveCard}</div>
             ) : null}
 
-            <div className="mt-6 rounded-2xl border border-stone-200/90 border-t-[3px] border-t-[#D4AF37]/45 bg-white p-5 shadow-[0_2px_4px_rgba(10,10,10,0.04),0_8px_24px_rgba(10,10,10,0.09),0_28px_56px_rgba(154,114,9,0.07)] ring-1 ring-[#D4AF37]/14 sm:p-6">
+            <div className="mt-6 rounded-2xl border border-stone-200/80 border-t-[3px] border-t-[#D4AF37]/65 bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] p-5 shadow-[0_4px_8px_rgba(10,10,10,0.06),0_12px_32px_rgba(10,10,10,0.1),0_32px_64px_rgba(154,114,9,0.1),0_0_28px_rgba(212,175,55,0.06)] ring-1 ring-[#D4AF37]/20 sm:p-6">
               {children}
             </div>
 
@@ -390,7 +404,7 @@ export function AuthSubmitButton({
     <button
       type="submit"
       disabled={pending}
-      className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0A0A0A] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.2),inset_0_1px_0_rgba(245,230,163,0.12)] ring-1 ring-[#D4AF37]/25 transition-all duration-200 hover:bg-[#141414] hover:ring-[#D4AF37]/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70 disabled:shadow-none disabled:active:scale-100"
+      className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0A0A0A] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2),0_0_22px_rgba(212,175,55,0.1),inset_0_1px_0_rgba(245,230,163,0.14)] ring-1 ring-[#D4AF37]/30 transition-all duration-200 hover:bg-[#141414] hover:shadow-[0_1px_2px_rgba(10,10,10,0.22),0_6px_22px_rgba(212,175,55,0.26),0_0_26px_rgba(212,175,55,0.14),inset_0_1px_0_rgba(245,230,163,0.16)] hover:ring-[#D4AF37]/42 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70 disabled:shadow-none disabled:active:scale-100"
     >
       {pending ? (
         <>
