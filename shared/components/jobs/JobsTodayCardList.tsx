@@ -5,49 +5,84 @@ import {
   formatScheduledTime,
   type Job,
 } from "@/shared/types/job";
+import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
 
 type JobsTodayCardListProps = {
   jobs: Job[];
   onSelect: (job: Job) => void;
+  selectionEnabled?: boolean;
+  selectedIds?: ReadonlySet<string>;
+  onToggleSelection?: (jobId: string) => void;
 };
 
-export function JobsTodayCardList({ jobs, onSelect }: JobsTodayCardListProps) {
+export function JobsTodayCardList({
+  jobs,
+  onSelect,
+  selectionEnabled = false,
+  selectedIds,
+  onToggleSelection,
+}: JobsTodayCardListProps) {
   return (
     <ul className="divide-y divide-slate-100">
-      {jobs.map((job) => (
-        <li key={job.id}>
-          <button
-            type="button"
-            onClick={() => onSelect(job)}
-            className={adminListRowClass}
-            aria-label={`Open job ${job.jobNumber} for ${job.customerName}`}
-          >
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-slate-900">
-                {job.jobNumber}
-              </p>
-              <p className="mt-0.5 text-sm text-slate-600">
-                {formatScheduledDate(job.scheduledDate)} ·{" "}
-                {formatScheduledTime(job.scheduledDate)}
-              </p>
-              <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                <JobStatusBadge status={job.status} />
-                <JobPriorityBadge priority={job.priority} />
-              </div>
-              <p className="mt-1 truncate text-sm font-medium text-slate-900">
-                {job.customerName}
-              </p>
-              <p className="mt-0.5 truncate text-xs text-slate-400">
-                {job.assignedTechnician ?? "Unassigned"}
-              </p>
-            </div>
+      {jobs.map((job) => {
+        const isSelected = selectedIds?.has(job.id) ?? false;
 
-            <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-300" />
-          </button>
-        </li>
-      ))}
+        return (
+          <li key={job.id}>
+            <div
+              className={`flex items-stretch ${
+                isSelected ? "bg-cyan-50/60" : ""
+              }`}
+            >
+              {selectionEnabled ? (
+                <div className="flex shrink-0 items-center pl-2">
+                  <label
+                    className="flex min-h-11 min-w-10 items-center justify-center"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <BulkSelectCheckbox
+                      checked={isSelected}
+                      ariaLabel={`Select job ${job.jobNumber}`}
+                      onChange={() => onToggleSelection?.(job.id)}
+                    />
+                  </label>
+                </div>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => onSelect(job)}
+                className={`${adminListRowClass} min-w-0 flex-1`}
+                aria-label={`Open job ${job.jobNumber} for ${job.customerName}`}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-slate-900">
+                    {job.jobNumber}
+                  </p>
+                  <p className="mt-0.5 text-sm text-slate-600">
+                    {formatScheduledDate(job.scheduledDate)} ·{" "}
+                    {formatScheduledTime(job.scheduledDate)}
+                  </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    <JobStatusBadge status={job.status} />
+                    <JobPriorityBadge priority={job.priority} />
+                  </div>
+                  <p className="mt-1 truncate text-sm font-medium text-slate-900">
+                    {job.customerName}
+                  </p>
+                  <p className="mt-0.5 truncate text-xs text-slate-400">
+                    {job.assignedTechnician ?? "Unassigned"}
+                  </p>
+                </div>
+
+                <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-300" />
+              </button>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }

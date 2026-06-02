@@ -1,4 +1,5 @@
 import { Filter, Search } from "lucide-react";
+import { BulkSelectAllControl } from "@/shared/components/bulk/BulkSelectAllControl";
 import {
   JOB_PRIORITY_OPTIONS,
   JOB_STATUS_OPTIONS,
@@ -19,6 +20,13 @@ type JobSearchFilterBarProps = {
   unassignedOnly?: boolean;
   hasActiveFilters?: boolean;
   onClearFilters?: () => void;
+  bulkSelectAllControl?: {
+    selectableCount: number;
+    allSelected: boolean;
+    onSelectAll: () => void;
+    onClearSelection: () => void;
+    className?: string;
+  };
 };
 
 const filterSelectClass =
@@ -37,6 +45,7 @@ export function JobSearchFilterBar({
   unassignedOnly = false,
   hasActiveFilters = false,
   onClearFilters,
+  bulkSelectAllControl,
 }: JobSearchFilterBarProps) {
   return (
     <div className="shrink-0 border-b border-slate-100/90 bg-white px-3 py-2 sm:px-4">
@@ -90,6 +99,10 @@ export function JobSearchFilterBar({
               </select>
             </div>
           </div>
+        ) : null}
+
+        {bulkSelectAllControl ? (
+          <BulkSelectAllControl {...bulkSelectAllControl} />
         ) : null}
       </div>
 

@@ -3,6 +3,7 @@ import { canAccessOperationalJobsArea, canViewAllJobs } from "@/lib/database/acc
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listCustomers } from "@/lib/database/queries/customers";
 import { listAssignedJobs, listJobs, listJobsForOperationalDay } from "@/lib/database/queries/jobs";
+import { listTechnicians } from "@/lib/database/queries/technicians";
 import { JobsPageView } from "@/shared/components/jobs/JobsPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { parseJobsPageSearchParams } from "@/shared/lib/jobs-page-filters";
@@ -43,7 +44,9 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
 
   const canViewAll = canViewAllJobs(companyContext);
 
-  const [jobs, todayJobs, customers] = await Promise.all([
+  const canDispatchJobs = companyContext.permissions.dispatchJobs;
+
+  const [jobs, todayJobs, customers, technicians] = await Promise.all([
     canViewAll
       ? listJobs(companyContext.company.id)
       : listAssignedJobs(
@@ -57,6 +60,9 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
         : companyContext.user.id,
     }),
     canViewAll ? listCustomers(companyContext.company.id) : Promise.resolve([]),
+    canDispatchJobs
+      ? listTechnicians(companyContext.company.id, companyContext)
+      : Promise.resolve([]),
   ]);
 
   const preselectedCustomer = customerId
@@ -80,7 +86,8 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
       initialTodayJobs={todayJobs}
       companyTimeZone={companyContext.company.timezone}
       customers={customers}
-      canDispatchJobs={companyContext.permissions.dispatchJobs}
+      technicians={technicians}
+      canDispatchJobs={canDispatchJobs}
       canManageCustomers={companyContext.permissions.manageCustomers}
       initialPanelMode={create === "1" && preselectedCustomer ? "create" : "empty"}
       createInitialData={createInitialData}
