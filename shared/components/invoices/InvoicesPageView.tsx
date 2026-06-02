@@ -30,7 +30,10 @@ import {
 } from "@/shared/lib/bulk-lifecycle-runner";
 import {
   formatBulkInvoicesResultMessage,
+  formatInvoiceBulkActionConfirmMessage,
+  formatInvoiceBulkEligibilityHints,
   getInvoiceLifecycleState,
+  summarizeInvoiceBulkEligibility,
 } from "@/shared/lib/invoice-lifecycle";
 import {
   countOperationalActive,
@@ -303,6 +306,51 @@ export function InvoicesPageView({
     selectedInvoiceIds,
     visibleInvoices,
   ]);
+
+  const selectedInvoices = useMemo(
+    () => resolveSelectedItems(visibleInvoices, selectedInvoiceIds),
+    [selectedInvoiceIds, visibleInvoices],
+  );
+
+  const selectedBulkEligibility = useMemo(
+    () =>
+      selectedCount === 0
+        ? null
+        : summarizeInvoiceBulkEligibility(selectedInvoices, {
+            jobsById,
+            voidMode: lifecycleFilter === "active" ? "guide" : "lifecycle",
+          }),
+    [jobsById, lifecycleFilter, selectedCount, selectedInvoices],
+  );
+
+  const activeBulkEligibilityHints = useMemo(
+    () =>
+      selectedBulkEligibility
+        ? formatInvoiceBulkEligibilityHints(selectedBulkEligibility, "active", {
+            includeSend: true,
+          })
+        : [],
+    [selectedBulkEligibility],
+  );
+
+  const lifecycleBulkEligibilityHints = useMemo(
+    () =>
+      selectedBulkEligibility && lifecycleFilter !== "active"
+        ? formatInvoiceBulkEligibilityHints(
+            selectedBulkEligibility,
+            lifecycleFilter,
+          )
+        : [],
+    [lifecycleFilter, selectedBulkEligibility],
+  );
+
+  const isInvoiceLifecycleBusy =
+    isBulkArchiving ||
+    isBulkRestoring ||
+    isBulkVoiding ||
+    isBulkMovingToTrash ||
+    isBulkRestoringFromTrash ||
+    isBulkPermanentlyDeleting;
 
   function handleToggleInvoiceSelection(invoiceId: string) {
     setSelectedInvoiceIds((previous) =>
@@ -686,16 +734,76 @@ export function InvoicesPageView({
             <InvoiceBatchSelectionBar
               selectedCount={selectedCount}
               sendableCount={selectedSendableCount}
+              eligibilityHints={activeBulkEligibilityHints}
               isSending={isBatchSending}
+              isLifecycleBusy={isInvoiceLifecycleBusy}
               onSendSelected={handleBatchSendSelected}
               onClearSelection={handleClearSelection}
+              archiveAction={
+                selectedBulkEligibility &&
+                selectedBulkEligibility.archiveEligibleCount > 0
+                  ? {
+                      eligibleCount: selectedBulkEligibility.archiveEligibleCount,
+                      isPending: isBulkArchiving,
+                      confirmMessage: formatInvoiceBulkActionConfirmMessage(
+                        "archive",
+                        selectedBulkEligibility,
+                      ),
+                      onAction: () =>
+                        runBulkLifecycle(
+                          bulkArchiveInvoicesAction,
+                          "Archive",
+                          startBulkArchiveTransition,
+                        ),
+                    }
+                  : undefined
+              }
+              voidAction={
+                selectedBulkEligibility &&
+                selectedBulkEligibility.voidEligibleCount > 0
+                  ? {
+                      eligibleCount: selectedBulkEligibility.voidEligibleCount,
+                      isPending: isBulkVoiding,
+                      confirmMessage: formatInvoiceBulkActionConfirmMessage(
+                        "void",
+                        selectedBulkEligibility,
+                      ),
+                      onAction: () =>
+                        runBulkLifecycle(
+                          bulkVoidInvoicesAction,
+                          "Void",
+                          startBulkVoidTransition,
+                        ),
+                    }
+                  : undefined
+              }
+              moveToTrashAction={
+                selectedBulkEligibility &&
+                selectedBulkEligibility.trashEligibleCount > 0
+                  ? {
+                      eligibleCount: selectedBulkEligibility.trashEligibleCount,
+                      isPending: isBulkMovingToTrash,
+                      confirmMessage: formatInvoiceBulkActionConfirmMessage(
+                        "moveToTrash",
+                        selectedBulkEligibility,
+                      ),
+                      onAction: () =>
+                        runBulkLifecycle(
+                          bulkMoveInvoicesToTrashAction,
+                          "Move to Recently Deleted",
+                          startBulkMoveToTrashTransition,
+                        ),
+                    }
+                  : undefined
+              }
             />
           ) : null}
-          {selectionEnabled && selectedCount > 0 ? (
+          {selectionEnabled && selectedCount > 0 && lifecycleFilter !== "active" ? (
             <EntityLifecycleBulkBar
               entityLabel="invoice"
               selectedCount={selectedCount}
               lifecycleFilter={lifecycleFilter}
+              eligibilityHints={lifecycleBulkEligibilityHints}
               isArchiving={isBulkArchiving}
               isRestoring={isBulkRestoring}
               isVoiding={isBulkVoiding}
@@ -703,17 +811,87 @@ export function InvoicesPageView({
               isRestoringFromTrash={isBulkRestoringFromTrash}
               isPermanentlyDeleting={isBulkPermanentlyDeleting}
               showArchive={
-                lifecycleFilter === "active" || lifecycleFilter === "voided"
+                lifecycleFilter === "voided" &&
+                (selectedBulkEligibility?.archiveEligibleCount ?? 0) > 0
               }
               showVoid={
-                lifecycleFilter === "active" || lifecycleFilter === "archived"
+                lifecycleFilter === "archived" &&
+                (selectedBulkEligibility?.voidEligibleCount ?? 0) > 0
               }
               showMoveToTrash={
-                lifecycleFilter === "active" || lifecycleFilter === "archived"
+                lifecycleFilter === "archived" &&
+                (selectedBulkEligibility?.trashEligibleCount ?? 0) > 0
               }
-              showRestore={lifecycleFilter === "archived"}
-              showRestoreFromTrash={lifecycleFilter === "deleted"}
-              showPermanentDelete={lifecycleFilter === "deleted"}
+              showRestore={
+                lifecycleFilter === "archived" &&
+                (selectedBulkEligibility?.restoreEligibleCount ?? 0) > 0
+              }
+              showRestoreFromTrash={
+                lifecycleFilter === "deleted" &&
+                (selectedBulkEligibility?.restoreFromTrashEligibleCount ?? 0) > 0
+              }
+              showPermanentDelete={
+                lifecycleFilter === "deleted" &&
+                (selectedBulkEligibility?.permanentDeleteEligibleCount ?? 0) > 0
+              }
+              archiveEligibleCount={selectedBulkEligibility?.archiveEligibleCount}
+              restoreEligibleCount={selectedBulkEligibility?.restoreEligibleCount}
+              voidEligibleCount={selectedBulkEligibility?.voidEligibleCount}
+              moveToTrashEligibleCount={selectedBulkEligibility?.trashEligibleCount}
+              restoreFromTrashEligibleCount={
+                selectedBulkEligibility?.restoreFromTrashEligibleCount
+              }
+              permanentDeleteEligibleCount={
+                selectedBulkEligibility?.permanentDeleteEligibleCount
+              }
+              archiveConfirmMessage={
+                selectedBulkEligibility
+                  ? formatInvoiceBulkActionConfirmMessage(
+                      "archive",
+                      selectedBulkEligibility,
+                    )
+                  : undefined
+              }
+              restoreConfirmMessage={
+                selectedBulkEligibility
+                  ? formatInvoiceBulkActionConfirmMessage(
+                      "restore",
+                      selectedBulkEligibility,
+                    )
+                  : undefined
+              }
+              voidConfirmMessage={
+                selectedBulkEligibility
+                  ? formatInvoiceBulkActionConfirmMessage(
+                      "void",
+                      selectedBulkEligibility,
+                    )
+                  : undefined
+              }
+              moveToTrashConfirmMessage={
+                selectedBulkEligibility
+                  ? formatInvoiceBulkActionConfirmMessage(
+                      "moveToTrash",
+                      selectedBulkEligibility,
+                    )
+                  : undefined
+              }
+              restoreFromTrashConfirmMessage={
+                selectedBulkEligibility
+                  ? formatInvoiceBulkActionConfirmMessage(
+                      "restoreFromTrash",
+                      selectedBulkEligibility,
+                    )
+                  : undefined
+              }
+              permanentDeleteConfirmMessage={
+                selectedBulkEligibility
+                  ? formatInvoiceBulkActionConfirmMessage(
+                      "permanentDelete",
+                      selectedBulkEligibility,
+                    )
+                  : undefined
+              }
               onArchive={() =>
                 runBulkLifecycle(
                   bulkArchiveInvoicesAction,

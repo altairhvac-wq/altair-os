@@ -6,6 +6,7 @@ type EntityLifecycleBulkBarProps = {
   entityLabel: string;
   selectedCount: number;
   lifecycleFilter: string;
+  eligibilityHints?: string[];
   isArchiving?: boolean;
   isRestoring?: boolean;
   isVoiding?: boolean;
@@ -20,6 +21,19 @@ type EntityLifecycleBulkBarProps = {
   showMoveToTrash?: boolean;
   showRestoreFromTrash?: boolean;
   showPermanentDelete?: boolean;
+  archiveEligibleCount?: number;
+  restoreEligibleCount?: number;
+  voidEligibleCount?: number;
+  moveToTrashEligibleCount?: number;
+  restoreFromTrashEligibleCount?: number;
+  permanentDeleteEligibleCount?: number;
+  archiveConfirmMessage?: string;
+  restoreConfirmMessage?: string;
+  voidConfirmMessage?: string;
+  cancelConfirmMessage?: string;
+  moveToTrashConfirmMessage?: string;
+  restoreFromTrashConfirmMessage?: string;
+  permanentDeleteConfirmMessage?: string;
   onArchive?: () => void;
   onRestore?: () => void;
   onVoid?: () => void;
@@ -34,6 +48,7 @@ export function EntityLifecycleBulkBar({
   entityLabel,
   selectedCount,
   lifecycleFilter,
+  eligibilityHints = [],
   isArchiving = false,
   isRestoring = false,
   isVoiding = false,
@@ -48,6 +63,19 @@ export function EntityLifecycleBulkBar({
   showMoveToTrash = false,
   showRestoreFromTrash = false,
   showPermanentDelete = false,
+  archiveEligibleCount,
+  restoreEligibleCount,
+  voidEligibleCount,
+  moveToTrashEligibleCount,
+  restoreFromTrashEligibleCount,
+  permanentDeleteEligibleCount,
+  archiveConfirmMessage,
+  restoreConfirmMessage,
+  voidConfirmMessage,
+  cancelConfirmMessage,
+  moveToTrashConfirmMessage,
+  restoreFromTrashConfirmMessage,
+  permanentDeleteConfirmMessage,
   onArchive,
   onRestore,
   onVoid,
@@ -70,12 +98,18 @@ export function EntityLifecycleBulkBar({
     return null;
   }
 
+  function isActionDisabled(eligibleCount?: number): boolean {
+    return isBusy || (eligibleCount !== undefined && eligibleCount === 0);
+  }
+
   function confirmAndRun(
-    message: string,
+    defaultMessage: string,
     action?: () => void,
+    confirmMessage?: string,
+    eligibleCount?: number,
   ) {
-    if (isBusy || !action) return;
-    if (!window.confirm(message)) return;
+    if (isActionDisabled(eligibleCount) || !action) return;
+    if (!window.confirm(confirmMessage ?? defaultMessage)) return;
     action();
   }
 
@@ -89,9 +123,16 @@ export function EntityLifecycleBulkBar({
     >
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-bold text-cyan-950">
-            {selectedCount} selected
-          </p>
+          <div>
+            <p className="text-sm font-bold text-cyan-950">{selectedCount} selected</p>
+            {eligibilityHints.length > 0 ? (
+              <ul className="mt-1 space-y-0.5 text-xs font-medium text-cyan-800/90">
+                {eligibilityHints.map((hint) => (
+                  <li key={hint}>{hint}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
           <button
             type="button"
             onClick={onClearSelection}
@@ -111,9 +152,11 @@ export function EntityLifecycleBulkBar({
                 confirmAndRun(
                   `Archive ${selectedCount} selected ${plural}? Historical records will be preserved.`,
                   onArchive,
+                  archiveConfirmMessage,
+                  archiveEligibleCount,
                 )
               }
-              disabled={isBusy}
+              disabled={isActionDisabled(archiveEligibleCount)}
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isArchiving ? (
@@ -132,6 +175,7 @@ export function EntityLifecycleBulkBar({
                 confirmAndRun(
                   `Cancel ${selectedCount} selected ${plural}?`,
                   onCancel,
+                  cancelConfirmMessage,
                 )
               }
               disabled={isBusy}
@@ -153,9 +197,11 @@ export function EntityLifecycleBulkBar({
                 confirmAndRun(
                   `Void ${selectedCount} selected ${plural}? This preserves audit history.`,
                   onVoid,
+                  voidConfirmMessage,
+                  voidEligibleCount,
                 )
               }
-              disabled={isBusy}
+              disabled={isActionDisabled(voidEligibleCount)}
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isVoiding ? (
@@ -174,9 +220,11 @@ export function EntityLifecycleBulkBar({
                 confirmAndRun(
                   `Move ${selectedCount} selected ${plural} to Recently Deleted?`,
                   onMoveToTrash,
+                  moveToTrashConfirmMessage,
+                  moveToTrashEligibleCount,
                 )
               }
-              disabled={isBusy}
+              disabled={isActionDisabled(moveToTrashEligibleCount)}
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-900 transition-colors hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isMovingToTrash ? (
@@ -191,8 +239,17 @@ export function EntityLifecycleBulkBar({
           {showRestore ? (
             <button
               type="button"
-              onClick={onRestore}
-              disabled={isBusy}
+              onClick={() => {
+                if (isActionDisabled(restoreEligibleCount) || !onRestore) return;
+                if (
+                  restoreConfirmMessage &&
+                  !window.confirm(restoreConfirmMessage)
+                ) {
+                  return;
+                }
+                onRestore();
+              }}
+              disabled={isActionDisabled(restoreEligibleCount)}
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-cyan-700 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isRestoring ? (
@@ -207,8 +264,19 @@ export function EntityLifecycleBulkBar({
           {showRestoreFromTrash ? (
             <button
               type="button"
-              onClick={onRestoreFromTrash}
-              disabled={isBusy}
+              onClick={() => {
+                if (isActionDisabled(restoreFromTrashEligibleCount) || !onRestoreFromTrash) {
+                  return;
+                }
+                if (
+                  restoreFromTrashConfirmMessage &&
+                  !window.confirm(restoreFromTrashConfirmMessage)
+                ) {
+                  return;
+                }
+                onRestoreFromTrash();
+              }}
+              disabled={isActionDisabled(restoreFromTrashEligibleCount)}
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-cyan-700 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isRestoringFromTrash ? (
@@ -227,9 +295,11 @@ export function EntityLifecycleBulkBar({
                 confirmAndRun(
                   `Permanently delete ${selectedCount} selected ${plural}? Records with history will be skipped.`,
                   onPermanentDelete,
+                  permanentDeleteConfirmMessage,
+                  permanentDeleteEligibleCount,
                 )
               }
-              disabled={isBusy}
+              disabled={isActionDisabled(permanentDeleteEligibleCount)}
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isPermanentlyDeleting ? (

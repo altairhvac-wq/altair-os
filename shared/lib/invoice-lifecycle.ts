@@ -1,3 +1,5 @@
+import type { InvoiceBatchSendJobLookup } from "@/shared/lib/invoice-batch-send";
+import { canBatchSendInvoice } from "@/shared/lib/invoice-batch-send";
 import {
   getVoidInvoiceBlockReason,
   type Invoice,
@@ -224,4 +226,221 @@ export function resolveBulkInvoiceLifecycleActions(
     return ["restoreFromTrash", "permanentDelete"];
   }
   return ["archive", "void", "moveToTrash"];
+}
+
+const VOID_GUIDED_STATUSES = new Set<InvoiceStatus>(["sent", "overdue"]);
+
+export type InvoiceBulkEligibilitySummary = {
+  selectedCount: number;
+  sendEligibleCount: number;
+  trashEligibleCount: number;
+  voidEligibleCount: number;
+  archiveEligibleCount: number;
+  restoreEligibleCount: number;
+  restoreFromTrashEligibleCount: number;
+  permanentDeleteEligibleCount: number;
+};
+
+/** Sent/unpaid/overdue invoices eligible for bulk void — excludes drafts (use trash instead). */
+export function canVoidInvoiceBulkGuide(
+  invoice: Pick<Invoice, "status" | "amountPaid" | "deletedAt">,
+): boolean {
+  if (!VOID_GUIDED_STATUSES.has(invoice.status)) {
+    return false;
+  }
+
+  return canVoidInvoiceLifecycle(invoice);
+}
+
+export function summarizeInvoiceBulkEligibility(
+  invoices: Invoice[],
+  options?: {
+    jobsById?: InvoiceBatchSendJobLookup;
+    voidMode?: "guide" | "lifecycle";
+  },
+): InvoiceBulkEligibilitySummary {
+  const voidMode = options?.voidMode ?? "guide";
+  let sendEligibleCount = 0;
+  let trashEligibleCount = 0;
+  let voidEligibleCount = 0;
+  let archiveEligibleCount = 0;
+  let restoreEligibleCount = 0;
+  let restoreFromTrashEligibleCount = 0;
+  let permanentDeleteEligibleCount = 0;
+
+  for (const invoice of invoices) {
+    if (canBatchSendInvoice(invoice, options?.jobsById)) {
+      sendEligibleCount += 1;
+    }
+    if (canMoveInvoiceToTrash(invoice)) {
+      trashEligibleCount += 1;
+    }
+    if (
+      voidMode === "guide"
+        ? canVoidInvoiceBulkGuide(invoice)
+        : canVoidInvoiceLifecycle(invoice)
+    ) {
+      voidEligibleCount += 1;
+    }
+    if (canArchiveInvoice(invoice)) {
+      archiveEligibleCount += 1;
+    }
+    if (canRestoreInvoice(invoice)) {
+      restoreEligibleCount += 1;
+    }
+    if (canRestoreInvoiceFromTrash(invoice)) {
+      restoreFromTrashEligibleCount += 1;
+    }
+    if (
+      canPermanentlyDeleteInvoice(invoice, {
+        paymentCount: invoice.amountPaid > 0 ? 1 : 0,
+      })
+    ) {
+      permanentDeleteEligibleCount += 1;
+    }
+  }
+
+  return {
+    selectedCount: invoices.length,
+    sendEligibleCount,
+    trashEligibleCount,
+    voidEligibleCount,
+    archiveEligibleCount,
+    restoreEligibleCount,
+    restoreFromTrashEligibleCount,
+    permanentDeleteEligibleCount,
+  };
+}
+
+function formatInvoiceCountHint(count: number, phrase: string): string {
+  return `${count} ${phrase}`;
+}
+
+export function formatInvoiceBulkEligibilityHints(
+  summary: InvoiceBulkEligibilitySummary,
+  lifecycleFilter: InvoiceLifecycleState,
+  options?: { includeSend?: boolean },
+): string[] {
+  const hints: string[] = [];
+
+  if (options?.includeSend && summary.sendEligibleCount > 0) {
+    hints.push(formatInvoiceCountHint(summary.sendEligibleCount, "can be sent"));
+  }
+
+  if (lifecycleFilter === "active") {
+    if (summary.trashEligibleCount > 0) {
+      hints.push(formatInvoiceCountHint(summary.trashEligibleCount, "can move to trash"));
+    }
+    if (summary.voidEligibleCount > 0) {
+      hints.push(formatInvoiceCountHint(summary.voidEligibleCount, "can be voided"));
+    }
+    if (summary.archiveEligibleCount > 0) {
+      hints.push(formatInvoiceCountHint(summary.archiveEligibleCount, "can be archived"));
+    }
+    return hints;
+  }
+
+  if (lifecycleFilter === "archived") {
+    if (summary.restoreEligibleCount > 0) {
+      hints.push(formatInvoiceCountHint(summary.restoreEligibleCount, "can be restored"));
+    }
+    if (summary.voidEligibleCount > 0) {
+      hints.push(formatInvoiceCountHint(summary.voidEligibleCount, "can be voided"));
+    }
+    if (summary.trashEligibleCount > 0) {
+      hints.push(formatInvoiceCountHint(summary.trashEligibleCount, "can move to trash"));
+    }
+    return hints;
+  }
+
+  if (lifecycleFilter === "voided" && summary.archiveEligibleCount > 0) {
+    hints.push(formatInvoiceCountHint(summary.archiveEligibleCount, "can be archived"));
+    return hints;
+  }
+
+  if (lifecycleFilter === "deleted") {
+    if (summary.restoreFromTrashEligibleCount > 0) {
+      hints.push(
+        formatInvoiceCountHint(
+          summary.restoreFromTrashEligibleCount,
+          "can be restored from Recently Deleted",
+        ),
+      );
+    }
+    if (summary.permanentDeleteEligibleCount > 0) {
+      hints.push(
+        formatInvoiceCountHint(summary.permanentDeleteEligibleCount, "can be permanently deleted"),
+      );
+    }
+  }
+
+  return hints;
+}
+
+function formatSkippedRecordsSuffix(skippedCount: number): string {
+  if (skippedCount <= 0) {
+    return "";
+  }
+
+  return ` ${skippedCount} selected invoice${
+    skippedCount === 1 ? "" : "s"
+  } will be skipped.`;
+}
+
+export function formatInvoiceBulkActionConfirmMessage(
+  actionId: InvoiceLifecycleActionId,
+  summary: InvoiceBulkEligibilitySummary,
+): string {
+  const { selectedCount } = summary;
+
+  switch (actionId) {
+    case "archive": {
+      const eligible = summary.archiveEligibleCount;
+      return `Archive ${eligible} selected invoice${
+        eligible === 1 ? "" : "s"
+      }? Historical records will be preserved.${formatSkippedRecordsSuffix(
+        selectedCount - eligible,
+      )}`;
+    }
+    case "void": {
+      const eligible = summary.voidEligibleCount;
+      return `Void ${eligible} selected invoice${
+        eligible === 1 ? "" : "s"
+      }? This preserves audit history.${formatSkippedRecordsSuffix(
+        selectedCount - eligible,
+      )}`;
+    }
+    case "moveToTrash": {
+      const eligible = summary.trashEligibleCount;
+      return `Move ${eligible} draft invoice${
+        eligible === 1 ? "" : "s"
+      } to Recently Deleted? Sent or unpaid invoices must be voided instead.${formatSkippedRecordsSuffix(
+        selectedCount - eligible,
+      )}`;
+    }
+    case "restore": {
+      const eligible = summary.restoreEligibleCount;
+      return `Restore ${eligible} selected invoice${
+        eligible === 1 ? "" : "s"
+      } to Active?${formatSkippedRecordsSuffix(selectedCount - eligible)}`;
+    }
+    case "restoreFromTrash": {
+      const eligible = summary.restoreFromTrashEligibleCount;
+      return `Restore ${eligible} selected invoice${
+        eligible === 1 ? "" : "s"
+      } from Recently Deleted?${formatSkippedRecordsSuffix(selectedCount - eligible)}`;
+    }
+    case "permanentDelete": {
+      const eligible = summary.permanentDeleteEligibleCount;
+      return `Permanently delete ${eligible} selected invoice${
+        eligible === 1 ? "" : "s"
+      }? Records with billing history will be skipped.${formatSkippedRecordsSuffix(
+        selectedCount - eligible,
+      )}`;
+    }
+    default:
+      return `Update ${selectedCount} selected invoice${
+        selectedCount === 1 ? "" : "s"
+      }?`;
+  }
 }
