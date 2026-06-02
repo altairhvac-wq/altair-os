@@ -1,17 +1,40 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
+import {
+  bulkArchiveExpensesAction,
+  bulkMoveExpensesToTrashAction,
+  bulkPermanentlyDeleteExpensesAction,
+  bulkRestoreExpensesAction,
+  bulkRestoreExpensesFromTrashAction,
+} from "@/app/actions/expenses-bulk-lifecycle";
+import { usePageBulkSelection } from "@/shared/hooks/usePageBulkSelection";
+import {
+  formatBulkLifecycleFailureDetails,
+  getBulkLifecycleFailedIds,
+  pruneBulkSelectionToFailedIds,
+  type BulkLifecycleActionResult,
+} from "@/shared/lib/bulk-lifecycle-runner";
+import {
+  formatBulkExpensesResultMessage,
+  getExpenseLifecycleState,
+} from "@/shared/lib/expense-lifecycle";
+import { formatActionError } from "@/shared/lib/operational-errors";
+import { EntityLifecycleBulkBar } from "@/shared/components/lifecycle/EntityLifecycleBulkBar";
 import type {
   Expense,
   ExpenseCategory,
   ExpenseDateFilter,
+  ExpenseLifecycleState,
   ExpensePaymentFilter,
   ExpenseReceiptFilter,
   ExpenseStatus,
 } from "@/shared/types/expense";
 import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
 import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
+import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import {
   filterExpenses,
   getExpenseJobOptions,
@@ -78,6 +101,8 @@ export function ExpensesPageView({
   const [receiptFilter, setReceiptFilter] = useState(
     DEFAULT_FILTERS.receiptFilter,
   );
+  const [lifecycleFilter, setLifecycleFilter] =
+    useState<ExpenseLifecycleState>("active");
   const [selectedId, setSelectedId] = useState<string | null>(
     initialSelectedId ?? null,
   );
@@ -88,6 +113,21 @@ export function ExpensesPageView({
   });
   const [createJobId] = useState(initialJobId);
   const [localExpenses, setLocalExpenses] = useState(expenses);
+  const [lifecycleMessage, setLifecycleMessage] = useState<string | null>(null);
+  const [lifecycleFailureDetails, setLifecycleFailureDetails] = useState<
+    string[] | null
+  >(null);
+  const [lifecycleTone, setLifecycleTone] = useState<
+    "success" | "warning" | "error"
+  >("success");
+  const [isBulkArchiving, startBulkArchiveTransition] = useTransition();
+  const [isBulkRestoring, startBulkRestoreTransition] = useTransition();
+  const [isBulkMovingToTrash, startBulkMoveToTrashTransition] = useTransition();
+  const [isBulkRestoringFromTrash, startBulkRestoreFromTrashTransition] =
+    useTransition();
+  const [isBulkPermanentlyDeleting, startBulkPermanentDeleteTransition] =
+    useTransition();
+  const router = useRouter();
 
   useEffect(() => {
     setLocalExpenses(expenses);
@@ -139,10 +179,95 @@ export function ExpensesPageView({
     ],
   );
 
-  const filteredExpenses = useMemo(
-    () => filterExpenses(localExpenses, listFilters),
-    [localExpenses, listFilters],
+  const lifecycleScopedExpenses = useMemo(
+    () =>
+      localExpenses.filter(
+        (expense) => getExpenseLifecycleState(expense) === lifecycleFilter,
+      ),
+    [localExpenses, lifecycleFilter],
   );
+
+  const filteredExpenses = useMemo(
+    () => filterExpenses(lifecycleScopedExpenses, listFilters),
+    [lifecycleScopedExpenses, listFilters],
+  );
+
+  const selectionEnabled = canManageBilling;
+  const {
+    selectedIds,
+    selectedCount,
+    selectionState,
+    toggleSelection,
+    toggleAllVisible,
+    clearSelection,
+    setSelectedIds,
+  } = usePageBulkSelection(filteredExpenses, [lifecycleFilter]);
+
+  function handleClearSelection() {
+    clearSelection();
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
+  }
+
+  function applyBulkLifecycleResult(input: {
+    result: BulkLifecycleActionResult;
+    actionLabel: string;
+  }) {
+    const { result, actionLabel } = input;
+
+    if (result.error && result.results.length === 0) {
+      setLifecycleTone("error");
+      setLifecycleMessage(
+        formatActionError(
+          result.error,
+          "We couldn't update the selected expenses.",
+        ),
+      );
+      return;
+    }
+
+    setSelectedIds((previous) =>
+      pruneBulkSelectionToFailedIds(previous, getBulkLifecycleFailedIds(result)),
+    );
+    setLifecycleFailureDetails(
+      formatBulkLifecycleFailureDetails(result).length > 0
+        ? formatBulkLifecycleFailureDetails(result)
+        : null,
+    );
+    setLifecycleTone(
+      result.successCount > 0
+        ? result.failureCount > 0
+          ? "warning"
+          : "success"
+        : "error",
+    );
+    setLifecycleMessage(
+      formatBulkExpensesResultMessage({
+        successCount: result.successCount,
+        failureCount: result.failureCount,
+        actionLabel,
+      }),
+    );
+
+    if (result.successCount > 0) {
+      router.refresh();
+    }
+  }
+
+  function runBulkLifecycle(
+    action: (ids: string[]) => Promise<BulkLifecycleActionResult>,
+    actionLabel: string,
+    startTransitionFn: (callback: () => void) => void,
+  ) {
+    if (!selectionEnabled || selectedCount === 0) return;
+    const ids = [...selectedIds];
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
+    startTransitionFn(async () => {
+      const result = await action(ids);
+      applyBulkLifecycleResult({ result, actionLabel });
+    });
+  }
 
   const activeFilters = hasActiveExpenseFilters(listFilters);
 
@@ -274,7 +399,37 @@ export function ExpensesPageView({
             onClearFilters={handleClearFilters}
             hasActiveFilters={activeFilters}
             resultCount={filteredExpenses.length}
+            lifecycleFilter={lifecycleFilter}
+            onLifecycleFilterChange={setLifecycleFilter}
+            showLifecycleFilter={canManageBilling}
+            bulkSelectAllControl={
+              selectionEnabled && selectionState.selectableCount > 0
+                ? {
+                    selectableCount: selectionState.selectableCount,
+                    allSelected: selectionState.allSelected,
+                    onSelectAll: () => toggleAllVisible(true),
+                    onClearSelection: handleClearSelection,
+                  }
+                : undefined
+            }
           />
+        ) : null}
+
+        {lifecycleMessage ? (
+          <div className="shrink-0 border-b border-slate-100/90 px-4 py-3 sm:px-5">
+            <SettingsAlertBanner tone={lifecycleTone}>
+              <div>
+                <p>{lifecycleMessage}</p>
+                {lifecycleFailureDetails?.length ? (
+                  <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                    {lifecycleFailureDetails.map((detail) => (
+                      <li key={detail}>{detail}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </SettingsAlertBanner>
+          </div>
         ) : null}
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
@@ -290,8 +445,68 @@ export function ExpensesPageView({
               expenses={filteredExpenses}
               selectedId={selectedId}
               onSelect={handleSelectExpense}
+              selectionEnabled={selectionEnabled}
+              selectedIds={selectedIds}
+              onToggleSelection={toggleSelection}
+              onToggleAllVisible={toggleAllVisible}
             />
           )}
+
+          {selectionEnabled && selectedCount > 0 ? (
+            <EntityLifecycleBulkBar
+              entityLabel="expense"
+              selectedCount={selectedCount}
+              lifecycleFilter={lifecycleFilter}
+              isArchiving={isBulkArchiving}
+              isRestoring={isBulkRestoring}
+              isMovingToTrash={isBulkMovingToTrash}
+              isRestoringFromTrash={isBulkRestoringFromTrash}
+              isPermanentlyDeleting={isBulkPermanentlyDeleting}
+              showArchive={lifecycleFilter === "active"}
+              showMoveToTrash={
+                lifecycleFilter === "active" || lifecycleFilter === "archived"
+              }
+              showRestore={lifecycleFilter === "archived"}
+              showRestoreFromTrash={lifecycleFilter === "deleted"}
+              showPermanentDelete={lifecycleFilter === "deleted"}
+              onArchive={() =>
+                runBulkLifecycle(
+                  bulkArchiveExpensesAction,
+                  "Archive",
+                  startBulkArchiveTransition,
+                )
+              }
+              onRestore={() =>
+                runBulkLifecycle(
+                  bulkRestoreExpensesAction,
+                  "Restore",
+                  startBulkRestoreTransition,
+                )
+              }
+              onMoveToTrash={() =>
+                runBulkLifecycle(
+                  bulkMoveExpensesToTrashAction,
+                  "Move to Recently Deleted",
+                  startBulkMoveToTrashTransition,
+                )
+              }
+              onRestoreFromTrash={() =>
+                runBulkLifecycle(
+                  bulkRestoreExpensesFromTrashAction,
+                  "Restore from Recently Deleted",
+                  startBulkRestoreFromTrashTransition,
+                )
+              }
+              onPermanentDelete={() =>
+                runBulkLifecycle(
+                  bulkPermanentlyDeleteExpensesAction,
+                  "Permanent delete",
+                  startBulkPermanentDeleteTransition,
+                )
+              }
+              onClearSelection={handleClearSelection}
+            />
+          ) : null}
         </div>
       </section>
 

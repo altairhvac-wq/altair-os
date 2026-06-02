@@ -20,8 +20,9 @@ export const listInvoicesWithBillingSync = cache(
   async function listInvoicesWithBillingSync(
     companyId: string,
     timeZone?: string,
+    options?: Parameters<typeof listInvoices>[1],
   ): Promise<Invoice[]> {
     await ensureInvoiceBillingStatesSynced(companyId, timeZone);
-    return listInvoices(companyId);
+    return listInvoices(companyId, options);
   },
 );

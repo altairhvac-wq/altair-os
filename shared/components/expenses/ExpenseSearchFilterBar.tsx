@@ -2,15 +2,18 @@ import { Filter, Search, X } from "lucide-react";
 import {
   EXPENSE_CATEGORY_OPTIONS,
   EXPENSE_DATE_FILTER_OPTIONS,
+  EXPENSE_LIFECYCLE_FILTER_OPTIONS,
   EXPENSE_PAYMENT_FILTER_OPTIONS,
   EXPENSE_RECEIPT_FILTER_OPTIONS,
   EXPENSE_STATUS_OPTIONS,
   type ExpenseCategory,
   type ExpenseDateFilter,
+  type ExpenseLifecycleState,
   type ExpensePaymentFilter,
   type ExpenseReceiptFilter,
   type ExpenseStatus,
 } from "@/shared/types/expense";
+import { BulkSelectAllControl } from "@/shared/components/bulk/BulkSelectAllControl";
 
 type SelectOption = {
   value: string;
@@ -42,6 +45,15 @@ type ExpenseSearchFilterBarProps = {
   onClearFilters: () => void;
   hasActiveFilters: boolean;
   resultCount: number;
+  lifecycleFilter?: ExpenseLifecycleState;
+  onLifecycleFilterChange?: (value: ExpenseLifecycleState) => void;
+  showLifecycleFilter?: boolean;
+  bulkSelectAllControl?: {
+    selectableCount: number;
+    allSelected: boolean;
+    onSelectAll: () => void;
+    onClearSelection: () => void;
+  };
 };
 
 const selectClass =
@@ -72,6 +84,10 @@ export function ExpenseSearchFilterBar({
   onClearFilters,
   hasActiveFilters,
   resultCount,
+  lifecycleFilter = "active",
+  onLifecycleFilterChange,
+  showLifecycleFilter = false,
+  bulkSelectAllControl,
 }: ExpenseSearchFilterBarProps) {
   const needsReviewActive = statusFilter === "submitted";
 
@@ -114,6 +130,18 @@ export function ExpenseSearchFilterBar({
         </div>
 
         <div className="flex flex-wrap gap-2">
+          {showLifecycleFilter && onLifecycleFilterChange ? (
+            <FilterSelect
+              value={lifecycleFilter}
+              options={EXPENSE_LIFECYCLE_FILTER_OPTIONS.map((option) => ({
+                value: option.value,
+                label: option.label,
+              }))}
+              onChange={(value) =>
+                onLifecycleFilterChange(value as ExpenseLifecycleState)
+              }
+            />
+          ) : null}
           <FilterSelect
             value={statusFilter}
             options={EXPENSE_STATUS_OPTIONS.map((option) => ({
@@ -182,10 +210,15 @@ export function ExpenseSearchFilterBar({
         </div>
       </div>
 
-      <p className="admin-text-helper mt-2">
-        {resultCount} {resultCount === 1 ? "expense" : "expenses"}
-        {needsReviewActive ? " · showing submitted for review" : ""}
-      </p>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {bulkSelectAllControl ? (
+          <BulkSelectAllControl {...bulkSelectAllControl} />
+        ) : null}
+        <p className="admin-text-helper">
+          {resultCount} {resultCount === 1 ? "expense" : "expenses"}
+          {needsReviewActive ? " · showing submitted for review" : ""}
+        </p>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { canViewCompanyExpenses } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { listExpenses } from "@/lib/database/queries/expenses";
+import { listDeletedExpenses, listExpenses } from "@/lib/database/queries/expenses";
 import { getJobById } from "@/lib/database/queries/jobs";
 import { ExpensesPageView } from "@/shared/components/expenses/ExpensesPageView";
 import type { ExpenseStatus } from "@/shared/types/expense";
@@ -51,10 +51,14 @@ export default async function ExpensesPage({ searchParams }: ExpensesPageProps) 
       ? params.customerId
       : undefined;
 
-  const expenses = await listExpenses(companyContext.company.id);
+  const [expenses, deletedExpenses] = await Promise.all([
+    listExpenses(companyContext.company.id, { includeArchived: true }),
+    listDeletedExpenses(companyContext.company.id),
+  ]);
+  const allExpenses = [...expenses, ...deletedExpenses];
   const visibleExpenses = canViewCompanyExpenses(companyContext)
-    ? expenses
-    : expenses.filter(
+    ? allExpenses
+    : allExpenses.filter(
         (expense) => expense.technicianId === companyContext.user.id,
       );
 

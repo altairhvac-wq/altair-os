@@ -52,7 +52,22 @@ export type Invoice = {
   createdAt: string;
   updatedAt?: string;
   sentAt?: string;
+  archivedAt?: string;
+  deletedAt?: string;
+  deleteAfter?: string;
 };
+
+export type InvoiceLifecycleState = "active" | "archived" | "deleted" | "voided";
+
+export const INVOICE_LIFECYCLE_FILTER_OPTIONS: {
+  value: InvoiceLifecycleState;
+  label: string;
+}[] = [
+  { value: "active", label: "Active invoices" },
+  { value: "archived", label: "Archived" },
+  { value: "voided", label: "Voided" },
+  { value: "deleted", label: "Recently Deleted" },
+];
 
 export type InvoiceDetail = Invoice & {
   customerEmail?: string;

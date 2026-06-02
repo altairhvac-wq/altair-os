@@ -1,13 +1,35 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
   batchSendInvoicesAction,
   createInvoiceAction,
 } from "@/app/actions/invoices";
+import {
+  bulkArchiveInvoicesAction,
+  bulkMoveInvoicesToTrashAction,
+  bulkPermanentlyDeleteInvoicesAction,
+  bulkRestoreInvoicesAction,
+  bulkRestoreInvoicesFromTrashAction,
+  bulkVoidInvoicesAction,
+} from "@/app/actions/invoices-bulk-lifecycle";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import {
+  toggleGroupBulkSelection,
+  resolveBulkSelectionState,
+} from "@/shared/lib/bulk-selection";
+import {
+  formatBulkLifecycleFailureDetails,
+  getBulkLifecycleFailedIds,
+  pruneBulkSelectionToFailedIds,
+  type BulkLifecycleActionResult,
+} from "@/shared/lib/bulk-lifecycle-runner";
+import {
+  formatBulkInvoicesResultMessage,
+  getInvoiceLifecycleState,
+} from "@/shared/lib/invoice-lifecycle";
 import {
   buildJobsByIdForBatchSend,
   formatBatchSendInvoicesResultMessage,
@@ -16,6 +38,7 @@ import {
   toggleInvoiceGroupBatchSelection,
 } from "@/shared/lib/invoice-batch-send";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import { EntityLifecycleBulkBar } from "@/shared/components/lifecycle/EntityLifecycleBulkBar";
 import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
 import type { ServiceItem } from "@/shared/types/service-item";
@@ -23,6 +46,7 @@ import {
   formatInvoiceStatus,
   type Invoice,
   type InvoiceFormData,
+  type InvoiceLifecycleState,
 } from "@/shared/types/invoice";
 import {
   matchesInvoiceListStatusFilter,
@@ -69,16 +93,19 @@ function filterInvoices(
   invoices: Invoice[],
   search: string,
   statusFilter: InvoiceListStatusFilter,
+  lifecycleFilter: InvoiceLifecycleState,
   jobIdFilter?: string,
   prioritizeCashFlow = false,
 ): Invoice[] {
   const query = search.trim().toLowerCase();
 
   const filtered = invoices.filter((invoice) => {
+    const matchesLifecycle =
+      getInvoiceLifecycleState(invoice) === lifecycleFilter;
     const matchesJob = !jobIdFilter || invoice.jobId === jobIdFilter;
     const matchesStatus = matchesInvoiceListStatusFilter(invoice, statusFilter);
 
-    if (!matchesJob || !matchesStatus) return false;
+    if (!matchesLifecycle || !matchesJob || !matchesStatus) return false;
     if (!query) return true;
 
     const haystack = [
@@ -130,6 +157,8 @@ export function InvoicesPageView({
   const [viewTab, setViewTab] = useState<TodayAllViewTab>("today");
   const [statusFilter, setStatusFilter] =
     useState<InvoiceListStatusFilter>(initialStatusFilter);
+  const [lifecycleFilter, setLifecycleFilter] =
+    useState<InvoiceLifecycleState>("active");
   const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
   const [createError, setCreateError] = useState<string | null>(null);
   const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<Set<string>>(
@@ -142,10 +171,37 @@ export function InvoicesPageView({
   const [batchSendTone, setBatchSendTone] = useState<
     "success" | "warning" | "error"
   >("success");
+  const [lifecycleMessage, setLifecycleMessage] = useState<string | null>(null);
+  const [lifecycleFailureDetails, setLifecycleFailureDetails] = useState<
+    string[] | null
+  >(null);
+  const [lifecycleTone, setLifecycleTone] = useState<
+    "success" | "warning" | "error"
+  >("success");
   const [isPending, startTransition] = useTransition();
   const [isBatchSending, startBatchSendTransition] = useTransition();
+  const [isBulkArchiving, startBulkArchiveTransition] = useTransition();
+  const [isBulkRestoring, startBulkRestoreTransition] = useTransition();
+  const [isBulkVoiding, startBulkVoidTransition] = useTransition();
+  const [isBulkMovingToTrash, startBulkMoveToTrashTransition] = useTransition();
+  const [isBulkRestoringFromTrash, startBulkRestoreFromTrashTransition] =
+    useTransition();
+  const [isBulkPermanentlyDeleting, startBulkPermanentDeleteTransition] =
+    useTransition();
   const router = useRouter();
   const companyTimeZone = useCompanyTimezone();
+
+  useEffect(() => {
+    setInvoices(initialInvoices);
+  }, [initialInvoices]);
+
+  useEffect(() => {
+    setSelectedInvoiceIds(new Set());
+    setBatchSendMessage(null);
+    setBatchSendFailureDetails(null);
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
+  }, [lifecycleFilter]);
 
   const prioritizeCashFlow = invoicePageFocus?.focus === "cash-flow";
 
@@ -172,6 +228,7 @@ export function InvoicesPageView({
         viewScopedInvoices,
         search,
         statusFilter,
+        lifecycleFilter,
         initialJobId,
         prioritizeCashFlow,
       ),
@@ -179,6 +236,7 @@ export function InvoicesPageView({
       viewScopedInvoices,
       search,
       statusFilter,
+      lifecycleFilter,
       initialJobId,
       prioritizeCashFlow,
     ],
@@ -206,17 +264,27 @@ export function InvoicesPageView({
 
   const selectionEnabled = canManageInvoices;
   const selectedCount = selectedInvoiceIds.size;
+  const useAllRowSelection = lifecycleFilter !== "active";
 
   const visibleSelectionState = useMemo(
-    () =>
-      selectionEnabled
-        ? resolveInvoiceBatchSelectionState(
-            selectedInvoiceIds,
-            visibleInvoices,
-            jobsById,
-          )
-        : null,
-    [jobsById, selectedInvoiceIds, selectionEnabled, visibleInvoices],
+    () => {
+      if (!selectionEnabled) return null;
+      if (useAllRowSelection) {
+        return resolveBulkSelectionState(selectedInvoiceIds, visibleInvoices);
+      }
+      return resolveInvoiceBatchSelectionState(
+        selectedInvoiceIds,
+        visibleInvoices,
+        jobsById,
+      );
+    },
+    [
+      jobsById,
+      selectedInvoiceIds,
+      selectionEnabled,
+      useAllRowSelection,
+      visibleInvoices,
+    ],
   );
 
   function handleToggleInvoiceSelection(invoiceId: string) {
@@ -225,25 +293,93 @@ export function InvoicesPageView({
     );
     setBatchSendMessage(null);
     setBatchSendFailureDetails(null);
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
   }
 
   function handleToggleAllVisibleSelection(selectAll: boolean) {
     setSelectedInvoiceIds((previous) =>
-      toggleInvoiceGroupBatchSelection(
-        previous,
-        visibleInvoices,
-        selectAll,
-        jobsById,
-      ),
+      useAllRowSelection
+        ? toggleGroupBulkSelection(previous, visibleInvoices, selectAll)
+        : toggleInvoiceGroupBatchSelection(
+            previous,
+            visibleInvoices,
+            selectAll,
+            jobsById,
+          ),
     );
     setBatchSendMessage(null);
     setBatchSendFailureDetails(null);
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
   }
 
   function handleClearSelection() {
     setSelectedInvoiceIds(new Set());
     setBatchSendMessage(null);
     setBatchSendFailureDetails(null);
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
+  }
+
+  function applyBulkLifecycleResult(input: {
+    result: BulkLifecycleActionResult;
+    actionLabel: string;
+  }) {
+    const { result, actionLabel } = input;
+
+    if (result.error && result.results.length === 0) {
+      setLifecycleTone("error");
+      setLifecycleMessage(
+        formatActionError(
+          result.error,
+          "We couldn't update the selected invoices.",
+        ),
+      );
+      return;
+    }
+
+    setSelectedInvoiceIds((previous) =>
+      pruneBulkSelectionToFailedIds(previous, getBulkLifecycleFailedIds(result)),
+    );
+    setLifecycleFailureDetails(
+      formatBulkLifecycleFailureDetails(result).length > 0
+        ? formatBulkLifecycleFailureDetails(result)
+        : null,
+    );
+    setLifecycleTone(
+      result.successCount > 0
+        ? result.failureCount > 0
+          ? "warning"
+          : "success"
+        : "error",
+    );
+    setLifecycleMessage(
+      formatBulkInvoicesResultMessage({
+        successCount: result.successCount,
+        failureCount: result.failureCount,
+        actionLabel,
+      }),
+    );
+
+    if (result.successCount > 0) {
+      router.refresh();
+    }
+  }
+
+  function runBulkLifecycle(
+    action: (ids: string[]) => Promise<BulkLifecycleActionResult>,
+    actionLabel: string,
+    startTransitionFn: (callback: () => void) => void,
+  ) {
+    if (!selectionEnabled || selectedCount === 0) return;
+    const ids = [...selectedInvoiceIds];
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
+    startTransitionFn(async () => {
+      const result = await action(ids);
+      applyBulkLifecycleResult({ result, actionLabel });
+    });
   }
 
   function handleBatchSendSelected() {
@@ -456,6 +592,9 @@ export function InvoicesPageView({
             onStatusFilterChange={setStatusFilter}
             resultCount={filteredInvoices.length}
             showStatusFilter={viewTab === "all"}
+            lifecycleFilter={lifecycleFilter}
+            onLifecycleFilterChange={setLifecycleFilter}
+            showLifecycleFilter={canManageInvoices}
             batchSelectAllControl={
               selectionEnabled &&
               visibleSelectionState &&
@@ -470,6 +609,23 @@ export function InvoicesPageView({
                 : undefined
             }
           />
+        ) : null}
+
+        {lifecycleMessage ? (
+          <div className="shrink-0 border-b border-slate-100/90 px-4 py-3 sm:px-5">
+            <SettingsAlertBanner tone={lifecycleTone}>
+              <div>
+                <p>{lifecycleMessage}</p>
+                {lifecycleFailureDetails?.length ? (
+                  <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                    {lifecycleFailureDetails.map((detail) => (
+                      <li key={detail}>{detail}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </SettingsAlertBanner>
+          </div>
         ) : null}
 
         {batchSendMessage ? (
@@ -514,14 +670,83 @@ export function InvoicesPageView({
               jobsById={jobsById}
               onToggleSelection={handleToggleInvoiceSelection}
               onToggleAllVisible={handleToggleAllVisibleSelection}
+              selectionScope={useAllRowSelection ? "all" : "batchSend"}
             />
           )}
 
-          {selectionEnabled ? (
+          {selectionEnabled && lifecycleFilter === "active" ? (
             <InvoiceBatchSelectionBar
               selectedCount={selectedCount}
               isSending={isBatchSending}
               onSendSelected={handleBatchSendSelected}
+              onClearSelection={handleClearSelection}
+            />
+          ) : null}
+          {selectionEnabled && selectedCount > 0 ? (
+            <EntityLifecycleBulkBar
+              entityLabel="invoice"
+              selectedCount={selectedCount}
+              lifecycleFilter={lifecycleFilter}
+              isArchiving={isBulkArchiving}
+              isRestoring={isBulkRestoring}
+              isVoiding={isBulkVoiding}
+              isMovingToTrash={isBulkMovingToTrash}
+              isRestoringFromTrash={isBulkRestoringFromTrash}
+              isPermanentlyDeleting={isBulkPermanentlyDeleting}
+              showArchive={
+                lifecycleFilter === "active" || lifecycleFilter === "voided"
+              }
+              showVoid={
+                lifecycleFilter === "active" || lifecycleFilter === "archived"
+              }
+              showMoveToTrash={
+                lifecycleFilter === "active" || lifecycleFilter === "archived"
+              }
+              showRestore={lifecycleFilter === "archived"}
+              showRestoreFromTrash={lifecycleFilter === "deleted"}
+              showPermanentDelete={lifecycleFilter === "deleted"}
+              onArchive={() =>
+                runBulkLifecycle(
+                  bulkArchiveInvoicesAction,
+                  "Archive",
+                  startBulkArchiveTransition,
+                )
+              }
+              onRestore={() =>
+                runBulkLifecycle(
+                  bulkRestoreInvoicesAction,
+                  "Restore",
+                  startBulkRestoreTransition,
+                )
+              }
+              onVoid={() =>
+                runBulkLifecycle(
+                  bulkVoidInvoicesAction,
+                  "Void",
+                  startBulkVoidTransition,
+                )
+              }
+              onMoveToTrash={() =>
+                runBulkLifecycle(
+                  bulkMoveInvoicesToTrashAction,
+                  "Move to Recently Deleted",
+                  startBulkMoveToTrashTransition,
+                )
+              }
+              onRestoreFromTrash={() =>
+                runBulkLifecycle(
+                  bulkRestoreInvoicesFromTrashAction,
+                  "Restore from Recently Deleted",
+                  startBulkRestoreFromTrashTransition,
+                )
+              }
+              onPermanentDelete={() =>
+                runBulkLifecycle(
+                  bulkPermanentlyDeleteInvoicesAction,
+                  "Permanent delete",
+                  startBulkPermanentDeleteTransition,
+                )
+              }
               onClearSelection={handleClearSelection}
             />
           ) : null}

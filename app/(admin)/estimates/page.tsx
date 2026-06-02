@@ -7,7 +7,10 @@ import { ComingSoonView } from "@/shared/components/layout/ComingSoonView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import { listCustomers } from "@/lib/database/queries/customers";
-import { listEstimates } from "@/lib/database/queries/estimates";
+import {
+  listDeletedEstimates,
+  listEstimates,
+} from "@/lib/database/queries/estimates";
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import { EstimatesPageView } from "@/shared/components/estimates/EstimatesPageView";
@@ -43,8 +46,10 @@ export default async function EstimatesPage({
 
   const { customerId, create } = await searchParams;
 
-  const [estimates, customers, jobs, serviceItems] = await Promise.all([
-    listEstimates(companyContext.company.id),
+  const [estimates, deletedEstimates, customers, jobs, serviceItems] =
+    await Promise.all([
+    listEstimates(companyContext.company.id, { includeArchived: true }),
+    listDeletedEstimates(companyContext.company.id),
     listCustomers(companyContext.company.id),
     listJobs(companyContext.company.id),
     listActiveServiceItems(companyContext.company.id),
@@ -62,7 +67,7 @@ export default async function EstimatesPage({
 
   return (
     <EstimatesPageView
-      initialEstimates={estimates}
+      initialEstimates={[...estimates, ...deletedEstimates]}
       customers={customers}
       jobs={jobs}
       serviceItems={serviceItems}

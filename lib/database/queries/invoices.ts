@@ -13,6 +13,10 @@ import type {
   InvoiceLineItemRow,
   InvoiceRow,
 } from "@/lib/database/types/core-tables";
+import {
+  buildTrashTimestampFields,
+  countRelatedRecordsByColumn,
+} from "@/lib/database/queries/entity-lifecycle-shared";
 import { recordInvoiceActivity } from "@/lib/database/queries/invoice-activities";
 import { getEstimateById, updateEstimateStatus } from "@/lib/database/queries/estimates";
 import { validateServiceItemIdsBelongToCompany } from "@/lib/database/queries/service-items";
@@ -135,6 +139,9 @@ export function mapInvoiceRowToInvoice(row: InvoiceRowWithRelations): Invoice {
     notes: row.notes ?? undefined,
     createdAt: toDateOnly(row.created_at),
     updatedAt: row.updated_at,
+    archivedAt: row.archived_at ?? undefined,
+    deletedAt: row.deleted_at ?? undefined,
+    deleteAfter: row.delete_after ?? undefined,
   };
 }
 
@@ -403,16 +410,33 @@ async function validateEstimateForInvoiceLink(
   return { error: null };
 }
 
+export type ListInvoicesOptions = {
+  includeArchived?: boolean;
+  includeDeleted?: boolean;
+};
+
 export const listInvoices = cache(async function listInvoices(
   companyId: string,
+  options?: ListInvoicesOptions,
 ): Promise<Invoice[]> {
   const supabase = await createClient();
+  const includeArchived = options?.includeArchived ?? false;
+  const includeDeleted = options?.includeDeleted ?? false;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("invoices")
     .select(INVOICE_LIST_SELECT)
-    .eq("company_id", companyId)
-    .order("created_at", { ascending: false });
+    .eq("company_id", companyId);
+
+  if (!includeDeleted) {
+    query = query.is("deleted_at", null);
+  }
+
+  if (!includeArchived) {
+    query = query.is("archived_at", null);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) {
     console.error("[listInvoices] query failed:", {
@@ -1163,4 +1187,187 @@ export async function convertEstimateToInvoice(
   }
 
   return { invoice, error: null };
+}
+
+export async function listDeletedInvoices(companyId: string): Promise<Invoice[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("invoices")
+    .select(INVOICE_LIST_SELECT)
+    .eq("company_id", companyId)
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false });
+
+  if (error) {
+    console.error("[listDeletedInvoices] query failed:", { companyId, error });
+    return [];
+  }
+
+  return ((data ?? []) as InvoiceRowWithRelations[]).map(mapInvoiceRowToInvoice);
+}
+
+export async function getInvoiceDeleteDependencies(
+  companyId: string,
+  invoiceId: string,
+): Promise<{ paymentCount: number }> {
+  const supabase = await createClient();
+  const paymentCount = await countRelatedRecordsByColumn(
+    supabase,
+    companyId,
+    "invoice_payments",
+    "invoice_id",
+    invoiceId,
+  );
+
+  return { paymentCount };
+}
+
+export async function archiveInvoice(
+  companyId: string,
+  invoiceId: string,
+): Promise<{ invoice: Invoice | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("invoices")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("company_id", companyId)
+    .eq("id", invoiceId)
+    .is("archived_at", null)
+    .is("deleted_at", null)
+    .not("status", "in", '("paid","partially_paid")')
+    .select(INVOICE_LIST_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { invoice: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { invoice: null, error: "This invoice could not be archived." };
+  }
+
+  return {
+    invoice: mapInvoiceRowToInvoice(row as InvoiceRowWithRelations),
+    error: null,
+  };
+}
+
+export async function restoreInvoice(
+  companyId: string,
+  invoiceId: string,
+): Promise<{ invoice: Invoice | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("invoices")
+    .update({ archived_at: null })
+    .eq("company_id", companyId)
+    .eq("id", invoiceId)
+    .not("archived_at", "is", null)
+    .is("deleted_at", null)
+    .select(INVOICE_LIST_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { invoice: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { invoice: null, error: "This invoice is not archived." };
+  }
+
+  return {
+    invoice: mapInvoiceRowToInvoice(row as InvoiceRowWithRelations),
+    error: null,
+  };
+}
+
+export async function moveInvoiceToTrash(
+  companyId: string,
+  invoiceId: string,
+): Promise<{ invoice: Invoice | null; error: string | null }> {
+  const supabase = await createClient();
+  const trashFields = buildTrashTimestampFields();
+
+  const { data: row, error } = await supabase
+    .from("invoices")
+    .update(trashFields)
+    .eq("company_id", companyId)
+    .eq("id", invoiceId)
+    .eq("status", "draft")
+    .eq("amount_paid", 0)
+    .is("deleted_at", null)
+    .select(INVOICE_LIST_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { invoice: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return {
+      invoice: null,
+      error: "Only draft invoices with no payments can move to Recently Deleted.",
+    };
+  }
+
+  return {
+    invoice: mapInvoiceRowToInvoice(row as InvoiceRowWithRelations),
+    error: null,
+  };
+}
+
+export async function restoreInvoiceFromTrash(
+  companyId: string,
+  invoiceId: string,
+): Promise<{ invoice: Invoice | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("invoices")
+    .update({
+      deleted_at: null,
+      delete_after: null,
+      archived_at: null,
+    })
+    .eq("company_id", companyId)
+    .eq("id", invoiceId)
+    .not("deleted_at", "is", null)
+    .select(INVOICE_LIST_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { invoice: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { invoice: null, error: "This invoice is not in Recently Deleted." };
+  }
+
+  return {
+    invoice: mapInvoiceRowToInvoice(row as InvoiceRowWithRelations),
+    error: null,
+  };
+}
+
+export async function permanentlyDeleteInvoice(
+  companyId: string,
+  invoiceId: string,
+): Promise<{ success: boolean; error: string | null }> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("invoices")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("id", invoiceId)
+    .not("deleted_at", "is", null);
+
+  if (error) {
+    return { success: false, error: mapDatabaseError(error) };
+  }
+
+  return { success: true, error: null };
 }

@@ -36,7 +36,21 @@ export type Job = {
   completionNotes?: string;
   followUpNotes?: string;
   createdAt: string;
+  archivedAt?: string;
+  deletedAt?: string;
+  deleteAfter?: string;
 };
+
+export type JobLifecycleState = "active" | "archived" | "deleted";
+
+export const JOB_LIFECYCLE_FILTER_OPTIONS: {
+  value: JobLifecycleState;
+  label: string;
+}[] = [
+  { value: "active", label: "Active jobs" },
+  { value: "archived", label: "Archived" },
+  { value: "deleted", label: "Recently Deleted" },
+];
 
 export type JobDetail = Job & {
   customerEmail?: string;

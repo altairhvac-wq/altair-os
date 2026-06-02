@@ -2,7 +2,12 @@ import { redirect } from "next/navigation";
 import { canAccessOperationalJobsArea, canViewAllJobs } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listCustomers } from "@/lib/database/queries/customers";
-import { listAssignedJobs, listJobs, listJobsForOperationalDay } from "@/lib/database/queries/jobs";
+import {
+  listAssignedJobs,
+  listDeletedJobs,
+  listJobs,
+  listJobsForOperationalDay,
+} from "@/lib/database/queries/jobs";
 import { listTechnicians } from "@/lib/database/queries/technicians";
 import { JobsPageView } from "@/shared/components/jobs/JobsPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
@@ -46,13 +51,16 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
 
   const canDispatchJobs = companyContext.permissions.dispatchJobs;
 
-  const [jobs, todayJobs, customers, technicians] = await Promise.all([
+  const [jobs, deletedJobs, todayJobs, customers, technicians] = await Promise.all([
     canViewAll
-      ? listJobs(companyContext.company.id)
+      ? listJobs(companyContext.company.id, { includeArchived: true })
       : listAssignedJobs(
           companyContext.company.id,
           companyContext.user.id,
         ),
+    canViewAll
+      ? listDeletedJobs(companyContext.company.id)
+      : Promise.resolve([]),
     listJobsForOperationalDay(companyContext.company.id, {
       timeZone: companyContext.company.timezone,
       assignedTechnicianId: canViewAll
@@ -82,7 +90,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
 
   return (
     <JobsPageView
-      initialJobs={jobs}
+      initialJobs={[...jobs, ...deletedJobs]}
       initialTodayJobs={todayJobs}
       companyTimeZone={companyContext.company.timezone}
       customers={customers}

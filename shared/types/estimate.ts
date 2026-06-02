@@ -44,7 +44,21 @@ export type Estimate = {
   updatedAt?: string;
   sentAt?: string;
   approvedAt?: string;
+  archivedAt?: string;
+  deletedAt?: string;
+  deleteAfter?: string;
 };
+
+export type EstimateLifecycleState = "active" | "archived" | "deleted";
+
+export const ESTIMATE_LIFECYCLE_FILTER_OPTIONS: {
+  value: EstimateLifecycleState;
+  label: string;
+}[] = [
+  { value: "active", label: "Active estimates" },
+  { value: "archived", label: "Archived" },
+  { value: "deleted", label: "Recently Deleted" },
+];
 
 export type EstimateDetail = Estimate & {
   customerEmail?: string;

@@ -30,8 +30,10 @@ import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { RecordPaymentForm } from "./RecordPaymentForm";
 import { InvoicePaymentLinkCard } from "./InvoicePaymentLinkCard";
 import { InvoiceMessageAiAssistant } from "./InvoiceMessageAiAssistant";
+import { InvoiceLifecycleControl } from "./InvoiceLifecycleControl";
 
 import type { BillingSignature } from "@/shared/types/billing-signature";
+import type { InvoiceDeleteDependencies } from "@/shared/lib/invoice-lifecycle";
 import { adminPageStackClass } from "@/shared/lib/admin-density";
 import { FocusedDocumentOverlayFooter } from "@/shared/components/layout/FocusedDocumentOverlay";
 
@@ -46,6 +48,7 @@ type InvoiceDetailPageViewProps = {
   signature?: BillingSignature | null;
   presentation?: "page" | "overlay";
   aiFeaturesEnabled?: boolean;
+  deleteDependencies: InvoiceDeleteDependencies;
 };
 
 export function InvoiceDetailPageView({
@@ -59,6 +62,7 @@ export function InvoiceDetailPageView({
   signature,
   presentation = "page",
   aiFeaturesEnabled = false,
+  deleteDependencies,
 }: InvoiceDetailPageViewProps) {
   const isOverlay = presentation === "overlay";
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -316,6 +320,16 @@ export function InvoiceDetailPageView({
           <InvoicePaymentHistory payments={payments} />
         </div>
       </section>
+
+      {canManageBilling ? (
+        <div className="no-print">
+          <InvoiceLifecycleControl
+            invoice={invoice}
+            deleteDependencies={deleteDependencies}
+            canManage={canManageBilling}
+          />
+        </div>
+      ) : null}
 
       <div className="no-print">
         <InvoiceActivityTimeline activities={activities} />

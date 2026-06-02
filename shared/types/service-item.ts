@@ -1,3 +1,5 @@
+import { isServiceItemVisibleInPickers } from "@/shared/lib/service-item-lifecycle";
+
 export type ServiceItem = {
   id: string;
   name: string;
@@ -7,6 +9,9 @@ export type ServiceItem = {
   taxable: boolean;
   category?: string;
   isActive: boolean;
+  archivedAt?: string;
+  deletedAt?: string;
+  deleteAfter?: string;
 };
 
 export type ServiceItemFormData = {
@@ -19,17 +24,29 @@ export type ServiceItemFormData = {
   isActive: boolean;
 };
 
+export type ServiceItemLifecycleState = "active" | "archived" | "deleted";
+
+export const SERVICE_ITEM_LIFECYCLE_FILTER_OPTIONS: {
+  value: ServiceItemLifecycleState;
+  label: string;
+}[] = [
+  { value: "active", label: "Active items" },
+  { value: "archived", label: "Archived" },
+  { value: "deleted", label: "Recently Deleted" },
+];
+
 export function filterActiveServiceItemsForSearch(
   serviceItems: ServiceItem[],
   search: string,
 ): ServiceItem[] {
+  const visibleItems = serviceItems.filter(isServiceItemVisibleInPickers);
   const query = search.trim().toLowerCase();
 
   if (!query) {
-    return serviceItems;
+    return visibleItems;
   }
 
-  return serviceItems.filter((item) => {
+  return visibleItems.filter((item) => {
     const haystack = [item.name, item.description, item.category]
       .filter(Boolean)
       .join(" ")

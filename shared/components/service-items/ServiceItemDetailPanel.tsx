@@ -3,6 +3,7 @@ import {
   ServiceItemForm,
   serviceItemToFormData,
 } from "./ServiceItemForm";
+import { ServiceItemLifecycleControl } from "./ServiceItemLifecycleControl";
 import type {
   ServiceItem,
   ServiceItemFormData,
@@ -20,6 +21,8 @@ type ServiceItemDetailPanelProps = {
   onCancel: () => void;
   error?: string | null;
   isSubmitting?: boolean;
+  canManagePriceBook?: boolean;
+  onLifecycleDeleted?: () => void;
 };
 
 export function ServiceItemDetailPanel({
@@ -32,6 +35,8 @@ export function ServiceItemDetailPanel({
   onCancel,
   error,
   isSubmitting = false,
+  canManagePriceBook = false,
+  onLifecycleDeleted,
 }: ServiceItemDetailPanelProps) {
   const isOpen = mode !== "empty";
 
@@ -70,15 +75,24 @@ export function ServiceItemDetailPanel({
       ) : null}
 
       {mode === "edit" && serviceItem ? (
-        <ServiceItemForm
-          key={serviceItem.id}
-          initialData={serviceItemToFormData(serviceItem)}
-          onSubmit={onEditSubmit}
-          onCancel={onCancel}
-          error={error}
-          isSubmitting={isSubmitting}
-          submitLabel="Save changes"
-        />
+        <div className="space-y-6">
+          <ServiceItemForm
+            key={serviceItem.id}
+            initialData={serviceItemToFormData(serviceItem)}
+            onSubmit={onEditSubmit}
+            onCancel={onCancel}
+            error={error}
+            isSubmitting={isSubmitting}
+            submitLabel="Save changes"
+          />
+          {canManagePriceBook ? (
+            <ServiceItemLifecycleControl
+              serviceItem={serviceItem}
+              canManage={canManagePriceBook}
+              onDeleted={onLifecycleDeleted}
+            />
+          ) : null}
+        </div>
       ) : null}
     </DesktopConditionalDetailPanel>
   );

@@ -18,6 +18,7 @@ import { ExpenseForm } from "./ExpenseForm";
 import { ExpenseReceiptPreview } from "./ExpenseReceiptPreview";
 import { ExpenseStatusBadge } from "./ExpenseStatusBadge";
 import { ExpenseWorkflowActions } from "./ExpenseWorkflowActions";
+import { ExpenseLifecycleControl } from "./ExpenseLifecycleControl";
 
 type PanelMode = "detail" | "create" | "empty";
 
@@ -197,6 +198,10 @@ export function ExpenseDetailsPanel({
             canDispatchJobs={canDispatchJobs}
             onExpenseUpdated={onExpenseUpdated}
           />
+
+          {canManageBilling ? (
+            <ExpenseLifecycleControl expense={expense} canManage={canManageBilling} />
+          ) : null}
         </div>
       ) : null}
     </DesktopConditionalDetailPanel>

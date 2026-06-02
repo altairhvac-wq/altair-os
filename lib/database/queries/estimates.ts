@@ -2,6 +2,10 @@ import { cache } from "react";
 import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import {
+  buildTrashTimestampFields,
+  countRelatedRecordsByColumn,
+} from "@/lib/database/queries/entity-lifecycle-shared";
 import { validateServiceItemIdsBelongToCompany } from "@/lib/database/queries/service-items";
 import type {
   EstimateInsert,
@@ -112,6 +116,9 @@ export function mapEstimateRowToEstimate(
     notes: row.notes ?? undefined,
     createdAt: toDateOnly(row.created_at),
     updatedAt: row.updated_at,
+    archivedAt: row.archived_at ?? undefined,
+    deletedAt: row.deleted_at ?? undefined,
+    deleteAfter: row.delete_after ?? undefined,
   };
 }
 
@@ -293,16 +300,33 @@ async function validateJob(
   return { error: null };
 }
 
+export type ListEstimatesOptions = {
+  includeArchived?: boolean;
+  includeDeleted?: boolean;
+};
+
 export const listEstimates = cache(async function listEstimates(
   companyId: string,
+  options?: ListEstimatesOptions,
 ): Promise<Estimate[]> {
   const supabase = await createClient();
+  const includeArchived = options?.includeArchived ?? false;
+  const includeDeleted = options?.includeDeleted ?? false;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("estimates")
     .select(ESTIMATE_LIST_SELECT)
-    .eq("company_id", companyId)
-    .order("created_at", { ascending: false });
+    .eq("company_id", companyId);
+
+  if (!includeDeleted) {
+    query = query.is("deleted_at", null);
+  }
+
+  if (!includeArchived) {
+    query = query.is("archived_at", null);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) {
     console.error("[listEstimates] query failed:", {
@@ -684,4 +708,222 @@ export async function updateEstimateStatus(
     estimate,
     error: estimate ? null : "Failed to load updated estimate.",
   };
+}
+
+export async function listDeletedEstimates(companyId: string): Promise<Estimate[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("estimates")
+    .select(ESTIMATE_LIST_SELECT)
+    .eq("company_id", companyId)
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false });
+
+  if (error) {
+    console.error("[listDeletedEstimates] query failed:", { companyId, error });
+    return [];
+  }
+
+  return ((data ?? []) as EstimateRowWithRelations[]).map(mapEstimateRowToEstimate);
+}
+
+export async function getEstimateDeleteDependencies(
+  companyId: string,
+  estimateId: string,
+): Promise<{ linkedInvoiceCount: number }> {
+  const supabase = await createClient();
+  const linkedInvoiceCount = await countRelatedRecordsByColumn(
+    supabase,
+    companyId,
+    "invoices",
+    "estimate_id",
+    estimateId,
+  );
+
+  return { linkedInvoiceCount };
+}
+
+export async function archiveEstimate(
+  companyId: string,
+  estimateId: string,
+): Promise<{ estimate: Estimate | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("estimates")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("company_id", companyId)
+    .eq("id", estimateId)
+    .is("archived_at", null)
+    .is("deleted_at", null)
+    .neq("status", "converted")
+    .select(ESTIMATE_LIST_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { estimate: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { estimate: null, error: "This estimate could not be archived." };
+  }
+
+  return {
+    estimate: mapEstimateRowToEstimate(row as EstimateRowWithRelations),
+    error: null,
+  };
+}
+
+export async function restoreEstimate(
+  companyId: string,
+  estimateId: string,
+): Promise<{ estimate: Estimate | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("estimates")
+    .update({ archived_at: null })
+    .eq("company_id", companyId)
+    .eq("id", estimateId)
+    .not("archived_at", "is", null)
+    .is("deleted_at", null)
+    .select(ESTIMATE_LIST_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { estimate: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { estimate: null, error: "This estimate is not archived." };
+  }
+
+  return {
+    estimate: mapEstimateRowToEstimate(row as EstimateRowWithRelations),
+    error: null,
+  };
+}
+
+export async function voidEstimate(
+  companyId: string,
+  estimateId: string,
+): Promise<{ estimate: Estimate | null; error: string | null }> {
+  const result = await updateEstimateStatus(
+    companyId,
+    estimateId,
+    "sent",
+    "cancelled",
+  );
+
+  if (result.estimate || result.error) {
+    return { estimate: result.estimate, error: result.error };
+  }
+
+  const approved = await updateEstimateStatus(
+    companyId,
+    estimateId,
+    "approved",
+    "cancelled",
+  );
+
+  if (approved.estimate || approved.error) {
+    return { estimate: approved.estimate, error: approved.error };
+  }
+
+  const declined = await updateEstimateStatus(
+    companyId,
+    estimateId,
+    "declined",
+    "cancelled",
+  );
+
+  return { estimate: declined.estimate, error: declined.error ?? "This estimate could not be voided." };
+}
+
+export async function moveEstimateToTrash(
+  companyId: string,
+  estimateId: string,
+): Promise<{ estimate: Estimate | null; error: string | null }> {
+  const supabase = await createClient();
+  const trashFields = buildTrashTimestampFields();
+
+  const { data: row, error } = await supabase
+    .from("estimates")
+    .update(trashFields)
+    .eq("company_id", companyId)
+    .eq("id", estimateId)
+    .eq("status", "draft")
+    .is("deleted_at", null)
+    .select(ESTIMATE_LIST_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { estimate: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return {
+      estimate: null,
+      error: "Only draft estimates can move to Recently Deleted.",
+    };
+  }
+
+  return {
+    estimate: mapEstimateRowToEstimate(row as EstimateRowWithRelations),
+    error: null,
+  };
+}
+
+export async function restoreEstimateFromTrash(
+  companyId: string,
+  estimateId: string,
+): Promise<{ estimate: Estimate | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("estimates")
+    .update({
+      deleted_at: null,
+      delete_after: null,
+      archived_at: null,
+    })
+    .eq("company_id", companyId)
+    .eq("id", estimateId)
+    .not("deleted_at", "is", null)
+    .select(ESTIMATE_LIST_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { estimate: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { estimate: null, error: "This estimate is not in Recently Deleted." };
+  }
+
+  return {
+    estimate: mapEstimateRowToEstimate(row as EstimateRowWithRelations),
+    error: null,
+  };
+}
+
+export async function permanentlyDeleteEstimate(
+  companyId: string,
+  estimateId: string,
+): Promise<{ success: boolean; error: string | null }> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("estimates")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("id", estimateId)
+    .not("deleted_at", "is", null);
+
+  if (error) {
+    return { success: false, error: mapDatabaseError(error) };
+  }
+
+  return { success: true, error: null };
 }

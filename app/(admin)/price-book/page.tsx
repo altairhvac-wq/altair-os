@@ -4,7 +4,10 @@ import { shouldShowAlphaComingSoon } from "@/lib/beta/alpha-hardening";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { ComingSoonView } from "@/shared/components/layout/ComingSoonView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
-import { listServiceItems } from "@/lib/database/queries/service-items";
+import {
+  listDeletedServiceItems,
+  listServiceItems,
+} from "@/lib/database/queries/service-items";
 import { ServiceItemsPageView } from "@/shared/components/service-items/ServiceItemsPageView";
 
 export default async function PriceBookPage() {
@@ -29,11 +32,14 @@ export default async function PriceBookPage() {
     );
   }
 
-  const serviceItems = await listServiceItems(companyContext.company.id);
+  const [serviceItems, deletedServiceItems] = await Promise.all([
+    listServiceItems(companyContext.company.id, { includeArchived: true }),
+    listDeletedServiceItems(companyContext.company.id),
+  ]);
 
   return (
     <ServiceItemsPageView
-      initialServiceItems={serviceItems}
+      initialServiceItems={[...serviceItems, ...deletedServiceItems]}
       canManagePriceBook={companyContext.permissions.manageBilling}
     />
   );

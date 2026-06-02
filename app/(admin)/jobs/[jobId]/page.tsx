@@ -14,7 +14,7 @@ import { listJobAttachmentsForJob } from "@/lib/database/queries/job-attachments
 import { listJobMaterialsForJob } from "@/lib/database/queries/job-materials";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment";
-import { getJobById } from "@/lib/database/queries/jobs";
+import { getJobById, getJobDeleteDependencies } from "@/lib/database/queries/jobs";
 import { listJobBillingSummariesForJob } from "@/lib/database/queries/job-billing-summaries";
 import { listTechnicians } from "@/lib/database/queries/technicians";
 import { getJobProfitabilitySnapshot } from "@/lib/database/services/job-profitability";
@@ -77,6 +77,11 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       : Promise.resolve([]),
   ]);
 
+  const deleteDependencies = await getJobDeleteDependencies(
+    companyContext.company.id,
+    jobId,
+  );
+
   const [profitability, operationalInconsistencies, billingContext] =
     await Promise.all([
     canViewFinancials
@@ -114,6 +119,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       }
       canAssignTechnician={companyContext.permissions.dispatchJobs}
       canEditJob={canEditJob}
+      deleteDependencies={deleteDependencies}
       canLogMaterials={
         companyContext.permissions.dispatchJobs ||
         companyContext.permissions.manageBilling ||

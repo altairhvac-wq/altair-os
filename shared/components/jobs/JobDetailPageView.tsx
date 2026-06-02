@@ -34,7 +34,9 @@ import {
 import type { CustomerEquipment } from "@/shared/types/customer-equipment";
 import type { JobAttachment } from "@/shared/types/job-attachment";
 import type { Expense } from "@/shared/types/expense";
+import type { JobDeleteDependencies } from "@/shared/lib/job-lifecycle";
 import type { JobMaterial } from "@/shared/types/job-material";
+import { JobLifecycleControl } from "@/shared/components/jobs/JobLifecycleControl";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
 import type { ServiceItem } from "@/shared/types/service-item";
 import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
@@ -62,6 +64,7 @@ type JobDetailPageViewProps = {
   canUpdateStatus: boolean;
   canAssignTechnician: boolean;
   canEditJob: boolean;
+  deleteDependencies: JobDeleteDependencies;
   canLogMaterials: boolean;
   canViewFinancials: boolean;
   canViewBilling: boolean;
@@ -107,6 +110,7 @@ export function JobDetailPageView({
   canUpdateStatus,
   canAssignTechnician,
   canEditJob,
+  deleteDependencies,
   canLogMaterials,
   canViewFinancials,
   canViewBilling,
@@ -376,6 +380,12 @@ export function JobDetailPageView({
             ? "Status changes, assignments, estimates, and invoices will appear here."
             : "Status changes, assignments, and field updates will appear here."
         }
+      />
+
+      <JobLifecycleControl
+        job={job}
+        deleteDependencies={deleteDependencies}
+        canManage={canEditJob}
       />
     </div>
   );

@@ -1,4 +1,7 @@
+import { useMemo } from "react";
 import { ImageIcon, Receipt } from "lucide-react";
+import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
+import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { formatExpenseAmount, formatExpenseDate } from "@/shared/types/expense";
 import type { Expense } from "@/shared/types/expense";
 import { ExpenseCategoryBadge } from "./ExpenseCategoryBadge";
@@ -8,6 +11,10 @@ type ExpensesTableProps = {
   expenses: Expense[];
   selectedId: string | null;
   onSelect: (expense: Expense) => void;
+  selectionEnabled?: boolean;
+  selectedIds?: ReadonlySet<string>;
+  onToggleSelection?: (expenseId: string) => void;
+  onToggleAllVisible?: (selectAll: boolean) => void;
 };
 
 const rowStatusAccent: Partial<Record<Expense["status"], string>> = {
@@ -21,12 +28,36 @@ export function ExpensesTable({
   expenses,
   selectedId,
   onSelect,
+  selectionEnabled = false,
+  selectedIds,
+  onToggleSelection,
+  onToggleAllVisible,
 }: ExpensesTableProps) {
+  const headerSelection = useMemo(
+    () =>
+      selectionEnabled && selectedIds
+        ? resolveBulkSelectionState(selectedIds, expenses)
+        : null,
+    [expenses, selectedIds, selectionEnabled],
+  );
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[880px] text-left text-sm">
         <thead>
           <tr className="border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {selectionEnabled ? (
+              <th className="w-10 px-4 py-3">
+                {headerSelection && headerSelection.selectableCount > 0 ? (
+                  <BulkSelectCheckbox
+                    checked={headerSelection.allSelected}
+                    indeterminate={headerSelection.someSelected}
+                    ariaLabel="Select all visible expenses"
+                    onChange={(checked) => onToggleAllVisible?.(checked)}
+                  />
+                ) : null}
+              </th>
+            ) : null}
             <th className="px-4 py-3">Expense</th>
             <th className="px-4 py-3">Merchant</th>
             <th className="hidden px-4 py-3 md:table-cell">Category</th>
@@ -40,6 +71,7 @@ export function ExpensesTable({
         <tbody className="divide-y divide-slate-50">
           {expenses.map((expense) => {
             const isSelected = expense.id === selectedId;
+            const isBulkSelected = selectedIds?.has(expense.id) ?? false;
             const hasReceipt = expense.receiptStatus === "attached";
 
             return (
@@ -48,8 +80,17 @@ export function ExpensesTable({
                 onClick={() => onSelect(expense)}
                 className={`cursor-pointer transition-colors ${
                   rowStatusAccent[expense.status] ?? ""
-                } ${isSelected ? "bg-cyan-50/70" : "hover:bg-slate-50"}`}
+                } ${isSelected || isBulkSelected ? "bg-cyan-50/70" : "hover:bg-slate-50"}`}
               >
+                {selectionEnabled ? (
+                  <td className="px-4 py-3">
+                    <BulkSelectCheckbox
+                      checked={isBulkSelected}
+                      ariaLabel={`Select expense ${expense.expenseNumber}`}
+                      onChange={() => onToggleSelection?.(expense.id)}
+                    />
+                  </td>
+                ) : null}
                 <td className="px-4 py-3">
                   <p className="font-semibold text-slate-900">
                     {expense.expenseNumber}

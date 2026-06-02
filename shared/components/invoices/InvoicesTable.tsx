@@ -6,6 +6,7 @@ import {
   resolveInvoiceBatchSelectionState,
   type InvoiceBatchSendJobLookup,
 } from "@/shared/lib/invoice-batch-send";
+import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import type { Invoice } from "@/shared/types/invoice";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
@@ -20,6 +21,7 @@ type InvoicesTableProps = {
   jobsById?: InvoiceBatchSendJobLookup;
   onToggleSelection?: (invoiceId: string) => void;
   onToggleAllVisible?: (selectAll: boolean) => void;
+  selectionScope?: "batchSend" | "all";
 };
 
 function InvoiceSelectCheckbox({
@@ -72,18 +74,28 @@ export function InvoicesTable({
   jobsById,
   onToggleSelection,
   onToggleAllVisible,
+  selectionScope = "batchSend",
 }: InvoicesTableProps) {
   const visibleInvoices = useMemo(
     () => sections.flatMap((section) => section.items),
     [sections],
   );
 
+  const useAllRowSelection = selectionScope === "all";
+
   const headerSelection = useMemo(
-    () =>
-      selectionEnabled && selectedIds
-        ? resolveInvoiceBatchSelectionState(selectedIds, visibleInvoices, jobsById)
-        : null,
-    [jobsById, selectedIds, selectionEnabled, visibleInvoices],
+    () => {
+      if (!selectionEnabled || !selectedIds) return null;
+      if (useAllRowSelection) {
+        return resolveBulkSelectionState(selectedIds, visibleInvoices);
+      }
+      return resolveInvoiceBatchSelectionState(
+        selectedIds,
+        visibleInvoices,
+        jobsById,
+      );
+    },
+    [jobsById, selectedIds, selectionEnabled, useAllRowSelection, visibleInvoices],
   );
 
   const tableColumnCount = selectionEnabled ? 8 : 7;
@@ -98,6 +110,7 @@ export function InvoicesTable({
         selectedIds={selectedIds}
         jobsById={jobsById}
         onToggleSelection={onToggleSelection}
+        selectionScope={selectionScope}
       />
 
       <div className="hidden overflow-x-auto md:block">
@@ -110,7 +123,11 @@ export function InvoicesTable({
                     <InvoiceSelectCheckbox
                       checked={headerSelection.allSelected}
                       indeterminate={headerSelection.someSelected}
-                      ariaLabel="Select all sendable invoices on this page"
+                      ariaLabel={
+                        useAllRowSelection
+                          ? "Select all invoices on this page"
+                          : "Select all sendable invoices on this page"
+                      }
                       onChange={(checked) => onToggleAllVisible?.(checked)}
                     />
                   ) : null}
@@ -141,7 +158,8 @@ export function InvoicesTable({
                 {section.items.map((invoice) => {
                   const isSelectable =
                     selectionEnabled &&
-                    canBatchSendInvoice(invoice, jobsById);
+                    (useAllRowSelection ||
+                      canBatchSendInvoice(invoice, jobsById));
                   const isSelected = selectedIds?.has(invoice.id) ?? false;
 
                   return (

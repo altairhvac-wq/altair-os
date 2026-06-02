@@ -5,6 +5,7 @@ import type {
   ExpenseInsert,
   ExpenseRow,
 } from "@/lib/database/types/core-tables";
+import { buildTrashTimestampFields } from "@/lib/database/queries/entity-lifecycle-shared";
 import { createSignedUrlsForPaths } from "@/lib/storage/signed-urls";
 import type { Expense, ExpenseFormData, ExpenseStatus } from "@/shared/types/expense";
 import {
@@ -56,6 +57,9 @@ function mapExpenseRow(row: ExpenseRowWithRelations): Expense {
     status: row.status,
     notes: row.notes ?? undefined,
     createdAt: toDateOnly(row.created_at),
+    archivedAt: row.archived_at ?? undefined,
+    deletedAt: row.deleted_at ?? undefined,
+    deleteAfter: row.delete_after ?? undefined,
   };
 }
 
@@ -103,16 +107,33 @@ async function generateExpenseNumber(companyId: string): Promise<string> {
   return `EXP-${1013 + (count ?? 0)}`;
 }
 
+export type ListExpensesOptions = {
+  includeArchived?: boolean;
+  includeDeleted?: boolean;
+};
+
 export const listExpenses = cache(async function listExpenses(
   companyId: string,
+  options?: ListExpensesOptions,
 ): Promise<Expense[]> {
   const supabase = await createClient();
+  const includeArchived = options?.includeArchived ?? false;
+  const includeDeleted = options?.includeDeleted ?? false;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("expenses")
     .select(EXPENSE_SELECT)
-    .eq("company_id", companyId)
-    .order("created_at", { ascending: false });
+    .eq("company_id", companyId);
+
+  if (!includeDeleted) {
+    query = query.is("deleted_at", null);
+  }
+
+  if (!includeArchived) {
+    query = query.is("archived_at", null);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) {
     console.error("[listExpenses] query failed:", {
@@ -389,4 +410,174 @@ export async function updateExpenseStatus(
     expense,
     error: expense ? null : "Failed to load updated expense.",
   };
+}
+
+export async function listDeletedExpenses(companyId: string): Promise<Expense[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("expenses")
+    .select(EXPENSE_SELECT)
+    .eq("company_id", companyId)
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false });
+
+  if (error) {
+    console.error("[listDeletedExpenses] query failed:", { companyId, error });
+    return [];
+  }
+
+  const expenses = ((data ?? []) as ExpenseRowWithRelations[]).map(mapExpenseRow);
+  return attachReceiptSignedUrls(expenses);
+}
+
+export async function archiveExpense(
+  companyId: string,
+  expenseId: string,
+): Promise<{ expense: Expense | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("expenses")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("company_id", companyId)
+    .eq("id", expenseId)
+    .is("archived_at", null)
+    .is("deleted_at", null)
+    .select(EXPENSE_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { expense: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { expense: null, error: "This expense could not be archived." };
+  }
+
+  const [expense] = await attachReceiptSignedUrls([
+    mapExpenseRow(row as ExpenseRowWithRelations),
+  ]);
+
+  return { expense: expense ?? null, error: null };
+}
+
+export async function restoreExpense(
+  companyId: string,
+  expenseId: string,
+): Promise<{ expense: Expense | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("expenses")
+    .update({ archived_at: null })
+    .eq("company_id", companyId)
+    .eq("id", expenseId)
+    .not("archived_at", "is", null)
+    .is("deleted_at", null)
+    .select(EXPENSE_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { expense: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { expense: null, error: "This expense is not archived." };
+  }
+
+  const [expense] = await attachReceiptSignedUrls([
+    mapExpenseRow(row as ExpenseRowWithRelations),
+  ]);
+
+  return { expense: expense ?? null, error: null };
+}
+
+export async function moveExpenseToTrash(
+  companyId: string,
+  expenseId: string,
+): Promise<{ expense: Expense | null; error: string | null }> {
+  const supabase = await createClient();
+  const trashFields = buildTrashTimestampFields();
+
+  const { data: row, error } = await supabase
+    .from("expenses")
+    .update(trashFields)
+    .eq("company_id", companyId)
+    .eq("id", expenseId)
+    .in("status", ["draft", "submitted", "rejected"])
+    .is("deleted_at", null)
+    .select(EXPENSE_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { expense: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return {
+      expense: null,
+      error: "Only draft, submitted, or rejected expenses can move to Recently Deleted.",
+    };
+  }
+
+  const [expense] = await attachReceiptSignedUrls([
+    mapExpenseRow(row as ExpenseRowWithRelations),
+  ]);
+
+  return { expense: expense ?? null, error: null };
+}
+
+export async function restoreExpenseFromTrash(
+  companyId: string,
+  expenseId: string,
+): Promise<{ expense: Expense | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("expenses")
+    .update({
+      deleted_at: null,
+      delete_after: null,
+      archived_at: null,
+    })
+    .eq("company_id", companyId)
+    .eq("id", expenseId)
+    .not("deleted_at", "is", null)
+    .select(EXPENSE_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { expense: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { expense: null, error: "This expense is not in Recently Deleted." };
+  }
+
+  const [expense] = await attachReceiptSignedUrls([
+    mapExpenseRow(row as ExpenseRowWithRelations),
+  ]);
+
+  return { expense: expense ?? null, error: null };
+}
+
+export async function permanentlyDeleteExpense(
+  companyId: string,
+  expenseId: string,
+): Promise<{ success: boolean; error: string | null }> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("expenses")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("id", expenseId)
+    .not("deleted_at", "is", null);
+
+  if (error) {
+    return { success: false, error: mapDatabaseError(error) };
+  }
+
+  return { success: true, error: null };
 }

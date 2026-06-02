@@ -4,6 +4,14 @@ import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
+  bulkArchiveJobsAction,
+  bulkCancelJobsAction,
+  bulkMoveJobsToTrashAction,
+  bulkPermanentlyDeleteJobsAction,
+  bulkRestoreJobsAction,
+  bulkRestoreJobsFromTrashAction,
+} from "@/app/actions/jobs-bulk-lifecycle";
+import {
   bulkAssignJobsAction,
   bulkUpdateJobStatusAction,
 } from "@/app/actions/jobs-bulk";
@@ -16,6 +24,17 @@ import {
   resolveBulkStatusActionOptions,
 } from "@/shared/lib/jobs-bulk-actions";
 import { resolveSelectedItems } from "@/shared/lib/bulk-selection";
+import {
+  formatBulkLifecycleFailureDetails,
+  getBulkLifecycleFailedIds,
+  pruneBulkSelectionToFailedIds,
+  type BulkLifecycleActionResult,
+} from "@/shared/lib/bulk-lifecycle-runner";
+import {
+  formatBulkJobsResultMessage as formatBulkJobLifecycleResultMessage,
+  getJobLifecycleState,
+} from "@/shared/lib/job-lifecycle";
+import { EntityLifecycleBulkBar } from "@/shared/components/lifecycle/EntityLifecycleBulkBar";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { sortJobsForOwnerView } from "@/shared/lib/jobs-owner-view-sort";
 import { isJobOnOperationalDay } from "@/shared/lib/scheduled-today";
@@ -31,6 +50,7 @@ import type { Technician } from "@/shared/types/dispatch";
 import {
   type Job,
   type JobFormData,
+  type JobLifecycleState,
   type JobPriority,
   type JobStatus,
 } from "@/shared/types/job";
@@ -110,6 +130,8 @@ export function JobsPageView({
     initialPriorityFilter,
   );
   const [unassignedOnly, setUnassignedOnly] = useState(initialUnassignedOnly);
+  const [lifecycleFilter, setLifecycleFilter] =
+    useState<JobLifecycleState>("active");
   const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
   const [createError, setCreateError] = useState<string | null>(null);
   const [bulkActionMessage, setBulkActionMessage] = useState<string | null>(null);
@@ -122,6 +144,14 @@ export function JobsPageView({
   const [isPending, startTransition] = useTransition();
   const [isBulkAssigning, startBulkAssignTransition] = useTransition();
   const [isBulkUpdatingStatus, startBulkStatusTransition] = useTransition();
+  const [isBulkArchiving, startBulkArchiveTransition] = useTransition();
+  const [isBulkRestoring, startBulkRestoreTransition] = useTransition();
+  const [isBulkCancelling, startBulkCancelTransition] = useTransition();
+  const [isBulkMovingToTrash, startBulkMoveToTrashTransition] = useTransition();
+  const [isBulkRestoringFromTrash, startBulkRestoreFromTrashTransition] =
+    useTransition();
+  const [isBulkPermanentlyDeleting, startBulkPermanentDeleteTransition] =
+    useTransition();
   const router = useRouter();
   const searchParams = useSearchParams();
   const companyTimeZoneFromContext = useCompanyTimezone();
@@ -210,31 +240,47 @@ export function JobsPageView({
     });
   }, [syncFiltersToUrl, viewTab]);
 
+  const lifecycleFilteredJobs = useMemo(
+    () => jobs.filter((job) => getJobLifecycleState(job) === lifecycleFilter),
+    [jobs, lifecycleFilter],
+  );
+
+  const lifecycleFilteredTodayJobs = useMemo(
+    () =>
+      todayJobs.filter((job) => getJobLifecycleState(job) === lifecycleFilter),
+    [todayJobs, lifecycleFilter],
+  );
+
   const filteredTodayJobs = useMemo(
     () =>
       sortJobsForOwnerView(
         filterJobsByPageFilters(
-          todayJobs,
+          lifecycleFilteredTodayJobs,
           statusFilter,
           priorityFilter,
           unassignedOnly,
           { matchDispatchInProgressCard: true },
         ),
       ),
-    [todayJobs, statusFilter, priorityFilter, unassignedOnly],
+    [
+      lifecycleFilteredTodayJobs,
+      statusFilter,
+      priorityFilter,
+      unassignedOnly,
+    ],
   );
 
   const filteredAllJobs = useMemo(
     () =>
       sortJobsForOwnerView(
         filterJobsByPageFilters(
-          jobs,
+          lifecycleFilteredJobs,
           statusFilter,
           priorityFilter,
           unassignedOnly,
         ),
       ),
-    [jobs, statusFilter, priorityFilter, unassignedOnly],
+    [lifecycleFilteredJobs, statusFilter, priorityFilter, unassignedOnly],
   );
 
   const filteredCustomers = useMemo(
@@ -262,6 +308,7 @@ export function JobsPageView({
     statusFilter,
     priorityFilter,
     unassignedOnly,
+    lifecycleFilter,
     search,
   ]);
 
@@ -359,6 +406,127 @@ export function JobsPageView({
       router.refresh();
     }
   }
+
+  function applyBulkLifecycleResult(input: {
+    result: BulkLifecycleActionResult;
+    actionLabel: string;
+  }) {
+    const { result, actionLabel } = input;
+
+    if (result.error && result.results.length === 0) {
+      setBulkActionTone("error");
+      setBulkActionMessage(
+        formatActionError(result.error, "We couldn't update the selected jobs."),
+      );
+      return;
+    }
+
+    setSelectedIds((previous) =>
+      pruneBulkSelectionToFailedIds(previous, getBulkLifecycleFailedIds(result)),
+    );
+
+    setBulkActionFailureDetails(
+      formatBulkLifecycleFailureDetails(result).length > 0
+        ? formatBulkLifecycleFailureDetails(result)
+        : null,
+    );
+    setBulkActionTone(
+      result.successCount > 0
+        ? result.failureCount > 0
+          ? "warning"
+          : "success"
+        : "error",
+    );
+    setBulkActionMessage(
+      formatBulkJobLifecycleResultMessage({
+        successCount: result.successCount,
+        failureCount: result.failureCount,
+        actionLabel,
+      }),
+    );
+
+    if (result.successCount > 0) {
+      router.refresh();
+    }
+  }
+
+  function runBulkLifecycle(
+    action: (ids: string[]) => Promise<BulkLifecycleActionResult>,
+    actionLabel: string,
+    startTransitionFn: (callback: () => void) => void,
+  ) {
+    if (!selectionEnabled || selectedCount === 0) return;
+    const ids = [...selectedIds];
+    clearBulkActionFeedback();
+    startTransitionFn(async () => {
+      const result = await action(ids);
+      applyBulkLifecycleResult({ result, actionLabel });
+    });
+  }
+
+  function handleBulkArchive() {
+    runBulkLifecycle(bulkArchiveJobsAction, "Archive", startBulkArchiveTransition);
+  }
+
+  function handleBulkRestore() {
+    runBulkLifecycle(bulkRestoreJobsAction, "Restore", startBulkRestoreTransition);
+  }
+
+  function handleBulkCancel() {
+    runBulkLifecycle(bulkCancelJobsAction, "Cancel", startBulkCancelTransition);
+  }
+
+  function handleBulkMoveToTrash() {
+    runBulkLifecycle(
+      bulkMoveJobsToTrashAction,
+      "Move to Recently Deleted",
+      startBulkMoveToTrashTransition,
+    );
+  }
+
+  function handleBulkRestoreFromTrash() {
+    runBulkLifecycle(
+      bulkRestoreJobsFromTrashAction,
+      "Restore from Recently Deleted",
+      startBulkRestoreFromTrashTransition,
+    );
+  }
+
+  function handleBulkPermanentDelete() {
+    runBulkLifecycle(
+      bulkPermanentlyDeleteJobsAction,
+      "Permanent delete",
+      startBulkPermanentDeleteTransition,
+    );
+  }
+
+  const lifecycleBulkBar =
+    selectionEnabled && selectedCount > 0 ? (
+      <EntityLifecycleBulkBar
+        entityLabel="job"
+        selectedCount={selectedCount}
+        lifecycleFilter={lifecycleFilter}
+        isArchiving={isBulkArchiving}
+        isRestoring={isBulkRestoring}
+        isCancelling={isBulkCancelling}
+        isMovingToTrash={isBulkMovingToTrash}
+        isRestoringFromTrash={isBulkRestoringFromTrash}
+        isPermanentlyDeleting={isBulkPermanentlyDeleting}
+        showArchive={lifecycleFilter === "active"}
+        showCancel={lifecycleFilter === "active"}
+        showMoveToTrash={lifecycleFilter === "active" || lifecycleFilter === "archived"}
+        showRestore={lifecycleFilter === "archived"}
+        showRestoreFromTrash={lifecycleFilter === "deleted"}
+        showPermanentDelete={lifecycleFilter === "deleted"}
+        onArchive={handleBulkArchive}
+        onRestore={handleBulkRestore}
+        onCancel={handleBulkCancel}
+        onMoveToTrash={handleBulkMoveToTrash}
+        onRestoreFromTrash={handleBulkRestoreFromTrash}
+        onPermanentDelete={handleBulkPermanentDelete}
+        onClearSelection={handleClearSelection}
+      />
+    ) : null;
 
   function handleBulkAssign(technicianId: string) {
     if (!selectionEnabled || selectedCount === 0 || isBulkAssigning) {
@@ -595,7 +763,7 @@ export function JobsPageView({
             selectedIds={selectedIds}
             onToggleSelection={handleToggleJobSelection}
           />
-          {selectionEnabled ? (
+          {selectionEnabled && lifecycleFilter === "active" ? (
             <JobsBulkActionBar
               selectedJobs={selectedJobs}
               technicians={technicians}
@@ -606,6 +774,7 @@ export function JobsPageView({
               onClearSelection={handleClearSelection}
             />
           ) : null}
+          {lifecycleBulkBar}
         </>
       );
     }
@@ -633,7 +802,7 @@ export function JobsPageView({
           onToggleSelection={handleToggleJobSelection}
           onToggleAllVisible={handleToggleAllVisibleSelection}
         />
-        {selectionEnabled ? (
+        {selectionEnabled && lifecycleFilter === "active" ? (
           <JobsBulkActionBar
             selectedJobs={selectedJobs}
             technicians={technicians}
@@ -644,6 +813,7 @@ export function JobsPageView({
             onClearSelection={handleClearSelection}
           />
         ) : null}
+        {lifecycleBulkBar}
       </>
     );
   }
@@ -720,6 +890,9 @@ export function JobsPageView({
           priorityFilter={priorityFilter}
           onStatusFilterChange={handleStatusFilterChange}
           onPriorityFilterChange={handlePriorityFilterChange}
+          lifecycleFilter={lifecycleFilter}
+          onLifecycleFilterChange={setLifecycleFilter}
+          showLifecycleFilter={!isSearching && canDispatchJobs}
           showJobFilters={!isSearching && !hasNoJobs}
           unassignedOnly={unassignedOnly}
           hasActiveFilters={hasActiveFilters}

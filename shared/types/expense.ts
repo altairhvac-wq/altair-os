@@ -44,7 +44,21 @@ export type Expense = {
   status: ExpenseStatus;
   notes?: string;
   createdAt: string;
+  archivedAt?: string;
+  deletedAt?: string;
+  deleteAfter?: string;
 };
+
+export type ExpenseLifecycleState = "active" | "archived" | "deleted";
+
+export const EXPENSE_LIFECYCLE_FILTER_OPTIONS: {
+  value: ExpenseLifecycleState;
+  label: string;
+}[] = [
+  { value: "active", label: "Active expenses" },
+  { value: "archived", label: "Archived" },
+  { value: "deleted", label: "Recently Deleted" },
+];
 
 export type ExpenseFormData = {
   amount?: number;

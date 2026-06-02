@@ -1,5 +1,9 @@
 import { Filter, Search } from "lucide-react";
-import { INVOICE_STATUS_OPTIONS } from "@/shared/types/invoice";
+import {
+  INVOICE_LIFECYCLE_FILTER_OPTIONS,
+  INVOICE_STATUS_OPTIONS,
+  type InvoiceLifecycleState,
+} from "@/shared/types/invoice";
 import type { InvoiceListStatusFilter } from "@/shared/lib/invoice-page-focus";
 import { InvoiceBatchSelectAllControl } from "./InvoiceBatchSelectAllControl";
 
@@ -18,6 +22,9 @@ type InvoiceSearchFilterBarProps = {
   onStatusFilterChange: (value: InvoiceListStatusFilter) => void;
   resultCount: number;
   showStatusFilter?: boolean;
+  lifecycleFilter?: InvoiceLifecycleState;
+  onLifecycleFilterChange?: (value: InvoiceLifecycleState) => void;
+  showLifecycleFilter?: boolean;
   batchSelectAllControl?: {
     selectableCount: number;
     allEligibleSelected: boolean;
@@ -33,6 +40,9 @@ export function InvoiceSearchFilterBar({
   onStatusFilterChange,
   resultCount,
   showStatusFilter = true,
+  lifecycleFilter = "active",
+  onLifecycleFilterChange,
+  showLifecycleFilter = false,
   batchSelectAllControl,
 }: InvoiceSearchFilterBarProps) {
   return (
@@ -50,6 +60,25 @@ export function InvoiceSearchFilterBar({
         </div>
 
         <div className="flex shrink-0 items-center gap-2.5">
+          {showLifecycleFilter && onLifecycleFilterChange ? (
+            <div className="relative min-w-[10rem]">
+              <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <select
+                value={lifecycleFilter}
+                onChange={(e) =>
+                  onLifecycleFilterChange(e.target.value as InvoiceLifecycleState)
+                }
+                aria-label="Filter by lifecycle"
+                className="w-full appearance-none rounded-lg border border-slate-200/90 bg-white py-2 pl-10 pr-10 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:w-auto"
+              >
+                {INVOICE_LIFECYCLE_FILTER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
           {showStatusFilter ? (
             <div className="relative min-w-[10rem]">
               <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />

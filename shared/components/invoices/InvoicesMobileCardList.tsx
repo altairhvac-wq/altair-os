@@ -18,6 +18,7 @@ type InvoicesMobileCardListProps = {
   selectedIds?: ReadonlySet<string>;
   jobsById?: InvoiceBatchSendJobLookup;
   onToggleSelection?: (invoiceId: string) => void;
+  selectionScope?: "batchSend" | "all";
 };
 
 export function InvoicesMobileCardList({
@@ -28,7 +29,10 @@ export function InvoicesMobileCardList({
   selectedIds,
   jobsById,
   onToggleSelection,
+  selectionScope = "batchSend",
 }: InvoicesMobileCardListProps) {
+  const useAllRowSelection = selectionScope === "all";
+
   return (
     <ul className="divide-y divide-slate-100 md:hidden">
       {sections.map((section) => (
@@ -44,7 +48,7 @@ export function InvoicesMobileCardList({
             {section.items.map((invoice) => {
               const isSelectable =
                 selectionEnabled &&
-                canBatchSendInvoice(invoice, jobsById);
+                (useAllRowSelection || canBatchSendInvoice(invoice, jobsById));
               const isSelected = selectedIds?.has(invoice.id) ?? false;
 
               return (

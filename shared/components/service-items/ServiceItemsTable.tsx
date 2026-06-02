@@ -1,5 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
+import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
+import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { formatCurrency } from "@/shared/types/customer";
 import type { ServiceItem } from "@/shared/types/service-item";
 
@@ -7,6 +10,10 @@ type ServiceItemsTableProps = {
   serviceItems: ServiceItem[];
   selectedItemId?: string;
   onSelectItem: (item: ServiceItem) => void;
+  selectionEnabled?: boolean;
+  selectedIds?: ReadonlySet<string>;
+  onToggleSelection?: (itemId: string) => void;
+  onToggleAllVisible?: (selectAll: boolean) => void;
 };
 
 const statusStyles = {
@@ -18,12 +25,36 @@ export function ServiceItemsTable({
   serviceItems,
   selectedItemId,
   onSelectItem,
+  selectionEnabled = false,
+  selectedIds,
+  onToggleSelection,
+  onToggleAllVisible,
 }: ServiceItemsTableProps) {
+  const headerSelection = useMemo(
+    () =>
+      selectionEnabled && selectedIds
+        ? resolveBulkSelectionState(selectedIds, serviceItems)
+        : null,
+    [selectedIds, selectionEnabled, serviceItems],
+  );
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[720px] text-left text-sm">
         <thead>
           <tr className="border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {selectionEnabled ? (
+              <th className="w-10 px-4 py-3">
+                {headerSelection && headerSelection.selectableCount > 0 ? (
+                  <BulkSelectCheckbox
+                    checked={headerSelection.allSelected}
+                    indeterminate={headerSelection.someSelected}
+                    ariaLabel="Select all visible items"
+                    onChange={(checked) => onToggleAllVisible?.(checked)}
+                  />
+                ) : null}
+              </th>
+            ) : null}
             <th className="px-4 py-3">Item</th>
             <th className="px-4 py-3">Category</th>
             <th className="px-4 py-3 text-right">Internal cost</th>
@@ -35,15 +66,27 @@ export function ServiceItemsTable({
         <tbody className="divide-y divide-slate-50">
           {serviceItems.map((item) => {
             const isSelected = item.id === selectedItemId;
+            const isBulkSelected = selectedIds?.has(item.id) ?? false;
 
             return (
               <tr
                 key={item.id}
                 onClick={() => onSelectItem(item)}
                 className={`cursor-pointer transition-colors hover:bg-slate-50 ${
-                  isSelected ? "bg-cyan-50/60 hover:bg-cyan-50/80" : ""
+                  isSelected || isBulkSelected
+                    ? "bg-cyan-50/60 hover:bg-cyan-50/80"
+                    : ""
                 }`}
               >
+                {selectionEnabled ? (
+                  <td className="px-4 py-3">
+                    <BulkSelectCheckbox
+                      checked={isBulkSelected}
+                      ariaLabel={`Select item ${item.name}`}
+                      onChange={() => onToggleSelection?.(item.id)}
+                    />
+                  </td>
+                ) : null}
                 <td className="px-4 py-3">
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-slate-900">

@@ -12,7 +12,13 @@ import {
   resolveCompanyTimeZone,
 } from "@/shared/lib/datetime";
 import type { EstimateLineItem } from "@/shared/types/estimate";
+import type { JobDeleteDependencies } from "@/shared/lib/job-lifecycle";
 import type { Job, JobDetail, JobFormData, JobStatus } from "@/shared/types/job";
+import {
+  buildTrashTimestampFields,
+  countInvoicePaymentsForJob,
+  countRelatedRecordsByColumn,
+} from "@/lib/database/queries/entity-lifecycle-shared";
 import type {
   JobWorkflowActionId,
   JobWorkflowCompletionPayload,
@@ -93,9 +99,18 @@ export function mapJobRowToJob(row: JobRowWithTechnician): Job {
     completionNotes: row.completion_notes ?? undefined,
     followUpNotes: row.follow_up_notes ?? undefined,
     createdAt: toDateOnly(row.created_at),
+    archivedAt: row.archived_at ?? undefined,
+    deletedAt: row.deleted_at ?? undefined,
+    deleteAfter: row.delete_after ?? undefined,
     ...technician,
   };
 }
+
+export type ListJobsOptions = {
+  includeArchived?: boolean;
+  includeDeleted?: boolean;
+  assignedTechnicianId?: string;
+};
 
 async function generateJobNumber(companyId: string): Promise<string> {
   const supabase = await createClient();
@@ -149,14 +164,32 @@ export function mapJobFormDataToUpdate(data: JobFormData): JobUpdate {
   return mapJobFormDataFields(data);
 }
 
-export const listJobs = cache(async function listJobs(companyId: string): Promise<Job[]> {
+export const listJobs = cache(async function listJobs(
+  companyId: string,
+  options?: ListJobsOptions,
+): Promise<Job[]> {
   const supabase = await createClient();
+  const includeArchived = options?.includeArchived ?? false;
+  const includeDeleted = options?.includeDeleted ?? false;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("jobs")
     .select(JOB_TECHNICIAN_SELECT)
-    .eq("company_id", companyId)
-    .order("scheduled_at", { ascending: false });
+    .eq("company_id", companyId);
+
+  if (!includeDeleted) {
+    query = query.is("deleted_at", null);
+  }
+
+  if (!includeArchived) {
+    query = query.is("archived_at", null);
+  }
+
+  if (options?.assignedTechnicianId) {
+    query = query.eq("assigned_technician_id", options.assignedTechnicianId);
+  }
+
+  const { data, error } = await query.order("scheduled_at", { ascending: false });
 
   if (error) {
     console.error("[listJobs] query failed:", {
@@ -214,6 +247,8 @@ export async function listAssignedJobs(
     .select(JOB_TECHNICIAN_SELECT)
     .eq("company_id", companyId)
     .eq("assigned_technician_id", technicianId)
+    .is("deleted_at", null)
+    .is("archived_at", null)
     .order("scheduled_at", { ascending: false });
 
   if (error) {
@@ -892,4 +927,214 @@ export async function reopenCompletedJob(
     error: null,
     dispatchReactivated,
   };
+}
+
+export async function listDeletedJobs(companyId: string): Promise<Job[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .select(JOB_TECHNICIAN_SELECT)
+    .eq("company_id", companyId)
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false });
+
+  if (error) {
+    console.error("[listDeletedJobs] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as JobRowWithTechnician[]).map(mapJobRowToJob);
+}
+
+export async function getJobDeleteDependencies(
+  companyId: string,
+  jobId: string,
+): Promise<JobDeleteDependencies> {
+  const supabase = await createClient();
+
+  const [
+    timeEntryCount,
+    estimateCount,
+    invoiceCount,
+    expenseCount,
+    paymentCount,
+  ] = await Promise.all([
+    countRelatedRecordsByColumn(supabase, companyId, "time_entries", "job_id", jobId),
+    countRelatedRecordsByColumn(supabase, companyId, "estimates", "job_id", jobId),
+    countRelatedRecordsByColumn(supabase, companyId, "invoices", "job_id", jobId),
+    countRelatedRecordsByColumn(supabase, companyId, "expenses", "job_id", jobId),
+    countInvoicePaymentsForJob(supabase, companyId, jobId),
+  ]);
+
+  return {
+    timeEntryCount,
+    estimateCount,
+    invoiceCount,
+    expenseCount,
+    paymentCount,
+  };
+}
+
+export async function archiveJob(
+  companyId: string,
+  jobId: string,
+): Promise<{ job: Job | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("jobs")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .is("archived_at", null)
+    .is("deleted_at", null)
+    .select(JOB_TECHNICIAN_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { job: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { job: null, error: "This job could not be archived." };
+  }
+
+  return { job: mapJobRowToJob(row as JobRowWithTechnician), error: null };
+}
+
+export async function restoreJob(
+  companyId: string,
+  jobId: string,
+): Promise<{ job: Job | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("jobs")
+    .update({ archived_at: null })
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .not("archived_at", "is", null)
+    .is("deleted_at", null)
+    .select(JOB_TECHNICIAN_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { job: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { job: null, error: "This job is not archived." };
+  }
+
+  return { job: mapJobRowToJob(row as JobRowWithTechnician), error: null };
+}
+
+export async function cancelJob(
+  companyId: string,
+  jobId: string,
+): Promise<{ job: Job | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("jobs")
+    .update({ status: "cancelled" satisfies JobStatus })
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .is("deleted_at", null)
+    .neq("status", "cancelled")
+    .neq("status", "completed")
+    .select(JOB_TECHNICIAN_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { job: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { job: null, error: "This job could not be cancelled." };
+  }
+
+  return { job: mapJobRowToJob(row as JobRowWithTechnician), error: null };
+}
+
+export async function moveJobToTrash(
+  companyId: string,
+  jobId: string,
+): Promise<{ job: Job | null; error: string | null }> {
+  const supabase = await createClient();
+  const trashFields = buildTrashTimestampFields();
+
+  const { data: row, error } = await supabase
+    .from("jobs")
+    .update(trashFields)
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .is("deleted_at", null)
+    .select(JOB_TECHNICIAN_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { job: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { job: null, error: "This job could not be moved to Recently Deleted." };
+  }
+
+  return { job: mapJobRowToJob(row as JobRowWithTechnician), error: null };
+}
+
+export async function restoreJobFromTrash(
+  companyId: string,
+  jobId: string,
+): Promise<{ job: Job | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("jobs")
+    .update({
+      deleted_at: null,
+      delete_after: null,
+      archived_at: null,
+    })
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .not("deleted_at", "is", null)
+    .select(JOB_TECHNICIAN_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    return { job: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { job: null, error: "This job is not in Recently Deleted." };
+  }
+
+  return { job: mapJobRowToJob(row as JobRowWithTechnician), error: null };
+}
+
+export async function permanentlyDeleteJob(
+  companyId: string,
+  jobId: string,
+): Promise<{ success: boolean; error: string | null }> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("jobs")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .not("deleted_at", "is", null);
+
+  if (error) {
+    return { success: false, error: mapDatabaseError(error) };
+  }
+
+  return { success: true, error: null };
 }

@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import {
+  buildTrashTimestampFields,
+  countRelatedRecordsByColumn,
+} from "@/lib/database/queries/entity-lifecycle-shared";
 import type {
   ServiceItemInsert,
   ServiceItemRow,
@@ -24,6 +28,9 @@ function mapServiceItemRow(row: ServiceItemRow): ServiceItem {
     taxable: row.taxable,
     category: row.category ?? undefined,
     isActive: row.is_active,
+    archivedAt: row.archived_at ?? undefined,
+    deletedAt: row.deleted_at ?? undefined,
+    deleteAfter: row.delete_after ?? undefined,
   };
 }
 
@@ -59,16 +66,33 @@ export function mapServiceItemFormDataToUpdate(
   };
 }
 
+export type ListServiceItemsOptions = {
+  includeArchived?: boolean;
+  includeDeleted?: boolean;
+};
+
 export async function listServiceItems(
   companyId: string,
+  options?: ListServiceItemsOptions,
 ): Promise<ServiceItem[]> {
   const supabase = await createClient();
+  const includeArchived = options?.includeArchived ?? false;
+  const includeDeleted = options?.includeDeleted ?? false;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("service_items")
     .select("*")
-    .eq("company_id", companyId)
-    .order("name", { ascending: true });
+    .eq("company_id", companyId);
+
+  if (!includeDeleted) {
+    query = query.is("deleted_at", null);
+  }
+
+  if (!includeArchived) {
+    query = query.is("archived_at", null);
+  }
+
+  const { data, error } = await query.order("name", { ascending: true });
 
   if (error) {
     console.error("[listServiceItems] query failed:", {
@@ -132,6 +156,8 @@ export async function listActiveServiceItems(
     .select("*")
     .eq("company_id", companyId)
     .eq("is_active", true)
+    .is("archived_at", null)
+    .is("deleted_at", null)
     .order("name", { ascending: true });
 
   if (error) {
@@ -158,6 +184,8 @@ export async function getActiveServiceItemForCompany(
     .eq("company_id", companyId)
     .eq("id", serviceItemId)
     .eq("is_active", true)
+    .is("archived_at", null)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (error) {
@@ -243,6 +271,208 @@ export async function updateServiceItem(
     serviceItem: mapServiceItemRow(row as ServiceItemRow),
     error: null,
   };
+}
+
+export async function listDeletedServiceItems(
+  companyId: string,
+): Promise<ServiceItem[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("service_items")
+    .select("*")
+    .eq("company_id", companyId)
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false });
+
+  if (error) {
+    console.error("[listDeletedServiceItems] query failed:", { companyId, error });
+    return [];
+  }
+
+  return ((data ?? []) as ServiceItemRow[]).map(mapServiceItemRow);
+}
+
+export async function getServiceItemDeleteDependencies(
+  companyId: string,
+  serviceItemId: string,
+): Promise<{
+  estimateLineItemCount: number;
+  invoiceLineItemCount: number;
+  jobMaterialCount: number;
+}> {
+  const supabase = await createClient();
+
+  const [estimateLineItemCount, invoiceLineItemCount, jobMaterialCount] =
+    await Promise.all([
+      countRelatedRecordsByColumn(
+        supabase,
+        companyId,
+        "estimate_line_items",
+        "service_item_id",
+        serviceItemId,
+      ),
+      countRelatedRecordsByColumn(
+        supabase,
+        companyId,
+        "invoice_line_items",
+        "service_item_id",
+        serviceItemId,
+      ),
+      countRelatedRecordsByColumn(
+        supabase,
+        companyId,
+        "job_materials",
+        "service_item_id",
+        serviceItemId,
+      ),
+    ]);
+
+  return { estimateLineItemCount, invoiceLineItemCount, jobMaterialCount };
+}
+
+export async function archiveServiceItem(
+  companyId: string,
+  serviceItemId: string,
+): Promise<{ serviceItem: ServiceItem | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("service_items")
+    .update({
+      archived_at: new Date().toISOString(),
+      is_active: false,
+    })
+    .eq("company_id", companyId)
+    .eq("id", serviceItemId)
+    .is("archived_at", null)
+    .is("deleted_at", null)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    return { serviceItem: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { serviceItem: null, error: "This item could not be archived." };
+  }
+
+  return { serviceItem: mapServiceItemRow(row as ServiceItemRow), error: null };
+}
+
+export async function restoreServiceItem(
+  companyId: string,
+  serviceItemId: string,
+): Promise<{ serviceItem: ServiceItem | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("service_items")
+    .update({
+      archived_at: null,
+      is_active: true,
+    })
+    .eq("company_id", companyId)
+    .eq("id", serviceItemId)
+    .not("archived_at", "is", null)
+    .is("deleted_at", null)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    return { serviceItem: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { serviceItem: null, error: "This item is not archived." };
+  }
+
+  return { serviceItem: mapServiceItemRow(row as ServiceItemRow), error: null };
+}
+
+export async function moveServiceItemToTrash(
+  companyId: string,
+  serviceItemId: string,
+): Promise<{ serviceItem: ServiceItem | null; error: string | null }> {
+  const supabase = await createClient();
+  const trashFields = buildTrashTimestampFields();
+
+  const { data: row, error } = await supabase
+    .from("service_items")
+    .update({
+      ...trashFields,
+      is_active: false,
+    })
+    .eq("company_id", companyId)
+    .eq("id", serviceItemId)
+    .is("deleted_at", null)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    return { serviceItem: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return {
+      serviceItem: null,
+      error: "This item could not be moved to Recently Deleted.",
+    };
+  }
+
+  return { serviceItem: mapServiceItemRow(row as ServiceItemRow), error: null };
+}
+
+export async function restoreServiceItemFromTrash(
+  companyId: string,
+  serviceItemId: string,
+): Promise<{ serviceItem: ServiceItem | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data: row, error } = await supabase
+    .from("service_items")
+    .update({
+      deleted_at: null,
+      delete_after: null,
+      archived_at: null,
+      is_active: true,
+    })
+    .eq("company_id", companyId)
+    .eq("id", serviceItemId)
+    .not("deleted_at", "is", null)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    return { serviceItem: null, error: mapDatabaseError(error) };
+  }
+
+  if (!row) {
+    return { serviceItem: null, error: "This item is not in Recently Deleted." };
+  }
+
+  return { serviceItem: mapServiceItemRow(row as ServiceItemRow), error: null };
+}
+
+export async function permanentlyDeleteServiceItem(
+  companyId: string,
+  serviceItemId: string,
+): Promise<{ success: boolean; error: string | null }> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("service_items")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("id", serviceItemId)
+    .not("deleted_at", "is", null);
+
+  if (error) {
+    return { success: false, error: mapDatabaseError(error) };
+  }
+
+  return { success: true, error: null };
 }
 
 export async function setServiceItemActive(

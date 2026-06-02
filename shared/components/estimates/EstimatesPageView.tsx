@@ -7,6 +7,14 @@ import {
   batchSendEstimatesAction,
   createEstimateAction,
 } from "@/app/actions/estimates";
+import {
+  bulkArchiveEstimatesAction,
+  bulkMoveEstimatesToTrashAction,
+  bulkPermanentlyDeleteEstimatesAction,
+  bulkRestoreEstimatesAction,
+  bulkRestoreEstimatesFromTrashAction,
+  bulkVoidEstimatesAction,
+} from "@/app/actions/estimates-bulk-lifecycle";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import {
   buildJobsByIdForEstimateBatchSend,
@@ -15,13 +23,25 @@ import {
   toggleEstimateBatchSelection,
   toggleEstimateGroupBatchSelection,
 } from "@/shared/lib/estimate-batch-send";
+import {
+  formatBulkLifecycleFailureDetails,
+  getBulkLifecycleFailedIds,
+  pruneBulkSelectionToFailedIds,
+  type BulkLifecycleActionResult,
+} from "@/shared/lib/bulk-lifecycle-runner";
+import {
+  formatBulkEstimatesResultMessage,
+  getEstimateLifecycleState,
+} from "@/shared/lib/estimate-lifecycle";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import { EntityLifecycleBulkBar } from "@/shared/components/lifecycle/EntityLifecycleBulkBar";
 import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
 import type { ServiceItem } from "@/shared/types/service-item";
 import {
   type Estimate,
   type EstimateFormData,
+  type EstimateLifecycleState,
   type EstimateStatus,
 } from "@/shared/types/estimate";
 import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
@@ -58,10 +78,16 @@ function filterEstimates(
   estimates: Estimate[],
   search: string,
   statusFilter: EstimateStatus | "all",
+  lifecycleFilter: EstimateLifecycleState,
 ): Estimate[] {
   const query = search.trim().toLowerCase();
 
   return estimates.filter((estimate) => {
+    const matchesLifecycle =
+      getEstimateLifecycleState(estimate) === lifecycleFilter;
+
+    if (!matchesLifecycle) return false;
+
     const matchesStatus =
       statusFilter === "all" || estimate.status === statusFilter;
 
@@ -99,6 +125,8 @@ export function EstimatesPageView({
   const [statusFilter, setStatusFilter] = useState<EstimateStatus | "all">(
     "all",
   );
+  const [lifecycleFilter, setLifecycleFilter] =
+    useState<EstimateLifecycleState>("active");
   const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
   const [createError, setCreateError] = useState<string | null>(null);
   const [selectedEstimateIds, setSelectedEstimateIds] = useState<Set<string>>(
@@ -113,6 +141,21 @@ export function EstimatesPageView({
   >("success");
   const [isPending, startTransition] = useTransition();
   const [isBatchSending, startBatchSendTransition] = useTransition();
+  const [lifecycleMessage, setLifecycleMessage] = useState<string | null>(null);
+  const [lifecycleFailureDetails, setLifecycleFailureDetails] = useState<
+    string[] | null
+  >(null);
+  const [lifecycleTone, setLifecycleTone] = useState<
+    "success" | "warning" | "error"
+  >("success");
+  const [isBulkArchiving, startBulkArchiveTransition] = useTransition();
+  const [isBulkRestoring, startBulkRestoreTransition] = useTransition();
+  const [isBulkVoiding, startBulkVoidTransition] = useTransition();
+  const [isBulkMovingToTrash, startBulkMoveToTrashTransition] = useTransition();
+  const [isBulkRestoringFromTrash, startBulkRestoreFromTrashTransition] =
+    useTransition();
+  const [isBulkPermanentlyDeleting, startBulkPermanentDeleteTransition] =
+    useTransition();
   const router = useRouter();
   const companyTimeZone = useCompanyTimezone();
 
@@ -145,8 +188,14 @@ export function EstimatesPageView({
   );
 
   const filteredEstimates = useMemo(
-    () => filterEstimates(viewScopedEstimates, search, statusFilter),
-    [viewScopedEstimates, search, statusFilter],
+    () =>
+      filterEstimates(
+        viewScopedEstimates,
+        search,
+        statusFilter,
+        lifecycleFilter,
+      ),
+    [viewScopedEstimates, search, statusFilter, lifecycleFilter],
   );
 
   const estimateListPresentation = useMemo(() => {
@@ -203,6 +252,68 @@ export function EstimatesPageView({
     setSelectedEstimateIds(new Set());
     setBatchSendMessage(null);
     setBatchSendFailureDetails(null);
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
+  }
+
+  function applyBulkLifecycleResult(input: {
+    result: BulkLifecycleActionResult;
+    actionLabel: string;
+  }) {
+    const { result, actionLabel } = input;
+
+    if (result.error && result.results.length === 0) {
+      setLifecycleTone("error");
+      setLifecycleMessage(
+        formatActionError(
+          result.error,
+          "We couldn't update the selected estimates.",
+        ),
+      );
+      return;
+    }
+
+    setSelectedEstimateIds((previous) =>
+      pruneBulkSelectionToFailedIds(previous, getBulkLifecycleFailedIds(result)),
+    );
+    setLifecycleFailureDetails(
+      formatBulkLifecycleFailureDetails(result).length > 0
+        ? formatBulkLifecycleFailureDetails(result)
+        : null,
+    );
+    setLifecycleTone(
+      result.successCount > 0
+        ? result.failureCount > 0
+          ? "warning"
+          : "success"
+        : "error",
+    );
+    setLifecycleMessage(
+      formatBulkEstimatesResultMessage({
+        successCount: result.successCount,
+        failureCount: result.failureCount,
+        actionLabel,
+      }),
+    );
+
+    if (result.successCount > 0) {
+      router.refresh();
+    }
+  }
+
+  function runBulkLifecycle(
+    action: (ids: string[]) => Promise<BulkLifecycleActionResult>,
+    actionLabel: string,
+    startTransitionFn: (callback: () => void) => void,
+  ) {
+    if (!selectionEnabled || selectedCount === 0) return;
+    const ids = [...selectedEstimateIds];
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
+    startTransitionFn(async () => {
+      const result = await action(ids);
+      applyBulkLifecycleResult({ result, actionLabel });
+    });
   }
 
   function handleBatchSendSelected() {
@@ -379,6 +490,9 @@ export function EstimatesPageView({
             onStatusFilterChange={setStatusFilter}
             resultCount={filteredEstimates.length}
             showStatusFilter={viewTab === "all"}
+            lifecycleFilter={lifecycleFilter}
+            onLifecycleFilterChange={setLifecycleFilter}
+            showLifecycleFilter={canManageEstimates}
             batchSelectAllControl={
               selectionEnabled &&
               visibleSelectionState &&
@@ -440,11 +554,77 @@ export function EstimatesPageView({
             />
           )}
 
-          {selectionEnabled ? (
+          {selectionEnabled && lifecycleFilter === "active" ? (
             <EstimateBatchSelectionBar
               selectedCount={selectedCount}
               isSending={isBatchSending}
               onSendSelected={handleBatchSendSelected}
+              onClearSelection={handleClearSelection}
+            />
+          ) : null}
+          {selectionEnabled && selectedCount > 0 ? (
+            <EntityLifecycleBulkBar
+              entityLabel="estimate"
+              selectedCount={selectedCount}
+              lifecycleFilter={lifecycleFilter}
+              isArchiving={isBulkArchiving}
+              isRestoring={isBulkRestoring}
+              isVoiding={isBulkVoiding}
+              isMovingToTrash={isBulkMovingToTrash}
+              isRestoringFromTrash={isBulkRestoringFromTrash}
+              isPermanentlyDeleting={isBulkPermanentlyDeleting}
+              showArchive={lifecycleFilter === "active"}
+              showVoid={
+                lifecycleFilter === "active" || lifecycleFilter === "archived"
+              }
+              showMoveToTrash={
+                lifecycleFilter === "active" || lifecycleFilter === "archived"
+              }
+              showRestore={lifecycleFilter === "archived"}
+              showRestoreFromTrash={lifecycleFilter === "deleted"}
+              showPermanentDelete={lifecycleFilter === "deleted"}
+              onArchive={() =>
+                runBulkLifecycle(
+                  bulkArchiveEstimatesAction,
+                  "Archive",
+                  startBulkArchiveTransition,
+                )
+              }
+              onRestore={() =>
+                runBulkLifecycle(
+                  bulkRestoreEstimatesAction,
+                  "Restore",
+                  startBulkRestoreTransition,
+                )
+              }
+              onVoid={() =>
+                runBulkLifecycle(
+                  bulkVoidEstimatesAction,
+                  "Void",
+                  startBulkVoidTransition,
+                )
+              }
+              onMoveToTrash={() =>
+                runBulkLifecycle(
+                  bulkMoveEstimatesToTrashAction,
+                  "Move to Recently Deleted",
+                  startBulkMoveToTrashTransition,
+                )
+              }
+              onRestoreFromTrash={() =>
+                runBulkLifecycle(
+                  bulkRestoreEstimatesFromTrashAction,
+                  "Restore from Recently Deleted",
+                  startBulkRestoreFromTrashTransition,
+                )
+              }
+              onPermanentDelete={() =>
+                runBulkLifecycle(
+                  bulkPermanentlyDeleteEstimatesAction,
+                  "Permanent delete",
+                  startBulkPermanentDeleteTransition,
+                )
+              }
               onClearSelection={handleClearSelection}
             />
           ) : null}

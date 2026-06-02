@@ -1,16 +1,39 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
   createServiceItemAction,
   updateServiceItemAction,
 } from "@/app/actions/service-items";
+import {
+  bulkArchiveServiceItemsAction,
+  bulkMoveServiceItemsToTrashAction,
+  bulkPermanentlyDeleteServiceItemsAction,
+  bulkRestoreServiceItemsAction,
+  bulkRestoreServiceItemsFromTrashAction,
+} from "@/app/actions/service-items-bulk-lifecycle";
+import { usePageBulkSelection } from "@/shared/hooks/usePageBulkSelection";
+import {
+  formatBulkLifecycleFailureDetails,
+  getBulkLifecycleFailedIds,
+  pruneBulkSelectionToFailedIds,
+  type BulkLifecycleActionResult,
+} from "@/shared/lib/bulk-lifecycle-runner";
+import {
+  formatBulkServiceItemsResultMessage,
+  getServiceItemLifecycleState,
+} from "@/shared/lib/service-item-lifecycle";
+import { formatActionError } from "@/shared/lib/operational-errors";
+import { EntityLifecycleBulkBar } from "@/shared/components/lifecycle/EntityLifecycleBulkBar";
 import type {
   ServiceItem,
   ServiceItemFormData,
+  ServiceItemLifecycleState,
 } from "@/shared/types/service-item";
 import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
+import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { ServiceItemDetailPanel } from "./ServiceItemDetailPanel";
 import { ServiceItemsEmptyState } from "./ServiceItemsEmptyState";
 import { ServiceItemsSearchFilterBar } from "./ServiceItemsSearchFilterBar";
@@ -27,15 +50,18 @@ function filterServiceItems(
   serviceItems: ServiceItem[],
   search: string,
   statusFilter: "all" | "active" | "inactive",
+  lifecycleFilter: ServiceItemLifecycleState,
 ): ServiceItem[] {
   const query = search.trim().toLowerCase();
 
   return serviceItems.filter((item) => {
+    const matchesLifecycle =
+      getServiceItemLifecycleState(item) === lifecycleFilter;
     const matchesStatus =
       statusFilter === "all" ||
       (statusFilter === "active" ? item.isActive : !item.isActive);
 
-    if (!matchesStatus) return false;
+    if (!matchesLifecycle || !matchesStatus) return false;
     if (!query) return true;
 
     const haystack = [item.name, item.description ?? "", item.category ?? ""]
@@ -55,16 +81,115 @@ export function ServiceItemsPageView({
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
   >("active");
+  const [lifecycleFilter, setLifecycleFilter] =
+    useState<ServiceItemLifecycleState>("active");
   const [panelMode, setPanelMode] = useState<PanelMode>("empty");
   const [selectedItem, setSelectedItem] = useState<ServiceItem | null>(null);
   const [createFormKey, setCreateFormKey] = useState(0);
   const [formError, setFormError] = useState<string | null>(null);
+  const [lifecycleMessage, setLifecycleMessage] = useState<string | null>(null);
+  const [lifecycleFailureDetails, setLifecycleFailureDetails] = useState<
+    string[] | null
+  >(null);
+  const [lifecycleTone, setLifecycleTone] = useState<
+    "success" | "warning" | "error"
+  >("success");
   const [isPending, startTransition] = useTransition();
+  const [isBulkArchiving, startBulkArchiveTransition] = useTransition();
+  const [isBulkRestoring, startBulkRestoreTransition] = useTransition();
+  const [isBulkMovingToTrash, startBulkMoveToTrashTransition] = useTransition();
+  const [isBulkRestoringFromTrash, startBulkRestoreFromTrashTransition] =
+    useTransition();
+  const [isBulkPermanentlyDeleting, startBulkPermanentDeleteTransition] =
+    useTransition();
+  const router = useRouter();
+
+  useEffect(() => {
+    setServiceItems(initialServiceItems);
+  }, [initialServiceItems]);
 
   const filteredServiceItems = useMemo(
-    () => filterServiceItems(serviceItems, search, statusFilter),
-    [serviceItems, search, statusFilter],
+    () =>
+      filterServiceItems(serviceItems, search, statusFilter, lifecycleFilter),
+    [serviceItems, search, statusFilter, lifecycleFilter],
   );
+
+  const selectionEnabled = canManagePriceBook;
+  const {
+    selectedIds,
+    selectedCount,
+    selectionState,
+    toggleSelection,
+    toggleAllVisible,
+    clearSelection,
+    setSelectedIds,
+  } = usePageBulkSelection(filteredServiceItems, [lifecycleFilter]);
+
+  function handleClearSelection() {
+    clearSelection();
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
+  }
+
+  function applyBulkLifecycleResult(input: {
+    result: BulkLifecycleActionResult;
+    actionLabel: string;
+  }) {
+    const { result, actionLabel } = input;
+
+    if (result.error && result.results.length === 0) {
+      setLifecycleTone("error");
+      setLifecycleMessage(
+        formatActionError(
+          result.error,
+          "We couldn't update the selected items.",
+        ),
+      );
+      return;
+    }
+
+    setSelectedIds((previous) =>
+      pruneBulkSelectionToFailedIds(previous, getBulkLifecycleFailedIds(result)),
+    );
+    setLifecycleFailureDetails(
+      formatBulkLifecycleFailureDetails(result).length > 0
+        ? formatBulkLifecycleFailureDetails(result)
+        : null,
+    );
+    setLifecycleTone(
+      result.successCount > 0
+        ? result.failureCount > 0
+          ? "warning"
+          : "success"
+        : "error",
+    );
+    setLifecycleMessage(
+      formatBulkServiceItemsResultMessage({
+        successCount: result.successCount,
+        failureCount: result.failureCount,
+        actionLabel,
+      }),
+    );
+
+    if (result.successCount > 0) {
+      router.refresh();
+    }
+  }
+
+  function runBulkLifecycle(
+    action: (ids: string[]) => Promise<BulkLifecycleActionResult>,
+    actionLabel: string,
+    startTransitionFn: (callback: () => void) => void,
+  ) {
+    if (!selectionEnabled || selectedCount === 0) return;
+    const ids = [...selectedIds];
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
+    startTransitionFn(async () => {
+      const result = await action(ids);
+      applyBulkLifecycleResult({ result, actionLabel });
+    });
+  }
 
   function openCreateForm() {
     setPanelMode("create");
@@ -186,7 +311,37 @@ export function ServiceItemsPageView({
             onSearchChange={setSearch}
             onStatusFilterChange={setStatusFilter}
             resultCount={filteredServiceItems.length}
+            lifecycleFilter={lifecycleFilter}
+            onLifecycleFilterChange={setLifecycleFilter}
+            showLifecycleFilter={canManagePriceBook}
+            bulkSelectAllControl={
+              selectionEnabled && selectionState.selectableCount > 0
+                ? {
+                    selectableCount: selectionState.selectableCount,
+                    allSelected: selectionState.allSelected,
+                    onSelectAll: () => toggleAllVisible(true),
+                    onClearSelection: handleClearSelection,
+                  }
+                : undefined
+            }
           />
+        ) : null}
+
+        {lifecycleMessage ? (
+          <div className="shrink-0 border-b border-slate-100/90 px-4 py-3 sm:px-5">
+            <SettingsAlertBanner tone={lifecycleTone}>
+              <div>
+                <p>{lifecycleMessage}</p>
+                {lifecycleFailureDetails?.length ? (
+                  <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                    {lifecycleFailureDetails.map((detail) => (
+                      <li key={detail}>{detail}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </SettingsAlertBanner>
+          </div>
         ) : null}
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
@@ -202,8 +357,68 @@ export function ServiceItemsPageView({
               serviceItems={filteredServiceItems}
               selectedItemId={selectedItem?.id}
               onSelectItem={handleSelectItem}
+              selectionEnabled={selectionEnabled}
+              selectedIds={selectedIds}
+              onToggleSelection={toggleSelection}
+              onToggleAllVisible={toggleAllVisible}
             />
           )}
+
+          {selectionEnabled && selectedCount > 0 ? (
+            <EntityLifecycleBulkBar
+              entityLabel="item"
+              selectedCount={selectedCount}
+              lifecycleFilter={lifecycleFilter}
+              isArchiving={isBulkArchiving}
+              isRestoring={isBulkRestoring}
+              isMovingToTrash={isBulkMovingToTrash}
+              isRestoringFromTrash={isBulkRestoringFromTrash}
+              isPermanentlyDeleting={isBulkPermanentlyDeleting}
+              showArchive={lifecycleFilter === "active"}
+              showMoveToTrash={
+                lifecycleFilter === "active" || lifecycleFilter === "archived"
+              }
+              showRestore={lifecycleFilter === "archived"}
+              showRestoreFromTrash={lifecycleFilter === "deleted"}
+              showPermanentDelete={lifecycleFilter === "deleted"}
+              onArchive={() =>
+                runBulkLifecycle(
+                  bulkArchiveServiceItemsAction,
+                  "Archive",
+                  startBulkArchiveTransition,
+                )
+              }
+              onRestore={() =>
+                runBulkLifecycle(
+                  bulkRestoreServiceItemsAction,
+                  "Restore",
+                  startBulkRestoreTransition,
+                )
+              }
+              onMoveToTrash={() =>
+                runBulkLifecycle(
+                  bulkMoveServiceItemsToTrashAction,
+                  "Move to Recently Deleted",
+                  startBulkMoveToTrashTransition,
+                )
+              }
+              onRestoreFromTrash={() =>
+                runBulkLifecycle(
+                  bulkRestoreServiceItemsFromTrashAction,
+                  "Restore from Recently Deleted",
+                  startBulkRestoreFromTrashTransition,
+                )
+              }
+              onPermanentDelete={() =>
+                runBulkLifecycle(
+                  bulkPermanentlyDeleteServiceItemsAction,
+                  "Permanent delete",
+                  startBulkPermanentDeleteTransition,
+                )
+              }
+              onClearSelection={handleClearSelection}
+            />
+          ) : null}
         </div>
       </section>
 
@@ -217,6 +432,8 @@ export function ServiceItemsPageView({
         onCancel={handleClosePanel}
         error={formError}
         isSubmitting={isPending}
+        canManagePriceBook={canManagePriceBook}
+        onLifecycleDeleted={handleClosePanel}
       />
     </ListCommandCenterLayout>
   );

@@ -1,6 +1,8 @@
 import { Filter, Search } from "lucide-react";
 import {
+  ESTIMATE_LIFECYCLE_FILTER_OPTIONS,
   ESTIMATE_STATUS_OPTIONS,
+  type EstimateLifecycleState,
   type EstimateStatus,
 } from "@/shared/types/estimate";
 import { InvoiceBatchSelectAllControl } from "@/shared/components/invoices/InvoiceBatchSelectAllControl";
@@ -12,6 +14,9 @@ type EstimateSearchFilterBarProps = {
   onStatusFilterChange: (value: EstimateStatus | "all") => void;
   resultCount: number;
   showStatusFilter?: boolean;
+  lifecycleFilter?: EstimateLifecycleState;
+  onLifecycleFilterChange?: (value: EstimateLifecycleState) => void;
+  showLifecycleFilter?: boolean;
   batchSelectAllControl?: {
     selectableCount: number;
     allEligibleSelected: boolean;
@@ -27,6 +32,9 @@ export function EstimateSearchFilterBar({
   onStatusFilterChange,
   resultCount,
   showStatusFilter = true,
+  lifecycleFilter = "active",
+  onLifecycleFilterChange,
+  showLifecycleFilter = false,
   batchSelectAllControl,
 }: EstimateSearchFilterBarProps) {
   return (
@@ -44,6 +52,25 @@ export function EstimateSearchFilterBar({
         </div>
 
         <div className="flex shrink-0 items-center gap-2.5">
+          {showLifecycleFilter && onLifecycleFilterChange ? (
+            <div className="relative min-w-[10rem]">
+              <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <select
+                value={lifecycleFilter}
+                onChange={(e) =>
+                  onLifecycleFilterChange(e.target.value as EstimateLifecycleState)
+                }
+                className="w-full appearance-none rounded-lg border border-slate-200/90 bg-white py-2 pl-10 pr-10 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:w-auto"
+                aria-label="Filter by lifecycle"
+              >
+                {ESTIMATE_LIFECYCLE_FILTER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
           {showStatusFilter ? (
             <div className="relative min-w-[10rem]">
               <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />

@@ -3,6 +3,8 @@ import { BulkSelectAllControl } from "@/shared/components/bulk/BulkSelectAllCont
 import {
   JOB_PRIORITY_OPTIONS,
   JOB_STATUS_OPTIONS,
+  JOB_LIFECYCLE_FILTER_OPTIONS,
+  type JobLifecycleState,
   type JobPriority,
   type JobStatus,
 } from "@/shared/types/job";
@@ -16,6 +18,9 @@ type JobSearchFilterBarProps = {
   priorityFilter?: JobPriority | "all";
   onStatusFilterChange?: (value: JobStatus | "all") => void;
   onPriorityFilterChange?: (value: JobPriority | "all") => void;
+  lifecycleFilter?: JobLifecycleState;
+  onLifecycleFilterChange?: (value: JobLifecycleState) => void;
+  showLifecycleFilter?: boolean;
   showJobFilters?: boolean;
   unassignedOnly?: boolean;
   hasActiveFilters?: boolean;
@@ -41,6 +46,9 @@ export function JobSearchFilterBar({
   priorityFilter = "all",
   onStatusFilterChange,
   onPriorityFilterChange,
+  lifecycleFilter = "active",
+  onLifecycleFilterChange,
+  showLifecycleFilter = false,
   showJobFilters = false,
   unassignedOnly = false,
   hasActiveFilters = false,
@@ -60,6 +68,26 @@ export function JobSearchFilterBar({
             className="h-9 w-full min-h-9 rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20"
           />
         </div>
+
+        {showLifecycleFilter && onLifecycleFilterChange ? (
+          <div className="relative min-w-0 lg:shrink-0">
+            <Filter className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            <select
+              value={lifecycleFilter}
+              onChange={(e) =>
+                onLifecycleFilterChange(e.target.value as JobLifecycleState)
+              }
+              className={filterSelectClass}
+              aria-label="Filter by lifecycle"
+            >
+              {JOB_LIFECYCLE_FILTER_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
 
         {showJobFilters && onStatusFilterChange && onPriorityFilterChange ? (
           <div className="grid grid-cols-2 gap-2 lg:flex lg:shrink-0 lg:flex-row lg:items-center lg:gap-2">

@@ -5,7 +5,10 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { ensureInvoiceBillingStatesSynced } from "@/lib/database/services/invoice-billing";
 import { listInvoiceActivitiesForInvoice } from "@/lib/database/queries/invoice-activities";
 import { listPaymentsForInvoice } from "@/lib/database/queries/invoice-payments";
-import { getInvoiceById } from "@/lib/database/queries/invoices";
+import {
+  getInvoiceById,
+  getInvoiceDeleteDependencies,
+} from "@/lib/database/queries/invoices";
 import { getBillingSignatureForEntity } from "@/lib/database/queries/billing-signatures";
 import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
 import { InvoiceDetailHeaderActions } from "./InvoiceDetailHeaderActions";
@@ -28,7 +31,8 @@ export async function InvoiceDetailRoute({
     notFound();
   }
 
-  const [invoice, activities, payments, signature] = await Promise.all([
+  const [invoice, activities, payments, signature, deleteDependencies] =
+    await Promise.all([
     ensureInvoiceBillingStatesSynced(
       companyContext.company.id,
       companyContext.company.timezone,
@@ -40,6 +44,7 @@ export async function InvoiceDetailRoute({
       "invoice",
       invoiceId,
     ),
+    getInvoiceDeleteDependencies(companyContext.company.id, invoiceId),
   ]);
 
   if (!invoice) {
@@ -65,6 +70,7 @@ export async function InvoiceDetailRoute({
       signature={signature}
       presentation={presentation}
       aiFeaturesEnabled={isAiFeaturesEnabled()}
+      deleteDependencies={deleteDependencies}
     />
   );
 

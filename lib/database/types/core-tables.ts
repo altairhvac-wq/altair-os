@@ -295,6 +295,9 @@ export type JobRow = {
   completion_notes: string | null;
   follow_up_notes: string | null;
   is_demo: boolean;
+  archived_at: Timestamp | null;
+  deleted_at: Timestamp | null;
+  delete_after: Timestamp | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -480,6 +483,9 @@ export type ExpenseRow = {
   receipt_storage_path: string | null;
   status: ExpenseStatus;
   notes: string | null;
+  archived_at: Timestamp | null;
+  deleted_at: Timestamp | null;
+  delete_after: Timestamp | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -547,6 +553,9 @@ export type EstimateRow = {
   valid_until: string | null;
   notes: string | null;
   is_demo: boolean;
+  archived_at: Timestamp | null;
+  deleted_at: Timestamp | null;
+  delete_after: Timestamp | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -636,6 +645,9 @@ export type ServiceItemRow = {
   category: string | null;
   is_active: boolean;
   is_demo: boolean;
+  archived_at: Timestamp | null;
+  deleted_at: Timestamp | null;
+  delete_after: Timestamp | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -678,6 +690,9 @@ export type InvoiceRow = {
   paid_at: Timestamp | null;
   notes: string | null;
   is_demo: boolean;
+  archived_at: Timestamp | null;
+  deleted_at: Timestamp | null;
+  delete_after: Timestamp | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
