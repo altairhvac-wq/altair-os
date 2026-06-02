@@ -1,6 +1,7 @@
 "use client";
 
-import { LogOut, Wrench } from "lucide-react";
+import { LogOut } from "lucide-react";
+import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { logoutAction } from "@/app/actions/auth";
 import { CompanyTimezoneProvider } from "@/shared/lib/company-timezone";
@@ -40,9 +41,7 @@ export function TechnicianMobileShell({
         <div className="tech-shell mx-auto flex min-h-dvh w-full min-w-0 max-w-md flex-col border-x">
           <header className="tech-header tech-header-safe sticky top-0 z-30 px-4 pb-3">
             <div className="flex min-w-0 items-center gap-2.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white text-slate-700 shadow-sm ring-1 ring-slate-200/60">
-                <Wrench className="h-4 w-4" />
-              </div>
+              <AltairLogo variant="gold" size="sm" showWordmark={false} />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-slate-900">Altair OS</p>
                 <CompanySwitcher

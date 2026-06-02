@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Altair">
+  <rect width="32" height="32" rx="6" fill="#0A0A0A"/>
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F5E6A3"/>
+      <stop offset="45%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#9A7209"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(16 16) scale(0.36) translate(-40 -32)">
+    <path fill="url(#g)" d="M40 6L62 58H54L48 40H32L26 58H18L40 6Z"/>
+    <path fill="url(#g)" d="M40 26L43.2 36.5L54 38L43.2 39.5L40 50L36.8 39.5L26 38L36.8 36.5L40 26Z"/>
+    <path fill="none" stroke="url(#g)" stroke-width="2.2" stroke-linecap="round" d="M28 38.5Q40 42.5 52 38.5"/>
+  </g>
+</svg>

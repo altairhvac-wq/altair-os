@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" role="img" aria-label="Altair">
+  <g transform="translate(100 38) scale(0.9) translate(-40 -32)">
+    <path fill="#FFFFFF" d="M40 6L62 58H54L48 40H32L26 58H18L40 6Z"/>
+    <path fill="#FFFFFF" d="M40 26L43.2 36.5L54 38L43.2 39.5L40 50L36.8 39.5L26 38L36.8 36.5L40 26Z"/>
+    <path fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" d="M28 38.5Q40 42.5 52 38.5"/>
+  </g>
+  <text x="100" y="98" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-weight="600" letter-spacing="0.38em">ALTAIR</text>
+  <line x1="72" y1="106" x2="128" y2="106" stroke="#FFFFFF" stroke-width="0.75" opacity="0.45"/>
+</svg>

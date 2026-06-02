@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { Search } from "lucide-react";
+import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import { getCompanyAccessScope } from "@/lib/database/access-control";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { logoutAction } from "@/app/actions/auth";
@@ -73,7 +75,25 @@ export function Header({
 
   return (
     <header className="admin-premium-header mobile-chrome-header-safe relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 border-b border-slate-200/90 bg-white px-3 shadow-[0_1px_3px_rgb(15_23_42_/_0.04)] sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+        <Link
+          href="/"
+          aria-label="Altair OS home"
+          className="shrink-0 rounded-md outline-none transition-opacity hover:opacity-85 focus-visible:ring-2 focus-visible:ring-cyan-500/40"
+        >
+          <AltairLogo
+            variant="gold"
+            size="sm"
+            showWordmark={false}
+            className="md:hidden"
+          />
+          <AltairLogo
+            variant="white"
+            size="sm"
+            showWordmark={false}
+            className="hidden md:block"
+          />
+        </Link>
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
             <h1 className="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg md:text-slate-50">

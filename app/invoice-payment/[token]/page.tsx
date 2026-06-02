@@ -1,4 +1,5 @@
 import { getPublicInvoicePaymentView } from "@/lib/database/queries/invoice-payment-tokens";
+import { PublicDocumentBrandFooter } from "@/shared/components/brand/PublicDocumentBrandFooter";
 import { PublicInvoicePaymentContactPanel } from "@/shared/components/invoices/PublicInvoicePaymentContactPanel";
 import { PublicInvoicePaymentDocument } from "@/shared/components/invoices/PublicInvoicePaymentDocument";
 
@@ -131,6 +132,7 @@ function PublicPaymentShell({
     <main className="min-h-full overflow-x-hidden bg-slate-50 px-3 py-2 sm:px-6 sm:py-8">
       <div className="mx-auto w-full min-w-0 max-w-lg sm:max-w-2xl">
         {children}
+        <PublicDocumentBrandFooter />
       </div>
     </main>
   );

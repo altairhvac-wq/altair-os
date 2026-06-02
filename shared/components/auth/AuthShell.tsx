@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import {
   AlertCircle,
   BarChart3,
@@ -105,9 +106,7 @@ function AuthHeroPanel() {
       <div className="relative z-10 flex h-full min-h-0 flex-col px-8 py-8 lg:px-10 lg:py-10 xl:px-12">
         <div className="auth-hero-enter shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-600 shadow-lg shadow-cyan-900/50 ring-1 ring-cyan-400/20">
-              <span className="text-sm font-black tracking-tight text-white">A</span>
-            </div>
+            <AltairLogo variant="gold" size="md" showWordmark={false} />
             <div>
               <p className="text-sm font-semibold tracking-tight text-white">
                 Altair OS
@@ -211,9 +210,7 @@ function AuthHeroPanel() {
 function AuthMobileBrand() {
   return (
     <div className="flex items-center gap-2.5 lg:hidden">
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-600 ring-1 ring-cyan-500/20">
-        <span className="text-xs font-black text-white">A</span>
-      </div>
+      <AltairLogo variant="gold" size="sm" showWordmark={false} />
       <div>
         <span className="text-sm font-semibold text-slate-900">Altair OS</span>
         <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
