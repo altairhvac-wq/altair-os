@@ -53,6 +53,7 @@ type SettingsPageViewProps = {
   canManageBillingDefaults: boolean;
   showBillingDefaultsSetupHint?: boolean;
   demoDataStatus?: DemoDataStatus;
+  demoDataLoadError?: string;
   pendingInvites?: PendingTeamInvite[];
 };
 
@@ -74,6 +75,7 @@ export function SettingsPageView({
   canManageBillingDefaults,
   showBillingDefaultsSetupHint = false,
   demoDataStatus,
+  demoDataLoadError,
   pendingInvites = [],
 }: SettingsPageViewProps) {
   const [members, setMembers] = useState(initialMembers);
@@ -207,8 +209,9 @@ export function SettingsPageView({
     onboardingChecklist &&
     shouldShowOnboardingChecklist(onboardingChecklist);
   const showDemoData = Boolean(demoDataStatus);
+  const showDemoDataLoadError = Boolean(demoDataLoadError);
   const showSetupSection =
-    showOnboarding || showDemoData || showSystemCheckLink;
+    showOnboarding || showDemoData || showDemoDataLoadError || showSystemCheckLink;
 
   return (
     <div className="min-w-0 max-w-full space-y-2 sm:space-y-4">
@@ -448,6 +451,12 @@ export function SettingsPageView({
                 />
               ) : null}
             </div>
+          ) : null}
+
+          {demoDataLoadError ? (
+            <SettingsAlertBanner tone="warning">
+              {demoDataLoadError}
+            </SettingsAlertBanner>
           ) : null}
 
           {showSystemCheckLink ? (

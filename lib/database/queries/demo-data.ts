@@ -129,6 +129,25 @@ export async function getDemoDataStatus(
   };
 }
 
+export async function getDemoDataStatusSafe(
+  companyId: string,
+  context?: ActiveCompanyContext,
+): Promise<{ status: DemoDataStatus | null; error?: string }> {
+  try {
+    const status = await getDemoDataStatus(companyId, context);
+    return { status };
+  } catch (error) {
+    console.error("[demo-data] safe status load failed:", {
+      companyId,
+      error,
+    });
+    return {
+      status: null,
+      error: "Demo data status is temporarily unavailable.",
+    };
+  }
+}
+
 export async function markCompanyDemoDataSeeded(
   companyId: string,
   context: ActiveCompanyContext,

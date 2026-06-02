@@ -8,6 +8,19 @@ type DatabaseErrorLike = {
   hint?: string;
 };
 
+export function isMissingDatabaseColumnError(error: DatabaseErrorLike): boolean {
+  const message = (error.message ?? "").toLowerCase();
+
+  return (
+    error.code === "42703" ||
+    error.code === "PGRST204" ||
+    (message.includes("column") &&
+      (message.includes("does not exist") ||
+        message.includes("could not find") ||
+        message.includes("schema cache")))
+  );
+}
+
 function isSafeUserFacingMessage(message: string): boolean {
   const lower = message.toLowerCase();
 

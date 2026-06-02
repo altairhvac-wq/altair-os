@@ -1,3 +1,4 @@
+import { isMissingDatabaseColumnError } from "@/lib/database/errors";
 import { createClient } from "@/lib/supabase/server";
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import { hasSavedCompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
@@ -13,15 +14,18 @@ async function countTableRows(
   table: "customers" | "jobs" | "service_items" | "company_memberships",
   companyId: string,
   extraFilters?: Record<string, string>,
+  options: { applyLifecycleFilters?: boolean } = {},
 ): Promise<number> {
   const supabase = await createClient();
+  const applyLifecycleFilters =
+    options.applyLifecycleFilters ?? LIFECYCLE_COUNT_TABLES.has(table);
 
   let query = supabase
     .from(table)
     .select("id", { count: "exact", head: true })
     .eq("company_id", companyId);
 
-  if (LIFECYCLE_COUNT_TABLES.has(table)) {
+  if (applyLifecycleFilters) {
     query = query.is("deleted_at", null).is("archived_at", null);
   }
 
@@ -34,6 +38,24 @@ async function countTableRows(
   const { count, error } = await query;
 
   if (error) {
+    if (
+      applyLifecycleFilters &&
+      LIFECYCLE_COUNT_TABLES.has(table) &&
+      isMissingDatabaseColumnError(error)
+    ) {
+      console.warn(
+        `[onboarding-snapshot] ${table} lifecycle columns missing; counting without lifecycle filters:`,
+        {
+          companyId,
+          code: error.code,
+          message: error.message,
+        },
+      );
+      return countTableRows(table, companyId, extraFilters, {
+        applyLifecycleFilters: false,
+      });
+    }
+
     console.error(`[onboarding-snapshot] ${table} count failed:`, {
       companyId,
       code: error.code,

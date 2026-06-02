@@ -8,19 +8,72 @@ import {
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { getDemoDataStatusSafe } from "@/lib/database/queries/demo-data";
 import {
   listCompanyMembers,
   listPendingInvitesForUserEmail,
   resolveUserEmailForInvite,
+  type PendingTeamInvite,
 } from "@/lib/database/queries/memberships";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
-import { getDemoDataStatus } from "@/lib/database/queries/demo-data";
 import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@/shared/lib/onboarding-checklist";
 import { hasSavedCompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { SettingsPageView } from "@/shared/components/settings/SettingsPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import type { CompanyProfileSummary } from "@/shared/types/team-member";
+import type { DemoDataStatus } from "@/shared/types/demo-data";
+import type { OnboardingSnapshot } from "@/shared/types/onboarding";
+
+const EMPTY_ONBOARDING_SNAPSHOT: OnboardingSnapshot = {
+  teamMemberCount: 0,
+  hasInvitedOrActiveTeam: false,
+  customerCount: 0,
+  jobCount: 0,
+  serviceItemCount: 0,
+  hasBillingDefaultsConfigured: false,
+};
+
+async function loadPendingInvitesSafely(
+  email: string | null | undefined,
+): Promise<{ invites: PendingTeamInvite[]; error?: string }> {
+  if (!email) {
+    return { invites: [] };
+  }
+
+  try {
+    return await listPendingInvitesForUserEmail(email);
+  } catch (error) {
+    console.error("[SettingsPage] pending invites load failed:", error);
+    return {
+      invites: [],
+      error: "Failed to load pending invitations. Please refresh and try again.",
+    };
+  }
+}
+
+async function loadOnboardingSnapshotSafely(
+  companyId: string,
+  companyContext: NonNullable<Awaited<ReturnType<typeof getActiveCompanyContext>>>,
+): Promise<OnboardingSnapshot> {
+  try {
+    return await getOnboardingSnapshot(companyId, companyContext);
+  } catch (error) {
+    console.error("[SettingsPage] onboarding snapshot load failed:", error);
+    return EMPTY_ONBOARDING_SNAPSHOT;
+  }
+}
+
+async function loadDemoDataStatusSafely(
+  companyId: string,
+  companyContext: NonNullable<Awaited<ReturnType<typeof getActiveCompanyContext>>>,
+): Promise<{ status: DemoDataStatus | null; error?: string }> {
+  if (!canManageDemoData(companyContext)) {
+    return { status: null };
+  }
+
+  return getDemoDataStatusSafe(companyId, companyContext);
+}
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
@@ -42,16 +95,16 @@ export default async function SettingsPage() {
     user?.email ?? undefined,
   );
 
-  const [{ members, error: membersError }, pendingInvitesResult, onboardingSnapshot, demoDataStatus] =
+  const { members, error: membersError } = await listCompanyMembers(
+    companyContext.company.id,
+    companyContext,
+  );
+
+  const [pendingInvitesResult, onboardingSnapshot, demoDataResult] =
     await Promise.all([
-      listCompanyMembers(companyContext.company.id, companyContext),
-      emailResolution.email
-        ? listPendingInvitesForUserEmail(emailResolution.email)
-        : Promise.resolve({ invites: [], error: undefined }),
-      getOnboardingSnapshot(companyContext.company.id, companyContext),
-      canManageDemoData(companyContext)
-        ? getDemoDataStatus(companyContext.company.id, companyContext)
-        : Promise.resolve(null),
+      loadPendingInvitesSafely(emailResolution.email),
+      loadOnboardingSnapshotSafely(companyContext.company.id, companyContext),
+      loadDemoDataStatusSafely(companyContext.company.id, companyContext),
     ]);
 
   const pendingInvites = pendingInvitesResult.invites.filter(
@@ -106,7 +159,8 @@ export default async function SettingsPage() {
         showBillingDefaultsSetupHint={
           !hasSavedCompanyBillingDefaults(companyContext.company.settings)
         }
-        demoDataStatus={demoDataStatus ?? undefined}
+        demoDataStatus={demoDataResult.status ?? undefined}
+        demoDataLoadError={demoDataResult.error}
         pendingInvites={pendingInvites}
       />
     </div>
