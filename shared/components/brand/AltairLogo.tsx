@@ -173,7 +173,9 @@ export { ALTAIR_BRAND_LIBRARY as ALTAIR_BRAND_ASSETS } from "@/shared/components
 
 export {
   ALTAIR_BRAND_COLORS,
+  ALTAIR_BRAND_IDENTITY,
   ALTAIR_BRAND_LIBRARY,
+  ALTAIR_BRAND_PUBLIC_PATHS,
   ALTAIR_BRAND_USAGE,
   ALTAIR_MARK_PATHS,
 } from "@/shared/components/brand/brand-assets";
