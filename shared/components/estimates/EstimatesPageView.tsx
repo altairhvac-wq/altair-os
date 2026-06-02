@@ -16,13 +16,13 @@ import {
   bulkVoidEstimatesAction,
 } from "@/app/actions/estimates-bulk-lifecycle";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import { resolveSelectedItems } from "@/shared/lib/bulk-selection";
 import {
   buildJobsByIdForEstimateBatchSend,
   formatBatchSendEstimatesResultMessage,
-  resolveEstimateBatchSelectionState,
-  toggleEstimateBatchSelection,
-  toggleEstimateGroupBatchSelection,
+  getBatchSendableEstimates,
 } from "@/shared/lib/estimate-batch-send";
+import { usePageBulkSelection } from "@/shared/hooks/usePageBulkSelection";
 import {
   formatBulkLifecycleFailureDetails,
   getBulkLifecycleFailedIds,
@@ -133,9 +133,6 @@ export function EstimatesPageView({
     useState<EstimateLifecycleState>("active");
   const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
   const [createError, setCreateError] = useState<string | null>(null);
-  const [selectedEstimateIds, setSelectedEstimateIds] = useState<Set<string>>(
-    () => new Set(),
-  );
   const [batchSendMessage, setBatchSendMessage] = useState<string | null>(null);
   const [batchSendFailureDetails, setBatchSendFailureDetails] = useState<
     string[] | null
@@ -227,47 +224,64 @@ export function EstimatesPageView({
   );
 
   const selectionEnabled = canManageEstimates;
-  const selectedCount = selectedEstimateIds.size;
+  const {
+    selectedIds: selectedEstimateIds,
+    selectedCount,
+    selectionState: visibleSelectionState,
+    toggleSelection,
+    toggleAllVisible,
+    clearSelection,
+    setSelectedIds: setSelectedEstimateIds,
+  } = usePageBulkSelection(visibleEstimates, [
+    viewTab,
+    statusFilter,
+    lifecycleFilter,
+    search,
+  ]);
 
-  const visibleSelectionState = useMemo(
-    () =>
-      selectionEnabled
-        ? resolveEstimateBatchSelectionState(
-            selectedEstimateIds,
-            visibleEstimates,
-            batchJobsById,
-          )
-        : null,
-    [batchJobsById, selectedEstimateIds, selectionEnabled, visibleEstimates],
-  );
+  const selectedSendableCount = useMemo(() => {
+    if (lifecycleFilter !== "active" || selectedCount === 0) {
+      return 0;
+    }
 
-  function handleToggleEstimateSelection(estimateId: string) {
-    setSelectedEstimateIds((previous) =>
-      toggleEstimateBatchSelection(previous, estimateId),
-    );
+    return getBatchSendableEstimates(
+      resolveSelectedItems(visibleEstimates, selectedEstimateIds),
+      batchJobsById,
+    ).length;
+  }, [
+    batchJobsById,
+    lifecycleFilter,
+    selectedCount,
+    selectedEstimateIds,
+    visibleEstimates,
+  ]);
+
+  function clearBatchSendFeedback() {
     setBatchSendMessage(null);
     setBatchSendFailureDetails(null);
+  }
+
+  function clearLifecycleFeedback() {
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
+  }
+
+  function handleToggleEstimateSelection(estimateId: string) {
+    toggleSelection(estimateId);
+    clearBatchSendFeedback();
+    clearLifecycleFeedback();
   }
 
   function handleToggleAllVisibleSelection(selectAll: boolean) {
-    setSelectedEstimateIds((previous) =>
-      toggleEstimateGroupBatchSelection(
-        previous,
-        visibleEstimates,
-        selectAll,
-        batchJobsById,
-      ),
-    );
-    setBatchSendMessage(null);
-    setBatchSendFailureDetails(null);
+    toggleAllVisible(selectAll);
+    clearBatchSendFeedback();
+    clearLifecycleFeedback();
   }
 
   function handleClearSelection() {
-    setSelectedEstimateIds(new Set());
-    setBatchSendMessage(null);
-    setBatchSendFailureDetails(null);
-    setLifecycleMessage(null);
-    setLifecycleFailureDetails(null);
+    clearSelection();
+    clearBatchSendFeedback();
+    clearLifecycleFeedback();
   }
 
   function applyBulkLifecycleResult(input: {
@@ -525,6 +539,23 @@ export function EstimatesPageView({
           />
         ) : null}
 
+        {lifecycleMessage ? (
+          <div className="shrink-0 border-b border-slate-100/90 px-4 py-3 sm:px-5">
+            <SettingsAlertBanner tone={lifecycleTone}>
+              <div>
+                <p>{lifecycleMessage}</p>
+                {lifecycleFailureDetails?.length ? (
+                  <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                    {lifecycleFailureDetails.map((detail) => (
+                      <li key={detail}>{detail}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </SettingsAlertBanner>
+          </div>
+        ) : null}
+
         {batchSendMessage ? (
           <div className="shrink-0 border-b border-slate-100/90 px-4 py-3 sm:px-5">
             <SettingsAlertBanner tone={batchSendTone}>
@@ -564,7 +595,6 @@ export function EstimatesPageView({
               onSelect={handleSelectEstimate}
               selectionEnabled={selectionEnabled}
               selectedIds={selectedEstimateIds}
-              jobsById={batchJobsById}
               onToggleSelection={handleToggleEstimateSelection}
               onToggleAllVisible={handleToggleAllVisibleSelection}
             />
@@ -573,6 +603,7 @@ export function EstimatesPageView({
           {selectionEnabled && lifecycleFilter === "active" ? (
             <EstimateBatchSelectionBar
               selectedCount={selectedCount}
+              sendableCount={selectedSendableCount}
               isSending={isBatchSending}
               onSendSelected={handleBatchSendSelected}
               onClearSelection={handleClearSelection}

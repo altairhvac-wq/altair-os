@@ -1,12 +1,10 @@
-import { Fragment, useEffect, useMemo, useRef, type ChangeEvent } from "react";
+import { Fragment, useMemo } from "react";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
-import {
-  canBatchSendEstimate,
-  resolveEstimateBatchSelectionState,
-  type EstimateBatchSendJobLookup,
-} from "@/shared/lib/estimate-batch-send";
+import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
+import { canSelectEstimateForBulkLifecycle } from "@/shared/lib/estimate-lifecycle";
 import type { Estimate } from "@/shared/types/estimate";
+import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
 import { EstimatesMobileCardList } from "./EstimatesMobileCardList";
@@ -17,51 +15,9 @@ type EstimatesTableProps = {
   onSelect: (estimate: Estimate) => void;
   selectionEnabled?: boolean;
   selectedIds?: ReadonlySet<string>;
-  jobsById?: EstimateBatchSendJobLookup;
   onToggleSelection?: (estimateId: string) => void;
   onToggleAllVisible?: (selectAll: boolean) => void;
 };
-
-function EstimateSelectCheckbox({
-  checked,
-  indeterminate = false,
-  disabled = false,
-  ariaLabel,
-  onChange,
-}: {
-  checked: boolean;
-  indeterminate?: boolean;
-  disabled?: boolean;
-  ariaLabel: string;
-  onChange: (checked: boolean) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.indeterminate = indeterminate;
-    }
-  }, [indeterminate]);
-
-  return (
-    <label
-      className="flex min-h-10 shrink-0 items-center sm:min-h-0"
-      onClick={(event) => event.stopPropagation()}
-    >
-      <input
-        ref={inputRef}
-        type="checkbox"
-        checked={checked}
-        disabled={disabled}
-        onChange={(event: ChangeEvent<HTMLInputElement>) =>
-          onChange(event.target.checked)
-        }
-        aria-label={ariaLabel}
-        className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-40"
-      />
-    </label>
-  );
-}
 
 export function EstimatesTable({
   sections,
@@ -69,7 +25,6 @@ export function EstimatesTable({
   onSelect,
   selectionEnabled = false,
   selectedIds,
-  jobsById,
   onToggleSelection,
   onToggleAllVisible,
 }: EstimatesTableProps) {
@@ -81,13 +36,9 @@ export function EstimatesTable({
   const headerSelection = useMemo(
     () =>
       selectionEnabled && selectedIds
-        ? resolveEstimateBatchSelectionState(
-            selectedIds,
-            visibleEstimates,
-            jobsById,
-          )
+        ? resolveBulkSelectionState(selectedIds, visibleEstimates)
         : null,
-    [jobsById, selectedIds, selectionEnabled, visibleEstimates],
+    [selectedIds, selectionEnabled, visibleEstimates],
   );
 
   const tableColumnCount = selectionEnabled ? 7 : 6;
@@ -100,7 +51,6 @@ export function EstimatesTable({
         onSelect={onSelect}
         selectionEnabled={selectionEnabled}
         selectedIds={selectedIds}
-        jobsById={jobsById}
         onToggleSelection={onToggleSelection}
       />
 
@@ -111,10 +61,10 @@ export function EstimatesTable({
               {selectionEnabled ? (
                 <th className="w-10 admin-table-cell">
                   {headerSelection && headerSelection.selectableCount > 0 ? (
-                    <EstimateSelectCheckbox
+                    <BulkSelectCheckbox
                       checked={headerSelection.allSelected}
                       indeterminate={headerSelection.someSelected}
-                      ariaLabel="Select all sendable estimates on this page"
+                      ariaLabel="Select all estimates on this page"
                       onChange={(checked) => onToggleAllVisible?.(checked)}
                     />
                   ) : null}
@@ -148,7 +98,7 @@ export function EstimatesTable({
                     estimate.lineItemCount ?? estimate.lineItems.length;
                   const isSelectable =
                     selectionEnabled &&
-                    canBatchSendEstimate(estimate, jobsById);
+                    canSelectEstimateForBulkLifecycle(estimate);
                   const isSelected = selectedIds?.has(estimate.id) ?? false;
 
                   return (
@@ -162,7 +112,7 @@ export function EstimatesTable({
                       {selectionEnabled ? (
                         <td className="admin-table-cell">
                           {isSelectable ? (
-                            <EstimateSelectCheckbox
+                            <BulkSelectCheckbox
                               checked={isSelected}
                               ariaLabel={`Select estimate ${estimate.estimateNumber}`}
                               onChange={() => onToggleSelection?.(estimate.id)}

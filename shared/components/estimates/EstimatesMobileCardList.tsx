@@ -1,12 +1,10 @@
 import { adminListRowClass } from "@/shared/lib/admin-density";
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
-import {
-  canBatchSendEstimate,
-  type EstimateBatchSendJobLookup,
-} from "@/shared/lib/estimate-batch-send";
+import { canSelectEstimateForBulkLifecycle } from "@/shared/lib/estimate-lifecycle";
 import { ChevronRight } from "lucide-react";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { Estimate } from "@/shared/types/estimate";
+import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
 
@@ -16,7 +14,6 @@ type EstimatesMobileCardListProps = {
   onSelect: (estimate: Estimate) => void;
   selectionEnabled?: boolean;
   selectedIds?: ReadonlySet<string>;
-  jobsById?: EstimateBatchSendJobLookup;
   onToggleSelection?: (estimateId: string) => void;
 };
 
@@ -26,7 +23,6 @@ export function EstimatesMobileCardList({
   onSelect,
   selectionEnabled = false,
   selectedIds,
-  jobsById,
   onToggleSelection,
 }: EstimatesMobileCardListProps) {
   return (
@@ -44,7 +40,7 @@ export function EstimatesMobileCardList({
             {section.items.map((estimate) => {
               const isSelectable =
                 selectionEnabled &&
-                canBatchSendEstimate(estimate, jobsById);
+                canSelectEstimateForBulkLifecycle(estimate);
               const isSelected = selectedIds?.has(estimate.id) ?? false;
 
               return (
@@ -61,12 +57,10 @@ export function EstimatesMobileCardList({
                             className="flex min-h-11 min-w-11 items-center justify-center"
                             onClick={(event) => event.stopPropagation()}
                           >
-                            <input
-                              type="checkbox"
+                            <BulkSelectCheckbox
                               checked={isSelected}
+                              ariaLabel={`Select estimate ${estimate.estimateNumber}`}
                               onChange={() => onToggleSelection?.(estimate.id)}
-                              aria-label={`Select estimate ${estimate.estimateNumber}`}
-                              className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
                             />
                           </label>
                         ) : (

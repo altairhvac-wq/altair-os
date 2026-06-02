@@ -43,6 +43,13 @@ export function getEstimateLifecycleState(
   return "active";
 }
 
+/** Any estimate visible in the current lifecycle tab can be bulk-selected. */
+export function canSelectEstimateForBulkLifecycle(
+  _estimate: Pick<Estimate, "id">,
+): boolean {
+  return true;
+}
+
 export function getArchiveEstimateBlockReason(
   estimate: Pick<Estimate, "archivedAt" | "deletedAt" | "status">,
 ): string | null {
