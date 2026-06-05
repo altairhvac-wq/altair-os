@@ -89,6 +89,8 @@ export async function getReportsPageData(
     showLeadPipeline?: boolean;
   } = {},
 ): Promise<ReportsPageData> {
+  const showLeadPipeline = options.showLeadPipeline ?? false;
+
   const [invoices, payments, estimates, jobs, expenses, leads, chartSeries, laborEntries, laborCostRates] =
     await Promise.all([
       listInvoices(companyId),
@@ -96,7 +98,7 @@ export async function getReportsPageData(
       listEstimates(companyId),
       listJobs(companyId),
       listExpenses(companyId),
-      listLeads(companyId),
+      showLeadPipeline ? listLeads(companyId) : Promise.resolve([]),
       getCompanyReportChartSeries(companyId, { dateRange }),
       listCompanyJobLaborEntries(companyId),
       listTechnicianLaborCostRates(companyId),
@@ -106,7 +108,7 @@ export async function getReportsPageData(
     companyName,
     dateRange,
     showTechnicianProfitability: options.showTechnicianPerformance ?? true,
-    showLeadPipeline: options.showLeadPipeline ?? false,
+    showLeadPipeline,
     datasets: {
       invoices,
       payments,

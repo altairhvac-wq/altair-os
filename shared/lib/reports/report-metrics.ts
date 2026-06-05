@@ -11,7 +11,10 @@ import type { Job } from "@/shared/types/job";
 import { roundJobMaterialAmount } from "@/shared/types/job-material";
 import type { TimeEntry } from "@/shared/types/time-entry";
 import { resolveClosedJobLaborMinutes } from "@/shared/types/time-entry";
-import { buildLeadPipelineMetrics } from "@/shared/lib/leads/lead-metrics";
+import {
+  buildLeadPipelineMetrics,
+  EMPTY_LEAD_PIPELINE_METRICS,
+} from "@/shared/lib/leads/lead-metrics";
 import type { Lead } from "@/shared/types/lead";
 import type {
   AccountantSummaryData,
@@ -865,6 +868,12 @@ export function buildReportsPageData(input: {
     "Collection rate compares payments collected in period to invoice totals issued in period.",
   ];
 
+  if (input.showLeadPipeline) {
+    limitations.push(
+      "Lead pipeline counts leads created in the selected period; won and lost reflect each lead's current status.",
+    );
+  }
+
   const technicianProfitability = input.showTechnicianProfitability
     ? buildTechnicianProfitability(input.datasets, dateBounds)
     : [];
@@ -898,7 +907,9 @@ export function buildReportsPageData(input: {
       dateBounds,
       input.datasets,
     ),
-    leadPipeline: buildLeadPipelineMetrics(input.datasets.leads, dateBounds),
+    leadPipeline: input.showLeadPipeline
+      ? buildLeadPipelineMetrics(input.datasets.leads, dateBounds)
+      : EMPTY_LEAD_PIPELINE_METRICS,
     showLeadPipeline: input.showLeadPipeline ?? false,
     limitations,
   };

@@ -1,4 +1,9 @@
-import { formatLeadSource, type Lead, type LeadSource } from "@/shared/types/lead";
+import {
+  formatLeadSource,
+  isLeadClosed,
+  type Lead,
+  type LeadSource,
+} from "@/shared/types/lead";
 import {
   isDateWithinReportBounds,
   type ProfitabilityReportDateBounds,
@@ -22,12 +27,38 @@ export type LeadPipelineMetrics = {
   topSourceInsight: string | null;
 };
 
+export const EMPTY_LEAD_PIPELINE_METRICS: LeadPipelineMetrics = {
+  totalLeads: 0,
+  wonLeads: 0,
+  lostLeads: 0,
+  openLeads: 0,
+  conversionRate: null,
+  sourcePerformance: [],
+  topSourceInsight: null,
+};
+
 function isLeadWon(lead: Lead): boolean {
-  return lead.status === "won" || lead.wonAt != null;
+  if (lead.status === "won") {
+    return true;
+  }
+
+  if (!isLeadClosed(lead.status)) {
+    return false;
+  }
+
+  return lead.wonAt != null;
 }
 
 function isLeadLost(lead: Lead): boolean {
-  return lead.status === "lost" || lead.lostAt != null;
+  if (lead.status === "lost") {
+    return true;
+  }
+
+  if (!isLeadClosed(lead.status)) {
+    return false;
+  }
+
+  return lead.lostAt != null;
 }
 
 function toCloseRate(won: number, total: number): number | null {
@@ -102,7 +133,9 @@ export function buildLeadPipelineMetrics(
   });
 
   const wonLeads = activeLeads.filter(isLeadWon).length;
-  const lostLeads = activeLeads.filter(isLeadLost).length;
+  const lostLeads = activeLeads.filter(
+    (lead) => isLeadLost(lead) && !isLeadWon(lead),
+  ).length;
   const closedLeads = wonLeads + lostLeads;
   const sourceMap = new Map<LeadSource, LeadSourcePerformance>();
 

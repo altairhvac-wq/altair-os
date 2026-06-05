@@ -37,21 +37,23 @@ export function LeadPipelineSection({ metrics }: LeadPipelineSectionProps) {
   const hasLeads = metrics.totalLeads > 0;
 
   return (
-    <section className="space-y-3">
+    <section className="min-w-0 space-y-3 overflow-x-hidden">
       <div>
         <h3 className="admin-heading-section text-[13px] sm:text-sm">
           Lead Pipeline
         </h3>
         <p className="admin-text-helper mt-0.5 text-[11px] sm:text-xs">
-          Track lead volume, conversion, and source quality.
+          Lead activity created during the selected period.
         </p>
       </div>
 
       {!hasLeads ? (
         <div className="admin-card px-4 py-5 text-center sm:px-5">
-          <p className="text-sm font-semibold text-slate-900">No lead data yet.</p>
+          <p className="text-sm font-semibold text-slate-900">
+            No leads created in this period.
+          </p>
           <p className="admin-text-helper mt-1 text-xs">
-            Lead source performance will appear once leads are created.
+            Try a wider date range or add a new lead to see pipeline metrics.
           </p>
           <Link
             href="/leads"
@@ -71,6 +73,11 @@ export function LeadPipelineSection({ metrics }: LeadPipelineSectionProps) {
               value={formatRate(metrics.conversionRate)}
             />
           </div>
+
+          <p className="text-[11px] text-slate-500 sm:text-xs">
+            Won and lost reflect each lead&apos;s current status, not when they
+            closed.
+          </p>
 
           {metrics.topSourceInsight ? (
             <p className="text-xs text-slate-600">{metrics.topSourceInsight}</p>
@@ -99,12 +106,17 @@ export function LeadPipelineSection({ metrics }: LeadPipelineSectionProps) {
             </div>
 
             <ul className="divide-y divide-slate-100">
+              {metrics.sourcePerformance.length === 0 ? (
+                <li className="px-3 py-4 text-center text-xs text-slate-500 sm:px-4">
+                  No lead source activity in this period.
+                </li>
+              ) : null}
               {metrics.sourcePerformance.map((entry) => (
                 <li
                   key={entry.source}
                   className="grid grid-cols-2 gap-x-3 gap-y-1 px-3 py-2.5 sm:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.6fr))] sm:items-center sm:gap-3 sm:px-4"
                 >
-                  <p className="col-span-2 text-xs font-medium text-slate-800 sm:col-span-1">
+                  <p className="col-span-2 break-words text-xs font-medium text-slate-800 sm:col-span-1">
                     {formatLeadSource(entry.source)}
                   </p>
                   <div className="flex items-center justify-between gap-2 sm:contents">
