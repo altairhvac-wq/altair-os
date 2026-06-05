@@ -102,7 +102,10 @@ export function mapMembershipToTeamMemberProfile(
       | null;
     invite_email?: string | null;
   },
-  options?: { includeLaborCostRate?: boolean },
+  options?: {
+    includeLaborCostRate?: boolean;
+    includeMemberNotes?: boolean;
+  },
 ): TeamMemberProfile | null {
   const base = mapMembershipToTeamMember(membership);
   if (!base) {
@@ -110,6 +113,7 @@ export function mapMembershipToTeamMemberProfile(
   }
 
   const includeLaborCostRate = options?.includeLaborCostRate ?? false;
+  const includeMemberNotes = options?.includeMemberNotes ?? false;
 
   return {
     ...base,
@@ -118,7 +122,9 @@ export function mapMembershipToTeamMemberProfile(
     laborCostRateCents: includeLaborCostRate
       ? membership.labor_cost_rate_cents
       : null,
-    memberNotes: membership.member_notes?.trim() || null,
+    memberNotes: includeMemberNotes
+      ? membership.member_notes?.trim() || null
+      : null,
     availableForDispatch: membership.available_for_dispatch ?? true,
     emergencyOnCall: membership.emergency_on_call ?? false,
     certifications: normalizeCertifications(membership.certifications),
@@ -133,6 +139,8 @@ export function formatLaborCostRate(cents: number | null): string {
   const dollars = cents / 100;
   return dollars % 1 === 0 ? String(dollars) : dollars.toFixed(2);
 }
+
+const MAX_LABOR_COST_RATE_CENTS = 999_900;
 
 export function parseLaborCostRateInput(
   value: string,
@@ -149,5 +157,11 @@ export function parseLaborCostRateInput(
     return { error: "Enter a valid hourly rate (0 or greater)." };
   }
 
-  return { cents: Math.round(parsed * 100) };
+  const cents = Math.round(parsed * 100);
+
+  if (cents > MAX_LABOR_COST_RATE_CENTS) {
+    return { error: "Hourly rate cannot exceed $9,999." };
+  }
+
+  return { cents };
 }

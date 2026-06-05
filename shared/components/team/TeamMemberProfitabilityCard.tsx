@@ -84,7 +84,7 @@ export function TeamMemberProfitabilityCard({
             >
               Labor Cost Rate
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <span className="text-sm text-slate-500">$</span>
               <input
                 id="labor-cost-rate"
@@ -94,7 +94,7 @@ export function TeamMemberProfitabilityCard({
                 onChange={(event) => setRateInput(event.target.value)}
                 placeholder="35.00"
                 disabled={isPending}
-                className={adminFormInputClass}
+                className={`${adminFormInputClass} min-w-0 flex-1`}
               />
               <span className="shrink-0 text-sm text-slate-500">/hr</span>
             </div>

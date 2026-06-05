@@ -1,4 +1,7 @@
-import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
+import type {
+  ActiveCompanyContext,
+  CompanyMembershipRow,
+} from "@/lib/database/types/core-tables";
 import { assertMatchingCompanyScope } from "@/lib/database/access-control";
 
 type TeamMemberProfileSubject = {
@@ -6,6 +9,11 @@ type TeamMemberProfileSubject = {
   userId: string | null;
   companyId: string;
 };
+
+type ProfileFieldEditTarget = Pick<
+  CompanyMembershipRow,
+  "status" | "user_id"
+>;
 
 export function canViewTeamMemberProfiles(
   context: ActiveCompanyContext,
@@ -71,6 +79,28 @@ export function canViewMemberWorkSummary(
     permissions.manageBilling ||
     permissions.dispatchJobs
   );
+}
+
+export function canViewMemberNotes(context: ActiveCompanyContext): boolean {
+  return context.permissions.manageUsers;
+}
+
+export function validateProfileFieldEditTarget(
+  member: ProfileFieldEditTarget,
+): string | null {
+  if (member.status === "invited" && !member.user_id) {
+    return "Pending invitations cannot be edited.";
+  }
+
+  if (member.status === "suspended") {
+    return "Inactive members cannot be edited.";
+  }
+
+  if (member.status !== "active") {
+    return "Only active members can be edited.";
+  }
+
+  return null;
 }
 
 export function assertTeamMemberProfileReadAccess(

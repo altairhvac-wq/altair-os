@@ -12,6 +12,11 @@ import {
 import type { TeamMemberProfile } from "@/shared/types/team-member-profile";
 import { parseLaborCostRateInput } from "@/shared/types/team-member-profile";
 
+function normalizeMembershipId(membershipId: string): string | null {
+  const trimmed = membershipId.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 function revalidateTeamMemberProfile(membershipId: string) {
   revalidatePath(`/team/${membershipId}`);
   revalidatePath("/settings");
@@ -31,6 +36,11 @@ export async function updateMemberLaborCostRateAction(
     return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
+  const normalizedMembershipId = normalizeMembershipId(membershipId);
+  if (!normalizedMembershipId) {
+    return { error: "Team member not found." };
+  }
+
   const parsed = parseLaborCostRateInput(laborCostRate);
   if ("error" in parsed) {
     return { error: parsed.error };
@@ -38,7 +48,7 @@ export async function updateMemberLaborCostRateAction(
 
   const result = await updateMemberLaborCostRate(
     context.company.id,
-    membershipId,
+    normalizedMembershipId,
     parsed.cents,
     { userId: context.user.id, role: context.role },
     context,
@@ -48,7 +58,11 @@ export async function updateMemberLaborCostRateAction(
     return { error: result.error };
   }
 
-  revalidateTeamMemberProfile(membershipId);
+  if (!result.profile) {
+    return { error: "Labor cost rate could not be saved. Please try again." };
+  }
+
+  revalidateTeamMemberProfile(normalizedMembershipId);
   return { profile: result.profile };
 }
 
@@ -61,9 +75,14 @@ export async function updateMemberNotesAction(
     return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
+  const normalizedMembershipId = normalizeMembershipId(membershipId);
+  if (!normalizedMembershipId) {
+    return { error: "Team member not found." };
+  }
+
   const result = await updateMemberNotes(
     context.company.id,
-    membershipId,
+    normalizedMembershipId,
     notes,
     { userId: context.user.id, role: context.role },
     context,
@@ -73,7 +92,11 @@ export async function updateMemberNotesAction(
     return { error: result.error };
   }
 
-  revalidateTeamMemberProfile(membershipId);
+  if (!result.profile) {
+    return { error: "Notes could not be saved. Please try again." };
+  }
+
+  revalidateTeamMemberProfile(normalizedMembershipId);
   return { profile: result.profile };
 }
 
@@ -87,9 +110,14 @@ export async function updateMemberAvailabilityAction(
     return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
+  const normalizedMembershipId = normalizeMembershipId(membershipId);
+  if (!normalizedMembershipId) {
+    return { error: "Team member not found." };
+  }
+
   const result = await updateMemberAvailability(
     context.company.id,
-    membershipId,
+    normalizedMembershipId,
     { availableForDispatch, emergencyOnCall },
     { userId: context.user.id, role: context.role },
     context,
@@ -99,7 +127,11 @@ export async function updateMemberAvailabilityAction(
     return { error: result.error };
   }
 
-  revalidateTeamMemberProfile(membershipId);
+  if (!result.profile) {
+    return { error: "Availability could not be saved. Please try again." };
+  }
+
+  revalidateTeamMemberProfile(normalizedMembershipId);
   return { profile: result.profile };
 }
 
@@ -112,9 +144,14 @@ export async function updateMemberCertificationsAction(
     return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
+  const normalizedMembershipId = normalizeMembershipId(membershipId);
+  if (!normalizedMembershipId) {
+    return { error: "Team member not found." };
+  }
+
   const result = await updateMemberCertifications(
     context.company.id,
-    membershipId,
+    normalizedMembershipId,
     certifications,
     { userId: context.user.id, role: context.role },
     context,
@@ -124,6 +161,10 @@ export async function updateMemberCertificationsAction(
     return { error: result.error };
   }
 
-  revalidateTeamMemberProfile(membershipId);
+  if (!result.profile) {
+    return { error: "Certifications could not be saved. Please try again." };
+  }
+
+  revalidateTeamMemberProfile(normalizedMembershipId);
   return { profile: result.profile };
 }

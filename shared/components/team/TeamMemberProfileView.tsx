@@ -46,6 +46,8 @@ type TeamMemberProfileViewProps = {
   workSummary: TeamMemberWorkSummary | null;
   activity: TeamMemberActivityItem[];
   canEdit: boolean;
+  canEditSpecialties: boolean;
+  canViewNotes: boolean;
   canViewProfitability: boolean;
   canEditProfitability: boolean;
   canViewWorkSummary: boolean;
@@ -59,6 +61,8 @@ export function TeamMemberProfileView({
   workSummary,
   activity,
   canEdit,
+  canEditSpecialties,
+  canViewNotes,
   canViewProfitability,
   canEditProfitability,
   canViewWorkSummary,
@@ -129,6 +133,16 @@ export function TeamMemberProfileView({
   function handleAddCertification() {
     const trimmed = certificationInput.trim();
     if (!trimmed) {
+      return;
+    }
+
+    if (trimmed.length > 100) {
+      showMessage("error", "Each certification must be 100 characters or fewer.");
+      return;
+    }
+
+    if (profile.certifications.length >= 50) {
+      showMessage("error", "A member can have at most 50 certifications.");
       return;
     }
 
@@ -214,6 +228,20 @@ export function TeamMemberProfileView({
         </div>
       ) : null}
 
+      {profile.status === "invited" ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          This member has a pending invite. Some profile details will appear
+          after they accept.
+        </div>
+      ) : null}
+
+      {profile.status === "suspended" ? (
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          This member is inactive. Profile edits are disabled until access is
+          restored.
+        </div>
+      ) : null}
+
       <section className={adminCardSectionClass}>
         <div className="flex flex-wrap items-start gap-3">
           {profile.avatarUrl ? (
@@ -262,38 +290,41 @@ export function TeamMemberProfileView({
               />
             </dl>
 
-            <div className="mt-3 border-t border-slate-100 pt-3">
-              <label htmlFor="member-notes" className={adminFormLabelClass}>
-                Notes
-              </label>
-              {canEdit ? (
-                <>
-                  <textarea
-                    id="member-notes"
-                    value={notesInput}
-                    onChange={(event) => setNotesInput(event.target.value)}
-                    rows={3}
-                    disabled={isPending}
-                    placeholder="Optional internal notes"
-                    className={`${adminFormInputClass} min-h-[88px] resize-y`}
-                  />
-                  <div className={`${adminFormActionsClass} mt-2`}>
-                    <button
-                      type="button"
-                      onClick={handleNotesSave}
+            {canViewNotes ? (
+              <div className="mt-3 border-t border-slate-100 pt-3">
+                <label htmlFor="member-notes" className={adminFormLabelClass}>
+                  Notes
+                </label>
+                {canEdit ? (
+                  <>
+                    <textarea
+                      id="member-notes"
+                      value={notesInput}
+                      onChange={(event) => setNotesInput(event.target.value)}
+                      rows={3}
+                      maxLength={2000}
                       disabled={isPending}
-                      className="inline-flex min-h-11 items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                    >
-                      Save notes
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <p className="text-sm text-slate-700">
-                  {profile.memberNotes?.trim() || "—"}
-                </p>
-              )}
-            </div>
+                      placeholder="Optional internal notes"
+                      className={`${adminFormInputClass} min-h-[88px] resize-y`}
+                    />
+                    <div className={`${adminFormActionsClass} mt-2`}>
+                      <button
+                        type="button"
+                        onClick={handleNotesSave}
+                        disabled={isPending}
+                        className="inline-flex min-h-11 items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                      >
+                        Save notes
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-slate-700">
+                    {profile.memberNotes?.trim() || "—"}
+                  </p>
+                )}
+              </div>
+            ) : null}
           </section>
 
           {showSpecialties ? (
@@ -304,7 +335,7 @@ export function TeamMemberProfileView({
               <p className="mb-2 text-xs text-slate-500">Specialties</p>
               <TeamMemberSpecialtiesField
                 specialties={profile.technicianSpecialties}
-                canEdit={canEdit}
+                canEdit={canEditSpecialties}
                 disabled={isPending}
                 onChange={handleSpecialtiesChange}
               />
@@ -349,6 +380,7 @@ export function TeamMemberProfileView({
                   value={certificationInput}
                   onChange={(event) => setCertificationInput(event.target.value)}
                   placeholder="EPA 608"
+                  maxLength={100}
                   disabled={isPending}
                   className={`${adminFormInputClass} min-w-0 flex-1`}
                 />
@@ -378,7 +410,10 @@ export function TeamMemberProfileView({
           ) : null}
 
           {canViewWorkSummary ? (
-            <TeamMemberSummaryCard summary={workSummary} />
+            <TeamMemberSummaryCard
+              summary={workSummary}
+              isPendingInvite={profile.status === "invited" && !profile.userId}
+            />
           ) : null}
 
           <TeamMemberActivityCard activity={activity} />

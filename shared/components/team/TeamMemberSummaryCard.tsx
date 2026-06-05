@@ -8,6 +8,7 @@ import {
 
 type TeamMemberSummaryCardProps = {
   summary: TeamMemberWorkSummary | null;
+  isPendingInvite?: boolean;
 };
 
 function formatLaborHours(hours: number): string {
@@ -18,7 +19,10 @@ function formatLaborHours(hours: number): string {
   return `${hours} hrs`;
 }
 
-export function TeamMemberSummaryCard({ summary }: TeamMemberSummaryCardProps) {
+export function TeamMemberSummaryCard({
+  summary,
+  isPendingInvite = false,
+}: TeamMemberSummaryCardProps) {
   if (!summary) {
     return null;
   }
@@ -37,7 +41,14 @@ export function TeamMemberSummaryCard({ summary }: TeamMemberSummaryCardProps) {
         </span>
       </div>
 
-      {!hasData ? (
+      {isPendingInvite ? (
+        <div className={adminEmptyWrapClass}>
+          <p className="text-sm text-slate-500">
+            Work summary will be available after this member accepts their
+            invite.
+          </p>
+        </div>
+      ) : !hasData ? (
         <div className={adminEmptyWrapClass}>
           <p className="text-sm text-slate-500">
             Work summary will appear once this member has completed jobs.

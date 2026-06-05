@@ -11,9 +11,12 @@ import {
   assertTeamMemberProfileReadAccess,
   canEditMemberProfitabilitySettings,
   canEditTeamMemberProfile,
+  canViewMemberNotes,
   canViewMemberProfitabilitySettings,
   canViewMemberWorkSummary,
+  validateProfileFieldEditTarget,
 } from "@/lib/database/services/team-member-profile-access";
+import { canActorEditMemberSpecialties } from "@/lib/database/services/member-role-guard";
 import { hasCompanyPermission } from "@/lib/database/types/roles";
 import type { CompanyMembershipRow } from "@/lib/database/types/core-tables";
 import {
@@ -144,16 +147,34 @@ async function listTechnicianLaborCostRates(
 function mapWorkSummary(
   summary: MemberWorkSummary,
   periodLabel: string,
+  options?: { includeProfitability?: boolean },
 ): TeamMemberWorkSummary {
+  const includeProfitability = options?.includeProfitability ?? false;
+
   return {
     periodLabel,
     jobsCompleted: summary.jobsCompleted,
     revenue: summary.revenue,
     laborHours: summary.laborHours,
-    laborCost: summary.laborCost,
-    grossProfit: summary.grossProfit,
-    margin: summary.margin,
-    profitAvailable: summary.profitAvailable,
+    laborCost: includeProfitability ? summary.laborCost : null,
+    grossProfit: includeProfitability ? summary.grossProfit : null,
+    margin: includeProfitability ? summary.margin : null,
+    profitAvailable: includeProfitability ? summary.profitAvailable : false,
+  };
+}
+
+function createPendingInviteWorkSummary(
+  periodLabel: string,
+): TeamMemberWorkSummary {
+  return {
+    periodLabel,
+    jobsCompleted: 0,
+    revenue: 0,
+    laborHours: 0,
+    laborCost: null,
+    grossProfit: null,
+    margin: null,
+    profitAvailable: false,
   };
 }
 
@@ -235,6 +256,8 @@ export type TeamMemberProfilePageData = {
   workSummary: TeamMemberWorkSummary | null;
   activity: TeamMemberActivityItem[];
   canEdit: boolean;
+  canEditSpecialties: boolean;
+  canViewNotes: boolean;
   canViewProfitability: boolean;
   canEditProfitability: boolean;
   canViewWorkSummary: boolean;
@@ -265,10 +288,19 @@ export async function getTeamMemberProfilePageData(
   const canViewProfitability = canViewMemberProfitabilitySettings(context);
   const canEditProfitability = canEditMemberProfitabilitySettings(context);
   const canEdit = canEditTeamMemberProfile(context, subject);
+  const canViewNotes = canViewMemberNotes(context);
   const canViewWorkSummary = canViewMemberWorkSummary(context);
+  const canEditSpecialties =
+    canEdit &&
+    canActorEditMemberSpecialties(context.role, context.user.id, {
+      role: row.role,
+      user_id: row.user_id,
+      status: row.status,
+    });
 
   const profile = mapMembershipToTeamMemberProfile(row, {
     includeLaborCostRate: canViewProfitability,
+    includeMemberNotes: canViewNotes,
   });
 
   if (!profile) {
@@ -276,14 +308,28 @@ export async function getTeamMemberProfilePageData(
   }
 
   const workSummaryRange = options?.workSummaryRange ?? "30d";
-  const workSummary =
-    canViewWorkSummary && profile.userId
-      ? await buildWorkSummaryForTechnician(
-          companyId,
-          profile.userId,
-          workSummaryRange,
-        )
-      : null;
+  const periodLabel =
+    workSummaryRange === "ytd"
+      ? "Year to date"
+      : workSummaryRange === "7d"
+        ? "Last 7 days"
+        : workSummaryRange === "90d"
+          ? "Last 90 days"
+          : "Last 30 days";
+
+  let workSummary: TeamMemberWorkSummary | null = null;
+  if (canViewWorkSummary) {
+    if (profile.userId) {
+      workSummary = await buildWorkSummaryForTechnician(
+        companyId,
+        profile.userId,
+        workSummaryRange,
+        canViewProfitability,
+      );
+    } else if (profile.status === "invited") {
+      workSummary = createPendingInviteWorkSummary(periodLabel);
+    }
+  }
 
   const activity = profile.userId
     ? await buildTeamMemberActivity(companyId, profile.userId)
@@ -294,6 +340,8 @@ export async function getTeamMemberProfilePageData(
     workSummary,
     activity,
     canEdit,
+    canEditSpecialties,
+    canViewNotes,
     canViewProfitability,
     canEditProfitability,
     canViewWorkSummary,
@@ -304,6 +352,7 @@ async function buildWorkSummaryForTechnician(
   companyId: string,
   technicianId: string,
   dateRange: ReportsPageDateRange,
+  includeProfitability: boolean,
 ): Promise<TeamMemberWorkSummary> {
   const dateBounds = resolveProfitabilityReportDateBounds(dateRange);
   const periodLabel =
@@ -321,7 +370,9 @@ async function buildWorkSummaryForTechnician(
       listInvoicePayments(companyId),
       listInvoices(companyId),
       listCompanyJobLaborEntries(companyId),
-      listTechnicianLaborCostRates(companyId),
+      includeProfitability
+        ? listTechnicianLaborCostRates(companyId)
+        : Promise.resolve(new Map<string, number>()),
     ]);
 
   const summary = buildMemberWorkSummary(
@@ -330,7 +381,7 @@ async function buildWorkSummaryForTechnician(
     dateBounds,
   );
 
-  return mapWorkSummary(summary, periodLabel);
+  return mapWorkSummary(summary, periodLabel, { includeProfitability });
 }
 
 export type UpdateMemberLaborCostRateResult = {
@@ -359,13 +410,30 @@ export async function updateMemberLaborCostRate(
     return { error: "Team member not found in this company." };
   }
 
+  const editError = assertTeamMemberProfileEditAccess(context, {
+    membershipId: row.id,
+    userId: row.user_id,
+    companyId,
+  });
+  if (editError) {
+    return { error: editError };
+  }
+
+  const targetError = validateProfileFieldEditTarget(row);
+  if (targetError) {
+    return { error: targetError };
+  }
+
   if (laborCostRateCents != null && laborCostRateCents < 0) {
     return { error: "Labor cost rate must be zero or greater." };
   }
 
+  const includeLaborCostRate = canViewMemberProfitabilitySettings(context);
+
   if (row.labor_cost_rate_cents === laborCostRateCents) {
     const profile = mapMembershipToTeamMemberProfile(row, {
-      includeLaborCostRate: true,
+      includeLaborCostRate,
+      includeMemberNotes: canViewMemberNotes(context),
     });
     return profile ? { profile } : { error: "Team member not found." };
   }
@@ -391,7 +459,8 @@ export async function updateMemberLaborCostRate(
   }
 
   const profile = mapMembershipToTeamMemberProfile(data as MembershipProfileRow, {
-    includeLaborCostRate: true,
+    includeLaborCostRate: includeLaborCostRate,
+    includeMemberNotes: canViewMemberNotes(context),
   });
 
   return profile ? { profile } : { error: "Updated membership could not be loaded." };
@@ -428,11 +497,21 @@ export async function updateMemberNotes(
     return { error: editError };
   }
 
+  const targetError = validateProfileFieldEditTarget(row);
+  if (targetError) {
+    return { error: targetError };
+  }
+
   const normalizedNotes = notes?.trim() || null;
+
+  if (normalizedNotes && normalizedNotes.length > 2000) {
+    return { error: "Notes must be 2,000 characters or fewer." };
+  }
 
   if (row.member_notes === normalizedNotes) {
     const profile = mapMembershipToTeamMemberProfile(row, {
       includeLaborCostRate: canViewMemberProfitabilitySettings(context),
+      includeMemberNotes: canViewMemberNotes(context),
     });
     return profile ? { profile } : { error: "Team member not found." };
   }
@@ -459,6 +538,7 @@ export async function updateMemberNotes(
 
   const profile = mapMembershipToTeamMemberProfile(data as MembershipProfileRow, {
     includeLaborCostRate: canViewMemberProfitabilitySettings(context),
+    includeMemberNotes: canViewMemberNotes(context),
   });
 
   return profile ? { profile } : { error: "Updated membership could not be loaded." };
@@ -493,12 +573,18 @@ export async function updateMemberAvailability(
     return { error: editError };
   }
 
+  const targetError = validateProfileFieldEditTarget(row);
+  if (targetError) {
+    return { error: targetError };
+  }
+
   if (
     row.available_for_dispatch === input.availableForDispatch &&
     row.emergency_on_call === input.emergencyOnCall
   ) {
     const profile = mapMembershipToTeamMemberProfile(row, {
       includeLaborCostRate: canViewMemberProfitabilitySettings(context),
+      includeMemberNotes: canViewMemberNotes(context),
     });
     return profile ? { profile } : { error: "Team member not found." };
   }
@@ -528,6 +614,7 @@ export async function updateMemberAvailability(
 
   const profile = mapMembershipToTeamMemberProfile(data as MembershipProfileRow, {
     includeLaborCostRate: canViewMemberProfitabilitySettings(context),
+    includeMemberNotes: canViewMemberNotes(context),
   });
 
   return profile ? { profile } : { error: "Updated membership could not be loaded." };
@@ -559,7 +646,20 @@ export async function updateMemberCertifications(
     return { error: editError };
   }
 
+  const targetError = validateProfileFieldEditTarget(row);
+  if (targetError) {
+    return { error: targetError };
+  }
+
   const normalizedCertifications = normalizeCertificationsFromInput(certifications);
+
+  if (normalizedCertifications.length > 50) {
+    return { error: "A member can have at most 50 certifications." };
+  }
+
+  if (normalizedCertifications.some((value) => value.length > 100)) {
+    return { error: "Each certification must be 100 characters or fewer." };
+  }
 
   const current = row.certifications ?? [];
   if (
@@ -568,6 +668,7 @@ export async function updateMemberCertifications(
   ) {
     const profile = mapMembershipToTeamMemberProfile(row, {
       includeLaborCostRate: canViewMemberProfitabilitySettings(context),
+      includeMemberNotes: canViewMemberNotes(context),
     });
     return profile ? { profile } : { error: "Team member not found." };
   }
@@ -594,6 +695,7 @@ export async function updateMemberCertifications(
 
   const profile = mapMembershipToTeamMemberProfile(data as MembershipProfileRow, {
     includeLaborCostRate: canViewMemberProfitabilitySettings(context),
+    includeMemberNotes: canViewMemberNotes(context),
   });
 
   return profile ? { profile } : { error: "Updated membership could not be loaded." };
