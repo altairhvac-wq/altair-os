@@ -26,6 +26,7 @@ create type public.lead_activity_type as enum (
   'email_logged',
   'note_added',
   'status_changed',
+  'follow_up_changed',
   'estimate_created',
   'converted',
   'won',

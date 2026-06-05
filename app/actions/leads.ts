@@ -2,8 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { createCustomer } from "@/lib/database/queries/customers";
-import { listLeadActivitiesForLead } from "@/lib/database/queries/lead-activities";
+import {
+  createCustomer,
+  findCustomerByContact,
+  getCustomerById,
+  updateCustomer,
+} from "@/lib/database/queries/customers";
+import {
+  hasLeadEstimateActivity,
+  listLeadActivitiesForLead,
+} from "@/lib/database/queries/lead-activities";
 import {
   createLead,
   getLeadById,
@@ -20,16 +28,19 @@ import {
   recordLeadCreatedActivity,
   recordLeadEmailLoggedActivity,
   recordLeadEstimateCreatedActivity,
+  recordLeadFollowUpChangedActivity,
   recordLeadLostActivity,
   recordLeadNoteAddedActivity,
   recordLeadStatusChangedActivity,
   recordLeadWonActivity,
 } from "@/lib/database/services/lead-activity";
 import { buildCustomerFormDataFromLead } from "@/shared/lib/leads/lead-conversion";
+import { validateLeadStatusTransition } from "@/shared/lib/leads/lead-status-transitions";
 import {
   formatLeadName,
   normalizeLeadFormData,
   validateLeadFormData,
+  isLeadClosed,
   type Lead,
   type LeadFormData,
   type LeadStatus,
@@ -41,6 +52,7 @@ import {
 
 export type LeadActionResult = {
   error?: string;
+  warning?: string;
   lead?: Lead;
   customerId?: string;
 };
@@ -121,6 +133,14 @@ export async function updateLeadAction(
     return { error: validationError };
   }
 
+  const statusError = validateLeadStatusTransition(
+    existing.status,
+    normalized.status,
+  );
+  if (statusError) {
+    return { error: statusError };
+  }
+
   const { lead, error } = await updateLead(
     permission.context.company.id,
     leadId,
@@ -161,7 +181,9 @@ export async function logLeadCallAction(
 
   const now = new Date().toISOString();
   const nextStatus: LeadStatus =
-    existing.status === "new" ? "contacted" : existing.status;
+    existing.status === "new" && !isLeadClosed(existing.status)
+      ? "contacted"
+      : existing.status;
 
   const { lead, error } = await updateLead(permission.context.company.id, leadId, {
     lastContactedAt: now,
@@ -209,7 +231,9 @@ export async function logLeadEmailAction(
 
   const now = new Date().toISOString();
   const nextStatus: LeadStatus =
-    existing.status === "new" ? "contacted" : existing.status;
+    existing.status === "new" && !isLeadClosed(existing.status)
+      ? "contacted"
+      : existing.status;
 
   const { lead, error } = await updateLead(permission.context.company.id, leadId, {
     lastContactedAt: now,
@@ -280,6 +304,20 @@ export async function updateLeadFollowUpAction(
     return { error: permission.error };
   }
 
+  const existing = await getLeadById(permission.context.company.id, leadId);
+  if (!existing) {
+    return { error: "Lead not found." };
+  }
+
+  const normalizedFollowUp = nextFollowUpAt?.trim()
+    ? `${nextFollowUpAt.trim()}T12:00:00.000Z`
+    : null;
+  const previousFollowUpAt = existing.nextFollowUpAt;
+
+  if (previousFollowUpAt === normalizedFollowUp) {
+    return { lead: existing };
+  }
+
   const { lead, error } = await updateLead(permission.context.company.id, leadId, {
     nextFollowUpAt: nextFollowUpAt ?? "",
   });
@@ -288,8 +326,62 @@ export async function updateLeadFollowUpAction(
     return { error: error ?? "We couldn't update the follow-up date." };
   }
 
+  await recordLeadFollowUpChangedActivity({
+    companyId: permission.context.company.id,
+    leadId,
+    actorId: permission.context.user.id,
+    previousFollowUpAt,
+    nextFollowUpAt: lead.nextFollowUpAt,
+  });
+
   revalidateLeadPaths();
   return { lead };
+}
+
+async function upgradeLeadCustomerStatus(
+  companyId: string,
+  customerId: string,
+  customerStatus: "lead" | "active",
+): Promise<{ error?: string }> {
+  if (customerStatus !== "active") {
+    return {};
+  }
+
+  const customer = await getCustomerById(companyId, customerId);
+  if (!customer || customer.status === "active") {
+    return {};
+  }
+
+  const { error } = await updateCustomer(companyId, customerId, {
+    name: customer.name,
+    email: customer.email,
+    phone: customer.phone,
+    company: customer.company ?? "",
+    status: "active",
+    address: customer.address,
+    city: customer.city,
+    state: customer.state,
+    zip: customer.zip,
+    notes: customer.notes ?? "",
+  });
+
+  if (error) {
+    return { error };
+  }
+
+  return {};
+}
+
+async function linkLeadToCustomer(
+  companyId: string,
+  leadId: string,
+  customerId: string,
+): Promise<{ error?: string }> {
+  const { error } = await updateLead(companyId, leadId, {
+    convertedCustomerId: customerId,
+  });
+
+  return error ? { error } : {};
 }
 
 async function ensureLeadCustomerRecord(
@@ -297,13 +389,28 @@ async function ensureLeadCustomerRecord(
   actorId: string,
   lead: Lead,
   customerStatus: "lead" | "active",
-): Promise<{ customerId?: string; error?: string }> {
-  if (lead.convertedCustomerId) {
-    return { customerId: lead.convertedCustomerId };
+): Promise<{ customerId?: string; error?: string; warning?: string }> {
+  const latestLead = await getLeadById(companyId, lead.id);
+  if (!latestLead) {
+    return { error: "Lead not found." };
+  }
+
+  if (latestLead.convertedCustomerId) {
+    const upgraded = await upgradeLeadCustomerStatus(
+      companyId,
+      latestLead.convertedCustomerId,
+      customerStatus,
+    );
+
+    if (upgraded.error) {
+      return { error: upgraded.error };
+    }
+
+    return { customerId: latestLead.convertedCustomerId };
   }
 
   const customerData = normalizeCustomerFormData({
-    ...buildCustomerFormDataFromLead(lead),
+    ...buildCustomerFormDataFromLead(latestLead),
     status: customerStatus,
   });
   const validationError = validateCustomerFormData(customerData, {
@@ -313,6 +420,42 @@ async function ensureLeadCustomerRecord(
 
   if (validationError) {
     return { error: validationError };
+  }
+
+  const existingMatch = await findCustomerByContact(companyId, {
+    email: latestLead.email,
+    phone: latestLead.phone,
+  });
+
+  if (existingMatch.conflict) {
+    return { error: existingMatch.conflict };
+  }
+
+  if (existingMatch.customer) {
+    const linked = await linkLeadToCustomer(
+      companyId,
+      latestLead.id,
+      existingMatch.customer.id,
+    );
+
+    if (linked.error) {
+      return { error: linked.error };
+    }
+
+    const upgraded = await upgradeLeadCustomerStatus(
+      companyId,
+      existingMatch.customer.id,
+      customerStatus,
+    );
+
+    if (upgraded.error) {
+      return { error: upgraded.error };
+    }
+
+    return {
+      customerId: existingMatch.customer.id,
+      warning: `Linked to existing customer ${existingMatch.customer.name}.`,
+    };
   }
 
   const { customer, error: customerError } = await createCustomer(
@@ -336,12 +479,9 @@ async function ensureLeadCustomerRecord(
     status: customer.status,
   });
 
-  const { error } = await updateLead(companyId, lead.id, {
-    convertedCustomerId: customer.id,
-  });
-
-  if (error) {
-    return { error };
+  const linked = await linkLeadToCustomer(companyId, latestLead.id, customer.id);
+  if (linked.error) {
+    return { error: linked.error };
   }
 
   return { customerId: customer.id };
@@ -360,6 +500,13 @@ export async function convertLeadToCustomerAction(
     return { error: "Lead not found." };
   }
 
+  if (existing.status === "won") {
+    return {
+      lead: existing,
+      customerId: existing.convertedCustomerId,
+    };
+  }
+
   const ensured = await ensureLeadCustomerRecord(
     permission.context.company.id,
     permission.context.user.id,
@@ -369,10 +516,6 @@ export async function convertLeadToCustomerAction(
 
   if (ensured.error || !ensured.customerId) {
     return { error: ensured.error };
-  }
-
-  if (existing.convertedCustomerId && existing.status === "won") {
-    return { lead: existing, customerId: ensured.customerId };
   }
 
   const now = new Date().toISOString();
@@ -405,7 +548,11 @@ export async function convertLeadToCustomerAction(
   });
 
   revalidateLeadPaths();
-  return { lead, customerId: ensured.customerId };
+  return {
+    lead,
+    customerId: ensured.customerId,
+    warning: ensured.warning,
+  };
 }
 
 export async function prepareLeadEstimateAction(
@@ -421,6 +568,10 @@ export async function prepareLeadEstimateAction(
     return { error: "Lead not found." };
   }
 
+  if (isLeadClosed(existing.status)) {
+    return { error: "Closed leads cannot start a new estimate." };
+  }
+
   const ensured = await ensureLeadCustomerRecord(
     permission.context.company.id,
     permission.context.user.id,
@@ -434,7 +585,11 @@ export async function prepareLeadEstimateAction(
 
   const lead = await getLeadById(permission.context.company.id, leadId);
   revalidateLeadPaths();
-  return { lead: lead ?? existing, customerId: ensured.customerId };
+  return {
+    lead: lead ?? existing,
+    customerId: ensured.customerId,
+    warning: ensured.warning,
+  };
 }
 
 export async function markLeadWonAction(
@@ -449,6 +604,10 @@ export async function markLeadWonAction(
   const existing = await getLeadById(permission.context.company.id, leadId);
   if (!existing) {
     return { error: "Lead not found." };
+  }
+
+  if (existing.status === "won") {
+    return { lead: existing, customerId: existing.convertedCustomerId };
   }
 
   if (!existing.convertedCustomerId && convertIfNeeded) {
@@ -491,11 +650,16 @@ export async function markLeadLostAction(
     return { error: "Lead not found." };
   }
 
+  if (existing.status === "lost") {
+    return { lead: existing };
+  }
+
   const now = new Date().toISOString();
+  const normalizedReason = lostReason?.trim() || null;
   const { lead, error } = await updateLead(permission.context.company.id, leadId, {
     status: "lost",
     lostAt: now,
-    lostReason: lostReason?.trim() || null,
+    lostReason: normalizedReason,
     wonAt: null,
   });
 
@@ -507,7 +671,7 @@ export async function markLeadLostAction(
     companyId: permission.context.company.id,
     leadId,
     actorId: permission.context.user.id,
-    lostReason: lostReason?.trim() || undefined,
+    lostReason: normalizedReason ?? undefined,
   });
 
   revalidateLeadPaths();
@@ -554,13 +718,25 @@ export async function recordLeadEstimateCreatedFromLeadAction(input: {
     return { error: "Lead not found." };
   }
 
-  const { lead, error } = await updateLead(
+  const alreadyRecorded = await hasLeadEstimateActivity(
     permission.context.company.id,
     existing.id,
-    {
-      status: "estimate_sent",
-    },
+    input.estimateId,
   );
+
+  if (alreadyRecorded) {
+    return { lead: existing };
+  }
+
+  const previousStatus = existing.status;
+  const shouldUpdateStatus =
+    !isLeadClosed(previousStatus) && previousStatus !== "estimate_sent";
+
+  const { lead, error } = shouldUpdateStatus
+    ? await updateLead(permission.context.company.id, existing.id, {
+        status: "estimate_sent",
+      })
+    : { lead: existing, error: null };
 
   if (error || !lead) {
     return { error: error ?? "Estimate created, but lead update failed." };
@@ -573,6 +749,16 @@ export async function recordLeadEstimateCreatedFromLeadAction(input: {
     estimateId: input.estimateId,
     estimateNumber: input.estimateNumber,
   });
+
+  if (shouldUpdateStatus) {
+    await recordLeadStatusChangedActivity({
+      companyId: permission.context.company.id,
+      leadId: existing.id,
+      actorId: permission.context.user.id,
+      previousStatus,
+      nextStatus: "estimate_sent",
+    });
+  }
 
   revalidateLeadPaths();
   return { lead };

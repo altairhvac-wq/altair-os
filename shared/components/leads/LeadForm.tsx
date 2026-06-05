@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { createLeadAction, updateLeadAction } from "@/app/actions/leads";
 import type { LeadAssignableMember } from "@/lib/database/queries/leads";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import { getEditableLeadStatusOptions } from "@/shared/lib/leads/lead-status-transitions";
 import {
   LEAD_SOURCE_OPTIONS,
   LEAD_STATUS_OPTIONS,
@@ -46,6 +47,9 @@ export function LeadForm({
   );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const editableStatuses = lead
+    ? getEditableLeadStatusOptions(lead.status)
+    : [];
 
   function updateField<K extends keyof LeadFormData>(
     field: K,
@@ -156,13 +160,15 @@ export function LeadForm({
               }
               className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
             >
-              {LEAD_STATUS_OPTIONS.filter((option) => option.value !== "all").map(
-                (option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ),
-              )}
+              {LEAD_STATUS_OPTIONS.filter(
+                (option) =>
+                  option.value !== "all" &&
+                  editableStatuses.includes(option.value),
+              ).map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </label>
         ) : null}

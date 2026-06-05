@@ -83,6 +83,25 @@ export async function recordLeadNoteAddedActivity(input: {
   });
 }
 
+export async function recordLeadFollowUpChangedActivity(input: {
+  companyId: string;
+  leadId: string;
+  actorId: string;
+  previousFollowUpAt?: string;
+  nextFollowUpAt?: string;
+}) {
+  return record({
+    companyId: input.companyId,
+    leadId: input.leadId,
+    actorId: input.actorId,
+    activityType: "follow_up_changed",
+    metadata: {
+      previousFollowUpAt: input.previousFollowUpAt,
+      nextFollowUpAt: input.nextFollowUpAt,
+    },
+  });
+}
+
 export async function recordLeadStatusChangedActivity(input: {
   companyId: string;
   leadId: string;

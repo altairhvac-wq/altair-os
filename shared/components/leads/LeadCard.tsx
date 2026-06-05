@@ -26,14 +26,14 @@ export function LeadCard({
     <button
       type="button"
       onClick={() => onSelect(lead)}
-      className={`w-full rounded-xl border p-4 text-left transition ${
+      className={`w-full rounded-xl border p-3 text-left transition ${
         selected
           ? "border-cyan-300 bg-cyan-50/60 ring-1 ring-cyan-200"
           : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50/80"
       }`}
     >
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-xs font-bold text-white">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-xs font-bold text-white">
           {getLeadInitials(lead)}
         </div>
 

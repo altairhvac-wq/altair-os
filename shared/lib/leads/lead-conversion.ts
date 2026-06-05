@@ -1,6 +1,5 @@
 import type { CustomerFormData } from "@/shared/types/customer";
-import type { Lead } from "@/shared/types/lead";
-import { formatLeadName } from "@/shared/types/lead";
+import { formatLeadName, isLeadClosed, type Lead } from "@/shared/types/lead";
 
 export function buildCustomerFormDataFromLead(lead: Lead): CustomerFormData {
   const name =
@@ -27,7 +26,7 @@ export function buildCustomerFormDataFromLead(lead: Lead): CustomerFormData {
 export function canConvertLeadToCustomer(
   lead: Pick<Lead, "convertedCustomerId" | "status">,
 ): boolean {
-  return !lead.convertedCustomerId;
+  return !lead.convertedCustomerId && !isLeadClosed(lead.status);
 }
 
 export function shouldPromptConvertOnWon(

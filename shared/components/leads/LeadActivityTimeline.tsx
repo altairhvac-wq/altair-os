@@ -1,4 +1,5 @@
 import {
+  CalendarClock,
   CheckCircle2,
   FileText,
   Mail,
@@ -26,6 +27,7 @@ const ACTIVITY_ICONS: Record<LeadActivityType, typeof Sparkles> = {
   email_logged: Mail,
   note_added: MessageSquare,
   status_changed: FileText,
+  follow_up_changed: CalendarClock,
   estimate_created: FileText,
   converted: UserPlus,
   won: CheckCircle2,

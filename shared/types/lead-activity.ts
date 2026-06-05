@@ -6,6 +6,7 @@ export type LeadActivityType =
   | "email_logged"
   | "note_added"
   | "status_changed"
+  | "follow_up_changed"
   | "estimate_created"
   | "converted"
   | "won"
@@ -15,6 +16,8 @@ import { formatLeadStatus } from "@/shared/types/lead";
 export type LeadActivityMetadata = {
   previousStatus?: LeadStatus;
   nextStatus?: LeadStatus;
+  previousFollowUpAt?: string;
+  nextFollowUpAt?: string;
   lostReason?: string;
   customerId?: string;
   customerName?: string;
@@ -49,6 +52,8 @@ export function formatLeadActivityLabel(activity: LeadActivity): string {
         return `Status changed to ${formatLeadStatus(activity.metadata.nextStatus)}`;
       }
       return "Status changed";
+    case "follow_up_changed":
+      return "Follow-up date changed";
     case "estimate_created":
       return "Estimate created";
     case "converted":
@@ -80,6 +85,10 @@ export function formatLeadActivityDetails(activity: LeadActivity): string | unde
       return activity.metadata.lostReason
         ? `Reason: ${activity.metadata.lostReason}`
         : undefined;
+    case "follow_up_changed":
+      return activity.metadata.nextFollowUpAt
+        ? `Next follow-up: ${activity.metadata.nextFollowUpAt.slice(0, 10)}`
+        : "Follow-up cleared";
     default:
       return undefined;
   }

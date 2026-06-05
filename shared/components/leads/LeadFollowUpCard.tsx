@@ -53,8 +53,15 @@ export function LeadFollowUpCard({
             Next follow-up
           </p>
           <p className="mt-1 text-sm font-semibold text-slate-900">
-            {formatLeadDate(lead.nextFollowUpAt, timeZone)}
+            {lead.nextFollowUpAt
+              ? formatLeadDate(lead.nextFollowUpAt, timeZone)
+              : "Not scheduled"}
           </p>
+          {!lead.nextFollowUpAt ? (
+            <p className="mt-1 text-xs text-slate-500">
+              Set a follow-up date so this lead stays on your radar.
+            </p>
+          ) : null}
         </div>
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-slate-500">

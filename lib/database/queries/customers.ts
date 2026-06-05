@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import { phonesMatch } from "@/shared/lib/phone";
 import type {
   CustomerInsert,
   CustomerRow,
@@ -181,6 +182,72 @@ export async function listDeletedCustomers(
   }
 
   return ((data ?? []) as CustomerRow[]).map(mapCustomerRowToCustomer);
+}
+
+export async function findCustomerByContact(
+  companyId: string,
+  contact: { email: string; phone: string },
+): Promise<{ customer: Customer | null; conflict?: string }> {
+  const supabase = await createClient();
+  const email = contact.email.trim().toLowerCase();
+  const phone = contact.phone.trim();
+
+  if (!email && !phone) {
+    return { customer: null };
+  }
+
+  const { data, error } = await supabase
+    .from("customers")
+    .select("*")
+    .eq("company_id", companyId)
+    .is("deleted_at", null);
+
+  if (error) {
+    console.error("[findCustomerByContact] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return { customer: null };
+  }
+
+  const rows = (data ?? []) as CustomerRow[];
+  const emailMatches = email
+    ? rows.filter((row) => row.email.trim().toLowerCase() === email)
+    : [];
+  const phoneMatches = phone
+    ? rows.filter((row) => phonesMatch(row.phone, phone))
+    : [];
+
+  if (emailMatches.length > 1 || phoneMatches.length > 1) {
+    return {
+      customer: null,
+      conflict:
+        "Multiple customers match this contact info. Link the lead manually from the customer record.",
+    };
+  }
+
+  if (emailMatches.length === 1 && phoneMatches.length === 1) {
+    if (emailMatches[0]!.id !== phoneMatches[0]!.id) {
+      return {
+        customer: null,
+        conflict:
+          "Email and phone match different customers. Review the existing records before converting.",
+      };
+    }
+
+    return { customer: mapCustomerRowToCustomer(emailMatches[0]!) };
+  }
+
+  if (emailMatches.length === 1) {
+    return { customer: mapCustomerRowToCustomer(emailMatches[0]!) };
+  }
+
+  if (phoneMatches.length === 1) {
+    return { customer: mapCustomerRowToCustomer(phoneMatches[0]!) };
+  }
+
+  return { customer: null };
 }
 
 export async function createCustomer(

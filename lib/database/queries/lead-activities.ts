@@ -107,6 +107,35 @@ export async function listLeadActivitiesForLead(
   return ((data ?? []) as LeadActivityRowWithActor[]).map(mapLeadActivityRow);
 }
 
+export async function hasLeadEstimateActivity(
+  companyId: string,
+  leadId: string,
+  estimateId: string,
+): Promise<boolean> {
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("lead_activities")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .eq("lead_id", leadId)
+    .eq("activity_type", "estimate_created")
+    .eq("metadata->>estimateId", estimateId);
+
+  if (error) {
+    console.error("[hasLeadEstimateActivity] query failed:", {
+      companyId,
+      leadId,
+      estimateId,
+      code: error.code,
+      message: error.message,
+    });
+    return false;
+  }
+
+  return (count ?? 0) > 0;
+}
+
 export async function getLatestLeadActivityForLeads(
   companyId: string,
   leadIds: string[],

@@ -45,6 +45,7 @@ export type LeadActivityType =
   | "email_logged"
   | "note_added"
   | "status_changed"
+  | "follow_up_changed"
   | "estimate_created"
   | "converted"
   | "won"

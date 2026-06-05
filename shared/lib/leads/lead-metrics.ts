@@ -18,7 +18,9 @@ export type LeadPipelineMetrics = {
 };
 
 export function buildLeadPipelineMetrics(leads: Lead[]): LeadPipelineMetrics {
-  const activeLeads = leads.filter((lead) => !lead.deletedAt);
+  const activeLeads = leads.filter(
+    (lead) => !lead.deletedAt && !lead.archivedAt,
+  );
   const wonLeads = activeLeads.filter((lead) => lead.status === "won").length;
   const lostLeads = activeLeads.filter((lead) => lead.status === "lost").length;
   const closedLeads = wonLeads + lostLeads;

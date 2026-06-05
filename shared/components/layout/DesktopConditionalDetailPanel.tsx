@@ -88,7 +88,7 @@ function DesktopDrawer({
             closeDisabled={closeDisabled}
           />
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-2.5">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-2.5">
               {children}
             </div>
             {footer ? (
@@ -138,7 +138,7 @@ export function DesktopConditionalDetailPanel({
           closeDisabled={closeDisabled}
         />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-2.5">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-2.5">
             {children}
           </div>
           {footer ? (

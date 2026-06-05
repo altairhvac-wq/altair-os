@@ -69,14 +69,16 @@ export function LeadDetailPanel({
   const timeZone = useCompanyTimezone();
   const [note, setNote] = useState("");
   const [activities, setActivities] = useState(initialActivities);
-  const [lostReason, setLostReason] = useState<string>(LEAD_LOST_REASON_OPTIONS[0]);
+  const [lostReason, setLostReason] = useState<string>("");
   const [actionError, setActionError] = useState<string | null>(null);
+  const [actionWarning, setActionWarning] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const isOpen = mode !== "empty";
 
   useEffect(() => {
     setNote("");
     setActionError(null);
+    setActionWarning(null);
   }, [lead?.id, mode]);
 
   useEffect(() => {
@@ -117,6 +119,7 @@ export function LeadDetailPanel({
 
   function runAction(action: () => Promise<void>) {
     setActionError(null);
+    setActionWarning(null);
     startTransition(action);
   }
 
@@ -179,6 +182,10 @@ export function LeadDetailPanel({
         return;
       }
 
+      if (result.warning) {
+        setActionWarning(result.warning);
+      }
+
       if (result.lead) {
         onLeadUpdated(result.lead);
       }
@@ -202,6 +209,10 @@ export function LeadDetailPanel({
           formatActionError(result.error, "We couldn't convert this lead."),
         );
         return;
+      }
+
+      if (result.warning) {
+        setActionWarning(result.warning);
       }
 
       onLeadUpdated(result.lead);
@@ -240,7 +251,10 @@ export function LeadDetailPanel({
     if (!lead) return;
 
     runAction(async () => {
-      const result = await markLeadLostAction(lead.id, lostReason);
+      const result = await markLeadLostAction(
+        lead.id,
+        lostReason.trim() || undefined,
+      );
       if (result.error || !result.lead) {
         setActionError(formatActionError(result.error, "We couldn't mark this lead lost."));
         return;
@@ -340,7 +354,11 @@ export function LeadDetailPanel({
             </button>
             <button
               type="button"
-              disabled={isPending || Boolean(lead.convertedCustomerId)}
+              disabled={
+                isPending ||
+                Boolean(lead.convertedCustomerId) ||
+                isLeadClosed(lead.status)
+              }
               onClick={handleConvert}
               className="admin-btn-secondary text-xs"
             >
@@ -349,7 +367,7 @@ export function LeadDetailPanel({
             </button>
             <button
               type="button"
-              disabled={isPending || lead.status === "won"}
+              disabled={isPending || isLeadClosed(lead.status)}
               onClick={handleMarkWon}
               className="admin-btn-secondary text-xs"
             >
@@ -367,6 +385,7 @@ export function LeadDetailPanel({
                   onChange={(event) => setLostReason(event.target.value)}
                   className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
                 >
+                  <option value="">No reason (optional)</option>
                   {LEAD_LOST_REASON_OPTIONS.map((reason) => (
                     <option key={reason} value={reason}>
                       {reason}
@@ -449,6 +468,12 @@ export function LeadDetailPanel({
               <LeadActivityTimeline activities={activities} timeZone={timeZone} />
             </div>
           </div>
+
+          {actionWarning ? (
+            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              {actionWarning}
+            </p>
+          ) : null}
 
           {actionError ? (
             <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
