@@ -1,0 +1,72 @@
+// shared/lib/operational-signals.ts
+
+import type { DashboardData } from "@/shared/types/dashboard";
+
+export type OperationalSignalSeverity =
+  | "critical"
+  | "warning"
+  | "info";
+
+export type OperationalSignalCategory =
+  | "billing"
+  | "dispatch"
+  | "lead"
+  | "operations";
+
+export type OperationalSignal = {
+  id: string;
+  category: OperationalSignalCategory;
+  severity: OperationalSignalSeverity;
+  count: number;
+  priorityScore: number;
+};
+
+export function buildOperationalSignals(
+  dashboardData: DashboardData,
+): OperationalSignal[] {
+  const signals: OperationalSignal[] = [];
+
+  // overdue invoices
+  if (dashboardData.money.overdueCount > 0) {
+    signals.push({
+      id: "overdue_invoices",
+      category: "billing",
+      severity:
+        dashboardData.money.overdueCount >= 5
+          ? "critical"
+          : "warning",
+      count: dashboardData.money.overdueCount,
+      priorityScore: 100,
+    });
+  }
+
+  // ready to invoice
+  if (dashboardData.operations.completedAwaitingInvoicing > 0) {
+    signals.push({
+      id: "ready_to_invoice",
+      category: "billing",
+      severity:
+        dashboardData.operations.completedAwaitingInvoicing >= 5
+          ? "critical"
+          : "warning",
+      count: dashboardData.operations.completedAwaitingInvoicing,
+      priorityScore: 90,
+    });
+  }
+
+  // unassigned jobs
+  if (dashboardData.operations.unassignedToday > 0) {
+    signals.push({
+      id: "unassigned_jobs",
+      category: "dispatch",
+      severity:
+        dashboardData.operations.unassignedToday >= 3
+          ? "critical"
+          : "warning",
+      count: dashboardData.operations.unassignedToday,
+      priorityScore: 85,
+    });
+  }
+
+  return signals;
+}
