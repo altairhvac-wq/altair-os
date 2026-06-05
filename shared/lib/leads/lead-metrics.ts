@@ -1,3 +1,5 @@
+import { getCompanyTimeZone } from "@/shared/lib/datetime";
+import { isLeadFollowUpDue } from "@/shared/lib/leads/lead-status";
 import {
   formatLeadSource,
   isLeadClosed,
@@ -22,6 +24,7 @@ export type LeadPipelineMetrics = {
   wonLeads: number;
   lostLeads: number;
   openLeads: number;
+  followUpsDue: number;
   conversionRate: number | null;
   sourcePerformance: LeadSourcePerformance[];
   topSourceInsight: string | null;
@@ -32,6 +35,7 @@ export const EMPTY_LEAD_PIPELINE_METRICS: LeadPipelineMetrics = {
   wonLeads: 0,
   lostLeads: 0,
   openLeads: 0,
+  followUpsDue: 0,
   conversionRate: null,
   sourcePerformance: [],
   topSourceInsight: null,
@@ -116,10 +120,23 @@ function buildTopSourceInsight(
   return `${formatLeadSource(best.source)} leads converted best this period.`;
 }
 
+function countFollowUpsDue(leads: Lead[], timeZone: string): number {
+  return leads.filter((lead) => {
+    if (lead.deletedAt || lead.archivedAt) {
+      return false;
+    }
+
+    return isLeadFollowUpDue(lead, undefined, timeZone);
+  }).length;
+}
+
 export function buildLeadPipelineMetrics(
   leads: Lead[],
   dateBounds?: ProfitabilityReportDateBounds,
+  timeZone: string = getCompanyTimeZone(),
 ): LeadPipelineMetrics {
+  const followUpsDue = countFollowUpsDue(leads, timeZone);
+
   const activeLeads = leads.filter((lead) => {
     if (lead.deletedAt || lead.archivedAt) {
       return false;
@@ -180,6 +197,7 @@ export function buildLeadPipelineMetrics(
     wonLeads,
     lostLeads,
     openLeads: activeLeads.length - closedLeads,
+    followUpsDue,
     conversionRate: toCloseRate(wonLeads, activeLeads.length),
     sourcePerformance,
     topSourceInsight: buildTopSourceInsight(sourcePerformance),

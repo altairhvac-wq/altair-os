@@ -2,7 +2,9 @@ import "server-only";
 
 import { trimAiText } from "@/lib/ai/limits";
 import type { GenerateDraftTextRequest } from "@/lib/ai/types";
+import { formatPercent } from "@/shared/types/analytics";
 import { formatCurrency } from "@/shared/types/customer";
+import { formatLeadSource } from "@/shared/types/lead";
 import type { ReportsPageData } from "@/shared/types/reports-page";
 
 export const BUSINESS_SUMMARY_AI_FEATURE = "business-summary";
@@ -11,7 +13,7 @@ const BUSINESS_SUMMARY_PROMPT = `You write a plain-English business review for a
 
 Output requirements:
 - Start with 3 to 5 bullet points using the bullet character (•)
-- Each bullet should be one concise sentence about revenue, cash flow, sales conversion, or operational health
+- Each bullet should be one concise sentence about revenue, cash flow, sales conversion, lead pipeline health, or operational health
 - After the bullets, add a blank line, then one line prefixed exactly with "Recommended next action:"
 - Professional, calm, owner-friendly tone — not alarmist unless data clearly warrants it
 
@@ -51,6 +53,39 @@ function formatTechnicianSummary(reports: ReportsPageData): string {
     .join("; ");
 }
 
+function formatConversionRate(value: number | null): string {
+  if (value == null) {
+    return "n/a";
+  }
+
+  return formatPercent(value, 1);
+}
+
+function formatLeadPipelineSummary(reports: ReportsPageData): string | null {
+  if (!reports.showLeadPipeline) {
+    return null;
+  }
+
+  const pipeline = reports.leadPipeline;
+  const lines = [
+    `Lead pipeline — Total: ${pipeline.totalLeads}; Won: ${pipeline.wonLeads}; Lost: ${pipeline.lostLeads}; Open: ${pipeline.openLeads}; Conversion rate: ${formatConversionRate(pipeline.conversionRate)}`,
+    `Follow-ups due: ${pipeline.followUpsDue}`,
+  ];
+
+  if (pipeline.topSourceInsight) {
+    lines.push(pipeline.topSourceInsight);
+  }
+
+  const topSource = pipeline.sourcePerformance[0];
+  if (topSource) {
+    lines.push(
+      `Top lead source — ${formatLeadSource(topSource.source)}: ${topSource.total} leads, ${topSource.won} won, ${formatConversionRate(topSource.conversionRate)} close rate`,
+    );
+  }
+
+  return lines.join("\n");
+}
+
 export function prepareBusinessSummaryDraft(
   input: BusinessSummaryDraftInput,
 ): GenerateDraftTextRequest {
@@ -60,6 +95,7 @@ export function prepareBusinessSummaryDraft(
     .join("\n");
 
   const cash = reports.cashHealth;
+  const leadPipelineSummary = formatLeadPipelineSummary(reports);
   const context = trimAiText(
     [
       `Reporting period: ${reports.dateBounds.startDate} to ${reports.dateBounds.endDate}`,
@@ -70,6 +106,7 @@ export function prepareBusinessSummaryDraft(
       `Cash health — Paid: ${formatCurrency(cash.paid)}; Outstanding: ${formatCurrency(cash.outstanding)}; Overdue: ${formatCurrency(cash.overdue)}; Collection rate: ${cash.collectionRateLabel}`,
       `Sales funnel — ${formatFunnelSummary(reports)}`,
       formatTechnicianSummary(reports),
+      ...(leadPipelineSummary ? ["", leadPipelineSummary] : []),
       "",
       `Accountant snapshot — Collected: ${formatCurrency(reports.accountantSummary.totalPaymentsCollected)}; Expenses: ${formatCurrency(reports.accountantSummary.expensesRecorded)}; Net estimate: ${formatCurrency(reports.accountantSummary.netIncomeEstimate)}`,
     ].join("\n"),

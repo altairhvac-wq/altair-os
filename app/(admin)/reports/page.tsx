@@ -41,6 +41,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     {
       showTechnicianPerformance: canViewTechnicianRoster(companyContext),
       showLeadPipeline: access.canManageCustomers,
+      timeZone: companyContext.company.timezone,
     },
   );
 

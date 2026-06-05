@@ -854,6 +854,7 @@ export function buildReportsPageData(input: {
   datasets: ReportRawDatasets;
   showTechnicianProfitability: boolean;
   showLeadPipeline?: boolean;
+  timeZone?: string;
 }): ReportsPageData {
   const dateBounds =
     resolveReportDateBounds(input.dateRange) ??
@@ -871,6 +872,7 @@ export function buildReportsPageData(input: {
   if (input.showLeadPipeline) {
     limitations.push(
       "Lead pipeline counts leads created in the selected period; won and lost reflect each lead's current status.",
+      "Follow-ups due counts open leads with a follow-up date on or before today.",
     );
   }
 
@@ -908,7 +910,11 @@ export function buildReportsPageData(input: {
       input.datasets,
     ),
     leadPipeline: input.showLeadPipeline
-      ? buildLeadPipelineMetrics(input.datasets.leads, dateBounds)
+      ? buildLeadPipelineMetrics(
+          input.datasets.leads,
+          dateBounds,
+          input.timeZone,
+        )
       : EMPTY_LEAD_PIPELINE_METRICS,
     showLeadPipeline: input.showLeadPipeline ?? false,
     limitations,

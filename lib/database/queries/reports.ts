@@ -87,6 +87,7 @@ export async function getReportsPageData(
   options: {
     showTechnicianPerformance?: boolean;
     showLeadPipeline?: boolean;
+    timeZone?: string;
   } = {},
 ): Promise<ReportsPageData> {
   const showLeadPipeline = options.showLeadPipeline ?? false;
@@ -109,6 +110,7 @@ export async function getReportsPageData(
     dateRange,
     showTechnicianProfitability: options.showTechnicianPerformance ?? true,
     showLeadPipeline,
+    timeZone: options.timeZone,
     datasets: {
       invoices,
       payments,

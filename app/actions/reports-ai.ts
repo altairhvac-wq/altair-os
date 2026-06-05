@@ -12,7 +12,7 @@ import {
 } from "@/lib/ai/business-summary";
 import { checkAiRateLimit } from "@/lib/ai/guardrails";
 import { generateDraftText } from "@/lib/ai/provider";
-import { canViewOperationalReports } from "@/lib/database/access-control";
+import { canViewOperationalReports, getCompanyAccessScope } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import { getReportsPageData } from "@/lib/database/queries/reports";
@@ -55,11 +55,17 @@ export async function generateBusinessSummaryAction(
     return { error: mapAiErrorToMessage(rateLimit.code) };
   }
 
+  const access = getCompanyAccessScope(context);
+
   const reports = await getReportsPageData(
     context.company.id,
     context.company.name,
     dateRange,
-    { showTechnicianPerformance: true },
+    {
+      showTechnicianPerformance: true,
+      showLeadPipeline: access.canManageCustomers,
+      timeZone: context.company.timezone,
+    },
   );
 
   const draftRequest = prepareBusinessSummaryDraft({ reports });
