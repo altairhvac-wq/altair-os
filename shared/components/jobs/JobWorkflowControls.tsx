@@ -248,6 +248,7 @@ export function JobWorkflowControls({
         canUpdateStatus={canUpdateStatus}
         layout={layout === "stack" ? "block" : "inline"}
         fieldStyled={fieldActionFirst && isCompact}
+        competingSheetActive={competingSheetActive}
         onStatusUpdated={handleStatusUpdated}
       />
     );

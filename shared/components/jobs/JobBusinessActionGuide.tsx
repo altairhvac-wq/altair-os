@@ -69,6 +69,20 @@ function secondaryLinkClassName(compact: boolean): string {
     : "inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60";
 }
 
+function withDisabledLinkClass(className: string, disabled: boolean): string {
+  return disabled
+    ? `${className} pointer-events-none cursor-not-allowed opacity-60`
+    : className;
+}
+
+function preventLinkWhenDisabled(disabled: boolean) {
+  return disabled
+    ? (event: React.MouseEvent<HTMLAnchorElement>) => {
+        event.preventDefault();
+      }
+    : undefined;
+}
+
 export function JobBusinessActionGuide({
   action,
   layout = "default",
@@ -104,8 +118,13 @@ export function JobBusinessActionGuide({
         {action.secondary ? (
           <Link
             href={action.secondary.href}
-            className={secondaryLinkClassName(compact)}
-            aria-disabled={disabled}
+            className={withDisabledLinkClass(
+              secondaryLinkClassName(compact),
+              disabled,
+            )}
+            aria-disabled={disabled || undefined}
+            tabIndex={disabled ? -1 : undefined}
+            onClick={preventLinkWhenDisabled(disabled)}
           >
             {action.secondary.label}
           </Link>
@@ -145,8 +164,13 @@ export function JobBusinessActionGuide({
       ) : action.href ? (
         <Link
           href={action.href}
-          className={ctaClassName(compact, action.emphasize)}
-          aria-disabled={disabled}
+          className={withDisabledLinkClass(
+            ctaClassName(compact, action.emphasize),
+            disabled,
+          )}
+          aria-disabled={disabled || undefined}
+          tabIndex={disabled ? -1 : undefined}
+          onClick={preventLinkWhenDisabled(disabled)}
         >
           <span className="inline-flex items-center gap-1.5">
             {ctaLabel}
@@ -160,8 +184,13 @@ export function JobBusinessActionGuide({
       {action.secondary ? (
         <Link
           href={action.secondary.href}
-          className={secondaryLinkClassName(compact)}
-          aria-disabled={disabled}
+          className={withDisabledLinkClass(
+            secondaryLinkClassName(compact),
+            disabled,
+          )}
+          aria-disabled={disabled || undefined}
+          tabIndex={disabled ? -1 : undefined}
+          onClick={preventLinkWhenDisabled(disabled)}
         >
           {action.secondary.label}
         </Link>

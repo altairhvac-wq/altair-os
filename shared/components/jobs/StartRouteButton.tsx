@@ -23,6 +23,7 @@ type StartRouteButtonProps = {
   layout?: "inline" | "block";
   /** Use technician field tokens in block layout (mobile job detail). */
   fieldStyled?: boolean;
+  competingSheetActive?: boolean;
   onStatusUpdated?: (status: JobStatus) => void;
 };
 
@@ -38,6 +39,7 @@ export function StartRouteButton({
   canUpdateStatus = false,
   layout = "inline",
   fieldStyled = false,
+  competingSheetActive = false,
   onStatusUpdated,
 }: StartRouteButtonProps) {
   const router = useRouter();
@@ -70,8 +72,10 @@ export function StartRouteButton({
       ? "Updating..."
       : "Start Route";
 
+  const routeDisabled = isPending || competingSheetActive;
+
   function handleStartRoute(event: React.MouseEvent<HTMLAnchorElement>) {
-    if (isPending) {
+    if (routeDisabled) {
       event.preventDefault();
       return;
     }
@@ -109,7 +113,7 @@ export function StartRouteButton({
 
   const showEnRouteHint = isEnRoute && !fieldStyled && layout !== "block";
   const showScheduledHint =
-    fieldStyled && status === "scheduled" && !isPending;
+    fieldStyled && status === "scheduled" && !routeDisabled;
 
   return (
     <div className={layout === "block" ? "space-y-2" : "space-y-2"}>
@@ -118,11 +122,11 @@ export function StartRouteButton({
         target="_blank"
         rel="noopener noreferrer"
         onClick={handleStartRoute}
-        aria-disabled={isPending || undefined}
-        tabIndex={isPending ? -1 : undefined}
+        aria-disabled={routeDisabled || undefined}
+        tabIndex={routeDisabled ? -1 : undefined}
         className={
-          isPending
-            ? `${linkClassName} pointer-events-none opacity-60`
+          routeDisabled
+            ? `${linkClassName} pointer-events-none cursor-not-allowed opacity-60`
             : linkClassName
         }
       >
