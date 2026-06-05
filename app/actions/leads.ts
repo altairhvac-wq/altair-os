@@ -6,6 +6,7 @@ import {
   createCustomer,
   findCustomerByContact,
   getCustomerById,
+  promoteLegacyLeadCustomerStatus,
   updateCustomer,
 } from "@/lib/database/queries/customers";
 import {
@@ -351,6 +352,11 @@ async function ensureLinkedCustomerIsActive(
   companyId: string,
   customerId: string,
 ): Promise<{ error?: string }> {
+  const promoted = await promoteLegacyLeadCustomerStatus(companyId, customerId);
+  if (promoted.error) {
+    return { error: promoted.error };
+  }
+
   const customer = await getCustomerById(companyId, customerId);
   if (!customer || customer.status === "active") {
     return {};
@@ -501,6 +507,17 @@ export async function convertLeadToCustomerAction(
   }
 
   if (existing.status === "won") {
+    if (existing.convertedCustomerId) {
+      const ensured = await ensureLinkedCustomerIsActive(
+        permission.context.company.id,
+        existing.convertedCustomerId,
+      );
+
+      if (ensured.error) {
+        return { error: ensured.error };
+      }
+    }
+
     return {
       lead: existing,
       customerId: existing.convertedCustomerId,

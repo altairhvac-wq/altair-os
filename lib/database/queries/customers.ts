@@ -254,6 +254,32 @@ export async function findCustomerByContact(
   return { customer: null };
 }
 
+export async function promoteLegacyLeadCustomerStatus(
+  companyId: string,
+  customerId: string,
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("customers")
+    .update({ status: "active" })
+    .eq("company_id", companyId)
+    .eq("id", customerId)
+    .eq("status", "lead");
+
+  if (error) {
+    console.error("[promoteLegacyLeadCustomerStatus] update failed:", {
+      companyId,
+      customerId,
+      code: error.code,
+      message: error.message,
+    });
+    return { error: mapDatabaseError(error) };
+  }
+
+  return { error: null };
+}
+
 export async function createCustomer(
   companyId: string,
   data: CustomerFormData,

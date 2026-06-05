@@ -447,6 +447,7 @@ export async function seedCompanyDemoData(
 
   const serviceItemIds: Record<string, string> = {};
   const customerIds: Record<string, string> = {};
+  const leadIds: Record<string, string> = {};
   const jobIds: Record<string, string> = {};
 
   try {
@@ -527,6 +528,52 @@ export async function seedCompanyDemoData(
 
       if (result.error || !result.id) {
         throw new Error(result.error ?? "Failed to seed leads.");
+      }
+
+      leadIds[lead.key] = result.id;
+    }
+
+    for (const lead of DEMO_LEADS) {
+      const leadId = leadIds[lead.key];
+      if (!leadId) {
+        continue;
+      }
+
+      const createdAt = addDays(seedContext.now, -lead.createdDaysAgo).toISOString();
+      const leadName = `${lead.firstName} ${lead.lastName}`.trim();
+
+      await insertRow("seed_lead_activities", companyId, "lead_activities", {
+        company_id: companyId,
+        lead_id: leadId,
+        activity_type: "lead_created",
+        created_by: seedContext.actorId,
+        created_at: createdAt,
+        metadata: { actorName: leadName },
+      });
+
+      if (lead.status === "estimate_sent") {
+        await insertRow("seed_lead_activities", companyId, "lead_activities", {
+          company_id: companyId,
+          lead_id: leadId,
+          activity_type: "status_changed",
+          created_by: seedContext.actorId,
+          created_at: addDays(seedContext.now, -Math.max(lead.createdDaysAgo - 2, 0)).toISOString(),
+          metadata: {
+            previousStatus: "new",
+            nextStatus: "estimate_sent",
+          },
+        });
+      }
+
+      if (lead.status === "lost") {
+        await insertRow("seed_lead_activities", companyId, "lead_activities", {
+          company_id: companyId,
+          lead_id: leadId,
+          activity_type: "lost",
+          created_by: seedContext.actorId,
+          created_at: createdAt,
+          metadata: lead.lostReason ? { lostReason: lead.lostReason } : {},
+        });
       }
     }
 
