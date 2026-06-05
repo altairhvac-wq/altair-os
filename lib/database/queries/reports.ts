@@ -1,3 +1,6 @@
+import { listExpenses } from "@/lib/database/queries/expenses";
+import { listInvoicePayments } from "@/lib/database/queries/invoice-payments";
+import { listInvoices } from "@/lib/database/queries/invoices";
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
 import { listEstimates } from "@/lib/database/queries/estimates";
 import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
@@ -7,7 +10,13 @@ import {
   listTodayTimeEntriesForCompany,
 } from "@/lib/database/queries/time-entries";
 import { listTimeClockEntries } from "@/lib/database/queries/time-clock";
+import { getCompanyReportChartSeries } from "@/lib/database/services/reports/report-chart-series";
 import { getCompanyOperationalInconsistenciesReport } from "@/lib/database/services/reports/operational-inconsistencies-report";
+import { buildReportsPageData } from "@/shared/lib/reports/report-metrics";
+import type {
+  ReportsPageData,
+  ReportsPageDateRange,
+} from "@/shared/types/reports-page";
 import { getDailyOperationsSummary } from "@/lib/database/services/operations/daily-operations-summary";
 import { getTodayOperationsSummary } from "@/shared/types/dashboard";
 import type { JobStatus } from "@/shared/types/job";
@@ -31,6 +40,37 @@ const CLOSED_JOB_STATUSES: ReadonlySet<JobStatus> = new Set([
 
 const RECENT_TIME_CLOCK_LIMIT = 10;
 const TIME_CLOCK_FETCH_LIMIT = 100;
+
+export async function getReportsPageData(
+  companyId: string,
+  companyName: string,
+  dateRange: ReportsPageDateRange,
+  options: { showTechnicianPerformance?: boolean } = {},
+): Promise<ReportsPageData> {
+  const [invoices, payments, estimates, jobs, expenses, chartSeries] =
+    await Promise.all([
+      listInvoices(companyId),
+      listInvoicePayments(companyId),
+      listEstimates(companyId),
+      listJobs(companyId),
+      listExpenses(companyId),
+      getCompanyReportChartSeries(companyId, { dateRange }),
+    ]);
+
+  return buildReportsPageData({
+    companyName,
+    dateRange,
+    showTechnicianPerformance: options.showTechnicianPerformance ?? true,
+    datasets: {
+      invoices,
+      payments,
+      estimates,
+      jobs,
+      expenses,
+      chartSeries,
+    },
+  });
+}
 
 export async function getReportsFoundationData(
   companyId: string,

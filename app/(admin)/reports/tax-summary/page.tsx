@@ -1,20 +1,17 @@
 import { redirect } from "next/navigation";
-import {
-  canViewOperationalReports,
-  canViewTechnicianRoster,
-} from "@/lib/database/access-control";
+import { canViewOperationalReports } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getReportsPageData } from "@/lib/database/queries/reports";
-import { isAiFeaturesEnabled } from "@/lib/ai/env";
-import { ReportsPageView } from "@/shared/components/reports/ReportsPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
+import { TaxSummaryActions } from "@/shared/components/reports/TaxSummaryActions";
+import { TaxSummaryPageView } from "@/shared/components/reports/TaxSummaryPageView";
 import { parseReportsPageDateRange } from "@/shared/types/reports-page";
 
-type ReportsPageProps = {
+type TaxSummaryPageProps = {
   searchParams: Promise<{ range?: string }>;
 };
 
-export default async function ReportsPage({ searchParams }: ReportsPageProps) {
+export default async function TaxSummaryPage({ searchParams }: TaxSummaryPageProps) {
   const companyContext = await getActiveCompanyContext();
 
   if (!companyContext) {
@@ -23,7 +20,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
 
   if (!canViewOperationalReports(companyContext)) {
     return (
-      <UnauthorizedAccessView description="Reports are limited to office, dispatch, and billing roles." />
+      <UnauthorizedAccessView description="Accountant summaries are limited to office, dispatch, and billing roles." />
     );
   }
 
@@ -35,14 +32,17 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     companyContext.company.name,
     dateRange,
     {
-      showTechnicianPerformance: canViewTechnicianRoster(companyContext),
+      showTechnicianPerformance: false,
     },
   );
 
   return (
-    <ReportsPageView
-      data={data}
-      aiFeaturesEnabled={isAiFeaturesEnabled()}
-    />
+    <div className="min-h-screen bg-slate-100">
+      <TaxSummaryActions dateRange={dateRange} />
+      <TaxSummaryPageView
+        summary={data.accountantSummary}
+        generatedAt={new Date().toISOString()}
+      />
+    </div>
   );
 }
