@@ -30,6 +30,15 @@ export const COMPLETION_NOTES_MAX_CHARS = 2_500;
 /** Max characters for the full completion-notes AI context payload. */
 export const COMPLETION_NOTES_CONTEXT_MAX_CHARS = 3_000;
 
+/** Recent activities included in lead follow-up context. */
+export const LEAD_FOLLOW_UP_ACTIVITY_LIMIT = 5;
+
+/** Max characters per long text field in lead follow-up context. */
+export const LEAD_FOLLOW_UP_FIELD_MAX_CHARS = 1_500;
+
+/** Max characters for the full lead follow-up AI context payload. */
+export const LEAD_FOLLOW_UP_CONTEXT_MAX_CHARS = 4_000;
+
 const TRUNCATION_SUFFIX = "…";
 
 /**

@@ -4,6 +4,7 @@ import type { AiFeatureName, GenerateDraftTextErrorCode } from "@/lib/ai/types";
 import { COMPLETION_NOTES_AI_FEATURE } from "@/lib/ai/completion-notes";
 import { INVOICE_MESSAGE_AI_FEATURE } from "@/lib/ai/invoice-message";
 import { JOB_SUMMARY_AI_FEATURE } from "@/lib/ai/job-summary";
+import { LEAD_FOLLOW_UP_AI_FEATURE } from "@/lib/ai/lead-follow-up";
 
 export type AiUserErrorCode =
   | GenerateDraftTextErrorCode
@@ -38,6 +39,8 @@ const FEATURE_PROVIDER_ERROR: Partial<Record<AiFeatureName, string>> = {
     "Could not draft the invoice message. Try again.",
   [COMPLETION_NOTES_AI_FEATURE]:
     "Could not polish the completion notes. Try again.",
+  [LEAD_FOLLOW_UP_AI_FEATURE]:
+    "Could not generate a follow-up right now. Try again in a moment.",
 };
 
 /**
