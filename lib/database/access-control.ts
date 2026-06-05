@@ -484,6 +484,15 @@ export function canAccessAppRedirectPath(
     return canViewCompanyTimeEntries(context);
   }
 
+  if (path.startsWith("/team/")) {
+    const permissions = context.permissions;
+    return (
+      permissions.manageUsers ||
+      permissions.manageCustomers ||
+      permissions.dispatchJobs
+    );
+  }
+
   if (path.startsWith("/settings")) {
     if (
       path === "/settings/system-check" ||

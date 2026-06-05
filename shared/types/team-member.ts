@@ -110,7 +110,12 @@ export function mapMembershipToTeamMember(
     | "reports_to_member_id"
     | "technician_specialties"
   > & {
-    profile: MembershipWithProfile["profile"] | null;
+    profile:
+      | Pick<
+          MembershipWithProfile["profile"],
+          "email" | "full_name"
+        >
+      | null;
     invite_email?: string | null;
   },
 ): TeamMember | null {

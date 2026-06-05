@@ -74,6 +74,10 @@ export type CompanyMembershipRow = {
   reports_to_member_id: UUID | null;
   technician_specialties: string[];
   labor_cost_rate_cents: number | null;
+  member_notes: string | null;
+  available_for_dispatch: boolean;
+  emergency_on_call: boolean;
+  certifications: string[];
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -100,13 +104,25 @@ export type ProfileInsert = {
 
 export type CompanyMembershipInsert = Omit<
   CompanyMembershipRow,
-  "id" | "created_at" | "updated_at" | "technician_specialties" | "labor_cost_rate_cents"
+  | "id"
+  | "created_at"
+  | "updated_at"
+  | "technician_specialties"
+  | "labor_cost_rate_cents"
+  | "member_notes"
+  | "available_for_dispatch"
+  | "emergency_on_call"
+  | "certifications"
 > & {
   id?: UUID;
   created_at?: Timestamp;
   updated_at?: Timestamp;
   technician_specialties?: string[];
   labor_cost_rate_cents?: number | null;
+  member_notes?: string | null;
+  available_for_dispatch?: boolean;
+  emergency_on_call?: boolean;
+  certifications?: string[];
 };
 
 export type CompanyUpdate = Partial<

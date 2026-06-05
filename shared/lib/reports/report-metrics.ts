@@ -901,3 +901,98 @@ export function buildReportsPageData(input: {
     limitations,
   };
 }
+
+export type MemberWorkSummary = {
+  jobsCompleted: number;
+  revenue: number;
+  laborHours: number;
+  laborCost: number | null;
+  grossProfit: number | null;
+  margin: number | null;
+  profitAvailable: boolean;
+};
+
+export function buildMemberWorkSummary(
+  technicianId: string,
+  datasets: Pick<
+    ReportRawDatasets,
+    "jobs" | "payments" | "invoices" | "laborEntries" | "laborCostRates"
+  >,
+  dateBounds: ProfitabilityReportDateBounds,
+): MemberWorkSummary {
+  const { jobs, payments, invoices, laborEntries, laborCostRates } = datasets;
+  const invoiceById = new Map(invoices.map((invoice) => [invoice.id, invoice]));
+
+  let jobsCompleted = 0;
+  let revenue = 0;
+  let laborHours = 0;
+
+  for (const job of jobs) {
+    if (
+      job.assignedTechnicianId !== technicianId ||
+      !jobCompletedInBounds(job, dateBounds)
+    ) {
+      continue;
+    }
+
+    jobsCompleted += 1;
+  }
+
+  for (const payment of paymentsInBounds(payments, dateBounds)) {
+    const invoice = invoiceById.get(payment.invoiceId);
+    if (!invoice?.jobId) {
+      continue;
+    }
+
+    const job = jobs.find((item) => item.id === invoice.jobId);
+    if (job?.assignedTechnicianId !== technicianId) {
+      continue;
+    }
+
+    revenue = roundCurrency(revenue + payment.amount);
+  }
+
+  for (const entry of laborEntries) {
+    if (entry.technicianId !== technicianId) {
+      continue;
+    }
+
+    if (!isDateWithinReportBounds(entry.startedAt, dateBounds)) {
+      continue;
+    }
+
+    const minutes = resolveClosedJobLaborMinutes(entry);
+    if (minutes == null) {
+      continue;
+    }
+
+    laborHours = roundJobMaterialAmount(laborHours + minutes / 60);
+  }
+
+  const hourlyRate = laborCostRates.get(technicianId);
+  const profitAvailable = hourlyRate != null && hourlyRate >= 0;
+  const laborCost =
+    profitAvailable && laborHours > 0
+      ? roundCurrency(laborHours * hourlyRate!)
+      : profitAvailable
+        ? 0
+        : null;
+  const grossProfit =
+    profitAvailable && laborCost != null
+      ? roundCurrency(revenue - laborCost)
+      : null;
+  const margin =
+    profitAvailable && grossProfit != null && revenue > 0
+      ? Math.round((grossProfit / revenue) * 1000) / 10
+      : null;
+
+  return {
+    jobsCompleted,
+    revenue,
+    laborHours,
+    laborCost,
+    grossProfit,
+    margin,
+    profitAvailable,
+  };
+}
