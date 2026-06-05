@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, Settings2 } from "lucide-react";
+import { ChevronDown, Wrench } from "lucide-react";
 import { listCustomerEquipmentAction } from "@/app/actions/customer-equipment";
 import { CustomerEquipmentForm } from "@/shared/components/equipment/CustomerEquipmentForm";
+import {
+  technicianFieldCloseoutInputClass,
+  technicianFieldJobDetailsClass,
+  technicianFieldJobDetailsSummaryClass,
+} from "@/shared/components/technician/technician-field-styles";
 import {
   EMPTY_CUSTOMER_EQUIPMENT_FORM,
   mapCustomerEquipmentToFormData,
@@ -22,6 +27,9 @@ type CompleteJobEquipmentPanelProps = {
   value: CompleteJobEquipmentPayload;
   onChange: (value: CompleteJobEquipmentPayload) => void;
 };
+
+const detailsClass = technicianFieldJobDetailsClass;
+const summaryClass = `${technicianFieldJobDetailsSummaryClass} justify-between`;
 
 export function CompleteJobEquipmentPanel({
   customerId,
@@ -66,8 +74,7 @@ export function CompleteJobEquipmentPanel({
     };
   }, [customerId, expanded]);
 
-  function handleExpand() {
-    const nextExpanded = !expanded;
+  function handleExpand(nextExpanded: boolean) {
     setExpanded(nextExpanded);
 
     if (!nextExpanded) {
@@ -117,24 +124,28 @@ export function CompleteJobEquipmentPanel({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white">
-      <button
-        type="button"
-        onClick={handleExpand}
-        className="flex w-full items-center justify-between gap-3 px-3.5 py-3 text-left"
-      >
-        <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-          <Settings2 className="h-4 w-4 text-violet-600" />
+    <details
+      className={detailsClass}
+      open={expanded}
+      onToggle={(event) => {
+        handleExpand((event.currentTarget as HTMLDetailsElement).open);
+      }}
+    >
+      <summary className={summaryClass}>
+        <span className="inline-flex items-center gap-1.5">
+          <Wrench className="h-3.5 w-3.5 text-slate-400" aria-hidden />
           Equipment
-          <span className="font-normal text-slate-400">(optional)</span>
         </span>
         <ChevronDown
-          className={`h-4 w-4 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${
+            expanded ? "rotate-180" : ""
+          }`}
+          aria-hidden
         />
-      </button>
+      </summary>
 
       {expanded ? (
-        <div className="space-y-4 border-t border-slate-200 px-3.5 py-3.5">
+        <div className="space-y-4 px-3 pb-3 pt-1">
           {loadError ? (
             <p className="text-sm text-red-600">{loadError}</p>
           ) : null}
@@ -143,10 +154,10 @@ export function CompleteJobEquipmentPanel({
             <button
               type="button"
               onClick={() => handleModeChange("create")}
-              className={`min-h-11 rounded-lg px-4 py-2.5 text-xs font-semibold transition-colors sm:px-3 sm:py-1.5 ${
+              className={`min-h-11 touch-manipulation rounded-xl px-4 py-2.5 text-xs font-semibold transition-colors ${
                 value.mode === "create"
-                  ? "bg-violet-600 text-white"
-                  : "bg-white text-slate-700 ring-1 ring-slate-200"
+                  ? "bg-violet-600 text-white shadow-sm"
+                  : "bg-white/80 text-slate-700 hover:bg-white"
               }`}
             >
               Add new
@@ -154,10 +165,10 @@ export function CompleteJobEquipmentPanel({
             <button
               type="button"
               onClick={() => handleModeChange("update")}
-              className={`min-h-11 rounded-lg px-4 py-2.5 text-xs font-semibold transition-colors sm:px-3 sm:py-1.5 ${
+              className={`min-h-11 touch-manipulation rounded-xl px-4 py-2.5 text-xs font-semibold transition-colors ${
                 value.mode === "update"
-                  ? "bg-violet-600 text-white"
-                  : "bg-white text-slate-700 ring-1 ring-slate-200"
+                  ? "bg-violet-600 text-white shadow-sm"
+                  : "bg-white/80 text-slate-700 hover:bg-white"
               }`}
             >
               Update existing
@@ -173,7 +184,7 @@ export function CompleteJobEquipmentPanel({
                 id="complete-job-equipment-select"
                 value={selectedEquipmentId}
                 onChange={(event) => handleEquipmentSelect(event.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+                className={technicianFieldCloseoutInputClass}
               >
                 <option value="">
                   {loading ? "Loading equipment..." : "Choose equipment to update"}
@@ -199,7 +210,7 @@ export function CompleteJobEquipmentPanel({
           ) : null}
         </div>
       ) : null}
-    </div>
+    </details>
   );
 }
 

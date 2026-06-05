@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ChevronDown, StickyNote } from "lucide-react";
 import {
   createCustomerEquipmentAction,
   updateCustomerEquipmentAction,
@@ -18,6 +18,17 @@ import {
 import { validateCustomerEquipmentFormData } from "@/shared/types/customer-equipment";
 import { CompletionNotesAiAssistant } from "@/shared/components/jobs/CompletionNotesAiAssistant";
 import { CompleteJobPhotosPanel } from "@/shared/components/jobs/CompleteJobPhotosPanel";
+import {
+  technicianFieldCloseoutCancelActionClass,
+  technicianFieldCloseoutCompleteActionClass,
+  technicianFieldCloseoutInputClass,
+  technicianFieldCloseoutLabelClass,
+  technicianFieldCloseoutPrimaryCardClass,
+  technicianFieldJobDetailsClass,
+  technicianFieldJobDetailsSummaryClass,
+  technicianFieldSectionLabelClass,
+  technicianFieldWorkflowHintClass,
+} from "@/shared/components/technician/technician-field-styles";
 import {
   MobileSheet,
   MobileSheetBody,
@@ -43,10 +54,8 @@ type CompleteJobSheetProps = {
 
 const TITLE_ID = "complete-job-sheet-title";
 
-const inputClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500";
-
-const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600";
+const optionalDetailsClass = technicianFieldJobDetailsClass;
+const optionalSummaryClass = `${technicianFieldJobDetailsSummaryClass} justify-between`;
 
 function formatRetryError(message: string) {
   return `${message} Your entries are saved below — review and tap Complete work to try again.`;
@@ -73,6 +82,7 @@ export function CompleteJobSheet({
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
   const [completionNotes, setCompletionNotes] = useState("");
   const [followUpNotes, setFollowUpNotes] = useState("");
+  const [followUpOpen, setFollowUpOpen] = useState(false);
   const [equipmentPayload, setEquipmentPayload] =
     useState<CompleteJobEquipmentPayload>(EMPTY_COMPLETE_JOB_EQUIPMENT_PAYLOAD);
 
@@ -213,7 +223,7 @@ export function CompleteJobSheet({
         <MobileSheetHeader
           titleId={TITLE_ID}
           title="Complete work"
-          subtitle="Submitting marks this job finished for dispatch. The office still reviews billing, labor, and any follow-up notes."
+          subtitle="Tell us what you did, then submit when ready."
           onClose={handleClose}
           closeDisabled={closeDisabled}
           icon={
@@ -230,10 +240,10 @@ export function CompleteJobSheet({
           />
         ) : (
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-            <MobileSheetBody className="space-y-4">
+            <MobileSheetBody className="space-y-5 pb-2">
               {isPending ? (
                 <p
-                  className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm font-medium text-emerald-800"
+                  className="rounded-xl bg-emerald-50/80 px-3.5 py-3 text-sm font-medium text-emerald-800"
                   role="status"
                   aria-live="polite"
                 >
@@ -241,90 +251,124 @@ export function CompleteJobSheet({
                   finishes.
                 </p>
               ) : (
-                <p className="text-xs leading-relaxed text-slate-500">
-                  Add notes and optional photos, then submit once. If submission
-                  fails, your entries stay here so you can retry.
+                <p className={technicianFieldWorkflowHintClass}>
+                  Start with what you did on site. Photos, equipment, and
+                  follow-up notes are optional.
                 </p>
               )}
 
-              <fieldset disabled={formDisabled} className="space-y-4">
-                <div>
-                  <label htmlFor="completion-notes" className={labelClass}>
-                    Completion notes
-                  </label>
-                  <textarea
-                    id="completion-notes"
-                    rows={4}
-                    value={completionNotes}
-                    onChange={(event) => setCompletionNotes(event.target.value)}
-                    placeholder="What was done on site?"
-                    className={inputClass}
-                  />
-                  <CompletionNotesAiAssistant
-                    jobId={jobId}
-                    notes={completionNotes}
-                    onNotesChange={setCompletionNotes}
-                    followUpNotes={followUpNotes}
-                    aiFeaturesEnabled={aiFeaturesEnabled}
-                    disabled={formDisabled}
-                  />
-                </div>
+              <fieldset disabled={formDisabled} className="space-y-5">
+                <section>
+                  <h3 className={technicianFieldSectionLabelClass}>
+                    What you did
+                  </h3>
+                  <div className={`${technicianFieldCloseoutPrimaryCardClass} mt-2 space-y-3`}>
+                    <div>
+                      <label htmlFor="completion-notes" className={technicianFieldCloseoutLabelClass}>
+                        Completion notes
+                      </label>
+                      <textarea
+                        id="completion-notes"
+                        rows={4}
+                        value={completionNotes}
+                        onChange={(event) => setCompletionNotes(event.target.value)}
+                        placeholder="What was done on site?"
+                        className={technicianFieldCloseoutInputClass}
+                      />
+                      <CompletionNotesAiAssistant
+                        jobId={jobId}
+                        notes={completionNotes}
+                        onNotesChange={setCompletionNotes}
+                        followUpNotes={followUpNotes}
+                        aiFeaturesEnabled={aiFeaturesEnabled}
+                        disabled={formDisabled}
+                        variant="field"
+                      />
+                    </div>
+                  </div>
+                </section>
 
-                <div>
-                  <label htmlFor="follow-up-notes" className={labelClass}>
-                    Follow-up recommendation{" "}
-                    <span className="font-normal text-slate-400">(optional)</span>
-                  </label>
-                  <textarea
-                    id="follow-up-notes"
-                    rows={3}
-                    value={followUpNotes}
-                    onChange={(event) => setFollowUpNotes(event.target.value)}
-                    placeholder="Any recommended follow-up for the office?"
-                    className={inputClass}
-                  />
-                </div>
+                <section>
+                  <h3 className={technicianFieldSectionLabelClass}>
+                    Optional
+                  </h3>
+                  <div className="mt-2 space-y-2">
+                    <details
+                      className={optionalDetailsClass}
+                      open={followUpOpen}
+                      onToggle={(event) => {
+                        setFollowUpOpen(
+                          (event.currentTarget as HTMLDetailsElement).open,
+                        );
+                      }}
+                    >
+                      <summary className={optionalSummaryClass}>
+                        <span className="inline-flex items-center gap-1.5">
+                          <StickyNote className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                          Follow-up recommendation
+                        </span>
+                        <ChevronDown
+                          className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${
+                            followUpOpen ? "rotate-180" : ""
+                          }`}
+                          aria-hidden
+                        />
+                      </summary>
+                      <div className="px-3 pb-3 pt-1">
+                        <label htmlFor="follow-up-notes" className="sr-only">
+                          Follow-up recommendation
+                        </label>
+                        <textarea
+                          id="follow-up-notes"
+                          rows={3}
+                          value={followUpNotes}
+                          onChange={(event) => setFollowUpNotes(event.target.value)}
+                          placeholder="Any recommended follow-up for the office?"
+                          className={technicianFieldCloseoutInputClass}
+                        />
+                      </div>
+                    </details>
 
-                <CompleteJobEquipmentPanel
-                  customerId={customerId}
-                  value={equipmentPayload}
-                  onChange={setEquipmentPayload}
-                />
+                    <CompleteJobEquipmentPanel
+                      customerId={customerId}
+                      value={equipmentPayload}
+                      onChange={setEquipmentPayload}
+                    />
 
-                <CompleteJobPhotosPanel
-                  jobId={jobId}
-                  onPendingChange={setIsPhotoUploading}
-                />
+                    <CompleteJobPhotosPanel
+                      jobId={jobId}
+                      onPendingChange={setIsPhotoUploading}
+                    />
+                  </div>
+                </section>
               </fieldset>
             </MobileSheetBody>
 
-            <MobileSheetFooter className={error ? "flex-col" : undefined}>
+            <MobileSheetFooter className={error ? "flex-col gap-3" : "flex-col gap-2.5"}>
               {error ? (
                 <p
-                  className="w-full break-words text-sm text-red-600"
+                  className="w-full break-words rounded-xl bg-red-50/80 px-3 py-2.5 text-sm text-red-700"
                   role="alert"
                   aria-live="polite"
                 >
                   {error}
                 </p>
               ) : null}
-              <div className="flex w-full gap-3">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  disabled={closeDisabled}
-                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={closeDisabled}
-                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-emerald-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isPending ? "Completing job…" : "Complete work"}
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={closeDisabled}
+                className={technicianFieldCloseoutCompleteActionClass}
+              >
+                {isPending ? "Completing job…" : "Complete work"}
+              </button>
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={closeDisabled}
+                className={technicianFieldCloseoutCancelActionClass}
+              >
+                Cancel
+              </button>
             </MobileSheetFooter>
           </form>
         )}

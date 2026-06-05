@@ -13,6 +13,8 @@ import {
 import { generateJobSummaryAction } from "@/app/actions/job-ai";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import {
+  technicianFieldCloseoutAiButtonClass,
+  technicianFieldCloseoutAiPreviewClass,
   technicianFieldJobDetailsClass,
   technicianFieldJobDetailsSummaryClass,
 } from "@/shared/components/technician/technician-field-styles";
@@ -113,7 +115,7 @@ export function JobSummaryAiAssistant({
 
   const summarizeButtonClass =
     variant === "field"
-      ? "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-1.5 rounded-xl bg-cyan-50 px-3 py-2.5 text-sm font-semibold text-cyan-800 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60"
+      ? technicianFieldCloseoutAiButtonClass
       : "inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2.5 text-sm font-semibold text-cyan-800 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9 sm:w-auto sm:px-2.5 sm:py-1.5 sm:text-xs";
 
   const panelContent = (
@@ -145,6 +147,12 @@ export function JobSummaryAiAssistant({
             Generate a concise internal summary of this job.
           </p>
         ) : null}
+
+        {variant === "field" && !isPending && !showPanel ? (
+          <p className="text-xs text-slate-500">
+            Quick recap of the job before you wrap up.
+          </p>
+        ) : null}
       </div>
 
       {error ? (
@@ -157,14 +165,20 @@ export function JobSummaryAiAssistant({
         <div
           className={
             variant === "field"
-              ? "mt-3 rounded-xl bg-cyan-50/70 px-3 py-2.5"
+              ? `mt-3 ${technicianFieldCloseoutAiPreviewClass}`
               : "mt-3 rounded-lg border border-cyan-100 bg-cyan-50/50 px-3 py-2.5"
           }
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-cyan-900">
-                AI job summary
+              <p
+                className={
+                  variant === "field"
+                    ? "text-xs font-semibold text-cyan-900"
+                    : "text-xs font-semibold uppercase tracking-wide text-cyan-900"
+                }
+              >
+                {variant === "field" ? "Summary" : "AI job summary"}
               </p>
               {variant === "default" ? (
                 <p className="mt-0.5 text-[11px] text-cyan-800/80">
@@ -173,19 +187,23 @@ export function JobSummaryAiAssistant({
               ) : null}
             </div>
 
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex shrink-0 items-center gap-0.5">
               <button
                 type="button"
                 onClick={handleCopy}
-                className="inline-flex min-h-9 items-center gap-1 rounded-md px-2 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:bg-white hover:text-slate-900 sm:min-h-8 sm:px-1.5 sm:py-1"
+                className={
+                  variant === "field"
+                    ? "inline-flex min-h-11 touch-manipulation items-center gap-1 rounded-xl px-2.5 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-white/60 hover:text-slate-900"
+                    : "inline-flex min-h-9 items-center gap-1 rounded-md px-2 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:bg-white hover:text-slate-900 sm:min-h-8 sm:px-1.5 sm:py-1"
+                }
                 aria-label={copied ? "Summary copied" : "Copy summary"}
               >
                 {copied ? (
-                  <Check className="h-3 w-3 text-emerald-600" aria-hidden="true" />
+                  <Check className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
                 ) : (
-                  <Copy className="h-3 w-3" aria-hidden="true" />
+                  <Copy className="h-3.5 w-3.5" aria-hidden="true" />
                 )}
-                <span className="hidden sm:inline">
+                <span className={variant === "field" ? "sr-only" : "hidden sm:inline"}>
                   {copied ? "Copied" : "Copy"}
                 </span>
               </button>
@@ -193,24 +211,32 @@ export function JobSummaryAiAssistant({
               <button
                 type="button"
                 onClick={() => setIsExpanded((current) => !current)}
-                className="inline-flex min-h-9 items-center rounded-md px-2 py-1.5 text-slate-600 transition-colors hover:bg-white hover:text-slate-900 sm:min-h-8 sm:px-1.5 sm:py-1"
+                className={
+                  variant === "field"
+                    ? "inline-flex min-h-11 touch-manipulation items-center rounded-xl px-2.5 py-2 text-slate-600 transition-colors hover:bg-white/60 hover:text-slate-900"
+                    : "inline-flex min-h-9 items-center rounded-md px-2 py-1.5 text-slate-600 transition-colors hover:bg-white hover:text-slate-900 sm:min-h-8 sm:px-1.5 sm:py-1"
+                }
                 aria-expanded={isExpanded}
                 aria-label={isExpanded ? "Collapse summary" : "Expand summary"}
               >
                 {isExpanded ? (
-                  <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+                  <ChevronUp className="h-4 w-4" aria-hidden="true" />
                 ) : (
-                  <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
                 )}
               </button>
 
               <button
                 type="button"
                 onClick={handleDismiss}
-                className="inline-flex min-h-9 items-center rounded-md px-2 py-1.5 text-slate-600 transition-colors hover:bg-white hover:text-slate-900 sm:min-h-8 sm:px-1.5 sm:py-1"
+                className={
+                  variant === "field"
+                    ? "inline-flex min-h-11 touch-manipulation items-center rounded-xl px-2.5 py-2 text-slate-600 transition-colors hover:bg-white/60 hover:text-slate-900"
+                    : "inline-flex min-h-9 items-center rounded-md px-2 py-1.5 text-slate-600 transition-colors hover:bg-white hover:text-slate-900 sm:min-h-8 sm:px-1.5 sm:py-1"
+                }
                 aria-label="Dismiss summary"
               >
-                <X className="h-3.5 w-3.5" aria-hidden="true" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -237,11 +263,19 @@ export function JobSummaryAiAssistant({
           setFieldOpen((event.currentTarget as HTMLDetailsElement).open);
         }}
       >
-        <summary className={technicianFieldJobDetailsSummaryClass}>
-          <Sparkles className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-          AI summary
+        <summary className={`${technicianFieldJobDetailsSummaryClass} justify-between`}>
+          <span className="inline-flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+            AI summary
+          </span>
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${
+              fieldOpen ? "rotate-180" : ""
+            }`}
+            aria-hidden
+          />
         </summary>
-        <div className="px-3 pb-3 pt-1">{panelContent}</div>
+        <div className="px-3 pb-3 pt-0.5">{panelContent}</div>
       </details>
     );
   }
