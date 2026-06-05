@@ -1,5 +1,11 @@
 import type { CompanyAccessScope } from "@/lib/database/access-control";
 import { recommendTechnicianForJob } from "@/shared/lib/dispatch-recommendations";
+import {
+  buildOperationalSignals,
+  findOperationalSignal,
+  formatLeadFollowUpSignalDescription,
+  type OperationalSignal,
+} from "@/shared/lib/operational-signals";
 import type { OperationalResolutionQueueType } from "@/shared/lib/operational-resolution-queue";
 import type {
   DashboardCompletedWorkAwaitingInvoicingSnapshot,
@@ -20,7 +26,8 @@ export const OFFICE_PRIORITY_BASE_SCORES = {
   unassigned_emergency: 85,
   unassigned_normal: 70,
   draft_invoices: 65,
-  draft_estimates: 50,
+  lead_follow_up: 50,
+  draft_estimates: 45,
   needs_review: 40,
 } as const;
 
@@ -36,6 +43,7 @@ export type OfficePriorityActionType =
   | "create_invoices"
   | "send_estimates"
   | "assign_job"
+  | "follow_up_leads"
   | "review_completed_jobs";
 
 export type OfficePriorityRecommendation = {
@@ -67,6 +75,7 @@ export type OfficePriorityEngineInput = Pick<
   | "officeReviewQueue"
   | "assignableTechnicians"
   | "technicians"
+  | "leadFollowUp"
 >;
 
 const EMERGENCY_PRIORITIES = new Set<DispatchJobPriority>(["urgent", "high"]);
@@ -136,12 +145,18 @@ function pickFeaturedUnassignedJob(
 
 function buildOverdueInvoicesCandidate(
   input: OfficePriorityEngineInput,
+  signals: OperationalSignal[],
 ): OfficePriorityRecommendation | null {
-  if (!input.access.canViewBilling || input.money.overdueCount === 0) {
+  if (!input.access.canViewBilling) {
     return null;
   }
 
-  const count = input.money.overdueCount;
+  const signal = findOperationalSignal(signals, "overdue_invoices");
+  if (!signal) {
+    return null;
+  }
+
+  const count = signal.count;
   const monetaryImpact = input.money.overdueTotal;
 
   return {
@@ -164,15 +179,18 @@ function buildOverdueInvoicesCandidate(
 
 function buildReadyToInvoiceCandidate(
   input: OfficePriorityEngineInput,
+  signals: OperationalSignal[],
 ): OfficePriorityRecommendation | null {
-  if (
-    !input.access.canViewOperationalReports ||
-    input.completedWorkAwaitingInvoicing.count === 0
-  ) {
+  if (!input.access.canViewOperationalReports) {
     return null;
   }
 
-  const count = input.completedWorkAwaitingInvoicing.count;
+  const signal = findOperationalSignal(signals, "ready_to_invoice");
+  if (!signal) {
+    return null;
+  }
+
+  const count = signal.count;
   const monetaryImpact = sumReadyToInvoicePotential(
     input.completedWorkAwaitingInvoicing,
   );
@@ -197,11 +215,14 @@ function buildReadyToInvoiceCandidate(
 
 function buildUnassignedJobCandidate(
   input: OfficePriorityEngineInput,
+  signals: OperationalSignal[],
 ): OfficePriorityRecommendation | null {
-  if (
-    !input.access.canViewTechnicianRoster ||
-    input.operations.unassignedToday === 0
-  ) {
+  if (!input.access.canViewTechnicianRoster) {
+    return null;
+  }
+
+  const signal = findOperationalSignal(signals, "unassigned_jobs");
+  if (!signal) {
     return null;
   }
 
@@ -243,14 +264,44 @@ function buildUnassignedJobCandidate(
     score: baseScore,
     actionType: "assign_job",
     relatedQueue: "unassigned_job",
-    count: input.operations.unassignedToday,
+    count: signal.count,
     dispatchRecommendation: dispatchRecommendation ?? undefined,
     featuredJobId: job.id,
   };
 }
 
+function buildLeadFollowUpCandidate(
+  input: OfficePriorityEngineInput,
+  signals: OperationalSignal[],
+): OfficePriorityRecommendation | null {
+  if (!input.access.canManageCustomers) {
+    return null;
+  }
+
+  const signal = findOperationalSignal(signals, "lead_follow_up");
+  if (!signal) {
+    return null;
+  }
+
+  const count = signal.count;
+
+  return {
+    id: "lead-follow-up",
+    priority: 0,
+    title: `Follow up with ${count} ${pluralize(count, "lead")}`,
+    description: formatLeadFollowUpSignalDescription(count),
+    reason: `${OFFICE_PRIORITY_BASE_SCORES.lead_follow_up} priority — overdue lead follow-ups slow pipeline conversion and booking.`,
+    impactCategory: "revenue_capture",
+    score: OFFICE_PRIORITY_BASE_SCORES.lead_follow_up,
+    actionType: "follow_up_leads",
+    relatedQueue: "lead_follow_up",
+    count,
+  };
+}
+
 function buildDraftInvoicesCandidate(
   input: OfficePriorityEngineInput,
+  _signals: OperationalSignal[],
 ): OfficePriorityRecommendation | null {
   if (!input.access.canViewBilling || input.money.unsentInvoiceCount === 0) {
     return null;
@@ -279,6 +330,7 @@ function buildDraftInvoicesCandidate(
 
 function buildDraftEstimatesCandidate(
   input: OfficePriorityEngineInput,
+  _signals: OperationalSignal[],
 ): OfficePriorityRecommendation | null {
   if (!input.access.canViewBilling || input.money.unsentEstimateCount === 0) {
     return null;
@@ -324,6 +376,7 @@ function resolveNeedsReviewCount(
 
 function buildNeedsReviewCandidate(
   input: OfficePriorityEngineInput,
+  _signals: OperationalSignal[],
 ): OfficePriorityRecommendation | null {
   const review = resolveNeedsReviewCount(input);
   if (!review) {
@@ -357,10 +410,12 @@ function buildNeedsReviewCandidate(
 
 const CANDIDATE_BUILDERS: ((
   input: OfficePriorityEngineInput,
+  signals: OperationalSignal[],
 ) => OfficePriorityRecommendation | null)[] = [
   buildOverdueInvoicesCandidate,
   buildReadyToInvoiceCandidate,
   buildUnassignedJobCandidate,
+  buildLeadFollowUpCandidate,
   buildDraftInvoicesCandidate,
   buildDraftEstimatesCandidate,
   buildNeedsReviewCandidate,
@@ -373,7 +428,8 @@ const CANDIDATE_BUILDERS: ((
 export function buildOfficePriorityRecommendations(
   input: OfficePriorityEngineInput,
 ): OfficePriorityRecommendation[] {
-  const ranked = CANDIDATE_BUILDERS.map((build) => build(input))
+  const signals = buildOperationalSignals(input);
+  const ranked = CANDIDATE_BUILDERS.map((build) => build(input, signals))
     .filter(
       (recommendation): recommendation is OfficePriorityRecommendation =>
         recommendation !== null,
@@ -390,7 +446,8 @@ export function buildOfficePriorityRecommendations(
 export function hasOfficePriorityRecommendations(
   input: OfficePriorityEngineInput,
 ): boolean {
-  return CANDIDATE_BUILDERS.some((build) => build(input) !== null);
+  const signals = buildOperationalSignals(input);
+  return CANDIDATE_BUILDERS.some((build) => build(input, signals) !== null);
 }
 
 /** Maps a recommendation to a mobile action card for the resolution queue sheet. */
@@ -451,6 +508,7 @@ export type OfficePriorityEngineSnapshot = {
   >;
   completedWorkReview: Pick<DashboardCompletedWorkReviewSnapshot, "count">;
   officeReviewQueue: Pick<OfficeReviewQueueReport, "summary">;
+  leadFollowUp: Pick<DashboardData["leadFollowUp"], "count">;
 };
 
 /** Lightweight counts for diagnostics or future analytics hooks. */
@@ -469,6 +527,7 @@ export function summarizeOfficePriorityInputs(
     unassignedToday: input.operations.unassignedToday,
     draftInvoices: input.money.unsentInvoiceCount,
     draftEstimates: input.money.unsentEstimateCount,
+    leadFollowUps: input.leadFollowUp.count,
     needsReview,
   };
 }
