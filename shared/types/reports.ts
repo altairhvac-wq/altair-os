@@ -1,4 +1,5 @@
 import type { AnalyticsDateRange } from "@/shared/types/analytics";
+import type { Estimate } from "@/shared/types/estimate";
 import type { Job, JobStatus } from "@/shared/types/job";
 import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
 import { roundCurrency, type InvoiceStatus } from "@/shared/types/invoice";
@@ -272,6 +273,29 @@ export type StalledJobsReportSummary = {
 
 export type StalledJobsReport = {
   summary: StalledJobsReportSummary;
+  meta: ReportSectionMeta;
+};
+
+export type StaleSentEstimateEntry = {
+  estimateId: string;
+  estimateNumber: string;
+  customerName: string;
+  customerEmail?: string;
+  jobId?: string;
+  total: number;
+  status: Estimate["status"];
+  sentAt: string;
+  daysSinceSent: number;
+};
+
+export type StaleSentEstimatesReportSummary = {
+  staleSentCount: number;
+  staleSentEstimates: StaleSentEstimateEntry[];
+  recoveryThresholdDays: number;
+};
+
+export type StaleSentEstimatesReport = {
+  summary: StaleSentEstimatesReportSummary;
   meta: ReportSectionMeta;
 };
 

@@ -12,7 +12,8 @@ export type OperationalSignalId =
   | "overdue_invoices"
   | "ready_to_invoice"
   | "unassigned_jobs"
-  | "lead_follow_up";
+  | "lead_follow_up"
+  | "stale_sent_estimates";
 
 export type OperationalSignal = {
   id: OperationalSignalId;
@@ -28,6 +29,7 @@ export const OPERATIONAL_SIGNAL_PRIORITY_SCORES = {
   ready_to_invoice: 90,
   unassigned_jobs: 85,
   lead_follow_up: 50,
+  stale_sent_estimates: 55,
 } as const;
 
 export type OperationalSignalsInput = Pick<
@@ -112,7 +114,24 @@ export function buildOperationalSignals(
     });
   }
 
+  if (dashboardData.money.staleSentEstimateCount > 0) {
+    signals.push({
+      id: "stale_sent_estimates",
+      category: "billing",
+      severity:
+        dashboardData.money.staleSentEstimateCount >= 5
+          ? "critical"
+          : "warning",
+      count: dashboardData.money.staleSentEstimateCount,
+      priorityScore: OPERATIONAL_SIGNAL_PRIORITY_SCORES.stale_sent_estimates,
+    });
+  }
+
   return signals;
+}
+
+export function formatStaleSentEstimatesSignalDescription(count: number): string {
+  return `${count} sent ${pluralize(count, "estimate")} awaiting customer approval`;
 }
 
 export function formatLeadFollowUpSignalDescription(count: number): string {

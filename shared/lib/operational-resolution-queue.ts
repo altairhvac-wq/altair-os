@@ -5,6 +5,7 @@ import { formatLeadFollowUpQueueTitle } from "@/shared/lib/leads/lead-status";
 import type {
   DashboardLeadFollowUpPreview,
   DashboardOverdueInvoicePreview,
+  DashboardStaleSentEstimatePreview,
   DashboardUnsentEstimatePreview,
   DashboardUnsentInvoicePreview,
 } from "@/shared/types/dashboard";
@@ -26,6 +27,7 @@ export type OperationalResolutionQueueType =
   | "overdue_invoice"
   | "unsent_invoice"
   | "unsent_estimate"
+  | "stale_sent_estimate"
   | "needs_review"
   | "stalled_job"
   | "lead_follow_up";
@@ -35,6 +37,7 @@ export type OperationalResolutionActionKind =
   | "create_invoice"
   | "send_invoice"
   | "send_estimate"
+  | "resend_estimate"
   | "record_payment"
   | "resend_invoice"
   | "open_record"
@@ -85,6 +88,11 @@ export type UnsentEstimateQueueItem = OperationalResolutionQueueItemBase & {
   estimate: DashboardUnsentEstimatePreview;
 };
 
+export type StaleSentEstimateQueueItem = OperationalResolutionQueueItemBase & {
+  queueType: "stale_sent_estimate";
+  estimate: DashboardStaleSentEstimatePreview;
+};
+
 export type NeedsReviewQueueItem = OperationalResolutionQueueItemBase & {
   queueType: "needs_review";
   entry: CompletedWorkReviewEntry;
@@ -106,6 +114,7 @@ export type OperationalResolutionQueueItem =
   | OverdueInvoiceQueueItem
   | UnsentInvoiceQueueItem
   | UnsentEstimateQueueItem
+  | StaleSentEstimateQueueItem
   | NeedsReviewQueueItem
   | LeadFollowUpQueueItem
   | StalledJobQueueItem;
@@ -179,6 +188,15 @@ const QUEUE_PRESENTATION: Record<
     relatedLabel: "View all estimates",
     icon: "clipboard",
     iconClassName: "bg-cyan-100 text-cyan-700",
+  },
+  stale_sent_estimate: {
+    completionTitle: "Sent estimates followed up",
+    completionSubtitle:
+      "No sent estimates past the recovery threshold remain in this preview.",
+    relatedHref: "/estimates",
+    relatedLabel: "View all estimates",
+    icon: "clipboard",
+    iconClassName: "bg-amber-100 text-amber-700",
   },
   needs_review: {
     completionTitle: "Review queue clear",
@@ -485,6 +503,43 @@ function buildUnsentEstimateItems(
   }));
 }
 
+function buildStaleSentEstimateItems(
+  estimates: DashboardStaleSentEstimatePreview[],
+  access: CompanyAccessScope,
+): StaleSentEstimateQueueItem[] {
+  const canManage = access.canViewBilling;
+
+  return estimates.map((estimate) => {
+    const severity: MobileActionSeverity =
+      estimate.daysSinceSent >= OFFICE_REVIEW_QUEUE_AGING_DAYS
+        ? "warning"
+        : "info";
+
+    return {
+      id: estimate.id,
+      queueType: "stale_sent_estimate",
+      title: `Estimate ${estimate.estimateNumber}`,
+      subtitle: estimate.customerName,
+      meta: `${estimate.daysSinceSent}d since sent`,
+      severity,
+      openHref: `/estimates/${estimate.id}`,
+      estimate,
+      primaryAction: {
+        kind: "resend_estimate",
+        label: "Resend estimate",
+        enabled: canManage,
+      },
+      secondaryActions: [
+        {
+          kind: "open_record",
+          label: "Open estimate",
+          enabled: true,
+        },
+      ],
+    };
+  });
+}
+
 export type BuildOperationalResolutionQueueInput = {
   queueType: OperationalResolutionQueueType;
   unassignedJobs: DispatchJob[];
@@ -493,6 +548,8 @@ export type BuildOperationalResolutionQueueInput = {
   overdueInvoices: DashboardOverdueInvoicePreview[];
   unsentInvoices: DashboardUnsentInvoicePreview[];
   unsentEstimates: DashboardUnsentEstimatePreview[];
+  staleSentEstimates: DashboardStaleSentEstimatePreview[];
+  staleSentEstimateThresholdDays: number;
   leadFollowUps: DashboardLeadFollowUpPreview[];
   stalledJobs: StalledJobEntry[];
   stalledJobInactivityThresholdDays: number;
@@ -515,6 +572,7 @@ export function buildOperationalResolutionQueue(
     overdueInvoices,
     unsentInvoices,
     unsentEstimates,
+    staleSentEstimates,
     leadFollowUps,
     stalledJobs,
     stalledJobInactivityThresholdDays,
@@ -547,6 +605,9 @@ export function buildOperationalResolutionQueue(
       break;
     case "unsent_estimate":
       items = buildUnsentEstimateItems(unsentEstimates, access);
+      break;
+    case "stale_sent_estimate":
+      items = buildStaleSentEstimateItems(staleSentEstimates, access);
       break;
     case "needs_review":
       items = buildNeedsReviewItems(completedWorkReviewJobs);

@@ -14,6 +14,7 @@ import type {
   DashboardLeadFollowUpPreview,
   DashboardOverdueInvoicePreview,
   DashboardTechnicianStatus,
+  DashboardStaleSentEstimatePreview,
   DashboardUnsentEstimatePreview,
   DashboardUnsentInvoicePreview,
 } from "@/shared/types/dashboard";
@@ -54,6 +55,8 @@ export type MobileActionSheetData = {
   overdueInvoices: DashboardOverdueInvoicePreview[];
   unsentInvoices: DashboardUnsentInvoicePreview[];
   unsentEstimates: DashboardUnsentEstimatePreview[];
+  staleSentEstimates: DashboardStaleSentEstimatePreview[];
+  staleSentEstimateThresholdDays: number;
   leadFollowUps: DashboardLeadFollowUpPreview[];
   stalledJobs: StalledJobEntry[];
   stalledJobInactivityThresholdDays: number;
@@ -97,6 +100,8 @@ function buildDescription(id: string, count: number): string {
       return `${count} draft ${pluralize(count, "invoice")} ready to send to customers`;
     case "estimates-not-sent":
       return `${count} draft ${pluralize(count, "estimate")} ready to send to customers`;
+    case "estimates-awaiting-approval":
+      return `${count} sent ${pluralize(count, "estimate")} awaiting customer approval`;
     case "needs-review":
       return `${count} ${pluralize(count, "item")} need office review before billing`;
     case "stalled-jobs":
@@ -119,6 +124,7 @@ const PRIMARY_IDS = new Set([
   "ready-to-invoice",
   "invoices-not-sent",
   "estimates-not-sent",
+  "estimates-awaiting-approval",
   "stalled-jobs",
   "expense-approvals",
   "lead-follow-up",
@@ -302,6 +308,24 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
     });
   }
 
+  if (access.canViewBilling && money.staleSentEstimateCount > 0) {
+    cards.push({
+      id: "estimates-awaiting-approval",
+      label: "Follow up",
+      count: money.staleSentEstimateCount,
+      severity: money.staleSentEstimateCount >= 5 ? "critical" : "warning",
+      description: buildDescription(
+        "estimates-awaiting-approval",
+        money.staleSentEstimateCount,
+      ),
+      category: "money-actions",
+      queueType: "stale_sent_estimate",
+      href: "/estimates",
+      panelId: "cash-flow",
+      canFix: access.canViewBilling,
+    });
+  }
+
   if (access.canViewCompanyExpenses && expenses.submittedCount > 0) {
     cards.push({
       id: "expense-approvals",
@@ -393,6 +417,8 @@ export function buildMobileActionSheetData(
     overdueInvoices: data.money.overdueInvoices,
     unsentInvoices: data.money.unsentInvoices,
     unsentEstimates: data.money.unsentEstimates,
+    staleSentEstimates: data.money.staleSentEstimates,
+    staleSentEstimateThresholdDays: data.money.staleSentEstimateThresholdDays,
     leadFollowUps: data.leadFollowUp.leads,
     stalledJobs: data.stalledJobs.stalledJobs,
     stalledJobInactivityThresholdDays: data.stalledJobs.inactivityThresholdDays,

@@ -4,6 +4,7 @@ import {
   buildOperationalSignals,
   findOperationalSignal,
   formatLeadFollowUpSignalDescription,
+  formatStaleSentEstimatesSignalDescription,
   type OperationalSignal,
 } from "@/shared/lib/operational-signals";
 import type { OperationalResolutionQueueType } from "@/shared/lib/operational-resolution-queue";
@@ -27,6 +28,7 @@ export const OFFICE_PRIORITY_BASE_SCORES = {
   unassigned_normal: 70,
   draft_invoices: 65,
   lead_follow_up: 50,
+  stale_sent_estimates: 55,
   draft_estimates: 45,
   needs_review: 40,
 } as const;
@@ -42,6 +44,7 @@ export type OfficePriorityActionType =
   | "send_invoices"
   | "create_invoices"
   | "send_estimates"
+  | "follow_up_sent_estimates"
   | "assign_job"
   | "follow_up_leads"
   | "review_completed_jobs";
@@ -352,6 +355,35 @@ function buildDraftEstimatesCandidate(
   };
 }
 
+function buildStaleSentEstimatesCandidate(
+  input: OfficePriorityEngineInput,
+  signals: OperationalSignal[],
+): OfficePriorityRecommendation | null {
+  if (!input.access.canViewBilling) {
+    return null;
+  }
+
+  const signal = findOperationalSignal(signals, "stale_sent_estimates");
+  if (!signal) {
+    return null;
+  }
+
+  const count = signal.count;
+
+  return {
+    id: "follow-up-sent-estimates",
+    priority: 0,
+    title: `Follow up ${count} sent ${pluralize(count, "estimate")} awaiting approval`,
+    description: formatStaleSentEstimatesSignalDescription(count),
+    reason: `${OFFICE_PRIORITY_BASE_SCORES.stale_sent_estimates} priority — sent estimates past the recovery threshold may need a reminder to close the sale.`,
+    impactCategory: "revenue_capture",
+    score: OFFICE_PRIORITY_BASE_SCORES.stale_sent_estimates,
+    actionType: "follow_up_sent_estimates",
+    relatedQueue: "stale_sent_estimate",
+    count,
+  };
+}
+
 function resolveNeedsReviewCount(
   input: OfficePriorityEngineInput,
 ): { count: number; source: "completed_work" | "office_queue" } | null {
@@ -417,6 +449,7 @@ const CANDIDATE_BUILDERS: ((
   buildUnassignedJobCandidate,
   buildLeadFollowUpCandidate,
   buildDraftInvoicesCandidate,
+  buildStaleSentEstimatesCandidate,
   buildDraftEstimatesCandidate,
   buildNeedsReviewCandidate,
 ];
@@ -501,6 +534,7 @@ export type OfficePriorityEngineSnapshot = {
     | "overdueTotal"
     | "unsentInvoiceCount"
     | "unsentEstimateCount"
+    | "staleSentEstimateCount"
   >;
   completedWorkAwaitingInvoicing: Pick<
     DashboardCompletedWorkAwaitingInvoicingSnapshot,
@@ -527,6 +561,7 @@ export function summarizeOfficePriorityInputs(
     unassignedToday: input.operations.unassignedToday,
     draftInvoices: input.money.unsentInvoiceCount,
     draftEstimates: input.money.unsentEstimateCount,
+    staleSentEstimates: input.money.staleSentEstimateCount,
     leadFollowUps: input.leadFollowUp.count,
     needsReview,
   };

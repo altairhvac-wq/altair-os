@@ -68,6 +68,18 @@ export type DashboardUnsentEstimatePreview = {
   status: Estimate["status"];
 };
 
+export type DashboardStaleSentEstimatePreview = {
+  id: string;
+  estimateNumber: string;
+  customerName: string;
+  customerEmail?: string;
+  jobId?: string;
+  total: number;
+  status: Estimate["status"];
+  sentAt: string;
+  daysSinceSent: number;
+};
+
 export type DashboardRecentPayment = {
   id: string;
   invoiceId: string;
@@ -95,6 +107,10 @@ export type DashboardMoneySnapshot = {
   /** Draft estimates not yet sent (preview for mobile action sheets). */
   unsentEstimateCount: number;
   unsentEstimates: DashboardUnsentEstimatePreview[];
+  /** Sent estimates past recovery threshold (preview for mobile action sheets). */
+  staleSentEstimateCount: number;
+  staleSentEstimates: DashboardStaleSentEstimatePreview[];
+  staleSentEstimateThresholdDays: number;
 };
 
 export type DashboardExpenseReview = {

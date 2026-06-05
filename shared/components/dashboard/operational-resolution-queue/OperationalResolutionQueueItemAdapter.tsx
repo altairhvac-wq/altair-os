@@ -5,7 +5,10 @@ import { useMemo, useState, useTransition } from "react";
 import { assignJobAction } from "@/app/actions/dispatch";
 import { DispatchTechnicianRecommendation } from "@/shared/components/dashboard/operational-resolution-queue/DispatchTechnicianRecommendation";
 import { recommendTechnicianForJob } from "@/shared/lib/dispatch-recommendations";
-import { updateEstimateStatusAction } from "@/app/actions/estimates";
+import {
+  resendEstimateEmailAction,
+  updateEstimateStatusAction,
+} from "@/app/actions/estimates";
 import { resendInvoiceEmailAction, sendInvoiceAction } from "@/app/actions/invoices";
 import {
   MobileActionButton,
@@ -22,6 +25,7 @@ import { hasValidCustomerEmailForSend } from "@/shared/lib/operational-errors";
 import { formatCurrency } from "@/shared/types/customer";
 import { formatDispatchStatus } from "@/shared/types/dispatch";
 import { formatJobStatus } from "@/shared/types/job";
+import { canResendEstimateEmail } from "@/shared/types/estimate";
 import { canResendInvoiceEmail } from "@/shared/types/invoice";
 import { canRecordInvoicePayment } from "@/shared/types/invoice-payment";
 
@@ -66,6 +70,14 @@ export function OperationalResolutionQueueItemAdapter({
     case "unsent_estimate":
       return (
         <UnsentEstimateQueueItemAdapter
+          item={item}
+          sheetData={sheetData}
+          onResolved={onResolved}
+        />
+      );
+    case "stale_sent_estimate":
+      return (
+        <StaleSentEstimateQueueItemAdapter
           item={item}
           sheetData={sheetData}
           onResolved={onResolved}
@@ -424,6 +436,72 @@ function UnsentInvoiceQueueItemAdapter({
           label="Open invoice"
           href={item.openHref}
           variant="secondary"
+        />
+      ) : null}
+    </OperationalResolutionQueueItemView>
+  );
+}
+
+function StaleSentEstimateQueueItemAdapter({
+  item,
+  sheetData,
+  onResolved,
+}: {
+  item: Extract<
+    OperationalResolutionQueueItem,
+    { queueType: "stale_sent_estimate" }
+  >;
+  sheetData: OperationalResolutionQueueSheetData;
+  onResolved: (itemId: string) => void;
+}) {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const { access } = sheetData;
+  const estimate = item.estimate;
+  const canResend =
+    access.canViewBilling &&
+    canResendEstimateEmail(estimate.status) &&
+    hasValidCustomerEmailForSend(estimate.customerEmail);
+
+  function handleResend() {
+    if (isPending) {
+      return;
+    }
+
+    setError(null);
+
+    startTransition(async () => {
+      try {
+        const result = await resendEstimateEmailAction(estimate.id);
+
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+
+        onResolved(item.id);
+        router.refresh();
+      } catch {
+        setError("We couldn't resend this estimate. Try again.");
+      }
+    });
+  }
+
+  return (
+    <OperationalResolutionQueueItemView item={item} error={error}>
+      {canResend ? (
+        <MobileActionButton
+          label={item.primaryAction.label}
+          onClick={handleResend}
+          pending={isPending}
+        />
+      ) : null}
+      {item.openHref ? (
+        <MobileActionButton
+          label="Open estimate"
+          href={item.openHref}
+          variant={canResend ? "secondary" : "primary"}
         />
       ) : null}
     </OperationalResolutionQueueItemView>

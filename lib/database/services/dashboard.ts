@@ -16,6 +16,10 @@ import {
 import { filterDailyOperationsSummaryForBillingAccess } from "@/shared/lib/dashboard-operational-insights-visibility";
 import { listRecentOperationalActivitiesForCompany } from "@/lib/database/queries/dashboard";
 import { listEstimates } from "@/lib/database/queries/estimates";
+import {
+  buildStaleSentEstimateEntries,
+  ESTIMATE_RECOVERY_THRESHOLD_DAYS,
+} from "@/shared/lib/estimate-recovery";
 import { listExpenses } from "@/lib/database/queries/expenses";
 import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
 import { listRecentPayments } from "@/lib/database/queries/invoice-payments";
@@ -60,6 +64,7 @@ const UNASSIGNED_JOBS_DASHBOARD_LIMIT = 10;
 const OVERDUE_INVOICES_DASHBOARD_LIMIT = 10;
 const UNSENT_INVOICES_DASHBOARD_LIMIT = 10;
 const UNSENT_ESTIMATES_DASHBOARD_LIMIT = 10;
+const STALE_SENT_ESTIMATES_DASHBOARD_LIMIT = 10;
 const LEAD_FOLLOW_UP_DASHBOARD_LIMIT = 10;
 
 const EMPTY_LEAD_FOLLOW_UP: DashboardData["leadFollowUp"] = {
@@ -91,6 +96,9 @@ const EMPTY_MONEY: DashboardData["money"] = {
   unsentInvoices: [],
   unsentEstimateCount: 0,
   unsentEstimates: [],
+  staleSentEstimateCount: 0,
+  staleSentEstimates: [],
+  staleSentEstimateThresholdDays: ESTIMATE_RECOVERY_THRESHOLD_DAYS,
 };
 
 const EMPTY_EXPENSES: DashboardData["expenses"] = {
@@ -386,6 +394,10 @@ export async function getDashboardData(
     ? estimates.filter((estimate) => estimate.status === "draft")
     : [];
 
+  const staleSentEstimateEntries = access.canViewBilling
+    ? buildStaleSentEstimateEntries(estimates)
+    : [];
+
   const submittedExpenses = access.canViewCompanyExpenses
     ? expenses.filter((expense) => expense.status === "submitted")
     : [];
@@ -492,6 +504,21 @@ export async function getDashboardData(
               total: estimate.total,
               status: estimate.status,
             })),
+          staleSentEstimateCount: staleSentEstimateEntries.length,
+          staleSentEstimates: staleSentEstimateEntries
+            .slice(0, STALE_SENT_ESTIMATES_DASHBOARD_LIMIT)
+            .map((entry) => ({
+              id: entry.estimateId,
+              estimateNumber: entry.estimateNumber,
+              customerName: entry.customerName,
+              customerEmail: entry.customerEmail,
+              jobId: entry.jobId,
+              total: entry.total,
+              status: entry.status,
+              sentAt: entry.sentAt,
+              daysSinceSent: entry.daysSinceSent,
+            })),
+          staleSentEstimateThresholdDays: ESTIMATE_RECOVERY_THRESHOLD_DAYS,
         }
       : EMPTY_MONEY,
     expenses: access.canViewCompanyExpenses
