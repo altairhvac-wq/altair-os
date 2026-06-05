@@ -170,10 +170,10 @@ export type DashboardLeadFollowUpSnapshot = {
 };
 
 export type DashboardLeadPipelineSummary = {
-  newLeads: number;
+  totalLeads: number;
   followUpsDue: number;
-  wonThisMonth: number;
-  lostThisMonth: number;
+  wonLeads: number;
+  lostLeads: number;
   hasLeads: boolean;
 };
 

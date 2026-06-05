@@ -130,6 +130,7 @@ async function attachLatestActivity(
 export type ListLeadsOptions = {
   includeArchived?: boolean;
   includeDeleted?: boolean;
+  includeLatestActivity?: boolean;
 };
 
 export async function listLeads(
@@ -139,6 +140,7 @@ export async function listLeads(
   const supabase = await createClient();
   const includeArchived = options?.includeArchived ?? false;
   const includeDeleted = options?.includeDeleted ?? false;
+  const includeLatestActivity = options?.includeLatestActivity ?? true;
 
   let query = supabase
     .from("leads")
@@ -178,7 +180,13 @@ export async function listLeads(
     return [];
   }
 
-  return attachLatestActivity(companyId, (data ?? []) as LeadRowWithRelations[]);
+  const rows = (data ?? []) as LeadRowWithRelations[];
+
+  if (!includeLatestActivity) {
+    return rows.map((row) => mapLeadRowToLead(row));
+  }
+
+  return attachLatestActivity(companyId, rows);
 }
 
 export async function getLeadById(

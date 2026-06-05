@@ -5,14 +5,12 @@ import {
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
+import { listLeads } from "@/lib/database/queries/leads";
 import {
-  countActiveLeads,
-  countLeadsByStatus,
-  countLeadsLostThisMonth,
-  countLeadsNeedingFollowUp,
-  countLeadsWonThisMonth,
-  listLeadsNeedingFollowUp,
-} from "@/lib/database/queries/leads";
+  buildLeadPipelineMetrics,
+  EMPTY_LEAD_PIPELINE_METRICS,
+  selectLeadsNeedingFollowUp,
+} from "@/shared/lib/leads/lead-metrics";
 import { filterDailyOperationsSummaryForBillingAccess } from "@/shared/lib/dashboard-operational-insights-visibility";
 import { listRecentOperationalActivitiesForCompany } from "@/lib/database/queries/dashboard";
 import { listEstimates } from "@/lib/database/queries/estimates";
@@ -46,6 +44,7 @@ import { hasAssignedJobTechnician } from "@/shared/types/dispatch";
 import type { OfficeReviewQueueReport } from "@/shared/types/office-review-queue";
 import type { OperationalHealthReport } from "@/shared/types/operational-health-report";
 import type { QueueResolutionTrendSummary } from "@/shared/types/queue-resolution-trends";
+import { resolveReportDateBounds } from "@/shared/types/reports";
 import { buildReportSectionMeta } from "@/shared/types/reports";
 import type { TechnicianTimeState } from "@/shared/types/time-entry";
 import type { TimeEntry } from "@/shared/types/time-entry";
@@ -66,6 +65,8 @@ const UNSENT_INVOICES_DASHBOARD_LIMIT = 10;
 const UNSENT_ESTIMATES_DASHBOARD_LIMIT = 10;
 const STALE_SENT_ESTIMATES_DASHBOARD_LIMIT = 10;
 const LEAD_FOLLOW_UP_DASHBOARD_LIMIT = 10;
+/** Match Reports default lead pipeline period. */
+const DASHBOARD_LEAD_PIPELINE_DATE_RANGE = "30d" as const;
 
 const EMPTY_LEAD_FOLLOW_UP: DashboardData["leadFollowUp"] = {
   count: 0,
@@ -73,10 +74,10 @@ const EMPTY_LEAD_FOLLOW_UP: DashboardData["leadFollowUp"] = {
 };
 
 const EMPTY_LEAD_PIPELINE_SUMMARY: DashboardData["leadPipelineSummary"] = {
-  newLeads: 0,
+  totalLeads: 0,
   followUpsDue: 0,
-  wonThisMonth: 0,
-  lostThisMonth: 0,
+  wonLeads: 0,
+  lostLeads: 0,
   hasLeads: false,
 };
 /** Match admin layout fetch so React cache dedupes within the request. */
@@ -303,12 +304,7 @@ export async function getDashboardData(
     unreadCount,
     operationsSummary,
     officeReviewQueueReport,
-    leadFollowUpCount,
-    leadFollowUpLeads,
-    leadNewCount,
-    leadWonThisMonthCount,
-    leadLostThisMonthCount,
-    activeLeadCount,
+    leads,
   ] = await Promise.all([
     access.canViewTechnicianRoster
       ? listTechnicians(companyId, context, todayJobs)
@@ -344,29 +340,29 @@ export async function getDashboardData(
       ? getCompanyOfficeReviewQueueReport(companyId)
       : Promise.resolve(EMPTY_OFFICE_REVIEW_QUEUE),
     access.canManageCustomers
-      ? countLeadsNeedingFollowUp(companyId, {
-          timeZone: context.company.timezone,
-        })
-      : Promise.resolve(0),
-    access.canManageCustomers
-      ? listLeadsNeedingFollowUp(companyId, {
-          limit: LEAD_FOLLOW_UP_DASHBOARD_LIMIT,
-          timeZone: context.company.timezone,
-        })
+      ? listLeads(companyId, { includeLatestActivity: false })
       : Promise.resolve([]),
-    access.canManageCustomers
-      ? countLeadsByStatus(companyId, "new")
-      : Promise.resolve(0),
-    access.canManageCustomers
-      ? countLeadsWonThisMonth(companyId, context.company.timezone)
-      : Promise.resolve(0),
-    access.canManageCustomers
-      ? countLeadsLostThisMonth(companyId, context.company.timezone)
-      : Promise.resolve(0),
-    access.canManageCustomers
-      ? countActiveLeads(companyId)
-      : Promise.resolve(0),
   ]);
+
+  const leadPipelineDateBounds = resolveReportDateBounds(
+    DASHBOARD_LEAD_PIPELINE_DATE_RANGE,
+  )!;
+  const leadPipelineMetrics = access.canManageCustomers
+    ? buildLeadPipelineMetrics(
+        leads,
+        leadPipelineDateBounds,
+        context.company.timezone,
+      )
+    : EMPTY_LEAD_PIPELINE_METRICS;
+  const leadFollowUpLeads = access.canManageCustomers
+    ? selectLeadsNeedingFollowUp(leads, {
+        limit: LEAD_FOLLOW_UP_DASHBOARD_LIMIT,
+        timeZone: context.company.timezone,
+      })
+    : [];
+  const hasActiveLeads = access.canManageCustomers
+    ? leads.some((lead) => !lead.deletedAt && !lead.archivedAt)
+    : false;
 
   const invoiceSummary = access.canViewBilling
     ? getInvoiceSummary(invoices)
@@ -573,7 +569,7 @@ export async function getDashboardData(
       : { count: 0, jobs: [], resolvedThisWeek: 0 },
     leadFollowUp: access.canManageCustomers
       ? {
-          count: leadFollowUpCount,
+          count: leadPipelineMetrics.followUpsDue,
           leads: leadFollowUpLeads.map((lead) => ({
             id: lead.id,
             firstName: lead.firstName,
@@ -588,11 +584,11 @@ export async function getDashboardData(
       : EMPTY_LEAD_FOLLOW_UP,
     leadPipelineSummary: access.canManageCustomers
       ? {
-          newLeads: leadNewCount,
-          followUpsDue: leadFollowUpCount,
-          wonThisMonth: leadWonThisMonthCount,
-          lostThisMonth: leadLostThisMonthCount,
-          hasLeads: activeLeadCount > 0,
+          totalLeads: leadPipelineMetrics.totalLeads,
+          followUpsDue: leadPipelineMetrics.followUpsDue,
+          wonLeads: leadPipelineMetrics.wonLeads,
+          lostLeads: leadPipelineMetrics.lostLeads,
+          hasLeads: hasActiveLeads,
         }
       : EMPTY_LEAD_PIPELINE_SUMMARY,
     operationalInsights: access.canViewOperationalReports

@@ -171,25 +171,24 @@ export function DashboardCompactLeadPipelineSection({
       href="/leads"
       linkLabel="All leads"
     >
+      <p className="mb-2 text-[11px] text-slate-500">
+        Lead activity created in the last 30 days.
+      </p>
       <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-        <MiniMetric
-          label="New leads"
-          value={summary.newLeads}
-          href="/leads?status=new"
-        />
+        <MiniMetric label="Total leads" value={summary.totalLeads} href="/leads" />
         <MiniMetric
           label="Follow-ups due"
           value={summary.followUpsDue}
           href="/leads?filter=follow_up_due"
         />
         <MiniMetric
-          label="Won this month"
-          value={summary.wonThisMonth}
+          label="Won leads"
+          value={summary.wonLeads}
           href="/leads?status=won"
         />
         <MiniMetric
-          label="Lost this month"
-          value={summary.lostThisMonth}
+          label="Lost leads"
+          value={summary.lostLeads}
           href="/leads?status=lost"
         />
       </div>

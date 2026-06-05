@@ -1,5 +1,8 @@
 import { getCompanyTimeZone } from "@/shared/lib/datetime";
-import { isLeadFollowUpDue } from "@/shared/lib/leads/lead-status";
+import {
+  compareLeadsByField,
+  isLeadFollowUpDue,
+} from "@/shared/lib/leads/lead-status";
 import {
   formatLeadSource,
   isLeadClosed,
@@ -120,14 +123,30 @@ function buildTopSourceInsight(
   return `${formatLeadSource(best.source)} leads converted best this period.`;
 }
 
-function countFollowUpsDue(leads: Lead[], timeZone: string): number {
-  return leads.filter((lead) => {
-    if (lead.deletedAt || lead.archivedAt) {
-      return false;
-    }
+function isActiveLeadRecord(lead: Lead): boolean {
+  return !lead.deletedAt && !lead.archivedAt;
+}
 
-    return isLeadFollowUpDue(lead, undefined, timeZone);
-  }).length;
+function countFollowUpsDue(leads: Lead[], timeZone: string): number {
+  return selectLeadsNeedingFollowUp(leads, { timeZone }).length;
+}
+
+export function selectLeadsNeedingFollowUp(
+  leads: Lead[],
+  options?: { limit?: number; reference?: Date; timeZone?: string },
+): Lead[] {
+  const reference = options?.reference ?? new Date();
+  const timeZone = options?.timeZone ?? getCompanyTimeZone();
+  const limit = options?.limit ?? leads.length;
+
+  return leads
+    .filter(
+      (lead) =>
+        isActiveLeadRecord(lead) &&
+        isLeadFollowUpDue(lead, reference, timeZone),
+    )
+    .sort((left, right) => compareLeadsByField(left, right, "nextFollowUpAt"))
+    .slice(0, limit);
 }
 
 export function buildLeadPipelineMetrics(
@@ -138,7 +157,7 @@ export function buildLeadPipelineMetrics(
   const followUpsDue = countFollowUpsDue(leads, timeZone);
 
   const activeLeads = leads.filter((lead) => {
-    if (lead.deletedAt || lead.archivedAt) {
+    if (!isActiveLeadRecord(lead)) {
       return false;
     }
 
