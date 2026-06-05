@@ -12,6 +12,7 @@ import type {
 import { formatCurrency } from "@/shared/types/customer";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 import type { DashboardTechnicianStatus } from "@/shared/types/dashboard";
+import { ESTIMATE_RECOVERY_THRESHOLD_DAYS } from "@/shared/lib/estimate-recovery";
 import { OFFICE_REVIEW_QUEUE_AGING_DAYS } from "@/shared/types/office-review-queue";
 import type {
   CompletedWorkAwaitingInvoicingEntry,
@@ -511,7 +512,7 @@ function buildStaleSentEstimateItems(
 
   return estimates.map((estimate) => {
     const severity: MobileActionSeverity =
-      estimate.daysSinceSent >= OFFICE_REVIEW_QUEUE_AGING_DAYS
+      estimate.daysSinceSent >= ESTIMATE_RECOVERY_THRESHOLD_DAYS
         ? "warning"
         : "info";
 

@@ -114,7 +114,10 @@ export function buildOperationalSignals(
     });
   }
 
-  if (dashboardData.money.staleSentEstimateCount > 0) {
+  if (
+    dashboardData.access.canViewBilling &&
+    dashboardData.money.staleSentEstimateCount > 0
+  ) {
     signals.push({
       id: "stale_sent_estimates",
       category: "billing",

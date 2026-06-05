@@ -459,10 +459,11 @@ function StaleSentEstimateQueueItemAdapter({
   const [isPending, startTransition] = useTransition();
   const { access } = sheetData;
   const estimate = item.estimate;
-  const canResend =
-    access.canViewBilling &&
-    canResendEstimateEmail(estimate.status) &&
-    hasValidCustomerEmailForSend(estimate.customerEmail);
+  const canManageResend =
+    access.canViewBilling && canResendEstimateEmail(estimate.status);
+  const hasCustomerEmail = hasValidCustomerEmailForSend(estimate.customerEmail);
+  const canResend = canManageResend && hasCustomerEmail;
+  const showEmailHint = canManageResend && !hasCustomerEmail;
 
   function handleResend() {
     if (isPending) {
@@ -490,6 +491,11 @@ function StaleSentEstimateQueueItemAdapter({
 
   return (
     <OperationalResolutionQueueItemView item={item} error={error}>
+      {showEmailHint ? (
+        <p className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
+          Add a customer email to resend this estimate.
+        </p>
+      ) : null}
       {canResend ? (
         <MobileActionButton
           label={item.primaryAction.label}
