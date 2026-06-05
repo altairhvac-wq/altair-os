@@ -47,6 +47,8 @@ export type ReportCashHealth = {
   paid: number;
   outstanding: number;
   overdue: number;
+  collectionRate: number | null;
+  collectionRateLabel: string;
 };
 
 export type ReportFunnelStage = {
@@ -55,11 +57,15 @@ export type ReportFunnelStage = {
   count: number;
 };
 
-export type ReportTechnicianMetric = {
+export type ReportTechnicianProfitability = {
   technicianId: string;
   name: string;
-  completedJobs: number;
   revenue: number;
+  laborHours: number;
+  laborCost: number | null;
+  grossProfit: number | null;
+  margin: number | null;
+  profitAvailable: boolean;
 };
 
 export type ReportSnapshotRow = {
@@ -112,8 +118,8 @@ export type ReportsPageData = {
   revenueTrend: ReportTrendPoint[];
   cashHealth: ReportCashHealth;
   salesFunnel: ReportFunnelStage[];
-  technicianPerformance: ReportTechnicianMetric[];
-  showTechnicianPerformance: boolean;
+  technicianProfitability: ReportTechnicianProfitability[];
+  showTechnicianProfitability: boolean;
   operationsSnapshot: ReportOperationsSnapshot;
   accountantSummary: AccountantSummaryData;
   limitations: string[];

@@ -5,7 +5,7 @@ type RevenueTrendChartCardProps = {
   data: ReportTrendPoint[];
 };
 
-const CHART_HEIGHT = 240;
+const CHART_HEIGHT = 215;
 
 function hasTrendData(data: ReportTrendPoint[]): boolean {
   return data.some((point) => point.value > 0);

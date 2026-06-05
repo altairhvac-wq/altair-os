@@ -32,16 +32,22 @@ function formatFunnelSummary(reports: ReportsPageData): string {
 }
 
 function formatTechnicianSummary(reports: ReportsPageData): string {
-  if (!reports.showTechnicianPerformance || reports.technicianPerformance.length === 0) {
-    return "Technician performance: not available or no completed jobs in period.";
+  if (
+    !reports.showTechnicianProfitability ||
+    reports.technicianProfitability.length === 0
+  ) {
+    return "Technician profitability: not available or no completed work in period.";
   }
 
-  return reports.technicianPerformance
+  return reports.technicianProfitability
     .slice(0, 3)
-    .map(
-      (tech) =>
-        `${tech.name} — ${tech.completedJobs} jobs, ${formatCurrency(tech.revenue)} revenue`,
-    )
+    .map((tech) => {
+      const profitPart =
+        tech.profitAvailable && tech.grossProfit != null
+          ? `${formatCurrency(tech.grossProfit)} gross profit`
+          : `${formatCurrency(tech.revenue)} revenue`;
+      return `${tech.name} — ${profitPart}, ${tech.laborHours} labor hours`;
+    })
     .join("; ");
 }
 
@@ -61,7 +67,7 @@ export function prepareBusinessSummaryDraft(
       "Key metrics:",
       kpiLines,
       "",
-      `Cash health — Paid: ${formatCurrency(cash.paid)}; Outstanding: ${formatCurrency(cash.outstanding)}; Overdue: ${formatCurrency(cash.overdue)}`,
+      `Cash health — Paid: ${formatCurrency(cash.paid)}; Outstanding: ${formatCurrency(cash.outstanding)}; Overdue: ${formatCurrency(cash.overdue)}; Collection rate: ${cash.collectionRateLabel}`,
       `Sales funnel — ${formatFunnelSummary(reports)}`,
       formatTechnicianSummary(reports),
       "",

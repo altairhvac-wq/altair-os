@@ -70,6 +70,7 @@ export type CompanyMembershipRow = {
   joined_at: Timestamp | null;
   reports_to_member_id: UUID | null;
   technician_specialties: string[];
+  labor_cost_rate_cents: number | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -96,12 +97,13 @@ export type ProfileInsert = {
 
 export type CompanyMembershipInsert = Omit<
   CompanyMembershipRow,
-  "id" | "created_at" | "updated_at" | "technician_specialties"
+  "id" | "created_at" | "updated_at" | "technician_specialties" | "labor_cost_rate_cents"
 > & {
   id?: UUID;
   created_at?: Timestamp;
   updated_at?: Timestamp;
   technician_specialties?: string[];
+  labor_cost_rate_cents?: number | null;
 };
 
 export type CompanyUpdate = Partial<

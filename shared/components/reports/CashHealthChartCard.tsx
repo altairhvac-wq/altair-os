@@ -81,6 +81,12 @@ export function CashHealthChartCard({ data }: CashHealthChartCardProps) {
               </span>
             </div>
           ))}
+          <div className="flex items-center justify-between gap-3 py-2.5">
+            <span className="text-xs font-medium text-slate-600">Collection Rate</span>
+            <span className="text-sm font-bold tabular-nums text-slate-900">
+              {data.collectionRateLabel}
+            </span>
+          </div>
         </div>
       </div>
     </ReportChartCard>

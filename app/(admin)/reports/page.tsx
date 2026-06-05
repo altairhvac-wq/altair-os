@@ -5,6 +5,7 @@ import {
 } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getReportsPageData } from "@/lib/database/queries/reports";
+import { getCachedBusinessSummary } from "@/lib/ai/business-summary-cache";
 import { isAiFeaturesEnabled } from "@/lib/ai/env";
 import { ReportsPageView } from "@/shared/components/reports/ReportsPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
@@ -39,10 +40,15 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     },
   );
 
+  const initialCachedSummary = isAiFeaturesEnabled()
+    ? getCachedBusinessSummary(companyContext.company.id, dateRange)
+    : null;
+
   return (
     <ReportsPageView
       data={data}
       aiFeaturesEnabled={isAiFeaturesEnabled()}
+      initialCachedSummary={initialCachedSummary}
     />
   );
 }

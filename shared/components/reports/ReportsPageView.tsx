@@ -17,23 +17,30 @@ import { ReportDateRangeBar } from "./ReportDateRangeBar";
 import { ReportKpiCard } from "./ReportKpiCard";
 import { RevenueTrendChartCard } from "./RevenueTrendChartCard";
 import { SalesFunnelChartCard } from "./SalesFunnelChartCard";
-import { TechnicianPerformanceChartCard } from "./TechnicianPerformanceChartCard";
+import { TechnicianProfitabilityChartCard } from "./TechnicianProfitabilityChartCard";
 
 type ReportsPageViewProps = {
   data: ReportsPageData;
   aiFeaturesEnabled: boolean;
+  initialCachedSummary?: BusinessSummaryAiResult | null;
 };
 
-export function ReportsPageView({ data, aiFeaturesEnabled }: ReportsPageViewProps) {
+export function ReportsPageView({
+  data,
+  aiFeaturesEnabled,
+  initialCachedSummary = null,
+}: ReportsPageViewProps) {
   const taxSummaryHref = `/reports/tax-summary?range=${data.dateRange}`;
-  const [summary, setSummary] = useState<BusinessSummaryAiResult | null>(null);
+  const [summary, setSummary] = useState<BusinessSummaryAiResult | null>(
+    initialCachedSummary,
+  );
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [isSummaryPending, startSummaryTransition] = useTransition();
 
   useEffect(() => {
-    setSummary(null);
+    setSummary(initialCachedSummary);
     setSummaryError(null);
-  }, [data.dateRange]);
+  }, [data.dateRange, initialCachedSummary]);
 
   function handleGenerateSummary(refresh = false) {
     if (!aiFeaturesEnabled || isSummaryPending) {
@@ -58,11 +65,11 @@ export function ReportsPageView({ data, aiFeaturesEnabled }: ReportsPageViewProp
       }
 
       setSummary(result.summary);
-      document
-        .getElementById("ai-business-summary")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
+
+  const showAiSummaryCard =
+    summary != null || isSummaryPending || summaryError != null;
 
   return (
     <div className="flex flex-col gap-4 pb-2 sm:gap-5">
@@ -106,6 +113,16 @@ export function ReportsPageView({ data, aiFeaturesEnabled }: ReportsPageViewProp
         ))}
       </div>
 
+      {showAiSummaryCard ? (
+        <AiBusinessSummaryCard
+          aiFeaturesEnabled={aiFeaturesEnabled}
+          summary={summary}
+          error={summaryError}
+          isPending={isSummaryPending}
+          onRefresh={() => handleGenerateSummary(true)}
+        />
+      ) : null}
+
       <div className="grid gap-3 lg:grid-cols-12 lg:gap-4">
         <div className="lg:col-span-8">
           <RevenueTrendChartCard data={data.revenueTrend} />
@@ -116,24 +133,14 @@ export function ReportsPageView({ data, aiFeaturesEnabled }: ReportsPageViewProp
         <div className="lg:col-span-6">
           <SalesFunnelChartCard stages={data.salesFunnel} />
         </div>
-        {data.showTechnicianPerformance ? (
+        {data.showTechnicianProfitability ? (
           <div className="lg:col-span-6">
-            <TechnicianPerformanceChartCard technicians={data.technicianPerformance} />
+            <TechnicianProfitabilityChartCard
+              technicians={data.technicianProfitability}
+            />
           </div>
         ) : null}
       </div>
-
-      <div id="ai-business-summary">
-        <AiBusinessSummaryCard
-          aiFeaturesEnabled={aiFeaturesEnabled}
-          summary={summary}
-          error={summaryError}
-          isPending={isSummaryPending}
-          onGenerate={handleGenerateSummary}
-        />
-      </div>
-
-      <AccountantSummaryCard dateRange={data.dateRange} />
 
       <OperationsSnapshotSection
         topCustomers={data.operationsSnapshot.topCustomers}
@@ -141,6 +148,8 @@ export function ReportsPageView({ data, aiFeaturesEnabled }: ReportsPageViewProp
         overdueInvoices={data.operationsSnapshot.overdueInvoices}
         workCompleted={data.operationsSnapshot.workCompleted}
       />
+
+      <AccountantSummaryCard dateRange={data.dateRange} />
     </div>
   );
 }

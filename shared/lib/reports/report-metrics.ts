@@ -8,6 +8,9 @@ import {
 import type { InvoicePayment } from "@/shared/types/invoice-payment";
 import { formatPaymentMethod } from "@/shared/types/invoice-payment";
 import type { Job } from "@/shared/types/job";
+import { roundJobMaterialAmount } from "@/shared/types/job-material";
+import type { TimeEntry } from "@/shared/types/time-entry";
+import { resolveClosedJobLaborMinutes } from "@/shared/types/time-entry";
 import type {
   AccountantSummaryData,
   ReportCashHealth,
@@ -16,7 +19,7 @@ import type {
   ReportKpiTrend,
   ReportOperationsSnapshot,
   ReportSnapshotRow,
-  ReportTechnicianMetric,
+  ReportTechnicianProfitability,
   ReportTrendPoint,
   ReportsPageData,
   ReportsPageDateRange,
@@ -40,6 +43,8 @@ type ReportRawDatasets = {
   jobs: Job[];
   expenses: Expense[];
   chartSeries: ReportChartSeriesBundle;
+  laborEntries: TimeEntry[];
+  laborCostRates: Map<string, number>;
 };
 
 function toDateOnly(value: Date): string {
@@ -291,7 +296,11 @@ function buildRevenueTrend(chartSeries: ReportChartSeriesBundle): ReportTrendPoi
   }));
 }
 
-function buildCashHealth(invoices: Invoice[]): ReportCashHealth {
+function buildCashHealth(
+  invoices: Invoice[],
+  payments: InvoicePayment[],
+  dateBounds: ProfitabilityReportDateBounds,
+): ReportCashHealth {
   const activeInvoices = invoices.filter(isActiveInvoice);
 
   const paid = roundCurrency(
@@ -312,7 +321,31 @@ function buildCashHealth(invoices: Invoice[]): ReportCashHealth {
       .reduce((sum, invoice) => sum + invoice.balanceDue, 0),
   );
 
-  return { paid, outstanding, overdue };
+  const scopedInvoices = activeInvoices.filter((invoice) =>
+    isDateWithinReportBounds(invoice.issueDate, dateBounds),
+  );
+  const invoiceTotal = roundCurrency(
+    scopedInvoices.reduce((sum, invoice) => sum + invoice.total, 0),
+  );
+  const collected = collectedRevenueInBounds(payments, dateBounds);
+
+  let collectionRate: number | null = null;
+  let collectionRateLabel: string;
+
+  if (invoiceTotal <= 0) {
+    collectionRateLabel = "No invoices";
+  } else {
+    collectionRate = Math.round((collected / invoiceTotal) * 1000) / 10;
+    collectionRateLabel = `${collectionRate}%`;
+  }
+
+  return {
+    paid,
+    outstanding,
+    overdue,
+    collectionRate,
+    collectionRateLabel,
+  };
 }
 
 function jobCompletedInBounds(job: Job, bounds: ProfitabilityReportDateBounds): boolean {
@@ -366,15 +399,15 @@ function buildSalesFunnel(
   ];
 }
 
-function buildTechnicianPerformance(
+function buildTechnicianProfitability(
   datasets: ReportRawDatasets,
   dateBounds: ProfitabilityReportDateBounds,
-): ReportTechnicianMetric[] {
-  const { jobs, payments, invoices } = datasets;
+): ReportTechnicianProfitability[] {
+  const { jobs, payments, invoices, laborEntries, laborCostRates } = datasets;
   const invoiceById = new Map(invoices.map((invoice) => [invoice.id, invoice]));
   const metrics = new Map<
     string,
-    { name: string; completedJobs: number; revenue: number }
+    { name: string; revenue: number; laborHours: number }
   >();
 
   for (const job of jobs) {
@@ -384,11 +417,10 @@ function buildTechnicianPerformance(
 
     const existing = metrics.get(job.assignedTechnicianId) ?? {
       name: job.assignedTechnician?.trim() || "Unassigned",
-      completedJobs: 0,
       revenue: 0,
+      laborHours: 0,
     };
 
-    existing.completedJobs += 1;
     metrics.set(job.assignedTechnicianId, existing);
   }
 
@@ -405,28 +437,77 @@ function buildTechnicianPerformance(
 
     const existing = metrics.get(job.assignedTechnicianId) ?? {
       name: job.assignedTechnician?.trim() || "Unassigned",
-      completedJobs: 0,
       revenue: 0,
+      laborHours: 0,
     };
 
     existing.revenue = roundCurrency(existing.revenue + payment.amount);
     metrics.set(job.assignedTechnicianId, existing);
   }
 
+  for (const entry of laborEntries) {
+    if (!isDateWithinReportBounds(entry.startedAt, dateBounds)) {
+      continue;
+    }
+
+    const minutes = resolveClosedJobLaborMinutes(entry);
+    if (minutes == null) {
+      continue;
+    }
+
+    const existing = metrics.get(entry.technicianId) ?? {
+      name: entry.technicianName.trim() || "Technician",
+      revenue: 0,
+      laborHours: 0,
+    };
+
+    existing.laborHours = roundJobMaterialAmount(
+      existing.laborHours + minutes / 60,
+    );
+    metrics.set(entry.technicianId, existing);
+  }
+
   return [...metrics.entries()]
-    .sort((left, right) => {
-      if (right[1].completedJobs !== left[1].completedJobs) {
-        return right[1].completedJobs - left[1].completedJobs;
-      }
-      return right[1].revenue - left[1].revenue;
+    .map(([technicianId, entry]) => {
+      const hourlyRate = laborCostRates.get(technicianId);
+      const profitAvailable = hourlyRate != null && hourlyRate >= 0;
+      const laborCost =
+        profitAvailable && entry.laborHours > 0
+          ? roundCurrency(entry.laborHours * hourlyRate!)
+          : profitAvailable
+            ? 0
+            : null;
+      const grossProfit =
+        profitAvailable && laborCost != null
+          ? roundCurrency(entry.revenue - laborCost)
+          : null;
+      const margin =
+        profitAvailable && grossProfit != null && entry.revenue > 0
+          ? Math.round((grossProfit / entry.revenue) * 1000) / 10
+          : null;
+
+      return {
+        technicianId,
+        name: entry.name,
+        revenue: entry.revenue,
+        laborHours: entry.laborHours,
+        laborCost,
+        grossProfit,
+        margin,
+        profitAvailable,
+      };
     })
-    .slice(0, 5)
-    .map(([technicianId, entry]) => ({
-      technicianId,
-      name: entry.name,
-      completedJobs: entry.completedJobs,
-      revenue: entry.revenue,
-    }));
+    .filter(
+      (entry) => entry.revenue > 0 || entry.laborHours > 0,
+    )
+    .sort((left, right) => {
+      const leftScore =
+        left.grossProfit ?? left.revenue;
+      const rightScore =
+        right.grossProfit ?? right.revenue;
+      return rightScore - leftScore;
+    })
+    .slice(0, 5);
 }
 
 function resolveExpenseReportDate(expense: Expense): string {
@@ -765,7 +846,7 @@ export function buildReportsPageData(input: {
   companyName: string;
   dateRange: ReportsPageDateRange;
   datasets: ReportRawDatasets;
-  showTechnicianPerformance: boolean;
+  showTechnicianProfitability: boolean;
 }): ReportsPageData {
   const dateBounds =
     resolveReportDateBounds(input.dateRange) ??
@@ -777,19 +858,35 @@ export function buildReportsPageData(input: {
     ...input.datasets.chartSeries.revenue.limitations,
     "Outstanding invoice balances reflect current open amounts, not limited to the selected period.",
     "Estimate close rate compares approved estimates to estimates sent in the selected period.",
+    "Collection rate compares payments collected in period to invoice totals issued in period.",
   ];
+
+  const technicianProfitability = input.showTechnicianProfitability
+    ? buildTechnicianProfitability(input.datasets, dateBounds)
+    : [];
+
+  if (
+    input.showTechnicianProfitability &&
+    technicianProfitability.some((entry) => !entry.profitAvailable)
+  ) {
+    limitations.push(
+      "Technician gross profit requires labor cost rates on team member profiles.",
+    );
+  }
 
   return {
     dateRange: input.dateRange,
     dateBounds,
     kpis: buildKpis(input.datasets, dateBounds, previousBounds),
     revenueTrend: buildRevenueTrend(input.datasets.chartSeries),
-    cashHealth: buildCashHealth(input.datasets.invoices),
+    cashHealth: buildCashHealth(
+      input.datasets.invoices,
+      input.datasets.payments,
+      dateBounds,
+    ),
     salesFunnel: buildSalesFunnel(input.datasets, dateBounds),
-    technicianPerformance: input.showTechnicianPerformance
-      ? buildTechnicianPerformance(input.datasets, dateBounds)
-      : [],
-    showTechnicianPerformance: input.showTechnicianPerformance,
+    technicianProfitability,
+    showTechnicianProfitability: input.showTechnicianProfitability,
     operationsSnapshot: buildOperationsSnapshot(input.datasets, dateBounds),
     accountantSummary: buildAccountantSummary(
       input.companyName,

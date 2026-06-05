@@ -9,6 +9,7 @@ import {
   listCompanyJobLaborEntries,
   listTodayTimeEntriesForCompany,
 } from "@/lib/database/queries/time-entries";
+import { createClient } from "@/lib/supabase/server";
 import { listTimeClockEntries } from "@/lib/database/queries/time-clock";
 import { getCompanyReportChartSeries } from "@/lib/database/services/reports/report-chart-series";
 import { getCompanyOperationalInconsistenciesReport } from "@/lib/database/services/reports/operational-inconsistencies-report";
@@ -29,6 +30,7 @@ import type { ReportsFoundationData } from "@/shared/types/reports-foundation";
 import { roundJobMaterialAmount } from "@/shared/types/job-material";
 import { summarizeTodayEntries } from "@/shared/types/time-entry";
 
+
 const TIME_RELATED_INCONSISTENCY_KINDS = new Set([
   "open_labor_on_cancelled_job",
 ]);
@@ -41,13 +43,49 @@ const CLOSED_JOB_STATUSES: ReadonlySet<JobStatus> = new Set([
 const RECENT_TIME_CLOCK_LIMIT = 10;
 const TIME_CLOCK_FETCH_LIMIT = 100;
 
+async function listTechnicianLaborCostRates(
+  companyId: string,
+): Promise<Map<string, number>> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("company_memberships")
+    .select("user_id, labor_cost_rate_cents")
+    .eq("company_id", companyId)
+    .eq("status", "active")
+    .not("user_id", "is", null);
+
+  if (error) {
+    console.error("[listTechnicianLaborCostRates] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return new Map();
+  }
+
+  const rates = new Map<string, number>();
+
+  for (const row of data ?? []) {
+    if (
+      row.user_id &&
+      row.labor_cost_rate_cents != null &&
+      row.labor_cost_rate_cents >= 0
+    ) {
+      rates.set(row.user_id, row.labor_cost_rate_cents / 100);
+    }
+  }
+
+  return rates;
+}
+
 export async function getReportsPageData(
   companyId: string,
   companyName: string,
   dateRange: ReportsPageDateRange,
   options: { showTechnicianPerformance?: boolean } = {},
 ): Promise<ReportsPageData> {
-  const [invoices, payments, estimates, jobs, expenses, chartSeries] =
+  const [invoices, payments, estimates, jobs, expenses, chartSeries, laborEntries, laborCostRates] =
     await Promise.all([
       listInvoices(companyId),
       listInvoicePayments(companyId),
@@ -55,12 +93,14 @@ export async function getReportsPageData(
       listJobs(companyId),
       listExpenses(companyId),
       getCompanyReportChartSeries(companyId, { dateRange }),
+      listCompanyJobLaborEntries(companyId),
+      listTechnicianLaborCostRates(companyId),
     ]);
 
   return buildReportsPageData({
     companyName,
     dateRange,
-    showTechnicianPerformance: options.showTechnicianPerformance ?? true,
+    showTechnicianProfitability: options.showTechnicianPerformance ?? true,
     datasets: {
       invoices,
       payments,
@@ -68,6 +108,8 @@ export async function getReportsPageData(
       jobs,
       expenses,
       chartSeries,
+      laborEntries,
+      laborCostRates,
     },
   });
 }
