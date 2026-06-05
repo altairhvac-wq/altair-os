@@ -19,12 +19,33 @@ type TechnicianJobListProps = {
   jobs: TechnicianJob[];
   selectedJobId: string | null;
   timeState: TechnicianTimeStateSnapshot;
+  heroSectionLabel: string;
+  heroSectionAriaLabel: string;
   /** Resets the mobile carousel when the schedule day changes. */
   deckKey?: string;
   aiFeaturesEnabled?: boolean;
   onSelectJob: (job: TechnicianJob) => void;
   onJobStatusUpdated?: (jobId: string, status: JobStatus) => void;
 };
+
+function formatUpNextJobLocation(job: TechnicianJob): string {
+  const city = job.city.trim();
+  const state = job.state.trim();
+
+  if (city && state) {
+    return `${city}, ${state}`;
+  }
+
+  if (city) {
+    return city;
+  }
+
+  if (state) {
+    return state;
+  }
+
+  return "Address TBD";
+}
 
 function resolveHeroJob(
   jobs: TechnicianJob[],
@@ -45,7 +66,7 @@ function TechnicianUpNextJobCard({
   fullWidth?: boolean;
   onSelectJob: (job: TechnicianJob) => void;
 }) {
-  const location = `${job.city}, ${job.state}`;
+  const location = formatUpNextJobLocation(job);
 
   return (
     <button
@@ -92,6 +113,8 @@ export function TechnicianJobList({
   jobs,
   selectedJobId,
   timeState,
+  heroSectionLabel,
+  heroSectionAriaLabel,
   deckKey,
   aiFeaturesEnabled = false,
   onSelectJob,
@@ -111,8 +134,8 @@ export function TechnicianJobList({
 
   return (
     <div className="space-y-4">
-      <section className="space-y-2.5" aria-label="Today's work">
-        <h2 className={technicianFieldSectionLabelClass}>Today&apos;s Work</h2>
+      <section className="space-y-2.5" aria-label={heroSectionAriaLabel}>
+        <h2 className={technicianFieldSectionLabelClass}>{heroSectionLabel}</h2>
         <TechnicianActiveJobHero
           job={heroJob}
           timeState={timeState}

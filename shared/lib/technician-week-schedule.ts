@@ -165,6 +165,19 @@ export function isSelectedTechnicianScheduleDayToday(
   return dateOnly === context.todayDateOnly;
 }
 
+export function getTechnicianHeroSectionCopy(
+  dateOnly: string,
+  context: TechnicianScheduleDayContext,
+): { label: string; ariaLabel: string } {
+  if (isSelectedTechnicianScheduleDayToday(dateOnly, context)) {
+    return { label: "Today's Work", ariaLabel: "Today's work" };
+  }
+
+  const day = formatTechnicianScheduleDayHeading(dateOnly, context);
+
+  return { label: day, ariaLabel: `${day} jobs` };
+}
+
 export function formatTechnicianScheduleQueueLabel(input: {
   dateOnly: string;
   activeCount: number;

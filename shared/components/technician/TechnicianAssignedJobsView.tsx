@@ -10,6 +10,7 @@ import {
   formatTechnicianScheduleEmptyDescription,
   formatTechnicianScheduleEmptyTitle,
   formatTechnicianScheduleQueueLabel,
+  getTechnicianHeroSectionCopy,
   getTechnicianTodayDateOnly,
   isSelectedTechnicianScheduleDayToday,
   type TechnicianScheduleDayContext,
@@ -254,6 +255,10 @@ export function TechnicianAssignedJobsView({
   );
 
   const showQueueSummary = deckJobs.length > 0;
+  const heroSectionCopy = getTechnicianHeroSectionCopy(
+    selectedDateOnly,
+    scheduleContext,
+  );
 
   return (
     <div className="space-y-3">
@@ -313,6 +318,8 @@ export function TechnicianAssignedJobsView({
             jobs={deckJobs}
             selectedJobId={selectedJob?.id ?? null}
             timeState={timeState}
+            heroSectionLabel={heroSectionCopy.label}
+            heroSectionAriaLabel={heroSectionCopy.ariaLabel}
             aiFeaturesEnabled={aiFeaturesEnabled}
             onSelectJob={handleSelectJob}
             onJobStatusUpdated={handleJobStatusUpdated}
