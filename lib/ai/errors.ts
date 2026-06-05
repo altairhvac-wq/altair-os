@@ -32,6 +32,8 @@ const FEATURE_INSUFFICIENT_CONTEXT: Partial<Record<AiFeatureName, string>> = {
 const FEATURE_CONFIG_ERROR: Partial<Record<AiFeatureName, string>> = {
   [INVOICE_MESSAGE_AI_FEATURE]:
     "AI invoice messages are not configured yet.",
+  [LEAD_FOLLOW_UP_AI_FEATURE]:
+    "AI follow-up drafting is not configured yet.",
 };
 
 const FEATURE_PROVIDER_ERROR: Partial<Record<AiFeatureName, string>> = {

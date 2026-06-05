@@ -20,6 +20,15 @@ export function isAiFeaturesEnabled(): boolean {
   return raw === "true" || raw === "1";
 }
 
+/** True when AI drafting can run (feature flag on and API key present). */
+export function isAiDraftingConfigured(): boolean {
+  if (!isAiFeaturesEnabled()) {
+    return false;
+  }
+
+  return Boolean(process.env[OPENAI_API_KEY_ENV]?.trim());
+}
+
 export function getAiConfig(): AiConfig {
   const apiKey = process.env[OPENAI_API_KEY_ENV]?.trim() || null;
   const model = process.env[AI_MODEL_ENV]?.trim() || DEFAULT_AI_MODEL;

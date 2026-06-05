@@ -51,6 +51,7 @@ type LeadDetailPanelProps = {
   initialActivities: LeadActivity[];
   assignableMembers: LeadAssignableMember[];
   aiFeaturesEnabled: boolean;
+  aiDraftingConfigured: boolean;
   onClose: () => void;
   onCreateSuccess: (lead: Lead, outcome?: LeadCreateOutcome) => void;
   onCreateCancel: () => void;
@@ -63,6 +64,7 @@ export function LeadDetailPanel({
   initialActivities,
   assignableMembers,
   aiFeaturesEnabled,
+  aiDraftingConfigured,
   onClose,
   onCreateSuccess,
   onCreateCancel,
@@ -413,6 +415,7 @@ export function LeadDetailPanel({
           <LeadFollowUpAiAssistant
             leadId={lead.id}
             aiFeaturesEnabled={aiFeaturesEnabled}
+            aiDraftingConfigured={aiDraftingConfigured}
           />
 
           <div className="rounded-xl border border-slate-200 bg-white p-4">

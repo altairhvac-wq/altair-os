@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { isAiFeaturesEnabled } from "@/lib/ai/env";
+import { isAiDraftingConfigured, isAiFeaturesEnabled } from "@/lib/ai/env";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listLeadActivitiesForLead } from "@/lib/database/queries/lead-activities";
 import {
@@ -72,6 +72,7 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
       activitiesByLeadId={activitiesByLeadId}
       assignableMembers={assignableMembers}
       aiFeaturesEnabled={isAiFeaturesEnabled()}
+      aiDraftingConfigured={isAiDraftingConfigured()}
       initialSelectedId={selectedLeadId}
       initialCreate={create === "1"}
       initialStatusFilter={initialStatusFilter}

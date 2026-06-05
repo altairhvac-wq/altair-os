@@ -31,6 +31,7 @@ type LeadsPageViewProps = {
   activitiesByLeadId: Record<string, LeadActivity[]>;
   assignableMembers: LeadAssignableMember[];
   aiFeaturesEnabled: boolean;
+  aiDraftingConfigured: boolean;
   initialSelectedId?: string;
   initialCreate?: boolean;
   initialStatusFilter?: LeadStatus;
@@ -81,6 +82,7 @@ export function LeadsPageView({
   activitiesByLeadId,
   assignableMembers,
   aiFeaturesEnabled,
+  aiDraftingConfigured,
   initialSelectedId,
   initialCreate = false,
   initialStatusFilter,
@@ -297,6 +299,7 @@ export function LeadsPageView({
         initialActivities={selectedActivities}
         assignableMembers={assignableMembers}
         aiFeaturesEnabled={aiFeaturesEnabled}
+        aiDraftingConfigured={aiDraftingConfigured}
         onClose={handleClosePanel}
         onCreateSuccess={handleCreateSuccess}
         onCreateCancel={handleClosePanel}

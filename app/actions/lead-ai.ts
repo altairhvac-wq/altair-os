@@ -1,7 +1,7 @@
 "use server";
 
 import { mapAiErrorToMessage } from "@/lib/ai/errors";
-import { isAiFeaturesEnabled } from "@/lib/ai/env";
+import { getAiConfig, isAiFeaturesEnabled } from "@/lib/ai/env";
 import { checkAiRateLimit } from "@/lib/ai/guardrails";
 import { LEAD_FOLLOW_UP_ACTIVITY_LIMIT } from "@/lib/ai/limits";
 import {
@@ -36,6 +36,32 @@ const CLOSED_JOB_STATUSES: ReadonlySet<JobStatus> = new Set([
   "completed",
   "cancelled",
 ]);
+
+async function assertLeadFollowUpPermission(leadId: string) {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: NO_ACTIVE_COMPANY_MESSAGE } as const;
+  }
+
+  if (!context.permissions.manageCustomers) {
+    return {
+      error: "You do not have permission to use lead follow-up AI.",
+    } as const;
+  }
+
+  const trimmedLeadId = leadId.trim();
+  if (!trimmedLeadId) {
+    return { error: "Lead not found." } as const;
+  }
+
+  const lead = await getLeadById(context.company.id, trimmedLeadId);
+  if (!lead || lead.archivedAt || lead.deletedAt) {
+    return { error: "Lead not found." } as const;
+  }
+
+  return { context, lead } as const;
+}
 
 async function resolveLeadEstimateContext(
   companyId: string,
@@ -144,29 +170,26 @@ async function buildLeadFollowUpDraftInput(
 export async function generateLeadFollowUpAction(
   leadId: string,
 ): Promise<GenerateLeadFollowUpResult> {
-  const context = await getActiveCompanyContext();
+  const permission = await assertLeadFollowUpPermission(leadId);
 
-  if (!context) {
-    return { error: NO_ACTIVE_COMPANY_MESSAGE };
-  }
-
-  if (!context.permissions.manageCustomers) {
-    return { error: "You do not have permission to use lead follow-up AI." };
+  if (permission.error || !permission.context || !permission.lead) {
+    return { error: permission.error };
   }
 
   if (!isAiFeaturesEnabled()) {
     return { error: "AI features are not enabled for this workspace." };
   }
 
-  const trimmedLeadId = leadId.trim();
-  if (!trimmedLeadId) {
-    return { error: "Lead not found." };
+  if (!getAiConfig().hasApiKey) {
+    return {
+      error: mapAiErrorToMessage(
+        "missing_api_key",
+        LEAD_FOLLOW_UP_AI_FEATURE,
+      ),
+    };
   }
 
-  const lead = await getLeadById(context.company.id, trimmedLeadId);
-  if (!lead) {
-    return { error: "Lead not found." };
-  }
+  const { context, lead } = permission;
 
   const rateLimit = checkAiRateLimit({
     companyId: context.company.id,
