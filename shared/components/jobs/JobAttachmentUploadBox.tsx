@@ -49,6 +49,10 @@ export function JobAttachmentUploadBox({
 
   useEffect(() => {
     onPendingChange?.(isPending);
+
+    return () => {
+      onPendingChange?.(false);
+    };
   }, [isPending, onPendingChange]);
 
   function handlePickFile() {
