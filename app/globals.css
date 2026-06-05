@@ -909,34 +909,42 @@ a[href] {
 }
 
 .tech-canvas {
-  background-color: var(--surface-canvas);
+  background-color: #f1f5f9;
   background-image:
     radial-gradient(
-      ellipse 80% 50% at 50% -10%,
-      rgb(186 230 253 / 0.1) 0%,
-      transparent 55%
+      ellipse 90% 60% at 50% -15%,
+      rgb(186 230 253 / 0.18) 0%,
+      transparent 60%
     ),
-    linear-gradient(180deg, #f6f8fb 0%, var(--surface-canvas) 100%);
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 .tech-shell {
-  border-color: rgb(203 213 225 / 0.65);
-  background-color: var(--surface-card);
-  box-shadow:
-    0 0 0 1px rgb(15 23 42 / 0.03),
-    0 24px 48px -12px rgb(15 23 42 / 0.1);
+  background-color: transparent;
+}
+
+@media (min-width: 480px) {
+  .tech-shell {
+    border-left: 1px solid rgb(226 232 240 / 0.45);
+    border-right: 1px solid rgb(226 232 240 / 0.45);
+    background-color: rgb(255 255 255 / 0.55);
+    box-shadow:
+      0 0 0 1px rgb(15 23 42 / 0.02),
+      0 20px 40px -16px rgb(15 23 42 / 0.08);
+  }
 }
 
 .tech-header {
-  border-bottom: 1px solid rgb(226 232 240 / 0.85);
-  background-color: rgb(252 253 254 / 0.96);
-  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgb(226 232 240 / 0.5);
+  background-color: rgb(255 255 255 / 0.82);
+  backdrop-filter: blur(12px);
 }
 
 .tech-bottom-nav {
-  border-top: 1px solid rgb(226 232 240 / 0.9);
-  background-color: rgb(252 253 254 / 0.96);
-  backdrop-filter: blur(8px);
+  border-top: 1px solid rgb(226 232 240 / 0.45);
+  background-color: rgb(255 255 255 / 0.9);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 -4px 24px -8px rgb(15 23 42 / 0.06);
 }
 
 .admin-command-surface {

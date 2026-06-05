@@ -55,7 +55,7 @@ function TechnicianJobsEmptyState({
   description: string;
 }) {
   return (
-    <section className="min-h-[8rem] rounded-lg border border-dashed border-slate-300 bg-white px-3 py-6 text-center shadow-sm">
+    <section className="min-h-[8rem] rounded-2xl bg-white px-4 py-8 text-center shadow-[0_1px_8px_-2px_rgb(15_23_42_/_0.08)]">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
         <Briefcase className="h-6 w-6 text-slate-400" />
       </div>
@@ -256,7 +256,7 @@ export function TechnicianAssignedJobsView({
   const showQueueSummary = deckJobs.length > 0;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <TechnicianWeekStrip
         jobs={jobs}
         selectedDateOnly={selectedDateOnly}
@@ -313,7 +313,9 @@ export function TechnicianAssignedJobsView({
             jobs={deckJobs}
             selectedJobId={selectedJob?.id ?? null}
             timeState={timeState}
+            aiFeaturesEnabled={aiFeaturesEnabled}
             onSelectJob={handleSelectJob}
+            onJobStatusUpdated={handleJobStatusUpdated}
           />
 
           {showCompletedToday ? (

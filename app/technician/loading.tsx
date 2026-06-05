@@ -1,5 +1,5 @@
-import { TechnicianShellContentLoadingState } from "@/shared/components/technician/TechnicianShellContentLoadingState";
+import { TechnicianAssignedJobsLoadingState } from "@/shared/components/technician/TechnicianAssignedJobsLoadingState";
 
 export default function TechnicianLoading() {
-  return <TechnicianShellContentLoadingState />;
+  return <TechnicianAssignedJobsLoadingState />;
 }

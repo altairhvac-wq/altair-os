@@ -38,8 +38,8 @@ export function TechnicianMobileShell({
         initialUnreadCount={unreadNotificationCount}
       >
       <div className="tech-canvas min-h-dvh max-w-full overflow-x-clip">
-        <div className="tech-shell mx-auto flex min-h-dvh w-full min-w-0 max-w-md flex-col border-x">
-          <header className="tech-header tech-header-safe sticky top-0 z-30 px-4 pb-3">
+        <div className="tech-shell mx-auto flex min-h-dvh w-full min-w-0 max-w-md flex-col">
+          <header className="tech-header tech-header-safe sticky top-0 z-30 px-4 pb-2.5 pt-0.5">
             <div className="flex min-w-0 items-center gap-2.5">
               <AltairLogo variant="gold" size="sm" showWordmark={false} />
               <div className="min-w-0 flex-1">
@@ -70,7 +70,7 @@ export function TechnicianMobileShell({
             </div>
           </header>
 
-          <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 pb-[max(5.75rem,calc(5.25rem+env(safe-area-inset-bottom,0px)))] sm:px-4 sm:py-4">
+          <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 pb-[max(6rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] sm:px-5 sm:py-5">
             <PullToRefresh>
               {redirectPending ? (
                 <TechnicianShellContentLoadingState />
