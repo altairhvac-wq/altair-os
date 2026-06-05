@@ -3,13 +3,8 @@
 import { useState } from "react";
 import { FocusedDocumentOverlay } from "@/shared/components/layout/FocusedDocumentOverlay";
 import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
-import { isLiveTechnicianJob } from "@/shared/lib/technician-dispatch-job";
 import type { JobStatus } from "@/shared/types/job";
-import {
-  formatJobPriority,
-  getPriorityStyles,
-  type TechnicianJob,
-} from "@/shared/types/technician";
+import type { TechnicianJob } from "@/shared/types/technician";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import type { ServiceItem } from "@/shared/types/service-item";
 import { TechnicianJobFieldDetail } from "./TechnicianJobFieldDetail";
@@ -45,7 +40,6 @@ export function TechnicianJobDetailOverlay({
   onJobStatusUpdated,
 }: TechnicianJobDetailOverlayProps) {
   const [closeDisabled, setCloseDisabled] = useState(false);
-  const isLive = isLiveTechnicianJob(job, timeState);
 
   return (
     <FocusedDocumentOverlay
@@ -53,24 +47,10 @@ export function TechnicianJobDetailOverlay({
       onClose={onClose}
       closeDisabled={closeDisabled}
       closeVariant="back"
-      title={job.jobNumber}
-      subtitle={job.jobType}
-      headerAside={
-        <>
-          <TechnicianJobStatusBadge status={job.status} />
-          <span
-            className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${getPriorityStyles(job.priority)}`}
-          >
-            {formatJobPriority(job.priority)}
-          </span>
-          {isLive ? (
-            <span className="inline-flex rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-              Active
-            </span>
-          ) : null}
-        </>
-      }
-      ariaLabel={`Job ${job.jobNumber}`}
+      title={job.customerName}
+      subtitle={`${job.jobNumber} · ${job.jobType}`}
+      headerAside={<TechnicianJobStatusBadge status={job.status} />}
+      ariaLabel={`${job.customerName}, job ${job.jobNumber}`}
     >
       <TechnicianJobFieldDetail
         job={job}

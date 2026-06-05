@@ -64,3 +64,17 @@ export const technicianFieldWorkflowStepLabelActiveClass =
 
 export const technicianFieldWorkflowStepLabelInactiveClass =
   "text-[10px] font-medium text-slate-400";
+
+export const technicianFieldContextBlockClass =
+  "space-y-1.5 text-sm text-slate-600";
+
+export const technicianFieldWorkflowSurfaceClass =
+  "space-y-3 rounded-2xl bg-white p-4 shadow-[0_1px_8px_-2px_rgb(15_23_42_/_0.08)]";
+
+export const technicianFieldReferenceSectionClass = "space-y-2 pt-1";
+
+export const technicianFieldWorkflowHintClass =
+  "text-xs leading-relaxed text-slate-500";
+
+export const technicianFieldStartRouteSecondaryClass =
+  "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-2 rounded-xl border border-slate-200/60 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 active:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60";

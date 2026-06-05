@@ -17,21 +17,30 @@ import { CompleteJobSheet } from "./CompleteJobSheet";
 function getMobileWorkflowHint(
   status: JobStatus,
   primaryActionId: JobWorkflowActionId | undefined,
+  short = false,
 ): string | null {
   if (status === "in_progress") {
     if (primaryActionId === "complete") {
-      return "This job is active on site. Complete work opens a wrap-up form that marks the job finished for the office.";
+      return short
+        ? "Tap Complete work when the job is done on site."
+        : "This job is active on site. Complete work opens a wrap-up form that marks the job finished for the office.";
     }
-    return "This job is active on site.";
+    return short ? "Job is active on site." : "This job is active on site.";
   }
 
   switch (status) {
     case "scheduled":
-      return "Next: start route when you leave for this job, then mark arrived on site.";
+      return short
+        ? "Start route when you leave, then mark arrived."
+        : "Next: start route when you leave for this job, then mark arrived on site.";
     case "dispatched":
-      return "You are en route. Mark arrived on site when you reach the customer.";
+      return short
+        ? "Mark arrived when you reach the customer."
+        : "You are en route. Mark arrived on site when you reach the customer.";
     case "arrived":
-      return "On site. Start work clocks you in and begins job labor automatically.";
+      return short
+        ? "Start work clocks you in automatically."
+        : "On site. Start work clocks you in and begins job labor automatically.";
     default:
       return null;
   }
@@ -45,6 +54,7 @@ type JobWorkflowActionsProps = {
   aiFeaturesEnabled?: boolean;
   layout?: "row" | "stack";
   showMobileHint?: boolean;
+  shortHints?: boolean;
   competingSheetActive?: boolean;
   onCompleteSheetOpenChange?: (open: boolean) => void;
   onStatusUpdated?: (status: JobStatus) => void;
@@ -58,6 +68,7 @@ export function JobWorkflowActions({
   aiFeaturesEnabled = false,
   layout = "row",
   showMobileHint = true,
+  shortHints = false,
   competingSheetActive = false,
   onCompleteSheetOpenChange,
   onStatusUpdated,
@@ -175,7 +186,7 @@ export function JobWorkflowActions({
 
   const mobileHint =
     isCompact && showMobileHint
-      ? getMobileWorkflowHint(status, primaryAction.id)
+      ? getMobileWorkflowHint(status, primaryAction.id, shortHints)
       : null;
 
   return (

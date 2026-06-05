@@ -40,6 +40,8 @@ type JobWorkflowControlsProps = {
   reopenSnapshot?: ReopenTargetJobSnapshot;
   layout?: "header" | "stack";
   section?: JobWorkflowControlsSection;
+  /** Technician field detail: Start Route leads when scheduled; softer billing presentation. */
+  fieldActionFirst?: boolean;
   showMobileHint?: boolean;
   competingSheetActive?: boolean;
   businessContext?: {
@@ -101,6 +103,7 @@ export function JobWorkflowControls({
   reopenSnapshot,
   layout = "header",
   section = "full",
+  fieldActionFirst = false,
   showMobileHint = true,
   competingSheetActive = false,
   businessContext,
@@ -134,7 +137,12 @@ export function JobWorkflowControls({
   }
 
   const isCompact = layout === "stack";
-  const stackClassName = isCompact ? "space-y-1.5" : "space-y-3";
+  const stackClassName = isCompact ? "space-y-2.5" : "space-y-3";
+  const businessGuideLayout = isCompact
+    ? fieldActionFirst
+      ? "field"
+      : "compact"
+    : "default";
   const businessAction = useMemo(() => {
     if (!businessContext) {
       return null;
@@ -168,8 +176,9 @@ export function JobWorkflowControls({
     return (
       <JobBusinessActionGuide
         action={businessAction}
-        layout={isCompact ? "compact" : "default"}
+        layout={businessGuideLayout === "field" ? "compact" : businessGuideLayout}
         presentation={presentation}
+        fieldSoft={businessGuideLayout === "field"}
         disabled={competingSheetActive}
         onFieldEstimateClick={onFieldEstimateClick}
         onFieldApproveClick={onFieldApproveClick}
@@ -209,6 +218,92 @@ export function JobWorkflowControls({
     return statusGuide ? <div className={stackClassName}>{statusGuide}</div> : null;
   }
 
+  function renderWorkflowActionsBlock() {
+    return (
+      <JobWorkflowActions
+        jobId={jobId}
+        customerId={customerId}
+        status={status}
+        canUpdateStatus={canUpdateStatus}
+        aiFeaturesEnabled={aiFeaturesEnabled}
+        layout={layout === "stack" ? "stack" : "row"}
+        showMobileHint={showMobileHint}
+        shortHints={fieldActionFirst}
+        competingSheetActive={competingSheetActive}
+        onCompleteSheetOpenChange={onCompleteSheetOpenChange}
+        onStatusUpdated={handleStatusUpdated}
+      />
+    );
+  }
+
+  function renderStartRouteBlock() {
+    return (
+      <StartRouteButton
+        jobId={jobId}
+        status={status}
+        serviceAddress={serviceAddress}
+        city={city}
+        state={state}
+        zip={zip}
+        canUpdateStatus={canUpdateStatus}
+        layout={layout === "stack" ? "block" : "inline"}
+        fieldStyled={fieldActionFirst && isCompact}
+        onStatusUpdated={handleStatusUpdated}
+      />
+    );
+  }
+
+  function renderStatusCorrectionBlock() {
+    return (
+      <JobStatusCorrectionControl
+        jobId={jobId}
+        status={status}
+        canCorrectStatus={canCorrectStatus}
+        onStatusUpdated={handleStatusUpdated}
+      />
+    );
+  }
+
+  function renderActiveWorkflowBlocks(
+    presentation: "full" | "cta",
+  ) {
+    const workflowActions = renderWorkflowActionsBlock();
+    const businessGuide = renderBusinessGuide(presentation);
+    const startRoute = renderStartRouteBlock();
+    const statusCorrection = renderStatusCorrectionBlock();
+
+    if (fieldActionFirst && status === "scheduled") {
+      return (
+        <>
+          {startRoute}
+          {businessGuide}
+          {workflowActions}
+          {statusCorrection}
+        </>
+      );
+    }
+
+    if (fieldActionFirst && status === "dispatched") {
+      return (
+        <>
+          {workflowActions}
+          {startRoute}
+          {businessGuide}
+          {statusCorrection}
+        </>
+      );
+    }
+
+    return (
+      <>
+        {workflowActions}
+        {businessGuide}
+        {startRoute}
+        {statusCorrection}
+      </>
+    );
+  }
+
   function renderActionsSection() {
     if (isTerminalJobStatus(status)) {
       const ctaGuide = renderBusinessGuide("cta");
@@ -216,38 +311,7 @@ export function JobWorkflowControls({
     }
 
     return (
-      <div className={stackClassName}>
-        <JobWorkflowActions
-          jobId={jobId}
-          customerId={customerId}
-          status={status}
-          canUpdateStatus={canUpdateStatus}
-          aiFeaturesEnabled={aiFeaturesEnabled}
-          layout={layout === "stack" ? "stack" : "row"}
-          showMobileHint={showMobileHint}
-          competingSheetActive={competingSheetActive}
-          onCompleteSheetOpenChange={onCompleteSheetOpenChange}
-          onStatusUpdated={handleStatusUpdated}
-        />
-        {renderBusinessGuide("cta")}
-        <StartRouteButton
-          jobId={jobId}
-          status={status}
-          serviceAddress={serviceAddress}
-          city={city}
-          state={state}
-          zip={zip}
-          canUpdateStatus={canUpdateStatus}
-          layout={layout === "stack" ? "block" : "inline"}
-          onStatusUpdated={handleStatusUpdated}
-        />
-        <JobStatusCorrectionControl
-          jobId={jobId}
-          status={status}
-          canCorrectStatus={canCorrectStatus}
-          onStatusUpdated={handleStatusUpdated}
-        />
-      </div>
+      <div className={stackClassName}>{renderActiveWorkflowBlocks("cta")}</div>
     );
   }
 
@@ -279,38 +343,7 @@ export function JobWorkflowControls({
     }
 
     return (
-      <div className={stackClassName}>
-        <JobWorkflowActions
-          jobId={jobId}
-          customerId={customerId}
-          status={status}
-          canUpdateStatus={canUpdateStatus}
-          aiFeaturesEnabled={aiFeaturesEnabled}
-          layout={layout === "stack" ? "stack" : "row"}
-          showMobileHint={showMobileHint}
-          competingSheetActive={competingSheetActive}
-          onCompleteSheetOpenChange={onCompleteSheetOpenChange}
-          onStatusUpdated={handleStatusUpdated}
-        />
-        {renderBusinessGuide("full")}
-        <StartRouteButton
-          jobId={jobId}
-          status={status}
-          serviceAddress={serviceAddress}
-          city={city}
-          state={state}
-          zip={zip}
-          canUpdateStatus={canUpdateStatus}
-          layout={layout === "stack" ? "block" : "inline"}
-          onStatusUpdated={handleStatusUpdated}
-        />
-        <JobStatusCorrectionControl
-          jobId={jobId}
-          status={status}
-          canCorrectStatus={canCorrectStatus}
-          onStatusUpdated={handleStatusUpdated}
-        />
-      </div>
+      <div className={stackClassName}>{renderActiveWorkflowBlocks("full")}</div>
     );
   }
 

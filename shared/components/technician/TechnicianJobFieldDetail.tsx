@@ -43,9 +43,13 @@ import { TechnicianPhotoSheet } from "./TechnicianPhotoSheet";
 import {
   technicianFieldContactPrimaryClass,
   technicianFieldContactSecondaryClass,
+  technicianFieldContextBlockClass,
   technicianFieldJobDetailsClass,
   technicianFieldJobDetailsSummaryClass,
+  technicianFieldReferenceSectionClass,
+  technicianFieldSectionLabelClass,
   technicianFieldUtilityActionClass,
+  technicianFieldWorkflowSurfaceClass,
 } from "./technician-field-styles";
 
 type TechnicianJobFieldDetailProps = {
@@ -145,202 +149,215 @@ export function TechnicianJobFieldDetail({
 
   return (
     <>
-      <div className="space-y-3 px-3 py-3 sm:px-4">
-        <div className="space-y-1 text-sm text-slate-700">
-          <p className="font-medium text-slate-900">{job.customerName}</p>
-          <p className="flex items-start gap-1 text-xs leading-snug text-slate-600">
-            <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-slate-400" aria-hidden />
+      <div className="space-y-5 px-4 py-4">
+        <div className={technicianFieldContextBlockClass}>
+          <p className="flex items-start gap-2 leading-snug">
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden />
             <span className="min-w-0 break-words">
               {hasCompleteAddress
                 ? formatTechnicianJobAddress(job)
                 : "No address — contact dispatch"}
             </span>
           </p>
-          <p className="flex items-center gap-1 text-[11px] text-slate-500">
-            <Clock className="h-3 w-3 shrink-0 text-slate-400" aria-hidden />
+          <p className="flex items-center gap-2 text-xs text-slate-500">
+            <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
             {formatTechnicianJobTime(job.scheduledDate)}
           </p>
+          {canManageTime && showTimeStatus ? (
+            <div className="flex flex-wrap items-center gap-2 pt-0.5">
+              <TechnicianJobShiftStatus jobId={job.id} timeState={timeState} compact />
+              <TechnicianJobLaborStatus jobId={job.id} timeState={timeState} compact />
+            </div>
+          ) : null}
         </div>
 
-        {canManageTime && showTimeStatus ? (
-          <div className="space-y-1">
-            <TechnicianJobShiftStatus jobId={job.id} timeState={timeState} compact />
-            <TechnicianJobLaborStatus jobId={job.id} timeState={timeState} compact />
+        <section>
+          <h3 className={technicianFieldSectionLabelClass}>Next step</h3>
+          <div className={`${technicianFieldWorkflowSurfaceClass} mt-2`}>
+            <JobWorkflowControls
+              jobId={job.id}
+              customerId={job.customerId}
+              initialStatus={status}
+              serviceAddress={job.serviceAddress}
+              city={job.city}
+              state={job.state}
+              zip={job.zip}
+              canUpdateStatus
+              aiFeaturesEnabled={aiFeaturesEnabled}
+              layout="stack"
+              fieldActionFirst
+              showMobileHint
+              competingSheetActive={activeSheet !== null}
+              businessContext={billingContext}
+              businessActionOptions={{
+                canCreateEstimate: showCreateEstimate,
+                canViewBilling,
+                canApproveOnSite:
+                  canApproveOnSite && Boolean(sentEstimateForApproval),
+              }}
+              onFieldEstimateClick={
+                showCreateEstimate ? () => setActiveSheet("estimate") : undefined
+              }
+              onFieldApproveClick={
+                canApproveOnSite && sentEstimateForApproval
+                  ? () => setActiveSheet("approve_estimate")
+                  : undefined
+              }
+              onCompleteSheetOpenChange={setCompleteSheetOpen}
+              onStatusUpdated={handleStatusUpdated}
+            />
           </div>
-        ) : null}
+        </section>
 
-        <JobSummaryAiAssistant
-          jobId={job.id}
-          aiFeaturesEnabled={aiFeaturesEnabled}
-        />
+        {isActive ? (
+          <section className="space-y-3">
+            {(showLegacyEstimateButton || hasPhone || hasEmail || hasMaps) ? (
+              <div>
+                <h3 className={technicianFieldSectionLabelClass}>Contact</h3>
+                <div className="mt-2 flex gap-2">
+                  {hasPhone ? (
+                    <a
+                      href={`tel:${job.customerPhone}`}
+                      className={technicianFieldContactPrimaryClass}
+                    >
+                      <Phone className="h-4 w-4 shrink-0 text-emerald-600" />
+                      Call
+                    </a>
+                  ) : null}
+                  {hasMaps ? (
+                    <a
+                      href={mapsUrl!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={technicianFieldContactPrimaryClass}
+                    >
+                      <Navigation className="h-4 w-4 shrink-0 text-cyan-700" />
+                      Maps
+                    </a>
+                  ) : null}
+                  {hasEmail ? (
+                    <a
+                      href={`mailto:${job.customerEmail}`}
+                      className={technicianFieldContactSecondaryClass}
+                    >
+                      <Mail className="h-4 w-4 shrink-0 text-slate-500" />
+                      Email
+                    </a>
+                  ) : null}
+                  {showLegacyEstimateButton ? (
+                    <button
+                      type="button"
+                      disabled={fieldActionsDisabled}
+                      onClick={() => setActiveSheet("estimate")}
+                      className={`${technicianFieldContactSecondaryClass} disabled:cursor-not-allowed disabled:opacity-60`}
+                      title={
+                        fieldActionsDisabled
+                          ? completeSheetOpen
+                            ? "Finish or cancel complete work before creating an estimate"
+                            : "Finish the open form before creating an estimate"
+                          : undefined
+                      }
+                    >
+                      <Calculator className="h-4 w-4 shrink-0 text-indigo-600" />
+                      Estimate
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
 
-        <div className="space-y-1.5">
-          <JobWorkflowControls
-            jobId={job.id}
-            customerId={job.customerId}
-            initialStatus={status}
-            serviceAddress={job.serviceAddress}
-            city={job.city}
-            state={job.state}
-            zip={job.zip}
-            canUpdateStatus
-            aiFeaturesEnabled={aiFeaturesEnabled}
-            layout="stack"
-            showMobileHint={false}
-            competingSheetActive={activeSheet !== null}
-            businessContext={billingContext}
-            businessActionOptions={{
-              canCreateEstimate: showCreateEstimate,
-              canViewBilling,
-              canApproveOnSite:
-                canApproveOnSite && Boolean(sentEstimateForApproval),
-            }}
-            onFieldEstimateClick={
-              showCreateEstimate ? () => setActiveSheet("estimate") : undefined
-            }
-            onFieldApproveClick={
-              canApproveOnSite && sentEstimateForApproval
-                ? () => setActiveSheet("approve_estimate")
-                : undefined
-            }
-            onCompleteSheetOpenChange={setCompleteSheetOpen}
-            onStatusUpdated={handleStatusUpdated}
-          />
-
-          {isActive &&
-          (showLegacyEstimateButton || hasPhone || hasEmail || hasMaps) ? (
-            <div className="flex gap-1.5">
-              {showLegacyEstimateButton ? (
+            <div>
+              <h3 className={technicianFieldSectionLabelClass}>Log on site</h3>
+              <div className="mt-2 grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   disabled={fieldActionsDisabled}
-                  onClick={() => setActiveSheet("estimate")}
-                  className={`${technicianFieldContactSecondaryClass} disabled:cursor-not-allowed disabled:opacity-60`}
+                  onClick={() => setActiveSheet("photo")}
+                  className={technicianFieldUtilityActionClass}
                   title={
                     fieldActionsDisabled
                       ? completeSheetOpen
-                        ? "Finish or cancel complete work before creating an estimate"
-                        : "Finish the open form before creating an estimate"
+                        ? "Finish or cancel complete work before adding a photo"
+                        : "Finish the open form before adding a photo"
                       : undefined
                   }
                 >
-                  <Calculator className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
-                  Estimate
+                  <Camera className="h-4 w-4 shrink-0 text-violet-600" />
+                  Photos
                 </button>
-              ) : null}
-              {hasPhone ? (
-                <a
-                  href={`tel:${job.customerPhone}`}
-                  className={technicianFieldContactPrimaryClass}
+                <button
+                  type="button"
+                  disabled={fieldActionsDisabled}
+                  onClick={() => setActiveSheet("material")}
+                  className={technicianFieldUtilityActionClass}
+                  title={
+                    fieldActionsDisabled
+                      ? completeSheetOpen
+                        ? "Finish or cancel complete work before logging material"
+                        : "Finish the open form before logging material"
+                      : undefined
+                  }
                 >
-                  <Phone className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                  Call
-                </a>
-              ) : null}
-              {hasMaps ? (
-                <a
-                  href={mapsUrl!}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={technicianFieldContactPrimaryClass}
+                  <Package className="h-4 w-4 shrink-0 text-cyan-700" />
+                  Materials
+                </button>
+                <button
+                  type="button"
+                  disabled={fieldActionsDisabled}
+                  onClick={() => setActiveSheet("expense")}
+                  className={technicianFieldUtilityActionClass}
+                  title={
+                    fieldActionsDisabled
+                      ? completeSheetOpen
+                        ? "Finish or cancel complete work before logging a receipt"
+                        : "Finish the open form before logging a receipt"
+                      : undefined
+                  }
                 >
-                  <Navigation className="h-3.5 w-3.5 shrink-0 text-cyan-700" />
-                  Maps
-                </a>
-              ) : null}
-              {hasEmail ? (
-                <a
-                  href={`mailto:${job.customerEmail}`}
-                  className={technicianFieldContactSecondaryClass}
-                >
-                  <Mail className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-                  Email
-                </a>
-              ) : null}
+                  <Receipt className="h-4 w-4 shrink-0 text-amber-600" />
+                  Receipts
+                </button>
+              </div>
             </div>
-          ) : null}
+          </section>
+        ) : null}
 
-          {isActive ? (
-            <div className="grid grid-cols-3 gap-1.5">
-              <button
-                type="button"
-                disabled={fieldActionsDisabled}
-                onClick={() => setActiveSheet("photo")}
-                className={technicianFieldUtilityActionClass}
-                title={
-                  fieldActionsDisabled
-                    ? completeSheetOpen
-                      ? "Finish or cancel complete work before adding a photo"
-                      : "Finish the open form before adding a photo"
-                    : undefined
-                }
-              >
-                <Camera className="h-4 w-4 shrink-0 text-violet-600" />
-                Photos
-              </button>
-              <button
-                type="button"
-                disabled={fieldActionsDisabled}
-                onClick={() => setActiveSheet("material")}
-                className={technicianFieldUtilityActionClass}
-                title={
-                  fieldActionsDisabled
-                    ? completeSheetOpen
-                      ? "Finish or cancel complete work before logging material"
-                      : "Finish the open form before logging material"
-                    : undefined
-                }
-              >
-                <Package className="h-4 w-4 shrink-0 text-cyan-700" />
-                Materials
-              </button>
-              <button
-                type="button"
-                disabled={fieldActionsDisabled}
-                onClick={() => setActiveSheet("expense")}
-                className={technicianFieldUtilityActionClass}
-                title={
-                  fieldActionsDisabled
-                    ? completeSheetOpen
-                      ? "Finish or cancel complete work before logging a receipt"
-                      : "Finish the open form before logging a receipt"
-                    : undefined
-                }
-              >
-                <Receipt className="h-4 w-4 shrink-0 text-amber-600" />
-                Receipts
-              </button>
-            </div>
-          ) : null}
-        </div>
+        <section className={technicianFieldReferenceSectionClass}>
+          <h3 className={technicianFieldSectionLabelClass}>Reference</h3>
+          <div className="mt-2 space-y-2">
+            <JobSummaryAiAssistant
+              jobId={job.id}
+              aiFeaturesEnabled={aiFeaturesEnabled}
+              variant="field"
+            />
 
-        <div className="space-y-1.5 border-t border-slate-100/90 pt-2">
-          <TechnicianJobEquipmentSummary customerId={job.customerId} />
+            <TechnicianJobEquipmentSummary customerId={job.customerId} />
 
-          {hasDescription ? (
-            <details className={detailsClass}>
-              <summary className={detailsSummaryClass}>
-                <FileText className="h-3.5 w-3.5 text-slate-400" />
-                Summary
-              </summary>
-              <p className="border-t border-slate-100 px-2 py-1.5 text-sm leading-snug text-slate-800">
-                {job.description}
-              </p>
-            </details>
-          ) : null}
+            {hasDescription ? (
+              <details className={detailsClass}>
+                <summary className={detailsSummaryClass}>
+                  <FileText className="h-3.5 w-3.5 text-slate-400" />
+                  Summary
+                </summary>
+                <p className="px-3 py-2.5 text-sm leading-snug text-slate-800">
+                  {job.description}
+                </p>
+              </details>
+            ) : null}
 
-          {hasNotes ? (
-            <details className={detailsClass}>
-              <summary className={detailsSummaryClass}>
-                <StickyNote className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                Office notes
-              </summary>
-              <p className="border-t border-slate-100 px-2 py-1.5 text-sm leading-snug text-slate-700">
-                {job.notes}
-              </p>
-            </details>
-          ) : null}
-        </div>
+            {hasNotes ? (
+              <details className={detailsClass}>
+                <summary className={detailsSummaryClass}>
+                  <StickyNote className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                  Office notes
+                </summary>
+                <p className="px-3 py-2.5 text-sm leading-snug text-slate-700">
+                  {job.notes}
+                </p>
+              </details>
+            ) : null}
+          </div>
+        </section>
       </div>
 
       {activeSheet === "material" ? (

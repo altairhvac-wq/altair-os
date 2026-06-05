@@ -12,10 +12,15 @@ import {
 } from "lucide-react";
 import { generateJobSummaryAction } from "@/app/actions/job-ai";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import {
+  technicianFieldJobDetailsClass,
+  technicianFieldJobDetailsSummaryClass,
+} from "@/shared/components/technician/technician-field-styles";
 
 type JobSummaryAiAssistantProps = {
   jobId: string;
   aiFeaturesEnabled: boolean;
+  variant?: "default" | "field";
 };
 
 function getHideReason(aiFeaturesEnabled: boolean): string | null {
@@ -29,13 +34,15 @@ function getHideReason(aiFeaturesEnabled: boolean): string | null {
 export function JobSummaryAiAssistant({
   jobId,
   aiFeaturesEnabled,
+  variant = "default",
 }: JobSummaryAiAssistantProps) {
   const [summaryText, setSummaryText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(variant !== "field");
   const [isDismissed, setIsDismissed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [fieldOpen, setFieldOpen] = useState(false);
 
   const isVisible = aiFeaturesEnabled;
   const hideReason = getHideReason(aiFeaturesEnabled);
@@ -104,15 +111,20 @@ export function JobSummaryAiAssistant({
 
   const showPanel = summaryText && !isDismissed;
 
-  return (
-    <section className="admin-card px-3 py-2.5 sm:px-4 sm:py-3">
+  const summarizeButtonClass =
+    variant === "field"
+      ? "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-1.5 rounded-xl bg-cyan-50 px-3 py-2.5 text-sm font-semibold text-cyan-800 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60"
+      : "inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2.5 text-sm font-semibold text-cyan-800 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9 sm:w-auto sm:px-2.5 sm:py-1.5 sm:text-xs";
+
+  const panelContent = (
+    <>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
           onClick={handleSummarize}
           disabled={isPending}
           aria-busy={isPending}
-          className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2.5 text-sm font-semibold text-cyan-800 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9 sm:w-auto sm:px-2.5 sm:py-1.5 sm:text-xs"
+          className={summarizeButtonClass}
         >
           {isPending ? (
             <Loader2
@@ -128,7 +140,7 @@ export function JobSummaryAiAssistant({
           {isPending ? "Summarizing…" : "Summarize with AI"}
         </button>
 
-        {!isPending && !showPanel ? (
+        {variant === "default" && !isPending && !showPanel ? (
           <p className="text-[11px] text-slate-500 sm:text-right">
             Generate a concise internal summary of this job.
           </p>
@@ -142,15 +154,23 @@ export function JobSummaryAiAssistant({
       ) : null}
 
       {showPanel ? (
-        <div className="mt-3 rounded-lg border border-cyan-100 bg-cyan-50/50 px-3 py-2.5">
+        <div
+          className={
+            variant === "field"
+              ? "mt-3 rounded-xl bg-cyan-50/70 px-3 py-2.5"
+              : "mt-3 rounded-lg border border-cyan-100 bg-cyan-50/50 px-3 py-2.5"
+          }
+        >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-cyan-900">
                 AI job summary
               </p>
-              <p className="mt-0.5 text-[11px] text-cyan-800/80">
-                Review before acting.
-              </p>
+              {variant === "default" ? (
+                <p className="mt-0.5 text-[11px] text-cyan-800/80">
+                  Review before acting.
+                </p>
+              ) : null}
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
@@ -205,6 +225,30 @@ export function JobSummaryAiAssistant({
           ) : null}
         </div>
       ) : null}
+    </>
+  );
+
+  if (variant === "field") {
+    return (
+      <details
+        className={technicianFieldJobDetailsClass}
+        open={fieldOpen}
+        onToggle={(event) => {
+          setFieldOpen((event.currentTarget as HTMLDetailsElement).open);
+        }}
+      >
+        <summary className={technicianFieldJobDetailsSummaryClass}>
+          <Sparkles className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+          AI summary
+        </summary>
+        <div className="px-3 pb-3 pt-1">{panelContent}</div>
+      </details>
+    );
+  }
+
+  return (
+    <section className="admin-card px-3 py-2.5 sm:px-4 sm:py-3">
+      {panelContent}
     </section>
   );
 }

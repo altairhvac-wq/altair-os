@@ -6,6 +6,11 @@ import { useState, useTransition } from "react";
 import { updateJobStatusAction } from "@/app/actions/jobs";
 import { buildGoogleMapsDirectionsUrl } from "@/shared/lib/maps";
 import type { JobStatus } from "@/shared/types/job";
+import {
+  technicianFieldPrimaryActionClass,
+  technicianFieldStartRouteSecondaryClass,
+  technicianFieldWorkflowHintClass,
+} from "@/shared/components/technician/technician-field-styles";
 
 type StartRouteButtonProps = {
   jobId: string;
@@ -16,6 +21,8 @@ type StartRouteButtonProps = {
   zip: string;
   canUpdateStatus?: boolean;
   layout?: "inline" | "block";
+  /** Use technician field tokens in block layout (mobile job detail). */
+  fieldStyled?: boolean;
   onStatusUpdated?: (status: JobStatus) => void;
 };
 
@@ -30,6 +37,7 @@ export function StartRouteButton({
   zip,
   canUpdateStatus = false,
   layout = "inline",
+  fieldStyled = false,
   onStatusUpdated,
 }: StartRouteButtonProps) {
   const router = useRouter();
@@ -87,13 +95,21 @@ export function StartRouteButton({
     });
   }
 
-  const linkClassName = isEnRoute
-    ? layout === "block"
-      ? "inline-flex w-full min-h-10 touch-manipulation items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-      : "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 sm:w-auto sm:px-3.5 sm:py-2 text-base sm:text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-    : layout === "block"
-      ? "inline-flex w-full min-h-10 touch-manipulation items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-      : "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg bg-cyan-600 px-4 py-3 sm:w-auto sm:px-3.5 sm:py-2 text-base sm:text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60";
+  const linkClassName = fieldStyled
+    ? isEnRoute
+      ? technicianFieldStartRouteSecondaryClass
+      : technicianFieldPrimaryActionClass
+    : isEnRoute
+      ? layout === "block"
+        ? "inline-flex w-full min-h-10 touch-manipulation items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        : "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 sm:w-auto sm:px-3.5 sm:py-2 text-base sm:text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+      : layout === "block"
+        ? "inline-flex w-full min-h-10 touch-manipulation items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        : "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg bg-cyan-600 px-4 py-3 sm:w-auto sm:px-3.5 sm:py-2 text-base sm:text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60";
+
+  const showEnRouteHint = isEnRoute && !fieldStyled && layout !== "block";
+  const showScheduledHint =
+    fieldStyled && status === "scheduled" && !isPending;
 
   return (
     <div className={layout === "block" ? "space-y-2" : "space-y-2"}>
@@ -113,9 +129,14 @@ export function StartRouteButton({
         <Navigation className="h-4 w-4" />
         {buttonLabel}
       </a>
-      {isEnRoute && layout !== "block" ? (
-        <p className="text-xs text-slate-500">
-          You&apos;re en route. Tap &quot;Arrived on site&quot; when you reach the job.
+      {showScheduledHint ? (
+        <p className={technicianFieldWorkflowHintClass}>
+          Opens maps and marks you en route.
+        </p>
+      ) : null}
+      {showEnRouteHint ? (
+        <p className={fieldStyled ? technicianFieldWorkflowHintClass : "text-xs text-slate-500"}>
+          Tap &quot;Arrived on site&quot; when you reach the job.
         </p>
       ) : null}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}

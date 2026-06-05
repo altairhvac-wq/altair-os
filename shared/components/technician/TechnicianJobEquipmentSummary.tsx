@@ -87,7 +87,7 @@ export function TechnicianJobEquipmentSummary({
   function renderContent() {
     if (isLoading) {
       return (
-        <div className="flex items-center gap-2 border-t border-slate-100 px-2.5 py-2 text-xs text-slate-500">
+        <div className="flex items-center gap-2 border-t border-slate-100/80 px-2.5 py-2 text-xs text-slate-500">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Loading equipment…
         </div>
@@ -96,7 +96,7 @@ export function TechnicianJobEquipmentSummary({
 
     if (error) {
       return (
-        <div className="border-t border-slate-100 px-2.5 py-2 text-xs text-red-700">
+        <div className="px-2.5 py-2 text-xs text-red-700">
           <p>{error}</p>
           <button
             type="button"
@@ -114,7 +114,7 @@ export function TechnicianJobEquipmentSummary({
 
     if (!equipment || equipment.length === 0) {
       return (
-        <p className="border-t border-slate-100 px-2.5 py-2 text-xs text-slate-500">
+        <p className="px-2.5 py-2 text-xs text-slate-500">
           No equipment recorded for this customer yet.
         </p>
       );
@@ -124,18 +124,18 @@ export function TechnicianJobEquipmentSummary({
 
     if (activeEquipment.length === 0) {
       return (
-        <p className="border-t border-slate-100 px-2.5 py-2 text-xs text-slate-500">
+        <p className="px-2.5 py-2 text-xs text-slate-500">
           No active equipment on file for this customer.
         </p>
       );
     }
 
     return (
-      <ul className="space-y-1.5 border-t border-slate-100 px-2.5 py-2">
+      <ul className="space-y-1.5 px-2.5 py-2">
         {activeEquipment.slice(0, 4).map((item) => (
           <li
             key={item.id}
-            className="rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5"
+            className="rounded-lg bg-slate-50/80 px-2.5 py-1.5"
           >
             <p className="text-sm font-medium text-slate-900">{item.name}</p>
             {(item.brand || item.modelNumber || item.location) && (

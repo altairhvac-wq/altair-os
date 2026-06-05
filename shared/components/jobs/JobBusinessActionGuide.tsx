@@ -10,6 +10,8 @@ type JobBusinessActionGuideProps = {
   action: JobBusinessAction | null;
   layout?: "compact" | "default";
   presentation?: JobBusinessActionPresentation;
+  /** Softer field-detail styling without heavy borders. */
+  fieldSoft?: boolean;
   disabled?: boolean;
   onFieldEstimateClick?: () => void;
   onFieldApproveClick?: () => void;
@@ -30,7 +32,18 @@ function matchesPresentation(
   return action.kind === "cta";
 }
 
-function statusBannerClassName(action: JobBusinessAction): string {
+function statusBannerClassName(
+  action: JobBusinessAction,
+  fieldSoft: boolean,
+): string {
+  if (fieldSoft) {
+    if (action.id === "awaiting_payment") {
+      return "bg-amber-50 text-amber-900";
+    }
+
+    return "bg-indigo-50 text-indigo-900";
+  }
+
   if (action.id === "awaiting_payment") {
     return "border-amber-200 bg-amber-50 text-amber-900";
   }
@@ -60,6 +73,7 @@ export function JobBusinessActionGuide({
   action,
   layout = "default",
   presentation = "full",
+  fieldSoft = false,
   disabled = false,
   onFieldEstimateClick,
   onFieldApproveClick,
@@ -79,7 +93,7 @@ export function JobBusinessActionGuide({
     return (
       <div className={compact ? "space-y-1.5" : "space-y-2"}>
         <div
-          className={`flex items-start gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold ${statusBannerClassName(action)}`}
+          className={`flex items-start gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold ${statusBannerClassName(action, fieldSoft)} ${fieldSoft ? "" : "border"}`}
         >
           <Clock3 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           <span>{action.label}</span>
