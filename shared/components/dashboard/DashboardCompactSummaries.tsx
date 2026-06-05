@@ -12,9 +12,13 @@ import {
 } from "@/shared/lib/dashboard-attention-cards";
 import type { CommandStripPanelId } from "@/shared/lib/dashboard-command-strip";
 import {
+  isCoveredByAltairRecommendations,
+} from "@/shared/lib/dashboard-surface-dedup";
+import {
   buildDashboardNextBestActions,
   hasDashboardNextBestActions,
 } from "@/shared/lib/dashboard-next-best-actions";
+import { buildOfficePriorityRecommendations } from "@/shared/lib/office-priority-engine";
 import type {
   DashboardData,
   DashboardLeadPipelineSummary,
@@ -222,27 +226,62 @@ export function DashboardCompactAttentionSummary({
         <div className="flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50/50 px-3 py-2.5">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-700" />
           <p className="text-xs font-semibold text-emerald-900">
-            All priority areas look healthy
+            No open priority signals
           </p>
         </div>
       ) : (
         <ul className="grid grid-cols-2 gap-1.5 sm:gap-2">
-          {issueCards.map((card) => (
-            <li
-              key={card.id}
-              className="rounded-lg border border-slate-100 bg-white px-2.5 py-2"
-            >
-              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                {card.label}
-              </p>
-              <p className="mt-0.5 text-base font-black tabular-nums text-slate-900">
-                {card.count !== null ? card.count : card.statusLabel}
-              </p>
-              <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-600">
-                {card.explanation}
-              </p>
-            </li>
-          ))}
+          {issueCards.map((card) => {
+            const cardBody = (
+              <>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                  {card.label}
+                </p>
+                <p className="mt-0.5 text-base font-black tabular-nums text-slate-900">
+                  {card.count !== null ? card.count : card.statusLabel}
+                </p>
+                <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-600">
+                  {card.explanation}
+                </p>
+              </>
+            );
+
+            if (!card.href && !card.queueType) {
+              return (
+                <li
+                  key={card.id}
+                  className="rounded-lg border border-slate-100 bg-white px-2.5 py-2"
+                >
+                  {cardBody}
+                </li>
+              );
+            }
+
+            return (
+              <li key={card.id}>
+                <DashboardQueueActionTrigger
+                  action={{
+                    id: card.id,
+                    label: card.label,
+                    description: card.explanation,
+                    count: card.count,
+                    severity:
+                      card.severity === "critical"
+                        ? "critical"
+                        : card.severity === "warning"
+                          ? "warning"
+                          : "info",
+                    queueType: card.queueType,
+                    href: card.href,
+                  }}
+                  data={data}
+                  className="block w-full rounded-lg border border-slate-100 bg-white px-2.5 py-2 text-left transition-colors hover:border-slate-200"
+                >
+                  {cardBody}
+                </DashboardQueueActionTrigger>
+              </li>
+            );
+          })}
         </ul>
       )}
     </CompactSectionShell>
@@ -551,29 +590,40 @@ export function DashboardCompactNextStepsSection({
 }: {
   data: DashboardData;
 }) {
-  const actions = buildDashboardNextBestActions(data).slice(
-    0,
-    NEXT_ACTION_PREVIEW_LIMIT,
+  const altairRecommendations = buildOfficePriorityRecommendations(data);
+  const coveredQueues = new Set(
+    altairRecommendations.map((recommendation) => recommendation.relatedQueue),
   );
+  const actions = buildDashboardNextBestActions(data)
+    .filter(
+      (action) =>
+        !isCoveredByAltairRecommendations(action.queueType, coveredQueues),
+    )
+    .slice(0, NEXT_ACTION_PREVIEW_LIMIT);
   const hasActions = hasDashboardNextBestActions(data);
+  const hasVisibleActions = actions.length > 0;
   const activities = data.recentActivity.slice(0, RECENT_ACTIVITY_PREVIEW_LIMIT);
 
   return (
     <div className="grid min-w-0 gap-3 lg:grid-cols-2 lg:gap-4">
       <CompactSectionShell
-        eyebrow="Recommended"
+        eyebrow="Action playbook"
         title="Next best actions"
         description={
-          hasActions
-            ? `${actions.length} top prioritized actions`
-            : "Operations running smoothly"
+          hasVisibleActions
+            ? altairRecommendations.length > 0
+              ? `${actions.length} additional action${actions.length === 1 ? "" : "s"} beyond top priorities`
+              : `${actions.length} prioritized action${actions.length === 1 ? "" : "s"}`
+            : hasActions && altairRecommendations.length > 0
+              ? "Top priorities shown in Altair Recommendations"
+              : "No pending actions"
         }
         href="/reports"
         linkLabel="Reports"
         panelId="next-steps"
         panelButtonLabel="All actions and activity"
       >
-        {hasActions ? (
+        {hasVisibleActions ? (
           <ul className="space-y-1.5">
             {actions.map((action) => (
               <li key={action.id}>
@@ -604,7 +654,11 @@ export function DashboardCompactNextStepsSection({
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-slate-500">No urgent actions flagged.</p>
+          <p className="text-xs text-slate-500">
+            {hasActions && altairRecommendations.length > 0
+              ? "Open the full breakdown for step-by-step guidance on top priorities."
+              : "No pending actions right now."}
+          </p>
         )}
       </CompactSectionShell>
 

@@ -10,6 +10,7 @@ import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
 import { useDashboardDrilldown } from "@/shared/components/dashboard/dashboard-drilldown-context";
 import { AltairRecommendationsSection } from "@/shared/components/dashboard/AltairRecommendationsSection";
+import { DashboardQueueActionTrigger } from "@/shared/components/dashboard/DashboardQueueActionTrigger";
 import { MobileActionDashboard } from "@/shared/components/dashboard/MobileActionDashboard";
 import { DashboardNotificationsList } from "@/shared/components/dashboard/DashboardNotificationsList";
 import { buildMobileActionCards } from "@/shared/lib/mobile-action-dashboard";
@@ -23,6 +24,7 @@ import { formatCurrency } from "@/shared/types/customer";
 import type { DailyOperationsSummaryHighlight } from "@/shared/types/daily-operations-summary";
 import type { NotificationAccess } from "@/shared/types/notification";
 import { getOperationalHealthLabelStyles } from "@/shared/types/operational-health-report";
+import { resolveHighlightQueueType } from "@/shared/lib/dashboard-action-routing";
 import { DISPATCH_PAGE_TODAY_HREF } from "@/shared/lib/dispatch-page-focus";
 import { INVOICE_PAGE_CASH_FLOW_HREF } from "@/shared/lib/invoice-page-focus";
 
@@ -283,24 +285,47 @@ function SecondaryInsightsSection({
       <div className="space-y-2 border-t border-slate-100 px-3 pb-3 pt-2">
         {hasHighlights ? (
           <ul className="space-y-1.5">
-            {highlights.map((highlight) => (
-              <li key={highlight.id}>
-                {highlight.href ? (
-                  <Link
-                    href={highlight.href}
-                    className={`block rounded-lg border px-2.5 py-2 text-xs font-medium transition-opacity hover:opacity-90 ${INSIGHT_SEVERITY_STYLES[highlight.severity]}`}
-                  >
-                    {highlight.message}
-                  </Link>
-                ) : (
+            {highlights.map((highlight) => {
+              const queueType = resolveHighlightQueueType(highlight.id);
+              const highlightClassName = `block rounded-lg border px-2.5 py-2 text-xs font-medium transition-opacity hover:opacity-90 ${INSIGHT_SEVERITY_STYLES[highlight.severity]}`;
+
+              if (queueType || highlight.href) {
+                return (
+                  <li key={highlight.id}>
+                    <DashboardQueueActionTrigger
+                      action={{
+                        id: highlight.id,
+                        label: highlight.category.replaceAll("_", " "),
+                        description: highlight.message,
+                        count: highlight.count ?? null,
+                        severity:
+                          highlight.severity === "critical"
+                            ? "critical"
+                            : highlight.severity === "warning"
+                              ? "warning"
+                              : "info",
+                        queueType,
+                        href: highlight.href,
+                      }}
+                      data={data}
+                      className={highlightClassName}
+                    >
+                      {highlight.message}
+                    </DashboardQueueActionTrigger>
+                  </li>
+                );
+              }
+
+              return (
+                <li key={highlight.id}>
                   <p
                     className={`rounded-lg border px-2.5 py-2 text-xs font-medium ${INSIGHT_SEVERITY_STYLES[highlight.severity]}`}
                   >
                     {highlight.message}
                   </p>
-                )}
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         ) : null}
 

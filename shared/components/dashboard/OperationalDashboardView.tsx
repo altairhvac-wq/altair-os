@@ -13,6 +13,7 @@ import {
   DashboardCompactTodaySection,
 } from "@/shared/components/dashboard/DashboardCompactSummaries";
 import { DashboardDrilldownProvider } from "@/shared/components/dashboard/dashboard-drilldown-context";
+import { DashboardQueueActionTrigger } from "@/shared/components/dashboard/DashboardQueueActionTrigger";
 import type { DashboardData } from "@/shared/types/dashboard";
 import {
   AlertCircle,
@@ -42,6 +43,7 @@ import { CashFlowCommandSection } from "@/shared/components/dashboard/CashFlowCo
 import { DashboardNotificationsList } from "@/shared/components/dashboard/DashboardNotificationsList";
 import { DispatchPressureSection } from "@/shared/components/dashboard/DispatchPressureSection";
 import { NextBestActionsSection } from "@/shared/components/dashboard/NextBestActionsSection";
+import { resolveHighlightQueueType } from "@/shared/lib/dashboard-action-routing";
 import type { CommandStripPanelId } from "@/shared/lib/dashboard-command-strip";
 import {
   INVOICE_PAGE_CASH_FLOW_HREF,
@@ -103,11 +105,17 @@ const DASHBOARD_SECTION_LABELS: Record<
   DashboardPrioritySectionId,
   { title: string; description?: string }
 > = {
-  "needs-attention": { title: "Needs attention" },
+  "needs-attention": {
+    title: "Needs attention",
+    description: "Priority signals and open queues",
+  },
   "todays-work": { title: "Today's work" },
   "revenue-billing": { title: "Revenue and billing" },
   "operational-health": { title: "Operational health" },
-  "next-steps": { title: "Next steps" },
+  "next-steps": {
+    title: "Next steps",
+    description: "Action playbook and recent activity",
+  },
 };
 
 function getDashboardRoleFocus(access: DashboardData["access"]): DashboardRoleFocus {
@@ -350,11 +358,11 @@ function getHighlightSeverityStyles(
 }
 
 function OperationalInsightsSection({
-  insights,
+  data,
 }: {
-  insights: DashboardData["operationalInsights"];
+  data: DashboardData;
 }) {
-  const { highlights } = insights;
+  const { highlights } = data.operationalInsights;
 
   return (
     <DashboardSection
@@ -406,17 +414,36 @@ function OperationalInsightsSection({
               </div>
             );
 
-            return (
-              <li key={highlight.id}>
-                {highlight.href ? (
-                  <Link href={highlight.href} className="block transition-opacity hover:opacity-90">
+            const queueType = resolveHighlightQueueType(highlight.id);
+
+            if (queueType || highlight.href) {
+              return (
+                <li key={highlight.id}>
+                  <DashboardQueueActionTrigger
+                    action={{
+                      id: highlight.id,
+                      label: highlight.category.replaceAll("_", " "),
+                      description: highlight.message,
+                      count: highlight.count ?? null,
+                      severity:
+                        highlight.severity === "critical"
+                          ? "critical"
+                          : highlight.severity === "warning"
+                            ? "warning"
+                            : "info",
+                      queueType,
+                      href: highlight.href,
+                    }}
+                    data={data}
+                    className="block w-full text-left transition-opacity hover:opacity-90"
+                  >
                     {content}
-                  </Link>
-                ) : (
-                  content
-                )}
-              </li>
-            );
+                  </DashboardQueueActionTrigger>
+                </li>
+              );
+            }
+
+            return <li key={highlight.id}>{content}</li>;
           })}
         </ul>
       )}
@@ -1136,7 +1163,7 @@ function DashboardContentLayout({
             <>
               <TodayNeedsAttentionSection data={data} />
               <OperationalRiskDrilldownSection data={data} />
-              <OperationalInsightsSection insights={data.operationalInsights} />
+              <OperationalInsightsSection data={data} />
             </>
           ),
           health: (

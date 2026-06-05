@@ -115,7 +115,12 @@ function AttentionCard({
         </p>
       </div>
 
-      {card.href ? (
+      {card.queueType ? (
+        <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 lg:mt-3">
+          Open queue
+          <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+        </span>
+      ) : card.href ? (
         <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 lg:mt-3">
           View details
           <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -193,7 +198,7 @@ export function TodayNeedsAttentionSection({
           <p className="text-xs text-slate-500 lg:text-sm">
             {issueCount === 0
               ? "Everything looks healthy — no urgent operational risks right now."
-              : `${issueCount} area${issueCount === 1 ? "" : "s"} need follow-up today.`}
+              : `${issueCount} area${issueCount === 1 ? "" : "s"} need follow-up today. Open a card for context.`}
           </p>
         </div>
         <Link

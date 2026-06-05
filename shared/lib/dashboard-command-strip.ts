@@ -107,7 +107,7 @@ export function buildDashboardCommandStripGroups(
         value: issueCount,
         detail:
           issueCount === 0
-            ? "All priority areas clear"
+            ? "0 areas flagged"
             : `${issueCount} area${issueCount === 1 ? "" : "s"} flagged`,
         severity: resolveAttentionSeverity(data, issueCount),
       },

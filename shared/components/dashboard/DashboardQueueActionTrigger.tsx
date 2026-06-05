@@ -1,5 +1,6 @@
 "use client";
 
+import type { CompanyAccessScope } from "@/lib/database/access-control";
 import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import { OperationalResolutionQueueSheet } from "@/shared/components/dashboard/operational-resolution-queue/OperationalResolutionQueueSheet";
@@ -30,9 +31,33 @@ type DashboardQueueActionTriggerProps = {
   className?: string;
 };
 
+function resolveQueueCanFix(
+  queueType: OperationalResolutionQueueType,
+  access: CompanyAccessScope,
+): boolean {
+  switch (queueType) {
+    case "unassigned_job":
+      return access.canViewTechnicianRoster;
+    case "needs_review":
+    case "stalled_job":
+      return false;
+    case "lead_follow_up":
+      return access.canManageCustomers;
+    case "overdue_invoice":
+    case "ready_to_invoice":
+    case "unsent_invoice":
+    case "unsent_estimate":
+    case "stale_sent_estimate":
+      return access.canViewBilling;
+    default:
+      return false;
+  }
+}
+
 function resolveActionCard(
   action: DashboardQueueActionTarget,
   cards: MobileActionCard[],
+  access: CompanyAccessScope,
 ): MobileActionCard | null {
   if (!action.queueType) {
     return null;
@@ -60,7 +85,7 @@ function resolveActionCard(
         ? "critical-operations"
         : "money-actions",
     queueType: action.queueType,
-    canFix: true,
+    canFix: resolveQueueCanFix(action.queueType, access),
   };
 }
 
@@ -80,7 +105,7 @@ export function DashboardQueueActionTrigger({
         <button
           type="button"
           onClick={() => {
-            const card = resolveActionCard(action, actionCards);
+            const card = resolveActionCard(action, actionCards, data.access);
             if (card) {
               setActiveCard(card);
             }

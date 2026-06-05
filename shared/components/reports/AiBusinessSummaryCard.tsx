@@ -69,7 +69,7 @@ export function AiBusinessSummaryCard({
 
             <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 px-3.5 py-2.5">
               <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700/70">
-                Recommended next action
+                Period takeaway
               </p>
               <p className="mt-1 text-sm leading-relaxed text-slate-800">
                 {summary.recommendedAction}

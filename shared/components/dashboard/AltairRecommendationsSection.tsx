@@ -130,9 +130,13 @@ export function AltairRecommendationsSection({
             </h2>
             {!compact ? (
               <p className="text-[11px] text-slate-500 lg:text-xs">
-                Top {recommendations.length} priorities from live operational data
+                Highest-impact actions ranked by score — tap to open queue
               </p>
-            ) : null}
+            ) : (
+              <p className="text-[11px] text-slate-500">
+                Tap a priority to open its queue
+              </p>
+            )}
           </div>
         </header>
 

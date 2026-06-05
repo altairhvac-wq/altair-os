@@ -142,8 +142,8 @@ export function NextBestActionsSection({ data }: NextBestActionsSectionProps) {
           </h2>
           <p className="text-xs text-slate-500 lg:text-sm">
             {hasActions
-              ? `${actions.length} prioritized action${actions.length === 1 ? "" : "s"} based on live operational data.`
-              : "Operations are running smoothly today."}
+              ? `${actions.length} action${actions.length === 1 ? "" : "s"} with full context — top priorities may also appear in Altair Recommendations.`
+              : "No operational actions flagged right now."}
           </p>
         </div>
         <Link
@@ -167,11 +167,11 @@ export function NextBestActionsSection({ data }: NextBestActionsSectionProps) {
             </div>
             <div>
               <p className="text-sm font-bold text-emerald-900">
-                Operations are running smoothly today
+                No pending actions
               </p>
               <p className="mt-1 text-xs leading-relaxed text-emerald-800/80">
-                No urgent office queue, billing, or pipeline actions are flagged
-                right now. Check back as work completes or new items enter review.
+                Office queue, billing, and pipeline signals are clear. New items
+                will surface here as work completes or enters review.
               </p>
             </div>
           </div>
