@@ -7,7 +7,7 @@ import {
   type PaymentMethod,
 } from "@/shared/types/invoice-payment";
 import { formatJobStatus, type JobStatus } from "@/shared/types/job";
-import type { CustomerStatus } from "@/shared/types/customer";
+import type { LegacyCustomerStatus } from "@/shared/types/customer";
 
 export type OperationalActivitySource =
   | "customer"
@@ -68,7 +68,7 @@ export type OperationalActivityEventType =
 export type OperationalActivityMetadata = {
   customer_id?: string;
   customer_name?: string;
-  status?: CustomerStatus;
+  status?: LegacyCustomerStatus;
   delete_after?: string;
   job_id?: string;
   job_number?: string;

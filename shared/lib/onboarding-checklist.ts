@@ -39,6 +39,16 @@ export function buildOnboardingChecklist(
       tip: "Use a real account you dispatch for this week.",
     },
     {
+      id: "add-lead",
+      title: "Add your first lead",
+      description:
+        "Track prospects in the Lead Pipeline before they become customers.",
+      href: "/leads",
+      completed: snapshot.leadCount > 0,
+      optional: true,
+      tip: "Leads stay separate from customers until you convert or send an estimate.",
+    },
+    {
       id: "create-job",
       title: "Schedule your first job",
       description:

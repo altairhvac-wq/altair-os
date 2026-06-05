@@ -347,15 +347,10 @@ export async function updateLeadFollowUpAction(
   return { lead };
 }
 
-async function upgradeLeadCustomerStatus(
+async function ensureLinkedCustomerIsActive(
   companyId: string,
   customerId: string,
-  customerStatus: "lead" | "active",
 ): Promise<{ error?: string }> {
-  if (customerStatus !== "active") {
-    return {};
-  }
-
   const customer = await getCustomerById(companyId, customerId);
   if (!customer || customer.status === "active") {
     return {};
@@ -397,7 +392,6 @@ async function ensureLeadCustomerRecord(
   companyId: string,
   actorId: string,
   lead: Lead,
-  customerStatus: "lead" | "active",
 ): Promise<{ customerId?: string; error?: string; warning?: string }> {
   const latestLead = await getLeadById(companyId, lead.id);
   if (!latestLead) {
@@ -405,23 +399,21 @@ async function ensureLeadCustomerRecord(
   }
 
   if (latestLead.convertedCustomerId) {
-    const upgraded = await upgradeLeadCustomerStatus(
+    const ensured = await ensureLinkedCustomerIsActive(
       companyId,
       latestLead.convertedCustomerId,
-      customerStatus,
     );
 
-    if (upgraded.error) {
-      return { error: upgraded.error };
+    if (ensured.error) {
+      return { error: ensured.error };
     }
 
     return { customerId: latestLead.convertedCustomerId };
   }
 
-  const customerData = normalizeCustomerFormData({
-    ...buildCustomerFormDataFromLead(latestLead),
-    status: customerStatus,
-  });
+  const customerData = normalizeCustomerFormData(
+    buildCustomerFormDataFromLead(latestLead),
+  );
   const validationError = validateCustomerFormData(customerData, {
     requireAddress: false,
     requireContact: true,
@@ -451,14 +443,13 @@ async function ensureLeadCustomerRecord(
       return { error: linked.error };
     }
 
-    const upgraded = await upgradeLeadCustomerStatus(
+    const ensured = await ensureLinkedCustomerIsActive(
       companyId,
       existingMatch.customer.id,
-      customerStatus,
     );
 
-    if (upgraded.error) {
-      return { error: upgraded.error };
+    if (ensured.error) {
+      return { error: ensured.error };
     }
 
     return {
@@ -520,7 +511,6 @@ export async function convertLeadToCustomerAction(
     permission.context.company.id,
     permission.context.user.id,
     existing,
-    "active",
   );
 
   if (ensured.error || !ensured.customerId) {
@@ -585,7 +575,6 @@ export async function prepareLeadEstimateAction(
     permission.context.company.id,
     permission.context.user.id,
     existing,
-    "lead",
   );
 
   if (ensured.error || !ensured.customerId) {

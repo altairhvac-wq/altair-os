@@ -12,7 +12,7 @@ export type CustomerSeed = {
   name: string;
   phone: string;
   companyName?: string;
-  status: "active" | "inactive" | "lead";
+  status: "active" | "inactive";
   address: string;
   city: string;
   state: string;
@@ -24,6 +24,55 @@ export type CustomerSeed = {
   lastServiceDaysAgo?: number;
   createdDaysAgo: number;
 };
+
+export type LeadSeed = {
+  key: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  companyName?: string;
+  source: "google" | "facebook" | "referral" | "website" | "other";
+  status: "new" | "estimate_sent" | "lost";
+  notes?: string;
+  lostReason?: string;
+  convertedCustomerKey?: string;
+  createdDaysAgo: number;
+};
+
+export const DEMO_LEADS: LeadSeed[] = [
+  {
+    key: "newLead",
+    firstName: "Taylor",
+    lastName: "Brooks",
+    phone: "(512) 555-8821",
+    source: "google",
+    status: "new",
+    notes: "AC not cooling, wants callback.",
+    createdDaysAgo: 2,
+  },
+  {
+    key: "estimateSentLead",
+    firstName: "Emily",
+    lastName: "Rodriguez",
+    phone: "(512) 555-0311",
+    source: "referral",
+    status: "estimate_sent",
+    notes: "Furnace replacement quote sent — follow up after homeowner review.",
+    convertedCustomerKey: "emily",
+    createdDaysAgo: 12,
+  },
+  {
+    key: "lostLead",
+    firstName: "Jordan",
+    lastName: "Price",
+    phone: "(737) 555-4410",
+    source: "facebook",
+    status: "lost",
+    notes: "Requested full system replacement quote.",
+    lostReason: "Price",
+    createdDaysAgo: 18,
+  },
+];
 
 export type JobSeed = {
   key: string;
@@ -356,7 +405,7 @@ export const DEMO_CUSTOMERS: CustomerSeed[] = [
     key: "chenFamily",
     name: "Chen Family Residence",
     phone: "(737) 555-1156",
-    status: "lead",
+    status: "active",
     address: "6200 River Bend Cir",
     city: "Austin",
     state: "TX",

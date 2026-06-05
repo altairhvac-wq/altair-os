@@ -140,7 +140,7 @@ Store denormalized counters on `customers` only if updated atomically via trigge
 | `notes` | — | ✓ | ✓ |
 | `createdAt` | — | "Customer since" | auto |
 
-**Status enum:** `active` | `inactive` | `lead`  
+**Status enum:** `active` | `inactive` (prospects live in the `leads` table, not customer status)  
 **Filters:** status dropdown, text search (name, email, phone, company, city, state)
 
 #### Tables required
@@ -166,7 +166,7 @@ Store denormalized counters on `customers` only if updated atomically via trigge
 | `total_jobs`, `total_revenue`, `last_service_date` | ✓ Exist; should be **trigger-maintained** or replaced with views |
 | Customer service history timeline | New `customer_activity` view or `job_events` table (future) |
 | Multiple service locations | Future `customer_locations` table (single address today) |
-| Lead source / referral tracking | Future `lead_source text` column |
+| Lead source / referral tracking | `leads` table (`lead_source` enum) — see Lead Pipeline module |
 
 #### Role / permission needs
 

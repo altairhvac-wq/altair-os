@@ -7,7 +7,11 @@ import type {
   CustomerUpdate,
 } from "@/lib/database/types/core-tables";
 import { listInvoicesByCustomer } from "@/lib/database/queries/invoices";
-import type { Customer, CustomerFormData } from "@/shared/types/customer";
+import {
+  normalizeCustomerStatus,
+  type Customer,
+  type CustomerFormData,
+} from "@/shared/types/customer";
 import type { CustomerDeleteDependencies } from "@/shared/lib/customer-lifecycle";
 import {
   computeCustomerFinancialSummary,
@@ -25,7 +29,7 @@ export function mapCustomerRowToCustomer(row: CustomerRow): Customer {
     email: row.email,
     phone: row.phone,
     company: row.company_name ?? undefined,
-    status: row.status,
+    status: normalizeCustomerStatus(row.status),
     address: row.address_line1,
     city: row.city,
     state: row.state,
@@ -64,7 +68,7 @@ function mapCustomerFormDataToRowFields(
     email: data.email.trim(),
     phone: data.phone.trim(),
     company_name: data.company.trim() || null,
-    status: data.status,
+    status: normalizeCustomerStatus(data.status),
     address_line1: data.address.trim(),
     city: data.city.trim(),
     state: data.state.trim(),

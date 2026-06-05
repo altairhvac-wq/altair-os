@@ -2,6 +2,7 @@ export type OnboardingSnapshot = {
   teamMemberCount: number;
   hasInvitedOrActiveTeam: boolean;
   customerCount: number;
+  leadCount: number;
   jobCount: number;
   serviceItemCount: number;
   hasBillingDefaultsConfigured: boolean;
@@ -10,6 +11,7 @@ export type OnboardingSnapshot = {
 export type OnboardingChecklistItemId =
   | "invite-team"
   | "add-customer"
+  | "add-lead"
   | "create-job"
   | "setup-price-book"
   | "billing-defaults";

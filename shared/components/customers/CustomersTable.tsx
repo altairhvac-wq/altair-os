@@ -7,6 +7,7 @@ import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { isCustomerArchived, isCustomerDeleted } from "@/shared/lib/customer-lifecycle";
 import {
   formatCurrency,
+  formatCustomerStatusLabel,
   formatDate,
   getCustomerInitials,
   type Customer,
@@ -23,7 +24,6 @@ type CustomersTableProps = {
 
 const statusStyles: Record<Customer["status"], string> = {
   active: "bg-emerald-50 text-emerald-700",
-  lead: "bg-amber-50 text-amber-700",
   inactive: "bg-slate-100 text-slate-600",
 };
 
@@ -118,7 +118,7 @@ export function CustomersTable({
                 <span
                   className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${statusStyles[customer.status]}`}
                 >
-                  {customer.status}
+                  {formatCustomerStatusLabel(customer.status)}
                 </span>
               </td>
               <td className="admin-table-cell text-slate-600">

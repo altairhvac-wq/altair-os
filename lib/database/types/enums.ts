@@ -19,6 +19,7 @@ export type MembershipActivityType =
 
 export type CompanyStatus = "active" | "trial" | "suspended";
 
+/** DB enum still includes legacy `lead`; app code normalizes to active. */
 export type CustomerStatus = "active" | "inactive" | "lead";
 
 export type LeadStatus =

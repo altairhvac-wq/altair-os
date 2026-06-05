@@ -29,6 +29,7 @@ const EMPTY_ONBOARDING_SNAPSHOT: OnboardingSnapshot = {
   teamMemberCount: 0,
   hasInvitedOrActiveTeam: false,
   customerCount: 0,
+  leadCount: 0,
   jobCount: 0,
   serviceItemCount: 0,
   hasBillingDefaultsConfigured: false,

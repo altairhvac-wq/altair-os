@@ -1,6 +1,7 @@
 import { Mail, MapPin, Phone } from "lucide-react";
 import {
   formatCurrency,
+  formatCustomerStatusLabel,
   formatDate,
   getCustomerInitials,
   type Customer,
@@ -16,7 +17,6 @@ type CustomerCardProps = {
 
 const statusStyles: Record<Customer["status"], string> = {
   active: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-  lead: "bg-amber-50 text-amber-700 ring-amber-600/20",
   inactive: "bg-slate-100 text-slate-600 ring-slate-500/20",
 };
 
@@ -44,7 +44,7 @@ export function CustomerCard({
             <span
               className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset ${statusStyles[customer.status]}`}
             >
-              {customer.status}
+              {formatCustomerStatusLabel(customer.status)}
             </span>
           </div>
 

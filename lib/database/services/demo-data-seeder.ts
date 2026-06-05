@@ -19,6 +19,7 @@ import {
   DEMO_CUSTOMERS,
   DEMO_EQUIPMENT,
   DEMO_JOBS,
+  DEMO_LEADS,
   DEMO_SERVICE_ITEMS,
   DEMO_TAX_RATE,
   type JobSeed,
@@ -498,6 +499,35 @@ export async function seedCompanyDemoData(
       }
 
       customerIds[customer.key] = result.id;
+    }
+
+    for (const lead of DEMO_LEADS) {
+      const convertedCustomerId = lead.convertedCustomerKey
+        ? customerIds[lead.convertedCustomerKey]
+        : null;
+      const createdAt = addDays(seedContext.now, -lead.createdDaysAgo).toISOString();
+
+      const result = await insertRow("seed_leads", companyId, "leads", {
+        company_id: companyId,
+        created_by: seedContext.actorId,
+        first_name: lead.firstName,
+        last_name: lead.lastName,
+        company_name: lead.companyName ?? null,
+        email: seedContext.demoEmail,
+        phone: lead.phone,
+        source: lead.source,
+        status: lead.status,
+        notes: lead.notes ?? null,
+        converted_customer_id: convertedCustomerId,
+        lost_at: lead.status === "lost" ? createdAt : null,
+        lost_reason: lead.lostReason ?? null,
+        created_at: createdAt,
+        is_demo: true,
+      });
+
+      if (result.error || !result.id) {
+        throw new Error(result.error ?? "Failed to seed leads.");
+      }
     }
 
     for (const equipment of DEMO_EQUIPMENT) {

@@ -35,10 +35,12 @@ import {
   validateCustomerFormData,
   type Customer,
   type CustomerFormData,
+  type LegacyCustomerStatus,
 } from "@/shared/types/customer";
 
 export type CreateCustomerActionResult = {
   error?: string;
+  warning?: string;
   customer?: Customer;
 };
 
@@ -77,11 +79,17 @@ export async function createCustomerAction(
     return { error: "You do not have permission to create customers." };
   }
 
+  const requestedStatus = data.status as LegacyCustomerStatus;
   const normalized = normalizeCustomerFormData(data);
   const validationError = validateCustomerFormData(normalized);
   if (validationError) {
     return { error: validationError };
   }
+
+  const warning =
+    requestedStatus === "lead"
+      ? "Use Leads to track prospects before they become customers."
+      : undefined;
 
   const { customer, error } = await createCustomer(
     context.company.id,
@@ -101,7 +109,7 @@ export async function createCustomerAction(
   });
 
   revalidateCustomerPaths(customer.id);
-  return { customer };
+  return { customer, warning };
 }
 
 export async function updateCustomerAction(

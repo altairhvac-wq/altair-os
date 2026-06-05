@@ -269,6 +269,7 @@ export type LeadRow = {
   archived_at: Timestamp | null;
   deleted_at: Timestamp | null;
   delete_after: Timestamp | null;
+  is_demo: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -295,6 +296,7 @@ export type LeadInsert = {
   archived_at?: Timestamp | null;
   deleted_at?: Timestamp | null;
   delete_after?: Timestamp | null;
+  is_demo?: boolean;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };

@@ -5,14 +5,14 @@ export function buildCustomerFormDataFromLead(lead: Lead): CustomerFormData {
   const name =
     `${lead.firstName} ${lead.lastName}`.trim() ||
     lead.companyName?.trim() ||
-    "Lead customer";
+    "Lead record";
 
   return {
     name,
     email: lead.email,
     phone: lead.phone,
     company: lead.companyName?.trim() ?? "",
-    status: "lead",
+    status: "active",
     address: "",
     city: "",
     state: "",

@@ -1,5 +1,5 @@
 import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
-import type { CustomerStatus } from "@/shared/types/customer";
+import type { LegacyCustomerStatus } from "@/shared/types/customer";
 
 export type CustomerActivityType =
   | "customer_created"
@@ -15,7 +15,7 @@ export type CustomerActivityType =
 
 export type CustomerActivityMetadata = {
   customer_name?: string;
-  status?: CustomerStatus;
+  status?: LegacyCustomerStatus;
   delete_after?: string;
   equipment_id?: string;
   equipment_name?: string;

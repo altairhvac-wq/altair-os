@@ -1,6 +1,9 @@
 import { formatDateInTimeZone } from "@/shared/lib/datetime";
 
-export type CustomerStatus = "active" | "inactive" | "lead";
+export type CustomerStatus = "active" | "inactive";
+
+/** Legacy DB/app value retained for activity metadata and row normalization. */
+export type LegacyCustomerStatus = CustomerStatus | "lead";
 
 export type Customer = {
   id: string;
@@ -42,9 +45,21 @@ export type CustomerFormData = {
 export const CUSTOMER_STATUS_OPTIONS: { value: CustomerStatus | "all"; label: string }[] = [
   { value: "all", label: "All statuses" },
   { value: "active", label: "Active" },
-  { value: "lead", label: "Lead" },
   { value: "inactive", label: "Inactive" },
 ];
+
+export function normalizeCustomerStatus(
+  status: LegacyCustomerStatus | string,
+): CustomerStatus {
+  return status === "inactive" ? "inactive" : "active";
+}
+
+export function formatCustomerStatusLabel(
+  status: LegacyCustomerStatus | string,
+): string {
+  const normalized = normalizeCustomerStatus(status);
+  return normalized === "active" ? "Active" : "Inactive";
+}
 
 export const CUSTOMER_LIFECYCLE_FILTER_OPTIONS: {
   value: CustomerLifecycleState;
@@ -65,7 +80,7 @@ export function normalizeCustomerFormData(
     email: data.email.trim(),
     phone: data.phone.trim(),
     company: data.company.trim(),
-    status: data.status,
+    status: normalizeCustomerStatus(data.status),
     address: data.address.trim(),
     city: data.city.trim(),
     state: data.state.trim(),

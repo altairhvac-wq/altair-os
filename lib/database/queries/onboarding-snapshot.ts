@@ -67,20 +67,52 @@ async function countTableRows(
   return count ?? 0;
 }
 
+async function countLeadRows(companyId: string): Promise<number> {
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("leads")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .is("deleted_at", null);
+
+  if (error) {
+    if (isMissingDatabaseColumnError(error)) {
+      return 0;
+    }
+
+    console.error("[onboarding-snapshot] leads count failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
 export async function getOnboardingSnapshot(
   companyId: string,
   _context: ActiveCompanyContext,
 ): Promise<OnboardingSnapshot> {
   const supabase = await createClient();
 
-  const [customerCount, jobCount, serviceItemCount, teamMemberCount, companyResult] =
-    await Promise.all([
-      countTableRows("customers", companyId),
-      countTableRows("jobs", companyId),
-      countTableRows("service_items", companyId),
-      countTableRows("company_memberships", companyId),
-      supabase.from("companies").select("settings").eq("id", companyId).maybeSingle(),
-    ]);
+  const [
+    customerCount,
+    leadCount,
+    jobCount,
+    serviceItemCount,
+    teamMemberCount,
+    companyResult,
+  ] = await Promise.all([
+    countTableRows("customers", companyId),
+    countLeadRows(companyId),
+    countTableRows("jobs", companyId),
+    countTableRows("service_items", companyId),
+    countTableRows("company_memberships", companyId),
+    supabase.from("companies").select("settings").eq("id", companyId).maybeSingle(),
+  ]);
 
   if (companyResult.error) {
     console.error("[onboarding-snapshot] company settings load failed:", {
@@ -94,6 +126,7 @@ export async function getOnboardingSnapshot(
     teamMemberCount,
     hasInvitedOrActiveTeam: teamMemberCount > 1,
     customerCount,
+    leadCount,
     jobCount,
     serviceItemCount,
     hasBillingDefaultsConfigured: hasSavedCompanyBillingDefaults(
