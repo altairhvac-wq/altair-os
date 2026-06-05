@@ -5,6 +5,10 @@ import type {
   EstimateActivityRow,
 } from "@/lib/database/types/core-tables";
 import type { EstimateActivityType } from "@/lib/database/types/enums";
+import {
+  resolveEstimateLifecycleTimestampsByEstimateId,
+  type EstimateLifecycleTimestamps,
+} from "@/shared/lib/estimate-lifecycle-timestamps";
 import type {
   EstimateActivity,
   EstimateActivityMetadata,
@@ -126,5 +130,47 @@ export async function listEstimateActivitiesForEstimate(
 
   return ((data ?? []) as EstimateActivityRowWithActor[]).map(
     mapEstimateActivityRow,
+  );
+}
+
+const LIFECYCLE_TIMESTAMP_EVENT_TYPES = [
+  "estimate_sent",
+  "estimate_approved",
+] as const satisfies readonly EstimateActivityType[];
+
+export async function batchResolveEstimateLifecycleTimestamps(
+  companyId: string,
+  estimateIds: string[],
+): Promise<Map<string, EstimateLifecycleTimestamps>> {
+  if (estimateIds.length === 0) {
+    return new Map();
+  }
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("estimate_activities")
+    .select("estimate_id, event_type, created_at")
+    .eq("company_id", companyId)
+    .in("estimate_id", estimateIds)
+    .in("event_type", [...LIFECYCLE_TIMESTAMP_EVENT_TYPES])
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("[batchResolveEstimateLifecycleTimestamps] query failed:", {
+      companyId,
+      estimateCount: estimateIds.length,
+      code: error.code,
+      message: error.message,
+    });
+    return new Map();
+  }
+
+  return resolveEstimateLifecycleTimestampsByEstimateId(
+    (data ?? []).map((row) => ({
+      estimateId: row.estimate_id,
+      eventType: row.event_type as EstimateActivityType,
+      createdAt: row.created_at,
+    })),
   );
 }

@@ -127,8 +127,8 @@ function estimateSentInBounds(estimate: Estimate, bounds: ProfitabilityReportDat
     return false;
   }
 
-  if (estimate.sentAt && isDateWithinReportBounds(estimate.sentAt, bounds)) {
-    return true;
+  if (estimate.sentAt) {
+    return isDateWithinReportBounds(estimate.sentAt, bounds);
   }
 
   return (
@@ -145,8 +145,8 @@ function estimateApprovedInBounds(
     return false;
   }
 
-  if (estimate.approvedAt && isDateWithinReportBounds(estimate.approvedAt, bounds)) {
-    return true;
+  if (estimate.approvedAt) {
+    return isDateWithinReportBounds(estimate.approvedAt, bounds);
   }
 
   return estimateSentInBounds(estimate, bounds);

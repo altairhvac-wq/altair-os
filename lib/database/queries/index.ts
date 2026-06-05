@@ -67,6 +67,7 @@ export {
   updateEstimateStatus,
 } from "./estimates";
 export {
+  batchResolveEstimateLifecycleTimestamps,
   listEstimateActivitiesForEstimate,
   recordEstimateActivity,
 } from "./estimate-activities";

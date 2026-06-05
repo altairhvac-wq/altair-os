@@ -6,7 +6,9 @@ import {
   buildTrashTimestampFields,
   countRelatedRecordsByColumn,
 } from "@/lib/database/queries/entity-lifecycle-shared";
+import { batchResolveEstimateLifecycleTimestamps } from "@/lib/database/queries/estimate-activities";
 import { validateServiceItemIdsBelongToCompany } from "@/lib/database/queries/service-items";
+import { mergeEstimateLifecycleTimestampsBatch } from "@/shared/lib/estimate-lifecycle-timestamps";
 import type {
   EstimateInsert,
   EstimateLineItemInsert,
@@ -120,6 +122,45 @@ export function mapEstimateRowToEstimate(
     deletedAt: row.deleted_at ?? undefined,
     deleteAfter: row.delete_after ?? undefined,
   };
+}
+
+async function enrichEstimatesWithLifecycleTimestamps(
+  companyId: string,
+  estimates: Estimate[],
+): Promise<Estimate[]> {
+  if (estimates.length === 0) {
+    return estimates;
+  }
+
+  const timestampsByEstimateId = await batchResolveEstimateLifecycleTimestamps(
+    companyId,
+    estimates.map((estimate) => estimate.id),
+  );
+
+  return mergeEstimateLifecycleTimestampsBatch(
+    estimates,
+    timestampsByEstimateId,
+  );
+}
+
+async function enrichEstimateWithLifecycleTimestamps(
+  companyId: string,
+  estimate: Estimate,
+): Promise<Estimate> {
+  const [enriched] = await enrichEstimatesWithLifecycleTimestamps(companyId, [
+    estimate,
+  ]);
+  return enriched;
+}
+
+async function enrichEstimateDetailWithLifecycleTimestamps(
+  companyId: string,
+  estimate: EstimateDetail,
+): Promise<EstimateDetail> {
+  return enrichEstimateWithLifecycleTimestamps(
+    companyId,
+    estimate,
+  ) as Promise<EstimateDetail>;
 }
 
 function mapEstimateRowToEstimateDetail(
@@ -339,8 +380,9 @@ export const listEstimates = cache(async function listEstimates(
     return [];
   }
 
-  return ((data ?? []) as EstimateRowWithRelations[]).map(
-    mapEstimateRowToEstimate,
+  return enrichEstimatesWithLifecycleTimestamps(
+    companyId,
+    ((data ?? []) as EstimateRowWithRelations[]).map(mapEstimateRowToEstimate),
   );
 });
 
@@ -371,8 +413,9 @@ export async function listEstimatesByCustomer(
     return [];
   }
 
-  return ((data ?? []) as EstimateRowWithRelations[]).map(
-    mapEstimateRowToEstimate,
+  return enrichEstimatesWithLifecycleTimestamps(
+    companyId,
+    ((data ?? []) as EstimateRowWithRelations[]).map(mapEstimateRowToEstimate),
   );
 }
 
@@ -402,8 +445,9 @@ export async function listEstimatesForJob(
     return [];
   }
 
-  return ((data ?? []) as EstimateRowWithRelations[]).map(
-    mapEstimateRowToEstimate,
+  return enrichEstimatesWithLifecycleTimestamps(
+    companyId,
+    ((data ?? []) as EstimateRowWithRelations[]).map(mapEstimateRowToEstimate),
   );
 }
 
@@ -506,10 +550,13 @@ export async function getEstimateById(
   const row = data as EstimateRowWithRelations;
   const lineItemRows = (row.estimate_line_items ?? []) as EstimateLineItemRow[];
 
-  return mapEstimateRowToEstimateDetail({
-    ...row,
-    estimate_line_items: sortLineItems(lineItemRows),
-  });
+  return enrichEstimateDetailWithLifecycleTimestamps(
+    companyId,
+    mapEstimateRowToEstimateDetail({
+      ...row,
+      estimate_line_items: sortLineItems(lineItemRows),
+    }),
+  );
 }
 
 function mapInsertRowToEstimateDetail(input: {
@@ -725,7 +772,10 @@ export async function listDeletedEstimates(companyId: string): Promise<Estimate[
     return [];
   }
 
-  return ((data ?? []) as EstimateRowWithRelations[]).map(mapEstimateRowToEstimate);
+  return enrichEstimatesWithLifecycleTimestamps(
+    companyId,
+    ((data ?? []) as EstimateRowWithRelations[]).map(mapEstimateRowToEstimate),
+  );
 }
 
 export async function getEstimateDeleteDependencies(
@@ -770,7 +820,10 @@ export async function archiveEstimate(
   }
 
   return {
-    estimate: mapEstimateRowToEstimate(row as EstimateRowWithRelations),
+    estimate: await enrichEstimateWithLifecycleTimestamps(
+      companyId,
+      mapEstimateRowToEstimate(row as EstimateRowWithRelations),
+    ),
     error: null,
   };
 }
@@ -800,7 +853,10 @@ export async function restoreEstimate(
   }
 
   return {
-    estimate: mapEstimateRowToEstimate(row as EstimateRowWithRelations),
+    estimate: await enrichEstimateWithLifecycleTimestamps(
+      companyId,
+      mapEstimateRowToEstimate(row as EstimateRowWithRelations),
+    ),
     error: null,
   };
 }
@@ -870,7 +926,10 @@ export async function moveEstimateToTrash(
   }
 
   return {
-    estimate: mapEstimateRowToEstimate(row as EstimateRowWithRelations),
+    estimate: await enrichEstimateWithLifecycleTimestamps(
+      companyId,
+      mapEstimateRowToEstimate(row as EstimateRowWithRelations),
+    ),
     error: null,
   };
 }
@@ -903,7 +962,10 @@ export async function restoreEstimateFromTrash(
   }
 
   return {
-    estimate: mapEstimateRowToEstimate(row as EstimateRowWithRelations),
+    estimate: await enrichEstimateWithLifecycleTimestamps(
+      companyId,
+      mapEstimateRowToEstimate(row as EstimateRowWithRelations),
+    ),
     error: null,
   };
 }
