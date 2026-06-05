@@ -72,9 +72,38 @@ export function OperationalResolutionQueueItemAdapter({
       );
     case "needs_review":
       return <NeedsReviewQueueItemAdapter item={item} />;
+    case "lead_follow_up":
+      return <LeadFollowUpQueueItemAdapter item={item} onResolved={onResolved} />;
     default:
       return null;
   }
+}
+
+function LeadFollowUpQueueItemAdapter({
+  item,
+  onResolved,
+}: {
+  item: Extract<OperationalResolutionQueueItem, { queueType: "lead_follow_up" }>;
+  onResolved: (itemId: string) => void;
+}) {
+  return (
+    <OperationalResolutionQueueItemView item={item}>
+      {item.openHref ? (
+        <MobileActionButton
+          label={item.primaryAction.label}
+          href={item.openHref}
+          onClick={() => onResolved(item.id)}
+        />
+      ) : null}
+      {item.lead.phone ? (
+        <MobileActionButton
+          label="Call lead"
+          href={`tel:${item.lead.phone}`}
+          variant="secondary"
+        />
+      ) : null}
+    </OperationalResolutionQueueItemView>
+  );
 }
 
 function UnassignedJobQueueItemAdapter({

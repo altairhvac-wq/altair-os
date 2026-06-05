@@ -3,6 +3,9 @@ import type {
   CompanyStatus,
   CustomerActivityType,
   CustomerStatus,
+  LeadActivityType,
+  LeadSource,
+  LeadStatus,
   DispatchAssignmentStatus,
   EstimateActivityType,
   EstimateStatus,
@@ -224,6 +227,84 @@ export type CustomerActivityInsert = {
   customer_id: UUID;
   actor_id?: UUID | null;
   event_type: CustomerActivityType;
+  metadata?: Json;
+  created_at?: Timestamp;
+};
+
+export type LeadRow = {
+  id: UUID;
+  company_id: UUID;
+  created_by: UUID | null;
+  assigned_user_id: UUID | null;
+  first_name: string;
+  last_name: string;
+  company_name: string | null;
+  email: string;
+  phone: string;
+  source: LeadSource;
+  status: LeadStatus;
+  notes: string | null;
+  last_contacted_at: Timestamp | null;
+  next_follow_up_at: Timestamp | null;
+  converted_customer_id: UUID | null;
+  won_at: Timestamp | null;
+  lost_at: Timestamp | null;
+  lost_reason: string | null;
+  archived_at: Timestamp | null;
+  deleted_at: Timestamp | null;
+  delete_after: Timestamp | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type LeadInsert = {
+  id?: UUID;
+  company_id: UUID;
+  created_by?: UUID | null;
+  assigned_user_id?: UUID | null;
+  first_name: string;
+  last_name: string;
+  company_name?: string | null;
+  email?: string;
+  phone?: string;
+  source?: LeadSource;
+  status?: LeadStatus;
+  notes?: string | null;
+  last_contacted_at?: Timestamp | null;
+  next_follow_up_at?: Timestamp | null;
+  converted_customer_id?: UUID | null;
+  won_at?: Timestamp | null;
+  lost_at?: Timestamp | null;
+  lost_reason?: string | null;
+  archived_at?: Timestamp | null;
+  deleted_at?: Timestamp | null;
+  delete_after?: Timestamp | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type LeadUpdate = Partial<
+  Omit<LeadRow, "id" | "company_id" | "created_at" | "updated_at">
+>;
+
+export type LeadActivityRow = {
+  id: UUID;
+  lead_id: UUID;
+  company_id: UUID;
+  activity_type: LeadActivityType;
+  note: string | null;
+  created_by: UUID | null;
+  metadata: Json;
+  created_at: Timestamp;
+};
+
+export type LeadActivityInsert = {
+  id?: UUID;
+  lead_id: UUID;
+  company_id: UUID;
+  activity_type: LeadActivityType;
+  note?: string | null;
+  created_by?: UUID | null;
   metadata?: Json;
   created_at?: Timestamp;
 };

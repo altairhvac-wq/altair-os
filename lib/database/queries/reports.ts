@@ -5,6 +5,7 @@ import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
 import { listEstimates } from "@/lib/database/queries/estimates";
 import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
 import { listJobs } from "@/lib/database/queries/jobs";
+import { listLeads } from "@/lib/database/queries/leads";
 import {
   listCompanyJobLaborEntries,
   listTodayTimeEntriesForCompany,
@@ -85,13 +86,14 @@ export async function getReportsPageData(
   dateRange: ReportsPageDateRange,
   options: { showTechnicianPerformance?: boolean } = {},
 ): Promise<ReportsPageData> {
-  const [invoices, payments, estimates, jobs, expenses, chartSeries, laborEntries, laborCostRates] =
+  const [invoices, payments, estimates, jobs, expenses, leads, chartSeries, laborEntries, laborCostRates] =
     await Promise.all([
       listInvoices(companyId),
       listInvoicePayments(companyId),
       listEstimates(companyId),
       listJobs(companyId),
       listExpenses(companyId),
+      listLeads(companyId),
       getCompanyReportChartSeries(companyId, { dateRange }),
       listCompanyJobLaborEntries(companyId),
       listTechnicianLaborCostRates(companyId),
@@ -107,6 +109,7 @@ export async function getReportsPageData(
       estimates,
       jobs,
       expenses,
+      leads,
       chartSeries,
       laborEntries,
       laborCostRates,

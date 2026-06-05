@@ -1,7 +1,9 @@
 import type { CompanyAccessScope } from "@/lib/database/access-control";
 import { INVOICE_PAGE_DRAFT_HREF } from "@/shared/lib/invoice-page-focus";
 import type { MobileActionSeverity } from "@/shared/lib/mobile-action-dashboard";
+import { formatLeadFollowUpQueueTitle } from "@/shared/lib/leads/lead-status";
 import type {
+  DashboardLeadFollowUpPreview,
   DashboardOverdueInvoicePreview,
   DashboardUnsentEstimatePreview,
   DashboardUnsentInvoicePreview,
@@ -23,7 +25,8 @@ export type OperationalResolutionQueueType =
   | "unsent_invoice"
   | "unsent_estimate"
   | "needs_review"
-  | "stalled_job";
+  | "stalled_job"
+  | "lead_follow_up";
 
 export type OperationalResolutionActionKind =
   | "assign_technician"
@@ -32,7 +35,8 @@ export type OperationalResolutionActionKind =
   | "send_estimate"
   | "record_payment"
   | "resend_invoice"
-  | "open_record";
+  | "open_record"
+  | "open_lead";
 
 /** Declarative primary action — adapters execute server/href behavior. */
 export type OperationalResolutionAction = {
@@ -84,13 +88,19 @@ export type NeedsReviewQueueItem = OperationalResolutionQueueItemBase & {
   entry: CompletedWorkReviewEntry;
 };
 
+export type LeadFollowUpQueueItem = OperationalResolutionQueueItemBase & {
+  queueType: "lead_follow_up";
+  lead: DashboardLeadFollowUpPreview;
+};
+
 export type OperationalResolutionQueueItem =
   | UnassignedJobQueueItem
   | ReadyToInvoiceQueueItem
   | OverdueInvoiceQueueItem
   | UnsentInvoiceQueueItem
   | UnsentEstimateQueueItem
-  | NeedsReviewQueueItem;
+  | NeedsReviewQueueItem
+  | LeadFollowUpQueueItem;
 
 export type OperationalResolutionQueueSheetData = {
   items: OperationalResolutionQueueItem[];
@@ -175,6 +185,14 @@ const QUEUE_PRESENTATION: Record<
     relatedLabel: "View stalled jobs",
     icon: "briefcase",
     iconClassName: "bg-amber-100 text-amber-700",
+  },
+  lead_follow_up: {
+    completionTitle: "Lead follow-ups complete",
+    completionSubtitle: "No overdue lead follow-ups remain in this preview.",
+    relatedHref: "/leads",
+    relatedLabel: "Open leads",
+    icon: "users",
+    iconClassName: "bg-cyan-100 text-cyan-700",
   },
 };
 
@@ -361,6 +379,40 @@ function buildNeedsReviewItems(
   });
 }
 
+function buildLeadFollowUpItems(
+  leads: DashboardLeadFollowUpPreview[],
+  access: CompanyAccessScope,
+): LeadFollowUpQueueItem[] {
+  const canManage = access.canManageCustomers;
+
+  return leads.map((lead) => ({
+    id: lead.id,
+    queueType: "lead_follow_up",
+    title: formatLeadFollowUpQueueTitle(lead),
+    subtitle: lead.phone || lead.email || undefined,
+    meta: lead.nextFollowUpAt
+      ? `Due ${lead.nextFollowUpAt.slice(0, 10)}`
+      : undefined,
+    severity: "warning",
+    openHref: `/leads?selected=${lead.id}`,
+    lead,
+    primaryAction: {
+      kind: "open_lead",
+      label: "Open lead",
+      enabled: canManage,
+    },
+    secondaryActions: lead.phone
+      ? [
+          {
+            kind: "open_record",
+            label: "Call lead",
+            enabled: true,
+          },
+        ]
+      : [],
+  }));
+}
+
 function buildUnsentEstimateItems(
   estimates: DashboardUnsentEstimatePreview[],
   access: CompanyAccessScope,
@@ -399,6 +451,7 @@ export type BuildOperationalResolutionQueueInput = {
   overdueInvoices: DashboardOverdueInvoicePreview[];
   unsentInvoices: DashboardUnsentInvoicePreview[];
   unsentEstimates: DashboardUnsentEstimatePreview[];
+  leadFollowUps: DashboardLeadFollowUpPreview[];
   technicians: { id: string; name: string }[];
   assignableTechnicians: Technician[];
   technicianStatuses: DashboardTechnicianStatus[];
@@ -418,6 +471,7 @@ export function buildOperationalResolutionQueue(
     overdueInvoices,
     unsentInvoices,
     unsentEstimates,
+    leadFollowUps,
     technicians,
     assignableTechnicians,
     technicianStatuses,
@@ -450,6 +504,9 @@ export function buildOperationalResolutionQueue(
       break;
     case "needs_review":
       items = buildNeedsReviewItems(completedWorkReviewJobs);
+      break;
+    case "lead_follow_up":
+      items = buildLeadFollowUpItems(leadFollowUps, access);
       break;
     default:
       items = [];

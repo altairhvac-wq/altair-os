@@ -11,6 +11,8 @@ import type { Job } from "@/shared/types/job";
 import { roundJobMaterialAmount } from "@/shared/types/job-material";
 import type { TimeEntry } from "@/shared/types/time-entry";
 import { resolveClosedJobLaborMinutes } from "@/shared/types/time-entry";
+import { buildLeadPipelineMetrics } from "@/shared/lib/leads/lead-metrics";
+import type { Lead } from "@/shared/types/lead";
 import type {
   AccountantSummaryData,
   ReportCashHealth,
@@ -42,6 +44,7 @@ type ReportRawDatasets = {
   estimates: Estimate[];
   jobs: Job[];
   expenses: Expense[];
+  leads: Lead[];
   chartSeries: ReportChartSeriesBundle;
   laborEntries: TimeEntry[];
   laborCostRates: Map<string, number>;
@@ -894,6 +897,7 @@ export function buildReportsPageData(input: {
       dateBounds,
       input.datasets,
     ),
+    leadPipeline: buildLeadPipelineMetrics(input.datasets.leads),
     limitations,
   };
 }

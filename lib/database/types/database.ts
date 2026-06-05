@@ -52,6 +52,10 @@ import type {
   JobInsert,
   JobRow,
   JobUpdate,
+  LeadActivityInsert,
+  LeadActivityRow,
+  LeadInsert,
+  LeadRow,
   JobActivityInsert,
   JobActivityRow,
   JobAttachmentInsert,
@@ -262,6 +266,69 @@ export type Database = {
             columns: ["job_id"];
             isOneToOne: false;
             referencedRelation: "jobs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      lead_activities: {
+        Row: LeadActivityRow;
+        Insert: LeadActivityInsert;
+        Update: Partial<LeadActivityInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey";
+            columns: ["lead_id"];
+            isOneToOne: false;
+            referencedRelation: "leads";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lead_activities_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      leads: {
+        Row: LeadRow;
+        Insert: LeadInsert;
+        Update: Partial<LeadInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "leads_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "leads_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "leads_assigned_user_id_fkey";
+            columns: ["assigned_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "leads_converted_customer_id_fkey";
+            columns: ["converted_customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
             referencedColumns: ["id"];
           },
         ];

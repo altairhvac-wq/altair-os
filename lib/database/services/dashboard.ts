@@ -5,6 +5,10 @@ import {
 import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
+import {
+  countLeadsNeedingFollowUp,
+  listLeadsNeedingFollowUp,
+} from "@/lib/database/queries/leads";
 import { filterDailyOperationsSummaryForBillingAccess } from "@/shared/lib/dashboard-operational-insights-visibility";
 import { listRecentOperationalActivitiesForCompany } from "@/lib/database/queries/dashboard";
 import { listEstimates } from "@/lib/database/queries/estimates";
@@ -52,6 +56,12 @@ const UNASSIGNED_JOBS_DASHBOARD_LIMIT = 10;
 const OVERDUE_INVOICES_DASHBOARD_LIMIT = 10;
 const UNSENT_INVOICES_DASHBOARD_LIMIT = 10;
 const UNSENT_ESTIMATES_DASHBOARD_LIMIT = 10;
+const LEAD_FOLLOW_UP_DASHBOARD_LIMIT = 10;
+
+const EMPTY_LEAD_FOLLOW_UP: DashboardData["leadFollowUp"] = {
+  count: 0,
+  leads: [],
+};
 /** Match admin layout fetch so React cache dedupes within the request. */
 const NOTIFICATIONS_FETCH_LIMIT = 20;
 
@@ -273,6 +283,8 @@ export async function getDashboardData(
     unreadCount,
     operationsSummary,
     officeReviewQueueReport,
+    leadFollowUpCount,
+    leadFollowUpLeads,
   ] = await Promise.all([
     access.canViewTechnicianRoster
       ? listTechnicians(companyId, context, todayJobs)
@@ -307,6 +319,14 @@ export async function getDashboardData(
     access.canViewOperationalReports
       ? getCompanyOfficeReviewQueueReport(companyId)
       : Promise.resolve(EMPTY_OFFICE_REVIEW_QUEUE),
+    access.canManageCustomers
+      ? countLeadsNeedingFollowUp(companyId)
+      : Promise.resolve(0),
+    access.canManageCustomers
+      ? listLeadsNeedingFollowUp(companyId, {
+          limit: LEAD_FOLLOW_UP_DASHBOARD_LIMIT,
+        })
+      : Promise.resolve([]),
   ]);
 
   const invoiceSummary = access.canViewBilling
@@ -493,6 +513,21 @@ export async function getDashboardData(
           resolvedThisWeek: summarySections.completedWorkReview.resolvedThisWeek,
         }
       : { count: 0, jobs: [], resolvedThisWeek: 0 },
+    leadFollowUp: access.canManageCustomers
+      ? {
+          count: leadFollowUpCount,
+          leads: leadFollowUpLeads.map((lead) => ({
+            id: lead.id,
+            firstName: lead.firstName,
+            lastName: lead.lastName,
+            companyName: lead.companyName,
+            phone: lead.phone,
+            email: lead.email,
+            nextFollowUpAt: lead.nextFollowUpAt ?? "",
+            status: lead.status,
+          })),
+        }
+      : EMPTY_LEAD_FOLLOW_UP,
     operationalInsights: access.canViewOperationalReports
       ? filterDailyOperationsSummaryForBillingAccess(
           operationsSummary,

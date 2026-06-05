@@ -21,6 +21,35 @@ export type CompanyStatus = "active" | "trial" | "suspended";
 
 export type CustomerStatus = "active" | "inactive" | "lead";
 
+export type LeadStatus =
+  | "new"
+  | "contacted"
+  | "scheduled"
+  | "estimate_sent"
+  | "won"
+  | "lost";
+
+export type LeadSource =
+  | "website"
+  | "google"
+  | "facebook"
+  | "referral"
+  | "door_hanger"
+  | "yard_sign"
+  | "truck_wrap"
+  | "other";
+
+export type LeadActivityType =
+  | "lead_created"
+  | "call_logged"
+  | "email_logged"
+  | "note_added"
+  | "status_changed"
+  | "estimate_created"
+  | "converted"
+  | "won"
+  | "lost";
+
 export type CustomerActivityType =
   | "customer_created"
   | "customer_archived"

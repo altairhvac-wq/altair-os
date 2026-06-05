@@ -1,4 +1,5 @@
 import type { AnalyticsDateRange } from "@/shared/types/analytics";
+import type { LeadPipelineMetrics } from "@/shared/lib/leads/lead-metrics";
 import type { ProfitabilityReportDateBounds } from "@/shared/types/reports";
 
 export type ReportsPageDateRange = Extract<
@@ -122,6 +123,7 @@ export type ReportsPageData = {
   showTechnicianProfitability: boolean;
   operationsSnapshot: ReportOperationsSnapshot;
   accountantSummary: AccountantSummaryData;
+  leadPipeline: LeadPipelineMetrics;
   limitations: string[];
 };
 

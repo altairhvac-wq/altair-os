@@ -137,6 +137,22 @@ export type DashboardCompletedWorkReviewSnapshot = {
   resolvedThisWeek: number;
 };
 
+export type DashboardLeadFollowUpPreview = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  companyName?: string;
+  phone: string;
+  email: string;
+  nextFollowUpAt: string;
+  status: string;
+};
+
+export type DashboardLeadFollowUpSnapshot = {
+  count: number;
+  leads: DashboardLeadFollowUpPreview[];
+};
+
 export type DashboardData = {
   access: CompanyAccessScope;
   analytics: DashboardAnalyticsSnapshot;
@@ -151,6 +167,7 @@ export type DashboardData = {
   stalledJobs: DashboardStalledJobsSnapshot;
   completedWorkAwaitingInvoicing: DashboardCompletedWorkAwaitingInvoicingSnapshot;
   completedWorkReview: DashboardCompletedWorkReviewSnapshot;
+  leadFollowUp: DashboardLeadFollowUpSnapshot;
   operationalInsights: DailyOperationsSummary;
   operationalHealth: OperationalHealthReport;
   recentActivity: OperationalActivity[];

@@ -78,6 +78,7 @@ type EstimatesPageViewProps = {
   canManageEstimates: boolean;
   initialPanelMode?: PanelMode;
   createInitialData?: Partial<EstimateFormData>;
+  initialLeadId?: string;
   aiFeaturesEnabled?: boolean;
 };
 
@@ -124,6 +125,7 @@ export function EstimatesPageView({
   canManageEstimates,
   initialPanelMode = "empty",
   createInitialData,
+  initialLeadId,
   aiFeaturesEnabled = false,
 }: EstimatesPageViewProps) {
   const [estimates, setEstimates] = useState(initialEstimates);
@@ -494,7 +496,10 @@ export function EstimatesPageView({
     setCreateError(null);
 
     startTransition(async () => {
-      const result = await createEstimateAction(data);
+      const result = await createEstimateAction(
+        data,
+        initialLeadId ? { leadId: initialLeadId } : undefined,
+      );
 
       if (result.error || !result.estimate) {
         setCreateError(

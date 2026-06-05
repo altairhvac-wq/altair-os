@@ -18,6 +18,7 @@ const ALLOWED_NEXT_PATH_PREFIXES = [
   "/",
   "/dispatch",
   "/customers",
+  "/leads",
   "/jobs",
   "/estimates",
   "/price-book",

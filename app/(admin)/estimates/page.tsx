@@ -17,7 +17,7 @@ import { EstimatesPageView } from "@/shared/components/estimates/EstimatesPageVi
 import { getEstimateCreateInitialData } from "@/shared/lib/company-billing-defaults";
 
 type EstimatesPageProps = {
-  searchParams: Promise<{ customerId?: string; create?: string }>;
+  searchParams: Promise<{ customerId?: string; create?: string; leadId?: string }>;
 };
 
 export default async function EstimatesPage({
@@ -44,7 +44,7 @@ export default async function EstimatesPage({
     );
   }
 
-  const { customerId, create } = await searchParams;
+  const { customerId, create, leadId } = await searchParams;
 
   const [estimates, deletedEstimates, customers, jobs, serviceItems] =
     await Promise.all([
@@ -74,6 +74,7 @@ export default async function EstimatesPage({
       canManageEstimates={companyContext.permissions.manageBilling}
       initialPanelMode={create === "1" && preselectedCustomer ? "create" : "empty"}
       createInitialData={createInitialData}
+      initialLeadId={leadId}
       aiFeaturesEnabled={isAiFeaturesEnabled()}
     />
   );

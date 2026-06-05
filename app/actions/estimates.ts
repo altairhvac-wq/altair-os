@@ -41,6 +41,7 @@ import {
   type EstimateStatus,
   type FieldEstimateFormData,
 } from "@/shared/types/estimate";
+import { recordLeadEstimateCreatedFromLeadAction } from "@/app/actions/leads";
 import { applyEstimateCreationDefaults } from "@/shared/lib/company-billing-defaults";
 import { formatActionError } from "@/shared/lib/operational-errors";
 
@@ -101,6 +102,7 @@ export type CreateEstimateActionResult = {
 
 export async function createEstimateAction(
   data: EstimateFormData,
+  options?: { leadId?: string },
 ): Promise<CreateEstimateActionResult> {
   const context = await getActiveCompanyContext();
 
@@ -140,7 +142,17 @@ export async function createEstimateAction(
     creationSource: "office",
   });
 
+  const leadId = options?.leadId?.trim();
+  if (leadId) {
+    await recordLeadEstimateCreatedFromLeadAction({
+      leadId,
+      estimateId: estimate.id,
+      estimateNumber: estimate.estimateNumber,
+    });
+  }
+
   revalidatePath("/estimates");
+  revalidatePath("/leads");
   return { estimate };
 }
 

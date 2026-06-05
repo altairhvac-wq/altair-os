@@ -11,6 +11,7 @@ import {
   Receipt,
   Settings,
   Shield,
+  Target,
   Truck,
   Users,
   type LucideIcon,
@@ -46,6 +47,12 @@ export const adminNavItems: NavItem[] = [
     href: "/customers",
     icon: Users,
     description: "Manage customer profiles and locations",
+  },
+  {
+    label: "Leads",
+    href: "/leads",
+    icon: Target,
+    description: "Track opportunities before they become customers",
   },
   {
     label: "Jobs",
@@ -124,7 +131,7 @@ export function isPlatformAdminPath(pathname: string): boolean {
 /** Two-row mobile nav: row 1 = ops hub, row 2 = billing + overflow. */
 export const PRIMARY_MOBILE_ADMIN_NAV_ROWS = [
   ["/", "/jobs", "/dispatch", "/customers"],
-  ["/estimates", "/invoices", "/price-book"],
+  ["/leads", "/estimates", "/invoices", "/price-book"],
 ] as const;
 
 export const PRIMARY_MOBILE_ADMIN_NAV_HREFS =
@@ -133,8 +140,9 @@ export const PRIMARY_MOBILE_ADMIN_NAV_HREFS =
 /** Left-to-right desktop tab order (workflow-first, admin items last). */
 export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/",
-  "/customers",
   "/jobs",
+  "/customers",
+  "/leads",
   "/dispatch",
   "/estimates",
   "/price-book",

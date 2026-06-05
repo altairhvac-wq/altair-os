@@ -11,6 +11,7 @@ import {
 } from "@/shared/lib/invoice-page-focus";
 import type {
   DashboardData,
+  DashboardLeadFollowUpPreview,
   DashboardOverdueInvoicePreview,
   DashboardTechnicianStatus,
   DashboardUnsentEstimatePreview,
@@ -52,6 +53,7 @@ export type MobileActionSheetData = {
   overdueInvoices: DashboardOverdueInvoicePreview[];
   unsentInvoices: DashboardUnsentInvoicePreview[];
   unsentEstimates: DashboardUnsentEstimatePreview[];
+  leadFollowUps: DashboardLeadFollowUpPreview[];
   technicians: { id: string; name: string }[];
   assignableTechnicians: Technician[];
   technicianStatuses: DashboardTechnicianStatus[];
@@ -98,6 +100,8 @@ function buildDescription(id: string, count: number): string {
       return `${count} ${pluralize(count, "job")} with no recent activity`;
     case "expense-approvals":
       return `${count} ${pluralize(count, "receipt", "receipts")} waiting for approval`;
+    case "lead-follow-up":
+      return `${count} ${pluralize(count, "lead")} need follow-up today`;
     case "unread-notifications":
       return `${count} unread ${pluralize(count, "alert")} to review`;
     default:
@@ -114,6 +118,7 @@ const PRIMARY_IDS = new Set([
   "estimates-not-sent",
   "stalled-jobs",
   "expense-approvals",
+  "lead-follow-up",
 ]);
 
 const ATTENTION_CARD_MAP: Record<string, string> = {
@@ -143,8 +148,24 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
     expenses,
     stalledJobs,
     notifications,
+    leadFollowUp,
   } = data;
   const cards: MobileActionCard[] = [];
+
+  if (access.canManageCustomers && leadFollowUp.count > 0) {
+    cards.push({
+      id: "lead-follow-up",
+      label: "Leads",
+      count: leadFollowUp.count,
+      severity: leadFollowUp.count >= 5 ? "critical" : "warning",
+      description: buildDescription("lead-follow-up", leadFollowUp.count),
+      category: "critical-operations",
+      queueType: "lead_follow_up",
+      href: "/leads",
+      panelId: "attention",
+      canFix: access.canManageCustomers,
+    });
+  }
 
   if (operations.unassignedToday > 0) {
     cards.push({
@@ -368,6 +389,7 @@ export function buildMobileActionSheetData(
     overdueInvoices: data.money.overdueInvoices,
     unsentInvoices: data.money.unsentInvoices,
     unsentEstimates: data.money.unsentEstimates,
+    leadFollowUps: data.leadFollowUp.leads,
     technicians: data.technicians.map((tech) => ({
       id: tech.id,
       name: tech.name,
