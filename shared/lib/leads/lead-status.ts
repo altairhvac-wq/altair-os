@@ -1,3 +1,9 @@
+import {
+  getCompanyTimeZone,
+  getDateOnlyInTimeZone,
+  getDayBoundsInTimeZone,
+  parseDateInput,
+} from "@/shared/lib/datetime";
 import type { Lead, LeadSortField, LeadStatus } from "@/shared/types/lead";
 import { formatLeadActivityLabel } from "@/shared/types/lead-activity";
 
@@ -50,9 +56,17 @@ export function getLeadLastActivityLabel(lead: Lead): string {
   return "No activity yet";
 }
 
+export function getLeadFollowUpDueCutoff(
+  reference = new Date(),
+  timeZone = getCompanyTimeZone(),
+): string {
+  return getDayBoundsInTimeZone(timeZone, reference).end;
+}
+
 export function isLeadFollowUpDue(
   lead: Pick<Lead, "status" | "nextFollowUpAt">,
   reference = new Date(),
+  timeZone = getCompanyTimeZone(),
 ): boolean {
   if (lead.status === "won" || lead.status === "lost") {
     return false;
@@ -62,7 +76,13 @@ export function isLeadFollowUpDue(
     return false;
   }
 
-  return Date.parse(lead.nextFollowUpAt) <= reference.getTime();
+  const followUpDate = getDateOnlyInTimeZone(
+    parseDateInput(lead.nextFollowUpAt),
+    timeZone,
+  );
+  const todayDate = getDateOnlyInTimeZone(reference, timeZone);
+
+  return followUpDate <= todayDate;
 }
 
 export function formatLeadFollowUpQueueTitle(

@@ -8,6 +8,7 @@ import type {
 } from "@/lib/database/types/core-tables";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import { formatLeadActivityLabel } from "@/shared/types/lead-activity";
+import { getLeadFollowUpDueCutoff } from "@/shared/lib/leads/lead-status";
 import { getMonthBoundsInTimeZone } from "@/shared/lib/datetime";
 import type { Lead, LeadFormData, LeadStatus } from "@/shared/types/lead";
 
@@ -227,11 +228,15 @@ export async function getLeadById(
 
 export async function listLeadsNeedingFollowUp(
   companyId: string,
-  options?: { limit?: number; reference?: Date },
+  options?: { limit?: number; reference?: Date; timeZone?: string },
 ): Promise<Lead[]> {
   const supabase = await createClient();
   const reference = options?.reference ?? new Date();
   const limit = options?.limit ?? 10;
+  const followUpDueCutoff = getLeadFollowUpDueCutoff(
+    reference,
+    options?.timeZone,
+  );
 
   const { data, error } = await supabase
     .from("leads")
@@ -255,7 +260,7 @@ export async function listLeadsNeedingFollowUp(
     .is("archived_at", null)
     .not("status", "in", '("won","lost")')
     .not("next_follow_up_at", "is", null)
-    .lte("next_follow_up_at", reference.toISOString())
+    .lte("next_follow_up_at", followUpDueCutoff)
     .order("next_follow_up_at", { ascending: true })
     .limit(limit);
 
@@ -374,9 +379,14 @@ export async function countLeadsLostThisMonth(
 
 export async function countLeadsNeedingFollowUp(
   companyId: string,
-  reference = new Date(),
+  options?: { reference?: Date; timeZone?: string },
 ): Promise<number> {
   const supabase = await createClient();
+  const reference = options?.reference ?? new Date();
+  const followUpDueCutoff = getLeadFollowUpDueCutoff(
+    reference,
+    options?.timeZone,
+  );
 
   const { count, error } = await supabase
     .from("leads")
@@ -386,7 +396,7 @@ export async function countLeadsNeedingFollowUp(
     .is("archived_at", null)
     .not("status", "in", '("won","lost")')
     .not("next_follow_up_at", "is", null)
-    .lte("next_follow_up_at", reference.toISOString());
+    .lte("next_follow_up_at", followUpDueCutoff);
 
   if (error) {
     console.error("[countLeadsNeedingFollowUp] query failed:", {

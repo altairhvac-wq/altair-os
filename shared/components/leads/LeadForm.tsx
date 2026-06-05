@@ -85,6 +85,7 @@ export function LeadForm({
   const [saveMenuOpen, setSaveMenuOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const isSubmittingRef = useRef(false);
   const saveMenuRef = useRef<HTMLDivElement>(null);
   const editableStatuses = lead
     ? getEditableLeadStatusOptions(lead.status)
@@ -127,6 +128,10 @@ export function LeadForm({
   }
 
   function submitLead(outcome: LeadCreateOutcome = "save") {
+    if (isSubmittingRef.current || isPending) {
+      return;
+    }
+
     setError(null);
     setSaveMenuOpen(false);
 
@@ -146,22 +151,28 @@ export function LeadForm({
       return;
     }
 
+    isSubmittingRef.current = true;
+
     startTransition(async () => {
-      const result =
-        mode === "create"
-          ? await createLeadAction(normalized)
-          : lead
-            ? await updateLeadAction(lead.id, normalized)
-            : { error: "Lead not found." };
+      try {
+        const result =
+          mode === "create"
+            ? await createLeadAction(normalized)
+            : lead
+              ? await updateLeadAction(lead.id, normalized)
+              : { error: "Lead not found." };
 
-      if (result.error || !result.lead) {
-        setError(
-          formatActionError(result.error, "We couldn't save this lead."),
-        );
-        return;
+        if (result.error || !result.lead) {
+          setError(
+            formatActionError(result.error, "We couldn't save this lead."),
+          );
+          return;
+        }
+
+        onSuccess(result.lead, mode === "create" ? outcome : undefined);
+      } finally {
+        isSubmittingRef.current = false;
       }
-
-      onSuccess(result.lead, mode === "create" ? outcome : undefined);
     });
   }
 
@@ -375,6 +386,7 @@ export function LeadForm({
           </div>
           <button
             type="button"
+            disabled={isPending}
             onClick={onCancel}
             className="admin-btn-secondary w-full sm:w-auto"
           >

@@ -42,11 +42,12 @@ function filterLeads(
   search: string,
   statusFilter: LeadStatus | "all",
   followUpDueOnly: boolean,
+  timeZone: string,
 ): Lead[] {
   const query = search.trim().toLowerCase();
 
   return leads.filter((lead) => {
-    if (followUpDueOnly && !isLeadFollowUpDue(lead)) {
+    if (followUpDueOnly && !isLeadFollowUpDue(lead, undefined, timeZone)) {
       return false;
     }
 
@@ -120,11 +121,17 @@ export function LeadsPageView({
   }, [initialLeads, initialSelectedId]);
 
   const filteredLeads = useMemo(() => {
-    const filtered = filterLeads(leads, search, statusFilter, followUpDueOnly);
+    const filtered = filterLeads(
+      leads,
+      search,
+      statusFilter,
+      followUpDueOnly,
+      timeZone,
+    );
     return [...filtered].sort((left, right) =>
       compareLeadsByField(left, right, sortField),
     );
-  }, [followUpDueOnly, leads, search, sortField, statusFilter]);
+  }, [followUpDueOnly, leads, search, sortField, statusFilter, timeZone]);
 
   const selectedLead =
     leads.find((lead) => lead.id === selectedId) ?? null;
@@ -153,7 +160,7 @@ export function LeadsPageView({
     );
   }
 
-  function handleCreateSuccess(lead: Lead, outcome: LeadCreateOutcome = "open") {
+  function handleCreateSuccess(lead: Lead, outcome: LeadCreateOutcome = "save") {
     setLeads((current) => [lead, ...current]);
     setCreateError(null);
 

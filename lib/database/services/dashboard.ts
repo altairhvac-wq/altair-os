@@ -336,11 +336,14 @@ export async function getDashboardData(
       ? getCompanyOfficeReviewQueueReport(companyId)
       : Promise.resolve(EMPTY_OFFICE_REVIEW_QUEUE),
     access.canManageCustomers
-      ? countLeadsNeedingFollowUp(companyId)
+      ? countLeadsNeedingFollowUp(companyId, {
+          timeZone: context.company.timezone,
+        })
       : Promise.resolve(0),
     access.canManageCustomers
       ? listLeadsNeedingFollowUp(companyId, {
           limit: LEAD_FOLLOW_UP_DASHBOARD_LIMIT,
+          timeZone: context.company.timezone,
         })
       : Promise.resolve([]),
     access.canManageCustomers
