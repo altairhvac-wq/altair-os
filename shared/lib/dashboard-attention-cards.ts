@@ -3,6 +3,7 @@ import {
   INVOICE_PAGE_CASH_FLOW_HREF,
   INVOICE_PAGE_OVERDUE_HREF,
 } from "@/shared/lib/invoice-page-focus";
+import type { OperationalResolutionQueueType } from "@/shared/lib/operational-resolution-queue";
 import type { DailyOperationsSummarySeverity } from "@/shared/types/daily-operations-summary";
 
 export type DashboardAttentionCardSeverity =
@@ -18,6 +19,8 @@ export type DashboardAttentionCard = {
   explanation: string;
   severity: DashboardAttentionCardSeverity;
   href?: string;
+  /** Opens the operational resolution queue sheet when set. */
+  queueType?: OperationalResolutionQueueType;
 };
 
 export type DashboardAttentionCardsInput = Pick<
@@ -89,6 +92,8 @@ function resolveOfficeQueueCard(
     parts.push(`${overdueCount} overdue in the queue`);
   }
 
+  const hasCompletedReview = input.completedWorkReview.count > 0;
+
   return {
     id: "office-queue",
     label: "Office queue",
@@ -98,6 +103,7 @@ function resolveOfficeQueueCard(
     severity,
     href:
       criticalCount > 0 ? "/reports?queue=critical" : "/reports?queue=attention",
+    queueType: hasCompletedReview ? "needs_review" : undefined,
   };
 }
 
@@ -139,6 +145,13 @@ function resolveInvoicingCard(
     );
   }
 
+  const queueType: OperationalResolutionQueueType | undefined =
+    overdueInvoices > 0 && canViewBilling
+      ? "overdue_invoice"
+      : awaitingInvoicing > 0
+        ? "ready_to_invoice"
+        : undefined;
+
   return {
     id: "invoicing",
     label: "Invoicing",
@@ -152,6 +165,7 @@ function resolveInvoicingCard(
       overdueInvoices > 0 && canViewBilling
         ? INVOICE_PAGE_OVERDUE_HREF
         : reportsInvoicingHref,
+    queueType,
   };
 }
 
@@ -180,9 +194,10 @@ function resolveStalledJobsCard(
     label: "Stalled jobs",
     count: stalledCount,
     statusLabel: `${stalledCount}`,
-    explanation: `${stalledCount} ${pluralize(stalledCount, "job")} with no activity in ${inactivityThresholdDays}+ days — check dispatch and customer follow-up.`,
+    explanation: `${stalledCount} ${pluralize(stalledCount, "job")} with no activity in ${inactivityThresholdDays}+ days — open the stalled jobs queue to follow up.`,
     severity,
     href: "/reports?queue=stalled",
+    queueType: "stalled_job",
   };
 }
 
@@ -292,6 +307,7 @@ function resolveReadinessCard(
     explanation: `${parts.join("; ")} — resolve blockers before scheduling or closing.`,
     severity,
     href: "/reports?queue=attention",
+    queueType: reviewBlockers > 0 ? "needs_review" : undefined,
   };
 }
 

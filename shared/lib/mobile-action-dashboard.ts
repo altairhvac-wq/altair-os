@@ -88,7 +88,14 @@ function pluralize(
   return count === 1 ? singular : plural;
 }
 
-function buildDescription(id: string, count: number): string {
+function buildDescription(
+  id: string,
+  count: number,
+  context?: {
+    inactivityThresholdDays?: number;
+    staleSentEstimateThresholdDays?: number;
+  },
+): string {
   switch (id) {
     case "unassigned-jobs":
       return `${count} ${pluralize(count, "job")} on today's board need a technician`;
@@ -100,16 +107,20 @@ function buildDescription(id: string, count: number): string {
       return `${count} draft ${pluralize(count, "invoice")} ready to send to customers`;
     case "estimates-not-sent":
       return `${count} draft ${pluralize(count, "estimate")} ready to send to customers`;
-    case "estimates-awaiting-approval":
-      return `${count} sent ${pluralize(count, "estimate")} awaiting customer approval`;
+    case "estimates-awaiting-approval": {
+      const threshold = context?.staleSentEstimateThresholdDays ?? 7;
+      return `${count} sent ${pluralize(count, "estimate")} awaiting follow-up — ${threshold}+ days since sent`;
+    }
     case "needs-review":
       return `${count} ${pluralize(count, "item")} need office review before billing`;
-    case "stalled-jobs":
-      return `${count} ${pluralize(count, "job")} with no recent activity`;
+    case "stalled-jobs": {
+      const threshold = context?.inactivityThresholdDays ?? 3;
+      return `${count} ${pluralize(count, "job")} with no activity in ${threshold}+ days`;
+    }
     case "expense-approvals":
       return `${count} ${pluralize(count, "receipt", "receipts")} waiting for approval`;
     case "lead-follow-up":
-      return `${count} ${pluralize(count, "lead")} need follow-up today`;
+      return `${count} ${pluralize(count, "lead")} with follow-up due today`;
     case "unread-notifications":
       return `${count} unread ${pluralize(count, "alert")} to review`;
     default:
@@ -161,16 +172,25 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   } = data;
   const cards: MobileActionCard[] = [];
 
+  const descriptionContext = {
+    inactivityThresholdDays: stalledJobs.inactivityThresholdDays,
+    staleSentEstimateThresholdDays: money.staleSentEstimateThresholdDays,
+  };
+
   if (access.canManageCustomers && leadFollowUp.count > 0) {
     cards.push({
       id: "lead-follow-up",
-      label: "Leads",
+      label: "Lead follow-up",
       count: leadFollowUp.count,
       severity: leadFollowUp.count >= 5 ? "critical" : "warning",
-      description: buildDescription("lead-follow-up", leadFollowUp.count),
+      description: buildDescription(
+        "lead-follow-up",
+        leadFollowUp.count,
+        descriptionContext,
+      ),
       category: "critical-operations",
       queueType: "lead_follow_up",
-      href: "/leads",
+      href: "/leads?filter=follow_up_due",
       panelId: "attention",
       canFix: access.canManageCustomers,
     });
@@ -182,7 +202,11 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
       label: "Assign",
       count: operations.unassignedToday,
       severity: operations.unassignedToday >= 3 ? "critical" : "warning",
-      description: buildDescription("unassigned-jobs", operations.unassignedToday),
+      description: buildDescription(
+        "unassigned-jobs",
+        operations.unassignedToday,
+        descriptionContext,
+      ),
       category: "critical-operations",
       queueType: "unassigned_job",
       href: DISPATCH_PAGE_UNASSIGNED_HREF,
@@ -207,7 +231,11 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
         count: needsReview,
         severity:
           officeReviewQueue.summary.criticalCount > 0 ? "critical" : "warning",
-        description: buildDescription("needs-review", needsReview),
+        description: buildDescription(
+          "needs-review",
+          needsReview,
+          descriptionContext,
+        ),
         category: "critical-operations",
         queueType: "needs_review",
         href:
@@ -223,10 +251,14 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   if (access.canViewOperationalReports && stalledJobs.stalledCount > 0) {
     cards.push({
       id: "stalled-jobs",
-      label: "Stalled",
+      label: "Stalled jobs",
       count: stalledJobs.stalledCount,
       severity: stalledJobs.stalledCount >= 5 ? "critical" : "warning",
-      description: buildDescription("stalled-jobs", stalledJobs.stalledCount),
+      description: buildDescription(
+        "stalled-jobs",
+        stalledJobs.stalledCount,
+        descriptionContext,
+      ),
       category: "critical-operations",
       queueType: "stalled_job",
       href: "/reports?queue=stalled",
@@ -238,10 +270,14 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   if (access.canViewBilling && money.overdueCount > 0) {
     cards.push({
       id: "overdue-invoices",
-      label: "Overdue",
+      label: "Overdue invoices",
       count: money.overdueCount,
       severity: "critical",
-      description: buildDescription("overdue-invoices", money.overdueCount),
+      description: buildDescription(
+        "overdue-invoices",
+        money.overdueCount,
+        descriptionContext,
+      ),
       category: "money-actions",
       queueType: "overdue_invoice",
       href: INVOICE_PAGE_OVERDUE_HREF,
@@ -256,13 +292,14 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   ) {
     cards.push({
       id: "ready-to-invoice",
-      label: "Invoice",
+      label: "Ready to invoice",
       count: completedWorkAwaitingInvoicing.count,
       severity:
         completedWorkAwaitingInvoicing.count >= 5 ? "critical" : "warning",
       description: buildDescription(
         "ready-to-invoice",
         completedWorkAwaitingInvoicing.count,
+        descriptionContext,
       ),
       category: "money-actions",
       queueType: "ready_to_invoice",
@@ -281,6 +318,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
       description: buildDescription(
         "invoices-not-sent",
         money.unsentInvoiceCount,
+        descriptionContext,
       ),
       category: "money-actions",
       queueType: "unsent_invoice",
@@ -293,12 +331,13 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   if (access.canViewBilling && money.unsentEstimateCount > 0) {
     cards.push({
       id: "estimates-not-sent",
-      label: "Estimates",
+      label: "Unsent estimates",
       count: money.unsentEstimateCount,
       severity: money.unsentEstimateCount >= 5 ? "critical" : "warning",
       description: buildDescription(
         "estimates-not-sent",
         money.unsentEstimateCount,
+        descriptionContext,
       ),
       category: "money-actions",
       queueType: "unsent_estimate",
@@ -311,16 +350,17 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
   if (access.canViewBilling && money.staleSentEstimateCount > 0) {
     cards.push({
       id: "estimates-awaiting-approval",
-      label: "Follow up",
+      label: "Follow up sent estimates",
       count: money.staleSentEstimateCount,
       severity: money.staleSentEstimateCount >= 5 ? "critical" : "warning",
       description: buildDescription(
         "estimates-awaiting-approval",
         money.staleSentEstimateCount,
+        descriptionContext,
       ),
       category: "money-actions",
       queueType: "stale_sent_estimate",
-      href: "/estimates",
+      href: "/estimates?status=sent",
       panelId: "cash-flow",
       canFix: access.canViewBilling,
     });
@@ -332,7 +372,11 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
       label: "Expenses",
       count: expenses.submittedCount,
       severity: "warning",
-      description: buildDescription("expense-approvals", expenses.submittedCount),
+      description: buildDescription(
+        "expense-approvals",
+        expenses.submittedCount,
+        descriptionContext,
+      ),
       category: "quiet-summary",
       href: "/expenses?status=submitted",
       panelId: "billing",
@@ -364,7 +408,11 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
         label: card.label,
         count: count > 0 ? count : 1,
         severity: toSeverity(card.severity),
-        description: buildDescription(card.id, count > 0 ? count : 1),
+        description: buildDescription(
+          card.id,
+          count > 0 ? count : 1,
+          descriptionContext,
+        ),
         category: "quiet-summary",
         href: card.href,
         panelId: "attention",
@@ -383,6 +431,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
       description: buildDescription(
         "unread-notifications",
         notifications.unreadCount,
+        descriptionContext,
       ),
       category: "quiet-summary",
       panelId: "attention",

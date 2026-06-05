@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2, MapPin } from "lucide-react";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { DashboardOpenPanelButton } from "@/shared/components/dashboard/DashboardOpenPanelButton";
+import { DashboardQueueActionTrigger } from "@/shared/components/dashboard/DashboardQueueActionTrigger";
 import { useDashboardDrilldown } from "@/shared/components/dashboard/dashboard-drilldown-context";
 import {
   buildDashboardAttentionCards,
@@ -576,15 +577,29 @@ export function DashboardCompactNextStepsSection({
           <ul className="space-y-1.5">
             {actions.map((action) => (
               <li key={action.id}>
-                <Link
-                  href={action.href}
-                  className="block rounded-lg border border-slate-100 bg-white px-2.5 py-2 transition-colors hover:border-slate-200 hover:bg-white"
+                <DashboardQueueActionTrigger
+                  action={{
+                    id: action.id,
+                    label: action.title,
+                    description: action.explanation,
+                    count: action.count,
+                    severity:
+                      action.severity === "info"
+                        ? "info"
+                        : action.severity === "warning"
+                          ? "warning"
+                          : "critical",
+                    queueType: action.queueType,
+                    href: action.href,
+                  }}
+                  data={data}
+                  className="block w-full rounded-lg border border-slate-100 bg-white px-2.5 py-2 text-left transition-colors hover:border-slate-200 hover:bg-white"
                 >
                   <p className="text-xs font-bold text-slate-900">{action.title}</p>
                   <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-600">
                     {action.recommendedAction}
                   </p>
-                </Link>
+                </DashboardQueueActionTrigger>
               </li>
             ))}
           </ul>

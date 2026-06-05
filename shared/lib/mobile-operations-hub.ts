@@ -29,18 +29,35 @@ function pluralize(
   return count === 1 ? singular : plural;
 }
 
-function buildAttentionSubtitle(id: string, count: number): string | undefined {
+function buildAttentionSubtitle(
+  id: string,
+  count: number,
+  context?: {
+    inactivityThresholdDays?: number;
+    staleSentEstimateThresholdDays?: number;
+  },
+): string | undefined {
   switch (id) {
     case "overdue-invoices":
       return `${count} ${pluralize(count, "invoice")} past due`;
     case "ready-to-invoice":
-      return `${count} completed ${pluralize(count, "job")} waiting`;
+      return `${count} completed ${pluralize(count, "job")} waiting to invoice`;
     case "unassigned-jobs":
       return `${count} ${pluralize(count, "job")} need assignment`;
     case "needs-review":
-      return `${count} ${pluralize(count, "item")} awaiting review`;
-    case "stalled-jobs":
-      return `${count} ${pluralize(count, "job")} with no recent activity`;
+      return `${count} ${pluralize(count, "item")} awaiting office review`;
+    case "stalled-jobs": {
+      const threshold = context?.inactivityThresholdDays ?? 3;
+      return `${count} ${pluralize(count, "job")} — no activity in ${threshold}+ days`;
+    }
+    case "lead-follow-up":
+      return `${count} ${pluralize(count, "lead")} with follow-up due today`;
+    case "estimates-awaiting-approval": {
+      const threshold = context?.staleSentEstimateThresholdDays ?? 7;
+      return `${count} sent ${pluralize(count, "estimate")} — ${threshold}+ days since sent`;
+    }
+    case "estimates-not-sent":
+      return `${count} draft ${pluralize(count, "estimate")} ready to send`;
     case "expense-approvals":
       return `${count} ${pluralize(count, "receipt", "receipts")} need approval`;
     case "unread-notifications":
@@ -62,10 +79,14 @@ function buildAttentionSubtitle(id: string, count: number): string | undefined {
 
 function withAttentionSubtitle(
   item: Omit<MobileAttentionQueueItem, "subtitle">,
+  context?: {
+    inactivityThresholdDays?: number;
+    staleSentEstimateThresholdDays?: number;
+  },
 ): MobileAttentionQueueItem {
   return {
     ...item,
-    subtitle: buildAttentionSubtitle(item.id, item.count),
+    subtitle: buildAttentionSubtitle(item.id, item.count, context),
   };
 }
 
@@ -120,6 +141,10 @@ export function buildMobileAttentionQueue(
     notifications,
   } = data;
   const items: MobileAttentionQueueItem[] = [];
+  const subtitleContext = {
+    inactivityThresholdDays: stalledJobs.inactivityThresholdDays,
+    staleSentEstimateThresholdDays: money.staleSentEstimateThresholdDays,
+  };
 
   if (operations.unassignedToday > 0) {
     items.push(
@@ -130,7 +155,7 @@ export function buildMobileAttentionQueue(
         severity: operations.unassignedToday >= 3 ? "critical" : "warning",
         href: DISPATCH_PAGE_UNASSIGNED_HREF,
         panelId: access.canViewTechnicianRoster ? "dispatch" : undefined,
-      }),
+      }, subtitleContext),
     );
   }
 
@@ -143,7 +168,7 @@ export function buildMobileAttentionQueue(
         severity: "critical",
         href: INVOICE_PAGE_OVERDUE_HREF,
         panelId: "cash-flow",
-      }),
+      }, subtitleContext),
     );
   }
 
@@ -165,7 +190,7 @@ export function buildMobileAttentionQueue(
               ? "/reports?queue=critical"
               : "/reports?queue=attention",
           panelId: "attention",
-        }),
+        }, subtitleContext),
       );
     }
   }
@@ -183,7 +208,7 @@ export function buildMobileAttentionQueue(
           completedWorkAwaitingInvoicing.count >= 5 ? "critical" : "warning",
         href: "/reports?queue=invoicing",
         panelId: access.canViewBilling ? "cash-flow" : undefined,
-      }),
+      }, subtitleContext),
     );
   }
 
@@ -196,7 +221,7 @@ export function buildMobileAttentionQueue(
         severity: stalledJobs.stalledCount >= 5 ? "critical" : "warning",
         href: "/reports?queue=stalled",
         panelId: "attention",
-      }),
+      }, subtitleContext),
     );
   }
 
@@ -209,7 +234,7 @@ export function buildMobileAttentionQueue(
         severity: "warning",
         href: "/expenses?status=submitted",
         panelId: "billing",
-      }),
+      }, subtitleContext),
     );
   }
 
@@ -240,7 +265,7 @@ export function buildMobileAttentionQueue(
           severity: toAttentionSeverity(card.severity),
           href: card.href,
           panelId: "attention",
-        }),
+        }, subtitleContext),
       );
       coveredIds.add(card.id);
     }
@@ -254,7 +279,7 @@ export function buildMobileAttentionQueue(
         count: notifications.unreadCount,
         severity: "info",
         panelId: "attention",
-      }),
+      }, subtitleContext),
     );
   }
 

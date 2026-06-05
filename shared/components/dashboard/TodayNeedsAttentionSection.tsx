@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   AlertCircle,
@@ -10,17 +12,18 @@ import {
   Receipt,
   type LucideIcon,
 } from "lucide-react";
+import { DashboardQueueActionTrigger } from "@/shared/components/dashboard/DashboardQueueActionTrigger";
 import {
   buildDashboardAttentionCards,
   countDashboardAttentionIssues,
   formatDashboardAttentionSeverityLabel,
   type DashboardAttentionCard,
   type DashboardAttentionCardSeverity,
-  type DashboardAttentionCardsInput,
 } from "@/shared/lib/dashboard-attention-cards";
+import type { DashboardData } from "@/shared/types/dashboard";
 
 type TodayNeedsAttentionSectionProps = {
-  data: DashboardAttentionCardsInput;
+  data: DashboardData;
 };
 
 const CARD_ICONS: Record<DashboardAttentionCard["id"], LucideIcon> = {
@@ -69,7 +72,13 @@ function getAttentionCardStyles(severity: DashboardAttentionCardSeverity): {
   }
 }
 
-function AttentionCard({ card }: { card: DashboardAttentionCard }) {
+function AttentionCard({
+  card,
+  data,
+}: {
+  card: DashboardAttentionCard;
+  data: DashboardData;
+}) {
   const CardIcon = CARD_ICONS[card.id];
   const styles = getAttentionCardStyles(card.severity);
   const StatusIcon = styles.Icon;
@@ -115,11 +124,28 @@ function AttentionCard({ card }: { card: DashboardAttentionCard }) {
     </div>
   );
 
-  if (card.href) {
+  if (card.href || card.queueType) {
     return (
-      <Link href={card.href} className="block h-full">
+      <DashboardQueueActionTrigger
+        action={{
+          id: card.id,
+          label: card.label,
+          description: card.explanation,
+          count: card.count,
+          severity:
+            card.severity === "critical"
+              ? "critical"
+              : card.severity === "warning"
+                ? "warning"
+                : "info",
+          queueType: card.queueType,
+          href: card.href,
+        }}
+        data={data}
+        className="block h-full w-full text-left"
+      >
         {body}
-      </Link>
+      </DashboardQueueActionTrigger>
     );
   }
 
@@ -186,7 +212,7 @@ export function TodayNeedsAttentionSection({
           <div className="space-y-3 max-lg:space-y-3 lg:space-y-4">
             <div className="grid grid-cols-2 gap-2 max-lg:gap-2 sm:grid-cols-2 sm:gap-3">
               {issueCards.map((card) => (
-                <AttentionCard key={card.id} card={card} />
+                <AttentionCard key={card.id} card={card} data={data} />
               ))}
             </div>
 

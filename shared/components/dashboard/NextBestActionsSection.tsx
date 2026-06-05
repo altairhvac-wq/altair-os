@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   AlertCircle,
@@ -7,17 +9,18 @@ import {
   ListChecks,
   type LucideIcon,
 } from "lucide-react";
+import { DashboardQueueActionTrigger } from "@/shared/components/dashboard/DashboardQueueActionTrigger";
 import {
   buildDashboardNextBestActions,
   formatDashboardNextBestActionSeverityLabel,
   hasDashboardNextBestActions,
   type DashboardNextBestAction,
   type DashboardNextBestActionSeverity,
-  type DashboardNextBestActionsInput,
 } from "@/shared/lib/dashboard-next-best-actions";
+import type { DashboardData } from "@/shared/types/dashboard";
 
 type NextBestActionsSectionProps = {
-  data: DashboardNextBestActionsInput;
+  data: DashboardData;
 };
 
 function getActionStyles(severity: DashboardNextBestActionSeverity): {
@@ -51,15 +54,35 @@ function getActionStyles(severity: DashboardNextBestActionSeverity): {
   }
 }
 
-function ActionRow({ action }: { action: DashboardNextBestAction }) {
+function ActionRow({
+  action,
+  data,
+}: {
+  action: DashboardNextBestAction;
+  data: DashboardData;
+}) {
   const styles = getActionStyles(action.severity);
   const StatusIcon = styles.Icon;
 
   return (
     <li>
-      <Link
-        href={action.href}
-        className={`block rounded-xl border px-3 py-2.5 transition-colors max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3 ${styles.rowClass}`}
+      <DashboardQueueActionTrigger
+        action={{
+          id: action.id,
+          label: action.title,
+          description: action.explanation,
+          count: action.count,
+          severity:
+            action.severity === "info"
+              ? "info"
+              : action.severity === "warning"
+                ? "warning"
+                : "critical",
+          queueType: action.queueType,
+          href: action.href,
+        }}
+        data={data}
+        className={`block w-full rounded-xl border px-3 py-2.5 text-left transition-colors max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3 ${styles.rowClass}`}
       >
         <div className="flex items-start gap-2.5 lg:gap-3">
           <div
@@ -98,7 +121,7 @@ function ActionRow({ action }: { action: DashboardNextBestAction }) {
             aria-hidden="true"
           />
         </div>
-      </Link>
+      </DashboardQueueActionTrigger>
     </li>
   );
 }
@@ -134,7 +157,7 @@ export function NextBestActionsSection({ data }: NextBestActionsSectionProps) {
 
       {hasActions ? (
         <ul className="space-y-2 p-4 lg:p-5">{actions.map((action) => (
-            <ActionRow key={action.id} action={action} />
+            <ActionRow key={action.id} action={action} data={data} />
           ))}</ul>
       ) : (
         <div className="p-4 lg:p-5">

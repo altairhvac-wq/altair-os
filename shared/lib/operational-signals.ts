@@ -1,3 +1,4 @@
+import { ESTIMATE_RECOVERY_THRESHOLD_DAYS } from "@/shared/lib/estimate-recovery";
 import type { DashboardData } from "@/shared/types/dashboard";
 
 export type OperationalSignalSeverity = "critical" | "warning" | "info";
@@ -134,7 +135,7 @@ export function buildOperationalSignals(
 }
 
 export function formatStaleSentEstimatesSignalDescription(count: number): string {
-  return `${count} sent ${pluralize(count, "estimate")} awaiting customer approval`;
+  return `${count} sent ${pluralize(count, "estimate")} awaiting follow-up — ${ESTIMATE_RECOVERY_THRESHOLD_DAYS}+ days since sent`;
 }
 
 export function formatLeadFollowUpSignalDescription(count: number): string {

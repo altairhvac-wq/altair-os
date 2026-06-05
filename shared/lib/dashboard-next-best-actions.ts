@@ -1,5 +1,6 @@
 import type { DashboardData } from "@/shared/types/dashboard";
 import { INVOICE_PAGE_OVERDUE_HREF } from "@/shared/lib/invoice-page-focus";
+import type { OperationalResolutionQueueType } from "@/shared/lib/operational-resolution-queue";
 import type { DailyOperationsSummarySeverity } from "@/shared/types/daily-operations-summary";
 
 export type DashboardNextBestActionSeverity = Exclude<
@@ -18,6 +19,8 @@ export type DashboardNextBestAction = {
   count: number | null;
   metricLabel?: string;
   href: string;
+  /** Opens the operational resolution queue sheet when set. */
+  queueType?: OperationalResolutionQueueType;
 };
 
 export function formatDashboardNextBestActionSeverityLabel(
@@ -58,6 +61,8 @@ function resolveCriticalQueueAction(
     return null;
   }
 
+  const hasCompletedReview = input.completedWorkReview.count > 0;
+
   return {
     id: "review-critical-queue",
     severity: "critical",
@@ -65,10 +70,11 @@ function resolveCriticalQueueAction(
     title: "Review critical office queue items",
     explanation: `${criticalCount} critical ${pluralize(criticalCount, "item")} need office review before jobs stall in the pipeline.`,
     recommendedAction:
-      "Open the critical queue and resolve the highest-severity blockers first.",
+      "Open the review queue and resolve the highest-severity blockers first.",
     count: criticalCount,
     metricLabel: "critical items",
     href: "/reports?queue=critical",
+    queueType: hasCompletedReview ? "needs_review" : undefined,
   };
 }
 
@@ -92,10 +98,11 @@ function resolveOverdueInvoicesAction(
     title: "Follow up on overdue invoices",
     explanation: `${overdueInvoices} ${pluralize(overdueInvoices, "invoice")} past due — follow up to protect cash flow.`,
     recommendedAction:
-      "Review overdue invoices and contact customers to protect cash flow.",
+      "Open the overdue invoice queue and contact customers to collect payment.",
     count: overdueInvoices,
     metricLabel: "overdue invoices",
     href: INVOICE_PAGE_OVERDUE_HREF,
+    queueType: "overdue_invoice",
   };
 }
 
@@ -138,10 +145,11 @@ function resolveAwaitingInvoicingAction(
     title: "Invoice completed jobs awaiting billing",
     explanation: `${awaitingCount} completed ${pluralize(awaitingCount, "job")} still need invoices created.`,
     recommendedAction:
-      "Create invoices for finished work so revenue is not left on the table.",
+      "Open the ready-to-invoice queue and create invoices for finished work.",
     count: awaitingCount,
     metricLabel: "awaiting invoice",
     href: "/reports?queue=invoicing",
+    queueType: "ready_to_invoice",
   };
 }
 
@@ -164,10 +172,11 @@ function resolveStalledJobsAction(
     title: "Resolve stalled jobs",
     explanation: `${stalledCount} ${pluralize(stalledCount, "job")} with no activity in ${inactivityThresholdDays}+ days.`,
     recommendedAction:
-      "Check dispatch status and follow up with customers or technicians to restart progress.",
+      "Open the stalled jobs queue and follow up with customers or technicians.",
     count: stalledCount,
     metricLabel: "stalled jobs",
     href: "/reports?queue=stalled",
+    queueType: "stalled_job",
   };
 }
 
@@ -236,13 +245,14 @@ function resolveCompletedWorkReviewAction(
     title: "Resolve completed work review blockers",
     explanation: `${reviewCount} completed ${pluralize(reviewCount, "job")} blocked on office review before invoicing or close-out.`,
     recommendedAction:
-      "Open each blocked job, clear review reasons, and move work toward billing.",
+      "Open the review queue, clear blockers, and move work toward billing.",
     count: reviewCount,
     metricLabel: "review blockers",
     href:
       criticalReviewJobs > 0
         ? "/reports?queue=critical"
         : "/reports?queue=attention",
+    queueType: "needs_review",
   };
 }
 
@@ -283,17 +293,21 @@ function resolveReadinessBlockersAction(
     parts.push(`Average workflow readiness is ${readinessScore}%`);
   }
 
+  const hasReviewBlockers = input.completedWorkReview.count > 0;
+
   return {
     id: "resolve-readiness-blockers",
     severity,
     priorityScore: 720 + blockerCount * 5 + (readinessScore < 50 ? 20 : 0),
     title: "Resolve workflow readiness blockers",
     explanation: `${parts.join("; ")} — scheduling and close-out may be delayed.`,
-    recommendedAction:
-      "Clear expenses, labor, or documentation gaps flagged on queue items.",
+    recommendedAction: hasReviewBlockers
+      ? "Open the review queue and clear blockers on flagged jobs."
+      : "Clear expenses, labor, or documentation gaps flagged on queue items.",
     count: blockerCount > 0 ? blockerCount : null,
     metricLabel: blockerCount > 0 ? "blocked items" : undefined,
     href: "/reports?queue=attention",
+    queueType: hasReviewBlockers ? "needs_review" : undefined,
   };
 }
 
@@ -306,17 +320,21 @@ function resolveNeedsAttentionQueueAction(
     return null;
   }
 
+  const hasCompletedReview = input.completedWorkReview.count > 0;
+
   return {
     id: "review-attention-queue",
     severity: "warning",
     priorityScore: 680 + needsAttentionCount * 6,
     title: "Review office queue items needing attention",
     explanation: `${needsAttentionCount} ${pluralize(needsAttentionCount, "item")} flagged for follow-up in the office review queue.`,
-    recommendedAction:
-      "Work through the attention queue to keep jobs moving toward invoice or completion.",
+    recommendedAction: hasCompletedReview
+      ? "Open the review queue and work through blocked jobs."
+      : "Work through the attention queue to keep jobs moving toward invoice or completion.",
     count: needsAttentionCount,
     metricLabel: "need attention",
     href: "/reports?queue=attention",
+    queueType: hasCompletedReview ? "needs_review" : undefined,
   };
 }
 

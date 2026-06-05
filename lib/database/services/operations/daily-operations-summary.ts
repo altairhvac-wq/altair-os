@@ -140,7 +140,7 @@ function buildHighlights(input: {
       category: "stalled_jobs",
       count: input.stalledCount,
       message: `${input.stalledCount} ${pluralize(input.stalledCount, "job")} may be stalled.`,
-      href: "/reports",
+      href: "/reports?queue=stalled",
     });
   }
 
@@ -151,7 +151,7 @@ function buildHighlights(input: {
       category: "invoicing",
       count: input.completedAwaitingInvoicingCount,
       message: `${input.completedAwaitingInvoicingCount} completed ${pluralize(input.completedAwaitingInvoicingCount, "job")} ${input.completedAwaitingInvoicingCount === 1 ? "is" : "are"} awaiting invoicing.`,
-      href: "/reports",
+      href: "/reports?queue=invoicing",
     });
   }
 
@@ -164,7 +164,7 @@ function buildHighlights(input: {
       category: "completed_work_review",
       count: input.completedWorkReviewCount,
       message: `${input.completedWorkReviewCount} completed ${pluralize(input.completedWorkReviewCount, "job")} ${input.completedWorkReviewCount === 1 ? "needs" : "need"} office review before admin closure.`,
-      href: "/reports",
+      href: "/reports?queue=attention",
     });
   }
 
