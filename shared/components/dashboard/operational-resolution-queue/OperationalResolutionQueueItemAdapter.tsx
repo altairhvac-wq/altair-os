@@ -21,6 +21,7 @@ import { canBatchSendInvoice } from "@/shared/lib/invoice-batch-send";
 import { hasValidCustomerEmailForSend } from "@/shared/lib/operational-errors";
 import { formatCurrency } from "@/shared/types/customer";
 import { formatDispatchStatus } from "@/shared/types/dispatch";
+import { formatJobStatus } from "@/shared/types/job";
 import { canResendInvoiceEmail } from "@/shared/types/invoice";
 import { canRecordInvoicePayment } from "@/shared/types/invoice-payment";
 
@@ -74,9 +75,40 @@ export function OperationalResolutionQueueItemAdapter({
       return <NeedsReviewQueueItemAdapter item={item} />;
     case "lead_follow_up":
       return <LeadFollowUpQueueItemAdapter item={item} onResolved={onResolved} />;
+    case "stalled_job":
+      return <StalledJobQueueItemAdapter item={item} onResolved={onResolved} />;
     default:
       return null;
   }
+}
+
+function StalledJobQueueItemAdapter({
+  item,
+  onResolved,
+}: {
+  item: Extract<OperationalResolutionQueueItem, { queueType: "stalled_job" }>;
+  onResolved: (itemId: string) => void;
+}) {
+  const statusMeta = formatJobStatus(item.entry.status);
+
+  return (
+    <OperationalResolutionQueueItemView
+      item={{ ...item, meta: `${statusMeta} · ${item.entry.daysSinceActivity}d inactive` }}
+    >
+      {item.openHref ? (
+        <MobileActionButton
+          label={item.primaryAction.label}
+          href={item.openHref}
+          onClick={() => onResolved(item.id)}
+        />
+      ) : null}
+      <MobileActionButton
+        label="Open dispatch"
+        href="/dispatch"
+        variant="secondary"
+      />
+    </OperationalResolutionQueueItemView>
+  );
 }
 
 function LeadFollowUpQueueItemAdapter({

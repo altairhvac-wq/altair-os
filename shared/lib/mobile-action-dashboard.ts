@@ -21,6 +21,7 @@ import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 import type {
   CompletedWorkAwaitingInvoicingEntry,
   CompletedWorkReviewEntry,
+  StalledJobEntry,
 } from "@/shared/types/reports";
 
 export type MobileActionSeverity = "critical" | "warning" | "info";
@@ -54,6 +55,8 @@ export type MobileActionSheetData = {
   unsentInvoices: DashboardUnsentInvoicePreview[];
   unsentEstimates: DashboardUnsentEstimatePreview[];
   leadFollowUps: DashboardLeadFollowUpPreview[];
+  stalledJobs: StalledJobEntry[];
+  stalledJobInactivityThresholdDays: number;
   technicians: { id: string; name: string }[];
   assignableTechnicians: Technician[];
   technicianStatuses: DashboardTechnicianStatus[];
@@ -219,6 +222,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
       severity: stalledJobs.stalledCount >= 5 ? "critical" : "warning",
       description: buildDescription("stalled-jobs", stalledJobs.stalledCount),
       category: "critical-operations",
+      queueType: "stalled_job",
       href: "/reports?queue=stalled",
       panelId: "attention",
       canFix: false,
@@ -390,6 +394,8 @@ export function buildMobileActionSheetData(
     unsentInvoices: data.money.unsentInvoices,
     unsentEstimates: data.money.unsentEstimates,
     leadFollowUps: data.leadFollowUp.leads,
+    stalledJobs: data.stalledJobs.stalledJobs,
+    stalledJobInactivityThresholdDays: data.stalledJobs.inactivityThresholdDays,
     technicians: data.technicians.map((tech) => ({
       id: tech.id,
       name: tech.name,

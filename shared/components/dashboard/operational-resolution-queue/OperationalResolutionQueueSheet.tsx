@@ -75,6 +75,9 @@ export function OperationalResolutionQueueSheet({
         unsentInvoices: sheetData.unsentInvoices,
         unsentEstimates: sheetData.unsentEstimates,
         leadFollowUps: sheetData.leadFollowUps,
+        stalledJobs: sheetData.stalledJobs,
+        stalledJobInactivityThresholdDays:
+          sheetData.stalledJobInactivityThresholdDays,
         technicians: sheetData.technicians,
         assignableTechnicians: sheetData.assignableTechnicians,
         technicianStatuses: sheetData.technicianStatuses,

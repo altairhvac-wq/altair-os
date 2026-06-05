@@ -11,9 +11,11 @@ import type {
 import { formatCurrency } from "@/shared/types/customer";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 import type { DashboardTechnicianStatus } from "@/shared/types/dashboard";
+import { OFFICE_REVIEW_QUEUE_AGING_DAYS } from "@/shared/types/office-review-queue";
 import type {
   CompletedWorkAwaitingInvoicingEntry,
   CompletedWorkReviewEntry,
+  StalledJobEntry,
 } from "@/shared/types/reports";
 import { formatCompletedWorkReviewReasons } from "@/shared/types/reports";
 
@@ -93,6 +95,11 @@ export type LeadFollowUpQueueItem = OperationalResolutionQueueItemBase & {
   lead: DashboardLeadFollowUpPreview;
 };
 
+export type StalledJobQueueItem = OperationalResolutionQueueItemBase & {
+  queueType: "stalled_job";
+  entry: StalledJobEntry;
+};
+
 export type OperationalResolutionQueueItem =
   | UnassignedJobQueueItem
   | ReadyToInvoiceQueueItem
@@ -100,7 +107,8 @@ export type OperationalResolutionQueueItem =
   | UnsentInvoiceQueueItem
   | UnsentEstimateQueueItem
   | NeedsReviewQueueItem
-  | LeadFollowUpQueueItem;
+  | LeadFollowUpQueueItem
+  | StalledJobQueueItem;
 
 export type OperationalResolutionQueueSheetData = {
   items: OperationalResolutionQueueItem[];
@@ -379,6 +387,40 @@ function buildNeedsReviewItems(
   });
 }
 
+function buildStalledJobItems(
+  entries: StalledJobEntry[],
+  inactivityThresholdDays: number,
+): StalledJobQueueItem[] {
+  return entries.map((entry) => {
+    const daysAging = entry.daysSinceActivity;
+    const severity: MobileActionSeverity =
+      daysAging >= OFFICE_REVIEW_QUEUE_AGING_DAYS ? "warning" : "info";
+
+    return {
+      id: entry.jobId,
+      queueType: "stalled_job",
+      title: `Job ${entry.jobNumber}`,
+      subtitle: entry.customerName,
+      meta: `${inactivityThresholdDays}+ days without job activity`,
+      severity,
+      openHref: `/jobs/${entry.jobId}`,
+      entry,
+      primaryAction: {
+        kind: "open_record",
+        label: "Open job",
+        enabled: true,
+      },
+      secondaryActions: [
+        {
+          kind: "open_record",
+          label: "Open dispatch",
+          enabled: true,
+        },
+      ],
+    };
+  });
+}
+
 function buildLeadFollowUpItems(
   leads: DashboardLeadFollowUpPreview[],
   access: CompanyAccessScope,
@@ -452,6 +494,8 @@ export type BuildOperationalResolutionQueueInput = {
   unsentInvoices: DashboardUnsentInvoicePreview[];
   unsentEstimates: DashboardUnsentEstimatePreview[];
   leadFollowUps: DashboardLeadFollowUpPreview[];
+  stalledJobs: StalledJobEntry[];
+  stalledJobInactivityThresholdDays: number;
   technicians: { id: string; name: string }[];
   assignableTechnicians: Technician[];
   technicianStatuses: DashboardTechnicianStatus[];
@@ -472,6 +516,8 @@ export function buildOperationalResolutionQueue(
     unsentInvoices,
     unsentEstimates,
     leadFollowUps,
+    stalledJobs,
+    stalledJobInactivityThresholdDays,
     technicians,
     assignableTechnicians,
     technicianStatuses,
@@ -507,6 +553,12 @@ export function buildOperationalResolutionQueue(
       break;
     case "lead_follow_up":
       items = buildLeadFollowUpItems(leadFollowUps, access);
+      break;
+    case "stalled_job":
+      items = buildStalledJobItems(
+        stalledJobs,
+        stalledJobInactivityThresholdDays,
+      );
       break;
     default:
       items = [];
