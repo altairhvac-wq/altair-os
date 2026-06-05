@@ -124,6 +124,7 @@ export type ReportsPageData = {
   operationsSnapshot: ReportOperationsSnapshot;
   accountantSummary: AccountantSummaryData;
   leadPipeline: LeadPipelineMetrics;
+  showLeadPipeline: boolean;
   limitations: string[];
 };
 

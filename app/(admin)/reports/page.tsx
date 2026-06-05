@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import {
   canViewOperationalReports,
   canViewTechnicianRoster,
+  getCompanyAccessScope,
 } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getReportsPageData } from "@/lib/database/queries/reports";
@@ -31,12 +32,15 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const params = await searchParams;
   const dateRange = parseReportsPageDateRange(params.range);
 
+  const access = getCompanyAccessScope(companyContext);
+
   const data = await getReportsPageData(
     companyContext.company.id,
     companyContext.company.name,
     dateRange,
     {
       showTechnicianPerformance: canViewTechnicianRoster(companyContext),
+      showLeadPipeline: access.canManageCustomers,
     },
   );
 

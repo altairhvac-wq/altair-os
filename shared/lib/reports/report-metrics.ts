@@ -850,6 +850,7 @@ export function buildReportsPageData(input: {
   dateRange: ReportsPageDateRange;
   datasets: ReportRawDatasets;
   showTechnicianProfitability: boolean;
+  showLeadPipeline?: boolean;
 }): ReportsPageData {
   const dateBounds =
     resolveReportDateBounds(input.dateRange) ??
@@ -897,7 +898,8 @@ export function buildReportsPageData(input: {
       dateBounds,
       input.datasets,
     ),
-    leadPipeline: buildLeadPipelineMetrics(input.datasets.leads),
+    leadPipeline: buildLeadPipelineMetrics(input.datasets.leads, dateBounds),
+    showLeadPipeline: input.showLeadPipeline ?? false,
     limitations,
   };
 }

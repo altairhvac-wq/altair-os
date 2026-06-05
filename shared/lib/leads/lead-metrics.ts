@@ -1,4 +1,8 @@
-import type { Lead, LeadSource } from "@/shared/types/lead";
+import { formatLeadSource, type Lead, type LeadSource } from "@/shared/types/lead";
+import {
+  isDateWithinReportBounds,
+  type ProfitabilityReportDateBounds,
+} from "@/shared/types/reports";
 
 export type LeadSourcePerformance = {
   source: LeadSource;
@@ -15,14 +19,90 @@ export type LeadPipelineMetrics = {
   openLeads: number;
   conversionRate: number | null;
   sourcePerformance: LeadSourcePerformance[];
+  topSourceInsight: string | null;
 };
 
-export function buildLeadPipelineMetrics(leads: Lead[]): LeadPipelineMetrics {
-  const activeLeads = leads.filter(
-    (lead) => !lead.deletedAt && !lead.archivedAt,
+function isLeadWon(lead: Lead): boolean {
+  return lead.status === "won" || lead.wonAt != null;
+}
+
+function isLeadLost(lead: Lead): boolean {
+  return lead.status === "lost" || lead.lostAt != null;
+}
+
+function toCloseRate(won: number, total: number): number | null {
+  if (total <= 0) {
+    return null;
+  }
+
+  return Math.round((won / total) * 1000) / 10;
+}
+
+function buildTopSourceInsight(
+  sourcePerformance: LeadSourcePerformance[],
+): string | null {
+  const activeSources = sourcePerformance.filter((entry) => entry.total > 0);
+
+  if (activeSources.length < 2) {
+    return null;
+  }
+
+  const qualified = activeSources.filter((entry) => entry.total >= 2);
+
+  if (qualified.length === 0) {
+    return null;
+  }
+
+  const ranked = [...qualified].sort((left, right) => {
+    const rateLeft = left.conversionRate ?? -1;
+    const rateRight = right.conversionRate ?? -1;
+
+    if (rateRight !== rateLeft) {
+      return rateRight - rateLeft;
+    }
+
+    if (right.won !== left.won) {
+      return right.won - left.won;
+    }
+
+    return right.total - left.total;
+  });
+
+  const best = ranked[0];
+
+  if (!best || best.conversionRate == null || best.won === 0) {
+    return null;
+  }
+
+  const tiedAtTop = ranked.filter(
+    (entry) => entry.conversionRate === best.conversionRate,
   );
-  const wonLeads = activeLeads.filter((lead) => lead.status === "won").length;
-  const lostLeads = activeLeads.filter((lead) => lead.status === "lost").length;
+
+  if (tiedAtTop.length !== 1) {
+    return null;
+  }
+
+  return `${formatLeadSource(best.source)} leads converted best this period.`;
+}
+
+export function buildLeadPipelineMetrics(
+  leads: Lead[],
+  dateBounds?: ProfitabilityReportDateBounds,
+): LeadPipelineMetrics {
+  const activeLeads = leads.filter((lead) => {
+    if (lead.deletedAt || lead.archivedAt) {
+      return false;
+    }
+
+    if (dateBounds && !isDateWithinReportBounds(lead.createdAt, dateBounds)) {
+      return false;
+    }
+
+    return true;
+  });
+
+  const wonLeads = activeLeads.filter(isLeadWon).length;
+  const lostLeads = activeLeads.filter(isLeadLost).length;
   const closedLeads = wonLeads + lostLeads;
   const sourceMap = new Map<LeadSource, LeadSourcePerformance>();
 
@@ -37,11 +117,11 @@ export function buildLeadPipelineMetrics(leads: Lead[]): LeadPipelineMetrics {
 
     current.total += 1;
 
-    if (lead.status === "won") {
+    if (isLeadWon(lead)) {
       current.won += 1;
     }
 
-    if (lead.status === "lost") {
+    if (isLeadLost(lead)) {
       current.lost += 1;
     }
 
@@ -49,25 +129,26 @@ export function buildLeadPipelineMetrics(leads: Lead[]): LeadPipelineMetrics {
   }
 
   const sourcePerformance = [...sourceMap.values()]
-    .map((entry) => {
-      const closed = entry.won + entry.lost;
-      return {
-        ...entry,
-        conversionRate:
-          closed > 0 ? Math.round((entry.won / closed) * 1000) / 10 : null,
-      };
-    })
-    .sort((left, right) => right.total - left.total);
+    .map((entry) => ({
+      ...entry,
+      conversionRate: toCloseRate(entry.won, entry.total),
+    }))
+    .filter((entry) => entry.total > 0)
+    .sort((left, right) => {
+      if (right.won !== left.won) {
+        return right.won - left.won;
+      }
+
+      return right.total - left.total;
+    });
 
   return {
     totalLeads: activeLeads.length,
     wonLeads,
     lostLeads,
     openLeads: activeLeads.length - closedLeads,
-    conversionRate:
-      closedLeads > 0
-        ? Math.round((wonLeads / closedLeads) * 1000) / 10
-        : null,
+    conversionRate: toCloseRate(wonLeads, activeLeads.length),
     sourcePerformance,
+    topSourceInsight: buildTopSourceInsight(sourcePerformance),
   };
 }

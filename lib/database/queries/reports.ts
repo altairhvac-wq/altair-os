@@ -84,7 +84,10 @@ export async function getReportsPageData(
   companyId: string,
   companyName: string,
   dateRange: ReportsPageDateRange,
-  options: { showTechnicianPerformance?: boolean } = {},
+  options: {
+    showTechnicianPerformance?: boolean;
+    showLeadPipeline?: boolean;
+  } = {},
 ): Promise<ReportsPageData> {
   const [invoices, payments, estimates, jobs, expenses, leads, chartSeries, laborEntries, laborCostRates] =
     await Promise.all([
@@ -103,6 +106,7 @@ export async function getReportsPageData(
     companyName,
     dateRange,
     showTechnicianProfitability: options.showTechnicianPerformance ?? true,
+    showLeadPipeline: options.showLeadPipeline ?? false,
     datasets: {
       invoices,
       payments,

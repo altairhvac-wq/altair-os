@@ -18,6 +18,7 @@ import { ReportKpiCard } from "./ReportKpiCard";
 import { RevenueTrendChartCard } from "./RevenueTrendChartCard";
 import { SalesFunnelChartCard } from "./SalesFunnelChartCard";
 import { TechnicianProfitabilityChartCard } from "./TechnicianProfitabilityChartCard";
+import { LeadPipelineSection } from "./LeadPipelineSection";
 
 type ReportsPageViewProps = {
   data: ReportsPageData;
@@ -141,6 +142,10 @@ export function ReportsPageView({
           </div>
         ) : null}
       </div>
+
+      {data.showLeadPipeline ? (
+        <LeadPipelineSection metrics={data.leadPipeline} />
+      ) : null}
 
       <OperationsSnapshotSection
         topCustomers={data.operationsSnapshot.topCustomers}
