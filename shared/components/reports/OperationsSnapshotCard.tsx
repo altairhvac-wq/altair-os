@@ -8,26 +8,26 @@ type SnapshotListProps = {
 
 function SnapshotList({ title, rows, emptyMessage }: SnapshotListProps) {
   return (
-    <div className="admin-card min-w-0 p-4 sm:p-5">
-      <h4 className="text-sm font-bold text-slate-900">{title}</h4>
+    <div className="admin-card min-w-0 px-3 py-3 sm:px-4 sm:py-3.5">
+      <h4 className="text-xs font-bold text-slate-900">{title}</h4>
       {rows.length === 0 ? (
-        <p className="admin-text-helper mt-3">{emptyMessage}</p>
+        <p className="admin-text-helper mt-2 text-[11px]">{emptyMessage}</p>
       ) : (
-        <ul className="mt-3 space-y-2.5">
+        <ul className="mt-2 space-y-1.5">
           {rows.map((row) => (
             <li
               key={row.id}
-              className="flex items-start justify-between gap-3 border-b border-slate-100 pb-2.5 last:border-b-0 last:pb-0"
+              className="flex items-start justify-between gap-2 border-b border-slate-100 pb-1.5 last:border-b-0 last:pb-0"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-slate-800">
+                <p className="truncate text-xs font-medium text-slate-800">
                   {row.label}
                 </p>
                 {row.detail ? (
-                  <p className="truncate text-xs text-slate-500">{row.detail}</p>
+                  <p className="truncate text-[11px] text-slate-500">{row.detail}</p>
                 ) : null}
               </div>
-              <span className="shrink-0 text-sm font-bold text-slate-900">
+              <span className="shrink-0 text-xs font-bold tabular-nums text-slate-900">
                 {row.value}
               </span>
             </li>
@@ -52,15 +52,17 @@ export function OperationsSnapshotSection({
   workCompleted,
 }: OperationsSnapshotSectionProps) {
   return (
-    <section className="space-y-4">
+    <section className="space-y-3">
       <div>
-        <h3 className="admin-heading-section">Operations Snapshot</h3>
-        <p className="admin-text-helper mt-0.5">
+        <h3 className="admin-heading-section text-[13px] sm:text-sm">
+          Operations Snapshot
+        </h3>
+        <p className="admin-text-helper mt-0.5 text-[11px] sm:text-xs">
           Quick lists for customers, services, collections, and completed work.
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <SnapshotList
           title="Top Customers"
           rows={topCustomers}

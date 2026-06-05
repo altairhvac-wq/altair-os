@@ -23,12 +23,14 @@ function TrendIcon({ trend }: { trend?: ReportKpiMetric["trend"] }) {
 
 export function ReportKpiCard({ metric }: ReportKpiCardProps) {
   return (
-    <div className="admin-card admin-metric-card min-w-0">
-      <p className="admin-metric-label">{metric.label}</p>
-      <p className="admin-metric-value mt-1 truncate text-2xl sm:text-3xl">
+    <div className="admin-card admin-metric-card min-w-0 px-4 py-4 sm:px-5 sm:py-5">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:text-xs">
+        {metric.label}
+      </p>
+      <p className="mt-2 truncate text-3xl font-extrabold tracking-tight text-slate-900 sm:mt-2.5 sm:text-[2rem] sm:leading-none">
         {metric.value}
       </p>
-      <p className="admin-text-helper mt-1 inline-flex items-center gap-1.5">
+      <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-slate-500">
         <TrendIcon trend={metric.trend} />
         <span>{metric.comparison}</span>
       </p>

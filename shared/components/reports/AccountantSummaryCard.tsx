@@ -10,27 +10,23 @@ export function AccountantSummaryCard({ dateRange }: AccountantSummaryCardProps)
   const exportHref = `/reports/tax-summary?range=${dateRange}`;
 
   return (
-    <section className="flex flex-col overflow-hidden admin-card">
-      <div className="admin-panel-header px-4 py-3 sm:px-5 sm:py-4">
-        <h3 className="admin-heading-section sm:text-base">Accountant Summary</h3>
-        <p className="admin-text-helper mt-0.5">
-          Export a printable summary of revenue, payments, invoices, taxes, and
-          expenses recorded in Altair OS.
-        </p>
-      </div>
+    <section className="overflow-hidden rounded-lg border border-slate-200/60 bg-slate-50/40">
+      <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3.5">
+        <div className="min-w-0">
+          <h3 className="text-xs font-semibold text-slate-600">Accountant Summary</h3>
+          <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
+            Export a printable summary for bookkeeping review. Includes records
+            entered in Altair OS only.
+          </p>
+        </div>
 
-      <div className="space-y-3 p-4 sm:p-5">
         <Link
           href={exportHref}
-          className="admin-btn-primary inline-flex items-center gap-2"
+          className="admin-btn-secondary inline-flex shrink-0 items-center gap-2 self-start text-xs sm:self-center"
         >
-          <FileText className="h-4 w-4" aria-hidden="true" />
+          <FileText className="h-3.5 w-3.5" aria-hidden="true" />
           Export Tax Summary
         </Link>
-        <p className="text-xs text-slate-500">
-          For bookkeeping review only. This report only includes records entered
-          in Altair OS.
-        </p>
       </div>
     </section>
   );

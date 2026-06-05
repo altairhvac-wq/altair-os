@@ -12,59 +12,71 @@ function hasCashData(data: ReportCashHealth): boolean {
 
 export function CashHealthChartCard({ data }: CashHealthChartCardProps) {
   const items = [
-    { key: "paid", label: "Paid", value: data.paid, barClass: "bg-emerald-500" },
+    {
+      key: "paid",
+      label: "Paid",
+      value: data.paid,
+      barClass: "bg-emerald-500",
+      textClass: "text-emerald-700",
+    },
     {
       key: "outstanding",
       label: "Outstanding",
       value: data.outstanding,
       barClass: "bg-amber-400",
+      textClass: "text-amber-700",
     },
-    { key: "overdue", label: "Overdue", value: data.overdue, barClass: "bg-rose-500" },
+    {
+      key: "overdue",
+      label: "Overdue",
+      value: data.overdue,
+      barClass: "bg-rose-500",
+      textClass: "text-rose-700",
+    },
   ];
 
-  const maxValue = Math.max(...items.map((item) => item.value), 1);
+  const total = items.reduce((sum, item) => sum + item.value, 0);
   const hasData = hasCashData(data);
 
   return (
     <ReportChartCard
       title="Cash Health"
-      subtitle="Paid vs outstanding invoice value."
+      subtitle="Invoice collection status for the period."
       hasData={hasData}
       emptyMessage="Invoice health will appear once invoices are created."
-      chartHeightClassName="min-h-[280px] sm:min-h-[320px]"
+      compact
     >
-      <div className="flex h-full flex-col justify-between gap-5">
-        <div className="flex flex-1 items-end justify-center gap-4 sm:gap-5">
-          {items.map((item) => {
-            const heightPercent = Math.max((item.value / maxValue) * 100, 4);
+      <div className="flex flex-col gap-3">
+        {total > 0 ? (
+          <div
+            className="flex h-1.5 overflow-hidden rounded-full bg-slate-100"
+            aria-hidden="true"
+          >
+            {items.map((item) => {
+              const widthPercent = (item.value / total) * 100;
+              if (widthPercent <= 0) {
+                return null;
+              }
 
-            return (
-              <div
-                key={item.key}
-                className="flex min-w-0 flex-1 flex-col items-center gap-2"
-              >
-                <span className="text-xs font-bold text-slate-700">
-                  {formatCurrency(item.value)}
-                </span>
-                <div className="flex h-40 w-full items-end justify-center sm:h-48">
-                  <div
-                    className={`w-full max-w-[4.5rem] rounded-t-lg ${item.barClass}`}
-                    style={{ height: `${heightPercent}%` }}
-                  />
-                </div>
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  {item.label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+              return (
+                <div
+                  key={item.key}
+                  className={`${item.barClass} transition-all`}
+                  style={{ width: `${widthPercent}%` }}
+                />
+              );
+            })}
+          </div>
+        ) : null}
 
-        <div className="grid gap-2 border-t border-slate-100 pt-4 text-sm">
+        <div className="divide-y divide-slate-100">
           {items.map((item) => (
-            <div key={item.key} className="flex items-center justify-between gap-3">
-              <span className="font-medium text-slate-600">{item.label}</span>
-              <span className="font-bold text-slate-900">
+            <div
+              key={item.key}
+              className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+            >
+              <span className="text-xs font-medium text-slate-600">{item.label}</span>
+              <span className={`text-sm font-bold tabular-nums ${item.textClass}`}>
                 {formatCurrency(item.value)}
               </span>
             </div>

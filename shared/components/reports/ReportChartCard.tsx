@@ -8,6 +8,7 @@ type ReportChartCardProps = {
   hasData?: boolean;
   className?: string;
   chartHeightClassName?: string;
+  compact?: boolean;
 };
 
 export function ReportChartCard({
@@ -17,19 +18,26 @@ export function ReportChartCard({
   emptyMessage,
   hasData = true,
   className = "",
-  chartHeightClassName = "min-h-[280px] sm:min-h-[320px]",
+  chartHeightClassName = "",
+  compact = false,
 }: ReportChartCardProps) {
   return (
     <section className={`flex h-full flex-col overflow-hidden admin-card ${className}`}>
-      <div className="admin-panel-header px-4 py-3 sm:px-5 sm:py-4">
-        <h3 className="admin-heading-section sm:text-base">{title}</h3>
-        <p className="admin-text-helper mt-0.5">{subtitle}</p>
+      <div
+        className={`admin-panel-header px-4 sm:px-4 ${
+          compact ? "py-2 sm:py-2.5" : "py-2.5 sm:py-3"
+        }`}
+      >
+        <h3 className="admin-heading-section text-[13px] sm:text-sm">{title}</h3>
+        <p className="admin-text-helper mt-0.5 text-[11px] sm:text-xs">{subtitle}</p>
       </div>
 
-      <div className={`flex flex-1 flex-col p-4 sm:p-5 ${chartHeightClassName}`}>
+      <div
+        className={`flex flex-col p-3 sm:p-4 ${chartHeightClassName}`}
+      >
         {!hasData && emptyMessage ? (
-          <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-10 text-center">
-            <p className="max-w-sm text-sm text-slate-500">{emptyMessage}</p>
+          <div className="flex items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-center">
+            <p className="max-w-sm text-xs text-slate-500 sm:text-sm">{emptyMessage}</p>
           </div>
         ) : (
           children

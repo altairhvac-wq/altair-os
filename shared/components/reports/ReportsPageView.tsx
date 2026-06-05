@@ -65,11 +65,11 @@ export function ReportsPageView({ data, aiFeaturesEnabled }: ReportsPageViewProp
   }
 
   return (
-    <div className="flex flex-col gap-5 pb-2 sm:gap-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-4 pb-2 sm:gap-5">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h1 className="admin-heading-page">Reports</h1>
-          <p className="admin-text-helper mt-1 max-w-2xl">
+          <p className="admin-text-helper mt-0.5 max-w-2xl">
             Track revenue, cash flow, sales performance, and operational health.
           </p>
         </div>
@@ -106,7 +106,7 @@ export function ReportsPageView({ data, aiFeaturesEnabled }: ReportsPageViewProp
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
+      <div className="grid gap-3 lg:grid-cols-12 lg:gap-4">
         <div className="lg:col-span-8">
           <RevenueTrendChartCard data={data.revenueTrend} />
         </div>

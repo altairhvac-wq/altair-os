@@ -5,6 +5,13 @@ type SalesFunnelChartCardProps = {
   stages: ReportFunnelStage[];
 };
 
+const STAGE_COLORS = [
+  "bg-cyan-500",
+  "bg-emerald-500",
+  "bg-indigo-500",
+  "bg-slate-700",
+];
+
 function hasFunnelData(stages: ReportFunnelStage[]): boolean {
   return stages.some((stage) => stage.count > 0);
 }
@@ -19,28 +26,25 @@ export function SalesFunnelChartCard({ stages }: SalesFunnelChartCardProps) {
       subtitle="Estimate flow from sent to approved to paid."
       hasData={hasData}
       emptyMessage="Estimate conversion appears once estimates are sent and approved."
+      compact
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2.5">
         {stages.map((stage, index) => {
-          const widthPercent = Math.max((stage.count / maxCount) * 100, 6);
+          const widthPercent = Math.max((stage.count / maxCount) * 100, 4);
 
           return (
-            <div key={stage.key} className="space-y-1.5">
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="font-medium text-slate-700">{stage.label}</span>
-                <span className="font-bold text-slate-900">{stage.count}</span>
+            <div key={stage.key} className="space-y-1">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs font-medium text-slate-700 sm:text-[13px]">
+                  {stage.label}
+                </span>
+                <span className="text-xs font-bold tabular-nums text-slate-900 sm:text-sm">
+                  {stage.count}
+                </span>
               </div>
-              <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+              <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                 <div
-                  className={`h-full rounded-full ${
-                    index === 0
-                      ? "bg-cyan-500"
-                      : index === 1
-                        ? "bg-emerald-500"
-                        : index === 2
-                          ? "bg-indigo-500"
-                          : "bg-slate-700"
-                  }`}
+                  className={`h-full rounded-full ${STAGE_COLORS[index] ?? STAGE_COLORS[3]}`}
                   style={{ width: `${widthPercent}%` }}
                 />
               </div>

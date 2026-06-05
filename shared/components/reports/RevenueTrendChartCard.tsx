@@ -1,5 +1,3 @@
-import { formatCompactCurrency } from "@/shared/types/analytics";
-import { formatCurrency } from "@/shared/types/customer";
 import type { ReportTrendPoint } from "@/shared/types/reports-page";
 import { ReportChartCard } from "./ReportChartCard";
 
@@ -7,38 +5,68 @@ type RevenueTrendChartCardProps = {
   data: ReportTrendPoint[];
 };
 
+const CHART_HEIGHT = 240;
+
 function hasTrendData(data: ReportTrendPoint[]): boolean {
   return data.some((point) => point.value > 0);
 }
 
+function getTrendScaleMax(data: ReportTrendPoint[]): number {
+  const values = data.map((point) => point.value);
+  const max = Math.max(...values, 0);
+
+  if (max === 0) {
+    return 1;
+  }
+
+  const nonZero = values.filter((value) => value > 0);
+
+  if (nonZero.length <= 2) {
+    const sorted = [...nonZero].sort((a, b) => b - a);
+    const top = sorted[0] ?? 0;
+    const runnerUp = sorted[1] ?? 0;
+
+    if (runnerUp === 0 || runnerUp < top * 0.3) {
+      return top * 1.4;
+    }
+  }
+
+  return max;
+}
+
+function getPointCoordinates(
+  data: ReportTrendPoint[],
+  maxValue: number,
+): { x: number; y: number }[] {
+  return data.map((point, index) => ({
+    x: (index / Math.max(data.length - 1, 1)) * 100,
+    y: 100 - (point.value / maxValue) * 100,
+  }));
+}
+
 export function RevenueTrendChartCard({ data }: RevenueTrendChartCardProps) {
   const hasData = hasTrendData(data);
-  const maxValue = Math.max(...data.map((point) => point.value), 1);
-  const chartHeight = 280;
+  const maxValue = getTrendScaleMax(data);
+  const coordinates = getPointCoordinates(data, maxValue);
 
-  const linePoints = data
-    .map((point, index) => {
-      const x = (index / Math.max(data.length - 1, 1)) * 100;
-      const y = 100 - (point.value / maxValue) * 100;
-      return `${x},${y}`;
-    })
-    .join(" ");
+  const linePoints = coordinates.map((point) => `${point.x},${point.y}`).join(" ");
+  const areaPoints = `0,100 ${linePoints} 100,100`;
 
   return (
     <ReportChartCard
       title="Revenue Trend"
-      subtitle="Revenue collected over the selected period."
+      subtitle="Revenue collected during the selected period."
       hasData={hasData}
       emptyMessage="Revenue will appear here once invoices are paid."
-      chartHeightClassName="min-h-[320px] sm:min-h-[360px]"
+      compact
     >
-      <div className="flex h-full flex-col">
-        <div className="relative flex-1" style={{ minHeight: chartHeight }}>
+      <div className="flex flex-col">
+        <div className="relative" style={{ height: CHART_HEIGHT }}>
           <div className="absolute inset-0 flex flex-col justify-between">
             {Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={index}
-                className="border-t border-dashed border-slate-100"
+                className="border-t border-slate-100/80"
               />
             ))}
           </div>
@@ -49,70 +77,47 @@ export function RevenueTrendChartCard({ data }: RevenueTrendChartCardProps) {
             className="absolute inset-0 h-full w-full overflow-visible"
             aria-label="Revenue trend line chart"
           >
+            <polygon
+              points={areaPoints}
+              className="fill-emerald-500/8"
+            />
             <polyline
               fill="none"
               stroke="currentColor"
-              strokeWidth="1.2"
-              className="text-emerald-600"
+              strokeWidth="0.6"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              className="text-emerald-600/90"
               points={linePoints}
             />
-            {data.map((point, index) => {
-              const x = (index / Math.max(data.length - 1, 1)) * 100;
-              const y = 100 - (point.value / maxValue) * 100;
-
-              return (
-                <circle
-                  key={point.label}
-                  cx={x}
-                  cy={y}
-                  r="1.4"
-                  className="fill-emerald-600"
-                />
-              );
-            })}
+            {coordinates.map((point, index) => (
+              <circle
+                key={data[index]?.label ?? index}
+                cx={point.x}
+                cy={point.y}
+                r="0.9"
+                className="fill-emerald-600/80"
+              />
+            ))}
           </svg>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <span className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-            Collected revenue
-          </span>
-          <div className="flex flex-wrap gap-2">
+        {data.length > 0 ? (
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
             {data.map((point, index) => {
-              if (data.length > 10 && index % 2 !== 0 && index !== data.length - 1) {
+              if (data.length > 8 && index % 2 !== 0 && index !== data.length - 1) {
                 return null;
               }
 
               return (
                 <span
                   key={point.label}
-                  className="text-[10px] font-semibold uppercase tracking-wide text-slate-400"
+                  className="text-[10px] font-medium text-slate-400"
                 >
                   {point.label}
                 </span>
               );
             })}
-          </div>
-        </div>
-
-        {data.length > 0 ? (
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            {data.slice(-3).map((point) => (
-              <div
-                key={point.label}
-                className="rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2"
-              >
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                  {point.label}
-                </p>
-                <p className="text-sm font-bold text-emerald-700">
-                  {point.value >= 1000
-                    ? formatCompactCurrency(point.value)
-                    : formatCurrency(point.value)}
-                </p>
-              </div>
-            ))}
           </div>
         ) : null}
       </div>
