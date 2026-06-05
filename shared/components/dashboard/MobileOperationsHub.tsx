@@ -17,6 +17,7 @@ import {
   buildMobileAttentionQueue,
   buildMobileHeroIssues,
 } from "@/shared/lib/mobile-operations-hub";
+import { DashboardCompactLeadPipelineSection } from "@/shared/components/dashboard/DashboardCompactSummaries";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { formatCurrency } from "@/shared/types/customer";
 import type { DailyOperationsSummaryHighlight } from "@/shared/types/daily-operations-summary";
@@ -342,6 +343,14 @@ function MobileFeedbackLink() {
   );
 }
 
+function LeadPipelineStrip({ data }: { data: DashboardData }) {
+  if (!data.access.canManageCustomers) {
+    return null;
+  }
+
+  return <DashboardCompactLeadPipelineSection summary={data.leadPipelineSummary} />;
+}
+
 function LimitedRoleHub({
   data,
   notificationAccess,
@@ -353,6 +362,7 @@ function LimitedRoleHub({
     <div className="flex min-w-0 flex-col gap-2">
       <AltairRecommendationsSection data={data} variant="mobile" />
       <MobileActionDashboard data={data} />
+      <LeadPipelineStrip data={data} />
       <TodayStrip operations={data.operations} />
       <CashStrip data={data} />
 
@@ -405,6 +415,7 @@ export function MobileOperationsHub({
     <div className="flex min-w-0 flex-col gap-2">
       <AltairRecommendationsSection data={data} variant="mobile" />
       <MobileActionDashboard data={data} />
+      <LeadPipelineStrip data={data} />
       <TodayStrip operations={data.operations} />
       <CashStrip data={data} />
       <OperationsStatusStrip

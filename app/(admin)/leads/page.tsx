@@ -8,11 +8,23 @@ import {
 } from "@/lib/database/queries/leads";
 import { LeadsPageView } from "@/shared/components/leads/LeadsPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
+import type { LeadStatus } from "@/shared/types/lead";
+
+const LEAD_STATUS_FILTERS = new Set<LeadStatus>([
+  "new",
+  "contacted",
+  "scheduled",
+  "estimate_sent",
+  "won",
+  "lost",
+]);
 
 type LeadsPageProps = {
   searchParams: Promise<{
     selected?: string;
     create?: string;
+    status?: string;
+    filter?: string;
   }>;
 };
 
@@ -29,7 +41,12 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
     );
   }
 
-  const { selected, create } = await searchParams;
+  const { selected, create, status, filter } = await searchParams;
+  const initialStatusFilter =
+    status && LEAD_STATUS_FILTERS.has(status as LeadStatus)
+      ? (status as LeadStatus)
+      : undefined;
+  const initialFollowUpDue = filter === "follow_up_due";
 
   const [leads, assignableMembers] = await Promise.all([
     listLeads(companyContext.company.id),
@@ -57,6 +74,8 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
       aiFeaturesEnabled={isAiFeaturesEnabled()}
       initialSelectedId={selectedLeadId}
       initialCreate={create === "1"}
+      initialStatusFilter={initialStatusFilter}
+      initialFollowUpDue={initialFollowUpDue}
     />
   );
 }

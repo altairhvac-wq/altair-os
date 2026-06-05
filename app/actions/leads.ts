@@ -109,6 +109,15 @@ export async function createLeadAction(
     leadName: formatLeadName(lead),
   });
 
+  if (lead.nextFollowUpAt) {
+    await recordLeadFollowUpChangedActivity({
+      companyId: permission.context.company.id,
+      leadId: lead.id,
+      actorId: permission.context.user.id,
+      nextFollowUpAt: lead.nextFollowUpAt,
+    });
+  }
+
   revalidateLeadPaths();
   return { lead };
 }

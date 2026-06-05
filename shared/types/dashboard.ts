@@ -153,6 +153,14 @@ export type DashboardLeadFollowUpSnapshot = {
   leads: DashboardLeadFollowUpPreview[];
 };
 
+export type DashboardLeadPipelineSummary = {
+  newLeads: number;
+  followUpsDue: number;
+  wonThisMonth: number;
+  lostThisMonth: number;
+  hasLeads: boolean;
+};
+
 export type DashboardData = {
   access: CompanyAccessScope;
   analytics: DashboardAnalyticsSnapshot;
@@ -168,6 +176,7 @@ export type DashboardData = {
   completedWorkAwaitingInvoicing: DashboardCompletedWorkAwaitingInvoicingSnapshot;
   completedWorkReview: DashboardCompletedWorkReviewSnapshot;
   leadFollowUp: DashboardLeadFollowUpSnapshot;
+  leadPipelineSummary: DashboardLeadPipelineSummary;
   operationalInsights: DailyOperationsSummary;
   operationalHealth: OperationalHealthReport;
   recentActivity: OperationalActivity[];

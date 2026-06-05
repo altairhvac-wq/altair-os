@@ -7,6 +7,7 @@ import {
   DashboardCompactBillingSection,
   DashboardCompactExpenseSection,
   DashboardCompactHealthCard,
+  DashboardCompactLeadPipelineSection,
   DashboardCompactNextStepsSection,
   DashboardCompactTechnicianSummary,
   DashboardCompactTodaySection,
@@ -1204,6 +1205,11 @@ function DashboardContentLayout({
   const needsAttentionContent = access.canViewOperationalReports ? (
     <div className="grid min-w-0 gap-2 lg:grid-cols-2 lg:gap-3">
       <DashboardCompactAttentionSummary data={data} />
+      {access.canManageCustomers ? (
+        <DashboardCompactLeadPipelineSection
+          summary={data.leadPipelineSummary}
+        />
+      ) : null}
       <OfficeReviewQueueSection
         report={data.officeReviewQueue}
         variant="compact"
@@ -1215,6 +1221,14 @@ function DashboardContentLayout({
           notificationAccess={notificationAccess}
         />
       </div>
+    </div>
+  ) : access.canManageCustomers ? (
+    <div className="grid min-w-0 gap-2 lg:gap-3">
+      <DashboardCompactLeadPipelineSection summary={data.leadPipelineSummary} />
+      <NotificationsSummarySection
+        notifications={data.notifications}
+        notificationAccess={notificationAccess}
+      />
     </div>
   ) : (
     <NotificationsSummarySection

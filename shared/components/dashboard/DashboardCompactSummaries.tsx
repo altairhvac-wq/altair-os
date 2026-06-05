@@ -14,7 +14,10 @@ import {
   buildDashboardNextBestActions,
   hasDashboardNextBestActions,
 } from "@/shared/lib/dashboard-next-best-actions";
-import type { DashboardData } from "@/shared/types/dashboard";
+import type {
+  DashboardData,
+  DashboardLeadPipelineSummary,
+} from "@/shared/types/dashboard";
 import { formatCurrency } from "@/shared/types/customer";
 import { formatDispatchTime } from "@/shared/types/dispatch";
 import { formatExpenseAmount } from "@/shared/types/expense";
@@ -98,13 +101,15 @@ function MiniMetric({
   label,
   value,
   detail,
+  href,
 }: {
   label: string;
   value: string | number;
   detail?: string;
+  href?: string;
 }) {
-  return (
-    <div className="min-w-0 rounded-lg border border-slate-100 bg-white px-2.5 py-2 shadow-sm">
+  const content = (
+    <>
       <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
         {label}
       </p>
@@ -114,7 +119,81 @@ function MiniMetric({
       {detail ? (
         <p className="mt-0.5 line-clamp-1 text-[11px] text-slate-500">{detail}</p>
       ) : null}
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="min-w-0 rounded-lg border border-slate-100 bg-white px-2.5 py-2 shadow-sm transition-colors hover:border-cyan-100 hover:bg-cyan-50/30"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="min-w-0 rounded-lg border border-slate-100 bg-white px-2.5 py-2 shadow-sm">
+      {content}
     </div>
+  );
+}
+
+export function DashboardCompactLeadPipelineSection({
+  summary,
+}: {
+  summary: DashboardLeadPipelineSummary;
+}) {
+  if (!summary.hasLeads) {
+    return (
+      <CompactSectionShell
+        eyebrow="Sales"
+        title="Lead Pipeline"
+        href="/leads?create=1"
+        linkLabel="Create Lead"
+      >
+        <p className="text-xs text-slate-500">No leads yet</p>
+        <Link
+          href="/leads?create=1"
+          className="mt-2 inline-flex text-xs font-semibold text-cyan-700 hover:text-cyan-800"
+        >
+          Create Lead
+        </Link>
+      </CompactSectionShell>
+    );
+  }
+
+  return (
+    <CompactSectionShell
+      eyebrow="Sales"
+      title="Lead Pipeline"
+      href="/leads"
+      linkLabel="All leads"
+    >
+      <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+        <MiniMetric
+          label="New leads"
+          value={summary.newLeads}
+          href="/leads?status=new"
+        />
+        <MiniMetric
+          label="Follow-ups due"
+          value={summary.followUpsDue}
+          href="/leads?filter=follow_up_due"
+        />
+        <MiniMetric
+          label="Won this month"
+          value={summary.wonThisMonth}
+          href="/leads?status=won"
+        />
+        <MiniMetric
+          label="Lost this month"
+          value={summary.lostThisMonth}
+          href="/leads?status=lost"
+        />
+      </div>
+    </CompactSectionShell>
   );
 }
 

@@ -181,8 +181,12 @@ export function normalizeLeadFormData(data: LeadFormData): LeadFormData {
 export function validateLeadFormData(data: LeadFormData): string | null {
   const normalized = normalizeLeadFormData(data);
 
-  if (!normalized.firstName && !normalized.lastName && !normalized.companyName) {
-    return "Enter a lead name or company name.";
+  if (!normalized.firstName && !normalized.companyName) {
+    return "Add a name or company name.";
+  }
+
+  if (!normalized.source) {
+    return "Choose how this lead came in.";
   }
 
   if (normalized.email && !EMAIL_PATTERN.test(normalized.email)) {
@@ -190,7 +194,7 @@ export function validateLeadFormData(data: LeadFormData): string | null {
   }
 
   if (!normalized.email && !normalized.phone) {
-    return "Email or phone is required.";
+    return "Add a phone number or email.";
   }
 
   return null;

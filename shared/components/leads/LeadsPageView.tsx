@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
+import { prepareLeadEstimateAction } from "@/app/actions/leads";
 import type { LeadAssignableMember } from "@/lib/database/queries/leads";
 import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
 import { LeadDetailPanel } from "@/shared/components/leads/LeadDetailPanel";
@@ -9,7 +11,9 @@ import { LeadList } from "@/shared/components/leads/LeadList";
 import { LeadSearchFilterBar } from "@/shared/components/leads/LeadSearchFilterBar";
 import { LeadsEmptyState } from "@/shared/components/leads/LeadsEmptyState";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
-import { compareLeadsByField } from "@/shared/lib/leads/lead-status";
+import type { LeadCreateOutcome } from "@/shared/components/leads/LeadForm";
+import { compareLeadsByField, isLeadFollowUpDue } from "@/shared/lib/leads/lead-status";
+import { formatActionError } from "@/shared/lib/operational-errors";
 import type { LeadActivity } from "@/shared/types/lead-activity";
 import {
   formatLeadName,
@@ -29,16 +33,23 @@ type LeadsPageViewProps = {
   aiFeaturesEnabled: boolean;
   initialSelectedId?: string;
   initialCreate?: boolean;
+  initialStatusFilter?: LeadStatus;
+  initialFollowUpDue?: boolean;
 };
 
 function filterLeads(
   leads: Lead[],
   search: string,
   statusFilter: LeadStatus | "all",
+  followUpDueOnly: boolean,
 ): Lead[] {
   const query = search.trim().toLowerCase();
 
   return leads.filter((lead) => {
+    if (followUpDueOnly && !isLeadFollowUpDue(lead)) {
+      return false;
+    }
+
     const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
     if (!matchesStatus) {
       return false;
@@ -71,11 +82,19 @@ export function LeadsPageView({
   aiFeaturesEnabled,
   initialSelectedId,
   initialCreate = false,
+  initialStatusFilter,
+  initialFollowUpDue = false,
 }: LeadsPageViewProps) {
+  const router = useRouter();
   const timeZone = useCompanyTimezone();
   const [leads, setLeads] = useState(initialLeads);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">(
+    initialStatusFilter ?? "all",
+  );
+  const [followUpDueOnly, setFollowUpDueOnly] = useState(initialFollowUpDue);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [, startCreateTransition] = useTransition();
   const [sortField, setSortField] = useState<LeadSortField>("createdAt");
   const [selectedId, setSelectedId] = useState<string | null>(
     initialSelectedId ?? null,
@@ -101,11 +120,11 @@ export function LeadsPageView({
   }, [initialLeads, initialSelectedId]);
 
   const filteredLeads = useMemo(() => {
-    const filtered = filterLeads(leads, search, statusFilter);
+    const filtered = filterLeads(leads, search, statusFilter, followUpDueOnly);
     return [...filtered].sort((left, right) =>
       compareLeadsByField(left, right, sortField),
     );
-  }, [leads, search, sortField, statusFilter]);
+  }, [followUpDueOnly, leads, search, sortField, statusFilter]);
 
   const selectedLead =
     leads.find((lead) => lead.id === selectedId) ?? null;
@@ -134,8 +153,49 @@ export function LeadsPageView({
     );
   }
 
-  function handleCreateSuccess(lead: Lead) {
+  function handleCreateSuccess(lead: Lead, outcome: LeadCreateOutcome = "open") {
     setLeads((current) => [lead, ...current]);
+    setCreateError(null);
+
+    if (outcome === "save") {
+      setSelectedId(null);
+      setPanelMode("empty");
+      return;
+    }
+
+    if (outcome === "estimate") {
+      startCreateTransition(async () => {
+        const result = await prepareLeadEstimateAction(lead.id);
+        if (result.error || !result.customerId) {
+          setCreateError(
+            formatActionError(
+              result.error,
+              "Lead saved, but we couldn't prepare the estimate.",
+            ),
+          );
+          setSelectedId(lead.id);
+          setPanelMode("detail");
+          return;
+        }
+
+        if (result.lead) {
+          setLeads((current) =>
+            current.map((entry) =>
+              entry.id === result.lead!.id ? result.lead! : entry,
+            ),
+          );
+        }
+
+        const params = new URLSearchParams({
+          customerId: result.customerId,
+          create: "1",
+          leadId: lead.id,
+        });
+        router.push(`/estimates?${params.toString()}`);
+      });
+      return;
+    }
+
     setSelectedId(lead.id);
     setPanelMode("detail");
   }
@@ -170,15 +230,33 @@ export function LeadsPageView({
         }`}
       >
         {!hasNoLeads ? (
-          <LeadSearchFilterBar
-            search={search}
-            statusFilter={statusFilter}
-            sortField={sortField}
-            onSearchChange={setSearch}
-            onStatusFilterChange={setStatusFilter}
-            onSortFieldChange={setSortField}
-            resultCount={filteredLeads.length}
-          />
+          <>
+            <LeadSearchFilterBar
+              search={search}
+              statusFilter={statusFilter}
+              sortField={sortField}
+              onSearchChange={setSearch}
+              onStatusFilterChange={(value) => {
+                setStatusFilter(value);
+                if (value !== "all") {
+                  setFollowUpDueOnly(false);
+                }
+              }}
+              onSortFieldChange={setSortField}
+              resultCount={filteredLeads.length}
+            />
+            {followUpDueOnly ? (
+              <div className="border-b border-slate-100/90 px-4 pb-3 sm:px-5">
+                <button
+                  type="button"
+                  onClick={() => setFollowUpDueOnly(false)}
+                  className="text-xs font-semibold text-cyan-700 hover:text-cyan-800"
+                >
+                  Clear follow-up due filter
+                </button>
+              </div>
+            ) : null}
+          </>
         ) : null}
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
@@ -199,6 +277,12 @@ export function LeadsPageView({
           )}
         </div>
       </section>
+
+      {createError ? (
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 lg:col-span-2">
+          {createError}
+        </p>
+      ) : null}
 
       <LeadDetailPanel
         mode={panelMode}

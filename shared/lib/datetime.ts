@@ -136,6 +136,25 @@ export function getDayBoundsInTimeZone(
   };
 }
 
+export function getMonthBoundsInTimeZone(
+  timeZone: string = getCompanyTimeZone(),
+  reference = new Date(),
+): { start: string; end: string } {
+  const dateOnly = getDateOnlyInTimeZone(reference, timeZone);
+  const [yearStr, monthStr] = dateOnly.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const monthPadded = String(month).padStart(2, "0");
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const startDate = `${yearStr}-${monthPadded}-01`;
+  const endDate = `${yearStr}-${monthPadded}-${String(daysInMonth).padStart(2, "0")}`;
+
+  return {
+    start: zonedTimeToUtc(startDate, 0, 0, 0, 0, timeZone).toISOString(),
+    end: zonedTimeToUtc(endDate, 23, 59, 59, 999, timeZone).toISOString(),
+  };
+}
+
 export function isSameCalendarDayInTimeZone(
   left: string | Date,
   right: Date,

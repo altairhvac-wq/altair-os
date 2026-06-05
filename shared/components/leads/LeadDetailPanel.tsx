@@ -26,7 +26,10 @@ import { DesktopConditionalDetailPanel } from "@/shared/components/layout/Deskto
 import { LeadActivityTimeline } from "@/shared/components/leads/LeadActivityTimeline";
 import { LeadFollowUpAiAssistant } from "@/shared/components/leads/LeadFollowUpAiAssistant";
 import { LeadFollowUpCard } from "@/shared/components/leads/LeadFollowUpCard";
-import { LeadForm } from "@/shared/components/leads/LeadForm";
+import {
+  LeadForm,
+  type LeadCreateOutcome,
+} from "@/shared/components/leads/LeadForm";
 import { LeadStatusBadge } from "@/shared/components/leads/LeadStatusBadge";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { shouldPromptConvertOnWon } from "@/shared/lib/leads/lead-conversion";
@@ -49,7 +52,7 @@ type LeadDetailPanelProps = {
   assignableMembers: LeadAssignableMember[];
   aiFeaturesEnabled: boolean;
   onClose: () => void;
-  onCreateSuccess: (lead: Lead) => void;
+  onCreateSuccess: (lead: Lead, outcome?: LeadCreateOutcome) => void;
   onCreateCancel: () => void;
   onLeadUpdated: (lead: Lead) => void;
 };

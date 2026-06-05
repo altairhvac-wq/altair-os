@@ -6,7 +6,11 @@ import type { ActiveCompanyContext } from "@/lib/database/types/core-tables";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
 import {
+  countActiveLeads,
+  countLeadsByStatus,
+  countLeadsLostThisMonth,
   countLeadsNeedingFollowUp,
+  countLeadsWonThisMonth,
   listLeadsNeedingFollowUp,
 } from "@/lib/database/queries/leads";
 import { filterDailyOperationsSummaryForBillingAccess } from "@/shared/lib/dashboard-operational-insights-visibility";
@@ -61,6 +65,14 @@ const LEAD_FOLLOW_UP_DASHBOARD_LIMIT = 10;
 const EMPTY_LEAD_FOLLOW_UP: DashboardData["leadFollowUp"] = {
   count: 0,
   leads: [],
+};
+
+const EMPTY_LEAD_PIPELINE_SUMMARY: DashboardData["leadPipelineSummary"] = {
+  newLeads: 0,
+  followUpsDue: 0,
+  wonThisMonth: 0,
+  lostThisMonth: 0,
+  hasLeads: false,
 };
 /** Match admin layout fetch so React cache dedupes within the request. */
 const NOTIFICATIONS_FETCH_LIMIT = 20;
@@ -285,6 +297,10 @@ export async function getDashboardData(
     officeReviewQueueReport,
     leadFollowUpCount,
     leadFollowUpLeads,
+    leadNewCount,
+    leadWonThisMonthCount,
+    leadLostThisMonthCount,
+    activeLeadCount,
   ] = await Promise.all([
     access.canViewTechnicianRoster
       ? listTechnicians(companyId, context, todayJobs)
@@ -327,6 +343,18 @@ export async function getDashboardData(
           limit: LEAD_FOLLOW_UP_DASHBOARD_LIMIT,
         })
       : Promise.resolve([]),
+    access.canManageCustomers
+      ? countLeadsByStatus(companyId, "new")
+      : Promise.resolve(0),
+    access.canManageCustomers
+      ? countLeadsWonThisMonth(companyId, context.company.timezone)
+      : Promise.resolve(0),
+    access.canManageCustomers
+      ? countLeadsLostThisMonth(companyId, context.company.timezone)
+      : Promise.resolve(0),
+    access.canManageCustomers
+      ? countActiveLeads(companyId)
+      : Promise.resolve(0),
   ]);
 
   const invoiceSummary = access.canViewBilling
@@ -528,6 +556,15 @@ export async function getDashboardData(
           })),
         }
       : EMPTY_LEAD_FOLLOW_UP,
+    leadPipelineSummary: access.canManageCustomers
+      ? {
+          newLeads: leadNewCount,
+          followUpsDue: leadFollowUpCount,
+          wonThisMonth: leadWonThisMonthCount,
+          lostThisMonth: leadLostThisMonthCount,
+          hasLeads: activeLeadCount > 0,
+        }
+      : EMPTY_LEAD_PIPELINE_SUMMARY,
     operationalInsights: access.canViewOperationalReports
       ? filterDailyOperationsSummaryForBillingAccess(
           operationsSummary,

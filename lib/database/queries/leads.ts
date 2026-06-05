@@ -8,7 +8,8 @@ import type {
 } from "@/lib/database/types/core-tables";
 import type { CompanyRole } from "@/lib/database/types/enums";
 import { formatLeadActivityLabel } from "@/shared/types/lead-activity";
-import type { Lead, LeadFormData } from "@/shared/types/lead";
+import { getMonthBoundsInTimeZone } from "@/shared/lib/datetime";
+import type { Lead, LeadFormData, LeadStatus } from "@/shared/types/lead";
 
 const LEAD_MANAGER_ROLES: CompanyRole[] = [
   "owner",
@@ -268,6 +269,107 @@ export async function listLeadsNeedingFollowUp(
   }
 
   return attachLatestActivity(companyId, (data ?? []) as LeadRowWithRelations[]);
+}
+
+function activeLeadCountQuery(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  companyId: string,
+) {
+  return supabase
+    .from("leads")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .is("archived_at", null);
+}
+
+export async function countActiveLeads(companyId: string): Promise<number> {
+  const supabase = await createClient();
+  const { count, error } = await activeLeadCountQuery(supabase, companyId);
+
+  if (error) {
+    console.error("[countActiveLeads] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+export async function countLeadsByStatus(
+  companyId: string,
+  status: LeadStatus,
+): Promise<number> {
+  const supabase = await createClient();
+  const { count, error } = await activeLeadCountQuery(supabase, companyId).eq(
+    "status",
+    status,
+  );
+
+  if (error) {
+    console.error("[countLeadsByStatus] query failed:", {
+      companyId,
+      status,
+      code: error.code,
+      message: error.message,
+    });
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+export async function countLeadsWonThisMonth(
+  companyId: string,
+  timeZone: string,
+  reference = new Date(),
+): Promise<number> {
+  const supabase = await createClient();
+  const { start, end } = getMonthBoundsInTimeZone(timeZone, reference);
+
+  const { count, error } = await activeLeadCountQuery(supabase, companyId)
+    .eq("status", "won")
+    .gte("won_at", start)
+    .lte("won_at", end);
+
+  if (error) {
+    console.error("[countLeadsWonThisMonth] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+export async function countLeadsLostThisMonth(
+  companyId: string,
+  timeZone: string,
+  reference = new Date(),
+): Promise<number> {
+  const supabase = await createClient();
+  const { start, end } = getMonthBoundsInTimeZone(timeZone, reference);
+
+  const { count, error } = await activeLeadCountQuery(supabase, companyId)
+    .eq("status", "lost")
+    .gte("lost_at", start)
+    .lte("lost_at", end);
+
+  if (error) {
+    console.error("[countLeadsLostThisMonth] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return 0;
+  }
+
+  return count ?? 0;
 }
 
 export async function countLeadsNeedingFollowUp(
