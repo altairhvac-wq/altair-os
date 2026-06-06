@@ -24,7 +24,7 @@ export function TechnicianBottomNav({
       aria-label="Technician navigation"
       className="tech-bottom-nav fixed inset-x-0 bottom-0 z-30"
     >
-      <div className="mx-auto flex max-w-md items-stretch justify-around gap-0.5 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-2">
+      <div className="tech-shell-nav-inner mx-auto flex items-stretch justify-around gap-0.5 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.id === activeItem.id;

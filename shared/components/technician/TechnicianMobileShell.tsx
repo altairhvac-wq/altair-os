@@ -38,7 +38,7 @@ export function TechnicianMobileShell({
         initialUnreadCount={unreadNotificationCount}
       >
       <div className="tech-canvas min-h-dvh max-w-full overflow-x-clip">
-        <div className="tech-shell mx-auto flex min-h-dvh w-full min-w-0 max-w-md flex-col">
+        <div className="tech-shell mx-auto flex min-h-dvh min-w-0 flex-col">
           <header className="tech-header tech-header-safe sticky top-0 z-30 px-4 pb-2.5 pt-0.5">
             <div className="flex min-w-0 items-center gap-2.5">
               <AltairLogo variant="gold" size="sm" showWordmark={false} />

@@ -919,11 +919,39 @@ a[href] {
     linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
+/*
+ * Technician shell width: phone-sized on mobile, capped on tablet, full width on desktop.
+ * Shared by .tech-shell and .tech-shell-nav-inner via --tech-shell-max-width.
+ */
+:root {
+  --tech-shell-max-width: 28rem;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --tech-shell-max-width: 48rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --tech-shell-max-width: none;
+  }
+}
+
 .tech-shell {
+  width: 100%;
+  max-width: var(--tech-shell-max-width);
   background-color: transparent;
 }
 
-@media (min-width: 480px) {
+.tech-shell-nav-inner {
+  width: 100%;
+  max-width: var(--tech-shell-max-width);
+}
+
+/* Phone-frame chrome only while the shell is width-constrained (mobile / tablet). */
+@media (min-width: 480px) and (max-width: 1023px) {
   .tech-shell {
     border-left: 1px solid rgb(226 232 240 / 0.45);
     border-right: 1px solid rgb(226 232 240 / 0.45);
