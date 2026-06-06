@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import {
   ArrowLeft,
   Briefcase,
@@ -38,6 +39,7 @@ type EstimateDetailPageViewProps = {
   company: BillingCompanyContact;
   companyTimeZone: string;
   canManageEstimates: boolean;
+  canManageCustomers?: boolean;
   canCaptureSignature?: boolean;
   signature?: BillingSignature | null;
   presentation?: "page" | "overlay";
@@ -50,6 +52,7 @@ export function EstimateDetailPageView({
   company,
   companyTimeZone,
   canManageEstimates,
+  canManageCustomers = false,
   canCaptureSignature = false,
   signature,
   presentation = "page",
@@ -163,7 +166,12 @@ export function EstimateDetailPageView({
             <div className="mt-3 space-y-2 text-sm text-slate-700">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 shrink-0 text-slate-400" />
-                <span className="min-w-0 break-words">{estimate.customerName}</span>
+                <CustomerNameLink
+                  customerId={estimate.customerId}
+                  customerName={estimate.customerName}
+                  canManageCustomers={canManageCustomers}
+                  className="min-w-0 break-words text-sm text-slate-700"
+                />
               </div>
               {customerEmail ? (
                 <div className="flex items-center gap-2">
@@ -174,13 +182,19 @@ export function EstimateDetailPageView({
                 <div className="flex items-start gap-2 text-slate-500">
                   <Mail className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
                   <span>
-                    No email on file —{" "}
-                    <Link
-                      href={`/customers/${estimate.customerId}`}
-                      className="font-semibold text-cyan-700 hover:text-cyan-800"
-                    >
-                      add one on the customer record
-                    </Link>{" "}
+                    No email on file
+                    {canManageCustomers ? (
+                      <>
+                        {" "}
+                        —{" "}
+                        <Link
+                          href={`/customers/${estimate.customerId}`}
+                          className="font-semibold text-cyan-700 hover:text-cyan-800"
+                        >
+                          add one on the customer record
+                        </Link>{" "}
+                      </>
+                    ) : null}
                     to send this estimate.
                   </span>
                 </div>

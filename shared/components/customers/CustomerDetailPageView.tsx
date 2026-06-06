@@ -6,6 +6,8 @@ import {
   Tag,
 } from "lucide-react";
 import { Customer360Card } from "./Customer360Card";
+import { CustomerDetailActionBar } from "./CustomerDetailActionBar";
+import { CustomerDetailSectionNav } from "./CustomerDetailSectionNav";
 import { JobDetailHashScroll } from "@/shared/components/jobs/JobDetailHashScroll";
 import { CustomerBillingHistorySection } from "./CustomerBillingHistorySection";
 import { CustomerRecentPhotosSection } from "./CustomerRecentPhotosSection";
@@ -34,6 +36,11 @@ import type { CustomerEquipment } from "@/shared/types/customer-equipment";
 import type { Expense } from "@/shared/types/expense";
 import type { JobAttachment } from "@/shared/types/job-attachment";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
+import type { InvoicePayment } from "@/shared/types/invoice-payment";
+import {
+  CUSTOMER_DETAIL_360_ANCHOR,
+  CUSTOMER_DETAIL_ACTIVITY_ANCHOR,
+} from "@/shared/lib/customers/customer-detail-anchors";
 import {
   adminCardSectionClass,
   adminDetailsBodyClass,
@@ -48,6 +55,7 @@ type CustomerDetailPageViewProps = {
   jobs: Job[];
   estimates: Estimate[];
   invoices: Invoice[];
+  payments: InvoicePayment[];
   activities: OperationalActivity[];
   equipment: CustomerEquipment[];
   recentPhotos: JobAttachment[];
@@ -56,6 +64,7 @@ type CustomerDetailPageViewProps = {
   canManageCustomers: boolean;
   canManageEquipment: boolean;
   canViewBilling: boolean;
+  canManageBilling: boolean;
   canViewCompanyExpenses: boolean;
   financialSummary?: CustomerFinancialSummary;
   customer360?: Customer360Data | null;
@@ -67,6 +76,7 @@ export function CustomerDetailPageView({
   jobs,
   estimates,
   invoices,
+  payments,
   activities,
   equipment,
   recentPhotos,
@@ -75,6 +85,7 @@ export function CustomerDetailPageView({
   canManageCustomers,
   canManageEquipment,
   canViewBilling,
+  canManageBilling,
   canViewCompanyExpenses,
   financialSummary,
   customer360,
@@ -105,7 +116,7 @@ export function CustomerDetailPageView({
           <div className="flex flex-col items-end gap-2">
             {customer360 ? (
               <Link
-                href="#customer-360"
+                href={`#${CUSTOMER_DETAIL_360_ANCHOR}`}
                 className="text-xs font-medium text-slate-600 transition-colors hover:text-slate-900"
               >
                 View Customer 360
@@ -171,6 +182,18 @@ export function CustomerDetailPageView({
         </div>
       </div>
 
+      <CustomerDetailSectionNav
+        showCustomer360={Boolean(customer360)}
+        showBilling={canViewBilling}
+      />
+
+      <CustomerDetailActionBar
+        customerId={customer.id}
+        invoices={invoices}
+        canCreateJob={canCreateJob}
+        canManageBilling={canManageBilling}
+      />
+
       {customer360 ? (
         <Customer360Card data={customer360} canViewBilling={canViewBilling} />
       ) : null}
@@ -200,8 +223,11 @@ export function CustomerDetailPageView({
 
       {canViewBilling ? (
         <CustomerBillingHistorySection
+          customerId={customer.id}
           estimates={estimates}
           invoices={invoices}
+          payments={payments}
+          canManageBilling={canManageBilling}
         />
       ) : null}
 
@@ -220,6 +246,8 @@ export function CustomerDetailPageView({
       <OperationalActivityTimeline
         activities={activities}
         canViewBilling={canViewBilling}
+        sectionId={CUSTOMER_DETAIL_ACTIVITY_ANCHOR}
+        sectionClassName="scroll-mt-6"
         description={
           canViewBilling
             ? "Jobs, billing, and account events"

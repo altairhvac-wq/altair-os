@@ -15,6 +15,7 @@ import type {
   Customer360Opportunity,
 } from "@/shared/lib/customers/customer-360";
 import { filterOperationalActivitiesForBillingAccess } from "@/shared/lib/billing-activity-visibility";
+import { CUSTOMER_DETAIL_360_ANCHOR } from "@/shared/lib/customers/customer-detail-anchors";
 import { OperationalActivityEntryContent } from "@/shared/components/operational/OperationalActivityEntryContent";
 import {
   adminCardSectionClass,
@@ -48,7 +49,7 @@ export function Customer360Card({ data, canViewBilling }: Customer360CardProps) 
   return (
     <section
       className={`${adminCardSectionClass} scroll-mt-6`}
-      id="customer-360"
+      id={CUSTOMER_DETAIL_360_ANCHOR}
     >
       <div className="mb-2">
         <h2 className="text-sm font-semibold text-slate-900">Customer 360</h2>

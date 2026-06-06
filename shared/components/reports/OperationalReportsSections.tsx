@@ -29,6 +29,7 @@ import { OperationalHealthSection } from "@/shared/components/reports/Operationa
 type OperationalReportsSectionsProps = {
   reports: OperationalReportsBundle;
   officeReviewQueueFilter?: OfficeReviewQueueFilter;
+  canManageCustomers?: boolean;
 };
 
 type MetricCardProps = {
@@ -328,6 +329,7 @@ function TechnicianLaborReportSection({
 export function OperationalReportsSections({
   reports,
   officeReviewQueueFilter = "all",
+  canManageCustomers = false,
 }: OperationalReportsSectionsProps) {
   return (
     <div className="flex flex-col gap-6">
@@ -335,6 +337,7 @@ export function OperationalReportsSections({
       <OfficeReviewQueueSection
         report={reports.officeReviewQueue}
         queueFilter={officeReviewQueueFilter}
+        canManageCustomers={canManageCustomers}
       />
       <RevenueReportSection report={reports.revenue} />
       <ExpenseReportSection report={reports.expenses} />

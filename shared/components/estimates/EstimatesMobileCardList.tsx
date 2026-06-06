@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { Estimate } from "@/shared/types/estimate";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
 
@@ -12,6 +13,7 @@ type EstimatesMobileCardListProps = {
   sections: BillingWorkflowListSection<Estimate>[];
   showSectionHeaders: boolean;
   onSelect: (estimate: Estimate) => void;
+  canManageCustomers?: boolean;
   selectionEnabled?: boolean;
   selectedIds?: ReadonlySet<string>;
   onToggleSelection?: (estimateId: string) => void;
@@ -21,6 +23,7 @@ export function EstimatesMobileCardList({
   sections,
   showSectionHeaders,
   onSelect,
+  canManageCustomers = false,
   selectionEnabled = false,
   selectedIds,
   onToggleSelection,
@@ -82,7 +85,13 @@ export function EstimatesMobileCardList({
                           <EstimateStatusBadge status={estimate.status} />
                         </div>
                         <p className="mt-0.5 truncate text-sm text-slate-600">
-                          {estimate.customerName}
+                          <CustomerNameLink
+                            customerId={estimate.customerId}
+                            customerName={estimate.customerName}
+                            canManageCustomers={canManageCustomers}
+                            linkClassName="text-sm text-slate-600 transition-colors hover:text-cyan-700"
+                            stopRowNavigation
+                          />
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
                           {formatDate(estimate.createdAt)}

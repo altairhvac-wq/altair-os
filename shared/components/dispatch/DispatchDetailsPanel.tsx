@@ -13,6 +13,7 @@ import {
   type DispatchJob,
   type Technician,
 } from "@/shared/types/dispatch";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { JobCustomerQuickActions } from "@/shared/components/jobs/JobCustomerQuickActions";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
 import type {
@@ -28,6 +29,7 @@ type DispatchDetailsPanelProps = {
   technicians: Technician[];
   canDispatchJobs: boolean;
   canUpdateJobWorkflow: boolean;
+  canManageCustomers?: boolean;
   canViewBilling?: boolean;
   aiFeaturesEnabled?: boolean;
   billingContext?: {
@@ -50,6 +52,7 @@ export function DispatchDetailsPanel({
   technicians,
   canDispatchJobs,
   canUpdateJobWorkflow,
+  canManageCustomers = false,
   canViewBilling = false,
   aiFeaturesEnabled = false,
   billingContext,
@@ -112,7 +115,14 @@ export function DispatchDetailsPanel({
           >
             {job.jobNumber}
           </h2>
-          <p className="mt-0.5 text-xs text-slate-500">{job.customerName}</p>
+          <p className="mt-0.5 text-xs text-slate-500">
+            <CustomerNameLink
+              customerId={job.customerId}
+              customerName={job.customerName}
+              canManageCustomers={canManageCustomers}
+              linkClassName="text-xs text-slate-500 transition-colors hover:text-cyan-700"
+            />
+          </p>
         </div>
         <button
           type="button"

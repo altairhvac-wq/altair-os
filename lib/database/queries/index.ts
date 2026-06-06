@@ -109,6 +109,7 @@ export {
 } from "./invoice-activities";
 export {
   listPaymentsForInvoice,
+  listInvoicePaymentsForCustomer,
   recordInvoicePayment,
 } from "./invoice-payments";
 export { listJobLaborEntriesForJob } from "./time-entries";

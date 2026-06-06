@@ -53,6 +53,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     <ReportsPageView
       data={data}
       aiFeaturesEnabled={isAiFeaturesEnabled()}
+      canManageCustomers={access.canManageCustomers}
       initialCachedSummary={initialCachedSummary}
     />
   );

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import type { ReactNode } from "react";
 import {
   ArrowLeft,
@@ -222,18 +223,12 @@ export function JobDetailPageView({
           </div>
 
           <div className="min-w-0 flex-1">
-            {canManageCustomers ? (
-              <Link
-                href={`/customers/${job.customerId}`}
-                className="text-base font-bold text-slate-900 transition-colors hover:text-cyan-700"
-              >
-                {job.customerName}
-              </Link>
-            ) : (
-              <p className="text-base font-bold text-slate-900">
-                {job.customerName}
-              </p>
-            )}
+            <CustomerNameLink
+              customerId={job.customerId}
+              customerName={job.customerName}
+              canManageCustomers={canManageCustomers}
+              linkClassName="text-base font-bold text-slate-900 transition-colors hover:text-cyan-700"
+            />
             {customerCompany ? (
               <div className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
                 <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />

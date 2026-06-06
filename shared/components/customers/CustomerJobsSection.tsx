@@ -8,6 +8,7 @@ import {
 import { JobPriorityBadge } from "@/shared/components/jobs/JobPriorityBadge";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { adminCardSectionClass } from "@/shared/lib/admin-density";
+import { createJobForCustomerHref } from "@/shared/lib/customers/customer-action-links";
 import { CUSTOMER_DETAIL_JOBS_ANCHOR } from "@/shared/lib/customers/customer-detail-anchors";
 
 type CustomerJobsSectionProps = {
@@ -21,7 +22,7 @@ export function CustomerJobsSection({
   jobs,
   canCreateJob,
 }: CustomerJobsSectionProps) {
-  const createJobHref = `/jobs?customerId=${encodeURIComponent(customerId)}&create=1`;
+  const createJobHref = createJobForCustomerHref(customerId);
 
   return (
     <section

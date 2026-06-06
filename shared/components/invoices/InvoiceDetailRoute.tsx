@@ -66,6 +66,7 @@ export async function InvoiceDetailRoute({
       company={company}
       companyTimeZone={companyContext.company.timezone}
       canManageBilling={canManageBilling}
+      canManageCustomers={companyContext.permissions.manageCustomers}
       canCaptureSignature={canCaptureSignature}
       signature={signature}
       presentation={presentation}

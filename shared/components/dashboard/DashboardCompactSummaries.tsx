@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, MapPin } from "lucide-react";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { DashboardOpenPanelButton } from "@/shared/components/dashboard/DashboardOpenPanelButton";
 import { DashboardQueueActionTrigger } from "@/shared/components/dashboard/DashboardQueueActionTrigger";
@@ -290,8 +291,10 @@ export function DashboardCompactAttentionSummary({
 
 export function DashboardCompactTodaySection({
   operations,
+  canManageCustomers = false,
 }: {
   operations: DashboardData["operations"];
+  canManageCustomers?: boolean;
 }) {
   const metrics = [
     {
@@ -341,19 +344,24 @@ export function DashboardCompactTodaySection({
         <ul className="mt-3 divide-y divide-slate-100 rounded-lg border border-slate-100">
           {previewJobs.map((job) => (
             <li key={job.id}>
-              <Link
-                href={`/jobs/${job.id}`}
-                className="flex items-center justify-between gap-2 px-2.5 py-2 transition-colors hover:bg-slate-50"
-              >
+              <div className="flex items-center justify-between gap-2 px-2.5 py-2 transition-colors hover:bg-slate-50">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <p className="text-xs font-bold text-slate-900">
+                    <Link
+                      href={`/jobs/${job.id}`}
+                      className="text-xs font-bold text-slate-900 transition-colors hover:text-cyan-700"
+                    >
                       {job.jobNumber}
-                    </p>
+                    </Link>
                     <JobStatusBadge status={job.status} />
                   </div>
                   <p className="truncate text-[11px] text-slate-600">
-                    {job.customerName}
+                    <CustomerNameLink
+                      customerId={job.customerId}
+                      customerName={job.customerName}
+                      canManageCustomers={canManageCustomers}
+                      linkClassName="text-[11px] text-slate-600 transition-colors hover:text-cyan-700"
+                    />
                   </p>
                   <p className="mt-0.5 flex items-center gap-1 text-[10px] text-slate-400">
                     <MapPin className="h-3 w-3 shrink-0" />
@@ -365,7 +373,7 @@ export function DashboardCompactTodaySection({
                 <p className="shrink-0 text-[11px] font-semibold text-slate-600">
                   {formatDispatchTime(job.scheduledDate)}
                 </p>
-              </Link>
+              </div>
             </li>
           ))}
         </ul>

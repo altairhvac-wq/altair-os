@@ -6,12 +6,14 @@ import {
   type Job,
 } from "@/shared/types/job";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
 
 type JobsMobileCardListProps = {
   jobs: Job[];
   onSelect: (job: Job) => void;
+  canManageCustomers?: boolean;
   selectionEnabled?: boolean;
   selectedIds?: ReadonlySet<string>;
   onToggleSelection?: (jobId: string) => void;
@@ -20,6 +22,7 @@ type JobsMobileCardListProps = {
 export function JobsMobileCardList({
   jobs,
   onSelect,
+  canManageCustomers = false,
   selectionEnabled = false,
   selectedIds,
   onToggleSelection,
@@ -70,7 +73,12 @@ export function JobsMobileCardList({
                     <JobPriorityBadge priority={job.priority} />
                   </div>
                   <p className="mt-1 truncate text-sm font-medium text-slate-900">
-                    {job.customerName}
+                    <CustomerNameLink
+                      customerId={job.customerId}
+                      customerName={job.customerName}
+                      canManageCustomers={canManageCustomers}
+                      stopRowNavigation
+                    />
                   </p>
                   <p className="mt-0.5 truncate text-xs text-slate-400">
                     {job.assignedTechnician ?? "Unassigned"}

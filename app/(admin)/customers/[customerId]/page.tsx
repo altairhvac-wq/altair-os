@@ -10,6 +10,7 @@ import { listOperationalActivitiesForCustomer } from "@/lib/database/queries/ope
 import { listRecentExpensesForCustomer } from "@/lib/database/queries/expenses";
 import { listRecentJobAttachmentsForCustomer } from "@/lib/database/queries/job-attachments";
 import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment";
+import { listInvoicePaymentsForCustomer } from "@/lib/database/queries/invoice-payments";
 import { CustomerDetailPageView } from "@/shared/components/customers/CustomerDetailPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import {
@@ -50,6 +51,7 @@ export default async function CustomerDetailPage({
     equipment,
     recentPhotos,
     recentReceipts,
+    payments,
     deleteDependencies,
   ] = await Promise.all([
     getCustomerById(companyContext.company.id, customerId),
@@ -89,6 +91,12 @@ export default async function CustomerDetailPage({
           withReceiptOnly: true,
         })
       : Promise.resolve([]),
+    canViewBillingData
+      ? listInvoicePaymentsForCustomer(
+          companyContext.company.id,
+          customerId,
+        )
+      : Promise.resolve([]),
     getCustomerDeleteDependencies(companyContext.company.id, customerId),
   ]);
 
@@ -125,6 +133,7 @@ export default async function CustomerDetailPage({
       jobs={jobs}
       estimates={estimates}
       invoices={invoices}
+      payments={payments}
       activities={activities}
       equipment={equipment}
       recentPhotos={recentPhotos}
@@ -133,6 +142,7 @@ export default async function CustomerDetailPage({
       canManageCustomers={companyContext.permissions.manageCustomers}
       canManageEquipment={companyContext.permissions.manageCustomers}
       canViewBilling={canViewBillingData}
+      canManageBilling={companyContext.permissions.manageBilling}
       canViewCompanyExpenses={access.canViewCompanyExpenses}
       financialSummary={financialSummary}
       customer360={customer360}

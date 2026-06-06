@@ -74,6 +74,7 @@ export type ReportSnapshotRow = {
   label: string;
   detail?: string;
   value: string;
+  customerId?: string;
 };
 
 export type ReportOperationsSnapshot = {

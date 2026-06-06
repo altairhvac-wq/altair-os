@@ -4,6 +4,7 @@ import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-l
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { canSelectInvoiceForBulkLifecycle } from "@/shared/lib/invoice-lifecycle";
 import type { Invoice } from "@/shared/types/invoice";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { InvoicesMobileCardList } from "./InvoicesMobileCardList";
@@ -12,6 +13,7 @@ type InvoicesTableProps = {
   sections: BillingWorkflowListSection<Invoice>[];
   showSectionHeaders: boolean;
   onSelect: (invoice: Invoice) => void;
+  canManageCustomers?: boolean;
   selectionEnabled?: boolean;
   selectedIds?: ReadonlySet<string>;
   onToggleSelection?: (invoiceId: string) => void;
@@ -63,6 +65,7 @@ export function InvoicesTable({
   sections,
   showSectionHeaders,
   onSelect,
+  canManageCustomers = false,
   selectionEnabled = false,
   selectedIds,
   onToggleSelection,
@@ -89,6 +92,7 @@ export function InvoicesTable({
         sections={sections}
         showSectionHeaders={showSectionHeaders}
         onSelect={onSelect}
+        canManageCustomers={canManageCustomers}
         selectionEnabled={selectionEnabled}
         selectedIds={selectedIds}
         onToggleSelection={onToggleSelection}
@@ -166,9 +170,13 @@ export function InvoicesTable({
                         </p>
                       </td>
                       <td className="admin-table-cell">
-                        <p className="truncate font-medium text-slate-900">
-                          {invoice.customerName}
-                        </p>
+                        <CustomerNameLink
+                          customerId={invoice.customerId}
+                          customerName={invoice.customerName}
+                          canManageCustomers={canManageCustomers}
+                          className="truncate font-medium text-slate-900"
+                          stopRowNavigation
+                        />
                       </td>
                       <td className="hidden admin-table-cell text-slate-600 lg:table-cell">
                         {invoice.jobNumber ?? "—"}

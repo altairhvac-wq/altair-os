@@ -36,6 +36,7 @@ import {
   Users,
 } from "lucide-react";
 import type { DailyOperationsSummaryHighlight } from "@/shared/types/daily-operations-summary";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { ExpenseStatusBadge } from "@/shared/components/expenses/ExpenseStatusBadge";
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
@@ -561,8 +562,10 @@ function AnalyticsSnapshotSection({
 
 function TodayOperationsSection({
   operations,
+  canManageCustomers = false,
 }: {
   operations: DashboardData["operations"];
+  canManageCustomers?: boolean;
 }) {
   const metrics = [
     {
@@ -635,19 +638,26 @@ function TodayOperationsSection({
           <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100">
             {operations.todayJobs.map((job) => (
               <li key={job.id}>
-                <Link
-                  href={`/jobs/${job.id}`}
-                  className="flex flex-col gap-1.5 px-3 py-2.5 transition-colors hover:bg-slate-50 max-lg:px-3 max-lg:py-2.5 sm:flex-row sm:items-center sm:justify-between lg:gap-2 lg:px-4 lg:py-3"
-                >
+                <div className="flex flex-col gap-1.5 px-3 py-2.5 transition-colors hover:bg-slate-50 max-lg:px-3 max-lg:py-2.5 sm:flex-row sm:items-center sm:justify-between lg:gap-2 lg:px-4 lg:py-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-bold text-slate-900">
+                      <Link
+                        href={`/jobs/${job.id}`}
+                        className="text-sm font-bold text-slate-900 transition-colors hover:text-cyan-700"
+                      >
                         {job.jobNumber}
-                      </p>
+                      </Link>
                       <JobStatusBadge status={job.status} />
                     </div>
                     <p className="mt-1 truncate text-sm text-slate-600">
-                      {job.customerName} · {job.jobType}
+                      <CustomerNameLink
+                        customerId={job.customerId}
+                        customerName={job.customerName}
+                        canManageCustomers={canManageCustomers}
+                        linkClassName="text-sm text-slate-600 transition-colors hover:text-cyan-700"
+                      />
+                      {" · "}
+                      {job.jobType}
                     </p>
                     <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-400">
                       <MapPin className="h-3 w-3 shrink-0" />
@@ -664,7 +674,7 @@ function TodayOperationsSection({
                       {formatDispatchStatus(job.status)}
                     </p>
                   </div>
-                </Link>
+                </div>
               </li>
             ))}
           </ul>
@@ -1221,7 +1231,10 @@ function DashboardContentLayout({
             canViewBilling={access.canViewBilling}
           />
         ) : null}
-        <TodayOperationsSection operations={data.operations} />
+        <TodayOperationsSection
+          operations={data.operations}
+          canManageCustomers={access.canManageCustomers}
+        />
         {access.canViewTechnicianRoster ? (
           <TechnicianStatusSection technicians={data.technicians} />
         ) : null}
@@ -1241,6 +1254,7 @@ function DashboardContentLayout({
         report={data.officeReviewQueue}
         variant="compact"
         itemLimit={4}
+        canManageCustomers={access.canManageCustomers}
       />
       <div className="lg:col-span-2">
         <NotificationsSummarySection
@@ -1266,7 +1280,10 @@ function DashboardContentLayout({
 
   const todaysWorkContent = (
     <div className="grid min-w-0 gap-2 lg:grid-cols-2 lg:gap-3">
-      <DashboardCompactTodaySection operations={data.operations} />
+      <DashboardCompactTodaySection
+        operations={data.operations}
+        canManageCustomers={access.canManageCustomers}
+      />
       {access.canViewTechnicianRoster ? (
         <DashboardCompactTechnicianSummary technicians={data.technicians} />
       ) : null}

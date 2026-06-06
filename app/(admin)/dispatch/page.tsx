@@ -66,6 +66,7 @@ export default async function DispatchPage({ searchParams }: DispatchPageProps) 
       technicians={technicians}
       canDispatchJobs={companyContext.permissions.dispatchJobs}
       canViewAssignedJobs={companyContext.permissions.viewAssignedJobs}
+      canManageCustomers={access.canManageCustomers}
       canViewBilling={canViewBillingData}
       aiFeaturesEnabled={isAiFeaturesEnabled()}
       billingSummaries={billingSummaries}

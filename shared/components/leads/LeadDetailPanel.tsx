@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
@@ -293,7 +294,16 @@ export function LeadDetailPanel({
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h3 className="text-lg font-bold text-slate-900">
-                  {formatLeadName(lead)}
+                  {lead.convertedCustomerId ? (
+                    <CustomerNameLink
+                      customerId={lead.convertedCustomerId}
+                      customerName={formatLeadName(lead)}
+                      canManageCustomers
+                      linkClassName="text-lg font-bold text-slate-900 transition-colors hover:text-cyan-700"
+                    />
+                  ) : (
+                    formatLeadName(lead)
+                  )}
                 </h3>
                 <div className="mt-2 space-y-1 text-sm text-slate-600">
                   {lead.phone ? <p>{lead.phone}</p> : null}

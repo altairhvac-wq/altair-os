@@ -5,6 +5,7 @@ import {
   type Job,
 } from "@/shared/types/job";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { JobsMobileCardList } from "./JobsMobileCardList";
 import { JobPriorityBadge } from "./JobPriorityBadge";
@@ -13,6 +14,7 @@ import { JobStatusBadge } from "./JobStatusBadge";
 type JobsTableProps = {
   jobs: Job[];
   onSelect: (job: Job) => void;
+  canManageCustomers?: boolean;
   selectionEnabled?: boolean;
   selectedIds?: ReadonlySet<string>;
   onToggleSelection?: (jobId: string) => void;
@@ -36,6 +38,7 @@ function handleJobRowKeyDown(
 export function JobsTable({
   jobs,
   onSelect,
+  canManageCustomers = false,
   selectionEnabled = false,
   selectedIds,
   onToggleSelection,
@@ -54,6 +57,7 @@ export function JobsTable({
       <JobsMobileCardList
         jobs={jobs}
         onSelect={onSelect}
+        canManageCustomers={canManageCustomers}
         selectionEnabled={selectionEnabled}
         selectedIds={selectedIds}
         onToggleSelection={onToggleSelection}
@@ -128,9 +132,13 @@ export function JobsTable({
                     <JobPriorityBadge priority={job.priority} />
                   </td>
                   <td className="admin-table-cell">
-                    <p className="truncate font-medium text-slate-900">
-                      {job.customerName}
-                    </p>
+                    <CustomerNameLink
+                      customerId={job.customerId}
+                      customerName={job.customerName}
+                      canManageCustomers={canManageCustomers}
+                      className="truncate font-medium text-slate-900"
+                      stopRowNavigation
+                    />
                   </td>
                   <td className="admin-table-cell text-slate-600">
                     {job.assignedTechnician ?? (

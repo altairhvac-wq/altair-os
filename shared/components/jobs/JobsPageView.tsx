@@ -808,6 +808,7 @@ export function JobsPageView({
         <JobsTable
           jobs={filteredAllJobs}
           onSelect={handleSelectJob}
+          canManageCustomers={canManageCustomers}
           selectionEnabled={selectionEnabled}
           selectedIds={selectedIds}
           onToggleSelection={handleToggleJobSelection}

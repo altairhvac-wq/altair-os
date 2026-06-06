@@ -72,6 +72,7 @@ export default async function EstimatesPage({
       jobs={jobs}
       serviceItems={serviceItems}
       canManageEstimates={companyContext.permissions.manageBilling}
+      canManageCustomers={companyContext.permissions.manageCustomers}
       initialPanelMode={create === "1" && preselectedCustomer ? "create" : "empty"}
       createInitialData={createInitialData}
       initialLeadId={leadId}

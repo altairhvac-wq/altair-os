@@ -36,6 +36,7 @@ type DispatchPageViewProps = {
   technicians: Technician[];
   canDispatchJobs: boolean;
   canViewAssignedJobs: boolean;
+  canManageCustomers: boolean;
   canViewBilling: boolean;
   aiFeaturesEnabled?: boolean;
   billingSummaries: JobBillingSummariesByJobId;
@@ -48,6 +49,7 @@ export function DispatchPageView({
   technicians,
   canDispatchJobs,
   canViewAssignedJobs,
+  canManageCustomers,
   canViewBilling,
   aiFeaturesEnabled = false,
   billingSummaries,
@@ -475,6 +477,7 @@ export function DispatchPageView({
               technicians={technicians}
               canDispatchJobs={canDispatchJobs}
               canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
+              canManageCustomers={canManageCustomers}
               canViewBilling={canViewBilling}
               aiFeaturesEnabled={aiFeaturesEnabled}
               billingContext={{
@@ -534,6 +537,7 @@ export function DispatchPageView({
               technicians={technicians}
               canDispatchJobs={canDispatchJobs}
               canUpdateJobWorkflow={canUpdateJobWorkflow(selectedJob)}
+              canManageCustomers={canManageCustomers}
               canViewBilling={canViewBilling}
               aiFeaturesEnabled={aiFeaturesEnabled}
               billingContext={{

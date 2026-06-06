@@ -69,6 +69,7 @@ import {
   type OfficeReviewQueuePreset,
 } from "@/shared/lib/office-review-queue-presets";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { formatJobStatus } from "@/shared/types/job";
 import {
   compareOfficeReviewQueueItems,
@@ -79,6 +80,7 @@ import {
   getOfficeReviewQueueFilterLabel,
   isOfficeReviewQueueFilterParam,
   isValidOfficeReviewQueueJobId,
+  isValidOfficeReviewQueueCustomerId,
   isValidQueueActionHref,
   OFFICE_REVIEW_QUEUE_AGING_BUCKET_MAX_DAYS,
   OFFICE_REVIEW_QUEUE_AGING_DAYS,
@@ -103,6 +105,7 @@ import { formatOperationalActivityTimestamp } from "@/shared/types/operational-a
 type OfficeReviewQueueSectionProps = {
   report: OfficeReviewQueueReport;
   variant?: "full" | "compact";
+  canManageCustomers?: boolean;
   /** When compact, caps visible rows while preserving summary metrics. */
   itemLimit?: number;
   /** Reports-only queue filter from URL search params. Ignored in compact variant. */
@@ -869,6 +872,7 @@ function QueueItemRow({
   showActions,
   compactActions = false,
   dense = false,
+  canManageCustomers = false,
   selectionEnabled = false,
   isSelected = false,
   onToggleSelect,
@@ -877,6 +881,7 @@ function QueueItemRow({
   showActions: boolean;
   compactActions?: boolean;
   dense?: boolean;
+  canManageCustomers?: boolean;
   selectionEnabled?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (jobId: string) => void;
@@ -942,7 +947,16 @@ function QueueItemRow({
             ) : null}
           </div>
           <p className="mt-1 truncate text-sm text-slate-600">
-            {item.customerName}
+            <CustomerNameLink
+              customerId={
+                isValidOfficeReviewQueueCustomerId(item.customerId)
+                  ? item.customerId
+                  : undefined
+              }
+              customerName={item.customerName}
+              canManageCustomers={canManageCustomers}
+              linkClassName="text-sm text-slate-600 transition-colors hover:text-cyan-700"
+            />
             {item.assignedTechnician
               ? ` · ${item.assignedTechnician}`
               : " · Unassigned"}
@@ -1319,6 +1333,7 @@ function QueueGroupSection({
   showActions,
   compactActions = false,
   showEmptyState,
+  canManageCustomers = false,
   collapsible = false,
   isCollapsed = false,
   onToggleCollapse,
@@ -1332,6 +1347,7 @@ function QueueGroupSection({
   showActions: boolean;
   compactActions?: boolean;
   showEmptyState: boolean;
+  canManageCustomers?: boolean;
   collapsible?: boolean;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -1436,6 +1452,7 @@ function QueueGroupSection({
                 item={item}
                 showActions={showActions}
                 compactActions={compactActions}
+                canManageCustomers={canManageCustomers}
                 selectionEnabled={selectionEnabled}
                 isSelected={selectedJobIds?.has(item.jobId) ?? false}
                 onToggleSelect={onToggleItemSelect}
@@ -1518,6 +1535,7 @@ function renderFilteredGroupSections(input: {
   groups: Record<OfficeReviewQueueGroup, OfficeReviewQueueItem[]>;
   showActions: boolean;
   compactActions?: boolean;
+  canManageCustomers?: boolean;
   collapsedGroups: ReadonlySet<OfficeReviewQueueGroup>;
   onToggleGroupCollapse: (group: OfficeReviewQueueGroup) => void;
   selectionEnabled?: boolean;
@@ -1534,6 +1552,7 @@ function renderFilteredGroupSections(input: {
     groups,
     showActions,
     compactActions,
+    canManageCustomers = false,
     collapsedGroups,
     onToggleGroupCollapse,
     selectionEnabled = false,
@@ -1549,6 +1568,7 @@ function renderFilteredGroupSections(input: {
         items={groups[activeGroupFilter]}
         showActions={showActions}
         compactActions={compactActions}
+        canManageCustomers={canManageCustomers}
         showEmptyState
         collapsible
         isCollapsed={collapsedGroups.has(activeGroupFilter)}
@@ -1584,6 +1604,7 @@ function renderFilteredGroupSections(input: {
         items={items}
         showActions={showActions}
         compactActions={compactActions}
+        canManageCustomers={canManageCustomers}
         showEmptyState={showEmptyState}
         collapsible
         isCollapsed={collapsedGroups.has(group)}
@@ -1602,6 +1623,7 @@ export function OfficeReviewQueueSection({
   variant = "full",
   itemLimit,
   queueFilter = "all",
+  canManageCustomers = false,
 }: OfficeReviewQueueSectionProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -2089,6 +2111,7 @@ export function OfficeReviewQueueSection({
               activeGroupFilter,
               groups,
               showActions,
+              canManageCustomers,
               collapsedGroups,
               onToggleGroupCollapse: handleToggleGroupCollapse,
               selectionEnabled,
@@ -2128,6 +2151,7 @@ export function OfficeReviewQueueSection({
                 item={item}
                 showActions={showActions}
                 compactActions={compactActions}
+                canManageCustomers={canManageCustomers}
                 dense
               />
             ))}

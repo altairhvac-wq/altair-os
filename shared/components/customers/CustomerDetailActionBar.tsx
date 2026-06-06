@@ -1,0 +1,78 @@
+import Link from "next/link";
+import { DollarSign, FileText, Plus, Receipt } from "lucide-react";
+import {
+  createEstimateForCustomerHref,
+  createInvoiceForCustomerHref,
+  createJobForCustomerHref,
+} from "@/shared/lib/customers/customer-action-links";
+import type { Invoice } from "@/shared/types/invoice";
+import { hasInvoiceUnpaidBalance } from "@/shared/types/invoice";
+
+type CustomerDetailActionBarProps = {
+  customerId: string;
+  invoices: Invoice[];
+  canCreateJob: boolean;
+  canManageBilling: boolean;
+};
+
+const actionClass =
+  "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50";
+
+function resolveRecordPaymentHref(invoices: Invoice[]): string | null {
+  const unpaidInvoice = invoices.find(
+    (invoice) =>
+      hasInvoiceUnpaidBalance(invoice) &&
+      invoice.status !== "void" &&
+      invoice.status !== "cancelled",
+  );
+
+  return unpaidInvoice ? `/invoices/${unpaidInvoice.id}` : null;
+}
+
+export function CustomerDetailActionBar({
+  customerId,
+  invoices,
+  canCreateJob,
+  canManageBilling,
+}: CustomerDetailActionBarProps) {
+  const recordPaymentHref = resolveRecordPaymentHref(invoices);
+
+  if (!canCreateJob && !canManageBilling) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {canCreateJob ? (
+        <Link href={createJobForCustomerHref(customerId)} className={actionClass}>
+          <Plus className="h-3.5 w-3.5" />
+          New job
+        </Link>
+      ) : null}
+      {canManageBilling ? (
+        <>
+          <Link
+            href={createEstimateForCustomerHref(customerId)}
+            className={actionClass}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            New estimate
+          </Link>
+          <Link
+            href={createInvoiceForCustomerHref(customerId)}
+            className={actionClass}
+          >
+            <Receipt className="h-3.5 w-3.5" />
+            New invoice
+          </Link>
+          {recordPaymentHref ? (
+            <Link href={recordPaymentHref} className={actionClass}>
+              <DollarSign className="h-3.5 w-3.5" />
+              Record payment
+            </Link>
+          ) : null}
+        </>
+      ) : null}
+    </div>
+  );
+}

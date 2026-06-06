@@ -105,6 +105,7 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
       jobs={jobs}
       serviceItems={serviceItems}
       canManageInvoices={companyContext.permissions.manageBilling}
+      canManageCustomers={companyContext.permissions.manageCustomers}
       initialPanelMode={shouldOpenCreate ? "create" : "empty"}
       createInitialData={createInitialData}
       initialJobId={validJob?.id}

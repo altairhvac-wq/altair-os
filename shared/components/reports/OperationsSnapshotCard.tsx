@@ -1,12 +1,21 @@
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import type { ReportSnapshotRow } from "@/shared/types/reports-page";
 
 type SnapshotListProps = {
   title: string;
   rows: ReportSnapshotRow[];
   emptyMessage: string;
+  linkCustomers?: boolean;
+  canManageCustomers?: boolean;
 };
 
-function SnapshotList({ title, rows, emptyMessage }: SnapshotListProps) {
+function SnapshotList({
+  title,
+  rows,
+  emptyMessage,
+  linkCustomers = false,
+  canManageCustomers = false,
+}: SnapshotListProps) {
   return (
     <div className="admin-card min-w-0 px-3 py-3 sm:px-4 sm:py-3.5">
       <h4 className="text-xs font-bold text-slate-900">{title}</h4>
@@ -21,7 +30,23 @@ function SnapshotList({ title, rows, emptyMessage }: SnapshotListProps) {
             >
               <div className="min-w-0">
                 <p className="truncate text-xs font-medium text-slate-800">
-                  {row.label}
+                  {linkCustomers ? (
+                    <CustomerNameLink
+                      customerId={row.id}
+                      customerName={row.label}
+                      canManageCustomers={canManageCustomers}
+                      linkClassName="text-xs font-medium text-slate-800 transition-colors hover:text-cyan-700"
+                    />
+                  ) : row.customerId && canManageCustomers ? (
+                    <CustomerNameLink
+                      customerId={row.customerId}
+                      customerName={row.label}
+                      canManageCustomers={canManageCustomers}
+                      linkClassName="text-xs font-medium text-slate-800 transition-colors hover:text-cyan-700"
+                    />
+                  ) : (
+                    row.label
+                  )}
                 </p>
                 {row.detail ? (
                   <p className="truncate text-[11px] text-slate-500">{row.detail}</p>
@@ -43,6 +68,7 @@ type OperationsSnapshotSectionProps = {
   topServiceCategories: ReportSnapshotRow[];
   overdueInvoices: ReportSnapshotRow[];
   workCompleted: ReportSnapshotRow[];
+  canManageCustomers?: boolean;
 };
 
 export function OperationsSnapshotSection({
@@ -50,6 +76,7 @@ export function OperationsSnapshotSection({
   topServiceCategories,
   overdueInvoices,
   workCompleted,
+  canManageCustomers = false,
 }: OperationsSnapshotSectionProps) {
   return (
     <section className="space-y-3">
@@ -67,6 +94,8 @@ export function OperationsSnapshotSection({
           title="Top Customers"
           rows={topCustomers}
           emptyMessage="Customer revenue appears once payments are recorded."
+          linkCustomers
+          canManageCustomers={canManageCustomers}
         />
         <SnapshotList
           title="Top Service Categories"
@@ -77,11 +106,12 @@ export function OperationsSnapshotSection({
           title="Overdue Invoices"
           rows={overdueInvoices}
           emptyMessage="No overdue invoices right now."
+          canManageCustomers={canManageCustomers}
         />
         <SnapshotList
           title="Work Completed"
           rows={workCompleted}
-          emptyMessage="Completed work appears once jobs are finished."
+          emptyMessage="Completed jobs appear once work is finished."
         />
       </div>
     </section>

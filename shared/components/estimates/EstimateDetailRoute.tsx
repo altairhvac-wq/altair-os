@@ -64,6 +64,7 @@ export async function EstimateDetailRoute({
       company={company}
       companyTimeZone={companyContext.company.timezone}
       canManageEstimates={canManageEstimates}
+      canManageCustomers={companyContext.permissions.manageCustomers}
       canCaptureSignature={canCaptureSignature}
       signature={signature}
       presentation={presentation}

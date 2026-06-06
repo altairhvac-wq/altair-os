@@ -34,6 +34,8 @@ type OperationalActivityTimelineProps = {
   description?: string;
   emptyTitle?: string;
   emptyDescription?: string;
+  sectionId?: string;
+  sectionClassName?: string;
 };
 
 const ACTIVITY_ICONS: Record<
@@ -157,6 +159,8 @@ export function OperationalActivityTimeline({
   description = "Operational timeline",
   emptyTitle = "No activity yet",
   emptyDescription = "Workflow events will appear here as work progresses.",
+  sectionId,
+  sectionClassName,
 }: OperationalActivityTimelineProps) {
   const visibleActivities = filterOperationalActivitiesForBillingAccess(
     activities,
@@ -164,7 +168,10 @@ export function OperationalActivityTimeline({
   );
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section
+      id={sectionId}
+      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ${sectionClassName ?? ""}`}
+    >
       <div className="flex items-center gap-2.5">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200">
           <History className="h-4 w-4 text-slate-500" />

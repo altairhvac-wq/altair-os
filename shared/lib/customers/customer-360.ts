@@ -35,6 +35,10 @@ import type { Job } from "@/shared/types/job";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
 import { DISPATCH_PAGE_UNASSIGNED_HREF } from "@/shared/lib/dispatch-page-focus";
 import {
+  createJobForCustomerHref,
+  customerDetailSectionHref,
+} from "@/shared/lib/customers/customer-action-links";
+import {
   CUSTOMER_DETAIL_BILLING_ANCHOR,
   CUSTOMER_DETAIL_EQUIPMENT_ANCHOR,
 } from "@/shared/lib/customers/customer-detail-anchors";
@@ -356,17 +360,6 @@ function buildEquipmentSnapshot(
     agingCount: agingEquipment.length,
     items: previewItems,
   };
-}
-
-function customerDetailSectionHref(
-  customerId: string,
-  anchor: string,
-): string {
-  return `/customers/${customerId}#${anchor}`;
-}
-
-function createJobForCustomerHref(customerId: string): string {
-  return `/jobs?customerId=${encodeURIComponent(customerId)}&create=1`;
 }
 
 function buildOpportunities(input: {

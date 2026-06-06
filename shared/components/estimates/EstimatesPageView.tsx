@@ -76,6 +76,7 @@ type EstimatesPageViewProps = {
   jobs: Job[];
   serviceItems: ServiceItem[];
   canManageEstimates: boolean;
+  canManageCustomers?: boolean;
   initialPanelMode?: PanelMode;
   createInitialData?: Partial<EstimateFormData>;
   initialLeadId?: string;
@@ -123,6 +124,7 @@ export function EstimatesPageView({
   jobs,
   serviceItems,
   canManageEstimates,
+  canManageCustomers = false,
   initialPanelMode = "empty",
   createInitialData,
   initialLeadId,
@@ -643,6 +645,7 @@ export function EstimatesPageView({
               sections={estimateListPresentation.sections}
               showSectionHeaders={estimateListPresentation.showSectionHeaders}
               onSelect={handleSelectEstimate}
+              canManageCustomers={canManageCustomers}
               selectionEnabled={selectionEnabled}
               selectedIds={selectedEstimateIds}
               onToggleSelection={handleToggleEstimateSelection}

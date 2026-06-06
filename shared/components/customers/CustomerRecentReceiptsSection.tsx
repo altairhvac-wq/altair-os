@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { customerExpensesHref } from "@/shared/lib/customers/customer-action-links";
 import { Receipt } from "lucide-react";
 import {
   formatExpenseAmount,
@@ -33,7 +34,7 @@ export function CustomerRecentReceiptsSection({
           Recent receipts
         </h2>
         <Link
-          href={`/expenses?customerId=${customerId}`}
+          href={customerExpensesHref(customerId)}
           className="min-h-11 inline-flex items-center text-xs font-semibold text-cyan-600 transition-colors hover:text-cyan-700"
         >
           All

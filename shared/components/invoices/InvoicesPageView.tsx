@@ -87,6 +87,7 @@ type InvoicesPageViewProps = {
   jobs: Job[];
   serviceItems: ServiceItem[];
   canManageInvoices: boolean;
+  canManageCustomers?: boolean;
   initialPanelMode?: PanelMode;
   createInitialData?: Partial<InvoiceFormData>;
   initialJobId?: string;
@@ -151,6 +152,7 @@ export function InvoicesPageView({
   jobs,
   serviceItems,
   canManageInvoices,
+  canManageCustomers = false,
   initialPanelMode = "empty",
   createInitialData,
   initialJobId,
@@ -723,6 +725,7 @@ export function InvoicesPageView({
               sections={invoiceListPresentation.sections}
               showSectionHeaders={invoiceListPresentation.showSectionHeaders}
               onSelect={handleSelectInvoice}
+              canManageCustomers={canManageCustomers}
               selectionEnabled={selectionEnabled}
               selectedIds={selectedInvoiceIds}
               onToggleSelection={handleToggleInvoiceSelection}

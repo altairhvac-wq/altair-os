@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { ArrowLeft, Briefcase, FileText, Mail, Phone, Printer, User } from "lucide-react";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import {
@@ -44,6 +45,7 @@ type InvoiceDetailPageViewProps = {
   company: BillingCompanyContact;
   companyTimeZone: string;
   canManageBilling: boolean;
+  canManageCustomers?: boolean;
   canCaptureSignature?: boolean;
   signature?: BillingSignature | null;
   presentation?: "page" | "overlay";
@@ -58,6 +60,7 @@ export function InvoiceDetailPageView({
   company,
   companyTimeZone,
   canManageBilling,
+  canManageCustomers = false,
   canCaptureSignature = false,
   signature,
   presentation = "page",
@@ -188,7 +191,12 @@ export function InvoiceDetailPageView({
             <div className="mt-3 space-y-2 text-sm text-slate-700">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 shrink-0 text-slate-400" />
-                <span className="min-w-0 break-words">{invoice.customerName}</span>
+                <CustomerNameLink
+                  customerId={invoice.customerId}
+                  customerName={invoice.customerName}
+                  canManageCustomers={canManageCustomers}
+                  className="min-w-0 break-words text-sm text-slate-700"
+                />
               </div>
               {customerEmail ? (
                 <div className="flex items-center gap-2">
@@ -199,13 +207,19 @@ export function InvoiceDetailPageView({
                 <div className="flex items-start gap-2 text-slate-500">
                   <Mail className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
                   <span>
-                    No email on file —{" "}
-                    <Link
-                      href={`/customers/${invoice.customerId}`}
-                      className="font-semibold text-cyan-700 hover:text-cyan-800"
-                    >
-                      add one on the customer record
-                    </Link>{" "}
+                    No email on file
+                    {canManageCustomers ? (
+                      <>
+                        {" "}
+                        —{" "}
+                        <Link
+                          href={`/customers/${invoice.customerId}`}
+                          className="font-semibold text-cyan-700 hover:text-cyan-800"
+                        >
+                          add one on the customer record
+                        </Link>{" "}
+                      </>
+                    ) : null}
                     to send this invoice.
                   </span>
                 </div>

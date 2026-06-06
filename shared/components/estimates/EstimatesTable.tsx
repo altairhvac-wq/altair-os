@@ -5,6 +5,7 @@ import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { canSelectEstimateForBulkLifecycle } from "@/shared/lib/estimate-lifecycle";
 import type { Estimate } from "@/shared/types/estimate";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
 import { EstimatesMobileCardList } from "./EstimatesMobileCardList";
@@ -13,6 +14,7 @@ type EstimatesTableProps = {
   sections: BillingWorkflowListSection<Estimate>[];
   showSectionHeaders: boolean;
   onSelect: (estimate: Estimate) => void;
+  canManageCustomers?: boolean;
   selectionEnabled?: boolean;
   selectedIds?: ReadonlySet<string>;
   onToggleSelection?: (estimateId: string) => void;
@@ -23,6 +25,7 @@ export function EstimatesTable({
   sections,
   showSectionHeaders,
   onSelect,
+  canManageCustomers = false,
   selectionEnabled = false,
   selectedIds,
   onToggleSelection,
@@ -49,6 +52,7 @@ export function EstimatesTable({
         sections={sections}
         showSectionHeaders={showSectionHeaders}
         onSelect={onSelect}
+        canManageCustomers={canManageCustomers}
         selectionEnabled={selectionEnabled}
         selectedIds={selectedIds}
         onToggleSelection={onToggleSelection}
@@ -129,9 +133,13 @@ export function EstimatesTable({
                         </p>
                       </td>
                       <td className="admin-table-cell">
-                        <p className="truncate font-medium text-slate-900">
-                          {estimate.customerName}
-                        </p>
+                        <CustomerNameLink
+                          customerId={estimate.customerId}
+                          customerName={estimate.customerName}
+                          canManageCustomers={canManageCustomers}
+                          className="truncate font-medium text-slate-900"
+                          stopRowNavigation
+                        />
                       </td>
                       <td className="hidden admin-table-cell text-slate-600 md:table-cell">
                         {lineItemCount} {lineItemCount === 1 ? "item" : "items"}

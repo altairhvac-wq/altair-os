@@ -23,12 +23,14 @@ import { LeadPipelineSection } from "./LeadPipelineSection";
 type ReportsPageViewProps = {
   data: ReportsPageData;
   aiFeaturesEnabled: boolean;
+  canManageCustomers?: boolean;
   initialCachedSummary?: BusinessSummaryAiResult | null;
 };
 
 export function ReportsPageView({
   data,
   aiFeaturesEnabled,
+  canManageCustomers = false,
   initialCachedSummary = null,
 }: ReportsPageViewProps) {
   const taxSummaryHref = `/reports/tax-summary?range=${data.dateRange}`;
@@ -152,6 +154,7 @@ export function ReportsPageView({
         topServiceCategories={data.operationsSnapshot.topServiceCategories}
         overdueInvoices={data.operationsSnapshot.overdueInvoices}
         workCompleted={data.operationsSnapshot.workCompleted}
+        canManageCustomers={canManageCustomers}
       />
 
       <AccountantSummaryCard dateRange={data.dateRange} />

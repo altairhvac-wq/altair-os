@@ -620,6 +620,7 @@ function buildOverdueInvoices(invoices: Invoice[]): ReportSnapshotRow[] {
     .map((invoice) => ({
       id: invoice.id,
       label: invoice.customerName,
+      customerId: invoice.customerId,
       detail: invoice.invoiceNumber,
       value: formatCurrency(invoice.balanceDue),
     }));

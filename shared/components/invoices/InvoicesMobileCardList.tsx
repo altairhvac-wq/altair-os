@@ -4,6 +4,7 @@ import { canSelectInvoiceForBulkLifecycle } from "@/shared/lib/invoice-lifecycle
 import { ChevronRight } from "lucide-react";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { Invoice } from "@/shared/types/invoice";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 
@@ -11,6 +12,7 @@ type InvoicesMobileCardListProps = {
   sections: BillingWorkflowListSection<Invoice>[];
   showSectionHeaders: boolean;
   onSelect: (invoice: Invoice) => void;
+  canManageCustomers?: boolean;
   selectionEnabled?: boolean;
   selectedIds?: ReadonlySet<string>;
   onToggleSelection?: (invoiceId: string) => void;
@@ -20,6 +22,7 @@ export function InvoicesMobileCardList({
   sections,
   showSectionHeaders,
   onSelect,
+  canManageCustomers = false,
   selectionEnabled = false,
   selectedIds,
   onToggleSelection,
@@ -83,7 +86,13 @@ export function InvoicesMobileCardList({
                           <InvoiceStatusBadge status={invoice.status} />
                         </div>
                         <p className="mt-0.5 truncate text-sm text-slate-600">
-                          {invoice.customerName}
+                          <CustomerNameLink
+                            customerId={invoice.customerId}
+                            customerName={invoice.customerName}
+                            canManageCustomers={canManageCustomers}
+                            linkClassName="text-sm text-slate-600 transition-colors hover:text-cyan-700"
+                            stopRowNavigation
+                          />
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
                           Due {formatDate(invoice.dueDate)}
