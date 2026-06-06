@@ -6,6 +6,7 @@ import {
   Tag,
 } from "lucide-react";
 import { Customer360Card } from "./Customer360Card";
+import { JobDetailHashScroll } from "@/shared/components/jobs/JobDetailHashScroll";
 import { CustomerBillingHistorySection } from "./CustomerBillingHistorySection";
 import { CustomerRecentPhotosSection } from "./CustomerRecentPhotosSection";
 import { CustomerRecentReceiptsSection } from "./CustomerRecentReceiptsSection";
@@ -24,7 +25,7 @@ import {
   isCustomerArchived,
   isCustomerDeleted,
 } from "@/shared/lib/customer-lifecycle";
-import type { Customer360Snapshot } from "@/shared/lib/customers/customer-360";
+import type { Customer360Data } from "@/shared/lib/customers/customer-360";
 import type { CustomerFinancialSummary } from "@/shared/types/customer-financial";
 import type { Estimate } from "@/shared/types/estimate";
 import type { Invoice } from "@/shared/types/invoice";
@@ -57,7 +58,7 @@ type CustomerDetailPageViewProps = {
   canViewBilling: boolean;
   canViewCompanyExpenses: boolean;
   financialSummary?: CustomerFinancialSummary;
-  customer360?: Customer360Snapshot | null;
+  customer360?: Customer360Data | null;
   deleteDependencies: CustomerDeleteDependencies;
 };
 
@@ -85,6 +86,7 @@ export function CustomerDetailPageView({
 
   return (
     <div className={`mx-auto max-w-5xl ${adminPageStackClass}`}>
+      <JobDetailHashScroll />
       <Link
         href="/customers"
         className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
@@ -101,6 +103,14 @@ export function CustomerDetailPageView({
             financialSummary={financialSummary}
           />
           <div className="flex flex-col items-end gap-2">
+            {customer360 ? (
+              <Link
+                href="#customer-360"
+                className="text-xs font-medium text-slate-600 transition-colors hover:text-slate-900"
+              >
+                View Customer 360
+              </Link>
+            ) : null}
             <CustomerEditControl
               customer={customer}
               canManage={canManageCustomers}
@@ -161,7 +171,9 @@ export function CustomerDetailPageView({
         </div>
       </div>
 
-      {customer360 ? <Customer360Card snapshot={customer360} /> : null}
+      {customer360 ? (
+        <Customer360Card data={customer360} canViewBilling={canViewBilling} />
+      ) : null}
 
       {hasNotes ? (
         <details className={adminDetailsClass}>

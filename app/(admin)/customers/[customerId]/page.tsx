@@ -13,7 +13,7 @@ import { CustomerDetailPageView } from "@/shared/components/customers/CustomerDe
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
 import {
   CUSTOMER_360_RECORD_LIMIT,
-  loadCustomer360Snapshot,
+  getCustomer360Data,
 } from "@/shared/lib/customers/customer-360";
 import { computeCustomerFinancialSummary } from "@/shared/types/customer-financial";
 
@@ -52,7 +52,11 @@ export default async function CustomerDetailPage({
     deleteDependencies,
   ] = await Promise.all([
     getCustomerById(companyContext.company.id, customerId),
-    listJobsByCustomer(companyContext.company.id, customerId),
+    listJobsByCustomer(
+      companyContext.company.id,
+      customerId,
+      CUSTOMER_360_RECORD_LIMIT,
+    ),
     canViewBillingData
       ? listEstimatesByCustomer(
           companyContext.company.id,
@@ -86,17 +90,23 @@ export default async function CustomerDetailPage({
     getCustomerDeleteDependencies(companyContext.company.id, customerId),
   ]);
 
-  const customer360 = canViewBillingData
-    ? await loadCustomer360Snapshot(companyContext.company.id, customerId, {
-        estimates,
-        invoices,
-        equipment,
-      })
-    : null;
-
   if (!customer) {
     notFound();
   }
+
+  const customer360 = await getCustomer360Data(
+    companyContext.company.id,
+    customerId,
+    {
+      customer,
+      jobs,
+      estimates,
+      invoices,
+      equipment,
+      activities,
+      includeBilling: canViewBillingData,
+    },
+  );
 
   const financialSummary = canViewBillingData
     ? computeCustomerFinancialSummary(invoices)

@@ -1,41 +1,51 @@
+import { getCustomerById } from "@/lib/database/queries/customers";
 import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment";
 import { listEstimatesByCustomer } from "@/lib/database/queries/estimates";
-import { listInvoicePaymentsForCustomer } from "@/lib/database/queries/invoice-payments";
 import { listInvoicesByCustomer } from "@/lib/database/queries/invoices";
 import { listJobsByCustomer } from "@/lib/database/queries/jobs";
+import { listOperationalActivitiesForCustomer } from "@/lib/database/queries/operational-activities";
+import { getCustomerLifecycleState } from "@/shared/lib/customer-lifecycle";
 import { getEstimateLifecycleState } from "@/shared/lib/estimate-lifecycle";
 import { getEstimateWorkflowGroup } from "@/shared/lib/estimate-workflow-list";
-import { sumCollectedRevenue } from "@/shared/lib/reports/report-metrics";
-import { formatCurrency } from "@/shared/types/customer";
-import { computeCustomerFinancialSummary } from "@/shared/types/customer-financial";
+import {
+  formatCustomerStatusLabel,
+  type Customer,
+  type CustomerStatus,
+} from "@/shared/types/customer";
+import {
+  computeCustomerFinancialSummary,
+  type CustomerFinancialSummary,
+} from "@/shared/types/customer-financial";
 import type { CustomerEquipment } from "@/shared/types/customer-equipment";
+import {
+  getWarrantyStatus,
+  type WarrantyStatus,
+} from "@/shared/types/customer-equipment";
 import type { Estimate } from "@/shared/types/estimate";
+import { formatCurrency } from "@/shared/types/customer";
 import {
   hasInvoiceUnpaidBalance,
-  isActiveInvoice,
   roundCurrency,
   type Invoice,
 } from "@/shared/types/invoice";
-import type { InvoicePayment } from "@/shared/types/invoice-payment";
 import type { Job } from "@/shared/types/job";
+import type { OperationalActivity } from "@/shared/types/operational-activity";
 
 export const CUSTOMER_360_RECORD_LIMIT = 500;
+export const CUSTOMER_360_ACTIVITY_LIMIT = 10;
+export const CUSTOMER_360_EQUIPMENT_PREVIEW_LIMIT = 5;
+export const CUSTOMER_360_NO_RECENT_SERVICE_DAYS = 180;
+export const CUSTOMER_360_AGING_EQUIPMENT_YEARS = 10;
 
 const CUSTOMER_360_TRUNCATION_MESSAGE =
-  "Some metrics may be incomplete for customers with more than 500 jobs, estimates, or invoices.";
-
-export type Customer360HealthStatus =
-  | "healthy"
-  | "attention_needed"
-  | "opportunity"
-  | "at_risk";
+  "Only the 500 most recent jobs, estimates, and invoices are included. Financial totals and opportunities may omit older records.";
 
 export type Customer360OpportunityType =
-  | "open_estimate_follow_up"
-  | "inactive_customer"
-  | "maintenance_opportunity"
-  | "repeat_repair_opportunity"
-  | "outstanding_balance";
+  | "outstanding_balance"
+  | "open_or_expired_estimate"
+  | "unscheduled_or_open_job"
+  | "aging_equipment"
+  | "no_recent_service";
 
 export type Customer360OpportunitySeverity = "info" | "warning" | "critical";
 
@@ -47,39 +57,73 @@ export type Customer360Opportunity = {
   href?: string;
 };
 
-export type Customer360Snapshot = {
-  summary: {
-    lifetimeRevenue: number;
-    lastCompletedJob: Job | null;
-    openEstimateCount: number;
-    openEstimateTotal: number;
-    outstandingBalance: number;
-    equipmentCount: number;
-  };
-  health: {
-    status: Customer360HealthStatus;
-    reasons: string[];
-  };
+export type Customer360IdentitySummary = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  company?: string;
+  status: CustomerStatus;
+  statusLabel: string;
+  lifecycleState: ReturnType<typeof getCustomerLifecycleState>;
+  addressLine: string;
+  tags: string[];
+  customerSince: string;
+};
+
+export type Customer360FinancialSnapshot = CustomerFinancialSummary;
+
+export type Customer360EquipmentItem = {
+  id: string;
+  name: string;
+  equipmentType?: string;
+  installDate?: string;
+  warrantyStatus: WarrantyStatus;
+};
+
+export type Customer360EquipmentSnapshot = {
+  totalCount: number;
+  activeCount: number;
+  agingCount: number;
+  items: Customer360EquipmentItem[];
+};
+
+export type Customer360Data = {
+  identity: Customer360IdentitySummary;
+  financial: Customer360FinancialSnapshot | null;
+  equipment: Customer360EquipmentSnapshot;
   opportunities: Customer360Opportunity[];
+  recentActivity: OperationalActivity[];
   limitations: string[];
 };
 
-type Customer360Input = {
+type Customer360BuildInput = {
+  customer: Customer;
   jobs: Job[];
   estimates: Estimate[];
   invoices: Invoice[];
   equipment: CustomerEquipment[];
-  payments: InvoicePayment[];
+  activities: OperationalActivity[];
+  includeBilling: boolean;
 };
 
-const OPPORTUNITY_SEVERITY_RANK: Record<
-  Customer360OpportunitySeverity,
-  number
-> = {
-  critical: 0,
-  warning: 1,
-  info: 2,
+export type Customer360PreloadedData = {
+  customer?: Customer;
+  jobs?: Job[];
+  estimates?: Estimate[];
+  invoices?: Invoice[];
+  equipment?: CustomerEquipment[];
+  activities?: OperationalActivity[];
+  includeBilling?: boolean;
 };
+
+const OPPORTUNITY_TYPE_ORDER: Customer360OpportunityType[] = [
+  "outstanding_balance",
+  "open_or_expired_estimate",
+  "unscheduled_or_open_job",
+  "aging_equipment",
+  "no_recent_service",
+];
 
 function normalizeMoney(value: number | null | undefined): number {
   return Number.isFinite(value) ? value! : 0;
@@ -146,7 +190,10 @@ function getCompletedJobs(jobs: Job[]): Job[] {
     });
 }
 
-function daysSinceLastCompletedJob(jobs: Job[], reference = new Date()): number | null {
+function daysSinceLastCompletedJob(
+  jobs: Job[],
+  reference = new Date(),
+): number | null {
   const lastCompleted = getCompletedJobs(jobs)[0];
   const completionDate = lastCompleted
     ? resolveJobCompletionDate(lastCompleted)
@@ -168,150 +215,152 @@ function isOpenEstimate(estimate: Estimate): boolean {
     return false;
   }
 
-  if (["approved", "declined", "converted", "cancelled"].includes(estimate.status)) {
+  return getEstimateWorkflowGroup(estimate.status) === "needs_action";
+}
+
+function isExpiredByValidUntil(
+  estimate: Estimate,
+  reference = new Date(),
+): boolean {
+  if (!estimate.validUntil?.trim()) {
     return false;
   }
 
-  return (
-    getEstimateWorkflowGroup(estimate.status) === "needs_action" ||
-    estimate.status === "draft" ||
-    estimate.status === "sent"
+  const validUntil = parseDateOnly(estimate.validUntil);
+  if (!validUntil) {
+    return false;
+  }
+
+  const today = parseDateOnly(
+    `${reference.getFullYear()}-${String(reference.getMonth() + 1).padStart(2, "0")}-${String(reference.getDate()).padStart(2, "0")}`,
   );
+
+  if (!today) {
+    return false;
+  }
+
+  return validUntil < today;
+}
+
+function isExpiredEstimate(estimate: Estimate): boolean {
+  return isOpenEstimate(estimate) && isExpiredByValidUntil(estimate);
 }
 
 function resolveEstimateAgeDate(estimate: Estimate): string {
   return estimate.sentAt ?? estimate.createdAt;
 }
 
-function isRepairOrServiceJob(job: Job): boolean {
-  const jobType = job.jobType.trim().toLowerCase();
-  if (!jobType) {
+function isOpenJob(job: Job): boolean {
+  return job.status !== "completed" && job.status !== "cancelled";
+}
+
+function resolveEquipmentWarrantyStatus(
+  warrantyExpiresAt: string | undefined,
+): WarrantyStatus {
+  if (!warrantyExpiresAt?.trim()) {
+    return "none";
+  }
+
+  if (!parseDateOnly(warrantyExpiresAt)) {
+    return "none";
+  }
+
+  return getWarrantyStatus(warrantyExpiresAt);
+}
+
+function compareOpenJobs(left: Job, right: Job): number {
+  const leftUnassigned = left.assignedTechnicianId ? 1 : 0;
+  const rightUnassigned = right.assignedTechnicianId ? 1 : 0;
+
+  if (leftUnassigned !== rightUnassigned) {
+    return leftUnassigned - rightUnassigned;
+  }
+
+  return (right.scheduledDate ?? "").localeCompare(left.scheduledDate ?? "");
+}
+
+function isAgingEquipmentItem(
+  item: CustomerEquipment,
+  reference = new Date(),
+): boolean {
+  if (!item.isActive) {
     return false;
   }
 
-  return /repair|service|maintenance|diagnostic|tune-?up|fix/.test(jobType);
-}
+  const warrantyStatus = resolveEquipmentWarrantyStatus(item.warrantyExpiresAt);
+  if (warrantyStatus === "expired") {
+    return true;
+  }
 
-function hasOverdueOutstandingBalance(invoices: Invoice[]): boolean {
-  return invoices.some(
-    (invoice) =>
-      isActiveInvoice(invoice) &&
-      invoice.status === "overdue" &&
-      invoice.balanceDue > 0,
-  );
-}
+  if (!item.installDate) {
+    return false;
+  }
 
-function hasOutstandingBalance(invoices: Invoice[]): boolean {
-  return invoices.some(
-    (invoice) => isActiveInvoice(invoice) && invoice.balanceDue > 0,
-  );
-}
+  const installDate = parseDateOnly(item.installDate);
+  if (!installDate) {
+    return false;
+  }
 
-function countRepairServiceJobsInLastYear(
-  jobs: Job[],
-  reference = new Date(),
-): number {
   const cutoff = new Date(reference);
-  cutoff.setDate(cutoff.getDate() - 365);
-
-  return jobs.filter((job) => {
-    if (job.status !== "completed" || !isRepairOrServiceJob(job)) {
-      return false;
-    }
-
-    const completionDate = resolveJobCompletionDate(job);
-    if (!completionDate) {
-      return false;
-    }
-
-    const parsed = parseDateOnly(completionDate);
-    return parsed != null && parsed >= cutoff;
-  }).length;
+  cutoff.setFullYear(cutoff.getFullYear() - CUSTOMER_360_AGING_EQUIPMENT_YEARS);
+  return installDate <= cutoff;
 }
 
-function resolveHealthStatus(input: {
-  lifetimeRevenue: number;
-  daysSinceLastCompleted: number | null;
-  hasOverdueBalance: boolean;
-  hasOutstandingBalance: boolean;
-  hasStaleOpenEstimate: boolean;
-  hasOpenEstimate: boolean;
-  hasEquipmentServiceGap: boolean;
-  hasRepeatRepairPattern: boolean;
-  isInactiveCustomer: boolean;
-}): { status: Customer360HealthStatus; reasons: string[] } {
-  const reasons: string[] = [];
+function buildIdentitySummary(customer: Customer): Customer360IdentitySummary {
+  return {
+    id: customer.id,
+    name: customer.name,
+    email: customer.email,
+    phone: customer.phone,
+    company: customer.company,
+    status: customer.status,
+    statusLabel: formatCustomerStatusLabel(customer.status),
+    lifecycleState: getCustomerLifecycleState(customer),
+    addressLine: `${customer.address}, ${customer.city}, ${customer.state} ${customer.zip}`,
+    tags: customer.tags,
+    customerSince: customer.createdAt,
+  };
+}
 
-  const isAtRisk =
-    input.hasOverdueBalance ||
-    (input.lifetimeRevenue > 0 &&
-      (input.daysSinceLastCompleted == null || input.daysSinceLastCompleted >= 365));
+function buildEquipmentSnapshot(
+  equipment: CustomerEquipment[],
+): Customer360EquipmentSnapshot {
+  const activeEquipment = equipment.filter((item) => item.isActive);
+  const agingEquipment = activeEquipment.filter((item) =>
+    isAgingEquipmentItem(item),
+  );
+  const previewItems = activeEquipment
+    .slice(0, CUSTOMER_360_EQUIPMENT_PREVIEW_LIMIT)
+    .map(
+      (item): Customer360EquipmentItem => ({
+        id: item.id,
+        name: item.name,
+        equipmentType: item.equipmentType,
+        installDate: item.installDate,
+        warrantyStatus: resolveEquipmentWarrantyStatus(item.warrantyExpiresAt),
+      }),
+    );
 
-  if (isAtRisk) {
-    if (input.hasOverdueBalance) {
-      reasons.push("Overdue invoice balance");
-    }
-    if (
-      input.lifetimeRevenue > 0 &&
-      (input.daysSinceLastCompleted == null || input.daysSinceLastCompleted >= 365)
-    ) {
-      reasons.push("No completed work in 12+ months despite prior revenue");
-    }
-
-    return { status: "at_risk", reasons };
-  }
-
-  const needsAttention =
-    input.hasOutstandingBalance || input.hasStaleOpenEstimate;
-
-  if (needsAttention) {
-    if (input.hasOutstandingBalance) {
-      reasons.push("Outstanding invoice balance");
-    }
-    if (input.hasStaleOpenEstimate) {
-      reasons.push("Open estimate waiting 7+ days");
-    }
-
-    return { status: "attention_needed", reasons };
-  }
-
-  const hasOpportunity =
-    input.hasOpenEstimate ||
-    input.hasEquipmentServiceGap ||
-    input.hasRepeatRepairPattern ||
-    input.isInactiveCustomer;
-
-  if (hasOpportunity) {
-    if (input.hasOpenEstimate) {
-      reasons.push("Open estimate ready for follow-up");
-    }
-    if (input.hasEquipmentServiceGap) {
-      reasons.push("Equipment on file without recent service");
-    }
-    if (input.hasRepeatRepairPattern) {
-      reasons.push("Repeat repair pattern in the last year");
-    }
-    if (input.isInactiveCustomer) {
-      reasons.push("No completed work in 6+ months");
-    }
-
-    return { status: "opportunity", reasons };
-  }
-
-  return { status: "healthy", reasons: ["No active risks or follow-ups"] };
+  return {
+    totalCount: equipment.length,
+    activeCount: activeEquipment.length,
+    agingCount: agingEquipment.length,
+    items: previewItems,
+  };
 }
 
 function buildOpportunities(input: {
+  includeBilling: boolean;
   openEstimates: Estimate[];
+  expiredEstimates: Estimate[];
+  openJobs: Job[];
+  agingEquipmentCount: number;
   daysSinceLastCompleted: number | null;
-  activeEquipmentCount: number;
-  repairServiceJobCountLastYear: number;
   unpaidInvoices: Invoice[];
-  healthStatus: Customer360HealthStatus;
 }): Customer360Opportunity[] {
   const opportunities: Customer360Opportunity[] = [];
 
-  if (input.unpaidInvoices.length > 0) {
+  if (input.includeBilling && input.unpaidInvoices.length > 0) {
     const overdueCount = input.unpaidInvoices.filter(
       (invoice) => invoice.status === "overdue",
     ).length;
@@ -324,7 +373,7 @@ function buildOpportunities(input: {
 
     opportunities.push({
       type: "outstanding_balance",
-      title: "Collect outstanding balance",
+      title: "Outstanding balance",
       description:
         overdueCount > 0
           ? `${formatCurrency(balance)} due across ${input.unpaidInvoices.length} invoice${input.unpaidInvoices.length === 1 ? "" : "s"} (${overdueCount} overdue).`
@@ -334,68 +383,94 @@ function buildOpportunities(input: {
     });
   }
 
-  if (input.openEstimates.length > 0) {
-    const sorted = [...input.openEstimates].sort((left, right) =>
-      resolveEstimateAgeDate(left).localeCompare(resolveEstimateAgeDate(right)),
+  if (input.includeBilling) {
+    const expiredEstimates = input.expiredEstimates;
+    const openEstimates = input.openEstimates.filter(
+      (estimate) => !isExpiredByValidUntil(estimate),
     );
-    const oldest = sorted[0]!;
-    const total = roundCurrency(
-      input.openEstimates.reduce(
-        (sum, estimate) => sum + normalizeMoney(estimate.total),
-        0,
-      ),
-    );
+    const estimateSignals = [...openEstimates, ...expiredEstimates];
+    if (estimateSignals.length > 0) {
+      const sorted = [...estimateSignals].sort((left, right) =>
+        resolveEstimateAgeDate(left).localeCompare(resolveEstimateAgeDate(right)),
+      );
+      const primary = sorted[0]!;
+      const openCount = openEstimates.length;
+      const expiredCount = expiredEstimates.length;
+      const total = roundCurrency(
+        estimateSignals.reduce(
+          (sum, estimate) => sum + normalizeMoney(estimate.total),
+          0,
+        ),
+      );
+
+      let description = "";
+      if (openCount > 0 && expiredCount > 0) {
+        description = `${openCount} open and ${expiredCount} expired estimate${expiredCount === 1 ? "" : "s"} (${formatCurrency(total)} total).`;
+      } else if (expiredCount > 0) {
+        description =
+          expiredCount === 1
+            ? `${primary.estimateNumber} expired (${formatCurrency(total)}).`
+            : `${expiredCount} expired estimates (${formatCurrency(total)} total).`;
+      } else {
+        description =
+          openCount === 1
+            ? `${primary.estimateNumber} is awaiting a decision (${formatCurrency(total)}).`
+            : `${openCount} estimates are still open (${formatCurrency(total)} total).`;
+      }
+
+      opportunities.push({
+        type: "open_or_expired_estimate",
+        title: "Open or expired estimate",
+        description,
+        severity: expiredCount > 0 ? "warning" : "info",
+        href: `/estimates/${primary.id}`,
+      });
+    }
+  }
+
+  if (input.openJobs.length > 0) {
+    const unassignedCount = input.openJobs.filter(
+      (job) => !job.assignedTechnicianId,
+    ).length;
+    const primary = input.openJobs[0]!;
 
     opportunities.push({
-      type: "open_estimate_follow_up",
-      title: "Follow up on open estimate",
+      type: "unscheduled_or_open_job",
+      title: "Unscheduled or open job",
       description:
-        input.openEstimates.length === 1
-          ? `${oldest.estimateNumber} is still awaiting a decision (${formatCurrency(total)}).`
-          : `${input.openEstimates.length} estimates are still open (${formatCurrency(total)} total).`,
+        unassignedCount > 0
+          ? `${input.openJobs.length} open job${input.openJobs.length === 1 ? "" : "s"} (${unassignedCount} unassigned).`
+          : `${input.openJobs.length} open job${input.openJobs.length === 1 ? "" : "s"} in progress or awaiting completion.`,
+      severity: unassignedCount > 0 ? "warning" : "info",
+      href: `/jobs/${primary.id}`,
+    });
+  }
+
+  if (input.agingEquipmentCount > 0) {
+    opportunities.push({
+      type: "aging_equipment",
+      title: "Aging equipment",
+      description: `${input.agingEquipmentCount} active equipment record${input.agingEquipmentCount === 1 ? "" : "s"} with expired warranty or ${CUSTOMER_360_AGING_EQUIPMENT_YEARS}+ year install age.`,
       severity: "info",
-      href: `/estimates/${oldest.id}`,
     });
   }
 
   if (
     input.daysSinceLastCompleted != null &&
-    input.daysSinceLastCompleted >= 180 &&
-    input.healthStatus !== "at_risk"
+    input.daysSinceLastCompleted >= CUSTOMER_360_NO_RECENT_SERVICE_DAYS
   ) {
     opportunities.push({
-      type: "inactive_customer",
-      title: "Re-engage inactive customer",
+      type: "no_recent_service",
+      title: "No recent service",
       description: `No completed jobs in ${input.daysSinceLastCompleted} days.`,
-      severity: "warning",
-    });
-  }
-
-  if (
-    input.activeEquipmentCount > 0 &&
-    (input.daysSinceLastCompleted == null || input.daysSinceLastCompleted >= 180)
-  ) {
-    opportunities.push({
-      type: "maintenance_opportunity",
-      title: "Maintenance opportunity",
-      description: `${input.activeEquipmentCount} active equipment record${input.activeEquipmentCount === 1 ? "" : "s"} with no recent service.`,
-      severity: "info",
-    });
-  }
-
-  if (input.repairServiceJobCountLastYear >= 2) {
-    opportunities.push({
-      type: "repeat_repair_opportunity",
-      title: "Repeat repair pattern",
-      description: `${input.repairServiceJobCountLastYear} repair or service jobs completed in the last 12 months.`,
       severity: "warning",
     });
   }
 
   return opportunities.sort(
     (left, right) =>
-      OPPORTUNITY_SEVERITY_RANK[left.severity] -
-      OPPORTUNITY_SEVERITY_RANK[right.severity],
+      OPPORTUNITY_TYPE_ORDER.indexOf(left.type) -
+      OPPORTUNITY_TYPE_ORDER.indexOf(right.type),
   );
 }
 
@@ -412,100 +487,88 @@ function resolveCustomer360Limitations(input: {
   return hitLimit ? [CUSTOMER_360_TRUNCATION_MESSAGE] : [];
 }
 
-export type Customer360PreloadedData = {
-  jobs?: Job[];
-  estimates?: Estimate[];
-  invoices?: Invoice[];
-  equipment?: CustomerEquipment[];
-};
-
-export function buildCustomer360Snapshot(
-  input: Customer360Input,
-): Customer360Snapshot {
-  const completedJobs = getCompletedJobs(input.jobs);
-  const lastCompletedJob = completedJobs[0] ?? null;
-  const daysSinceLastCompleted = daysSinceLastCompletedJob(input.jobs);
+export function buildCustomer360Data(input: Customer360BuildInput): Customer360Data {
   const openEstimates = input.estimates.filter(isOpenEstimate);
-  const openEstimateTotal = roundCurrency(
-    openEstimates.reduce(
-      (sum, estimate) => sum + normalizeMoney(estimate.total),
-      0,
-    ),
-  );
-  const activeEquipment = input.equipment.filter((item) => item.isActive);
-  const financialSummary = computeCustomerFinancialSummary(input.invoices);
-  const lifetimeRevenue = sumCollectedRevenue(input.payments);
+  const expiredEstimates = input.estimates.filter(isExpiredEstimate);
+  const openJobs = input.jobs.filter(isOpenJob).sort(compareOpenJobs);
+  const daysSinceLastCompleted = daysSinceLastCompletedJob(input.jobs);
+  const equipmentSnapshot = buildEquipmentSnapshot(input.equipment);
   const unpaidInvoices = input.invoices
     .filter(hasInvoiceUnpaidBalance)
     .sort((left, right) => right.balanceDue - left.balanceDue);
-  const staleOpenEstimate = openEstimates.some(
-    (estimate) => daysSinceDate(resolveEstimateAgeDate(estimate)) >= 7,
-  );
-  const repairServiceJobCountLastYear = countRepairServiceJobsInLastYear(
-    input.jobs,
-  );
 
-  const health = resolveHealthStatus({
-    lifetimeRevenue,
-    daysSinceLastCompleted,
-    hasOverdueBalance: hasOverdueOutstandingBalance(input.invoices),
-    hasOutstandingBalance: hasOutstandingBalance(input.invoices),
-    hasStaleOpenEstimate: staleOpenEstimate,
-    hasOpenEstimate: openEstimates.length > 0,
-    hasEquipmentServiceGap:
-      activeEquipment.length > 0 &&
-      (daysSinceLastCompleted == null || daysSinceLastCompleted >= 180),
-    hasRepeatRepairPattern: repairServiceJobCountLastYear >= 2,
-    isInactiveCustomer:
-      daysSinceLastCompleted != null && daysSinceLastCompleted >= 180,
-  });
+  const financial = input.includeBilling
+    ? computeCustomerFinancialSummary(input.invoices)
+    : null;
 
   const opportunities = buildOpportunities({
+    includeBilling: input.includeBilling,
     openEstimates,
+    expiredEstimates,
+    openJobs,
+    agingEquipmentCount: equipmentSnapshot.agingCount,
     daysSinceLastCompleted,
-    activeEquipmentCount: activeEquipment.length,
-    repairServiceJobCountLastYear,
     unpaidInvoices,
-    healthStatus: health.status,
   });
 
   return {
-    summary: {
-      lifetimeRevenue,
-      lastCompletedJob,
-      openEstimateCount: openEstimates.length,
-      openEstimateTotal,
-      outstandingBalance: financialSummary.outstandingBalance,
-      equipmentCount: activeEquipment.length,
-    },
-    health,
+    identity: buildIdentitySummary(input.customer),
+    financial,
+    equipment: equipmentSnapshot,
     opportunities,
+    recentActivity: input.activities.slice(0, CUSTOMER_360_ACTIVITY_LIMIT),
     limitations: resolveCustomer360Limitations(input),
   };
 }
 
-export async function loadCustomer360Snapshot(
+export async function getCustomer360Data(
   companyId: string,
   customerId: string,
   preloaded?: Customer360PreloadedData,
-): Promise<Customer360Snapshot> {
-  const [jobs, estimates, invoices, equipment, payments] = await Promise.all([
+): Promise<Customer360Data | null> {
+  const includeBilling = preloaded?.includeBilling ?? true;
+
+  const customer =
+    preloaded?.customer ?? (await getCustomerById(companyId, customerId));
+
+  if (!customer) {
+    return null;
+  }
+
+  const [jobs, estimates, invoices, equipment, activities] = await Promise.all([
     preloaded?.jobs ??
       listJobsByCustomer(companyId, customerId, CUSTOMER_360_RECORD_LIMIT),
-    preloaded?.estimates ??
-      listEstimatesByCustomer(companyId, customerId, CUSTOMER_360_RECORD_LIMIT),
-    preloaded?.invoices ??
-      listInvoicesByCustomer(companyId, customerId, CUSTOMER_360_RECORD_LIMIT),
+    includeBilling
+      ? preloaded?.estimates ??
+        listEstimatesByCustomer(
+          companyId,
+          customerId,
+          CUSTOMER_360_RECORD_LIMIT,
+        )
+      : Promise.resolve([]),
+    includeBilling
+      ? preloaded?.invoices ??
+        listInvoicesByCustomer(
+          companyId,
+          customerId,
+          CUSTOMER_360_RECORD_LIMIT,
+        )
+      : Promise.resolve([]),
     preloaded?.equipment ??
       listCustomerEquipment(companyId, customerId, { includeInactive: true }),
-    listInvoicePaymentsForCustomer(companyId, customerId),
+    preloaded?.activities ??
+      listOperationalActivitiesForCustomer(companyId, customerId, {
+        includeBillingActivities: includeBilling,
+      }),
   ]);
 
-  return buildCustomer360Snapshot({
+  return buildCustomer360Data({
+    customer,
     jobs,
     estimates,
     invoices,
     equipment,
-    payments,
+    activities,
+    includeBilling,
   });
 }

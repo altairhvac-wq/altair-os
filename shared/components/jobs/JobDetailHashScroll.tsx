@@ -3,28 +3,37 @@
 import { useEffect } from "react";
 
 /**
- * Scrolls to in-page hash targets on job detail (e.g. profitability section).
+ * Scrolls to in-page hash targets inside admin detail pages.
  */
 export function JobDetailHashScroll() {
   useEffect(() => {
-    const hash = window.location.hash;
+    let frame = 0;
 
-    if (!hash || hash.length <= 1) {
-      return;
-    }
+    const scrollToHashTarget = () => {
+      const hash = window.location.hash;
 
-    const targetId = decodeURIComponent(hash.slice(1));
-    const element = document.getElementById(targetId);
+      if (!hash || hash.length <= 1) {
+        return;
+      }
 
-    if (!element) {
-      return;
-    }
+      const targetId = decodeURIComponent(hash.slice(1));
+      const element = document.getElementById(targetId);
 
-    const frame = window.requestAnimationFrame(() => {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+      if (!element) {
+        return;
+      }
+
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    };
+
+    scrollToHashTarget();
+    window.addEventListener("hashchange", scrollToHashTarget);
 
     return () => {
+      window.removeEventListener("hashchange", scrollToHashTarget);
       window.cancelAnimationFrame(frame);
     };
   }, []);
