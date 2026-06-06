@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Check, Sparkles } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
+import { SeeAltairInActionSection } from "@/shared/components/marketing/SeeAltairInActionSection";
 
 const PLANS = [
   {
@@ -186,6 +187,10 @@ export function PricingPageView() {
               ))}
             </ul>
           </div>
+        </div>
+
+        <div className="auth-hero-enter mx-auto mt-16 max-w-5xl">
+          <SeeAltairInActionSection variant="light" />
         </div>
 
         <section className="auth-hero-enter mx-auto mt-16 max-w-3xl text-center">

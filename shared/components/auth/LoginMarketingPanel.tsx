@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
+import { SeeAltairInActionSection } from "@/shared/components/marketing/SeeAltairInActionSection";
 
 export const LOGIN_HERO_TITLE =
   "Run Your Entire Service Business From One Platform";
@@ -221,11 +222,15 @@ export function LoginMarketingPanel() {
           <PricingTeaser />
         </div>
 
-        <div className="auth-hero-enter mt-5 min-h-0 flex-1 pb-2">
+        <div className="auth-hero-enter mt-5 shrink-0">
           <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
             Platform highlights
           </p>
           <FeatureGrid />
+        </div>
+
+        <div className="auth-hero-enter mt-8 min-h-0 flex-1 pb-2 xl:mt-10">
+          <SeeAltairInActionSection variant="dark" />
         </div>
 
         <div className="auth-panel-enter mt-6 shrink-0 border-t border-[#D4AF37]/15 pt-6">
@@ -272,6 +277,10 @@ export function LoginMobileMarketing() {
               Platform highlights
             </p>
             <FeatureGrid compact />
+          </div>
+
+          <div className="mt-6">
+            <SeeAltairInActionSection variant="dark" compact />
           </div>
 
           <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
