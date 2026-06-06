@@ -86,6 +86,9 @@ type AuthShellProps = {
   children: ReactNode;
   aboveCard?: ReactNode;
   footer?: ReactNode;
+  belowFooter?: ReactNode;
+  heroPanel?: ReactNode;
+  formAnchorId?: string;
   variant?: "default" | "onboarding";
   onboardingStep?: {
     current: number;
@@ -297,13 +300,16 @@ export function AuthShell({
   children,
   aboveCard,
   footer,
+  belowFooter,
+  heroPanel,
+  formAnchorId,
   variant = "default",
   onboardingStep,
 }: AuthShellProps) {
   return (
     <div className="flex min-h-dvh flex-col bg-stone-50 lg:h-dvh lg:flex-row lg:overflow-hidden">
       <div className="hidden min-h-0 flex-1 lg:flex lg:max-w-[58%]">
-        <AuthHeroPanel />
+        {heroPanel ?? <AuthHeroPanel />}
       </div>
 
       <div className="auth-panel-enter auth-panel-bg relative flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-y-auto bg-gradient-to-br from-[#FAF7F2] via-[#FFFBF7] to-[#EDE8DF]">
@@ -338,13 +344,18 @@ export function AuthShell({
               <div className="mt-4 min-w-0 space-y-4">{aboveCard}</div>
             ) : null}
 
-            <div className="mt-4 rounded-2xl border border-stone-200/80 border-t-[3px] border-t-[#D4AF37]/65 bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] p-5 shadow-[0_4px_8px_rgba(10,10,10,0.06),0_12px_32px_rgba(10,10,10,0.1),0_32px_64px_rgba(154,114,9,0.1),0_0_28px_rgba(212,175,55,0.06)] ring-1 ring-[#D4AF37]/20 sm:p-6">
+            <div
+              id={formAnchorId}
+              className="mt-4 scroll-mt-6 rounded-2xl border border-stone-200/80 border-t-[3px] border-t-[#D4AF37]/65 bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] p-5 shadow-[0_4px_8px_rgba(10,10,10,0.06),0_12px_32px_rgba(10,10,10,0.1),0_32px_64px_rgba(154,114,9,0.1),0_0_28px_rgba(212,175,55,0.06)] ring-1 ring-[#D4AF37]/20 sm:p-6"
+            >
               {children}
             </div>
 
             {footer ? (
               <div className="mt-5 text-center text-sm text-stone-500">{footer}</div>
             ) : null}
+
+            {belowFooter ? <div className="min-w-0">{belowFooter}</div> : null}
 
             <p className="mt-6 hidden text-center text-[11px] tracking-wide text-stone-400 lg:block">
               © {new Date().getFullYear()} Altair · Built for trades and field service

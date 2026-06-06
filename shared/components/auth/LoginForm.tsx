@@ -16,6 +16,10 @@ import {
   AuthSubmitButton,
   AuthLink,
 } from "./AuthShell";
+import {
+  LoginMarketingPanel,
+  LoginMobileMarketing,
+} from "./LoginMarketingPanel";
 
 const initialState: AuthActionState = {};
 
@@ -30,13 +34,21 @@ function LoginFormFields() {
 
   return (
     <AuthShell
-      title="Welcome back"
-      description="Sign in to your command center — dispatch, jobs, and field teams in one place."
+      title="Sign in"
+      description="Welcome back — access dispatch, jobs, customers, and your field teams."
+      heroPanel={<LoginMarketingPanel />}
+      belowFooter={<LoginMobileMarketing />}
+      formAnchorId="sign-in-form"
       footer={
-        <p>
-          New to Altair OS?{" "}
-          <AuthLink href="/signup">Create an account</AuthLink>
-        </p>
+        <div className="space-y-2">
+          <p>
+            New to Altair OS?{" "}
+            <AuthLink href="/signup">Create a free account</AuthLink>
+          </p>
+          <p>
+            <AuthLink href="/pricing">View pricing</AuthLink>
+          </p>
+        </div>
       }
     >
       <form action={formAction} className="space-y-5">
