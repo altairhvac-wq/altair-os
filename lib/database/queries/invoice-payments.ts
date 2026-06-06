@@ -88,6 +88,45 @@ export async function listPaymentsForInvoice(
   return ((data ?? []) as InvoicePaymentRowWithRecorder[]).map(mapPaymentRow);
 }
 
+type InvoicePaymentRowWithCustomerInvoice = InvoicePaymentRowWithRecorder & {
+  invoice: { customer_id: string } | null;
+};
+
+export async function listInvoicePaymentsForCustomer(
+  companyId: string,
+  customerId: string,
+): Promise<InvoicePayment[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("invoice_payments")
+    .select(
+      `
+      *,
+      recorder:profiles!invoice_payments_recorded_by_fkey(full_name, email),
+      invoice:invoices!inner(customer_id)
+    `,
+    )
+    .eq("company_id", companyId)
+    .eq("invoice.customer_id", customerId)
+    .order("payment_date", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[listInvoicePaymentsForCustomer] query failed:", {
+      companyId,
+      customerId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return ((data ?? []) as InvoicePaymentRowWithCustomerInvoice[]).map(
+    mapPaymentRow,
+  );
+}
+
 type InvoicePaymentRowWithInvoice = InvoicePaymentRowWithRecorder & {
   invoice: {
     invoice_number: string;

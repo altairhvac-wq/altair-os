@@ -11,6 +11,10 @@ import { listRecentJobAttachmentsForCustomer } from "@/lib/database/queries/job-
 import { listCustomerEquipment } from "@/lib/database/queries/customer-equipment";
 import { CustomerDetailPageView } from "@/shared/components/customers/CustomerDetailPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
+import {
+  CUSTOMER_360_RECORD_LIMIT,
+  loadCustomer360Snapshot,
+} from "@/shared/lib/customers/customer-360";
 import { computeCustomerFinancialSummary } from "@/shared/types/customer-financial";
 
 type CustomerDetailPageProps = {
@@ -50,10 +54,18 @@ export default async function CustomerDetailPage({
     getCustomerById(companyContext.company.id, customerId),
     listJobsByCustomer(companyContext.company.id, customerId),
     canViewBillingData
-      ? listEstimatesByCustomer(companyContext.company.id, customerId)
+      ? listEstimatesByCustomer(
+          companyContext.company.id,
+          customerId,
+          CUSTOMER_360_RECORD_LIMIT,
+        )
       : Promise.resolve([]),
     canViewBillingData
-      ? listInvoicesByCustomer(companyContext.company.id, customerId)
+      ? listInvoicesByCustomer(
+          companyContext.company.id,
+          customerId,
+          CUSTOMER_360_RECORD_LIMIT,
+        )
       : Promise.resolve([]),
     listOperationalActivitiesForCustomer(companyContext.company.id, customerId, {
       includeBillingActivities: canViewBillingData,
@@ -73,6 +85,14 @@ export default async function CustomerDetailPage({
       : Promise.resolve([]),
     getCustomerDeleteDependencies(companyContext.company.id, customerId),
   ]);
+
+  const customer360 = canViewBillingData
+    ? await loadCustomer360Snapshot(companyContext.company.id, customerId, {
+        estimates,
+        invoices,
+        equipment,
+      })
+    : null;
 
   if (!customer) {
     notFound();
@@ -98,6 +118,7 @@ export default async function CustomerDetailPage({
       canViewBilling={canViewBillingData}
       canViewCompanyExpenses={access.canViewCompanyExpenses}
       financialSummary={financialSummary}
+      customer360={customer360}
       deleteDependencies={deleteDependencies}
     />
   );

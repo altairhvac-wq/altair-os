@@ -5,6 +5,7 @@ import {
   MapPin,
   Tag,
 } from "lucide-react";
+import { Customer360Card } from "./Customer360Card";
 import { CustomerBillingHistorySection } from "./CustomerBillingHistorySection";
 import { CustomerRecentPhotosSection } from "./CustomerRecentPhotosSection";
 import { CustomerRecentReceiptsSection } from "./CustomerRecentReceiptsSection";
@@ -23,6 +24,7 @@ import {
   isCustomerArchived,
   isCustomerDeleted,
 } from "@/shared/lib/customer-lifecycle";
+import type { Customer360Snapshot } from "@/shared/lib/customers/customer-360";
 import type { CustomerFinancialSummary } from "@/shared/types/customer-financial";
 import type { Estimate } from "@/shared/types/estimate";
 import type { Invoice } from "@/shared/types/invoice";
@@ -55,6 +57,7 @@ type CustomerDetailPageViewProps = {
   canViewBilling: boolean;
   canViewCompanyExpenses: boolean;
   financialSummary?: CustomerFinancialSummary;
+  customer360?: Customer360Snapshot | null;
   deleteDependencies: CustomerDeleteDependencies;
 };
 
@@ -73,6 +76,7 @@ export function CustomerDetailPageView({
   canViewBilling,
   canViewCompanyExpenses,
   financialSummary,
+  customer360,
   deleteDependencies,
 }: CustomerDetailPageViewProps) {
   const hasNotes = Boolean(customer.notes?.trim());
@@ -156,6 +160,8 @@ export function CustomerDetailPageView({
           ) : null}
         </div>
       </div>
+
+      {customer360 ? <Customer360Card snapshot={customer360} /> : null}
 
       {hasNotes ? (
         <details className={adminDetailsClass}>

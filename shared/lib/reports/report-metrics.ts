@@ -96,16 +96,17 @@ function paymentsInBounds(
   );
 }
 
+export function sumCollectedRevenue(payments: InvoicePayment[]): number {
+  return roundCurrency(
+    payments.reduce((sum, payment) => sum + payment.amount, 0),
+  );
+}
+
 function collectedRevenueInBounds(
   payments: InvoicePayment[],
   bounds: ProfitabilityReportDateBounds,
 ): number {
-  return roundCurrency(
-    paymentsInBounds(payments, bounds).reduce(
-      (sum, payment) => sum + payment.amount,
-      0,
-    ),
-  );
+  return sumCollectedRevenue(paymentsInBounds(payments, bounds));
 }
 
 function averageTicketInBounds(
