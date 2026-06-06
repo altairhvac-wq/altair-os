@@ -14,6 +14,7 @@ import { useOwnerViewMode } from "@/shared/components/view-mode/useOwnerViewMode
 import { TechnicianBottomNav } from "./TechnicianBottomNav";
 import { TechnicianShellContentLoadingState } from "./TechnicianShellContentLoadingState";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
+import { FounderMarketingDisplayProvider } from "@/shared/components/display/FounderMarketingDisplayContext";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 
 type TechnicianMobileShellProps = {
@@ -21,6 +22,7 @@ type TechnicianMobileShellProps = {
   companyContext: ActiveCompanyContext;
   userCompanies: MembershipWithCompany[];
   unreadNotificationCount?: number;
+  hideDemoPrefixes?: boolean;
 };
 
 export function TechnicianMobileShell({
@@ -28,11 +30,13 @@ export function TechnicianMobileShell({
   companyContext,
   userCompanies,
   unreadNotificationCount = 0,
+  hideDemoPrefixes = false,
 }: TechnicianMobileShellProps) {
   const { isOwner, viewMode, setViewMode, navigationContext, redirectPending } =
     useOwnerViewMode(companyContext);
 
   return (
+    <FounderMarketingDisplayProvider hideDemoPrefixes={hideDemoPrefixes}>
     <CompanyTimezoneProvider timeZone={companyContext.company.timezone}>
       <TechnicianNotificationBadgeProvider
         initialUnreadCount={unreadNotificationCount}
@@ -88,5 +92,6 @@ export function TechnicianMobileShell({
       </div>
     </TechnicianNotificationBadgeProvider>
     </CompanyTimezoneProvider>
+    </FounderMarketingDisplayProvider>
   );
 }

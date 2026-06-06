@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { canCaptureBillingSignature } from "@/lib/database/access-control";
 import { isAiFeaturesEnabled } from "@/lib/ai/env";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { shouldHideDemoPrefixesForDisplay } from "@/lib/database/founder-marketing-display";
+import { formatDemoDisplayName } from "@/shared/lib/demo-display-name";
 import { ensureInvoiceBillingStatesSynced } from "@/lib/database/services/invoice-billing";
 import { listInvoiceActivitiesForInvoice } from "@/lib/database/queries/invoice-activities";
 import { listPaymentsForInvoice } from "@/lib/database/queries/invoice-payments";
@@ -57,6 +59,10 @@ export async function InvoiceDetailRoute({
     "invoice",
   );
   const company = mapCompanyRowToBillingContact(companyContext.company);
+  const displayCustomerName = formatDemoDisplayName(
+    invoice.customerName,
+    shouldHideDemoPrefixesForDisplay(companyContext.user),
+  );
 
   const detailView = (
     <InvoiceDetailPageView
@@ -79,7 +85,7 @@ export async function InvoiceDetailRoute({
     return (
       <InvoiceDetailOverlayShell
         title={invoice.invoiceNumber}
-        subtitle={invoice.customerName}
+        subtitle={displayCustomerName}
         headerAside={<InvoiceStatusBadge status={invoice.status} />}
         headerTrailing={<InvoiceDetailHeaderActions />}
       >

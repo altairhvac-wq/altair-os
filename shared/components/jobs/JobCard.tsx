@@ -4,6 +4,7 @@ import {
   formatScheduledTime,
   type Job,
 } from "@/shared/types/job";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
 
@@ -29,7 +30,7 @@ export function JobCard({ job, compact = false }: JobCardProps) {
             {job.jobNumber}
           </p>
           <h3 className="mt-1 truncate text-base font-bold text-slate-900">
-            {job.customerName}
+            <DemoDisplayName>{job.customerName}</DemoDisplayName>
           </h3>
           <p className="mt-0.5 truncate text-sm text-slate-500">{job.jobType}</p>
         </div>

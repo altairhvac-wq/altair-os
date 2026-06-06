@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { canCaptureBillingSignature } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { shouldHideDemoPrefixesForDisplay } from "@/lib/database/founder-marketing-display";
+import { formatDemoDisplayName } from "@/shared/lib/demo-display-name";
 import { listEstimateActivitiesForEstimate } from "@/lib/database/queries/estimate-activities";
 import { getEstimateById } from "@/lib/database/queries/estimates";
 import { getInvoiceByEstimateId } from "@/lib/database/queries/invoices";
@@ -55,6 +57,10 @@ export async function EstimateDetailRoute({
   }
 
   const company = mapCompanyRowToBillingContact(companyContext.company);
+  const displayCustomerName = formatDemoDisplayName(
+    estimate.customerName,
+    shouldHideDemoPrefixesForDisplay(companyContext.user),
+  );
 
   const detailView = (
     <EstimateDetailPageView
@@ -75,7 +81,7 @@ export async function EstimateDetailRoute({
     return (
       <EstimateDetailOverlayShell
         title={estimate.estimateNumber}
-        subtitle={estimate.customerName}
+        subtitle={displayCustomerName}
         headerAside={<EstimateStatusBadge status={estimate.status} />}
         headerTrailing={<EstimateDetailHeaderActions />}
       >

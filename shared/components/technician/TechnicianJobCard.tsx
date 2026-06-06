@@ -15,6 +15,7 @@ import {
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import type { ServiceItem } from "@/shared/types/service-item";
 import { TechnicianJobFieldDetail } from "./TechnicianJobFieldDetail";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 import {
   technicianFieldActiveCardClass,
@@ -156,7 +157,7 @@ export function TechnicianJobCard({
         />
       ) : (
         <p className="truncate px-2 pb-2 text-sm text-slate-700">
-          {job.customerName}
+          <DemoDisplayName>{job.customerName}</DemoDisplayName>
         </p>
       )}
     </article>

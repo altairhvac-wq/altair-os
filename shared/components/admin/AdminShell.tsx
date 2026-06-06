@@ -16,6 +16,7 @@ import { Header } from "./Header";
 import { shouldHideAdminNavigation } from "./should-hide-admin-navigation";
 import type { Notification } from "@/shared/types/notification";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
+import { FounderMarketingDisplayProvider } from "@/shared/components/display/FounderMarketingDisplayContext";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 
 type AdminShellProps = {
@@ -25,6 +26,7 @@ type AdminShellProps = {
   notifications?: Notification[];
   unreadNotificationCount?: number;
   showPlatformAdminNav?: boolean;
+  hideDemoPrefixes?: boolean;
 };
 
 export function AdminShell({
@@ -34,6 +36,7 @@ export function AdminShell({
   notifications = [],
   unreadNotificationCount = 0,
   showPlatformAdminNav = false,
+  hideDemoPrefixes = false,
 }: AdminShellProps) {
   const pathname = usePathname();
   const isMobile = useMobileViewport();
@@ -52,6 +55,7 @@ export function AdminShell({
   });
 
   return (
+    <FounderMarketingDisplayProvider hideDemoPrefixes={hideDemoPrefixes}>
     <CompanyTimezoneProvider timeZone={companyContext.company.timezone}>
       <div className="admin-canvas admin-shell-canvas flex w-full min-w-0 max-w-full flex-col md:min-h-dvh md:h-dvh md:overflow-hidden">
       <div className="admin-top-shell no-print">
@@ -99,5 +103,6 @@ export function AdminShell({
         <BetaBugReportButton />
       ) : null}
     </CompanyTimezoneProvider>
+    </FounderMarketingDisplayProvider>
   );
 }

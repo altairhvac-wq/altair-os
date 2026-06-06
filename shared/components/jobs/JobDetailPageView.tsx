@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
+import { DemoCustomerInitials } from "@/shared/components/display/DemoCustomerInitials";
 import type { ReactNode } from "react";
 import {
   ArrowLeft,
@@ -10,7 +11,7 @@ import {
   Phone,
   User,
 } from "lucide-react";
-import { getCustomerInitials, type Customer } from "@/shared/types/customer";
+import type { Customer } from "@/shared/types/customer";
 import type { Technician } from "@/shared/types/dispatch";
 import { JobCustomerQuickActions } from "./JobCustomerQuickActions";
 import { JobDetailHeaderSection } from "./JobDetailHeaderSection";
@@ -219,7 +220,7 @@ export function JobDetailPageView({
         </h2>
         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-sm font-bold text-white">
-            {getCustomerInitials(job.customerName)}
+            <DemoCustomerInitials name={job.customerName} />
           </div>
 
           <div className="min-w-0 flex-1">

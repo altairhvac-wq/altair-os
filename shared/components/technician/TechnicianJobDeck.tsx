@@ -9,6 +9,7 @@ import type { TechnicianJob } from "@/shared/types/technician";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import type { ServiceItem } from "@/shared/types/service-item";
 import { TechnicianJobCard } from "./TechnicianJobCard";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 
 const SWIPE_THRESHOLD_PX = 48;
@@ -62,7 +63,9 @@ function TechnicianJobDeckPeekCard({ job }: { job: TechnicianJob }) {
           <p className="truncate text-xs font-semibold text-slate-500">
             {job.jobNumber}
           </p>
-          <p className="truncate text-[11px] text-slate-400">{job.customerName}</p>
+          <p className="truncate text-[11px] text-slate-400">
+            <DemoDisplayName>{job.customerName}</DemoDisplayName>
+          </p>
         </div>
         <TechnicianJobStatusBadge
           status={job.status}

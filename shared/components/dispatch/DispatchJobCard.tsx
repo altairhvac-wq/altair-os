@@ -5,6 +5,7 @@ import {
   formatDispatchTime,
   type DispatchJob,
 } from "@/shared/types/dispatch";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { DispatchPriorityBadge } from "./DispatchPriorityBadge";
 import { DispatchStatusBadge } from "./DispatchStatusBadge";
 
@@ -61,7 +62,7 @@ export const DispatchJobCard = memo(function DispatchJobCard({
               compact ? "text-xs" : "mt-0.5 text-sm"
             }`}
           >
-            {job.customerName}
+            <DemoDisplayName>{job.customerName}</DemoDisplayName>
           </h4>
           {!compact ? (
             <p className="mt-0.5 truncate text-xs text-slate-500">{job.jobType}</p>

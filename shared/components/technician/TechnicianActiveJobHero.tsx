@@ -13,6 +13,7 @@ import {
 } from "@/shared/types/technician";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import { TechnicianJobLaborStatus } from "./TechnicianJobLaborStatus";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 import {
   technicianFieldHomeHeroClass,
@@ -80,7 +81,7 @@ export function TechnicianActiveJobHero({
               ) : null}
             </div>
             <p className="truncate text-[1.65rem] font-bold leading-tight tracking-tight text-slate-900">
-              {job.customerName}
+              <DemoDisplayName>{job.customerName}</DemoDisplayName>
             </p>
             <p className="text-base font-medium text-slate-600">{job.jobType}</p>
             <p className="text-xs font-medium tabular-nums text-slate-400">

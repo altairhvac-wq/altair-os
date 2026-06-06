@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
+import { useFormatDemoDisplayName } from "@/shared/components/display/FounderMarketingDisplayContext";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { isCustomerArchived, isCustomerDeleted } from "@/shared/lib/customer-lifecycle";
 import {
@@ -36,6 +38,7 @@ export function CustomersTable({
   onToggleAllVisible,
 }: CustomersTableProps) {
   const router = useRouter();
+  const formatDisplayName = useFormatDemoDisplayName();
 
   const headerSelection = useMemo(
     () =>
@@ -91,12 +94,12 @@ export function CustomersTable({
               <td className="admin-table-cell">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-400 text-xs font-bold text-white">
-                    {getCustomerInitials(customer.name)}
+                    {getCustomerInitials(formatDisplayName(customer.name))}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="truncate font-semibold text-slate-900">
-                        {customer.name}
+                        <DemoDisplayName>{customer.name}</DemoDisplayName>
                       </p>
                       {isCustomerDeleted(customer) ? (
                         <span className="inline-flex shrink-0 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-800">

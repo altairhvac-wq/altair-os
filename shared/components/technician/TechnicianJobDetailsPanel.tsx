@@ -20,6 +20,7 @@ import {
   type TechnicianJob,
   type TechnicianQuickAction,
 } from "@/shared/types/technician";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 import { TechnicianQuickActions } from "./TechnicianQuickActions";
 
@@ -72,7 +73,9 @@ export function TechnicianJobDetailsPanel({
           <div className="rounded-lg bg-white px-2.5 py-2 text-sm text-slate-700">
             <div className={adminMetaRowClass}>
               <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-              <span className="font-semibold text-slate-900">{job.customerName}</span>
+              <span className="font-semibold text-slate-900">
+                <DemoDisplayName>{job.customerName}</DemoDisplayName>
+              </span>
             </div>
             <div className={`mt-1 ${adminMetaRowClass}`}>
               <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />

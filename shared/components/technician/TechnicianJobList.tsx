@@ -9,6 +9,7 @@ import {
 } from "@/shared/types/technician";
 import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import { TechnicianActiveJobHero } from "./TechnicianActiveJobHero";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 import {
   technicianFieldUpNextMutedLabelClass,
@@ -77,7 +78,7 @@ function TechnicianUpNextJobRow({
       <div className="min-w-0 flex-1 space-y-0.5">
         <div className="flex items-baseline justify-between gap-2">
           <p className="truncate text-sm font-semibold text-slate-800">
-            {job.customerName}
+            <DemoDisplayName>{job.customerName}</DemoDisplayName>
           </p>
           <span className="shrink-0 text-[11px] font-medium tabular-nums text-slate-400">
             {formatTechnicianJobTime(job.scheduledDate)}

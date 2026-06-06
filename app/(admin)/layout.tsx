@@ -3,6 +3,7 @@ import { AdminShell } from "@/shared/components/admin/AdminShell";
 import { shouldUseTechnicianHome } from "@/lib/auth/redirects";
 import { getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext, getUserCompanies } from "@/lib/database/company-context";
+import { shouldHideDemoPrefixesForDisplay } from "@/lib/database/founder-marketing-display";
 import { canAccessPlatformAdmin } from "@/lib/database/platform-admin";
 import {
   getUnreadNotificationCount,
@@ -43,6 +44,7 @@ export default async function AdminLayout({
   ]);
 
   const showPlatformAdminNav = canAccessPlatformAdmin(user);
+  const hideDemoPrefixes = shouldHideDemoPrefixesForDisplay(user);
 
   return (
     <AdminShell
@@ -51,6 +53,7 @@ export default async function AdminLayout({
       notifications={notifications}
       unreadNotificationCount={unreadNotificationCount}
       showPlatformAdminNav={showPlatformAdminNav}
+      hideDemoPrefixes={hideDemoPrefixes}
     >
       {children}
     </AdminShell>

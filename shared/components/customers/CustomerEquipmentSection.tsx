@@ -7,6 +7,7 @@ import {
   setCustomerEquipmentActiveAction,
   updateCustomerEquipmentAction,
 } from "@/app/actions/customer-equipment";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { CustomerEquipmentForm } from "@/shared/components/equipment/CustomerEquipmentForm";
 import {
   EMPTY_CUSTOMER_EQUIPMENT_FORM,
@@ -159,7 +160,9 @@ export function CustomerEquipmentSection({
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-slate-900">{item.name}</p>
+                      <p className="font-semibold text-slate-900">
+                        <DemoDisplayName>{item.name}</DemoDisplayName>
+                      </p>
                       {item.equipmentType ? (
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
                           {item.equipmentType}

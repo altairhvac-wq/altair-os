@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, Loader2, Wrench } from "lucide-react";
 import { listCustomerEquipmentAction } from "@/app/actions/customer-equipment";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { CustomerEquipment } from "@/shared/types/customer-equipment";
 import {
@@ -137,7 +138,9 @@ export function TechnicianJobEquipmentSummary({
             key={item.id}
             className="rounded-lg bg-slate-50/80 px-2.5 py-1.5"
           >
-            <p className="text-sm font-medium text-slate-900">{item.name}</p>
+            <p className="text-sm font-medium text-slate-900">
+              <DemoDisplayName>{item.name}</DemoDisplayName>
+            </p>
             {(item.brand || item.modelNumber || item.location) && (
               <p className="mt-0.5 text-xs text-slate-500">
                 {[item.brand, item.modelNumber, item.location]

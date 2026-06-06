@@ -2,6 +2,7 @@ import type { EstimateDetail } from "@/shared/types/estimate";
 import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact";
 import type { BillingDocumentLayoutVariant } from "@/shared/lib/billing-document-style";
 import { getBillingScopeSummary } from "@/shared/lib/billing-document-scope-summary";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
 import { BillingCollapsibleSection } from "./BillingCollapsibleSection";
 import { BillingLineItemsList } from "./BillingLineItemsList";
@@ -208,7 +209,7 @@ export function EstimateDocumentSection({
         </p>
         <div className="mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 ring-1 ring-slate-100 sm:mt-4 sm:rounded-xl sm:px-5 sm:py-5 print:rounded-none print:border-0 print:bg-white print:px-0 print:py-0 print:ring-0">
           <p className="break-words text-base font-semibold text-slate-900 sm:text-xl print:text-base">
-            {estimate.customerName}
+            <DemoDisplayName>{estimate.customerName}</DemoDisplayName>
           </p>
           {customerEmail || customerPhone ? (
             <div className="mt-1.5 space-y-0.5 text-xs leading-snug text-slate-600 sm:mt-3 sm:space-y-1.5 sm:text-sm sm:leading-relaxed">

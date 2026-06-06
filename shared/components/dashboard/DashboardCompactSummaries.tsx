@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, MapPin } from "lucide-react";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { DashboardOpenPanelButton } from "@/shared/components/dashboard/DashboardOpenPanelButton";
 import { DashboardQueueActionTrigger } from "@/shared/components/dashboard/DashboardQueueActionTrigger";
@@ -518,7 +519,7 @@ export function DashboardCompactBillingSection({
                     {payment.invoiceNumber}
                   </p>
                   <p className="truncate text-[11px] text-slate-500">
-                    {payment.customerName}
+                    <DemoDisplayName>{payment.customerName}</DemoDisplayName>
                   </p>
                 </div>
                 <p className="shrink-0 text-xs font-black text-emerald-700">

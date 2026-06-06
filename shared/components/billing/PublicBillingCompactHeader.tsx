@@ -1,4 +1,5 @@
 import { Building2 } from "lucide-react";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { formatDate } from "@/shared/types/customer";
 import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact";
 
@@ -101,7 +102,9 @@ export function PublicBillingCompactHeader({
         {isCompact ? (
           <p className="break-words text-sm text-slate-700">
             <span className="text-slate-500">{customerLabel} </span>
-            <span className="font-semibold text-slate-900">{customerName}</span>
+            <span className="font-semibold text-slate-900">
+              <DemoDisplayName>{customerName}</DemoDisplayName>
+            </span>
           </p>
         ) : (
           <>
@@ -109,7 +112,7 @@ export function PublicBillingCompactHeader({
               {customerLabel}
             </p>
             <p className="mt-0.5 break-words text-sm font-semibold text-slate-900">
-              {customerName}
+              <DemoDisplayName>{customerName}</DemoDisplayName>
             </p>
           </>
         )}

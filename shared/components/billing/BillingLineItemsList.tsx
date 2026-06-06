@@ -1,3 +1,6 @@
+"use client";
+
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { formatCurrency } from "@/shared/types/customer";
 import { calculateLineItemTotal } from "@/shared/types/estimate";
 import {
@@ -81,7 +84,7 @@ export function BillingLineItemsList({
             >
               <div className="flex items-start justify-between gap-2">
                 <p className="min-w-0 flex-1 break-words text-sm font-semibold text-slate-900">
-                  {item.name}
+                  <DemoDisplayName>{item.name}</DemoDisplayName>
                 </p>
                 <span className="shrink-0 text-sm font-bold tabular-nums text-slate-900">
                   {formatCurrency(
@@ -131,7 +134,9 @@ export function BillingLineItemsList({
                 {items.map((item) => (
                   <tr key={item.id} className={bodyRowClass}>
                     <td className={`${bodyCellClass} align-top text-slate-900`}>
-                      <p className="font-semibold">{item.name}</p>
+                      <p className="font-semibold">
+                        <DemoDisplayName>{item.name}</DemoDisplayName>
+                      </p>
                       {item.description ? (
                         <p className="mt-1 text-sm leading-relaxed text-slate-600">
                           {item.description}
@@ -187,7 +192,7 @@ export function BillingLineItemsList({
               <tr key={item.id} className={bodyRowClass}>
                 <td className={`${bodyCellClass} align-top text-slate-900`}>
                   <p className={isPremiumStyle ? "font-semibold" : "font-medium"}>
-                    {item.name}
+                    <DemoDisplayName>{item.name}</DemoDisplayName>
                   </p>
                   {item.description ? (
                     <p
@@ -245,7 +250,7 @@ export function BillingLineItemsList({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <p className="break-words text-sm font-semibold text-slate-900">
-                {item.name}
+                <DemoDisplayName>{item.name}</DemoDisplayName>
               </p>
               {item.description ? (
                 <p className={descriptionClass(compactDescriptions, false)}>

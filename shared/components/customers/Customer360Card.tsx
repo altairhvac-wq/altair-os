@@ -16,6 +16,7 @@ import type {
 } from "@/shared/lib/customers/customer-360";
 import { filterOperationalActivitiesForBillingAccess } from "@/shared/lib/billing-activity-visibility";
 import { CUSTOMER_DETAIL_360_ANCHOR } from "@/shared/lib/customers/customer-detail-anchors";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { OperationalActivityEntryContent } from "@/shared/components/operational/OperationalActivityEntryContent";
 import {
   adminCardSectionClass,
@@ -92,7 +93,9 @@ function IdentitySection({
       </p>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-semibold text-slate-900">{identity.name}</p>
+          <p className="text-sm font-semibold text-slate-900">
+            <DemoDisplayName>{identity.name}</DemoDisplayName>
+          </p>
           {identity.company ? (
             <p className="text-xs text-slate-600">{identity.company}</p>
           ) : null}
@@ -205,7 +208,7 @@ function EquipmentSection({
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-slate-900">
-                  {item.name}
+                  <DemoDisplayName>{item.name}</DemoDisplayName>
                 </p>
                 <p className="text-[11px] text-slate-500">
                   {item.equipmentType || "Equipment"}

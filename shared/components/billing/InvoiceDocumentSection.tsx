@@ -10,6 +10,7 @@ import { BillingSignatureSection } from "./BillingSignatureSection";
 import type { BillingSignatureCaptureContext } from "./BillingSignatureSection";
 import { BillingTotalsSummary } from "./BillingTotalsSummary";
 import { InvoiceAmountDueHero } from "./InvoiceAmountDueHero";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { InvoiceCompanyHeroHeader } from "./InvoiceCompanyHeroHeader";
 import { InvoiceIdentityCard } from "./InvoiceIdentityCard";
 import { InvoiceNotesBlock } from "./InvoiceNotesBlock";
@@ -176,7 +177,7 @@ export function InvoiceDocumentSection({
         </p>
         <div className="mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 ring-1 ring-slate-100 sm:mt-4 sm:rounded-xl sm:px-5 sm:py-5 print:rounded-none print:border-0 print:bg-white print:px-0 print:py-0 print:ring-0">
           <p className="break-words text-base font-semibold text-slate-900 sm:text-xl print:text-base">
-            {invoice.customerName}
+            <DemoDisplayName>{invoice.customerName}</DemoDisplayName>
           </p>
           {(customerEmail || customerPhone) ? (
             <div className="mt-1.5 space-y-0.5 text-xs leading-snug text-slate-600 sm:mt-3 sm:space-y-1.5 sm:text-sm sm:leading-relaxed">

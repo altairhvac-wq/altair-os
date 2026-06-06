@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Settings2 } from "lucide-react";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import {
   formatEquipmentDate,
   formatWarrantyStatus,
@@ -67,7 +68,7 @@ export function JobCustomerEquipmentSection({
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-sm font-semibold text-slate-900">
-                        {item.name}
+                        <DemoDisplayName>{item.name}</DemoDisplayName>
                       </p>
                       {addedOnJob ? (
                         <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[11px] font-semibold text-cyan-700 ring-1 ring-cyan-600/15">

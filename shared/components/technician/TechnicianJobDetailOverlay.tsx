@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useFormatDemoDisplayName } from "@/shared/components/display/FounderMarketingDisplayContext";
 import { FocusedDocumentOverlay } from "@/shared/components/layout/FocusedDocumentOverlay";
 import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
 import type { JobStatus } from "@/shared/types/job";
@@ -40,6 +41,8 @@ export function TechnicianJobDetailOverlay({
   onJobStatusUpdated,
 }: TechnicianJobDetailOverlayProps) {
   const [closeDisabled, setCloseDisabled] = useState(false);
+  const formatDisplayName = useFormatDemoDisplayName();
+  const displayCustomerName = formatDisplayName(job.customerName);
 
   return (
     <FocusedDocumentOverlay
@@ -47,10 +50,10 @@ export function TechnicianJobDetailOverlay({
       onClose={onClose}
       closeDisabled={closeDisabled}
       closeVariant="back"
-      title={job.customerName}
+      title={displayCustomerName}
       subtitle={`${job.jobNumber} · ${job.jobType}`}
       headerAside={<TechnicianJobStatusBadge status={job.status} />}
-      ariaLabel={`${job.customerName}, job ${job.jobNumber}`}
+      ariaLabel={`${displayCustomerName}, job ${job.jobNumber}`}
     >
       <TechnicianJobFieldDetail
         job={job}

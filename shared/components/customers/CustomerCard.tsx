@@ -1,4 +1,7 @@
+"use client";
+
 import { Mail, MapPin, Phone } from "lucide-react";
+import { useFormatDemoDisplayName } from "@/shared/components/display/FounderMarketingDisplayContext";
 import {
   formatCurrency,
   formatCustomerStatusLabel,
@@ -26,6 +29,8 @@ export function CustomerCard({
   showRevenueStats = true,
   financialSummary,
 }: CustomerCardProps) {
+  const formatDisplayName = useFormatDemoDisplayName();
+  const displayName = formatDisplayName(customer.name);
   const location = `${customer.city}, ${customer.state}`;
   const showFinancialSummary = showRevenueStats && financialSummary != null;
 
@@ -33,13 +38,13 @@ export function CustomerCard({
     <div className={compact ? "space-y-4" : "rounded-xl border border-slate-100 bg-white p-4"}>
       <div className="flex items-start gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-sm font-bold text-white">
-          {getCustomerInitials(customer.name)}
+          {getCustomerInitials(displayName)}
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-base font-bold text-slate-900">
-              {customer.name}
+              {displayName}
             </h3>
             <span
               className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset ${statusStyles[customer.status]}`}

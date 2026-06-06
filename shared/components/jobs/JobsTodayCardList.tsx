@@ -6,6 +6,7 @@ import {
   type Job,
 } from "@/shared/types/job";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
 
@@ -70,7 +71,7 @@ export function JobsTodayCardList({
                     <JobPriorityBadge priority={job.priority} />
                   </div>
                   <p className="mt-1 truncate text-sm font-medium text-slate-900">
-                    {job.customerName}
+                    <DemoDisplayName>{job.customerName}</DemoDisplayName>
                   </p>
                   <p className="mt-0.5 truncate text-xs text-slate-400">
                     {job.assignedTechnician ?? "Unassigned"}

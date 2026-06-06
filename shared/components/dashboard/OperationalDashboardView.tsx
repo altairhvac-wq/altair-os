@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import type { DailyOperationsSummaryHighlight } from "@/shared/types/daily-operations-summary";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { ExpenseStatusBadge } from "@/shared/components/expenses/ExpenseStatusBadge";
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
@@ -820,7 +821,7 @@ function MoneySnapshotSection({ money }: { money: DashboardData["money"] }) {
                       {payment.invoiceNumber}
                     </p>
                     <p className="truncate text-xs text-slate-500">
-                      {payment.customerName}
+                      <DemoDisplayName>{payment.customerName}</DemoDisplayName>
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
@@ -884,7 +885,7 @@ function MoneySnapshotSection({ money }: { money: DashboardData["money"] }) {
                       <EstimateStatusBadge status={estimate.status} />
                     </div>
                     <p className="truncate text-xs text-slate-500">
-                      {estimate.customerName}
+                      <DemoDisplayName>{estimate.customerName}</DemoDisplayName>
                     </p>
                   </div>
                   <p className="shrink-0 text-sm font-black text-slate-900">

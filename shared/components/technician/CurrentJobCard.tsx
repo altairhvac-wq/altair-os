@@ -7,6 +7,7 @@ import {
   type TechnicianJob,
   type TechnicianQuickAction,
 } from "@/shared/types/technician";
+import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 import { TechnicianQuickActions } from "./TechnicianQuickActions";
 
@@ -62,7 +63,7 @@ export function CurrentJobCard({
           <User className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
           <div>
             <p className="text-sm font-medium text-slate-900">
-              {job.customerName}
+              <DemoDisplayName>{job.customerName}</DemoDisplayName>
             </p>
             <p className="text-xs text-slate-500">{job.customerPhone}</p>
           </div>

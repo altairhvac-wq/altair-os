@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { TechnicianMobileShell } from "@/shared/components/technician/TechnicianMobileShell";
 import { getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext, getUserCompanies } from "@/lib/database/company-context";
+import { shouldHideDemoPrefixesForDisplay } from "@/lib/database/founder-marketing-display";
 import { getUnreadNotificationCount } from "@/lib/database/services/notifications";
 import { TECHNICIAN_NOTIFICATION_TYPES } from "@/shared/types/notification";
 
@@ -31,11 +32,14 @@ export default async function TechnicianLayout({
     { types: TECHNICIAN_NOTIFICATION_TYPES },
   );
 
+  const hideDemoPrefixes = shouldHideDemoPrefixesForDisplay(user);
+
   return (
     <TechnicianMobileShell
       companyContext={companyContext}
       userCompanies={userCompanies}
       unreadNotificationCount={unreadNotificationCount}
+      hideDemoPrefixes={hideDemoPrefixes}
     >
       {children}
     </TechnicianMobileShell>
