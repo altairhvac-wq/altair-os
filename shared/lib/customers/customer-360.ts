@@ -5,6 +5,9 @@ import { listInvoicesByCustomer } from "@/lib/database/queries/invoices";
 import { listJobsByCustomer } from "@/lib/database/queries/jobs";
 import { listOperationalActivitiesForCustomer } from "@/lib/database/queries/operational-activities";
 import { getCustomerLifecycleState } from "@/shared/lib/customer-lifecycle";
+import {
+  resolveJobCompletionDate,
+} from "@/shared/lib/customers/customer-operational-stats";
 import { getEstimateLifecycleState } from "@/shared/lib/estimate-lifecycle";
 import { getEstimateWorkflowGroup } from "@/shared/lib/estimate-workflow-list";
 import {
@@ -173,14 +176,6 @@ function daysSinceDate(value: string, reference = new Date()): number {
     0,
     Math.floor((today.getTime() - parsed.getTime()) / (1000 * 60 * 60 * 24)),
   );
-}
-
-function resolveJobCompletionDate(job: Job): string | null {
-  if (job.status !== "completed") {
-    return null;
-  }
-
-  return job.completedAt ?? job.scheduledDate ?? null;
 }
 
 function getCompletedJobs(jobs: Job[]): Job[] {

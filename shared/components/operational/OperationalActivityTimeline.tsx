@@ -25,12 +25,7 @@ import type {
   OperationalActivityEventType,
 } from "@/shared/types/operational-activity";
 import { filterOperationalActivitiesForBillingAccess } from "@/shared/lib/billing-activity-visibility";
-import {
-  formatOperationalActivityAttribution,
-  formatOperationalActivityDetailsForAccess,
-  formatOperationalActivityLabelForAccess,
-  formatOperationalActivityTimestamp,
-} from "@/shared/types/operational-activity";
+import { OperationalActivityEntryContent } from "@/shared/components/operational/OperationalActivityEntryContent";
 
 type OperationalActivityTimelineProps = {
   activities: OperationalActivity[];
@@ -193,11 +188,6 @@ export function OperationalActivityTimeline({
             const Icon =
               WORKFLOW_ICON_OVERRIDES[activity.rawEventType] ??
               ACTIVITY_ICONS[activity.eventType];
-            const details = formatOperationalActivityDetailsForAccess(
-              activity,
-              canViewBilling,
-            );
-            const attribution = formatOperationalActivityAttribution(activity);
             const isLast = index === visibleActivities.length - 1;
 
             return (
@@ -216,30 +206,10 @@ export function OperationalActivityTimeline({
                 </div>
 
                 <div className="min-w-0 flex-1 pt-0.5">
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                    <p className="text-sm font-semibold text-slate-900">
-                      {formatOperationalActivityLabelForAccess(
-                        activity,
-                        canViewBilling,
-                      )}
-                    </p>
-                    <time
-                      dateTime={activity.createdAt}
-                      className="shrink-0 text-xs text-slate-400"
-                    >
-                      {formatOperationalActivityTimestamp(activity.createdAt)}
-                    </time>
-                  </div>
-
-                  {details ? (
-                    <p className="mt-1 text-sm text-slate-600">{details}</p>
-                  ) : null}
-
-                  {attribution ? (
-                    <p className="mt-1.5 text-xs text-slate-500">
-                      {attribution}
-                    </p>
-                  ) : null}
+                  <OperationalActivityEntryContent
+                    activity={activity}
+                    canViewBilling={canViewBilling}
+                  />
                 </div>
               </li>
             );

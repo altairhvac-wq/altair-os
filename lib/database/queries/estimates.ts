@@ -386,18 +386,41 @@ export const listEstimates = cache(async function listEstimates(
   );
 });
 
+export type ListEstimatesByCustomerOptions = {
+  includeArchived?: boolean;
+  includeDeleted?: boolean;
+  limit?: number;
+};
+
 export async function listEstimatesByCustomer(
   companyId: string,
   customerId: string,
-  limit = 5,
+  limitOrOptions: number | ListEstimatesByCustomerOptions = 5,
 ): Promise<Estimate[]> {
   const supabase = await createClient();
+  const options =
+    typeof limitOrOptions === "number"
+      ? { limit: limitOrOptions }
+      : limitOrOptions;
+  const includeArchived = options.includeArchived ?? false;
+  const includeDeleted = options.includeDeleted ?? false;
+  const limit = options.limit ?? 5;
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("estimates")
     .select(ESTIMATE_LIST_SELECT)
     .eq("company_id", companyId)
-    .eq("customer_id", customerId)
+    .eq("customer_id", customerId);
+
+  if (!includeDeleted) {
+    query = query.is("deleted_at", null);
+  }
+
+  if (!includeArchived) {
+    query = query.is("archived_at", null);
+  }
+
+  const { data, error } = await query
     .order("created_at", { ascending: false })
     .limit(limit);
 

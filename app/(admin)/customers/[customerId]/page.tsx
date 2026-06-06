@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { getCompanyAccessScope, canAccessOperationalJobsArea, canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { getCustomerById, getCustomerDeleteDependencies } from "@/lib/database/queries/customers";
+import { getCustomerById, getCustomerDeleteDependencies, getCustomerOperationalStats } from "@/lib/database/queries/customers";
+import { mergeCustomerOperationalStats } from "@/shared/lib/customers/customer-operational-stats";
 import { listEstimatesByCustomer } from "@/lib/database/queries/estimates";
 import { listInvoicesByCustomer } from "@/lib/database/queries/invoices";
 import { listJobsByCustomer } from "@/lib/database/queries/jobs";
@@ -15,7 +16,6 @@ import {
   CUSTOMER_360_RECORD_LIMIT,
   getCustomer360Data,
 } from "@/shared/lib/customers/customer-360";
-import { computeCustomerFinancialSummary } from "@/shared/types/customer-financial";
 
 type CustomerDetailPageProps = {
   params: Promise<{ customerId: string }>;
@@ -41,7 +41,8 @@ export default async function CustomerDetailPage({
   const canViewBillingData = canViewBilling(companyContext);
 
   const [
-    customer,
+    customerRecord,
+    operationalStats,
     jobs,
     estimates,
     invoices,
@@ -52,6 +53,7 @@ export default async function CustomerDetailPage({
     deleteDependencies,
   ] = await Promise.all([
     getCustomerById(companyContext.company.id, customerId),
+    getCustomerOperationalStats(companyContext.company.id, customerId),
     listJobsByCustomer(
       companyContext.company.id,
       customerId,
@@ -90,9 +92,11 @@ export default async function CustomerDetailPage({
     getCustomerDeleteDependencies(companyContext.company.id, customerId),
   ]);
 
-  if (!customer) {
+  if (!customerRecord) {
     notFound();
   }
+
+  const customer = mergeCustomerOperationalStats(customerRecord, operationalStats);
 
   const customer360 = await getCustomer360Data(
     companyContext.company.id,
@@ -113,9 +117,7 @@ export default async function CustomerDetailPage({
     },
   );
 
-  const financialSummary = canViewBillingData
-    ? computeCustomerFinancialSummary(invoices)
-    : undefined;
+  const financialSummary = customer360?.financial ?? undefined;
 
   return (
     <CustomerDetailPageView

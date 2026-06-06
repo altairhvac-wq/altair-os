@@ -15,6 +15,7 @@ import type {
   Customer360Opportunity,
 } from "@/shared/lib/customers/customer-360";
 import { filterOperationalActivitiesForBillingAccess } from "@/shared/lib/billing-activity-visibility";
+import { OperationalActivityEntryContent } from "@/shared/components/operational/OperationalActivityEntryContent";
 import {
   adminCardSectionClass,
   adminEmptyWrapClass,
@@ -26,12 +27,6 @@ import {
   getWarrantyStatusStyles,
 } from "@/shared/types/customer-equipment";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
-import {
-  formatOperationalActivityAttribution,
-  formatOperationalActivityDetailsForAccess,
-  formatOperationalActivityLabelForAccess,
-  formatOperationalActivityTimestamp,
-} from "@/shared/types/operational-activity";
 
 type Customer360CardProps = {
   data: Customer360Data;
@@ -283,49 +278,26 @@ function RecentActivitySection({
 
       {visibleActivities.length > 0 ? (
         <ol className="mt-1.5 space-y-1.5">
-          {visibleActivities.map((activity) => {
-            const label = formatOperationalActivityLabelForAccess(
-              activity,
-              canViewBilling,
-            );
-            const details = formatOperationalActivityDetailsForAccess(
-              activity,
-              canViewBilling,
-            );
-            const attribution = formatOperationalActivityAttribution(activity);
-            const timestamp = formatOperationalActivityTimestamp(
-              activity.createdAt,
-            );
-
-            return (
-              <li
-                key={activity.id}
-                className="rounded-md border border-slate-100 bg-white px-2 py-1.5"
-              >
-                <div className="flex items-start gap-2">
-                  <History className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
-                      <p className="text-sm font-medium text-slate-900">
-                        {label}
-                      </p>
-                      <time className="shrink-0 text-[11px] text-slate-400">
-                        {timestamp}
-                      </time>
-                    </div>
-                    {details ? (
-                      <p className="mt-0.5 text-xs text-slate-600">{details}</p>
-                    ) : null}
-                    {attribution ? (
-                      <p className="mt-0.5 text-[11px] text-slate-400">
-                        {attribution}
-                      </p>
-                    ) : null}
-                  </div>
+          {visibleActivities.map((activity) => (
+            <li
+              key={activity.id}
+              className="rounded-md border border-slate-100 bg-white px-2 py-1.5"
+            >
+              <div className="flex items-start gap-2">
+                <History className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                <div className="min-w-0 flex-1">
+                  <OperationalActivityEntryContent
+                    activity={activity}
+                    canViewBilling={canViewBilling}
+                    labelClassName="text-sm font-medium text-slate-900"
+                    timestampClassName="shrink-0 text-[11px] text-slate-400"
+                    detailsClassName="mt-0.5 text-xs text-slate-600"
+                    attributionClassName="mt-0.5 text-[11px] text-slate-400"
+                  />
                 </div>
-              </li>
-            );
-          })}
+              </div>
+            </li>
+          ))}
         </ol>
       ) : (
         <div className={`mt-1.5 ${adminEmptyWrapClass}`}>

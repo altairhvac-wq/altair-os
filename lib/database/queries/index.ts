@@ -4,10 +4,12 @@ export {
   listUserCompanies,
 } from "../company-context";
 export {
+  applyCustomerOperationalStats,
   createCustomer,
   getCustomerById,
   getCustomerDeleteDependencies,
-  getCustomerFinancialSummary,
+  getCustomerOperationalStats,
+  listCustomerOperationalStatsByCompany,
   listCustomers,
   listArchivedCustomers,
   listDeletedCustomers,

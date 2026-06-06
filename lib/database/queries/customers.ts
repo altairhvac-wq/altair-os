@@ -6,7 +6,6 @@ import type {
   CustomerRow,
   CustomerUpdate,
 } from "@/lib/database/types/core-tables";
-import { listInvoicesByCustomer } from "@/lib/database/queries/invoices";
 import {
   normalizeCustomerStatus,
   type Customer,
@@ -14,9 +13,11 @@ import {
 } from "@/shared/types/customer";
 import type { CustomerDeleteDependencies } from "@/shared/lib/customer-lifecycle";
 import {
-  computeCustomerFinancialSummary,
-  type CustomerFinancialSummary,
-} from "@/shared/types/customer-financial";
+  computeCustomerOperationalStatsFromRecords,
+  type CustomerOperationalStats,
+  mergeCustomerOperationalStats,
+} from "@/shared/lib/customers/customer-operational-stats";
+import { isActiveInvoice, type InvoiceStatus } from "@/shared/types/invoice";
 
 function toDateOnly(value: string): string {
   return value.split("T")[0] ?? value;
@@ -346,12 +347,219 @@ export async function getCustomerById(
   return mapCustomerRowToCustomer(data as CustomerRow);
 }
 
-export async function getCustomerFinancialSummary(
+export async function getCustomerOperationalStats(
   companyId: string,
   customerId: string,
-): Promise<CustomerFinancialSummary> {
-  const invoices = await listInvoicesByCustomer(companyId, customerId);
-  return computeCustomerFinancialSummary(invoices);
+): Promise<CustomerOperationalStats> {
+  const supabase = await createClient();
+
+  const [jobCountResult, completedJobsResult, invoicesResult] =
+    await Promise.all([
+      supabase
+        .from("jobs")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", companyId)
+        .eq("customer_id", customerId)
+        .is("deleted_at", null)
+        .is("archived_at", null),
+      supabase
+        .from("jobs")
+        .select("status, completed_at, scheduled_at")
+        .eq("company_id", companyId)
+        .eq("customer_id", customerId)
+        .eq("status", "completed")
+        .is("deleted_at", null)
+        .is("archived_at", null),
+      supabase
+        .from("invoices")
+        .select("status, amount_paid, total, balance_due")
+        .eq("company_id", companyId)
+        .eq("customer_id", customerId)
+        .is("deleted_at", null)
+        .is("archived_at", null),
+    ]);
+
+  if (jobCountResult.error) {
+    console.error("[getCustomerOperationalStats] job count failed:", {
+      companyId,
+      customerId,
+      code: jobCountResult.error.code,
+      message: jobCountResult.error.message,
+    });
+  }
+
+  if (completedJobsResult.error) {
+    console.error("[getCustomerOperationalStats] completed jobs failed:", {
+      companyId,
+      customerId,
+      code: completedJobsResult.error.code,
+      message: completedJobsResult.error.message,
+    });
+  }
+
+  if (invoicesResult.error) {
+    console.error("[getCustomerOperationalStats] invoices failed:", {
+      companyId,
+      customerId,
+      code: invoicesResult.error.code,
+      message: invoicesResult.error.message,
+    });
+  }
+
+  const completedJobs = (completedJobsResult.data ?? []).map((row) => ({
+    status: row.status as "completed",
+    completedAt: row.completed_at ?? undefined,
+    scheduledDate: row.scheduled_at,
+  }));
+
+  const invoices = (invoicesResult.data ?? [])
+    .filter((row) => isActiveInvoice({ status: row.status }))
+    .map((row) => ({
+      status: row.status as InvoiceStatus,
+      total: Number(row.total),
+      amountPaid: Number(row.amount_paid),
+      balanceDue: Number(row.balance_due),
+    }));
+
+  return computeCustomerOperationalStatsFromRecords({
+    jobCount: jobCountResult.count ?? 0,
+    completedJobs,
+    invoices,
+  });
+}
+
+export async function listCustomerOperationalStatsByCompany(
+  companyId: string,
+): Promise<Map<string, CustomerOperationalStats>> {
+  const supabase = await createClient();
+
+  const [jobsResult, invoicesResult] = await Promise.all([
+    supabase
+      .from("jobs")
+      .select("customer_id, status, completed_at, scheduled_at")
+      .eq("company_id", companyId)
+      .is("deleted_at", null)
+      .is("archived_at", null),
+    supabase
+      .from("invoices")
+      .select("customer_id, status, amount_paid, total, balance_due")
+      .eq("company_id", companyId)
+      .is("deleted_at", null)
+      .is("archived_at", null),
+  ]);
+
+  if (jobsResult.error) {
+    console.error("[listCustomerOperationalStatsByCompany] jobs failed:", {
+      companyId,
+      code: jobsResult.error.code,
+      message: jobsResult.error.message,
+    });
+  }
+
+  if (invoicesResult.error) {
+    console.error(
+      "[listCustomerOperationalStatsByCompany] invoices failed:",
+      {
+        companyId,
+        code: invoicesResult.error.code,
+        message: invoicesResult.error.message,
+      },
+    );
+  }
+
+  const jobsByCustomer = new Map<
+    string,
+    Array<{
+      status: string;
+      completedAt?: string;
+      scheduledDate: string;
+    }>
+  >();
+  const invoicesByCustomer = new Map<
+    string,
+    Array<{
+      status: InvoiceStatus;
+      total: number;
+      amountPaid: number;
+      balanceDue: number;
+    }>
+  >();
+
+  for (const row of jobsResult.data ?? []) {
+    const jobs = jobsByCustomer.get(row.customer_id) ?? [];
+    jobs.push({
+      status: row.status,
+      completedAt: row.completed_at ?? undefined,
+      scheduledDate: row.scheduled_at,
+    });
+    jobsByCustomer.set(row.customer_id, jobs);
+  }
+
+  for (const row of invoicesResult.data ?? []) {
+    if (!isActiveInvoice({ status: row.status })) {
+      continue;
+    }
+
+    const invoices = invoicesByCustomer.get(row.customer_id) ?? [];
+    invoices.push({
+      status: row.status as InvoiceStatus,
+      total: Number(row.total),
+      amountPaid: Number(row.amount_paid),
+      balanceDue: Number(row.balance_due),
+    });
+    invoicesByCustomer.set(row.customer_id, invoices);
+  }
+
+  const statsByCustomer = new Map<string, CustomerOperationalStats>();
+  const customerIds = new Set([
+    ...jobsByCustomer.keys(),
+    ...invoicesByCustomer.keys(),
+  ]);
+
+  for (const customerId of customerIds) {
+    const jobs = jobsByCustomer.get(customerId) ?? [];
+    const completedJobs = jobs
+      .filter((job) => job.status === "completed")
+      .map((job) => ({
+        status: "completed" as const,
+        completedAt: job.completedAt,
+        scheduledDate: job.scheduledDate,
+      }));
+
+    statsByCustomer.set(
+      customerId,
+      computeCustomerOperationalStatsFromRecords({
+        jobCount: jobs.length,
+        completedJobs,
+        invoices: invoicesByCustomer.get(customerId) ?? [],
+      }),
+    );
+  }
+
+  return statsByCustomer;
+}
+
+export function applyCustomerOperationalStats(
+  customers: Customer[],
+  statsByCustomer: Map<string, CustomerOperationalStats>,
+  options?: { includeRevenue?: boolean },
+): Customer[] {
+  const includeRevenue = options?.includeRevenue ?? true;
+
+  return customers.map((customer) => {
+    const stats = statsByCustomer.get(customer.id);
+    if (!stats) {
+      return {
+        ...customer,
+        totalJobs: 0,
+        totalRevenue: 0,
+        lastServiceDate: undefined,
+      };
+    }
+
+    const merged = mergeCustomerOperationalStats(customer, stats);
+    return includeRevenue ? merged : { ...merged, totalRevenue: 0 };
+  });
 }
 
 export async function updateCustomer(
