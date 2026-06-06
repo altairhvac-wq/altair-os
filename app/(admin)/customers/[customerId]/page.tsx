@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getCompanyAccessScope, canViewBilling } from "@/lib/database/access-control";
+import { getCompanyAccessScope, canAccessOperationalJobsArea, canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCustomerById, getCustomerDeleteDependencies } from "@/lib/database/queries/customers";
 import { listEstimatesByCustomer } from "@/lib/database/queries/estimates";
@@ -105,6 +105,11 @@ export default async function CustomerDetailPage({
       equipment,
       activities,
       includeBilling: canViewBillingData,
+      actionContext: {
+        customerId,
+        canCreateJob: companyContext.permissions.dispatchJobs,
+        canAccessDispatch: canAccessOperationalJobsArea(companyContext),
+      },
     },
   );
 

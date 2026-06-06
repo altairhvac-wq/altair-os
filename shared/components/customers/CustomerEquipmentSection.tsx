@@ -19,6 +19,7 @@ import {
   type CustomerEquipment,
   type CustomerEquipmentFormData,
 } from "@/shared/types/customer-equipment";
+import { CUSTOMER_DETAIL_EQUIPMENT_ANCHOR } from "@/shared/lib/customers/customer-detail-anchors";
 
 type CustomerEquipmentSectionProps = {
   customerId: string;
@@ -117,7 +118,10 @@ export function CustomerEquipmentSection({
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <section
+      className="scroll-mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+      id={CUSTOMER_DETAIL_EQUIPMENT_ANCHOR}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 ring-1 ring-violet-600/10">

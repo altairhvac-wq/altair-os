@@ -8,6 +8,7 @@ import {
 import { JobPriorityBadge } from "@/shared/components/jobs/JobPriorityBadge";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
 import { adminCardSectionClass } from "@/shared/lib/admin-density";
+import { CUSTOMER_DETAIL_JOBS_ANCHOR } from "@/shared/lib/customers/customer-detail-anchors";
 
 type CustomerJobsSectionProps = {
   customerId: string;
@@ -23,7 +24,10 @@ export function CustomerJobsSection({
   const createJobHref = `/jobs?customerId=${encodeURIComponent(customerId)}&create=1`;
 
   return (
-    <section className={adminCardSectionClass}>
+    <section
+      className={`${adminCardSectionClass} scroll-mt-6`}
+      id={CUSTOMER_DETAIL_JOBS_ANCHOR}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h2 className="text-sm font-bold text-slate-900">Jobs</h2>
 

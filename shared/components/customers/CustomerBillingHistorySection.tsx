@@ -5,6 +5,7 @@ import type { Estimate } from "@/shared/types/estimate";
 import type { Invoice } from "@/shared/types/invoice";
 import { EstimateStatusBadge } from "@/shared/components/estimates/EstimateStatusBadge";
 import { InvoiceStatusBadge } from "@/shared/components/invoices/InvoiceStatusBadge";
+import { CUSTOMER_DETAIL_BILLING_ANCHOR } from "@/shared/lib/customers/customer-detail-anchors";
 
 type CustomerBillingHistorySectionProps = {
   estimates: Estimate[];
@@ -24,7 +25,10 @@ export function CustomerBillingHistorySection({
   invoices,
 }: CustomerBillingHistorySectionProps) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <section
+      className="scroll-mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+      id={CUSTOMER_DETAIL_BILLING_ANCHOR}
+    >
       <div className="flex items-center gap-2.5">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
           <Receipt className="h-4 w-4 text-slate-500" />

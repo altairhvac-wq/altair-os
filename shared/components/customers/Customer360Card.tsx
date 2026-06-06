@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   AlertTriangle,
+  ArrowRight,
   CircleDollarSign,
   ClipboardList,
   Clock,
@@ -376,7 +377,15 @@ function OpportunityRow({
 }) {
   const content = (
     <>
-      <p className="text-sm font-semibold text-slate-900">{opportunity.title}</p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-semibold text-slate-900">{opportunity.title}</p>
+        {opportunity.href && opportunity.actionLabel ? (
+          <span className="inline-flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-cyan-700">
+            {opportunity.actionLabel}
+            <ArrowRight className="h-3 w-3" />
+          </span>
+        ) : null}
+      </div>
       <p className="mt-0.5 text-xs leading-snug text-slate-600">
         {opportunity.description}
       </p>

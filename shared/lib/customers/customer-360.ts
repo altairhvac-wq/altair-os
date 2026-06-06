@@ -30,6 +30,11 @@ import {
 } from "@/shared/types/invoice";
 import type { Job } from "@/shared/types/job";
 import type { OperationalActivity } from "@/shared/types/operational-activity";
+import { DISPATCH_PAGE_UNASSIGNED_HREF } from "@/shared/lib/dispatch-page-focus";
+import {
+  CUSTOMER_DETAIL_BILLING_ANCHOR,
+  CUSTOMER_DETAIL_EQUIPMENT_ANCHOR,
+} from "@/shared/lib/customers/customer-detail-anchors";
 
 export const CUSTOMER_360_RECORD_LIMIT = 500;
 export const CUSTOMER_360_ACTIVITY_LIMIT = 10;
@@ -55,6 +60,13 @@ export type Customer360Opportunity = {
   description: string;
   severity: Customer360OpportunitySeverity;
   href?: string;
+  actionLabel?: string;
+};
+
+export type Customer360ActionContext = {
+  customerId: string;
+  canCreateJob: boolean;
+  canAccessDispatch: boolean;
 };
 
 export type Customer360IdentitySummary = {
@@ -105,6 +117,7 @@ type Customer360BuildInput = {
   equipment: CustomerEquipment[];
   activities: OperationalActivity[];
   includeBilling: boolean;
+  actionContext: Customer360ActionContext;
 };
 
 export type Customer360PreloadedData = {
@@ -115,6 +128,7 @@ export type Customer360PreloadedData = {
   equipment?: CustomerEquipment[];
   activities?: OperationalActivity[];
   includeBilling?: boolean;
+  actionContext?: Customer360ActionContext;
 };
 
 const OPPORTUNITY_TYPE_ORDER: Customer360OpportunityType[] = [
@@ -349,7 +363,19 @@ function buildEquipmentSnapshot(
   };
 }
 
+function customerDetailSectionHref(
+  customerId: string,
+  anchor: string,
+): string {
+  return `/customers/${customerId}#${anchor}`;
+}
+
+function createJobForCustomerHref(customerId: string): string {
+  return `/jobs?customerId=${encodeURIComponent(customerId)}&create=1`;
+}
+
 function buildOpportunities(input: {
+  actionContext: Customer360ActionContext;
   includeBilling: boolean;
   openEstimates: Estimate[];
   expiredEstimates: Estimate[];
@@ -358,6 +384,7 @@ function buildOpportunities(input: {
   daysSinceLastCompleted: number | null;
   unpaidInvoices: Invoice[];
 }): Customer360Opportunity[] {
+  const { customerId, canCreateJob, canAccessDispatch } = input.actionContext;
   const opportunities: Customer360Opportunity[] = [];
 
   if (input.includeBilling && input.unpaidInvoices.length > 0) {
@@ -379,7 +406,11 @@ function buildOpportunities(input: {
           ? `${formatCurrency(balance)} due across ${input.unpaidInvoices.length} invoice${input.unpaidInvoices.length === 1 ? "" : "s"} (${overdueCount} overdue).`
           : `${formatCurrency(balance)} due across ${input.unpaidInvoices.length} open invoice${input.unpaidInvoices.length === 1 ? "" : "s"}.`,
       severity: overdueCount > 0 ? "critical" : "warning",
-      href: `/invoices/${input.unpaidInvoices[0]!.id}`,
+      href: customerDetailSectionHref(
+        customerId,
+        CUSTOMER_DETAIL_BILLING_ANCHOR,
+      ),
+      actionLabel: "View billing",
     });
   }
 
@@ -424,6 +455,7 @@ function buildOpportunities(input: {
         description,
         severity: expiredCount > 0 ? "warning" : "info",
         href: `/estimates/${primary.id}`,
+        actionLabel: "View estimate",
       });
     }
   }
@@ -434,6 +466,9 @@ function buildOpportunities(input: {
     ).length;
     const primary = input.openJobs[0]!;
 
+    const primaryUnassigned = !primary.assignedTechnicianId;
+    const useDispatchLink = primaryUnassigned && canAccessDispatch;
+
     opportunities.push({
       type: "unscheduled_or_open_job",
       title: "Unscheduled or open job",
@@ -442,7 +477,10 @@ function buildOpportunities(input: {
           ? `${input.openJobs.length} open job${input.openJobs.length === 1 ? "" : "s"} (${unassignedCount} unassigned).`
           : `${input.openJobs.length} open job${input.openJobs.length === 1 ? "" : "s"} in progress or awaiting completion.`,
       severity: unassignedCount > 0 ? "warning" : "info",
-      href: `/jobs/${primary.id}`,
+      href: useDispatchLink
+        ? DISPATCH_PAGE_UNASSIGNED_HREF
+        : `/jobs/${primary.id}`,
+      actionLabel: useDispatchLink ? "Open dispatch" : "View job",
     });
   }
 
@@ -452,6 +490,11 @@ function buildOpportunities(input: {
       title: "Aging equipment",
       description: `${input.agingEquipmentCount} active equipment record${input.agingEquipmentCount === 1 ? "" : "s"} with expired warranty or ${CUSTOMER_360_AGING_EQUIPMENT_YEARS}+ year install age.`,
       severity: "info",
+      href: customerDetailSectionHref(
+        customerId,
+        CUSTOMER_DETAIL_EQUIPMENT_ANCHOR,
+      ),
+      actionLabel: "View equipment",
     });
   }
 
@@ -464,6 +507,12 @@ function buildOpportunities(input: {
       title: "No recent service",
       description: `No completed jobs in ${input.daysSinceLastCompleted} days.`,
       severity: "warning",
+      ...(canCreateJob
+        ? {
+            href: createJobForCustomerHref(customerId),
+            actionLabel: "Create job",
+          }
+        : {}),
     });
   }
 
@@ -502,6 +551,7 @@ export function buildCustomer360Data(input: Customer360BuildInput): Customer360D
     : null;
 
   const opportunities = buildOpportunities({
+    actionContext: input.actionContext,
     includeBilling: input.includeBilling,
     openEstimates,
     expiredEstimates,
@@ -527,6 +577,11 @@ export async function getCustomer360Data(
   preloaded?: Customer360PreloadedData,
 ): Promise<Customer360Data | null> {
   const includeBilling = preloaded?.includeBilling ?? true;
+  const actionContext = preloaded?.actionContext ?? {
+    customerId,
+    canCreateJob: false,
+    canAccessDispatch: false,
+  };
 
   const customer =
     preloaded?.customer ?? (await getCustomerById(companyId, customerId));
@@ -570,5 +625,6 @@ export async function getCustomer360Data(
     equipment,
     activities,
     includeBilling,
+    actionContext,
   });
 }
