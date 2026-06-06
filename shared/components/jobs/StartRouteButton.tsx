@@ -8,6 +8,7 @@ import { buildGoogleMapsDirectionsUrl } from "@/shared/lib/maps";
 import type { JobStatus } from "@/shared/types/job";
 import {
   technicianFieldPrimaryActionClass,
+  technicianFieldHomeHeroPrimaryActionClass,
   technicianFieldHomeHeroRouteActionClass,
   technicianFieldStartRouteSecondaryClass,
   technicianFieldWorkflowHintClass,
@@ -24,7 +25,9 @@ type StartRouteButtonProps = {
   layout?: "inline" | "block";
   /** Use technician field tokens in block layout (mobile job detail). */
   fieldStyled?: boolean;
-  /** Compact secondary styling for the technician home hero. */
+  /** Dominant primary styling for the technician home hero (scheduled). */
+  heroPrimary?: boolean;
+  /** Compact secondary styling for the technician home hero (dispatched). */
   heroSecondary?: boolean;
   competingSheetActive?: boolean;
   onStatusUpdated?: (status: JobStatus) => void;
@@ -42,6 +45,7 @@ export function StartRouteButton({
   canUpdateStatus = false,
   layout = "inline",
   fieldStyled = false,
+  heroPrimary = false,
   heroSecondary = false,
   competingSheetActive = false,
   onStatusUpdated,
@@ -103,7 +107,10 @@ export function StartRouteButton({
     });
   }
 
-  const linkClassName = heroSecondary
+  const linkClassName =
+    heroPrimary && !isEnRoute
+      ? technicianFieldHomeHeroPrimaryActionClass
+      : heroSecondary
     ? technicianFieldHomeHeroRouteActionClass
     : fieldStyled
     ? isEnRoute

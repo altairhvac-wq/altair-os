@@ -50,6 +50,9 @@ export function TechnicianActiveJobHero({
     onJobStatusUpdated?.(job.id, status);
   }
 
+  const isScheduled = job.status === "scheduled";
+  const isDispatched = job.status === "dispatched";
+
   return (
     <article
       className={`${technicianFieldHomeHeroClass} ${
@@ -127,29 +130,48 @@ export function TechnicianActiveJobHero({
         onClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.stopPropagation()}
       >
-        <JobWorkflowActions
-          jobId={job.id}
-          customerId={job.customerId}
-          status={job.status}
-          canUpdateStatus
-          aiFeaturesEnabled={aiFeaturesEnabled}
-          layout="stack"
-          primarySize="hero"
-          showMobileHint={false}
-          onStatusUpdated={handleStatusUpdated}
-        />
-        <StartRouteButton
-          jobId={job.id}
-          status={job.status}
-          serviceAddress={job.serviceAddress}
-          city={job.city}
-          state={job.state}
-          zip={job.zip}
-          canUpdateStatus
-          layout="inline"
-          heroSecondary
-          onStatusUpdated={handleStatusUpdated}
-        />
+        {isScheduled ? (
+          <StartRouteButton
+            jobId={job.id}
+            status={job.status}
+            serviceAddress={job.serviceAddress}
+            city={job.city}
+            state={job.state}
+            zip={job.zip}
+            canUpdateStatus
+            layout="inline"
+            heroPrimary
+            onStatusUpdated={handleStatusUpdated}
+          />
+        ) : (
+          <>
+            <JobWorkflowActions
+              jobId={job.id}
+              customerId={job.customerId}
+              status={job.status}
+              canUpdateStatus
+              aiFeaturesEnabled={aiFeaturesEnabled}
+              layout="stack"
+              primarySize="hero"
+              showMobileHint={false}
+              onStatusUpdated={handleStatusUpdated}
+            />
+            {isDispatched ? (
+              <StartRouteButton
+                jobId={job.id}
+                status={job.status}
+                serviceAddress={job.serviceAddress}
+                city={job.city}
+                state={job.state}
+                zip={job.zip}
+                canUpdateStatus
+                layout="inline"
+                heroSecondary
+                onStatusUpdated={handleStatusUpdated}
+              />
+            ) : null}
+          </>
+        )}
       </div>
     </article>
   );
