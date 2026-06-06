@@ -20,6 +20,7 @@ import {
   buildGoogleMapsDirectionsUrl,
   buildMapsDirectionsUrl,
   hasCompleteServiceAddress,
+  openMapsDirectionsUrl,
 } from "@/shared/lib/maps";
 import {
   selectActiveEstimate,
@@ -235,6 +236,11 @@ export function TechnicianJobFieldDetail({
                       href={mapsUrl!}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(event) => {
+                        if (openMapsDirectionsUrl(mapsUrl!)) {
+                          event.preventDefault();
+                        }
+                      }}
                       className={technicianFieldContactPrimaryClass}
                     >
                       <Navigation className="h-4 w-4 shrink-0 text-cyan-700" />

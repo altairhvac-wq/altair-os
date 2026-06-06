@@ -63,3 +63,11 @@ export function buildMapsDirectionsUrl(
 
   return buildGoogleMapsDirectionsUrl(parts);
 }
+
+/**
+ * Open directions without replacing the current Altair session.
+ * Prefer this over relying on anchor target="_blank" in standalone PWAs.
+ */
+export function openMapsDirectionsUrl(url: string): Window | null {
+  return window.open(url, "_blank", "noopener,noreferrer");
+}

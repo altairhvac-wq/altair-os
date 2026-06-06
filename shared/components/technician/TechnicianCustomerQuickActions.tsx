@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   buildGoogleMapsDirectionsUrl,
   buildMapsDirectionsUrl,
+  openMapsDirectionsUrl,
 } from "@/shared/lib/maps";
 import type { TechnicianJob } from "@/shared/types/technician";
 import {
@@ -92,6 +93,11 @@ export function TechnicianCustomerQuickActions({
           href={mapsUrl!}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={(event) => {
+            if (openMapsDirectionsUrl(mapsUrl!)) {
+              event.preventDefault();
+            }
+          }}
           className={`${actionClass} ${technicianFieldContactPrimaryClass}`}
         >
           <Navigation className="h-4 w-4 shrink-0 text-cyan-700" />

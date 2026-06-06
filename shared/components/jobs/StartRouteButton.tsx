@@ -7,6 +7,7 @@ import { updateJobStatusAction } from "@/app/actions/jobs";
 import {
   buildGoogleMapsDirectionsUrl,
   buildMapsDirectionsUrl,
+  openMapsDirectionsUrl,
 } from "@/shared/lib/maps";
 import type { JobStatus } from "@/shared/types/job";
 import {
@@ -92,23 +93,31 @@ export function StartRouteButton({
       return;
     }
 
+    // Programmatic open keeps Altair in place; avoid anchor navigation race.
+    event.preventDefault();
     setError(null);
 
-    if (status !== "scheduled" || !canUpdateStatus) {
-      return;
+    const shouldDispatch = status === "scheduled" && canUpdateStatus;
+
+    if (shouldDispatch) {
+      startTransition(async () => {
+        const result = await updateJobStatusAction(jobId, "dispatch", status);
+
+        if (result.error || !result.job) {
+          setError(result.error ?? "The job status could not be updated.");
+          return;
+        }
+
+        onStatusUpdated?.(result.job.status);
+        router.refresh();
+      });
     }
 
-    startTransition(async () => {
-      const result = await updateJobStatusAction(jobId, "dispatch", status);
-
-      if (result.error || !result.job) {
-        setError(result.error ?? "The job status could not be updated.");
-        return;
-      }
-
-      onStatusUpdated?.(result.job.status);
-      router.refresh();
-    });
+    if (!openMapsDirectionsUrl(mapsUrl!)) {
+      setError(
+        "Unable to open navigation. Allow pop-ups for this site and try again.",
+      );
+    }
   }
 
   const linkClassName =
