@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import {
   BarChart3,
@@ -16,25 +14,16 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import { SeeAltairInActionSection } from "@/shared/components/marketing/SeeAltairInActionSection";
+import {
+  FOUNDING_BETA_OFFER,
+  FOUNDING_PLANS,
+} from "@/shared/data/founding-pricing";
 
 export const LOGIN_HERO_TITLE =
   "Run Your Entire Service Business From One Platform";
 
 export const LOGIN_HERO_SUBCOPY =
   "Altair OS brings dispatch, customers, jobs, estimates, invoices, payments, equipment, technician workflows, reporting, and AI-powered operations tools into one modern platform.";
-
-const BETA_OFFER = [
-  "Founding Company Beta",
-  "3 Months Free",
-  "No credit card required",
-  "Lock in founding company pricing",
-] as const;
-
-const PRICING_TEASER = [
-  { name: "Starter", price: 29 },
-  { name: "Growth", price: 59 },
-  { name: "Pro", price: 99 },
-] as const;
 
 const FEATURE_HIGHLIGHTS: { label: string; icon: LucideIcon }[] = [
   { label: "Dispatch & Scheduling", icon: CalendarClock },
@@ -46,6 +35,9 @@ const FEATURE_HIGHLIGHTS: { label: string; icon: LucideIcon }[] = [
   { label: "Reporting & Business Review", icon: BarChart3 },
   { label: "AI Assistants", icon: Bot },
 ];
+
+const ctaFocusClass =
+  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20";
 
 function MarketingBackdrop() {
   return (
@@ -71,18 +63,18 @@ function BetaOfferCard({ compact = false }: { compact?: boolean }) {
       ].join(" ")}
     >
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#D4AF37]/90">
-        {BETA_OFFER[0]}
+        {FOUNDING_BETA_OFFER[0]}
       </p>
       <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="font-mono text-2xl font-semibold tracking-tight text-white">
-          {BETA_OFFER[1]}
+          {FOUNDING_BETA_OFFER[1]}
         </span>
         <span className="flex items-center gap-1.5 text-sm text-neutral-400">
           <CreditCard className="h-3.5 w-3.5 text-[#D4AF37]/80" aria-hidden="true" />
-          {BETA_OFFER[2]}
+          {FOUNDING_BETA_OFFER[2]}
         </span>
       </div>
-      <p className="mt-2 text-sm text-neutral-400">{BETA_OFFER[3]}</p>
+      <p className="mt-2 text-sm text-neutral-400">{FOUNDING_BETA_OFFER[3]}</p>
     </div>
   );
 }
@@ -95,16 +87,16 @@ function PricingTeaser({ compact = false }: { compact?: boolean }) {
         compact ? "grid-cols-3" : "grid-cols-3 gap-3",
       ].join(" ")}
     >
-      {PRICING_TEASER.map((plan) => (
+      {FOUNDING_PLANS.map((plan) => (
         <div
-          key={plan.name}
+          key={plan.id}
           className="rounded-xl border border-[#D4AF37]/20 bg-gradient-to-b from-[#FFFCF6] via-[#FAF7F0] to-[#F3EDE2] px-3 py-2.5 shadow-[inset_0_2px_5px_rgba(0,0,0,0.08),0_6px_16px_rgba(0,0,0,0.32),0_2px_6px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.94)]"
         >
           <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-600">
             {plan.name}
           </p>
           <p className="mt-1 font-mono text-sm font-semibold tabular-nums tracking-tight text-[#0A0A0A]">
-            ${plan.price}
+            ${plan.postBetaPrice}
             <span className="text-[10px] font-medium text-stone-500">/mo</span>
           </p>
           <p className="mt-0.5 text-[9px] font-medium uppercase tracking-wide text-stone-500">
@@ -161,8 +153,10 @@ function MarketingCtas({ layout }: { layout: "desktop" | "mobile" }) {
       ? "border border-[#D4AF37]/30 bg-[#FFFCF8]/10 text-[#F5E6A3] hover:border-[#D4AF37]/50 hover:bg-[#FFFCF8]/15"
       : "border border-[#D4AF37]/35 bg-white text-[#9A7209] shadow-sm hover:border-[#D4AF37]/55 hover:bg-[#FFFCF8]";
 
-  const base =
-    "inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20";
+  const base = [
+    "inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-all",
+    ctaFocusClass,
+  ].join(" ");
 
   return (
     <div
@@ -284,7 +278,7 @@ export function LoginMobileMarketing() {
           </div>
 
           <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
-            {BETA_OFFER.map((item) => (
+            {FOUNDING_BETA_OFFER.map((item) => (
               <li
                 key={item}
                 className="flex items-center gap-1.5 text-xs text-neutral-400"

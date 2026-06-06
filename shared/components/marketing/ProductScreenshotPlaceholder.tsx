@@ -1,3 +1,9 @@
+import Image from "next/image";
+import {
+  FOUNDING_BETA_OFFER,
+  FOUNDING_PLANS,
+} from "@/shared/data/founding-pricing";
+
 type ProductScreenshotPlaceholderProps = {
   alt: string;
   label: string;
@@ -12,18 +18,19 @@ export function ProductScreenshotPlaceholder({
   className = "",
 }: ProductScreenshotPlaceholderProps) {
   const frameClass = [
-    "group/image relative overflow-hidden rounded-xl border border-[#D4AF37]/22 bg-[#0A0A0A] shadow-[0_14px_44px_rgba(0,0,0,0.42),0_4px_14px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(245,230,163,0.12)] transition-[border-color,box-shadow,transform] duration-300 hover:border-[#D4AF37]/38 hover:shadow-[0_18px_52px_rgba(0,0,0,0.48),0_6px_20px_rgba(212,175,55,0.12),inset_0_1px_0_rgba(245,230,163,0.16)] hover:-translate-y-0.5",
+    "group/image relative overflow-hidden rounded-xl border border-[#D4AF37]/22 bg-[#0A0A0A] shadow-[0_14px_44px_rgba(0,0,0,0.42),0_4px_14px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(245,230,163,0.12)] motion-safe:transition-[border-color,box-shadow] motion-safe:duration-300 motion-safe:hover:border-[#D4AF37]/38 motion-safe:hover:shadow-[0_18px_52px_rgba(0,0,0,0.48),0_6px_20px_rgba(212,175,55,0.12),inset_0_1px_0_rgba(245,230,163,0.16)]",
     className,
   ].join(" ");
 
   if (src) {
     return (
-      <div className={frameClass}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+      <div className={`${frameClass} relative aspect-[16/10] w-full`}>
+        <Image
           src={src}
           alt={alt}
-          className="aspect-[16/10] w-full object-cover object-top transition-transform duration-500 group-hover/image:scale-[1.015]"
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 560px"
+          className="object-cover object-top"
         />
       </div>
     );

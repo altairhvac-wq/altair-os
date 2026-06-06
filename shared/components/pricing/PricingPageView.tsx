@@ -2,30 +2,10 @@ import Link from "next/link";
 import { Check, Sparkles } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import { SeeAltairInActionSection } from "@/shared/components/marketing/SeeAltairInActionSection";
-
-const PLANS = [
-  {
-    id: "starter",
-    name: "Starter",
-    regularPrice: 149,
-    description: "For owner-operators and small teams ready to leave spreadsheets behind.",
-    featured: false,
-  },
-  {
-    id: "growth",
-    name: "Growth",
-    regularPrice: 299,
-    description: "For growing shops scaling dispatch, crews, and customer volume.",
-    featured: true,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    regularPrice: 499,
-    description: "For established companies running multi-crew, multi-office operations.",
-    featured: false,
-  },
-] as const;
+import {
+  FOUNDING_BETA_FEATURES,
+  FOUNDING_PLANS,
+} from "@/shared/data/founding-pricing";
 
 const POSITIONING = [
   "Founding Company Beta",
@@ -34,20 +14,8 @@ const POSITIONING = [
   "Built for HVAC, electrical, plumbing, and service companies",
 ] as const;
 
-const BETA_FEATURES = [
-  "Dispatch & Scheduling",
-  "Customer Management",
-  "Customer 360",
-  "Estimates & Approvals",
-  "Invoices & Payments",
-  "Equipment Tracking",
-  "Technician Mobile App",
-  "Time Tracking",
-  "Team Management",
-  "Business Reporting",
-  "AI-Powered Assistants",
-  "Unlimited Users During Beta",
-] as const;
+const ctaFocusClass =
+  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20";
 
 export function PricingPageView() {
   return (
@@ -56,23 +24,27 @@ export function PricingPageView() {
 
       <header className="relative border-b border-stone-200/80 bg-white/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
-          <Link href="/login" className="shrink-0">
+          <Link
+            href="/login"
+            className={`shrink-0 ${ctaFocusClass} rounded-sm`}
+            aria-label="Altair OS — Sign in"
+          >
             <AltairLogo variant="primary" size="sm" showWordmark />
           </Link>
-          <div className="flex items-center gap-3 text-sm">
+          <nav aria-label="Account actions" className="flex items-center gap-3 text-sm">
             <Link
               href="/login"
-              className="font-medium text-stone-600 transition-colors hover:text-stone-900"
+              className={`font-medium text-stone-600 transition-colors hover:text-stone-900 ${ctaFocusClass} rounded-sm`}
             >
               Sign in
             </Link>
             <Link
               href="/signup"
-              className="rounded-lg bg-[#0A0A0A] px-3.5 py-2 font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2)] ring-1 ring-[#D4AF37]/30 transition-colors hover:bg-[#141414]"
+              className={`rounded-lg bg-[#0A0A0A] px-3.5 py-2 font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2)] ring-1 ring-[#D4AF37]/30 transition-colors hover:bg-[#141414] ${ctaFocusClass}`}
             >
               Get started
             </Link>
-          </div>
+          </nav>
         </div>
       </header>
 
@@ -85,8 +57,8 @@ export function PricingPageView() {
             Founding Company Beta
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-stone-600 sm:text-lg">
-            Full platform access during beta — built for HVAC, electrical, plumbing,
-            and service companies ready to run on one premium operating system.
+            Three months free with full platform access — built for HVAC, electrical,
+            plumbing, and service companies ready to run on one operating system.
           </p>
         </div>
 
@@ -100,7 +72,7 @@ export function PricingPageView() {
         </ul>
 
         <div className="auth-panel-enter mx-auto mt-10 grid max-w-5xl gap-5 lg:grid-cols-3 lg:gap-6">
-          {PLANS.map((plan) => (
+          {FOUNDING_PLANS.map((plan) => (
             <div
               key={plan.id}
               className={[
@@ -128,19 +100,21 @@ export function PricingPageView() {
                 </div>
 
                 <div className="mt-6 border-t border-stone-200/70 pt-6">
-                  <p className="text-sm text-stone-500">
-                    <span className="line-through decoration-stone-400/80">
-                      ${plan.regularPrice}/month
-                    </span>
-                  </p>
-                  <div className="mt-2 flex items-baseline gap-1.5">
+                  <div className="flex items-baseline gap-1.5">
                     <span className="font-mono text-4xl font-semibold tracking-tight text-[#0A0A0A]">
                       $0
                     </span>
                     <span className="text-base font-medium text-stone-600">for 3 months</span>
                   </div>
+                  <p className="mt-2 text-sm text-stone-600">
+                    Then{" "}
+                    <span className="font-semibold text-[#0A0A0A]">
+                      ${plan.postBetaPrice}/month
+                    </span>{" "}
+                    after beta
+                  </p>
                   <p className="mt-2 text-xs font-medium text-[#9A7209]">
-                    No credit card required
+                    No credit card required · Founding company pricing
                   </p>
                 </div>
 
@@ -148,6 +122,7 @@ export function PricingPageView() {
                   href="/signup"
                   className={[
                     "mt-6 inline-flex w-full items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold transition-all",
+                    ctaFocusClass,
                     plan.featured
                       ? "bg-[#0A0A0A] text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2),0_0_22px_rgba(212,175,55,0.1)] ring-1 ring-[#D4AF37]/30 hover:bg-[#141414] hover:ring-[#D4AF37]/42"
                       : "border border-stone-300/80 bg-white text-[#0A0A0A] shadow-sm hover:border-[#D4AF37]/40 hover:bg-[#FFFCF8]",
@@ -176,7 +151,7 @@ export function PricingPageView() {
 
           <div className="px-6 py-8 sm:px-8">
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {BETA_FEATURES.map((feature) => (
+              {FOUNDING_BETA_FEATURES.map((feature) => (
                 <li key={feature} className="flex items-start gap-2.5 text-sm text-stone-700">
                   <Check
                     className="mt-0.5 h-4 w-4 shrink-0 text-[#9A7209]"
@@ -195,7 +170,7 @@ export function PricingPageView() {
 
         <section className="auth-hero-enter mx-auto mt-16 max-w-3xl text-center">
           <h2 className="text-xl font-semibold tracking-tight text-[#0A0A0A] sm:text-2xl">
-            Premium software for trades that run the field
+            Operations software for trades that run the field
           </h2>
           <p className="mt-4 text-base leading-relaxed text-stone-600">
             Altair OS gives HVAC, electrical, plumbing, and service businesses a
@@ -203,7 +178,7 @@ export function PricingPageView() {
             keep technicians productive — without the complexity of legacy tools.
           </p>
           <p className="mt-3 text-sm font-medium text-stone-500">
-            Modern software. Real-world workflows. Built for founding companies.
+            Modern workflows. Real-world operations. Built for founding companies.
           </p>
         </section>
 
@@ -217,11 +192,11 @@ export function PricingPageView() {
             customers.
           </p>
           <p className="mt-3 text-sm font-medium text-stone-600">
-            Join now and help shape the future of field service software.
+            Join during beta and lock in founding company pricing.
           </p>
           <Link
             href="/signup"
-            className="mt-6 inline-flex items-center justify-center rounded-lg border border-[#D4AF37]/35 bg-white px-6 py-2.5 text-sm font-semibold text-[#9A7209] shadow-sm transition-colors hover:border-[#D4AF37]/55 hover:bg-[#FFFCF8]"
+            className={`mt-6 inline-flex items-center justify-center rounded-lg border border-[#D4AF37]/35 bg-white px-6 py-2.5 text-sm font-semibold text-[#9A7209] shadow-sm transition-colors hover:border-[#D4AF37]/55 hover:bg-[#FFFCF8] ${ctaFocusClass}`}
           >
             Start 3 Months Free
           </Link>

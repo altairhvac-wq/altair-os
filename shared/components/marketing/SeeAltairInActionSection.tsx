@@ -125,8 +125,8 @@ function ShowcaseRow({
             className={[
               "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors duration-200",
               isDark
-                ? "border-[#D4AF37]/28 bg-[#D4AF37]/8 text-[#D4AF37]/90 group-hover/row:border-[#D4AF37]/40 group-hover/row:bg-[#D4AF37]/12"
-                : "border-[#D4AF37]/30 bg-[#FFFCF8] text-[#9A7209] group-hover/row:border-[#D4AF37]/45 group-hover/row:bg-[#FAF7F0]",
+                ? "border-[#D4AF37]/28 bg-[#D4AF37]/8 text-[#D4AF37]/90 motion-safe:transition-colors motion-safe:duration-200 group-hover/row:border-[#D4AF37]/40 group-hover/row:bg-[#D4AF37]/12"
+                : "border-[#D4AF37]/30 bg-[#FFFCF8] text-[#9A7209] motion-safe:transition-colors motion-safe:duration-200 group-hover/row:border-[#D4AF37]/45 group-hover/row:bg-[#FAF7F0]",
             ].join(" ")}
           >
             <item.icon className="h-3 w-3 shrink-0 opacity-80" aria-hidden="true" />

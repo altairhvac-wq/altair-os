@@ -12,18 +12,13 @@ import {
   AuthField,
   AuthInput,
   AuthMessage,
-  AuthShell,
   AuthSubmitButton,
   AuthLink,
 } from "./AuthShell";
-import {
-  LoginMarketingPanel,
-  LoginMobileMarketing,
-} from "./LoginMarketingPanel";
 
 const initialState: AuthActionState = {};
 
-function LoginFormFields() {
+export function LoginFormFields() {
   const searchParams = useSearchParams();
   const callbackError =
     searchParams.get("error") === "auth_callback"
@@ -33,64 +28,45 @@ function LoginFormFields() {
   const displayError = state.error ?? callbackError;
 
   return (
-    <AuthShell
-      title="Sign in"
-      description="Welcome back — access dispatch, jobs, customers, and your field teams."
-      heroPanel={<LoginMarketingPanel />}
-      belowFooter={<LoginMobileMarketing />}
-      formAnchorId="sign-in-form"
-      footer={
-        <div className="space-y-2">
-          <p>
-            New to Altair OS?{" "}
-            <AuthLink href="/signup">Create a free account</AuthLink>
-          </p>
-          <p>
-            <AuthLink href="/pricing">View pricing</AuthLink>
-          </p>
-        </div>
-      }
-    >
-      <form action={formAction} className="space-y-5">
-        <Suspense fallback={null}>
-          <NextRedirectField />
-        </Suspense>
-        {displayError ? <AuthMessage tone="error">{displayError}</AuthMessage> : null}
-        {state.success ? (
-          <AuthMessage tone="success">{state.success}</AuthMessage>
-        ) : null}
+    <form action={formAction} className="space-y-5">
+      <Suspense fallback={null}>
+        <NextRedirectField />
+      </Suspense>
+      {displayError ? <AuthMessage tone="error">{displayError}</AuthMessage> : null}
+      {state.success ? (
+        <AuthMessage tone="success">{state.success}</AuthMessage>
+      ) : null}
 
-        <AuthField label="Work email" id="email">
-          <AuthInput
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            placeholder="you@company.com"
-            required
-          />
-        </AuthField>
+      <AuthField label="Work email" id="email">
+        <AuthInput
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@company.com"
+          required
+        />
+      </AuthField>
 
-        <AuthField label="Password" id="password">
-          <AuthInput
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            placeholder="Enter your password"
-            required
-          />
-        </AuthField>
+      <AuthField label="Password" id="password">
+        <AuthInput
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          placeholder="Enter your password"
+          required
+        />
+      </AuthField>
 
-        <div className="flex justify-end">
-          <AuthLink href="/forgot-password">Forgot password?</AuthLink>
-        </div>
+      <div className="flex justify-end">
+        <AuthLink href="/forgot-password">Forgot password?</AuthLink>
+      </div>
 
-        <div className="pt-1">
-          <AuthSubmitButton pending={pending}>Sign in</AuthSubmitButton>
-        </div>
-      </form>
-    </AuthShell>
+      <div className="pt-1">
+        <AuthSubmitButton pending={pending}>Sign in</AuthSubmitButton>
+      </div>
+    </form>
   );
 }
 
