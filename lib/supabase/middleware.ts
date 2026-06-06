@@ -9,6 +9,7 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getSupabaseEnv } from "./env";
 
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
+const PRICING_ROUTE = "/pricing";
 const AUTH_CALLBACK_ROUTE = "/auth/callback";
 const ESTIMATE_APPROVAL_ROUTE_PREFIX = "/estimate-approval";
 const INVOICE_PAYMENT_ROUTE_PREFIX = "/invoice-payment";
@@ -33,9 +34,14 @@ function isInvoicePaymentRoute(pathname: string) {
   );
 }
 
+function isPricingRoute(pathname: string) {
+  return pathname === PRICING_ROUTE;
+}
+
 function isPublicRoute(pathname: string) {
   return (
     isAuthRoute(pathname) ||
+    isPricingRoute(pathname) ||
     pathname === AUTH_CALLBACK_ROUTE ||
     isEstimateApprovalRoute(pathname) ||
     isInvoicePaymentRoute(pathname)
