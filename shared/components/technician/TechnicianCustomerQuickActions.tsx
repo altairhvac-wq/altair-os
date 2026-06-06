@@ -1,7 +1,11 @@
 "use client";
 
 import { Mail, Navigation, Phone } from "lucide-react";
-import { buildGoogleMapsDirectionsUrl } from "@/shared/lib/maps";
+import { useEffect, useState } from "react";
+import {
+  buildGoogleMapsDirectionsUrl,
+  buildMapsDirectionsUrl,
+} from "@/shared/lib/maps";
 import type { TechnicianJob } from "@/shared/types/technician";
 import {
   technicianFieldContactPrimaryClass,
@@ -21,12 +25,19 @@ export function TechnicianCustomerQuickActions({
   job,
   showEmptyState = false,
 }: TechnicianCustomerQuickActionsProps) {
-  const mapsUrl = buildGoogleMapsDirectionsUrl({
+  const addressParts = {
     serviceAddress: job.serviceAddress,
     city: job.city,
     state: job.state,
     zip: job.zip,
-  });
+  };
+  const [mapsUrl, setMapsUrl] = useState(() =>
+    buildGoogleMapsDirectionsUrl(addressParts),
+  );
+
+  useEffect(() => {
+    setMapsUrl(buildMapsDirectionsUrl(addressParts));
+  }, [job.serviceAddress, job.city, job.state, job.zip]);
 
   const hasPhone = Boolean(job.customerPhone?.trim());
   const hasEmail = Boolean(job.customerEmail?.trim());

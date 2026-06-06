@@ -2,9 +2,12 @@
 
 import { Navigation } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { updateJobStatusAction } from "@/app/actions/jobs";
-import { buildGoogleMapsDirectionsUrl } from "@/shared/lib/maps";
+import {
+  buildGoogleMapsDirectionsUrl,
+  buildMapsDirectionsUrl,
+} from "@/shared/lib/maps";
 import type { JobStatus } from "@/shared/types/job";
 import {
   technicianFieldPrimaryActionClass,
@@ -53,17 +56,18 @@ export function StartRouteButton({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const addressParts = { serviceAddress, city, state, zip };
+  const [mapsUrl, setMapsUrl] = useState(() =>
+    buildGoogleMapsDirectionsUrl(addressParts),
+  );
+
+  useEffect(() => {
+    setMapsUrl(buildMapsDirectionsUrl(addressParts));
+  }, [serviceAddress, city, state, zip]);
 
   if (!START_ROUTE_STATUSES.includes(status)) {
     return null;
   }
-
-  const mapsUrl = buildGoogleMapsDirectionsUrl({
-    serviceAddress,
-    city,
-    state,
-    zip,
-  });
 
   if (!mapsUrl) {
     return (

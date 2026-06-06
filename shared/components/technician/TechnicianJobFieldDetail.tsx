@@ -16,7 +16,11 @@ import {
 } from "lucide-react";
 import { JobSummaryAiAssistant } from "@/shared/components/jobs/JobSummaryAiAssistant";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
-import { buildGoogleMapsDirectionsUrl, hasCompleteServiceAddress } from "@/shared/lib/maps";
+import {
+  buildGoogleMapsDirectionsUrl,
+  buildMapsDirectionsUrl,
+  hasCompleteServiceAddress,
+} from "@/shared/lib/maps";
 import {
   selectActiveEstimate,
   type JobEstimateSummary,
@@ -122,18 +126,20 @@ export function TechnicianJobFieldDetail({
 
   const hasDescription = Boolean(job.description?.trim());
   const hasNotes = Boolean(job.notes?.trim());
-  const hasCompleteAddress = hasCompleteServiceAddress({
+  const addressParts = {
     serviceAddress: job.serviceAddress,
     city: job.city,
     state: job.state,
     zip: job.zip,
-  });
-  const mapsUrl = buildGoogleMapsDirectionsUrl({
-    serviceAddress: job.serviceAddress,
-    city: job.city,
-    state: job.state,
-    zip: job.zip,
-  });
+  };
+  const hasCompleteAddress = hasCompleteServiceAddress(addressParts);
+  const [mapsUrl, setMapsUrl] = useState(() =>
+    buildGoogleMapsDirectionsUrl(addressParts),
+  );
+
+  useEffect(() => {
+    setMapsUrl(buildMapsDirectionsUrl(addressParts));
+  }, [job.serviceAddress, job.city, job.state, job.zip]);
   const hasPhone = Boolean(job.customerPhone?.trim());
   const hasEmail = Boolean(job.customerEmail?.trim());
   const hasMaps = Boolean(mapsUrl);

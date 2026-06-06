@@ -25,3 +25,41 @@ export function buildGoogleMapsDirectionsUrl(
   const destination = encodeURIComponent(formatServiceAddress(parts));
   return `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
 }
+
+export function buildAppleMapsDirectionsUrl(
+  parts: ServiceAddressParts,
+): string | null {
+  if (!hasCompleteServiceAddress(parts)) {
+    return null;
+  }
+
+  const destination = encodeURIComponent(formatServiceAddress(parts));
+  return `https://maps.apple.com/?daddr=${destination}`;
+}
+
+/** True on iPhone, iPod, iPad, and iPadOS devices that report a desktop UA. */
+export function isIOSOrIPadOS(): boolean {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  const ua = navigator.userAgent;
+  if (/iPhone|iPod/i.test(ua)) {
+    return true;
+  }
+  if (/iPad/i.test(ua)) {
+    return true;
+  }
+
+  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+}
+
+export function buildMapsDirectionsUrl(
+  parts: ServiceAddressParts,
+): string | null {
+  if (isIOSOrIPadOS()) {
+    return buildAppleMapsDirectionsUrl(parts);
+  }
+
+  return buildGoogleMapsDirectionsUrl(parts);
+}
