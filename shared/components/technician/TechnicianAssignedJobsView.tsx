@@ -312,7 +312,6 @@ export function TechnicianAssignedJobsView({
           {canManageTime ? (
             <TechnicianClockStatusBanner timeState={timeState} />
           ) : null}
-
           <TechnicianJobList
             deckKey={selectedDateOnly}
             jobs={deckJobs}
@@ -324,7 +323,6 @@ export function TechnicianAssignedJobsView({
             onSelectJob={handleSelectJob}
             onJobStatusUpdated={handleJobStatusUpdated}
           />
-
           {showCompletedToday ? (
             <CompletedTodaySection
               jobs={jobs}

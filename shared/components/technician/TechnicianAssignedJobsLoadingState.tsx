@@ -8,38 +8,37 @@ function SectionLabelSkeleton() {
 
 function HeroCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-2xl border-l-[4px] border-l-slate-200 bg-white p-4 shadow-[0_2px_16px_-4px_rgb(15_23_42_/_0.1)]">
-      <div className="space-y-3">
+    <div className="-mx-4 overflow-hidden bg-white shadow-[0_12px_40px_-12px_rgb(8_145_178_/_0.2)] sm:-mx-5 sm:rounded-3xl">
+      <div className="space-y-4 px-5 pb-2 pt-5">
         <div className="space-y-2">
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-32" />
           <Skeleton className="h-3 w-16" />
         </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-6 w-20 rounded-full" />
-          <Skeleton className="h-6 w-14 rounded-full" />
-        </div>
-        <div className="space-y-1.5">
-          <Skeleton className="h-3 w-full max-w-[16rem]" />
-          <Skeleton className="h-3 w-32" />
+        <Skeleton className="h-6 w-20 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full max-w-[18rem]" />
+          <Skeleton className="h-3 w-28" />
         </div>
       </div>
-      <div className="mt-4 border-t border-slate-100 pt-3">
-        <Skeleton className="h-12 w-full rounded-xl" />
+      <div className="space-y-2.5 px-5 pb-5 pt-2">
+        <Skeleton className="h-[3.75rem] w-full rounded-2xl" />
+        <Skeleton className="h-11 w-full rounded-xl" />
       </div>
     </div>
   );
 }
 
-function UpNextCardSkeleton() {
+function UpNextRowSkeleton() {
   return (
-    <div className="w-[14.5rem] shrink-0 rounded-2xl bg-white p-3.5 shadow-[0_1px_8px_-2px_rgb(15_23_42_/_0.08)]">
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-32" />
+    <div className="flex items-center gap-3 py-3">
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <Skeleton className="h-4 w-36" />
         <Skeleton className="h-3 w-24" />
-        <Skeleton className="h-3 w-full max-w-[10rem]" />
-        <Skeleton className="h-5 w-16 rounded-full" />
+        <Skeleton className="h-3 w-28" />
       </div>
+      <Skeleton className="h-4 w-4 shrink-0" />
     </div>
   );
 }
@@ -65,19 +64,15 @@ export function TechnicianAssignedJobsLoadingState() {
 
       <Skeleton className="h-14 rounded-2xl" />
 
-      <div className="space-y-2.5">
-        <SectionLabelSkeleton />
+      <div className="space-y-5">
         <HeroCardSkeleton />
       </div>
 
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between px-0.5">
-          <SectionLabelSkeleton />
-          <Skeleton className="h-5 w-6 rounded-full" />
-        </div>
-        <div className="flex gap-2.5 overflow-x-hidden">
-          <UpNextCardSkeleton />
-          <UpNextCardSkeleton />
+      <div className="space-y-1 px-0.5">
+        <SectionLabelSkeleton />
+        <div className="divide-y divide-slate-100/90">
+          <UpNextRowSkeleton />
+          <UpNextRowSkeleton />
         </div>
       </div>
 

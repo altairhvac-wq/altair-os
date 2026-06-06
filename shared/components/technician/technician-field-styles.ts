@@ -3,6 +3,31 @@
 export const technicianFieldSectionLabelClass =
   "px-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400";
 
+/** Technician home — full-bleed hero that dominates the screen. */
+export const technicianFieldHomeHeroClass =
+  "overflow-hidden rounded-none bg-white shadow-[0_12px_40px_-12px_rgb(8_145_178_/_0.28),0_4px_12px_-4px_rgb(15_23_42_/_0.1)] sm:rounded-3xl";
+
+export const technicianFieldHomeHeroLiveClass =
+  "bg-gradient-to-b from-cyan-400/15 via-cyan-50/50 to-white ring-1 ring-inset ring-cyan-500/15";
+
+export const technicianFieldHomeHeroIdleClass =
+  "bg-gradient-to-b from-slate-100/70 via-white to-white";
+
+export const technicianFieldHomeHeroEyebrowClass =
+  "text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-700/80";
+
+export const technicianFieldHomeHeroPrimaryActionClass =
+  "inline-flex min-h-[3.75rem] w-full touch-manipulation items-center justify-center rounded-2xl bg-cyan-600 px-5 py-4 text-lg font-bold tracking-tight text-white shadow-[0_6px_20px_-4px_rgb(8_145_178_/_0.5)] transition-[transform,background-color,box-shadow] hover:bg-cyan-700 active:scale-[0.98] active:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60";
+
+export const technicianFieldHomeHeroRouteActionClass =
+  "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-2 rounded-xl bg-white/70 px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200/50 transition-colors hover:bg-white active:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60";
+
+export const technicianFieldUpNextMutedLabelClass =
+  "text-[10px] font-medium uppercase tracking-[0.12em] text-slate-400";
+
+export const technicianFieldUpNextRowClass =
+  "flex w-full touch-manipulation items-center gap-3 py-3 text-left transition-colors active:bg-slate-50/50";
+
 export const technicianFieldHeroCardClass =
   "overflow-hidden rounded-2xl border-l-[4px] border-l-cyan-600 bg-white shadow-[0_2px_16px_-4px_rgb(15_23_42_/_0.1)]";
 

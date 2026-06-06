@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, MapPin } from "lucide-react";
+import { ChevronRight, MapPin } from "lucide-react";
 import { isLiveTechnicianJob } from "@/shared/lib/technician-dispatch-job";
 import type { JobStatus } from "@/shared/types/job";
 import {
@@ -11,8 +11,8 @@ import type { TechnicianTimeStateSnapshot } from "@/shared/types/time-entry";
 import { TechnicianActiveJobHero } from "./TechnicianActiveJobHero";
 import { TechnicianJobStatusBadge } from "./TechnicianJobStatusBadge";
 import {
-  technicianFieldSectionLabelClass,
-  technicianFieldSurfaceCardClass,
+  technicianFieldUpNextMutedLabelClass,
+  technicianFieldUpNextRowClass,
 } from "./technician-field-styles";
 
 type TechnicianJobListProps = {
@@ -55,15 +55,13 @@ function resolveHeroJob(
   return liveJob ?? jobs[0];
 }
 
-function TechnicianUpNextJobCard({
+function TechnicianUpNextJobRow({
   job,
   isHighlighted,
-  fullWidth = false,
   onSelectJob,
 }: {
   job: TechnicianJob;
   isHighlighted: boolean;
-  fullWidth?: boolean;
   onSelectJob: (job: TechnicianJob) => void;
 }) {
   const location = formatUpNextJobLocation(job);
@@ -72,39 +70,35 @@ function TechnicianUpNextJobCard({
     <button
       type="button"
       onClick={() => onSelectJob(job)}
-      className={`${technicianFieldSurfaceCardClass} snap-start p-3.5 text-left ${
-        fullWidth
-          ? "w-full"
-          : "w-[14.5rem] shrink-0 sm:w-[15.5rem]"
-      } ${
-        isHighlighted
-          ? "ring-2 ring-cyan-500/25"
-          : ""
+      className={`${technicianFieldUpNextRowClass} ${
+        isHighlighted ? "bg-cyan-50/40" : ""
       }`}
     >
-      <div className="space-y-2">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-slate-900">
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="truncate text-sm font-semibold text-slate-800">
             {job.customerName}
           </p>
-          <p className="truncate text-xs text-slate-500">{job.jobType}</p>
+          <span className="shrink-0 text-[11px] font-medium tabular-nums text-slate-400">
+            {formatTechnicianJobTime(job.scheduledDate)}
+          </span>
         </div>
-
-        <div className="space-y-1 text-[11px] text-slate-600">
-          <p className="flex items-center gap-1">
-            <Clock className="h-3 w-3 shrink-0 text-slate-400" aria-hidden />
-            <span className="font-medium text-slate-700">
-              {formatTechnicianJobTime(job.scheduledDate)}
-            </span>
-          </p>
-          <p className="flex items-center gap-1">
+        <p className="truncate text-xs text-slate-500">{job.jobType}</p>
+        <div className="flex items-center gap-3 pt-0.5">
+          <p className="flex min-w-0 items-center gap-1 truncate text-[11px] text-slate-500">
             <MapPin className="h-3 w-3 shrink-0 text-slate-400" aria-hidden />
             <span className="truncate">{location}</span>
           </p>
+          <TechnicianJobStatusBadge
+            status={job.status}
+            className="shrink-0 text-[9px]"
+          />
         </div>
-
-        <TechnicianJobStatusBadge status={job.status} className="text-[10px]" />
       </div>
+      <ChevronRight
+        className="h-4 w-4 shrink-0 text-slate-300"
+        aria-hidden
+      />
     </button>
   );
 }
@@ -133,12 +127,15 @@ export function TechnicianJobList({
   }
 
   return (
-    <div className="space-y-4">
-      <section className="space-y-2.5" aria-label={heroSectionAriaLabel}>
-        <h2 className={technicianFieldSectionLabelClass}>{heroSectionLabel}</h2>
+    <div className="space-y-5">
+      <section
+        className="-mx-4 sm:-mx-5"
+        aria-label={heroSectionAriaLabel}
+      >
         <TechnicianActiveJobHero
           job={heroJob}
           timeState={timeState}
+          heroSectionLabel={heroSectionLabel}
           aiFeaturesEnabled={aiFeaturesEnabled}
           onSelectJob={onSelectJob}
           onJobStatusUpdated={onJobStatusUpdated}
@@ -146,21 +143,22 @@ export function TechnicianJobList({
       </section>
 
       {upNextJobs.length > 0 ? (
-        <section className="space-y-2.5" aria-label="Up next jobs">
-          <div className="flex items-center justify-between gap-2 px-0.5">
-            <h2 className={technicianFieldSectionLabelClass}>Up Next</h2>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-slate-600">
-              {upNextJobs.length}
+        <section
+          key={deckKey}
+          className="space-y-1 px-0.5"
+          aria-label="Up next jobs"
+          data-no-pull-refresh
+        >
+          <div className="flex items-baseline gap-2 pb-1">
+            <h2 className={technicianFieldUpNextMutedLabelClass}>Up next</h2>
+            <span className="text-[10px] font-medium tabular-nums text-slate-400">
+              {upNextJobs.length} more
             </span>
           </div>
 
-          <div
-            key={deckKey}
-            className="-mx-1 flex min-h-[7.5rem] snap-x snap-mandatory gap-2.5 overflow-x-auto px-1 pb-1 sm:hidden"
-            data-no-pull-refresh
-          >
+          <div className="divide-y divide-slate-100/90">
             {upNextJobs.map((job) => (
-              <TechnicianUpNextJobCard
+              <TechnicianUpNextJobRow
                 key={job.id}
                 job={job}
                 isHighlighted={isHighlighted(job)}
@@ -168,22 +166,6 @@ export function TechnicianJobList({
               />
             ))}
           </div>
-
-          <ul
-            className="hidden gap-2.5 sm:grid sm:grid-cols-2 lg:grid-cols-1"
-            data-no-pull-refresh
-          >
-            {upNextJobs.map((job) => (
-              <li key={job.id} className="min-w-0">
-                <TechnicianUpNextJobCard
-                  job={job}
-                  isHighlighted={isHighlighted(job)}
-                  fullWidth
-                  onSelectJob={onSelectJob}
-                />
-              </li>
-            ))}
-          </ul>
         </section>
       ) : null}
     </div>
