@@ -29,6 +29,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     badge: "Connected scheduling",
     imageAlt: "Altair OS dispatch command center showing daily schedule and crew assignments",
     imageLabel: "Dispatch Command Center",
+    imageSrc: "/marketing/screenshots/marketing-dispatch.png",
     icon: CalendarClock,
   },
   {
@@ -39,6 +40,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     badge: "Single customer view",
     imageAlt: "Altair OS Customer 360 view with service history and account details",
     imageLabel: "Customer 360",
+    imageSrc: "/marketing/screenshots/marketing-customers.png",
     icon: Users,
   },
   {
@@ -49,6 +51,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     badge: "Field-ready workflows",
     imageAlt: "Altair OS technician mobile app with job details and status updates",
     imageLabel: "Technician Mobile App",
+    imageSrc: "/marketing/screenshots/marketing-expenses.png",
     icon: Smartphone,
   },
   {
@@ -59,6 +62,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     badge: "Customer approvals built in",
     imageAlt: "Altair OS estimates and customer approval workflow",
     imageLabel: "Estimates & Approvals",
+    imageSrc: "/marketing/screenshots/marketing-estimate.png",
     icon: FileCheck,
   },
   {
@@ -69,6 +73,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     badge: "End-to-end billing",
     imageAlt: "Altair OS invoicing and payment collection interface",
     imageLabel: "Invoicing & Payments",
+    imageSrc: "/marketing/screenshots/marketing-pricebook.png",
     icon: Receipt,
   },
   {
@@ -79,6 +84,7 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     badge: "Operations at a glance",
     imageAlt: "Altair OS reporting dashboards and business insights",
     imageLabel: "Reporting & Business Insights",
+    imageSrc: "/marketing/screenshots/marketing-dashboard.png",
     icon: BarChart3,
   },
 ];

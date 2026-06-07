@@ -1,3 +1,5 @@
+import "server-only";
+
 import { notFound } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { getCurrentUser } from "@/lib/database/auth";
