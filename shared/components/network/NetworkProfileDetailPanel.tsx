@@ -140,28 +140,38 @@ export function NetworkProfileDetailPanel({
                     type="button"
                     onClick={onRemoveFromNetwork}
                     disabled={isNetworkActionPending}
-                    className="inline-flex w-full items-center justify-center gap-2 admin-btn-secondary"
+                    className="inline-flex w-full items-center justify-center gap-2 admin-btn-secondary disabled:opacity-60"
                   >
                     <UserMinus className="h-4 w-4" />
-                    Remove from My Network
+                    {isNetworkActionPending
+                      ? "Removing..."
+                      : "Remove from My Network"}
                   </button>
-                ) : onAddToNetwork ? (
+                ) : !isInMyNetwork && onAddToNetwork ? (
                   <button
                     type="button"
                     onClick={onAddToNetwork}
                     disabled={isNetworkActionPending}
-                    className="inline-flex w-full items-center justify-center gap-2 admin-btn-secondary"
+                    className="inline-flex w-full items-center justify-center gap-2 admin-btn-secondary disabled:opacity-60"
                   >
                     <UserPlus className="h-4 w-4" />
-                    Add to My Network
+                    {isNetworkActionPending ? "Adding..." : "Add to My Network"}
                   </button>
+                ) : isInMyNetwork ? (
+                  <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-800">
+                    This company is already in your network.
+                  </p>
                 ) : null}
 
                 {networkActionError ? (
                   <p className="text-xs text-rose-700">{networkActionError}</p>
                 ) : null}
               </div>
-            ) : null}
+            ) : (
+              <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-500">
+                Network connections are managed by company owners and admins.
+              </p>
+            )}
 
             {canSendReferral ? (
               <button

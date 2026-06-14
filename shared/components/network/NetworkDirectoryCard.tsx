@@ -15,6 +15,7 @@ type NetworkDirectoryCardProps = {
   onAddToNetwork?: () => void;
   onRemoveFromNetwork?: () => void;
   isNetworkActionPending?: boolean;
+  networkActionError?: string | null;
 };
 
 export function NetworkDirectoryCard({
@@ -29,6 +30,7 @@ export function NetworkDirectoryCard({
   onAddToNetwork,
   onRemoveFromNetwork,
   isNetworkActionPending = false,
+  networkActionError = null,
 }: NetworkDirectoryCardProps) {
   return (
     <article
@@ -82,23 +84,33 @@ export function NetworkDirectoryCard({
           {isTrustedPartner && onRemoveFromNetwork ? (
             <button
               type="button"
-              onClick={onRemoveFromNetwork}
+              onClick={(event) => {
+                event.stopPropagation();
+                onRemoveFromNetwork();
+              }}
               disabled={isNetworkActionPending}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
             >
               <UserMinus className="h-3.5 w-3.5" />
-              Remove from My Network
+              {isNetworkActionPending ? "Removing..." : "Remove from My Network"}
             </button>
           ) : onAddToNetwork ? (
             <button
               type="button"
-              onClick={onAddToNetwork}
+              onClick={(event) => {
+                event.stopPropagation();
+                onAddToNetwork();
+              }}
               disabled={isNetworkActionPending}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-60"
             >
               <UserPlus className="h-3.5 w-3.5" />
-              Add to My Network
+              {isNetworkActionPending ? "Adding..." : "Add to My Network"}
             </button>
+          ) : null}
+
+          {networkActionError ? (
+            <p className="text-xs text-rose-700">{networkActionError}</p>
           ) : null}
         </div>
       ) : null}
@@ -106,7 +118,10 @@ export function NetworkDirectoryCard({
       {canSendReferral && onSendReferral ? (
         <button
           type="button"
-          onClick={onSendReferral}
+          onClick={(event) => {
+            event.stopPropagation();
+            onSendReferral();
+          }}
           className={`inline-flex w-full items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800 transition hover:bg-sky-100 ${
             canManageNetwork ? "mt-2" : "mt-4"
           }`}

@@ -93,6 +93,54 @@ export async function getNetworkPartnerByLinkedCompanyId(
   return data ? mapNetworkPartnerRow(data) : null;
 }
 
+async function getNetworkPartnerLinkByLinkedCompanyId(
+  companyId: string,
+  linkedCompanyId: string,
+): Promise<NetworkPartner | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("network_partners")
+    .select("*")
+    .eq("company_id", companyId)
+    .eq("linked_company_id", linkedCompanyId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getNetworkPartnerLinkByLinkedCompanyId] query failed:", error);
+    return null;
+  }
+
+  return data ? mapNetworkPartnerRow(data) : null;
+}
+
+async function reactivateLinkedNetworkPartner(
+  companyId: string,
+  partnerId: string,
+  profile: NetworkProfile,
+): Promise<{ partner: NetworkPartner | null; error: string | null }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("network_partners")
+    .update({
+      partner_company_name: profile.displayName,
+      trade_type: profile.tradeType,
+      service_area: profile.serviceArea,
+      city: profile.city,
+      state: profile.state,
+      relationship_status: "active",
+    })
+    .eq("company_id", companyId)
+    .eq("id", partnerId)
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    return { partner: null, error: mapDatabaseError(error) };
+  }
+
+  return { partner: mapNetworkPartnerRow(data), error: null };
+}
+
 export async function getNetworkPartnerById(
   companyId: string,
   partnerId: string,
@@ -121,12 +169,20 @@ export async function addLinkedNetworkPartner(
     return { partner: null, error: "You cannot add your own company to your network." };
   }
 
-  const existing = await getNetworkPartnerByLinkedCompanyId(
+  const existingLink = await getNetworkPartnerLinkByLinkedCompanyId(
     companyId,
     profile.companyId,
   );
-  if (existing) {
-    return { partner: existing, error: null };
+  if (existingLink) {
+    if (existingLink.relationshipStatus === "active") {
+      return { partner: existingLink, error: null };
+    }
+
+    return reactivateLinkedNetworkPartner(
+      companyId,
+      existingLink.id,
+      profile,
+    );
   }
 
   const supabase = await createClient();
@@ -134,6 +190,9 @@ export async function addLinkedNetworkPartner(
     company_id: companyId,
     linked_company_id: profile.companyId,
     partner_company_name: profile.displayName,
+    contact_name: "",
+    email: "",
+    phone: "",
     trade_type: profile.tradeType,
     service_area: profile.serviceArea,
     city: profile.city,
@@ -148,6 +207,29 @@ export async function addLinkedNetworkPartner(
     .single();
 
   if (error || !data) {
+    if (error?.code === "23505") {
+      const racedLink = await getNetworkPartnerLinkByLinkedCompanyId(
+        companyId,
+        profile.companyId,
+      );
+      if (racedLink) {
+        if (racedLink.relationshipStatus === "active") {
+          return { partner: racedLink, error: null };
+        }
+
+        return reactivateLinkedNetworkPartner(
+          companyId,
+          racedLink.id,
+          profile,
+        );
+      }
+
+      return {
+        partner: null,
+        error: "This company is already in your network.",
+      };
+    }
+
     return { partner: null, error: mapDatabaseError(error) };
   }
 

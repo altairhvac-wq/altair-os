@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Network, Search, UserMinus, UserPlus } from "lucide-react";
 import {
   addToMyNetworkAction,
@@ -39,6 +40,12 @@ import { NetworkReferralCard } from "./NetworkReferralCard";
 import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
 
 type ProfilePanelMode = "detail" | "referral" | "empty";
+
+type NetworkActionTarget = {
+  profileId: string;
+  partnerId?: string;
+  action: "add" | "remove";
+};
 
 type NetworkReferralsPageViewProps = {
   initialProfiles: NetworkProfile[];
@@ -83,6 +90,7 @@ export function NetworkReferralsPageView({
   canManageNetwork,
   canManageReceivedReferrals,
 }: NetworkReferralsPageViewProps) {
+  const router = useRouter();
   const timeZone = useCompanyTimezone();
   const [activeTab, setActiveTab] = useState<NetworkReferralsTab>("directory");
   const [profiles] = useState(initialProfiles);
@@ -105,7 +113,12 @@ export function NetworkReferralsPageView({
   const [panelMode, setPanelMode] = useState<ProfilePanelMode>("empty");
   const [visibilityError, setVisibilityError] = useState<string | null>(null);
   const [networkActionError, setNetworkActionError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [networkActionErrorProfileId, setNetworkActionErrorProfileId] =
+    useState<string | null>(null);
+  const [networkActionTarget, setNetworkActionTarget] =
+    useState<NetworkActionTarget | null>(null);
+  const [isVisibilityPending, startVisibilityTransition] = useTransition();
+  const [isNetworkActionPending, startNetworkActionTransition] = useTransition();
 
   const trustedCompanyIds = useMemo(
     () => getTrustedCompanyIds(myNetworkPartners),
@@ -162,13 +175,19 @@ export function NetworkReferralsPageView({
     return sortProfilesWithTrustedFirst(nextProfiles, trustedCompanyIds);
   }, [profiles, search, directoryFilter, trustedCompanyIds]);
 
+  function clearNetworkActionFeedback() {
+    setNetworkActionError(null);
+    setNetworkActionErrorProfileId(null);
+  }
+
   function handleTabChange(tab: NetworkReferralsTab) {
     setActiveTab(tab);
     setSearch("");
     setDirectoryFilter("all");
     setSelectedProfileId(null);
     setPanelMode("empty");
-    setNetworkActionError(null);
+    clearNetworkActionFeedback();
+    setNetworkActionTarget(null);
     setShowInviteForm(false);
     setLatestInviteUrl(null);
   }
@@ -215,19 +234,19 @@ export function NetworkReferralsPageView({
   function handleSelectProfile(profileId: string) {
     setSelectedProfileId(profileId);
     setPanelMode("detail");
-    setNetworkActionError(null);
+    clearNetworkActionFeedback();
   }
 
   function handleClosePanel() {
     setSelectedProfileId(null);
     setPanelMode("empty");
-    setNetworkActionError(null);
+    clearNetworkActionFeedback();
   }
 
   function handleSendReferral(profileId: string) {
     setSelectedProfileId(profileId);
     setPanelMode("referral");
-    setNetworkActionError(null);
+    clearNetworkActionFeedback();
   }
 
   function handleReferralSuccess(referral: NetworkReferral) {
@@ -243,7 +262,7 @@ export function NetworkReferralsPageView({
     }
 
     setVisibilityError(null);
-    startTransition(async () => {
+    startVisibilityTransition(async () => {
       const result = await toggleOwnNetworkProfileVisibilityAction(
         !ownProfile.isVisible,
       );
@@ -257,45 +276,91 @@ export function NetworkReferralsPageView({
     });
   }
 
-  function handleAddToNetwork(profileId: string) {
-    if (!canManageNetwork) {
-      return;
-    }
-
-    setNetworkActionError(null);
-    startTransition(async () => {
-      const result = await addToMyNetworkAction(profileId);
-      if (result.error) {
-        setNetworkActionError(result.error);
-        return;
-      }
-      if (result.partner) {
-        setMyNetworkPartners((current) => {
-          const withoutDuplicate = current.filter(
-            (partner) => partner.id !== result.partner!.id,
-          );
-          return [...withoutDuplicate, result.partner!];
-        });
-      }
+  function upsertMyNetworkPartner(partner: NetworkPartner) {
+    setMyNetworkPartners((current) => {
+      const withoutDuplicate = current.filter(
+        (existingPartner) =>
+          existingPartner.id !== partner.id &&
+          existingPartner.linkedCompanyId !== partner.linkedCompanyId,
+      );
+      return [...withoutDuplicate, partner];
     });
   }
 
-  function handleRemoveFromNetwork(partnerId: string) {
+  function handleAddToNetwork(profileId: string) {
     if (!canManageNetwork) {
+      setNetworkActionError(
+        "Only company owners and admins can manage network connections.",
+      );
+      setNetworkActionErrorProfileId(profileId);
       return;
     }
 
-    setNetworkActionError(null);
-    startTransition(async () => {
+    clearNetworkActionFeedback();
+    setNetworkActionTarget({ profileId, action: "add" });
+    startNetworkActionTransition(async () => {
+      const result = await addToMyNetworkAction(profileId);
+      if (result.error) {
+        setNetworkActionError(result.error);
+        setNetworkActionErrorProfileId(profileId);
+        setNetworkActionTarget(null);
+        return;
+      }
+      if (result.partner) {
+        upsertMyNetworkPartner(result.partner);
+        setSelectedProfileId(profileId);
+        setPanelMode("detail");
+        router.refresh();
+      }
+      setNetworkActionTarget(null);
+    });
+  }
+
+  function handleRemoveFromNetwork(partnerId: string, profileId?: string) {
+    if (!canManageNetwork) {
+      setNetworkActionError(
+        "Only company owners and admins can manage network connections.",
+      );
+      if (profileId) {
+        setNetworkActionErrorProfileId(profileId);
+      }
+      return;
+    }
+
+    clearNetworkActionFeedback();
+    setNetworkActionTarget({
+      profileId: profileId ?? selectedProfileId ?? partnerId,
+      partnerId,
+      action: "remove",
+    });
+    startNetworkActionTransition(async () => {
       const result = await removeFromMyNetworkAction(partnerId);
       if (result.error) {
         setNetworkActionError(result.error);
+        if (profileId) {
+          setNetworkActionErrorProfileId(profileId);
+        } else if (selectedProfileId) {
+          setNetworkActionErrorProfileId(selectedProfileId);
+        }
+        setNetworkActionTarget(null);
         return;
       }
       setMyNetworkPartners((current) =>
         current.filter((partner) => partner.id !== partnerId),
       );
+      router.refresh();
+      setNetworkActionTarget(null);
     });
+  }
+
+  function isNetworkActionPendingForProfile(profileId: string): boolean {
+    return (
+      isNetworkActionPending && networkActionTarget?.profileId === profileId
+    );
+  }
+
+  function getNetworkActionErrorForProfile(profileId: string): string | null {
+    return networkActionErrorProfileId === profileId ? networkActionError : null;
   }
 
   function renderMyNetworkCard(partner: MyNetworkPartner) {
@@ -314,8 +379,11 @@ export function NetworkReferralsPageView({
           canManageNetwork={canManageNetwork}
           isTrustedPartner
           priorityPartner
-          onRemoveFromNetwork={() => handleRemoveFromNetwork(partner.id)}
-          isNetworkActionPending={isPending}
+          onRemoveFromNetwork={() =>
+            handleRemoveFromNetwork(partner.id, profile.id)
+          }
+          isNetworkActionPending={isNetworkActionPendingForProfile(profile.id)}
+          networkActionError={getNetworkActionErrorForProfile(profile.id)}
         />
       );
     }
@@ -348,14 +416,24 @@ export function NetworkReferralsPageView({
             <button
               type="button"
               onClick={() => handleRemoveFromNetwork(partner.id)}
-              disabled={isPending}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+              disabled={
+                isNetworkActionPending &&
+                networkActionTarget?.partnerId === partner.id
+              }
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
             >
               <UserMinus className="h-3.5 w-3.5" />
-              Remove
+              {isNetworkActionPending &&
+              networkActionTarget?.partnerId === partner.id
+                ? "Removing..."
+                : "Remove"}
             </button>
           ) : null}
         </div>
+        {networkActionError &&
+        networkActionTarget?.partnerId === partner.id ? (
+          <p className="mt-2 text-xs text-rose-700">{networkActionError}</p>
+        ) : null}
       </article>
     );
   }
@@ -394,8 +472,8 @@ export function NetworkReferralsPageView({
             <button
               type="button"
               onClick={handleToggleVisibility}
-              disabled={isPending}
-              className="inline-flex items-center gap-2 admin-btn-secondary"
+              disabled={isVisibilityPending}
+              className="inline-flex items-center gap-2 admin-btn-secondary disabled:opacity-60"
             >
               {ownProfile.isVisible ? (
                 <EyeOff className="h-4 w-4" />
@@ -437,6 +515,12 @@ export function NetworkReferralsPageView({
             </button>
           ))}
         </nav>
+
+        {networkActionError ? (
+          <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {networkActionError}
+          </p>
+        ) : null}
       </header>
 
       {activeTab === "directory" ? (
@@ -530,10 +614,16 @@ export function NetworkReferralsPageView({
                         }
                         onRemoveFromNetwork={
                           canManageNetwork && partner
-                            ? () => handleRemoveFromNetwork(partner.id)
+                            ? () =>
+                                handleRemoveFromNetwork(partner.id, profile.id)
                             : undefined
                         }
-                        isNetworkActionPending={isPending}
+                        isNetworkActionPending={isNetworkActionPendingForProfile(
+                          profile.id,
+                        )}
+                        networkActionError={getNetworkActionErrorForProfile(
+                          profile.id,
+                        )}
                       />
                     );
                   })}
@@ -550,7 +640,11 @@ export function NetworkReferralsPageView({
             isInMyNetwork={Boolean(selectedPartner)}
             myNetworkPartnerId={selectedPartner?.id}
             networkActionError={networkActionError}
-            isNetworkActionPending={isPending}
+            isNetworkActionPending={
+              selectedProfile
+                ? isNetworkActionPendingForProfile(selectedProfile.id)
+                : false
+            }
             onClose={handleClosePanel}
             onSendReferral={() => {
               if (selectedProfile) {
@@ -563,8 +657,11 @@ export function NetworkReferralsPageView({
               }
             }}
             onRemoveFromNetwork={() => {
-              if (selectedPartner) {
-                handleRemoveFromNetwork(selectedPartner.id);
+              if (selectedPartner && selectedProfile) {
+                handleRemoveFromNetwork(
+                  selectedPartner.id,
+                  selectedProfile.id,
+                );
               }
             }}
             onReferralSuccess={handleReferralSuccess}
@@ -634,7 +731,11 @@ export function NetworkReferralsPageView({
             isInMyNetwork={Boolean(selectedPartner)}
             myNetworkPartnerId={selectedPartner?.id}
             networkActionError={networkActionError}
-            isNetworkActionPending={isPending}
+            isNetworkActionPending={
+              selectedProfile
+                ? isNetworkActionPendingForProfile(selectedProfile.id)
+                : false
+            }
             onClose={handleClosePanel}
             onSendReferral={() => {
               if (selectedProfile) {
@@ -647,8 +748,11 @@ export function NetworkReferralsPageView({
               }
             }}
             onRemoveFromNetwork={() => {
-              if (selectedPartner) {
-                handleRemoveFromNetwork(selectedPartner.id);
+              if (selectedPartner && selectedProfile) {
+                handleRemoveFromNetwork(
+                  selectedPartner.id,
+                  selectedProfile.id,
+                );
               }
             }}
             onReferralSuccess={handleReferralSuccess}
