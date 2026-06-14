@@ -1,5 +1,6 @@
 import { Mail, Phone } from "lucide-react";
 import { LeadStatusBadge } from "@/shared/components/leads/LeadStatusBadge";
+import { NetworkReferralBadge } from "@/shared/components/leads/NetworkReferralBadge";
 import { getLeadLastActivityLabel } from "@/shared/lib/leads/lead-status";
 import {
   formatLeadDate,
@@ -43,6 +44,7 @@ export function LeadCard({
               {formatLeadName(lead)}
             </p>
             <LeadStatusBadge status={lead.status} />
+            <NetworkReferralBadge referral={lead.networkReferral} compact />
           </div>
 
           <div className="mt-2 space-y-1 text-xs text-slate-600">

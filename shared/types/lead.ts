@@ -13,6 +13,7 @@ export type LeadSource =
   | "google"
   | "facebook"
   | "referral"
+  | "network_referral"
   | "door_hanger"
   | "yard_sign"
   | "truck_wrap"
@@ -47,6 +48,15 @@ export type Lead = {
   deleteAfter?: string;
   lastActivityAt?: string;
   lastActivityLabel?: string;
+  networkReferral?: LeadNetworkReferralSummary;
+};
+
+export type LeadNetworkReferralSummary = {
+  referralId: string;
+  sourceCompanyId: string;
+  sourceCompanyName: string;
+  sourceUserName?: string;
+  sourceNetworkProfileId?: string;
 };
 
 export type LeadFormData = {
@@ -80,6 +90,7 @@ export const LEAD_SOURCE_OPTIONS: { value: LeadSource; label: string }[] = [
   { value: "google", label: "Google" },
   { value: "facebook", label: "Facebook" },
   { value: "referral", label: "Referral" },
+  { value: "network_referral", label: "Network Referral" },
   { value: "door_hanger", label: "Door hanger" },
   { value: "yard_sign", label: "Yard sign" },
   { value: "truck_wrap", label: "Truck wrap" },

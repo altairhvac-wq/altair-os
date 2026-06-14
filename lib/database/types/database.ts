@@ -83,6 +83,12 @@ import type {
   TimeClockEntryInsert,
   TimeClockEntryRow,
   TimeClockEntryUpdate,
+  NetworkProfileInsert,
+  NetworkProfileRow,
+  NetworkProfileUpdate,
+  NetworkReferralInsert,
+  NetworkReferralRow,
+  NetworkReferralUpdate,
 } from "./core-tables";
 import type { Json } from "./enums";
 
@@ -329,6 +335,69 @@ export type Database = {
             columns: ["converted_customer_id"];
             isOneToOne: false;
             referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      network_profiles: {
+        Row: NetworkProfileRow;
+        Insert: NetworkProfileInsert;
+        Update: NetworkProfileUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "network_profiles_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: true;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      network_referrals: {
+        Row: NetworkReferralRow;
+        Insert: NetworkReferralInsert;
+        Update: NetworkReferralUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "network_referrals_source_company_id_fkey";
+            columns: ["source_company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "network_referrals_target_company_id_fkey";
+            columns: ["target_company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "network_referrals_source_user_id_fkey";
+            columns: ["source_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "network_referrals_target_lead_id_fkey";
+            columns: ["target_lead_id"];
+            isOneToOne: false;
+            referencedRelation: "leads";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "network_referrals_source_network_profile_id_fkey";
+            columns: ["source_network_profile_id"];
+            isOneToOne: false;
+            referencedRelation: "network_profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "network_referrals_target_network_profile_id_fkey";
+            columns: ["target_network_profile_id"];
+            isOneToOne: false;
+            referencedRelation: "network_profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -1052,6 +1121,8 @@ export type Database = {
       alpha_tracker_severity: AlphaTrackerItemRow["severity"];
       alpha_tracker_status: AlphaTrackerItemRow["status"];
       alpha_tracker_device: AlphaTrackerItemRow["device"];
+      network_referral_urgency: NetworkReferralRow["urgency"];
+      network_referral_status: NetworkReferralRow["status"];
     };
     CompositeTypes: Record<string, never>;
   };

@@ -35,10 +35,26 @@ export type LeadSource =
   | "google"
   | "facebook"
   | "referral"
+  | "network_referral"
   | "door_hanger"
   | "yard_sign"
   | "truck_wrap"
   | "other";
+
+export type NetworkReferralUrgency =
+  | "low"
+  | "normal"
+  | "urgent"
+  | "emergency";
+
+export type NetworkReferralStatus =
+  | "sent"
+  | "accepted"
+  | "declined"
+  | "converted"
+  | "won"
+  | "lost"
+  | "cancelled";
 
 export type LeadActivityType =
   | "lead_created"

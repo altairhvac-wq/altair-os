@@ -32,6 +32,7 @@ import {
   type LeadCreateOutcome,
 } from "@/shared/components/leads/LeadForm";
 import { LeadStatusBadge } from "@/shared/components/leads/LeadStatusBadge";
+import { NetworkReferralAttribution } from "@/shared/components/leads/NetworkReferralBadge";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { shouldPromptConvertOnWon } from "@/shared/lib/leads/lead-conversion";
 import { formatActionError } from "@/shared/lib/operational-errors";
@@ -329,6 +330,12 @@ export function LeadDetailPanel({
                 </dd>
               </div>
             </dl>
+
+            {lead.networkReferral ? (
+              <div className="mt-4">
+                <NetworkReferralAttribution referral={lead.networkReferral} />
+              </div>
+            ) : null}
 
             {lead.convertedCustomerId ? (
               <p className="mt-4 text-sm">

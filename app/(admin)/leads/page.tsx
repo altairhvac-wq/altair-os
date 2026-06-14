@@ -4,7 +4,7 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { listLeadActivitiesForLead } from "@/lib/database/queries/lead-activities";
 import {
   listLeadAssignableMembers,
-  listLeads,
+  listLeadsWithReferrals,
 } from "@/lib/database/queries/leads";
 import { LeadsPageView } from "@/shared/components/leads/LeadsPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
@@ -49,7 +49,7 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
   const initialFollowUpDue = filter === "follow_up_due";
 
   const [leads, assignableMembers] = await Promise.all([
-    listLeads(companyContext.company.id),
+    listLeadsWithReferrals(companyContext.company.id),
     listLeadAssignableMembers(companyContext.company.id),
   ]);
 

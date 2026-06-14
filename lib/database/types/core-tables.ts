@@ -1218,6 +1218,95 @@ export type TimeClockEntryUpdate = Partial<
   Omit<TimeClockEntryRow, "id" | "company_id" | "user_id" | "created_at">
 >;
 
+export type NetworkProfileRow = {
+  id: UUID;
+  company_id: UUID;
+  display_name: string;
+  trade_type: string;
+  service_area: string;
+  city: string;
+  state: string;
+  bio: string | null;
+  is_visible: boolean;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type NetworkProfileInsert = {
+  id?: UUID;
+  company_id: UUID;
+  display_name: string;
+  trade_type?: string;
+  service_area?: string;
+  city?: string;
+  state?: string;
+  bio?: string | null;
+  is_visible?: boolean;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type NetworkProfileUpdate = Partial<
+  Omit<NetworkProfileRow, "id" | "company_id" | "created_at" | "updated_at">
+>;
+
+export type NetworkReferralRow = {
+  id: UUID;
+  source_company_id: UUID;
+  target_company_id: UUID;
+  source_user_id: UUID;
+  target_lead_id: UUID | null;
+  source_network_profile_id: UUID | null;
+  target_network_profile_id: UUID | null;
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string;
+  service_address: string;
+  city: string;
+  state: string;
+  zip: string;
+  requested_service: string;
+  urgency: import("./enums").NetworkReferralUrgency;
+  notes: string | null;
+  incentive_note: string | null;
+  status: import("./enums").NetworkReferralStatus;
+  decline_reason: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type NetworkReferralInsert = {
+  id?: UUID;
+  source_company_id: UUID;
+  target_company_id: UUID;
+  source_user_id: UUID;
+  target_lead_id?: UUID | null;
+  source_network_profile_id?: UUID | null;
+  target_network_profile_id?: UUID | null;
+  customer_name: string;
+  customer_phone?: string;
+  customer_email?: string;
+  service_address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  requested_service: string;
+  urgency?: import("./enums").NetworkReferralUrgency;
+  notes?: string | null;
+  incentive_note?: string | null;
+  status?: import("./enums").NetworkReferralStatus;
+  decline_reason?: string | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type NetworkReferralUpdate = Partial<
+  Omit<
+    NetworkReferralRow,
+    "id" | "source_company_id" | "target_company_id" | "source_user_id" | "created_at"
+  >
+>;
+
 export type ActiveCompanyContext = UserCompanyContext & {
   user: {
     id: UUID;

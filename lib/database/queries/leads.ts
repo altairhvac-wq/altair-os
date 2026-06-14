@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { getLatestLeadActivityForLeads } from "@/lib/database/queries/lead-activities";
+import { getNetworkReferralsByLeadIds } from "@/lib/database/queries/network-referrals";
 import type {
   LeadInsert,
   LeadRow,
@@ -187,6 +188,33 @@ export async function listLeads(
   }
 
   return attachLatestActivity(companyId, rows);
+}
+
+async function attachNetworkReferrals(
+  companyId: string,
+  leads: Lead[],
+): Promise<Lead[]> {
+  const referralMap = await getNetworkReferralsByLeadIds(
+    companyId,
+    leads.map((lead) => lead.id),
+  );
+
+  if (referralMap.size === 0) {
+    return leads;
+  }
+
+  return leads.map((lead) => {
+    const networkReferral = referralMap.get(lead.id);
+    return networkReferral ? { ...lead, networkReferral } : lead;
+  });
+}
+
+export async function listLeadsWithReferrals(
+  companyId: string,
+  options?: ListLeadsOptions,
+): Promise<Lead[]> {
+  const leads = await listLeads(companyId, options);
+  return attachNetworkReferrals(companyId, leads);
 }
 
 export async function getLeadById(
