@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
-import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
+import {
+  NO_ACTIVE_COMPANY_MESSAGE,
+  NETWORK_PARTNER_MANAGER_MESSAGE,
+} from "@/lib/database/errors";
+import { hasCompanyRole } from "@/lib/database/types/roles";
 import {
   getNetworkProfileById,
 } from "@/lib/database/queries/network-profiles";
@@ -28,10 +32,11 @@ async function assertNetworkManager() {
     return { error: NO_ACTIVE_COMPANY_MESSAGE } as const;
   }
 
-  if (!context.permissions.manageCompany) {
-    return {
-      error: "Only company owners and admins can manage network connections.",
-    } as const;
+  if (
+    !context.permissions.manageCompany ||
+    !hasCompanyRole(context.role, ["owner", "admin"])
+  ) {
+    return { error: NETWORK_PARTNER_MANAGER_MESSAGE } as const;
   }
 
   return { context } as const;

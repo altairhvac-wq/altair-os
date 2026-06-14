@@ -7,6 +7,7 @@ import {
   addToMyNetworkAction,
   removeFromMyNetworkAction,
 } from "@/app/actions/network-partners";
+import { NETWORK_PARTNER_MANAGER_MESSAGE } from "@/lib/database/errors";
 import { toggleOwnNetworkProfileVisibilityAction } from "@/app/actions/network-referrals";
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
@@ -289,9 +290,7 @@ export function NetworkReferralsPageView({
 
   function handleAddToNetwork(profileId: string) {
     if (!canManageNetwork) {
-      setNetworkActionError(
-        "Only company owners and admins can manage network connections.",
-      );
+      setNetworkActionError(NETWORK_PARTNER_MANAGER_MESSAGE);
       setNetworkActionErrorProfileId(profileId);
       return;
     }
@@ -318,9 +317,7 @@ export function NetworkReferralsPageView({
 
   function handleRemoveFromNetwork(partnerId: string, profileId?: string) {
     if (!canManageNetwork) {
-      setNetworkActionError(
-        "Only company owners and admins can manage network connections.",
-      );
+      setNetworkActionError(NETWORK_PARTNER_MANAGER_MESSAGE);
       if (profileId) {
         setNetworkActionErrorProfileId(profileId);
       }

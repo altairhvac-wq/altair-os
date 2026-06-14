@@ -7,9 +7,8 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
-import { mapDatabaseError } from "@/lib/database/errors";
+import { mapNetworkPartnerError } from "@/lib/database/errors";
 import type {
-  NetworkPartnerInsert,
   NetworkPartnerRow,
 } from "@/lib/database/types/core-tables";
 import type { NetworkProfile } from "@/shared/types/network-referral";
@@ -113,32 +112,26 @@ export async function getNetworkPartnerLinkByLinkedCompanyId(
   return data ? mapNetworkPartnerRow(data) : null;
 }
 
-async function reactivateLinkedNetworkPartner(
+async function upsertLinkedNetworkPartnerViaRpc(
   companyId: string,
-  partnerId: string,
   profile: NetworkProfile,
 ): Promise<{ partner: NetworkPartner | null; error: string | null }> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("network_partners")
-    .update({
-      partner_company_name: profile.displayName,
-      trade_type: profile.tradeType,
-      service_area: profile.serviceArea,
-      city: profile.city,
-      state: profile.state,
-      relationship_status: "active",
-    })
-    .eq("company_id", companyId)
-    .eq("id", partnerId)
-    .select("*")
-    .single();
+  const { data, error } = await supabase.rpc("upsert_linked_network_partner", {
+    p_company_id: companyId,
+    p_linked_company_id: profile.companyId,
+    p_partner_company_name: profile.displayName,
+    p_trade_type: profile.tradeType,
+    p_service_area: profile.serviceArea,
+    p_city: profile.city,
+    p_state: profile.state,
+  });
 
   if (error || !data) {
-    return { partner: null, error: mapDatabaseError(error) };
+    return { partner: null, error: mapNetworkPartnerError(error) };
   }
 
-  return { partner: mapNetworkPartnerRow(data), error: null };
+  return { partner: mapNetworkPartnerRow(data as NetworkPartnerRow), error: null };
 }
 
 export async function getNetworkPartnerById(
@@ -169,71 +162,7 @@ export async function addLinkedNetworkPartner(
     return { partner: null, error: "You cannot add your own company to your network." };
   }
 
-  const existingLink = await getNetworkPartnerLinkByLinkedCompanyId(
-    companyId,
-    profile.companyId,
-  );
-  if (existingLink) {
-    if (existingLink.relationshipStatus === "active") {
-      return { partner: existingLink, error: null };
-    }
-
-    return reactivateLinkedNetworkPartner(
-      companyId,
-      existingLink.id,
-      profile,
-    );
-  }
-
-  const supabase = await createClient();
-  const row: NetworkPartnerInsert = {
-    company_id: companyId,
-    linked_company_id: profile.companyId,
-    partner_company_name: profile.displayName,
-    contact_name: "",
-    email: "",
-    phone: "",
-    trade_type: profile.tradeType,
-    service_area: profile.serviceArea,
-    city: profile.city,
-    state: profile.state,
-    relationship_status: "active",
-  };
-
-  const { data, error } = await supabase
-    .from("network_partners")
-    .insert(row)
-    .select("*")
-    .single();
-
-  if (error || !data) {
-    if (error?.code === "23505") {
-      const racedLink = await getNetworkPartnerLinkByLinkedCompanyId(
-        companyId,
-        profile.companyId,
-      );
-      if (racedLink) {
-        if (racedLink.relationshipStatus === "active") {
-          return { partner: racedLink, error: null };
-        }
-
-        return reactivateLinkedNetworkPartner(
-          companyId,
-          racedLink.id,
-          profile,
-        );
-      }
-
-      return {
-        partner: null,
-        error: "This company is already in your network.",
-      };
-    }
-
-    return { partner: null, error: mapDatabaseError(error) };
-  }
-
-  return { partner: mapNetworkPartnerRow(data), error: null };
+  return upsertLinkedNetworkPartnerViaRpc(companyId, profile);
 }
 
 export async function removeLinkedNetworkPartner(
@@ -249,7 +178,7 @@ export async function removeLinkedNetworkPartner(
     .not("linked_company_id", "is", null);
 
   if (error) {
-    return { error: mapDatabaseError(error) };
+    return { error: mapNetworkPartnerError(error) };
   }
 
   return { error: null };

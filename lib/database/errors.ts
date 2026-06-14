@@ -116,6 +116,32 @@ export function mapDatabaseError(error: DatabaseErrorLike): string {
   return "Something went wrong. Please try again.";
 }
 
+export const NETWORK_PARTNER_MANAGER_MESSAGE =
+  "Only company owners and admins can add trusted network partners.";
+
+export function mapNetworkPartnerError(error: DatabaseErrorLike): string {
+  const rawMessage = error.message?.trim() ?? "";
+  const message = rawMessage.toLowerCase();
+
+  if (message.includes("not authorized to manage network partners")) {
+    return NETWORK_PARTNER_MANAGER_MESSAGE;
+  }
+
+  if (message.includes("not available in the network directory")) {
+    return "This company is not available in the network directory.";
+  }
+
+  if (
+    message.includes("permission denied") ||
+    error.code === "42501" ||
+    message.includes("row-level security")
+  ) {
+    return NETWORK_PARTNER_MANAGER_MESSAGE;
+  }
+
+  return mapDatabaseError(error);
+}
+
 export type DemoDataActionKind = "seed" | "clear";
 
 function demoDataPermissionMessage(action: DemoDataActionKind): string {

@@ -1,5 +1,6 @@
 "use server";
 
+import type { User } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PASSWORD_RESET_RATE_LIMIT_MESSAGE, PASSWORD_RESET_SUCCESS_MESSAGE } from "@/lib/auth/constants";
@@ -42,25 +43,37 @@ async function redirectAfterAuth(next?: string | null): Promise<never> {
 }
 
 async function ensureCompanyAfterAuth(
+  user: User,
   companyName?: string,
 ): Promise<AuthActionState | null> {
-  const context = await getActiveCompanyContext();
+  let context = await getActiveCompanyContext();
+
+  if (!context) {
+    if (companyName) {
+      const bootstrapResult = await bootstrapCompanyForNewUser(companyName);
+
+      if (bootstrapResult.error) {
+        return { error: bootstrapResult.error };
+      }
+
+      if (bootstrapResult.companyId) {
+        context = await getActiveCompanyContext({
+          companyId: bootstrapResult.companyId,
+        });
+      }
+    } else {
+      redirect("/setup");
+    }
+  }
 
   if (context) {
-    return null;
+    await processNetworkInviteAfterCompanyBootstrap({
+      user,
+      companyId: context.company.id,
+    });
   }
 
-  if (companyName) {
-    const { error } = await bootstrapCompanyForNewUser(companyName);
-
-    if (error) {
-      return { error };
-    }
-
-    return null;
-  }
-
-  redirect("/setup");
+  return null;
 }
 
 export async function loginAction(
@@ -88,7 +101,9 @@ export async function loginAction(
   const companyName = data.user
     ? getCompanyNameFromUserMetadata(data.user)
     : null;
-  const setupResult = await ensureCompanyAfterAuth(companyName ?? undefined);
+  const setupResult = data.user
+    ? await ensureCompanyAfterAuth(data.user, companyName ?? undefined)
+    : null;
 
   if (setupResult?.error) {
     return setupResult;

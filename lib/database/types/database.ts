@@ -1161,6 +1161,18 @@ export type Database = {
         };
         Returns: boolean;
       };
+      upsert_linked_network_partner: {
+        Args: {
+          p_company_id: string;
+          p_linked_company_id: string;
+          p_partner_company_name: string;
+          p_trade_type: string;
+          p_service_area?: string;
+          p_city?: string;
+          p_state?: string;
+        };
+        Returns: NetworkPartnerRow;
+      };
       submit_public_estimate_approval: {
         Args: {
           p_raw_token: string;
