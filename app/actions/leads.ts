@@ -434,6 +434,10 @@ async function ensureLeadCustomerRecord(
     phone: latestLead.phone,
   });
 
+  if (existingMatch.error) {
+    return { error: existingMatch.error };
+  }
+
   if (existingMatch.conflict) {
     return { error: existingMatch.conflict };
   }

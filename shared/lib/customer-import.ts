@@ -1,5 +1,16 @@
 import { normalizePhoneDigits, phonesMatch } from "@/shared/lib/phone";
 import {
+  parseCustomerImportCsvRaw,
+  parseCsvRecords,
+  normalizeCsvHeader,
+} from "@/shared/lib/customer-import-parser";
+import {
+  mapCsvRecordsToImportRowsWithCompany,
+  sanitizeCustomerImportFieldMapping,
+  type CustomerImportFieldMapping,
+  type CustomerImportRowInput,
+} from "@/shared/lib/customer-import-mapping";
+import {
   normalizeCustomerFormData,
   validateCustomerFormData,
   type CustomerFormData,
@@ -22,19 +33,30 @@ export const CUSTOMER_IMPORT_MAX_ROWS = 500;
 /** Guard against oversized uploads before parsing (500 rows × ~200 chars ≪ 256 KB). */
 export const CUSTOMER_IMPORT_MAX_FILE_BYTES = 256 * 1024;
 
+export const CUSTOMER_IMPORT_PREVIEW_ROW_LIMIT = 25;
+
 export const CUSTOMER_IMPORT_TEMPLATE_CSV = `name,phone,email,address,city,state,zip
 John Smith,8015551234,john@example.com,123 Main St,Draper,UT,84020`;
 
-export type CustomerImportRowInput = {
-  rowNumber: number;
-  name: string;
-  phone: string;
-  email: string;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
-};
+export const CUSTOMER_IMPORT_ADVANCED_TEMPLATE_CSV = `name,first_name,last_name,company_name,phone,email,address,city,state,zip,notes
+John Smith,John,Smith,,8015551234,john@example.com,123 Main St,Draper,UT,84020,VIP customer
+Acme Plumbing,,,Acme Plumbing,8015555678,office@acme.example.com,456 Oak Ave,Salt Lake City,UT,84101,Commercial account`;
+
+export type { CustomerImportRowInput } from "@/shared/lib/customer-import-mapping";
+export type {
+  CustomerImportAltairField,
+  CustomerImportFieldMapping,
+  CustomerImportPreset,
+} from "@/shared/lib/customer-import-mapping";
+export {
+  CUSTOMER_IMPORT_ALTAIR_FIELDS,
+  CUSTOMER_IMPORT_FIELD_LABELS,
+  CUSTOMER_IMPORT_PRESET_OPTIONS,
+  createEmptyCustomerImportFieldMapping,
+  suggestCustomerImportFieldMapping,
+  sanitizeCustomerImportFieldMapping,
+} from "@/shared/lib/customer-import-mapping";
+export { parseCustomerImportCsvRaw } from "@/shared/lib/customer-import-parser";
 
 export type CustomerImportRowStatus = "ready" | "duplicate" | "error";
 
@@ -43,6 +65,11 @@ export type CustomerImportPreviewRow = {
   name: string;
   phone: string;
   email: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  notes: string;
   status: CustomerImportRowStatus;
   message?: string;
   formData?: CustomerFormData;
@@ -59,83 +86,6 @@ export type CustomerImportPreviewSummary = {
   duplicateCount: number;
   errorCount: number;
 };
-
-function stripBom(value: string): string {
-  return value.charCodeAt(0) === 0xfeff ? value.slice(1) : value;
-}
-
-function parseCsvRecords(text: string): {
-  records: string[][];
-  error?: string;
-} {
-  const records: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let inQuotes = false;
-
-  for (let index = 0; index < text.length; index += 1) {
-    const char = text[index]!;
-    const nextChar = text[index + 1];
-
-    if (inQuotes) {
-      if (char === '"') {
-        if (nextChar === '"') {
-          field += '"';
-          index += 1;
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        field += char;
-      }
-      continue;
-    }
-
-    if (char === '"') {
-      inQuotes = true;
-      continue;
-    }
-
-    if (char === ",") {
-      row.push(field);
-      field = "";
-      continue;
-    }
-
-    if (char === "\n") {
-      row.push(field);
-      records.push(row);
-      row = [];
-      field = "";
-      continue;
-    }
-
-    if (char === "\r") {
-      continue;
-    }
-
-    field += char;
-  }
-
-  if (inQuotes) {
-    return {
-      records: [],
-      error:
-        "The CSV file has an unclosed quote. Fix the formatting and try again.",
-    };
-  }
-
-  if (field.length > 0 || row.length > 0) {
-    row.push(field);
-    records.push(row);
-  }
-
-  return { records };
-}
-
-function normalizeHeader(value: string): string {
-  return value.trim().toLowerCase();
-}
 
 export function normalizeImportEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -184,6 +134,8 @@ export function sanitizeCustomerImportRows(
     city: String(row?.city ?? "").trim(),
     state: String(row?.state ?? "").trim(),
     zip: String(row?.zip ?? "").trim(),
+    notes: String(row?.notes ?? "").trim(),
+    company: String(row?.company ?? "").trim(),
   }));
 }
 
@@ -211,9 +163,9 @@ export function buildCustomerFormDataFromImportRow(
     city: row.city,
     state: row.state,
     zip: row.zip,
-    company: "",
+    company: row.company,
     status: "active",
-    notes: "",
+    notes: row.notes,
   };
 }
 
@@ -239,10 +191,10 @@ export function validateCustomerImportRow(
   return null;
 }
 
-function contactMatchesExisting(
+function getExistingDuplicateReason(
   formData: CustomerFormData,
   existingContacts: CustomerImportContact[],
-): boolean {
+): string | null {
   const normalizedEmail = normalizeImportEmail(formData.email);
 
   for (const contact of existingContacts) {
@@ -250,33 +202,35 @@ function contactMatchesExisting(
       normalizedEmail &&
       normalizeImportEmail(contact.email) === normalizedEmail
     ) {
-      return true;
+      return "Matches an existing customer (matching email).";
     }
 
     if (formData.phone && phonesMatch(formData.phone, contact.phone)) {
-      return true;
+      return "Matches an existing customer (matching phone).";
     }
   }
 
-  return false;
+  return null;
 }
 
-function contactMatchesBatch(
+function getBatchDuplicateReason(
   formData: CustomerFormData,
   seenEmails: Set<string>,
   seenPhones: Set<string>,
-): boolean {
+): string | null {
   const normalizedEmail = normalizeImportEmail(formData.email);
   if (normalizedEmail && seenEmails.has(normalizedEmail)) {
-    return true;
+    return "Duplicate contact in this file (matching email).";
   }
 
-  const phoneKey = formData.phone ? normalizeImportPhoneKey(formData.phone) : null;
+  const phoneKey = formData.phone
+    ? normalizeImportPhoneKey(formData.phone)
+    : null;
   if (phoneKey && seenPhones.has(phoneKey)) {
-    return true;
+    return "Duplicate contact in this file (matching phone).";
   }
 
-  return false;
+  return null;
 }
 
 function trackBatchContact(
@@ -289,7 +243,9 @@ function trackBatchContact(
     seenEmails.add(normalizedEmail);
   }
 
-  const phoneKey = formData.phone ? normalizeImportPhoneKey(formData.phone) : null;
+  const phoneKey = formData.phone
+    ? normalizeImportPhoneKey(formData.phone)
+    : null;
   if (phoneKey) {
     seenPhones.add(phoneKey);
   }
@@ -306,13 +262,22 @@ export function classifyCustomerImportRows(
     const displayName = row.name.trim() || `Row ${row.rowNumber}`;
     const validationError = validateCustomerImportRow(row);
 
+    const basePreview = {
+      rowNumber: row.rowNumber,
+      name: displayName,
+      phone: row.phone.trim(),
+      email: row.email.trim(),
+      address: row.address.trim(),
+      city: row.city.trim(),
+      state: row.state.trim(),
+      zip: row.zip.trim(),
+      notes: row.notes.trim(),
+    };
+
     if (validationError) {
       return {
-        rowNumber: row.rowNumber,
-        name: displayName,
-        phone: row.phone.trim(),
-        email: row.email.trim(),
-        status: "error",
+        ...basePreview,
+        status: "error" as const,
         message: validationError,
       };
     }
@@ -321,36 +286,45 @@ export function classifyCustomerImportRows(
       buildCustomerFormDataFromImportRow(row),
     );
 
-    if (contactMatchesBatch(formData, seenEmails, seenPhones)) {
+    const batchDuplicateReason = getBatchDuplicateReason(
+      formData,
+      seenEmails,
+      seenPhones,
+    );
+    if (batchDuplicateReason) {
       return {
-        rowNumber: row.rowNumber,
+        ...basePreview,
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
-        status: "duplicate",
-        message: "Duplicate contact in this file.",
+        status: "duplicate" as const,
+        message: batchDuplicateReason,
       };
     }
 
-    if (contactMatchesExisting(formData, existingContacts)) {
+    const existingDuplicateReason = getExistingDuplicateReason(
+      formData,
+      existingContacts,
+    );
+    if (existingDuplicateReason) {
       return {
-        rowNumber: row.rowNumber,
+        ...basePreview,
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
-        status: "duplicate",
-        message: "Matches an existing customer.",
+        status: "duplicate" as const,
+        message: existingDuplicateReason,
       };
     }
 
     trackBatchContact(formData, seenEmails, seenPhones);
 
     return {
-      rowNumber: row.rowNumber,
+      ...basePreview,
       name: formData.name,
       phone: formData.phone,
       email: formData.email,
-      status: "ready",
+      status: "ready" as const,
       formData,
     };
   });
@@ -367,17 +341,47 @@ export function summarizeCustomerImportPreview(
   };
 }
 
+export function mapCustomerImportCsvWithMapping(
+  csvText: string,
+  mapping: CustomerImportFieldMapping,
+): {
+  error?: string;
+  rows?: CustomerImportRowInput[];
+} {
+  const parsedResult = parseCustomerImportCsvRaw(csvText);
+  if (parsedResult.error || !parsedResult.parsed) {
+    return { error: parsedResult.error ?? "Could not read this CSV file." };
+  }
+
+  const sanitizedMapping = sanitizeCustomerImportFieldMapping(
+    mapping,
+    parsedResult.parsed.headers,
+  );
+
+  const mapped = mapCsvRecordsToImportRowsWithCompany(
+    parsedResult.parsed,
+    sanitizedMapping,
+  );
+
+  if (mapped.error || !mapped.rows) {
+    return { error: mapped.error ?? "Could not map customer rows." };
+  }
+
+  return { rows: mapped.rows };
+}
+
+/** V1 exact-column parser — kept for backward compatibility with the simple template. */
 export function parseCustomerImportCsv(text: string): {
   error?: string;
   rows?: CustomerImportRowInput[];
 } {
-  const trimmed = stripBom(text).trim();
+  const trimmed = text.trim();
 
   if (!trimmed) {
     return { error: "The file is empty. Add customer rows and try again." };
   }
 
-  const parsedRecords = parseCsvRecords(trimmed);
+  const parsedRecords = parseCsvRecords(trimmed.startsWith("\ufeff") ? trimmed.slice(1) : trimmed);
   if (parsedRecords.error) {
     return { error: parsedRecords.error };
   }
@@ -390,7 +394,7 @@ export function parseCustomerImportCsv(text: string): {
     return { error: "The file is empty. Add customer rows and try again." };
   }
 
-  const header = records[0]!.map(normalizeHeader);
+  const header = records[0]!.map(normalizeCsvHeader);
   const missingColumns = CUSTOMER_IMPORT_COLUMNS.filter(
     (column) => !header.includes(column),
   );
@@ -431,6 +435,8 @@ export function parseCustomerImportCsv(text: string): {
       city: getValue("city"),
       state: getValue("state"),
       zip: getValue("zip"),
+      notes: "",
+      company: "",
     };
   });
 

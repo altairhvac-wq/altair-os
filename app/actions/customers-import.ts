@@ -11,9 +11,12 @@ import {
 import { recordCustomerCreatedActivity } from "@/lib/database/services/customer-activity";
 import {
   classifyCustomerImportRows,
+  getCustomerImportFileSizeError,
   getCustomerImportRowLimitError,
+  mapCustomerImportCsvWithMapping,
   parseCustomerImportCsv,
   sanitizeCustomerImportRows,
+  type CustomerImportFieldMapping,
   type CustomerImportRowInput,
 } from "@/shared/lib/customer-import";
 
@@ -38,7 +41,7 @@ function revalidateCustomerPaths() {
   revalidatePath("/invoices");
 }
 
-export async function importCustomersFromCsvAction(
+async function importCustomersFromCsvRows(
   rows: CustomerImportRowInput[],
 ): Promise<ImportCustomersFromCsvActionResult> {
   const context = await getActiveCompanyContext();
@@ -131,13 +134,23 @@ export async function importCustomersFromCsvAction(
       continue;
     }
 
-    const { customer: existingMatch, conflict } = await findCustomerByContact(
-      context.company.id,
-      {
-        email: row.formData.email,
-        phone: row.formData.phone,
-      },
-    );
+    const {
+      customer: existingMatch,
+      conflict,
+      error: contactLookupError,
+    } = await findCustomerByContact(context.company.id, {
+      email: row.formData.email,
+      phone: row.formData.phone,
+    });
+
+    if (contactLookupError) {
+      errorRows.push({
+        rowNumber: row.rowNumber,
+        customerName: row.name,
+        message: contactLookupError,
+      });
+      continue;
+    }
 
     if (conflict) {
       errorRows.push({
@@ -197,10 +210,112 @@ export async function importCustomersFromCsvAction(
   };
 }
 
+export async function importCustomersFromMappedCsvAction(
+  csvText: string,
+  mapping: CustomerImportFieldMapping,
+): Promise<ImportCustomersFromCsvActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return {
+      error: NO_ACTIVE_COMPANY_MESSAGE,
+      importedRows: [],
+      skippedRows: [],
+      errorRows: [],
+    };
+  }
+
+  if (!context.permissions.manageCustomers) {
+    return {
+      error: "You do not have permission to import customers.",
+      importedRows: [],
+      skippedRows: [],
+      errorRows: [],
+    };
+  }
+
+  const trimmedCsv = csvText.trim();
+  if (!trimmedCsv) {
+    return {
+      error: "No customer rows were provided.",
+      importedRows: [],
+      skippedRows: [],
+      errorRows: [],
+    };
+  }
+
+  const fileSizeError = getCustomerImportFileSizeError(
+    new TextEncoder().encode(trimmedCsv).length,
+  );
+  if (fileSizeError) {
+    return {
+      error: fileSizeError,
+      importedRows: [],
+      skippedRows: [],
+      errorRows: [],
+    };
+  }
+
+  const mapped = mapCustomerImportCsvWithMapping(trimmedCsv, mapping);
+  if (mapped.error || !mapped.rows) {
+    return {
+      error: mapped.error ?? "Could not read this CSV file.",
+      importedRows: [],
+      skippedRows: [],
+      errorRows: [],
+    };
+  }
+
+  return importCustomersFromCsvRows(mapped.rows);
+}
+
+/** V1 exact-template import — kept for backward compatibility. */
 export async function importCustomersFromCsvTextAction(
   csvText: string,
 ): Promise<ImportCustomersFromCsvActionResult> {
-  const parsed = parseCustomerImportCsv(csvText);
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return {
+      error: NO_ACTIVE_COMPANY_MESSAGE,
+      importedRows: [],
+      skippedRows: [],
+      errorRows: [],
+    };
+  }
+
+  if (!context.permissions.manageCustomers) {
+    return {
+      error: "You do not have permission to import customers.",
+      importedRows: [],
+      skippedRows: [],
+      errorRows: [],
+    };
+  }
+
+  const trimmedCsv = csvText.trim();
+  if (!trimmedCsv) {
+    return {
+      error: "No customer rows were provided.",
+      importedRows: [],
+      skippedRows: [],
+      errorRows: [],
+    };
+  }
+
+  const fileSizeError = getCustomerImportFileSizeError(
+    new TextEncoder().encode(trimmedCsv).length,
+  );
+  if (fileSizeError) {
+    return {
+      error: fileSizeError,
+      importedRows: [],
+      skippedRows: [],
+      errorRows: [],
+    };
+  }
+
+  const parsed = parseCustomerImportCsv(trimmedCsv);
 
   if (parsed.error || !parsed.rows) {
     return {
@@ -211,5 +326,5 @@ export async function importCustomersFromCsvTextAction(
     };
   }
 
-  return importCustomersFromCsvAction(parsed.rows);
+  return importCustomersFromCsvRows(parsed.rows);
 }

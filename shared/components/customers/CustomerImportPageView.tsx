@@ -5,23 +5,31 @@ import { useMemo, useRef, useState, useTransition } from "react";
 import {
   AlertCircle,
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   Download,
   FileSpreadsheet,
   Upload,
   Users,
 } from "lucide-react";
-import { importCustomersFromCsvAction } from "@/app/actions/customers-import";
+import { importCustomersFromMappedCsvAction } from "@/app/actions/customers-import";
 import type { ImportCustomersFromCsvActionResult } from "@/app/actions/customers-import";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import {
   classifyCustomerImportRows,
+  CUSTOMER_IMPORT_ALTAIR_FIELDS,
+  CUSTOMER_IMPORT_FIELD_LABELS,
+  CUSTOMER_IMPORT_PREVIEW_ROW_LIMIT,
+  CUSTOMER_IMPORT_PRESET_OPTIONS,
   getCustomerImportFileSizeError,
-  parseCustomerImportCsv,
+  mapCustomerImportCsvWithMapping,
+  parseCustomerImportCsvRaw,
+  suggestCustomerImportFieldMapping,
   summarizeCustomerImportPreview,
   type CustomerImportContact,
+  type CustomerImportFieldMapping,
+  type CustomerImportPreset,
   type CustomerImportPreviewRow,
-  type CustomerImportRowInput,
 } from "@/shared/lib/customer-import";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 
@@ -29,7 +37,14 @@ type CustomerImportPageViewProps = {
   existingContacts: CustomerImportContact[];
 };
 
-type ImportPhase = "upload" | "preview" | "result";
+type ImportPhase = "upload" | "mapping" | "preview" | "result";
+
+const IMPORT_STEPS: { id: ImportPhase; label: string }[] = [
+  { id: "upload", label: "Upload CSV" },
+  { id: "mapping", label: "Match Columns" },
+  { id: "preview", label: "Review Preview" },
+  { id: "result", label: "Import Results" },
+];
 
 const STATUS_STYLES: Record<
   CustomerImportPreviewRow["status"],
@@ -49,6 +64,11 @@ const STATUS_STYLES: Record<
   },
 };
 
+function formatAddressPreview(row: CustomerImportPreviewRow): string {
+  const parts = [row.address, row.city, row.state, row.zip].filter(Boolean);
+  return parts.join(", ") || "—";
+}
+
 function formatContactPreview(row: CustomerImportPreviewRow): string {
   const parts = [row.phone, row.email].filter(Boolean);
   return parts.join(" · ") || "—";
@@ -59,10 +79,15 @@ export function CustomerImportPageView({
 }: CustomerImportPageViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<ImportPhase>("upload");
+  const [preset, setPreset] = useState<CustomerImportPreset>("other");
   const [fileName, setFileName] = useState<string | null>(null);
+  const [csvText, setCsvText] = useState("");
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [fieldMapping, setFieldMapping] = useState<CustomerImportFieldMapping>(
+    suggestCustomerImportFieldMapping([]),
+  );
   const [parseError, setParseError] = useState<string | null>(null);
   const [previewRows, setPreviewRows] = useState<CustomerImportPreviewRow[]>([]);
-  const [sourceRows, setSourceRows] = useState<CustomerImportRowInput[]>([]);
   const [importResult, setImportResult] =
     useState<ImportCustomersFromCsvActionResult | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
@@ -73,17 +98,46 @@ export function CustomerImportPageView({
     [previewRows],
   );
 
+  const previewRowsForDisplay = useMemo(
+    () => previewRows.slice(0, CUSTOMER_IMPORT_PREVIEW_ROW_LIMIT),
+    [previewRows],
+  );
+
+  const hasHiddenPreviewRows =
+    previewRows.length > CUSTOMER_IMPORT_PREVIEW_ROW_LIMIT;
+
   function resetImportState() {
     setPhase("upload");
     setFileName(null);
+    setCsvText("");
+    setCsvHeaders([]);
+    setFieldMapping(suggestCustomerImportFieldMapping([]));
     setParseError(null);
     setPreviewRows([]);
-    setSourceRows([]);
     setImportResult(null);
     setImportError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  }
+
+  function applyMappingAndPreview(
+    text: string,
+    headers: string[],
+    mapping: CustomerImportFieldMapping,
+  ) {
+    const mapped = mapCustomerImportCsvWithMapping(text, mapping);
+
+    if (mapped.error || !mapped.rows) {
+      setParseError(mapped.error ?? "Could not map customer rows.");
+      setPreviewRows([]);
+      return false;
+    }
+
+    const classified = classifyCustomerImportRows(mapped.rows, existingContacts);
+    setPreviewRows(classified);
+    setParseError(null);
+    return true;
   }
 
   function handleFileSelected(file: File | null) {
@@ -99,8 +153,9 @@ export function CustomerImportPageView({
     const sizeError = getCustomerImportFileSizeError(file.size);
     if (sizeError) {
       setParseError(sizeError);
+      setCsvText("");
+      setCsvHeaders([]);
       setPreviewRows([]);
-      setSourceRows([]);
       setPhase("upload");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -111,23 +166,26 @@ export function CustomerImportPageView({
     const reader = new FileReader();
     reader.onload = () => {
       const text = typeof reader.result === "string" ? reader.result : "";
-      const parsed = parseCustomerImportCsv(text);
+      const parsed = parseCustomerImportCsvRaw(text);
 
-      if (parsed.error || !parsed.rows) {
+      if (parsed.error || !parsed.parsed) {
         setParseError(parsed.error ?? "Could not read this CSV file.");
+        setCsvText("");
+        setCsvHeaders([]);
         setPreviewRows([]);
-        setSourceRows([]);
         setPhase("upload");
         return;
       }
 
-      const classified = classifyCustomerImportRows(
-        parsed.rows,
-        existingContacts,
+      const suggestedMapping = suggestCustomerImportFieldMapping(
+        parsed.parsed.headers,
+        preset,
       );
-      setSourceRows(parsed.rows);
-      setPreviewRows(classified);
-      setPhase("preview");
+
+      setCsvText(text);
+      setCsvHeaders(parsed.parsed.headers);
+      setFieldMapping(suggestedMapping);
+      setPhase("mapping");
     };
 
     reader.onerror = () => {
@@ -138,6 +196,30 @@ export function CustomerImportPageView({
     reader.readAsText(file);
   }
 
+  function handlePresetChange(nextPreset: CustomerImportPreset) {
+    setPreset(nextPreset);
+    if (csvHeaders.length > 0) {
+      setFieldMapping(suggestCustomerImportFieldMapping(csvHeaders, nextPreset));
+    }
+  }
+
+  function handleMappingFieldChange(
+    field: (typeof CUSTOMER_IMPORT_ALTAIR_FIELDS)[number],
+    header: string | null,
+  ) {
+    setFieldMapping((current) => ({
+      ...current,
+      [field]: header,
+    }));
+  }
+
+  function handleContinueToPreview() {
+    const success = applyMappingAndPreview(csvText, csvHeaders, fieldMapping);
+    if (success) {
+      setPhase("preview");
+    }
+  }
+
   function handleConfirmImport() {
     if (isImporting || previewSummary.readyCount === 0) {
       return;
@@ -146,7 +228,10 @@ export function CustomerImportPageView({
     setImportError(null);
 
     startImportTransition(async () => {
-      const result = await importCustomersFromCsvAction(sourceRows);
+      const result = await importCustomersFromMappedCsvAction(
+        csvText,
+        fieldMapping,
+      );
 
       if (result.error && result.importedRows.length === 0) {
         setImportError(
@@ -163,6 +248,8 @@ export function CustomerImportPageView({
     });
   }
 
+  const currentStepIndex = IMPORT_STEPS.findIndex((step) => step.id === phase);
+
   return (
     <div className="flex min-h-0 flex-col gap-3 lg:gap-4 lg:h-[calc(100dvh-7rem)]">
       <header className="admin-page-header flex shrink-0 items-center justify-between gap-2 px-3 py-2 sm:px-3.5">
@@ -176,7 +263,7 @@ export function CustomerImportPageView({
                 Import Customers
               </h1>
               <p className="truncate text-xs text-slate-500">
-                Upload a CSV to add customers to your company
+                Smart CSV import for spreadsheets and field-service exports
               </p>
             </div>
           </div>
@@ -191,6 +278,40 @@ export function CustomerImportPageView({
         </Link>
       </header>
 
+      {phase !== "result" ? (
+        <nav
+          aria-label="Import steps"
+          className="admin-card grid gap-2 p-3 sm:grid-cols-4 sm:p-4"
+        >
+          {IMPORT_STEPS.filter((step) => step.id !== "result").map(
+            (step, index) => {
+              const isActive = step.id === phase;
+              const isComplete = index < currentStepIndex;
+
+              return (
+                <div
+                  key={step.id}
+                  className={`rounded-xl border px-3 py-2 ${
+                    isActive
+                      ? "border-cyan-200 bg-cyan-50/70"
+                      : isComplete
+                        ? "border-emerald-200 bg-emerald-50/50"
+                        : "border-slate-200 bg-white"
+                  }`}
+                >
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    Step {index + 1}
+                  </p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {step.label}
+                  </p>
+                </div>
+              );
+            },
+          )}
+        </nav>
+      ) : null}
+
       {parseError ? (
         <SettingsAlertBanner tone="error">{parseError}</SettingsAlertBanner>
       ) : null}
@@ -200,32 +321,96 @@ export function CustomerImportPageView({
       ) : null}
 
       {phase === "upload" ? (
-        <section className="admin-card flex flex-col gap-4 p-4 sm:p-6">
-          <div className="space-y-2">
+        <section className="admin-card flex flex-col gap-5 p-4 sm:p-6">
+          <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4">
+            <p className="text-sm font-semibold text-amber-900">
+              Duplicates are skipped, not merged
+            </p>
+            <p className="mt-1 text-sm text-amber-800">
+              Rows matching an existing customer phone or email are skipped.
+              Altair never updates existing customers during import.
+            </p>
+          </div>
+
+          <div className="space-y-3">
             <h2 className="text-sm font-semibold text-slate-900">
-              Step 1: Download the template
+              Where is your customer list?
             </h2>
             <p className="text-sm text-slate-600">
-              Use the required columns: name, phone, email, address, city, state,
-              zip. Name is required, and each row needs a phone or email.
+              Choose a source to improve column matching. This is optional — you
+              can map columns manually on the next step.
             </p>
-            <a
-              href="/templates/customer-import-template.csv"
-              download="customer-import-template.csv"
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl admin-btn-secondary px-3 py-1.5 text-sm"
+            <select
+              value={preset}
+              onChange={(event) =>
+                handlePresetChange(event.target.value as CustomerImportPreset)
+              }
+              className="admin-input h-11 w-full max-w-md text-base sm:h-10 sm:text-sm"
             >
-              <Download className="h-3.5 w-3.5" />
-              Download CSV template
-            </a>
+              {CUSTOMER_IMPORT_PRESET_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+            <h2 className="text-sm font-semibold text-slate-900">
+              Export guidance
+            </h2>
+            <ul className="space-y-2 text-sm text-slate-600">
+              <li>
+                <span className="font-medium text-slate-800">Google Sheets:</span>{" "}
+                File &gt; Download &gt; Comma Separated Values (.csv)
+              </li>
+              <li>
+                <span className="font-medium text-slate-800">Excel:</span> Save
+                As &gt; CSV
+              </li>
+              <li>
+                <span className="font-medium text-slate-800">
+                  ServiceTitan, Housecall Pro, Jobber, QuickBooks:
+                </span>{" "}
+                Export customers as CSV, then upload here. If columns differ,
+                Altair will help match them.
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold text-slate-900">Templates</h2>
+            <p className="text-sm text-slate-600">
+              Need a starting point? Download a simple template or the advanced
+              template with separate name and company columns.
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <a
+                href="/templates/customer-import-template.csv"
+                download="customer-import-template.csv"
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl admin-btn-secondary px-3 py-1.5 text-sm"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download template
+              </a>
+              <a
+                href="/templates/customer-import-advanced-template.csv"
+                download="customer-import-advanced-template.csv"
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl admin-btn-secondary px-3 py-1.5 text-sm"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download advanced template
+              </a>
+            </div>
           </div>
 
           <div className="space-y-2">
             <h2 className="text-sm font-semibold text-slate-900">
-              Step 2: Upload your CSV
+              Upload your CSV
             </h2>
             <p className="text-sm text-slate-600">
-              Import up to 500 customers at a time. Duplicates and invalid rows are
-              skipped automatically.
+              Import up to 500 customers at a time. You&apos;ll match columns,
+              review a preview, then confirm the import.
             </p>
             <label className="flex min-h-40 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-8 text-center transition-colors hover:border-cyan-300 hover:bg-cyan-50/40">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-cyan-600 shadow-sm">
@@ -249,6 +434,103 @@ export function CustomerImportPageView({
                 }
               />
             </label>
+          </div>
+        </section>
+      ) : null}
+
+      {phase === "mapping" ? (
+        <section className="admin-card flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-4 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">
+                Match your columns
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                {fileName ? `File: ${fileName}` : "Uploaded CSV"} ·{" "}
+                {csvHeaders.length} column{csvHeaders.length === 1 ? "" : "s"}{" "}
+                detected
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={resetImportState}
+              className="admin-btn-secondary text-xs"
+            >
+              Choose another file
+            </button>
+          </div>
+
+          <p className="text-sm text-slate-600">
+            We auto-matched obvious columns. Adjust any dropdown before
+            previewing your import.
+          </p>
+
+          <div className="hidden min-h-0 flex-1 overflow-auto rounded-xl border border-slate-200 md:block">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">Altair field</th>
+                  <th className="px-4 py-3 font-semibold">Your CSV column</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {CUSTOMER_IMPORT_ALTAIR_FIELDS.map((field) => (
+                  <tr key={field}>
+                    <td className="px-4 py-3 font-medium text-slate-900">
+                      {CUSTOMER_IMPORT_FIELD_LABELS[field]}
+                    </td>
+                    <td className="px-4 py-3">
+                      <MappingSelect
+                        field={field}
+                        headers={csvHeaders}
+                        value={fieldMapping[field]}
+                        onChange={handleMappingFieldChange}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="grid gap-3 md:hidden">
+            {CUSTOMER_IMPORT_ALTAIR_FIELDS.map((field) => (
+              <div
+                key={field}
+                className="rounded-xl border border-slate-200 bg-slate-50/60 p-3"
+              >
+                <label className="block text-sm font-semibold text-slate-900">
+                  {CUSTOMER_IMPORT_FIELD_LABELS[field]}
+                </label>
+                <div className="mt-2">
+                  <MappingSelect
+                    field={field}
+                    headers={csvHeaders}
+                    value={fieldMapping[field]}
+                    onChange={handleMappingFieldChange}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              type="button"
+              onClick={() => setPhase("upload")}
+              className="admin-btn-secondary inline-flex h-9 items-center justify-center gap-1.5 px-4 text-sm"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleContinueToPreview}
+              className="admin-btn-primary inline-flex h-9 items-center justify-center gap-1.5 px-4 text-sm"
+            >
+              Continue to preview
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
           </div>
         </section>
       ) : null}
@@ -284,87 +566,129 @@ export function CustomerImportPageView({
           <section className="admin-card min-h-0 flex flex-1 flex-col overflow-hidden">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 sm:px-6">
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">Preview</h2>
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Review preview
+                </h2>
                 <p className="text-xs text-slate-500">
                   {fileName ? `File: ${fileName}` : "Uploaded CSV"}
+                  {hasHiddenPreviewRows
+                    ? ` · Showing first ${CUSTOMER_IMPORT_PREVIEW_ROW_LIMIT} of ${previewRows.length} rows`
+                    : ` · ${previewRows.length} row${previewRows.length === 1 ? "" : "s"}`}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={resetImportState}
+                onClick={() => setPhase("mapping")}
                 className="admin-btn-secondary text-xs"
               >
-                Choose another file
+                Edit column mapping
               </button>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="sticky top-0 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold sm:px-6">Row</th>
-                    <th className="px-4 py-3 font-semibold sm:px-6">Customer</th>
-                    <th className="hidden px-4 py-3 font-semibold md:table-cell sm:px-6">
-                      Phone / Email
-                    </th>
-                    <th className="px-4 py-3 font-semibold sm:px-6">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {previewRows.map((row) => {
-                    const statusMeta = STATUS_STYLES[row.status];
-                    return (
-                      <tr key={row.rowNumber} className="align-top">
-                        <td className="px-4 py-3 text-slate-500 sm:px-6">
-                          {row.rowNumber}
-                        </td>
-                        <td className="px-4 py-3 sm:px-6">
-                          <div className="font-medium text-slate-900">
-                            {row.name}
-                          </div>
-                          <div className="mt-1 text-xs text-slate-500 md:hidden">
-                            {formatContactPreview(row)}
-                          </div>
-                          {row.message ? (
-                            <div className="mt-1 text-xs text-slate-500">
-                              {row.message}
+            {previewRows.length === 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-12 text-center">
+                <FileSpreadsheet
+                  className="h-8 w-8 text-slate-300"
+                  aria-hidden="true"
+                />
+                <p className="text-sm font-semibold text-slate-900">
+                  No rows to preview
+                </p>
+                <p className="max-w-md text-sm text-slate-500">
+                  Check your column mapping or upload a different file.
+                </p>
+              </div>
+            ) : (
+              <div className="min-h-0 flex-1 overflow-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="sticky top-0 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold sm:px-6">Row</th>
+                      <th className="px-4 py-3 font-semibold sm:px-6">
+                        Customer
+                      </th>
+                      <th className="hidden px-4 py-3 font-semibold lg:table-cell sm:px-6">
+                        Contact
+                      </th>
+                      <th className="hidden px-4 py-3 font-semibold xl:table-cell sm:px-6">
+                        Address
+                      </th>
+                      <th className="px-4 py-3 font-semibold sm:px-6">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {previewRowsForDisplay.map((row) => {
+                      const statusMeta = STATUS_STYLES[row.status];
+                      return (
+                        <tr key={row.rowNumber} className="align-top">
+                          <td className="px-4 py-3 text-slate-500 sm:px-6">
+                            {row.rowNumber}
+                          </td>
+                          <td className="px-4 py-3 sm:px-6">
+                            <div className="font-medium text-slate-900">
+                              {row.name}
                             </div>
-                          ) : null}
-                        </td>
-                        <td className="hidden px-4 py-3 text-slate-600 md:table-cell sm:px-6">
-                          {formatContactPreview(row)}
-                        </td>
-                        <td className="px-4 py-3 sm:px-6">
-                          <span
-                            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${statusMeta.className}`}
-                          >
-                            {statusMeta.label}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                            <div className="mt-1 text-xs text-slate-500 lg:hidden">
+                              {formatContactPreview(row)}
+                            </div>
+                            {row.notes ? (
+                              <div className="mt-1 text-xs text-slate-500">
+                                Notes: {row.notes}
+                              </div>
+                            ) : null}
+                            {row.message ? (
+                              <div className="mt-1 text-xs text-slate-500">
+                                {row.message}
+                              </div>
+                            ) : null}
+                          </td>
+                          <td className="hidden px-4 py-3 text-slate-600 lg:table-cell sm:px-6">
+                            {formatContactPreview(row)}
+                          </td>
+                          <td className="hidden px-4 py-3 text-slate-600 xl:table-cell sm:px-6">
+                            {formatAddressPreview(row)}
+                          </td>
+                          <td className="px-4 py-3 sm:px-6">
+                            <span
+                              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${statusMeta.className}`}
+                            >
+                              {statusMeta.label}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             <div className="flex flex-col gap-2 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <p className="text-xs text-slate-500">
-                Only valid, non-duplicate rows are imported. Existing customers
-                are never updated.
+                Only valid, non-duplicate rows are imported. Duplicates are
+                skipped — existing customers are never updated or merged.
               </p>
-              <button
-                type="button"
-                onClick={handleConfirmImport}
-                disabled={previewSummary.readyCount === 0 || isImporting}
-                className="admin-btn-primary inline-flex h-9 items-center justify-center px-4 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isImporting
-                  ? "Importing..."
-                  : `Import ${previewSummary.readyCount} customer${
-                      previewSummary.readyCount === 1 ? "" : "s"
-                    }`}
-              </button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => setPhase("mapping")}
+                  className="admin-btn-secondary inline-flex h-9 items-center justify-center px-4 text-sm"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmImport}
+                  disabled={previewSummary.readyCount === 0 || isImporting}
+                  className="admin-btn-primary inline-flex h-9 items-center justify-center px-4 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isImporting
+                    ? "Importing..."
+                    : `Import ${previewSummary.readyCount} customer${
+                        previewSummary.readyCount === 1 ? "" : "s"
+                      }`}
+                </button>
+              </div>
             </div>
           </section>
         </>
@@ -446,6 +770,38 @@ export function CustomerImportPageView({
         </section>
       ) : null}
     </div>
+  );
+}
+
+function MappingSelect({
+  field,
+  headers,
+  value,
+  onChange,
+}: {
+  field: (typeof CUSTOMER_IMPORT_ALTAIR_FIELDS)[number];
+  headers: string[];
+  value: string | null;
+  onChange: (
+    field: (typeof CUSTOMER_IMPORT_ALTAIR_FIELDS)[number],
+    header: string | null,
+  ) => void;
+}) {
+  return (
+    <select
+      value={value ?? ""}
+      onChange={(event) =>
+        onChange(field, event.target.value.length > 0 ? event.target.value : null)
+      }
+      className="admin-input h-11 w-full max-w-md text-base sm:h-10 sm:text-sm"
+    >
+      <option value="">Don&apos;t import</option>
+      {headers.map((header) => (
+        <option key={`${field}-${header}`} value={header}>
+          {header}
+        </option>
+      ))}
+    </select>
   );
 }
 

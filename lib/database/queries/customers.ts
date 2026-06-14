@@ -223,7 +223,7 @@ export async function listDeletedCustomers(
 export async function findCustomerByContact(
   companyId: string,
   contact: { email: string; phone: string },
-): Promise<{ customer: Customer | null; conflict?: string }> {
+): Promise<{ customer: Customer | null; conflict?: string; error?: string }> {
   const supabase = await createClient();
   const email = contact.email.trim().toLowerCase();
   const phone = contact.phone.trim();
@@ -244,7 +244,11 @@ export async function findCustomerByContact(
       code: error.code,
       message: error.message,
     });
-    return { customer: null };
+    return {
+      customer: null,
+      error:
+        "We couldn't verify existing customers right now. Try again in a moment.",
+    };
   }
 
   const rows = (data ?? []) as CustomerRow[];
