@@ -20,7 +20,7 @@ All ten product modules are **client-side mock prototypes** today. They share a 
 | Time Clock | `/time` | `mock-time-entries.ts` | `time_entries` | `customer_name` denorm; approval audit |
 | Dispatch | `/dispatch` | `mock-dispatch-jobs.ts`, `mock-technicians.ts` | `jobs`, `dispatch_assignments`, `profiles` | `technician_status`, real-time board |
 | Technician Mobile | `/tech` | `mock-technician-dashboard.ts` | `jobs`, `time_entries`, `profiles` | Shift state, job actions, photos |
-| Network | `/network` | `mock-network-partners.ts`, `mock-subcontract-jobs.ts` | `network_partners` | **`subcontract_jobs` table missing** |
+| Network | `/network` | *(live — Supabase)* | `network_profiles`, `network_referrals` | `network_partners` CRM UI, `subcontract_jobs` |
 | Analytics | `/reports` | `mock-analytics*.ts` | *(none — read aggregates)* | Materialized views / RPC functions |
 
 ---
@@ -652,34 +652,43 @@ Use Supabase Realtime on `jobs` and `dispatch_assignments` filtered by `company_
 
 ---
 
-### 9. Network (Subcontractor Network)
+### 9. Network (Referrals V1 — live; Partner CRM — future)
 
-**Route:** `/network`  
-**Key files:** `shared/types/network.ts`, `shared/types/network-utils.ts`, `shared/data/mock-network-partners.ts`, `shared/data/mock-subcontract-jobs.ts`, `shared/components/network/*`
+**Route:** `/network` → `NetworkReferralsPageView` (Supabase-backed)  
+**Key files:** `shared/types/network-referral.ts`, `shared/types/network.ts`, `lib/database/queries/network-profiles.ts`, `lib/database/queries/network-referrals.ts`, `app/actions/network-referrals.ts`, `lib/database/services/network-referral-lead.ts`, `shared/components/network/README.md`
 
-#### Tabs & data displayed
+#### Three models (do not conflate)
+
+| Table | Role |
+|-------|------|
+| `network_profiles` | Public/internal **directory profile** — discovery + referral targeting |
+| `network_referrals` | Cross-company **lead handoff** — customer payload, status, optional `target_lead_id` |
+| `network_partners` | Private **partner CRM** — per-company subcontractor relationships (DB exists; UI not wired) |
+
+#### Live tabs (referrals V1)
 
 | Tab | Entity | Key fields |
 |-----|--------|------------|
-| My Network | `PartnerCompany` | companyName, contact, trade, area, relationshipStatus, stats, rating, trustScore, license, insured |
-| Open Jobs | `SubcontractJob` | title, trade, location, budget, status=`open`, direction=`open` |
-| Sent Work | `SubcontractJob` | partner, payoutAmount, direction=`sent` |
-| Received Work | `SubcontractJob` | partner, earnedAmount, direction=`received` |
-| Revenue Tracker | `PartnerRevenueStat` | jobs sent/received, paid out, earned, totals |
+| Directory | `NetworkProfile` | displayName, trade, area, city/state, bio, isVisible |
+| Sent Referrals | `NetworkReferral` | target company, customer, service, urgency, status |
+| Received Referrals | `NetworkReferral` | source company, customer, service; accept → lead pipeline |
 
-**Partner relationship status:** `preferred` | `active` | `pending` | `paused`  
-**Subcontract job status:** `open` | `pending` | `accepted` | `in_progress` | `completed` | `declined`  
-**Direction:** `open` | `sent` | `received`  
+**Referral status:** `sent` \| `accepted` \| `declined` \| `converted` \| `won` \| `lost` \| `cancelled`  
 **Trade types:** HVAC, Plumbing, Electrical, Roofing, General Contracting, Landscaping, Painting
 
-#### Tables required
+#### Tables
 
 | Table | Status |
 |-------|--------|
-| `network_partners` | ✓ Migrated |
-| **`subcontract_jobs`** | **NOT migrated** — documented in `supabase/DATA_MODEL.md` only |
-| **`partner_invites`** *(missing)* | QR invite card is hardcoded mock |
-| `companies` | `linked_company_id` on partner for true B2B network (Altair-to-Altair) |
+| `network_profiles` | ✓ Live (migration `073`) |
+| `network_referrals` | ✓ Live (migration `073`) |
+| `network_partners` | ✓ Migrated — **no query layer / UI yet** |
+| **`subcontract_jobs`** | **NOT migrated** — future partner CRM work |
+| **`partner_invites`** *(missing)* | Future partner CRM work |
+
+#### Removed mock UI (tech debt cleanup)
+
+Former mock partner/subcontract UI (`NetworkPageView`, mock data files) was deleted — never routed. Partner CRM should wire to `network_partners`, not `network_profiles`.
 
 #### Proposed `subcontract_jobs` schema (planning only)
 
@@ -988,8 +997,6 @@ Aligns with `supabase/DATA_MODEL.md` and dependency graph:
 | `mock-time-entries.ts` | 8 | `time-001`–`008` | 4 technician names |
 | `mock-technicians.ts` | 6 | `tech-001`–`006` | Dispatch roster |
 | `mock-technician-dashboard.ts` | 1 dashboard | Marcus Rivera | Hard-coded current user |
-| `mock-network-partners.ts` | 7 | `partner-001`–`007` | |
-| `mock-subcontract-jobs.ts` | 10 | `sub-001`–`010` | No DB table yet |
 | `mock-analytics*.ts` | aggregated | — | Independent from other mocks |
 
 **Known mock inconsistencies to resolve at wire-up (not now):**

@@ -98,10 +98,12 @@ Each module will add `company_id` and RLS policies:
 - `invoices`
 - `expenses`
 - `time_entries`
-- `network_partners`
-- `subcontract_jobs`
+- `network_partners` — private per-company partner CRM (subcontractor rolodex); **no UI wired yet**
+- `network_profiles` — public/internal directory profile for cross-company discovery (live; migration `073`)
+- `network_referrals` — cross-company lead handoff between companies (live; migration `073`)
+- `subcontract_jobs` — planned; not migrated
 
-Frontend types in `shared/types/*` remain the UI contract until each page is connected.
+See `shared/components/network/README.md` for how these differ. Do not use `network_profiles` for private partner CRM.
 
 ## Connection order (recommended)
 

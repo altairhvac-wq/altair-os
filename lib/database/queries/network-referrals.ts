@@ -1,3 +1,10 @@
+/**
+ * Queries for `network_referrals` — cross-company lead handoffs.
+ *
+ * Accepted referrals may spawn leads via `network-referral-lead.ts`.
+ * Not partner CRM (`network_partners`). See `shared/components/network/README.md`.
+ */
+
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {

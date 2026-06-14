@@ -1,3 +1,10 @@
+/**
+ * Queries for `network_profiles` — public/internal directory profiles.
+ *
+ * Not to be confused with `network_partners` (private partner CRM) or
+ * `network_referrals` (lead handoff). See `shared/components/network/README.md`.
+ */
+
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {

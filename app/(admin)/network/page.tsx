@@ -1,3 +1,9 @@
+/**
+ * Network admin route — live V1 referrals UI (`NetworkReferralsPageView`).
+ * Uses `network_profiles` + `network_referrals` only. Do not wire `NetworkPageView`
+ * (removed mock partner CRM). See `shared/components/network/README.md`.
+ */
+
 import { redirect } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { canAccessAdminNavItem } from "@/lib/database/access-control";

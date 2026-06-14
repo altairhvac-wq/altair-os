@@ -1,3 +1,13 @@
+/**
+ * Types for the live Network V1 referrals feature.
+ *
+ * - `NetworkProfile` ↔ `network_profiles` — directory entry (discovery, not private CRM)
+ * - `NetworkReferral` ↔ `network_referrals` — cross-company lead handoff
+ *
+ * Private partner CRM uses `network_partners` (separate table; no types here yet).
+ * See `shared/components/network/README.md`.
+ */
+
 import type {
   NetworkReferralStatus,
   NetworkReferralUrgency,
@@ -5,6 +15,7 @@ import type {
 import type { LeadStatus } from "@/shared/types/lead";
 import type { TradeType } from "@/shared/types/network";
 
+/** Maps to `network_profiles` — public/internal directory profile, not partner CRM. */
 export type NetworkProfile = {
   id: string;
   companyId: string;
@@ -19,6 +30,7 @@ export type NetworkProfile = {
   updatedAt: string;
 };
 
+/** Maps to `network_referrals` — cross-company lead handoff between Altair companies. */
 export type NetworkReferral = {
   id: string;
   sourceCompanyId: string;

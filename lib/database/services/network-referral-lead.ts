@@ -1,3 +1,11 @@
+/**
+ * Bridges accepted `network_referrals` into the lead pipeline (`leads` table).
+ *
+ * This is referral → lead conversion only. It does not touch `network_partners`
+ * (private CRM) or mutate `network_profiles` (directory). See README in
+ * `shared/components/network/README.md`.
+ */
+
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type { LeadInsert } from "@/lib/database/types/core-tables";
