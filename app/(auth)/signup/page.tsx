@@ -1,3 +1,4 @@
+import { setSignupNetworkInviteCookie } from "@/lib/auth/signup-invite-cookie";
 import { getPublicNetworkInvitePreview } from "@/lib/database/queries/network-invites";
 import { SignUpForm } from "@/shared/components/auth/SignUpForm";
 
@@ -11,6 +12,10 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   const invitePreview = inviteToken
     ? await getPublicNetworkInvitePreview(inviteToken)
     : null;
+
+  if (inviteToken && invitePreview?.state === "valid") {
+    await setSignupNetworkInviteCookie(inviteToken);
+  }
 
   return (
     <SignUpForm inviteToken={inviteToken} invitePreview={invitePreview} />

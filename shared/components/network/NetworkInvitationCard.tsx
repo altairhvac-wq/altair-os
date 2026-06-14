@@ -40,6 +40,7 @@ export function NetworkInvitationCard({
       startTransition(async () => {
         try {
           await copyToClipboard(inviteUrl);
+          setCopyMessage("Invite link copied.");
         } catch {
           setError("Unable to copy the invite link.");
         }
@@ -58,6 +59,9 @@ export function NetworkInvitationCard({
 
       try {
         await copyToClipboard(result.inviteUrl);
+        setCopyMessage(
+          "Fresh invite link copied. Any previously shared link no longer works.",
+        );
       } catch {
         setError("Link generated but clipboard access was blocked.");
       }
@@ -95,25 +99,32 @@ export function NetworkInvitationCard({
       </dl>
 
       {invite.status === "pending" ? (
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={handleCopyLink}
-            disabled={isPending}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-          >
-            <Copy className="h-3.5 w-3.5" />
-            Copy invite link
-          </button>
-          <button
-            type="button"
-            disabled
-            title="Coming soon"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-400"
-          >
-            <Mail className="h-3.5 w-3.5" />
-            Resend invitation
-          </button>
+        <div className="mt-4 space-y-2">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              disabled={isPending}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy invite link
+            </button>
+            <button
+              type="button"
+              disabled
+              title="Coming soon"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-400"
+            >
+              <Mail className="h-3.5 w-3.5" />
+              Resend invitation
+            </button>
+          </div>
+          <p className="text-xs text-slate-500">
+            {inviteUrl
+              ? "Copy again from this card without refreshing to reuse the same link."
+              : "After a page refresh, copying generates a fresh link and invalidates older ones."}
+          </p>
         </div>
       ) : null}
 

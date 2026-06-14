@@ -120,7 +120,15 @@ export function SignUpForm({
           />
         </AuthField>
 
-        <AuthField label="Work email" id="email">
+        <AuthField
+          label="Work email"
+          id="email"
+          hint={
+            defaultEmail
+              ? "This email is locked to your invitation and cannot be changed."
+              : undefined
+          }
+        >
           <AuthInput
             id="email"
             name="email"

@@ -191,6 +191,27 @@ export function NetworkReferralsPageView({
     [networkInvites, invitationsTab],
   );
 
+  const invitationsEmptyCopy: Record<
+    NetworkInvitationsTab,
+    { title: string; description: string }
+  > = {
+    pending: {
+      title: "No pending invitations",
+      description:
+        "Invite contractors you already trust to start building your network.",
+    },
+    accepted: {
+      title: "No accepted invitations yet",
+      description:
+        "Accepted invitations appear here after invited companies join Altair.",
+    },
+    expired: {
+      title: "No expired or cancelled invitations",
+      description:
+        "Expired and cancelled invitations are kept here for your records.",
+    },
+  };
+
   function handleSelectProfile(profileId: string) {
     setSelectedProfileId(profileId);
     setPanelMode("detail");
@@ -724,11 +745,10 @@ export function NetworkReferralsPageView({
                   {filteredInvites.length === 0 ? (
                     <div className="col-span-full rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-10 text-center">
                       <p className="text-sm font-medium text-slate-700">
-                        No invitations yet
+                        {invitationsEmptyCopy[invitationsTab].title}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
-                        Invite contractors you already trust to start building your
-                        network.
+                        {invitationsEmptyCopy[invitationsTab].description}
                       </p>
                     </div>
                   ) : (

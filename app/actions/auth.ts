@@ -8,7 +8,13 @@ import {
   buildAuthCallbackUrl,
   resolveAuthRedirectOrigin,
 } from "@/lib/auth/request-origin";
+import { validateSignupNetworkInviteEmail } from "@/lib/auth/network-invite-signup";
 import { resolvePostLoginRedirect } from "@/lib/auth/redirects";
+import {
+  clearSignupNetworkInviteCookie,
+  readSignupNetworkInviteCookie,
+  resolveSignupNetworkInviteToken,
+} from "@/lib/auth/signup-invite-cookie";
 import { createAuthEmailClient } from "@/lib/supabase/auth-email";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -99,11 +105,35 @@ export async function signupAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const companyName = String(formData.get("companyName") ?? "").trim();
-  const inviteToken = String(formData.get("inviteToken") ?? "").trim() || null;
+  const formInviteToken =
+    String(formData.get("inviteToken") ?? "").trim() || null;
   const next = String(formData.get("next") ?? "").trim() || null;
 
   if (!fullName || !email || !password || !companyName) {
     return { error: "All fields are required." };
+  }
+
+  const cookieInviteToken = await readSignupNetworkInviteCookie();
+  const resolvedInvite = resolveSignupNetworkInviteToken({
+    formToken: formInviteToken,
+    cookieToken: cookieInviteToken,
+  });
+
+  if (resolvedInvite.error) {
+    return { error: resolvedInvite.error };
+  }
+
+  const inviteToken = resolvedInvite.token;
+
+  if (inviteToken) {
+    const inviteEmailError = await validateSignupNetworkInviteEmail(
+      inviteToken,
+      email,
+    );
+
+    if (inviteEmailError) {
+      return { error: inviteEmailError };
+    }
   }
 
   const supabase = await createClient();
@@ -130,6 +160,8 @@ export async function signupAction(
   }
 
   if (!data.session) {
+    await clearSignupNetworkInviteCookie();
+
     return {
       success:
         "Account created. Check your email to confirm your address, then sign in.",
@@ -150,6 +182,8 @@ export async function signupAction(
       inviteToken,
     });
   }
+
+  await clearSignupNetworkInviteCookie();
 
   return redirectAfterAuth(next);
 }
