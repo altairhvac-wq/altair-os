@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Network, Search, UserMinus, UserPlus } from "lucide-react";
 import {
@@ -101,6 +101,14 @@ export function NetworkReferralsPageView({
   const [sentReferrals, setSentReferrals] = useState(initialSentReferrals);
   const [receivedReferrals, setReceivedReferrals] =
     useState(initialReceivedReferrals);
+
+  useEffect(() => {
+    setSentReferrals(initialSentReferrals);
+  }, [initialSentReferrals]);
+
+  useEffect(() => {
+    setReceivedReferrals(initialReceivedReferrals);
+  }, [initialReceivedReferrals]);
   const [myNetworkPartners, setMyNetworkPartners] = useState(
     initialMyNetworkPartners,
   );
@@ -214,13 +222,23 @@ export function NetworkReferralsPageView({
   );
 
   const sentReferralMetrics = useMemo(
-    () => buildNetworkReferralSummaryMetrics(sentReferrals),
-    [sentReferrals],
+    () =>
+      buildNetworkReferralSummaryMetrics(
+        sentReferrals.filter(
+          (referral) => referral.sourceCompanyId === companyId,
+        ),
+      ),
+    [sentReferrals, companyId],
   );
 
   const receivedReferralMetrics = useMemo(
-    () => buildNetworkReferralSummaryMetrics(receivedReferrals),
-    [receivedReferrals],
+    () =>
+      buildNetworkReferralSummaryMetrics(
+        receivedReferrals.filter(
+          (referral) => referral.targetCompanyId === companyId,
+        ),
+      ),
+    [receivedReferrals, companyId],
   );
 
   const invitationsEmptyCopy: Record<
@@ -503,6 +521,33 @@ export function NetworkReferralsPageView({
             sourceCompanyName={invitedByCompanyName}
             companyId={companyId}
           />
+        ) : null}
+
+        {canSendReferral || canManageReceivedReferrals ? (
+          <div className="mt-4 space-y-4">
+            {canSendReferral ? (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Sent referrals
+                </p>
+                <NetworkReferralSummaryCards
+                  direction="sent"
+                  metrics={sentReferralMetrics}
+                />
+              </div>
+            ) : null}
+            {canManageReceivedReferrals ? (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Received referrals
+                </p>
+                <NetworkReferralSummaryCards
+                  direction="received"
+                  metrics={receivedReferralMetrics}
+                />
+              </div>
+            ) : null}
+          </div>
         ) : null}
 
         <nav
@@ -907,26 +952,23 @@ export function NetworkReferralsPageView({
               </p>
             </div>
           ) : (
-            <>
-              <NetworkReferralSummaryCards metrics={sentReferralMetrics} />
-              <div className="grid gap-4 lg:grid-cols-2">
-                {sentReferrals.map((referral) => (
-                  <NetworkReferralCard
-                    key={referral.id}
-                    referral={referral}
-                    direction="sent"
-                    timeZone={timeZone}
-                    onUpdated={(updated) =>
-                      setSentReferrals((current) =>
-                        current.map((item) =>
-                          item.id === updated.id ? updated : item,
-                        ),
-                      )
-                    }
-                  />
-                ))}
-              </div>
-            </>
+            <div className="grid gap-4 lg:grid-cols-2">
+              {sentReferrals.map((referral) => (
+                <NetworkReferralCard
+                  key={referral.id}
+                  referral={referral}
+                  direction="sent"
+                  timeZone={timeZone}
+                  onUpdated={(updated) =>
+                    setSentReferrals((current) =>
+                      current.map((item) =>
+                        item.id === updated.id ? updated : item,
+                      ),
+                    )
+                  }
+                />
+              ))}
+            </div>
           )}
         </section>
       ) : null}
@@ -947,26 +989,23 @@ export function NetworkReferralsPageView({
               </p>
             </div>
           ) : (
-            <>
-              <NetworkReferralSummaryCards metrics={receivedReferralMetrics} />
-              <div className="grid gap-4 lg:grid-cols-2">
-                {receivedReferrals.map((referral) => (
-                  <NetworkReferralCard
-                    key={referral.id}
-                    referral={referral}
-                    direction="received"
-                    timeZone={timeZone}
-                    onUpdated={(updated) =>
-                      setReceivedReferrals((current) =>
-                        current.map((item) =>
-                          item.id === updated.id ? updated : item,
-                        ),
-                      )
-                    }
-                  />
-                ))}
-              </div>
-            </>
+            <div className="grid gap-4 lg:grid-cols-2">
+              {receivedReferrals.map((referral) => (
+                <NetworkReferralCard
+                  key={referral.id}
+                  referral={referral}
+                  direction="received"
+                  timeZone={timeZone}
+                  onUpdated={(updated) =>
+                    setReceivedReferrals((current) =>
+                      current.map((item) =>
+                        item.id === updated.id ? updated : item,
+                      ),
+                    )
+                  }
+                />
+              ))}
+            </div>
           )}
         </section>
       ) : null}
