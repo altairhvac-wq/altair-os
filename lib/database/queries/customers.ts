@@ -136,6 +136,37 @@ export async function listCustomers(
   return ((data ?? []) as CustomerRow[]).map(mapCustomerRowToCustomer);
 }
 
+export async function listCustomerImportContacts(
+  companyId: string,
+): Promise<{ contacts: { email: string; phone: string }[]; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("customers")
+    .select("email, phone")
+    .eq("company_id", companyId)
+    .is("deleted_at", null);
+
+  if (error) {
+    console.error("[listCustomerImportContacts] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return { contacts: [], error: mapDatabaseError(error) };
+  }
+
+  return {
+    contacts: ((data ?? []) as Pick<CustomerRow, "email" | "phone">[]).map(
+      (row) => ({
+        email: row.email,
+        phone: row.phone,
+      }),
+    ),
+    error: null,
+  };
+}
+
 export async function listArchivedCustomers(
   companyId: string,
 ): Promise<Customer[]> {

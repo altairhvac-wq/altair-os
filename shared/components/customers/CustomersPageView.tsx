@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { UserPlus } from "lucide-react";
+import { Upload, UserPlus } from "lucide-react";
 import {
   bulkArchiveCustomersAction,
   bulkMoveCustomersToTrashAction,
@@ -341,6 +342,18 @@ export function CustomersPageView({
             <UserPlus className="h-3.5 w-3.5" />
             New Customer
           </button>
+        ) : undefined
+      }
+      secondaryAction={
+        canManageCustomers ? (
+          <Link
+            href="/customers/import"
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-secondary px-3 py-1.5 text-sm"
+          >
+            <Upload className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Import Customers</span>
+            <span className="sm:hidden">Import</span>
+          </Link>
         ) : undefined
       }
       className={
