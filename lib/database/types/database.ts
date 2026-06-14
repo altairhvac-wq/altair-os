@@ -1161,6 +1161,15 @@ export type Database = {
         };
         Returns: boolean;
       };
+      update_received_network_referral_status: {
+        Args: {
+          p_referral_id: string;
+          p_target_company_id: string;
+          p_status: NetworkReferralRow["status"];
+          p_decline_reason?: string | null;
+        };
+        Returns: NetworkReferralRow;
+      };
       upsert_linked_network_partner: {
         Args: {
           p_company_id: string;

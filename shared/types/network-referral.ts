@@ -227,10 +227,6 @@ export function buildReferralLeadNotes(input: {
     "Network Referral",
     `Referred by: ${input.sourceCompanyName}`,
     input.sourceUserName ? `Referring contact: ${input.sourceUserName}` : null,
-    `Source company ID: ${input.sourceCompanyId}`,
-    input.sourceNetworkProfileId
-      ? `Source network profile ID: ${input.sourceNetworkProfileId}`
-      : null,
     "",
     `Service: ${input.requestedService}`,
     `Urgency: ${formatNetworkReferralUrgency(input.urgency)}`,

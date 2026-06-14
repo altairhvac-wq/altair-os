@@ -170,14 +170,25 @@ export async function insertNetworkReferral(
 export async function updateNetworkReferral(
   referralId: string,
   updates: NetworkReferralUpdate,
+  targetCompanyId: string,
 ): Promise<{ referral: NetworkReferral | null; error: string | null }> {
+  if (updates.status !== "accepted" && updates.status !== "declined") {
+    return {
+      referral: null,
+      error: "Unsupported referral update.",
+    };
+  }
+
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("network_referrals")
-    .update(updates)
-    .eq("id", referralId)
-    .select(REFERRAL_SELECT)
-    .single();
+  const { data, error } = await supabase.rpc(
+    "update_received_network_referral_status",
+    {
+      p_referral_id: referralId,
+      p_target_company_id: targetCompanyId,
+      p_status: updates.status,
+      p_decline_reason: updates.decline_reason ?? null,
+    },
+  );
 
   if (error || !data) {
     return {
@@ -186,9 +197,10 @@ export async function updateNetworkReferral(
     };
   }
 
+  const referral = await getNetworkReferralById(referralId);
   return {
-    referral: mapNetworkReferralRow(data as NetworkReferralRowWithRelations),
-    error: null,
+    referral,
+    error: referral ? null : "Referral not found.",
   };
 }
 

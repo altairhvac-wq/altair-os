@@ -53,14 +53,6 @@ export function NetworkReferralAttribution({
               Contact: {referral.sourceUserName}
             </p>
           ) : null}
-          <p className="mt-2 text-[11px] text-slate-500">
-            Source company ID: {referral.sourceCompanyId}
-          </p>
-          {referral.sourceNetworkProfileId ? (
-            <p className="text-[11px] text-slate-500">
-              Network profile ID: {referral.sourceNetworkProfileId}
-            </p>
-          ) : null}
         </div>
       </div>
     </div>

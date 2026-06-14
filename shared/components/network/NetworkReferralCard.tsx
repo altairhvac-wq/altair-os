@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import {
   acceptNetworkReferralAction,
@@ -31,14 +31,20 @@ export function NetworkReferralCard({
   onUpdated,
 }: NetworkReferralCardProps) {
   const [isPending, startTransition] = useTransition();
+  const [actionError, setActionError] = useState<string | null>(null);
   const partnerName =
     direction === "sent"
       ? referral.targetCompanyName ?? "Partner company"
       : referral.sourceCompanyName ?? "Partner company";
 
   function handleAccept() {
+    setActionError(null);
     startTransition(async () => {
       const result = await acceptNetworkReferralAction(referral.id);
+      if (result.error) {
+        setActionError(formatActionError(result.error, "We couldn't accept this referral."));
+        return;
+      }
       if (result.referral) {
         onUpdated?.(result.referral);
       }
@@ -46,10 +52,15 @@ export function NetworkReferralCard({
   }
 
   function handleDecline() {
+    setActionError(null);
     startTransition(async () => {
       const result = await declineNetworkReferralAction({
         referralId: referral.id,
       });
+      if (result.error) {
+        setActionError(formatActionError(result.error, "We couldn't decline this referral."));
+        return;
+      }
       if (result.referral) {
         onUpdated?.(result.referral);
       }
@@ -134,6 +145,10 @@ export function NetworkReferralCard({
             Decline
           </button>
         </div>
+      ) : null}
+
+      {actionError ? (
+        <p className="mt-3 text-xs text-rose-700">{actionError}</p>
       ) : null}
 
       {referral.declineReason && referral.status === "declined" ? (

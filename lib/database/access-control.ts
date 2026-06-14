@@ -397,7 +397,8 @@ export function canAccessAdminNavItem(
       return (
         permissions.dispatchJobs ||
         permissions.manageCompany ||
-        permissions.manageBilling
+        permissions.manageBilling ||
+        permissions.manageCustomers
       );
     case "/reports":
       return access.canViewOperationalReports;

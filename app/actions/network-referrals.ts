@@ -233,9 +233,13 @@ export async function acceptNetworkReferralAction(
     return { error: "This referral has already been handled." };
   }
 
-  const { referral: updated, error } = await updateNetworkReferral(referralId, {
-    status: "accepted",
-  });
+  const { referral: updated, error } = await updateNetworkReferral(
+    referralId,
+    {
+      status: "accepted",
+    },
+    permission.context.company.id,
+  );
 
   if (error || !updated) {
     return { error: error ?? "We couldn't accept this referral." };
@@ -269,6 +273,7 @@ export async function declineNetworkReferralAction(input: {
       status: "declined",
       decline_reason: input.declineReason?.trim() || "Declined by receiving company.",
     },
+    permission.context.company.id,
   );
 
   if (error || !updated) {

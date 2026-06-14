@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import { acceptNetworkInvite } from "@/lib/database/queries/network-invites";
+import { createClient } from "@/lib/supabase/server";
 
 const INVITE_TOKEN_METADATA_KEY = "network_invite_token";
 
@@ -49,6 +50,22 @@ export async function processNetworkInviteAfterCompanyBootstrap(input: {
       error: result.error,
     });
     return { error: result.error };
+  }
+
+  const supabase = await createClient();
+  const { error: metadataError } = await supabase.auth.updateUser({
+    data: { [INVITE_TOKEN_METADATA_KEY]: null },
+  });
+
+  if (metadataError) {
+    console.error(
+      "[processNetworkInviteAfterCompanyBootstrap] failed to clear invite token metadata:",
+      {
+        userId: input.user.id,
+        companyId: input.companyId,
+        error: metadataError.message,
+      },
+    );
   }
 
   return { sourceCompanyName: result.sourceCompanyName };
