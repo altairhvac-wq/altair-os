@@ -1,0 +1,109 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
+import { getVisibleNetworkProfileById } from "@/lib/database/queries/network-profiles";
+import {
+  addLinkedNetworkPartner,
+  getNetworkPartnerById,
+  listMyNetworkPartners,
+  removeLinkedNetworkPartner,
+} from "@/lib/database/queries/network-partners";
+import type { NetworkPartner } from "@/shared/types/network-partner";
+
+export type NetworkPartnerActionResult = {
+  error?: string;
+  partner?: NetworkPartner;
+  partners?: NetworkPartner[];
+};
+
+async function assertNetworkManager() {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: NO_ACTIVE_COMPANY_MESSAGE } as const;
+  }
+
+  if (!context.permissions.manageCompany) {
+    return {
+      error: "Only company owners and admins can manage network connections.",
+    } as const;
+  }
+
+  return { context } as const;
+}
+
+function revalidateNetworkPath() {
+  revalidatePath("/network");
+}
+
+export async function listMyNetworkPartnersAction(): Promise<NetworkPartnerActionResult> {
+  const permission = await assertNetworkManager();
+  if (permission.error || !permission.context) {
+    return { partners: [], error: permission.error };
+  }
+
+  return {
+    partners: await listMyNetworkPartners(permission.context.company.id),
+  };
+}
+
+export async function addToMyNetworkAction(
+  targetNetworkProfileId: string,
+): Promise<NetworkPartnerActionResult> {
+  const permission = await assertNetworkManager();
+  if (permission.error || !permission.context) {
+    return { error: permission.error };
+  }
+
+  const profile = await getVisibleNetworkProfileById(targetNetworkProfileId);
+  if (!profile) {
+    return { error: "This company is not available in the network directory." };
+  }
+
+  if (profile.companyId === permission.context.company.id) {
+    return { error: "You cannot add your own company to your network." };
+  }
+
+  const result = await addLinkedNetworkPartner(
+    permission.context.company.id,
+    profile,
+  );
+
+  if (result.error || !result.partner) {
+    return { error: result.error ?? "We couldn't add this company to your network." };
+  }
+
+  revalidateNetworkPath();
+  return { partner: result.partner };
+}
+
+export async function removeFromMyNetworkAction(
+  partnerId: string,
+): Promise<NetworkPartnerActionResult> {
+  const permission = await assertNetworkManager();
+  if (permission.error || !permission.context) {
+    return { error: permission.error };
+  }
+
+  const partner = await getNetworkPartnerById(
+    permission.context.company.id,
+    partnerId,
+  );
+  if (!partner || !partner.linkedCompanyId) {
+    return { error: "Network connection not found." };
+  }
+
+  const result = await removeLinkedNetworkPartner(
+    permission.context.company.id,
+    partnerId,
+  );
+
+  if (result.error) {
+    return { error: result.error };
+  }
+
+  revalidateNetworkPath();
+  return {};
+}

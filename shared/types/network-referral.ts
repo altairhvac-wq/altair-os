@@ -4,7 +4,7 @@
  * - `NetworkProfile` ↔ `network_profiles` — directory entry (discovery, not private CRM)
  * - `NetworkReferral` ↔ `network_referrals` — cross-company lead handoff
  *
- * Private partner CRM uses `network_partners` (separate table; no types here yet).
+ * Private partner CRM uses `network_partners` (`shared/types/network-partner.ts`).
  * See `shared/components/network/README.md`.
  */
 
@@ -100,6 +100,7 @@ export const NETWORK_REFERRAL_STATUS_OPTIONS: {
 
 export type NetworkReferralsTab =
   | "directory"
+  | "my-network"
   | "sent-referrals"
   | "received-referrals";
 
@@ -108,6 +109,7 @@ export const NETWORK_REFERRALS_TAB_OPTIONS: {
   label: string;
 }[] = [
   { value: "directory", label: "Directory" },
+  { value: "my-network", label: "My Network" },
   { value: "sent-referrals", label: "Sent Referrals" },
   { value: "received-referrals", label: "Received Referrals" },
 ];

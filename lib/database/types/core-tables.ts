@@ -1307,6 +1307,61 @@ export type NetworkReferralUpdate = Partial<
   >
 >;
 
+/** Private partner CRM row — "My Network" uses rows with `linked_company_id` set. */
+export type NetworkPartnerRow = {
+  id: UUID;
+  company_id: UUID;
+  linked_company_id: UUID | null;
+  partner_company_name: string;
+  contact_name: string;
+  email: string;
+  phone: string;
+  trade_type: string;
+  service_area: string;
+  city: string;
+  state: string;
+  relationship_status: import("./enums").RelationshipStatus;
+  jobs_completed_together: number;
+  revenue_generated_together: number;
+  last_worked_date: string | null;
+  rating: number;
+  trust_score: number;
+  license_number: string | null;
+  insured: boolean;
+  notes: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type NetworkPartnerInsert = {
+  id?: UUID;
+  company_id: UUID;
+  linked_company_id?: UUID | null;
+  partner_company_name: string;
+  contact_name?: string;
+  email?: string;
+  phone?: string;
+  trade_type: string;
+  service_area?: string;
+  city?: string;
+  state?: string;
+  relationship_status?: import("./enums").RelationshipStatus;
+  jobs_completed_together?: number;
+  revenue_generated_together?: number;
+  last_worked_date?: string | null;
+  rating?: number;
+  trust_score?: number;
+  license_number?: string | null;
+  insured?: boolean;
+  notes?: string | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type NetworkPartnerUpdate = Partial<
+  Omit<NetworkPartnerRow, "id" | "company_id" | "created_at" | "updated_at">
+>;
+
 export type ActiveCompanyContext = UserCompanyContext & {
   user: {
     id: UUID;

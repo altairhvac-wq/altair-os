@@ -7,7 +7,7 @@ The `/network` admin route (`app/(admin)/network/page.tsx`) renders **`NetworkRe
 | Table | Purpose | Scope | Live code |
 |-------|---------|-------|-----------|
 | **`network_profiles`** | Public/internal **directory profile** — how a company presents itself for discovery and referral targeting | One row per company; `is_visible` controls directory listing | `lib/database/queries/network-profiles.ts`, directory cards/panels |
-| **`network_partners`** | Private **company partner CRM** — subcontractor relationships, contact details, relationship status | Per-company partner list; not shared across tenants | DB only (`002_app_core.sql`); **no query layer or UI yet** |
+| **`network_partners`** | Private **company partner CRM** — subcontractor relationships, contact details, relationship status. **Network Connections V1** uses rows with `linked_company_id` as the source company's one-sided "My Network" / trusted partners list. | Per-company partner list; not shared across tenants | `lib/database/queries/network-partners.ts`, My Network tab + directory badges |
 | **`network_referrals`** | Cross-company **lead handoff** — source company sends a customer to a target company | Tracks customer payload, status lifecycle, optional `target_lead_id` | `lib/database/queries/network-referrals.ts`, `app/actions/network-referrals.ts`, referral cards/forms |
 
 ### Mental model
@@ -15,18 +15,22 @@ The `/network` admin route (`app/(admin)/network/page.tsx`) renders **`NetworkRe
 ```
 network_profiles   → "Who can I find in the directory?"
 network_referrals  → "I'm sending this lead to that company."
-network_partners   → "My private rolodex of subs I work with." (future CRM UI)
+network_partners   → "My private trusted partners / subs." (linked_company_id = My Network V1)
 ```
+
+**`network_partners` with `linked_company_id`** is the private "My Network" layer: one-sided, no target approval in V1, managed only by the source company (owner/admin). External subs without an Altair account can still use `network_partners` rows without `linked_company_id` (future CRM UI).
 
 Referrals may reference `source_network_profile_id` / `target_network_profile_id` for audit context, but the referral row is the handoff record. Accepted referrals create leads via `lib/database/services/network-referral-lead.ts` — that pipeline is separate from partner CRM.
 
-## Live components (V1 referrals)
+## Live components (V1 referrals + connections)
 
-- `NetworkReferralsPageView.tsx` — page shell (directory + sent/received tabs)
-- `NetworkDirectoryCard.tsx`, `NetworkProfileDetailPanel.tsx` — directory (`network_profiles`)
+- `NetworkReferralsPageView.tsx` — page shell (directory + my network + sent/received tabs)
+- `NetworkDirectoryCard.tsx`, `NetworkProfileDetailPanel.tsx`, `NetworkTrustedBadge.tsx` — directory (`network_profiles`) + trusted badges (`network_partners`)
 - `SendReferralForm.tsx`, `NetworkReferralCard.tsx`, `NetworkReferralStatusBadge.tsx` — referrals (`network_referrals`)
 
-Types: `shared/types/network-referral.ts` (profiles + referrals), `shared/types/network.ts` (trade types + initials helper only).
+Types: `shared/types/network-referral.ts` (profiles + referrals), `shared/types/network-partner.ts` (My Network / `network_partners`), `shared/types/network.ts` (trade types + initials helper only).
+
+Actions: `app/actions/network-referrals.ts`, `app/actions/network-partners.ts`
 
 ## Removed mock partner CRM (V0)
 

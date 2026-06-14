@@ -83,6 +83,9 @@ import type {
   TimeClockEntryInsert,
   TimeClockEntryRow,
   TimeClockEntryUpdate,
+  NetworkPartnerInsert,
+  NetworkPartnerRow,
+  NetworkPartnerUpdate,
   NetworkProfileInsert,
   NetworkProfileRow,
   NetworkProfileUpdate,
@@ -348,6 +351,27 @@ export type Database = {
             foreignKeyName: "network_profiles_company_id_fkey";
             columns: ["company_id"];
             isOneToOne: true;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      network_partners: {
+        Row: NetworkPartnerRow;
+        Insert: NetworkPartnerInsert;
+        Update: NetworkPartnerUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "network_partners_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "network_partners_linked_company_id_fkey";
+            columns: ["linked_company_id"];
+            isOneToOne: false;
             referencedRelation: "companies";
             referencedColumns: ["id"];
           },

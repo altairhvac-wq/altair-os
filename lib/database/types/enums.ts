@@ -56,6 +56,13 @@ export type NetworkReferralStatus =
   | "lost"
   | "cancelled";
 
+/** `network_partners.relationship_status` — private partner CRM lifecycle. */
+export type RelationshipStatus =
+  | "preferred"
+  | "active"
+  | "pending"
+  | "paused";
+
 export type LeadActivityType =
   | "lead_created"
   | "call_logged"

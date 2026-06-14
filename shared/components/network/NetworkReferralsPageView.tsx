@@ -1,10 +1,23 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Eye, EyeOff, Network, Search } from "lucide-react";
+import { Eye, EyeOff, Network, Search, UserMinus } from "lucide-react";
+import {
+  addToMyNetworkAction,
+  removeFromMyNetworkAction,
+} from "@/app/actions/network-partners";
 import { toggleOwnNetworkProfileVisibilityAction } from "@/app/actions/network-referrals";
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import {
+  DIRECTORY_FILTER_OPTIONS,
+  enrichMyNetworkPartners,
+  getTrustedCompanyIds,
+  MY_NETWORK_EMPTY_MESSAGE,
+  type DirectoryFilter,
+  type MyNetworkPartner,
+  type NetworkPartner,
+} from "@/shared/types/network-partner";
 import {
   NETWORK_REFERRALS_TAB_OPTIONS,
   type NetworkProfile,
@@ -14,6 +27,7 @@ import {
 import { NetworkDirectoryCard } from "./NetworkDirectoryCard";
 import { NetworkProfileDetailPanel } from "./NetworkProfileDetailPanel";
 import { NetworkReferralCard } from "./NetworkReferralCard";
+import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
 
 type ProfilePanelMode = "detail" | "referral" | "empty";
 
@@ -22,16 +36,36 @@ type NetworkReferralsPageViewProps = {
   initialOwnProfile: NetworkProfile | null;
   initialSentReferrals: NetworkReferral[];
   initialReceivedReferrals: NetworkReferral[];
+  initialMyNetworkPartners: NetworkPartner[];
   canSendReferral: boolean;
+  canManageNetwork: boolean;
   canManageReceivedReferrals: boolean;
 };
+
+function sortProfilesWithTrustedFirst(
+  profiles: NetworkProfile[],
+  trustedCompanyIds: Set<string>,
+): NetworkProfile[] {
+  return [...profiles].sort((left, right) => {
+    const leftTrusted = trustedCompanyIds.has(left.companyId);
+    const rightTrusted = trustedCompanyIds.has(right.companyId);
+
+    if (leftTrusted !== rightTrusted) {
+      return leftTrusted ? -1 : 1;
+    }
+
+    return left.displayName.localeCompare(right.displayName);
+  });
+}
 
 export function NetworkReferralsPageView({
   initialProfiles,
   initialOwnProfile,
   initialSentReferrals,
   initialReceivedReferrals,
+  initialMyNetworkPartners,
   canSendReferral,
+  canManageNetwork,
   canManageReceivedReferrals,
 }: NetworkReferralsPageViewProps) {
   const timeZone = useCompanyTimezone();
@@ -41,55 +75,98 @@ export function NetworkReferralsPageView({
   const [sentReferrals, setSentReferrals] = useState(initialSentReferrals);
   const [receivedReferrals, setReceivedReferrals] =
     useState(initialReceivedReferrals);
+  const [myNetworkPartners, setMyNetworkPartners] = useState(
+    initialMyNetworkPartners,
+  );
   const [search, setSearch] = useState("");
+  const [directoryFilter, setDirectoryFilter] =
+    useState<DirectoryFilter>("all");
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<ProfilePanelMode>("empty");
   const [visibilityError, setVisibilityError] = useState<string | null>(null);
+  const [networkActionError, setNetworkActionError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const trustedCompanyIds = useMemo(
+    () => getTrustedCompanyIds(myNetworkPartners),
+    [myNetworkPartners],
+  );
+
+  const myNetworkEntries = useMemo(
+    () => enrichMyNetworkPartners(myNetworkPartners, profiles),
+    [myNetworkPartners, profiles],
+  );
+
+  const partnerByCompanyId = useMemo(() => {
+    const map = new Map<string, NetworkPartner>();
+    for (const partner of myNetworkPartners) {
+      if (partner.linkedCompanyId) {
+        map.set(partner.linkedCompanyId, partner);
+      }
+    }
+    return map;
+  }, [myNetworkPartners]);
 
   const selectedProfile =
     profiles.find((profile) => profile.id === selectedProfileId) ?? null;
 
+  const selectedPartner = selectedProfile
+    ? partnerByCompanyId.get(selectedProfile.companyId)
+    : undefined;
+
   const filteredProfiles = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) {
-      return profiles;
+    let nextProfiles = profiles;
+
+    if (directoryFilter === "my-network") {
+      nextProfiles = nextProfiles.filter((profile) =>
+        trustedCompanyIds.has(profile.companyId),
+      );
     }
 
-    return profiles.filter((profile) => {
-      const haystack = [
-        profile.displayName,
-        profile.tradeType,
-        profile.city,
-        profile.state,
-        profile.serviceArea,
-      ]
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(query);
-    });
-  }, [profiles, search]);
+    if (query) {
+      nextProfiles = nextProfiles.filter((profile) => {
+        const haystack = [
+          profile.displayName,
+          profile.tradeType,
+          profile.city,
+          profile.state,
+          profile.serviceArea,
+        ]
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(query);
+      });
+    }
+
+    return sortProfilesWithTrustedFirst(nextProfiles, trustedCompanyIds);
+  }, [profiles, search, directoryFilter, trustedCompanyIds]);
 
   function handleTabChange(tab: NetworkReferralsTab) {
     setActiveTab(tab);
     setSearch("");
+    setDirectoryFilter("all");
     setSelectedProfileId(null);
     setPanelMode("empty");
+    setNetworkActionError(null);
   }
 
   function handleSelectProfile(profileId: string) {
     setSelectedProfileId(profileId);
     setPanelMode("detail");
+    setNetworkActionError(null);
   }
 
   function handleClosePanel() {
     setSelectedProfileId(null);
     setPanelMode("empty");
+    setNetworkActionError(null);
   }
 
   function handleSendReferral(profileId: string) {
     setSelectedProfileId(profileId);
     setPanelMode("referral");
+    setNetworkActionError(null);
   }
 
   function handleReferralSuccess(referral: NetworkReferral) {
@@ -119,6 +196,109 @@ export function NetworkReferralsPageView({
     });
   }
 
+  function handleAddToNetwork(profileId: string) {
+    if (!canManageNetwork) {
+      return;
+    }
+
+    setNetworkActionError(null);
+    startTransition(async () => {
+      const result = await addToMyNetworkAction(profileId);
+      if (result.error) {
+        setNetworkActionError(result.error);
+        return;
+      }
+      if (result.partner) {
+        setMyNetworkPartners((current) => {
+          const withoutDuplicate = current.filter(
+            (partner) => partner.id !== result.partner!.id,
+          );
+          return [...withoutDuplicate, result.partner!];
+        });
+      }
+    });
+  }
+
+  function handleRemoveFromNetwork(partnerId: string) {
+    if (!canManageNetwork) {
+      return;
+    }
+
+    setNetworkActionError(null);
+    startTransition(async () => {
+      const result = await removeFromMyNetworkAction(partnerId);
+      if (result.error) {
+        setNetworkActionError(result.error);
+        return;
+      }
+      setMyNetworkPartners((current) =>
+        current.filter((partner) => partner.id !== partnerId),
+      );
+    });
+  }
+
+  function renderMyNetworkCard(partner: MyNetworkPartner) {
+    const profile = partner.linkedProfile;
+    const displayName = profile?.displayName ?? partner.partnerCompanyName;
+
+    if (profile) {
+      return (
+        <NetworkDirectoryCard
+          key={partner.id}
+          profile={profile}
+          selected={profile.id === selectedProfileId}
+          onSelect={() => handleSelectProfile(profile.id)}
+          canSendReferral={canSendReferral}
+          onSendReferral={() => handleSendReferral(profile.id)}
+          canManageNetwork={canManageNetwork}
+          isTrustedPartner
+          priorityPartner
+          onRemoveFromNetwork={() => handleRemoveFromNetwork(partner.id)}
+          isNetworkActionPending={isPending}
+        />
+      );
+    }
+
+    return (
+      <article
+        key={partner.id}
+        className="rounded-xl border border-emerald-200 bg-emerald-50/30 p-4"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="truncate text-sm font-bold text-slate-900">
+                {displayName}
+              </p>
+              <NetworkTrustedBadge />
+            </div>
+            <p className="mt-1 text-xs text-slate-600">{partner.tradeType}</p>
+            {partner.city || partner.state ? (
+              <p className="mt-1 text-xs text-slate-500">
+                {[partner.city, partner.state].filter(Boolean).join(", ")}
+              </p>
+            ) : null}
+            <p className="mt-2 text-xs text-slate-500">
+              Profile is hidden from the directory. Referrals resume when they
+              make their profile visible again.
+            </p>
+          </div>
+          {canManageNetwork ? (
+            <button
+              type="button"
+              onClick={() => handleRemoveFromNetwork(partner.id)}
+              disabled={isPending}
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              <UserMinus className="h-3.5 w-3.5" />
+              Remove
+            </button>
+          ) : null}
+        </div>
+      </article>
+    );
+  }
+
   return (
     <div className="flex min-w-0 flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:overflow-hidden">
       <header className="admin-page-header shrink-0">
@@ -129,8 +309,8 @@ export function NetworkReferralsPageView({
               Send and receive trusted trade referrals.
             </h1>
             <p className="admin-text-helper mt-1 max-w-3xl">
-              Pass overflow work, track referral relationships, and keep every
-              opportunity inside Altair.
+              Build trusted partner relationships, pass overflow work, and keep
+              every opportunity inside Altair.
             </p>
           </div>
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white">
@@ -208,13 +388,38 @@ export function NetworkReferralsPageView({
                   {filteredProfiles.length} companies
                 </p>
               </div>
+
+              {canManageNetwork ? (
+                <div
+                  className="mt-3 flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1"
+                  aria-label="Directory filter"
+                >
+                  {DIRECTORY_FILTER_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setDirectoryFilter(option.value)}
+                      className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                        directoryFilter === option.value
+                          ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
               <div className="relative mt-3">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
+                  type="search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search companies, trades, or locations"
-                  className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm"
+                  aria-label="Search network directory"
+                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:text-base sm:placeholder:text-slate-400"
                 />
               </div>
             </div>
@@ -223,25 +428,47 @@ export function NetworkReferralsPageView({
               {filteredProfiles.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-10 text-center">
                   <p className="text-sm font-medium text-slate-700">
-                    No visible network profiles yet
+                    {directoryFilter === "my-network"
+                      ? "No trusted partners in your network yet"
+                      : "No visible network profiles yet"}
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    Partner companies appear here when they make their profile
-                    visible in the network.
+                    {directoryFilter === "my-network"
+                      ? MY_NETWORK_EMPTY_MESSAGE
+                      : "Partner companies appear here when they make their profile visible in the network."}
                   </p>
                 </div>
               ) : (
                 <div className="grid min-w-0 grid-cols-1 gap-4 @xl:grid-cols-2">
-                  {filteredProfiles.map((profile) => (
-                    <NetworkDirectoryCard
-                      key={profile.id}
-                      profile={profile}
-                      selected={profile.id === selectedProfileId}
-                      onSelect={() => handleSelectProfile(profile.id)}
-                      canSendReferral={canSendReferral}
-                      onSendReferral={() => handleSendReferral(profile.id)}
-                    />
-                  ))}
+                  {filteredProfiles.map((profile) => {
+                    const partner = partnerByCompanyId.get(profile.companyId);
+                    const isTrusted = trustedCompanyIds.has(profile.companyId);
+
+                    return (
+                      <NetworkDirectoryCard
+                        key={profile.id}
+                        profile={profile}
+                        selected={profile.id === selectedProfileId}
+                        onSelect={() => handleSelectProfile(profile.id)}
+                        canSendReferral={canSendReferral}
+                        onSendReferral={() => handleSendReferral(profile.id)}
+                        canManageNetwork={canManageNetwork}
+                        isTrustedPartner={isTrusted}
+                        priorityPartner={isTrusted}
+                        onAddToNetwork={
+                          canManageNetwork && !isTrusted
+                            ? () => handleAddToNetwork(profile.id)
+                            : undefined
+                        }
+                        onRemoveFromNetwork={
+                          canManageNetwork && partner
+                            ? () => handleRemoveFromNetwork(partner.id)
+                            : undefined
+                        }
+                        isNetworkActionPending={isPending}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -251,10 +478,97 @@ export function NetworkReferralsPageView({
             mode={panelMode}
             profile={selectedProfile}
             canSendReferral={canSendReferral}
+            canManageNetwork={canManageNetwork}
+            isInMyNetwork={Boolean(selectedPartner)}
+            myNetworkPartnerId={selectedPartner?.id}
+            networkActionError={networkActionError}
+            isNetworkActionPending={isPending}
             onClose={handleClosePanel}
             onSendReferral={() => {
               if (selectedProfile) {
                 handleSendReferral(selectedProfile.id);
+              }
+            }}
+            onAddToNetwork={() => {
+              if (selectedProfile) {
+                handleAddToNetwork(selectedProfile.id);
+              }
+            }}
+            onRemoveFromNetwork={() => {
+              if (selectedPartner) {
+                handleRemoveFromNetwork(selectedPartner.id);
+              }
+            }}
+            onReferralSuccess={handleReferralSuccess}
+            onReferralCancel={() => setPanelMode("detail")}
+          />
+        </div>
+      ) : null}
+
+      {activeTab === "my-network" ? (
+        <div className="flex min-h-0 min-w-0 lg:flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">
+          <section className="admin-card flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden">
+            <div className="shrink-0 border-b border-slate-100 px-4 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">
+                    Trusted Partners
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Companies in your private network for quick referrals
+                  </p>
+                </div>
+                <p className="text-xs font-medium text-slate-500">
+                  {myNetworkEntries.length} partners
+                </p>
+              </div>
+            </div>
+
+            <div className="@container min-h-0 min-w-0 flex-1 overflow-x-hidden p-4 lg:overflow-y-auto">
+              {!canManageNetwork ? (
+                <p className="text-sm text-slate-600">
+                  Trusted partners are managed by company owners and admins.
+                </p>
+              ) : myNetworkEntries.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-10 text-center">
+                  <p className="text-sm font-medium text-slate-700">
+                    No trusted partners yet
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {MY_NETWORK_EMPTY_MESSAGE}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid min-w-0 grid-cols-1 gap-4 @xl:grid-cols-2">
+                  {myNetworkEntries.map((partner) => renderMyNetworkCard(partner))}
+                </div>
+              )}
+            </div>
+          </section>
+
+          <NetworkProfileDetailPanel
+            mode={panelMode}
+            profile={selectedProfile}
+            canSendReferral={canSendReferral}
+            canManageNetwork={canManageNetwork}
+            isInMyNetwork={Boolean(selectedPartner)}
+            myNetworkPartnerId={selectedPartner?.id}
+            networkActionError={networkActionError}
+            isNetworkActionPending={isPending}
+            onClose={handleClosePanel}
+            onSendReferral={() => {
+              if (selectedProfile) {
+                handleSendReferral(selectedProfile.id);
+              }
+            }}
+            onAddToNetwork={() => {
+              if (selectedProfile) {
+                handleAddToNetwork(selectedProfile.id);
+              }
+            }}
+            onRemoveFromNetwork={() => {
+              if (selectedPartner) {
+                handleRemoveFromNetwork(selectedPartner.id);
               }
             }}
             onReferralSuccess={handleReferralSuccess}

@@ -98,7 +98,7 @@ Each module will add `company_id` and RLS policies:
 - `invoices`
 - `expenses`
 - `time_entries`
-- `network_partners` — private per-company partner CRM (subcontractor rolodex); **no UI wired yet**
+- `network_partners` — private per-company partner CRM; **My Network V1** uses `linked_company_id` rows (migration `075`)
 - `network_profiles` — public/internal directory profile for cross-company discovery (live; migration `073`)
 - `network_referrals` — cross-company lead handoff between companies (live; migration `073`)
 - `subcontract_jobs` — planned; not migrated

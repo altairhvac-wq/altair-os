@@ -3,7 +3,7 @@
  *
  * Do NOT confuse with:
  * - `network_profiles` — public/internal directory profile (see network-referral.ts)
- * - `network_partners` — private company partner CRM (DB table exists; no UI wired yet)
+ * - `network_partners` — private company partner CRM / My Network (see network-partner.ts)
  * - `network_referrals` — cross-company lead handoff (see network-referral.ts)
  *
  * See `shared/components/network/README.md` for the full model map.

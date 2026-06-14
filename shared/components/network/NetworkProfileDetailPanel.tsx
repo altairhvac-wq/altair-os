@@ -1,7 +1,8 @@
-import { MapPin, Send, Wrench, X } from "lucide-react";
+import { MapPin, Send, UserMinus, UserPlus, Wrench, X } from "lucide-react";
 import { listDetailPanelClass } from "@/shared/components/layout/list-detail-layout";
 import { getPartnerInitials } from "@/shared/types/network";
 import type { NetworkProfile } from "@/shared/types/network-referral";
+import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
 import { SendReferralForm } from "./SendReferralForm";
 import type { NetworkReferral } from "@/shared/types/network-referral";
 
@@ -11,8 +12,15 @@ type NetworkProfileDetailPanelProps = {
   mode: PanelMode;
   profile: NetworkProfile | null;
   canSendReferral: boolean;
+  canManageNetwork?: boolean;
+  isInMyNetwork?: boolean;
+  myNetworkPartnerId?: string;
+  networkActionError?: string | null;
+  isNetworkActionPending?: boolean;
   onClose: () => void;
   onSendReferral: () => void;
+  onAddToNetwork?: () => void;
+  onRemoveFromNetwork?: () => void;
   onReferralSuccess: (referral: NetworkReferral) => void;
   onReferralCancel: () => void;
 };
@@ -21,8 +29,15 @@ export function NetworkProfileDetailPanel({
   mode,
   profile,
   canSendReferral,
+  canManageNetwork = false,
+  isInMyNetwork = false,
+  myNetworkPartnerId,
+  networkActionError = null,
+  isNetworkActionPending = false,
   onClose,
   onSendReferral,
+  onAddToNetwork,
+  onRemoveFromNetwork,
   onReferralSuccess,
   onReferralCancel,
 }: NetworkProfileDetailPanelProps) {
@@ -83,7 +98,10 @@ export function NetworkProfileDetailPanel({
                 {getPartnerInitials(profile.displayName)}
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900">{profile.tradeType}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-bold text-slate-900">{profile.tradeType}</p>
+                  {isInMyNetwork ? <NetworkTrustedBadge /> : null}
+                </div>
                 {profile.city || profile.state ? (
                   <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
                     <MapPin className="h-3.5 w-3.5" />
@@ -113,6 +131,36 @@ export function NetworkProfileDetailPanel({
                   {profile.bio}
                 </p>
               </section>
+            ) : null}
+
+            {canManageNetwork ? (
+              <div className="space-y-3">
+                {isInMyNetwork && myNetworkPartnerId && onRemoveFromNetwork ? (
+                  <button
+                    type="button"
+                    onClick={onRemoveFromNetwork}
+                    disabled={isNetworkActionPending}
+                    className="inline-flex w-full items-center justify-center gap-2 admin-btn-secondary"
+                  >
+                    <UserMinus className="h-4 w-4" />
+                    Remove from My Network
+                  </button>
+                ) : onAddToNetwork ? (
+                  <button
+                    type="button"
+                    onClick={onAddToNetwork}
+                    disabled={isNetworkActionPending}
+                    className="inline-flex w-full items-center justify-center gap-2 admin-btn-secondary"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Add to My Network
+                  </button>
+                ) : null}
+
+                {networkActionError ? (
+                  <p className="text-xs text-rose-700">{networkActionError}</p>
+                ) : null}
+              </div>
             ) : null}
 
             {canSendReferral ? (

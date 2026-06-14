@@ -1,12 +1,13 @@
 /**
- * Network admin route — live V1 referrals UI (`NetworkReferralsPageView`).
- * Uses `network_profiles` + `network_referrals` only. Do not wire `NetworkPageView`
- * (removed mock partner CRM). See `shared/components/network/README.md`.
+ * Network admin route — live V1 referrals + connections UI (`NetworkReferralsPageView`).
+ * Uses `network_profiles`, `network_referrals`, and `network_partners` (My Network).
+ * See `shared/components/network/README.md`.
  */
 
 import { redirect } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { canAccessAdminNavItem } from "@/lib/database/access-control";
+import { listMyNetworkPartners } from "@/lib/database/queries/network-partners";
 import {
   ensureCompanyNetworkProfile,
   listVisibleNetworkProfiles,
@@ -33,9 +34,10 @@ export default async function NetworkPage() {
 
   const companyId = companyContext.company.id;
   const canSendReferral = companyContext.permissions.manageCompany;
+  const canManageNetwork = companyContext.permissions.manageCompany;
   const canManageReceivedReferrals = companyContext.permissions.manageCustomers;
 
-  const [profiles, ownProfileResult, sentReferrals, receivedReferrals] =
+  const [profiles, ownProfileResult, sentReferrals, receivedReferrals, myNetworkPartners] =
     await Promise.all([
       canSendReferral ? listVisibleNetworkProfiles(companyId) : Promise.resolve([]),
       canSendReferral
@@ -47,6 +49,9 @@ export default async function NetworkPage() {
       canManageReceivedReferrals
         ? listReceivedNetworkReferrals(companyId)
         : Promise.resolve([]),
+      canManageNetwork
+        ? listMyNetworkPartners(companyId)
+        : Promise.resolve([]),
     ]);
 
   return (
@@ -55,7 +60,9 @@ export default async function NetworkPage() {
       initialOwnProfile={ownProfileResult.profile}
       initialSentReferrals={sentReferrals}
       initialReceivedReferrals={receivedReferrals}
+      initialMyNetworkPartners={myNetworkPartners}
       canSendReferral={canSendReferral}
+      canManageNetwork={canManageNetwork}
       canManageReceivedReferrals={canManageReceivedReferrals}
     />
   );
