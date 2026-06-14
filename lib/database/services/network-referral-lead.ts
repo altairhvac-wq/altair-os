@@ -151,3 +151,118 @@ export async function createReferralTargetLead(
     error: null,
   };
 }
+
+type ReferralHandoffRow = {
+  id: string;
+  source_company_id: string;
+  target_company_id: string;
+  status: string;
+  target_lead_id: string | null;
+};
+
+async function getReferralHandoffRow(
+  referralId: string,
+): Promise<{ row: ReferralHandoffRow | null; error: string | null }> {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase
+    .from("network_referrals")
+    .select("id, source_company_id, target_company_id, status, target_lead_id")
+    .eq("id", referralId)
+    .maybeSingle();
+
+  if (error || !data) {
+    return {
+      row: null,
+      error: error ? mapDatabaseError(error) : "Referral not found.",
+    };
+  }
+
+  return { row: data, error: null };
+}
+
+export async function linkNetworkReferralTargetLead(input: {
+  referralId: string;
+  sourceCompanyId: string;
+  targetCompanyId: string;
+  targetLeadId: string;
+}): Promise<{ error: string | null }> {
+  const { row, error: loadError } = await getReferralHandoffRow(input.referralId);
+  if (loadError || !row) {
+    return { error: loadError ?? "Referral not found." };
+  }
+
+  if (row.source_company_id !== input.sourceCompanyId) {
+    return { error: "Referral not found." };
+  }
+
+  if (row.target_company_id !== input.targetCompanyId) {
+    return { error: "Referral target company mismatch." };
+  }
+
+  if (row.status !== "sent") {
+    return { error: "This referral can no longer be linked to a lead." };
+  }
+
+  if (row.target_lead_id) {
+    return { error: null };
+  }
+
+  const supabase = createServiceRoleClient();
+  const { data: lead, error: leadError } = await supabase
+    .from("leads")
+    .select("id, company_id")
+    .eq("id", input.targetLeadId)
+    .maybeSingle();
+
+  if (leadError || !lead || lead.company_id !== input.targetCompanyId) {
+    return {
+      error: leadError
+        ? mapDatabaseError(leadError)
+        : "Target lead not found for this referral.",
+    };
+  }
+
+  const { error: updateError } = await supabase
+    .from("network_referrals")
+    .update({ target_lead_id: input.targetLeadId })
+    .eq("id", input.referralId)
+    .eq("source_company_id", input.sourceCompanyId)
+    .is("target_lead_id", null);
+
+  return { error: updateError ? mapDatabaseError(updateError) : null };
+}
+
+export async function cancelNetworkReferralHandoff(input: {
+  referralId: string;
+  sourceCompanyId: string;
+  declineReason: string;
+}): Promise<{ error: string | null }> {
+  const { row, error: loadError } = await getReferralHandoffRow(input.referralId);
+  if (loadError || !row) {
+    return { error: loadError ?? "Referral not found." };
+  }
+
+  if (row.source_company_id !== input.sourceCompanyId) {
+    return { error: "Referral not found." };
+  }
+
+  if (row.status !== "sent" || row.target_lead_id) {
+    return { error: null };
+  }
+
+  const supabase = createServiceRoleClient();
+  const { error: updateError } = await supabase
+    .from("network_referrals")
+    .update({
+      status: "cancelled",
+      decline_reason: input.declineReason,
+    })
+    .eq("id", input.referralId)
+    .eq("source_company_id", input.sourceCompanyId)
+    .eq("status", "sent")
+    .is("target_lead_id", null);
+
+  return {
+    error: updateError ? mapDatabaseError(updateError) : null,
+  };
+}

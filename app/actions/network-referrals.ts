@@ -15,7 +15,11 @@ import {
   listSentNetworkReferrals,
   updateNetworkReferral,
 } from "@/lib/database/queries/network-referrals";
-import { createReferralTargetLead } from "@/lib/database/services/network-referral-lead";
+import {
+  cancelNetworkReferralHandoff,
+  createReferralTargetLead,
+  linkNetworkReferralTargetLead,
+} from "@/lib/database/services/network-referral-lead";
 import type { NetworkProfile, NetworkReferral } from "@/shared/types/network-referral";
 import {
   normalizeNetworkReferralFormData,
@@ -175,9 +179,10 @@ export async function sendNetworkReferralAction(
   });
 
   if (leadError || !lead) {
-    await updateNetworkReferral(referralInsert.referral.id, {
-      status: "cancelled",
-      decline_reason: "Lead creation failed during referral handoff.",
+    await cancelNetworkReferralHandoff({
+      referralId: referralInsert.referral.id,
+      sourceCompanyId: permission.context.company.id,
+      declineReason: "Lead creation failed during referral handoff.",
     });
     return {
       error:
@@ -186,14 +191,25 @@ export async function sendNetworkReferralAction(
     };
   }
 
-  const linked = await updateNetworkReferral(referralInsert.referral.id, {
-    target_lead_id: lead.id,
+  const linkError = await linkNetworkReferralTargetLead({
+    referralId: referralInsert.referral.id,
+    sourceCompanyId: permission.context.company.id,
+    targetCompanyId: targetProfile.companyId,
+    targetLeadId: lead.id,
   });
+
+  if (linkError.error) {
+    return {
+      error:
+        linkError.error ??
+        "The lead was created but could not be linked to this referral.",
+    };
+  }
 
   revalidateNetworkPaths();
 
   return {
-    referral: linked.referral ?? {
+    referral: {
       ...referralInsert.referral,
       targetLeadId: lead.id,
     },
