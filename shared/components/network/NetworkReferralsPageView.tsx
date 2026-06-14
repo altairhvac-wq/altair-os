@@ -10,6 +10,7 @@ import {
 import { NETWORK_PARTNER_MANAGER_MESSAGE } from "@/lib/database/errors";
 import { toggleOwnNetworkProfileVisibilityAction } from "@/app/actions/network-referrals";
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
+import { buildNetworkReferralSummaryMetrics } from "@/shared/lib/network/network-referral-metrics";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import {
   DIRECTORY_FILTER_OPTIONS,
@@ -38,6 +39,7 @@ import { NetworkInvitationCard } from "./NetworkInvitationCard";
 import { NetworkInvitedByBanner } from "./NetworkInvitedByBanner";
 import { NetworkProfileDetailPanel } from "./NetworkProfileDetailPanel";
 import { NetworkReferralCard } from "./NetworkReferralCard";
+import { NetworkReferralSummaryCards } from "./NetworkReferralSummaryCards";
 import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
 
 type ProfilePanelMode = "detail" | "referral" | "empty";
@@ -209,6 +211,16 @@ export function NetworkReferralsPageView({
   const filteredInvites = useMemo(
     () => filterInvitesByTab(networkInvites, invitationsTab),
     [networkInvites, invitationsTab],
+  );
+
+  const sentReferralMetrics = useMemo(
+    () => buildNetworkReferralSummaryMetrics(sentReferrals),
+    [sentReferrals],
+  );
+
+  const receivedReferralMetrics = useMemo(
+    () => buildNetworkReferralSummaryMetrics(receivedReferrals),
+    [receivedReferrals],
   );
 
   const invitationsEmptyCopy: Record<
@@ -895,23 +907,26 @@ export function NetworkReferralsPageView({
               </p>
             </div>
           ) : (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {sentReferrals.map((referral) => (
-                <NetworkReferralCard
-                  key={referral.id}
-                  referral={referral}
-                  direction="sent"
-                  timeZone={timeZone}
-                  onUpdated={(updated) =>
-                    setSentReferrals((current) =>
-                      current.map((item) =>
-                        item.id === updated.id ? updated : item,
-                      ),
-                    )
-                  }
-                />
-              ))}
-            </div>
+            <>
+              <NetworkReferralSummaryCards metrics={sentReferralMetrics} />
+              <div className="grid gap-4 lg:grid-cols-2">
+                {sentReferrals.map((referral) => (
+                  <NetworkReferralCard
+                    key={referral.id}
+                    referral={referral}
+                    direction="sent"
+                    timeZone={timeZone}
+                    onUpdated={(updated) =>
+                      setSentReferrals((current) =>
+                        current.map((item) =>
+                          item.id === updated.id ? updated : item,
+                        ),
+                      )
+                    }
+                  />
+                ))}
+              </div>
+            </>
           )}
         </section>
       ) : null}
@@ -932,23 +947,26 @@ export function NetworkReferralsPageView({
               </p>
             </div>
           ) : (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {receivedReferrals.map((referral) => (
-                <NetworkReferralCard
-                  key={referral.id}
-                  referral={referral}
-                  direction="received"
-                  timeZone={timeZone}
-                  onUpdated={(updated) =>
-                    setReceivedReferrals((current) =>
-                      current.map((item) =>
-                        item.id === updated.id ? updated : item,
-                      ),
-                    )
-                  }
-                />
-              ))}
-            </div>
+            <>
+              <NetworkReferralSummaryCards metrics={receivedReferralMetrics} />
+              <div className="grid gap-4 lg:grid-cols-2">
+                {receivedReferrals.map((referral) => (
+                  <NetworkReferralCard
+                    key={referral.id}
+                    referral={referral}
+                    direction="received"
+                    timeZone={timeZone}
+                    onUpdated={(updated) =>
+                      setReceivedReferrals((current) =>
+                        current.map((item) =>
+                          item.id === updated.id ? updated : item,
+                        ),
+                      )
+                    }
+                  />
+                ))}
+              </div>
+            </>
           )}
         </section>
       ) : null}

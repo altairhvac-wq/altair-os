@@ -35,6 +35,10 @@ import {
   recordLeadStatusChangedActivity,
   recordLeadWonActivity,
 } from "@/lib/database/services/lead-activity";
+import {
+  syncNetworkReferralOutcomeForLead,
+  type ReferralOutcomeStatus,
+} from "@/lib/database/services/network-referral-outcome-sync";
 import { buildCustomerFormDataFromLead } from "@/shared/lib/leads/lead-conversion";
 import { validateLeadStatusTransition } from "@/shared/lib/leads/lead-status-transitions";
 import {
@@ -63,6 +67,26 @@ function revalidateLeadPaths() {
   revalidatePath("/");
   revalidatePath("/customers");
   revalidatePath("/estimates");
+  revalidatePath("/network");
+}
+
+async function syncReferralOutcomeForNetworkLead(
+  companyId: string,
+  lead: Lead,
+  actorUserId: string,
+  statusOrOutcome: ReferralOutcomeStatus,
+) {
+  if (lead.source !== "network_referral") {
+    return;
+  }
+
+  await syncNetworkReferralOutcomeForLead({
+    leadId: lead.id,
+    companyId,
+    statusOrOutcome,
+    actorUserId,
+    lead,
+  });
 }
 
 async function assertLeadManager() {
@@ -567,6 +591,13 @@ export async function convertLeadToCustomerAction(
     actorId: permission.context.user.id,
   });
 
+  await syncReferralOutcomeForNetworkLead(
+    permission.context.company.id,
+    lead,
+    permission.context.user.id,
+    "won",
+  );
+
   revalidateLeadPaths();
   return {
     lead,
@@ -603,6 +634,16 @@ export async function prepareLeadEstimateAction(
   }
 
   const lead = await getLeadById(permission.context.company.id, leadId);
+
+  if (lead?.source === "network_referral" && lead.convertedCustomerId) {
+    await syncReferralOutcomeForNetworkLead(
+      permission.context.company.id,
+      lead,
+      permission.context.user.id,
+      "converted",
+    );
+  }
+
   revalidateLeadPaths();
   return {
     lead: lead ?? existing,
@@ -651,6 +692,13 @@ export async function markLeadWonAction(
     actorId: permission.context.user.id,
   });
 
+  await syncReferralOutcomeForNetworkLead(
+    permission.context.company.id,
+    lead,
+    permission.context.user.id,
+    "won",
+  );
+
   revalidateLeadPaths();
   return { lead, customerId: lead.convertedCustomerId };
 }
@@ -692,6 +740,13 @@ export async function markLeadLostAction(
     actorId: permission.context.user.id,
     lostReason: normalizedReason ?? undefined,
   });
+
+  await syncReferralOutcomeForNetworkLead(
+    permission.context.company.id,
+    lead,
+    permission.context.user.id,
+    "lost",
+  );
 
   revalidateLeadPaths();
   return { lead };

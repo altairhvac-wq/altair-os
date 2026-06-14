@@ -271,3 +271,34 @@ export async function getNetworkReferralByLeadId(
   const map = await getNetworkReferralsByLeadIds(companyId, [leadId]);
   return map.get(leadId) ?? null;
 }
+
+export async function syncNetworkReferralOutcomeForLeadRpc(
+  leadId: string,
+  targetCompanyId: string,
+  newStatus: Extract<
+    NetworkReferral["status"],
+    "converted" | "won" | "lost"
+  >,
+): Promise<{ updated: boolean; error: string | null }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc(
+    "sync_network_referral_outcome_for_lead",
+    {
+      p_lead_id: leadId,
+      p_target_company_id: targetCompanyId,
+      p_new_status: newStatus,
+    },
+  );
+
+  if (error) {
+    return {
+      updated: false,
+      error: mapDatabaseError(error),
+    };
+  }
+
+  return {
+    updated: Boolean(data),
+    error: null,
+  };
+}

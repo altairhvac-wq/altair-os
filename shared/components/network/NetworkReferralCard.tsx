@@ -12,6 +12,7 @@ import { formatDate } from "@/shared/types/customer";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import {
   formatNetworkReferralRequest,
+  formatNetworkReferralStatus,
   formatNetworkReferralUrgency,
   type NetworkReferral,
 } from "@/shared/types/network-referral";
@@ -81,7 +82,14 @@ export function NetworkReferralCard({
             Urgency: {formatNetworkReferralUrgency(referral.urgency)}
           </p>
         </div>
-        <NetworkReferralStatusBadge status={referral.status} />
+        <div className="text-right">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Referral outcome
+          </p>
+          <div className="mt-1">
+            <NetworkReferralStatusBadge status={referral.status} />
+          </div>
+        </div>
       </div>
 
       <div className="mt-4 grid gap-3 text-xs text-slate-600 sm:grid-cols-2">
@@ -93,10 +101,10 @@ export function NetworkReferralCard({
             {formatDate(referral.createdAt, timeZone)}
           </p>
         </div>
-        {direction === "sent" && referral.targetLeadStatus ? (
+        {referral.targetLeadStatus ? (
           <div>
             <p className="font-semibold uppercase tracking-wide text-slate-500">
-              Lead status
+              Pipeline status
             </p>
             <p className="mt-0.5 text-slate-700">
               {formatLeadStatus(referral.targetLeadStatus)}
@@ -154,6 +162,21 @@ export function NetworkReferralCard({
       {referral.declineReason && referral.status === "declined" ? (
         <p className="mt-3 text-xs text-slate-500">
           Decline reason: {referral.declineReason}
+        </p>
+      ) : null}
+
+      {referral.status === "cancelled" ? (
+        <p className="mt-3 text-xs text-slate-500">
+          {referral.declineReason
+            ? `Cancelled: ${referral.declineReason}`
+            : "This referral handoff was cancelled."}
+        </p>
+      ) : null}
+
+      {["converted", "won", "lost"].includes(referral.status) ? (
+        <p className="mt-3 text-xs text-slate-500">
+          Outcome synced from lead pipeline:{" "}
+          {formatNetworkReferralStatus(referral.status)}.
         </p>
       ) : null}
     </article>

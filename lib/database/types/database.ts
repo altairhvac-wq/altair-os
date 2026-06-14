@@ -1170,6 +1170,17 @@ export type Database = {
         };
         Returns: NetworkReferralRow;
       };
+      sync_network_referral_outcome_for_lead: {
+        Args: {
+          p_lead_id: string;
+          p_target_company_id: string;
+          p_new_status: Extract<
+            NetworkReferralRow["status"],
+            "converted" | "won" | "lost"
+          >;
+        };
+        Returns: NetworkReferralRow | null;
+      };
       upsert_linked_network_partner: {
         Args: {
           p_company_id: string;
