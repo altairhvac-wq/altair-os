@@ -101,6 +101,7 @@ export const NETWORK_REFERRAL_STATUS_OPTIONS: {
 export type NetworkReferralsTab =
   | "directory"
   | "my-network"
+  | "invitations"
   | "sent-referrals"
   | "received-referrals";
 
@@ -110,6 +111,7 @@ export const NETWORK_REFERRALS_TAB_OPTIONS: {
 }[] = [
   { value: "directory", label: "Directory" },
   { value: "my-network", label: "My Network" },
+  { value: "invitations", label: "Invitations" },
   { value: "sent-referrals", label: "Sent Referrals" },
   { value: "received-referrals", label: "Received Referrals" },
 ];

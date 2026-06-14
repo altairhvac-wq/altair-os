@@ -86,6 +86,9 @@ import type {
   NetworkPartnerInsert,
   NetworkPartnerRow,
   NetworkPartnerUpdate,
+  NetworkInviteInsert,
+  NetworkInviteRow,
+  NetworkInviteUpdate,
   NetworkProfileInsert,
   NetworkProfileRow,
   NetworkProfileUpdate,
@@ -373,6 +376,41 @@ export type Database = {
             columns: ["linked_company_id"];
             isOneToOne: false;
             referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      network_invites: {
+        Row: NetworkInviteRow;
+        Insert: NetworkInviteInsert;
+        Update: NetworkInviteUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "network_invites_source_company_id_fkey";
+            columns: ["source_company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "network_invites_source_user_id_fkey";
+            columns: ["source_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "network_invites_accepted_company_id_fkey";
+            columns: ["accepted_company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "network_invites_accepted_user_id_fkey";
+            columns: ["accepted_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -1100,6 +1138,29 @@ export type Database = {
         };
         Returns: Json;
       };
+      get_public_network_invite_preview: {
+        Args: {
+          p_raw_token: string;
+        };
+        Returns: Json;
+      };
+      accept_network_invite: {
+        Args: {
+          p_raw_token: string;
+          p_accepted_company_id: string;
+          p_accepted_user_id: string;
+          p_signup_email: string;
+        };
+        Returns: Json;
+      };
+      rotate_network_invite_token: {
+        Args: {
+          p_invite_id: string;
+          p_source_company_id: string;
+          p_new_token_hash: string;
+        };
+        Returns: boolean;
+      };
       submit_public_estimate_approval: {
         Args: {
           p_raw_token: string;
@@ -1147,6 +1208,7 @@ export type Database = {
       alpha_tracker_device: AlphaTrackerItemRow["device"];
       network_referral_urgency: NetworkReferralRow["urgency"];
       network_referral_status: NetworkReferralRow["status"];
+      network_invite_status: NetworkInviteRow["status"];
     };
     CompositeTypes: Record<string, never>;
   };

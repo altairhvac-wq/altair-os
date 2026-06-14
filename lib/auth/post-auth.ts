@@ -4,6 +4,7 @@ import {
   getCurrentUser,
 } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { processNetworkInviteAfterCompanyBootstrap } from "@/lib/database/services/network-invite-acceptance";
 import {
   RESET_PASSWORD_PATH,
 } from "./constants";
@@ -57,6 +58,11 @@ export async function resolveAuthCallbackDestination(
 
       if (!bootstrapResult.error && bootstrapResult.companyId) {
         companyContext = await getActiveCompanyContext({
+          companyId: bootstrapResult.companyId,
+        });
+
+        await processNetworkInviteAfterCompanyBootstrap({
+          user,
           companyId: bootstrapResult.companyId,
         });
       }

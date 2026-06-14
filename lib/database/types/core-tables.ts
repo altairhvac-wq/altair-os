@@ -1362,6 +1362,52 @@ export type NetworkPartnerUpdate = Partial<
   Omit<NetworkPartnerRow, "id" | "company_id" | "created_at" | "updated_at">
 >;
 
+/** Trusted network invitation — growth invite to join Altair as a partner. */
+export type NetworkInviteRow = {
+  id: UUID;
+  source_company_id: UUID;
+  source_user_id: UUID;
+  invited_company_name: string;
+  invited_contact_name: string;
+  invited_email: string;
+  invited_phone: string;
+  trade_category: string;
+  personal_message: string | null;
+  invite_token_hash: string;
+  status: import("./enums").NetworkInviteStatus;
+  accepted_company_id: UUID | null;
+  accepted_user_id: UUID | null;
+  created_at: Timestamp;
+  accepted_at: Timestamp | null;
+  expires_at: Timestamp;
+};
+
+export type NetworkInviteInsert = {
+  id?: UUID;
+  source_company_id: UUID;
+  source_user_id: UUID;
+  invited_company_name: string;
+  invited_contact_name: string;
+  invited_email: string;
+  invited_phone?: string;
+  trade_category: string;
+  personal_message?: string | null;
+  invite_token_hash: string;
+  status?: import("./enums").NetworkInviteStatus;
+  accepted_company_id?: UUID | null;
+  accepted_user_id?: UUID | null;
+  created_at?: Timestamp;
+  accepted_at?: Timestamp | null;
+  expires_at?: Timestamp;
+};
+
+export type NetworkInviteUpdate = Partial<
+  Omit<
+    NetworkInviteRow,
+    "id" | "source_company_id" | "source_user_id" | "invite_token_hash" | "created_at"
+  >
+>;
+
 export type ActiveCompanyContext = UserCompanyContext & {
   user: {
     id: UUID;

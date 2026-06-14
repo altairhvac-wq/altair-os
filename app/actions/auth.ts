@@ -16,6 +16,7 @@ import {
   getActiveCompanyContext,
   getCompanyNameFromUserMetadata,
 } from "@/lib/database";
+import { processNetworkInviteAfterCompanyBootstrap } from "@/lib/database/services/network-invite-acceptance";
 import { mapAuthError } from "@/lib/database/errors";
 
 export type AuthActionState = {
@@ -98,6 +99,7 @@ export async function signupAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const companyName = String(formData.get("companyName") ?? "").trim();
+  const inviteToken = String(formData.get("inviteToken") ?? "").trim() || null;
   const next = String(formData.get("next") ?? "").trim() || null;
 
   if (!fullName || !email || !password || !companyName) {
@@ -117,6 +119,7 @@ export async function signupAction(
       data: {
         full_name: fullName,
         company_name: companyName,
+        ...(inviteToken ? { network_invite_token: inviteToken } : {}),
       },
       emailRedirectTo,
     },
@@ -138,6 +141,14 @@ export async function signupAction(
 
   if (bootstrapResult.error) {
     return { error: bootstrapResult.error };
+  }
+
+  if (bootstrapResult.companyId && data.user) {
+    await processNetworkInviteAfterCompanyBootstrap({
+      user: data.user,
+      companyId: bootstrapResult.companyId,
+      inviteToken,
+    });
   }
 
   return redirectAfterAuth(next);
@@ -178,6 +189,13 @@ export async function setupCompanyAction(
       error: bootstrapResult.error,
     });
     return { error: bootstrapResult.error };
+  }
+
+  if (bootstrapResult.companyId) {
+    await processNetworkInviteAfterCompanyBootstrap({
+      user,
+      companyId: bootstrapResult.companyId,
+    });
   }
 
   revalidatePath("/", "layout");

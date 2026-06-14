@@ -9,6 +9,7 @@ The `/network` admin route (`app/(admin)/network/page.tsx`) renders **`NetworkRe
 | **`network_profiles`** | Public/internal **directory profile** — how a company presents itself for discovery and referral targeting | One row per company; `is_visible` controls directory listing | `lib/database/queries/network-profiles.ts`, directory cards/panels |
 | **`network_partners`** | Private **company partner CRM** — subcontractor relationships, contact details, relationship status. **Network Connections V1** uses rows with `linked_company_id` as the source company's one-sided "My Network" / trusted partners list. | Per-company partner list; not shared across tenants | `lib/database/queries/network-partners.ts`, My Network tab + directory badges |
 | **`network_referrals`** | Cross-company **lead handoff** — source company sends a customer to a target company | Tracks customer payload, status lifecycle, optional `target_lead_id` | `lib/database/queries/network-referrals.ts`, `app/actions/network-referrals.ts`, referral cards/forms |
+| **`network_invites`** | **Growth invitations** — invite contractors to join Altair; accepted signups auto-link trusted partners | Per-source-company invite list; token-based signup; bidirectional `network_partners` on accept | `lib/database/queries/network-invites.ts`, `app/actions/network-invites.ts`, Invitations tab |
 
 ### Mental model
 
@@ -24,13 +25,14 @@ Referrals may reference `source_network_profile_id` / `target_network_profile_id
 
 ## Live components (V1 referrals + connections)
 
-- `NetworkReferralsPageView.tsx` — page shell (directory + my network + sent/received tabs)
+- `NetworkReferralsPageView.tsx` — page shell (directory + my network + invitations + sent/received tabs)
+- `NetworkInviteForm.tsx`, `NetworkInvitationCard.tsx`, `NetworkInvitedByBanner.tsx` — invitations (`network_invites`)
 - `NetworkDirectoryCard.tsx`, `NetworkProfileDetailPanel.tsx`, `NetworkTrustedBadge.tsx` — directory (`network_profiles`) + trusted badges (`network_partners`)
 - `SendReferralForm.tsx`, `NetworkReferralCard.tsx`, `NetworkReferralStatusBadge.tsx` — referrals (`network_referrals`)
 
-Types: `shared/types/network-referral.ts` (profiles + referrals), `shared/types/network-partner.ts` (My Network / `network_partners`), `shared/types/network.ts` (trade types + initials helper only).
+Types: `shared/types/network-referral.ts` (profiles + referrals), `shared/types/network-partner.ts` (My Network / `network_partners`), `shared/types/network-invite.ts` (invitations), `shared/types/network.ts` (trade types + initials helper only).
 
-Actions: `app/actions/network-referrals.ts`, `app/actions/network-partners.ts`
+Actions: `app/actions/network-referrals.ts`, `app/actions/network-partners.ts`, `app/actions/network-invites.ts`
 
 ## Removed mock partner CRM (V0)
 

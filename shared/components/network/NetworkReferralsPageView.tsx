@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Eye, EyeOff, Network, Search, UserMinus } from "lucide-react";
+import { Eye, EyeOff, Network, Search, UserMinus, UserPlus } from "lucide-react";
 import {
   addToMyNetworkAction,
   removeFromMyNetworkAction,
@@ -24,7 +24,16 @@ import {
   type NetworkReferral,
   type NetworkReferralsTab,
 } from "@/shared/types/network-referral";
+import {
+  filterInvitesByTab,
+  NETWORK_INVITATIONS_TAB_OPTIONS,
+  type NetworkInvite,
+  type NetworkInvitationsTab,
+} from "@/shared/types/network-invite";
 import { NetworkDirectoryCard } from "./NetworkDirectoryCard";
+import { NetworkInviteForm } from "./NetworkInviteForm";
+import { NetworkInvitationCard } from "./NetworkInvitationCard";
+import { NetworkInvitedByBanner } from "./NetworkInvitedByBanner";
 import { NetworkProfileDetailPanel } from "./NetworkProfileDetailPanel";
 import { NetworkReferralCard } from "./NetworkReferralCard";
 import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
@@ -37,6 +46,9 @@ type NetworkReferralsPageViewProps = {
   initialSentReferrals: NetworkReferral[];
   initialReceivedReferrals: NetworkReferral[];
   initialMyNetworkPartners: NetworkPartner[];
+  initialNetworkInvites: NetworkInvite[];
+  invitedByCompanyName?: string | null;
+  companyId: string;
   canSendReferral: boolean;
   canManageNetwork: boolean;
   canManageReceivedReferrals: boolean;
@@ -64,6 +76,9 @@ export function NetworkReferralsPageView({
   initialSentReferrals,
   initialReceivedReferrals,
   initialMyNetworkPartners,
+  initialNetworkInvites,
+  invitedByCompanyName,
+  companyId,
   canSendReferral,
   canManageNetwork,
   canManageReceivedReferrals,
@@ -78,6 +93,11 @@ export function NetworkReferralsPageView({
   const [myNetworkPartners, setMyNetworkPartners] = useState(
     initialMyNetworkPartners,
   );
+  const [networkInvites, setNetworkInvites] = useState(initialNetworkInvites);
+  const [invitationsTab, setInvitationsTab] =
+    useState<NetworkInvitationsTab>("pending");
+  const [showInviteForm, setShowInviteForm] = useState(false);
+  const [latestInviteUrl, setLatestInviteUrl] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [directoryFilter, setDirectoryFilter] =
     useState<DirectoryFilter>("all");
@@ -149,7 +169,27 @@ export function NetworkReferralsPageView({
     setSelectedProfileId(null);
     setPanelMode("empty");
     setNetworkActionError(null);
+    setShowInviteForm(false);
+    setLatestInviteUrl(null);
   }
+
+  function handleOpenInviteForm() {
+    setActiveTab("invitations");
+    setShowInviteForm(true);
+    setLatestInviteUrl(null);
+  }
+
+  function handleInviteSuccess(invite: NetworkInvite, inviteUrl?: string) {
+    setNetworkInvites((current) => [invite, ...current]);
+    setShowInviteForm(false);
+    setInvitationsTab("pending");
+    setLatestInviteUrl(inviteUrl ?? null);
+  }
+
+  const filteredInvites = useMemo(
+    () => filterInvitesByTab(networkInvites, invitationsTab),
+    [networkInvites, invitationsTab],
+  );
 
   function handleSelectProfile(profileId: string) {
     setSelectedProfileId(profileId);
@@ -350,6 +390,13 @@ export function NetworkReferralsPageView({
           <p className="mt-2 text-sm text-rose-700">{visibilityError}</p>
         ) : null}
 
+        {invitedByCompanyName ? (
+          <NetworkInvitedByBanner
+            sourceCompanyName={invitedByCompanyName}
+            companyId={companyId}
+          />
+        ) : null}
+
         <nav
           className="mt-4 flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1"
           aria-label="Network sections"
@@ -518,9 +565,21 @@ export function NetworkReferralsPageView({
                     Companies in your private network for quick referrals
                   </p>
                 </div>
-                <p className="text-xs font-medium text-slate-500">
-                  {myNetworkEntries.length} partners
-                </p>
+                <div className="flex items-center gap-2">
+                  {canManageNetwork ? (
+                    <button
+                      type="button"
+                      onClick={handleOpenInviteForm}
+                      className="inline-flex items-center gap-1.5 admin-btn-secondary"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                      Invite company
+                    </button>
+                  ) : null}
+                  <p className="text-xs font-medium text-slate-500">
+                    {myNetworkEntries.length} partners
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -575,6 +634,122 @@ export function NetworkReferralsPageView({
             onReferralCancel={() => setPanelMode("detail")}
           />
         </div>
+      ) : null}
+
+      {activeTab === "invitations" ? (
+        <section className="admin-card min-h-0 flex-1 overflow-y-auto p-4">
+          {!canManageNetwork ? (
+            <p className="text-sm text-slate-600">
+              Network invitations are managed by company owners and admins.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-5 text-white">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
+                  Grow your network
+                </p>
+                <h2 className="mt-1 text-lg font-bold">
+                  Invite trusted contractors to join Altair
+                </h2>
+                <p className="mt-2 max-w-3xl text-sm text-slate-200">
+                  Invite trusted contractors to join Altair and build referral
+                  relationships that work directly inside your operating system.
+                </p>
+                {!showInviteForm ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowInviteForm(true)}
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Invite company
+                  </button>
+                ) : null}
+              </div>
+
+              {showInviteForm ? (
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Invite a company
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    They&apos;ll receive a signup link and become a trusted partner
+                    when they join.
+                  </p>
+                  <div className="mt-4">
+                    <NetworkInviteForm
+                      onSuccess={handleInviteSuccess}
+                      onCancel={() => setShowInviteForm(false)}
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {latestInviteUrl ? (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3">
+                  <p className="text-sm font-semibold text-emerald-900">
+                    Invitation created
+                  </p>
+                  <p className="mt-1 break-all text-xs text-emerald-800">
+                    {latestInviteUrl}
+                  </p>
+                  <p className="mt-1 text-xs text-emerald-700">
+                    Copy this link from the invitation card below anytime.
+                  </p>
+                </div>
+              ) : null}
+
+              <div>
+                <div
+                  className="flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1"
+                  aria-label="Invitation status filter"
+                >
+                  {NETWORK_INVITATIONS_TAB_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setInvitationsTab(option.value)}
+                      className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                        invitationsTab === option.value
+                          ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                  {filteredInvites.length === 0 ? (
+                    <div className="col-span-full rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-10 text-center">
+                      <p className="text-sm font-medium text-slate-700">
+                        No invitations yet
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Invite contractors you already trust to start building your
+                        network.
+                      </p>
+                    </div>
+                  ) : (
+                    filteredInvites.map((invite) => (
+                      <NetworkInvitationCard
+                        key={invite.id}
+                        invite={invite}
+                        timeZone={timeZone}
+                        initialInviteUrl={
+                          invite.id === networkInvites[0]?.id
+                            ? (latestInviteUrl ?? undefined)
+                            : undefined
+                        }
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
       ) : null}
 
       {activeTab === "sent-referrals" ? (

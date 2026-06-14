@@ -9,6 +9,10 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { canAccessAdminNavItem } from "@/lib/database/access-control";
 import { listMyNetworkPartners } from "@/lib/database/queries/network-partners";
 import {
+  getAcceptedNetworkInviteForCompany,
+  listNetworkInvitesForSourceCompany,
+} from "@/lib/database/queries/network-invites";
+import {
   ensureCompanyNetworkProfile,
   listVisibleNetworkProfiles,
 } from "@/lib/database/queries/network-profiles";
@@ -37,7 +41,7 @@ export default async function NetworkPage() {
   const canManageNetwork = companyContext.permissions.manageCompany;
   const canManageReceivedReferrals = companyContext.permissions.manageCustomers;
 
-  const [profiles, ownProfileResult, sentReferrals, receivedReferrals, myNetworkPartners] =
+  const [profiles, ownProfileResult, sentReferrals, receivedReferrals, myNetworkPartners, networkInvites, acceptedInvite] =
     await Promise.all([
       canSendReferral ? listVisibleNetworkProfiles(companyId) : Promise.resolve([]),
       canSendReferral
@@ -52,6 +56,10 @@ export default async function NetworkPage() {
       canManageNetwork
         ? listMyNetworkPartners(companyId)
         : Promise.resolve([]),
+      canManageNetwork
+        ? listNetworkInvitesForSourceCompany(companyId)
+        : Promise.resolve([]),
+      getAcceptedNetworkInviteForCompany(companyId),
     ]);
 
   return (
@@ -61,6 +69,9 @@ export default async function NetworkPage() {
       initialSentReferrals={sentReferrals}
       initialReceivedReferrals={receivedReferrals}
       initialMyNetworkPartners={myNetworkPartners}
+      initialNetworkInvites={networkInvites}
+      invitedByCompanyName={acceptedInvite?.sourceCompanyName ?? null}
+      companyId={companyId}
       canSendReferral={canSendReferral}
       canManageNetwork={canManageNetwork}
       canManageReceivedReferrals={canManageReceivedReferrals}

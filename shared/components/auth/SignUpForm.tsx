@@ -14,16 +14,46 @@ import {
   AuthSubmitButton,
   AuthLink,
 } from "./AuthShell";
+import type { PublicNetworkInvitePreview } from "@/shared/types/network-invite";
 
 const initialState: AuthActionState = {};
 
-export function SignUpForm() {
+type SignUpFormProps = {
+  inviteToken?: string | null;
+  invitePreview?: PublicNetworkInvitePreview | null;
+};
+
+export function SignUpForm({
+  inviteToken,
+  invitePreview,
+}: SignUpFormProps) {
   const [state, formAction, pending] = useActionState(signupAction, initialState);
+  const isValidInvite = invitePreview?.state === "valid";
+  const defaultCompanyName =
+    isValidInvite && invitePreview?.invitedCompanyName
+      ? invitePreview.invitedCompanyName
+      : undefined;
+  const defaultEmail =
+    isValidInvite && invitePreview?.invitedEmail
+      ? invitePreview.invitedEmail
+      : undefined;
+  const defaultFullName =
+    isValidInvite && invitePreview?.invitedContactName
+      ? invitePreview.invitedContactName
+      : undefined;
 
   return (
     <AuthShell
-      title="Create your account"
-      description="Get your trades business on Altair OS — set up in minutes, built for the field."
+      title={
+        isValidInvite && invitePreview?.sourceCompanyName
+          ? `Join Altair with ${invitePreview.sourceCompanyName}`
+          : "Create your account"
+      }
+      description={
+        isValidInvite
+          ? "You were invited to join Altair and connect as a trusted network partner."
+          : "Get your trades business on Altair OS — set up in minutes, built for the field."
+      }
       footer={
         <p>
           Already have an account?{" "}
@@ -35,9 +65,31 @@ export function SignUpForm() {
         <Suspense fallback={null}>
           <NextRedirectField />
         </Suspense>
+        {inviteToken ? (
+          <input type="hidden" name="inviteToken" value={inviteToken} />
+        ) : null}
         {state.error ? <AuthMessage tone="error">{state.error}</AuthMessage> : null}
         {state.success ? (
           <AuthMessage tone="success">{state.success}</AuthMessage>
+        ) : null}
+
+        {invitePreview && invitePreview.state !== "valid" ? (
+          <AuthMessage tone="error">
+            {invitePreview.state === "expired"
+              ? "This invitation has expired. Ask your partner to send a new invite."
+              : invitePreview.state === "accepted"
+                ? "This invitation has already been used."
+                : "This invitation link is invalid."}
+          </AuthMessage>
+        ) : null}
+
+        {isValidInvite && invitePreview?.personalMessage ? (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Message from {invitePreview.sourceCompanyName}
+            </p>
+            <p className="mt-2 whitespace-pre-wrap">{invitePreview.personalMessage}</p>
+          </div>
         ) : null}
 
         <AuthField label="Full name" id="fullName">
@@ -47,6 +99,7 @@ export function SignUpForm() {
             type="text"
             autoComplete="name"
             placeholder="Jordan Smith"
+            defaultValue={defaultFullName}
             required
           />
         </AuthField>
@@ -62,6 +115,7 @@ export function SignUpForm() {
             type="text"
             autoComplete="organization"
             placeholder="Smith HVAC & Plumbing"
+            defaultValue={defaultCompanyName}
             required
           />
         </AuthField>
@@ -73,6 +127,8 @@ export function SignUpForm() {
             type="email"
             autoComplete="email"
             placeholder="you@company.com"
+            defaultValue={defaultEmail}
+            readOnly={Boolean(defaultEmail)}
             required
           />
         </AuthField>

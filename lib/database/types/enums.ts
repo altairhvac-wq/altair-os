@@ -63,6 +63,13 @@ export type RelationshipStatus =
   | "pending"
   | "paused";
 
+/** `network_invites.status` — trusted network invitation lifecycle. */
+export type NetworkInviteStatus =
+  | "pending"
+  | "accepted"
+  | "expired"
+  | "cancelled";
+
 export type LeadActivityType =
   | "lead_created"
   | "call_logged"
