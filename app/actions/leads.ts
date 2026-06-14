@@ -36,7 +36,9 @@ import {
   recordLeadWonActivity,
 } from "@/lib/database/services/lead-activity";
 import {
+  resolveReferralOutcomeFromLead,
   syncNetworkReferralOutcomeForLead,
+  syncNetworkReferralOutcomeFromLeadState,
   type ReferralOutcomeStatus,
 } from "@/lib/database/services/network-referral-outcome-sync";
 import { buildCustomerFormDataFromLead } from "@/shared/lib/leads/lead-conversion";
@@ -193,6 +195,18 @@ export async function updateLeadAction(
       previousStatus: existing.status,
       nextStatus: lead.status,
     });
+  }
+
+  if (lead.source === "network_referral") {
+    const previousOutcome = resolveReferralOutcomeFromLead(existing);
+    const nextOutcome = resolveReferralOutcomeFromLead(lead);
+    if (nextOutcome && previousOutcome !== nextOutcome) {
+      await syncNetworkReferralOutcomeFromLeadState({
+        lead,
+        companyId: permission.context.company.id,
+        actorUserId: permission.context.user.id,
+      });
+    }
   }
 
   revalidateLeadPaths();
