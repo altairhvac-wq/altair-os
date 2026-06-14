@@ -516,7 +516,7 @@ export function NetworkReferralsPageView({
           ))}
         </nav>
 
-        {networkActionError ? (
+        {networkActionError && !networkActionErrorProfileId ? (
           <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {networkActionError}
           </p>
@@ -639,7 +639,11 @@ export function NetworkReferralsPageView({
             canManageNetwork={canManageNetwork}
             isInMyNetwork={Boolean(selectedPartner)}
             myNetworkPartnerId={selectedPartner?.id}
-            networkActionError={networkActionError}
+            networkActionError={
+              selectedProfile
+                ? getNetworkActionErrorForProfile(selectedProfile.id)
+                : null
+            }
             isNetworkActionPending={
               selectedProfile
                 ? isNetworkActionPendingForProfile(selectedProfile.id)
@@ -730,7 +734,11 @@ export function NetworkReferralsPageView({
             canManageNetwork={canManageNetwork}
             isInMyNetwork={Boolean(selectedPartner)}
             myNetworkPartnerId={selectedPartner?.id}
-            networkActionError={networkActionError}
+            networkActionError={
+              selectedProfile
+                ? getNetworkActionErrorForProfile(selectedProfile.id)
+                : null
+            }
             isNetworkActionPending={
               selectedProfile
                 ? isNetworkActionPendingForProfile(selectedProfile.id)

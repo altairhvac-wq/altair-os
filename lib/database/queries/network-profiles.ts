@@ -64,6 +64,24 @@ export async function getNetworkProfileByCompanyId(
   return data ? mapNetworkProfileRow(data) : null;
 }
 
+export async function getNetworkProfileById(
+  profileId: string,
+): Promise<NetworkProfile | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("network_profiles")
+    .select("*")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getNetworkProfileById] query failed:", error);
+    return null;
+  }
+
+  return data ? mapNetworkProfileRow(data) : null;
+}
+
 export async function getVisibleNetworkProfileById(
   profileId: string,
 ): Promise<NetworkProfile | null> {

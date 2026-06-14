@@ -93,7 +93,7 @@ export async function getNetworkPartnerByLinkedCompanyId(
   return data ? mapNetworkPartnerRow(data) : null;
 }
 
-async function getNetworkPartnerLinkByLinkedCompanyId(
+export async function getNetworkPartnerLinkByLinkedCompanyId(
   companyId: string,
   linkedCompanyId: string,
 ): Promise<NetworkPartner | null> {

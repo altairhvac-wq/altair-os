@@ -3,10 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
-import { getVisibleNetworkProfileById } from "@/lib/database/queries/network-profiles";
+import {
+  getNetworkProfileById,
+} from "@/lib/database/queries/network-profiles";
 import {
   addLinkedNetworkPartner,
   getNetworkPartnerById,
+  getNetworkPartnerLinkByLinkedCompanyId,
   listMyNetworkPartners,
   removeLinkedNetworkPartner,
 } from "@/lib/database/queries/network-partners";
@@ -57,13 +60,39 @@ export async function addToMyNetworkAction(
     return { error: permission.error };
   }
 
-  const profile = await getVisibleNetworkProfileById(targetNetworkProfileId);
+  const profile = await getNetworkProfileById(targetNetworkProfileId);
   if (!profile) {
     return { error: "This company is not available in the network directory." };
   }
 
   if (profile.companyId === permission.context.company.id) {
     return { error: "You cannot add your own company to your network." };
+  }
+
+  const existingLink = await getNetworkPartnerLinkByLinkedCompanyId(
+    permission.context.company.id,
+    profile.companyId,
+  );
+  if (existingLink?.relationshipStatus === "active") {
+    return { partner: existingLink };
+  }
+  if (existingLink) {
+    const reactivated = await addLinkedNetworkPartner(
+      permission.context.company.id,
+      profile,
+    );
+    if (reactivated.error || !reactivated.partner) {
+      return {
+        error:
+          reactivated.error ?? "We couldn't add this company to your network.",
+      };
+    }
+    revalidateNetworkPath();
+    return { partner: reactivated.partner };
+  }
+
+  if (!profile.isVisible) {
+    return { error: "This company is not available in the network directory." };
   }
 
   const result = await addLinkedNetworkPartner(
