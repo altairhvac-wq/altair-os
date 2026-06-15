@@ -45,8 +45,8 @@ import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
 type ProfilePanelMode = "detail" | "referral" | "empty";
 
 type NetworkActionTarget = {
-  profileId: string;
-  linkedCompanyId?: string;
+  linkedCompanyId: string;
+  profileId?: string;
   action: "add" | "remove";
 };
 
@@ -109,13 +109,6 @@ export function NetworkReferralsPageView({
   useEffect(() => {
     setReceivedReferrals(initialReceivedReferrals);
   }, [initialReceivedReferrals]);
-  const [myNetworkPartners, setMyNetworkPartners] = useState(
-    initialMyNetworkPartners,
-  );
-
-  useEffect(() => {
-    setMyNetworkPartners(initialMyNetworkPartners);
-  }, [initialMyNetworkPartners]);
   const [networkInvites, setNetworkInvites] = useState(initialNetworkInvites);
   const [invitationsTab, setInvitationsTab] =
     useState<NetworkInvitationsTab>("pending");
@@ -136,24 +129,24 @@ export function NetworkReferralsPageView({
   const [isNetworkActionPending, startNetworkActionTransition] = useTransition();
 
   const trustedCompanyIds = useMemo(
-    () => getTrustedCompanyIds(myNetworkPartners),
-    [myNetworkPartners],
+    () => getTrustedCompanyIds(initialMyNetworkPartners),
+    [initialMyNetworkPartners],
   );
 
   const myNetworkEntries = useMemo(
-    () => enrichMyNetworkPartners(myNetworkPartners, profiles),
-    [myNetworkPartners, profiles],
+    () => enrichMyNetworkPartners(initialMyNetworkPartners, profiles),
+    [initialMyNetworkPartners, profiles],
   );
 
   const partnerByCompanyId = useMemo(() => {
     const map = new Map<string, NetworkPartner>();
-    for (const partner of myNetworkPartners) {
+    for (const partner of initialMyNetworkPartners) {
       if (partner.linkedCompanyId) {
         map.set(partner.linkedCompanyId, partner);
       }
     }
     return map;
-  }, [myNetworkPartners]);
+  }, [initialMyNetworkPartners]);
 
   const selectedProfile =
     profiles.find((profile) => profile.id === selectedProfileId) ?? null;
@@ -311,40 +304,28 @@ export function NetworkReferralsPageView({
     });
   }
 
-  function upsertMyNetworkPartner(partner: NetworkPartner) {
-    setMyNetworkPartners((current) => {
-      const withoutDuplicate = current.filter(
-        (existingPartner) =>
-          existingPartner.id !== partner.id &&
-          existingPartner.linkedCompanyId !== partner.linkedCompanyId,
-      );
-      return [...withoutDuplicate, partner];
-    });
-  }
-
-  function handleAddToNetwork(profileId: string) {
+  function handleAddToNetwork(linkedCompanyId: string, profileId?: string) {
     if (!canManageNetwork) {
       setNetworkActionError(NETWORK_PARTNER_MANAGER_MESSAGE);
-      setNetworkActionErrorProfileId(profileId);
+      setNetworkActionErrorProfileId(profileId ?? linkedCompanyId);
       return;
     }
 
     clearNetworkActionFeedback();
-    setNetworkActionTarget({ profileId, action: "add" });
+    setNetworkActionTarget({ linkedCompanyId, profileId, action: "add" });
     startNetworkActionTransition(async () => {
-      const result = await addToMyNetworkAction(profileId);
+      const result = await addToMyNetworkAction(linkedCompanyId);
       if (result.error) {
         setNetworkActionError(result.error);
-        setNetworkActionErrorProfileId(profileId);
+        setNetworkActionErrorProfileId(profileId ?? linkedCompanyId);
         setNetworkActionTarget(null);
         return;
       }
-      if (result.partner) {
-        upsertMyNetworkPartner(result.partner);
+      if (profileId) {
         setSelectedProfileId(profileId);
         setPanelMode("detail");
-        router.refresh();
       }
+      router.refresh();
       setNetworkActionTarget(null);
     });
   }
@@ -359,11 +340,7 @@ export function NetworkReferralsPageView({
     }
 
     clearNetworkActionFeedback();
-    setNetworkActionTarget({
-      profileId: profileId ?? selectedProfileId ?? linkedCompanyId,
-      linkedCompanyId,
-      action: "remove",
-    });
+    setNetworkActionTarget({ linkedCompanyId, profileId, action: "remove" });
     startNetworkActionTransition(async () => {
       const result = await removeFromMyNetworkAction(linkedCompanyId);
       if (result.error) {
@@ -376,18 +353,24 @@ export function NetworkReferralsPageView({
         setNetworkActionTarget(null);
         return;
       }
-      setMyNetworkPartners((current) =>
-        current.filter((partner) => partner.linkedCompanyId !== linkedCompanyId),
-      );
       router.refresh();
       setNetworkActionTarget(null);
     });
   }
 
-  function isNetworkActionPendingForProfile(profileId: string): boolean {
+  function isNetworkActionPendingForCompany(linkedCompanyId: string): boolean {
     return (
-      isNetworkActionPending && networkActionTarget?.profileId === profileId
+      isNetworkActionPending &&
+      networkActionTarget?.linkedCompanyId === linkedCompanyId
     );
+  }
+
+  function isNetworkActionPendingForProfile(profileId: string): boolean {
+    const profile = profiles.find((item) => item.id === profileId);
+    if (!profile) {
+      return false;
+    }
+    return isNetworkActionPendingForCompany(profile.companyId);
   }
 
   function getNetworkActionErrorForProfile(profileId: string): string | null {
@@ -450,15 +433,11 @@ export function NetworkReferralsPageView({
                 partner.linkedCompanyId &&
                 handleRemoveFromNetwork(partner.linkedCompanyId)
               }
-              disabled={
-                isNetworkActionPending &&
-                networkActionTarget?.linkedCompanyId === partner.linkedCompanyId
-              }
+              disabled={isNetworkActionPendingForCompany(partner.linkedCompanyId ?? "")}
               className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
             >
               <UserMinus className="h-3.5 w-3.5" />
-              {isNetworkActionPending &&
-              networkActionTarget?.linkedCompanyId === partner.linkedCompanyId
+              {isNetworkActionPendingForCompany(partner.linkedCompanyId ?? "")
                 ? "Removing..."
                 : "Remove"}
             </button>
@@ -654,7 +633,6 @@ export function NetworkReferralsPageView({
               ) : (
                 <div className="grid min-w-0 grid-cols-1 gap-4 @xl:grid-cols-2">
                   {filteredProfiles.map((profile) => {
-                    const partner = partnerByCompanyId.get(profile.companyId);
                     const isTrusted = trustedCompanyIds.has(profile.companyId);
 
                     return (
@@ -670,11 +648,15 @@ export function NetworkReferralsPageView({
                         priorityPartner={isTrusted}
                         onAddToNetwork={
                           canManageNetwork && !isTrusted
-                            ? () => handleAddToNetwork(profile.id)
+                            ? () =>
+                                handleAddToNetwork(
+                                  profile.companyId,
+                                  profile.id,
+                                )
                             : undefined
                         }
                         onRemoveFromNetwork={
-                          canManageNetwork && partner?.linkedCompanyId
+                          canManageNetwork && isTrusted
                             ? () =>
                                 handleRemoveFromNetwork(
                                   profile.companyId,
@@ -721,7 +703,10 @@ export function NetworkReferralsPageView({
             }}
             onAddToNetwork={() => {
               if (selectedProfile) {
-                handleAddToNetwork(selectedProfile.id);
+                handleAddToNetwork(
+                  selectedProfile.companyId,
+                  selectedProfile.id,
+                );
               }
             }}
             onRemoveFromNetwork={() => {
@@ -816,7 +801,10 @@ export function NetworkReferralsPageView({
             }}
             onAddToNetwork={() => {
               if (selectedProfile) {
-                handleAddToNetwork(selectedProfile.id);
+                handleAddToNetwork(
+                  selectedProfile.companyId,
+                  selectedProfile.id,
+                );
               }
             }}
             onRemoveFromNetwork={() => {

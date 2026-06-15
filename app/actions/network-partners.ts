@@ -7,9 +7,7 @@ import {
   NETWORK_PARTNER_MANAGER_MESSAGE,
 } from "@/lib/database/errors";
 import { hasCompanyRole } from "@/lib/database/types/roles";
-import {
-  getNetworkProfileById,
-} from "@/lib/database/queries/network-profiles";
+import { getNetworkProfileByCompanyId } from "@/lib/database/queries/network-profiles";
 import {
   addLinkedNetworkPartner,
   getNetworkPartnerByLinkedCompanyId,
@@ -62,14 +60,14 @@ export async function listMyNetworkPartnersAction(): Promise<NetworkPartnerActio
 }
 
 export async function addToMyNetworkAction(
-  targetNetworkProfileId: string,
+  targetCompanyId: string,
 ): Promise<NetworkPartnerActionResult> {
   const permission = await assertNetworkManager();
   if (permission.error || !permission.context) {
     return { error: permission.error };
   }
 
-  const profile = await getNetworkProfileById(targetNetworkProfileId);
+  const profile = await getNetworkProfileByCompanyId(targetCompanyId);
   if (!profile) {
     return { error: "This company is not available in the network directory." };
   }
