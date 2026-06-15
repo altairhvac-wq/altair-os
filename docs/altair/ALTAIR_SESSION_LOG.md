@@ -42,3 +42,20 @@
 **Hardening:** Strict TypeScript props, tone defaults, accessible contrast, keyboard-safe Link/button actions, mobile-responsive layouts, server components (no client boundary unless onClick used from client parent).
 
 **Status:** InsightCard, PulseCard, and ActionCard implemented and build-verified. Not wired to production pages.
+
+---
+
+## 2026-06-15 — V2 Design System Build Session 4 + Hardening Pass
+
+**Scope:** Three reusable V2 components with hardening pass. No page adoption, routes, or business logic changes.
+
+**Built:**
+- `shared/design-system/components/CelebrationBanner.tsx` — calm progress/completion banner with optional action
+- `shared/design-system/components/EmptyState.tsx` — centered empty-state guidance with primary and secondary actions
+- `shared/design-system/components/WorkspaceSection.tsx` — reusable section wrapper with optional header and action
+- `shared/design-system/components/index.ts` — barrel exports updated
+- `shared/design-system/components/README.md` — usage notes for new components
+
+**Hardening:** Strict TypeScript props, tone defaults, accessible contrast, keyboard-safe Link/button actions, mobile-responsive layouts, server components (no client boundary unless onClick used from client parent).
+
+**Status:** CelebrationBanner, EmptyState, and WorkspaceSection implemented and build-verified. Not wired to production pages.

@@ -362,3 +362,175 @@ Use `href` for navigation. Use `onClick` for in-page actions. If both are provid
 - Left accent border follows PriorityCard tone pattern
 - `action` is required — card always renders an action control
 - Not yet adopted on production routes
+
+---
+
+## CelebrationBanner
+
+Celebrates progress, completion, or positive momentum without feeling gamified. Answers: **"What went well?"**
+
+### Import
+
+```tsx
+import { CelebrationBanner } from "@/shared/design-system/components";
+```
+
+### Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `title` | `string` | Yes | Celebration headline |
+| `description` | `string` | No | Supporting context |
+| `tone` | `CelebrationBannerTone` | No | Visual emphasis — defaults to `"success"` |
+| `action` | `CelebrationBannerAction` | No | Optional follow-up action — omit to hide action area |
+| `className` | `string` | No | Additional wrapper classes |
+
+### Action shape
+
+```tsx
+type CelebrationBannerAction = {
+  label: string;
+  href?: string;      // renders a Next.js Link
+  onClick?: () => void; // renders a button
+};
+```
+
+Use `href` for navigation. Use `onClick` for in-page actions. If both are provided, `href` takes precedence.
+
+### Tone values
+
+`"success"` | `"info"` | `"neutral"`
+
+### Example
+
+```tsx
+<CelebrationBanner
+  tone="success"
+  title="All office priorities are complete."
+  description="Dispatch, billing, and follow-ups are caught up for today."
+  action={{ label: "View command center", href: "/" }}
+/>
+```
+
+### Design notes
+
+- Soft tinted surface — calm acknowledgment, not confetti or gamification
+- Uses `role="status"` and `aria-live="polite"` for screen reader awareness
+- Optional action uses secondary button styling
+- Not yet adopted on production routes
+
+---
+
+## EmptyState
+
+Replaces dead empty states with helpful, calm guidance. Answers: **"What should I do here?"**
+
+### Import
+
+```tsx
+import { EmptyState } from "@/shared/design-system/components";
+```
+
+### Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `title` | `string` | Yes | Empty-state headline |
+| `description` | `string` | No | Guidance or next-step context |
+| `action` | `EmptyStateAction` | No | Primary call-to-action |
+| `secondaryAction` | `EmptyStateAction` | No | Secondary call-to-action |
+| `tone` | `EmptyStateTone` | No | Visual accent — defaults to `"neutral"` |
+| `className` | `string` | No | Additional wrapper classes |
+
+### Action shape
+
+```tsx
+type EmptyStateAction = {
+  label: string;
+  href?: string;      // renders a Next.js Link
+  onClick?: () => void; // renders a button
+};
+```
+
+Use `href` for navigation. Use `onClick` for in-page actions. If both are provided, `href` takes precedence.
+
+### Tone values
+
+`"neutral"` | `"success"` | `"warning"` | `"danger"` | `"info"`
+
+### Example
+
+```tsx
+<EmptyState
+  title="No customers yet."
+  description="Add your first customer to start tracking jobs, estimates, and invoices in one place."
+  action={{ label: "Add customer", href: "/customers/new" }}
+  secondaryAction={{ label: "Import CSV", href: "/customers/import" }}
+/>
+```
+
+### Design notes
+
+- Centered layout with dashed border — clearly distinct from content cards
+- Primary action uses cyan CTA; secondary uses outline styling
+- No action area when both `action` and `secondaryAction` are omitted
+- Not yet adopted on production routes
+
+---
+
+## WorkspaceSection
+
+Reusable section wrapper for page content. Answers: **"What am I working on in this area?"**
+
+### Import
+
+```tsx
+import { WorkspaceSection } from "@/shared/design-system/components";
+```
+
+### Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `title` | `string` | No | Section headline |
+| `description` | `string` | No | Supporting context |
+| `action` | `WorkspaceSectionAction` | No | Optional section-level action — omit to hide action area |
+| `children` | `React.ReactNode` | Yes | Section body content |
+| `tone` | `WorkspaceSectionTone` | No | Left accent emphasis — defaults to `"neutral"` |
+| `className` | `string` | No | Additional wrapper classes |
+
+### Action shape
+
+```tsx
+type WorkspaceSectionAction = {
+  label: string;
+  href?: string;      // renders a Next.js Link
+  onClick?: () => void; // renders a button
+};
+```
+
+Use `href` for navigation. Use `onClick` for in-page actions. If both are provided, `href` takes precedence.
+
+### Tone values
+
+`"neutral"` | `"success"` | `"warning"` | `"danger"` | `"info"`
+
+### Example
+
+```tsx
+<WorkspaceSection
+  title="Today's jobs"
+  description="Scheduled work for your crew."
+  tone="info"
+  action={{ label: "View dispatch", href: "/dispatch" }}
+>
+  {/* job cards, lists, or other workspace content */}
+</WorkspaceSection>
+```
+
+### Design notes
+
+- Semantic `<section>` wrapper with optional left-accent header
+- Header omitted when `title`, `description`, and `action` are all absent — children still render
+- Left accent border follows PriorityCard tone pattern
+- Not yet adopted on production routes

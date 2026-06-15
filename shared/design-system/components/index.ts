@@ -6,6 +6,20 @@ export {
 } from "./ActionCard";
 
 export {
+  CelebrationBanner,
+  type CelebrationBannerAction,
+  type CelebrationBannerProps,
+  type CelebrationBannerTone,
+} from "./CelebrationBanner";
+
+export {
+  EmptyState,
+  type EmptyStateAction,
+  type EmptyStateProps,
+  type EmptyStateTone,
+} from "./EmptyState";
+
+export {
   HeroHeader,
   type HeroAction,
   type HeroHeaderProps,
@@ -46,3 +60,10 @@ export {
   type StatusPillSize,
   type StatusPillTone,
 } from "./StatusPill";
+
+export {
+  WorkspaceSection,
+  type WorkspaceSectionAction,
+  type WorkspaceSectionProps,
+  type WorkspaceSectionTone,
+} from "./WorkspaceSection";
