@@ -12,7 +12,7 @@ import {
 } from "@/lib/database/queries/network-profiles";
 import {
   addLinkedNetworkPartner,
-  getNetworkPartnerById,
+  getNetworkPartnerByLinkedCompanyId,
   getNetworkPartnerLinkByLinkedCompanyId,
   listMyNetworkPartners,
   removeLinkedNetworkPartner,
@@ -118,25 +118,25 @@ export async function addToMyNetworkAction(
 }
 
 export async function removeFromMyNetworkAction(
-  partnerId: string,
+  linkedCompanyId: string,
 ): Promise<NetworkPartnerActionResult> {
   const permission = await assertNetworkManager();
   if (permission.error || !permission.context) {
     return { error: permission.error };
   }
 
-  const partner = await getNetworkPartnerById(
-    permission.context.company.id,
-    partnerId,
+  const companyId = permission.context.company.id;
+  await repairAcceptedInvitePartnerLinksForCompany(companyId);
+
+  const partner = await getNetworkPartnerByLinkedCompanyId(
+    companyId,
+    linkedCompanyId,
   );
-  if (!partner || !partner.linkedCompanyId) {
+  if (!partner?.linkedCompanyId) {
     return { error: "Network connection not found." };
   }
 
-  const result = await removeLinkedNetworkPartner(
-    permission.context.company.id,
-    partnerId,
-  );
+  const result = await removeLinkedNetworkPartner(companyId, linkedCompanyId);
 
   if (result.error) {
     return { error: result.error };

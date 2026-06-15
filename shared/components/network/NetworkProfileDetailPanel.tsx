@@ -135,7 +135,7 @@ export function NetworkProfileDetailPanel({
 
             {canManageNetwork ? (
               <div className="space-y-3">
-                {isInMyNetwork && myNetworkPartnerId && onRemoveFromNetwork ? (
+                {isInMyNetwork && onRemoveFromNetwork ? (
                   <button
                     type="button"
                     onClick={onRemoveFromNetwork}

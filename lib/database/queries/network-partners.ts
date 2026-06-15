@@ -167,14 +167,14 @@ export async function addLinkedNetworkPartner(
 
 export async function removeLinkedNetworkPartner(
   companyId: string,
-  partnerId: string,
+  linkedCompanyId: string,
 ): Promise<{ error: string | null }> {
   const supabase = await createClient();
   const { error } = await supabase
     .from("network_partners")
     .delete()
     .eq("company_id", companyId)
-    .eq("id", partnerId)
+    .eq("linked_company_id", linkedCompanyId)
     .not("linked_company_id", "is", null);
 
   if (error) {

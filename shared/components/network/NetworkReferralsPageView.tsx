@@ -46,7 +46,7 @@ type ProfilePanelMode = "detail" | "referral" | "empty";
 
 type NetworkActionTarget = {
   profileId: string;
-  partnerId?: string;
+  linkedCompanyId?: string;
   action: "add" | "remove";
 };
 
@@ -112,6 +112,10 @@ export function NetworkReferralsPageView({
   const [myNetworkPartners, setMyNetworkPartners] = useState(
     initialMyNetworkPartners,
   );
+
+  useEffect(() => {
+    setMyNetworkPartners(initialMyNetworkPartners);
+  }, [initialMyNetworkPartners]);
   const [networkInvites, setNetworkInvites] = useState(initialNetworkInvites);
   const [invitationsTab, setInvitationsTab] =
     useState<NetworkInvitationsTab>("pending");
@@ -345,7 +349,7 @@ export function NetworkReferralsPageView({
     });
   }
 
-  function handleRemoveFromNetwork(partnerId: string, profileId?: string) {
+  function handleRemoveFromNetwork(linkedCompanyId: string, profileId?: string) {
     if (!canManageNetwork) {
       setNetworkActionError(NETWORK_PARTNER_MANAGER_MESSAGE);
       if (profileId) {
@@ -356,12 +360,12 @@ export function NetworkReferralsPageView({
 
     clearNetworkActionFeedback();
     setNetworkActionTarget({
-      profileId: profileId ?? selectedProfileId ?? partnerId,
-      partnerId,
+      profileId: profileId ?? selectedProfileId ?? linkedCompanyId,
+      linkedCompanyId,
       action: "remove",
     });
     startNetworkActionTransition(async () => {
-      const result = await removeFromMyNetworkAction(partnerId);
+      const result = await removeFromMyNetworkAction(linkedCompanyId);
       if (result.error) {
         setNetworkActionError(result.error);
         if (profileId) {
@@ -373,7 +377,7 @@ export function NetworkReferralsPageView({
         return;
       }
       setMyNetworkPartners((current) =>
-        current.filter((partner) => partner.id !== partnerId),
+        current.filter((partner) => partner.linkedCompanyId !== linkedCompanyId),
       );
       router.refresh();
       setNetworkActionTarget(null);
@@ -407,7 +411,7 @@ export function NetworkReferralsPageView({
           isTrustedPartner
           priorityPartner
           onRemoveFromNetwork={() =>
-            handleRemoveFromNetwork(partner.id, profile.id)
+            handleRemoveFromNetwork(profile.companyId, profile.id)
           }
           isNetworkActionPending={isNetworkActionPendingForProfile(profile.id)}
           networkActionError={getNetworkActionErrorForProfile(profile.id)}
@@ -442,23 +446,26 @@ export function NetworkReferralsPageView({
           {canManageNetwork ? (
             <button
               type="button"
-              onClick={() => handleRemoveFromNetwork(partner.id)}
+              onClick={() =>
+                partner.linkedCompanyId &&
+                handleRemoveFromNetwork(partner.linkedCompanyId)
+              }
               disabled={
                 isNetworkActionPending &&
-                networkActionTarget?.partnerId === partner.id
+                networkActionTarget?.linkedCompanyId === partner.linkedCompanyId
               }
               className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
             >
               <UserMinus className="h-3.5 w-3.5" />
               {isNetworkActionPending &&
-              networkActionTarget?.partnerId === partner.id
+              networkActionTarget?.linkedCompanyId === partner.linkedCompanyId
                 ? "Removing..."
                 : "Remove"}
             </button>
           ) : null}
         </div>
         {networkActionError &&
-        networkActionTarget?.partnerId === partner.id ? (
+        networkActionTarget?.linkedCompanyId === partner.linkedCompanyId ? (
           <p className="mt-2 text-xs text-rose-700">{networkActionError}</p>
         ) : null}
       </article>
@@ -667,9 +674,12 @@ export function NetworkReferralsPageView({
                             : undefined
                         }
                         onRemoveFromNetwork={
-                          canManageNetwork && partner
+                          canManageNetwork && partner?.linkedCompanyId
                             ? () =>
-                                handleRemoveFromNetwork(partner.id, profile.id)
+                                handleRemoveFromNetwork(
+                                  profile.companyId,
+                                  profile.id,
+                                )
                             : undefined
                         }
                         isNetworkActionPending={isNetworkActionPendingForProfile(
@@ -715,9 +725,9 @@ export function NetworkReferralsPageView({
               }
             }}
             onRemoveFromNetwork={() => {
-              if (selectedPartner && selectedProfile) {
+              if (selectedProfile) {
                 handleRemoveFromNetwork(
-                  selectedPartner.id,
+                  selectedProfile.companyId,
                   selectedProfile.id,
                 );
               }
@@ -810,9 +820,9 @@ export function NetworkReferralsPageView({
               }
             }}
             onRemoveFromNetwork={() => {
-              if (selectedPartner && selectedProfile) {
+              if (selectedProfile) {
                 handleRemoveFromNetwork(
-                  selectedPartner.id,
+                  selectedProfile.companyId,
                   selectedProfile.id,
                 );
               }
