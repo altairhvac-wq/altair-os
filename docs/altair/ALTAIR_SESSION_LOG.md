@@ -112,3 +112,21 @@
 **Hardening:** Server components only, Tailwind-only CSS (no images, no animations, no external libraries), mobile-responsive, decorative layers use `aria-hidden` and `pointer-events-none`, TypeScript strict props.
 
 **Status:** Signature layer built in isolation. Not wired to production pages, Command Center, or Dashboard.
+
+---
+
+## 2026-06-15 — V2 Build Session 9 — Workspace Prototype V1
+
+**Scope:** Experience sandbox page answering "What am I working on?" Static sample data only. No production changes, nav, routes, DB, server actions, permissions, or business logic.
+
+**Built:**
+- `app/(admin)/workspace-v1/page.tsx` — Workspace V1 prototype with Hero, Continue Working, Needs Attention, Quick Access, and Momentum sections
+- `docs/altair/ALTAIR_SESSION_LOG.md` — this entry
+
+**Experience structure:** HeroHeader (40% visual weight) → Continue Working (3 PriorityCards) → Needs Attention (compact list) → Quick Access (6 text links) → Momentum (MomentumStrip)
+
+**Components used:** HeroHeader, PriorityCard, StatusPill, WorkspaceSection, AtmosphereBackground, HorizonDivider, MomentumStrip
+
+**Hardening:** Server component only, static sample data, no AI/DB/browser APIs, TypeScript strict, mobile-responsive spacious layout, build-verified.
+
+**Status:** Prototype live at `/workspace-v1`. Not in admin nav. Blueprint for Altair V2 Workspace — not a production page.
