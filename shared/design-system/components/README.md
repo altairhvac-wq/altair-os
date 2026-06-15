@@ -195,3 +195,170 @@ import { StatusPill } from "@/shared/design-system/components";
   Overdue
 </StatusPill>
 ```
+
+---
+
+## InsightCard
+
+Surfaces a useful intelligent insight without making AI feel like a gimmick. Answers: **"What is my business telling me?"**
+
+### Import
+
+```tsx
+import { InsightCard } from "@/shared/design-system/components";
+```
+
+### Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `title` | `string` | Yes | Insight headline |
+| `insight` | `string` | Yes | Primary insight copy |
+| `recommendation` | `string` | No | Optional follow-up recommendation |
+| `tone` | `InsightCardTone` | No | Visual emphasis — defaults to `"neutral"` |
+| `eyebrow` | `string` | No | Small uppercase label above the title |
+| `action` | `InsightCardAction` | No | Optional call-to-action — omit to hide action area |
+| `className` | `string` | No | Additional wrapper classes |
+
+### Action shape
+
+```tsx
+type InsightCardAction = {
+  label: string;
+  href?: string;      // renders a Next.js Link
+  onClick?: () => void; // renders a button
+};
+```
+
+Use `href` for navigation. Use `onClick` for in-page actions. If both are provided, `href` takes precedence.
+
+### Tone values
+
+`"neutral"` | `"success"` | `"warning"` | `"danger"` | `"info"`
+
+### Example
+
+```tsx
+<InsightCard
+  eyebrow="Intelligence"
+  tone="info"
+  title="Estimate follow-ups could recover stalled revenue."
+  insight="Three sent estimates have had no response in over a week."
+  recommendation="A brief check-in with these customers often moves stalled quotes forward."
+  action={{ label: "Review estimates", href: "/estimates?status=sent" }}
+/>
+```
+
+### Design notes
+
+- Calm, factual tone — intelligence from business logic, not flashy AI chrome
+- Recommendation renders in a nested callout when provided
+- No action area when `action` is omitted
+- Not yet adopted on production routes
+
+---
+
+## PulseCard
+
+Shows business health or operational condition. Answers: **"How is the business doing?"**
+
+### Import
+
+```tsx
+import { PulseCard } from "@/shared/design-system/components";
+```
+
+### Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `label` | `string` | Yes | Pulse category or area name |
+| `status` | `string` | Yes | Current condition label (rendered in StatusPill) |
+| `description` | `string` | No | Supporting context |
+| `tone` | `PulseCardTone` | No | Visual emphasis — defaults to `"neutral"` |
+| `trend` | `string` | No | Momentum or change context |
+| `meta` | `string` | No | Secondary detail (timing, source) |
+| `className` | `string` | No | Additional wrapper classes |
+
+### Tone values
+
+`"neutral"` | `"success"` | `"warning"` | `"danger"` | `"info"`
+
+### Example
+
+```tsx
+<PulseCard
+  label="Dispatch"
+  status="Healthy"
+  tone="success"
+  description="All scheduled jobs are assigned and on track for today."
+  trend="12 jobs dispatched"
+  meta="Updated just now"
+/>
+```
+
+### Design notes
+
+- Status renders via `StatusPill` for consistent tone vocabulary
+- Trend and meta stack on mobile; align right on larger screens
+- Not yet adopted on production routes
+
+---
+
+## ActionCard
+
+Presents a clear next action. Answers: **"What should I do next?"**
+
+### Import
+
+```tsx
+import { ActionCard } from "@/shared/design-system/components";
+```
+
+### Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `title` | `string` | Yes | Action headline |
+| `description` | `string` | No | Supporting context |
+| `action` | `ActionCardAction` | Yes | Required call-to-action |
+| `tone` | `ActionCardTone` | No | Visual accent — defaults to `"neutral"` |
+| `eyebrow` | `string` | No | Small uppercase label above the title |
+| `meta` | `string` | No | Secondary detail (timing, count, source) |
+| `className` | `string` | No | Additional wrapper classes |
+
+### Action shape
+
+```tsx
+type ActionCardAction = {
+  label: string;
+  href?: string;      // renders a Next.js Link
+  onClick?: () => void; // renders a button
+};
+```
+
+Use `href` for navigation. Use `onClick` for in-page actions. If both are provided, `href` takes precedence.
+
+### Tone values
+
+`"neutral"` | `"success"` | `"warning"` | `"danger"` | `"info"`
+
+### Example
+
+```tsx
+<ActionCard
+  eyebrow="Billing"
+  tone="warning"
+  title="Send 2 draft invoices before end of day."
+  description="Completed jobs are waiting for office review and billing."
+  meta="Oldest draft: 3 days"
+  action={{ label: "Review drafts", href: "/invoices?status=draft" }}
+/>
+```
+
+### Design notes
+
+- Primary CTA styling (cyan) — action is the focal point
+- Left accent border follows PriorityCard tone pattern
+- `action` is required — card always renders an action control
+- Not yet adopted on production routes

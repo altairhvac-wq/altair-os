@@ -25,3 +25,20 @@
 - `shared/design-system/components/README.md` — usage notes for new components
 
 **Status:** PriorityCard, MetricCard, and StatusPill implemented and build-verified. Not wired to production pages.
+
+---
+
+## 2026-06-15 — V2 Design System Build Session 3 + Hardening Pass
+
+**Scope:** Three reusable V2 components with hardening pass. No page adoption, routes, or business logic changes.
+
+**Built:**
+- `shared/design-system/components/InsightCard.tsx` — intelligent insight surface with optional recommendation and action
+- `shared/design-system/components/PulseCard.tsx` — business health card with StatusPill status, trend, and meta
+- `shared/design-system/components/ActionCard.tsx` — required-action card with primary CTA styling
+- `shared/design-system/components/index.ts` — barrel exports updated
+- `shared/design-system/components/README.md` — usage notes for new components
+
+**Hardening:** Strict TypeScript props, tone defaults, accessible contrast, keyboard-safe Link/button actions, mobile-responsive layouts, server components (no client boundary unless onClick used from client parent).
+
+**Status:** InsightCard, PulseCard, and ActionCard implemented and build-verified. Not wired to production pages.
