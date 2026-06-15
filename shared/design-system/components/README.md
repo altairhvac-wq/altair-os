@@ -2,6 +2,8 @@
 
 Reusable visual building blocks for Altair OS V2. Do not wire these into production pages until a deliberate adoption pass.
 
+**Design Lab:** Visual review of all V2 components with realistic sample content at `/altair-design-lab` (internal route — not in admin nav).
+
 ## HeroHeader
 
 The top section of an Altair page. Answers: **"What should I do next?"**
