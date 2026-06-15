@@ -76,3 +76,19 @@
 **Hardening:** Server component only (href-based actions, no onClick), static sample data, TypeScript strict, mobile-responsive layout, build-verified.
 
 **Status:** Design lab route live at `/altair-design-lab`. Not in admin nav. Not wired to production pages.
+
+---
+
+## 2026-06-15 — V2 Build Session 6 — Command Center Prototype V1
+
+**Scope:** Experience sandbox page answering "What should I do today?" Static sample data only. No production dashboard changes, nav, routes, DB, server actions, permissions, or business logic.
+
+**Built:**
+- `app/(admin)/command-center-v1/page.tsx` — Command Center V1 prototype with Hero, Today's Focus, Business Pulse, Growth Opportunities, and Momentum sections
+- `docs/altair/ALTAIR_SESSION_LOG.md` — this entry
+
+**Experience structure:** HeroHeader (40% visual weight) → Today's Focus (3 PriorityCards) → Business Pulse (3 PulseCards + 4 MetricCards) → Growth Opportunities (2 InsightCards) → Momentum (CelebrationBanner)
+
+**Hardening:** Server component only, static sample data, no AI/DB/browser APIs, TypeScript strict, mobile-responsive spacious layout, build-verified.
+
+**Status:** Prototype live at `/command-center-v1`. Not in admin nav. Blueprint for Altair V2 Command Center — not a production page.
