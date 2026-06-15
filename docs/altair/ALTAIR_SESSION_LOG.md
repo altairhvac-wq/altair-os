@@ -92,3 +92,23 @@
 **Hardening:** Server component only, static sample data, no AI/DB/browser APIs, TypeScript strict, mobile-responsive spacious layout, build-verified.
 
 **Status:** Prototype live at `/command-center-v1`. Not in admin nav. Blueprint for Altair V2 Command Center — not a production page.
+
+---
+
+## 2026-06-15 — V2 Build Session 7 — Signature Layer
+
+**Scope:** Visual brand primitives for Horizon Intelligence. No page adoption, production changes, routes, DB, server actions, permissions, or business logic.
+
+**Built:**
+- `shared/design-system/signature/AtmosphereBackground.tsx` — layered radial gradients and ambient glows
+- `shared/design-system/signature/BusinessTerrain.tsx` — CSS-only mountain/rolling/minimal terrain silhouettes
+- `shared/design-system/signature/LightBeam.tsx` — subtle vertical light and horizon glow focal point
+- `shared/design-system/signature/HorizonDivider.tsx` — soft fade/glow/line section separators
+- `shared/design-system/signature/MomentumStrip.tsx` — lightweight business win acknowledgments
+- `shared/design-system/signature/index.ts` — barrel exports
+- `shared/design-system/signature/README.md` — usage and composition notes
+- `docs/altair/ALTAIR_SESSION_LOG.md` — this entry
+
+**Hardening:** Server components only, Tailwind-only CSS (no images, no animations, no external libraries), mobile-responsive, decorative layers use `aria-hidden` and `pointer-events-none`, TypeScript strict props.
+
+**Status:** Signature layer built in isolation. Not wired to production pages, Command Center, or Dashboard.
