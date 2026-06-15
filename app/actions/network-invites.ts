@@ -5,12 +5,15 @@ import { resolveAuthRedirectOrigin } from "@/lib/auth/request-origin";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import {
+  acceptIncomingNetworkInvite,
   createNetworkInvite,
+  listIncomingNetworkInvitesForUser,
   listNetworkInvitesForSourceCompany,
   rotateNetworkInviteToken,
 } from "@/lib/database/queries/network-invites";
 import { buildNetworkInviteSignupUrl } from "@/shared/lib/network-invite-token";
 import type {
+  IncomingNetworkInvite,
   NetworkInvite,
   NetworkInviteFormData,
 } from "@/shared/types/network-invite";
@@ -23,7 +26,10 @@ export type NetworkInviteActionResult = {
   error?: string;
   invite?: NetworkInvite;
   invites?: NetworkInvite[];
+  incomingInvites?: IncomingNetworkInvite[];
   inviteUrl?: string;
+  sourceCompanyName?: string;
+  alreadyAccepted?: boolean;
 };
 
 async function assertNetworkInviteManager() {
@@ -102,6 +108,49 @@ export async function createNetworkInviteAction(
       inviteUrl,
     },
     inviteUrl,
+  };
+}
+
+export async function listIncomingNetworkInvitesAction(): Promise<NetworkInviteActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { incomingInvites: [], error: NO_ACTIVE_COMPANY_MESSAGE };
+  }
+
+  return {
+    incomingInvites: await listIncomingNetworkInvitesForUser(
+      context.company.id,
+    ),
+  };
+}
+
+export async function acceptIncomingNetworkInviteAction(
+  inviteId: string,
+): Promise<NetworkInviteActionResult> {
+  const permission = await assertNetworkInviteManager();
+  if (permission.error || !permission.context) {
+    return { error: permission.error };
+  }
+
+  if (!inviteId.trim()) {
+    return { error: "Invitation not found." };
+  }
+
+  const result = await acceptIncomingNetworkInvite({
+    inviteId: inviteId.trim(),
+    acceptedCompanyId: permission.context.company.id,
+  });
+
+  if (!result.ok) {
+    return { error: result.error ?? "Unable to accept this invitation." };
+  }
+
+  revalidateNetworkPath();
+
+  return {
+    sourceCompanyName: result.sourceCompanyName,
+    alreadyAccepted: result.alreadyAccepted,
   };
 }
 

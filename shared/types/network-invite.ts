@@ -28,6 +28,20 @@ export type NetworkInvite = {
   inviteUrl?: string;
 };
 
+/** Pending invite addressed to the signed-in user's email (in-platform acceptance). */
+export type IncomingNetworkInvite = {
+  id: string;
+  sourceCompanyId: string;
+  sourceCompanyName: string;
+  invitedCompanyName: string;
+  invitedContactName: string;
+  invitedEmail: string;
+  tradeCategory: TradeType;
+  personalMessage?: string;
+  createdAt: string;
+  expiresAt: string;
+};
+
 export type NetworkInviteFormData = {
   invitedCompanyName: string;
   invitedContactName: string;

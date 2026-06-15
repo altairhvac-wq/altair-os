@@ -11,6 +11,7 @@ import { listMyNetworkPartners } from "@/lib/database/queries/network-partners";
 import { repairAcceptedInvitePartnerLinksForCompany } from "@/lib/database/services/network-invite-partner-repair";
 import {
   getAcceptedNetworkInviteForCompany,
+  listIncomingNetworkInvitesForUser,
   listNetworkInvitesForSourceCompany,
 } from "@/lib/database/queries/network-invites";
 import {
@@ -46,7 +47,7 @@ export default async function NetworkPage() {
     await repairAcceptedInvitePartnerLinksForCompany(companyId);
   }
 
-  const [profiles, ownProfileResult, sentReferrals, receivedReferrals, myNetworkPartners, networkInvites, acceptedInvite] =
+  const [profiles, ownProfileResult, sentReferrals, receivedReferrals, myNetworkPartners, networkInvites, acceptedInvite, incomingNetworkInvites] =
     await Promise.all([
       canSendReferral ? listVisibleNetworkProfiles(companyId) : Promise.resolve([]),
       canSendReferral
@@ -65,6 +66,7 @@ export default async function NetworkPage() {
         ? listNetworkInvitesForSourceCompany(companyId)
         : Promise.resolve([]),
       getAcceptedNetworkInviteForCompany(companyId),
+      listIncomingNetworkInvitesForUser(companyId),
     ]);
 
   return (
@@ -75,6 +77,7 @@ export default async function NetworkPage() {
       initialReceivedReferrals={receivedReferrals}
       initialMyNetworkPartners={myNetworkPartners}
       initialNetworkInvites={networkInvites}
+      initialIncomingNetworkInvites={incomingNetworkInvites}
       invitedByCompanyName={acceptedInvite?.sourceCompanyName ?? null}
       companyId={companyId}
       canSendReferral={canSendReferral}

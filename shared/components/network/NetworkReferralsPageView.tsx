@@ -30,9 +30,11 @@ import {
 import {
   filterInvitesByTab,
   NETWORK_INVITATIONS_TAB_OPTIONS,
+  type IncomingNetworkInvite,
   type NetworkInvite,
   type NetworkInvitationsTab,
 } from "@/shared/types/network-invite";
+import { IncomingNetworkInvitesCard } from "./IncomingNetworkInvitesCard";
 import { NetworkDirectoryCard } from "./NetworkDirectoryCard";
 import { NetworkInviteForm } from "./NetworkInviteForm";
 import { NetworkInvitationCard } from "./NetworkInvitationCard";
@@ -57,6 +59,7 @@ type NetworkReferralsPageViewProps = {
   initialReceivedReferrals: NetworkReferral[];
   initialMyNetworkPartners: NetworkPartner[];
   initialNetworkInvites: NetworkInvite[];
+  initialIncomingNetworkInvites: IncomingNetworkInvite[];
   invitedByCompanyName?: string | null;
   companyId: string;
   canSendReferral: boolean;
@@ -87,6 +90,7 @@ export function NetworkReferralsPageView({
   initialReceivedReferrals,
   initialMyNetworkPartners,
   initialNetworkInvites,
+  initialIncomingNetworkInvites,
   invitedByCompanyName,
   companyId,
   canSendReferral,
@@ -115,10 +119,17 @@ export function NetworkReferralsPageView({
   }, [initialReceivedReferrals]);
 
   const [networkInvites, setNetworkInvites] = useState(initialNetworkInvites);
+  const [incomingNetworkInvites, setIncomingNetworkInvites] = useState(
+    initialIncomingNetworkInvites,
+  );
 
   useEffect(() => {
     setNetworkInvites(initialNetworkInvites);
   }, [initialNetworkInvites]);
+
+  useEffect(() => {
+    setIncomingNetworkInvites(initialIncomingNetworkInvites);
+  }, [initialIncomingNetworkInvites]);
   const [invitationsTab, setInvitationsTab] =
     useState<NetworkInvitationsTab>("pending");
   const [showInviteForm, setShowInviteForm] = useState(false);
@@ -515,6 +526,15 @@ export function NetworkReferralsPageView({
           <NetworkInvitedByBanner
             sourceCompanyName={invitedByCompanyName}
             companyId={companyId}
+          />
+        ) : null}
+
+        {incomingNetworkInvites.length > 0 ? (
+          <IncomingNetworkInvitesCard
+            invites={incomingNetworkInvites}
+            canAccept={canManageNetwork}
+            timeZone={timeZone}
+            variant={incomingNetworkInvites.length === 1 ? "banner" : "section"}
           />
         ) : null}
 

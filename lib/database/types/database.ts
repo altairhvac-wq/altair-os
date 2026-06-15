@@ -1153,6 +1153,19 @@ export type Database = {
         };
         Returns: Json;
       };
+      accept_incoming_network_invite: {
+        Args: {
+          p_invite_id: string;
+          p_accepted_company_id: string;
+        };
+        Returns: Json;
+      };
+      list_incoming_network_invites_for_user: {
+        Args: {
+          p_active_company_id: string;
+        };
+        Returns: Json;
+      };
       repair_accepted_invite_partner_links_for_company: {
         Args: {
           p_company_id: string;

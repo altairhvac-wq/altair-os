@@ -13,6 +13,7 @@ import {
   getNetworkInviteTokenExpiresAt,
 } from "@/shared/lib/network-invite-token";
 import type {
+  IncomingNetworkInvite,
   NetworkInvite,
   PublicNetworkInvitePreview,
 } from "@/shared/types/network-invite";
@@ -280,6 +281,152 @@ export async function acceptNetworkInvite(input: {
 
   return {
     ok: true,
+    sourceCompanyName:
+      typeof payload.source_company_name === "string"
+        ? payload.source_company_name
+        : undefined,
+  };
+}
+
+function mapIncomingNetworkInviteRow(
+  payload: Record<string, unknown>,
+): IncomingNetworkInvite | null {
+  const id = typeof payload.id === "string" ? payload.id : null;
+  const sourceCompanyId =
+    typeof payload.source_company_id === "string"
+      ? payload.source_company_id
+      : null;
+  const sourceCompanyName =
+    typeof payload.source_company_name === "string"
+      ? payload.source_company_name
+      : null;
+  const invitedCompanyName =
+    typeof payload.invited_company_name === "string"
+      ? payload.invited_company_name
+      : null;
+  const invitedContactName =
+    typeof payload.invited_contact_name === "string"
+      ? payload.invited_contact_name
+      : null;
+  const invitedEmail =
+    typeof payload.invited_email === "string" ? payload.invited_email : null;
+  const createdAt =
+    typeof payload.created_at === "string" ? payload.created_at : null;
+  const expiresAt =
+    typeof payload.expires_at === "string" ? payload.expires_at : null;
+
+  if (
+    !id ||
+    !sourceCompanyId ||
+    !sourceCompanyName ||
+    !invitedCompanyName ||
+    !invitedContactName ||
+    !invitedEmail ||
+    !createdAt ||
+    !expiresAt
+  ) {
+    return null;
+  }
+
+  return {
+    id,
+    sourceCompanyId,
+    sourceCompanyName,
+    invitedCompanyName,
+    invitedContactName,
+    invitedEmail,
+    tradeCategory:
+      typeof payload.trade_category === "string"
+        ? normalizeTradeType(payload.trade_category)
+        : "General Contracting",
+    personalMessage:
+      typeof payload.personal_message === "string"
+        ? payload.personal_message
+        : undefined,
+    createdAt,
+    expiresAt,
+  };
+}
+
+export async function listIncomingNetworkInvitesForUser(
+  activeCompanyId: string,
+): Promise<IncomingNetworkInvite[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc(
+    "list_incoming_network_invites_for_user",
+    {
+      p_active_company_id: activeCompanyId,
+    },
+  );
+
+  if (error) {
+    console.error("[listIncomingNetworkInvitesForUser] RPC failed:", error);
+    return [];
+  }
+
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data.flatMap((item) => {
+    if (!item || typeof item !== "object") {
+      return [];
+    }
+
+    const mapped = mapIncomingNetworkInviteRow(item as Record<string, unknown>);
+    return mapped ? [mapped] : [];
+  });
+}
+
+export async function acceptIncomingNetworkInvite(input: {
+  inviteId: string;
+  acceptedCompanyId: string;
+}): Promise<{
+  ok: boolean;
+  sourceCompanyName?: string;
+  alreadyAccepted?: boolean;
+  error?: string;
+}> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("accept_incoming_network_invite", {
+    p_invite_id: input.inviteId,
+    p_accepted_company_id: input.acceptedCompanyId,
+  });
+
+  if (error) {
+    console.error("[acceptIncomingNetworkInvite] RPC failed:", error);
+    return { ok: false, error: mapDatabaseError(error) };
+  }
+
+  if (!data || typeof data !== "object") {
+    return { ok: false, error: "Unable to accept this invitation." };
+  }
+
+  const payload = data as Record<string, unknown>;
+
+  if (payload.ok !== true) {
+    const errorCode =
+      typeof payload.error === "string" ? payload.error : "unknown";
+
+    const messageByCode: Record<string, string> = {
+      invite_not_found: "This invitation was not found.",
+      invite_not_pending: "This invitation is no longer available.",
+      invite_expired: "This invitation has expired.",
+      email_mismatch:
+        "Only the invited email address can accept this invitation.",
+      self_invite: "You cannot accept an invitation from your own company.",
+      invalid_request: "Unable to accept this invitation.",
+    };
+
+    return {
+      ok: false,
+      error: messageByCode[errorCode] ?? "Unable to accept this invitation.",
+    };
+  }
+
+  return {
+    ok: true,
+    alreadyAccepted: payload.already_accepted === true,
     sourceCompanyName:
       typeof payload.source_company_name === "string"
         ? payload.source_company_name
