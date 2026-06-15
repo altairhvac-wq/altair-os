@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { canAccessAdminNavItem } from "@/lib/database/access-control";
 import { listMyNetworkPartners, getNetworkPartnerLinkByLinkedCompanyId } from "@/lib/database/queries/network-partners";
+import { repairAcceptedInvitePartnerLinksForCompany } from "@/lib/database/services/network-invite-partner-repair";
 import {
   getAcceptedNetworkInviteForCompany,
   listNetworkInvitesForSourceCompany,
@@ -40,6 +41,10 @@ export default async function NetworkPage() {
   const canSendReferral = companyContext.permissions.manageCompany;
   const canManageNetwork = companyContext.permissions.manageCompany;
   const canManageReceivedReferrals = companyContext.permissions.manageCustomers;
+
+  if (canManageNetwork) {
+    await repairAcceptedInvitePartnerLinksForCompany(companyId);
+  }
 
   const [profiles, ownProfileResult, sentReferrals, receivedReferrals, myNetworkPartnersBase, networkInvites, acceptedInvite] =
     await Promise.all([

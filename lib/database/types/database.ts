@@ -1153,6 +1153,12 @@ export type Database = {
         };
         Returns: Json;
       };
+      repair_accepted_invite_partner_links_for_company: {
+        Args: {
+          p_company_id: string;
+        };
+        Returns: number;
+      };
       rotate_network_invite_token: {
         Args: {
           p_invite_id: string;

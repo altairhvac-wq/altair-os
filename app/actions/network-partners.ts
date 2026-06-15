@@ -17,6 +17,7 @@ import {
   listMyNetworkPartners,
   removeLinkedNetworkPartner,
 } from "@/lib/database/queries/network-partners";
+import { repairAcceptedInvitePartnerLinksForCompany } from "@/lib/database/services/network-invite-partner-repair";
 import type { NetworkPartner } from "@/shared/types/network-partner";
 
 export type NetworkPartnerActionResult = {
@@ -52,8 +53,11 @@ export async function listMyNetworkPartnersAction(): Promise<NetworkPartnerActio
     return { partners: [], error: permission.error };
   }
 
+  const companyId = permission.context.company.id;
+  await repairAcceptedInvitePartnerLinksForCompany(companyId);
+
   return {
-    partners: await listMyNetworkPartners(permission.context.company.id),
+    partners: await listMyNetworkPartners(companyId),
   };
 }
 
