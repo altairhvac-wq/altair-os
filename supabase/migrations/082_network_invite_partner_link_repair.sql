@@ -15,6 +15,13 @@ declare
   v_accepted_company_name text;
   v_source_trade text;
 begin
+  if p_accepted_company_id is null
+    or p_invite.source_company_id is null
+    or p_invite.source_company_id = p_accepted_company_id
+  then
+    return;
+  end if;
+
   select c.name
   into v_source_company_name
   from public.companies c
@@ -121,6 +128,8 @@ begin
     from public.network_invites ni
     where ni.status = 'accepted'
       and ni.accepted_company_id is not null
+      and ni.source_company_id is not null
+      and ni.source_company_id <> ni.accepted_company_id
       and (
         ni.source_company_id = p_company_id
         or ni.accepted_company_id = p_company_id
@@ -136,6 +145,10 @@ begin
   return v_repaired;
 end;
 $$;
+
+-- Internal helper: only callable from other security definer RPCs (not clients).
+revoke all on function public.ensure_network_invite_partner_links(public.network_invites, uuid) from public;
+revoke all on function public.ensure_network_invite_partner_links(public.network_invites, uuid) from authenticated;
 
 revoke all on function public.repair_accepted_invite_partner_links_for_company(uuid) from public;
 grant execute on function public.repair_accepted_invite_partner_links_for_company(uuid) to authenticated;
