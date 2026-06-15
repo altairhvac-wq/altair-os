@@ -2,8 +2,8 @@
  * Queries for `network_partners` — private partner CRM / "My Network" layer.
  *
  * Network Connections V1 stores trusted Altair directory companies as rows with
- * `linked_company_id` set. Not directory (`network_profiles`) or handoffs
- * (`network_referrals`). See `shared/components/network/README.md`.
+ * `linked_company_id` set. Remove sets relationship_status = removed (soft lifecycle).
+ * Not directory (`network_profiles`) or handoffs (`network_referrals`).
  */
 
 import { createClient } from "@/lib/supabase/server";
@@ -170,12 +170,10 @@ export async function removeLinkedNetworkPartner(
   linkedCompanyId: string,
 ): Promise<{ error: string | null }> {
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("network_partners")
-    .delete()
-    .eq("company_id", companyId)
-    .eq("linked_company_id", linkedCompanyId)
-    .not("linked_company_id", "is", null);
+  const { error } = await supabase.rpc("remove_linked_network_partner", {
+    p_company_id: companyId,
+    p_linked_company_id: linkedCompanyId,
+  });
 
   if (error) {
     return { error: mapNetworkPartnerError(error) };

@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Idempotently creates or reactivates bidirectional network_partners rows for
- * every accepted invite where `companyId` is the source or accepted company.
- * Safe to call before My Network loads; does not expose cross-company invite data.
+ * Idempotently creates missing bidirectional network_partners rows for accepted
+ * invites where `companyId` is the source or accepted company. Does not
+ * reactivate rows with relationship_status = removed.
  */
 export async function repairAcceptedInvitePartnerLinksForCompany(
   companyId: string,

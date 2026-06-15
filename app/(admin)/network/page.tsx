@@ -7,7 +7,7 @@
 import { redirect } from "next/navigation";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { canAccessAdminNavItem } from "@/lib/database/access-control";
-import { listMyNetworkPartners, getNetworkPartnerLinkByLinkedCompanyId } from "@/lib/database/queries/network-partners";
+import { listMyNetworkPartners } from "@/lib/database/queries/network-partners";
 import { repairAcceptedInvitePartnerLinksForCompany } from "@/lib/database/services/network-invite-partner-repair";
 import {
   getAcceptedNetworkInviteForCompany,
@@ -46,7 +46,7 @@ export default async function NetworkPage() {
     await repairAcceptedInvitePartnerLinksForCompany(companyId);
   }
 
-  const [profiles, ownProfileResult, sentReferrals, receivedReferrals, myNetworkPartnersBase, networkInvites, acceptedInvite] =
+  const [profiles, ownProfileResult, sentReferrals, receivedReferrals, myNetworkPartners, networkInvites, acceptedInvite] =
     await Promise.all([
       canSendReferral ? listVisibleNetworkProfiles(companyId) : Promise.resolve([]),
       canSendReferral
@@ -66,28 +66,6 @@ export default async function NetworkPage() {
         : Promise.resolve([]),
       getAcceptedNetworkInviteForCompany(companyId),
     ]);
-
-  let myNetworkPartners = myNetworkPartnersBase;
-
-  if (
-    canManageNetwork &&
-    acceptedInvite?.sourceCompanyId &&
-    !myNetworkPartners.some(
-      (partner) => partner.linkedCompanyId === acceptedInvite.sourceCompanyId,
-    )
-  ) {
-    const invitePartner = await getNetworkPartnerLinkByLinkedCompanyId(
-      companyId,
-      acceptedInvite.sourceCompanyId,
-    );
-
-    if (
-      invitePartner &&
-      invitePartner.relationshipStatus === "active"
-    ) {
-      myNetworkPartners = [...myNetworkPartners, invitePartner];
-    }
-  }
 
   return (
     <NetworkReferralsPageView

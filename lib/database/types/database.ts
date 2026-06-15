@@ -1159,6 +1159,13 @@ export type Database = {
         };
         Returns: number;
       };
+      remove_linked_network_partner: {
+        Args: {
+          p_company_id: string;
+          p_linked_company_id: string;
+        };
+        Returns: NetworkPartnerRow;
+      };
       rotate_network_invite_token: {
         Args: {
           p_invite_id: string;

@@ -61,7 +61,8 @@ export type RelationshipStatus =
   | "preferred"
   | "active"
   | "pending"
-  | "paused";
+  | "paused"
+  | "removed";
 
 /** `network_invites.status` — trusted network invitation lifecycle. */
 export type NetworkInviteStatus =

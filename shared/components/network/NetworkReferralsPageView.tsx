@@ -96,11 +96,15 @@ export function NetworkReferralsPageView({
   const router = useRouter();
   const timeZone = useCompanyTimezone();
   const [activeTab, setActiveTab] = useState<NetworkReferralsTab>("directory");
-  const [profiles] = useState(initialProfiles);
+  const [profiles, setProfiles] = useState(initialProfiles);
   const [ownProfile, setOwnProfile] = useState(initialOwnProfile);
   const [sentReferrals, setSentReferrals] = useState(initialSentReferrals);
   const [receivedReferrals, setReceivedReferrals] =
     useState(initialReceivedReferrals);
+
+  useEffect(() => {
+    setProfiles(initialProfiles);
+  }, [initialProfiles]);
 
   useEffect(() => {
     setSentReferrals(initialSentReferrals);
@@ -109,7 +113,12 @@ export function NetworkReferralsPageView({
   useEffect(() => {
     setReceivedReferrals(initialReceivedReferrals);
   }, [initialReceivedReferrals]);
+
   const [networkInvites, setNetworkInvites] = useState(initialNetworkInvites);
+
+  useEffect(() => {
+    setNetworkInvites(initialNetworkInvites);
+  }, [initialNetworkInvites]);
   const [invitationsTab, setInvitationsTab] =
     useState<NetworkInvitationsTab>("pending");
   const [showInviteForm, setShowInviteForm] = useState(false);
