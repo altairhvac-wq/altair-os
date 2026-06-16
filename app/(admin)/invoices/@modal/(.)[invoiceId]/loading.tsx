@@ -4,7 +4,7 @@ import { InvoiceDetailOverlayShell } from "@/shared/components/invoices/InvoiceD
 export default function InterceptedInvoiceDetailLoading() {
   return (
     <InvoiceDetailOverlayShell title="Loading invoice…">
-      <InvoiceDetailLoadingState />
+      <InvoiceDetailLoadingState showBackLink={false} />
     </InvoiceDetailOverlayShell>
   );
 }

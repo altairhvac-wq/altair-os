@@ -37,6 +37,7 @@ import type { BillingSignature } from "@/shared/types/billing-signature";
 import type { InvoiceDeleteDependencies } from "@/shared/lib/invoice-lifecycle";
 import { adminPageStackClass } from "@/shared/lib/admin-density";
 import { FocusedDocumentOverlayFooter } from "@/shared/components/layout/FocusedDocumentOverlay";
+import { MasterDetailPageLayout } from "@/shared/design-system/shell";
 
 type InvoiceDetailPageViewProps = {
   invoice: InvoiceDetail;
@@ -99,25 +100,21 @@ export function InvoiceDetailPageView({
     </div>
   );
 
-  return (
-    <div
-      className={`mx-auto min-w-0 max-w-5xl ${adminPageStackClass} overflow-x-hidden print:max-w-none print:pb-0 ${
-        isOverlay ? "px-3 py-3 pb-4 sm:px-4 sm:py-4" : "pb-2"
-      }`}
-    >
-      {!isOverlay ? (
-        <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Link
-            href="/invoices"
-            className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-          >
-            <ArrowLeft className="h-4 w-4 shrink-0" />
-            Back to invoices
-          </Link>
-          {headerActions}
-        </div>
-      ) : null}
+  const pageBackLink = (
+    <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <Link
+        href="/invoices"
+        className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+      >
+        <ArrowLeft className="h-4 w-4 shrink-0" />
+        Back to invoices
+      </Link>
+      {headerActions}
+    </div>
+  );
 
+  const pageBody = (
+    <>
       <section className="no-print overflow-x-hidden admin-card">
         <div className="border-b border-slate-100 bg-white px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -386,6 +383,25 @@ export function InvoiceDetailPageView({
           )}
         </>
       ) : null}
-    </div>
+    </>
+  );
+
+  if (isOverlay) {
+    return (
+      <div
+        className={`mx-auto min-w-0 max-w-5xl ${adminPageStackClass} overflow-x-hidden px-3 py-3 pb-4 sm:px-4 sm:py-4`}
+      >
+        {pageBody}
+      </div>
+    );
+  }
+
+  return (
+    <MasterDetailPageLayout
+      backLink={pageBackLink}
+      className="overflow-x-hidden print:max-w-none print:pb-0"
+    >
+      {pageBody}
+    </MasterDetailPageLayout>
   );
 }
