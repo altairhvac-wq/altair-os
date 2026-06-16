@@ -35,7 +35,7 @@ import { InvoiceLifecycleControl } from "./InvoiceLifecycleControl";
 
 import type { BillingSignature } from "@/shared/types/billing-signature";
 import type { InvoiceDeleteDependencies } from "@/shared/lib/invoice-lifecycle";
-import { adminPageStackClass } from "@/shared/lib/admin-density";
+import { adminPageStackClass, adminCardSectionClass } from "@/shared/lib/admin-density";
 import { FocusedDocumentOverlayFooter } from "@/shared/components/layout/FocusedDocumentOverlay";
 import { MasterDetailPageLayout } from "@/shared/design-system/shell";
 
@@ -181,7 +181,7 @@ export function InvoiceDetailPageView({
         ) : null}
 
         <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-3">
-          <section className="rounded-xl border border-slate-200 bg-white p-4 lg:col-span-2">
+          <section className={`${adminCardSectionClass} lg:col-span-2`}>
             <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Customer
             </h2>
@@ -232,7 +232,7 @@ export function InvoiceDetailPageView({
 
           <div className="space-y-5">
             {invoice.jobId ? (
-              <section className="rounded-xl border border-slate-200 bg-white p-4">
+              <section className={adminCardSectionClass}>
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Related job
                 </h2>
@@ -248,7 +248,7 @@ export function InvoiceDetailPageView({
                 </p>
               </section>
             ) : (
-              <section className="rounded-xl border border-dashed border-slate-200 bg-white p-4">
+              <section className={`${adminCardSectionClass} border-dashed`}>
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Related job
                 </h2>
@@ -262,7 +262,7 @@ export function InvoiceDetailPageView({
             )}
 
             {invoice.estimateId ? (
-              <section className="rounded-xl border border-slate-200 bg-white p-4">
+              <section className={adminCardSectionClass}>
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Source estimate
                 </h2>
@@ -301,7 +301,7 @@ export function InvoiceDetailPageView({
         }}
       />
 
-      <section className="no-print min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className={`no-print min-w-0 ${adminCardSectionClass}`}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatJobAttachmentType, type JobAttachment } from "@/shared/types/job-attachment";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 
 type CustomerRecentPhotosSectionProps = {
   customerId: string;
@@ -15,7 +16,7 @@ export function CustomerRecentPhotosSection({
   }
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+    <section className={adminCardSectionClass}>
       <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
         Recent photos
       </h2>

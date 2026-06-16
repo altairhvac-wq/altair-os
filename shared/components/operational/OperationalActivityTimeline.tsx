@@ -26,6 +26,7 @@ import type {
 } from "@/shared/types/operational-activity";
 import { filterOperationalActivitiesForBillingAccess } from "@/shared/lib/billing-activity-visibility";
 import { OperationalActivityEntryContent } from "@/shared/components/operational/OperationalActivityEntryContent";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 
 type OperationalActivityTimelineProps = {
   activities: OperationalActivity[];
@@ -170,7 +171,7 @@ export function OperationalActivityTimeline({
   return (
     <section
       id={sectionId}
-      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ${sectionClassName ?? ""}`}
+      className={`${adminCardSectionClass} ${sectionClassName ?? ""}`}
     >
       <div className="flex items-center gap-2.5">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200">

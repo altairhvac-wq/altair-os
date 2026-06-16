@@ -22,6 +22,7 @@ import {
   resolveCompletedWorkReviewSeverity,
   type CompletedWorkReviewSeverity,
 } from "@/shared/types/reports";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 
 export type JobReviewChecklistItemId =
   | "invoice_exists"
@@ -340,7 +341,7 @@ export function JobReviewChecklistSection({
   return (
     <section
       aria-labelledby={`job-review-checklist-heading-${jobId}`}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      className={adminCardSectionClass}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">

@@ -8,6 +8,7 @@ import {
   getWarrantyStatusStyles,
   type CustomerEquipment,
 } from "@/shared/types/customer-equipment";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 
 type JobCustomerEquipmentSectionProps = {
   customerId: string;
@@ -23,7 +24,7 @@ export function JobCustomerEquipmentSection({
   canViewCustomerProfile = false,
 }: JobCustomerEquipmentSectionProps) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className={adminCardSectionClass}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 ring-1 ring-violet-600/10">

@@ -13,6 +13,7 @@ import {
   formatJobProfitabilityLaborHours,
   formatJobProfitabilityMargin,
 } from "@/shared/types/job-profitability";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 
 type JobProfitabilitySectionProps = {
   jobId: string;
@@ -188,7 +189,7 @@ export function JobProfitabilitySection({
   return (
     <section
       aria-labelledby={`job-profitability-heading-${jobId}`}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      className={adminCardSectionClass}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">

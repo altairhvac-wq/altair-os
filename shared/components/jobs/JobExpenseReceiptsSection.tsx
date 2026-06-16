@@ -8,6 +8,7 @@ import {
   type Expense,
 } from "@/shared/types/expense";
 import { ExpenseCategoryBadge } from "@/shared/components/expenses/ExpenseCategoryBadge";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 
 type JobExpenseReceiptsSectionProps = {
   jobId: string;
@@ -25,7 +26,7 @@ export function JobExpenseReceiptsSection({
   return (
     <section
       aria-labelledby={`job-expense-receipts-heading-${jobId}`}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      className={adminCardSectionClass}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">

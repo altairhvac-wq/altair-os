@@ -14,6 +14,7 @@ import {
   createInvoiceForCustomerHref,
 } from "@/shared/lib/customers/customer-action-links";
 import { CUSTOMER_DETAIL_BILLING_ANCHOR } from "@/shared/lib/customers/customer-detail-anchors";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 
 type CustomerBillingHistorySectionProps = {
   customerId: string;
@@ -44,7 +45,7 @@ export function CustomerBillingHistorySection({
 
   return (
     <section
-      className="scroll-mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+      className={`${adminCardSectionClass} scroll-mt-6`}
       id={CUSTOMER_DETAIL_BILLING_ANCHOR}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">

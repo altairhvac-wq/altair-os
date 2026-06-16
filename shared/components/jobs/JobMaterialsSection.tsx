@@ -10,6 +10,7 @@ import {
 } from "@/shared/types/job-material";
 import type { ServiceItem } from "@/shared/types/service-item";
 import { JobMaterialForm } from "./JobMaterialForm";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 
 type JobMaterialsSectionProps = {
   jobId: string;
@@ -46,7 +47,7 @@ export function JobMaterialsSection({
   return (
     <section
       aria-labelledby={`job-materials-heading-${jobId}`}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      className={adminCardSectionClass}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">

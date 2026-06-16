@@ -5,6 +5,7 @@ import {
   formatExpenseAmount,
   type Expense,
 } from "@/shared/types/expense";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 
 type CustomerRecentReceiptsSectionProps = {
   customerId: string;
@@ -28,7 +29,7 @@ export function CustomerRecentReceiptsSection({
   }
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+    <section className={adminCardSectionClass}>
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
           Recent receipts

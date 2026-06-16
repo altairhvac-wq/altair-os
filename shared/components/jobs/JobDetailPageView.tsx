@@ -288,7 +288,7 @@ export function JobDetailPageView({
                 <p className="font-semibold text-slate-900">{scheduledLabel}</p>
               </div>
             </div>
-            <div className="rounded-lg border border-slate-100 bg-white px-3 py-2.5">
+            <div className="rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-2.5">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Job type
               </p>

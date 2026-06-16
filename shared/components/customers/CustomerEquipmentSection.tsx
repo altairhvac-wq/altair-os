@@ -21,6 +21,7 @@ import {
   type CustomerEquipmentFormData,
 } from "@/shared/types/customer-equipment";
 import { CUSTOMER_DETAIL_EQUIPMENT_ANCHOR } from "@/shared/lib/customers/customer-detail-anchors";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 
 type CustomerEquipmentSectionProps = {
   customerId: string;
@@ -120,7 +121,7 @@ export function CustomerEquipmentSection({
 
   return (
     <section
-      className="scroll-mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+      className={`${adminCardSectionClass} scroll-mt-6`}
       id={CUSTOMER_DETAIL_EQUIPMENT_ANCHOR}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">

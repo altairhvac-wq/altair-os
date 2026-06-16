@@ -29,7 +29,7 @@ import { EstimateStatusActions } from "./EstimateStatusActions";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
 
 import type { BillingSignature } from "@/shared/types/billing-signature";
-import { adminPageStackClass } from "@/shared/lib/admin-density";
+import { adminPageStackClass, adminCardSectionClass } from "@/shared/lib/admin-density";
 import { FocusedDocumentOverlayFooter } from "@/shared/components/layout/FocusedDocumentOverlay";
 import { MasterDetailPageLayout } from "@/shared/design-system/shell";
 
@@ -156,7 +156,7 @@ export function EstimateDetailPageView({
         </div>
 
         <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-3">
-          <section className="rounded-xl border border-slate-200 bg-white p-4 lg:col-span-2">
+          <section className={`${adminCardSectionClass} lg:col-span-2`}>
             <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Customer
             </h2>
@@ -206,7 +206,7 @@ export function EstimateDetailPageView({
           </section>
 
           {estimate.jobId ? (
-            <section className="rounded-xl border border-slate-200 bg-white p-4">
+            <section className={adminCardSectionClass}>
               <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Related job
               </h2>
@@ -222,7 +222,7 @@ export function EstimateDetailPageView({
               </p>
             </section>
           ) : (
-            <section className="rounded-xl border border-dashed border-slate-200 bg-white p-4">
+            <section className={`${adminCardSectionClass} border-dashed`}>
               <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Related job
               </h2>
@@ -236,7 +236,7 @@ export function EstimateDetailPageView({
           )}
 
           {linkedInvoice ? (
-            <section className="rounded-xl border border-slate-200 bg-white p-4 lg:col-span-3">
+            <section className={`${adminCardSectionClass} lg:col-span-3`}>
               <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Linked invoice
               </h2>
