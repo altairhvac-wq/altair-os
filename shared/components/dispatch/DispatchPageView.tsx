@@ -30,6 +30,11 @@ import { DispatchSectionSheet } from "./DispatchSectionSheet";
 import { DispatchSummaryCards } from "./DispatchSummaryCards";
 import { TechnicianWorkloadCards } from "./TechnicianWorkloadCards";
 import { UnassignedJobsModal } from "./UnassignedJobsModal";
+import {
+  MasterContentStack,
+  MasterPageCanvas,
+  MasterShellPage,
+} from "@/shared/design-system/shell";
 
 type DispatchPageViewProps = {
   initialJobs: DispatchJob[];
@@ -372,46 +377,52 @@ export function DispatchPageView({
   ]);
 
   return (
-    <div className="flex min-h-0 min-w-0 max-w-full flex-col gap-2 sm:gap-4 lg:h-[calc(100dvh-7rem)] lg:overflow-hidden">
-      <DispatchDashboardHeader
-        jobCount={jobs.length}
-        technicianCount={technicians.length}
-      />
+    <MasterShellPage fillViewport density="compact">
+      <MasterPageCanvas width="wide" className="min-h-0 flex-1">
+        <MasterContentStack
+          density="compact"
+          scrollable
+          className="min-h-0 flex-1"
+        >
+          <DispatchDashboardHeader
+            jobCount={jobs.length}
+            technicianCount={technicians.length}
+          />
 
-      {dispatchPageFocus?.banner ? (
-        <DispatchFocusBanner
-          title={dispatchPageFocus.banner.title}
-          description={dispatchPageFocus.banner.description}
-          clearHref={dispatchPageFocus.banner.clearHref}
-        />
-      ) : null}
+          {dispatchPageFocus?.banner ? (
+            <DispatchFocusBanner
+              title={dispatchPageFocus.banner.title}
+              description={dispatchPageFocus.banner.description}
+              clearHref={dispatchPageFocus.banner.clearHref}
+            />
+          ) : null}
 
-      <DispatchSectionActions
-        openSection={openSection}
-        onOpenSection={handleOpenSection}
-        hasJobs={!hasNoJobs}
-        filtersActive={filtersActive}
-        unassignedCount={unassignedJobs.length}
-        dispatchPageFocus={dispatchPageFocus}
-      />
+          <DispatchSectionActions
+            openSection={openSection}
+            onOpenSection={handleOpenSection}
+            hasJobs={!hasNoJobs}
+            filtersActive={filtersActive}
+            unassignedCount={unassignedJobs.length}
+            dispatchPageFocus={dispatchPageFocus}
+          />
 
-      {!hasNoJobs && !isBelowLg ? (
-        <DispatchSearchFilterBar
-          search={search}
-          statusFilter={statusFilter}
-          technicianFilter={technicianFilter}
-          technicians={technicians}
-          onSearchChange={setSearch}
-          onStatusFilterChange={setStatusFilter}
-          onTechnicianFilterChange={setTechnicianFilter}
-          resultCount={filteredJobs.length}
-          unassignedCount={unassignedJobs.length}
-          onOpenUnassigned={handleOpenUnassigned}
-          compact
-        />
-      ) : null}
+          {!hasNoJobs && !isBelowLg ? (
+            <DispatchSearchFilterBar
+              search={search}
+              statusFilter={statusFilter}
+              technicianFilter={technicianFilter}
+              technicians={technicians}
+              onSearchChange={setSearch}
+              onStatusFilterChange={setStatusFilter}
+              onTechnicianFilterChange={setTechnicianFilter}
+              resultCount={filteredJobs.length}
+              unassignedCount={unassignedJobs.length}
+              onOpenUnassigned={handleOpenUnassigned}
+              compact
+            />
+          ) : null}
 
-      <div className="flex min-h-0 min-w-0 max-w-full lg:flex-1 flex-col gap-2 sm:gap-4 lg:flex-row lg:items-stretch">
+          <div className="flex min-h-0 min-w-0 max-w-full lg:flex-1 flex-col gap-2 sm:gap-4 lg:flex-row lg:items-stretch">
         <section
           className={`admin-panel flex min-h-0 min-w-0 max-w-full lg:flex-1 flex-col overflow-hidden ${
             dispatchPageFocus?.emphasizeBoard
@@ -497,7 +508,9 @@ export function DispatchPageView({
             />
           </div>
         ) : null}
-      </div>
+          </div>
+        </MasterContentStack>
+      </MasterPageCanvas>
 
       {openSectionSheet ? (
         <DispatchSectionSheet
@@ -558,6 +571,6 @@ export function DispatchPageView({
           </MobileSheetPanel>
         </MobileSheet>
       ) : null}
-    </div>
+    </MasterShellPage>
   );
 }
