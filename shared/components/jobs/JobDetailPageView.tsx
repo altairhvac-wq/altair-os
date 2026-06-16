@@ -43,10 +43,8 @@ import type { OperationalActivity } from "@/shared/types/operational-activity";
 import type { ServiceItem } from "@/shared/types/service-item";
 import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
 import type { OperationalInconsistencyEntry } from "@/shared/types/operational-inconsistencies";
-import {
-  adminCardSectionClass,
-  adminPageStackClass,
-} from "@/shared/lib/admin-density";
+import { MasterDetailPageLayout } from "@/shared/design-system/shell";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 import type {
   JobEstimateSummary,
   JobInvoiceSummary,
@@ -128,15 +126,18 @@ export function JobDetailPageView({
   const scheduledLabel = `${formatScheduledDate(job.scheduledDate)} at ${formatScheduledTime(job.scheduledDate)}`;
 
   return (
-    <div className={`mx-auto max-w-5xl ${adminPageStackClass}`}>
+    <MasterDetailPageLayout
+      backLink={
+        <Link
+          href="/jobs"
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to jobs
+        </Link>
+      }
+    >
       <JobDetailHashScroll />
-      <Link
-        href="/jobs"
-        className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to jobs
-      </Link>
 
       <section className="admin-card">
         <div className="border-b border-slate-100 bg-white px-3 py-2.5 sm:px-4 sm:py-3">
@@ -383,6 +384,6 @@ export function JobDetailPageView({
         deleteDependencies={deleteDependencies}
         canManage={canEditJob}
       />
-    </div>
+    </MasterDetailPageLayout>
   );
 }
