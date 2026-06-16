@@ -26,8 +26,8 @@ import {
   adminFormLabelClass,
   adminMetaLabelClass,
   adminMetaRowClass,
-  adminPageStackClass,
 } from "@/shared/lib/admin-density";
+import { MasterDetailPageLayout } from "@/shared/design-system/shell";
 import { formatDate } from "@/shared/types/customer";
 import {
   formatTeamMemberRole,
@@ -207,15 +207,17 @@ export function TeamMemberProfileView({
   }
 
   return (
-    <div className={`mx-auto max-w-5xl ${adminPageStackClass}`}>
-      <Link
-        href={backHref}
-        className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {backLabel}
-      </Link>
-
+    <MasterDetailPageLayout
+      backLink={
+        <Link
+          href={backHref}
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {backLabel}
+        </Link>
+      }
+    >
       {feedback ? (
         <div
           className={`rounded-lg border px-3 py-2 text-sm ${
@@ -443,7 +445,7 @@ export function TeamMemberProfileView({
           </section>
         </div>
       </div>
-    </div>
+    </MasterDetailPageLayout>
   );
 }
 
