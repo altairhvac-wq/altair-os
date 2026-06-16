@@ -41,13 +41,13 @@ import {
   CUSTOMER_DETAIL_360_ANCHOR,
   CUSTOMER_DETAIL_ACTIVITY_ANCHOR,
 } from "@/shared/lib/customers/customer-detail-anchors";
+import { MasterDetailPageLayout } from "@/shared/design-system/shell";
 import {
   adminCardSectionClass,
   adminDetailsBodyClass,
   adminDetailsClass,
   adminDetailsSummaryClass,
   adminMetaRowClass,
-  adminPageStackClass,
 } from "@/shared/lib/admin-density";
 
 type CustomerDetailPageViewProps = {
@@ -96,15 +96,18 @@ export function CustomerDetailPageView({
   const deleted = isCustomerDeleted(customer);
 
   return (
-    <div className={`mx-auto max-w-5xl ${adminPageStackClass}`}>
+    <MasterDetailPageLayout
+      backLink={
+        <Link
+          href="/customers"
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Customers
+        </Link>
+      }
+    >
       <JobDetailHashScroll />
-      <Link
-        href="/customers"
-        className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Customers
-      </Link>
 
       <div className={adminCardSectionClass}>
         <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
@@ -259,6 +262,6 @@ export function CustomerDetailPageView({
             : "Activity will appear here as work progresses."
         }
       />
-    </div>
+    </MasterDetailPageLayout>
   );
 }

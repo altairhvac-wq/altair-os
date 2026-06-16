@@ -4,6 +4,16 @@ export {
 } from "./MasterContentStack";
 
 export {
+  MasterDetailPageLayout,
+  type MasterDetailPageLayoutProps,
+} from "./MasterDetailPageLayout";
+
+export {
+  MasterDetailPageLoadingState,
+  type MasterDetailPageLoadingStateProps,
+} from "./MasterDetailPageLoadingState";
+
+export {
   MasterListPageLayout,
   type MasterListPageLayoutProps,
 } from "./MasterListPageLayout";

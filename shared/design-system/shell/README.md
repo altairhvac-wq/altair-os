@@ -14,6 +14,8 @@ Reusable page structure inside `AdminShell` main. Does not replace global naviga
 | `MasterContentStack` | Vertical stack between major blocks |
 | `MasterListPageLayout` | Full list-page scaffold (header + scrollable body) |
 | `MasterListPageLoadingState` | Loading skeleton scaffold matching `MasterListPageLayout` |
+| `MasterDetailPageLayout` | Detail-page scaffold (back link + detail canvas + body stack) |
+| `MasterDetailPageLoadingState` | Loading skeleton scaffold matching `MasterDetailPageLayout` |
 
 ## Adoption
 
@@ -63,4 +65,17 @@ Exported from `tokens.ts` for the repeated class strings across migrated pages (
 
 **Legacy layout:** `ListCommandCenterLayout` has no remaining page imports. Deprecated; keep the file until a later cleanup pass.
 
-**Not in scope:** Dispatch, Customer 360, detail pages, global `AdminShell` chrome.
+**Not in scope:** Dispatch, global `AdminShell` chrome.
+
+## Detail-page shell
+
+Reference implementation: Customer 360 (`CustomerDetailPageView`).
+
+1. **Root**: `MasterDetailPageLayout` with `density="default"`.
+2. **Width**: `MasterPageCanvas` `width="detail"` (`max-w-5xl`) inside the layout.
+3. **Back link**: `backLink` prop (sibling above body content in the vertical stack).
+4. **Section cards**: existing `adminCardSectionClass` sections or `MasterPageSurface` `variant="section"` — no forced migration of inner section markup yet.
+5. **Section anchors / nav**: page-specific components (e.g. `CustomerDetailSectionNav`) stay as children of the layout body.
+6. **Loading states**: `MasterDetailPageLoadingState` with profile + section skeleton props.
+
+**Next detail migration candidate:** Job detail page.
