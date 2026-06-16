@@ -123,7 +123,7 @@ export function NetworkLoadingState() {
               </div>
             </MasterPageSurface>
 
-            <div className="hidden min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white lg:flex lg:min-h-0 lg:w-[400px] lg:flex-none lg:shrink-0">
+            <div className="hidden min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white lg:flex lg:min-h-0 lg:w-[420px] lg:flex-none lg:shrink-0">
               <div className="border-b border-slate-100 p-5">
                 <Skeleton className="h-5 w-36" />
                 <Skeleton className="mt-2 h-4 w-48" />

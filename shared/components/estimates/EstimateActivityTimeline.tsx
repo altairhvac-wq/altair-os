@@ -17,6 +17,7 @@ import {
   formatEstimateActivityLabel,
   formatEstimateActivityTimestamp,
 } from "@/shared/types/estimate-activity";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 
 type EstimateActivityTimelineProps = {
   activities: EstimateActivity[];
@@ -48,7 +49,7 @@ export function EstimateActivityTimeline({
   activities,
 }: EstimateActivityTimelineProps) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className={adminCardSectionClass}>
       <div className="flex items-center gap-2.5">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200">
           <History className="h-4 w-4 text-slate-500" />

@@ -31,28 +31,31 @@ export function MasterPageHeader({
     <header
       className={`admin-page-header flex shrink-0 justify-between gap-2 ${
         isCompact
-          ? "items-center px-3 py-2 sm:px-3.5"
+          ? "items-start px-3 py-2 sm:items-center sm:px-3.5"
           : "flex-wrap items-start gap-3"
       } ${className}`}
     >
-      <div className={`min-w-0 ${isCompact ? "flex flex-1 items-baseline gap-2" : ""}`}>
+      <div className={`min-w-0 flex-1 ${isCompact ? "space-y-0.5" : ""}`}>
         {eyebrow ? <p className="admin-heading-eyebrow">{eyebrow}</p> : null}
-        <h1
-          className={
-            isCompact
-              ? "shrink-0 text-base font-bold tracking-tight text-slate-900 sm:text-lg"
-              : "admin-heading-page"
-          }
-        >
-          {title}
-        </h1>
-        {subtitle ? (
-          isCompact ? (
-            <p className="min-w-0 truncate text-xs text-slate-500">{subtitle}</p>
-          ) : (
-            <p className="admin-text-helper mt-1 max-w-2xl">{subtitle}</p>
-          )
-        ) : null}
+        {isCompact ? (
+          <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
+            <h1 className="min-w-0 text-base font-bold tracking-tight text-slate-900 sm:shrink-0 sm:text-lg">
+              {title}
+            </h1>
+            {subtitle ? (
+              <p className="min-w-0 text-xs leading-snug text-slate-500 sm:truncate">
+                {subtitle}
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <>
+            <h1 className="admin-heading-page">{title}</h1>
+            {subtitle ? (
+              <p className="admin-text-helper mt-1 max-w-2xl">{subtitle}</p>
+            ) : null}
+          </>
+        )}
       </div>
       {hasActions ? (
         <div className={actionRowClass}>
