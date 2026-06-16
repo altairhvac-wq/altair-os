@@ -1,9 +1,11 @@
-/** Shared spacing and control sizing for admin / field workflows (density pass V1). */
+/** Shared spacing and control sizing for admin / field workflows (Master Shell V2 density). */
+
+import { masterSectionSurfaceClass } from "@/shared/design-system/shell/tokens";
 
 export const adminPageStackClass = "space-y-2.5";
 
-export const adminCardSectionClass =
-  "rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm";
+/** Section/card grouping — uses shared 3-tier surface system (section tier). */
+export const adminCardSectionClass = masterSectionSurfaceClass;
 
 export const adminPanelBodyClass = "min-h-0 flex-1 overflow-y-auto px-3 py-2";
 

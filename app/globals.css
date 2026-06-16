@@ -4,20 +4,22 @@
   --background: #f4f7fa;
   --foreground: #0f172a;
   --surface-canvas: #f4f7fa;
+  --surface-panel: #fcfdfe;
   --surface-card: #fcfdfe;
-  --surface-muted: #eef4f8;
-  --border-subtle: rgb(203 213 225 / 0.55);
-  --border-strong: rgb(148 163 184 / 0.38);
+  --surface-muted: #eef2f6;
+  --border-subtle: rgb(203 213 225 / 0.62);
+  --border-strong: rgb(148 163 184 / 0.42);
+  --radius-panel: 1rem;
+  --radius-section: 0.875rem;
   --accent-teal: #0891b2;
   --accent-teal-hover: #0e7490;
   --accent-teal-muted: rgb(8 145 178 / 0.1);
   --shadow-card:
-    0 1px 2px rgb(15 23 42 / 0.025),
-    0 1px 3px rgb(15 23 42 / 0.035),
-    0 10px 28px -10px rgb(15 23 42 / 0.07);
+    0 1px 2px rgb(15 23 42 / 0.028),
+    0 2px 8px -2px rgb(15 23 42 / 0.06);
   --shadow-panel:
-    0 1px 2px rgb(15 23 42 / 0.025),
-    0 6px 20px -8px rgb(15 23 42 / 0.065);
+    0 1px 2px rgb(15 23 42 / 0.024),
+    0 4px 16px -4px rgb(15 23 42 / 0.07);
   --shadow-sticky: 0 -4px 16px -4px rgb(15 23 42 / 0.08);
   --shell-navy-base: #071827;
   --shell-navy-mid: #0b1f33;
@@ -51,7 +53,7 @@ html {
 }
 
 body {
-  background: var(--background);
+  background: var(--surface-canvas);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
@@ -263,21 +265,21 @@ a[href] {
   }
 }
 
-/* Admin experience — operational surfaces with calm depth hierarchy */
+/* Admin experience — 3-tier surface system (canvas → panel → section/card) */
 .admin-canvas {
   background-color: var(--surface-canvas);
   background-image:
     radial-gradient(
-      ellipse 90% 55% at 50% -8%,
-      rgb(186 230 253 / 0.14) 0%,
-      transparent 58%
+      ellipse 100% 55% at 50% -10%,
+      rgb(186 230 253 / 0.09) 0%,
+      transparent 56%
     ),
-    radial-gradient(
-      ellipse 55% 42% at 100% 0%,
-      rgb(148 163 184 / 0.06) 0%,
-      transparent 52%
-    ),
-    linear-gradient(180deg, #f6f8fb 0%, var(--surface-canvas) 42%, #eef4f8 100%);
+    linear-gradient(
+      180deg,
+      rgb(247 249 252 / 0.85) 0%,
+      var(--surface-canvas) 28%,
+      var(--surface-canvas) 100%
+    );
 }
 
 /* Premium navy header + light nav band — authenticated desktop chrome only */
@@ -357,26 +359,40 @@ a[href] {
 }
 
 .admin-card {
-  border-radius: 1rem;
+  border-radius: var(--radius-panel);
   border: 1px solid var(--border-subtle);
   background-color: var(--surface-card);
   box-shadow: var(--shadow-card);
 }
 
 .admin-panel {
-  border-radius: 1rem;
+  border-radius: var(--radius-panel);
   border: 1px solid var(--border-subtle);
-  background-color: var(--surface-card);
+  background-color: var(--surface-panel);
   box-shadow: var(--shadow-panel);
 }
 
+.admin-section-surface {
+  border-radius: var(--radius-section);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+
 .admin-panel-header {
-  border-bottom: 1px solid rgb(226 232 240 / 0.75);
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--border-subtle);
   background: linear-gradient(
     180deg,
-    rgb(252 253 254 / 0.98) 0%,
-    rgb(248 250 252 / 0.92) 100%
+    var(--surface-panel) 0%,
+    rgb(248 250 252 / 0.94) 100%
   );
+}
+
+@media (min-width: 640px) {
+  .admin-panel-header {
+    padding: 0.75rem 1rem;
+  }
 }
 
 .admin-card-interactive {
@@ -544,7 +560,7 @@ a[href] {
   background-color: rgb(240 249 255 / 0.55);
 }
 
-/* Page / panel rhythm — compact density pass V1 */
+/* Page / panel rhythm — Master Shell V2 density */
 .admin-page-stack {
   display: flex;
   flex-direction: column;
@@ -552,17 +568,15 @@ a[href] {
 }
 
 .admin-page-header {
-  border-radius: 1rem;
-  border: 1px solid rgb(203 213 225 / 0.45);
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--border-subtle);
   background: linear-gradient(
     135deg,
-    rgb(252 253 254 / 0.98) 0%,
-    rgb(241 248 252 / 0.92) 52%,
-    rgb(236 244 250 / 0.88) 100%
+    var(--surface-panel) 0%,
+    rgb(241 248 252 / 0.94) 52%,
+    rgb(236 244 250 / 0.9) 100%
   );
-  box-shadow:
-    0 1px 2px rgb(15 23 42 / 0.025),
-    0 8px 24px -12px rgb(15 23 42 / 0.06);
+  box-shadow: var(--shadow-card);
   padding: 0.875rem 1rem;
 }
 
@@ -597,10 +611,11 @@ a[href] {
 
 .admin-section-header {
   padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--border-subtle);
   background: linear-gradient(
     180deg,
-    rgb(252 253 254 / 0.98) 0%,
-    rgb(248 250 252 / 0.9) 100%
+    var(--surface-panel) 0%,
+    rgb(248 250 252 / 0.92) 100%
   );
 }
 
@@ -645,7 +660,7 @@ a[href] {
 }
 
 .admin-hero {
-  border-radius: 1rem;
+  border-radius: var(--radius-panel);
   border: 1px solid var(--border-subtle);
   background-color: var(--surface-card);
   box-shadow: var(--shadow-card);

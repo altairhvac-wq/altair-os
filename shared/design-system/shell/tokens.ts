@@ -1,4 +1,4 @@
-/** Shared rhythm and width tokens for Master Shell V1. */
+/** Shared rhythm and width tokens for Master Shell V2. */
 
 export type MasterShellDensity = "default" | "compact";
 
@@ -27,6 +27,16 @@ export const masterShellViewportFillClass =
 /** Compact list-page primary action button (README checklist item 8). */
 export const masterListPagePrimaryActionClass =
   "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm";
+
+/** Compact list-page secondary action button — pairs with primary in page headers. */
+export const masterSecondaryActionClass =
+  "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-secondary px-3 py-1.5 text-sm";
+
+/** Panel chrome header inside board/workbench surfaces (Dispatch, list detail panels). */
+export const masterPanelHeaderClass = "admin-panel-header shrink-0";
+
+/** Grouped section surface — details, settings, forms (maps to `.admin-section-surface`). */
+export const masterSectionSurfaceClass = "admin-section-surface p-2.5";
 
 /** Mobile viewport lock when a list detail/create panel is open (checklist item 7). */
 export const masterListPageMobilePanelLockClass =

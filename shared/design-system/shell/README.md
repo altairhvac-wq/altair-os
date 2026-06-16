@@ -4,6 +4,23 @@ Reusable page structure inside `AdminShell` main. Does not replace global naviga
 
 Master Shell V2 architecture migration is **complete** across major admin surfaces. Remaining work is visual polish and experience refinement, not broad page-family migration.
 
+## Surface system (Pass A)
+
+Three shared tiers — defined in `app/globals.css`, consumed via CSS classes and shell tokens:
+
+| Tier | CSS class | Token | Use |
+|------|-----------|-------|-----|
+| **Canvas** | `.admin-canvas` | `--surface-canvas` | Page background inside `AdminShell` main; matches `html`/`body` shell color (`#f4f7fa`) |
+| **Panel** | `.admin-panel` | `--surface-panel`, `--radius-panel` | Large structural containers — list cards, Dispatch board, workbench panels |
+| **Card** | `.admin-card` | same radius as panel | Primary content cards with card shadow |
+| **Section** | `.admin-section-surface` | `masterSectionSurfaceClass` | Grouped blocks inside detail/settings/forms — slightly smaller radius (`--radius-section`) |
+
+Panel headers use `.admin-panel-header` (`masterPanelHeaderClass`) with default padding; pages may override with Tailwind utilities.
+
+Page command rows use `.admin-page-header`. Secondary header actions: `masterSecondaryActionClass`.
+
+`adminCardSectionClass` in `shared/lib/admin-density.ts` aliases `masterSectionSurfaceClass` — detail sections and `MasterPageSurface` `variant="section"` share one treatment.
+
 ## Components
 
 | Component | Responsibility |
@@ -58,6 +75,9 @@ Exported from `tokens.ts` for repeated class strings across migrated list pages:
 | `masterListPageMobilePanelLockClass` | `MasterListPageLayout` `className` when a panel is open on mobile |
 | `masterListPageSurfaceClass` | `MasterPageSurface` card flex shell |
 | `masterListPageScrollRegionClass` | Inner scroll container inside the list card |
+| `masterSectionSurfaceClass` | Section/card grouping surface (detail sections, `MasterPageSurface` section variant) |
+| `masterPanelHeaderClass` | Panel chrome header with default padding |
+| `masterSecondaryActionClass` | Compact secondary button in page headers |
 
 **Adopted on all 7 migrated list page views** (Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items).
 

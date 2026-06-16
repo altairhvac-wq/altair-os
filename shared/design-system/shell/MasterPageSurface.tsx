@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { masterSectionSurfaceClass } from "./tokens";
 
 export type MasterPageSurfaceVariant = "card" | "panel" | "section";
 
@@ -13,7 +14,7 @@ export type MasterPageSurfaceProps = {
 const variantClass: Record<MasterPageSurfaceVariant, string> = {
   card: "admin-card overflow-hidden",
   panel: "admin-panel min-h-0 min-w-0 flex flex-col overflow-hidden",
-  section: "rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm",
+  section: masterSectionSurfaceClass,
 };
 
 export function MasterPageSurface({
