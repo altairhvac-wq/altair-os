@@ -59,6 +59,10 @@ import type { JobWorkflowActionId } from "@/shared/types/job-workflow";
 import {
   MasterListPageLayout,
   MasterPageSurface,
+  masterListPageMobilePanelLockClass,
+  masterListPagePrimaryActionClass,
+  masterListPageScrollRegionClass,
+  masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { CustomerSearchResultCard } from "./CustomerSearchResultCard";
@@ -844,7 +848,7 @@ export function JobsPageView({
             type="button"
             onClick={handleNewJob}
             disabled={customers.length === 0}
-            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+            className={`${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`}
           >
             <Plus className="h-3.5 w-3.5" />
             New Job
@@ -867,15 +871,11 @@ export function JobsPageView({
           </SettingsAlertBanner>
         ) : undefined
       }
-      className={
-        isCreateOpen
-          ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
-          : undefined
-      }
+      className={isCreateOpen ? masterListPageMobilePanelLockClass : undefined}
     >
       <MasterPageSurface
         variant="card"
-        className={`flex min-h-[16rem] min-w-0 lg:min-h-0 lg:flex-1 flex-col ${
+        className={`${masterListPageSurfaceClass} ${
           isCreateOpen ? "max-lg:hidden" : ""
         }`}
       >
@@ -915,7 +915,7 @@ export function JobsPageView({
           bulkSelectAllControl={bulkSelectAllControl}
         />
 
-        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
+        <div className={masterListPageScrollRegionClass}>
           {renderMainContent()}
         </div>
       </MasterPageSurface>

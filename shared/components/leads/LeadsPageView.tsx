@@ -8,6 +8,10 @@ import type { LeadAssignableMember } from "@/lib/database/queries/leads";
 import {
   MasterListPageLayout,
   MasterPageSurface,
+  masterListPageMobilePanelLockClass,
+  masterListPagePrimaryActionClass,
+  masterListPageScrollRegionClass,
+  masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { LeadDetailPanel } from "@/shared/components/leads/LeadDetailPanel";
@@ -226,7 +230,7 @@ export function LeadsPageView({
         <button
           type="button"
           onClick={handleCreateLead}
-          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm"
+          className={masterListPagePrimaryActionClass}
         >
           <Plus className="h-3.5 w-3.5" />
           Create Lead
@@ -237,15 +241,11 @@ export function LeadsPageView({
           <SettingsAlertBanner tone="error">{createError}</SettingsAlertBanner>
         ) : undefined
       }
-      className={
-        isPanelOpen
-          ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
-          : undefined
-      }
+      className={isPanelOpen ? masterListPageMobilePanelLockClass : undefined}
     >
       <MasterPageSurface
         variant="card"
-        className={`flex min-h-[16rem] min-w-0 lg:min-h-0 lg:flex-1 flex-col ${
+        className={`${masterListPageSurfaceClass} ${
           isPanelOpen ? "max-lg:hidden" : ""
         }`}
       >
@@ -279,7 +279,7 @@ export function LeadsPageView({
           </>
         ) : null}
 
-        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
+        <div className={masterListPageScrollRegionClass}>
           {hasNoLeads ? (
             <LeadsEmptyState
               variant="no-leads"

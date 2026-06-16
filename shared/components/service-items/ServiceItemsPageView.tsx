@@ -35,6 +35,10 @@ import type {
 import {
   MasterListPageLayout,
   MasterPageSurface,
+  masterListPageMobilePanelLockClass,
+  masterListPagePrimaryActionClass,
+  masterListPageScrollRegionClass,
+  masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { ServiceItemDetailPanel } from "./ServiceItemDetailPanel";
@@ -306,22 +310,18 @@ export function ServiceItemsPageView({
           <button
             type="button"
             onClick={handleNewItem}
-            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm"
+            className={masterListPagePrimaryActionClass}
           >
             <Plus className="h-3.5 w-3.5" />
             New item
           </button>
         ) : undefined
       }
-      className={
-        isPanelOpen
-          ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
-          : undefined
-      }
+      className={isPanelOpen ? masterListPageMobilePanelLockClass : undefined}
     >
       <MasterPageSurface
         variant="card"
-        className={`flex min-h-[16rem] min-w-0 lg:min-h-0 lg:flex-1 flex-col ${
+        className={`${masterListPageSurfaceClass} ${
           isPanelOpen ? "max-lg:hidden" : ""
         }`}
       >
@@ -348,7 +348,7 @@ export function ServiceItemsPageView({
           />
         ) : null}
 
-        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
+        <div className={masterListPageScrollRegionClass}>
           {hasNoItems ? (
             <ServiceItemsEmptyState
               variant="no-items"

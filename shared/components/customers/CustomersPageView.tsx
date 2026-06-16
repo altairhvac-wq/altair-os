@@ -29,6 +29,10 @@ import {
 import {
   MasterListPageLayout,
   MasterPageSurface,
+  masterListPageMobilePanelLockClass,
+  masterListPagePrimaryActionClass,
+  masterListPageScrollRegionClass,
+  masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { CustomerDetailPanel } from "./CustomerDetailPanel";
@@ -340,7 +344,7 @@ export function CustomersPageView({
           <button
             type="button"
             onClick={handleNewCustomer}
-            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm"
+            className={masterListPagePrimaryActionClass}
           >
             <UserPlus className="h-3.5 w-3.5" />
             New Customer
@@ -375,15 +379,11 @@ export function CustomersPageView({
           </SettingsAlertBanner>
         ) : undefined
       }
-      className={
-        isCreateOpen
-          ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
-          : undefined
-      }
+      className={isCreateOpen ? masterListPageMobilePanelLockClass : undefined}
     >
       <MasterPageSurface
         variant="card"
-        className={`flex min-h-[16rem] min-w-0 lg:min-h-0 lg:flex-1 flex-col ${
+        className={`${masterListPageSurfaceClass} ${
           isCreateOpen ? "max-lg:hidden" : ""
         }`}
       >
@@ -399,7 +399,7 @@ export function CustomersPageView({
           />
         ) : null}
 
-        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
+        <div className={masterListPageScrollRegionClass}>
           {hasNoCustomers ? (
             <CustomersEmptyState
               variant="no-customers"

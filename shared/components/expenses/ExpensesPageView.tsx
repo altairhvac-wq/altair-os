@@ -36,6 +36,10 @@ import type {
 import {
   MasterListPageLayout,
   MasterPageSurface,
+  masterListPageMobilePanelLockClass,
+  masterListPagePrimaryActionClass,
+  masterListPageScrollRegionClass,
+  masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
 import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
@@ -384,21 +388,17 @@ export function ExpensesPageView({
         <button
           type="button"
           onClick={handleNewExpense}
-          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm"
+          className={masterListPagePrimaryActionClass}
         >
           <Plus className="h-3.5 w-3.5" />
           New Expense
         </button>
       }
-      className={
-        isPanelOpen
-          ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
-          : undefined
-      }
+      className={isPanelOpen ? masterListPageMobilePanelLockClass : undefined}
     >
       <MasterPageSurface
         variant="card"
-        className={`flex min-h-[16rem] min-w-0 lg:min-h-0 lg:flex-1 flex-col ${
+        className={`${masterListPageSurfaceClass} ${
           isPanelOpen ? "max-lg:hidden" : ""
         }`}
       >
@@ -444,7 +444,7 @@ export function ExpensesPageView({
           />
         ) : null}
 
-        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
+        <div className={masterListPageScrollRegionClass}>
           {hasNoExpenses ? (
             <ExpensesEmptyState
               variant="no-expenses"

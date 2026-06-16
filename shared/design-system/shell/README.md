@@ -21,7 +21,7 @@ Reusable page structure inside `AdminShell` main. Does not replace global naviga
 
 1. Wrap page view root in `MasterShellPage` + `MasterPageCanvas`.
 2. Replace ad-hoc section wrappers with `MasterPageSection`.
-3. Use `MasterListPageLayout` when migrating list pages from `ListCommandCenterLayout`.
+3. Use `MasterListPageLayout` for list pages (Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items).
 
 Global chrome (`AdminShell`, `Header`, `DesktopNav`, `MobileNav`) stays in `shared/components/admin/` until a later phase.
 
@@ -48,7 +48,7 @@ Reference implementations: Customers, Leads, Jobs, Estimates, Invoices, Expenses
 
 ## List-page shell tokens
 
-Exported from `tokens.ts` for the repeated class strings across migrated pages (adopt incrementally):
+Exported from `tokens.ts` for repeated class strings across migrated list pages:
 
 | Token | Use |
 |-------|-----|
@@ -57,15 +57,15 @@ Exported from `tokens.ts` for the repeated class strings across migrated pages (
 | `masterListPageSurfaceClass` | `MasterPageSurface` card flex shell |
 | `masterListPageScrollRegionClass` | Inner scroll container inside the list card |
 
+**Adopted on all 7 migrated list page views** (Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items).
+
 ## Migration status (Master List Shell)
 
-**Migrated (7):** Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items / Price Book — all use `MasterListPageLayout` with `density="compact"`.
+**Migrated (7):** Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items / Price Book — all use `MasterListPageLayout` with `density="compact"` and list-page shell tokens.
 
 **Migrated hub page (1):** Network — uses basic Master Shell primitives (`MasterShellPage`, `MasterPageCanvas`, `MasterPageHeader`, `MasterContentStack`, `MasterPageSection`, `MasterPageSurface`). Not a list page; tabbed relationship hub with master-detail panels.
 
-**Legacy loading:** `ListCommandCenterLoadingState` has no remaining list-page imports. Safe to mark deprecated; keep the file until non-list loading wrappers are audited.
-
-**Legacy layout:** `ListCommandCenterLayout` has no remaining page imports. Deprecated; keep the file until a later cleanup pass.
+**Removed (cleanup pass):** `ListCommandCenterLayout` and `ListCommandCenterLoadingState` — zero active imports; deleted.
 
 **Not in scope:** Dispatch, global `AdminShell` chrome.
 
@@ -99,27 +99,20 @@ Reference implementations: Customer 360, Job detail, Estimate detail, Invoice de
 
 | Type | Routes / views |
 |------|----------------|
-| Settings / admin form | `/invoices/[invoiceId]/edit` |
-| List-detail (legacy) | `/time`; `/time-clock` |
 | Board / workbench | `/dispatch` |
-| Wizard / import | `/customers/import` |
 | Internal / platform | `/alpha-tracker`; `/platform`; `/platform/bugs` |
 | Design prototypes | `/workspace-v1`; `/command-center-v1`; `/altair-design-lab` |
 
 **Next recommended sequence:**
 
-1. Invoice edit
-2. Customer import wizard
-3. Time / Time Clock
-4. Delete deprecated `ListCommandCenter*` files (zero imports)
-5. Dispatch (board/workbench shell, last)
+1. Dispatch (board/workbench shell, last)
+2. Internal/platform surfaces as needed
+3. Overlay/detail consistency pass (`MasterDetailPageLayout` for estimate/invoice overlays)
 
-**Legacy layout files — keep for now:**
+**Active layout helpers:**
 
 | File | Status |
 |------|--------|
-| `ListCommandCenterLayout` | Deprecated; zero imports; safe to delete in a later cleanup pass |
-| `ListCommandCenterLoadingState` | Deprecated; zero imports; safe to delete in a later cleanup pass |
 | `list-detail-layout.ts` | Active (Network, Time Clock, detail panels) |
 | `FocusedDocumentOverlay` | Active (invoice/estimate overlays, technician) |
 | `DesktopConditionalDetailPanel` | Active (list-page side panels) |
@@ -128,7 +121,6 @@ Reference implementations: Customer 360, Job detail, Estimate detail, Invoice de
 
 **Known inconsistencies (non-blocking):**
 
-- Migrated list pages duplicate shell token class strings instead of importing `tokens.ts` helpers (incremental adoption).
 - `EstimatesLoadingState` uses default skeleton props (no summary strip skeleton); loaded page shows summary cards when data exists.
 - Invoice/estimate overlay modes use raw `max-w-5xl` + `adminPageStackClass` instead of `MasterDetailPageLayout`.
 
