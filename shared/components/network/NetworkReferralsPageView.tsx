@@ -17,6 +17,9 @@ import {
   MasterPageSection,
   MasterPageSurface,
   MasterShellPage,
+  adminSegmentedControlClass,
+  adminSegmentedItemActiveClass,
+  adminSegmentedItemClass,
   masterListPageScrollRegionClass,
   masterPanelHeaderClass,
   masterSecondaryActionClass,
@@ -571,18 +574,17 @@ export function NetworkReferralsPageView({
           ) : null}
 
           <nav
-            className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1"
+            className={`${adminSegmentedControlClass} overflow-x-auto rounded-xl p-1`}
             aria-label="Network sections"
           >
             {NETWORK_REFERRALS_TAB_OPTIONS.map((tab) => (
               <button
                 key={tab.value}
                 type="button"
+                aria-pressed={activeTab === tab.value}
                 onClick={() => handleTabChange(tab.value)}
-                className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-                  activeTab === tab.value
-                    ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
-                    : "text-slate-600 hover:text-slate-900"
+                className={`${adminSegmentedItemClass} shrink-0 px-4 py-2 ${
+                  activeTab === tab.value ? adminSegmentedItemActiveClass : ""
                 }`}
               >
                 {tab.label}
@@ -620,18 +622,19 @@ export function NetworkReferralsPageView({
 
               {canManageNetwork ? (
                 <div
-                  className="mt-3 flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1"
+                  className={`${adminSegmentedControlClass} mt-3`}
                   aria-label="Directory filter"
                 >
                   {DIRECTORY_FILTER_OPTIONS.map((option) => (
                     <button
                       key={option.value}
                       type="button"
+                      aria-pressed={directoryFilter === option.value}
                       onClick={() => setDirectoryFilter(option.value)}
-                      className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                      className={`${adminSegmentedItemClass} px-3 py-2 text-xs ${
                         directoryFilter === option.value
-                          ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
-                          : "text-slate-600 hover:text-slate-900"
+                          ? adminSegmentedItemActiveClass
+                          : ""
                       }`}
                     >
                       {option.label}
@@ -929,18 +932,19 @@ export function NetworkReferralsPageView({
 
               <div>
                 <div
-                  className="flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1"
+                  className={adminSegmentedControlClass}
                   aria-label="Invitation status filter"
                 >
                   {NETWORK_INVITATIONS_TAB_OPTIONS.map((option) => (
                     <button
                       key={option.value}
                       type="button"
+                      aria-pressed={invitationsTab === option.value}
                       onClick={() => setInvitationsTab(option.value)}
-                      className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                      className={`${adminSegmentedItemClass} px-3 py-2 text-xs ${
                         invitationsTab === option.value
-                          ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
-                          : "text-slate-600 hover:text-slate-900"
+                          ? adminSegmentedItemActiveClass
+                          : ""
                       }`}
                     >
                       {option.label}

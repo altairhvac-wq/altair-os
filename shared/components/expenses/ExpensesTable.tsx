@@ -2,6 +2,10 @@ import { useMemo } from "react";
 import { ImageIcon, Receipt } from "lucide-react";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
+import {
+  adminTableRowClass,
+  adminTableRowSelectedClass,
+} from "@/shared/lib/admin-density";
 import { formatExpenseAmount, formatExpenseDate } from "@/shared/types/expense";
 import type { Expense } from "@/shared/types/expense";
 import { ExpenseCategoryBadge } from "./ExpenseCategoryBadge";
@@ -78,9 +82,9 @@ export function ExpensesTable({
               <tr
                 key={expense.id}
                 onClick={() => onSelect(expense)}
-                className={`cursor-pointer transition-colors ${
+                className={`${adminTableRowClass} ${
                   rowStatusAccent[expense.status] ?? ""
-                } ${isSelected || isBulkSelected ? "bg-cyan-50/70" : "hover:bg-slate-50"}`}
+                } ${isSelected || isBulkSelected ? adminTableRowSelectedClass : ""}`}
               >
                 {selectionEnabled ? (
                   <td className="px-4 py-3">

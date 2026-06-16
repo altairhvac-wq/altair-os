@@ -50,7 +50,19 @@ export const adminEmptyWrapClass = "admin-empty-wrap";
 
 /** Interactive list rows — compact padding with 44px min touch height */
 export const adminListRowClass =
-  "flex w-full min-w-0 items-start gap-2.5 admin-list-row text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/20";
+  "flex w-full min-w-0 items-start gap-2.5 admin-list-row text-left";
+
+/** Selected/bulk-selected list row tint (mobile card wrappers and row buttons). */
+export const adminListRowSelectedClass = "admin-list-row-selected";
+
+/** Selected row wrapper for mobile list rows with adjacent checkboxes. */
+export const adminListRowWrapSelectedClass = "admin-list-row-wrap-selected";
+
+/** Interactive table row — hover/focus without changing click behavior. */
+export const adminTableRowClass = "admin-table-row";
+
+/** Selected/bulk-selected table row tint. */
+export const adminTableRowSelectedClass = "admin-table-row-selected";
 
 /** Table cell padding (pair with text-left text-sm on table) */
 export const adminTableHeadClass = "admin-table-head";

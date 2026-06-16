@@ -3,6 +3,10 @@
 import { useMemo } from "react";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
+import {
+  adminTableRowClass,
+  adminTableRowSelectedClass,
+} from "@/shared/lib/admin-density";
 import { formatCurrency } from "@/shared/types/customer";
 import type { ServiceItem } from "@/shared/types/service-item";
 
@@ -72,10 +76,8 @@ export function ServiceItemsTable({
               <tr
                 key={item.id}
                 onClick={() => onSelectItem(item)}
-                className={`cursor-pointer transition-colors hover:bg-slate-50 ${
-                  isSelected || isBulkSelected
-                    ? "bg-cyan-50/60 hover:bg-cyan-50/80"
-                    : ""
+                className={`${adminTableRowClass} ${
+                  isSelected || isBulkSelected ? adminTableRowSelectedClass : ""
                 }`}
               >
                 {selectionEnabled ? (

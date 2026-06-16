@@ -6,6 +6,10 @@ import { usePathname } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
 import type { ActiveCompanyContext } from "@/lib/database/types";
 import {
+  adminNavLinkActiveClass,
+  adminNavLinkClass,
+} from "@/shared/design-system/shell/tokens";
+import {
   platformAdminNavItem,
   splitAdminNavItemsForMobile,
   type NavItem,
@@ -40,11 +44,12 @@ function MobileNavLink({
     <Link
       href={item.href}
       onClick={onNavigate}
-      className={`flex min-w-0 flex-1 touch-manipulation flex-col items-center justify-center rounded-lg px-0.5 transition-colors ${
+      aria-current={active ? "page" : undefined}
+      className={`${adminNavLinkClass} flex min-w-0 flex-1 touch-manipulation flex-col items-center justify-center rounded-lg px-0.5 ${
         compact ? "min-h-10 gap-0.5" : "min-h-11 gap-0.5"
       } ${
         active
-          ? "bg-cyan-500/12 text-cyan-900 ring-1 ring-cyan-500/18 shadow-[0_1px_2px_rgb(6_182_212_/_0.08)]"
+          ? `${adminNavLinkActiveClass} text-cyan-900`
           : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
       }`}
     >
@@ -145,7 +150,8 @@ export function MobileNav({
             <li className="flex min-w-0 flex-[1.15]">
               <Link
                 href={moreActiveItem.href}
-                className="flex min-h-10 w-full min-w-0 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-lg bg-cyan-500/12 px-0.5 text-cyan-900 ring-1 ring-cyan-500/18"
+                aria-current="page"
+                className={`${adminNavLinkClass} ${adminNavLinkActiveClass} flex min-h-10 w-full min-w-0 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 text-cyan-900`}
               >
                 <moreActiveItem.icon className="h-4 w-4 shrink-0 stroke-[2.5] text-cyan-700" />
                 <span className="w-full truncate text-center text-[10px] font-semibold leading-tight">
@@ -163,7 +169,7 @@ export function MobileNav({
                 aria-haspopup="menu"
                 aria-label="More navigation"
                 onClick={() => setMoreOpen((open) => !open)}
-                className="flex min-h-10 min-w-[2.75rem] touch-manipulation flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                className={`${adminNavLinkClass} flex min-h-10 min-w-[2.75rem] touch-manipulation flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-slate-600 hover:bg-slate-50 hover:text-slate-900`}
               >
                 <MoreHorizontal className="h-4 w-4 shrink-0" />
                 <span className="text-[10px] font-semibold leading-tight">
@@ -194,9 +200,9 @@ export function MobileNav({
                   aria-haspopup="menu"
                   aria-label="More navigation"
                   onClick={() => setMoreOpen((open) => !open)}
-                  className={`flex min-h-11 w-full min-w-0 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 transition-colors ${
+                  className={`${adminNavLinkClass} flex min-h-11 w-full min-w-0 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 ${
                     moreActive || moreOpen
-                      ? "bg-cyan-500/12 text-cyan-800 ring-1 ring-cyan-500/15"
+                      ? `${adminNavLinkActiveClass} text-cyan-800`
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >
@@ -236,8 +242,9 @@ export function MobileNav({
                     <Link
                       href={item.href}
                       role="menuitem"
+                      aria-current={active ? "page" : undefined}
                       onClick={() => setMoreOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                      className={`${adminNavLinkClass} flex items-center gap-3 px-4 py-3 text-sm font-medium ${
                         active
                           ? "bg-cyan-500/10 text-cyan-800"
                           : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"

@@ -456,13 +456,20 @@ a[href] {
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
-    color 0.15s ease;
+    color 0.15s ease,
+    transform 0.15s ease;
 }
 
 .admin-btn-secondary:hover {
   border-color: rgb(186 203 220);
   background: #ffffff;
   color: #0f172a;
+}
+
+.admin-btn-secondary:active {
+  transform: scale(0.98);
+  background: rgb(248 250 252);
+  border-color: rgb(203 213 225);
 }
 
 .admin-empty-icon {
@@ -513,6 +520,125 @@ a[href] {
 
 .admin-list-row:hover {
   background-color: rgb(241 245 249 / 0.65);
+}
+
+.admin-list-row:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgb(6 182 212 / 0.28);
+}
+
+.admin-list-row:active {
+  background-color: rgb(226 232 240 / 0.55);
+}
+
+.admin-list-row-selected {
+  background-color: rgb(236 254 255 / 0.6);
+}
+
+.admin-list-row-selected:hover {
+  background-color: rgb(236 254 255 / 0.75);
+}
+
+.admin-list-row-selected:active {
+  background-color: rgb(207 250 254 / 0.8);
+}
+
+.admin-list-row-wrap-selected {
+  background-color: rgb(236 254 255 / 0.6);
+}
+
+.admin-table-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.admin-table-row:hover {
+  background-color: rgb(248 250 252);
+}
+
+.admin-table-row:focus-visible {
+  outline: none;
+  background-color: rgb(248 250 252);
+  box-shadow: inset 0 0 0 2px rgb(6 182 212 / 0.28);
+}
+
+.admin-table-row-selected {
+  background-color: rgb(236 254 255 / 0.6);
+}
+
+.admin-table-row-selected:hover {
+  background-color: rgb(236 254 255 / 0.8);
+}
+
+.admin-nav-link {
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.admin-nav-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(6 182 212 / 0.35);
+}
+
+.admin-nav-link-active {
+  background-color: rgb(6 182 212 / 0.12);
+  color: #083344;
+  box-shadow: 0 1px 2px rgb(6 182 212 / 0.1);
+  outline: 1px solid rgb(6 182 212 / 0.22);
+}
+
+.admin-segmented-control {
+  display: flex;
+  gap: 0.125rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  background: rgb(241 245 249 / 0.6);
+  padding: 0.125rem;
+}
+
+.admin-segmented-item {
+  min-width: 0;
+  min-height: 2.25rem;
+  flex: 1 1 0%;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.admin-segmented-item:hover {
+  color: #0f172a;
+}
+
+.admin-segmented-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(6 182 212 / 0.35);
+}
+
+.admin-segmented-item:active:not(.admin-segmented-item-active) {
+  background-color: rgb(226 232 240 / 0.45);
+}
+
+.admin-segmented-item-active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+  outline: 1px solid rgb(226 232 240 / 0.85);
+}
+
+.admin-filter-card-active {
+  border-color: rgb(34 211 238 / 0.65);
+  background: rgb(236 254 255 / 0.55);
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.04),
+    0 0 0 2px rgb(6 182 212 / 0.14);
 }
 
 .admin-table-head,
@@ -1028,8 +1154,14 @@ a[href] {
     background: #e2e8f0;
   }
 
-  .admin-btn-primary:active {
+  .admin-btn-primary:active,
+  .admin-btn-secondary:active {
     transform: none;
+  }
+
+  .admin-list-row:active,
+  .admin-segmented-item:active:not(.admin-segmented-item-active) {
+    background-color: inherit;
   }
 }
 

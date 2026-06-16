@@ -1,4 +1,4 @@
-import { adminListRowClass } from "@/shared/lib/admin-density";
+import { adminListRowClass, adminListRowWrapSelectedClass } from "@/shared/lib/admin-density";
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
 import { canSelectInvoiceForBulkLifecycle } from "@/shared/lib/invoice-lifecycle";
 import { ChevronRight } from "lucide-react";
@@ -49,7 +49,7 @@ export function InvoicesMobileCardList({
                 <li key={invoice.id}>
                   <div
                     className={`flex items-stretch ${
-                      isSelected ? "bg-cyan-50/60" : ""
+                      isSelected ? adminListRowWrapSelectedClass : ""
                     }`}
                   >
                     {selectionEnabled ? (

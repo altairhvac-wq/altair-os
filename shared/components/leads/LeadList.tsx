@@ -2,6 +2,10 @@ import { LeadCard } from "@/shared/components/leads/LeadCard";
 import { LeadStatusBadge } from "@/shared/components/leads/LeadStatusBadge";
 import { getLeadLastActivityLabel } from "@/shared/lib/leads/lead-status";
 import {
+  adminTableRowClass,
+  adminTableRowSelectedClass,
+} from "@/shared/lib/admin-density";
+import {
   formatLeadDate,
   formatLeadName,
   formatLeadSource,
@@ -44,8 +48,8 @@ export function LeadList({
                   <tr
                     key={lead.id}
                     onClick={() => onSelect(lead)}
-                    className={`cursor-pointer transition hover:bg-slate-50/80 ${
-                      isSelected ? "bg-cyan-50/60" : ""
+                    className={`${adminTableRowClass} ${
+                      isSelected ? adminTableRowSelectedClass : ""
                     }`}
                   >
                     <td className="px-4 py-3 font-medium text-slate-900">

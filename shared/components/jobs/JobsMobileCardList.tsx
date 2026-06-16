@@ -1,4 +1,4 @@
-import { adminListRowClass } from "@/shared/lib/admin-density";
+import { adminListRowClass, adminListRowWrapSelectedClass } from "@/shared/lib/admin-density";
 import { ChevronRight } from "lucide-react";
 import {
   formatScheduledDate,
@@ -36,7 +36,7 @@ export function JobsMobileCardList({
           <li key={job.id}>
             <div
               className={`flex items-stretch ${
-                isSelected ? "bg-cyan-50/60" : ""
+                isSelected ? adminListRowWrapSelectedClass : ""
               }`}
             >
               {selectionEnabled ? (

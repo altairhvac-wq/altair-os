@@ -4,6 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ActiveCompanyContext } from "@/lib/database/types";
 import {
+  adminNavLinkActiveClass,
+  adminNavLinkClass,
+} from "@/shared/design-system/shell/tokens";
+import {
   getAdminNavItems,
   getOrderedAdminNavItemsForDesktop,
   platformAdminNavItem,
@@ -29,9 +33,10 @@ function DesktopNavLink({ item, active }: DesktopNavLinkProps) {
   return (
     <Link
       href={item.href}
-      className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all ${
+      aria-current={active ? "page" : undefined}
+      className={`${adminNavLinkClass} flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium ${
         active
-          ? "bg-cyan-500/12 text-cyan-950 shadow-[0_1px_2px_rgb(6_182_212_/_0.1)] ring-1 ring-cyan-500/22"
+          ? `${adminNavLinkActiveClass} text-cyan-950`
           : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
       }`}
     >

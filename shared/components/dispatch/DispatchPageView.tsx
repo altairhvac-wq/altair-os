@@ -330,6 +330,11 @@ export function DispatchPageView({
             jobs={jobs}
             emphasized={dispatchPageFocus?.emphasizeWorkload}
             highlightedTechnicianIds={dispatchPageFocus?.overloadedTechnicianIds}
+            activeTechnicianFilterId={
+              technicianFilter !== "all" && technicianFilter !== "unassigned"
+                ? technicianFilter
+                : null
+            }
             onTechnicianClick={handleTechnicianWorkloadClick}
           />
         ),

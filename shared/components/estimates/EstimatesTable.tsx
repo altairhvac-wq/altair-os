@@ -3,6 +3,10 @@ import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { canSelectEstimateForBulkLifecycle } from "@/shared/lib/estimate-lifecycle";
+import {
+  adminTableRowClass,
+  adminTableRowSelectedClass,
+} from "@/shared/lib/admin-density";
 import type { Estimate } from "@/shared/types/estimate";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
@@ -109,8 +113,8 @@ export function EstimatesTable({
                     <tr
                       key={estimate.id}
                       onClick={() => onSelect(estimate)}
-                      className={`cursor-pointer transition-colors hover:bg-slate-50 ${
-                        isSelected ? "bg-cyan-50/60" : ""
+                      className={`${adminTableRowClass} ${
+                        isSelected ? adminTableRowSelectedClass : ""
                       }`}
                     >
                       {selectionEnabled ? (

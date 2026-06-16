@@ -60,3 +60,21 @@ export const masterListPageScrollRegionClass =
 /** Board surface + desktop detail panel sibling row (Dispatch workbench). */
 export const masterWorkbenchRowClass =
   "flex min-h-0 min-w-0 max-w-full lg:flex-1 flex-col gap-2 sm:gap-4 lg:flex-row lg:items-stretch";
+
+/** Desktop/mobile nav link — pair with active variant class when current. */
+export const adminNavLinkClass = "admin-nav-link";
+
+/** Active nav item surface (does not replace routing/active matching). */
+export const adminNavLinkActiveClass = "admin-nav-link-active";
+
+/** Segmented control track (tabs, date range, filter pills). */
+export const adminSegmentedControlClass = "admin-segmented-control";
+
+/** Segmented control segment button. */
+export const adminSegmentedItemClass = "admin-segmented-item";
+
+/** Active segment — calm white pill on shared track. */
+export const adminSegmentedItemActiveClass = "admin-segmented-item-active";
+
+/** Pressed/selected state for operational filter cards (e.g. dispatch workload). */
+export const adminFilterCardActiveClass = "admin-filter-card-active";

@@ -3,6 +3,10 @@ import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { canSelectInvoiceForBulkLifecycle } from "@/shared/lib/invoice-lifecycle";
+import {
+  adminTableRowClass,
+  adminTableRowSelectedClass,
+} from "@/shared/lib/admin-density";
 import type { Invoice } from "@/shared/types/invoice";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
@@ -146,8 +150,8 @@ export function InvoicesTable({
                     <tr
                       key={invoice.id}
                       onClick={() => onSelect(invoice)}
-                      className={`cursor-pointer transition-colors hover:bg-slate-50 ${
-                        isSelected ? "bg-cyan-50/60" : ""
+                      className={`${adminTableRowClass} ${
+                        isSelected ? adminTableRowSelectedClass : ""
                       }`}
                     >
                       {selectionEnabled ? (

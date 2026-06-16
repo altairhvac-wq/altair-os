@@ -1,4 +1,4 @@
-import { adminListRowClass } from "@/shared/lib/admin-density";
+import { adminListRowClass, adminListRowWrapSelectedClass } from "@/shared/lib/admin-density";
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
 import { canSelectEstimateForBulkLifecycle } from "@/shared/lib/estimate-lifecycle";
 import { ChevronRight } from "lucide-react";
@@ -50,7 +50,7 @@ export function EstimatesMobileCardList({
                 <li key={estimate.id}>
                   <div
                     className={`flex items-stretch ${
-                      isSelected ? "bg-cyan-50/60" : ""
+                      isSelected ? adminListRowWrapSelectedClass : ""
                     }`}
                   >
                     {selectionEnabled ? (

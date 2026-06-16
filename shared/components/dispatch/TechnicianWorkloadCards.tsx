@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { adminFilterCardActiveClass } from "@/shared/design-system/shell/tokens";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 
 type TechnicianWorkloadCardsProps = {
@@ -8,6 +9,7 @@ type TechnicianWorkloadCardsProps = {
   jobs: DispatchJob[];
   emphasized?: boolean;
   highlightedTechnicianIds?: string[];
+  activeTechnicianFilterId?: string | null;
   onTechnicianClick?: (technicianId: string) => void;
 };
 
@@ -16,6 +18,7 @@ export function TechnicianWorkloadCards({
   jobs,
   emphasized = false,
   highlightedTechnicianIds = [],
+  activeTechnicianFilterId = null,
   onTechnicianClick,
 }: TechnicianWorkloadCardsProps) {
   const assignedCountByTechnicianId = useMemo(() => {
@@ -51,13 +54,18 @@ export function TechnicianWorkloadCards({
     <div className="grid shrink-0 grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {technicians.map((technician) => {
         const assignedCount = assignedCountByTechnicianId.get(technician.id) ?? 0;
-        const isHighlighted = highlightedTechnicianIds.includes(technician.id);
+        const isActiveFilter = activeTechnicianFilterId === technician.id;
+        const isOverloaded =
+          !isActiveFilter &&
+          highlightedTechnicianIds.includes(technician.id);
 
-        const cardClassName = `rounded-xl border bg-white p-2.5 shadow-sm transition-shadow sm:rounded-2xl sm:p-4 ${
-          isHighlighted
-            ? "border-amber-300 ring-2 ring-amber-400/25 shadow-md"
-            : "border-slate-200"
-        } ${onTechnicianClick ? "cursor-pointer hover:border-cyan-300 hover:shadow-md" : ""}`;
+        const cardClassName = `rounded-xl border bg-white p-2.5 shadow-sm transition-[border-color,box-shadow,background-color] sm:rounded-2xl sm:p-4 ${
+          isActiveFilter
+            ? adminFilterCardActiveClass
+            : isOverloaded
+              ? "border-amber-300 ring-2 ring-amber-400/25 shadow-md"
+              : "border-slate-200"
+        } ${onTechnicianClick ? "cursor-pointer hover:border-cyan-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/30" : ""}`;
 
         const cardContent = (
           <>
@@ -90,6 +98,7 @@ export function TechnicianWorkloadCards({
             <button
               key={technician.id}
               type="button"
+              aria-pressed={isActiveFilter}
               onClick={() => onTechnicianClick(technician.id)}
               className={`text-left ${cardClassName}`}
             >

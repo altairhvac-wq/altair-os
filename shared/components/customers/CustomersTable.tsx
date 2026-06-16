@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { useFormatDemoDisplayName } from "@/shared/components/display/FounderMarketingDisplayContext";
+import {
+  adminTableRowClass,
+  adminTableRowSelectedClass,
+} from "@/shared/lib/admin-density";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { isCustomerArchived, isCustomerDeleted } from "@/shared/lib/customer-lifecycle";
 import {
@@ -76,11 +80,16 @@ export function CustomersTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50">
-          {customers.map((customer) => (
+          {customers.map((customer) => {
+            const isBulkSelected = selectedIds?.has(customer.id) ?? false;
+
+            return (
             <tr
               key={customer.id}
               onClick={() => router.push(`/customers/${customer.id}`)}
-              className="cursor-pointer transition-colors hover:bg-slate-50"
+              className={`${adminTableRowClass} ${
+                isBulkSelected ? adminTableRowSelectedClass : ""
+              }`}
             >
               {selectionEnabled ? (
                 <td className="admin-table-cell">
@@ -141,7 +150,8 @@ export function CustomersTable({
                   : "—"}
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

@@ -6,6 +6,10 @@ import {
 } from "@/shared/types/job";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
+import {
+  adminTableRowClass,
+  adminTableRowSelectedClass,
+} from "@/shared/lib/admin-density";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { JobsMobileCardList } from "./JobsMobileCardList";
 import { JobPriorityBadge } from "./JobPriorityBadge";
@@ -21,8 +25,7 @@ type JobsTableProps = {
   onToggleAllVisible?: (selectAll: boolean) => void;
 };
 
-const jobRowClassName =
-  "cursor-pointer transition-colors hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-500/30";
+const jobRowClassName = adminTableRowClass;
 
 function handleJobRowKeyDown(
   event: React.KeyboardEvent<HTMLTableRowElement>,
@@ -102,7 +105,7 @@ export function JobsTable({
                   }
                   aria-label={`Open job ${job.jobNumber} for ${job.customerName}`}
                   className={`${jobRowClassName} ${
-                    isSelected ? "bg-cyan-50/60" : ""
+                    isSelected ? adminTableRowSelectedClass : ""
                   }`}
                 >
                   {selectionEnabled ? (

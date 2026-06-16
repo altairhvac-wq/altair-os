@@ -1,3 +1,9 @@
+import {
+  adminSegmentedControlClass,
+  adminSegmentedItemActiveClass,
+  adminSegmentedItemClass,
+} from "@/shared/design-system/shell/tokens";
+
 export type TodayAllViewTab = "today" | "all";
 
 type JobsViewTabsProps = {
@@ -21,7 +27,7 @@ export function JobsViewTabs({
   ];
 
   return (
-    <div className="flex gap-0.5 rounded-lg border border-slate-200/90 bg-slate-100/60 p-0.5">
+    <div className={`${adminSegmentedControlClass} w-full sm:w-auto`}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
 
@@ -29,11 +35,10 @@ export function JobsViewTabs({
           <button
             key={tab.id}
             type="button"
+            aria-pressed={isActive}
             onClick={() => onTabChange(tab.id)}
-            className={`min-h-9 min-w-0 flex-1 rounded-md px-2.5 py-1 text-sm font-semibold transition-all sm:px-3 sm:py-1.5 ${
-              isActive
-                ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80"
-                : "text-slate-600 hover:text-slate-900"
+            className={`${adminSegmentedItemClass} sm:px-3 sm:py-1.5 ${
+              isActive ? adminSegmentedItemActiveClass : ""
             }`}
           >
             <span>{tab.label}</span>

@@ -1,6 +1,7 @@
 import { Mail, Phone } from "lucide-react";
 import { LeadStatusBadge } from "@/shared/components/leads/LeadStatusBadge";
 import { NetworkReferralBadge } from "@/shared/components/leads/NetworkReferralBadge";
+import { adminListRowSelectedClass } from "@/shared/lib/admin-density";
 import { getLeadLastActivityLabel } from "@/shared/lib/leads/lead-status";
 import {
   formatLeadDate,
@@ -27,9 +28,9 @@ export function LeadCard({
     <button
       type="button"
       onClick={() => onSelect(lead)}
-      className={`w-full rounded-xl border p-3 text-left transition ${
+      className={`w-full rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/30 ${
         selected
-          ? "border-cyan-300 bg-cyan-50/60 ring-1 ring-cyan-200"
+          ? `border-cyan-300 ${adminListRowSelectedClass} ring-1 ring-cyan-200`
           : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50/80"
       }`}
     >
