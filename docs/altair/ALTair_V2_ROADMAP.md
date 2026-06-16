@@ -1,6 +1,6 @@
 # Altair OS V2 Roadmap
 
-Last Updated: 2026-06-15
+Last Updated: 2026-06-16
 
 Experience-layer redesign roadmap. Does not track feature development — see `ALTair_BRAIN.md` for production inventory.
 
@@ -32,21 +32,22 @@ Components remain available for future experience adoption; Master Shell migrati
 
 ## Phase 2 — Master Shell Architecture
 
-**Status:** Complete — list, detail, hub, admin form, and report/dashboard families
+**Status:** Complete — all major admin page families
 
 Shell primitives in `shared/design-system/shell/`:
 
 | Sub-phase | Status | Coverage |
 |-----------|--------|----------|
-| Master List Shell | **Complete** | Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items |
+| Master List Shell | **Complete** | Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items + exported list tokens |
 | Master List Loading | **Complete** | All 7 list pages |
 | Master Detail Shell | **Complete** | Customer 360, Job, Estimate, Invoice, Team Member Profile |
 | Hub page shell | **Complete** | Network |
-| Settings / admin form hub | **Complete** | Settings, System Check |
+| Settings / admin form hub | **Complete** | Settings, System Check, Invoice Edit, Customer Import Wizard |
+| Time / Time Clock | **Complete** | Time Clock, Admin Time Tracking |
 | Report / dashboard shell | **Complete** | Reports, Tax Summary, Dashboard (loaded + loading) |
-| Board / workbench shell | **Pending** | Dispatch (deferred last) |
+| Board / workbench shell | **Complete (Phase 4)** | Dispatch Phases 1–4; Phase 5 mobile viewport lock deferred |
 
-Legacy `ListCommandCenterLayout` and `ListCommandCenterLoadingState` deprecated with zero active imports. Files retained until cleanup pass.
+Legacy `ListCommandCenterLayout` and `ListCommandCenterLoadingState` **removed** (cleanup complete).
 
 ---
 
@@ -62,29 +63,35 @@ Legacy `ListCommandCenterLayout` and `ListCommandCenterLoadingState` deprecated 
 
 ## Phase 4 — Remaining Admin Surfaces
 
-**Status:** In progress (next)
+**Status:** Complete
 
-1. Invoice edit — form-edit route
-2. Customer import wizard — `/customers/import`
-3. Time / Time Clock — admin time surfaces
-4. Deprecated ListCommandCenter cleanup — delete legacy files
-5. Platform / alpha internal utility surfaces (as needed)
+1. Invoice edit — form-edit route on Master Shell primitives
+2. Customer import wizard — `/customers/import` on Master Shell primitives
+3. Time / Time Clock — admin time surfaces on Master Shell primitives
+4. Deprecated ListCommandCenter cleanup — legacy layout/loading files **removed**
+5. Platform / alpha internal utility surfaces — **deferred** (not required for major admin coverage)
 
 ---
 
 ## Phase 5 — Dispatch (Board / Workbench Shell)
 
-**Status:** Not started — **last by design**
+**Status:** Complete (Phases 1–4); Phase 5 deferred
 
-Dispatch requires a board/workbench shell pattern (columns, cards, mobile sheets). Highest layout risk; deferred until other page families are stable.
+| Phase | Status | Notes |
+|-------|--------|-------|
+| 1 — Shell wrapper/header | **Complete** | `MasterShellPage` + header alignment |
+| 2 — Loading state | **Complete** | `DispatchLoadingState` aligned |
+| 3 — Board panel surface | **Complete** | `MasterPageSurface` panel variant |
+| 4 — Workbench row token | **Complete** | `masterWorkbenchRowClass`; smoke tests passed (desktop + mobile) |
+| 5 — Mobile viewport lock | **Deferred/skipped** | Dispatch mobile behavior differs from list pages; board must stay visible under sheets |
 
 ---
 
 ## Phase 6 — Experience Prototype Adoption
 
-**Status:** Future
+**Status:** Next recommended phase (after visual polish)
 
-Adopt Command Center and Workspace prototype patterns into production dashboard and workspace modules. Depends on remaining admin shell surfaces and Dispatch completion.
+Adopt Command Center and Workspace prototype patterns into production dashboard and workspace modules. Master Shell architecture is complete; this phase is experience refinement, not layout migration.
 
 ---
 
@@ -99,6 +106,6 @@ Adopt Command Center and Workspace prototype patterns into production dashboard 
 
 ## Phase 8 — Micro Interactions & Polish
 
-**Status:** Not started
+**Status:** Active — primary V2 focus after Master Shell completion
 
-Motion, delight, and consistency pass after shell families are stable across admin surfaces.
+Motion, delight, consistency, and premium feel on migrated admin surfaces. Includes overlay/detail consistency, skeleton alignment, and selective V2 component/signature-layer adoption.

@@ -187,3 +187,51 @@
 **Next sequence:** Invoice edit → Customer import wizard → Time / Time Clock → ListCommandCenter cleanup → Dispatch last.
 
 **Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md` (shell appendix), this log.
+
+---
+
+## 2026-06-16 — Master Shell V2 Final Documentation Sync
+
+**Scope:** Living status/planning docs only. No app code, routes, server actions, Supabase queries, RLS, or product logic changes.
+
+**Master Shell V2 architecture migration — complete** across major admin surfaces:
+
+- **List pages (7):** Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items — `MasterListPageLayout` + tokens
+- **Detail pages (5):** Customer 360, Job, Estimate, Invoice, Team Member Profile
+- **Hub:** Network
+- **Admin form hubs:** Settings, System Check, Invoice Edit, Customer Import Wizard
+- **Time / Time Clock:** Time Clock, Admin Time Tracking
+- **Report/dashboard:** Reports, Tax Summary, Dashboard (loaded + loading)
+- **Dispatch (Phases 1–4):** shell wrapper, loading state, board surface, workbench row token — desktop/mobile smoke tests passed
+
+**Legacy cleanup:** `ListCommandCenterLayout` and `ListCommandCenterLoadingState` **removed**.
+
+**Deferred:** Dispatch Phase 5 mobile viewport lock — intentionally skipped; board must remain visible under mobile sheets.
+
+**Next phase:** Visual polish and premium experience refinement (Phase 8), not broad architecture migration. Then Command Center / Workspace prototype adoption (Phase 6) and Technician Experience V2.
+
+**Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md`, `shared/design-system/shell/README.md`, this log.
+
+---
+
+## 2026-06-16 — Master Shell V2 Final Documentation Sync
+
+**Scope:** Living status/planning docs only. No app code, routes, server actions, Supabase queries, RLS, or product logic changes.
+
+**Master Shell V2 architecture migration — complete** across major admin surfaces:
+
+- **List pages (7):** Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items — `MasterListPageLayout` + tokens
+- **Detail pages (5):** Customer 360, Job, Estimate, Invoice, Team Member Profile
+- **Hub:** Network
+- **Admin form hubs:** Settings, System Check, Invoice Edit, Customer Import Wizard
+- **Time / Time Clock:** Time Clock, Admin Time Tracking
+- **Report/dashboard:** Reports, Tax Summary, Dashboard (loaded + loading)
+- **Dispatch (Phases 1–4):** shell wrapper, loading state, board surface, workbench row token — desktop/mobile smoke tests passed
+
+**Legacy cleanup:** `ListCommandCenterLayout` and `ListCommandCenterLoadingState` **removed**.
+
+**Deferred:** Dispatch Phase 5 mobile viewport lock — intentionally skipped; board must remain visible under mobile sheets.
+
+**Next phase:** Visual polish and premium experience refinement (Phase 8), not broad architecture migration. Then Command Center / Workspace prototype adoption (Phase 6) and Technician Experience V2.
+
+**Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md`, `shared/design-system/shell/README.md`, this log.

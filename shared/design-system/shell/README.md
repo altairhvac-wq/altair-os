@@ -1,6 +1,8 @@
-# Master Shell V1
+# Master Shell
 
 Reusable page structure inside `AdminShell` main. Does not replace global navigation or auth chrome.
+
+Master Shell V2 architecture migration is **complete** across major admin surfaces. Remaining work is visual polish and experience refinement, not broad page-family migration.
 
 ## Components
 
@@ -109,21 +111,37 @@ Reference implementations: Customer 360, Job detail, Estimate detail, Invoice de
 
 **Migrated (3):** Reports, Tax Summary, Operational Dashboard — loaded views and loading states on `MasterShellPage` + `MasterPageCanvas`.
 
-## Coverage audit (2026-06-15)
+## Coverage audit (2026-06-16)
 
-**Not migrated (remaining admin surfaces):**
+**Major admin surfaces — migrated:**
+
+| Family | Routes / views |
+|--------|----------------|
+| List pages (7) | Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items — tokens exported |
+| Detail pages (5) | Customer 360, Job, Estimate, Invoice, Team Member Profile |
+| Hub | Network |
+| Admin form hubs | Settings, System Check, Invoice Edit, Customer Import Wizard |
+| Time / Time Clock | Time Clock, Admin Time Tracking |
+| Report / dashboard | Reports, Tax Summary, Operational Dashboard (loaded + loading) |
+| Board / workbench | Dispatch — Phases 1–4 complete; desktop/mobile smoke tests passed |
+
+**Out of scope (not major admin surfaces):**
 
 | Type | Routes / views |
 |------|----------------|
-| Board / workbench | `/dispatch` (shell scaffold + row token; Phase 5 mobile viewport lock pending) |
 | Internal / platform | `/alpha-tracker`; `/platform`; `/platform/bugs` |
 | Design prototypes | `/workspace-v1`; `/command-center-v1`; `/altair-design-lab` |
 
-**Next recommended sequence:**
+**Deferred (intentional):**
 
-1. Dispatch (board/workbench shell, last)
-2. Internal/platform surfaces as needed
-3. Overlay/detail consistency pass (`MasterDetailPageLayout` for estimate/invoice overlays)
+- Dispatch Phase 5 mobile viewport lock — board must remain visible under mobile sheets; do not apply list-page viewport lock pattern
+
+**Next recommended phase (not architecture migration):**
+
+1. Visual polish and premium experience refinement
+2. Overlay/detail consistency pass (`MasterDetailPageLayout` for estimate/invoice overlays)
+3. Command Center / Workspace prototype adoption (Phase 6)
+4. Internal/platform surfaces only if needed for beta
 
 **Active layout helpers:**
 
@@ -140,4 +158,4 @@ Reference implementations: Customer 360, Job detail, Estimate detail, Invoice de
 - `EstimatesLoadingState` uses default skeleton props (no summary strip skeleton); loaded page shows summary cards when data exists.
 - Invoice/estimate overlay modes use raw `max-w-5xl` + `adminPageStackClass` instead of `MasterDetailPageLayout`.
 
-**Dispatch:** Phases 1–4 complete (Master Shell scaffold, loading state, board surface, workbench row token). Phase 5 mobile viewport lock is high-risk — evaluate separately.
+**Dispatch:** Phases 1–4 complete (Master Shell scaffold, loading state, board surface, workbench row token). Desktop and mobile smoke tests passed. Phase 5 mobile viewport lock **deferred/skipped** — Dispatch mobile behavior differs from list pages.

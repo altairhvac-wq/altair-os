@@ -162,11 +162,13 @@ Not:
 
 # Shell Migration Status (Living)
 
-Tracks V2 Master Shell adoption by experience. Updated 2026-06-15.
+Tracks V2 Master Shell adoption by experience. Updated 2026-06-16.
 
 This section tracks **layout architecture only** — not feature completeness. See `ALTair_MASTER_STATUS.md` and `ALTair_CURRENT_SPRINT.md` for sprint detail.
 
 **Principle:** Shell migrations are experience-layer architecture only. No product logic, routes, server actions, Supabase behavior, or RLS assumptions change during migration.
+
+**Summary:** Master Shell V2 coverage is **complete** for major admin surfaces. Remaining V2 work is visual polish and experience refinement.
 
 ## Experience 1: Command Center
 
@@ -175,7 +177,7 @@ This section tracks **layout architecture only** — not feature completeness. S
 | Dashboard (`/`) | **Complete** — loaded view + loading state on Master Shell |
 | Notifications | Not migrated |
 
-**Next:** Command Center prototype patterns (future Phase 6).
+**Next:** Command Center prototype patterns (Phase 6) and visual polish.
 
 ## Experience 2: Workspace
 
@@ -188,8 +190,8 @@ This section tracks **layout architecture only** — not feature completeness. S
 | Invoices (list + detail) | **Complete** |
 | Expenses | **Complete** — list shell |
 | Price Book / Service Items | **Complete** — list shell |
-| Customer import wizard | Not migrated |
-| Invoice edit | Not migrated |
+| Customer import wizard | **Complete** — Master Shell wizard |
+| Invoice edit | **Complete** — Master Shell form-edit |
 
 Workspace list and detail families are the reference implementations for the rest of the product.
 
@@ -197,9 +199,9 @@ Workspace list and detail families are the reference implementations for the res
 
 | Module | Shell status |
 |--------|--------------|
-| Dispatch | **Pending** — board/workbench shell (last) |
+| Dispatch | **Complete (Phases 1–4)** — board/workbench shell; Phase 5 mobile viewport lock **deferred** |
 | Technician Mobile | Not in Master Shell scope |
-| Time / Time Clock | Not migrated |
+| Time / Time Clock | **Complete** — admin time surfaces on Master Shell |
 
 ## Experience 4: Intelligence
 
@@ -219,17 +221,23 @@ Workspace list and detail families are the reference implementations for the res
 | System Check | **Complete** — admin/form hub |
 | Team Member Profile | **Complete** — detail shell |
 
-## Legacy (Deprecated, Zero Imports)
+## Legacy (Removed)
 
 | File | Status |
 |------|--------|
-| `ListCommandCenterLayout` | Deprecated — delete in cleanup pass |
-| `ListCommandCenterLoadingState` | Deprecated — delete in cleanup pass |
+| `ListCommandCenterLayout` | **Removed** — cleanup complete |
+| `ListCommandCenterLoadingState` | **Removed** — cleanup complete |
 
-## Next Sequence
+## Out of Scope (Not Major Admin Surfaces)
 
-1. Invoice edit
-2. Customer import wizard
-3. Time / Time Clock
-4. ListCommandCenter legacy file cleanup
-5. Dispatch (board/workbench shell, last)
+| Surface | Notes |
+|---------|-------|
+| `/alpha-tracker`, `/platform`, `/platform/bugs` | Internal/platform utility |
+| `/workspace-v1`, `/command-center-v1`, `/altair-design-lab` | Design prototypes |
+
+## Next Phase (After Master Shell V2)
+
+1. **Visual polish & premium experience** — motion, consistency, delight on migrated surfaces
+2. **Command Center / Workspace prototype adoption** (Phase 6)
+3. **Technician Experience V2**
+4. **Deferred:** Dispatch Phase 5 mobile viewport lock — evaluate only if needed
