@@ -32,7 +32,10 @@ import type {
   ServiceItemFormData,
   ServiceItemLifecycleState,
 } from "@/shared/types/service-item";
-import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
+import {
+  MasterListPageLayout,
+  MasterPageSurface,
+} from "@/shared/design-system/shell";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { ServiceItemDetailPanel } from "./ServiceItemDetailPanel";
 import { ServiceItemsEmptyState } from "./ServiceItemsEmptyState";
@@ -278,17 +281,34 @@ export function ServiceItemsPageView({
   const isPanelOpen = panelMode !== "empty";
 
   return (
-    <ListCommandCenterLayout
+    <MasterListPageLayout
       title="Price book"
       subtitle="Reusable services and parts for estimate line items"
+      density="compact"
+      banners={
+        lifecycleMessage ? (
+          <SettingsAlertBanner tone={lifecycleTone}>
+            <div>
+              <p>{lifecycleMessage}</p>
+              {lifecycleFailureDetails?.length ? (
+                <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                  {lifecycleFailureDetails.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </SettingsAlertBanner>
+        ) : undefined
+      }
       primaryAction={
         canManagePriceBook ? (
           <button
             type="button"
             onClick={handleNewItem}
-            className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5" />
             New item
           </button>
         ) : undefined
@@ -299,8 +319,9 @@ export function ServiceItemsPageView({
           : undefined
       }
     >
-      <section
-        className={`flex min-h-[16rem] min-w-0 lg:flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
+      <MasterPageSurface
+        variant="card"
+        className={`flex min-h-[16rem] min-w-0 lg:min-h-0 lg:flex-1 flex-col ${
           isPanelOpen ? "max-lg:hidden" : ""
         }`}
       >
@@ -325,23 +346,6 @@ export function ServiceItemsPageView({
                 : undefined
             }
           />
-        ) : null}
-
-        {lifecycleMessage ? (
-          <div className="shrink-0 border-b border-slate-100/90 px-4 py-3 sm:px-5">
-            <SettingsAlertBanner tone={lifecycleTone}>
-              <div>
-                <p>{lifecycleMessage}</p>
-                {lifecycleFailureDetails?.length ? (
-                  <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
-                    {lifecycleFailureDetails.map((detail) => (
-                      <li key={detail}>{detail}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            </SettingsAlertBanner>
-          </div>
         ) : null}
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
@@ -420,7 +424,7 @@ export function ServiceItemsPageView({
             />
           ) : null}
         </div>
-      </section>
+      </MasterPageSurface>
 
       <ServiceItemDetailPanel
         mode={panelMode}
@@ -435,6 +439,6 @@ export function ServiceItemsPageView({
         canManagePriceBook={canManagePriceBook}
         onLifecycleDeleted={handleClosePanel}
       />
-    </ListCommandCenterLayout>
+    </MasterListPageLayout>
   );
 }
