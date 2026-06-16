@@ -85,6 +85,12 @@ import {
   formatTechnicianTimeState,
   getTechnicianTimeStateStyles,
 } from "@/shared/types/time-entry";
+import {
+  MasterContentStack,
+  MasterPageCanvas,
+  MasterPageSection,
+  MasterShellPage,
+} from "@/shared/design-system/shell";
 
 type OperationalDashboardViewProps = {
   data: DashboardData;
@@ -176,42 +182,6 @@ function getDashboardSectionOrder(
         "next-steps",
       ];
   }
-}
-
-function DashboardPriorityGroup({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  const visibleChildren = Array.isArray(children)
-    ? children.filter(Boolean)
-    : children
-      ? [children]
-      : [];
-
-  if (visibleChildren.length === 0) {
-    return null;
-  }
-
-  return (
-    <section className="flex min-w-0 flex-col gap-2 lg:gap-3">
-      <header className="border-b border-slate-200/80 pb-1.5">
-        <h2 className="text-xs font-black uppercase tracking-wide text-slate-900 sm:text-sm">
-          {title}
-        </h2>
-        {description ? (
-          <p className="mt-0.5 text-[11px] leading-snug text-slate-500 sm:text-xs">
-            {description}
-          </p>
-        ) : null}
-      </header>
-      <div className="flex min-w-0 flex-col gap-2 lg:gap-3">{visibleChildren}</div>
-    </section>
-  );
 }
 
 function formatJobLocation(city?: string, state?: string): string {
@@ -1349,7 +1319,7 @@ function DashboardContentLayout({
         />
       ) : null}
 
-      <div className="hidden min-w-0 flex-col gap-3 lg:flex">
+      <MasterContentStack density="compact" className="hidden lg:flex">
         <DashboardCommandStrip data={data} />
         <AltairRecommendationsSection data={data} variant="desktop" />
 
@@ -1362,16 +1332,17 @@ function DashboardContentLayout({
           const labels = DASHBOARD_SECTION_LABELS[sectionId];
 
           return (
-            <DashboardPriorityGroup
+            <MasterPageSection
               key={sectionId}
               title={labels.title}
               description={labels.description}
+              density="compact"
             >
               {content}
-            </DashboardPriorityGroup>
+            </MasterPageSection>
           );
         })}
-      </div>
+      </MasterContentStack>
 
       <div className="min-w-0 lg:hidden">
         <MobileOperationsHub
@@ -1392,14 +1363,16 @@ export function OperationalDashboardView({
   demoDataStatus,
 }: OperationalDashboardViewProps) {
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-full flex-col gap-2 pb-2 xl:max-w-[1440px]">
-      <DashboardContentLayout
-        data={data}
-        onboardingChecklist={onboardingChecklist}
-        companyId={companyId}
-        userId={userId}
-        demoDataStatus={demoDataStatus}
-      />
-    </div>
+    <MasterShellPage density="compact">
+      <MasterPageCanvas width="wide">
+        <DashboardContentLayout
+          data={data}
+          onboardingChecklist={onboardingChecklist}
+          companyId={companyId}
+          userId={userId}
+          demoDataStatus={demoDataStatus}
+        />
+      </MasterPageCanvas>
+    </MasterShellPage>
   );
 }
