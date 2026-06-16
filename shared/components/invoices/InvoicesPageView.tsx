@@ -67,7 +67,10 @@ import {
   prepareInvoicesForTodayView,
 } from "@/shared/lib/invoice-workflow-list";
 import { formatCurrency } from "@/shared/types/customer";
-import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
+import {
+  MasterListPageLayout,
+  MasterPageSurface,
+} from "@/shared/design-system/shell";
 import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
 import { JobsViewTabs, type TodayAllViewTab } from "@/shared/components/jobs/JobsViewTabs";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
@@ -566,6 +569,7 @@ export function InvoicesPageView({
   const hasNoInvoices = invoices.length === 0;
   const hasNoTodayInvoices = !hasNoInvoices && todayInvoices.length === 0;
   const hasNoResults = !hasNoInvoices && filteredInvoices.length === 0;
+  const isCreateOpen = panelMode === "create";
 
   const subtitle =
     viewTab === "today"
@@ -587,27 +591,63 @@ export function InvoicesPageView({
     );
 
   return (
-    <ListCommandCenterLayout
+    <MasterListPageLayout
       title="Invoices"
       subtitle={subtitle}
       eyebrow={invoicePageFocus?.sectionEyebrow ?? undefined}
+      density="compact"
       banners={
-        <>
-          {initialJobId && initialJobLabel ? (
-            <JobContextFilterBanner
-              jobLabel={initialJobLabel}
-              clearHref={invoicePageFocus?.jobClearHref ?? "/invoices"}
-              variant={initialCreateMode ? "create" : "filter"}
-            />
-          ) : null}
-          {invoicePageFocus?.banner ? (
-            <InvoiceCashFlowFocusBanner
-              title={invoicePageFocus.banner.title}
-              description={invoicePageFocus.banner.description}
-              clearHref={invoicePageFocus.banner.clearHref}
-            />
-          ) : null}
-        </>
+        initialJobId && initialJobLabel ||
+        invoicePageFocus?.banner ||
+        lifecycleMessage ||
+        batchSendMessage
+          ? (
+              <>
+                {initialJobId && initialJobLabel ? (
+                  <JobContextFilterBanner
+                    jobLabel={initialJobLabel}
+                    clearHref={invoicePageFocus?.jobClearHref ?? "/invoices"}
+                    variant={initialCreateMode ? "create" : "filter"}
+                  />
+                ) : null}
+                {invoicePageFocus?.banner ? (
+                  <InvoiceCashFlowFocusBanner
+                    title={invoicePageFocus.banner.title}
+                    description={invoicePageFocus.banner.description}
+                    clearHref={invoicePageFocus.banner.clearHref}
+                  />
+                ) : null}
+                {lifecycleMessage ? (
+                  <SettingsAlertBanner tone={lifecycleTone}>
+                    <div>
+                      <p>{lifecycleMessage}</p>
+                      {lifecycleFailureDetails?.length ? (
+                        <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                          {lifecycleFailureDetails.map((detail) => (
+                            <li key={detail}>{detail}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  </SettingsAlertBanner>
+                ) : null}
+                {batchSendMessage ? (
+                  <SettingsAlertBanner tone={batchSendTone}>
+                    <div>
+                      <p>{batchSendMessage}</p>
+                      {batchSendFailureDetails?.length ? (
+                        <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                          {batchSendFailureDetails.map((detail) => (
+                            <li key={detail}>{detail}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  </SettingsAlertBanner>
+                ) : null}
+              </>
+            )
+          : undefined
       }
       summary={
         !hasNoInvoices ? (
@@ -623,17 +663,27 @@ export function InvoicesPageView({
             type="button"
             onClick={handleNewInvoice}
             disabled={customers.length === 0}
-            className="inline-flex shrink-0 items-center gap-2 admin-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5" />
             New Invoice
           </button>
         ) : undefined
       }
+      className={
+        isCreateOpen
+          ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
+          : undefined
+      }
     >
-      <section className="flex min-h-[16rem] min-w-0 lg:flex-1 flex-col overflow-hidden admin-card lg:min-h-0">
+      <MasterPageSurface
+        variant="card"
+        className={`flex min-h-[16rem] min-w-0 lg:min-h-0 lg:flex-1 flex-col ${
+          isCreateOpen ? "max-lg:hidden" : ""
+        }`}
+      >
         {!hasNoInvoices ? (
-          <div className="shrink-0 border-b border-slate-100/90 px-4 py-2.5">
+          <div className="shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4">
             <JobsViewTabs
               activeTab={viewTab}
               onTabChange={setViewTab}
@@ -669,40 +719,6 @@ export function InvoicesPageView({
                 : undefined
             }
           />
-        ) : null}
-
-        {lifecycleMessage ? (
-          <div className="shrink-0 border-b border-slate-100/90 px-4 py-3 sm:px-5">
-            <SettingsAlertBanner tone={lifecycleTone}>
-              <div>
-                <p>{lifecycleMessage}</p>
-                {lifecycleFailureDetails?.length ? (
-                  <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
-                    {lifecycleFailureDetails.map((detail) => (
-                      <li key={detail}>{detail}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            </SettingsAlertBanner>
-          </div>
-        ) : null}
-
-        {batchSendMessage ? (
-          <div className="shrink-0 border-b border-slate-100/90 px-4 py-3 sm:px-5">
-            <SettingsAlertBanner tone={batchSendTone}>
-              <div>
-                <p>{batchSendMessage}</p>
-                {batchSendFailureDetails?.length ? (
-                  <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
-                    {batchSendFailureDetails.map((detail) => (
-                      <li key={detail}>{detail}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            </SettingsAlertBanner>
-          </div>
         ) : null}
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
@@ -941,7 +957,7 @@ export function InvoicesPageView({
             />
           ) : null}
         </div>
-      </section>
+      </MasterPageSurface>
 
       <InvoiceDetailsPanel
         mode={panelMode}
@@ -955,6 +971,6 @@ export function InvoicesPageView({
         isSubmitting={isPending}
         createInitialData={createInitialData}
       />
-    </ListCommandCenterLayout>
+    </MasterListPageLayout>
   );
 }
