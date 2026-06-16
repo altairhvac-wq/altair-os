@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { prepareLeadEstimateAction } from "@/app/actions/leads";
 import type { LeadAssignableMember } from "@/lib/database/queries/leads";
-import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
+import {
+  MasterListPageLayout,
+  MasterPageSurface,
+} from "@/shared/design-system/shell";
+import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { LeadDetailPanel } from "@/shared/components/leads/LeadDetailPanel";
 import { LeadList } from "@/shared/components/leads/LeadList";
 import { LeadSearchFilterBar } from "@/shared/components/leads/LeadSearchFilterBar";
@@ -214,18 +218,24 @@ export function LeadsPageView({
   const isPanelOpen = panelMode !== "empty";
 
   return (
-    <ListCommandCenterLayout
+    <MasterListPageLayout
       title="Leads"
       subtitle="Track opportunities before they become customers"
+      density="compact"
       primaryAction={
         <button
           type="button"
           onClick={handleCreateLead}
-          className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
+          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
           Create Lead
         </button>
+      }
+      banners={
+        createError ? (
+          <SettingsAlertBanner tone="error">{createError}</SettingsAlertBanner>
+        ) : undefined
       }
       className={
         isPanelOpen
@@ -233,8 +243,9 @@ export function LeadsPageView({
           : undefined
       }
     >
-      <section
-        className={`flex min-h-[16rem] min-w-0 lg:flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
+      <MasterPageSurface
+        variant="card"
+        className={`flex min-h-[16rem] min-w-0 lg:min-h-0 lg:flex-1 flex-col ${
           isPanelOpen ? "max-lg:hidden" : ""
         }`}
       >
@@ -285,13 +296,7 @@ export function LeadsPageView({
             />
           )}
         </div>
-      </section>
-
-      {createError ? (
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 lg:col-span-2">
-          {createError}
-        </p>
-      ) : null}
+      </MasterPageSurface>
 
       <LeadDetailPanel
         mode={panelMode}
@@ -305,6 +310,6 @@ export function LeadsPageView({
         onCreateCancel={handleClosePanel}
         onLeadUpdated={handleLeadUpdated}
       />
-    </ListCommandCenterLayout>
+    </MasterListPageLayout>
   );
 }
