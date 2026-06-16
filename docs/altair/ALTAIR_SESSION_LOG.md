@@ -214,24 +214,23 @@
 
 ---
 
-## 2026-06-16 — Master Shell V2 Final Documentation Sync
+## 2026-06-16 — V2 Final Polish & Beta-Ready Documentation Sync
 
 **Scope:** Living status/planning docs only. No app code, routes, server actions, Supabase queries, RLS, or product logic changes.
 
-**Master Shell V2 architecture migration — complete** across major admin surfaces:
+**Documented complete V2 experience layer on major admin surfaces:**
 
-- **List pages (7):** Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items — `MasterListPageLayout` + tokens
-- **Detail pages (5):** Customer 360, Job, Estimate, Invoice, Team Member Profile
-- **Hub:** Network
-- **Admin form hubs:** Settings, System Check, Invoice Edit, Customer Import Wizard
-- **Time / Time Clock:** Time Clock, Admin Time Tracking
-- **Report/dashboard:** Reports, Tax Summary, Dashboard (loaded + loading)
-- **Dispatch (Phases 1–4):** shell wrapper, loading state, board surface, workbench row token — desktop/mobile smoke tests passed
+- **Master Shell V2** — architecture migration complete (list, detail, hub, form, time, report/dashboard, Dispatch Phases 1–4)
+- **Visual Polish Passes A–F** — surface/canvas foundation, action/header rhythm, loading fidelity, detail section surface alignment, billing overlay loaded/loading parity, narrow density standardization
+- **Micro-Interaction Batch A** — list row feedback, nav focus/`aria-current`, dispatch workload active filter state, secondary button press feedback, segmented-control tokens
+- **Micro-Interaction Batch B** — form focus polish, empty-state action polish, pending feedback, panel/header micro-states, reduced-motion coverage
+- **Interaction Bug-Fix Pass A** — `/time` nav mismatch, Customer Import drag/drop, Invoice Edit validation feedback, Invoices selection reset, Dispatch feedback scoping
+- **Pre-beta interaction fixes** — Dispatch pending assignment guard, desktop Escape behavior, Invoices bulk selection during search/filter, Labor nav href mismatch
 
-**Legacy cleanup:** `ListCommandCenterLayout` and `ListCommandCenterLoadingState` **removed**.
+**Focused smoke test passed (2026-06-16):** Dispatch assign/unassign pending guard, desktop Escape panel behavior, Invoices bulk selection, Labor nav for `/time` and `/time-clock`; no obvious regressions.
 
-**Deferred:** Dispatch Phase 5 mobile viewport lock — intentionally skipped; board must remain visible under mobile sheets.
+**Current status:** Beta-ready with authenticated production/user-data smoke recommended.
 
-**Next phase:** Visual polish and premium experience refinement (Phase 8), not broad architecture migration. Then Command Center / Workspace prototype adoption (Phase 6) and Technician Experience V2.
+**Deferred post-beta (unless smoke finds gaps):** Dispatch Phase 5 mobile viewport lock, Micro-Interaction Batch C, Technician Experience V2, Command Center / Workspace production adoption, broad dark mode, route/page transitions.
 
 **Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md`, `shared/design-system/shell/README.md`, this log.

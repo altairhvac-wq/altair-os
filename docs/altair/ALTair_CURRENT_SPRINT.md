@@ -1,6 +1,6 @@
 # Altair Current Sprint
 
-Sprint: **Master Shell V2 Complete — Visual Polish & Premium Experience Next**
+Sprint: **V2 Polish Complete — Beta Readiness & Authenticated Smoke**
 
 Last Updated: 2026-06-16
 
@@ -8,9 +8,11 @@ Last Updated: 2026-06-16
 
 ## Goal
 
-Master Shell V2 architecture migration across major admin surfaces is **complete**. Remaining V2 work is visual polish and experience refinement — not broad page-family migration.
+Master Shell V2, Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete** on major admin surfaces.
 
-Shell work remains **experience-layer architecture** — reducing mental load and making Altair feel calm, organized, intelligent, and premium. No product logic, routes, server actions, permissions, or business logic changes.
+**Current status:** Beta-ready with authenticated production/user-data smoke recommended. This is not “feature complete forever” and not “needs more polish before beta.”
+
+Shell and polish work remains **experience-layer architecture** — reducing mental load and making Altair feel calm, organized, intelligent, and premium. No product logic, routes, server actions, permissions, or business logic changes.
 
 ---
 
@@ -65,12 +67,67 @@ All use `MasterDetailPageLayout` + `MasterDetailPageLoadingState`.
 - Phase 3: board panel surface
 - Phase 4: workbench row token alignment (`masterWorkbenchRowClass`)
 - Desktop and mobile smoke tests **passed**
-- **Phase 5 mobile viewport lock — intentionally deferred/skipped** (board must remain visible under mobile sheets)
+- **Phase 5 mobile viewport lock — intentionally deferred** (board must remain visible under mobile sheets)
 
 ### Legacy Cleanup (Done)
 
 - `ListCommandCenterLayout` — **removed**
 - `ListCommandCenterLoadingState` — **removed**
+
+---
+
+## Completed — Visual Polish Passes A–F
+
+| Pass | Focus |
+|------|-------|
+| **A** | Surface/canvas foundation |
+| **B** | Action/header rhythm |
+| **C** | Loading fidelity |
+| **D** | Detail section surface alignment |
+| **E** | Billing overlay loaded/loading parity |
+| **F** | Narrow density standardization |
+
+---
+
+## Completed — Micro-Interaction Batch A
+
+- List row feedback
+- Nav focus / `aria-current`
+- Dispatch workload active filter state
+- Secondary button press feedback
+- Segmented-control tokens
+
+---
+
+## Completed — Micro-Interaction Batch B
+
+- Form focus polish
+- Empty-state action polish
+- Pending feedback
+- Panel/header micro-states
+- Reduced-motion coverage
+
+---
+
+## Completed — Interaction Bug-Fix Pass A
+
+- `/time` nav mismatch
+- Customer Import drag/drop
+- Invoice Edit validation feedback
+- Invoices selection reset behavior
+- Dispatch feedback scoping
+
+---
+
+## Completed — Pre-Beta Interaction Fixes
+
+Focused smoke test passed (2026-06-16):
+
+- Dispatch assign/unassign pending guard
+- Dispatch desktop Escape no longer unexpectedly closes inline detail panel
+- Invoices bulk selection during search/filter changes
+- Labor nav href mismatch (`/time`, `/time-clock`)
+- No obvious regressions found
 
 ---
 
@@ -89,35 +146,32 @@ All use `MasterDetailPageLayout` + `MasterDetailPageLoadingState`.
 
 ## Current Focus
 
-**Visual polish and premium experience refinement** on top of completed Master Shell architecture. No new page-family migrations unless a new admin surface is added.
+**Beta readiness** — authenticated production/user-data smoke and first external company onboarding prep.
 
-Candidate polish items (non-blocking):
-
-- Overlay/detail consistency (`MasterDetailPageLayout` for estimate/invoice overlays)
-- Loading skeleton alignment (e.g. Estimates summary strip)
-- Motion, micro-interactions, and signature-layer adoption where appropriate
-- Dispatch Phase 5 mobile viewport lock — **deferred**; do not implement without explicit decision
+Do not start additional polish unless smoke finds gaps.
 
 ---
 
-## Next Phase (After Master Shell V2)
+## Deferred (Post-Beta Unless Smoke Finds Gaps)
 
-1. **Visual polish & premium experience** — consistency, motion, delight on migrated surfaces
-2. **Command Center / Workspace prototype adoption** (Phase 6) — production dashboard and workspace modules
-3. **Technician Experience V2** — eliminate `/tech` mock infrastructure; field-optimized layouts
-4. **Internal/platform surfaces** — migrate only if needed for beta (`/alpha-tracker`, `/platform`)
+- Dispatch Phase 5 mobile viewport lock
+- Micro-Interaction Batch C
+- Technician Experience V2 (`/tech` mock cleanup)
+- Command Center / Workspace production adoption (Phase 6)
+- Broad dark mode
+- Route/page transitions
+- Overlay/detail consistency (`MasterDetailPageLayout` for estimate/invoice overlays)
+- Internal/platform surfaces (`/alpha-tracker`, `/platform`) — only if needed for beta
 
 ---
 
 ## Out of Scope
 
 - Global `AdminShell` chrome replacement
-- V2 Command Center / Workspace prototype adoption into production nav (future Phase 6)
 - Feature work or new modules
-- Dispatch Phase 5 mobile viewport lock (deferred)
 - Database schemas, server actions, routes, permissions, business logic, Supabase/RLS
 
-Only change presentational structure, layout primitives, loading skeletons, and visual refinement.
+Only change presentational structure, layout primitives, loading skeletons, and visual refinement when explicitly scoped.
 
 ---
 

@@ -168,7 +168,9 @@ This section tracks **layout architecture only** — not feature completeness. S
 
 **Principle:** Shell migrations are experience-layer architecture only. No product logic, routes, server actions, Supabase behavior, or RLS assumptions change during migration.
 
-**Summary:** Master Shell V2 coverage is **complete** for major admin surfaces. Remaining V2 work is visual polish and experience refinement.
+**Summary:** Master Shell V2 coverage is **complete** for major admin surfaces. Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete**.
+
+**Current status:** Beta-ready with authenticated production/user-data smoke recommended — not “feature complete forever,” not “needs more polish before beta.”
 
 ## Experience 1: Command Center
 
@@ -177,7 +179,7 @@ This section tracks **layout architecture only** — not feature completeness. S
 | Dashboard (`/`) | **Complete** — loaded view + loading state on Master Shell |
 | Notifications | Not migrated |
 
-**Next:** Command Center prototype patterns (Phase 6) and visual polish.
+**Next:** Command Center prototype patterns (Phase 6) — deferred post-beta.
 
 ## Experience 2: Workspace
 
@@ -235,9 +237,21 @@ Workspace list and detail families are the reference implementations for the res
 | `/alpha-tracker`, `/platform`, `/platform/bugs` | Internal/platform utility |
 | `/workspace-v1`, `/command-center-v1`, `/altair-design-lab` | Design prototypes |
 
-## Next Phase (After Master Shell V2)
+## V2 Polish & Interaction Status (Complete)
 
-1. **Visual polish & premium experience** — motion, consistency, delight on migrated surfaces
+| Track | Status |
+|-------|--------|
+| Visual Polish Passes A–F | **Complete** |
+| Micro-Interaction Batch A | **Complete** |
+| Micro-Interaction Batch B | **Complete** |
+| Interaction Bug-Fix Pass A | **Complete** |
+| Pre-beta interaction fixes | **Complete** — focused smoke passed 2026-06-16 |
+
+## Deferred (Post-Beta Unless Smoke Finds Gaps)
+
+1. **Micro-Interaction Batch C**
 2. **Command Center / Workspace prototype adoption** (Phase 6)
 3. **Technician Experience V2**
-4. **Deferred:** Dispatch Phase 5 mobile viewport lock — evaluate only if needed
+4. **Dispatch Phase 5 mobile viewport lock**
+5. **Broad dark mode**
+6. **Route/page transitions**

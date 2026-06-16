@@ -6,6 +6,8 @@ Experience-layer redesign roadmap. Does not track feature development — see `A
 
 **Rule:** Shell migrations do not alter product logic, routes, server actions, Supabase behavior, or RLS assumptions.
 
+**Current status:** Beta-ready with authenticated production/user-data smoke recommended. Master Shell V2, Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are complete on major admin surfaces.
+
 ---
 
 ## Phase 0 — Experience Mapping
@@ -83,29 +85,54 @@ Legacy `ListCommandCenterLayout` and `ListCommandCenterLoadingState` **removed**
 | 2 — Loading state | **Complete** | `DispatchLoadingState` aligned |
 | 3 — Board panel surface | **Complete** | `MasterPageSurface` panel variant |
 | 4 — Workbench row token | **Complete** | `masterWorkbenchRowClass`; smoke tests passed (desktop + mobile) |
-| 5 — Mobile viewport lock | **Deferred/skipped** | Dispatch mobile behavior differs from list pages; board must stay visible under sheets |
+| 5 — Mobile viewport lock | **Deferred** | Dispatch mobile behavior differs from list pages; board must stay visible under sheets |
 
 ---
 
 ## Phase 6 — Experience Prototype Adoption
 
-**Status:** Next recommended phase (after visual polish)
+**Status:** Deferred (post-beta)
 
-Adopt Command Center and Workspace prototype patterns into production dashboard and workspace modules. Master Shell architecture is complete; this phase is experience refinement, not layout migration.
+Adopt Command Center and Workspace prototype patterns into production dashboard and workspace modules. Not required before beta.
 
 ---
 
 ## Phase 7 — Technician Experience V2
 
-**Status:** Not started
+**Status:** Deferred (post-beta)
 
 - Eliminate `/tech` mock infrastructure
 - Field-optimized layouts under appropriate shell families
 
 ---
 
-## Phase 8 — Micro Interactions & Polish
+## Phase 8 — Visual Polish & Micro-Interactions
 
-**Status:** Active — primary V2 focus after Master Shell completion
+**Status:** Complete (Passes A–F, Batches A–B, Bug-Fix Pass A, pre-beta fixes)
 
-Motion, delight, consistency, and premium feel on migrated admin surfaces. Includes overlay/detail consistency, skeleton alignment, and selective V2 component/signature-layer adoption.
+| Sub-phase | Status | Coverage |
+|-----------|--------|----------|
+| Visual Polish Pass A | **Complete** | Surface/canvas foundation |
+| Visual Polish Pass B | **Complete** | Action/header rhythm |
+| Visual Polish Pass C | **Complete** | Loading fidelity |
+| Visual Polish Pass D | **Complete** | Detail section surface alignment |
+| Visual Polish Pass E | **Complete** | Billing overlay loaded/loading parity |
+| Visual Polish Pass F | **Complete** | Narrow density standardization |
+| Micro-Interaction Batch A | **Complete** | List row feedback, nav focus/`aria-current`, dispatch workload filter, secondary button press, segmented-control tokens |
+| Micro-Interaction Batch B | **Complete** | Form focus, empty-state actions, pending feedback, panel/header micro-states, reduced-motion |
+| Micro-Interaction Batch C | **Deferred** | Only if beta smoke finds gaps |
+| Interaction Bug-Fix Pass A | **Complete** | `/time` nav, Customer Import drag/drop, Invoice Edit validation, Invoices selection reset, Dispatch feedback scoping |
+| Pre-beta interaction fixes | **Complete** | Dispatch pending guard, desktop Escape, Invoices bulk selection, Labor nav href |
+
+**Deferred polish/experience items (not blocking beta):**
+
+- Broad dark mode
+- Route/page transitions
+- Overlay/detail consistency (`MasterDetailPageLayout` for estimate/invoice overlays)
+- `EstimatesLoadingState` summary strip skeleton alignment
+
+---
+
+## Next Operational Step
+
+Authenticated production/user-data smoke — validate core workflows on real tenant data before first external company onboarding.

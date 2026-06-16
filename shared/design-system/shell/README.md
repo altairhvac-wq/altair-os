@@ -2,9 +2,11 @@
 
 Reusable page structure inside `AdminShell` main. Does not replace global navigation or auth chrome.
 
-Master Shell V2 architecture migration is **complete** across major admin surfaces. Remaining work is visual polish and experience refinement, not broad page-family migration.
+Master Shell V2 architecture migration is **complete** across major admin surfaces. Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete**.
 
-## Surface system (Pass A)
+**Current status:** Beta-ready with authenticated production/user-data smoke recommended — not broad page-family migration or additional polish before beta unless smoke finds gaps.
+
+## Surface system (Visual Polish Pass A — complete)
 
 Three shared tiers — defined in `app/globals.css`, consumed via CSS classes and shell tokens:
 
@@ -164,12 +166,19 @@ Reference: Operational Dashboard, Reports, Tax Summary.
 
 - Dispatch Phase 5 mobile viewport lock — board must remain visible under mobile sheets; do not apply list-page viewport lock pattern
 
-**Next recommended phase (not architecture migration):**
+## V2 polish & interaction status (complete)
 
-1. Visual polish and premium experience refinement
-2. Overlay/detail consistency pass (`MasterDetailPageLayout` for estimate/invoice overlays)
-3. Command Center / Workspace prototype adoption (Phase 6)
-4. Internal/platform surfaces only if needed for beta
+| Track | Status |
+|-------|--------|
+| Visual Polish Passes A–F | **Complete** |
+| Micro-Interaction Batch A | **Complete** |
+| Micro-Interaction Batch B | **Complete** |
+| Interaction Bug-Fix Pass A | **Complete** |
+| Pre-beta interaction fixes | **Complete** |
+
+**Deferred post-beta (unless smoke finds gaps):** Dispatch Phase 5 mobile viewport lock, Micro-Interaction Batch C, overlay/detail consistency pass, Command Center / Workspace adoption, broad dark mode, route/page transitions.
+
+**Next operational step:** Authenticated production/user-data smoke before first external company onboarding.
 
 **Active layout helpers:**
 
@@ -181,8 +190,9 @@ Reference: Operational Dashboard, Reports, Tax Summary.
 | `PageSummaryStrip` | Active (summary strips on migrated list pages) |
 | `JobContextFilterBanner` | Active (invoices, expenses, time) |
 
-**Known inconsistencies (non-blocking):**
+**Known inconsistencies (non-blocking for beta):**
 
-- Estimate/invoice overlay **loading** states still use ad-hoc skeleton wrappers (E2 pass).
+- Invoice/estimate overlay modes use `FocusedDocumentOverlay` + detail canvas instead of full `MasterDetailPageLayout` (overlay consistency deferred)
+- `EstimatesLoadingState` summary strip skeleton alignment (non-blocking)
 
-**Dispatch:** Phases 1–4 complete (Master Shell scaffold, loading state, board surface, workbench row token). Desktop and mobile smoke tests passed. Phase 5 mobile viewport lock **deferred/skipped** — Dispatch mobile behavior differs from list pages.
+**Dispatch:** Phases 1–4 complete (Master Shell scaffold, loading state, board surface, workbench row token). Desktop and mobile smoke tests passed; pre-beta interaction fixes complete. Phase 5 mobile viewport lock **deferred** — Dispatch mobile behavior differs from list pages.
