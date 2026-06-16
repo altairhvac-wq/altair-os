@@ -6,7 +6,7 @@ Experience-layer redesign roadmap. Does not track feature development — see `A
 
 **Rule:** Shell migrations do not alter product logic, routes, server actions, Supabase behavior, or RLS assumptions.
 
-**Current status:** Beta-ready with authenticated production/user-data smoke recommended. Master Shell V2, Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are complete on major admin surfaces.
+**Current status:** Beta-ready foundation complete; Signature Visual Layer next. Master Shell V2, Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are complete on major admin surfaces.
 
 ---
 
@@ -89,9 +89,36 @@ Legacy `ListCommandCenterLayout` and `ListCommandCenterLoadingState` **removed**
 
 ---
 
+## Phase 9 — Altair Signature Visual Layer
+
+**Status:** Next (planning)
+
+Visible product identity on top of the complete Master Shell / polish / micro-interaction baseline. **Comes before** Command Center / Workspace production adoption (Phase 6).
+
+Founder feedback (2026-06-16): the app is structurally consistent and beta-ready, but still reads too plain — closer to generic admin SaaS than a signature business operating system. Future work must not loop on small polish passes.
+
+**Goal:**
+
+- Visible screenshot-level visual upgrade
+- Stronger first impression and richer app canvas
+- Stronger page hero/header treatment
+- Branded operational accents
+- Richer metric/status cards and premium empty states
+- Less “white card/table SaaS,” more “business operating system”
+
+**Must preserve:** routes, product logic, Supabase/RLS/server actions, Dispatch behavior, billing/payment/status behavior, overlay routing, mobile sheets.
+
+**Is not:** random gradients, flashy animation, Dribbble redesign, fake AI features, gamification, broad route transitions, page-by-page one-off decoration.
+
+**Assets:** V2 components (`shared/design-system/components/`), signature primitives (`shared/design-system/signature/`), experience prototypes (`/command-center-v1`, `/workspace-v1`). Art direction: `ALTAIR_ART_DIRECTION.md`.
+
+**First adoption targets:** Dashboard, Dispatch, list pages, detail pages.
+
+---
+
 ## Phase 6 — Experience Prototype Adoption
 
-**Status:** Deferred (post-beta)
+**Status:** Deferred — after Signature Visual Layer (Phase 9)
 
 Adopt Command Center and Workspace prototype patterns into production dashboard and workspace modules. Not required before beta.
 
@@ -135,4 +162,5 @@ Adopt Command Center and Workspace prototype patterns into production dashboard 
 
 ## Next Operational Step
 
-Authenticated production/user-data smoke — validate core workflows on real tenant data before first external company onboarding.
+1. Authenticated production/user-data smoke — validate core workflows on real tenant data before first external company onboarding.
+2. Altair Signature Visual Layer audit/planning pass — phased rollout plan before production adoption.

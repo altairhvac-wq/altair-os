@@ -4,7 +4,7 @@ Reusable page structure inside `AdminShell` main. Does not replace global naviga
 
 Master Shell V2 architecture migration is **complete** across major admin surfaces. Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete**.
 
-**Current status:** Beta-ready with authenticated production/user-data smoke recommended — not broad page-family migration or additional polish before beta unless smoke finds gaps.
+**Current status:** Beta-ready foundation complete; Signature Visual Layer next. Authenticated production/user-data smoke recommended — not broad page-family migration or additional consistency polish unless smoke finds gaps.
 
 ## Surface system (Visual Polish Pass A — complete)
 
@@ -176,7 +176,9 @@ Reference: Operational Dashboard, Reports, Tax Summary.
 | Interaction Bug-Fix Pass A | **Complete** |
 | Pre-beta interaction fixes | **Complete** |
 
-**Deferred post-beta (unless smoke finds gaps):** Dispatch Phase 5 mobile viewport lock, Micro-Interaction Batch C, overlay/detail consistency pass, Command Center / Workspace adoption, broad dark mode, route/page transitions.
+**Deferred post-beta (unless smoke finds gaps):** Dispatch Phase 5 mobile viewport lock, Micro-Interaction Batch C, overlay/detail consistency pass, broad dark mode, route/page transitions.
+
+**Next design track — Altair Signature Visual Layer (Phase 9):** Visible product identity on top of this shell baseline. Not more polish. Must preserve routes, product logic, Supabase/RLS/server actions, Dispatch behavior, billing/payment/status, overlay routing, and mobile sheets. First targets: Dashboard, Dispatch, list pages, detail pages. See `docs/altair/ALTair_V2_ROADMAP.md` and `docs/altair/ALTair_MASTER_STATUS.md`.
 
 **Next operational step:** Authenticated production/user-data smoke before first external company onboarding.
 

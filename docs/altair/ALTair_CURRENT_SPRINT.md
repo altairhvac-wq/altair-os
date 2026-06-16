@@ -1,6 +1,6 @@
 # Altair Current Sprint
 
-Sprint: **V2 Polish Complete — Beta Readiness & Authenticated Smoke**
+Sprint: **Authenticated Beta Smoke + Signature Visual Layer Planning**
 
 Last Updated: 2026-06-16
 
@@ -10,9 +10,9 @@ Last Updated: 2026-06-16
 
 Master Shell V2, Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete** on major admin surfaces.
 
-**Current status:** Beta-ready with authenticated production/user-data smoke recommended. This is not “feature complete forever” and not “needs more polish before beta.”
+**Current status:** Beta-ready foundation complete; Signature Visual Layer next. Authenticated production/user-data smoke recommended. This is not “feature complete forever” and not “needs more polish before beta.”
 
-Shell and polish work remains **experience-layer architecture** — reducing mental load and making Altair feel calm, organized, intelligent, and premium. No product logic, routes, server actions, permissions, or business logic changes.
+Shell, polish, and signature work remain **experience-layer architecture** — reducing mental load and making Altair feel calm, organized, intelligent, and premium. No product logic, routes, server actions, permissions, or business logic changes.
 
 ---
 
@@ -146,13 +146,38 @@ Focused smoke test passed (2026-06-16):
 
 ## Current Focus
 
-**Beta readiness** — authenticated production/user-data smoke and first external company onboarding prep.
-
-Do not start additional polish unless smoke finds gaps.
+1. **Authenticated production/user-data smoke** — validate core workflows on real tenant data before first external company onboarding.
+2. **Altair Signature Visual Layer planning** — audit and phase visible identity upgrades; do not start another small polish pass.
 
 ---
 
-## Deferred (Post-Beta Unless Smoke Finds Gaps)
+## Next Major Design Track — Altair Signature Visual Layer
+
+**Not “more polish.”** Master Shell V2, Visual Polish A–F, and Micro-Interaction A–B created the baseline. Founder feedback: the app is consistent and stable, but still too plain — too close to standard admin SaaS (white/gray canvas, cards, tables, filters, headers).
+
+**Goal:**
+
+- Visible screenshot-level visual upgrade
+- Stronger first impression
+- Richer app canvas
+- Stronger page hero/header treatment
+- More branded operational accents
+- Richer metric/status cards
+- More premium empty states
+- Less generic “white card/table SaaS”
+- More “business operating system”
+
+**Must preserve:** routes, product logic, Supabase/RLS/server actions, Dispatch behavior, billing/payment/status behavior, overlay routing, mobile sheets.
+
+**Is not:** random gradients, flashy animation, Dribbble redesign, fake AI features, gamification, broad route transitions, page-by-page one-off decoration.
+
+**Reference:** `shared/design-system/components/`, `shared/design-system/signature/`, `/command-center-v1`, `/workspace-v1`, `/altair-design-lab`, `ALTAIR_ART_DIRECTION.md`.
+
+**First adoption targets:** Dashboard, Dispatch, list pages, detail pages.
+
+---
+
+## Deferred (After Signature Visual Layer Unless Smoke Finds Gaps)
 
 - Dispatch Phase 5 mobile viewport lock
 - Micro-Interaction Batch C

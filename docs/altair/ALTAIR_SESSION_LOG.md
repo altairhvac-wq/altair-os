@@ -234,3 +234,25 @@
 **Deferred post-beta (unless smoke finds gaps):** Dispatch Phase 5 mobile viewport lock, Micro-Interaction Batch C, Technician Experience V2, Command Center / Workspace production adoption, broad dark mode, route/page transitions.
 
 **Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md`, `shared/design-system/shell/README.md`, this log.
+
+---
+
+## 2026-06-16 — Signature Visual Layer Documentation Sync (Founder Feedback)
+
+**Scope:** Living status/planning docs only. No app code, routes, server actions, Supabase queries, RLS, or product logic changes.
+
+**Context:** Master Shell V2, Visual Polish A–F, Micro-Interaction A–B, Interaction Bug-Fix Pass A, pre-beta interaction fixes, and focused smoke test are all complete. Altair is beta-ready with authenticated production/user-data smoke recommended.
+
+**Founder feedback:** The app is structurally consistent, safer, and more polished — but still does not feel visually transformed enough. It reads too plain and too close to standard admin SaaS (white/gray canvas, cards, tables, filters, headers). This is not a failure of Master Shell work; the shell created the stable foundation. The next design phase must target visible product identity, not small polish passes.
+
+**Docs updated to establish next major track — Altair Signature Visual Layer:**
+
+- Master Shell V2, visual polish baseline, and micro-interaction baseline marked complete
+- Beta status reaffirmed: beta-ready with authenticated owner/user-data smoke recommended
+- Next design track named and scoped (visible upgrade, richer canvas, hero treatment, branded accents, premium empty states — not random gradients, Dribbble redesign, or page-by-page decoration)
+- Non-negotiable preserves documented: routes, product logic, Supabase/RLS/server actions, Dispatch, billing, overlays, mobile sheets
+- Command Center / Workspace production adoption explicitly sequenced after Signature Visual Layer
+
+**Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md`, `shared/design-system/shell/README.md`, `ALTAIR_ART_DIRECTION.md` (living note), this log.
+
+**Recommended next prompt:** Altair Signature Visual Layer audit/planning pass.

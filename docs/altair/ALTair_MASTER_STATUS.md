@@ -4,18 +4,23 @@ Last Updated: 2026-06-16
 
 ## Current Stage
 
-Status: **Beta-ready with authenticated production/user-data smoke recommended**
+Status: **Beta-ready foundation complete; Signature Visual Layer next**
 
 Altair OS is a production-grade multi-tenant field service operating system preparing for small company beta testing.
 
-Master Shell V2 architecture migration, Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete** on major admin surfaces. Remaining work is operational validation and deferred experience tracks — not broad polish before beta.
+Master Shell V2 architecture migration, Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete** on major admin surfaces. Focused smoke test passed (2026-06-16).
+
+**Beta status:** Beta-ready with authenticated production/user-data smoke recommended before first external company onboarding.
+
+**Next major design track:** Altair Signature Visual Layer — not more consistency polish. The Master Shell created the stable foundation; the product still reads too close to generic admin SaaS (white/gray canvas, cards, tables, filters, headers). The next phase must deliver visible screenshot-level identity and a richer “business operating system” feel.
 
 Parallel tracks:
 
 1. **Beta readiness** — authenticated smoke on production/user data, onboarding, operational trust
-2. **Deferred experience tracks** — Command Center / Workspace adoption, Technician Experience V2, broad dark mode, route transitions (post-beta unless smoke finds gaps)
+2. **Altair Signature Visual Layer** — visible product identity on top of the shell baseline (planning → phased adoption)
+3. **Deferred experience tracks** — Command Center / Workspace production adoption, Technician Experience V2, broad dark mode, route transitions (after Signature Visual Layer unless smoke finds gaps)
 
-The redesign is **experience-layer architecture**, not feature work. Shell and polish passes do not change product logic, routes, server actions, Supabase behavior, or RLS assumptions.
+The redesign is **experience-layer architecture**, not feature work. Shell, polish, and signature layers do not change product logic, routes, server actions, Supabase behavior, or RLS assumptions.
 
 **North star:** Reduce mental load. Altair should feel calm, organized, intelligent, and premium — not like another management system.
 
@@ -149,6 +154,38 @@ No obvious regressions found in focused smoke.
 
 ---
 
+## Altair Signature Visual Layer — Next Major Design Track
+
+**Status:** Planning (not started)
+
+The app is structurally consistent and safer after Master Shell V2, but founder feedback is clear: it still does not feel visually transformed enough. Consistency across pages is not the same as signature product identity. Do not keep making tiny polish changes — the next phase is a deliberate visual layer.
+
+**Goal:** Visible screenshot-level upgrade, stronger first impression, richer app canvas, stronger page hero/header treatment, branded operational accents, richer metric/status cards, premium empty states — less generic “white card/table SaaS,” more “business operating system.”
+
+**Must preserve (non-negotiable):**
+
+- Routes
+- Product logic
+- Supabase / RLS / server actions
+- Dispatch behavior
+- Billing / payment / status behavior
+- Overlay routing
+- Mobile sheets
+
+**Is not:**
+
+- Random gradients
+- Flashy animation
+- Dribbble redesign
+- Fake AI features
+- Gamification
+- Broad route transitions
+- Page-by-page one-off decoration
+
+**Reference assets (isolated, not yet on production):** V2 components in `shared/design-system/components/`, signature primitives in `shared/design-system/signature/`, prototypes at `/command-center-v1`, `/workspace-v1`, `/altair-design-lab`. See `ALTAIR_ART_DIRECTION.md` and `ALTair_V2_ROADMAP.md` Phase 9.
+
+---
+
 ## Current Priorities
 
 ### Priority 1: Beta Readiness (Active)
@@ -159,16 +196,22 @@ Prepare Altair for real companies to onboard and operate daily.
 
 Focus: friction reduction, trust, onboarding, duplicate workflow elimination.
 
-### Priority 2: Deferred Experience Tracks (Post-Beta Unless Smoke Finds Gaps)
+### Priority 2: Altair Signature Visual Layer (Next Design Track)
 
-- Command Center / Workspace prototype adoption (Phase 6)
+Plan and phase visible identity upgrades on top of the complete shell/polish/micro-interaction baseline. Target signature composition moments first: Dashboard, Dispatch, list pages, detail pages.
+
+Do **not** label this work “more polish.” Do **not** repeat small consistency passes unless smoke finds functional gaps.
+
+### Priority 3: Deferred Experience Tracks (After Signature Visual Layer)
+
+- Command Center / Workspace production adoption (Phase 6)
 - Technician Experience V2 — eliminate `/tech` mock infrastructure
 - Dispatch Phase 5 mobile viewport lock
 - Micro-Interaction Batch C
 - Broad dark mode
 - Route/page transitions
 
-### Priority 3: Internal / Platform Surfaces
+### Priority 4: Internal / Platform Surfaces
 
 Migrate only if needed for beta: `/alpha-tracker`, `/platform`, `/platform/bugs`.
 
@@ -180,11 +223,13 @@ Migrate only if needed for beta: `/alpha-tracker`, `/platform`, `/platform/bugs`
 
 - Beta onboarding preparation
 - Authenticated production/user-data smoke (recommended before first external company)
+- Altair Signature Visual Layer planning
 
 ### Upcoming
 
+- Signature Visual Layer phased adoption (Dashboard, Dispatch, list pages, detail pages)
 - First external company beta testing
-- Command Center / Workspace prototype patterns (Phase 6) — deferred
+- Command Center / Workspace production adoption (Phase 6) — after Signature Visual Layer
 - Technician Experience V2 shell alignment — deferred
 
 ---
@@ -211,6 +256,7 @@ Success metrics:
 - Companies can create customers, estimates, jobs, and dispatch technicians
 - Technicians can complete work; companies can invoice and collect payments
 - Admin surfaces feel consistent, calm, and premium under Master Shell patterns
+- Signature Visual Layer plan approved with clear phased rollout (post-smoke)
 
 ---
 

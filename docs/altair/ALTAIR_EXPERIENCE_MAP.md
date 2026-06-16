@@ -170,7 +170,16 @@ This section tracks **layout architecture only** — not feature completeness. S
 
 **Summary:** Master Shell V2 coverage is **complete** for major admin surfaces. Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete**.
 
-**Current status:** Beta-ready with authenticated production/user-data smoke recommended — not “feature complete forever,” not “needs more polish before beta.”
+**Current status:** Beta-ready foundation complete; Signature Visual Layer next. Authenticated production/user-data smoke recommended — not “feature complete forever,” not “needs more polish before beta.”
+
+**Signature gap:** Most admin pages now share the same shell/polish baseline, but the product still lacks signature composition moments. Pages feel consistent yet too plain — still close to generic admin SaaS. The next design phase must add visible identity on top of the shell, starting with:
+
+- **Dashboard** — Command Center hero, pulse, and focus hierarchy (see `/command-center-v1` prototype)
+- **Dispatch** — richer operational canvas without changing board behavior
+- **List pages** — stronger headers, metric strips, and empty states (Workspace identity)
+- **Detail pages** — section rhythm and branded accents without one-off decoration
+
+Do not loop on small polish passes. See `ALTair_MASTER_STATUS.md` and Phase 9 in `ALTair_V2_ROADMAP.md`.
 
 ## Experience 1: Command Center
 
@@ -247,10 +256,10 @@ Workspace list and detail families are the reference implementations for the res
 | Interaction Bug-Fix Pass A | **Complete** |
 | Pre-beta interaction fixes | **Complete** — focused smoke passed 2026-06-16 |
 
-## Deferred (Post-Beta Unless Smoke Finds Gaps)
+## Deferred (After Signature Visual Layer Unless Smoke Finds Gaps)
 
 1. **Micro-Interaction Batch C**
-2. **Command Center / Workspace prototype adoption** (Phase 6)
+2. **Command Center / Workspace prototype adoption** (Phase 6) — follows Signature Visual Layer (Phase 9)
 3. **Technician Experience V2**
 4. **Dispatch Phase 5 mobile viewport lock**
 5. **Broad dark mode**
