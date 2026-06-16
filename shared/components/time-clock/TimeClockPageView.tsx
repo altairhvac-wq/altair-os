@@ -15,8 +15,18 @@ import {
   type MockTimeEntryStatus,
 } from "@/shared/types/time-entry-mock";
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
+import {
+  MasterContentStack,
+  MasterPageCanvas,
+  MasterPageSurface,
+  MasterShellPage,
+} from "@/shared/design-system/shell";
+import {
+  masterListPageScrollRegionClass,
+  masterListPageSurfaceClass,
+} from "@/shared/design-system/shell/tokens";
 import { TimeClockEmptyState } from "./TimeClockEmptyState";
-import { TimeClockLoadingState } from "./TimeClockLoadingState";
+import { TimeClockPageViewLoadingState } from "./TimeClockLoadingState";
 import { TimeClockWidget } from "./TimeClockWidget";
 import { TimeEntriesTable } from "./TimeEntriesTable";
 import { TimeEntryDetailsPanel } from "./TimeEntryDetailsPanel";
@@ -199,83 +209,90 @@ export function TimeClockPageView() {
   }
 
   if (isLoading) {
-    return <TimeClockLoadingState />;
+    return <TimeClockPageViewLoadingState />;
   }
 
   const hasNoEntries = entries.length === 0;
   const hasNoResults = !hasNoEntries && filteredEntries.length === 0;
 
   return (
-    <div className="flex flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:overflow-hidden">
-      <WeeklySummaryCards entries={entries} />
+    <MasterShellPage fillViewport density="compact">
+      <MasterPageCanvas width="standard" className="min-h-0 flex-1">
+        <MasterContentStack density="compact" scrollable className="min-h-0 flex-1">
+          <WeeklySummaryCards entries={entries} />
 
-      <TimeClockWidget
-        activeSession={activeSession}
-        onClockIn={handleClockIn}
-        onClockOut={handleClockOut}
-      />
+          <TimeClockWidget
+            activeSession={activeSession}
+            onClockIn={handleClockIn}
+            onClockOut={handleClockOut}
+          />
 
-      <div className="flex min-h-0 lg:flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">
-        <section className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1`}>
-          <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">
-                All time entries
-              </h2>
-              <p className="text-xs text-slate-500">
-                Field hours, job links, and approval workflow
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleNewEntry}
-              className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
+          <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">
+            <MasterPageSurface
+              variant="card"
+              className={`${listDetailListSectionClassName} ${masterListPageSurfaceClass} flex-[1_1_55%] lg:overflow-hidden`}
             >
-              <Plus className="h-4 w-4" />
-              Manual Entry
-            </button>
+              <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">
+                    All time entries
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Field hours, job links, and approval workflow
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleNewEntry}
+                  className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
+                >
+                  <Plus className="h-4 w-4" />
+                  Manual Entry
+                </button>
+              </div>
+
+              {!hasNoEntries ? (
+                <div className="shrink-0">
+                  <TimeSearchFilterBar
+                    search={search}
+                    statusFilter={statusFilter}
+                    onSearchChange={setSearch}
+                    onStatusFilterChange={setStatusFilter}
+                    resultCount={filteredEntries.length}
+                  />
+                </div>
+              ) : null}
+
+              <div className={masterListPageScrollRegionClass}>
+                {hasNoEntries ? (
+                  <TimeClockEmptyState
+                    variant="no-entries"
+                    onCreateEntry={handleNewEntry}
+                  />
+                ) : hasNoResults ? (
+                  <TimeClockEmptyState variant="no-results" />
+                ) : (
+                  <TimeEntriesTable
+                    entries={filteredEntries}
+                    selectedId={selectedId}
+                    onSelect={handleSelectEntry}
+                  />
+                )}
+              </div>
+            </MasterPageSurface>
+
+            <TimeEntryDetailsPanel
+              mode={panelMode}
+              entry={selectedEntry}
+              onClose={handleClosePanel}
+              onCreateSubmit={handleCreateSubmit}
+              onEditSubmit={handleEditSubmit}
+              onCreateCancel={handleClosePanel}
+              onEdit={() => setPanelMode("edit")}
+            />
           </div>
-
-          {!hasNoEntries ? (
-            <div className="shrink-0">
-              <TimeSearchFilterBar
-                search={search}
-                statusFilter={statusFilter}
-                onSearchChange={setSearch}
-                onStatusFilterChange={setStatusFilter}
-                resultCount={filteredEntries.length}
-              />
-            </div>
-          ) : null}
-
-          <div className="min-h-0 flex-1 lg:overflow-y-auto">
-            {hasNoEntries ? (
-              <TimeClockEmptyState
-                variant="no-entries"
-                onCreateEntry={handleNewEntry}
-              />
-            ) : hasNoResults ? (
-              <TimeClockEmptyState variant="no-results" />
-            ) : (
-              <TimeEntriesTable
-                entries={filteredEntries}
-                selectedId={selectedId}
-                onSelect={handleSelectEntry}
-              />
-            )}
-          </div>
-        </section>
-
-        <TimeEntryDetailsPanel
-          mode={panelMode}
-          entry={selectedEntry}
-          onClose={handleClosePanel}
-          onCreateSubmit={handleCreateSubmit}
-          onEditSubmit={handleEditSubmit}
-          onCreateCancel={handleClosePanel}
-          onEdit={() => setPanelMode("edit")}
-        />
-      </div>
-    </div>
+        </MasterContentStack>
+      </MasterPageCanvas>
+    </MasterShellPage>
   );
 }
