@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   CircleHelp,
   Info,
-  ShieldCheck,
   XCircle,
 } from "lucide-react";
 import type {
@@ -12,6 +11,14 @@ import type {
   SystemCheckResult,
   SystemCheckStatus,
 } from "@/lib/system-check/types";
+import {
+  MasterContentStack,
+  MasterPageCanvas,
+  MasterPageHeader,
+  MasterPageSection,
+  MasterPageSurface,
+  MasterShellPage,
+} from "@/shared/design-system/shell";
 
 type SystemCheckPageViewProps = {
   report: SystemCheckReport;
@@ -43,6 +50,13 @@ const STATUS_META: Record<
   },
 };
 
+const SUMMARY_CARDS = [
+  { key: "pass", label: "Passing", valueClass: "text-emerald-700" },
+  { key: "fail", label: "Failing", valueClass: "text-rose-700" },
+  { key: "warn", label: "Warnings", valueClass: "text-amber-700" },
+  { key: "info", label: "Info", valueClass: "text-sky-700" },
+] as const;
+
 function SystemCheckRow({ check }: { check: SystemCheckResult }) {
   const meta = STATUS_META[check.status];
   const Icon = meta.icon;
@@ -70,98 +84,90 @@ function SystemCheckRow({ check }: { check: SystemCheckResult }) {
 
 export function SystemCheckPageView({ report }: SystemCheckPageViewProps) {
   const checkedAt = new Date(report.checkedAt).toLocaleString();
+  const lastCheckedNote = `Last checked ${checkedAt}. No secrets are displayed on this page.`;
 
   return (
-    <div className="min-w-0 max-w-full space-y-6">
-      <div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
-            <ShieldCheck className="h-5 w-5" aria-hidden="true" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">System Check</h1>
-            <p className="text-sm text-slate-600">
-              Read-only production readiness checks for the internal alpha.
-            </p>
-          </div>
-        </div>
-        <p className="mt-3 text-sm text-slate-500">
-          Last checked {checkedAt}. No secrets are displayed on this page.
-        </p>
-      </div>
+    <MasterShellPage density="compact">
+      <MasterPageCanvas width="standard">
+        <MasterContentStack density="compact">
+          <MasterPageHeader
+            title="System Check"
+            subtitle="Read-only production readiness checks for the internal alpha."
+            density="compact"
+            secondaryAction={
+              <p className="min-w-0 hidden break-words text-xs text-slate-500 sm:block sm:max-w-xs sm:text-right">
+                {lastCheckedNote}
+              </p>
+            }
+          />
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Passing
-          </p>
-          <p className="mt-2 text-2xl font-bold text-emerald-700">
-            {report.summary.pass}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Failing
-          </p>
-          <p className="mt-2 text-2xl font-bold text-rose-700">
-            {report.summary.fail}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Warnings
-          </p>
-          <p className="mt-2 text-2xl font-bold text-amber-700">
-            {report.summary.warn}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Info
-          </p>
-          <p className="mt-2 text-2xl font-bold text-sky-700">
-            {report.summary.info}
-          </p>
-        </div>
-      </section>
+          <p className="text-xs text-slate-500 sm:hidden">{lastCheckedNote}</p>
 
-      <section className="admin-card min-w-0 max-w-full overflow-x-clip">
-        <div className="border-b border-slate-100 px-4 py-4 sm:px-6">
-          <h2 className="text-lg font-bold text-slate-900">Checks</h2>
-          <p className="text-sm text-slate-600">
-            These probes are read-only and safe to run in production.
-          </p>
-        </div>
-        {report.checks.map((check) => (
-          <SystemCheckRow key={check.id} check={check} />
-        ))}
-      </section>
+          <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
+            {SUMMARY_CARDS.map((card) => (
+              <MasterPageSurface
+                key={card.key}
+                variant="card"
+                className="min-w-0 p-3 sm:p-3.5"
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                  {card.label}
+                </p>
+                <p
+                  className={`mt-1 truncate text-base font-bold sm:text-lg ${card.valueClass}`}
+                >
+                  {report.summary[card.key]}
+                </p>
+              </MasterPageSurface>
+            ))}
+          </div>
 
-      <section className="min-w-0 max-w-full rounded-2xl border border-dashed border-slate-300 bg-white p-5">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
-            <CircleHelp className="h-5 w-5" aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="font-semibold text-slate-900">Deploy documentation</h3>
-            <p className="mt-1 text-sm text-slate-600">
-              Use the repo checklists for Vercel env vars, Supabase Auth URLs,
-              and the full internal alpha smoke test.
-            </p>
-            <ul className="mt-3 space-y-1 text-sm text-cyan-700">
-              <li>
-                <Link href="/settings" className="hover:underline">
-                  Back to Settings
-                </Link>
-              </li>
-            </ul>
-            <p className="mt-3 text-xs text-slate-500">
-              See docs/internal-alpha-deployment-checklist.md and
-              docs/internal-alpha-smoke-test.md in the repository.
-            </p>
-          </div>
-        </div>
-      </section>
-    </div>
+          <MasterPageSection
+            title="Checks"
+            description="These probes are read-only and safe to run in production."
+            density="compact"
+          >
+            <MasterPageSurface
+              variant="card"
+              className="min-w-0 max-w-full overflow-x-clip"
+            >
+              {report.checks.map((check) => (
+                <SystemCheckRow key={check.id} check={check} />
+              ))}
+            </MasterPageSurface>
+          </MasterPageSection>
+
+          <MasterPageSection
+            title="Deploy documentation"
+            description="Use the repo checklists for Vercel env vars, Supabase Auth URLs, and the full internal alpha smoke test."
+            density="compact"
+          >
+            <MasterPageSurface
+              variant="section"
+              className="border-dashed border-slate-300 p-4 sm:p-5"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                  <CircleHelp className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <ul className="space-y-1 text-sm text-cyan-700">
+                    <li>
+                      <Link href="/settings" className="hover:underline">
+                        Back to Settings
+                      </Link>
+                    </li>
+                  </ul>
+                  <p className="mt-3 text-xs text-slate-500">
+                    See docs/internal-alpha-deployment-checklist.md and
+                    docs/internal-alpha-smoke-test.md in the repository.
+                  </p>
+                </div>
+              </div>
+            </MasterPageSurface>
+          </MasterPageSection>
+        </MasterContentStack>
+      </MasterPageCanvas>
+    </MasterShellPage>
   );
 }
