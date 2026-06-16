@@ -32,7 +32,7 @@ Components remain available for future experience adoption; Master Shell migrati
 
 ## Phase 2 — Master Shell Architecture
 
-**Status:** In progress — list, detail, hub, and admin form families complete
+**Status:** Complete — list, detail, hub, admin form, and report/dashboard families
 
 Shell primitives in `shared/design-system/shell/`:
 
@@ -43,31 +43,32 @@ Shell primitives in `shared/design-system/shell/`:
 | Master Detail Shell | **Complete** | Customer 360, Job, Estimate, Invoice, Team Member Profile |
 | Hub page shell | **Complete** | Network |
 | Settings / admin form hub | **Complete** | Settings, System Check |
-| Report / dashboard shell | **Next** | Reports overview (partial primitives); Tax Summary; Dashboard loading |
+| Report / dashboard shell | **Complete** | Reports, Tax Summary, Dashboard (loaded + loading) |
 | Board / workbench shell | **Pending** | Dispatch (deferred last) |
 
-Legacy `ListCommandCenterLayout` and `ListCommandCenterLoadingState` deprecated with zero active imports.
+Legacy `ListCommandCenterLayout` and `ListCommandCenterLoadingState` deprecated with zero active imports. Files retained until cleanup pass.
 
 ---
 
 ## Phase 3 — Report & Dashboard Shell
 
-**Status:** Not started (next)
+**Status:** Complete
 
-1. Reports — full report/dashboard shell pattern
-2. Tax Summary — adopt report shell family
-3. Dashboard — align `OperationalDashboardLoadingState` with Master Shell (loaded view already on primitives)
+1. Reports — report shell on Master Shell primitives
+2. Tax Summary — report shell on Master Shell primitives
+3. Dashboard — loaded view and `OperationalDashboardLoadingState` aligned to Master Shell
 
 ---
 
 ## Phase 4 — Remaining Admin Surfaces
 
-**Status:** Not started
+**Status:** In progress (next)
 
-- Invoice edit and other form-heavy utility pages
-- Time / time-clock surfaces
-- Import wizards (`/customers/import`)
-- Platform / alpha internal surfaces
+1. Invoice edit — form-edit route
+2. Customer import wizard — `/customers/import`
+3. Time / Time Clock — admin time surfaces
+4. Deprecated ListCommandCenter cleanup — delete legacy files
+5. Platform / alpha internal utility surfaces (as needed)
 
 ---
 
@@ -83,7 +84,7 @@ Dispatch requires a board/workbench shell pattern (columns, cards, mobile sheets
 
 **Status:** Future
 
-Adopt Command Center and Workspace prototype patterns into production dashboard and workspace modules. Depends on Master Shell and report/dashboard shell completion.
+Adopt Command Center and Workspace prototype patterns into production dashboard and workspace modules. Depends on remaining admin shell surfaces and Dispatch completion.
 
 ---
 

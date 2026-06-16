@@ -165,3 +165,25 @@
 **Updated:** Master status, current sprint, V2 roadmap, experience map shell appendix, this log.
 
 **Principle reaffirmed:** V2 redesign is experience-layer architecture — calm, organized, intelligent, premium — not feature work.
+
+---
+
+## 2026-06-15 — Documentation Sync Pass (Master Shell — Report/Dashboard Complete)
+
+**Scope:** Living status/planning docs only. No app code, routes, server actions, Supabase queries, RLS, or product logic changes.
+
+**Documented completed Master Shell coverage:**
+
+- **List pages (7):** Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items / Price Book — `MasterListPageLayout` + `MasterListPageLoadingState`
+- **Detail pages (5):** Customer 360, Job Detail, Estimate Detail, Invoice Detail, Team Member Profile — `MasterDetailPageLayout`
+- **Hub pages:** Network
+- **Form/admin hub pages:** Settings, System Check
+- **Report/dashboard pages:** Reports, Tax Summary, Dashboard loaded view, Dashboard loading state aligned
+
+**Legacy status:** `ListCommandCenterLayout` and `ListCommandCenterLoadingState` have zero active imports; deprecated; files retained until cleanup pass.
+
+**Remaining page families:** Invoice edit, customer import wizard, Time / Time Clock, platform/admin utility surfaces, Dispatch (board/workbench shell, last).
+
+**Next sequence:** Invoice edit → Customer import wizard → Time / Time Clock → ListCommandCenter cleanup → Dispatch last.
+
+**Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md` (shell appendix), this log.

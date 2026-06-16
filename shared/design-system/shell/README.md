@@ -81,28 +81,38 @@ Reference implementations: Customer 360, Job detail, Estimate detail, Invoice de
 6. **Loading states**: `MasterDetailPageLoadingState` with profile + section skeleton props.
 7. **Intercepted modal routes**: estimate/invoice overlay shells may keep a local `max-w-5xl` wrapper instead of `MasterDetailPageLayout`; full-page routes use the layout.
 
-**Migrated detail pages (4):** Customer 360, Job detail, Estimate detail, Invoice detail.
+**Migrated detail pages (5):** Customer 360, Job detail, Estimate detail, Invoice detail, Team member profile.
 
-**Next detail migration candidate:** Team member profile (`TeamMemberProfileView`).
+## Hub / admin form shell
 
-## Partial / dashboard shell
+**Migrated hub (1):** Network — tabbed relationship hub on Master Shell primitives.
 
-**Operational dashboard (`/`):** loaded view uses `MasterShellPage` + `MasterPageCanvas width="wide"`; loading skeleton (`OperationalDashboardLoadingState`) is not yet on Master Shell primitives.
+**Migrated admin form hubs (2):** Settings, System Check — compact density.
 
-## Coverage audit (2025-06-15)
+## Report / dashboard shell
 
-**Not migrated (major admin surfaces):**
+**Migrated (3):** Reports, Tax Summary, Operational Dashboard — loaded views and loading states on `MasterShellPage` + `MasterPageCanvas`.
+
+## Coverage audit (2026-06-15)
+
+**Not migrated (remaining admin surfaces):**
 
 | Type | Routes / views |
 |------|----------------|
-| Dashboard / report | `/` loading state; `/reports`; `/reports/tax-summary` |
-| Settings / admin form | `/settings`; `/settings/system-check`; `/invoices/[invoiceId]/edit` |
-| Detail (legacy layout) | `/team/[membershipId]` |
-| List-detail (legacy) | `/time`; `/time-clock` (mock) |
+| Settings / admin form | `/invoices/[invoiceId]/edit` |
+| List-detail (legacy) | `/time`; `/time-clock` |
 | Board / workbench | `/dispatch` |
 | Wizard / import | `/customers/import` |
 | Internal / platform | `/alpha-tracker`; `/platform`; `/platform/bugs` |
 | Design prototypes | `/workspace-v1`; `/command-center-v1`; `/altair-design-lab` |
+
+**Next recommended sequence:**
+
+1. Invoice edit
+2. Customer import wizard
+3. Time / Time Clock
+4. Delete deprecated `ListCommandCenter*` files (zero imports)
+5. Dispatch (board/workbench shell, last)
 
 **Legacy layout files — keep for now:**
 
@@ -121,6 +131,5 @@ Reference implementations: Customer 360, Job detail, Estimate detail, Invoice de
 - Migrated list pages duplicate shell token class strings instead of importing `tokens.ts` helpers (incremental adoption).
 - `EstimatesLoadingState` uses default skeleton props (no summary strip skeleton); loaded page shows summary cards when data exists.
 - Invoice/estimate overlay modes use raw `max-w-5xl` + `adminPageStackClass` instead of `MasterDetailPageLayout`.
-- Dashboard loaded vs loading shell mismatch.
 
-**Dispatch:** defer until more detail/form/hub families are migrated; board layout and mobile sheet behavior are high-risk.
+**Dispatch:** defer until remaining admin utility/form surfaces are migrated; board layout and mobile sheet behavior are high-risk.

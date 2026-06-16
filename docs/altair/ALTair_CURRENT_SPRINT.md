@@ -1,6 +1,6 @@
 # Altair Current Sprint
 
-Sprint: **Master Shell Migration — Hub & Detail Complete; Report Shell Next**
+Sprint: **Master Shell Migration — Report/Dashboard Complete; Admin Utility Surfaces Next**
 
 Last Updated: 2026-06-15
 
@@ -44,11 +44,18 @@ All use `MasterDetailPageLayout` + `MasterDetailPageLoadingState`.
 - **Settings** — admin/form hub, compact density
 - **System Check** — admin/form hub, compact density
 
+### Report / Dashboard Shells
+
+- **Reports** — report shell on Master Shell primitives
+- **Tax Summary** — report shell on Master Shell primitives
+- **Dashboard loaded view** — `OperationalDashboardView` on `MasterShellPage`
+- **Dashboard loading state** — `OperationalDashboardLoadingState` aligned to Master Shell skeleton
+
 ### Legacy Deprecation
 
 - `ListCommandCenterLayout` — deprecated, zero active imports
 - `ListCommandCenterLoadingState` — deprecated, zero active imports
-- Files kept for cleanup pass; safe to delete
+- Files kept for cleanup pass; safe to delete when convenient
 
 ---
 
@@ -60,24 +67,34 @@ All use `MasterDetailPageLayout` + `MasterDetailPageLoadingState`.
 | Detail page shell | Complete |
 | Hub page shell | Complete (Network) |
 | Settings / admin form hub shell | Complete |
-| Report / dashboard shell | **Next** |
+| Report / dashboard shell | Complete |
 | Board / workbench shell | Pending (Dispatch) |
 
 ---
 
 ## Current Focus
 
-**Reports** — establish the report/dashboard shell family. Reports overview already uses some Master Shell primitives; align loaded view, loading state, and section structure to a consistent report/dashboard pattern before Tax Summary.
+**Invoice edit** — migrate the invoice form-edit route to the admin form shell family. Preserve all edit workflows, validation, and server actions; change presentational structure only.
 
 ---
 
 ## Next Sequence (Do Not Reorder Without Reason)
 
-1. Reports — report/dashboard shell
-2. Tax Summary — adopt report shell family
-3. Dashboard loading alignment — `OperationalDashboardLoadingState` → Master Shell skeleton
-4. Remaining admin utility / form pages — invoice edit, time, import wizards, platform surfaces
+1. Invoice edit — form-edit route
+2. Customer import wizard — `/customers/import`
+3. Time / Time Clock — admin time surfaces
+4. Deprecated ListCommandCenter cleanup — delete legacy layout/loading files after confirming zero imports
 5. Dispatch — board/workbench shell **last** (highest layout and mobile-sheet risk)
+
+---
+
+## Remaining Page Families (Not Started)
+
+- Invoice edit / form-edit route
+- Customer import wizard
+- Time / Time Clock
+- Platform / admin utility surfaces
+- Dispatch board / workbench shell
 
 ---
 
@@ -102,13 +119,14 @@ Only change presentational page structure, layout primitives, and loading skelet
 | List shell | `shared/design-system/shell/MasterListPageLayout.tsx` | `shared/design-system/shell/README.md` |
 | Detail shell | `shared/design-system/shell/MasterDetailPageLayout.tsx` | same |
 | Hub / form shell | Network, Settings, System Check page views | same |
+| Report / dashboard shell | Reports, Tax Summary, Operational Dashboard views | same |
 | Design components (isolated) | `shared/design-system/components/` | `docs/altair/ALTAIR_COMPONENT_SYSTEM.md` |
 
 ---
 
 ## Out of Scope This Sprint
 
-- Dispatch board/workbench shell
+- Dispatch board/workbench shell (deferred last)
 - Global `AdminShell` chrome replacement
 - V2 Command Center / Workspace prototype adoption into production nav
 - Feature work or new modules

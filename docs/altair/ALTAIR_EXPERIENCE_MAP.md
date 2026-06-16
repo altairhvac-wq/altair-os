@@ -166,14 +166,16 @@ Tracks V2 Master Shell adoption by experience. Updated 2026-06-15.
 
 This section tracks **layout architecture only** — not feature completeness. See `ALTair_MASTER_STATUS.md` and `ALTair_CURRENT_SPRINT.md` for sprint detail.
 
+**Principle:** Shell migrations are experience-layer architecture only. No product logic, routes, server actions, Supabase behavior, or RLS assumptions change during migration.
+
 ## Experience 1: Command Center
 
 | Module | Shell status |
 |--------|--------------|
-| Dashboard (`/`) | Partial — loaded view on Master Shell; loading skeleton pending |
+| Dashboard (`/`) | **Complete** — loaded view + loading state on Master Shell |
 | Notifications | Not migrated |
 
-**Next:** Dashboard loading alignment, then Command Center prototype patterns (future).
+**Next:** Command Center prototype patterns (future Phase 6).
 
 ## Experience 2: Workspace
 
@@ -186,6 +188,8 @@ This section tracks **layout architecture only** — not feature completeness. S
 | Invoices (list + detail) | **Complete** |
 | Expenses | **Complete** — list shell |
 | Price Book / Service Items | **Complete** — list shell |
+| Customer import wizard | Not migrated |
+| Invoice edit | Not migrated |
 
 Workspace list and detail families are the reference implementations for the rest of the product.
 
@@ -195,14 +199,14 @@ Workspace list and detail families are the reference implementations for the res
 |--------|--------------|
 | Dispatch | **Pending** — board/workbench shell (last) |
 | Technician Mobile | Not in Master Shell scope |
-| Time / Labor | Not migrated |
+| Time / Time Clock | Not migrated |
 
 ## Experience 4: Intelligence
 
 | Module | Shell status |
 |--------|--------------|
-| Reports | **Next** — partial primitives; report/dashboard shell pending |
-| Tax Summary | Not migrated |
+| Reports | **Complete** — report shell |
+| Tax Summary | **Complete** — report shell |
 | Customer 360 | **Complete** — detail shell (lives in Workspace + Intelligence) |
 | AI Business Review | Embedded in Reports — follows Reports shell |
 
@@ -214,3 +218,18 @@ Workspace list and detail families are the reference implementations for the res
 | Settings | **Complete** — admin/form hub |
 | System Check | **Complete** — admin/form hub |
 | Team Member Profile | **Complete** — detail shell |
+
+## Legacy (Deprecated, Zero Imports)
+
+| File | Status |
+|------|--------|
+| `ListCommandCenterLayout` | Deprecated — delete in cleanup pass |
+| `ListCommandCenterLoadingState` | Deprecated — delete in cleanup pass |
+
+## Next Sequence
+
+1. Invoice edit
+2. Customer import wizard
+3. Time / Time Clock
+4. ListCommandCenter legacy file cleanup
+5. Dispatch (board/workbench shell, last)
