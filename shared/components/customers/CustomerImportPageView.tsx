@@ -10,7 +10,7 @@ import {
   Download,
   FileSpreadsheet,
   Upload,
-  Users,
+  type LucideIcon,
 } from "lucide-react";
 import { importCustomersFromMappedCsvAction } from "@/app/actions/customers-import";
 import type { ImportCustomersFromCsvActionResult } from "@/app/actions/customers-import";
@@ -32,6 +32,13 @@ import {
   type CustomerImportPreviewRow,
 } from "@/shared/lib/customer-import";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
+import {
+  MasterContentStack,
+  MasterPageCanvas,
+  MasterPageHeader,
+  MasterPageSurface,
+  MasterShellPage,
+} from "@/shared/design-system/shell";
 
 type CustomerImportPageViewProps = {
   existingContacts: CustomerImportContact[];
@@ -251,77 +258,74 @@ export function CustomerImportPageView({
   const currentStepIndex = IMPORT_STEPS.findIndex((step) => step.id === phase);
 
   return (
-    <div className="flex min-h-0 flex-col gap-3 lg:gap-4 lg:h-[calc(100dvh-7rem)]">
-      <header className="admin-page-header flex shrink-0 items-center justify-between gap-2 px-3 py-2 sm:px-3.5">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
-              <Users className="h-4 w-4" aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-base font-bold tracking-tight text-slate-900 sm:text-lg">
-                Import Customers
-              </h1>
-              <p className="truncate text-xs text-slate-500">
-                Smart CSV import for spreadsheets and field-service exports
-              </p>
-            </div>
-          </div>
-        </div>
-        <Link
-          href="/customers"
-          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-secondary px-3 py-1.5 text-sm"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Back to Customers</span>
-          <span className="sm:hidden">Back</span>
-        </Link>
-      </header>
+    <MasterShellPage fillViewport density="compact">
+      <MasterPageCanvas width="standard">
+        <MasterContentStack density="compact" scrollable>
+          <MasterPageHeader
+            title="Import Customers"
+            subtitle="Smart CSV import for spreadsheets and field-service exports"
+            density="compact"
+            secondaryAction={
+              <Link
+                href="/customers"
+                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-secondary px-3 py-1.5 text-sm"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Back to Customers</span>
+                <span className="sm:hidden">Back</span>
+              </Link>
+            }
+          />
 
-      {phase !== "result" ? (
-        <nav
-          aria-label="Import steps"
-          className="admin-card grid gap-2 p-3 sm:grid-cols-4 sm:p-4"
-        >
-          {IMPORT_STEPS.filter((step) => step.id !== "result").map(
-            (step, index) => {
-              const isActive = step.id === phase;
-              const isComplete = index < currentStepIndex;
+          {phase !== "result" ? (
+            <MasterPageSurface
+              variant="card"
+              className="grid gap-2 p-3 sm:grid-cols-4 sm:p-4"
+            >
+              <nav aria-label="Import steps" className="contents">
+                {IMPORT_STEPS.filter((step) => step.id !== "result").map(
+                  (step, index) => {
+                    const isActive = step.id === phase;
+                    const isComplete = index < currentStepIndex;
 
-              return (
-                <div
-                  key={step.id}
-                  className={`rounded-xl border px-3 py-2 ${
-                    isActive
-                      ? "border-cyan-200 bg-cyan-50/70"
-                      : isComplete
-                        ? "border-emerald-200 bg-emerald-50/50"
-                        : "border-slate-200 bg-white"
-                  }`}
-                >
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                    Step {index + 1}
-                  </p>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {step.label}
-                  </p>
-                </div>
-              );
-            },
-          )}
-        </nav>
-      ) : null}
+                    return (
+                      <div
+                        key={step.id}
+                        className={`rounded-xl border px-3 py-2 ${
+                          isActive
+                            ? "border-cyan-200 bg-cyan-50/70"
+                            : isComplete
+                              ? "border-emerald-200 bg-emerald-50/50"
+                              : "border-slate-200 bg-white"
+                        }`}
+                      >
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                          Step {index + 1}
+                        </p>
+                        <p className="text-sm font-semibold text-slate-900">
+                          {step.label}
+                        </p>
+                      </div>
+                    );
+                  },
+                )}
+              </nav>
+            </MasterPageSurface>
+          ) : null}
 
-      {parseError ? (
-        <SettingsAlertBanner tone="error">{parseError}</SettingsAlertBanner>
-      ) : null}
+          {parseError ? (
+            <SettingsAlertBanner tone="error">{parseError}</SettingsAlertBanner>
+          ) : null}
 
-      {importError ? (
-        <SettingsAlertBanner tone="error">{importError}</SettingsAlertBanner>
-      ) : null}
+          {importError ? (
+            <SettingsAlertBanner tone="error">{importError}</SettingsAlertBanner>
+          ) : null}
 
-      {phase === "upload" ? (
-        <section className="admin-card flex flex-col gap-5 p-4 sm:p-6">
+          {phase === "upload" ? (
+            <MasterPageSurface
+              variant="card"
+              className="flex flex-col gap-5 p-4 sm:p-6"
+            >
           <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4">
             <p className="text-sm font-semibold text-amber-900">
               Duplicates are skipped, not merged
@@ -435,11 +439,14 @@ export function CustomerImportPageView({
               />
             </label>
           </div>
-        </section>
-      ) : null}
+            </MasterPageSurface>
+          ) : null}
 
-      {phase === "mapping" ? (
-        <section className="admin-card flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-4 sm:p-6">
+          {phase === "mapping" ? (
+            <MasterPageSurface
+              variant="card"
+              className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-4 sm:p-6"
+            >
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold text-slate-900">
@@ -532,12 +539,12 @@ export function CustomerImportPageView({
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
-        </section>
-      ) : null}
+            </MasterPageSurface>
+          ) : null}
 
-      {phase === "preview" ? (
-        <>
-          <section className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          {phase === "preview" ? (
+            <>
+              <section className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
             <SummaryCard
               label="Total rows"
               value={previewSummary.totalRows}
@@ -563,7 +570,10 @@ export function CustomerImportPageView({
             />
           </section>
 
-          <section className="admin-card min-h-0 flex flex-1 flex-col overflow-hidden">
+          <MasterPageSurface
+            variant="panel"
+            className="min-h-0 flex flex-1 flex-col overflow-hidden"
+          >
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 sm:px-6">
               <div>
                 <h2 className="text-sm font-semibold text-slate-900">
@@ -690,12 +700,12 @@ export function CustomerImportPageView({
                 </button>
               </div>
             </div>
-          </section>
-        </>
-      ) : null}
+          </MasterPageSurface>
+            </>
+          ) : null}
 
-      {phase === "result" && importResult ? (
-        <section className="admin-card space-y-4 p-4 sm:p-6">
+          {phase === "result" && importResult ? (
+            <MasterPageSurface variant="card" className="space-y-4 p-4 sm:p-6">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
@@ -767,9 +777,11 @@ export function CustomerImportPageView({
               Import another file
             </button>
           </div>
-        </section>
-      ) : null}
-    </div>
+            </MasterPageSurface>
+          ) : null}
+        </MasterContentStack>
+      </MasterPageCanvas>
+    </MasterShellPage>
   );
 }
 
@@ -813,7 +825,7 @@ function SummaryCard({
 }: {
   label: string;
   value: number;
-  icon: typeof Users;
+  icon: LucideIcon;
   tone?: "default" | "success" | "warning" | "danger";
 }) {
   const toneClasses = {
@@ -824,13 +836,13 @@ function SummaryCard({
   }[tone];
 
   return (
-    <div className="admin-card px-4 py-3">
+    <MasterPageSurface variant="card" className="px-4 py-3">
       <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
         <Icon className="h-3.5 w-3.5" aria-hidden="true" />
         {label}
       </div>
       <p className={`mt-1 text-2xl font-bold ${toneClasses}`}>{value}</p>
-    </div>
+    </MasterPageSurface>
   );
 }
 
