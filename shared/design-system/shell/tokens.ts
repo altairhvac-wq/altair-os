@@ -39,3 +39,7 @@ export const masterListPageSurfaceClass =
 /** Scroll region inside the list card (checklist item 5). */
 export const masterListPageScrollRegionClass =
   "min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto";
+
+/** Board surface + desktop detail panel sibling row (Dispatch workbench). */
+export const masterWorkbenchRowClass =
+  "flex min-h-0 min-w-0 max-w-full lg:flex-1 flex-col gap-2 sm:gap-4 lg:flex-row lg:items-stretch";

@@ -35,6 +35,7 @@ import {
   MasterPageCanvas,
   MasterPageSurface,
   MasterShellPage,
+  masterWorkbenchRowClass,
 } from "@/shared/design-system/shell";
 
 type DispatchPageViewProps = {
@@ -423,7 +424,7 @@ export function DispatchPageView({
             />
           ) : null}
 
-          <div className="flex min-h-0 min-w-0 max-w-full lg:flex-1 flex-col gap-2 sm:gap-4 lg:flex-row lg:items-stretch">
+          <div className={masterWorkbenchRowClass}>
         <MasterPageSurface
           variant="panel"
           className={`max-w-full lg:flex-1 ${

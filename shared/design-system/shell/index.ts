@@ -54,6 +54,7 @@ export {
   masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
+  masterWorkbenchRowClass,
   masterPageCanvasWidthClass,
   masterShellSectionGap,
   masterShellStackGap,

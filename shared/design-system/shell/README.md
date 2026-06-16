@@ -59,6 +59,22 @@ Exported from `tokens.ts` for repeated class strings across migrated list pages:
 
 **Adopted on all 7 migrated list page views** (Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items).
 
+## Workbench / board shell (Dispatch)
+
+Board-style pages keep the main surface and desktop detail panel as **siblings** inside a shared flex row — not nested.
+
+1. **Root**: `MasterShellPage` `fillViewport` `density="compact"` + `MasterPageCanvas` `width="wide"`.
+2. **Body stack**: `MasterContentStack` `density="compact"` `scrollable`.
+3. **Workbench row**: `masterWorkbenchRowClass` — column on mobile, row on `lg+`; `min-h-0` / `min-w-0` / `lg:flex-1` so the board fills height.
+4. **Board surface**: `MasterPageSurface` `variant="panel"` with inner vertical scroll region (page-owned markup).
+5. **Desktop detail panel**: sibling of the board surface, `hidden lg:flex`, fixed width (~380px); mobile uses `MobileSheet` outside the row.
+
+| Token | Use |
+|-------|-----|
+| `masterWorkbenchRowClass` | Flex row wrapping board surface + desktop detail panel |
+
+**Migrated (Dispatch Phase 4):** `DispatchPageView`, `DispatchLoadingState`.
+
 ## Migration status (Master List Shell)
 
 **Migrated (7):** Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items / Price Book — all use `MasterListPageLayout` with `density="compact"` and list-page shell tokens.
@@ -67,7 +83,7 @@ Exported from `tokens.ts` for repeated class strings across migrated list pages:
 
 **Removed (cleanup pass):** `ListCommandCenterLayout` and `ListCommandCenterLoadingState` — zero active imports; deleted.
 
-**Not in scope:** Dispatch, global `AdminShell` chrome.
+**Not in scope:** global `AdminShell` chrome. Dispatch workbench row tokenized in Phase 4; board internals and mobile sheets unchanged.
 
 ## Detail-page shell
 
@@ -99,7 +115,7 @@ Reference implementations: Customer 360, Job detail, Estimate detail, Invoice de
 
 | Type | Routes / views |
 |------|----------------|
-| Board / workbench | `/dispatch` |
+| Board / workbench | `/dispatch` (shell scaffold + row token; Phase 5 mobile viewport lock pending) |
 | Internal / platform | `/alpha-tracker`; `/platform`; `/platform/bugs` |
 | Design prototypes | `/workspace-v1`; `/command-center-v1`; `/altair-design-lab` |
 
@@ -124,4 +140,4 @@ Reference implementations: Customer 360, Job detail, Estimate detail, Invoice de
 - `EstimatesLoadingState` uses default skeleton props (no summary strip skeleton); loaded page shows summary cards when data exists.
 - Invoice/estimate overlay modes use raw `max-w-5xl` + `adminPageStackClass` instead of `MasterDetailPageLayout`.
 
-**Dispatch:** defer until remaining admin utility/form surfaces are migrated; board layout and mobile sheet behavior are high-risk.
+**Dispatch:** Phases 1–4 complete (Master Shell scaffold, loading state, board surface, workbench row token). Phase 5 mobile viewport lock is high-risk — evaluate separately.

@@ -3,6 +3,7 @@ import {
   MasterPageCanvas,
   MasterPageSurface,
   MasterShellPage,
+  masterWorkbenchRowClass,
 } from "@/shared/design-system/shell";
 
 function Skeleton({ className }: { className?: string }) {
@@ -32,7 +33,7 @@ export function DispatchLoadingState() {
 
           <Skeleton className="hidden h-12 shrink-0 rounded-xl lg:block" />
 
-          <div className="flex min-h-0 lg:flex-1 flex-col gap-2 sm:gap-4 lg:flex-row">
+          <div className={masterWorkbenchRowClass}>
             <MasterPageSurface variant="panel" className="lg:flex-1">
               <div className="admin-panel-header shrink-0 px-3 py-2 sm:px-4 sm:py-3">
                 <Skeleton className="h-4 w-40" />
