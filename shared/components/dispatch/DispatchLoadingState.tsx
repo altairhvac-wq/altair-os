@@ -5,12 +5,34 @@ import {
   MasterShellPage,
   masterWorkbenchRowClass,
 } from "@/shared/design-system/shell";
+import { HorizonHero } from "@/shared/design-system/signature";
+import { signatureHeroContentClass } from "@/shared/design-system/shell/tokens";
 
 function Skeleton({ className }: { className?: string }) {
   return (
     <div
       className={`admin-skeleton ${className ?? ""}`}
     />
+  );
+}
+
+function DispatchHeaderSkeleton() {
+  return (
+    <HorizonHero tone="cyan" beamTone="cyan" beamPosition="left" size="compact">
+      <div
+        aria-hidden="true"
+        className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 ${signatureHeroContentClass}`}
+      >
+        <div className="min-w-0 flex-1">
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="mt-1.5 hidden h-3 w-56 sm:block" />
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <Skeleton className="h-7 w-20 rounded-full" />
+          <Skeleton className="h-7 w-24 rounded-full" />
+        </div>
+      </div>
+    </HorizonHero>
   );
 }
 
@@ -23,7 +45,7 @@ export function DispatchLoadingState() {
           scrollable
           className="min-h-0 flex-1"
         >
-          <Skeleton className="h-14 shrink-0 rounded-2xl" />
+          <DispatchHeaderSkeleton />
 
           <div className="flex shrink-0 gap-2 overflow-hidden">
             {Array.from({ length: 3 }).map((_, i) => (

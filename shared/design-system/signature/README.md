@@ -24,6 +24,7 @@ Every element should feel like standing above your business and seeing the horiz
 import {
   AtmosphereBackground,
   BusinessTerrain,
+  HorizonHero,
   LightBeam,
   HorizonDivider,
   MomentumStrip,
@@ -139,6 +140,21 @@ Displays small business wins in a lightweight, non-gamified format.
 
 ---
 
+## HorizonHero
+
+Production-safe signature hero band — composes `AtmosphereBackground` + `LightBeam` + content slot.
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `tone` | AtmosphereTone | `"cyan"` | Ambient glow temperature |
+| `beamTone` | LightBeamTone | `"cyan"` | Light beam color |
+| `beamPosition` | `"center"` \| `"left"` \| `"right"` | `"center"` | Beam placement |
+| `size` | `"compact"` \| `"standard"` | `"standard"` | Padding and radius scale |
+| `className` | `string` | — | Wrapper classes |
+| `contentClassName` | `string` | — | Inner content padding override |
+
+Pair frosted content with `signatureHeroContentClass` from shell tokens.
+
 ## Composition Pattern
 
 Typical hero atmosphere stack:
@@ -164,4 +180,6 @@ Typical hero atmosphere stack:
 
 ## Status
 
-Built in isolation. Not wired to production pages, Command Center, or Dashboard.
+**G1 (Signature Visual Layer pass 1)** — production adoption started on Dashboard, list metric strips, Dispatch header band, and Customers empty state pilot.
+
+Use `HorizonHero` + shell tokens (`signatureHeroContentClass`) for hero bands. Do not copy page-local prototype markup inline.

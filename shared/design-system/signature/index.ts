@@ -16,3 +16,6 @@ export type { HorizonDividerProps, HorizonDividerVariant } from "./HorizonDivide
 
 export { MomentumStrip } from "./MomentumStrip";
 export type { MomentumItem, MomentumStripProps } from "./MomentumStrip";
+
+export { HorizonHero } from "./HorizonHero";
+export type { HorizonHeroProps, HorizonHeroSize } from "./HorizonHero";

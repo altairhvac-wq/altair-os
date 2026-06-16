@@ -4,7 +4,21 @@ Reusable page structure inside `AdminShell` main. Does not replace global naviga
 
 Master Shell V2 architecture migration is **complete** across major admin surfaces. Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete**.
 
-**Current status:** Beta-ready foundation complete; Signature Visual Layer next. Authenticated production/user-data smoke recommended — not broad page-family migration or additional consistency polish unless smoke finds gaps.
+**Current status:** G1 Signature Visual Layer pass complete on Dashboard hero, metric strips, Dispatch header band, and Customers empty state pilot. Beta-ready foundation + first signature adoption.
+
+## Signature Visual Layer (G1)
+
+| Surface | Treatment |
+|---------|-----------|
+| **Admin canvas** | Stronger calm depth via `.admin-canvas` radial gradients |
+| **Dashboard** | `HorizonHero` + `HeroHeader` with real operational highlights |
+| **List metric strips** | V2 MetricCard styling via upgraded `.admin-metric-card` |
+| **Dispatch header** | `HorizonHero` compact band — board internals unchanged |
+| **Customers empty state** | V2 `EmptyState` pilot |
+
+Shared tokens: `signatureHeroContentClass`, `signatureSoftCardClass`, `signatureHeaderBandClass` in `tokens.ts`.
+
+Primitive: `HorizonHero` in `shared/design-system/signature/HorizonHero.tsx`.
 
 ## Surface system (Visual Polish Pass A — complete)
 

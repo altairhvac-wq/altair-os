@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 export type EmptyStateTone = "neutral" | "success" | "warning" | "danger" | "info";
 
@@ -14,6 +15,7 @@ export type EmptyStateProps = {
   action?: EmptyStateAction;
   secondaryAction?: EmptyStateAction;
   tone?: EmptyStateTone;
+  icon?: ReactNode;
   className?: string;
 };
 
@@ -69,6 +71,7 @@ export function EmptyState({
   action,
   secondaryAction,
   tone = "neutral",
+  icon,
   className = "",
 }: EmptyStateProps) {
   const hasActions = Boolean(action || secondaryAction);
@@ -78,6 +81,14 @@ export function EmptyState({
       className={`rounded-2xl border border-dashed bg-white/90 px-5 py-10 text-center shadow-[var(--shadow-card)] sm:px-8 sm:py-12 ${accentStyles[tone]} ${className}`}
     >
       <div className="mx-auto max-w-md">
+        {icon ? (
+          <div
+            className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200/60 bg-gradient-to-br from-slate-50 to-slate-100/80 text-slate-500 shadow-sm"
+            aria-hidden="true"
+          >
+            {icon}
+          </div>
+        ) : null}
         <h3 className={`text-lg font-bold tracking-tight sm:text-xl ${titleStyles[tone]}`}>
           {title}
         </h3>

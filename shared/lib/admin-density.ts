@@ -71,7 +71,7 @@ export const adminTableCellClass = "admin-table-cell";
 
 /** Compact one-row summary strip for list pages on mobile */
 export const adminCompactSummaryStripClass =
-  "shrink-0 overflow-x-auto rounded-lg border border-slate-200/80 bg-white px-2.5 py-2 shadow-sm sm:hidden";
+  "shrink-0 overflow-x-auto rounded-xl border border-slate-200/60 bg-white/95 px-2.5 py-2 shadow-[var(--shadow-card)] sm:hidden";
 
 export const adminCompactSummaryStripInnerClass =
   "flex w-max min-w-full items-center gap-3";
@@ -79,7 +79,8 @@ export const adminCompactSummaryStripInnerClass =
 export const adminCompactSummaryMetricClass =
   "flex shrink-0 items-baseline gap-1";
 
-export const adminCompactSummaryLabelClass = "text-xs text-slate-500";
+export const adminCompactSummaryLabelClass =
+  "text-[11px] font-semibold uppercase tracking-wide text-slate-500";
 
 export const adminCompactSummaryValueClass =
-  "text-sm font-semibold tabular-nums text-slate-900";
+  "text-sm font-bold tabular-nums tracking-tight text-slate-900";

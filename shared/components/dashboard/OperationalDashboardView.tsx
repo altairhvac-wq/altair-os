@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AltairRecommendationsSection } from "@/shared/components/dashboard/AltairRecommendationsSection";
 import { DashboardCommandStrip } from "@/shared/components/dashboard/DashboardCommandStrip";
+import { DashboardSignatureHero } from "@/shared/components/dashboard/DashboardSignatureHero";
 import { MobileOperationsHub } from "@/shared/components/dashboard/MobileOperationsHub";
 import {
   DashboardCompactAttentionSummary,
@@ -1320,6 +1321,7 @@ function DashboardContentLayout({
       ) : null}
 
       <MasterContentStack density="compact" className="hidden lg:flex">
+        <DashboardSignatureHero data={data} variant="desktop" />
         <DashboardCommandStrip data={data} />
         <AltairRecommendationsSection data={data} variant="desktop" />
 
@@ -1344,7 +1346,8 @@ function DashboardContentLayout({
         })}
       </MasterContentStack>
 
-      <div className="min-w-0 lg:hidden">
+      <div className="flex min-w-0 flex-col gap-2 lg:hidden">
+        <DashboardSignatureHero data={data} variant="mobile" />
         <MobileOperationsHub
           data={data}
           notificationAccess={notificationAccess}

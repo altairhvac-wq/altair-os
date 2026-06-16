@@ -94,3 +94,14 @@ export const adminPanelActionAccentClass = "admin-panel-action admin-panel-actio
 /** Amber-accent panel header action (warnings, unassigned counts). */
 export const adminPanelActionWarningClass =
   "admin-panel-action admin-panel-action-warning";
+
+/** Signature hero band — frosted content surface inside `HorizonHero`. */
+export const signatureHeroContentClass =
+  "border-0 bg-white/60 shadow-[0_4px_24px_rgba(15,23,42,0.04)] backdrop-blur-[2px] sm:bg-white/55";
+
+/** Signature soft card — borderless premium surface for metrics and strips. */
+export const signatureSoftCardClass =
+  "rounded-2xl border border-slate-200/50 bg-white/90 shadow-[var(--shadow-card)]";
+
+/** Signature page header band wrapper — atmosphere around in-page headers. */
+export const signatureHeaderBandClass = "min-w-0 shrink-0";

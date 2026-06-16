@@ -5,9 +5,40 @@ import {
   MasterPageSurface,
   MasterShellPage,
 } from "@/shared/design-system/shell";
+import { HorizonHero } from "@/shared/design-system/signature";
+import { signatureHeroContentClass } from "@/shared/design-system/shell/tokens";
 
 function Skeleton({ className }: { className?: string }) {
   return <div className={`admin-skeleton ${className ?? ""}`} />;
+}
+
+function HeroSkeleton({ variant }: { variant: "desktop" | "mobile" }) {
+  const isMobile = variant === "mobile";
+
+  return (
+    <HorizonHero
+      tone="cyan"
+      beamTone="cyan"
+      size={isMobile ? "compact" : "standard"}
+    >
+      <div
+        aria-hidden="true"
+        className={`rounded-2xl border border-slate-200/40 p-4 sm:p-5 ${signatureHeroContentClass}`}
+      >
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="mt-2 h-6 w-48" />
+        <Skeleton className="mt-2 h-4 w-64 max-w-full" />
+        <div
+          className={`mt-4 grid gap-2 ${isMobile ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4"}`}
+        >
+          {Array.from({ length: isMobile ? 2 : 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-16 rounded-xl" />
+          ))}
+        </div>
+        {!isMobile ? <Skeleton className="mt-4 h-14 rounded-xl" /> : null}
+      </div>
+    </HorizonHero>
+  );
 }
 
 const DASHBOARD_LOADING_SECTIONS = [
@@ -65,6 +96,7 @@ function SectionCardsSkeleton() {
 function DesktopLoadingSkeleton() {
   return (
     <MasterContentStack density="compact" className="hidden lg:flex">
+      <HeroSkeleton variant="desktop" />
       <CommandStripSkeleton />
 
       {DASHBOARD_LOADING_SECTIONS.map((section) => (
@@ -84,7 +116,7 @@ function DesktopLoadingSkeleton() {
 function MobileLoadingSkeleton() {
   return (
     <MasterContentStack density="compact">
-      <Skeleton className="h-[4.5rem] w-full rounded-lg" />
+      <HeroSkeleton variant="mobile" />
       <Skeleton className="h-[3.25rem] w-full rounded-lg" />
       <Skeleton className="h-[3.25rem] w-full rounded-lg" />
 

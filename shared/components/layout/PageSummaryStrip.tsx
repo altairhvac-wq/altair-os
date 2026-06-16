@@ -60,7 +60,7 @@ export function PageSummaryStrip({
       </div>
 
       <div
-        className={`hidden shrink-0 gap-2.5 sm:grid sm:grid-cols-2 ${lgColumnsClass}`}
+        className={`hidden shrink-0 gap-3 sm:grid sm:grid-cols-2 ${lgColumnsClass}`}
       >
         {cards.map((card) => (
           <div
