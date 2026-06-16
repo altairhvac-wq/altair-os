@@ -1,7 +1,7 @@
-import { ListCommandCenterLoadingState } from "@/shared/components/layout/ListCommandCenterLoadingState";
+import { MasterListPageLoadingState } from "@/shared/design-system/shell";
 
 export function ServiceItemsLoadingState() {
   return (
-    <ListCommandCenterLoadingState showViewTabs={false} filterControlCount={2} />
+    <MasterListPageLoadingState showViewTabs={false} filterControlCount={2} />
   );
 }

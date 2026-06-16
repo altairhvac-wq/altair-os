@@ -1,5 +1,5 @@
-import { ListCommandCenterLoadingState } from "@/shared/components/layout/ListCommandCenterLoadingState";
+import { MasterListPageLoadingState } from "@/shared/design-system/shell";
 
 export function JobsLoadingState() {
-  return <ListCommandCenterLoadingState filterControlCount={3} />;
+  return <MasterListPageLoadingState filterControlCount={3} />;
 }

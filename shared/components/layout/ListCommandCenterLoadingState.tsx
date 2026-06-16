@@ -6,6 +6,10 @@ function Skeleton({ className }: SkeletonProps) {
   return <div className={`admin-skeleton ${className ?? ""}`} />;
 }
 
+/**
+ * @deprecated Superseded by `MasterListPageLoadingState` (`shared/design-system/shell/`).
+ * Retained for any non-migrated loading wrappers; do not use on Master List Shell pages.
+ */
 export type ListCommandCenterLoadingStateProps = {
   /** Number of summary metric cards to show (0 hides the strip) */
   summaryCardCount?: number;
@@ -21,6 +25,7 @@ export type ListCommandCenterLoadingStateProps = {
   tableRowVariant?: "default" | "customer";
 };
 
+/** @deprecated Use `MasterListPageLoadingState` from `shared/design-system/shell/`. */
 export function ListCommandCenterLoadingState({
   summaryCardCount = 0,
   summaryLgColumnsClass = "lg:grid-cols-4",

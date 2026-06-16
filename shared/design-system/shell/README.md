@@ -13,6 +13,7 @@ Reusable page structure inside `AdminShell` main. Does not replace global naviga
 | `MasterPageSurface` | Card, panel, or section surface wrapper |
 | `MasterContentStack` | Vertical stack between major blocks |
 | `MasterListPageLayout` | Full list-page scaffold (header + scrollable body) |
+| `MasterListPageLoadingState` | Loading skeleton scaffold matching `MasterListPageLayout` |
 
 ## Adoption
 
@@ -41,7 +42,7 @@ Reference implementations: Customers, Leads, Jobs, Estimates, Invoices, Expenses
 7. **Mobile panel open**: viewport-lock class on the layout (`max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden`); hide the list surface with `max-lg:hidden`.
 8. **Primary action**: compact h-9 button — `inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm`.
 9. **Subtitles**: static or contextual (counts, filter state).
-10. **Loading states**: may remain on `ListCommandCenterLoadingState` until `MasterListPageLoadingState` exists.
+10. **Loading states**: use `MasterListPageLoadingState` with the same density and summary/tab props as the loaded page.
 
 ## List-page shell tokens
 
@@ -58,6 +59,8 @@ Exported from `tokens.ts` for the repeated class strings across migrated pages (
 
 **Migrated (7):** Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items / Price Book — all use `MasterListPageLayout` with `density="compact"`.
 
-**Legacy layout:** `ListCommandCenterLayout` has no remaining page imports. Safe to mark deprecated; keep the file until `MasterListPageLoadingState` replaces `ListCommandCenterLoadingState` (7 loading wrappers still depend on it).
+**Legacy loading:** `ListCommandCenterLoadingState` has no remaining list-page imports. Safe to mark deprecated; keep the file until non-list loading wrappers are audited.
+
+**Legacy layout:** `ListCommandCenterLayout` has no remaining page imports. Deprecated; keep the file until a later cleanup pass.
 
 **Not in scope:** Dispatch, Customer 360, detail pages, global `AdminShell` chrome.

@@ -1,8 +1,8 @@
-import { ListCommandCenterLoadingState } from "@/shared/components/layout/ListCommandCenterLoadingState";
+import { MasterListPageLoadingState } from "@/shared/design-system/shell";
 
 export function LeadsLoadingState() {
   return (
-    <ListCommandCenterLoadingState
+    <MasterListPageLoadingState
       showViewTabs={false}
       filterControlCount={3}
     />

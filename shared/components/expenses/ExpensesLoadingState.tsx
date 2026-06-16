@@ -1,8 +1,8 @@
-import { ListCommandCenterLoadingState } from "@/shared/components/layout/ListCommandCenterLoadingState";
+import { MasterListPageLoadingState } from "@/shared/design-system/shell";
 
 export function ExpensesLoadingState() {
   return (
-    <ListCommandCenterLoadingState
+    <MasterListPageLoadingState
       summaryCardCount={4}
       showViewTabs={false}
       filterControlCount={3}

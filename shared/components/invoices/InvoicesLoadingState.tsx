@@ -1,8 +1,8 @@
-import { ListCommandCenterLoadingState } from "@/shared/components/layout/ListCommandCenterLoadingState";
+import { MasterListPageLoadingState } from "@/shared/design-system/shell";
 
 export function InvoicesLoadingState() {
   return (
-    <ListCommandCenterLoadingState
+    <MasterListPageLoadingState
       summaryCardCount={3}
       summaryLgColumnsClass="lg:grid-cols-3"
     />
