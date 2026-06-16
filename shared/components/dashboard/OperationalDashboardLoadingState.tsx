@@ -6,36 +6,63 @@ import {
   MasterShellPage,
 } from "@/shared/design-system/shell";
 import { HorizonHero } from "@/shared/design-system/signature";
-import { signatureHeroContentClass } from "@/shared/design-system/shell/tokens";
+import { signatureCockpitSurfaceClass } from "@/shared/design-system/shell/tokens";
 
 function Skeleton({ className }: { className?: string }) {
   return <div className={`admin-skeleton ${className ?? ""}`} />;
 }
 
-function HeroSkeleton({ variant }: { variant: "desktop" | "mobile" }) {
+function CockpitSkeleton({ variant }: { variant: "desktop" | "mobile" }) {
   const isMobile = variant === "mobile";
 
   return (
     <HorizonHero
       tone="cyan"
       beamTone="cyan"
-      size={isMobile ? "compact" : "standard"}
+      size={isMobile ? "compact" : "cockpit"}
     >
       <div
         aria-hidden="true"
-        className={`rounded-2xl border border-slate-200/40 p-4 sm:p-5 ${signatureHeroContentClass}`}
+        className={signatureCockpitSurfaceClass}
       >
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="mt-2 h-6 w-48" />
-        <Skeleton className="mt-2 h-4 w-64 max-w-full" />
         <div
-          className={`mt-4 grid gap-2 ${isMobile ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4"}`}
+          className={
+            isMobile
+              ? "flex flex-col gap-2"
+              : "flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between lg:gap-6"
+          }
         >
-          {Array.from({ length: isMobile ? 2 : 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-16 rounded-xl" />
-          ))}
+          <div className="min-w-0 flex-1">
+            <Skeleton className="h-2.5 w-24" />
+            <Skeleton className="mt-2 h-5 w-44" />
+            <Skeleton className="mt-2 h-4 w-full max-w-md" />
+          </div>
+          {!isMobile ? (
+            <Skeleton className="h-[4.5rem] w-full max-w-xs rounded-lg lg:shrink-0" />
+          ) : null}
         </div>
-        {!isMobile ? <Skeleton className="mt-4 h-14 rounded-xl" /> : null}
+
+        {isMobile ? (
+          <div className="mt-3 grid grid-cols-2 gap-3 border-t border-slate-200/40 pt-3">
+            <Skeleton className="h-10" />
+            <Skeleton className="h-10" />
+          </div>
+        ) : (
+          <div className="mt-3 border-t border-slate-200/45 pt-3">
+            <Skeleton className="h-2 w-28" />
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={index} className="h-14" />
+              ))}
+            </div>
+            <Skeleton className="mt-3 h-2 w-24" />
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={`today-${index}`} className="h-14" />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </HorizonHero>
   );
@@ -50,30 +77,6 @@ const DASHBOARD_LOADING_SECTIONS = [
     description: "Priority signals and open queues",
   },
 ] as const;
-
-function CommandStripSkeleton() {
-  return (
-    <section
-      aria-hidden="true"
-      className="admin-command-strip-surface min-w-0 overflow-hidden p-2.5 lg:p-3"
-    >
-      <Skeleton className="h-3 w-20" />
-      <Skeleton className="mt-1.5 h-4 w-36" />
-      <Skeleton className="mt-2 h-2.5 w-28" />
-      <div className="mt-2 grid grid-cols-2 gap-1.5 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-[3.75rem] rounded-lg" />
-        ))}
-      </div>
-      <Skeleton className="mt-2 h-2.5 w-24" />
-      <div className="mt-1.5 grid grid-cols-2 gap-1.5 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={`today-${i}`} className="h-[3.75rem] rounded-lg" />
-        ))}
-      </div>
-    </section>
-  );
-}
 
 function SectionCardsSkeleton() {
   return (
@@ -96,8 +99,8 @@ function SectionCardsSkeleton() {
 function DesktopLoadingSkeleton() {
   return (
     <MasterContentStack density="compact" className="hidden lg:flex">
-      <HeroSkeleton variant="desktop" />
-      <CommandStripSkeleton />
+      <CockpitSkeleton variant="desktop" />
+      <Skeleton className="h-24 w-full rounded-xl" />
 
       {DASHBOARD_LOADING_SECTIONS.map((section) => (
         <MasterPageSection
@@ -116,7 +119,7 @@ function DesktopLoadingSkeleton() {
 function MobileLoadingSkeleton() {
   return (
     <MasterContentStack density="compact">
-      <HeroSkeleton variant="mobile" />
+      <CockpitSkeleton variant="mobile" />
       <Skeleton className="h-[3.25rem] w-full rounded-lg" />
       <Skeleton className="h-[3.25rem] w-full rounded-lg" />
 

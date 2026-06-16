@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AltairRecommendationsSection } from "@/shared/components/dashboard/AltairRecommendationsSection";
-import { DashboardCommandStrip } from "@/shared/components/dashboard/DashboardCommandStrip";
 import { DashboardSignatureHero } from "@/shared/components/dashboard/DashboardSignatureHero";
 import { MobileOperationsHub } from "@/shared/components/dashboard/MobileOperationsHub";
 import {
@@ -1322,8 +1321,11 @@ function DashboardContentLayout({
 
       <MasterContentStack density="compact" className="hidden lg:flex">
         <DashboardSignatureHero data={data} variant="desktop" />
-        <DashboardCommandStrip data={data} />
-        <AltairRecommendationsSection data={data} variant="desktop" />
+        <AltairRecommendationsSection
+          data={data}
+          variant="desktop"
+          skipTopPriority
+        />
 
         {sectionOrder.map((sectionId) => {
           const content = sectionContent[sectionId];

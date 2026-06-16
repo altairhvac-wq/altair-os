@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { AtmosphereBackground, type AtmosphereTone } from "./AtmosphereBackground";
 import { LightBeam, type LightBeamPosition, type LightBeamTone } from "./LightBeam";
 
-export type HorizonHeroSize = "compact" | "standard";
+export type HorizonHeroSize = "compact" | "standard" | "cockpit";
 
 export type HorizonHeroProps = {
   children: ReactNode;
@@ -26,6 +26,10 @@ const sizeStyles: Record<
   standard: {
     shell: "rounded-2xl",
     content: "px-3 py-3 sm:px-5 sm:py-4 lg:px-6 lg:py-5",
+  },
+  cockpit: {
+    shell: "rounded-2xl",
+    content: "px-3 py-2.5 sm:px-4 sm:py-3 lg:px-5 lg:py-3.5",
   },
 };
 
