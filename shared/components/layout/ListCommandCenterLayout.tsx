@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 /**
  * @deprecated Superseded by `MasterListPageLayout` (`shared/design-system/shell/`).
- * No migrated list pages import this component. Retained until loading states move to
- * `MasterListPageLoadingState`.
+ * No migrated list pages import this component. Retained until a later cleanup pass
+ * confirms no external references remain.
  */
 type ListCommandCenterLayoutProps = {
   title: string;
