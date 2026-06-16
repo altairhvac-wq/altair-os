@@ -56,7 +56,10 @@ import {
   type JobStatus,
 } from "@/shared/types/job";
 import type { JobWorkflowActionId } from "@/shared/types/job-workflow";
-import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
+import {
+  MasterListPageLayout,
+  MasterPageSurface,
+} from "@/shared/design-system/shell";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { CustomerSearchResultCard } from "./CustomerSearchResultCard";
 import { JobDetailsPanel } from "./JobDetailsPanel";
@@ -831,7 +834,7 @@ export function JobsPageView({
   }
 
   return (
-    <ListCommandCenterLayout
+    <MasterListPageLayout
       title="Jobs"
       subtitle={subtitle}
       density="compact"
@@ -848,14 +851,31 @@ export function JobsPageView({
           </button>
         ) : undefined
       }
+      banners={
+        bulkActionMessage ? (
+          <SettingsAlertBanner tone={bulkActionTone}>
+            <div>
+              <p>{bulkActionMessage}</p>
+              {bulkActionFailureDetails?.length ? (
+                <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                  {bulkActionFailureDetails.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </SettingsAlertBanner>
+        ) : undefined
+      }
       className={
         isCreateOpen
           ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
           : undefined
       }
     >
-      <section
-        className={`flex min-h-[16rem] min-w-0 lg:flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
+      <MasterPageSurface
+        variant="card"
+        className={`flex min-h-[16rem] min-w-0 lg:min-h-0 lg:flex-1 flex-col ${
           isCreateOpen ? "max-lg:hidden" : ""
         }`}
       >
@@ -867,23 +887,6 @@ export function JobsPageView({
               todayCount={activeTodayCount}
               allCount={activeAllCount}
             />
-          </div>
-        ) : null}
-
-        {bulkActionMessage ? (
-          <div className="shrink-0 border-b border-slate-100/90 px-3 py-3 sm:px-4">
-            <SettingsAlertBanner tone={bulkActionTone}>
-              <div>
-                <p>{bulkActionMessage}</p>
-                {bulkActionFailureDetails?.length ? (
-                  <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
-                    {bulkActionFailureDetails.map((detail) => (
-                      <li key={detail}>{detail}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            </SettingsAlertBanner>
           </div>
         ) : null}
 
@@ -915,7 +918,7 @@ export function JobsPageView({
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
           {renderMainContent()}
         </div>
-      </section>
+      </MasterPageSurface>
 
       <JobDetailsPanel
         mode={panelMode}
@@ -927,6 +930,6 @@ export function JobsPageView({
         isSubmitting={isPending}
         createInitialData={createInitialData}
       />
-    </ListCommandCenterLayout>
+    </MasterListPageLayout>
   );
 }
