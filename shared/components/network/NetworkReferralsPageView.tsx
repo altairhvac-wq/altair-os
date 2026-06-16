@@ -10,6 +10,15 @@ import {
 import { NETWORK_PARTNER_MANAGER_MESSAGE } from "@/lib/database/errors";
 import { toggleOwnNetworkProfileVisibilityAction } from "@/app/actions/network-referrals";
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
+import {
+  MasterContentStack,
+  MasterPageCanvas,
+  MasterPageHeader,
+  MasterPageSection,
+  MasterPageSurface,
+  MasterShellPage,
+  masterListPageScrollRegionClass,
+} from "@/shared/design-system/shell";
 import { buildNetworkReferralSummaryMetrics } from "@/shared/lib/network/network-referral-metrics";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import {
@@ -472,130 +481,126 @@ export function NetworkReferralsPageView({
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4 lg:h-[calc(100dvh-7rem)] lg:overflow-hidden">
-      <header className="admin-page-header shrink-0">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="admin-heading-eyebrow">Altair Network</p>
-            <h1 className="admin-heading-page">
-              Send and receive trusted trade referrals.
-            </h1>
-            <p className="admin-text-helper mt-1 max-w-3xl">
-              Build trusted partner relationships, pass overflow work, and keep
-              every opportunity inside Altair.
+    <MasterShellPage fillViewport>
+      <MasterPageCanvas width="wide" className="min-h-0 flex-1">
+        <MasterContentStack density="default" className="shrink-0">
+          <MasterPageHeader
+            eyebrow="Altair Network"
+            title="Send and receive trusted trade referrals."
+            subtitle="Build trusted partner relationships, pass overflow work, and keep every opportunity inside Altair."
+            secondaryAction={
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white">
+                <Network className="h-5 w-5" />
+              </div>
+            }
+          />
+
+          {ownProfile && canSendReferral ? (
+            <MasterPageSurface
+              variant="section"
+              className="flex flex-wrap items-center justify-between gap-3 !rounded-2xl !p-4"
+            >
+              <div>
+                <p className="text-sm font-semibold text-slate-900">
+                  Your network profile
+                </p>
+                <p className="text-xs text-slate-500">
+                  {ownProfile.isVisible
+                    ? "Visible in the directory for trusted referrals."
+                    : "Hidden from the directory. Turn on visibility to receive referrals."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleToggleVisibility}
+                disabled={isVisibilityPending}
+                className="inline-flex items-center gap-2 admin-btn-secondary disabled:opacity-60"
+              >
+                {ownProfile.isVisible ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+                {ownProfile.isVisible ? "Hide profile" : "Make profile visible"}
+              </button>
+            </MasterPageSurface>
+          ) : null}
+
+          {visibilityError ? (
+            <p className="text-sm text-rose-700">{visibilityError}</p>
+          ) : null}
+
+          {invitedByCompanyName ? (
+            <NetworkInvitedByBanner
+              sourceCompanyName={invitedByCompanyName}
+              companyId={companyId}
+            />
+          ) : null}
+
+          {incomingNetworkInvites.length > 0 ? (
+            <IncomingNetworkInvitesCard
+              invites={incomingNetworkInvites}
+              canAccept={canManageNetwork}
+              timeZone={timeZone}
+              variant={incomingNetworkInvites.length === 1 ? "banner" : "section"}
+            />
+          ) : null}
+
+          {canSendReferral || canManageReceivedReferrals ? (
+            <MasterContentStack density="compact">
+              {canSendReferral ? (
+                <MasterPageSection title="Sent referrals">
+                  <NetworkReferralSummaryCards
+                    direction="sent"
+                    metrics={sentReferralMetrics}
+                  />
+                </MasterPageSection>
+              ) : null}
+              {canManageReceivedReferrals ? (
+                <MasterPageSection title="Received referrals">
+                  <NetworkReferralSummaryCards
+                    direction="received"
+                    metrics={receivedReferralMetrics}
+                  />
+                </MasterPageSection>
+              ) : null}
+            </MasterContentStack>
+          ) : null}
+
+          <nav
+            className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1"
+            aria-label="Network sections"
+          >
+            {NETWORK_REFERRALS_TAB_OPTIONS.map((tab) => (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => handleTabChange(tab.value)}
+                className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                  activeTab === tab.value
+                    ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+
+          {networkActionError && !networkActionErrorProfileId ? (
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {networkActionError}
             </p>
-          </div>
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white">
-            <Network className="h-5 w-5" />
-          </div>
-        </div>
+          ) : null}
+        </MasterContentStack>
 
-        {ownProfile && canSendReferral ? (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                Your network profile
-              </p>
-              <p className="text-xs text-slate-500">
-                {ownProfile.isVisible
-                  ? "Visible in the directory for trusted referrals."
-                  : "Hidden from the directory. Turn on visibility to receive referrals."}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleToggleVisibility}
-              disabled={isVisibilityPending}
-              className="inline-flex items-center gap-2 admin-btn-secondary disabled:opacity-60"
-            >
-              {ownProfile.isVisible ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-              {ownProfile.isVisible ? "Hide profile" : "Make profile visible"}
-            </button>
-          </div>
-        ) : null}
-
-        {visibilityError ? (
-          <p className="mt-2 text-sm text-rose-700">{visibilityError}</p>
-        ) : null}
-
-        {invitedByCompanyName ? (
-          <NetworkInvitedByBanner
-            sourceCompanyName={invitedByCompanyName}
-            companyId={companyId}
-          />
-        ) : null}
-
-        {incomingNetworkInvites.length > 0 ? (
-          <IncomingNetworkInvitesCard
-            invites={incomingNetworkInvites}
-            canAccept={canManageNetwork}
-            timeZone={timeZone}
-            variant={incomingNetworkInvites.length === 1 ? "banner" : "section"}
-          />
-        ) : null}
-
-        {canSendReferral || canManageReceivedReferrals ? (
-          <div className="mt-4 space-y-4">
-            {canSendReferral ? (
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Sent referrals
-                </p>
-                <NetworkReferralSummaryCards
-                  direction="sent"
-                  metrics={sentReferralMetrics}
-                />
-              </div>
-            ) : null}
-            {canManageReceivedReferrals ? (
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Received referrals
-                </p>
-                <NetworkReferralSummaryCards
-                  direction="received"
-                  metrics={receivedReferralMetrics}
-                />
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
-        <nav
-          className="mt-4 flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1"
-          aria-label="Network sections"
-        >
-          {NETWORK_REFERRALS_TAB_OPTIONS.map((tab) => (
-            <button
-              key={tab.value}
-              type="button"
-              onClick={() => handleTabChange(tab.value)}
-              className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-                activeTab === tab.value
-                  ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-
-        {networkActionError && !networkActionErrorProfileId ? (
-          <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {networkActionError}
-          </p>
-        ) : null}
-      </header>
+        <MasterContentStack scrollable className="min-h-0 lg:flex-1">
 
       {activeTab === "directory" ? (
-        <div className="flex min-h-0 min-w-0 lg:flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">
-          <section
-            className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:overflow-hidden admin-card lg:min-h-0 lg:flex-1`}
+        <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-1 lg:flex-row lg:overflow-hidden">
+          <MasterPageSurface
+            variant="card"
+            className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden`}
           >
             <div className="shrink-0 border-b border-slate-100 px-4 py-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -645,7 +650,7 @@ export function NetworkReferralsPageView({
               </div>
             </div>
 
-            <div className="@container min-h-0 min-w-0 flex-1 overflow-x-hidden p-4 lg:overflow-y-auto">
+            <div className={`@container p-4 ${masterListPageScrollRegionClass}`}>
               {filteredProfiles.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-10 text-center">
                   <p className="text-sm font-medium text-slate-700">
@@ -705,7 +710,7 @@ export function NetworkReferralsPageView({
                 </div>
               )}
             </div>
-          </section>
+          </MasterPageSurface>
 
           <NetworkProfileDetailPanel
             mode={panelMode}
@@ -753,8 +758,11 @@ export function NetworkReferralsPageView({
       ) : null}
 
       {activeTab === "my-network" ? (
-        <div className="flex min-h-0 min-w-0 lg:flex-1 flex-col gap-4 lg:flex-row lg:overflow-hidden">
-          <section className="admin-card flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden">
+        <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-1 lg:flex-row lg:overflow-hidden">
+          <MasterPageSurface
+            variant="card"
+            className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden"
+          >
             <div className="shrink-0 border-b border-slate-100 px-4 py-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -783,7 +791,7 @@ export function NetworkReferralsPageView({
               </div>
             </div>
 
-            <div className="@container min-h-0 min-w-0 flex-1 overflow-x-hidden p-4 lg:overflow-y-auto">
+            <div className={`@container p-4 ${masterListPageScrollRegionClass}`}>
               {!canManageNetwork ? (
                 <p className="text-sm text-slate-600">
                   Trusted partners are managed by company owners and admins.
@@ -803,7 +811,7 @@ export function NetworkReferralsPageView({
                 </div>
               )}
             </div>
-          </section>
+          </MasterPageSurface>
 
           <NetworkProfileDetailPanel
             mode={panelMode}
@@ -851,7 +859,10 @@ export function NetworkReferralsPageView({
       ) : null}
 
       {activeTab === "invitations" ? (
-        <section className="admin-card min-h-0 flex-1 overflow-y-auto p-4">
+        <MasterPageSurface
+          variant="card"
+          className="min-h-0 flex-1 overflow-y-auto p-4"
+        >
           {!canManageNetwork ? (
             <p className="text-sm text-slate-600">
               Network invitations are managed by company owners and admins.
@@ -962,11 +973,14 @@ export function NetworkReferralsPageView({
               </div>
             </div>
           )}
-        </section>
+        </MasterPageSurface>
       ) : null}
 
       {activeTab === "sent-referrals" ? (
-        <section className="admin-card min-h-0 flex-1 overflow-y-auto p-4">
+        <MasterPageSurface
+          variant="card"
+          className="min-h-0 flex-1 overflow-y-auto p-4"
+        >
           {!canSendReferral ? (
             <p className="text-sm text-slate-600">
               Sent referrals are visible to company owners and admins.
@@ -997,11 +1011,14 @@ export function NetworkReferralsPageView({
               ))}
             </div>
           )}
-        </section>
+        </MasterPageSurface>
       ) : null}
 
       {activeTab === "received-referrals" ? (
-        <section className="admin-card min-h-0 flex-1 overflow-y-auto p-4">
+        <MasterPageSurface
+          variant="card"
+          className="min-h-0 flex-1 overflow-y-auto p-4"
+        >
           {!canManageReceivedReferrals ? (
             <p className="text-sm text-slate-600">
               Received referrals are visible to lead management roles.
@@ -1034,8 +1051,10 @@ export function NetworkReferralsPageView({
               ))}
             </div>
           )}
-        </section>
+        </MasterPageSurface>
       ) : null}
-    </div>
+        </MasterContentStack>
+      </MasterPageCanvas>
+    </MasterShellPage>
   );
 }

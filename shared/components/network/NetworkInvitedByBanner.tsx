@@ -33,7 +33,7 @@ export function NetworkInvitedByBanner({
   }
 
   return (
-    <div className="mt-4 flex items-start justify-between gap-3 rounded-2xl border border-cyan-200 bg-cyan-50/80 px-4 py-3">
+    <div className="flex items-start justify-between gap-3 rounded-2xl border border-cyan-200 bg-cyan-50/80 px-4 py-3">
       <div>
         <p className="text-sm font-semibold text-slate-900">Invited by</p>
         <p className="mt-0.5 text-sm text-slate-700">{sourceCompanyName}</p>

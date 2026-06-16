@@ -61,6 +61,8 @@ Exported from `tokens.ts` for the repeated class strings across migrated pages (
 
 **Migrated (7):** Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items / Price Book — all use `MasterListPageLayout` with `density="compact"`.
 
+**Migrated hub page (1):** Network — uses basic Master Shell primitives (`MasterShellPage`, `MasterPageCanvas`, `MasterPageHeader`, `MasterContentStack`, `MasterPageSection`, `MasterPageSurface`). Not a list page; tabbed relationship hub with master-detail panels.
+
 **Legacy loading:** `ListCommandCenterLoadingState` has no remaining list-page imports. Safe to mark deprecated; keep the file until non-list loading wrappers are audited.
 
 **Legacy layout:** `ListCommandCenterLayout` has no remaining page imports. Deprecated; keep the file until a later cleanup pass.

@@ -66,7 +66,7 @@ export function IncomingNetworkInvitesCard({
     const isAccepting = isPending && acceptingId === invite.id;
 
     return (
-      <section className="mt-4 rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 to-white p-4 shadow-sm">
+      <section className="rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 to-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-900">
