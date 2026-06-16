@@ -33,6 +33,7 @@ import { UnassignedJobsModal } from "./UnassignedJobsModal";
 import {
   MasterContentStack,
   MasterPageCanvas,
+  MasterPageSurface,
   MasterShellPage,
 } from "@/shared/design-system/shell";
 
@@ -423,8 +424,9 @@ export function DispatchPageView({
           ) : null}
 
           <div className="flex min-h-0 min-w-0 max-w-full lg:flex-1 flex-col gap-2 sm:gap-4 lg:flex-row lg:items-stretch">
-        <section
-          className={`admin-panel flex min-h-0 min-w-0 max-w-full lg:flex-1 flex-col overflow-hidden ${
+        <MasterPageSurface
+          variant="panel"
+          className={`max-w-full lg:flex-1 ${
             dispatchPageFocus?.emphasizeBoard
               ? "ring-1 ring-cyan-500/20"
               : ""
@@ -478,7 +480,7 @@ export function DispatchPageView({
               />
             )}
           </div>
-        </section>
+        </MasterPageSurface>
 
         {selectedJob ? (
           <div className="hidden lg:flex lg:h-full lg:min-h-0 lg:w-[380px] lg:shrink-0 lg:flex-col lg:overflow-hidden">

@@ -1,6 +1,7 @@
 import {
   MasterContentStack,
   MasterPageCanvas,
+  MasterPageSurface,
   MasterShellPage,
 } from "@/shared/design-system/shell";
 
@@ -32,8 +33,8 @@ export function DispatchLoadingState() {
           <Skeleton className="hidden h-12 shrink-0 rounded-xl lg:block" />
 
           <div className="flex min-h-0 lg:flex-1 flex-col gap-2 sm:gap-4 lg:flex-row">
-            <div className="flex min-h-0 lg:flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <div className="border-b border-slate-100 px-4 py-3">
+            <MasterPageSurface variant="panel" className="lg:flex-1">
+              <div className="admin-panel-header shrink-0 px-3 py-2 sm:px-4 sm:py-3">
                 <Skeleton className="h-4 w-40" />
                 <Skeleton className="mt-2 hidden h-3 w-56 sm:block" />
               </div>
@@ -42,7 +43,7 @@ export function DispatchLoadingState() {
                   <Skeleton key={i} className="h-20 rounded-xl" />
                 ))}
               </div>
-            </div>
+            </MasterPageSurface>
 
             <div className="hidden w-[380px] shrink-0 flex-col rounded-2xl border border-slate-200 bg-white p-5 lg:flex">
               <Skeleton className="h-5 w-32" />
