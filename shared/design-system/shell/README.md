@@ -175,7 +175,6 @@ Reference implementations: Customer 360, Job detail, Estimate detail, Invoice de
 
 **Known inconsistencies (non-blocking):**
 
-- `EstimatesLoadingState` uses default skeleton props (no summary strip skeleton); loaded page shows summary cards when data exists.
 - Invoice/estimate overlay modes use raw `max-w-5xl` + `adminPageStackClass` instead of `MasterDetailPageLayout`.
 
 **Dispatch:** Phases 1–4 complete (Master Shell scaffold, loading state, board surface, workbench row token). Desktop and mobile smoke tests passed. Phase 5 mobile viewport lock **deferred/skipped** — Dispatch mobile behavior differs from list pages.

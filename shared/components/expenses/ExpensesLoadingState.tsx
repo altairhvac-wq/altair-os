@@ -5,7 +5,8 @@ export function ExpensesLoadingState() {
     <MasterListPageLoadingState
       summaryCardCount={4}
       showViewTabs={false}
-      filterControlCount={3}
+      filterVariant="stacked"
+      filterControlCount={7}
     />
   );
 }

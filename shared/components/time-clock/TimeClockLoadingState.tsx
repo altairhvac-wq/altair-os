@@ -29,10 +29,19 @@ export function TimeClockLoadingState() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-3 w-1 rounded-full" />
             <Skeleton className="h-4 w-28" />
           </div>
 
-          <Skeleton className="h-16 rounded-xl" />
+          <section className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm sm:px-4">
+            <div className="flex items-center gap-3">
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-56 max-w-full" />
+              </div>
+              <Skeleton className="h-10 w-28 shrink-0 rounded-lg" />
+            </div>
+          </section>
 
           <MasterPageSurface variant="card">
             <div className={masterPanelHeaderClass}>

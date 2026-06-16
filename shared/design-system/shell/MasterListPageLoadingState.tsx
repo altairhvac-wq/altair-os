@@ -1,3 +1,8 @@
+import {
+  adminCompactSummaryMetricClass,
+  adminCompactSummaryStripClass,
+  adminCompactSummaryStripInnerClass,
+} from "@/shared/lib/admin-density";
 import { MasterContentStack } from "./MasterContentStack";
 import { MasterPageSurface } from "./MasterPageSurface";
 import { MasterShellPage } from "./MasterShellPage";
@@ -29,6 +34,8 @@ export type MasterListPageLoadingStateProps = {
   showSecondaryAction?: boolean;
   /** Number of filter control skeletons in the toolbar row */
   filterControlCount?: number;
+  /** Filter toolbar layout — `stacked` mirrors Expenses-style multi-row filters */
+  filterVariant?: "inline" | "stacked";
   /** Number of table row skeletons */
   tableRowCount?: number;
   /** Alias for `tableRowCount` */
@@ -49,11 +56,39 @@ export function MasterListPageLoadingState({
   showViewTabs = true,
   showSecondaryAction = false,
   filterControlCount = 2,
+  filterVariant = "inline",
   tableRowCount = 8,
   rowCount,
   tableRowVariant = "default",
 }: MasterListPageLoadingStateProps) {
   const resolvedRowCount = rowCount ?? tableRowCount;
+
+  const filterToolbar =
+    filterVariant === "stacked" ? (
+      <div className="shrink-0 border-b border-slate-100/90 bg-white px-4 py-3">
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-10 w-full rounded-lg" />
+          <div className="flex flex-wrap items-center gap-2">
+            <Skeleton className="h-7 w-28 rounded-full" />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: filterControlCount }).map((_, index) => (
+              <Skeleton key={index} className="h-10 w-36 rounded-lg" />
+            ))}
+          </div>
+          <Skeleton className="h-4 w-24" />
+        </div>
+      </div>
+    ) : (
+      <div className="admin-panel-header shrink-0 p-4 sm:px-5">
+        <div className="flex flex-wrap gap-3">
+          <Skeleton className="h-9 w-full max-w-md" />
+          {Array.from({ length: filterControlCount }).map((_, index) => (
+            <Skeleton key={index} className="h-9 w-36" />
+          ))}
+        </div>
+      </div>
+    );
 
   return (
     <MasterShellPage fillViewport density="compact">
@@ -84,7 +119,21 @@ export function MasterListPageLoadingState({
 
       {summaryCardCount > 0 ? (
         <>
-          <Skeleton className="h-10 shrink-0 rounded-lg sm:hidden" />
+          <div className={adminCompactSummaryStripClass} aria-hidden="true">
+            <div className={adminCompactSummaryStripInnerClass}>
+              {Array.from({ length: summaryCardCount }).map((_, index) => (
+                <div
+                  key={index}
+                  className={`${adminCompactSummaryMetricClass} ${
+                    index > 0 ? "border-l border-slate-200 pl-3" : ""
+                  }`}
+                >
+                  <Skeleton className="h-3 w-10" />
+                  <Skeleton className="h-4 w-8" />
+                </div>
+              ))}
+            </div>
+          </div>
           <div
             className={`hidden shrink-0 gap-2.5 sm:grid sm:grid-cols-2 ${summaryLgColumnsClass}`}
           >
@@ -98,7 +147,7 @@ export function MasterListPageLoadingState({
       <MasterContentStack density="compact" scrollable>
         <MasterPageSurface variant="card" className={masterListPageSurfaceClass}>
           {showViewTabs ? (
-            <div className="shrink-0 border-b border-slate-100/90 px-4 py-2.5">
+            <div className="shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4">
               <div className="flex gap-2">
                 <Skeleton className="h-9 w-24 rounded-lg" />
                 <Skeleton className="h-9 w-20 rounded-lg" />
@@ -106,14 +155,7 @@ export function MasterListPageLoadingState({
             </div>
           ) : null}
 
-          <div className="admin-panel-header shrink-0 p-4 sm:px-5">
-            <div className="flex flex-wrap gap-3">
-              <Skeleton className="h-9 w-full max-w-md" />
-              {Array.from({ length: filterControlCount }).map((_, index) => (
-                <Skeleton key={index} className="h-9 w-36" />
-              ))}
-            </div>
-          </div>
+          {filterToolbar}
 
           <div className={`${masterListPageScrollRegionClass} p-4`}>
             <div className="space-y-3">
