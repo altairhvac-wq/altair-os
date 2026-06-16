@@ -6,6 +6,7 @@ export type MasterPageSectionProps = {
   description?: string;
   children: ReactNode;
   density?: MasterShellDensity;
+  id?: string;
   className?: string;
 };
 
@@ -24,6 +25,7 @@ export function MasterPageSection({
   description,
   children,
   density = "default",
+  id,
   className = "",
 }: MasterPageSectionProps) {
   if (!hasVisibleChildren(children)) {
@@ -32,6 +34,7 @@ export function MasterPageSection({
 
   return (
     <section
+      id={id}
       className={`flex min-w-0 flex-col ${masterShellSectionGap[density]} ${className}`}
     >
       <header className="border-b border-slate-200/80 pb-1.5">

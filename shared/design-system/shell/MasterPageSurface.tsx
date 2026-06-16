@@ -6,6 +6,7 @@ export type MasterPageSurfaceProps = {
   children: ReactNode;
   /** card = admin-card, panel = admin-panel, section = compact bordered block */
   variant?: MasterPageSurfaceVariant;
+  id?: string;
   className?: string;
 };
 
@@ -18,9 +19,12 @@ const variantClass: Record<MasterPageSurfaceVariant, string> = {
 export function MasterPageSurface({
   children,
   variant = "card",
+  id,
   className = "",
 }: MasterPageSurfaceProps) {
   return (
-    <div className={`${variantClass[variant]} ${className}`}>{children}</div>
+    <div id={id} className={`${variantClass[variant]} ${className}`}>
+      {children}
+    </div>
   );
 }
