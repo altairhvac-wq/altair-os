@@ -130,3 +130,38 @@
 **Hardening:** Server component only, static sample data, no AI/DB/browser APIs, TypeScript strict, mobile-responsive spacious layout, build-verified.
 
 **Status:** Prototype live at `/workspace-v1`. Not in admin nav. Blueprint for Altair V2 Workspace — not a production page.
+
+---
+
+## 2026-06-15 — V2 Master Shell Migration — List, Detail, Hub Complete
+
+**Scope:** Production page shell migration using `shared/design-system/shell/` primitives. No product logic, routes, server actions, Supabase behavior, or RLS changes.
+
+**Master List Shell migrated (7):** Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items / Price Book — `MasterListPageLayout` + `MasterListPageLoadingState`, compact density.
+
+**Master Detail Shell migrated (5):** Customer 360, Job Detail, Estimate Detail, Invoice Detail, Team Member Profile — `MasterDetailPageLayout` + `MasterDetailPageLoadingState`.
+
+**Hub / admin form shells migrated (3):**
+- Network — tabbed relationship hub on Master Shell primitives
+- Settings — admin/form hub, compact density
+- System Check — admin/form hub, compact density
+
+**Legacy deprecated (zero active imports):**
+- `ListCommandCenterLayout`
+- `ListCommandCenterLoadingState`
+
+**Page-family patterns established:** list, detail, hub, settings/admin form. Report/dashboard and board/workbench (Dispatch) patterns pending.
+
+**Next sequence:** Reports → Tax Summary → Dashboard loading alignment → remaining admin utility/form pages → Dispatch last.
+
+**Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md` (shell migration appendix).
+
+---
+
+## 2026-06-15 — Documentation Sync Pass (Master Shell)
+
+**Scope:** Living status/planning docs only. No app code changes.
+
+**Updated:** Master status, current sprint, V2 roadmap, experience map shell appendix, this log.
+
+**Principle reaffirmed:** V2 redesign is experience-layer architecture — calm, organized, intelligent, premium — not feature work.
