@@ -18,6 +18,7 @@ import {
   MasterPageSection,
   MasterPageSurface,
   MasterShellPage,
+  masterPanelHeaderClass,
 } from "@/shared/design-system/shell";
 
 type AdminTimeTrackingViewProps = {
@@ -170,7 +171,9 @@ export function AdminTimeTrackingView({
           </MasterPageSection>
 
           <MasterPageSurface variant="card">
-            <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div
+              className={`${masterPanelHeaderClass} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}
+            >
               <div>
                 <h2 className="text-sm font-semibold text-slate-900">Time</h2>
                 <p className="text-xs text-slate-500">

@@ -5,6 +5,7 @@ import {
   MasterPageHeader,
   MasterPageSurface,
   MasterShellPage,
+  masterPanelHeaderClass,
 } from "@/shared/design-system/shell";
 import {
   masterListPageScrollRegionClass,
@@ -34,7 +35,7 @@ export function TimeClockLoadingState() {
           <Skeleton className="h-16 rounded-xl" />
 
           <MasterPageSurface variant="card">
-            <div className="border-b border-slate-100 px-4 py-4">
+            <div className={masterPanelHeaderClass}>
               <div className="space-y-2">
                 <Skeleton className="h-4 w-12" />
                 <Skeleton className="h-3 w-48" />

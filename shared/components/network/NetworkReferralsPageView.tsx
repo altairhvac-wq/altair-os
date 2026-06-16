@@ -18,6 +18,8 @@ import {
   MasterPageSurface,
   MasterShellPage,
   masterListPageScrollRegionClass,
+  masterPanelHeaderClass,
+  masterSecondaryActionClass,
 } from "@/shared/design-system/shell";
 import { buildNetworkReferralSummaryMetrics } from "@/shared/lib/network/network-referral-metrics";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
@@ -514,7 +516,7 @@ export function NetworkReferralsPageView({
                 type="button"
                 onClick={handleToggleVisibility}
                 disabled={isVisibilityPending}
-                className="inline-flex items-center gap-2 admin-btn-secondary disabled:opacity-60"
+                className={`${masterSecondaryActionClass} disabled:opacity-60`}
               >
                 {ownProfile.isVisible ? (
                   <EyeOff className="h-4 w-4" />
@@ -602,7 +604,7 @@ export function NetworkReferralsPageView({
             variant="card"
             className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden`}
           >
-            <div className="shrink-0 border-b border-slate-100 px-4 py-4">
+            <div className={masterPanelHeaderClass}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-base font-bold text-slate-900">Directory</h2>
@@ -763,7 +765,7 @@ export function NetworkReferralsPageView({
             variant="card"
             className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden"
           >
-            <div className="shrink-0 border-b border-slate-100 px-4 py-4">
+            <div className={masterPanelHeaderClass}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-base font-bold text-slate-900">
@@ -778,7 +780,7 @@ export function NetworkReferralsPageView({
                     <button
                       type="button"
                       onClick={handleOpenInviteForm}
-                      className="inline-flex items-center gap-1.5 admin-btn-secondary"
+                      className={masterSecondaryActionClass}
                     >
                       <UserPlus className="h-4 w-4" />
                       Invite company

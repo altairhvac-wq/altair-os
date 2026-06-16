@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, BarChart3, Briefcase, Clock, TrendingUp } from "lucide-react";
+import { masterPanelHeaderClass } from "@/shared/design-system/shell/tokens";
 import { formatCompactCurrency } from "@/shared/types/analytics";
 import { formatCurrency } from "@/shared/types/customer";
 import { formatJobProfitabilityLaborHours } from "@/shared/types/job-profitability";
@@ -143,7 +144,7 @@ function ReportTimeSeriesChartCard({ chart }: { chart: ReportOperationalChart })
 
   return (
     <section className="flex flex-col overflow-hidden admin-card">
-      <div className="admin-panel-header px-4 py-3 sm:px-5 sm:py-4">
+      <div className={`${masterPanelHeaderClass} px-4 py-3 sm:px-5 sm:py-4`}>
         <div className="flex items-center gap-2">
           <Icon className="h-4 w-4 text-slate-700" aria-hidden="true" />
           <h3 className="admin-heading-section sm:text-base">{chart.title}</h3>

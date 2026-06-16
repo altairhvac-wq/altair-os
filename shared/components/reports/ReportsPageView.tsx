@@ -14,6 +14,8 @@ import {
   MasterPageCanvas,
   MasterPageHeader,
   MasterShellPage,
+  masterListPagePrimaryActionClass,
+  masterSecondaryActionClass,
 } from "@/shared/design-system/shell";
 import { AccountantSummaryCard } from "./AccountantSummaryCard";
 import { AiBusinessSummaryCard } from "./AiBusinessSummaryCard";
@@ -88,32 +90,32 @@ export function ReportsPageView({
             title="Reports"
             subtitle="Track revenue, cash flow, sales performance, and operational health."
             className="flex-col items-stretch gap-3 sm:flex-row sm:items-center"
+            secondaryAction={
+              <button
+                type="button"
+                className={`${masterSecondaryActionClass} justify-center sm:justify-start`}
+                onClick={() => handleGenerateSummary(false)}
+                disabled={!aiFeaturesEnabled || isSummaryPending}
+              >
+                {isSummaryPending ? (
+                  <Loader2
+                    className="h-4 w-4 animate-spin"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+                )}
+                Generate AI Summary
+              </button>
+            }
             primaryAction={
-              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-                <button
-                  type="button"
-                  className="admin-btn-secondary inline-flex w-full items-center justify-center gap-2 sm:w-auto"
-                  onClick={() => handleGenerateSummary(false)}
-                  disabled={!aiFeaturesEnabled || isSummaryPending}
-                >
-                  {isSummaryPending ? (
-                    <Loader2
-                      className="h-4 w-4 animate-spin"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <Sparkles className="h-4 w-4" aria-hidden="true" />
-                  )}
-                  Generate AI Summary
-                </button>
-                <Link
-                  href={taxSummaryHref}
-                  className="admin-btn-primary inline-flex w-full items-center justify-center gap-2 sm:w-auto"
-                >
-                  <FileText className="h-4 w-4" aria-hidden="true" />
-                  Export Tax Summary
-                </Link>
-              </div>
+              <Link
+                href={taxSummaryHref}
+                className={`${masterListPagePrimaryActionClass} justify-center sm:justify-start`}
+              >
+                <FileText className="h-4 w-4" aria-hidden="true" />
+                Export Tax Summary
+              </Link>
             }
           />
 

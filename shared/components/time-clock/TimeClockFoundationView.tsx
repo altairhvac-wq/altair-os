@@ -13,6 +13,7 @@ import {
   MasterPageHeader,
   MasterPageSurface,
   MasterShellPage,
+  masterPanelHeaderClass,
 } from "@/shared/design-system/shell";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { TimeClockEntry } from "@/shared/types/time-clock";
@@ -158,7 +159,7 @@ export function TimeClockFoundationView({
           />
 
           <MasterPageSurface variant="card">
-            <div className="border-b border-slate-100 px-4 py-4">
+            <div className={masterPanelHeaderClass}>
               <h2 className="text-sm font-semibold text-slate-900">Time</h2>
               <p className="text-xs text-slate-500">
                 {canViewCompanyEntries ? "Company shift clock entries" : "Your shift clock entries"} ·{" "}

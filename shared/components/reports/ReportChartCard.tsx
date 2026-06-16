@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { masterPanelHeaderClass } from "@/shared/design-system/shell/tokens";
 
 type ReportChartCardProps = {
   title: string;
@@ -24,7 +25,7 @@ export function ReportChartCard({
   return (
     <section className={`flex h-full flex-col overflow-hidden admin-card ${className}`}>
       <div
-        className={`admin-panel-header px-4 sm:px-4 ${
+        className={`${masterPanelHeaderClass} px-4 sm:px-4 ${
           compact ? "py-2 sm:py-2.5" : "py-2.5 sm:py-3"
         }`}
       >

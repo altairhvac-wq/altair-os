@@ -20,11 +20,11 @@ export function TaxSummaryLoadingState() {
             className="no-print flex-col items-stretch gap-3 sm:flex-row sm:items-center"
             title="Tax Summary"
             subtitle="Printable accountant summary for the selected reporting period."
+            secondaryAction={
+              <Skeleton className="h-9 w-full rounded-lg sm:w-36" />
+            }
             primaryAction={
-              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                <Skeleton className="h-9 w-full rounded-lg sm:w-36" />
-                <Skeleton className="h-9 w-full rounded-lg sm:w-36" />
-              </div>
+              <Skeleton className="h-9 w-full rounded-lg sm:w-36" />
             }
           />
 

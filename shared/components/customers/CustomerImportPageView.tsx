@@ -38,6 +38,8 @@ import {
   MasterPageHeader,
   MasterPageSurface,
   MasterShellPage,
+  masterPanelHeaderClass,
+  masterSecondaryActionClass,
 } from "@/shared/design-system/shell";
 
 type CustomerImportPageViewProps = {
@@ -268,7 +270,7 @@ export function CustomerImportPageView({
             secondaryAction={
               <Link
                 href="/customers"
-                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-secondary px-3 py-1.5 text-sm"
+                className={masterSecondaryActionClass}
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Back to Customers</span>
@@ -392,7 +394,7 @@ export function CustomerImportPageView({
               <a
                 href="/templates/customer-import-template.csv"
                 download="customer-import-template.csv"
-                className="inline-flex h-9 items-center gap-1.5 rounded-xl admin-btn-secondary px-3 py-1.5 text-sm"
+                className={masterSecondaryActionClass}
               >
                 <Download className="h-3.5 w-3.5" />
                 Download template
@@ -400,7 +402,7 @@ export function CustomerImportPageView({
               <a
                 href="/templates/customer-import-advanced-template.csv"
                 download="customer-import-advanced-template.csv"
-                className="inline-flex h-9 items-center gap-1.5 rounded-xl admin-btn-secondary px-3 py-1.5 text-sm"
+                className={masterSecondaryActionClass}
               >
                 <Download className="h-3.5 w-3.5" />
                 Download advanced template
@@ -574,7 +576,9 @@ export function CustomerImportPageView({
             variant="panel"
             className="min-h-0 flex flex-1 flex-col overflow-hidden"
           >
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 sm:px-6">
+            <div
+              className={`${masterPanelHeaderClass} flex flex-wrap items-center justify-between gap-2`}
+            >
               <div>
                 <h2 className="text-sm font-semibold text-slate-900">
                   Review preview

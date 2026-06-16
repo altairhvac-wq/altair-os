@@ -33,6 +33,7 @@ import {
   masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
+  masterSecondaryActionClass,
 } from "@/shared/design-system/shell";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { CustomerDetailPanel } from "./CustomerDetailPanel";
@@ -355,7 +356,7 @@ export function CustomersPageView({
         canManageCustomers ? (
           <Link
             href="/customers/import"
-            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-secondary px-3 py-1.5 text-sm"
+            className={masterSecondaryActionClass}
           >
             <Upload className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Import Customers</span>

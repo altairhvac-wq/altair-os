@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReportsPageDateRange } from "@/shared/types/reports-page";
-import { MasterPageHeader } from "@/shared/design-system/shell";
+import { MasterPageHeader, masterListPagePrimaryActionClass, masterSecondaryActionClass } from "@/shared/design-system/shell";
 
 type TaxSummaryActionsProps = {
   dateRange: ReportsPageDateRange;
@@ -17,7 +17,7 @@ export function TaxSummaryActions({ dateRange }: TaxSummaryActionsProps) {
       secondaryAction={
         <Link
           href={`/reports?range=${dateRange}`}
-          className="admin-btn-secondary inline-flex w-full items-center justify-center text-sm sm:w-auto"
+          className={`${masterSecondaryActionClass} justify-center sm:justify-start`}
         >
           Back to Reports
         </Link>
@@ -26,7 +26,7 @@ export function TaxSummaryActions({ dateRange }: TaxSummaryActionsProps) {
         <button
           type="button"
           onClick={() => window.print()}
-          className="admin-btn-primary inline-flex w-full items-center justify-center text-sm sm:w-auto"
+          className={`${masterListPagePrimaryActionClass} justify-center sm:justify-start`}
         >
           Print Summary
         </button>

@@ -18,11 +18,11 @@ export function ReportsLoadingState() {
             title="Reports"
             subtitle="Track revenue, cash flow, sales performance, and operational health."
             className="flex-col items-stretch gap-3 sm:flex-row sm:items-center"
+            secondaryAction={
+              <Skeleton className="h-9 w-full rounded-lg sm:w-44" />
+            }
             primaryAction={
-              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                <Skeleton className="h-9 w-full rounded-lg sm:w-44" />
-                <Skeleton className="h-9 w-full rounded-lg sm:w-44" />
-              </div>
+              <Skeleton className="h-9 w-full rounded-lg sm:w-44" />
             }
           />
 

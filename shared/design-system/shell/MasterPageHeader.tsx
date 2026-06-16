@@ -23,6 +23,9 @@ export function MasterPageHeader({
 }: MasterPageHeaderProps) {
   const isCompact = density === "compact";
   const hasActions = Boolean(primaryAction || secondaryAction);
+  const actionRowClass = isCompact
+    ? "flex shrink-0 items-center gap-2"
+    : "flex w-full shrink-0 flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center";
 
   return (
     <header
@@ -52,7 +55,7 @@ export function MasterPageHeader({
         ) : null}
       </div>
       {hasActions ? (
-        <div className="flex shrink-0 items-center gap-2">
+        <div className={actionRowClass}>
           {secondaryAction}
           {primaryAction}
         </div>

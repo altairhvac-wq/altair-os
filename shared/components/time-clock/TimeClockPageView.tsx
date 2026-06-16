@@ -20,6 +20,8 @@ import {
   MasterPageCanvas,
   MasterPageSurface,
   MasterShellPage,
+  masterListPagePrimaryActionClass,
+  masterPanelHeaderClass,
 } from "@/shared/design-system/shell";
 import {
   masterListPageScrollRegionClass,
@@ -232,7 +234,9 @@ export function TimeClockPageView() {
               variant="card"
               className={`${listDetailListSectionClassName} ${masterListPageSurfaceClass} flex-[1_1_55%] lg:overflow-hidden`}
             >
-              <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
+              <div
+                className={`${masterPanelHeaderClass} flex flex-wrap items-center justify-between gap-3`}
+              >
                 <div>
                   <h2 className="text-base font-bold text-slate-900">
                     All time entries
@@ -244,7 +248,7 @@ export function TimeClockPageView() {
                 <button
                   type="button"
                   onClick={handleNewEntry}
-                  className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
+                  className={masterListPagePrimaryActionClass}
                 >
                   <Plus className="h-4 w-4" />
                   Manual Entry

@@ -5,6 +5,7 @@ import {
   MasterPageSection,
   MasterPageSurface,
   MasterShellPage,
+  masterPanelHeaderClass,
 } from "@/shared/design-system/shell";
 
 function Skeleton({ className }: { className?: string }) {
@@ -49,7 +50,9 @@ export function AdminTimeTrackingLoadingState() {
           </MasterPageSection>
 
           <MasterPageSurface variant="card">
-            <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div
+              className={`${masterPanelHeaderClass} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}
+            >
               <div className="space-y-2">
                 <Skeleton className="h-4 w-12" />
                 <Skeleton className="h-3 w-48" />
