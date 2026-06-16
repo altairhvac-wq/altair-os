@@ -3,7 +3,6 @@ import { canViewOperationalReports } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getReportsPageData } from "@/lib/database/queries/reports";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
-import { TaxSummaryActions } from "@/shared/components/reports/TaxSummaryActions";
 import { TaxSummaryPageView } from "@/shared/components/reports/TaxSummaryPageView";
 import { parseReportsPageDateRange } from "@/shared/types/reports-page";
 
@@ -37,12 +36,10 @@ export default async function TaxSummaryPage({ searchParams }: TaxSummaryPagePro
   );
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <TaxSummaryActions dateRange={dateRange} />
-      <TaxSummaryPageView
-        summary={data.accountantSummary}
-        generatedAt={new Date().toISOString()}
-      />
-    </div>
+    <TaxSummaryPageView
+      summary={data.accountantSummary}
+      generatedAt={new Date().toISOString()}
+      dateRange={dateRange}
+    />
   );
 }
