@@ -50,6 +50,7 @@ export {
 } from "./MasterShellPage";
 
 export {
+  masterDetailOverlayBodyInsetClass,
   masterListPageMobilePanelLockClass,
   masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,

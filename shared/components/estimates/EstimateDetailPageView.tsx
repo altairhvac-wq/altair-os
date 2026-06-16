@@ -29,9 +29,14 @@ import { EstimateStatusActions } from "./EstimateStatusActions";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
 
 import type { BillingSignature } from "@/shared/types/billing-signature";
-import { adminPageStackClass, adminCardSectionClass } from "@/shared/lib/admin-density";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 import { FocusedDocumentOverlayFooter } from "@/shared/components/layout/FocusedDocumentOverlay";
-import { MasterDetailPageLayout } from "@/shared/design-system/shell";
+import {
+  MasterContentStack,
+  MasterDetailPageLayout,
+  MasterPageCanvas,
+  masterDetailOverlayBodyInsetClass,
+} from "@/shared/design-system/shell";
 
 type EstimateDetailPageViewProps = {
   estimate: EstimateDetail;
@@ -119,16 +124,14 @@ export function EstimateDetailPageView({
               <div
                 className={`flex flex-wrap items-center gap-2 ${isOverlay ? "" : "mt-3"}`}
               >
-                {isOverlay ? (
-                  <EstimateStatusBadge status={estimate.status} />
-                ) : (
+                {!isOverlay ? (
                   <>
                     <EstimateStatusBadge status={estimate.status} />
                     <span className="hidden text-sm font-semibold text-slate-900 sm:inline">
                       {formatCurrency(estimate.total)}
                     </span>
                   </>
-                )}
+                ) : null}
                 <span className="text-sm text-slate-500">
                   Created {formatDate(estimate.createdAt)}
                 </span>
@@ -299,11 +302,9 @@ export function EstimateDetailPageView({
 
   if (isOverlay) {
     return (
-      <div
-        className={`mx-auto min-w-0 max-w-5xl ${adminPageStackClass} overflow-x-hidden px-3 py-3 pb-4 sm:px-4 sm:py-4`}
-      >
-        {pageBody}
-      </div>
+      <MasterPageCanvas width="detail" className={masterDetailOverlayBodyInsetClass}>
+        <MasterContentStack density="default">{pageBody}</MasterContentStack>
+      </MasterPageCanvas>
     );
   }
 

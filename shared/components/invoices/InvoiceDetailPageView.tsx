@@ -35,9 +35,14 @@ import { InvoiceLifecycleControl } from "./InvoiceLifecycleControl";
 
 import type { BillingSignature } from "@/shared/types/billing-signature";
 import type { InvoiceDeleteDependencies } from "@/shared/lib/invoice-lifecycle";
-import { adminPageStackClass, adminCardSectionClass } from "@/shared/lib/admin-density";
+import { adminCardSectionClass } from "@/shared/lib/admin-density";
 import { FocusedDocumentOverlayFooter } from "@/shared/components/layout/FocusedDocumentOverlay";
-import { MasterDetailPageLayout } from "@/shared/design-system/shell";
+import {
+  MasterContentStack,
+  MasterDetailPageLayout,
+  MasterPageCanvas,
+  masterDetailOverlayBodyInsetClass,
+} from "@/shared/design-system/shell";
 
 type InvoiceDetailPageViewProps = {
   invoice: InvoiceDetail;
@@ -132,9 +137,9 @@ export function InvoiceDetailPageView({
               <div
                 className={`flex flex-wrap items-center gap-2 ${isOverlay ? "" : "mt-3"}`}
               >
-                <InvoiceStatusBadge status={invoice.status} />
                 {!isOverlay ? (
                   <>
+                    <InvoiceStatusBadge status={invoice.status} />
                     <span className="hidden text-sm font-semibold text-slate-900 sm:inline">
                       {formatCurrency(invoice.total)}
                     </span>
@@ -388,11 +393,9 @@ export function InvoiceDetailPageView({
 
   if (isOverlay) {
     return (
-      <div
-        className={`mx-auto min-w-0 max-w-5xl ${adminPageStackClass} overflow-x-hidden px-3 py-3 pb-4 sm:px-4 sm:py-4`}
-      >
-        {pageBody}
-      </div>
+      <MasterPageCanvas width="detail" className={masterDetailOverlayBodyInsetClass}>
+        <MasterContentStack density="default">{pageBody}</MasterContentStack>
+      </MasterPageCanvas>
     );
   }
 

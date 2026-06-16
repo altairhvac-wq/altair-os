@@ -60,7 +60,7 @@ function OverlayHeader({
   const closeLabel = closeVariant === "back" ? "Back" : "Close";
 
   return (
-    <header className="overlay-header-safe-mobile flex shrink-0 items-start gap-2 border-b border-slate-100/90 bg-white px-3 py-2.5 sm:px-4 sm:py-3 lg:pt-3">
+    <header className="no-print overlay-header-safe-mobile flex shrink-0 items-start gap-2 border-b border-slate-100/90 bg-white px-3 py-2.5 sm:px-4 sm:py-3 lg:pt-3">
       <button
         type="button"
         onClick={onClose}
@@ -121,7 +121,7 @@ export function FocusedDocumentOverlay({
   }
 
   const resolvedFooter = footer ? (
-    <div className="admin-sticky-footer-inline overlay-form-actions px-3 py-2.5 sm:px-4">
+    <div className="no-print admin-sticky-footer-inline overlay-form-actions px-3 py-2.5 sm:px-4">
       {footer}
     </div>
   ) : null;
@@ -144,7 +144,7 @@ export function FocusedDocumentOverlay({
           aria-label="Close"
           onClick={onClose}
           disabled={closeDisabled}
-          className="absolute inset-0 z-0 hidden bg-slate-900/20 lg:block disabled:cursor-default"
+          className="no-print absolute inset-0 z-0 hidden bg-slate-900/20 lg:block disabled:cursor-default"
         />
         <div className="relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-white lg:mx-auto lg:max-w-6xl lg:shadow-2xl lg:ring-1 lg:ring-slate-200/80">
           <OverlayHeader
@@ -166,7 +166,7 @@ export function FocusedDocumentOverlay({
               </div>
               <div
                 ref={setFooterSlot}
-                className="overlay-form-actions shrink-0 empty:hidden"
+                className="no-print overlay-form-actions shrink-0 empty:hidden"
                 data-overlay-footer=""
               />
               {resolvedFooter}

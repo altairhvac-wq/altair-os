@@ -20,6 +20,13 @@ export const masterPageCanvasWidthClass: Record<MasterPageCanvasWidth, string> =
   detail: "max-w-5xl",
 };
 
+/**
+ * Body inset for loaded estimate/invoice overlays inside `FocusedDocumentOverlay`.
+ * Pair with `MasterPageCanvas` `width="detail"` + `MasterContentStack` — not `MasterDetailPageLayout`.
+ */
+export const masterDetailOverlayBodyInsetClass =
+  "overflow-x-hidden px-3 py-3 pb-4 sm:px-4 sm:py-4 print:max-w-none print:px-0 print:pb-0 print:py-0";
+
 /** Viewport-fill height for list-style pages inside AdminShell main. */
 export const masterShellViewportFillClass =
   "lg:h-[calc(100dvh-7rem)] lg:min-h-0 lg:overflow-hidden";

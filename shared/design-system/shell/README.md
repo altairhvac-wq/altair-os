@@ -117,7 +117,7 @@ Reference implementations: Customer 360, Job detail, Estimate detail, Invoice de
 4. **Section cards**: existing `adminCardSectionClass` sections or `MasterPageSurface` `variant="section"` — no forced migration of inner section markup yet.
 5. **Section anchors / nav**: page-specific components (e.g. `CustomerDetailSectionNav`) stay as children of the layout body.
 6. **Loading states**: `MasterDetailPageLoadingState` with profile + section skeleton props.
-7. **Intercepted modal routes**: estimate/invoice overlay shells may keep a local `max-w-5xl` wrapper instead of `MasterDetailPageLayout`; full-page routes use the layout.
+7. **Intercepted modal routes**: estimate/invoice loaded overlays use `FocusedDocumentOverlay` + `MasterPageCanvas` `width="detail"` + `MasterContentStack` + `masterDetailOverlayBodyInsetClass` — not `MasterDetailPageLayout`. Full-page routes use the layout.
 
 **Migrated detail pages (5):** Customer 360, Job detail, Estimate detail, Invoice detail, Team member profile.
 
@@ -175,6 +175,6 @@ Reference implementations: Customer 360, Job detail, Estimate detail, Invoice de
 
 **Known inconsistencies (non-blocking):**
 
-- Invoice/estimate overlay modes use raw `max-w-5xl` + `adminPageStackClass` instead of `MasterDetailPageLayout`.
+- Estimate/invoice overlay **loading** states still use ad-hoc skeleton wrappers (E2 pass).
 
 **Dispatch:** Phases 1–4 complete (Master Shell scaffold, loading state, board surface, workbench row token). Desktop and mobile smoke tests passed. Phase 5 mobile viewport lock **deferred/skipped** — Dispatch mobile behavior differs from list pages.
