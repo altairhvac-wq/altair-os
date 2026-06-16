@@ -478,7 +478,7 @@ export function DispatchPageView({
               <button
                 type="button"
                 onClick={handleOpenUnassigned}
-                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-amber-200/80 bg-amber-50/80 px-2.5 py-1.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100/80"
+                className="admin-panel-action admin-panel-action-warning min-h-9 gap-1.5 px-2.5 py-1.5"
               >
                 Unassigned
                 <span className="rounded-full bg-amber-200/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums">

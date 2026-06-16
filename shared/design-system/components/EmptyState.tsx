@@ -39,16 +39,14 @@ type EmptyStateActionButtonProps = {
 };
 
 function EmptyStateActionButton({ action, variant }: EmptyStateActionButtonProps) {
-  const baseStyles =
-    "inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 sm:w-auto sm:min-w-[9rem]";
-  const variantStyles =
+  const className =
     variant === "primary"
-      ? "bg-cyan-600 text-white shadow-sm hover:bg-cyan-700 focus-visible:outline-cyan-600"
-      : "border border-slate-200/85 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-slate-400";
+      ? "inline-flex w-full items-center justify-center gap-1.5 admin-btn-primary sm:w-auto sm:min-w-[9rem]"
+      : "inline-flex w-full items-center justify-center gap-1.5 admin-btn-secondary sm:w-auto sm:min-w-[9rem]";
 
   if (action.href) {
     return (
-      <Link href={action.href} className={`${baseStyles} ${variantStyles}`}>
+      <Link href={action.href} className={className}>
         {action.label}
       </Link>
     );
@@ -58,7 +56,7 @@ function EmptyStateActionButton({ action, variant }: EmptyStateActionButtonProps
     <button
       type="button"
       onClick={action.onClick}
-      className={`${baseStyles} ${variantStyles}`}
+      className={className}
     >
       {action.label}
     </button>

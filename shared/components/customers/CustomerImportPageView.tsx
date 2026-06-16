@@ -41,6 +41,8 @@ import {
   masterPanelHeaderClass,
   masterSecondaryActionClass,
 } from "@/shared/design-system/shell";
+import { AdminPendingLabel } from "@/shared/design-system/components";
+import { adminFormInputClass } from "@/shared/lib/admin-density";
 
 type CustomerImportPageViewProps = {
   existingContacts: CustomerImportContact[];
@@ -362,7 +364,7 @@ export function CustomerImportPageView({
               onChange={(event) =>
                 handlePresetChange(event.target.value as CustomerImportPreset)
               }
-              className="admin-input h-11 w-full max-w-md text-base sm:h-10 sm:text-sm"
+              className={`${adminFormInputClass} h-11 w-full max-w-md text-base sm:h-10 sm:text-sm`}
             >
               {CUSTOMER_IMPORT_PRESET_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -615,17 +617,21 @@ export function CustomerImportPageView({
             </div>
 
             {previewRows.length === 0 ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-12 text-center">
-                <FileSpreadsheet
-                  className="h-8 w-8 text-slate-300"
-                  aria-hidden="true"
-                />
-                <p className="text-sm font-semibold text-slate-900">
-                  No rows to preview
-                </p>
-                <p className="max-w-md text-sm text-slate-500">
-                  Check your column mapping or upload a different file.
-                </p>
+              <div className="admin-empty-wrap flex-1">
+                <div className="admin-empty-state w-full max-w-md text-center">
+                  <div className="admin-empty-icon mx-auto">
+                    <FileSpreadsheet
+                      className="h-7 w-7 text-slate-400"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <p className="mt-4 text-sm font-semibold text-slate-900">
+                    No rows to preview
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Check your column mapping or upload a different file.
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="min-h-0 flex-1 overflow-auto">
@@ -709,13 +715,15 @@ export function CustomerImportPageView({
                   type="button"
                   onClick={handleConfirmImport}
                   disabled={previewSummary.readyCount === 0 || isImporting}
-                  className="admin-btn-primary inline-flex h-9 items-center justify-center px-4 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                  className="admin-btn-primary inline-flex h-9 items-center justify-center gap-1.5 px-4 text-sm disabled:cursor-not-allowed"
                 >
-                  {isImporting
-                    ? "Importing..."
-                    : `Import ${previewSummary.readyCount} customer${
-                        previewSummary.readyCount === 1 ? "" : "s"
-                      }`}
+                  <AdminPendingLabel
+                    pending={isImporting}
+                    pendingLabel="Importing…"
+                    idleLabel={`Import ${previewSummary.readyCount} customer${
+                      previewSummary.readyCount === 1 ? "" : "s"
+                    }`}
+                  />
                 </button>
               </div>
             </div>
@@ -824,7 +832,7 @@ function MappingSelect({
       onChange={(event) =>
         onChange(field, event.target.value.length > 0 ? event.target.value : null)
       }
-      className="admin-input h-11 w-full max-w-md text-base sm:h-10 sm:text-sm"
+      className={`${adminFormInputClass} h-11 w-full max-w-md text-base sm:h-10 sm:text-sm`}
     >
       <option value="">Don&apos;t import</option>
       {headers.map((header) => (

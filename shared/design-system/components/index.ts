@@ -1,4 +1,9 @@
 export {
+  AdminPendingLabel,
+  type AdminPendingLabelProps,
+} from "./AdminPendingLabel";
+
+export {
   ActionCard,
   type ActionCardAction,
   type ActionCardProps,

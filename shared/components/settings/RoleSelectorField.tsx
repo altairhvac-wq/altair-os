@@ -5,6 +5,7 @@ import {
   formatTeamMemberRole,
 } from "@/shared/types/team-member";
 import { getTeamRoleDescription } from "@/shared/lib/team-role-descriptions";
+import { adminFormInputClass } from "@/shared/lib/admin-density";
 
 type RoleSelectorFieldProps = {
   id?: string;
@@ -30,9 +31,7 @@ export function RoleSelectorField({
   "aria-label": ariaLabel,
 }: RoleSelectorFieldProps) {
   const description = getTeamRoleDescription(value);
-  const selectClass = compact
-    ? "w-full min-h-10 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60 sm:min-h-[44px] sm:py-2.5"
-    : "w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60";
+  const selectClass = `${adminFormInputClass} shadow-sm disabled:opacity-60`;
 
   return (
     <div className={compact ? "space-y-1.5" : "space-y-2"}>

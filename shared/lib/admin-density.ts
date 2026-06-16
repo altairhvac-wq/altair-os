@@ -1,6 +1,11 @@
 /** Shared spacing and control sizing for admin / field workflows (Master Shell V2 density). */
 
-import { masterSectionSurfaceClass } from "@/shared/design-system/shell/tokens";
+import {
+  adminFormInputClass,
+  masterSectionSurfaceClass,
+} from "@/shared/design-system/shell/tokens";
+
+export { adminFormInputClass };
 
 export const adminPageStackClass = "space-y-2.5";
 
@@ -15,10 +20,6 @@ export const adminFormGridClass = "grid gap-2 sm:grid-cols-2";
 
 export const adminFormLabelClass =
   "mb-0.5 block text-[11px] font-semibold leading-tight text-slate-600";
-
-/** min-h-11 preserves ~44px touch targets on mobile */
-export const adminFormInputClass =
-  "w-full min-h-11 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
 
 export const adminFormActionsClass =
   "flex gap-2 border-t border-slate-100 pt-2";

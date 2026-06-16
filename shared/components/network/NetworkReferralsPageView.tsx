@@ -20,12 +20,14 @@ import {
   adminSegmentedControlClass,
   adminSegmentedItemActiveClass,
   adminSegmentedItemClass,
+  adminPanelActionClass,
   masterListPageScrollRegionClass,
   masterPanelHeaderClass,
   masterSecondaryActionClass,
 } from "@/shared/design-system/shell";
 import { buildNetworkReferralSummaryMetrics } from "@/shared/lib/network/network-referral-metrics";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import { adminFormInputClass } from "@/shared/lib/admin-density";
 import {
   DIRECTORY_FILTER_OPTIONS,
   enrichMyNetworkPartners,
@@ -468,7 +470,7 @@ export function NetworkReferralsPageView({
                 handleRemoveFromNetwork(partner.linkedCompanyId)
               }
               disabled={isNetworkActionPendingForCompany(partner.linkedCompanyId ?? "")}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+              className={`${adminPanelActionClass} disabled:cursor-not-allowed`}
             >
               <UserMinus className="h-3.5 w-3.5" />
               {isNetworkActionPendingForCompany(partner.linkedCompanyId ?? "")
@@ -651,7 +653,7 @@ export function NetworkReferralsPageView({
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search companies, trades, or locations"
                   aria-label="Search network directory"
-                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:text-base sm:placeholder:text-slate-400"
+                  className={`${adminFormInputClass} rounded-xl py-2.5 pl-9 pr-3 sm:text-base`}
                 />
               </div>
             </div>

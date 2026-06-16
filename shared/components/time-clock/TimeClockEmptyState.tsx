@@ -12,7 +12,8 @@ export function TimeClockEmptyState({
   const isNoResults = variant === "no-results";
 
   return (
-    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+    <div className="admin-empty-wrap">
+      <div className="flex flex-col items-center justify-center text-center">
       <div className="admin-empty-icon">
         {isNoResults ? (
           <SearchX className="h-7 w-7 text-slate-400" />
@@ -41,6 +42,7 @@ export function TimeClockEmptyState({
           Log manual entry
         </button>
       ) : null}
+      </div>
     </div>
   );
 }

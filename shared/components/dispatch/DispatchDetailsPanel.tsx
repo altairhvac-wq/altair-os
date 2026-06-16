@@ -127,7 +127,7 @@ export function DispatchDetailsPanel({
         <button
           type="button"
           onClick={onClose}
-          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          className="admin-icon-btn"
           aria-label="Close"
         >
           <X className="h-5 w-5" />

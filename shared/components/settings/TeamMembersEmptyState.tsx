@@ -12,7 +12,8 @@ export function TeamMembersEmptyState({
   const isNoResults = variant === "no-results";
 
   return (
-    <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
+    <div className="admin-empty-wrap">
+      <div className="flex flex-col items-center justify-center text-center">
       <div className="admin-empty-icon">
         {isNoResults ? (
           <SearchX className="h-7 w-7 text-slate-400" />
@@ -39,6 +40,7 @@ export function TeamMembersEmptyState({
           Invites stay pending until the teammate signs up with the same email
         </p>
       ) : null}
+      </div>
     </div>
   );
 }

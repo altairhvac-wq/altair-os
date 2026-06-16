@@ -78,3 +78,19 @@ export const adminSegmentedItemActiveClass = "admin-segmented-item-active";
 
 /** Pressed/selected state for operational filter cards (e.g. dispatch workload). */
 export const adminFilterCardActiveClass = "admin-filter-card-active";
+
+/** Shared admin text/select/textarea control — pairs with `.admin-form-input` in globals.css. */
+export const adminFormInputClass = "admin-form-input text-sm";
+
+/** Compact panel header icon button (close, overflow actions). */
+export const adminIconBtnClass = "admin-icon-btn";
+
+/** Compact panel header text action. */
+export const adminPanelActionClass = "admin-panel-action";
+
+/** Cyan-accent panel header action (invite, primary inline actions). */
+export const adminPanelActionAccentClass = "admin-panel-action admin-panel-action-accent";
+
+/** Amber-accent panel header action (warnings, unassigned counts). */
+export const adminPanelActionWarningClass =
+  "admin-panel-action admin-panel-action-warning";

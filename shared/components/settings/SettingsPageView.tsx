@@ -37,7 +37,10 @@ import {
   MasterPageSection,
   MasterPageSurface,
   MasterShellPage,
+  adminPanelActionAccentClass,
+  adminPanelActionClass,
 } from "@/shared/design-system/shell";
+import { adminFormInputClass } from "@/shared/lib/admin-density";
 import { SettingsComingSoonSection } from "./SettingsComingSoonSection";
 import { TeamInviteForm } from "./TeamInviteForm";
 import { TeamMemberMobileCards } from "./TeamMemberMobileCards";
@@ -320,7 +323,7 @@ export function SettingsPageView({
                 <button
                   type="button"
                   onClick={() => setOrgTreeOpen(true)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                  className={adminPanelActionClass}
                 >
                   <GitBranch className="h-3.5 w-3.5" aria-hidden="true" />
                   <span className="hidden sm:inline">View company tree</span>
@@ -331,7 +334,7 @@ export function SettingsPageView({
                     type="button"
                     onClick={() => setInviteExpanded((open) => !open)}
                     aria-expanded={inviteExpanded}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-cyan-200 bg-cyan-50/60 px-2.5 py-1.5 text-xs font-semibold text-cyan-800 transition-colors hover:bg-cyan-50 md:hidden"
+                    className={`${adminPanelActionAccentClass} md:hidden`}
                   >
                     <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
                     {inviteExpanded ? "Close" : "Invite member"}
@@ -345,7 +348,7 @@ export function SettingsPageView({
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search members..."
               aria-label="Search team members"
-              className="w-full min-h-10 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 sm:max-w-xs sm:min-h-[44px] sm:py-2.5"
+              className={`${adminFormInputClass} w-full shadow-sm sm:max-w-xs`}
             />
           </div>
 

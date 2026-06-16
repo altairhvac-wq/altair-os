@@ -15,6 +15,7 @@ import {
   adminFormLabelClass,
   adminFormStackClass,
 } from "@/shared/lib/admin-density";
+import { AdminPendingLabel } from "@/shared/design-system/components";
 import { InvoiceLineItemsEditor } from "./InvoiceLineItemsEditor";
 
 type InvoiceEditFormProps = {
@@ -154,15 +155,19 @@ export function InvoiceEditForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-h-11 flex-1 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-11 flex-1 admin-btn-primary disabled:cursor-not-allowed"
         >
-          {isSubmitting ? "Saving…" : "Save changes"}
+          <AdminPendingLabel
+            pending={isSubmitting}
+            pendingLabel="Saving…"
+            idleLabel="Save changes"
+          />
         </button>
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="min-h-11 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-11 flex-1 admin-btn-secondary disabled:cursor-not-allowed"
         >
           Cancel
         </button>

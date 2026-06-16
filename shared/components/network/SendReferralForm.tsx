@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { sendNetworkReferralAction } from "@/app/actions/network-referrals";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import { AdminPendingLabel } from "@/shared/design-system/components";
+import { adminFormInputClass } from "@/shared/lib/admin-density";
 import {
   NETWORK_REFERRAL_URGENCY_OPTIONS,
   type NetworkProfile,
@@ -31,8 +33,7 @@ const DEFAULT_FORM: NetworkReferralFormData = {
   incentiveNote: "",
 };
 
-const inputClassName =
-  "mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm";
+const inputClassName = `${adminFormInputClass} mt-1 rounded-xl`;
 
 export function SendReferralForm({
   targetProfile,
@@ -273,7 +274,11 @@ export function SendReferralForm({
           Cancel
         </button>
         <button type="submit" className="admin-btn-primary" disabled={isPending}>
-          {isPending ? "Sending referral..." : "Send Referral Lead"}
+          <AdminPendingLabel
+            pending={isPending}
+            pendingLabel="Sending referral…"
+            idleLabel="Send Referral Lead"
+          />
         </button>
       </div>
     </form>

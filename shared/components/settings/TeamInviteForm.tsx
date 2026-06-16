@@ -8,6 +8,8 @@ import type { CompanyRole } from "@/lib/database/types/enums";
 import type { TeamMember } from "@/shared/types/team-member";
 import { isValidEmail } from "@/shared/lib/email-validation";
 import { buildTeamInviteShareTextFromOrigin } from "@/shared/lib/team-invite-link";
+import { AdminPendingLabel } from "@/shared/design-system/components";
+import { adminFormInputClass } from "@/shared/lib/admin-density";
 import { RoleSelectorField } from "./RoleSelectorField";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
 
@@ -182,7 +184,7 @@ export function TeamInviteForm({
               placeholder="name@company.com"
               required
               disabled={isPending}
-              className="w-full min-h-10 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60 sm:min-h-[44px] sm:py-2.5"
+              className={`${adminFormInputClass} shadow-sm disabled:opacity-60`}
             />
           </label>
 
@@ -203,16 +205,20 @@ export function TeamInviteForm({
           <button
             type="submit"
             disabled={isPending || email.trim().length === 0}
-            className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-cyan-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[44px] sm:w-auto sm:py-2.5"
+            className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 admin-btn-primary sm:min-h-[44px] sm:w-auto disabled:cursor-not-allowed"
           >
-            {isPending ? "Sending invite..." : "Send invite"}
+            <AdminPendingLabel
+              pending={isPending}
+              pendingLabel="Sending invite…"
+              idleLabel="Send invite"
+            />
           </button>
 
           <button
             type="button"
             onClick={handleCopyInstructions}
             disabled={isPending}
-            className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[44px] sm:w-auto sm:py-2.5"
+            className="inline-flex min-h-10 w-full items-center justify-center gap-2 admin-btn-secondary sm:min-h-[44px] sm:w-auto disabled:cursor-not-allowed"
           >
             <Copy className="h-4 w-4" aria-hidden="true" />
             {copied ? "Copied invite link" : "Copy invite link"}

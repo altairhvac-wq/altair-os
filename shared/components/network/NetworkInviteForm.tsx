@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { createNetworkInviteAction } from "@/app/actions/network-invites";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import { AdminPendingLabel } from "@/shared/design-system/components";
+import { adminFormInputClass } from "@/shared/lib/admin-density";
 import {
   NETWORK_INVITE_TRADE_OPTIONS,
   type NetworkInvite,
@@ -23,8 +25,7 @@ const DEFAULT_FORM: NetworkInviteFormData = {
   personalMessage: "",
 };
 
-const inputClassName =
-  "mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm";
+const inputClassName = `${adminFormInputClass} mt-1 rounded-xl`;
 
 export function NetworkInviteForm({ onSuccess, onCancel }: NetworkInviteFormProps) {
   const [formData, setFormData] = useState<NetworkInviteFormData>(DEFAULT_FORM);
@@ -157,7 +158,11 @@ export function NetworkInviteForm({ onSuccess, onCancel }: NetworkInviteFormProp
           disabled={isPending}
           className="admin-btn-primary"
         >
-          {isPending ? "Sending invitation…" : "Send invitation"}
+          <AdminPendingLabel
+            pending={isPending}
+            pendingLabel="Sending invitation…"
+            idleLabel="Send invitation"
+          />
         </button>
         {onCancel ? (
           <button
