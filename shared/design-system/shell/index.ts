@@ -9,6 +9,11 @@ export {
 } from "./MasterDetailPageLayout";
 
 export {
+  MasterBillingDetailOverlayLoadingState,
+  type MasterBillingDetailOverlayLoadingStateProps,
+} from "./MasterBillingDetailOverlayLoadingState";
+
+export {
   MasterDetailPageLoadingState,
   type MasterDetailPageLoadingStateProps,
 } from "./MasterDetailPageLoadingState";

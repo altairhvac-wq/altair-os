@@ -116,8 +116,9 @@ Reference implementations: Customer 360, Job detail, Estimate detail, Invoice de
 3. **Back link**: `backLink` prop (sibling above body content in the vertical stack).
 4. **Section cards**: existing `adminCardSectionClass` sections or `MasterPageSurface` `variant="section"` — no forced migration of inner section markup yet.
 5. **Section anchors / nav**: page-specific components (e.g. `CustomerDetailSectionNav`) stay as children of the layout body.
-6. **Loading states**: `MasterDetailPageLoadingState` with profile + section skeleton props.
+6. **Loading states**: `MasterDetailPageLoadingState` with profile + section skeleton props for full-page detail routes.
 7. **Intercepted modal routes**: estimate/invoice loaded overlays use `FocusedDocumentOverlay` + `MasterPageCanvas` `width="detail"` + `MasterContentStack` + `masterDetailOverlayBodyInsetClass` — not `MasterDetailPageLayout`. Full-page routes use the layout.
+8. **Overlay loading states**: intercepted estimate/invoice modal `loading.tsx` routes use the same overlay shell + `MasterBillingDetailOverlayLoadingState` (or domain wrappers `EstimateDetailOverlayLoadingState` / `InvoiceDetailOverlayLoadingState`) — billing-detail-shaped skeleton only; no `MasterShellPage`, no back-link skeleton, no nested page shell.
 
 **Migrated detail pages (5):** Customer 360, Job detail, Estimate detail, Invoice detail, Team member profile.
 
