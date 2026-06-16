@@ -35,6 +35,10 @@ export {
 } from "./MasterShellPage";
 
 export {
+  masterListPageMobilePanelLockClass,
+  masterListPagePrimaryActionClass,
+  masterListPageScrollRegionClass,
+  masterListPageSurfaceClass,
   masterPageCanvasWidthClass,
   masterShellSectionGap,
   masterShellStackGap,

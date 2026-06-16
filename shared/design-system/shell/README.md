@@ -42,3 +42,22 @@ Reference implementations: Customers, Leads, Jobs, Estimates, Invoices, Expenses
 8. **Primary action**: compact h-9 button — `inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm`.
 9. **Subtitles**: static or contextual (counts, filter state).
 10. **Loading states**: may remain on `ListCommandCenterLoadingState` until `MasterListPageLoadingState` exists.
+
+## List-page shell tokens
+
+Exported from `tokens.ts` for the repeated class strings across migrated pages (adopt incrementally):
+
+| Token | Use |
+|-------|-----|
+| `masterListPagePrimaryActionClass` | Compact primary header button |
+| `masterListPageMobilePanelLockClass` | `MasterListPageLayout` `className` when a panel is open on mobile |
+| `masterListPageSurfaceClass` | `MasterPageSurface` card flex shell |
+| `masterListPageScrollRegionClass` | Inner scroll container inside the list card |
+
+## Migration status (Master List Shell)
+
+**Migrated (7):** Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items / Price Book — all use `MasterListPageLayout` with `density="compact"`.
+
+**Legacy layout:** `ListCommandCenterLayout` has no remaining page imports. Safe to mark deprecated; keep the file until `MasterListPageLoadingState` replaces `ListCommandCenterLoadingState` (7 loading wrappers still depend on it).
+
+**Not in scope:** Dispatch, Customer 360, detail pages, global `AdminShell` chrome.
