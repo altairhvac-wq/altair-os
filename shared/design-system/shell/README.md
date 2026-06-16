@@ -21,3 +21,9 @@ Reusable page structure inside `AdminShell` main. Does not replace global naviga
 3. Use `MasterListPageLayout` when migrating list pages from `ListCommandCenterLayout`.
 
 Global chrome (`AdminShell`, `Header`, `DesktopNav`, `MobileNav`) stays in `shared/components/admin/` until a later phase.
+
+## Page title hierarchy
+
+- **Global `Header`**: nav module label (e.g. "Customers") — orientation in the app shell; no page actions.
+- **`MasterPageHeader` / `MasterListPageLayout`**: in-page title, subtitle, and primary/secondary actions — the operational command row for list pages.
+- Do not remove the in-page header on list pages; compact density keeps title + subtitle on one row so it reads as a toolbar, not a duplicate document title.

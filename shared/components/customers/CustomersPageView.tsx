@@ -26,7 +26,10 @@ import {
   type CustomerStatus,
   validateCustomerFormData,
 } from "@/shared/types/customer";
-import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
+import {
+  MasterListPageLayout,
+  MasterPageSurface,
+} from "@/shared/design-system/shell";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { CustomerDetailPanel } from "./CustomerDetailPanel";
 import { CustomerSearchFilterBar } from "./CustomerSearchFilterBar";
@@ -328,7 +331,7 @@ export function CustomersPageView({
   const isCreateOpen = panelMode === "create";
 
   return (
-    <ListCommandCenterLayout
+    <MasterListPageLayout
       title="Customers"
       subtitle="Manage profiles, locations, and service history"
       density="compact"
@@ -356,29 +359,31 @@ export function CustomersPageView({
           </Link>
         ) : undefined
       }
+      banners={
+        bulkActionMessage ? (
+          <SettingsAlertBanner tone={bulkActionTone}>
+            <div>
+              <p>{bulkActionMessage}</p>
+              {bulkActionFailureDetails?.length ? (
+                <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                  {bulkActionFailureDetails.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </SettingsAlertBanner>
+        ) : undefined
+      }
       className={
         isCreateOpen
           ? "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden"
           : undefined
       }
     >
-      {bulkActionMessage ? (
-        <SettingsAlertBanner tone={bulkActionTone}>
-          <div>
-            <p>{bulkActionMessage}</p>
-            {bulkActionFailureDetails?.length ? (
-              <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
-                {bulkActionFailureDetails.map((detail) => (
-                  <li key={detail}>{detail}</li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-        </SettingsAlertBanner>
-      ) : null}
-
-      <section
-        className={`flex min-h-[16rem] min-w-0 lg:flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
+      <MasterPageSurface
+        variant="card"
+        className={`flex min-h-[16rem] min-w-0 lg:min-h-0 lg:flex-1 flex-col ${
           isCreateOpen ? "max-lg:hidden" : ""
         }`}
       >
@@ -433,7 +438,7 @@ export function CustomersPageView({
             onClearSelection={clearSelection}
           />
         ) : null}
-      </section>
+      </MasterPageSurface>
 
       <CustomerDetailPanel
         mode={panelMode}
@@ -443,6 +448,6 @@ export function CustomersPageView({
         createError={createError}
         isSubmitting={isPending}
       />
-    </ListCommandCenterLayout>
+    </MasterListPageLayout>
   );
 }
