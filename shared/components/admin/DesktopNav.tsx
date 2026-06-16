@@ -20,7 +20,7 @@ function isActivePath(pathname: string, href: string) {
     return pathname === "/";
   }
 
-  if (href === "/time-clock" && isLaborPayrollPath(pathname)) {
+  if (href === "/time" && isLaborPayrollPath(pathname)) {
     return true;
   }
 

@@ -39,11 +39,13 @@ type DispatchDetailsPanelProps = {
   assignError: string | null;
   assignSuccess?: string | null;
   isAssignmentBusy: boolean;
+  isOtherAssignmentPending?: boolean;
   onClose: () => void;
   onAssign: (jobId: string, technicianId: string) => void;
   onUnassign?: (jobId: string) => void;
   onStatusUpdated?: (jobId: string, status: DispatchJob["status"]) => void;
   lockBodyScroll?: boolean;
+  enableEscapeClose?: boolean;
 };
 
 export function DispatchDetailsPanel({
@@ -59,11 +61,13 @@ export function DispatchDetailsPanel({
   assignError,
   assignSuccess = null,
   isAssignmentBusy,
+  isOtherAssignmentPending = false,
   onClose,
   onAssign,
   onUnassign,
   onStatusUpdated,
   lockBodyScroll = true,
+  enableEscapeClose = false,
 }: DispatchDetailsPanelProps) {
   const [selectedTechnicianId, setSelectedTechnicianId] = useState("");
   const isAssigned = hasAssignedJobTechnician(job);
@@ -86,8 +90,11 @@ export function DispatchDetailsPanel({
     setSelectedTechnicianId(job.technicianId ?? "");
   }, [job.id, job.technicianId]);
 
+  const isAssignmentControlsDisabled =
+    isAssignmentBusy || isOtherAssignmentPending;
+
   useScrollLock(lockBodyScroll);
-  useSheetEscape(onClose, !lockBodyScroll);
+  useSheetEscape(onClose, enableEscapeClose);
 
   function handleAssignClick() {
     if (!canSubmitAssignment) {
@@ -98,7 +105,7 @@ export function DispatchDetailsPanel({
   }
 
   function handleUnassignClick() {
-    if (!showUnassign || isAssignmentBusy) {
+    if (!showUnassign || isAssignmentControlsDisabled) {
       return;
     }
 
@@ -210,6 +217,11 @@ export function DispatchDetailsPanel({
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Assigned technician
               </h3>
+              {isOtherAssignmentPending ? (
+                <p className="mt-2 text-xs text-amber-700" role="status">
+                  Another assignment is still in progress.
+                </p>
+              ) : null}
               {isAssigned ? (
                 <div className="mt-2 space-y-3">
                   <div className="rounded-xl border border-slate-100 bg-white p-3">
@@ -238,7 +250,7 @@ export function DispatchDetailsPanel({
                     <button
                       type="button"
                       onClick={handleUnassignClick}
-                      disabled={isAssignmentBusy}
+                      disabled={isAssignmentControlsDisabled}
                       className="inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 sm:py-2"
                     >
                       <UserMinus className="h-4 w-4" />
@@ -260,7 +272,7 @@ export function DispatchDetailsPanel({
                         onChange={(event) =>
                           setSelectedTechnicianId(event.target.value)
                         }
-                        disabled={isAssignmentBusy}
+                        disabled={isAssignmentControlsDisabled}
                         className="w-full min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60 sm:py-2"
                       >
                         <option value="">Select a team member</option>
@@ -279,7 +291,7 @@ export function DispatchDetailsPanel({
                       <button
                         type="button"
                         onClick={handleAssignClick}
-                        disabled={!canSubmitAssignment || isAssignmentBusy}
+                        disabled={!canSubmitAssignment || isAssignmentControlsDisabled}
                         className="w-full min-h-11 rounded-lg bg-cyan-600 px-3 py-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60 sm:py-2"
                       >
                         {isAssignmentBusy ? "Assigning..." : "Change technician"}
@@ -326,7 +338,7 @@ export function DispatchDetailsPanel({
                         onChange={(event) =>
                           setSelectedTechnicianId(event.target.value)
                         }
-                        disabled={isAssignmentBusy}
+                        disabled={isAssignmentControlsDisabled}
                         className="w-full min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60 sm:py-2"
                       >
                         <option value="">Select a team member</option>
@@ -345,7 +357,7 @@ export function DispatchDetailsPanel({
                       <button
                         type="button"
                         onClick={handleAssignClick}
-                        disabled={!canSubmitAssignment || isAssignmentBusy}
+                        disabled={!canSubmitAssignment || isAssignmentControlsDisabled}
                         className="w-full min-h-11 rounded-lg bg-cyan-600 px-3 py-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60 sm:py-2"
                       >
                         {isAssignmentBusy ? "Assigning..." : "Assign technician"}

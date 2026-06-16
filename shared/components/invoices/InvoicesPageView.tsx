@@ -21,6 +21,7 @@ import {
   resolveSelectedItems,
   toggleBulkSelection,
   toggleGroupBulkSelection,
+  pruneBulkSelection,
 } from "@/shared/lib/bulk-selection";
 import {
   formatBulkLifecycleFailureDetails,
@@ -217,7 +218,7 @@ export function InvoicesPageView({
     setBatchSendFailureDetails(null);
     setLifecycleMessage(null);
     setLifecycleFailureDetails(null);
-  }, [lifecycleFilter, search, viewTab, statusFilter]);
+  }, [lifecycleFilter, viewTab, statusFilter]);
 
   const prioritizeCashFlow = invoicePageFocus?.focus === "cash-flow";
 
@@ -287,6 +288,23 @@ export function InvoicesPageView({
       invoiceListPresentation.sections.flatMap((section) => section.items),
     [invoiceListPresentation.sections],
   );
+
+  useEffect(() => {
+    setSelectedInvoiceIds((previous) => {
+      if (previous.size === 0) {
+        return previous;
+      }
+
+      const visibleIds = new Set(visibleInvoices.map((invoice) => invoice.id));
+      const pruned = pruneBulkSelection(previous, visibleIds);
+
+      if (pruned.size === previous.size) {
+        return previous;
+      }
+
+      return pruned;
+    });
+  }, [search, visibleInvoices]);
 
   const selectionEnabled = canManageInvoices;
   const selectedCount = selectedInvoiceIds.size;

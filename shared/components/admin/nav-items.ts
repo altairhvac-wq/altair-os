@@ -86,7 +86,7 @@ export const adminNavItems: NavItem[] = [
   },
   {
     label: "Labor & payroll",
-    href: "/time-clock",
+    href: "/time",
     icon: Clock,
     description: "Active technicians, time entries, and payroll review",
   },
@@ -162,18 +162,20 @@ export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/network",
   "/alpha-tracker",
   "/settings",
-  "/time-clock",
+  "/time",
 ] as const;
 
 export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {
   const visibleHrefs = new Set(getAccessibleAdminNavHrefs(context));
 
   return adminNavItems.filter((item) => {
-    if (!isAdminNavHref(item.href)) {
+    const permissionHref = item.href === "/time" ? "/time-clock" : item.href;
+
+    if (!isAdminNavHref(permissionHref)) {
       return false;
     }
 
-    return visibleHrefs.has(item.href);
+    return visibleHrefs.has(permissionHref);
   });
 }
 
@@ -245,7 +247,7 @@ export function getNavItemForPath(
   }
 
   if (isLaborPayrollPath(pathname)) {
-    const laborItem = adminNavItems.find((item) => item.href === "/time-clock");
+    const laborItem = adminNavItems.find((item) => item.href === "/time");
 
     if (laborItem) {
       return laborItem;

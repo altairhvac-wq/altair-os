@@ -306,6 +306,10 @@ export function DispatchPageView({
 
   const isAssignmentBusyForSelected =
     selectedJob !== null && pendingJobId === selectedJob.id;
+  const isOtherAssignmentPending =
+    pendingJobId !== null &&
+    selectedJob !== null &&
+    pendingJobId !== selectedJob.id;
 
   const selectedAssignError =
     assignFeedback &&
@@ -535,6 +539,7 @@ export function DispatchPageView({
               assignError={selectedAssignError}
               assignSuccess={selectedAssignSuccess}
               isAssignmentBusy={isAssignmentBusyForSelected}
+              isOtherAssignmentPending={isOtherAssignmentPending}
               lockBodyScroll={false}
               onClose={handleClosePanel}
               onAssign={handleAssign}
@@ -597,6 +602,7 @@ export function DispatchPageView({
               assignError={selectedAssignError}
               assignSuccess={selectedAssignSuccess}
               isAssignmentBusy={isAssignmentBusyForSelected}
+              isOtherAssignmentPending={isOtherAssignmentPending}
               lockBodyScroll={false}
               onClose={handleClosePanel}
               onAssign={handleAssign}
