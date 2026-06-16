@@ -116,8 +116,11 @@ export function DispatchPageView({
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState<DispatchSection | null>(null);
   const [showUnassignedModal, setShowUnassignedModal] = useState(false);
-  const [assignError, setAssignError] = useState<string | null>(null);
-  const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
+  const [assignFeedback, setAssignFeedback] = useState<{
+    jobId: string;
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
   const [pendingJobId, setPendingJobId] = useState<string | null>(null);
   const [showAllTechnicians, setShowAllTechnicians] = useState(false);
   const [, startTransition] = useTransition();
@@ -150,16 +153,14 @@ export function DispatchPageView({
 
   const handleSelectJob = useCallback((job: DispatchJob) => {
     setSelectedJobId(job.id);
-    setAssignError(null);
-    setAssignSuccess(null);
+    setAssignFeedback(null);
     setShowUnassignedModal(false);
     setOpenSection(null);
   }, []);
 
   const handleClosePanel = useCallback(() => {
     setSelectedJobId(null);
-    setAssignError(null);
-    setAssignSuccess(null);
+    setAssignFeedback(null);
   }, []);
 
   const handleAssign = useCallback(
@@ -168,8 +169,7 @@ export function DispatchPageView({
         return;
       }
 
-      setAssignError(null);
-      setAssignSuccess(null);
+      setAssignFeedback(null);
       setPendingJobId(jobId);
       pendingAssignJobIdsRef.current.add(jobId);
 
@@ -178,14 +178,22 @@ export function DispatchPageView({
           const result = await assignJobAction(jobId, technicianId);
 
           if (result.error || !result.job) {
-            setAssignError(result.error ?? "Failed to assign job.");
+            setAssignFeedback({
+              jobId,
+              type: "error",
+              message: result.error ?? "Failed to assign job.",
+            });
             return;
           }
 
           const assignedName =
             technicians.find((technician) => technician.id === technicianId)
               ?.name ?? "Technician";
-          setAssignSuccess(`Assigned to ${assignedName}.`);
+          setAssignFeedback({
+            jobId,
+            type: "success",
+            message: `Assigned to ${assignedName}.`,
+          });
 
           setJobs((previous) =>
             previous.map((job) => (job.id === result.job!.id ? result.job! : job)),
@@ -205,8 +213,7 @@ export function DispatchPageView({
         return;
       }
 
-      setAssignError(null);
-      setAssignSuccess(null);
+      setAssignFeedback(null);
       setPendingJobId(jobId);
 
       startTransition(async () => {
@@ -214,11 +221,19 @@ export function DispatchPageView({
           const result = await unassignJobAction(jobId);
 
           if (result.error || !result.job) {
-            setAssignError(result.error ?? "Failed to unassign job.");
+            setAssignFeedback({
+              jobId,
+              type: "error",
+              message: result.error ?? "Failed to unassign job.",
+            });
             return;
           }
 
-          setAssignSuccess("Technician unassigned.");
+          setAssignFeedback({
+            jobId,
+            type: "success",
+            message: "Technician unassigned.",
+          });
           setJobs((previous) =>
             previous.map((job) => (job.id === result.job!.id ? result.job! : job)),
           );
@@ -258,8 +273,7 @@ export function DispatchPageView({
         const isClosing = current === section;
         if (!isClosing && isBelowLg) {
           setSelectedJobId(null);
-          setAssignError(null);
-          setAssignSuccess(null);
+          setAssignFeedback(null);
         }
         return isClosing ? null : section;
       });
@@ -292,6 +306,19 @@ export function DispatchPageView({
 
   const isAssignmentBusyForSelected =
     selectedJob !== null && pendingJobId === selectedJob.id;
+
+  const selectedAssignError =
+    assignFeedback &&
+    assignFeedback.jobId === selectedJob?.id &&
+    assignFeedback.type === "error"
+      ? assignFeedback.message
+      : null;
+  const selectedAssignSuccess =
+    assignFeedback &&
+    assignFeedback.jobId === selectedJob?.id &&
+    assignFeedback.type === "success"
+      ? assignFeedback.message
+      : null;
 
   const boardTitle =
     dispatchPageFocus?.boardEyebrow ?? "Today's scheduled jobs";
@@ -505,8 +532,8 @@ export function DispatchPageView({
                 invoices:
                   billingSummaries.invoicesByJobId[selectedJob.id] ?? [],
               }}
-              assignError={assignError}
-              assignSuccess={assignSuccess}
+              assignError={selectedAssignError}
+              assignSuccess={selectedAssignSuccess}
               isAssignmentBusy={isAssignmentBusyForSelected}
               lockBodyScroll={false}
               onClose={handleClosePanel}
@@ -567,8 +594,8 @@ export function DispatchPageView({
                 invoices:
                   billingSummaries.invoicesByJobId[selectedJob.id] ?? [],
               }}
-              assignError={assignError}
-              assignSuccess={assignSuccess}
+              assignError={selectedAssignError}
+              assignSuccess={selectedAssignSuccess}
               isAssignmentBusy={isAssignmentBusyForSelected}
               lockBodyScroll={false}
               onClose={handleClosePanel}

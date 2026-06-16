@@ -128,6 +128,16 @@ export function isPlatformAdminPath(pathname: string): boolean {
   return pathname === "/platform" || pathname.startsWith("/platform/");
 }
 
+/** /time (labor review) and /time-clock (shift exceptions) share one nav item. */
+export function isLaborPayrollPath(pathname: string): boolean {
+  return (
+    pathname === "/time" ||
+    pathname.startsWith("/time/") ||
+    pathname === "/time-clock" ||
+    pathname.startsWith("/time-clock/")
+  );
+}
+
 /** Two-row mobile nav: row 1 = ops hub, row 2 = billing + overflow. */
 export const PRIMARY_MOBILE_ADMIN_NAV_ROWS = [
   ["/", "/jobs", "/dispatch", "/customers"],
@@ -232,6 +242,14 @@ export function getNavItemForPath(
     }
 
     return platformAdminNavItem;
+  }
+
+  if (isLaborPayrollPath(pathname)) {
+    const laborItem = adminNavItems.find((item) => item.href === "/time-clock");
+
+    if (laborItem) {
+      return laborItem;
+    }
   }
 
   const match = adminNavItems.find(

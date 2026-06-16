@@ -10,6 +10,7 @@ import {
 import {
   getAdminNavItems,
   getOrderedAdminNavItemsForDesktop,
+  isLaborPayrollPath,
   platformAdminNavItem,
   type NavItem,
 } from "./nav-items";
@@ -17,6 +18,10 @@ import {
 function isActivePath(pathname: string, href: string) {
   if (href === "/") {
     return pathname === "/";
+  }
+
+  if (href === "/time-clock" && isLaborPayrollPath(pathname)) {
+    return true;
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);

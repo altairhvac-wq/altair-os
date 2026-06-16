@@ -217,7 +217,7 @@ export function InvoicesPageView({
     setBatchSendFailureDetails(null);
     setLifecycleMessage(null);
     setLifecycleFailureDetails(null);
-  }, [lifecycleFilter]);
+  }, [lifecycleFilter, search, viewTab, statusFilter]);
 
   const prioritizeCashFlow = invoicePageFocus?.focus === "cash-flow";
 

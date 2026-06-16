@@ -53,12 +53,15 @@ export function InvoiceEditForm({
   );
   const [lineItems, setLineItems] =
     useState<InvoiceLineItemFormData[]>(initialLineItems);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (isSubmitting) {
       return;
     }
+
+    setValidationError(null);
 
     const form = new FormData(e.currentTarget);
 
@@ -68,7 +71,12 @@ export function InvoiceEditForm({
         item.quantity > 0,
     );
 
-    if (validLineItems.length === 0) return;
+    if (validLineItems.length === 0) {
+      setValidationError(
+        "Add at least one line item with a name or description and a quantity greater than zero.",
+      );
+      return;
+    }
 
     onSubmit({
       dueDate: String(form.get("dueDate") ?? invoice.dueDate),
@@ -79,12 +87,12 @@ export function InvoiceEditForm({
 
   return (
     <form onSubmit={handleSubmit} className={adminFormStackClass} aria-busy={isSubmitting}>
-      {error ? (
+      {error || validationError ? (
         <div
           className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
           role="alert"
         >
-          {error}
+          {error ?? validationError}
         </div>
       ) : null}
 

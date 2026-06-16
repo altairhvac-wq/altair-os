@@ -149,6 +149,17 @@ export function CustomerImportPageView({
     return true;
   }
 
+  function handleDragOver(event: React.DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  function handleDrop(event: React.DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    handleFileSelected(event.dataTransfer.files?.[0] ?? null);
+  }
+
   function handleFileSelected(file: File | null) {
     if (!file) {
       return;
@@ -418,7 +429,11 @@ export function CustomerImportPageView({
               Import up to 500 customers at a time. You&apos;ll match columns,
               review a preview, then confirm the import.
             </p>
-            <label className="flex min-h-40 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-8 text-center transition-colors hover:border-cyan-300 hover:bg-cyan-50/40">
+            <label
+              className="flex min-h-40 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-8 text-center transition-colors hover:border-cyan-300 hover:bg-cyan-50/40"
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-cyan-600 shadow-sm">
                 <Upload className="h-5 w-5" aria-hidden="true" />
               </div>

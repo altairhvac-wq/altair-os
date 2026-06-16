@@ -10,6 +10,7 @@ import {
   adminNavLinkClass,
 } from "@/shared/design-system/shell/tokens";
 import {
+  isLaborPayrollPath,
   platformAdminNavItem,
   splitAdminNavItemsForMobile,
   type NavItem,
@@ -18,6 +19,10 @@ import {
 function isActivePath(pathname: string, href: string) {
   if (href === "/") {
     return pathname === "/";
+  }
+
+  if (href === "/time-clock" && isLaborPayrollPath(pathname)) {
+    return true;
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
