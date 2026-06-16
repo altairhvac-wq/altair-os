@@ -4,7 +4,7 @@ import { EstimateDetailOverlayShell } from "@/shared/components/estimates/Estima
 export default function InterceptedEstimateDetailLoading() {
   return (
     <EstimateDetailOverlayShell title="Loading estimate…">
-      <EstimateDetailLoadingState />
+      <EstimateDetailLoadingState showBackLink={false} />
     </EstimateDetailOverlayShell>
   );
 }
