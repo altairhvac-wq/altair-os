@@ -30,7 +30,7 @@ Global chrome (`AdminShell`, `Header`, `DesktopNav`, `MobileNav`) stays in `shar
 
 ## Migrated list page checklist
 
-Reference implementations: Customers, Leads, Jobs, Estimates.
+Reference implementations: Customers, Leads, Jobs, Estimates, Invoices, Expenses.
 
 1. **Root**: `MasterListPageLayout` with `density="compact"`.
 2. **Page-level alerts**: `banners` prop above the header (bulk/lifecycle feedback, create errors).

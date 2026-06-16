@@ -33,7 +33,10 @@ import type {
   ExpenseReceiptFilter,
   ExpenseStatus,
 } from "@/shared/types/expense";
-import { ListCommandCenterLayout } from "@/shared/components/layout/ListCommandCenterLayout";
+import {
+  MasterListPageLayout,
+  MasterPageSurface,
+} from "@/shared/design-system/shell";
 import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import {
@@ -342,16 +345,35 @@ export function ExpensesPageView({
     contextLabel ?? "Capture receipts and draft expenses for later review";
 
   return (
-    <ListCommandCenterLayout
+    <MasterListPageLayout
       title="Expenses"
       subtitle={subtitle}
+      density="compact"
       banners={
-        initialJobId && initialJobLabel ? (
-          <JobContextFilterBanner
-            jobLabel={initialJobLabel}
-            clearHref="/expenses"
-          />
-        ) : null
+        (initialJobId && initialJobLabel) || lifecycleMessage ? (
+          <>
+            {initialJobId && initialJobLabel ? (
+              <JobContextFilterBanner
+                jobLabel={initialJobLabel}
+                clearHref="/expenses"
+              />
+            ) : null}
+            {lifecycleMessage ? (
+              <SettingsAlertBanner tone={lifecycleTone}>
+                <div>
+                  <p>{lifecycleMessage}</p>
+                  {lifecycleFailureDetails?.length ? (
+                    <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+                      {lifecycleFailureDetails.map((detail) => (
+                        <li key={detail}>{detail}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </SettingsAlertBanner>
+            ) : null}
+          </>
+        ) : undefined
       }
       summary={
         !hasNoExpenses ? (
@@ -362,9 +384,9 @@ export function ExpensesPageView({
         <button
           type="button"
           onClick={handleNewExpense}
-          className="inline-flex shrink-0 items-center gap-2 admin-btn-primary"
+          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
           New Expense
         </button>
       }
@@ -374,8 +396,9 @@ export function ExpensesPageView({
           : undefined
       }
     >
-      <section
-        className={`flex min-h-[16rem] min-w-0 lg:flex-1 flex-col overflow-hidden admin-card lg:min-h-0 ${
+      <MasterPageSurface
+        variant="card"
+        className={`flex min-h-[16rem] min-w-0 lg:min-h-0 lg:flex-1 flex-col ${
           isPanelOpen ? "max-lg:hidden" : ""
         }`}
       >
@@ -419,23 +442,6 @@ export function ExpensesPageView({
                 : undefined
             }
           />
-        ) : null}
-
-        {lifecycleMessage ? (
-          <div className="shrink-0 border-b border-slate-100/90 px-4 py-3 sm:px-5">
-            <SettingsAlertBanner tone={lifecycleTone}>
-              <div>
-                <p>{lifecycleMessage}</p>
-                {lifecycleFailureDetails?.length ? (
-                  <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
-                    {lifecycleFailureDetails.map((detail) => (
-                      <li key={detail}>{detail}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            </SettingsAlertBanner>
-          </div>
         ) : null}
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto">
@@ -514,7 +520,7 @@ export function ExpensesPageView({
             />
           ) : null}
         </div>
-      </section>
+      </MasterPageSurface>
 
       <ExpenseDetailsPanel
         mode={panelMode}
@@ -528,6 +534,6 @@ export function ExpensesPageView({
         onCreateCancel={handleClosePanel}
         onExpenseUpdated={handleExpenseUpdated}
       />
-    </ListCommandCenterLayout>
+    </MasterListPageLayout>
   );
 }
