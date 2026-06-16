@@ -101,7 +101,7 @@ Board-style pages keep the main surface and desktop detail panel as **siblings**
 
 **Migrated (7):** Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items / Price Book — all use `MasterListPageLayout` with `density="compact"` and list-page shell tokens.
 
-**Migrated hub page (1):** Network — uses basic Master Shell primitives (`MasterShellPage`, `MasterPageCanvas`, `MasterPageHeader`, `MasterContentStack`, `MasterPageSection`, `MasterPageSurface`). Not a list page; tabbed relationship hub with master-detail panels.
+**Migrated hub page (1):** Network — uses basic Master Shell primitives (`MasterShellPage`, `MasterPageCanvas`, `MasterPageHeader`, `MasterContentStack`, `MasterPageSection`, `MasterPageSurface`) with `density="compact"` on page root, header, and content stacks. Not a list page; tabbed relationship hub with master-detail panels.
 
 **Removed (cleanup pass):** `ListCommandCenterLayout` and `ListCommandCenterLoadingState` — zero active imports; deleted.
 
@@ -130,7 +130,14 @@ Reference implementations: Customer 360, Job detail, Estimate detail, Invoice de
 
 ## Report / dashboard shell
 
-**Migrated (3):** Reports, Tax Summary, Operational Dashboard — loaded views and loading states on `MasterShellPage` + `MasterPageCanvas`.
+Reference: Operational Dashboard, Reports, Tax Summary.
+
+1. **Root**: `MasterShellPage` `density="compact"` + `MasterPageCanvas` (`standard` for Reports, `detail` + optional `max-w-4xl` for Tax Summary print doc).
+2. **Body stack**: `MasterContentStack` `density="compact"`.
+3. **Page header**: `MasterPageHeader` `density="compact"` when a command row is shown (Reports actions, Tax Summary print/back).
+4. **Tax Summary sections**: inner `MasterPageSection` `density="compact"` — print card padding and document width stay page-owned; shell density only tightens vertical rhythm between sections.
+
+**Migrated (3):** Reports, Tax Summary, Operational Dashboard — loaded views and loading states on compact Master Shell density.
 
 ## Coverage audit (2026-06-16)
 

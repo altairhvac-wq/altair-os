@@ -51,13 +51,14 @@ function ReferralSummarySkeleton() {
 
 export function NetworkLoadingState() {
   return (
-    <MasterShellPage fillViewport>
+    <MasterShellPage fillViewport density="compact">
       <MasterPageCanvas width="wide" className="min-h-0 flex-1">
-        <MasterContentStack density="default" className="shrink-0">
+        <MasterContentStack density="compact" className="shrink-0">
           <MasterPageHeader
             eyebrow="Altair Network"
             title="Send and receive trusted trade referrals."
             subtitle="Build trusted partner relationships, pass overflow work, and keep every opportunity inside Altair."
+            density="compact"
             secondaryAction={
               <Skeleton className="h-11 w-11 shrink-0 rounded-2xl" />
             }
@@ -94,7 +95,7 @@ export function NetworkLoadingState() {
           </nav>
         </MasterContentStack>
 
-        <MasterContentStack scrollable className="min-h-0 lg:flex-1">
+        <MasterContentStack density="compact" scrollable className="min-h-0 lg:flex-1">
           <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-1 lg:flex-row lg:overflow-hidden">
             <MasterPageSurface
               variant="card"

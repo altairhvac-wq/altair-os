@@ -11,12 +11,13 @@ function Skeleton({ className }: { className?: string }) {
 
 export function ReportsLoadingState() {
   return (
-    <MasterShellPage>
+    <MasterShellPage density="compact">
       <MasterPageCanvas width="standard">
-        <MasterContentStack>
+        <MasterContentStack density="compact">
           <MasterPageHeader
             title="Reports"
             subtitle="Track revenue, cash flow, sales performance, and operational health."
+            density="compact"
             className="flex-col items-stretch gap-3 sm:flex-row sm:items-center"
             secondaryAction={
               <Skeleton className="h-9 w-full rounded-lg sm:w-44" />

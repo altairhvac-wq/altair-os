@@ -483,13 +483,14 @@ export function NetworkReferralsPageView({
   }
 
   return (
-    <MasterShellPage fillViewport>
+    <MasterShellPage fillViewport density="compact">
       <MasterPageCanvas width="wide" className="min-h-0 flex-1">
-        <MasterContentStack density="default" className="shrink-0">
+        <MasterContentStack density="compact" className="shrink-0">
           <MasterPageHeader
             eyebrow="Altair Network"
             title="Send and receive trusted trade referrals."
             subtitle="Build trusted partner relationships, pass overflow work, and keep every opportunity inside Altair."
+            density="compact"
             secondaryAction={
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white">
                 <Network className="h-5 w-5" />
@@ -596,7 +597,7 @@ export function NetworkReferralsPageView({
           ) : null}
         </MasterContentStack>
 
-        <MasterContentStack scrollable className="min-h-0 lg:flex-1">
+        <MasterContentStack density="compact" scrollable className="min-h-0 lg:flex-1">
 
       {activeTab === "directory" ? (
         <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-1 lg:flex-row lg:overflow-hidden">

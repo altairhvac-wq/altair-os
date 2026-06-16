@@ -54,9 +54,9 @@ export function TaxSummaryPageView({
     )?.label ?? summary.dateRange;
 
   return (
-    <MasterShellPage>
+    <MasterShellPage density="compact">
       <MasterPageCanvas width="detail" className="max-w-4xl">
-        <MasterContentStack>
+        <MasterContentStack density="compact">
           <TaxSummaryActions dateRange={dateRange} />
 
           <MasterPageSurface
@@ -80,8 +80,8 @@ export function TaxSummaryPageView({
               </p>
             </header>
 
-            <MasterContentStack className="mt-8">
-              <MasterPageSection title="Financial Overview">
+            <MasterContentStack density="compact" className="mt-8">
+              <MasterPageSection title="Financial Overview" density="compact">
                 <SummaryTableSurface>
                   <SummaryRow
                     label="Total invoice value"
@@ -114,7 +114,7 @@ export function TaxSummaryPageView({
                 </SummaryTableSurface>
               </MasterPageSection>
 
-              <MasterPageSection title="Payments by Method">
+              <MasterPageSection title="Payments by Method" density="compact">
                 <SummaryTableSurface>
                   {summary.paymentsByMethod.length === 0 ? (
                     <p className="py-3 text-sm text-slate-500">No payments in period.</p>
@@ -131,7 +131,7 @@ export function TaxSummaryPageView({
               </MasterPageSection>
 
               <div className="grid gap-8 md:grid-cols-2">
-                <MasterPageSection title="Revenue by Customer">
+                <MasterPageSection title="Revenue by Customer" density="compact">
                   <SummaryTableSurface>
                     {summary.revenueByCustomer.length === 0 ? (
                       <p className="py-3 text-sm text-slate-500">No customer revenue.</p>
@@ -147,7 +147,7 @@ export function TaxSummaryPageView({
                   </SummaryTableSurface>
                 </MasterPageSection>
 
-                <MasterPageSection title="Revenue by Service Category">
+                <MasterPageSection title="Revenue by Service Category" density="compact">
                   <SummaryTableSurface>
                     {summary.revenueByServiceCategory.length === 0 ? (
                       <p className="py-3 text-sm text-slate-500">No service revenue.</p>
@@ -164,7 +164,7 @@ export function TaxSummaryPageView({
                 </MasterPageSection>
               </div>
 
-              <MasterPageSection title="Invoice Aging">
+              <MasterPageSection title="Invoice Aging" density="compact">
                 <SummaryTableSurface>
                   {summary.invoiceAging.map((bucket) => (
                     <SummaryRow

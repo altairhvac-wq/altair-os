@@ -13,13 +13,14 @@ function Skeleton({ className }: { className?: string }) {
 
 export function TaxSummaryLoadingState() {
   return (
-    <MasterShellPage>
+    <MasterShellPage density="compact">
       <MasterPageCanvas width="detail" className="max-w-4xl">
-        <MasterContentStack>
+        <MasterContentStack density="compact">
           <MasterPageHeader
             className="no-print flex-col items-stretch gap-3 sm:flex-row sm:items-center"
             title="Tax Summary"
             subtitle="Printable accountant summary for the selected reporting period."
+            density="compact"
             secondaryAction={
               <Skeleton className="h-9 w-full rounded-lg sm:w-36" />
             }
@@ -39,10 +40,11 @@ export function TaxSummaryLoadingState() {
               <Skeleton className="mt-2 h-3 w-full max-w-lg" />
             </div>
 
-            <MasterContentStack className="mt-8">
+            <MasterContentStack density="compact" className="mt-8">
               {Array.from({ length: 4 }).map((_, index) => (
                 <MasterPageSection
                   key={index}
+                  density="compact"
                   title={
                     index === 0
                       ? "Financial Overview"
