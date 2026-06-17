@@ -6,9 +6,11 @@ import { WorkColumn } from "./WorkColumn";
 import { MoneyColumn } from "./MoneyColumn";
 import {
   v3BoardHeaderClass,
-  v3EyebrowDarkClass,
+  v3BoardTitleClass,
+  v3ConnectionChipClass,
+  v3EyebrowBrassClass,
+  v3MetaClass,
   v3OperatingBoardClass,
-  v3WorkspaceTitleClass,
 } from "./v3-tokens";
 
 type IvoryOperatingBoardProps = {
@@ -34,33 +36,31 @@ export function IvoryOperatingBoard({
 }: IvoryOperatingBoardProps) {
   return (
     <section aria-label="Operating board" className={v3OperatingBoardClass}>
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(184,148,63,0.45)] to-transparent" />
+
       <div className={v3BoardHeaderClass}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className={v3EyebrowDarkClass}>Operating board</p>
-            <h2 className={`mt-1 ${v3WorkspaceTitleClass}`}>Action · Work · Money — one connected loop</h2>
-            <p className="mt-1 max-w-2xl text-xs text-slate-400">
-              Jobs move crews. Completed work becomes invoices. Overdue AR slows cash. Everything here affects
-              dispatch, billing, and customer follow-through.
+            <p className={v3EyebrowBrassClass}>Operating board</p>
+            <h2 className={`mt-1 ${v3BoardTitleClass}`}>Action · Work · Money</h2>
+            <p className={`mt-1 max-w-2xl ${v3MetaClass}`}>
+              One connected loop — jobs move crews, completed work becomes invoices, overdue AR slows cash.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             {connections.map((link) => (
-              <div
-                key={link.id}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-white/[0.04] px-2.5 py-1.5 ring-1 ring-white/[0.08]"
-              >
-                <span className="text-[10px] font-medium text-slate-300">{link.from}</span>
-                <ArrowRight className="h-3 w-3 text-slate-500" aria-hidden="true" />
-                <span className="text-[10px] font-medium text-slate-300">{link.to}</span>
-                <span className="hidden text-[10px] text-slate-500 sm:inline">· {link.note}</span>
+              <div key={link.id} className={v3ConnectionChipClass}>
+                <span>{link.from}</span>
+                <ArrowRight className="h-3 w-3 text-[#B8943F]" aria-hidden="true" />
+                <span>{link.to}</span>
+                <span className="hidden text-[rgba(41,34,24,0.45)] sm:inline">· {link.note}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 lg:divide-x lg:divide-[rgba(41,34,24,0.10)]">
+      <div className="grid lg:grid-cols-3">
         <ActionColumn actionQueue={actionQueue} officeQueue={officeQueue} />
         <WorkColumn jobs={jobs} technicians={technicians} />
         <MoneyColumn

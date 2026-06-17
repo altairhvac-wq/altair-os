@@ -31,9 +31,9 @@ export type V3NavGroup = {
 export const v3NavGroups: V3NavGroup[] = [
   {
     id: "command",
-    label: "Command",
+    label: "Overview",
     items: [
-      { label: "Mission Control", href: "/altair-shell-north-star-v3", icon: LayoutDashboard },
+      { label: "Operating Center", href: "/altair-shell-north-star-v3", icon: LayoutDashboard },
       { label: "Reports", href: "/reports", icon: BarChart3 },
     ],
   },

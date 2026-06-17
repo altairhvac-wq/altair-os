@@ -7,6 +7,7 @@ import {
   v3LabelMutedClass,
   v3LinkClass,
   v3RowClass,
+  v3SurfaceInsetClass,
   v3WorkspaceSubheadingClass,
 } from "./v3-tokens";
 
@@ -24,7 +25,7 @@ type MoneyColumnProps = {
 
 export function MoneyColumn({ moneyStages, expenseReview, leadOpportunity }: MoneyColumnProps) {
   return (
-    <div className="relative flex flex-col gap-4 border-t border-[rgba(41,34,24,0.10)] p-4 sm:p-5 lg:border-t-0 lg:p-6">
+    <div className="relative flex flex-col gap-4 border-t border-[rgba(184,148,63,0.12)] p-4 sm:p-5 lg:border-t-0 lg:p-6 lg:pl-7">
       <div className={v3ColumnHeaderClass}>
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -66,11 +67,8 @@ export function MoneyColumn({ moneyStages, expenseReview, leadOpportunity }: Mon
         })}
       </div>
 
-      <div className="mt-auto grid grid-cols-2 gap-2 border-t border-[rgba(41,34,24,0.10)] pt-3">
-        <Link
-          href="/expenses"
-          className="group rounded-xl border border-[rgba(41,34,24,0.10)] bg-[#FBF9F5] p-2.5 shadow-[0_1px_2px_rgba(41,34,24,0.03)] transition-all hover:border-[rgba(41,34,24,0.16)] hover:shadow-[0_2px_6px_rgba(41,34,24,0.05)]"
-        >
+      <div className="mt-auto grid grid-cols-2 gap-2 border-t border-[rgba(184,148,63,0.12)] pt-3">
+        <Link href="/expenses" className={`group block ${v3SurfaceInsetClass} transition-all hover:border-[rgba(184,148,63,0.20)]`}>
           <div className="flex items-center gap-1.5">
             <Receipt className="h-3.5 w-3.5 text-[rgba(41,34,24,0.50)]" aria-hidden="true" />
             <span className={v3LabelMutedClass}>Parts & expenses</span>
@@ -81,7 +79,7 @@ export function MoneyColumn({ moneyStages, expenseReview, leadOpportunity }: Mon
 
         <Link
           href="/leads"
-          className="group rounded-xl border border-[rgba(41,34,24,0.10)] bg-[#FBF9F5] p-2.5 shadow-[0_1px_2px_rgba(41,34,24,0.03)] transition-all hover:border-[rgba(184,148,63,0.28)] hover:shadow-[0_2px_6px_rgba(41,34,24,0.05)]"
+          className={`group block border-l-2 border-l-[#B8943F] ${v3SurfaceInsetClass} transition-all hover:border-[rgba(184,148,63,0.28)]`}
         >
           <div className="flex items-center gap-1.5">
             <Target className="h-3.5 w-3.5 text-[#6B5A2E]" aria-hidden="true" />

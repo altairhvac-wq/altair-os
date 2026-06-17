@@ -27,7 +27,7 @@ export function PrimaryActionPanel({
             <span className={v3BrassBadgeClass}>Do this first</span>
             <span className="text-[11px] font-medium text-slate-400">Right now</span>
           </div>
-          <p className="mt-2 text-xl font-semibold leading-snug text-white sm:text-2xl">
+          <p className="mt-2 text-lg font-semibold leading-snug text-white sm:text-xl">
             {topPriority.label}
           </p>
           {topPriority.metric ? (

@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowUpRight, Clock, FileText, Inbox } from "lucide-reac
 import type { ActionQueueItem, OfficeQueueItem } from "./sample-data";
 import {
   v3ColumnHeaderClass,
+  v3ColumnRailClass,
   v3EyebrowLightClass,
   v3LabelMutedClass,
   v3LinkClass,
@@ -40,7 +41,8 @@ type ActionColumnProps = {
 
 export function ActionColumn({ actionQueue, officeQueue }: ActionColumnProps) {
   return (
-    <div className="relative flex flex-col gap-4 p-4 sm:p-5 lg:p-6">
+    <div className="relative flex flex-col gap-4 p-4 sm:p-5 lg:p-6 lg:pr-7">
+      <div aria-hidden="true" className={v3ColumnRailClass} />
       <div className={v3ColumnHeaderClass}>
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -93,7 +95,7 @@ export function ActionColumn({ actionQueue, officeQueue }: ActionColumnProps) {
         })}
       </ul>
 
-      <div className="mt-auto border-t border-[rgba(41,34,24,0.10)] pt-3">
+      <div className="mt-auto border-t border-[rgba(184,148,63,0.12)] pt-3">
         <p className={v3LabelMutedClass}>Office follow-ups</p>
         <ul className="mt-2 flex flex-col gap-1">
           {officeQueue.map((item) => {
