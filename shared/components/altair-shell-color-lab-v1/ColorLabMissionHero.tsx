@@ -25,6 +25,13 @@ type ColorLabMissionHeroProps = {
   insight: ColorLabInsight;
 };
 
+const signalValueStyles = {
+  neutral: { dark: "text-white", light: "text-[#1E1B16]" },
+  attention: { dark: "text-amber-300", light: "text-amber-800" },
+  positive: { dark: "text-emerald-300", light: "text-emerald-800" },
+  risk: { dark: "text-red-300", light: "text-red-800" },
+} as const;
+
 export function ColorLabMissionHero({
   dayState,
   signals,
@@ -33,13 +40,14 @@ export function ColorLabMissionHero({
   insight,
 }: ColorLabMissionHeroProps) {
   const t = usePaletteTokens();
-
-  const signalValueByTone = {
-    neutral: t.heroSignalNeutral,
-    attention: t.heroSignalAttention,
-    positive: t.heroSignalPositive,
-    risk: t.heroSignalRisk,
-  } as const;
+  const isDark = t.heroMode === "dark";
+  const shiftMuted = isDark ? "text-slate-400" : "text-[rgba(30,27,22,0.55)]";
+  const insightHeadline = isDark ? "text-sm font-medium leading-snug text-white" : "text-sm font-medium leading-snug text-[#1E1B16]";
+  const secondaryLabel = isDark ? "text-sm font-medium text-slate-200 group-hover:text-white" : "text-sm font-medium text-[#3A342C] group-hover:text-[#1E1B16]";
+  const secondaryMetric = isDark ? "hidden text-xs tabular-nums text-slate-400 sm:inline" : "hidden text-xs tabular-nums text-[rgba(30,27,22,0.55)] sm:inline";
+  const secondaryChevron = isDark
+    ? "h-3.5 w-3.5 text-slate-500 transition-transform group-hover:translate-x-0.5 group-hover:text-[#C6A757]"
+    : "h-3.5 w-3.5 text-[rgba(30,27,22,0.40)] transition-transform group-hover:translate-x-0.5 group-hover:text-[#9A8B6E]";
 
   return (
     <section aria-label="Business command" className={t.heroShell}>
@@ -50,17 +58,17 @@ export function ColorLabMissionHero({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2.5">
               <span className={t.eyebrowAccent}>Operating center</span>
-              <span className={`text-[11px] ${t.heroShiftMuted}`}>·</span>
+              <span className={`text-[11px] ${shiftMuted}`}>·</span>
               <span className={t.eyebrowLight}>{dayState.dateLabel}</span>
               <span className={t.liveBadge}>
-                <span className={`h-1.5 w-1.5 rounded-full ${t.heroLiveDot}`} aria-hidden="true" />
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
                 Field ops live
               </span>
             </div>
             <h1 className={`mt-2 ${t.heroTitle}`}>Today&apos;s operating picture</h1>
             <p className={`mt-1.5 max-w-2xl ${t.bodySecondary}`}>
               {dayState.monitoringMessage}
-              <span className={t.heroShiftMuted}> — {dayState.shiftLabel}</span>
+              <span className={shiftMuted}> — {dayState.shiftLabel}</span>
             </p>
           </div>
 
@@ -90,18 +98,18 @@ export function ColorLabMissionHero({
                 {secondaryActions.map((action, index) => (
                   <Link key={action.id} href={action.href} className={t.secondaryAction}>
                     <span className={t.secondaryActionIndex}>{index + 2}</span>
-                    <span className={t.heroSecondaryLabel}>{action.label}</span>
+                    <span className={secondaryLabel}>{action.label}</span>
                     {action.metric ? (
-                      <span className={t.heroSecondaryMetric}>{action.metric.split(" · ")[0]}</span>
+                      <span className={secondaryMetric}>{action.metric.split(" · ")[0]}</span>
                     ) : null}
-                    <ChevronRight className={t.heroSecondaryChevron} aria-hidden="true" />
+                    <ChevronRight className={secondaryChevron} aria-hidden="true" />
                   </Link>
                 ))}
               </div>
             </div>
 
             <div className={t.insightSurface}>
-              <p className={t.heroInsightHeadline}>{insight.headline}</p>
+              <p className={insightHeadline}>{insight.headline}</p>
               <p className={`mt-1 ${t.meta}`}>{insight.detail}</p>
             </div>
           </div>
@@ -113,9 +121,10 @@ export function ColorLabMissionHero({
                 emphasis === "attention" && signal.label.toLowerCase().includes("overdue")
                   ? "risk"
                   : emphasis;
+              const mode = isDark ? "dark" : "light";
               const valueStyle =
-                signalValueByTone[toneKey as keyof typeof signalValueByTone] ??
-                signalValueByTone.neutral;
+                signalValueStyles[toneKey as keyof typeof signalValueStyles]?.[mode] ??
+                signalValueStyles.neutral[mode];
 
               return (
                 <div key={signal.label} className={t.signalChip}>

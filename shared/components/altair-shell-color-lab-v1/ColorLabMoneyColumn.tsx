@@ -5,6 +5,12 @@ import { DollarSign, Receipt, Target } from "lucide-react";
 import type { MoneyStage } from "@/shared/components/dashboard/north-star-v2/sample-data";
 import { usePaletteTokens } from "./palette-context";
 
+const stageEmphasisStyles = {
+  positive: "from-emerald-500 to-emerald-600",
+  neutral: "from-slate-400 to-slate-500",
+  attention: "from-amber-500 to-amber-600",
+} as const;
+
 type ColorLabMoneyColumnProps = {
   moneyStages: MoneyStage[];
   expenseReview: { pendingCount: number; pendingTotal: string };
@@ -18,19 +24,13 @@ export function ColorLabMoneyColumn({
 }: ColorLabMoneyColumnProps) {
   const t = usePaletteTokens();
 
-  const stageEmphasisStyles = {
-    positive: t.moneyStagePositive,
-    neutral: t.moneyStageNeutral,
-    attention: t.moneyStageAttention,
-  } as const;
-
   return (
     <div className={`relative flex flex-col gap-4 border-t ${t.columnDivider} p-4 sm:p-5 lg:border-t-0 lg:p-6 lg:pl-7`}>
       <div className={t.columnHeader}>
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <DollarSign className={`h-4 w-4 ${t.moneyIcon}`} aria-hidden="true" />
+              <DollarSign className="h-4 w-4 text-amber-700" aria-hidden="true" />
               <p className={t.eyebrowLight}>Money waiting</p>
             </div>
             <h3 className={`mt-1 ${t.workspaceSubheading}`}>Completed work → cash</h3>
@@ -75,7 +75,7 @@ export function ColorLabMoneyColumn({
           className={`group block ${t.surfaceInset} transition-all hover:opacity-95`}
         >
           <div className="flex items-center gap-1.5">
-            <Receipt className={`h-3.5 w-3.5 ${t.workspaceIconMuted}`} aria-hidden="true" />
+            <Receipt className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
             <span className={t.labelMuted}>Parts & expenses</span>
           </div>
           <p className={`mt-1 text-base font-bold tabular-nums ${t.workspaceSubheading}`}>

@@ -24,13 +24,15 @@ export function ColorLabPrimaryAction({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className={t.accentBadge}>Do this first</span>
-            <span className={t.primaryActionSubtext}>Right now</span>
+            <span className="text-[11px] font-medium text-slate-400">Right now</span>
           </div>
-          <p className={`mt-2 ${t.primaryActionTitle}`}>{topPriority.label}</p>
+          <p className="mt-2 text-lg font-semibold leading-snug text-white sm:text-xl">
+            {topPriority.label}
+          </p>
           {topPriority.metric ? (
             <p className={t.primaryActionMetric}>{topPriority.metric}</p>
           ) : null}
-          <p className={`mt-2 ${t.primaryActionBody}`}>{primaryFocus}</p>
+          <p className="mt-2 text-sm font-medium text-slate-200">{primaryFocus}</p>
           <p className={`mt-1 ${t.metaDark}`}>{primaryImpact}</p>
         </div>
         <span className={t.accentCta}>

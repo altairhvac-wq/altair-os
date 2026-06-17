@@ -5,6 +5,20 @@ import { Truck, Users } from "lucide-react";
 import type { JobInMotion, TechnicianPresence } from "@/shared/components/dashboard/north-star-v2/sample-data";
 import { usePaletteTokens } from "./palette-context";
 
+const jobStatusStyles = {
+  in_progress: { label: "On site", dot: "bg-slate-600", text: "text-slate-700" },
+  en_route: { label: "En route", dot: "bg-slate-500", text: "text-slate-600" },
+  scheduled: { label: "Scheduled", dot: "bg-slate-400", text: "text-slate-500" },
+  completed: { label: "Complete", dot: "bg-emerald-500", text: "text-emerald-700" },
+} as const;
+
+const techStateStyles = {
+  on_job: { ring: "ring-slate-200", bg: "from-slate-50 to-white" },
+  available: { ring: "ring-emerald-200/80", bg: "from-emerald-50/80 to-white" },
+  break: { ring: "ring-slate-200", bg: "from-slate-50/80 to-white" },
+  offline: { ring: "ring-slate-200", bg: "from-slate-50/60 to-white" },
+} as const;
+
 type ColorLabWorkColumnProps = {
   jobs: JobInMotion[];
   technicians: TechnicianPresence[];
@@ -15,20 +29,6 @@ export function ColorLabWorkColumn({ jobs, technicians }: ColorLabWorkColumnProp
   const activeCount = jobs.filter((j) => j.status === "in_progress" || j.status === "en_route").length;
   const completedToday = jobs.filter((j) => j.status === "completed").length;
 
-  const jobStatusStyles = {
-    in_progress: { label: "On site", dot: t.jobStatusInProgressDot, text: t.jobStatusInProgressText },
-    en_route: { label: "En route", dot: t.jobStatusEnRouteDot, text: t.jobStatusEnRouteText },
-    scheduled: { label: "Scheduled", dot: t.jobStatusScheduledDot, text: t.jobStatusScheduledText },
-    completed: { label: "Complete", dot: t.jobStatusCompletedDot, text: t.jobStatusCompletedText },
-  } as const;
-
-  const techStateStyles = {
-    on_job: { ring: t.techOnJobRing, bg: t.techOnJobBg },
-    available: { ring: t.techAvailableRing, bg: t.techAvailableBg },
-    break: { ring: t.techBreakRing, bg: t.techBreakBg },
-    offline: { ring: t.techOfflineRing, bg: t.techOfflineBg },
-  } as const;
-
   return (
     <div className={`relative flex flex-col gap-4 border-t ${t.columnDivider} p-4 sm:p-5 lg:border-t-0 lg:p-6 lg:px-7`}>
       <div aria-hidden="true" className={t.columnRail} />
@@ -36,7 +36,7 @@ export function ColorLabWorkColumn({ jobs, technicians }: ColorLabWorkColumnProp
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <Truck className={`h-4 w-4 ${t.workspaceIcon}`} aria-hidden="true" />
+              <Truck className="h-4 w-4 text-slate-600" aria-hidden="true" />
               <p className={t.eyebrowLight}>Work moving</p>
             </div>
             <h3 className={`mt-1 ${t.workspaceSubheading}`}>
@@ -79,7 +79,7 @@ export function ColorLabWorkColumn({ jobs, technicians }: ColorLabWorkColumnProp
 
       <div className={`mt-auto border-t ${t.columnDivider} pt-3`}>
         <div className="flex items-center gap-1.5">
-          <Users className={`h-3.5 w-3.5 ${t.workspaceIconMuted}`} aria-hidden="true" />
+          <Users className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
           <p className={t.labelMuted}>Crew load → dispatch pressure</p>
         </div>
         <ul className="mt-2 grid grid-cols-2 gap-2">
