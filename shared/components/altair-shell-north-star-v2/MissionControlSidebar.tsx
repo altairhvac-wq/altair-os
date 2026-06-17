@@ -100,12 +100,12 @@ export function MissionControlSidebar() {
         <div className="rounded-xl bg-gradient-to-br from-slate-900/80 to-slate-950/90 p-3.5 ring-1 ring-slate-700/40">
           <div className="flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5 text-violet-400" aria-hidden="true" />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-              Concept · v2
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300">
+              Concept · v2.1
             </p>
           </div>
-          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
-            Mission Control art direction. Not linked in production nav.
+          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+            Trades operating system art direction. Not linked in production nav.
           </p>
         </div>
       </div>

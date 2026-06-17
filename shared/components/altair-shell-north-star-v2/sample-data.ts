@@ -21,6 +21,8 @@ export type ActionQueueItem = {
   meta: string;
   urgency: "now" | "today" | "soon";
   amount?: string;
+  /** Trades-specific impact line — jobs, customers, schedule. */
+  impact?: string;
 };
 
 export type OfficeQueueItem = {
@@ -45,6 +47,13 @@ export type PulseMetric = {
   tone: "cyan" | "emerald" | "amber" | "violet";
 };
 
+export type SystemConnection = {
+  id: string;
+  from: string;
+  to: string;
+  note: string;
+};
+
 export type MissionControlSampleData = {
   dayState: {
     greeting: string;
@@ -52,6 +61,7 @@ export type MissionControlSampleData = {
     shiftLabel: string;
     monitoringMessage: string;
     primaryFocus: string;
+    primaryImpact: string;
     opsScore: number;
   };
   signals: OperatingSignal[];
@@ -74,6 +84,7 @@ export type MissionControlSampleData = {
   pulseMetrics: PulseMetric[];
   activities: ActivityItem[];
   momentum: string[];
+  systemConnections: SystemConnection[];
   systemHealth: {
     score: number;
     label: string;
@@ -86,52 +97,54 @@ export const missionControlSampleData: MissionControlSampleData = {
   dayState: {
     greeting: "Jeremiah",
     dateLabel: "Tuesday · Jun 16",
-    shiftLabel: "Morning ops window · 4 crew active",
-    monitoringMessage: "Altair is monitoring your business today",
-    primaryFocus: "3 overdue invoices need you first",
+    shiftLabel: "Morning dispatch · 4 techs on route · HVAC peak season",
+    monitoringMessage: "Altair is watching jobs, invoices, and crew load",
+    primaryFocus: "3 overdue invoices blocking $3,840 in collected cash",
+    primaryImpact:
+      "Westside Retail, Chen Residence, and Harbor Office Park are past due — follow up before noon dispatch.",
     opsScore: 82,
   },
   signals: [
-    { label: "Jobs moving", value: "11", emphasis: "positive" },
+    { label: "Jobs on board", value: "11", emphasis: "positive" },
     { label: "Ready to invoice", value: "$4.2k", emphasis: "neutral" },
-    { label: "Overdue", value: "3", emphasis: "attention" },
+    { label: "Overdue AR", value: "3", emphasis: "attention" },
     { label: "Unassigned", value: "1", emphasis: "attention" },
   ],
   priorityActions: [
     {
       id: "overdue",
-      label: "Review overdue invoices",
+      label: "Collect overdue invoices",
       href: "/invoices?status=overdue",
       leverage: "primary",
-      metric: "$3,840 · 3 past due",
+      metric: "$3,840 · 3 accounts past due",
     },
     {
       id: "ready-invoice",
-      label: "Send ready invoices",
+      label: "Invoice completed jobs",
       href: "/invoices?status=ready",
       leverage: "secondary",
-      metric: "$4,200 · 3 jobs",
+      metric: "$4,200 · Miller, Parkview, Chen",
     },
     {
       id: "assign",
-      label: "Assign tomorrow job",
+      label: "Dispatch tomorrow's call",
       href: "/dispatch",
       leverage: "secondary",
-      metric: "Johnson · 7:00 AM",
+      metric: "Johnson AC · 7:00 AM · unassigned",
     },
     {
       id: "estimates",
-      label: "Follow up estimates",
+      label: "Revive quiet quotes",
       href: "/estimates?status=sent",
       leverage: "tertiary",
-      metric: "$6,400 · 3 quotes",
+      metric: "$6,400 · 3 HVAC estimates",
     },
   ],
   insight: {
     id: "billing-leverage",
-    headline: "Billing is your highest leverage right now",
+    headline: "Completed work is waiting to become cash",
     detail:
-      "$8,040 is waiting across overdue and ready-to-send invoices. Clearing overdue first protects cash flow before noon dispatch.",
+      "Miller Home closed this morning — that's $640 ready to invoice. 3 overdue accounts are slowing the pipeline. Clear AR first, then send ready invoices before crew dispatch.",
     action: "Open billing queue",
     href: "/invoices",
     confidence: "high",
@@ -143,45 +156,49 @@ export const missionControlSampleData: MissionControlSampleData = {
       meta: "Oldest 12 days · Westside, Chen, Harbor",
       urgency: "now",
       amount: "$3,840",
+      impact: "Blocks cash · 3 commercial accounts at risk",
     },
     {
       id: "ready-to-invoice",
       title: "3 jobs ready to invoice",
-      meta: "Completed work · waiting to send",
+      meta: "Completed HVAC work · invoice not sent",
       urgency: "today",
       amount: "$4,200",
+      impact: "Miller Home just closed · $640 unlocks today",
     },
     {
       id: "stalled-jobs",
-      title: "2 stalled jobs",
-      meta: "5+ days inactive · needs owner review",
+      title: "2 stalled service calls",
+      meta: "5+ days idle · parts or approval hold",
       urgency: "today",
+      impact: "Parkview HOA · Chen duct job stuck on estimate",
     },
     {
       id: "follow-ups",
-      title: "3 quiet estimates",
+      title: "3 quiet HVAC estimates",
       meta: "$6,400 · no response in 7+ days",
       urgency: "soon",
       amount: "$6,400",
+      impact: "Seasonal replacement window closing",
     },
   ],
   officeQueue: [
     {
       id: "oq-1",
       title: "Approve estimate · Parkview HOA",
-      meta: "$8,200 · sent 3d ago",
+      meta: "$8,200 rooftop package · sent 3d ago",
       type: "estimate",
     },
     {
       id: "oq-2",
-      title: "Review invoice draft · Chen Residence",
-      meta: "Ready to send · $640",
+      title: "Send invoice · Chen Residence",
+      meta: "Duct cleaning complete · $640",
       type: "invoice",
     },
     {
       id: "oq-3",
       title: "Close job · Miller Home",
-      meta: "Completed · needs final review",
+      meta: "Thermostat install done · ready for invoice",
       type: "job",
     },
   ],
@@ -225,21 +242,21 @@ export const missionControlSampleData: MissionControlSampleData = {
       name: "Marcus Thompson",
       initials: "MT",
       state: "on_job",
-      jobLabel: "Westside Retail",
+      jobLabel: "Westside Retail · RTU",
     },
     {
       id: "tech-2",
       name: "Devon Reyes",
       initials: "DR",
       state: "on_job",
-      jobLabel: "En route · Chen",
+      jobLabel: "En route · Chen duct",
     },
     {
       id: "tech-3",
       name: "Alex Kim",
       initials: "AK",
       state: "available",
-      jobLabel: "Next: Harbor Office",
+      jobLabel: "Next: Harbor PM",
     },
     {
       id: "tech-4",
@@ -252,25 +269,25 @@ export const missionControlSampleData: MissionControlSampleData = {
   moneyStages: [
     {
       id: "ready",
-      label: "Ready",
+      label: "Ready to send",
       amount: "$4,200",
-      detail: "3 jobs",
+      detail: "3 completed jobs",
       emphasis: "positive",
       fill: 22,
     },
     {
       id: "sent",
-      label: "Sent",
+      label: "Sent · awaiting pay",
       amount: "$8,840",
-      detail: "5 open",
+      detail: "5 open invoices",
       emphasis: "neutral",
       fill: 46,
     },
     {
       id: "unpaid",
-      label: "Unpaid",
+      label: "Outstanding AR",
       amount: "$12,680",
-      detail: "8 invoices",
+      detail: "8 invoices open",
       emphasis: "neutral",
       fill: 66,
     },
@@ -278,15 +295,15 @@ export const missionControlSampleData: MissionControlSampleData = {
       id: "overdue",
       label: "Overdue",
       amount: "$3,840",
-      detail: "3 past due",
+      detail: "3 past due · action now",
       emphasis: "attention",
       fill: 20,
     },
     {
       id: "collected",
-      label: "Collected",
+      label: "Collected today",
       amount: "$1,240",
-      detail: "today",
+      detail: "2 payments in",
       emphasis: "positive",
       fill: 12,
     },
@@ -296,31 +313,81 @@ export const missionControlSampleData: MissionControlSampleData = {
     pendingTotal: "$842",
   },
   leadOpportunity: {
-    label: "Pipeline opportunity",
+    label: "Replacement pipeline",
     value: "$31.6k",
-    detail: "4 quoted leads · 2 viewed this week",
+    detail: "4 quoted installs · 2 viewed this week",
   },
   pulseMetrics: [
-    { id: "revenue", label: "Revenue in motion", value: "$16.9k", delta: "+12% vs last week", tone: "cyan" },
-    { id: "completion", label: "Completion rate", value: "91%", delta: "4 jobs done today", tone: "emerald" },
-    { id: "backlog", label: "Cash waiting", value: "$29.7k", delta: "8 unpaid · 3 overdue", tone: "amber" },
-    { id: "pipeline", label: "Lead pipeline", value: "$84.1k", delta: "12 active opportunities", tone: "violet" },
+    {
+      id: "revenue",
+      label: "Revenue in motion",
+      value: "$16.9k",
+      delta: "+12% vs last week",
+      tone: "cyan",
+    },
+    {
+      id: "completion",
+      label: "Jobs completed",
+      value: "4 today",
+      delta: "91% close rate this week",
+      tone: "emerald",
+    },
+    {
+      id: "backlog",
+      label: "Cash waiting",
+      value: "$29.7k",
+      delta: "8 unpaid · 3 overdue",
+      tone: "amber",
+    },
+    {
+      id: "pipeline",
+      label: "Quoted pipeline",
+      value: "$84.1k",
+      delta: "12 active HVAC leads",
+      tone: "violet",
+    },
   ],
   activities: [
-    { id: "a-1", title: "Invoice paid · Westside Retail", time: "12m ago", tone: "emerald" },
-    { id: "a-2", title: "Estimate viewed · Parkview HOA", time: "1h ago", tone: "cyan" },
-    { id: "a-3", title: "Job completed · Miller Home", time: "2h ago", tone: "emerald" },
-    { id: "a-4", title: "Expense flagged · parts receipt", time: "3h ago", tone: "amber" },
+    { id: "a-1", title: "Payment received · Westside Retail", time: "12m ago", tone: "emerald" },
+    { id: "a-2", title: "Estimate opened · Parkview HOA", time: "1h ago", tone: "cyan" },
+    { id: "a-3", title: "Job closed · Miller Home thermostat", time: "2h ago", tone: "emerald" },
+    { id: "a-4", title: "Parts receipt flagged · Devon R.", time: "3h ago", tone: "amber" },
   ],
   momentum: [
-    "4 jobs completed today",
-    "Dispatch caught up for morning crew",
+    "4 service calls completed today",
+    "Morning crew dispatch on schedule",
     "2 invoices paid overnight",
+  ],
+  systemConnections: [
+    {
+      id: "complete-to-invoice",
+      from: "Jobs complete",
+      to: "Ready to invoice",
+      note: "Miller Home → $640 waiting",
+    },
+    {
+      id: "stall-to-action",
+      from: "Stalled jobs",
+      to: "Action queue",
+      note: "2 calls need owner decision",
+    },
+    {
+      id: "overdue-to-cash",
+      from: "Overdue AR",
+      to: "Cash pipeline",
+      note: "$3,840 blocking collection",
+    },
+    {
+      id: "crew-to-dispatch",
+      from: "Crew load",
+      to: "Dispatch pressure",
+      note: "1 unassigned · Johnson 7 AM",
+    },
   ],
   systemHealth: {
     score: 82,
-    label: "Operations healthy",
-    status: "All systems nominal",
+    label: "Field ops healthy",
+    status: "Dispatch, billing, and crew sync nominal",
     notifications: 2,
   },
 };

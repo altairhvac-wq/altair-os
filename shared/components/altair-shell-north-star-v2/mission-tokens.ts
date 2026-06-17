@@ -1,4 +1,4 @@
-/** Altair Mission Control v2 — premium dark command center tokens. */
+/** Altair Mission Control v2.1 — premium dark command center tokens. */
 
 export const missionRootClass = "bg-[#060912]";
 
@@ -18,26 +18,36 @@ export const missionCanvasGlowAccentClass =
 export const missionHeroClass =
   "relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#0c1424]/95 via-[#0a101c]/90 to-[#060912]/95 p-5 shadow-[0_32px_100px_-20px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_1px_0_0_rgba(255,255,255,0.06)_inset] ring-1 ring-white/[0.06] backdrop-blur-xl sm:p-6 lg:p-8";
 
+/** Unified operating board — one composed surface for Action / Work / Money. */
+export const missionOperatingBoardClass =
+  "relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-slate-900/95 via-[#0c1220]/90 to-slate-950/95 shadow-[0_24px_80px_-28px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] ring-1 ring-slate-700/40 backdrop-blur-sm";
+
 /** High-contrast glass card for priority modules. */
 export const missionGlassCardClass =
   "relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)_inset] ring-1 ring-slate-700/40 backdrop-blur-md sm:p-5";
 
-/** Operating zone — one of three strong zones. */
+/** Operating zone — one of three strong zones (legacy, prefer operating board). */
 export const missionZoneClass =
   "relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-slate-900/90 via-[#0c1220]/85 to-slate-950/95 p-4 shadow-[0_20px_60px_-24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.03)_inset] ring-1 ring-slate-700/35 backdrop-blur-sm sm:p-5 lg:p-6";
 
 /** Inset list row inside a zone. */
 export const missionRowClass =
-  "flex items-center gap-3 rounded-xl bg-slate-950/50 px-3.5 py-3 ring-1 ring-slate-800/40 transition-colors hover:bg-slate-900/60 hover:ring-slate-700/50";
+  "flex items-center gap-3 rounded-xl bg-slate-950/50 px-3.5 py-3 ring-1 ring-slate-800/50 transition-colors hover:bg-slate-900/60 hover:ring-slate-700/55";
 
 export const missionTopBarClass =
   "flex shrink-0 items-center justify-between gap-4 border-b border-slate-800/70 bg-[#060912]/90 px-4 py-3 backdrop-blur-2xl sm:px-6";
 
+/** Eyebrow labels — scannable, higher contrast. */
 export const missionEyebrowClass =
-  "text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-400/80";
+  "text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300/90";
 
 export const missionConceptMarkerClass =
-  "inline-flex items-center rounded-full bg-violet-950/70 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-300/90 ring-1 ring-violet-500/25";
+  "inline-flex items-center rounded-full bg-violet-950/70 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-200/95 ring-1 ring-violet-500/30";
+
+/** Readability tokens — secondary text lifted from slate-400/500 to slate-300/350 range. */
+export const missionBodySecondaryClass = "text-sm text-slate-300";
+export const missionMetaClass = "text-xs text-slate-400";
+export const missionLabelMutedClass = "text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400";
 
 export const missionDockClass =
   "rounded-2xl bg-slate-950/70 p-4 ring-1 ring-slate-800/50 backdrop-blur-sm sm:p-5";

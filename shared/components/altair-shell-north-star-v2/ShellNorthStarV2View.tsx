@@ -1,16 +1,10 @@
 import type { ActiveCompanyContext } from "@/lib/database/types";
-import { ActionQueueBoard } from "./ActionQueueBoard";
-import { ActivityDock } from "./ActivityDock";
-import { BusinessPulsePanel } from "./BusinessPulsePanel";
 import { CommandCenterHero } from "./CommandCenterHero";
-import { IntelligencePanel } from "./IntelligencePanel";
 import { MissionConceptBadge } from "./MissionConceptBadge";
 import { MissionControlSidebar } from "./MissionControlSidebar";
 import { MissionTopBar } from "./MissionTopBar";
-import { PriorityCommandGrid } from "./PriorityCommandGrid";
-import { RevenueCommandBoard } from "./RevenueCommandBoard";
-import { SystemHealthDock } from "./SystemHealthDock";
-import { WorkCommandBoard } from "./WorkCommandBoard";
+import { OperationsCommandBoard } from "./OperationsCommandBoard";
+import { OperationalFooter } from "./OperationalFooter";
 import { missionControlSampleData } from "./sample-data";
 import {
   missionRootClass,
@@ -29,6 +23,7 @@ export function ShellNorthStarV2View({ companyContext }: ShellNorthStarV2ViewPro
   const greeting =
     companyContext.user.email?.split("@")[0] ?? data.dayState.greeting;
   const topPriority = data.priorityActions[0];
+  const secondaryActions = data.priorityActions.slice(1);
 
   return (
     <div className={`flex h-screen overflow-hidden ${missionRootClass}`}>
@@ -46,42 +41,31 @@ export function ShellNorthStarV2View({ companyContext }: ShellNorthStarV2ViewPro
             <div className="flex flex-col gap-5 lg:gap-6">
               <MissionConceptBadge />
 
-              {/* PRIMARY — dominant command hero */}
               <CommandCenterHero
                 dayState={{ ...data.dayState, greeting }}
                 signals={data.signals}
                 topPriority={topPriority}
+                secondaryActions={secondaryActions}
+                insight={data.insight}
               />
 
-              {/* SECONDARY — priority grid + intelligence sidecar */}
-              <div className="grid gap-5 lg:grid-cols-[1fr_22rem] lg:gap-6 xl:grid-cols-[1fr_24rem]">
-                <PriorityCommandGrid actions={data.priorityActions} />
-                <IntelligencePanel insight={data.insight} momentum={data.momentum} />
-              </div>
+              <OperationsCommandBoard
+                actionQueue={data.actionQueue}
+                officeQueue={data.officeQueue}
+                jobs={data.jobsInMotion}
+                technicians={data.technicians}
+                moneyStages={data.moneyStages}
+                expenseReview={data.expenseReview}
+                leadOpportunity={data.leadOpportunity}
+                connections={data.systemConnections}
+              />
 
-              {/* SECONDARY — three operating zones, asymmetric */}
-              <div className="grid gap-5 lg:grid-cols-12 lg:gap-6">
-                <div className="lg:col-span-7">
-                  <ActionQueueBoard items={data.actionQueue} officeQueue={data.officeQueue} />
-                </div>
-                <div className="lg:col-span-5">
-                  <RevenueCommandBoard
-                    stages={data.moneyStages}
-                    expenseReview={data.expenseReview}
-                    leadOpportunity={data.leadOpportunity}
-                  />
-                </div>
-              </div>
-
-              <WorkCommandBoard jobs={data.jobsInMotion} technicians={data.technicians} />
-
-              {/* SUPPORTING — pulse band + docks */}
-              <BusinessPulsePanel metrics={data.pulseMetrics} />
-
-              <div className="grid gap-5 sm:grid-cols-2 lg:gap-6">
-                <ActivityDock activities={data.activities} />
-                <SystemHealthDock health={data.systemHealth} />
-              </div>
+              <OperationalFooter
+                metrics={data.pulseMetrics}
+                activities={data.activities}
+                health={data.systemHealth}
+                momentum={data.momentum}
+              />
             </div>
           </div>
         </main>

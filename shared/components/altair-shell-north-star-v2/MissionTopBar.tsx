@@ -26,7 +26,7 @@ export function MissionTopBar({ companyContext, dateLabel }: MissionTopBarProps)
               Live
             </span>
           </div>
-          <p className="truncate text-[11px] text-slate-500">{dateLabel}</p>
+          <p className="truncate text-[11px] text-slate-400">{dateLabel}</p>
         </div>
       </div>
 
