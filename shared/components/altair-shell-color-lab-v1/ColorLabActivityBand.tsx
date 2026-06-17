@@ -3,12 +3,6 @@
 import type { ActivityItem } from "./sample-data";
 import { usePaletteTokens } from "./palette-context";
 
-const toneDot = {
-  slate: "bg-slate-400",
-  emerald: "bg-emerald-500",
-  amber: "bg-amber-500",
-} as const;
-
 type ColorLabActivityBandProps = {
   activities: ActivityItem[];
   momentum: string[];
@@ -16,6 +10,12 @@ type ColorLabActivityBandProps = {
 
 export function ColorLabActivityBand({ activities, momentum }: ColorLabActivityBandProps) {
   const t = usePaletteTokens();
+
+  const toneDot = {
+    slate: t.activityDotSlate,
+    emerald: t.activityDotEmerald,
+    amber: t.activityDotAmber,
+  } as const;
 
   return (
     <div className={`${t.footerSection} grid lg:grid-cols-[1.2fr_0.8fr]`}>

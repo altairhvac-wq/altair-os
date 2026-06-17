@@ -3,18 +3,18 @@
 import type { PulseMetric } from "./sample-data";
 import { usePaletteTokens } from "./palette-context";
 
-const toneStyles = {
-  slate: "",
-  emerald: "text-emerald-800",
-  amber: "text-amber-800",
-} as const;
-
 type ColorLabRevenueBandProps = {
   metrics: PulseMetric[];
 };
 
 export function ColorLabRevenueBand({ metrics }: ColorLabRevenueBandProps) {
   const t = usePaletteTokens();
+
+  const toneStyles = {
+    slate: "",
+    emerald: t.metricToneEmerald,
+    amber: t.metricToneAmber,
+  } as const;
 
   return (
     <div className={t.footerSection}>
