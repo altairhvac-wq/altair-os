@@ -1,53 +1,87 @@
-/** Altair Mission Control v2.1 — premium dark command center tokens. */
+/** Altair Mission Control v2.2 — dark shell, light workspace tokens. */
+
+/* ── Shell (dark) ─────────────────────────────────────────────── */
 
 export const missionRootClass = "bg-[#060912]";
-
-export const missionCanvasClass =
-  "relative flex-1 overflow-y-auto bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,rgba(34,211,238,0.07),transparent_50%),linear-gradient(180deg,#060912_0%,#0a0f1a_40%,#070b14_100%)]";
-
-export const missionCanvasGlowPrimaryClass =
-  "pointer-events-none absolute inset-x-0 top-0 h-96 bg-[radial-gradient(ellipse_60%_100%_at_50%_0%,rgba(34,211,238,0.12),transparent_70%)]";
-
-export const missionCanvasGlowSecondaryClass =
-  "pointer-events-none absolute right-0 top-0 h-80 w-80 bg-[radial-gradient(circle_at_100%_0%,rgba(99,102,241,0.1),transparent_65%)]";
-
-export const missionCanvasGlowAccentClass =
-  "pointer-events-none absolute bottom-0 left-0 h-64 w-96 bg-[radial-gradient(circle_at_0%_100%,rgba(139,92,246,0.06),transparent_70%)]";
-
-/** Dominant hero surface — the primary focal canvas. */
-export const missionHeroClass =
-  "relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#0c1424]/95 via-[#0a101c]/90 to-[#060912]/95 p-5 shadow-[0_32px_100px_-20px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_1px_0_0_rgba(255,255,255,0.06)_inset] ring-1 ring-white/[0.06] backdrop-blur-xl sm:p-6 lg:p-8";
-
-/** Unified operating board — one composed surface for Action / Work / Money. */
-export const missionOperatingBoardClass =
-  "relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-slate-900/95 via-[#0c1220]/90 to-slate-950/95 shadow-[0_24px_80px_-28px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] ring-1 ring-slate-700/40 backdrop-blur-sm";
-
-/** High-contrast glass card for priority modules. */
-export const missionGlassCardClass =
-  "relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-950/90 p-4 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)_inset] ring-1 ring-slate-700/40 backdrop-blur-md sm:p-5";
-
-/** Operating zone — one of three strong zones (legacy, prefer operating board). */
-export const missionZoneClass =
-  "relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-slate-900/90 via-[#0c1220]/85 to-slate-950/95 p-4 shadow-[0_20px_60px_-24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.03)_inset] ring-1 ring-slate-700/35 backdrop-blur-sm sm:p-5 lg:p-6";
-
-/** Inset list row inside a zone. */
-export const missionRowClass =
-  "flex items-center gap-3 rounded-xl bg-slate-950/50 px-3.5 py-3 ring-1 ring-slate-800/50 transition-colors hover:bg-slate-900/60 hover:ring-slate-700/55";
 
 export const missionTopBarClass =
   "flex shrink-0 items-center justify-between gap-4 border-b border-slate-800/70 bg-[#060912]/90 px-4 py-3 backdrop-blur-2xl sm:px-6";
 
-/** Eyebrow labels — scannable, higher contrast. */
+/* ── Workspace canvas (light, below hero) ───────────────────── */
+
+export const missionCanvasClass =
+  "relative flex-1 overflow-y-auto bg-[radial-gradient(ellipse_100%_55%_at_50%_0%,rgba(34,211,238,0.07),transparent_58%),linear-gradient(180deg,#dce4ed_0%,#eef2f6_30%,#f4f7fa_100%)]";
+
+export const missionCanvasGlowPrimaryClass =
+  "pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(ellipse_55%_90%_at_50%_0%,rgba(34,211,238,0.1),transparent_72%)]";
+
+export const missionCanvasGlowSecondaryClass =
+  "pointer-events-none absolute right-0 top-0 h-56 w-56 bg-[radial-gradient(circle_at_100%_0%,rgba(99,102,241,0.06),transparent_68%)]";
+
+export const missionCanvasGlowAccentClass =
+  "pointer-events-none absolute bottom-0 left-0 h-48 w-80 bg-[radial-gradient(circle_at_0%_100%,rgba(148,163,184,0.08),transparent_72%)]";
+
+/* ── Hero (dark anchor — unchanged from v2.1) ─────────────────── */
+
+export const missionHeroClass =
+  "relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#0c1424]/95 via-[#0a101c]/90 to-[#060912]/95 p-5 shadow-[0_32px_100px_-20px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_1px_0_0_rgba(255,255,255,0.06)_inset] ring-1 ring-white/[0.06] backdrop-blur-xl sm:p-6 lg:p-8";
+
+/** Eyebrow on dark surfaces (hero, board header dock). */
 export const missionEyebrowClass =
   "text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300/90";
 
-export const missionConceptMarkerClass =
-  "inline-flex items-center rounded-full bg-violet-950/70 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-200/95 ring-1 ring-violet-500/30";
+/** Eyebrow on light workspace surfaces. */
+export const missionEyebrowLightClass =
+  "text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-600";
 
-/** Readability tokens — secondary text lifted from slate-400/500 to slate-300/350 range. */
 export const missionBodySecondaryClass = "text-sm text-slate-300";
-export const missionMetaClass = "text-xs text-slate-400";
-export const missionLabelMutedClass = "text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400";
+
+export const missionMetaDarkClass = "text-xs text-slate-400";
+
+export const missionConceptMarkerClass =
+  "inline-flex items-center rounded-full bg-violet-100 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-700 ring-1 ring-violet-200";
+
+/* ── Operating board (frosted light surface) ──────────────────── */
+
+export const missionOperatingBoardClass =
+  "relative overflow-hidden rounded-[1.75rem] bg-white/72 shadow-[0_8px_40px_-12px_rgba(15,23,42,0.1),0_0_0_1px_rgba(255,255,255,0.8)_inset] ring-1 ring-slate-200/90 backdrop-blur-xl";
+
+/** Dark header dock — hierarchy anchor on light board. */
+export const missionBoardHeaderClass =
+  "border-b border-slate-800/30 bg-gradient-to-r from-[#0f172a] via-slate-900 to-[#0f172a] px-4 py-4 sm:px-6 sm:py-5";
+
+/** Dark mini-dock for column section headers. */
+export const missionColumnHeaderClass =
+  "rounded-xl bg-gradient-to-br from-slate-900/95 via-[#0f172a]/90 to-slate-800/95 px-3.5 py-3 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.35)] ring-1 ring-slate-700/35";
+
+/** Light workspace list row — high readability for daily use. */
+export const missionRowClass =
+  "flex items-center gap-3 rounded-xl bg-white/95 px-3.5 py-3 shadow-[0_1px_4px_rgba(15,23,42,0.05)] ring-1 ring-slate-200/90 transition-colors hover:bg-white hover:ring-slate-300/90 hover:shadow-[0_2px_10px_rgba(15,23,42,0.07)]";
+
+/** Light workspace text tokens. */
+export const missionWorkspaceTitleClass = "text-lg font-semibold text-white sm:text-xl";
+export const missionWorkspaceHeadingClass = "text-base font-semibold text-white";
+export const missionWorkspaceSubheadingClass = "text-base font-semibold text-slate-800";
+export const missionBodyPrimaryClass = "text-sm font-medium text-slate-800";
+export const missionMetaClass = "text-xs text-slate-500";
+export const missionLabelMutedClass =
+  "text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500";
+
+export const missionLinkClass =
+  "text-xs font-medium text-cyan-600 transition-colors hover:text-cyan-700";
+
+/* ── Footer (frosted light band) ────────────────────────────── */
+
+export const missionFooterClass =
+  "relative overflow-hidden rounded-2xl bg-white/70 shadow-[0_4px_24px_-6px_rgba(15,23,42,0.08),0_0_0_1px_rgba(255,255,255,0.7)_inset] ring-1 ring-slate-200/90 backdrop-blur-xl";
+
+/* ── Legacy tokens (unused in v2.2 layout, kept for compat) ─── */
+
+export const missionGlassCardClass =
+  "relative overflow-hidden rounded-2xl bg-white/75 p-4 shadow-[0_4px_24px_-6px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/90 backdrop-blur-xl sm:p-5";
+
+export const missionZoneClass =
+  "relative overflow-hidden rounded-[1.75rem] bg-white/72 p-4 shadow-[0_8px_40px_-12px_rgba(15,23,42,0.1)] ring-1 ring-slate-200/90 backdrop-blur-xl sm:p-5 lg:p-6";
 
 export const missionDockClass =
-  "rounded-2xl bg-slate-950/70 p-4 ring-1 ring-slate-800/50 backdrop-blur-sm sm:p-5";
+  "rounded-2xl bg-white/70 p-4 ring-1 ring-slate-200/90 shadow-[0_2px_12px_rgba(15,23,42,0.05)] backdrop-blur-xl sm:p-5";

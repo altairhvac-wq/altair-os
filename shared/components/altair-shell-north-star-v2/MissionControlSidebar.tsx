@@ -101,7 +101,7 @@ export function MissionControlSidebar() {
           <div className="flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5 text-violet-400" aria-hidden="true" />
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-300">
-              Concept · v2.1
+              Concept · v2.2
             </p>
           </div>
           <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">

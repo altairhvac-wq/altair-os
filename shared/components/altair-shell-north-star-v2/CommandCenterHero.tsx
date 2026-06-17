@@ -6,7 +6,7 @@ import {
   missionHeroClass,
   missionEyebrowClass,
   missionBodySecondaryClass,
-  missionMetaClass,
+  missionMetaDarkClass,
 } from "./mission-tokens";
 
 type DayState = {
@@ -110,7 +110,7 @@ export function CommandCenterHero({
                   <p className="mt-1.5 text-base tabular-nums text-cyan-100">{topPriority.metric}</p>
                 ) : null}
                 <p className="mt-2 text-sm font-medium text-slate-200">{dayState.primaryFocus}</p>
-                <p className={`mt-1 ${missionMetaClass}`}>{dayState.primaryImpact}</p>
+                <p className={`mt-1 ${missionMetaDarkClass}`}>{dayState.primaryImpact}</p>
               </div>
               <span className="relative inline-flex shrink-0 items-center gap-2 self-start rounded-xl bg-cyan-400/20 px-5 py-3 text-sm font-semibold text-cyan-100 ring-1 ring-cyan-300/40 transition-all group-hover:bg-cyan-400/30 group-hover:ring-cyan-200/50 sm:self-center">
                 Start now
@@ -152,7 +152,7 @@ export function CommandCenterHero({
           {/* Intelligence strip — inline, not a side panel */}
           <div className="rounded-xl bg-violet-950/30 px-4 py-3 ring-1 ring-violet-500/20">
             <p className="text-sm font-medium leading-snug text-violet-100">{insight.headline}</p>
-            <p className={`mt-1 ${missionMetaClass} leading-relaxed`}>{insight.detail}</p>
+            <p className={`mt-1 ${missionMetaDarkClass} leading-relaxed`}>{insight.detail}</p>
           </div>
         </div>
 
