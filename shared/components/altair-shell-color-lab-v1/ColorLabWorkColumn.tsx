@@ -30,7 +30,7 @@ export function ColorLabWorkColumn({ jobs, technicians }: ColorLabWorkColumnProp
   const completedToday = jobs.filter((j) => j.status === "completed").length;
 
   return (
-    <div className={`relative flex flex-col gap-4 border-t ${t.columnDivider} p-4 sm:p-5 lg:border-t-0 lg:p-6 lg:px-7`}>
+    <div className={`relative flex flex-col gap-4 border-t ${t.columnDivider} p-4 sm:p-5 lg:border-t-0 lg:p-6 lg:px-7 ${t.columnWell}`}>
       <div aria-hidden="true" className={t.columnRail} />
       <div className={t.columnHeader}>
         <div className="flex items-start justify-between gap-3">

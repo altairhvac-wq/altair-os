@@ -36,7 +36,7 @@ export function ColorLabActionColumn({ actionQueue, officeQueue }: ColorLabActio
   const t = usePaletteTokens();
 
   return (
-    <div className="relative flex flex-col gap-4 p-4 sm:p-5 lg:p-6 lg:pr-7">
+    <div className={`relative flex flex-col gap-4 p-4 sm:p-5 lg:p-6 lg:pr-7 ${t.columnWell}`}>
       <div aria-hidden="true" className={t.columnRail} />
       <div className={t.columnHeader}>
         <div className="flex items-start justify-between gap-3">

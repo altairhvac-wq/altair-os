@@ -19,7 +19,7 @@ export function ColorLabSystemDock({ health }: ColorLabSystemDockProps) {
 
   return (
     <div
-      className={`${t.footerSection} flex items-center gap-4 border-t ${t.columnDivider} px-4 py-4 lg:border-l lg:border-t-0 lg:px-5`}
+      className={`${t.footerSection} ${t.footerPanel} ${t.footerDock} flex items-center gap-4 border-t ${t.columnDivider} px-4 py-4 lg:border-l lg:border-t-0 lg:px-5`}
     >
       <div className="relative h-11 w-11 shrink-0">
         <svg className="h-full w-full -rotate-90" viewBox="0 0 48 48" aria-hidden="true">

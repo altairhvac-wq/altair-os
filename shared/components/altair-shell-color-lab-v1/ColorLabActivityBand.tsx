@@ -18,8 +18,8 @@ export function ColorLabActivityBand({ activities, momentum }: ColorLabActivityB
   const t = usePaletteTokens();
 
   return (
-    <div className={`${t.footerSection} grid lg:grid-cols-[1.2fr_0.8fr]`}>
-      <div className={`border-b ${t.columnDivider} px-4 py-4 lg:border-b-0 lg:border-r lg:px-5`}>
+    <div className={`${t.footerSection} grid gap-3 p-3 sm:p-4 lg:grid-cols-[1.2fr_0.8fr]`}>
+      <div className={`${t.footerPanel} px-4 py-4 lg:px-5`}>
         <p className={t.eyebrowLight}>Field activity</p>
         <ul className="mt-3 space-y-2">
           {activities.map((item) => (
@@ -35,7 +35,7 @@ export function ColorLabActivityBand({ activities, momentum }: ColorLabActivityB
         </ul>
       </div>
 
-      <div className="px-4 py-4 lg:px-5">
+      <div className={`${t.footerPanel} px-4 py-4 lg:px-5`}>
         <p className={t.eyebrowLight}>Today&apos;s momentum</p>
         <ul className="mt-3 space-y-1.5">
           {momentum.map((item) => (

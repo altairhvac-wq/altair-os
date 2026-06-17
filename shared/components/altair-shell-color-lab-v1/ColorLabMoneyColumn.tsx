@@ -25,7 +25,7 @@ export function ColorLabMoneyColumn({
   const t = usePaletteTokens();
 
   return (
-    <div className={`relative flex flex-col gap-4 border-t ${t.columnDivider} p-4 sm:p-5 lg:border-t-0 lg:p-6 lg:pl-7`}>
+    <div className={`relative flex flex-col gap-4 border-t ${t.columnDivider} p-4 sm:p-5 lg:border-t-0 lg:p-6 lg:pl-7 ${t.columnWell}`}>
       <div className={t.columnHeader}>
         <div className="flex items-start justify-between gap-3">
           <div>

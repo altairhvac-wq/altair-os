@@ -17,8 +17,8 @@ export function ColorLabRevenueBand({ metrics }: ColorLabRevenueBandProps) {
   const t = usePaletteTokens();
 
   return (
-    <div className={t.footerSection}>
-      <p className={`px-4 pt-4 sm:px-5 ${t.eyebrowLight}`}>Business pulse</p>
+    <div className={`${t.footerSection} px-2 pb-2 pt-4 sm:px-3 sm:pb-3`}>
+      <p className={`px-2 sm:px-3 ${t.eyebrowLight}`}>Business pulse</p>
       <div className="mt-2 grid sm:grid-cols-4">
         {metrics.map((metric) => (
           <div key={metric.id} className={t.footerMetric}>

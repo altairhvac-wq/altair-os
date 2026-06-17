@@ -67,6 +67,7 @@ export type PaletteTokens = {
   boardHeader: string;
   boardTopAccent: string;
   boardTitle: string;
+  columnWell: string;
   columnHeader: string;
   columnRail: string;
   row: string;
@@ -87,6 +88,8 @@ export type PaletteTokens = {
   footerTopAccent: string;
   footerSection: string;
   footerMetric: string;
+  footerPanel: string;
+  footerDock: string;
   surfaceInset: string;
   momentumDot: string;
   activityTitle: string;
@@ -133,11 +136,11 @@ export const missionControlRefined: PaletteTokens = {
   topBarAvatarRing: "ring-1 ring-[rgba(198,167,87,0.25)]",
 
   canvas:
-    "relative flex-1 overflow-y-auto bg-[linear-gradient(180deg,#ebe8e2_0%,#e6eaf0_24%,#edf1f6_58%,#f4f6f9_100%)]",
+    "relative flex-1 overflow-y-auto bg-[linear-gradient(180deg,#d4dae4_0%,#c4ccd8_22%,#b4c0d0_50%,#a4b4c8_78%,#96a8be_100%)]",
   canvasGlowPrimary:
-    "pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(ellipse_60%_70%_at_30%_0%,rgba(198,167,87,0.06),transparent_70%)]",
+    "pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_55%_80%_at_50%_0%,rgba(17,27,46,0.14),transparent_72%)]",
   canvasGlowSecondary:
-    "pointer-events-none absolute right-0 top-0 h-28 w-40 bg-[radial-gradient(circle_at_100%_0%,rgba(100,116,139,0.05),transparent_68%)]",
+    "pointer-events-none absolute inset-x-0 bottom-0 h-52 bg-[radial-gradient(ellipse_80%_55%_at_50%_100%,rgba(26,36,56,0.10),transparent_70%)]",
 
   heroShell:
     "relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#111b2e]/98 via-[#0e1726]/96 to-[#0b1220]/98 shadow-[0_16px_48px_-16px_rgba(0,0,0,0.48),0_0_0_1px_rgba(255,255,255,0.04)_inset] ring-1 ring-[rgba(198,167,87,0.14)]",
@@ -187,24 +190,25 @@ export const missionControlRefined: PaletteTokens = {
   primaryActionMetric: "mt-1.5 text-base font-medium tabular-nums text-[#E8DDC2]",
 
   operatingBoard:
-    "relative overflow-hidden rounded-[1.5rem] bg-[linear-gradient(180deg,#f8f7f4_0%,#f6f8fb_48%,#f8f7f4_100%)] shadow-[0_10px_44px_-14px_rgba(15,23,42,0.10),0_0_0_1px_rgba(255,255,255,0.9)_inset] ring-1 ring-slate-200/80",
-  boardHeader: "border-b border-slate-200/80 px-5 py-4 sm:px-6 sm:py-5",
+    "relative overflow-hidden rounded-[1.5rem] bg-gradient-to-b from-[#1a2538] via-[#172232] to-[#152030] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38),0_0_0_1px_rgba(255,255,255,0.06)_inset] ring-1 ring-[rgba(148,163,184,0.22)]",
+  boardHeader: "border-b border-white/[0.08] bg-[#141e2e]/80 px-5 py-4 sm:px-6 sm:py-5",
   boardTopAccent:
-    "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(198,167,87,0.32)] to-transparent",
-  boardTitle: "text-lg font-semibold text-slate-900 sm:text-xl",
+    "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(198,167,87,0.38)] to-transparent",
+  boardTitle: "text-lg font-semibold text-slate-100 sm:text-xl",
+  columnWell: "bg-[rgba(12,20,34,0.38)]",
   columnHeader:
-    "rounded-lg border border-slate-200/90 bg-white/85 px-3.5 py-3 shadow-[0_1px_4px_rgba(15,23,42,0.04)]",
+    "rounded-lg border border-white/[0.12] bg-[#FAF9F6] px-3.5 py-3 shadow-[0_2px_10px_rgba(0,0,0,0.20)]",
   columnRail:
-    "pointer-events-none absolute right-0 top-5 bottom-5 hidden w-px bg-gradient-to-b from-transparent via-slate-300/60 to-transparent lg:block",
-  row: "flex items-center gap-3 rounded-lg border border-slate-200/80 bg-white px-3.5 py-3 shadow-[0_1px_4px_rgba(15,23,42,0.03)] transition-all hover:border-[rgba(198,167,87,0.28)] hover:shadow-[0_4px_14px_rgba(15,23,42,0.06)]",
+    "pointer-events-none absolute right-0 top-5 bottom-5 hidden w-px bg-gradient-to-b from-transparent via-[rgba(198,167,87,0.24)] to-transparent lg:block",
+  row: "flex items-center gap-3 rounded-lg border border-slate-200/90 bg-[#FCFBF8] px-3.5 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.14)] transition-all hover:border-[rgba(198,167,87,0.32)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.18)]",
   workspaceSubheading: "text-base font-semibold text-slate-900",
-  labelMuted: "text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500",
+  labelMuted: "text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400",
   link: "text-xs font-medium text-[#8B7232] transition-colors hover:text-[#6B5A2E]",
   connectionChip:
-    "inline-flex items-center gap-1.5 rounded-md border border-slate-200/90 bg-white/80 px-2.5 py-1.5 text-[10px] font-medium text-slate-600",
-  connectionArrow: "h-3 w-3 text-[#5B8A9A]",
-  columnDivider: "border-[rgba(148,163,184,0.25)]",
-  officeHover: "hover:bg-slate-100/80",
+    "inline-flex items-center gap-1.5 rounded-md border border-white/[0.10] bg-[#FAF9F6]/95 px-2.5 py-1.5 text-[10px] font-medium text-slate-700 shadow-[0_1px_4px_rgba(0,0,0,0.12)]",
+  connectionArrow: "h-3 w-3 text-[#8B7232]",
+  columnDivider: "border-white/[0.08]",
+  officeHover: "hover:bg-white/[0.06]",
   soonBadge: "bg-slate-100 text-slate-700",
   soonBadgeRing: "ring-slate-200",
   techAvatarBg: "bg-slate-200",
@@ -212,14 +216,17 @@ export const missionControlRefined: PaletteTokens = {
   moneyLeadBorder: "border-l-[#B8943F]",
 
   footer:
-    "relative overflow-hidden rounded-[1.25rem] bg-[linear-gradient(180deg,#f8f7f4_0%,#f6f8fb_100%)] shadow-[0_6px_28px_-10px_rgba(15,23,42,0.08),0_0_0_1px_rgba(255,255,255,0.85)_inset] ring-1 ring-slate-200/80",
+    "relative overflow-hidden rounded-[1.25rem] bg-gradient-to-b from-[#243448] via-[#1f2d40] to-[#1a2838] shadow-[0_10px_36px_-12px_rgba(0,0,0,0.32),0_0_0_1px_rgba(255,255,255,0.05)_inset] ring-1 ring-[rgba(148,163,184,0.20)]",
   footerTopAccent:
-    "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(198,167,87,0.26)] to-transparent",
-  footerSection: "border-t border-slate-200/70 first:border-t-0",
+    "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(198,167,87,0.30)] to-transparent",
+  footerSection: "border-t border-white/[0.08] first:border-t-0",
   footerMetric:
-    "px-4 py-3.5 sm:px-5 border-b border-slate-200/60 sm:border-b-0 sm:border-r last:border-r-0 last:border-b-0",
+    "mx-2 my-2 rounded-lg border border-white/[0.10] bg-[#FAF9F6]/95 px-4 py-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.14)] sm:mx-3 sm:my-3 sm:px-5",
+  footerPanel:
+    "rounded-lg border border-white/[0.10] bg-[#FAF9F6]/95 shadow-[0_2px_8px_rgba(0,0,0,0.14)]",
+  footerDock: "m-3 sm:m-4 lg:ml-0 lg:mr-4 lg:mb-4",
   surfaceInset:
-    "rounded-lg border border-slate-200/80 bg-white/80 px-3 py-2.5 shadow-[0_1px_3px_rgba(15,23,42,0.03)]",
+    "rounded-lg border border-slate-200/85 bg-[#FAF9F6] px-3 py-2.5 shadow-[0_2px_6px_rgba(0,0,0,0.10)]",
   momentumDot: "mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#B8943F]",
   activityTitle: "min-w-0 flex-1 text-xs font-medium text-slate-800",
   activityTime: "shrink-0 text-[10px] tabular-nums text-slate-500",
@@ -313,6 +320,7 @@ export const graphiteBrass: PaletteTokens = {
   boardTopAccent:
     "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(198,167,87,0.40)] to-transparent",
   boardTitle: "text-lg font-semibold text-[#1E1B16] sm:text-xl",
+  columnWell: "",
   columnHeader:
     "rounded-lg border border-[rgba(198,167,87,0.14)] bg-[#FCFBF8]/90 px-3.5 py-3 shadow-[0_1px_4px_rgba(30,27,22,0.04)]",
   columnRail:
@@ -339,6 +347,8 @@ export const graphiteBrass: PaletteTokens = {
   footerSection: "border-t border-[rgba(198,167,87,0.12)] first:border-t-0",
   footerMetric:
     "px-4 py-3.5 sm:px-5 border-b border-[rgba(198,167,87,0.10)] sm:border-b-0 sm:border-r last:border-r-0 last:border-b-0",
+  footerPanel: "",
+  footerDock: "",
   surfaceInset:
     "rounded-lg border border-[rgba(30,27,22,0.07)] bg-[#FCFBF8]/85 px-3 py-2.5 shadow-[0_1px_3px_rgba(30,27,22,0.03)]",
   momentumDot: "mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#B8943F]",
@@ -434,6 +444,7 @@ export const luxuryHybrid: PaletteTokens = {
   boardTopAccent:
     "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(198,167,87,0.32)] to-transparent",
   boardTitle: "text-lg font-semibold text-[#1E1B16] sm:text-xl",
+  columnWell: "",
   columnHeader:
     "rounded-lg border border-[rgba(30,27,22,0.08)] bg-[#FAF9F6]/90 px-3.5 py-3 shadow-[0_1px_4px_rgba(30,27,22,0.04)]",
   columnRail:
@@ -460,6 +471,8 @@ export const luxuryHybrid: PaletteTokens = {
   footerSection: "border-t border-[rgba(198,167,87,0.10)] first:border-t-0",
   footerMetric:
     "px-4 py-3.5 sm:px-5 border-b border-[rgba(198,167,87,0.08)] sm:border-b-0 sm:border-r last:border-r-0 last:border-b-0",
+  footerPanel: "",
+  footerDock: "",
   surfaceInset:
     "rounded-lg border border-[rgba(30,27,22,0.07)] bg-[#FAF9F6]/85 px-3 py-2.5 shadow-[0_1px_3px_rgba(30,27,22,0.03)]",
   momentumDot: "mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#B8943F]",
@@ -555,6 +568,7 @@ export const warmExecutive: PaletteTokens = {
   boardTopAccent:
     "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(212,196,160,0.28)] to-transparent",
   boardTitle: "text-lg font-semibold text-[#1E1B16] sm:text-xl",
+  columnWell: "",
   columnHeader:
     "rounded-lg border border-[rgba(30,27,22,0.06)] bg-[#FBFAF7]/90 px-3.5 py-3 shadow-[0_1px_3px_rgba(30,27,22,0.03)]",
   columnRail:
@@ -581,6 +595,8 @@ export const warmExecutive: PaletteTokens = {
   footerSection: "border-t border-[rgba(212,196,160,0.10)] first:border-t-0",
   footerMetric:
     "px-4 py-3.5 sm:px-5 border-b border-[rgba(212,196,160,0.08)] sm:border-b-0 sm:border-r last:border-r-0 last:border-b-0",
+  footerPanel: "",
+  footerDock: "",
   surfaceInset:
     "rounded-lg border border-[rgba(30,27,22,0.06)] bg-[#FBFAF7]/85 px-3 py-2.5 shadow-[0_1px_2px_rgba(30,27,22,0.02)]",
   momentumDot: "mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#B8A882]",
