@@ -256,3 +256,30 @@
 **Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md`, `shared/design-system/shell/README.md`, `ALTAIR_ART_DIRECTION.md` (living note), this log.
 
 **Recommended next prompt:** Altair Signature Visual Layer audit/planning pass.
+
+---
+
+## 2026-06-16 — North Star Shell Direction Approved (Living Docs Sync)
+
+**Scope:** Living status/planning docs only. No app code, routes, server actions, Supabase queries, RLS, or product logic changes.
+
+**Context:** After multiple isolated concept routes and palette explorations (`/altair-shell-color-lab-v1`, `/altair-shell-north-star-v1`–`v3`, `/command-center-v1`, `/workspace-v1`, `/altair-design-lab`), founder approved **Mission Control Original Refined** as the preferred North Star shell direction. Concept iteration stops; production migration has not started.
+
+**Approved visual formula:** graphite shell + brass command accents + slate operating backing + ivory work cards.
+
+**What worked:** grouped left sidebar, dark graphite shell, command hero, “Do this first” primary action, Action/Work/Money model, slate backing + ivory cards, brass command accent, restrained field-ops signal.
+
+**What did not work:** full light SaaS, paper/report dashboard, full dark cyber/cyan, strict black/gold purity, beige-only workspace, changing layout and palette simultaneously.
+
+**Docs updated to establish:**
+
+- Preferred North Star shell direction selected (Mission Control Original Refined)
+- Production app remains beta-ready Master Shell V2 baseline — no backport yet
+- Concept routes remain research/reference only — retain, do not delete, do not productionize wholesale
+- Next step is production migration planning, not more concepting
+- Phased migration sequence: shell audit → grouped left nav plan → token extraction → dashboard pilot → one list pilot → one detail pilot
+- Non-negotiable preserves: routes, Supabase/RLS/server actions, billing/print/overlay, Dispatch behavior
+
+**Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md`, `ALTAIR_ART_DIRECTION.md`, `shared/design-system/shell/README.md`, this log.
+
+**Recommended next prompt:** North Star production migration planning audit.

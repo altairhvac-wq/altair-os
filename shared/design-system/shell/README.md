@@ -4,21 +4,38 @@ Reusable page structure inside `AdminShell` main. Does not replace global naviga
 
 Master Shell V2 architecture migration is **complete** across major admin surfaces. Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete**.
 
-**Current status:** G1 Signature Visual Layer pass complete on Dashboard hero, metric strips, Dispatch header band, and Customers empty state pilot. Beta-ready foundation + first signature adoption.
+**Current status:** Beta-ready foundation complete. Master Shell V2, Visual Polish A–F, Micro-Interaction A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete** on major admin surfaces. **No North Star backport to production yet.**
 
-## Signature Visual Layer (G1)
+## Approved North Star (2026-06-16)
 
-| Surface | Treatment |
-|---------|-----------|
-| **Admin canvas** | Stronger calm depth via `.admin-canvas` radial gradients |
-| **Dashboard** | `HorizonHero` + `HeroHeader` with real operational highlights |
-| **List metric strips** | V2 MetricCard styling via upgraded `.admin-metric-card` |
-| **Dispatch header** | `HorizonHero` compact band — board internals unchanged |
-| **Customers empty state** | V2 `EmptyState` pilot |
+**Mission Control Original Refined** — founder-approved shell direction. Concept iteration stopped.
 
-Shared tokens: `signatureHeroContentClass`, `signatureSoftCardClass`, `signatureHeaderBandClass` in `tokens.ts`.
+**Visual formula:** graphite shell + brass command accents + slate operating backing + ivory work cards.
 
-Primitive: `HorizonHero` in `shared/design-system/signature/HorizonHero.tsx`.
+| Layer | North Star treatment |
+|-------|---------------------|
+| Global chrome | Dark graphite grouped left sidebar (future — `AdminShell` unchanged today) |
+| Command hero | Dark hero band with brass accents |
+| Operating canvas | Slate/blue backing |
+| Work cards | Ivory surfaces with readable dark text |
+| Status | Semantic colors separate from brand/command accents |
+
+**Primary reference:** `/altair-shell-color-lab-v1` — palette `mission-control-refined`.
+
+**Concept routes (reference only):** `/altair-shell-north-star-v1`, `/altair-shell-north-star-v2`, `/altair-shell-north-star-v3`, `/command-center-v1`, `/workspace-v1`, `/altair-design-lab`. Retain; do not productionize wholesale.
+
+**Next design track:** Phased production migration (planning only until approved):
+
+1. Shell architecture audit
+2. Grouped left nav production plan
+3. Design token extraction
+4. Dashboard pilot
+5. One list page pilot
+6. One detail page pilot
+
+**Must preserve:** routes, Supabase/RLS/server actions, billing/print/overlay behavior, Dispatch behavior, mobile sheets.
+
+See `docs/altair/ALTAIR_ART_DIRECTION.md` and Phase 9 in `docs/altair/ALTair_V2_ROADMAP.md`.
 
 ## Surface system (Visual Polish Pass A — complete)
 
@@ -174,7 +191,7 @@ Reference: Operational Dashboard, Reports, Tax Summary.
 | Type | Routes / views |
 |------|----------------|
 | Internal / platform | `/alpha-tracker`; `/platform`; `/platform/bugs` |
-| Design prototypes | `/workspace-v1`; `/command-center-v1`; `/altair-design-lab` |
+| Design prototypes | `/workspace-v1`; `/command-center-v1`; `/altair-design-lab`; `/altair-shell-color-lab-v1`; `/altair-shell-north-star-v1`; `/altair-shell-north-star-v2`; `/altair-shell-north-star-v3` |
 
 **Deferred (intentional):**
 
@@ -192,7 +209,7 @@ Reference: Operational Dashboard, Reports, Tax Summary.
 
 **Deferred post-beta (unless smoke finds gaps):** Dispatch Phase 5 mobile viewport lock, Micro-Interaction Batch C, overlay/detail consistency pass, broad dark mode, route/page transitions.
 
-**Next design track — Altair Signature Visual Layer (Phase 9):** Visible product identity on top of this shell baseline. Not more polish. Must preserve routes, product logic, Supabase/RLS/server actions, Dispatch behavior, billing/payment/status, overlay routing, and mobile sheets. First targets: Dashboard, Dispatch, list pages, detail pages. See `docs/altair/ALTair_V2_ROADMAP.md` and `docs/altair/ALTair_MASTER_STATUS.md`.
+**Next design track — North Star Production Migration (Phase 9):** Migrate **Mission Control Original Refined** onto production in phased pilots — not more palette concepts or blind shell redesign. Must preserve routes, product logic, Supabase/RLS/server actions, Dispatch behavior, billing/print/overlay, and mobile sheets. Do not productionize concept routes wholesale. See `docs/altair/ALTAIR_ART_DIRECTION.md`, `docs/altair/ALTair_V2_ROADMAP.md`, and `docs/altair/ALTair_MASTER_STATUS.md`.
 
 **Next operational step:** Authenticated production/user-data smoke before first external company onboarding.
 

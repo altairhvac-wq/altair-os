@@ -122,3 +122,89 @@ Master Shell V2, Visual Polish A–F, and Micro-Interaction A–B are **complete
 The next implementation track is **Altair Signature Visual Layer** (Phase 9 in `ALTair_V2_ROADMAP.md`): adopt signature composition, atmosphere, and V2 components on production routes without changing product logic. Command Center / Workspace prototype adoption follows Signature Visual Layer, not before it.
 
 Do not loop on small polish passes. See `ALTair_MASTER_STATUS.md` for scope, preserves, and anti-patterns.
+
+---
+
+# Approved North Star Shell Direction (2026-06-16)
+
+**Status:** Founder-approved. Concept iteration stops here.
+
+After multiple isolated concept routes and palette explorations, the preferred shell direction is:
+
+**Mission Control Original Refined**
+
+## Visual Formula
+
+**Graphite shell + brass command accents + slate operating backing + ivory work cards.**
+
+| Layer | Treatment |
+|-------|-----------|
+| **Shell** | Dark graphite grouped left sidebar |
+| **Command** | Brass/gold accents; dark command hero |
+| **Operating canvas** | Slate/blue backing behind lower operating sections |
+| **Work surfaces** | Ivory cards on slate backing |
+| **Typography** | Readable dark text on light cards |
+| **Status** | Semantic status colors kept separate from brand/command accents |
+
+## What Worked
+
+- Grouped left sidebar
+- Dark graphite shell
+- Command hero / operating picture
+- “Do this first” primary action
+- Action / Work / Money operating model
+- Slate backing behind lower operating sections
+- Ivory cards on slate backing
+- Brass/gold as command/brand accent
+- Small cool field-ops signal is okay if restrained
+
+## What Did Not Work
+
+- Full light SaaS
+- Paper/report dashboard
+- Full dark cyber/cyan dashboard
+- Strict black/gold token purity that killed visual richness
+- Beige/ivory-only workspace with no contrast
+- Changing layout and palette at the same time
+
+## Founder Decision
+
+This direction is **good enough** to stop concept iteration for now.
+
+- Do **not** keep creating more palette concepts.
+- Do **not** keep redesigning the shell blindly.
+- Future work should use this as the current preferred North Star direction.
+
+## Production vs Concept
+
+| Surface | Status |
+|---------|--------|
+| **Production app** | Beta-ready baseline — Master Shell V2, polish, micro-interactions complete. Unchanged by this decision. |
+| **Concept routes** | Research/reference only — not production targets to copy wholesale |
+
+**Primary reference:** `/altair-shell-color-lab-v1` — palette `mission-control-refined` (Mission Control Original Refined).
+
+**Other concept routes (retain, do not delete):** `/altair-shell-north-star-v1`, `/altair-shell-north-star-v2`, `/altair-shell-north-star-v3`, `/command-center-v1`, `/workspace-v1`, `/altair-design-lab`.
+
+## Next Step: Production Migration Plan (Not More Concepting)
+
+The next design track is a **phased production migration plan** — not additional palette exploration or blind shell redesign.
+
+### Phased Migration (planned, not started)
+
+1. **Shell architecture audit** — map current `AdminShell` / Master Shell vs North Star grouped left nav and surface tiers
+2. **Grouped left nav production plan** — how grouped sidebar lands in production without breaking mobile nav or route structure
+3. **Design token extraction** — pull approved palette into shared tokens (graphite, brass, slate, ivory, semantic status)
+4. **Dashboard pilot** — first production surface; command hero + Action/Work/Money rhythm
+5. **One list page pilot** — e.g. Customers; ivory cards on slate backing, brass command accents
+6. **One detail page pilot** — e.g. Customer 360 or Job detail; section rhythm without one-off decoration
+
+### Non-Negotiable Preserves
+
+- Routes
+- Supabase / RLS / server actions
+- Billing / print / overlay behavior
+- Dispatch behavior (board internals, mobile sheets, workbench row)
+- Do **not** productionize concept routes wholesale
+
+See `ALTair_MASTER_STATUS.md`, `ALTair_V2_ROADMAP.md` Phase 9, and `shared/design-system/shell/README.md` for migration sequencing and shell constraints.

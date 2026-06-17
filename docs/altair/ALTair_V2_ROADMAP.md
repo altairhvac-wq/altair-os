@@ -6,7 +6,7 @@ Experience-layer redesign roadmap. Does not track feature development — see `A
 
 **Rule:** Shell migrations do not alter product logic, routes, server actions, Supabase behavior, or RLS assumptions.
 
-**Current status:** Beta-ready foundation complete; Signature Visual Layer next. Master Shell V2, Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are complete on major admin surfaces.
+**Current status:** Beta-ready foundation complete; **North Star selected** — production migration planning next. Master Shell V2, Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are complete on major admin surfaces.
 
 ---
 
@@ -26,7 +26,7 @@ Reusable V2 components in `shared/design-system/components/`:
 
 - Built: HeroHeader, PriorityCard, MetricCard, StatusPill, InsightCard, PulseCard, ActionCard, CelebrationBanner, EmptyState, WorkspaceSection
 - Signature layer: AtmosphereBackground, BusinessTerrain, LightBeam, HorizonDivider, MomentumStrip
-- Isolated prototypes: `/altair-design-lab`, `/command-center-v1`, `/workspace-v1`
+- Isolated prototypes: `/altair-design-lab`, `/command-center-v1`, `/workspace-v1`, `/altair-shell-color-lab-v1`, `/altair-shell-north-star-v1`, `/altair-shell-north-star-v2`, `/altair-shell-north-star-v3`
 
 Components remain available for future experience adoption; Master Shell migration does not require them on every page.
 
@@ -89,36 +89,50 @@ Legacy `ListCommandCenterLayout` and `ListCommandCenterLoadingState` **removed**
 
 ---
 
-## Phase 9 — Altair Signature Visual Layer
+## Phase 9 — North Star Production Migration
 
-**Status:** Next (planning)
+**Status:** Next (planning — migration not started)
 
-Visible product identity on top of the complete Master Shell / polish / micro-interaction baseline. **Comes before** Command Center / Workspace production adoption (Phase 6).
+**North Star approved (2026-06-16):** **Mission Control Original Refined** — graphite shell + brass command accents + slate operating backing + ivory work cards. Concept iteration **stopped**. Production app remains beta-ready Master Shell V2 baseline.
 
-Founder feedback (2026-06-16): the app is structurally consistent and beta-ready, but still reads too plain — closer to generic admin SaaS than a signature business operating system. Future work must not loop on small polish passes.
+Founder decision: this direction is good enough to stop concept iteration. Do not create more palette concepts or redesign the shell blindly. Next work is a phased production migration plan, not additional concepting.
 
-**Goal:**
+**Visual formula:**
 
-- Visible screenshot-level visual upgrade
-- Stronger first impression and richer app canvas
-- Stronger page hero/header treatment
-- Branded operational accents
-- Richer metric/status cards and premium empty states
-- Less “white card/table SaaS,” more “business operating system”
+- Dark graphite grouped left shell
+- Brass command accents
+- Dark command hero
+- Slate/blue operating backing
+- Ivory work cards
+- Readable dark text on light cards
+- Semantic status colors kept separate
 
-**Must preserve:** routes, product logic, Supabase/RLS/server actions, Dispatch behavior, billing/payment/status behavior, overlay routing, mobile sheets.
+**Primary reference:** `/altair-shell-color-lab-v1` — palette `mission-control-refined`.
 
-**Is not:** random gradients, flashy animation, Dribbble redesign, fake AI features, gamification, broad route transitions, page-by-page one-off decoration.
+**Concept routes:** research/reference only — retain, do not delete, do not productionize wholesale.
 
-**Assets:** V2 components (`shared/design-system/components/`), signature primitives (`shared/design-system/signature/`), experience prototypes (`/command-center-v1`, `/workspace-v1`). Art direction: `ALTAIR_ART_DIRECTION.md`.
+**Phased migration (planned sequence):**
 
-**First adoption targets:** Dashboard, Dispatch, list pages, detail pages.
+| Step | Focus |
+|------|-------|
+| 1 | Shell architecture audit |
+| 2 | Grouped left nav production plan |
+| 3 | Design token extraction |
+| 4 | Dashboard pilot |
+| 5 | One list page pilot |
+| 6 | One detail page pilot |
+
+**Must preserve:** routes, product logic, Supabase/RLS/server actions, Dispatch behavior, billing/print/overlay behavior, mobile sheets.
+
+**Is not:** more palette concepts, blind shell redesign, concept wholesale backport, random gradients, flashy animation, Dribbble redesign, fake AI features, gamification, broad route transitions, page-by-page one-off decoration.
+
+**Assets:** North Star concept (`/altair-shell-color-lab-v1`), V2 components (`shared/design-system/components/`), signature primitives (`shared/design-system/signature/`). Art direction: `ALTAIR_ART_DIRECTION.md`.
 
 ---
 
 ## Phase 6 — Experience Prototype Adoption
 
-**Status:** Deferred — after Signature Visual Layer (Phase 9)
+**Status:** Deferred — after North Star Production Migration (Phase 9)
 
 Adopt Command Center and Workspace prototype patterns into production dashboard and workspace modules. Not required before beta.
 
@@ -163,4 +177,4 @@ Adopt Command Center and Workspace prototype patterns into production dashboard 
 ## Next Operational Step
 
 1. Authenticated production/user-data smoke — validate core workflows on real tenant data before first external company onboarding.
-2. Altair Signature Visual Layer audit/planning pass — phased rollout plan before production adoption.
+2. North Star production migration planning audit — shell architecture audit, grouped left nav plan, token extraction strategy, phased pilot scope (dashboard + one list + one detail). No concept iteration. No production backport until plan approved.

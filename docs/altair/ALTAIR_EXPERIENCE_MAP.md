@@ -160,6 +160,27 @@ Not:
 
 ---
 
+# Approved Shell Visual Direction (2026-06-16)
+
+**Mission Control Original Refined** — founder-approved North Star. Concept iteration stops here.
+
+**Formula:** graphite shell + brass command accents + slate operating backing + ivory work cards.
+
+| Experience | North Star expression |
+|------------|----------------------|
+| **Command Center** | Dark command hero; “Do this first”; Action / Work / Money operating picture |
+| **Workspace** | Ivory work cards on slate backing; readable dark text; brass command accents in headers |
+| **Operations** | Restrained field-ops signal; Dispatch board behavior unchanged |
+| **Intelligence** | Semantic status colors separate from brand/command accents |
+
+**Production:** beta-ready Master Shell V2 baseline — unchanged until phased migration.
+
+**Concept routes:** `/altair-shell-color-lab-v1` (primary reference), plus `/altair-shell-north-star-v1`–`v3`, `/command-center-v1`, `/workspace-v1`, `/altair-design-lab` — research/reference only.
+
+See `ALTAIR_ART_DIRECTION.md` and Phase 9 in `ALTair_V2_ROADMAP.md`.
+
+---
+
 # Shell Migration Status (Living)
 
 Tracks V2 Master Shell adoption by experience. Updated 2026-06-16.
@@ -170,16 +191,18 @@ This section tracks **layout architecture only** — not feature completeness. S
 
 **Summary:** Master Shell V2 coverage is **complete** for major admin surfaces. Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete**.
 
-**Current status:** Beta-ready foundation complete; Signature Visual Layer next. Authenticated production/user-data smoke recommended — not “feature complete forever,” not “needs more polish before beta.”
+**Current status:** Beta-ready foundation complete; **North Star shell direction selected** — production migration planning next. Authenticated production/user-data smoke recommended — not “feature complete forever,” not “needs more polish before beta.”
 
-**Signature gap:** Most admin pages now share the same shell/polish baseline, but the product still lacks signature composition moments. Pages feel consistent yet too plain — still close to generic admin SaaS. The next design phase must add visible identity on top of the shell, starting with:
+**North Star selected (2026-06-16):** **Mission Control Original Refined** — graphite shell, brass command accents, slate operating backing, ivory work cards. Concept iteration stopped. Production app unchanged. Next step: phased production migration plan (shell audit → grouped left nav → tokens → dashboard/list/detail pilots). Do not create more palette concepts or redesign the shell blindly.
 
-- **Dashboard** — Command Center hero, pulse, and focus hierarchy (see `/command-center-v1` prototype)
-- **Dispatch** — richer operational canvas without changing board behavior
-- **List pages** — stronger headers, metric strips, and empty states (Workspace identity)
-- **Detail pages** — section rhythm and branded accents without one-off decoration
+**Signature gap (addressed by migration, not more concepting):** Most admin pages share the same shell/polish baseline but lack the approved North Star identity. Phased migration targets:
 
-Do not loop on small polish passes. See `ALTair_MASTER_STATUS.md` and Phase 9 in `ALTair_V2_ROADMAP.md`.
+- **Dashboard** — command hero + Action/Work/Money rhythm (see `/altair-shell-color-lab-v1`)
+- **One list page pilot** — ivory cards on slate backing, brass command accents
+- **One detail page pilot** — section rhythm without one-off decoration
+- **Dispatch** — richer operational canvas only where board behavior is preserved
+
+Do not loop on small polish passes or new palette concepts. See `ALTAIR_ART_DIRECTION.md`, `ALTair_MASTER_STATUS.md`, and Phase 9 in `ALTair_V2_ROADMAP.md`.
 
 ## Experience 1: Command Center
 
@@ -244,7 +267,7 @@ Workspace list and detail families are the reference implementations for the res
 | Surface | Notes |
 |---------|-------|
 | `/alpha-tracker`, `/platform`, `/platform/bugs` | Internal/platform utility |
-| `/workspace-v1`, `/command-center-v1`, `/altair-design-lab` | Design prototypes |
+| `/workspace-v1`, `/command-center-v1`, `/altair-design-lab`, `/altair-shell-color-lab-v1`, `/altair-shell-north-star-v1`, `/altair-shell-north-star-v2`, `/altair-shell-north-star-v3` | Design prototypes — research/reference only; North Star primary ref: color lab `mission-control-refined` |
 
 ## V2 Polish & Interaction Status (Complete)
 
@@ -256,10 +279,10 @@ Workspace list and detail families are the reference implementations for the res
 | Interaction Bug-Fix Pass A | **Complete** |
 | Pre-beta interaction fixes | **Complete** — focused smoke passed 2026-06-16 |
 
-## Deferred (After Signature Visual Layer Unless Smoke Finds Gaps)
+## Deferred (After North Star Migration Unless Smoke Finds Gaps)
 
 1. **Micro-Interaction Batch C**
-2. **Command Center / Workspace prototype adoption** (Phase 6) — follows Signature Visual Layer (Phase 9)
+2. **Command Center / Workspace prototype adoption** (Phase 6) — follows North Star Production Migration (Phase 9)
 3. **Technician Experience V2**
 4. **Dispatch Phase 5 mobile viewport lock**
 5. **Broad dark mode**
