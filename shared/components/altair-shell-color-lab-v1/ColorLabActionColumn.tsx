@@ -43,10 +43,10 @@ export function ColorLabActionColumn({ actionQueue, officeQueue }: ColorLabActio
           <div>
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-red-600" aria-hidden="true" />
-              <p className={t.eyebrowLight}>Action now</p>
+              <p className={t.lightCardLabel}>Action now</p>
             </div>
             <h3 className={`mt-1 ${t.workspaceSubheading}`}>Blockers on jobs & billing</h3>
-            <p className={`text-xs ${t.meta}`}>Clear these to protect schedule and cash</p>
+            <p className={t.lightSurfaceMuted}>Clear these to protect schedule and cash</p>
           </div>
           <Link href="/invoices?status=overdue" className={`shrink-0 ${t.link}`}>
             View all
@@ -64,7 +64,7 @@ export function ColorLabActionColumn({ actionQueue, officeQueue }: ColorLabActio
                 <span className={`h-2 w-2 shrink-0 rounded-full ${style.dot}`} aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className={`truncate text-sm font-semibold ${t.workspaceSubheading} group-hover:opacity-90`}>
+                    <p className={`truncate ${t.lightCardValue}`}>
                       {item.title}
                     </p>
                     <span
@@ -75,9 +75,9 @@ export function ColorLabActionColumn({ actionQueue, officeQueue }: ColorLabActio
                       {item.urgency}
                     </span>
                   </div>
-                  <p className={`mt-0.5 truncate ${t.meta}`}>{item.meta}</p>
+                  <p className={`mt-0.5 truncate ${t.lightCardMeta}`}>{item.meta}</p>
                   {item.impact ? (
-                    <p className={`mt-0.5 truncate text-[11px] ${t.meta}`}>{item.impact}</p>
+                    <p className={`mt-0.5 truncate text-[11px] ${t.lightSurfaceMuted}`}>{item.impact}</p>
                   ) : null}
                 </div>
                 {item.amount ? (
@@ -86,7 +86,7 @@ export function ColorLabActionColumn({ actionQueue, officeQueue }: ColorLabActio
                   </span>
                 ) : null}
                 <ArrowUpRight
-                  className="h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-slate-600"
+                  className="h-3.5 w-3.5 shrink-0 text-slate-500 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-slate-700"
                   aria-hidden="true"
                 />
               </Link>
@@ -96,7 +96,7 @@ export function ColorLabActionColumn({ actionQueue, officeQueue }: ColorLabActio
       </ul>
 
       <div className={`mt-auto border-t ${t.columnDivider} pt-3`}>
-        <p className={t.labelMuted}>Office follow-ups</p>
+        <p className={t.eyebrowLight}>Office follow-ups</p>
         <ul className="mt-2 flex flex-col gap-1">
           {officeQueue.map((item) => {
             const Icon = officeTypeIcons[item.type];
@@ -106,9 +106,9 @@ export function ColorLabActionColumn({ actionQueue, officeQueue }: ColorLabActio
                   href="/jobs"
                   className={`group flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs transition-colors ${t.officeHover}`}
                 >
-                  <Icon className="h-3.5 w-3.5 shrink-0 text-slate-400 group-hover:text-slate-600" aria-hidden="true" />
-                  <span className={`min-w-0 flex-1 truncate font-medium ${t.bodyPrimary}`}>{item.title}</span>
-                  <span className={`shrink-0 ${t.meta}`}>{item.meta}</span>
+                  <Icon className="h-3.5 w-3.5 shrink-0 text-slate-400 group-hover:text-slate-300" aria-hidden="true" />
+                  <span className={`min-w-0 flex-1 truncate font-medium ${t.darkSurfaceText}`}>{item.title}</span>
+                  <span className={`shrink-0 ${t.darkSurfaceMuted}`}>{item.meta}</span>
                 </Link>
               </li>
             );

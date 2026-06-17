@@ -37,12 +37,12 @@ export function ColorLabWorkColumn({ jobs, technicians }: ColorLabWorkColumnProp
           <div>
             <div className="flex items-center gap-2">
               <Truck className="h-4 w-4 text-slate-600" aria-hidden="true" />
-              <p className={t.eyebrowLight}>Work moving</p>
+              <p className={t.lightCardLabel}>Work moving</p>
             </div>
             <h3 className={`mt-1 ${t.workspaceSubheading}`}>
               {activeCount} calls active · {completedToday} ready to bill
             </h3>
-            <p className={`text-xs ${t.meta}`}>Today&apos;s dispatch board · HVAC service & install</p>
+            <p className={t.lightSurfaceMuted}>Today&apos;s dispatch board · HVAC service & install</p>
           </div>
           <Link href="/dispatch" className={`shrink-0 ${t.link}`}>
             Dispatch
@@ -56,15 +56,15 @@ export function ColorLabWorkColumn({ jobs, technicians }: ColorLabWorkColumnProp
           return (
             <li key={job.id}>
               <Link href="/jobs" className={`group flex items-center gap-3 ${t.row}`}>
-                <span className={`w-10 shrink-0 text-sm font-semibold tabular-nums ${t.meta}`}>
+                <span className={`w-10 shrink-0 tabular-nums ${t.lightSurfaceSecondary} font-semibold`}>
                   {job.time}
                 </span>
                 <span className={`h-2 w-2 shrink-0 rounded-full ${status.dot}`} aria-hidden="true" />
                 <div className="min-w-0 flex-1">
-                  <p className={`truncate text-sm font-semibold ${t.workspaceSubheading} group-hover:opacity-90`}>
+                  <p className={`truncate ${t.lightCardValue} group-hover:text-slate-900`}>
                     {job.customer}
                   </p>
-                  <p className={`truncate ${t.meta}`}>
+                  <p className={`truncate ${t.lightCardMeta}`}>
                     {job.job} · {job.technician}
                   </p>
                 </div>
@@ -79,8 +79,8 @@ export function ColorLabWorkColumn({ jobs, technicians }: ColorLabWorkColumnProp
 
       <div className={`mt-auto border-t ${t.columnDivider} pt-3`}>
         <div className="flex items-center gap-1.5">
-          <Users className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-          <p className={t.labelMuted}>Crew load → dispatch pressure</p>
+          <Users className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
+          <p className={t.eyebrowLight}>Crew load → dispatch pressure</p>
         </div>
         <ul className="mt-2 grid grid-cols-2 gap-2">
           {technicians.map((tech) => {
@@ -96,10 +96,10 @@ export function ColorLabWorkColumn({ jobs, technicians }: ColorLabWorkColumnProp
                   {tech.initials}
                 </span>
                 <div className="min-w-0">
-                  <p className={`truncate text-[11px] font-semibold ${t.bodyPrimary}`}>
+                  <p className={`truncate text-[11px] font-semibold ${t.lightSurfaceText}`}>
                     {tech.name.split(" ")[0]}
                   </p>
-                  <p className={`truncate text-[10px] ${t.meta}`}>{tech.jobLabel}</p>
+                  <p className={`truncate ${t.lightCardMeta}`}>{tech.jobLabel}</p>
                 </div>
               </li>
             );

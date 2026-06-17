@@ -31,10 +31,10 @@ export function ColorLabMoneyColumn({
           <div>
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-amber-700" aria-hidden="true" />
-              <p className={t.eyebrowLight}>Money waiting</p>
+              <p className={t.lightCardLabel}>Money waiting</p>
             </div>
             <h3 className={`mt-1 ${t.workspaceSubheading}`}>Completed work → cash</h3>
-            <p className={`text-xs ${t.meta}`}>Invoice pipeline · what crews earned today</p>
+            <p className={t.lightSurfaceMuted}>Invoice pipeline · what crews earned today</p>
           </div>
           <Link href="/invoices" className={`shrink-0 ${t.link}`}>
             Billing
@@ -49,9 +49,7 @@ export function ColorLabMoneyColumn({
             <Link key={stage.id} href="/invoices" className={`group flex items-center gap-3 ${t.row}`}>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className={`text-sm font-semibold ${t.bodyPrimary} group-hover:opacity-90`}>
-                    {stage.label}
-                  </span>
+                  <span className={t.lightCardValue}>{stage.label}</span>
                   <span className={`text-sm font-bold tabular-nums ${t.workspaceSubheading}`}>
                     {stage.amount}
                   </span>
@@ -62,7 +60,7 @@ export function ColorLabMoneyColumn({
                     style={{ width: `${stage.fill}%` }}
                   />
                 </div>
-                <p className={`mt-0.5 text-[10px] ${t.meta}`}>{stage.detail}</p>
+                <p className={`mt-0.5 ${t.lightCardMeta}`}>{stage.detail}</p>
               </div>
             </Link>
           );
@@ -75,13 +73,13 @@ export function ColorLabMoneyColumn({
           className={`group block ${t.surfaceInset} transition-all hover:opacity-95`}
         >
           <div className="flex items-center gap-1.5">
-            <Receipt className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-            <span className={t.labelMuted}>Parts & expenses</span>
+            <Receipt className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
+            <span className={t.lightCardLabel}>Parts & expenses</span>
           </div>
           <p className={`mt-1 text-base font-bold tabular-nums ${t.workspaceSubheading}`}>
             {expenseReview.pendingTotal}
           </p>
-          <p className={`text-[10px] ${t.meta}`}>{expenseReview.pendingCount} to review</p>
+          <p className={t.lightCardMeta}>{expenseReview.pendingCount} to review</p>
         </Link>
 
         <Link
@@ -90,12 +88,12 @@ export function ColorLabMoneyColumn({
         >
           <div className="flex items-center gap-1.5">
             <Target className={`h-3.5 w-3.5 ${t.intelligenceAccent}`} aria-hidden="true" />
-            <span className={t.labelMuted}>{leadOpportunity.label}</span>
+            <span className={t.lightCardLabel}>{leadOpportunity.label}</span>
           </div>
           <p className={`mt-1 text-base font-bold tabular-nums ${t.workspaceSubheading}`}>
             {leadOpportunity.value}
           </p>
-          <p className={`text-[10px] ${t.meta}`}>{leadOpportunity.detail}</p>
+          <p className={t.lightCardMeta}>{leadOpportunity.detail}</p>
         </Link>
       </div>
     </div>

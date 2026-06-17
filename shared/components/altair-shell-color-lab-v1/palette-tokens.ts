@@ -42,6 +42,15 @@ export type PaletteTokens = {
   meta: string;
   metaDark: string;
   bodySecondaryDark: string;
+
+  darkSurfaceText: string;
+  darkSurfaceMuted: string;
+  lightSurfaceText: string;
+  lightSurfaceSecondary: string;
+  lightSurfaceMuted: string;
+  lightCardLabel: string;
+  lightCardMeta: string;
+  lightCardValue: string;
   conceptMarker: string;
   conceptMarkerText: string;
 
@@ -115,6 +124,16 @@ const sharedSemantics = {
   systemStatusText: "inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700",
 } as const;
 
+/** Readable dark text on ivory/light card surfaces — shared baseline for non-MC palettes. */
+const sharedLightSurfaceText = {
+  lightSurfaceText: "text-sm font-medium text-[#17130E]",
+  lightSurfaceSecondary: "text-sm text-slate-700",
+  lightSurfaceMuted: "text-xs text-slate-600",
+  lightCardLabel: "text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500",
+  lightCardMeta: "text-[10px] text-slate-600",
+  lightCardValue: "text-sm font-semibold text-slate-950",
+} as const;
+
 export const missionControlRefined: PaletteTokens = {
   id: "mission-control-refined",
   label: "Mission Control Original Refined",
@@ -158,6 +177,14 @@ export const missionControlRefined: PaletteTokens = {
   meta: "text-xs text-slate-400",
   metaDark: "text-xs text-slate-400",
   bodySecondaryDark: "text-sm text-slate-300",
+  darkSurfaceText: "text-sm font-medium text-slate-200",
+  darkSurfaceMuted: "text-xs text-slate-400",
+  lightSurfaceText: "text-sm font-medium text-slate-950",
+  lightSurfaceSecondary: "text-sm text-slate-700",
+  lightSurfaceMuted: "text-xs text-slate-600",
+  lightCardLabel: "text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500",
+  lightCardMeta: "text-[10px] text-slate-600",
+  lightCardValue: "text-sm font-semibold text-slate-950",
   conceptMarker:
     "inline-flex items-center rounded-full bg-violet-950/40 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-300/90 ring-1 ring-violet-500/25",
   conceptMarkerText: "text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500",
@@ -202,7 +229,7 @@ export const missionControlRefined: PaletteTokens = {
     "pointer-events-none absolute right-0 top-5 bottom-5 hidden w-px bg-gradient-to-b from-transparent via-[rgba(198,167,87,0.24)] to-transparent lg:block",
   row: "flex items-center gap-3 rounded-lg border border-slate-200/90 bg-[#FCFBF8] px-3.5 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.14)] transition-all hover:border-[rgba(198,167,87,0.32)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.18)]",
   workspaceSubheading: "text-base font-semibold text-slate-900",
-  labelMuted: "text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400",
+  labelMuted: "text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500",
   link: "text-xs font-medium text-[#8B7232] transition-colors hover:text-[#6B5A2E]",
   connectionChip:
     "inline-flex items-center gap-1.5 rounded-md border border-white/[0.10] bg-[#FAF9F6]/95 px-2.5 py-1.5 text-[10px] font-medium text-slate-700 shadow-[0_1px_4px_rgba(0,0,0,0.12)]",
@@ -228,15 +255,15 @@ export const missionControlRefined: PaletteTokens = {
   surfaceInset:
     "rounded-lg border border-slate-200/85 bg-[#FAF9F6] px-3 py-2.5 shadow-[0_2px_6px_rgba(0,0,0,0.10)]",
   momentumDot: "mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#B8943F]",
-  activityTitle: "min-w-0 flex-1 text-xs font-medium text-slate-800",
-  activityTime: "shrink-0 text-[10px] tabular-nums text-slate-500",
+  activityTitle: "min-w-0 flex-1 text-xs font-medium text-slate-950",
+  activityTime: "shrink-0 text-[10px] tabular-nums text-slate-600",
   metricLabel: "text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500",
-  metricDelta: "text-[11px] text-slate-500",
+  metricDelta: "text-[11px] text-slate-600",
 
   healthScoreTrack: "rgba(198,167,87,0.22)",
   healthScoreGradientId: "mc-health-score",
   ...sharedSemantics,
-  systemNotificationText: "inline-flex items-center gap-1 text-[11px] text-slate-500",
+  systemNotificationText: "inline-flex items-center gap-1 text-[11px] text-slate-600",
 
   intelligenceAccent: "text-[#C6A757]",
 };
@@ -283,6 +310,14 @@ export const graphiteBrass: PaletteTokens = {
   meta: "text-xs text-slate-400",
   metaDark: "text-xs text-slate-400",
   bodySecondaryDark: "text-sm text-slate-300",
+  darkSurfaceText: "text-sm font-medium text-slate-200",
+  darkSurfaceMuted: "text-xs text-slate-400",
+  lightSurfaceText: "text-sm font-medium text-[#1E1B16]",
+  lightSurfaceSecondary: "text-sm text-[#4F4638]",
+  lightSurfaceMuted: "text-xs text-[#6B6255]",
+  lightCardLabel: "text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(30,27,22,0.52)]",
+  lightCardMeta: "text-[10px] text-[#6B6255]",
+  lightCardValue: "text-sm font-semibold text-[#1E1B16]",
   conceptMarker:
     "inline-flex items-center rounded-full bg-[rgba(198,167,87,0.12)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#E8DDC2] ring-1 ring-[rgba(198,167,87,0.30)]",
   conceptMarkerText: "text-[11px] font-medium uppercase tracking-[0.14em] text-[rgba(41,34,24,0.48)]",
@@ -407,6 +442,9 @@ export const luxuryHybrid: PaletteTokens = {
   meta: "text-xs text-slate-400",
   metaDark: "text-xs text-slate-400",
   bodySecondaryDark: "text-sm text-slate-300",
+  darkSurfaceText: "text-sm font-medium text-slate-200",
+  darkSurfaceMuted: "text-xs text-slate-400",
+  ...sharedLightSurfaceText,
   conceptMarker:
     "inline-flex items-center rounded-full bg-[rgba(198,167,87,0.10)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#E8DDC2] ring-1 ring-[rgba(198,167,87,0.25)]",
   conceptMarkerText: "text-[11px] font-medium uppercase tracking-[0.14em] text-[rgba(41,34,24,0.48)]",
@@ -531,6 +569,14 @@ export const warmExecutive: PaletteTokens = {
   meta: "text-xs text-[rgba(30,27,22,0.58)]",
   metaDark: "text-xs text-slate-400",
   bodySecondaryDark: "text-sm text-slate-300",
+  darkSurfaceText: "text-sm font-medium text-slate-200",
+  darkSurfaceMuted: "text-xs text-slate-400",
+  lightSurfaceText: "text-sm font-medium text-[#1E1B16]",
+  lightSurfaceSecondary: "text-sm text-[#4F4638]",
+  lightSurfaceMuted: "text-xs text-[#6B6255]",
+  lightCardLabel: "text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(30,27,22,0.50)]",
+  lightCardMeta: "text-[10px] text-[#6B6255]",
+  lightCardValue: "text-sm font-semibold text-[#1E1B16]",
   conceptMarker:
     "inline-flex items-center rounded-full bg-[rgba(212,196,160,0.22)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6B5F4A] ring-1 ring-[rgba(212,196,160,0.28)]",
   conceptMarkerText: "text-[11px] font-medium uppercase tracking-[0.14em] text-[rgba(30,27,22,0.45)]",

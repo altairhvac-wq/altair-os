@@ -47,7 +47,7 @@ export function ColorLabSystemDock({ health }: ColorLabSystemDockProps) {
         </div>
       </div>
       <div className="min-w-0">
-        <p className={t.eyebrowLight}>System health</p>
+        <p className={t.lightCardLabel}>System health</p>
         <p className={`mt-1 text-xs font-semibold ${t.workspaceSubheading}`}>{health.label}</p>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className={t.systemStatusText}>

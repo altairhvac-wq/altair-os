@@ -20,7 +20,7 @@ export function ColorLabActivityBand({ activities, momentum }: ColorLabActivityB
   return (
     <div className={`${t.footerSection} grid gap-3 p-3 sm:p-4 lg:grid-cols-[1.2fr_0.8fr]`}>
       <div className={`${t.footerPanel} px-4 py-4 lg:px-5`}>
-        <p className={t.eyebrowLight}>Field activity</p>
+        <p className={t.lightCardLabel}>Field activity</p>
         <ul className="mt-3 space-y-2">
           {activities.map((item) => (
             <li key={item.id} className="flex items-baseline gap-2.5">
@@ -36,10 +36,10 @@ export function ColorLabActivityBand({ activities, momentum }: ColorLabActivityB
       </div>
 
       <div className={`${t.footerPanel} px-4 py-4 lg:px-5`}>
-        <p className={t.eyebrowLight}>Today&apos;s momentum</p>
+        <p className={t.lightCardLabel}>Today&apos;s momentum</p>
         <ul className="mt-3 space-y-1.5">
           {momentum.map((item) => (
-            <li key={item} className={`flex items-start gap-2 ${t.meta}`}>
+            <li key={item} className={`flex items-start gap-2 ${t.lightSurfaceMuted}`}>
               <span className={t.momentumDot} aria-hidden="true" />
               {item}
             </li>

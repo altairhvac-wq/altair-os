@@ -40,7 +40,7 @@ export function ColorLabOperatingBoard({
           <div>
             <p className={t.eyebrowAccent}>Operating board</p>
             <h2 className={`mt-1 ${t.boardTitle}`}>Action · Work · Money</h2>
-            <p className={`mt-1 max-w-2xl ${t.meta}`}>
+            <p className={`mt-1 max-w-2xl ${t.darkSurfaceMuted}`}>
               One connected loop — jobs move crews, completed work becomes invoices, overdue AR slows cash.
             </p>
           </div>
@@ -50,7 +50,7 @@ export function ColorLabOperatingBoard({
                 <span>{link.from}</span>
                 <ArrowRight className={t.connectionArrow} aria-hidden="true" />
                 <span>{link.to}</span>
-                <span className={`hidden ${t.meta} sm:inline`}>· {link.note}</span>
+                <span className={`hidden ${t.lightCardMeta} sm:inline`}>· {link.note}</span>
               </div>
             ))}
           </div>
