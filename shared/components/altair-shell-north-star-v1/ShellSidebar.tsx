@@ -22,7 +22,7 @@ export function ShellSidebar() {
   return (
     <aside
       aria-label="Altair shell navigation"
-      className="hidden w-[15.5rem] shrink-0 flex-col border-r border-slate-800/80 bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900 lg:flex"
+      className="hidden w-[15.5rem] shrink-0 flex-col border-r border-slate-800/60 bg-gradient-to-b from-[#070b12] via-slate-950 to-[#0a0f18] lg:flex"
     >
       <div className="border-b border-slate-800/60 px-5 py-5">
         <div className="flex items-center gap-3">
@@ -56,8 +56,8 @@ export function ShellSidebar() {
                         href={item.href}
                         className={`group flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm transition-colors ${
                           active
-                            ? "bg-slate-800/90 text-white ring-1 ring-cyan-500/20"
-                            : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+                            ? "bg-slate-900/90 text-white ring-1 ring-cyan-500/25"
+                            : "text-slate-500 hover:bg-slate-900/50 hover:text-slate-300"
                         }`}
                       >
                         <Icon

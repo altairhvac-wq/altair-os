@@ -1,6 +1,5 @@
 import type { ActiveCompanyContext } from "@/lib/database/types";
 import { AttentionSystemPanel } from "./AttentionSystemPanel";
-import { CockpitSectionBand } from "./CockpitSectionBand";
 import { FeatureCoverageNote } from "./FeatureCoverageNote";
 import { GrowthPipelinePanel } from "./GrowthPipelinePanel";
 import { MoneySystemPanel } from "./MoneySystemPanel";
@@ -12,6 +11,7 @@ import { ShellTopBar } from "./ShellTopBar";
 import { SystemDock } from "./SystemDock";
 import { WorkSystemPanel } from "./WorkSystemPanel";
 import { shellNorthStarSampleData } from "./sample-data";
+import { shellCanvasClass, shellCanvasGlowClass, shellCanvasGlowSecondaryClass, shellRootClass } from "./shell-tokens";
 
 type ShellNorthStarViewProps = {
   companyContext: ActiveCompanyContext;
@@ -23,15 +23,18 @@ export function ShellNorthStarView({ companyContext }: ShellNorthStarViewProps) 
     companyContext.user.email?.split("@")[0] ?? data.dayState.greeting;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-200/80">
+    <div className={`flex h-screen overflow-hidden ${shellRootClass}`}>
       <ShellSidebar />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <ShellTopBar companyContext={companyContext} />
 
-        <main className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,rgb(241_245_249)_0%,rgb(248_250_252)_12%,rgb(226_232_240)_100%)]">
-          <div className="mx-auto max-w-[90rem] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-            <div className="flex flex-col gap-5 sm:gap-6 lg:gap-7">
+        <main className={shellCanvasClass}>
+          <div aria-hidden="true" className={shellCanvasGlowClass} />
+          <div aria-hidden="true" className={shellCanvasGlowSecondaryClass} />
+
+          <div className="relative mx-auto max-w-[90rem] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+            <div className="flex flex-col gap-6 lg:gap-7">
               <ShellConceptBadge />
 
               <ShellCommandDeck
@@ -42,26 +45,24 @@ export function ShellNorthStarView({ companyContext }: ShellNorthStarViewProps) 
                 operatingLinks={data.operatingLinks}
               />
 
-              <CockpitSectionBand
-                variant="dark"
-                label="Operations zone"
-                title="Field systems below the command deck"
-                detail="Work · money · attention · growth"
-              />
-
               <WorkSystemPanel
                 jobs={data.jobsInMotion}
                 technicians={data.technicians}
                 health={data.operationalHealth}
               />
 
-              <MoneySystemPanel stages={data.moneyStages} expenseReview={data.expenseReview} />
+              <div className="grid gap-6 lg:grid-cols-2 lg:gap-7">
+                <MoneySystemPanel
+                  stages={data.moneyStages}
+                  expenseReview={data.expenseReview}
+                />
 
-              <AttentionSystemPanel
-                rails={data.attentionRails}
-                officeQueue={data.officeQueue}
-                notifications={data.notifications}
-              />
+                <AttentionSystemPanel
+                  rails={data.attentionRails}
+                  officeQueue={data.officeQueue}
+                  notifications={data.notifications}
+                />
+              </div>
 
               <GrowthPipelinePanel stages={data.leadPipeline} />
 
