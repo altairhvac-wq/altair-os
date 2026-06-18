@@ -61,7 +61,7 @@ export function DashboardNorthStarView({
       <MasterContentStack density="compact" className="hidden lg:flex">
         <NorthStarMissionHero data={data} dateLabel={dateLabel} />
         <NorthStarOperatingBoard data={data} />
-        <NorthStarSupportingBands />
+        <NorthStarSupportingBands data={data} />
       </MasterContentStack>
     </>
   );
