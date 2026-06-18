@@ -10,7 +10,17 @@ import {
 } from "@/shared/types/job-material";
 import type { ServiceItem } from "@/shared/types/service-item";
 import { JobMaterialForm } from "./JobMaterialForm";
-import { adminCardSectionClass } from "@/shared/lib/admin-density";
+import { JOB_DETAIL_MATERIALS_ANCHOR } from "@/shared/lib/jobs/job-detail-anchors";
+import {
+  jobDetailEmptyHintClass,
+  jobDetailEmptyStateClass,
+  jobDetailEmptyTitleClass,
+  jobDetailPrimaryTextClass,
+  jobDetailSectionIconWrapClass,
+  jobDetailSectionSubtitleClass,
+  jobDetailSectionTitleClass,
+  resolveJobDetailSectionClass,
+} from "@/shared/components/jobs/job-detail-section-styles";
 
 type JobMaterialsSectionProps = {
   jobId: string;
@@ -18,6 +28,7 @@ type JobMaterialsSectionProps = {
   serviceItems: ServiceItem[];
   canLogMaterials: boolean;
   canViewMaterialCosts?: boolean;
+  northStar?: boolean;
 };
 
 function MaterialMetaItem({
@@ -43,25 +54,27 @@ export function JobMaterialsSection({
   serviceItems,
   canLogMaterials,
   canViewMaterialCosts = true,
+  northStar = false,
 }: JobMaterialsSectionProps) {
   return (
     <section
       aria-labelledby={`job-materials-heading-${jobId}`}
-      className={adminCardSectionClass}
+      id={northStar ? JOB_DETAIL_MATERIALS_ANCHOR : undefined}
+      className={`${resolveJobDetailSectionClass(northStar)} scroll-mt-6`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 ring-1 ring-emerald-600/10">
-            <Package2 className="h-5 w-5 text-emerald-600" />
+          <div className={jobDetailSectionIconWrapClass(northStar)}>
+            <Package2 className={northStar ? "h-4 w-4" : "h-5 w-5 text-emerald-600"} />
           </div>
           <div>
             <h2
               id={`job-materials-heading-${jobId}`}
-              className="text-xs font-semibold uppercase tracking-wide text-slate-500"
+              className={jobDetailSectionTitleClass(northStar)}
             >
               Materials used
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className={jobDetailSectionSubtitleClass(northStar)}>
               Parts and supplies consumed on this job
             </p>
           </div>
@@ -75,11 +88,11 @@ export function JobMaterialsSection({
       ) : null}
 
       {materials.length === 0 ? (
-        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
-          <p className="text-sm font-medium text-slate-700">
+        <div className={`mt-4 ${jobDetailEmptyStateClass(northStar)}`}>
+          <p className={jobDetailEmptyTitleClass(northStar)}>
             No materials logged yet
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className={jobDetailEmptyHintClass(northStar)}>
             {canLogMaterials
               ? "Log parts and supplies used on this job above."
               : "Materials logged for this job will appear here."}
@@ -94,11 +107,15 @@ export function JobMaterialsSection({
             return (
               <li
                 key={material.id}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-3"
+                className={
+                  northStar
+                    ? "rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-4 py-3"
+                    : "rounded-xl border border-slate-200 bg-white px-4 py-3"
+                }
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-slate-900">
+                    <p className={jobDetailPrimaryTextClass(northStar)}>
                       {material.name}
                     </p>
                     {material.description?.trim() ? (

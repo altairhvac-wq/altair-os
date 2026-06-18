@@ -13,12 +13,19 @@ import {
   formatJobProfitabilityLaborHours,
   formatJobProfitabilityMargin,
 } from "@/shared/types/job-profitability";
-import { adminCardSectionClass } from "@/shared/lib/admin-density";
+import {
+  jobDetailSectionIconWrapClass,
+  jobDetailSectionSubtitleClass,
+  jobDetailSectionTitleClass,
+  resolveJobDetailSectionClass,
+} from "@/shared/components/jobs/job-detail-section-styles";
+import { JOB_DETAIL_BILLING_ANCHOR } from "@/shared/lib/jobs/job-detail-anchors";
 
 type JobProfitabilitySectionProps = {
   jobId: string;
   jobStatus: JobStatus;
   snapshot: JobProfitabilitySnapshot;
+  northStar?: boolean;
 };
 
 type MetricCardProps = {
@@ -171,6 +178,7 @@ export function JobProfitabilitySection({
   jobId,
   jobStatus,
   snapshot,
+  northStar = false,
 }: JobProfitabilitySectionProps) {
   const { revenue, costs, grossProfit, grossMarginPercent, labor, projectedRevenue } =
     snapshot;
@@ -189,21 +197,22 @@ export function JobProfitabilitySection({
   return (
     <section
       aria-labelledby={`job-profitability-heading-${jobId}`}
-      className={adminCardSectionClass}
+      id={northStar ? JOB_DETAIL_BILLING_ANCHOR : undefined}
+      className={`${resolveJobDetailSectionClass(northStar)} scroll-mt-6`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50 ring-1 ring-cyan-600/10">
-            <TrendingUp className="h-5 w-5 text-cyan-600" />
+          <div className={jobDetailSectionIconWrapClass(northStar)}>
+            <TrendingUp className={northStar ? "h-4 w-4" : "h-5 w-5 text-cyan-600"} />
           </div>
           <div>
             <h2
               id={`job-profitability-heading-${jobId}`}
-              className="text-xs font-semibold uppercase tracking-wide text-slate-500"
+              className={jobDetailSectionTitleClass(northStar)}
             >
               Job profitability
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className={jobDetailSectionSubtitleClass(northStar)}>
               Collected revenue minus direct costs. Labor hours shown separately.
             </p>
           </div>

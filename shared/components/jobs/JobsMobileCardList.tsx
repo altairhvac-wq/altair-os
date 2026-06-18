@@ -7,6 +7,7 @@ import {
 } from "@/shared/types/job";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
 
@@ -17,6 +18,7 @@ type JobsMobileCardListProps = {
   selectionEnabled?: boolean;
   selectedIds?: ReadonlySet<string>;
   onToggleSelection?: (jobId: string) => void;
+  northStar?: boolean;
 };
 
 export function JobsMobileCardList({
@@ -26,9 +28,14 @@ export function JobsMobileCardList({
   selectionEnabled = false,
   selectedIds,
   onToggleSelection,
+  northStar = false,
 }: JobsMobileCardListProps) {
   return (
-    <ul className="divide-y divide-slate-100 md:hidden">
+    <ul
+      className={`md:hidden ${
+        northStar ? "divide-y divide-[rgba(138,99,36,0.12)]" : "divide-y divide-slate-100"
+      }`}
+    >
       {jobs.map((job) => {
         const isSelected = selectedIds?.has(job.id) ?? false;
 
@@ -36,7 +43,11 @@ export function JobsMobileCardList({
           <li key={job.id}>
             <div
               className={`flex items-stretch ${
-                isSelected ? adminListRowWrapSelectedClass : ""
+                isSelected
+                  ? northStar
+                    ? "job-north-star-row-selected"
+                    : adminListRowWrapSelectedClass
+                  : ""
               }`}
             >
               {selectionEnabled ? (
@@ -49,6 +60,7 @@ export function JobsMobileCardList({
                       checked={isSelected}
                       ariaLabel={`Select job ${job.jobNumber}`}
                       onChange={() => onToggleSelection?.(job.id)}
+                      variant={northStar ? "northStar" : "default"}
                     />
                   </label>
                 </div>
@@ -57,14 +69,26 @@ export function JobsMobileCardList({
               <button
                 type="button"
                 onClick={() => onSelect(job)}
-                className={`${adminListRowClass} min-w-0 flex-1`}
+                className={`${northStar ? "" : adminListRowClass} min-w-0 flex-1 px-3 py-3 text-left transition-colors`}
                 aria-label={`Open job ${job.jobNumber} for ${job.customerName}`}
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-slate-900">
+                  <p
+                    className={
+                      northStar
+                        ? `truncate ${lt.tablePrimaryText}`
+                        : "truncate text-sm font-bold text-slate-900"
+                    }
+                  >
                     {job.jobNumber}
                   </p>
-                  <p className="mt-0.5 text-sm text-slate-600">
+                  <p
+                    className={
+                      northStar
+                        ? `mt-0.5 ${lt.tableSecondaryText} text-sm`
+                        : "mt-0.5 text-sm text-slate-600"
+                    }
+                  >
                     {formatScheduledDate(job.scheduledDate)} ·{" "}
                     {formatScheduledTime(job.scheduledDate)}
                   </p>
@@ -72,7 +96,13 @@ export function JobsMobileCardList({
                     <JobStatusBadge status={job.status} />
                     <JobPriorityBadge priority={job.priority} />
                   </div>
-                  <p className="mt-1 truncate text-sm font-medium text-slate-900">
+                  <p
+                    className={
+                      northStar
+                        ? `mt-1 truncate ${lt.tablePrimaryText} text-sm font-medium`
+                        : "mt-1 truncate text-sm font-medium text-slate-900"
+                    }
+                  >
                     <CustomerNameLink
                       customerId={job.customerId}
                       customerName={job.customerName}
@@ -80,12 +110,22 @@ export function JobsMobileCardList({
                       stopRowNavigation
                     />
                   </p>
-                  <p className="mt-0.5 truncate text-xs text-slate-400">
+                  <p
+                    className={
+                      northStar
+                        ? `mt-0.5 truncate ${lt.tableMutedText}`
+                        : "mt-0.5 truncate text-xs text-slate-400"
+                    }
+                  >
                     {job.assignedTechnician ?? "Unassigned"}
                   </p>
                 </div>
 
-                <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-300" />
+                <ChevronRight
+                  className={`mt-1 h-4 w-4 shrink-0 ${
+                    northStar ? "text-[#8A6324]/50" : "text-slate-300"
+                  }`}
+                />
               </button>
             </div>
           </li>

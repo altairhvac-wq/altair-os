@@ -9,12 +9,22 @@ import {
   type JobAttachment,
   type JobAttachmentType,
 } from "@/shared/types/job-attachment";
-import { adminCardSectionClass } from "@/shared/lib/admin-density";
+import { JOB_DETAIL_ATTACHMENTS_ANCHOR } from "@/shared/lib/jobs/job-detail-anchors";
+import {
+  jobDetailEmptyHintClass,
+  jobDetailEmptyStateClass,
+  jobDetailEmptyTitleClass,
+  jobDetailSectionIconWrapClass,
+  jobDetailSectionSubtitleClass,
+  jobDetailSectionTitleClass,
+  resolveJobDetailSectionClass,
+} from "@/shared/components/jobs/job-detail-section-styles";
 
 type JobAttachmentsSectionProps = {
   jobId: string;
   attachments: JobAttachment[];
   canUpload: boolean;
+  northStar?: boolean;
 };
 
 type FilterValue = "all" | JobAttachmentType;
@@ -23,6 +33,7 @@ export function JobAttachmentsSection({
   jobId,
   attachments,
   canUpload,
+  northStar = false,
 }: JobAttachmentsSectionProps) {
   const [filter, setFilter] = useState<FilterValue>("all");
 
@@ -45,17 +56,20 @@ export function JobAttachmentsSection({
   ];
 
   return (
-    <section className={adminCardSectionClass}>
+    <section
+      id={northStar ? JOB_DETAIL_ATTACHMENTS_ANCHOR : undefined}
+      className={`${resolveJobDetailSectionClass(northStar)} scroll-mt-6`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 ring-1 ring-blue-600/10">
-            <Camera className="h-5 w-5 text-blue-600" />
+          <div className={jobDetailSectionIconWrapClass(northStar)}>
+            <Camera className={northStar ? "h-4 w-4" : "h-5 w-5 text-blue-600"} />
           </div>
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <h2 className={jobDetailSectionTitleClass(northStar)}>
               Photos & attachments
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className={jobDetailSectionSubtitleClass(northStar)}>
               Before/after photos, diagnostics, and job documentation
             </p>
           </div>
@@ -90,8 +104,12 @@ export function JobAttachmentsSection({
                 onClick={() => setFilter(option.value)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
                   isActive
-                    ? "bg-cyan-600 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? northStar
+                      ? "bg-[#C9A44D] text-[#17130E]"
+                      : "bg-cyan-600 text-white"
+                    : northStar
+                      ? "bg-[#EFE4CB] text-[#4F4638] hover:bg-[#E6D092]/40"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
                 {option.label}
@@ -103,13 +121,13 @@ export function JobAttachmentsSection({
       ) : null}
 
       {filteredAttachments.length === 0 ? (
-        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
-          <p className="text-sm font-medium text-slate-700">
+        <div className={`mt-4 ${jobDetailEmptyStateClass(northStar)}`}>
+          <p className={jobDetailEmptyTitleClass(northStar)}>
             {attachments.length === 0
               ? "No attachments yet"
               : "No attachments in this category"}
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className={jobDetailEmptyHintClass(northStar)}>
             {canUpload
               ? "Upload before/after photos or job documentation from the field."
               : "Attachments uploaded for this job will appear here."}

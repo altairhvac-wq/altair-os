@@ -8,13 +8,27 @@ import {
   getWarrantyStatusStyles,
   type CustomerEquipment,
 } from "@/shared/types/customer-equipment";
-import { adminCardSectionClass } from "@/shared/lib/admin-density";
+import { JOB_DETAIL_EQUIPMENT_ANCHOR } from "@/shared/lib/jobs/job-detail-anchors";
+import {
+  jobDetailEmptyHintClass,
+  jobDetailEmptyStateClass,
+  jobDetailEmptyTitleClass,
+  jobDetailLinkClass,
+  jobDetailMutedTextClass,
+  jobDetailPrimaryTextClass,
+  jobDetailSectionIconWrapClass,
+  jobDetailSectionSubtitleClass,
+  jobDetailSectionTitleClass,
+  resolveJobDetailSectionClass,
+} from "@/shared/components/jobs/job-detail-section-styles";
 
 type JobCustomerEquipmentSectionProps = {
   customerId: string;
   jobId: string;
   equipment: CustomerEquipment[];
   canViewCustomerProfile?: boolean;
+  northStar?: boolean;
+  compact?: boolean;
 };
 
 export function JobCustomerEquipmentSection({
@@ -22,44 +36,49 @@ export function JobCustomerEquipmentSection({
   jobId,
   equipment,
   canViewCustomerProfile = false,
+  northStar = false,
+  compact = false,
 }: JobCustomerEquipmentSectionProps) {
+  const visibleEquipment = compact ? equipment.slice(0, 4) : equipment;
+  const hiddenCount = compact ? Math.max(0, equipment.length - 4) : 0;
+
   return (
-    <section className={adminCardSectionClass}>
+    <section
+      id={northStar ? JOB_DETAIL_EQUIPMENT_ANCHOR : undefined}
+      className={`${resolveJobDetailSectionClass(northStar, compact)} scroll-mt-6`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 ring-1 ring-violet-600/10">
-            <Settings2 className="h-5 w-5 text-violet-600" />
+          <div className={jobDetailSectionIconWrapClass(northStar)}>
+            <Settings2 className={northStar ? "h-4 w-4" : "h-5 w-5 text-violet-600"} />
           </div>
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <h2 className={jobDetailSectionTitleClass(northStar)}>
               Customer equipment
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className={jobDetailSectionSubtitleClass(northStar)}>
               Assets on file for this customer&apos;s property
             </p>
           </div>
         </div>
 
         {canViewCustomerProfile ? (
-          <Link
-            href={`/customers/${customerId}`}
-            className="text-sm font-semibold text-cyan-600 transition-colors hover:text-cyan-700"
-          >
+          <Link href={`/customers/${customerId}`} className={jobDetailLinkClass(northStar)}>
             View customer
           </Link>
         ) : null}
       </div>
 
       {equipment.length === 0 ? (
-        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
-          <p className="text-sm font-medium text-slate-700">No equipment on file</p>
-          <p className="mt-1 text-xs text-slate-500">
+        <div className={`mt-4 ${jobDetailEmptyStateClass(northStar)}`}>
+          <p className={jobDetailEmptyTitleClass(northStar)}>No equipment on file</p>
+          <p className={jobDetailEmptyHintClass(northStar)}>
             Technicians can add equipment when completing a job.
           </p>
         </div>
       ) : (
-        <ul className="mt-4 divide-y divide-slate-100">
-          {equipment.map((item) => {
+        <ul className={`mt-4 ${northStar ? "divide-[rgba(138,99,36,0.12)]" : "divide-y divide-slate-100"}`}>
+          {visibleEquipment.map((item) => {
             const warrantyStatus = getWarrantyStatus(item.warrantyExpiresAt);
             const addedOnJob = item.jobId === jobId;
 
@@ -68,7 +87,7 @@ export function JobCustomerEquipmentSection({
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-slate-900">
+                      <p className={jobDetailPrimaryTextClass(northStar)}>
                         <DemoDisplayName>{item.name}</DemoDisplayName>
                       </p>
                       {addedOnJob ? (
@@ -77,7 +96,7 @@ export function JobCustomerEquipmentSection({
                         </span>
                       ) : null}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
+                    <div className={`mt-1 flex flex-wrap gap-x-3 gap-y-1 ${jobDetailMutedTextClass(northStar)}`}>
                       {item.equipmentType ? <span>{item.equipmentType}</span> : null}
                       {item.brand ? <span>{item.brand}</span> : null}
                       {item.modelNumber ? <span>{item.modelNumber}</span> : null}
@@ -99,6 +118,11 @@ export function JobCustomerEquipmentSection({
           })}
         </ul>
       )}
+      {hiddenCount > 0 ? (
+        <p className={`mt-2 ${jobDetailMutedTextClass(northStar)}`}>
+          +{hiddenCount} more on file
+        </p>
+      ) : null}
     </section>
   );
 }

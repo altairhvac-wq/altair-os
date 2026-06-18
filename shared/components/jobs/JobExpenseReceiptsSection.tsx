@@ -8,16 +8,28 @@ import {
   type Expense,
 } from "@/shared/types/expense";
 import { ExpenseCategoryBadge } from "@/shared/components/expenses/ExpenseCategoryBadge";
-import { adminCardSectionClass } from "@/shared/lib/admin-density";
+import {
+  jobDetailEmptyHintClass,
+  jobDetailEmptyStateClass,
+  jobDetailEmptyTitleClass,
+  jobDetailLinkClass,
+  jobDetailSectionIconWrapClass,
+  jobDetailSectionSubtitleClass,
+  jobDetailSectionTitleClass,
+  resolveJobDetailSectionClass,
+} from "@/shared/components/jobs/job-detail-section-styles";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type JobExpenseReceiptsSectionProps = {
   jobId: string;
   expenses: Expense[];
+  northStar?: boolean;
 };
 
 export function JobExpenseReceiptsSection({
   jobId,
   expenses,
+  northStar = false,
 }: JobExpenseReceiptsSectionProps) {
   const receiptExpenses = expenses.filter(
     (expense) => expense.receiptStatus === "attached",
@@ -26,21 +38,21 @@ export function JobExpenseReceiptsSection({
   return (
     <section
       aria-labelledby={`job-expense-receipts-heading-${jobId}`}
-      className={adminCardSectionClass}
+      className={resolveJobDetailSectionClass(northStar)}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 ring-1 ring-amber-600/10">
-            <Receipt className="h-5 w-5 text-amber-600" />
+          <div className={jobDetailSectionIconWrapClass(northStar)}>
+            <Receipt className={northStar ? "h-4 w-4" : "h-5 w-5 text-amber-600"} />
           </div>
           <div>
             <h2
               id={`job-expense-receipts-heading-${jobId}`}
-              className="text-xs font-semibold uppercase tracking-wide text-slate-500"
+              className={jobDetailSectionTitleClass(northStar)}
             >
               Expense receipts
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className={jobDetailSectionSubtitleClass(northStar)}>
               Material receipts and reimbursable expenses linked to this job
             </p>
           </div>
@@ -49,13 +61,17 @@ export function JobExpenseReceiptsSection({
         <div className="flex flex-wrap items-center gap-3">
           <Link
             href={`/expenses?jobId=${jobId}&create=1`}
-            className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+            className={
+              northStar
+                ? dt.primaryAction
+                : "inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+            }
           >
             Add receipt
           </Link>
           <Link
             href={`/expenses?jobId=${jobId}`}
-            className="text-sm font-semibold text-cyan-600 transition-colors hover:text-cyan-700"
+            className={jobDetailLinkClass(northStar)}
           >
             View all
           </Link>
@@ -63,9 +79,9 @@ export function JobExpenseReceiptsSection({
       </div>
 
       {receiptExpenses.length === 0 ? (
-        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
-          <p className="text-sm font-medium text-slate-700">No receipts linked yet</p>
-          <p className="mt-1 text-xs text-slate-500">
+        <div className={`mt-4 ${jobDetailEmptyStateClass(northStar)}`}>
+          <p className={jobDetailEmptyTitleClass(northStar)}>No receipts linked yet</p>
+          <p className={jobDetailEmptyHintClass(northStar)}>
             Snap a receipt from the job card or add one from the expenses page.
           </p>
         </div>

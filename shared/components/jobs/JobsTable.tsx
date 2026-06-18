@@ -6,6 +6,7 @@ import {
 } from "@/shared/types/job";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import {
   adminTableRowClass,
   adminTableRowSelectedClass,
@@ -23,6 +24,7 @@ type JobsTableProps = {
   selectedIds?: ReadonlySet<string>;
   onToggleSelection?: (jobId: string) => void;
   onToggleAllVisible?: (selectAll: boolean) => void;
+  northStar?: boolean;
 };
 
 const jobRowClassName = adminTableRowClass;
@@ -46,6 +48,7 @@ export function JobsTable({
   selectedIds,
   onToggleSelection,
   onToggleAllVisible,
+  northStar = false,
 }: JobsTableProps) {
   const headerSelection = useMemo(
     () =>
@@ -64,33 +67,65 @@ export function JobsTable({
         selectionEnabled={selectionEnabled}
         selectedIds={selectedIds}
         onToggleSelection={onToggleSelection}
+        northStar={northStar}
       />
 
-      <div className="hidden max-w-full overflow-x-auto md:block">
+      <div
+        className={`hidden max-w-full overflow-x-auto md:block${
+          northStar ? " job-north-star-ledger" : ""
+        }`}
+      >
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead>
-            <tr className="border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <tr
+              className={
+                northStar
+                  ? lt.tableHeaderRow
+                  : "border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500"
+              }
+            >
               {selectionEnabled ? (
-                <th className="w-10 admin-table-cell">
+                <th
+                  className={`w-10 ${northStar ? lt.tableHeaderCell : "admin-table-cell"}`}
+                >
                   {headerSelection && headerSelection.selectableCount > 0 ? (
                     <BulkSelectCheckbox
                       checked={headerSelection.allSelected}
                       indeterminate={headerSelection.someSelected}
                       ariaLabel="Select all visible jobs"
                       onChange={(checked) => onToggleAllVisible?.(checked)}
+                      variant={northStar ? "northStar" : "default"}
                     />
                   ) : null}
                 </th>
               ) : null}
-              <th className="admin-table-cell">Job</th>
-              <th className="admin-table-cell">Scheduled</th>
-              <th className="admin-table-cell">Status</th>
-              <th className="admin-table-cell">Priority</th>
-              <th className="admin-table-cell">Customer</th>
-              <th className="admin-table-cell">Technician</th>
+              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+                Job
+              </th>
+              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+                Scheduled
+              </th>
+              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+                Status
+              </th>
+              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+                Priority
+              </th>
+              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+                Customer
+              </th>
+              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+                Technician
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-50">
+          <tbody
+            className={
+              northStar
+                ? "divide-y divide-[rgba(138,99,36,0.12)]"
+                : "divide-y divide-slate-50"
+            }
+          >
             {jobs.map((job) => {
               const isSelected = selectedIds?.has(job.id) ?? false;
 
@@ -104,9 +139,13 @@ export function JobsTable({
                     handleJobRowKeyDown(event, onSelect, job)
                   }
                   aria-label={`Open job ${job.jobNumber} for ${job.customerName}`}
-                  className={`${jobRowClassName} ${
-                    isSelected ? adminTableRowSelectedClass : ""
-                  }`}
+                  className={
+                    northStar
+                      ? `${lt.tableRow} ${isSelected ? lt.tableRowSelected : ""}`
+                      : `${jobRowClassName} ${
+                          isSelected ? adminTableRowSelectedClass : ""
+                        }`
+                  }
                 >
                   {selectionEnabled ? (
                     <td className="admin-table-cell">
@@ -114,17 +153,32 @@ export function JobsTable({
                         checked={isSelected}
                         ariaLabel={`Select job ${job.jobNumber}`}
                         onChange={() => onToggleSelection?.(job.id)}
+                        variant={northStar ? "northStar" : "default"}
                       />
                     </td>
                   ) : null}
                   <td className="admin-table-cell">
-                    <p className="font-semibold text-slate-900">
+                    <p
+                      className={
+                        northStar ? lt.tablePrimaryText : "font-semibold text-slate-900"
+                      }
+                    >
                       {job.jobNumber}
                     </p>
                   </td>
-                  <td className="admin-table-cell text-slate-600">
-                    <p>{formatScheduledDate(job.scheduledDate)}</p>
-                    <p className="text-xs text-slate-500">
+                  <td
+                    className={`admin-table-cell ${
+                      northStar ? "job-north-star-scheduled-cell" : "text-slate-600"
+                    }`}
+                  >
+                    <p className={northStar ? lt.tableDateText : undefined}>
+                      {formatScheduledDate(job.scheduledDate)}
+                    </p>
+                    <p
+                      className={
+                        northStar ? lt.tableMutedText : "text-xs text-slate-500"
+                      }
+                    >
                       {formatScheduledTime(job.scheduledDate)}
                     </p>
                   </td>
@@ -139,13 +193,27 @@ export function JobsTable({
                       customerId={job.customerId}
                       customerName={job.customerName}
                       canManageCustomers={canManageCustomers}
-                      className="truncate font-medium text-slate-900"
+                      className={
+                        northStar
+                          ? `${lt.tablePrimaryText} truncate font-medium`
+                          : "truncate font-medium text-slate-900"
+                      }
                       stopRowNavigation
                     />
                   </td>
-                  <td className="admin-table-cell text-slate-600">
+                  <td
+                    className={`admin-table-cell ${
+                      northStar ? "job-north-star-tech-cell" : "text-slate-600"
+                    }`}
+                  >
                     {job.assignedTechnician ?? (
-                      <span className="text-slate-400">Unassigned</span>
+                      <span
+                        className={
+                          northStar ? "job-north-star-unassigned" : "text-slate-400"
+                        }
+                      >
+                        Unassigned
+                      </span>
                     )}
                   </td>
                 </tr>

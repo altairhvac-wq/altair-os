@@ -11,6 +11,7 @@ import {
   Phone,
   User,
 } from "lucide-react";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import type { Customer } from "@/shared/types/customer";
 import type { Technician } from "@/shared/types/dispatch";
 import { JobCustomerQuickActions } from "./JobCustomerQuickActions";
@@ -44,7 +45,20 @@ import type { ServiceItem } from "@/shared/types/service-item";
 import type { JobProfitabilitySnapshot } from "@/shared/types/job-profitability";
 import type { OperationalInconsistencyEntry } from "@/shared/types/operational-inconsistencies";
 import { MasterDetailPageLayout } from "@/shared/design-system/shell";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 import { adminCardSectionClass } from "@/shared/lib/admin-density";
+import {
+  JOB_DETAIL_ACTIVITY_ANCHOR,
+  JOB_DETAIL_SCOPE_ANCHOR,
+} from "@/shared/lib/jobs/job-detail-anchors";
+import { jobDetailBodyTextClass } from "@/shared/components/jobs/job-detail-section-styles";
+import {
+  JobDetailNorthStarContentSection,
+  JobDetailNorthStarHeader,
+  JobDetailSideRailBillingCard,
+  JobDetailSideRailCustomerCard,
+  JobDetailSideRailDispatchCard,
+} from "@/shared/components/jobs/north-star-m4b";
 import type {
   JobEstimateSummary,
   JobInvoiceSummary,
@@ -85,9 +99,7 @@ type ContentSectionProps = {
 
 function ContentSection({ title, children, className }: ContentSectionProps) {
   return (
-    <section
-      className={`${adminCardSectionClass} ${className ?? ""}`}
-    >
+    <section className={`${adminCardSectionClass} ${className ?? ""}`}>
       <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         {title}
       </h2>
@@ -96,7 +108,38 @@ function ContentSection({ title, children, className }: ContentSectionProps) {
   );
 }
 
-export function JobDetailPageView({
+type SharedWorkspaceProps = {
+  job: JobDetail;
+  customers: Customer[];
+  technicians: Technician[];
+  activities: OperationalActivity[];
+  equipment: CustomerEquipment[];
+  attachments: JobAttachment[];
+  expenses: Expense[];
+  materials: JobMaterial[];
+  profitability: JobProfitabilitySnapshot | null;
+  serviceItems: ServiceItem[];
+  canUpdateStatus: boolean;
+  canAssignTechnician: boolean;
+  canEditJob: boolean;
+  deleteDependencies: JobDeleteDependencies;
+  canLogMaterials: boolean;
+  canViewFinancials: boolean;
+  canViewBilling: boolean;
+  canManageCustomers: boolean;
+  operationalInconsistencies: OperationalInconsistencyEntry[];
+  billingContext?: {
+    estimates: JobEstimateSummary[];
+    invoices: JobInvoiceSummary[];
+  };
+  aiFeaturesEnabled: boolean;
+  scheduledLabel: string;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
+  customerCompany?: string | null;
+};
+
+function LegacyJobDetailBody({
   job,
   customers,
   technicians,
@@ -115,30 +158,18 @@ export function JobDetailPageView({
   canViewFinancials,
   canViewBilling,
   canManageCustomers,
-  operationalInconsistencies = [],
+  operationalInconsistencies,
   billingContext,
-  aiFeaturesEnabled = false,
-}: JobDetailPageViewProps) {
-  const customerEmail = job.customerEmail?.trim();
-  const customerPhone = job.customerPhone?.trim();
-  const customerCompany = job.customerCompany?.trim();
+  aiFeaturesEnabled,
+  scheduledLabel,
+  customerEmail,
+  customerPhone,
+  customerCompany,
+}: SharedWorkspaceProps) {
   const isAssigned = Boolean(job.assignedTechnicianId);
-  const scheduledLabel = `${formatScheduledDate(job.scheduledDate)} at ${formatScheduledTime(job.scheduledDate)}`;
 
   return (
-    <MasterDetailPageLayout
-      backLink={
-        <Link
-          href="/jobs"
-          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to jobs
-        </Link>
-      }
-    >
-      <JobDetailHashScroll />
-
+    <>
       <section className="admin-card">
         <div className="border-b border-slate-100 bg-white px-3 py-2.5 sm:px-4 sm:py-3">
           <JobDetailHeaderSection
@@ -384,6 +415,353 @@ export function JobDetailPageView({
         deleteDependencies={deleteDependencies}
         canManage={canEditJob}
       />
+    </>
+  );
+}
+
+function NorthStarMainColumn({
+  job,
+  activities,
+  attachments,
+  expenses,
+  materials,
+  profitability,
+  serviceItems,
+  canUpdateStatus,
+  canEditJob,
+  deleteDependencies,
+  canLogMaterials,
+  canViewFinancials,
+  canViewBilling,
+  operationalInconsistencies,
+  billingContext,
+  aiFeaturesEnabled,
+}: SharedWorkspaceProps) {
+  const activityDescription = canViewBilling
+    ? "Job workflow, estimates, and billing events"
+    : "Job workflow and field events";
+
+  return (
+    <>
+      <JobDetailNorthStarContentSection
+        title="Work scope"
+        subtitle="Description and notes for this job"
+        anchor={JOB_DETAIL_SCOPE_ANCHOR}
+      >
+        <div className="grid gap-3 lg:grid-cols-2">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255]">
+              Description
+            </p>
+            <p className={`mt-1.5 ${jobDetailBodyTextClass(true)}`}>
+              {job.description?.trim()
+                ? job.description
+                : "No description provided."}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255]">
+              Notes
+            </p>
+            <p className={`mt-1.5 ${jobDetailBodyTextClass(true)}`}>
+              {job.notes?.trim() ? job.notes : "No notes on file."}
+            </p>
+          </div>
+        </div>
+      </JobDetailNorthStarContentSection>
+
+      <JobSummaryAiAssistant
+        jobId={job.id}
+        aiFeaturesEnabled={aiFeaturesEnabled}
+      />
+
+      {operationalInconsistencies.length > 0 ? (
+        <JobOperationalRecoverySection
+          jobId={job.id}
+          entries={operationalInconsistencies}
+        />
+      ) : null}
+
+      {canViewFinancials && profitability ? (
+        <>
+          <JobReviewChecklistSection
+            jobId={job.id}
+            jobStatus={job.status}
+            customerId={job.customerId}
+            snapshot={profitability}
+            invoices={billingContext?.invoices ?? []}
+          />
+
+          <JobProfitabilitySection
+            jobId={job.id}
+            jobStatus={job.status}
+            snapshot={profitability}
+            northStar
+          />
+        </>
+      ) : null}
+
+      <JobMaterialsSection
+        jobId={job.id}
+        materials={materials}
+        serviceItems={serviceItems}
+        canLogMaterials={canLogMaterials}
+        canViewMaterialCosts={canViewFinancials}
+        northStar
+      />
+
+      <JobAttachmentsSection
+        jobId={job.id}
+        attachments={attachments}
+        canUpload={canUpdateStatus}
+        northStar
+      />
+
+      <JobExpenseReceiptsSection jobId={job.id} expenses={expenses} northStar />
+
+      <OperationalActivityTimeline
+        activities={activities}
+        canViewBilling={canViewBilling}
+        sectionId={JOB_DETAIL_ACTIVITY_ANCHOR}
+        sectionClassName="scroll-mt-6"
+        northStar
+        compact
+        description={activityDescription}
+        emptyDescription={
+          canViewBilling
+            ? "Status changes, assignments, estimates, and invoices will appear here."
+            : "Status changes, assignments, and field updates will appear here."
+        }
+      />
+
+      <JobLifecycleControl
+        job={job}
+        deleteDependencies={deleteDependencies}
+        canManage={canEditJob}
+        northStar
+      />
+    </>
+  );
+}
+
+function NorthStarSideColumn({
+  job,
+  technicians,
+  equipment,
+  profitability,
+  canAssignTechnician,
+  canManageCustomers,
+  canViewFinancials,
+  canViewBilling,
+  billingContext,
+  scheduledLabel,
+  customerEmail,
+  customerPhone,
+  customerCompany,
+}: SharedWorkspaceProps) {
+  return (
+    <>
+      <JobDetailSideRailCustomerCard
+        customerId={job.customerId}
+        customerName={job.customerName}
+        customerCompany={customerCompany}
+        customerEmail={customerEmail}
+        customerPhone={customerPhone}
+        serviceAddress={job.serviceAddress}
+        city={job.city}
+        state={job.state}
+        zip={job.zip}
+        canManageCustomers={canManageCustomers}
+      />
+
+      <JobDetailSideRailDispatchCard
+        job={job}
+        scheduledLabel={scheduledLabel}
+        technicians={technicians}
+        canAssignTechnician={canAssignTechnician}
+      />
+
+      <JobCustomerEquipmentSection
+        customerId={job.customerId}
+        jobId={job.id}
+        equipment={equipment}
+        canViewCustomerProfile={canManageCustomers}
+        northStar
+        compact
+      />
+
+      {canViewFinancials && profitability ? (
+        <JobDetailSideRailBillingCard
+          profitability={profitability}
+          estimates={billingContext?.estimates ?? []}
+          invoices={billingContext?.invoices ?? []}
+          canViewBilling={canViewBilling}
+        />
+      ) : null}
+    </>
+  );
+}
+
+function NorthStarJobDetailBody(props: SharedWorkspaceProps) {
+  const mobileStack = (
+    <>
+      <JobDetailSideRailCustomerCard
+        customerId={props.job.customerId}
+        customerName={props.job.customerName}
+        customerCompany={props.customerCompany}
+        customerEmail={props.customerEmail}
+        customerPhone={props.customerPhone}
+        serviceAddress={props.job.serviceAddress}
+        city={props.job.city}
+        state={props.job.state}
+        zip={props.job.zip}
+        canManageCustomers={props.canManageCustomers}
+      />
+
+      <JobDetailSideRailDispatchCard
+        job={props.job}
+        scheduledLabel={props.scheduledLabel}
+        technicians={props.technicians}
+        canAssignTechnician={props.canAssignTechnician}
+      />
+
+      <NorthStarMainColumn {...props} />
+
+      <JobCustomerEquipmentSection
+        customerId={props.job.customerId}
+        jobId={props.job.id}
+        equipment={props.equipment}
+        canViewCustomerProfile={props.canManageCustomers}
+        northStar
+        compact
+      />
+
+      {props.canViewFinancials && props.profitability ? (
+        <JobDetailSideRailBillingCard
+          profitability={props.profitability}
+          estimates={props.billingContext?.estimates ?? []}
+          invoices={props.billingContext?.invoices ?? []}
+          canViewBilling={props.canViewBilling}
+        />
+      ) : null}
+    </>
+  );
+
+  return (
+    <>
+      <div className="flex flex-col gap-3 lg:hidden">{mobileStack}</div>
+
+      <div className={`hidden lg:grid ${dt.workspaceGrid}`}>
+        <div className={dt.workspaceMain}>
+          <NorthStarMainColumn {...props} />
+        </div>
+        <div className={dt.workspaceSide}>
+          <NorthStarSideColumn {...props} />
+        </div>
+      </div>
+    </>
+  );
+}
+
+export function JobDetailPageView({
+  job,
+  customers,
+  technicians,
+  activities,
+  equipment,
+  attachments,
+  expenses,
+  materials,
+  profitability,
+  serviceItems,
+  canUpdateStatus,
+  canAssignTechnician,
+  canEditJob,
+  deleteDependencies,
+  canLogMaterials,
+  canViewFinancials,
+  canViewBilling,
+  canManageCustomers,
+  operationalInconsistencies = [],
+  billingContext,
+  aiFeaturesEnabled = false,
+}: JobDetailPageViewProps) {
+  const customerEmail = job.customerEmail?.trim();
+  const customerPhone = job.customerPhone?.trim();
+  const customerCompany = job.customerCompany?.trim();
+  const scheduledLabel = `${formatScheduledDate(job.scheduledDate)} at ${formatScheduledTime(job.scheduledDate)}`;
+  const northStar = isNorthStarShellEnabled();
+
+  const workspaceProps: SharedWorkspaceProps = {
+    job,
+    customers,
+    technicians,
+    activities,
+    equipment,
+    attachments,
+    expenses,
+    materials,
+    profitability,
+    serviceItems,
+    canUpdateStatus,
+    canAssignTechnician,
+    canEditJob,
+    deleteDependencies,
+    canLogMaterials,
+    canViewFinancials,
+    canViewBilling,
+    canManageCustomers,
+    operationalInconsistencies,
+    billingContext,
+    aiFeaturesEnabled,
+    scheduledLabel,
+    customerEmail,
+    customerPhone,
+    customerCompany,
+  };
+
+  return (
+    <MasterDetailPageLayout
+      className={northStar ? dt.pageCanvas : undefined}
+      canvasWidth={northStar ? "detailWide" : "detail"}
+      backLink={
+        <Link
+          href="/jobs"
+          className={
+            northStar
+              ? dt.backLink
+              : "inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+          }
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to jobs
+        </Link>
+      }
+    >
+      <JobDetailHashScroll />
+
+      {northStar ? (
+        <>
+          <JobDetailNorthStarHeader
+            job={job}
+            customers={customers}
+            scheduledLabel={scheduledLabel}
+            canUpdateStatus={canUpdateStatus}
+            canEditJob={canEditJob}
+            canManageCustomers={canManageCustomers}
+            canViewFinancials={canViewFinancials}
+            aiFeaturesEnabled={aiFeaturesEnabled}
+            canCreateEstimate={canViewBilling}
+            canViewBilling={canViewBilling}
+            billingContext={billingContext}
+            profitability={profitability}
+            showEquipmentNav={equipment.length > 0}
+          />
+          <NorthStarJobDetailBody {...workspaceProps} />
+        </>
+      ) : (
+        <LegacyJobDetailBody {...workspaceProps} />
+      )}
     </MasterDetailPageLayout>
   );
 }

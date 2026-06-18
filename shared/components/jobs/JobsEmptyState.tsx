@@ -1,5 +1,7 @@
 import { Calendar, SearchX, UserPlus, Wrench } from "lucide-react";
 import Link from "next/link";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import { adminEmptyWrapClass } from "@/shared/lib/admin-density";
 
 type JobsEmptyStateProps = {
   variant:
@@ -10,12 +12,14 @@ type JobsEmptyStateProps = {
     | "no-company-customers";
   onCreateJob?: () => void;
   canAddCustomer?: boolean;
+  northStar?: boolean;
 };
 
 export function JobsEmptyState({
   variant,
   onCreateJob,
   canAddCustomer = false,
+  northStar = false,
 }: JobsEmptyStateProps) {
   const isNoResults = variant === "no-results";
   const isNoJobsToday = variant === "no-jobs-today";
@@ -54,6 +58,40 @@ export function JobsEmptyState({
             : "Assigned and scheduled jobs will appear here once dispatch adds work to the board.";
 
   const Icon = icon;
+
+  if (northStar) {
+    return (
+      <div className={adminEmptyWrapClass}>
+        <div className={`${lt.emptyState} w-full max-w-md text-center`}>
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F5F1E8] text-[#6B6255] ring-1 ring-[rgba(79,70,56,0.10)]">
+            <Icon className="h-6 w-6" />
+          </div>
+
+          <h3 className="mt-4 text-base font-semibold text-[#17130E]">{title}</h3>
+
+          <p className="mt-2 text-sm text-[#6B6255]">{description}</p>
+
+          {isNoCompanyCustomers && canAddCustomer ? (
+            <Link href="/customers" className={`mt-5 ${lt.emptyStateAction}`}>
+              <UserPlus className="h-4 w-4" />
+              Go to Customers
+            </Link>
+          ) : null}
+
+          {(variant === "no-jobs" || variant === "no-jobs-today") && onCreateJob ? (
+            <button
+              type="button"
+              onClick={onCreateJob}
+              className={`mt-5 inline-flex items-center justify-center gap-2 ${lt.emptyStateAction}`}
+            >
+              <Wrench className="h-4 w-4" />
+              {variant === "no-jobs-today" ? "New Job" : "Create your first job"}
+            </button>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-empty-wrap">

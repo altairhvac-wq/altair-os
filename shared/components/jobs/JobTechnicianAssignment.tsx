@@ -10,6 +10,7 @@ import {
   type DispatchJobStatus,
   type Technician,
 } from "@/shared/types/dispatch";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type JobTechnicianAssignmentProps = {
   jobId: string;
@@ -18,6 +19,8 @@ type JobTechnicianAssignmentProps = {
   assignedTechnician?: string;
   technicians: Technician[];
   canAssign: boolean;
+  northStar?: boolean;
+  compact?: boolean;
 };
 
 export function JobTechnicianAssignment({
@@ -27,6 +30,8 @@ export function JobTechnicianAssignment({
   assignedTechnician,
   technicians,
   canAssign,
+  northStar = false,
+  compact = false,
 }: JobTechnicianAssignmentProps) {
   const router = useRouter();
   const [selectedTechnicianId, setSelectedTechnicianId] = useState(
@@ -113,28 +118,56 @@ export function JobTechnicianAssignment({
   );
 
   return (
-    <div className="space-y-4">
+    <div className={compact ? "space-y-2.5" : "space-y-4"}>
       {isAssigned ? (
-        <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+        <div
+          className={
+            northStar
+              ? `${dt.innerCard} border-[rgba(16,185,129,0.18)] bg-[rgba(236,253,245,0.65)]`
+              : "rounded-xl border border-emerald-100 bg-emerald-50/60 p-4"
+          }
+        >
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-sm font-bold text-emerald-800">
+            <div
+              className={
+                northStar
+                  ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[rgba(16,185,129,0.12)] text-xs font-bold text-emerald-900"
+                  : "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-sm font-bold text-emerald-800"
+              }
+            >
               {assignedMember?.initials ??
                 assignedTechnician?.slice(0, 2).toUpperCase() ??
                 "?"}
             </div>
             <div>
-              <p className="text-sm font-semibold text-emerald-950">
+              <p
+                className={
+                  northStar
+                    ? "text-sm font-semibold text-[#17130E]"
+                    : "text-sm font-semibold text-emerald-950"
+                }
+              >
                 {assignedTechnician ?? assignedMember?.name ?? "Assigned"}
               </p>
-              <p className="text-xs text-emerald-700">
+              <p
+                className={
+                  northStar ? "text-xs text-[#4F4638]" : "text-xs text-emerald-700"
+                }
+              >
                 {assignedMember?.role ?? "Team member"}
               </p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-3 text-sm text-amber-800">
-          <User className="h-4 w-4 shrink-0" />
+        <div
+          className={
+            northStar
+              ? `${dt.innerCard} border-[rgba(245,158,11,0.22)] bg-[rgba(254,243,199,0.45)] px-2.5 py-2 text-xs font-medium text-[#92400E]`
+              : "flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-3 text-sm text-amber-800"
+          }
+        >
+          {!northStar ? <User className="h-4 w-4 shrink-0" /> : null}
           Unassigned — no technician has been assigned yet
         </div>
       )}
@@ -144,7 +177,11 @@ export function JobTechnicianAssignment({
           type="button"
           onClick={handleUnassign}
           disabled={isPending}
-          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className={
+            northStar
+              ? `${dt.secondaryAction} w-full justify-center`
+              : "inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          }
         >
           <UserMinus className="h-4 w-4" />
           {pendingAction === "unassign" && isPending
@@ -158,7 +195,11 @@ export function JobTechnicianAssignment({
           <div className="space-y-2">
             <label
               htmlFor={`assign-technician-${jobId}`}
-              className="text-xs font-semibold uppercase tracking-wide text-slate-500"
+              className={
+                northStar
+                  ? dt.metricLabel
+                  : "text-xs font-semibold uppercase tracking-wide text-slate-500"
+              }
             >
               {isAssigned ? "Change assignment" : "Assign technician"}
             </label>
@@ -167,7 +208,11 @@ export function JobTechnicianAssignment({
               value={selectedTechnicianId}
               onChange={(event) => setSelectedTechnicianId(event.target.value)}
               disabled={isPending}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60"
+              className={
+                northStar
+                  ? "w-full rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] outline-none focus:border-[#B88A2E] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] disabled:opacity-60"
+                  : "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60"
+              }
             >
               <option value="">Select a team member</option>
               {technicians.map((technician) => (
@@ -189,7 +234,11 @@ export function JobTechnicianAssignment({
               type="button"
               onClick={handleAssign}
               disabled={!hasSelectionChanged || isPending}
-              className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-cyan-600 px-3.5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className={
+                northStar
+                  ? `${dt.primaryAction} w-full justify-center`
+                  : "inline-flex min-h-11 items-center gap-2 rounded-lg bg-cyan-600 px-3.5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              }
             >
               <UserPlus className="h-4 w-4" />
               {pendingAction === "assign" && isPending
@@ -200,13 +249,13 @@ export function JobTechnicianAssignment({
             </button>
           </div>
         ) : (
-          <p className="text-sm text-slate-500">
+          <p className={northStar ? "text-sm text-[#6B6255]" : "text-sm text-slate-500"}>
             No team members are available to assign. Add active company members
             to enable assignments.
           </p>
         )
       ) : (
-        <p className="text-sm text-slate-500">
+        <p className={northStar ? "text-sm text-[#6B6255]" : "text-sm text-slate-500"}>
           You do not have permission to assign technicians to this job.
         </p>
       )}

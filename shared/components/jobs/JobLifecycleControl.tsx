@@ -24,17 +24,20 @@ import {
 } from "@/shared/lib/job-lifecycle";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { Job } from "@/shared/types/job";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type JobLifecycleControlProps = {
   job: Job;
   deleteDependencies: JobDeleteDependencies;
   canManage: boolean;
+  northStar?: boolean;
 };
 
 export function JobLifecycleControl({
   job,
   deleteDependencies,
   canManage,
+  northStar = false,
 }: JobLifecycleControlProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -64,8 +67,20 @@ export function JobLifecycleControl({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <div
+      className={
+        northStar
+          ? `${dt.compactSectionSurface} scroll-mt-6`
+          : "rounded-xl border border-slate-200 bg-slate-50/80 p-4"
+      }
+    >
+      <p
+        className={
+          northStar
+            ? dt.sectionTitle
+            : "text-xs font-semibold uppercase tracking-wide text-slate-500"
+        }
+      >
         Cleanup
       </p>
       {error ? <p className="mt-2 text-sm text-rose-700">{error}</p> : null}

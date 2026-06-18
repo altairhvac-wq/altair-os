@@ -3,6 +3,7 @@ import {
   adminSegmentedItemActiveClass,
   adminSegmentedItemClass,
 } from "@/shared/design-system/shell/tokens";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 
 export type TodayAllViewTab = "today" | "all";
 
@@ -12,6 +13,7 @@ type JobsViewTabsProps = {
   todayCount: number;
   allCount: number;
   allTabLabel?: string;
+  northStar?: boolean;
 };
 
 export function JobsViewTabs({
@@ -20,11 +22,39 @@ export function JobsViewTabs({
   todayCount,
   allCount,
   allTabLabel = "All Jobs",
+  northStar = false,
 }: JobsViewTabsProps) {
   const tabs: { id: TodayAllViewTab; label: string; count: number }[] = [
     { id: "today", label: "Today", count: todayCount },
     { id: "all", label: allTabLabel, count: allCount },
   ];
+
+  if (northStar) {
+    return (
+      <div className={`${lt.viewTabsControl} w-full sm:w-auto`}>
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              aria-pressed={isActive}
+              onClick={() => onTabChange(tab.id)}
+              className={`${lt.viewTabsItem} sm:px-3 sm:py-1.5 ${
+                isActive ? lt.viewTabsItemActive : ""
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span className={isActive ? lt.viewTabsCountActive : lt.viewTabsCount}>
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div className={`${adminSegmentedControlClass} w-full sm:w-auto`}>
