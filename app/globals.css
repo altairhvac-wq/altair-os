@@ -37,6 +37,13 @@
   --north-star-brass: #c6a757;
   --north-star-brass-rail: #b8943f;
   --north-star-brass-ring: rgb(198 167 87 / 0.25);
+  --north-star-sidebar-width: 14.5rem;
+  --north-star-sidebar-label: rgb(198 167 87 / 0.58);
+  --north-star-sidebar-link: #a3abb8;
+  --north-star-sidebar-link-hover: #ddd6c8;
+  --north-star-sidebar-link-active: #f0ebe3;
+  --north-star-sidebar-icon: #8f98a6;
+  --north-star-sidebar-icon-hover: #b8a882;
 }
 
 @theme inline {
@@ -370,6 +377,7 @@ a[href] {
 
   /* North Star M1 — grouped left sidebar shell (flag-gated via .admin-north-star-shell) */
   .admin-north-star-sidebar {
+    width: var(--north-star-sidebar-width);
     border-right: 1px solid var(--north-star-graphite-border);
     background: linear-gradient(
       180deg,
@@ -408,20 +416,30 @@ a[href] {
     font-weight: 600;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgb(100 116 139);
+    color: var(--north-star-sidebar-label);
   }
 
   .admin-north-star-sidebar-link {
-    color: rgb(100 116 139);
+    color: var(--north-star-sidebar-link);
     transition:
       background-color 0.15s ease,
       color 0.15s ease,
       box-shadow 0.15s ease;
   }
 
+  .admin-north-star-sidebar-link svg {
+    color: var(--north-star-sidebar-icon);
+    transition: color 0.15s ease;
+  }
+
   .admin-north-star-sidebar-link:hover {
-    background-color: rgb(255 255 255 / 0.04);
-    color: rgb(203 213 225);
+    background-color: rgb(198 167 87 / 0.05);
+    color: var(--north-star-sidebar-link-hover);
+    box-shadow: 0 0 0 1px rgb(198 167 87 / 0.1);
+  }
+
+  .admin-north-star-sidebar-link:hover svg {
+    color: var(--north-star-sidebar-icon-hover);
   }
 
   .admin-north-star-sidebar-link:focus-visible {
@@ -430,9 +448,13 @@ a[href] {
   }
 
   .admin-north-star-sidebar-link-active {
-    background-color: rgb(255 255 255 / 0.06);
-    color: rgb(248 250 252);
+    background-color: rgb(198 167 87 / 0.07);
+    color: var(--north-star-sidebar-link-active);
     box-shadow: 0 0 0 1px var(--north-star-brass-ring);
+  }
+
+  .admin-north-star-sidebar-link-active svg {
+    color: var(--north-star-brass);
   }
 
   .admin-north-star-sidebar-rail {

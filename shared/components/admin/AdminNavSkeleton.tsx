@@ -16,7 +16,7 @@ export function AdminNavSkeleton({ variant }: AdminNavSkeletonProps) {
       <aside
         aria-label="Loading navigation"
         aria-busy="true"
-        className="admin-north-star-sidebar hidden w-[16rem] shrink-0 flex-col md:flex"
+        className="admin-north-star-sidebar hidden shrink-0 flex-col md:flex"
       >
         <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4">
           <ul className="flex flex-col gap-7">

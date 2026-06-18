@@ -35,14 +35,7 @@ function SidebarNavLink({ item, active }: SidebarNavLinkProps) {
       {active ? (
         <span aria-hidden="true" className="admin-north-star-sidebar-rail" />
       ) : null}
-      <Icon
-        className={`h-4 w-4 shrink-0 ${
-          active
-            ? "text-[var(--north-star-brass)]"
-            : "text-slate-500 group-hover:text-slate-400"
-        }`}
-        aria-hidden="true"
-      />
+      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
       <span className="truncate">{item.label}</span>
     </Link>
   );
@@ -66,7 +59,7 @@ export function SidebarNav({
   return (
     <aside
       aria-label="Desktop navigation"
-      className={`${northStarSidebarClass} hidden w-[16rem] shrink-0 flex-col md:flex`}
+      className={`${northStarSidebarClass} hidden shrink-0 flex-col md:flex`}
     >
       <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4">
         <ul className="flex flex-col gap-7">
@@ -90,7 +83,7 @@ export function SidebarNav({
         </ul>
 
         {navItems.length <= 2 ? (
-          <p className="mt-6 px-2.5 text-xs text-slate-500">
+          <p className="mt-6 px-2.5 text-xs text-[var(--north-star-sidebar-link)]">
             Limited workspace access
           </p>
         ) : null}

@@ -67,7 +67,7 @@ export const adminNavLinkClass = "admin-nav-link";
 /** Active nav item surface (does not replace routing/active matching). */
 export const adminNavLinkActiveClass = "admin-nav-link-active";
 
-/** North Star M1 — grouped left sidebar shell (flag-gated). */
+/** North Star M1 — grouped left sidebar shell (flag-gated). Width via `--north-star-sidebar-width` in globals.css. */
 export const northStarSidebarClass = "admin-north-star-sidebar";
 
 export const northStarSidebarGroupLabelClass =
