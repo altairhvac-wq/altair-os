@@ -182,7 +182,7 @@ export default async function EstimateApprovalPage({
     <PublicApprovalShell>
       <PublicEstimateApprovalDocument
         view={view}
-        afterCustomer={approvalForm}
+        customerActions={approvalForm}
       />
     </PublicApprovalShell>
   );

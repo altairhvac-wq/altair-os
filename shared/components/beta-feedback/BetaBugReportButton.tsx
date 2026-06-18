@@ -136,7 +136,7 @@ export function BetaBugReportButton({
         </button>
       ) : (
       <div
-        className={`fixed right-4 z-40 flex flex-col items-end gap-2 ${positionClassName}`}
+        className={`no-print fixed right-4 z-40 flex flex-col items-end gap-2 ${positionClassName}`}
       >
         {showHint ? (
           <div

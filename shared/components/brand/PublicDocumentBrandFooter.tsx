@@ -2,7 +2,7 @@ import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 
 export function PublicDocumentBrandFooter() {
   return (
-    <footer className="mt-6 flex flex-col items-center gap-1.5 pb-2 sm:mt-8">
+    <footer className="no-print mt-6 flex flex-col items-center gap-1.5 pb-2 sm:mt-8">
       <AltairLogo
         variant="gold"
         size="sm"
