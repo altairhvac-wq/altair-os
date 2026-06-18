@@ -16,6 +16,8 @@ type NotificationBellProps = {
   initialUnreadCount: number;
   notificationAccess?: NotificationAccess;
   tone?: "light" | "dark";
+  triggerClassName?: string;
+  badgeClassName?: string;
 };
 
 export function NotificationBell({
@@ -23,6 +25,8 @@ export function NotificationBell({
   initialUnreadCount,
   notificationAccess,
   tone = "light",
+  triggerClassName,
+  badgeClassName,
 }: NotificationBellProps) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -92,16 +96,21 @@ export function NotificationBell({
         type="button"
         onClick={() => setOpen((current) => !current)}
         className={`relative rounded-lg p-2 transition-colors ${
-          tone === "dark"
+          triggerClassName ??
+          (tone === "dark"
             ? "text-slate-400 hover:bg-white/10 hover:text-slate-200"
-            : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            : "text-slate-400 hover:bg-slate-100 hover:text-slate-600")
         }`}
         aria-label="Notifications"
         aria-expanded={open}
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 ? (
-          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-600 px-1 text-[10px] font-bold text-white">
+          <span
+            className={`absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ${
+              badgeClassName ?? "bg-cyan-600"
+            }`}
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         ) : null}

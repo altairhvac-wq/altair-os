@@ -31,19 +31,35 @@
   --shell-nav-surface: #f0f5f9;
   --shell-nav-border: rgb(186 203 220 / 0.75);
   --shell-nav-divider: rgb(15 23 42 / 0.08);
-  --north-star-graphite-base: #0f141b;
-  --north-star-graphite-mid: #111720;
-  --north-star-graphite-border: rgb(255 255 255 / 0.08);
-  --north-star-brass: #c6a757;
-  --north-star-brass-rail: #b8943f;
-  --north-star-brass-ring: rgb(198 167 87 / 0.25);
+  --north-star-root: #070b10;
+  --north-star-sidebar: #0b1118;
+  --north-star-topbar: #0e141d;
+  --north-star-panel: #101a28;
+  --north-star-border: #223044;
+  --north-star-bronze: #8a6324;
+  --north-star-brass: #b88a2e;
+  --north-star-gold: #c9a44d;
+  --north-star-champagne: #e6d092;
+  --north-star-ivory: #fbf7ef;
+  --north-star-ivory-strong: #fff9ea;
+  --north-star-text-dark: #17130e;
+  --north-star-text-secondary: #4f4638;
+  --north-star-text-muted: #6b6255;
+  --north-star-text-light: #f3ebdd;
+  --north-star-text-light-muted: #c9bfae;
+  --north-star-graphite-base: var(--north-star-sidebar);
+  --north-star-graphite-mid: var(--north-star-topbar);
+  --north-star-graphite-border: var(--north-star-border);
+  --north-star-brass-rail: var(--north-star-gold);
+  --north-star-brass-ring: rgb(201 164 77 / 0.28);
   --north-star-sidebar-width: 14.5rem;
-  --north-star-sidebar-label: rgb(198 167 87 / 0.58);
-  --north-star-sidebar-link: #a3abb8;
-  --north-star-sidebar-link-hover: #ddd6c8;
-  --north-star-sidebar-link-active: #f0ebe3;
-  --north-star-sidebar-icon: #8f98a6;
-  --north-star-sidebar-icon-hover: #b8a882;
+  --north-star-sidebar-label: var(--north-star-gold);
+  --north-star-sidebar-link: #c9bfae;
+  --north-star-sidebar-link-hover: var(--north-star-text-light);
+  --north-star-sidebar-link-active: var(--north-star-ivory-strong);
+  --north-star-sidebar-icon: #8e826f;
+  --north-star-sidebar-icon-hover: var(--north-star-champagne);
+  --north-star-sidebar-icon-active: var(--north-star-champagne);
 }
 
 @theme inline {
@@ -278,6 +294,26 @@ a[href] {
   }
 }
 
+/* North Star shell scope — premium palette overrides legacy admin chrome when flag is on */
+.admin-north-star-shell {
+  --north-star-root: #070b10;
+  --north-star-sidebar: #0b1118;
+  --north-star-topbar: #0e141d;
+  --north-star-panel: #101a28;
+  --north-star-border: #223044;
+  --north-star-bronze: #8a6324;
+  --north-star-brass: #b88a2e;
+  --north-star-gold: #c9a44d;
+  --north-star-champagne: #e6d092;
+  --north-star-ivory: #fbf7ef;
+  --north-star-ivory-strong: #fff9ea;
+  --north-star-text-dark: #17130e;
+  --north-star-text-secondary: #4f4638;
+  --north-star-text-muted: #6b6255;
+  --north-star-text-light: #f3ebdd;
+  --north-star-text-light-muted: #c9bfae;
+}
+
 /* Admin experience — 3-tier surface system (canvas → panel → section/card) */
 .admin-canvas {
   background-color: var(--surface-canvas);
@@ -375,40 +411,153 @@ a[href] {
       0 1px 3px rgb(15 23 42 / 0.04) !important;
   }
 
-  /* North Star M1 — grouped left sidebar shell (flag-gated via .admin-north-star-shell) */
+  /* North Star shell — hard-reset chrome (flag-gated via .admin-north-star-shell) */
+  .admin-north-star-shell.admin-canvas,
+  .admin-north-star-shell.admin-shell-canvas {
+    background-color: var(--north-star-root);
+    background-image: none;
+  }
+
+  .admin-north-star-shell .admin-shell-main {
+    background-color: var(--north-star-root);
+  }
+
   .admin-north-star-sidebar {
+    position: relative;
     width: var(--north-star-sidebar-width);
-    border-right: 1px solid var(--north-star-graphite-border);
+    border-right: 1px solid var(--north-star-border);
+    background: var(--north-star-sidebar);
+    box-shadow: inset -1px 0 0 rgb(201 164 77 / 0.06);
+  }
+
+  .admin-north-star-sidebar::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
     background: linear-gradient(
-      180deg,
-      var(--north-star-graphite-base) 0%,
-      var(--north-star-graphite-mid) 50%,
-      var(--north-star-graphite-base) 100%
+      90deg,
+      transparent 0%,
+      rgb(201 164 77 / 0.28) 50%,
+      transparent 100%
     );
+    pointer-events: none;
   }
 
   .admin-north-star-shell .admin-premium-header {
-    border-bottom: 1px solid var(--north-star-graphite-border) !important;
-    background: linear-gradient(
-      180deg,
-      var(--north-star-graphite-mid) 0%,
-      var(--north-star-graphite-base) 100%
-    ) !important;
-    box-shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset !important;
+    border-bottom: 1px solid rgb(201 164 77 / 0.22) !important;
+    background: var(--north-star-topbar) !important;
+    box-shadow: none !important;
   }
 
   .admin-north-star-shell .admin-premium-header::before {
     background:
       radial-gradient(
-        ellipse 72% 55% at 18% -8%,
-        rgb(255 255 255 / 0.04) 0%,
+        ellipse 68% 50% at 14% -10%,
+        rgb(201 164 77 / 0.07) 0%,
         transparent 58%
       ),
       radial-gradient(
-        ellipse 42% 38% at 82% 0%,
-        rgb(198 167 87 / 0.04) 0%,
+        ellipse 40% 36% at 88% 0%,
+        rgb(230 208 146 / 0.05) 0%,
         transparent 52%
       );
+  }
+
+  .admin-north-star-shell .admin-premium-header::after {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgb(201 164 77 / 0.18) 48%,
+      transparent 100%
+    );
+  }
+
+  .admin-north-star-shell .admin-premium-header h1 {
+    color: var(--north-star-text-light);
+  }
+
+  .admin-north-star-shell .admin-premium-header p {
+    color: var(--north-star-text-light-muted);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-search {
+    color: var(--north-star-text-light-muted);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-search:hover {
+    background-color: rgb(201 164 77 / 0.1);
+    color: var(--north-star-champagne);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-divider {
+    border-color: rgb(201 164 77 / 0.2);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-avatar {
+    background: linear-gradient(180deg, #c9a44d 0%, #8a6324 100%);
+    color: var(--north-star-text-dark);
+    box-shadow:
+      0 1px 4px rgb(0 0 0 / 0.28),
+      0 0 0 2px rgb(201 164 77 / 0.35);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-signout {
+    color: var(--north-star-text-light-muted);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-signout:hover {
+    background-color: rgb(201 164 77 / 0.1);
+    color: var(--north-star-text-light);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-company-switcher p,
+  .admin-north-star-shell .admin-premium-header .north-star-company-switcher span {
+    color: var(--north-star-text-light);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-company-switcher .text-slate-400,
+  .admin-north-star-shell .admin-premium-header .north-star-company-switcher .text-slate-500 {
+    color: var(--north-star-text-light-muted);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-company-switcher button:hover {
+    background-color: rgb(201 164 77 / 0.1);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-alpha {
+    border-color: rgb(201 164 77 / 0.28);
+    background-color: rgb(201 164 77 / 0.12);
+    color: var(--north-star-champagne);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-bell {
+    color: var(--north-star-text-light-muted);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-bell:hover {
+    background-color: rgb(201 164 77 / 0.1);
+    color: var(--north-star-champagne);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-bell-badge {
+    background-color: var(--north-star-gold);
+    color: var(--north-star-text-dark);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-view-switcher p,
+  .admin-north-star-shell .admin-premium-header .north-star-view-switcher span {
+    color: var(--north-star-text-light);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-view-switcher .text-slate-400,
+  .admin-north-star-shell .admin-premium-header .north-star-view-switcher .text-slate-500 {
+    color: var(--north-star-text-light-muted);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-view-switcher button:hover {
+    background-color: rgb(201 164 77 / 0.1);
   }
 
   .admin-north-star-sidebar-group-label {
@@ -423,8 +572,7 @@ a[href] {
     color: var(--north-star-sidebar-link);
     transition:
       background-color 0.15s ease,
-      color 0.15s ease,
-      box-shadow 0.15s ease;
+      color 0.15s ease;
   }
 
   .admin-north-star-sidebar-link svg {
@@ -433,9 +581,8 @@ a[href] {
   }
 
   .admin-north-star-sidebar-link:hover {
-    background-color: rgb(198 167 87 / 0.05);
+    background-color: rgb(201 164 77 / 0.1);
     color: var(--north-star-sidebar-link-hover);
-    box-shadow: 0 0 0 1px rgb(198 167 87 / 0.1);
   }
 
   .admin-north-star-sidebar-link:hover svg {
@@ -444,17 +591,16 @@ a[href] {
 
   .admin-north-star-sidebar-link:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px rgb(198 167 87 / 0.35);
+    box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
   }
 
   .admin-north-star-sidebar-link-active {
-    background-color: rgb(198 167 87 / 0.07);
+    background-color: rgb(201 164 77 / 0.14);
     color: var(--north-star-sidebar-link-active);
-    box-shadow: 0 0 0 1px var(--north-star-brass-ring);
   }
 
   .admin-north-star-sidebar-link-active svg {
-    color: var(--north-star-brass);
+    color: var(--north-star-sidebar-icon-active);
   }
 
   .admin-north-star-sidebar-rail {
@@ -465,7 +611,233 @@ a[href] {
     width: 0.125rem;
     transform: translateY(-50%);
     border-radius: 0 9999px 9999px 0;
-    background-color: var(--north-star-brass-rail);
+    background-color: var(--north-star-gold);
+  }
+}
+
+/* North Star Customers list — moon graphite frame + premium header plate */
+.north-star-list-page-canvas {
+  position: relative;
+}
+
+@media (min-width: 1024px) {
+  .north-star-list-page-canvas {
+    overflow: hidden;
+    border-radius: 1.5rem;
+    padding: 1rem;
+    border: 1px solid rgb(174 182 194 / 0.18);
+    background: linear-gradient(180deg, #273140 0%, #1a2029 18%, #111821 100%);
+    box-shadow:
+      0 22px 60px rgb(3 7 12 / 0.3),
+      inset 0 1px 0 rgb(255 255 255 / 0.08);
+  }
+
+  .north-star-list-page-canvas::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgb(214 190 120 / 0.22) 50%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+}
+
+.north-star-page-header {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  border: 1px solid rgb(214 190 120 / 0.2);
+  background: linear-gradient(180deg, #222b38 0%, #17202b 100%);
+  box-shadow:
+    0 8px 32px -12px rgb(3 7 12 / 0.34),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+.north-star-page-header::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(214 190 120 / 0.38) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.admin-north-star-shell .north-star-list-surface {
+  border-radius: 1.25rem;
+  border: 1px solid rgb(138 99 36 / 0.12);
+  background-color: var(--north-star-ivory);
+  box-shadow:
+    0 10px 40px -14px rgb(3 7 12 / 0.28),
+    inset 0 1px 0 rgb(255 255 255 / 0.45);
+}
+
+/* North Star Customers ledger — scoped ownership (customer-north-star-ledger on table wrapper) */
+.admin-north-star-shell .customer-north-star-ledger thead tr {
+  border-bottom: 1px solid rgb(138 99 36 / 0.12) !important;
+  background: #efe4cb !important;
+}
+
+.admin-north-star-shell .customer-north-star-ledger thead th {
+  padding: 0.5625rem 0.75rem;
+  font-size: 0.625rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: #4f4638 !important;
+  background: transparent !important;
+}
+
+.admin-north-star-shell .customer-north-star-ledger tbody tr {
+  background-color: #fbf7ef !important;
+  transition: background-color 0.15s ease;
+}
+
+.admin-north-star-shell .customer-north-star-ledger tbody tr:hover {
+  background-color: #f3ebdd !important;
+}
+
+.admin-north-star-shell .customer-north-star-ledger tbody tr:nth-child(even) {
+  background-color: #fbf7ef !important;
+}
+
+.admin-north-star-shell .customer-north-star-ledger tbody tr:nth-child(even):hover {
+  background-color: #f3ebdd !important;
+}
+
+.admin-north-star-shell .customer-north-star-ledger tbody td {
+  color: #17130e;
+}
+
+.admin-north-star-shell .customer-north-star-ledger .customer-north-star-location-cell,
+.admin-north-star-shell .customer-north-star-ledger .customer-north-star-date-cell {
+  color: #4f4638 !important;
+}
+
+.admin-north-star-shell .customer-north-star-ledger .customer-north-star-jobs-cell {
+  color: #17130e !important;
+  font-weight: 600 !important;
+}
+
+.admin-north-star-shell .customer-north-star-ledger .customer-north-star-revenue-cell {
+  color: #17130e !important;
+  font-weight: 700 !important;
+}
+
+.admin-north-star-shell .customer-north-star-ledger input[type="checkbox"] {
+  border-color: #b88a2e !important;
+  accent-color: #8a6324;
+  color: #c9a44d;
+}
+
+.admin-north-star-shell .customer-north-star-ledger input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
+}
+
+.admin-north-star-shell .north-star-page-header .north-star-customers-secondary-action {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid #d6be78 !important;
+  background: #fff9ea !important;
+  color: #17130e !important;
+  opacity: 1 !important;
+}
+
+.admin-north-star-shell .north-star-page-header .north-star-customers-secondary-action svg {
+  color: #8a6324 !important;
+}
+
+.admin-north-star-shell .north-star-page-header .north-star-customers-primary-action {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid #e6d092 !important;
+  background: linear-gradient(
+    180deg,
+    #e6d092 0%,
+    #c9a44d 45%,
+    #b88a2e 100%
+  ) !important;
+  color: #17130e !important;
+  opacity: 1 !important;
+}
+
+.admin-north-star-shell .north-star-page-header .north-star-customers-primary-action svg {
+  color: #17130e !important;
+}
+
+.admin-north-star-shell .customer-north-star-filter-bar {
+  border-bottom: 1px solid rgb(138 99 36 / 0.12);
+  background: #efe4cb;
+}
+
+.admin-north-star-shell .customer-north-star-filter-bar input[type="search"],
+.admin-north-star-shell .customer-north-star-filter-bar select {
+  border: 1px solid rgb(138 99 36 / 0.18);
+  background: #fff9ea;
+  color: #17130e;
+}
+
+.admin-north-star-shell .customer-north-star-filter-bar input[type="search"]::placeholder {
+  color: #6b6255;
+}
+
+.admin-north-star-shell .customer-north-star-filter-bar input[type="search"]:focus,
+.admin-north-star-shell .customer-north-star-filter-bar select:focus {
+  border-color: #b88a2e;
+  background: #fbf7ef;
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
+}
+
+.admin-north-star-shell .customer-north-star-filter-bar svg {
+  color: #8a6324;
+}
+
+/* North Star Customers loading skeleton — warm ledger pulse */
+.north-star-skeleton {
+  animation: north-star-skeleton-pulse 1.8s ease-in-out infinite;
+  border-radius: 0.5rem;
+  background: linear-gradient(
+    90deg,
+    rgb(243 235 221 / 0.2) 0%,
+    rgb(230 208 146 / 0.24) 45%,
+    rgb(243 235 221 / 0.2) 90%
+  );
+  background-size: 200% 100%;
+}
+
+.north-star-skeleton-dark {
+  background: linear-gradient(
+    90deg,
+    rgb(201 164 77 / 0.08) 0%,
+    rgb(201 164 77 / 0.12) 45%,
+    rgb(201 164 77 / 0.08) 90%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes north-star-skeleton-pulse {
+  0%,
+  100% {
+    background-position: 100% 0;
+  }
+
+  50% {
+    background-position: 0 0;
   }
 }
 
@@ -1409,6 +1781,12 @@ a[href] {
   .admin-skeleton {
     animation: none;
     background: #e2e8f0;
+  }
+
+  .north-star-skeleton,
+  .north-star-skeleton-dark {
+    animation: none;
+    background: rgb(243 235 221 / 0.2);
   }
 
   .admin-btn-primary,

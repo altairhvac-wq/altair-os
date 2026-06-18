@@ -12,6 +12,7 @@ import { useMobileViewport } from "@/shared/components/mobile/use-mobile-viewpor
 import type { OwnerViewMode } from "@/shared/lib/owner-view-mode";
 import { buildNotificationAccess } from "@/shared/types/notification";
 import type { Notification } from "@/shared/types/notification";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 
 type HeaderProps = {
   title: string;
@@ -69,6 +70,7 @@ export function Header({
     canViewAssignedJobs: companyContext.permissions.viewAssignedJobs,
   });
   const isMobile = useMobileViewport();
+  const northStarChrome = isNorthStarShellEnabled() && !isMobile;
   const chromeTone = isMobile ? "light" : "dark";
 
   return (
@@ -76,13 +78,21 @@ export function Header({
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
-            <h1 className="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg md:text-slate-50">
+            <h1
+              className={`truncate text-base font-bold tracking-tight sm:text-lg ${
+                northStarChrome ? "" : "text-slate-900 md:text-slate-50"
+              }`}
+            >
               {title}
             </h1>
-            <AlphaIndicator tone={chromeTone} />
+            <AlphaIndicator tone={chromeTone} northStar={northStarChrome} />
           </div>
           {description ? (
-            <p className="hidden truncate text-sm text-slate-500 sm:block md:text-slate-400">
+            <p
+              className={`hidden truncate text-sm sm:block ${
+                northStarChrome ? "" : "text-slate-500 md:text-slate-400"
+              }`}
+            >
               {description}
             </p>
           ) : null}
@@ -92,7 +102,11 @@ export function Header({
       <div className="flex shrink-0 items-center gap-1 sm:gap-3">
         <button
           type="button"
-          className="hidden rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 sm:inline-flex md:text-slate-400 md:hover:bg-white/10 md:hover:text-slate-200"
+          className={`hidden rounded-lg p-2 transition-colors sm:inline-flex ${
+            northStarChrome
+              ? "north-star-header-search"
+              : "text-slate-400 hover:bg-slate-100 hover:text-slate-600 md:text-slate-400 md:hover:bg-white/10 md:hover:text-slate-200"
+          }`}
           aria-label="Search"
         >
           <Search className="h-5 w-5" />
@@ -102,26 +116,43 @@ export function Header({
           initialUnreadCount={unreadNotificationCount}
           notificationAccess={notificationAccess}
           tone={chromeTone}
+          triggerClassName={
+            northStarChrome ? "north-star-header-bell" : undefined
+          }
+          badgeClassName={
+            northStarChrome ? "north-star-header-bell-badge" : undefined
+          }
         />
-        <div className="flex items-center gap-2 border-l border-slate-200 pl-2 sm:ml-2 sm:gap-3 sm:pl-4 md:border-white/10">
+        <div
+          className={`flex items-center gap-2 pl-2 sm:ml-2 sm:gap-3 sm:pl-4 ${
+            northStarChrome
+              ? "north-star-header-divider border-l"
+              : "border-l border-slate-200 md:border-white/10"
+          }`}
+        >
           <CompanySwitcher
             activeCompanyId={companyContext.company.id}
             companies={userCompanies}
             variant="admin"
             tone={chromeTone}
-            className={
+            className={`${
               userCompanies.length > 1 ? "block" : "hidden md:block"
-            }
+            } ${northStarChrome ? "north-star-company-switcher" : ""}`}
           />
           {showViewSwitcher && onViewModeChange ? (
             <OwnerViewSwitcher
               viewMode={viewMode}
               onViewModeChange={onViewModeChange}
               tone={chromeTone}
+              className={northStarChrome ? "north-star-view-switcher" : ""}
             />
           ) : null}
           <div
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white md:ring-white/25"
+            className={
+              northStarChrome
+                ? "north-star-header-avatar flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ring-2"
+                : "flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white md:ring-white/25"
+            }
             title={displayName}
           >
             {initials}
@@ -129,7 +160,11 @@ export function Header({
           <form action={logoutAction}>
             <button
               type="submit"
-              className="rounded-lg px-2 py-1 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 md:text-slate-300 md:hover:bg-white/10 md:hover:text-white"
+              className={`rounded-lg px-2 py-1 text-xs font-semibold transition-colors ${
+                northStarChrome
+                  ? "north-star-header-signout"
+                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-700 md:text-slate-300 md:hover:bg-white/10 md:hover:text-white"
+              }`}
             >
               Sign out
             </button>

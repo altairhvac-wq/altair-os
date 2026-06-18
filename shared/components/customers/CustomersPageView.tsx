@@ -12,6 +12,7 @@ import {
   bulkRestoreCustomersFromTrashAction,
 } from "@/app/actions/customers-bulk";
 import { createCustomerAction } from "@/app/actions/customers";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { usePageBulkSelection } from "@/shared/hooks/usePageBulkSelection";
 import { resolveSelectedItems } from "@/shared/lib/bulk-selection";
 import {
@@ -35,6 +36,7 @@ import {
   masterListPageSurfaceClass,
   masterSecondaryActionClass,
 } from "@/shared/design-system/shell";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { CustomerDetailPanel } from "./CustomerDetailPanel";
 import { CustomerSearchFilterBar } from "./CustomerSearchFilterBar";
@@ -334,18 +336,24 @@ export function CustomersPageView({
   const hasNoCustomers = customers.length === 0;
   const hasNoResults = !hasNoCustomers && filteredCustomers.length === 0;
   const isCreateOpen = panelMode === "create";
+  const northStar = isNorthStarShellEnabled();
 
   return (
     <MasterListPageLayout
       title="Customers"
       subtitle="Manage profiles, locations, and service history"
+      eyebrow={northStar ? "Customer directory" : undefined}
       density="compact"
       primaryAction={
         canManageCustomers ? (
           <button
             type="button"
             onClick={handleNewCustomer}
-            className={masterListPagePrimaryActionClass}
+            className={
+              northStar
+                ? `north-star-customers-primary-action ${lt.primaryAction}`
+                : masterListPagePrimaryActionClass
+            }
           >
             <UserPlus className="h-3.5 w-3.5" />
             New Customer
@@ -356,7 +364,11 @@ export function CustomersPageView({
         canManageCustomers ? (
           <Link
             href="/customers/import"
-            className={masterSecondaryActionClass}
+            className={
+              northStar
+                ? `north-star-customers-secondary-action ${lt.secondaryAction}`
+                : masterSecondaryActionClass
+            }
           >
             <Upload className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Import Customers</span>
@@ -380,14 +392,25 @@ export function CustomersPageView({
           </SettingsAlertBanner>
         ) : undefined
       }
-      className={isCreateOpen ? masterListPageMobilePanelLockClass : undefined}
+      className={`${isCreateOpen ? masterListPageMobilePanelLockClass : ""} ${
+        northStar ? lt.pageCanvas : ""
+      }`}
+      headerClassName={northStar ? lt.pageHeader : undefined}
+      headerSurfaceVariant={northStar ? "northStar" : "default"}
+      headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
+      headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
+      headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
       <MasterPageSurface
-        variant="card"
+        variant={northStar ? "northStarList" : "card"}
         className={`${masterListPageSurfaceClass} ${
           isCreateOpen ? "max-lg:hidden" : ""
-        }`}
+        } ${northStar ? lt.listSurface : ""}`}
       >
+        {northStar ? (
+          <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
+        ) : null}
+
         {!hasNoCustomers ? (
           <CustomerSearchFilterBar
             search={search}
@@ -397,6 +420,7 @@ export function CustomersPageView({
             onStatusFilterChange={setStatusFilter}
             onLifecycleFilterChange={setLifecycleFilter}
             resultCount={filteredCustomers.length}
+            northStar={northStar}
           />
         ) : null}
 
@@ -407,9 +431,10 @@ export function CustomersPageView({
               onCreateCustomer={
                 canManageCustomers ? handleNewCustomer : undefined
               }
+              northStar={northStar}
             />
           ) : hasNoResults ? (
-            <CustomersEmptyState variant="no-results" />
+            <CustomersEmptyState variant="no-results" northStar={northStar} />
           ) : (
             <CustomersTable
               customers={filteredCustomers}
@@ -418,6 +443,7 @@ export function CustomersPageView({
               selectedIds={selectedIds}
               onToggleSelection={toggleSelection}
               onToggleAllVisible={toggleAllVisible}
+              northStar={northStar}
             />
           )}
         </div>
@@ -437,6 +463,7 @@ export function CustomersPageView({
             onRestoreFromTrash={handleBulkRestoreFromTrash}
             onPermanentDelete={handleBulkPermanentDelete}
             onClearSelection={clearSelection}
+            northStar={northStar}
           />
         ) : null}
       </MasterPageSurface>

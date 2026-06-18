@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import { masterSectionSurfaceClass } from "./tokens";
 
-export type MasterPageSurfaceVariant = "card" | "panel" | "section";
+export type MasterPageSurfaceVariant = "card" | "panel" | "section" | "northStarList";
 
 export type MasterPageSurfaceProps = {
   children: ReactNode;
-  /** card = admin-card, panel = admin-panel, section = compact bordered block */
+  /** card = admin-card, panel = admin-panel, section = compact bordered block, northStarList = ivory ledger (no admin-card) */
   variant?: MasterPageSurfaceVariant;
   id?: string;
   className?: string;
@@ -15,6 +15,7 @@ const variantClass: Record<MasterPageSurfaceVariant, string> = {
   card: "admin-card overflow-hidden",
   panel: "admin-panel min-h-0 min-w-0 flex flex-col overflow-hidden",
   section: masterSectionSurfaceClass,
+  northStarList: "north-star-list-surface overflow-hidden",
 };
 
 export function MasterPageSurface({
