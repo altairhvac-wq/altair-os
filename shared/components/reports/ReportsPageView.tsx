@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { FileText, Loader2, Sparkles } from "lucide-react";
 import { generateBusinessSummaryAction } from "@/app/actions/reports-ai";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type {
   BusinessSummaryAiResult,
@@ -27,6 +28,7 @@ import { RevenueTrendChartCard } from "./RevenueTrendChartCard";
 import { SalesFunnelChartCard } from "./SalesFunnelChartCard";
 import { TechnicianProfitabilityChartCard } from "./TechnicianProfitabilityChartCard";
 import { LeadPipelineSection } from "./LeadPipelineSection";
+import { ReportsNorthStarView } from "./north-star-m8";
 
 type ReportsPageViewProps = {
   data: ReportsPageData;
@@ -81,6 +83,17 @@ export function ReportsPageView({
 
   const showAiSummaryCard =
     summary != null || isSummaryPending || summaryError != null;
+
+  if (isNorthStarShellEnabled()) {
+    return (
+      <ReportsNorthStarView
+        data={data}
+        aiFeaturesEnabled={aiFeaturesEnabled}
+        canManageCustomers={canManageCustomers}
+        initialCachedSummary={initialCachedSummary}
+      />
+    );
+  }
 
   return (
     <MasterShellPage density="compact">
