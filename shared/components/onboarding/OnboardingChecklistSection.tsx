@@ -16,6 +16,7 @@ type OnboardingChecklistSectionProps = {
   companyId: string;
   userId?: string;
   variant?: "dashboard" | "settings";
+  northStar?: boolean;
 };
 
 function getDismissStorageKey(companyId: string, userId?: string): string {
@@ -29,6 +30,7 @@ export function OnboardingChecklistSection({
   companyId,
   userId,
   variant = "dashboard",
+  northStar = false,
 }: OnboardingChecklistSectionProps) {
   const [dismissed, setDismissed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -67,26 +69,46 @@ export function OnboardingChecklistSection({
   const isSettingsCompact = variant === "settings";
 
   return (
-    <section className="admin-card min-w-0 max-w-full overflow-x-clip">
+    <section
+      className={
+        northStar
+          ? "min-w-0 max-w-full overflow-x-clip rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF]"
+          : "admin-card min-w-0 max-w-full overflow-x-clip"
+      }
+    >
       <div
-        className={`flex items-start justify-between gap-2.5 border-b border-slate-100 bg-gradient-to-r from-cyan-50/80 to-white ${
+        className={`flex items-start justify-between gap-2.5 border-b ${
+          northStar
+            ? "border-[rgba(138,99,36,0.12)] bg-[#F5F0E4]"
+            : "border-slate-100 bg-gradient-to-r from-cyan-50/80 to-white"
+        } ${
           isSettingsCompact ? "px-3 py-3 sm:px-4" : "px-4 py-4 sm:px-6"
         }`}
       >
         <div className="flex min-w-0 items-start gap-2.5">
           <div
-            className={`flex shrink-0 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 ${
+            className={`flex shrink-0 items-center justify-center rounded-lg ${
+              northStar
+                ? "bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.12)]"
+                : "bg-cyan-100 text-cyan-700"
+            } ${
               isSettingsCompact ? "h-9 w-9" : "h-11 w-11 rounded-xl"
             }`}
           >
             <Rocket className="h-4 w-4" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600/90">
+            <p
+              className={`text-[10px] font-bold uppercase tracking-widest ${
+                northStar ? "text-[#8A6324]" : "text-cyan-600/90"
+              }`}
+            >
               Beta setup
             </p>
             <h2
-              className={`font-black tracking-tight text-slate-900 ${
+              className={`font-black tracking-tight ${
+                northStar ? "text-[#17130E]" : "text-slate-900"
+              } ${
                 isSettingsCompact
                   ? "text-sm sm:text-base"
                   : "text-base sm:text-lg"
@@ -95,7 +117,9 @@ export function OnboardingChecklistSection({
               {title}
             </h2>
             <p
-              className={`text-slate-600 ${
+              className={`${
+                northStar ? "text-[#6B6255]" : "text-slate-600"
+              } ${
                 isSettingsCompact
                   ? "mt-0.5 text-xs leading-snug"
                   : "mt-1 text-xs sm:text-sm"
@@ -119,14 +143,16 @@ export function OnboardingChecklistSection({
 
       <div className={isSettingsCompact ? "px-3 py-2.5 sm:px-4" : "px-4 py-3 sm:px-6"}>
         <div className={isSettingsCompact ? "mb-3" : "mb-4"}>
-          <div className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-600">
+          <div className="flex items-center justify-between gap-2 text-xs font-semibold text-[#4F4638]">
             <span>{progressPercent}% complete</span>
             <span>
               {checklist.completedCount}/{checklist.totalCount} steps
             </span>
           </div>
           <div
-            className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"
+            className={`mt-2 h-2 overflow-hidden rounded-full ${
+              northStar ? "bg-[#EFE4CB]" : "bg-slate-100"
+            }`}
             role="progressbar"
             aria-valuenow={progressPercent}
             aria-valuemin={0}
@@ -134,7 +160,9 @@ export function OnboardingChecklistSection({
             aria-label="Setup progress"
           >
             <div
-              className="h-full rounded-full bg-cyan-500 transition-all duration-300"
+              className={`h-full rounded-full transition-all duration-300 ${
+                northStar ? "bg-[#C9A44D]" : "bg-cyan-500"
+              }`}
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -165,36 +193,64 @@ export function OnboardingChecklistSection({
               ) : (
                 <Link
                   href={item.href}
-                  className={`flex items-start gap-2.5 border border-slate-200 bg-white transition hover:border-cyan-200 hover:bg-cyan-50/30 ${
+                  className={`flex items-start gap-2.5 border transition ${
+                    northStar
+                      ? "border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] hover:border-[rgba(201,164,77,0.35)] hover:bg-[#F3EBDD]"
+                      : "border-slate-200 bg-white hover:border-cyan-200 hover:bg-cyan-50/30"
+                  } ${
                     isSettingsCompact
                       ? "rounded-lg px-2.5 py-2 sm:px-3"
                       : "rounded-xl px-3 py-3 sm:px-4"
                   }`}
                 >
                   <Circle
-                    className="mt-0.5 h-5 w-5 shrink-0 text-slate-300"
+                    className={`mt-0.5 h-5 w-5 shrink-0 ${
+                      northStar ? "text-[#B8AD9E]" : "text-slate-300"
+                    }`}
                     aria-hidden="true"
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-bold text-slate-900">
+                      <p
+                        className={`text-sm font-bold ${
+                          northStar ? "text-[#17130E]" : "text-slate-900"
+                        }`}
+                      >
                         {item.title}
                       </p>
                       {item.optional ? (
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                            northStar
+                              ? "bg-[#EFE4CB] text-[#6B6255] ring-1 ring-[rgba(138,99,36,0.12)]"
+                              : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
                           Optional
                         </span>
                       ) : null}
                     </div>
-                    <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
+                    <p
+                      className={`mt-0.5 text-xs leading-relaxed ${
+                        northStar ? "text-[#4F4638]" : "text-slate-600"
+                      }`}
+                    >
                       {item.description}
                     </p>
                     {item.tip ? (
-                      <p className="mt-1.5 text-xs text-slate-500">{item.tip}</p>
+                      <p
+                        className={`mt-1.5 text-xs ${
+                          northStar ? "text-[#6B6255]" : "text-slate-500"
+                        }`}
+                      >
+                        {item.tip}
+                      </p>
                     ) : null}
                   </div>
                   <ArrowRight
-                    className="mt-1 h-4 w-4 shrink-0 text-slate-400"
+                    className={`mt-1 h-4 w-4 shrink-0 ${
+                      northStar ? "text-[#8A6324]" : "text-slate-400"
+                    }`}
                     aria-hidden="true"
                   />
                 </Link>
@@ -204,7 +260,9 @@ export function OnboardingChecklistSection({
         </ul>
 
         <p
-          className={`text-slate-500 ${
+          className={`${
+            northStar ? "text-[#6B6255]" : "text-slate-500"
+          } ${
             isSettingsCompact ? "mt-3 text-[11px] leading-snug" : "mt-4 text-xs"
           }`}
         >
