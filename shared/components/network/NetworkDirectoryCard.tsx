@@ -70,7 +70,7 @@ export function NetworkDirectoryCard({
     : "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60";
 
   const addButtonClass = isNorthStar
-    ? st.cardActionAccentFull
+    ? st.cardActionFull
     : "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-60";
 
   const sendButtonClass = isNorthStar
@@ -111,7 +111,7 @@ export function NetworkDirectoryCard({
       </button>
 
       {canManageNetwork ? (
-        <div className="mt-4 space-y-2">
+        <div className={`${isNorthStar ? "mt-3" : "mt-4"} space-y-1.5`}>
           {isTrustedPartner && onRemoveFromNetwork ? (
             <button
               type="button"

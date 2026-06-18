@@ -22,38 +22,33 @@ function Skeleton({
 }
 
 const NETWORK_TAB_COUNT = 5;
-const REFERRAL_METRIC_COUNT = 7;
 
 function ReferralSummarySkeleton() {
   return (
-    <>
-      <div
-        className="invoice-north-star-summary-strip shrink-0 overflow-x-auto border-b border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-2 sm:px-4"
-        aria-hidden="true"
-      >
-        <div className="flex min-w-max items-stretch gap-0">
-          {Array.from({ length: REFERRAL_METRIC_COUNT }).map((_, index) => (
-            <div
+    <div className="space-y-4" aria-hidden="true">
+      <div>
+        <Skeleton className="h-2.5 w-24" />
+        <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Skeleton
               key={index}
-              className={`flex min-w-[4.5rem] flex-col px-3 py-0.5 ${
-                index > 0 ? "border-l border-[rgba(138,99,36,0.18)]" : ""
-              }`}
-            >
-              <Skeleton className="h-3 w-8" />
-              <Skeleton className="h-4 w-6" />
-            </div>
+              className="h-[4.5rem] rounded-[0.875rem] border border-[rgba(138,99,36,0.10)]"
+            />
           ))}
         </div>
       </div>
-      <div className="hidden shrink-0 gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-        {Array.from({ length: REFERRAL_METRIC_COUNT }).map((_, index) => (
-          <Skeleton
-            key={index}
-            className="h-24 rounded-[1rem] border border-[rgba(138,99,36,0.12)]"
-          />
-        ))}
+      <div>
+        <Skeleton className="h-2.5 w-32" />
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <Skeleton
+              key={index}
+              className="h-[4.5rem] rounded-[0.875rem] border border-[rgba(138,99,36,0.10)]"
+            />
+          ))}
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 

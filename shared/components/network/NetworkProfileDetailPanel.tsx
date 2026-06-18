@@ -73,14 +73,14 @@ export function NetworkProfileDetailPanel({
     ? "mt-1 text-sm text-[#4F4638]"
     : "mt-1 text-sm text-slate-700";
   const emptyIconWrapClass = isNorthStar
-    ? "flex h-12 w-12 items-center justify-center rounded-xl bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)]"
+    ? "flex h-10 w-10 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)]"
     : "flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900/5 ring-1 ring-slate-200";
   const emptyIconClass = isNorthStar ? "text-[#8A6324]" : "text-slate-400";
   const emptyTitleClass = isNorthStar
-    ? "mt-4 text-sm font-medium text-[#17130E]"
+    ? "mt-3 text-sm font-medium text-[#17130E]"
     : "mt-4 text-sm font-medium text-slate-700";
   const emptyBodyClass = isNorthStar
-    ? "mt-1 max-w-[260px] text-xs leading-relaxed text-[#6B6255]"
+    ? "mt-1 max-w-[240px] text-xs leading-snug text-[#6B6255]"
     : "mt-1 max-w-[260px] text-xs leading-relaxed text-slate-500";
   const avatarClass = isNorthStar
     ? "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-sm font-bold text-[#17130E] ring-1 ring-[rgba(138,99,36,0.16)]"
@@ -129,11 +129,19 @@ export function NetworkProfileDetailPanel({
         ) : null}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-5">
+      <div
+        className={`flex-1 overflow-y-auto px-5 ${isNorthStar && mode === "empty" ? "py-6" : "py-5"}`}
+      >
         {mode === "empty" ? (
-          <div className="flex h-full flex-col items-center justify-center text-center">
+          <div
+            className={`flex flex-col items-center text-center ${
+              isNorthStar ? "py-4" : "h-full justify-center"
+            }`}
+          >
             <div className={emptyIconWrapClass}>
-              <Wrench className={`h-6 w-6 ${emptyIconClass}`} />
+              <Wrench
+                className={`${isNorthStar ? "h-5 w-5" : "h-6 w-6"} ${emptyIconClass}`}
+              />
             </div>
             <p className={emptyTitleClass}>No company selected</p>
             <p className={emptyBodyClass}>

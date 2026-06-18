@@ -28,9 +28,9 @@ export const networkNorthStarStyles = {
   emptyTitle: "text-sm font-semibold text-[#17130E]",
   emptyDescription: "mt-1 text-xs text-[#6B6255]",
   panelAction:
-    "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-2.5 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#8A6324]",
+    "inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-2.5 py-1.5 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[rgba(201,164,77,0.38)] hover:bg-[#F3EBDD] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#8A6324]",
   panelActionAccent:
-    "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-2.5 text-xs font-semibold text-[#17130E] shadow-[0_2px_8px_rgba(138,99,36,0.22)] transition-all hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#17130E]",
+    "inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(201,164,77,0.42)] bg-gradient-to-b from-[#F0E4B8] from-0% via-[#D4B05A] via-[50%] to-[#C9A44D] to-100% px-2.5 py-1.5 text-xs font-semibold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.12)] transition-all hover:from-[#F5EBC8] hover:via-[#DDB868] hover:to-[#B88A2E] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#17130E]",
   cardShell:
     "rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-4 transition-all",
   cardShellSelected:
@@ -43,9 +43,23 @@ export const networkNorthStarStyles = {
   cardIcon:
     "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-xs font-bold text-[#17130E] ring-1 ring-[rgba(138,99,36,0.16)]",
   cardActionFull:
-    "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 py-2 text-xs font-semibold text-[#4F4638] transition hover:border-[#C9A44D] hover:bg-[#F3EBDD] disabled:opacity-60",
+    "inline-flex w-full min-h-8 items-center justify-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-1.5 text-xs font-semibold text-[#4F4638] transition hover:border-[rgba(201,164,77,0.38)] hover:bg-[#F3EBDD] disabled:opacity-60 [&_svg]:text-[#8A6324]",
   cardActionAccentFull:
-    "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3 py-2 text-xs font-semibold text-[#17130E] shadow-[0_2px_8px_rgba(138,99,36,0.18)] transition hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:opacity-60",
+    "inline-flex w-full min-h-8 items-center justify-center gap-1.5 rounded-lg border border-[rgba(201,164,77,0.42)] bg-gradient-to-b from-[#F0E4B8] from-0% via-[#D4B05A] via-[50%] to-[#C9A44D] to-100% px-3 py-1.5 text-xs font-semibold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.12)] transition hover:from-[#F5EBC8] hover:via-[#DDB868] hover:to-[#B88A2E] disabled:opacity-60 [&_svg]:text-[#17130E]",
+  metricGroupLabel:
+    "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6B6255]",
+  metricCard:
+    "rounded-[0.875rem] border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF] px-3 py-2.5",
+  metricLabel:
+    "truncate text-[10px] font-semibold uppercase tracking-[0.1em] text-[#6B6255]",
+  metricValue: "mt-0.5 text-base font-bold tabular-nums text-[#17130E]",
+  metricDescription: "mt-0.5 text-[11px] leading-snug text-[#6B6255]",
+  metricIconWrapBrass:
+    "flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.12)]",
+  metricIconWrapSuccess:
+    "flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[rgba(22,101,52,0.08)] text-[#166534] ring-1 ring-[rgba(22,101,52,0.14)]",
+  metricIconWrapMuted:
+    "flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[rgba(79,70,56,0.06)] text-[#6B6255] ring-1 ring-[rgba(138,99,36,0.10)]",
   detailPanel:
     "north-star-list-surface flex min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden lg:h-full lg:min-h-0 lg:w-[420px] lg:flex-none lg:shrink-0",
   detailPanelHeader:
