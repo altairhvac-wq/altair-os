@@ -1,5 +1,6 @@
 export { DashboardNorthStarView } from "./DashboardNorthStarView";
 export type { DashboardNorthStarViewProps } from "./DashboardNorthStarView";
+export { DashboardNorthStarMobileView } from "./DashboardNorthStarMobileView";
 export { DashboardNorthStarLoadingState } from "./DashboardNorthStarLoadingState";
 export { NorthStarMissionHero } from "./NorthStarMissionHero";
 export { NorthStarOperatingBoard } from "./NorthStarOperatingBoard";

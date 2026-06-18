@@ -5,6 +5,7 @@ import type { DashboardData } from "@/shared/types/dashboard";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import { MasterContentStack } from "@/shared/design-system/shell";
+import { DashboardNorthStarMobileView } from "./DashboardNorthStarMobileView";
 import { NorthStarMissionHero } from "./NorthStarMissionHero";
 import { NorthStarOperatingBoard } from "./NorthStarOperatingBoard";
 import { NorthStarSupportingBands } from "./NorthStarSupportingBands";
@@ -63,6 +64,8 @@ export function DashboardNorthStarView({
         <NorthStarOperatingBoard data={data} />
         <NorthStarSupportingBands data={data} />
       </MasterContentStack>
+
+      <DashboardNorthStarMobileView data={data} dateLabel={dateLabel} />
     </>
   );
 }

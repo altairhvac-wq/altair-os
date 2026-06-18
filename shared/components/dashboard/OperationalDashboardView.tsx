@@ -1363,14 +1363,16 @@ function DashboardContentLayout({
         </>
       )}
 
-      <div className="flex min-w-0 flex-col gap-2 lg:hidden">
-        <DashboardSignatureHero data={data} variant="mobile" />
-        <MobileOperationsHub
-          data={data}
-          notificationAccess={notificationAccess}
-          showLiveMetrics={showLiveMetrics}
-        />
-      </div>
+      {!northStarEnabled ? (
+        <div className="flex min-w-0 flex-col gap-2 lg:hidden">
+          <DashboardSignatureHero data={data} variant="mobile" />
+          <MobileOperationsHub
+            data={data}
+            notificationAccess={notificationAccess}
+            showLiveMetrics={showLiveMetrics}
+          />
+        </div>
+      ) : null}
     </DashboardDrilldownProvider>
   );
 }
