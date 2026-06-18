@@ -1139,6 +1139,146 @@ a[href] {
   box-shadow: inset 3px 0 0 0 #c9a44d;
 }
 
+/* North Star Expenses list — spending ledger (M6A) */
+.admin-north-star-shell .north-star-page-header .north-star-expenses-primary-action {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid #e6d092 !important;
+  background: linear-gradient(
+    180deg,
+    #e6d092 0%,
+    #c9a44d 45%,
+    #b88a2e 100%
+  ) !important;
+  color: #17130e !important;
+  opacity: 1 !important;
+}
+
+.admin-north-star-shell .north-star-page-header .north-star-expenses-primary-action svg {
+  color: #17130e !important;
+}
+
+.admin-north-star-shell .north-star-expenses-page-header > div > p:first-child {
+  color: #d6be78 !important;
+}
+
+.admin-north-star-shell .north-star-expenses-page-header h1 {
+  color: #fff8e8 !important;
+}
+
+.admin-north-star-shell .north-star-expenses-page-header h1 + p {
+  color: #d7cdbd !important;
+}
+
+.admin-north-star-shell .expense-north-star-filter-bar {
+  border-bottom: 1px solid rgb(138 99 36 / 0.12);
+  background: #efe4cb;
+}
+
+.admin-north-star-shell .expense-north-star-filter-bar input[type="search"],
+.admin-north-star-shell .expense-north-star-filter-bar select {
+  border: 1px solid rgb(138 99 36 / 0.18);
+  background: #fff9ea;
+  color: #17130e;
+}
+
+.admin-north-star-shell .expense-north-star-filter-bar input[type="search"]::placeholder {
+  color: #6b6255;
+}
+
+.admin-north-star-shell .expense-north-star-filter-bar input[type="search"]:focus,
+.admin-north-star-shell .expense-north-star-filter-bar select:focus {
+  border-color: #b88a2e;
+  background: #fbf7ef;
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
+}
+
+.admin-north-star-shell .expense-north-star-filter-bar svg {
+  color: #8a6324;
+}
+
+.admin-north-star-shell .expense-north-star-filter-bar .expense-north-star-result-meta {
+  color: #4f4638 !important;
+}
+
+.admin-north-star-shell .expense-north-star-ledger thead tr {
+  border-bottom: 1px solid rgb(138 99 36 / 0.12) !important;
+  background: #efe4cb !important;
+}
+
+.admin-north-star-shell .expense-north-star-ledger thead th {
+  padding: 0.5625rem 0.75rem;
+  font-size: 0.625rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: #5a4a32 !important;
+  background: transparent !important;
+}
+
+.admin-north-star-shell .expense-north-star-ledger tbody tr {
+  background-color: #fbf7ef !important;
+  transition: background-color 0.15s ease;
+}
+
+.admin-north-star-shell .expense-north-star-ledger tbody tr:hover {
+  background-color: #f3ebdd !important;
+}
+
+.admin-north-star-shell .expense-north-star-ledger tbody td {
+  color: #17130e;
+}
+
+.admin-north-star-shell .expense-north-star-ledger .expense-north-star-meta-cell {
+  color: #4f4638 !important;
+}
+
+.admin-north-star-shell .expense-north-star-ledger input[type="checkbox"] {
+  border-color: #b88a2e !important;
+  accent-color: #8a6324;
+  color: #c9a44d;
+}
+
+.admin-north-star-shell .expense-north-star-ledger input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
+}
+
+/* North Star Expense detail panel — receipt review (M6B) */
+.admin-north-star-shell .expense-north-star-detail-panel-body .north-star-detail-hero {
+  border-radius: 1rem;
+}
+
+.admin-north-star-shell .expense-north-star-detail-panel-body .north-star-detail-section,
+.admin-north-star-shell .expense-north-star-detail-panel-body .north-star-detail-section-surface {
+  border-radius: 1rem;
+}
+
+/* Portaled desktop drawer sits outside .admin-north-star-shell — restore ivory section surfaces */
+.expense-north-star-detail-panel-body .north-star-detail-section,
+.expense-north-star-detail-panel-body .north-star-detail-section-surface {
+  border: 1px solid rgb(138 99 36 / 0.12);
+  background-color: var(--north-star-ivory);
+  box-shadow:
+    0 10px 40px -14px rgb(3 7 12 / 0.28),
+    inset 0 1px 0 rgb(255 255 255 / 0.45);
+}
+
+.admin-north-star-shell .expense-north-star-detail-workspace {
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .admin-north-star-shell .expense-north-star-detail-panel-mobile {
+    border: 1px solid rgb(174 182 194 / 0.18);
+    border-radius: 1rem;
+    background: #1a2029;
+    box-shadow: 0 10px 36px -12px rgb(3 7 12 / 0.32);
+  }
+}
+
 /* North Star Customer 360 detail — moon graphite frame + premium hero + ivory sections (M3B) */
 .north-star-detail-page-canvas {
   position: relative;

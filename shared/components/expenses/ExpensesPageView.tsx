@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import {
   bulkArchiveExpensesAction,
   bulkMoveExpensesToTrashAction,
@@ -41,6 +42,7 @@ import {
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import {
@@ -51,6 +53,7 @@ import {
 } from "@/shared/utils/expense-filters";
 import { ExpenseDetailsPanel } from "./ExpenseDetailsPanel";
 import { ExpenseSearchFilterBar } from "./ExpenseSearchFilterBar";
+import { ExpensesNorthStarReviewQueueHeading } from "./north-star-m6a";
 import { ExpenseSummaryCards } from "./ExpenseSummaryCards";
 import { ExpensesEmptyState } from "./ExpensesEmptyState";
 import { ExpensesTable } from "./ExpensesTable";
@@ -348,10 +351,13 @@ export function ExpensesPageView({
   const subtitle =
     contextLabel ?? "Capture receipts and draft expenses for later review";
 
+  const northStar = isNorthStarShellEnabled();
+
   return (
     <MasterListPageLayout
       title="Expenses"
       subtitle={subtitle}
+      eyebrow={northStar ? "Spending ledger" : undefined}
       density="compact"
       banners={
         (initialJobId && initialJobLabel) || lifecycleMessage ? (
@@ -381,27 +387,46 @@ export function ExpensesPageView({
       }
       summary={
         !hasNoExpenses ? (
-          <ExpenseSummaryCards expenses={activeExpenses} />
+          <ExpenseSummaryCards expenses={activeExpenses} northStar={northStar} />
         ) : null
       }
       primaryAction={
         <button
           type="button"
           onClick={handleNewExpense}
-          className={masterListPagePrimaryActionClass}
+          className={
+            northStar
+              ? `north-star-expenses-primary-action ${lt.primaryAction}`
+              : masterListPagePrimaryActionClass
+          }
         >
           <Plus className="h-3.5 w-3.5" />
           New Expense
         </button>
       }
-      className={isPanelOpen ? masterListPageMobilePanelLockClass : undefined}
+      className={`${isPanelOpen ? masterListPageMobilePanelLockClass : ""} ${
+        northStar ? lt.pageCanvas : ""
+      }`}
+      headerClassName={
+        northStar ? `${lt.pageHeader} north-star-expenses-page-header` : undefined
+      }
+      headerSurfaceVariant={northStar ? "northStar" : "default"}
+      headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
+      headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
+      headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
       <MasterPageSurface
-        variant="card"
+        variant={northStar ? "northStarList" : "card"}
         className={`${masterListPageSurfaceClass} ${
           isPanelOpen ? "max-lg:hidden" : ""
-        }`}
+        } ${northStar ? lt.listSurface : ""}`}
       >
+        {northStar ? (
+          <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
+        ) : null}
+        {northStar && !hasNoExpenses ? (
+          <ExpensesNorthStarReviewQueueHeading />
+        ) : null}
         {!hasNoExpenses ? (
           <ExpenseSearchFilterBar
             search={search}
@@ -441,6 +466,7 @@ export function ExpensesPageView({
                   }
                 : undefined
             }
+            northStar={northStar}
           />
         ) : null}
 
@@ -449,9 +475,10 @@ export function ExpensesPageView({
             <ExpensesEmptyState
               variant="no-expenses"
               onCreateExpense={handleNewExpense}
+              northStar={northStar}
             />
           ) : hasNoResults ? (
-            <ExpensesEmptyState variant="no-results" />
+            <ExpensesEmptyState variant="no-results" northStar={northStar} />
           ) : (
             <ExpensesTable
               expenses={filteredExpenses}
@@ -461,6 +488,7 @@ export function ExpensesPageView({
               selectedIds={selectedIds}
               onToggleSelection={toggleSelection}
               onToggleAllVisible={toggleAllVisible}
+              northStar={northStar}
             />
           )}
 
@@ -481,6 +509,7 @@ export function ExpensesPageView({
               showRestore={lifecycleFilter === "archived"}
               showRestoreFromTrash={lifecycleFilter === "deleted"}
               showPermanentDelete={lifecycleFilter === "deleted"}
+              northStar={northStar}
               onArchive={() =>
                 runBulkLifecycle(
                   bulkArchiveExpensesAction,

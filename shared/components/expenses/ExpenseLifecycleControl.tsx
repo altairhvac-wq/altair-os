@@ -20,6 +20,7 @@ import {
   getPermanentDeleteExpenseBlockReason,
 } from "@/shared/lib/expense-lifecycle";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 import { formatDate } from "@/shared/types/customer";
 import type { Expense } from "@/shared/types/expense";
 
@@ -34,11 +35,13 @@ type ExpenseLifecycleControlProps = {
     | "deleteAfter"
   >;
   canManage: boolean;
+  northStar?: boolean;
 };
 
 export function ExpenseLifecycleControl({
   expense,
   canManage,
+  northStar = false,
 }: ExpenseLifecycleControlProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -64,20 +67,45 @@ export function ExpenseLifecycleControl({
     });
   }
 
+  const shellClass = northStar
+    ? dt.compactSectionSurface
+    : "rounded-xl border border-slate-200 bg-slate-50/80 p-4";
+  const titleClass = northStar
+    ? "text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638]"
+    : "text-xs font-semibold uppercase tracking-wide text-slate-500";
+  const secondaryButtonClass = northStar
+    ? `${dt.secondaryAction} !text-xs`
+    : "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800";
+  const restoreButtonClass = northStar
+    ? dt.primaryAction
+    : "rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white";
+  const trashButtonClass = northStar
+    ? "rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-900 transition-colors hover:bg-orange-100"
+    : "rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-900";
+  const deleteButtonClass = northStar
+    ? "rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800 transition-colors hover:bg-rose-100"
+    : "rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800";
+
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-        Cleanup
-      </p>
+    <div className={shellClass}>
+      <p className={titleClass}>Cleanup</p>
       {lifecycleState === "deleted" && expense.deletedAt ? (
-        <p className="mt-2 text-xs text-orange-900">
+        <p
+          className={`mt-2 text-xs ${
+            northStar ? "text-[#78350F]" : "text-orange-900"
+          }`}
+        >
           Deleted {formatDate(expense.deletedAt)}
           {expense.deleteAfter
             ? ` · eligible for permanent deletion after ${formatDate(expense.deleteAfter)}`
             : null}
         </p>
       ) : null}
-      {error ? <p className="mt-2 text-sm text-rose-700">{error}</p> : null}
+      {error ? (
+        <p className={`mt-2 text-sm ${northStar ? "text-rose-700" : "text-rose-700"}`}>
+          {error}
+        </p>
+      ) : null}
       <div className="mt-3 flex flex-wrap gap-2">
         {lifecycleState === "active" ? (
           <>
@@ -91,7 +119,7 @@ export function ExpenseLifecycleControl({
                     `Archive expense ${expense.expenseNumber}?`,
                   )
                 }
-                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800"
+                className={secondaryButtonClass}
               >
                 Archive
               </button>
@@ -106,12 +134,12 @@ export function ExpenseLifecycleControl({
                     `Move expense ${expense.expenseNumber} to Recently Deleted?`,
                   )
                 }
-                className="rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-900"
+                className={trashButtonClass}
               >
                 Move to Trash
               </button>
             ) : trashBlockReason ? (
-              <p className="text-xs text-slate-600">{trashBlockReason}</p>
+              <p className={`text-xs ${northStar ? "text-[#6B6255]" : "text-slate-600"}`}>{trashBlockReason}</p>
             ) : null}
           </>
         ) : null}
@@ -123,7 +151,7 @@ export function ExpenseLifecycleControl({
                 type="button"
                 disabled={isPending}
                 onClick={() => runAction(() => restoreExpenseAction(expense.id))}
-                className="rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white"
+                className={restoreButtonClass}
               >
                 Restore
               </button>
@@ -138,12 +166,12 @@ export function ExpenseLifecycleControl({
                     `Move expense ${expense.expenseNumber} to Recently Deleted?`,
                   )
                 }
-                className="rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-900"
+                className={trashButtonClass}
               >
                 Move to Trash
               </button>
             ) : trashBlockReason ? (
-              <p className="text-xs text-slate-600">{trashBlockReason}</p>
+              <p className={`text-xs ${northStar ? "text-[#6B6255]" : "text-slate-600"}`}>{trashBlockReason}</p>
             ) : null}
           </>
         ) : null}
@@ -157,7 +185,7 @@ export function ExpenseLifecycleControl({
                 onClick={() =>
                   runAction(() => restoreExpenseFromTrashAction(expense.id))
                 }
-                className="rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white"
+                className={restoreButtonClass}
               >
                 Restore
               </button>
@@ -172,12 +200,12 @@ export function ExpenseLifecycleControl({
                     `Permanently delete expense ${expense.expenseNumber}? This cannot be undone.`,
                   )
                 }
-                className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800"
+                className={deleteButtonClass}
               >
                 Permanently Delete
               </button>
             ) : permanentDeleteBlockReason ? (
-              <p className="text-xs text-slate-600">{permanentDeleteBlockReason}</p>
+              <p className={`text-xs ${northStar ? "text-[#6B6255]" : "text-slate-600"}`}>{permanentDeleteBlockReason}</p>
             ) : null}
           </>
         ) : null}

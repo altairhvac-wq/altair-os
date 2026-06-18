@@ -5,6 +5,7 @@ import {
   User,
   Wrench,
 } from "lucide-react";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { DesktopConditionalDetailPanel } from "@/shared/components/layout/DesktopConditionalDetailPanel";
 import {
   formatExpenseAmount,
@@ -19,6 +20,10 @@ import { ExpenseReceiptPreview } from "./ExpenseReceiptPreview";
 import { ExpenseStatusBadge } from "./ExpenseStatusBadge";
 import { ExpenseWorkflowActions } from "./ExpenseWorkflowActions";
 import { ExpenseLifecycleControl } from "./ExpenseLifecycleControl";
+import {
+  ExpenseDetailNorthStarBody,
+  ExpenseDetailNorthStarPanel,
+} from "./north-star-m6b";
 
 type PanelMode = "detail" | "create" | "empty";
 
@@ -41,7 +46,7 @@ const receiptStatusStyles = {
   attached: "text-emerald-600 bg-emerald-50",
 };
 
-export function ExpenseDetailsPanel({
+function LegacyExpenseDetailsPanel({
   mode,
   expense,
   createJobId,
@@ -206,4 +211,63 @@ export function ExpenseDetailsPanel({
       ) : null}
     </DesktopConditionalDetailPanel>
   );
+}
+
+function NorthStarExpenseDetailsPanel({
+  mode,
+  expense,
+  createJobId,
+  currentUserId,
+  canManageBilling,
+  canDispatchJobs,
+  onClose,
+  onCreateSuccess,
+  onCreateCancel,
+  onExpenseUpdated,
+}: ExpenseDetailsPanelProps) {
+  const isOpen = mode !== "empty";
+
+  if (mode === "create") {
+    return (
+      <DesktopConditionalDetailPanel
+        isOpen={isOpen}
+        onClose={onClose}
+        title="New expense"
+        subtitle="Log a purchase and attach a receipt"
+        ariaLabel="Create expense"
+      >
+        <ExpenseForm
+          jobId={createJobId}
+          onSuccess={onCreateSuccess}
+          onCancel={onCreateCancel}
+        />
+      </DesktopConditionalDetailPanel>
+    );
+  }
+
+  return (
+    <ExpenseDetailNorthStarPanel
+      isOpen={isOpen}
+      onClose={onClose}
+      ariaLabel="Expense details"
+    >
+      {mode === "detail" && expense ? (
+        <ExpenseDetailNorthStarBody
+          expense={expense}
+          currentUserId={currentUserId}
+          canManageBilling={canManageBilling}
+          canDispatchJobs={canDispatchJobs}
+          onExpenseUpdated={onExpenseUpdated}
+        />
+      ) : null}
+    </ExpenseDetailNorthStarPanel>
+  );
+}
+
+export function ExpenseDetailsPanel(props: ExpenseDetailsPanelProps) {
+  if (isNorthStarShellEnabled()) {
+    return <NorthStarExpenseDetailsPanel {...props} />;
+  }
+
+  return <LegacyExpenseDetailsPanel {...props} />;
 }
