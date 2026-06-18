@@ -1,12 +1,12 @@
 # Altair OS V2 Roadmap
 
-Last Updated: 2026-06-16
+Last Updated: 2026-06-17
 
 Experience-layer redesign roadmap. Does not track feature development — see `ALTair_BRAIN.md` for production inventory.
 
 **Rule:** Shell migrations do not alter product logic, routes, server actions, Supabase behavior, or RLS assumptions.
 
-**Current status:** Beta-ready foundation complete; **North Star selected** — production migration planning next. Master Shell V2, Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are complete on major admin surfaces.
+**Current status:** Beta-ready foundation complete; **North Star Phase M1 complete** behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. M1 polish next; M2 dashboard planning queued (no M2 implementation until M1 stable). Master Shell V2, Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are complete on major admin surfaces.
 
 ---
 
@@ -91,19 +91,19 @@ Legacy `ListCommandCenterLayout` and `ListCommandCenterLoadingState` **removed**
 
 ## Phase 9 — North Star Production Migration
 
-**Status:** Next (planning — migration not started)
+**Status:** M1 complete; M2 planning next (do not implement until M1 stable)
 
-**North Star approved (2026-06-16):** **Mission Control Original Refined** — graphite shell + brass command accents + slate operating backing + ivory work cards. Concept iteration **stopped**. Production app remains beta-ready Master Shell V2 baseline.
+**North Star approved (2026-06-16):** **Mission Control Original Refined** — graphite shell + brass command accents + slate operating backing + ivory work cards. Concept iteration **stopped**.
 
-Founder decision: this direction is good enough to stop concept iteration. Do not create more palette concepts or redesign the shell blindly. Next work is a phased production migration plan, not additional concepting.
+Founder decision: this direction is good enough to stop concept iteration. Do not create more palette concepts or redesign the shell blindly. M1 landed the grouped desktop shell; M2 targets dashboard pilot only.
 
 **Visual formula:**
 
 - Dark graphite grouped left shell
 - Brass command accents
-- Dark command hero
-- Slate/blue operating backing
-- Ivory work cards
+- Dark command hero (M2)
+- Slate/blue operating backing (M2+)
+- Ivory work cards (M2+)
 - Readable dark text on light cards
 - Semantic status colors kept separate
 
@@ -111,22 +111,37 @@ Founder decision: this direction is good enough to stop concept iteration. Do no
 
 **Concept routes:** research/reference only — retain, do not delete, do not productionize wholesale.
 
-**Phased migration (planned sequence):**
+**Phased migration:**
 
-| Step | Focus |
-|------|-------|
-| 1 | Shell architecture audit |
-| 2 | Grouped left nav production plan |
-| 3 | Design token extraction |
-| 4 | Dashboard pilot |
-| 5 | One list page pilot |
-| 6 | One detail page pilot |
+| Phase | Focus | Status |
+|-------|-------|--------|
+| **M1** | Grouped left sidebar shell (desktop admin chrome) | **Complete** — `NEXT_PUBLIC_NORTH_STAR_SHELL=true` |
+| **M2** | Dashboard pilot — command hero, “Do this first”, Action/Work/Money board | **Planning** — do not start until M1 stable |
+| **M3** | One list page pilot | **Planned** |
+| **M4** | One detail page pilot | **Planned** |
+
+**M1 delivered (2026-06-17):**
+
+- Grouped desktop left sidebar when flag enabled; legacy horizontal nav when off
+- Mobile navigation and page interiors intentionally unchanged
+- Shell/chrome migration only — not a dashboard redesign
+- Routes, permissions, RBAC, Dispatch, overlays, billing, print, technician app preserved
+- Production smoke looked good on desktop; mobile unchanged
+
+**M2 scope (dashboard pilot only — planning, not started):**
+
+- Mission Control hero
+- “Do this first” primary action
+- Action / Work / Money operating board
+- Real production dashboard data preserved
+- Existing queues and actions preserved
+- **Not in M2:** Dispatch redesign, billing redesign, mobile redesign
 
 **Must preserve:** routes, product logic, Supabase/RLS/server actions, Dispatch behavior, billing/print/overlay behavior, mobile sheets.
 
 **Is not:** more palette concepts, blind shell redesign, concept wholesale backport, random gradients, flashy animation, Dribbble redesign, fake AI features, gamification, broad route transitions, page-by-page one-off decoration.
 
-**Assets:** North Star concept (`/altair-shell-color-lab-v1`), V2 components (`shared/design-system/components/`), signature primitives (`shared/design-system/signature/`). Art direction: `ALTAIR_ART_DIRECTION.md`.
+**Assets:** North Star concept (`/altair-shell-color-lab-v1`), V2 components (`shared/design-system/components/`), signature primitives (`shared/design-system/signature/`). Art direction: `ALTAIR_ART_DIRECTION.md`. Flag helper: `lib/beta/north-star-shell.ts`.
 
 ---
 
@@ -176,5 +191,6 @@ Adopt Command Center and Workspace prototype patterns into production dashboard 
 
 ## Next Operational Step
 
-1. Authenticated production/user-data smoke — validate core workflows on real tenant data before first external company onboarding.
-2. North Star production migration planning audit — shell architecture audit, grouped left nav plan, token extraction strategy, phased pilot scope (dashboard + one list + one detail). No concept iteration. No production backport until plan approved.
+1. North Star M1 polish and screenshot review — confirm stability before M2 planning.
+2. Authenticated production/user-data smoke — validate core workflows on real tenant data before first external company onboarding.
+3. M2 dashboard pilot planning — command hero, “Do this first”, Action/Work/Money board; real production data and existing queues preserved. **Do not start M2 implementation until M1 is stable.**

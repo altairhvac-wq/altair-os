@@ -283,3 +283,31 @@
 **Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md`, `ALTAIR_ART_DIRECTION.md`, `shared/design-system/shell/README.md`, this log.
 
 **Recommended next prompt:** North Star production migration planning audit.
+
+---
+
+## 2026-06-17 — North Star Phase M1 Complete (Living Docs Sync)
+
+**Scope:** Living status/planning docs only. No app code, routes, server actions, Supabase queries, RLS, env files, or product logic changes.
+
+**Context:** North Star Phase M1 is implemented and live behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. Signup hotfix also completed separately (`/signup` renders correctly; `/sign-up` redirects to `/signup`).
+
+**M1 delivered:**
+
+- Desktop admin routes use grouped left sidebar shell when flag enabled
+- Legacy horizontal nav remains when flag is off
+- Mobile navigation intentionally unchanged
+- Page interiors intentionally unchanged
+- Routes, permissions, RBAC, Dispatch behavior, overlays, billing, print, and technician app preserved
+- Production smoke looked good on desktop; mobile unchanged
+- M1 was shell/chrome migration only — not a dashboard redesign
+
+**Next steps documented:**
+
+1. M1 polish and screenshot review
+2. M2 dashboard planning (do not start M2 implementation until M1 is stable)
+3. M2 scope: dashboard pilot only — Mission Control hero, “Do this first”, Action/Work/Money operating board; real production dashboard data and existing queues preserved; no Dispatch/billing/mobile redesign
+
+**Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md`, `ALTAIR_ART_DIRECTION.md`, `shared/design-system/shell/README.md`, this log.
+
+**Recommended next prompt:** North Star M1 polish and screenshot review; then M2 dashboard pilot planning.

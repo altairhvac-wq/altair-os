@@ -173,7 +173,7 @@ Not:
 | **Operations** | Restrained field-ops signal; Dispatch board behavior unchanged |
 | **Intelligence** | Semantic status colors separate from brand/command accents |
 
-**Production:** beta-ready Master Shell V2 baseline — unchanged until phased migration.
+**Production:** North Star M1 grouped desktop sidebar behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. Legacy horizontal nav when flag off. Mobile nav and page interiors unchanged until M2+ pilots.
 
 **Concept routes:** `/altair-shell-color-lab-v1` (primary reference), plus `/altair-shell-north-star-v1`–`v3`, `/command-center-v1`, `/workspace-v1`, `/altair-design-lab` — research/reference only.
 
@@ -183,32 +183,34 @@ See `ALTAIR_ART_DIRECTION.md` and Phase 9 in `ALTair_V2_ROADMAP.md`.
 
 # Shell Migration Status (Living)
 
-Tracks V2 Master Shell adoption by experience. Updated 2026-06-16.
+Tracks V2 Master Shell adoption by experience. Updated 2026-06-17.
 
 This section tracks **layout architecture only** — not feature completeness. See `ALTair_MASTER_STATUS.md` and `ALTair_CURRENT_SPRINT.md` for sprint detail.
 
 **Principle:** Shell migrations are experience-layer architecture only. No product logic, routes, server actions, Supabase behavior, or RLS assumptions change during migration.
 
-**Summary:** Master Shell V2 coverage is **complete** for major admin surfaces. Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete**.
+**Summary:** Master Shell V2 coverage is **complete** for major admin surfaces. Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete**. **North Star Phase M1 complete** — grouped desktop left sidebar behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`.
 
-**Current status:** Beta-ready foundation complete; **North Star shell direction selected** — production migration planning next. Authenticated production/user-data smoke recommended — not “feature complete forever,” not “needs more polish before beta.”
+**Current status:** Beta-ready foundation complete; **North Star M1 shipped**. Next: M1 polish and screenshot review, then M2 dashboard planning. Do not start M2 until M1 is stable.
 
-**North Star selected (2026-06-16):** **Mission Control Original Refined** — graphite shell, brass command accents, slate operating backing, ivory work cards. Concept iteration stopped. Production app unchanged. Next step: phased production migration plan (shell audit → grouped left nav → tokens → dashboard/list/detail pilots). Do not create more palette concepts or redesign the shell blindly.
+**North Star M1 (2026-06-17):** Grouped desktop left sidebar on admin routes when flag enabled. Legacy horizontal nav when flag off. Mobile navigation and page interiors intentionally unchanged. M1 was shell/chrome migration only — not a dashboard redesign. Production smoke looked good on desktop; mobile unchanged.
 
-**Signature gap (addressed by migration, not more concepting):** Most admin pages share the same shell/polish baseline but lack the approved North Star identity. Phased migration targets:
+**North Star M2 (planning — not started):** Dashboard pilot only — Mission Control hero, “Do this first”, Action/Work/Money operating board; real production dashboard data and existing queues preserved. No Dispatch, billing, or mobile redesign in M2.
 
-- **Dashboard** — command hero + Action/Work/Money rhythm (see `/altair-shell-color-lab-v1`)
-- **One list page pilot** — ivory cards on slate backing, brass command accents
-- **One detail page pilot** — section rhythm without one-off decoration
-- **Dispatch** — richer operational canvas only where board behavior is preserved
+**Later phases (M3+):** one list page pilot, one detail page pilot, slate/ivory backing refinements. Do not create more palette concepts or redesign the shell blindly.
 
-Do not loop on small polish passes or new palette concepts. See `ALTAIR_ART_DIRECTION.md`, `ALTair_MASTER_STATUS.md`, and Phase 9 in `ALTair_V2_ROADMAP.md`.
+## Global Admin Chrome (North Star M1)
+
+| Module | Shell status |
+|--------|--------------|
+| Desktop admin chrome | **M1 complete** — grouped left sidebar when `NEXT_PUBLIC_NORTH_STAR_SHELL=true`; legacy horizontal nav when flag off |
+| Mobile admin nav | **Unchanged** — intentionally not migrated in M1 |
 
 ## Experience 1: Command Center
 
 | Module | Shell status |
 |--------|--------------|
-| Dashboard (`/`) | **Complete** — loaded view + loading state on Master Shell |
+| Dashboard (`/`) | **Complete** — loaded view + loading state on Master Shell; **M2 target** for command hero + Action/Work/Money pilot |
 | Notifications | Not migrated |
 
 **Next:** Command Center prototype patterns (Phase 6) — deferred post-beta.
@@ -279,7 +281,7 @@ Workspace list and detail families are the reference implementations for the res
 | Interaction Bug-Fix Pass A | **Complete** |
 | Pre-beta interaction fixes | **Complete** — focused smoke passed 2026-06-16 |
 
-## Deferred (After North Star Migration Unless Smoke Finds Gaps)
+## Deferred (After North Star M2+ Unless Smoke Finds Gaps)
 
 1. **Micro-Interaction Batch C**
 2. **Command Center / Workspace prototype adoption** (Phase 6) — follows North Star Production Migration (Phase 9)

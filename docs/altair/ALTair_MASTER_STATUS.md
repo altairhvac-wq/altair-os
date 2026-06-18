@@ -1,10 +1,10 @@
 # ALTAIR MASTER STATUS
 
-Last Updated: 2026-06-16
+Last Updated: 2026-06-17
 
 ## Current Stage
 
-Status: **Beta-ready foundation complete; North Star selected — production migration planning next**
+Status: **Beta-ready foundation complete; North Star Phase M1 shipped behind flag — M1 polish next, M2 dashboard planning queued**
 
 Altair OS is a production-grade multi-tenant field service operating system preparing for small company beta testing.
 
@@ -12,15 +12,17 @@ Master Shell V2 architecture migration, Visual Polish Passes A–F, Micro-Intera
 
 **Beta status:** Beta-ready with authenticated production/user-data smoke recommended before first external company onboarding.
 
-**Next major design track:** Phased **production migration** of the approved North Star shell direction — not more concept iteration or blind shell redesign. The Master Shell created the stable foundation; the preferred visual identity is now selected. Next work is a migration plan and phased pilots, not additional palette concepts.
+**Next major design track:** **North Star Phase M1 polish and screenshot review**, then **M2 dashboard planning** — not more concept iteration or blind shell redesign. M2 must not begin until M1 is considered stable.
 
 **Approved North Star (2026-06-16):** **Mission Control Original Refined** — graphite shell + brass command accents + slate operating backing + ivory work cards. See `ALTAIR_ART_DIRECTION.md`.
+
+**North Star Phase M1 (2026-06-17):** Grouped desktop left sidebar shell **complete** and live behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. Legacy horizontal nav remains when the flag is off. Mobile navigation and page interiors intentionally unchanged. M1 was shell/chrome migration only — not a dashboard redesign.
 
 Parallel tracks:
 
 1. **Beta readiness** — authenticated smoke on production/user data, onboarding, operational trust
-2. **North Star production migration planning** — shell audit, grouped left nav plan, token extraction, dashboard/list/detail pilots (planning only until approved)
-3. **Deferred experience tracks** — Command Center / Workspace composition adoption, Technician Experience V2, broad dark mode, route transitions (after phased migration unless smoke finds gaps)
+2. **North Star M1 polish** — screenshot review, stability check; then M2 dashboard pilot planning (do not start M2 implementation until M1 is stable)
+3. **Deferred experience tracks** — Command Center / Workspace composition adoption, Technician Experience V2, broad dark mode, route transitions (after M2+ phased migration unless smoke finds gaps)
 
 The redesign is **experience-layer architecture**, not feature work. Shell, polish, and signature layers do not change product logic, routes, server actions, Supabase behavior, or RLS assumptions.
 
@@ -100,7 +102,7 @@ Customer 360, Job Detail, Estimate Detail, Invoice Detail, Team Member Profile �
 |---------|--------|-------|
 | Platform / alpha internal utility | Not migrated | `/alpha-tracker`, `/platform`, `/platform/bugs` |
 | Design prototypes | Not migrated — research/reference only | `/workspace-v1`, `/command-center-v1`, `/altair-design-lab`, `/altair-shell-color-lab-v1`, `/altair-shell-north-star-v1`, `/altair-shell-north-star-v2`, `/altair-shell-north-star-v3` |
-| Global `AdminShell` chrome | Unchanged | Stays in `shared/components/admin/` |
+| Global `AdminShell` chrome | **M1 complete (flagged)** | Grouped left sidebar when `NEXT_PUBLIC_NORTH_STAR_SHELL=true`; legacy horizontal nav when off; mobile nav unchanged |
 
 ---
 
@@ -158,17 +160,17 @@ No obvious regressions found in focused smoke.
 
 ## North Star Shell Direction — Approved (2026-06-16)
 
-**Status:** Founder-approved. Concept iteration **stopped**. Production migration **not started**.
+**Status:** Founder-approved. Concept iteration **stopped**. **Phase M1 complete (2026-06-17).**
 
 After multiple isolated concept routes and palette explorations, the preferred direction is **Mission Control Original Refined**.
 
-**Visual formula:** dark graphite grouped left shell · brass command accents · dark command hero · slate/blue operating backing · ivory work cards · readable dark text on light cards · semantic status colors kept separate.
+**Visual formula:** dark graphite grouped left shell · brass command accents · dark command hero (M2+) · slate/blue operating backing (M2+) · ivory work cards (M2+) · readable dark text on light cards · semantic status colors kept separate.
 
 **What this means:**
 
-- **Production app** remains the beta-ready Master Shell V2 baseline — no North Star backport yet.
+- **Production app (M1):** Desktop admin routes use the grouped left sidebar shell when `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. Legacy horizontal nav when the flag is off. Mobile navigation and page interiors unchanged.
 - **Concept routes** remain research/reference only — do not delete; do not productionize wholesale.
-- **Next step** is a production migration plan, not more palette concepts or blind shell redesign.
+- **Next step:** M1 polish and screenshot review; then M2 dashboard planning — not more palette concepts or blind shell redesign.
 
 **Primary reference:** `/altair-shell-color-lab-v1` — palette `mission-control-refined`.
 
@@ -178,20 +180,52 @@ See `ALTAIR_ART_DIRECTION.md` for what worked, what did not work, and founder co
 
 ---
 
-## North Star Production Migration — Next Major Design Track
+## North Star Phase M1 — Complete (2026-06-17)
 
-**Status:** Planning (not started)
+**Status:** **Complete** — shipped behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`.
 
-The app is structurally consistent and beta-ready after Master Shell V2. The North Star visual identity is now selected. The next phase is a **phased production migration plan** — not additional concepting or tiny polish passes.
+**Scope:** Shell/chrome migration only — not a dashboard redesign.
 
-**Phased migration (planned sequence):**
+**Delivered:**
 
-1. Shell architecture audit
-2. Grouped left nav production plan
-3. Design token extraction (graphite, brass, slate, ivory, semantic status)
-4. Dashboard pilot
-5. One list page pilot
-6. One detail page pilot
+- Grouped desktop left sidebar on admin routes when the flag is enabled
+- Legacy horizontal nav preserved when the flag is off or unset
+- Mobile navigation intentionally left unchanged
+- Page interiors intentionally left unchanged
+- Routes, permissions, RBAC, Dispatch behavior, overlays, billing, print, and technician app preserved
+
+**Validation:** Production smoke looked good on desktop; mobile behavior unchanged.
+
+**Flag:** `NEXT_PUBLIC_NORTH_STAR_SHELL=true` enables the North Star grouped left sidebar. Roll back by unsetting the flag or setting it to anything other than `"true"`. See `lib/beta/north-star-shell.ts`.
+
+**Also completed separately:** Signup hotfix — `/signup` renders correctly; `/sign-up` redirects to `/signup`.
+
+**Next:** M1 polish and screenshot review. Do **not** start M2 until M1 is considered stable.
+
+---
+
+## North Star Production Migration — Phased Track
+
+**Status:** M1 complete; M2 planning next (do not implement until M1 stable)
+
+The app is structurally consistent and beta-ready after Master Shell V2. North Star M1 landed the grouped desktop shell behind a flag. Remaining migration phases stay incremental — not additional concepting or tiny polish passes.
+
+**Phased migration (sequence):**
+
+| Phase | Focus | Status |
+|-------|-------|--------|
+| **M1** | Grouped left sidebar shell (desktop admin chrome) | **Complete** — `NEXT_PUBLIC_NORTH_STAR_SHELL=true` |
+| **M2** | Dashboard pilot — command hero, “Do this first”, Action/Work/Money operating board | **Planning** — do not start until M1 stable |
+| **M3+** | One list page pilot, one detail page pilot, token/backing refinements | **Planned** |
+
+**M2 scope (dashboard pilot only — planning, not started):**
+
+- Mission Control hero
+- “Do this first” primary action
+- Action / Work / Money operating board
+- Real production dashboard data preserved
+- Existing queues and actions preserved
+- **Not in M2:** Dispatch redesign, billing redesign, mobile redesign
 
 **Must preserve (non-negotiable):**
 
@@ -225,11 +259,11 @@ Prepare Altair for real companies to onboard and operate daily.
 
 Focus: friction reduction, trust, onboarding, duplicate workflow elimination.
 
-### Priority 2: North Star Production Migration Planning (Next Design Track)
+### Priority 2: North Star M1 Polish + M2 Dashboard Planning (Next Design Track)
 
-Plan phased migration of **Mission Control Original Refined** onto production — shell audit, grouped left nav plan, token extraction, then dashboard/list/detail pilots.
+M1 grouped desktop sidebar is **complete** behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. Next: M1 polish and screenshot review, then plan **M2 dashboard pilot only** (command hero, “Do this first”, Action/Work/Money board — real production data and existing queues preserved).
 
-Do **not** create more palette concepts. Do **not** redesign the shell blindly. Do **not** backport concept routes wholesale. Do **not** repeat small polish passes unless smoke finds functional gaps.
+Do **not** start M2 implementation until M1 is considered stable. Do **not** create more palette concepts. Do **not** redesign Dispatch, billing, or mobile in M2.
 
 ### Priority 3: Deferred Experience Tracks (After North Star Migration)
 
@@ -252,11 +286,12 @@ Migrate only if needed for beta: `/alpha-tracker`, `/platform`, `/platform/bugs`
 
 - Beta onboarding preparation
 - Authenticated production/user-data smoke (recommended before first external company)
-- North Star production migration planning
+- North Star M1 polish and screenshot review
 
 ### Upcoming
 
-- North Star phased production migration (shell audit → tokens → dashboard/list/detail pilots)
+- North Star M2 dashboard pilot planning (after M1 stable — no M2 implementation yet)
+- North Star M3+ list/detail pilots (after M2)
 - First external company beta testing
 - Command Center / Workspace production adoption (Phase 6) — after North Star migration
 - Technician Experience V2 shell alignment — deferred
@@ -285,7 +320,7 @@ Success metrics:
 - Companies can create customers, estimates, jobs, and dispatch technicians
 - Technicians can complete work; companies can invoice and collect payments
 - Admin surfaces feel consistent, calm, and premium under Master Shell patterns
-- North Star production migration plan approved with clear phased rollout (post-smoke)
+- North Star M1 stable behind flag; M2 dashboard plan approved before M2 implementation (post-smoke)
 
 ---
 

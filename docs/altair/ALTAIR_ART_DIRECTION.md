@@ -115,13 +115,13 @@ Not:
 
 ---
 
-# Living Note (2026-06-16)
+# Living Note (2026-06-17)
 
-Master Shell V2, Visual Polish A–F, and Micro-Interaction A–B are **complete** on major admin surfaces. Art direction above describes the target feel — **Horizon Intelligence** — but production pages still read closer to generic admin SaaS than this document.
+Master Shell V2, Visual Polish A–F, and Micro-Interaction A–B are **complete** on major admin surfaces. **North Star Phase M1 is complete** — grouped desktop left sidebar live behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. Legacy horizontal nav when flag off; mobile nav and page interiors unchanged.
 
-The next implementation track is **Altair Signature Visual Layer** (Phase 9 in `ALTair_V2_ROADMAP.md`): adopt signature composition, atmosphere, and V2 components on production routes without changing product logic. Command Center / Workspace prototype adoption follows Signature Visual Layer, not before it.
+M1 was shell/chrome migration only — not a dashboard redesign. Command hero, slate operating backing, and ivory work cards remain **M2+** targets. Next: M1 polish and screenshot review, then M2 dashboard planning. Do **not** start M2 until M1 is stable.
 
-Do not loop on small polish passes. See `ALTair_MASTER_STATUS.md` for scope, preserves, and anti-patterns.
+Do not loop on small polish passes or new palette concepts. See `ALTair_MASTER_STATUS.md` for scope, preserves, and anti-patterns.
 
 ---
 
@@ -179,25 +179,35 @@ This direction is **good enough** to stop concept iteration for now.
 
 | Surface | Status |
 |---------|--------|
-| **Production app** | Beta-ready baseline — Master Shell V2, polish, micro-interactions complete. Unchanged by this decision. |
+| **Production app (M1)** | Grouped desktop left sidebar when `NEXT_PUBLIC_NORTH_STAR_SHELL=true`; legacy horizontal nav when off; mobile nav and page interiors unchanged |
+| **Production app (M2+)** | Dashboard pilot next — command hero, “Do this first”, Action/Work/Money board; then list/detail pilots |
 | **Concept routes** | Research/reference only — not production targets to copy wholesale |
 
 **Primary reference:** `/altair-shell-color-lab-v1` — palette `mission-control-refined` (Mission Control Original Refined).
 
 **Other concept routes (retain, do not delete):** `/altair-shell-north-star-v1`, `/altair-shell-north-star-v2`, `/altair-shell-north-star-v3`, `/command-center-v1`, `/workspace-v1`, `/altair-design-lab`.
 
-## Next Step: Production Migration Plan (Not More Concepting)
+## Next Step: M1 Polish, Then M2 Dashboard Planning
 
-The next design track is a **phased production migration plan** — not additional palette exploration or blind shell redesign.
+North Star M1 landed the grouped desktop shell behind a flag. The next design track is **M1 polish and screenshot review**, then **M2 dashboard pilot planning** — not additional palette exploration or blind shell redesign. **Do not start M2 implementation until M1 is considered stable.**
 
-### Phased Migration (planned, not started)
+### Phased Migration
 
-1. **Shell architecture audit** — map current `AdminShell` / Master Shell vs North Star grouped left nav and surface tiers
-2. **Grouped left nav production plan** — how grouped sidebar lands in production without breaking mobile nav or route structure
-3. **Design token extraction** — pull approved palette into shared tokens (graphite, brass, slate, ivory, semantic status)
-4. **Dashboard pilot** — first production surface; command hero + Action/Work/Money rhythm
-5. **One list page pilot** — e.g. Customers; ivory cards on slate backing, brass command accents
-6. **One detail page pilot** — e.g. Customer 360 or Job detail; section rhythm without one-off decoration
+| Phase | Focus | Status |
+|-------|-------|--------|
+| **M1** | Grouped left sidebar shell (desktop admin chrome) | **Complete** — `NEXT_PUBLIC_NORTH_STAR_SHELL=true` |
+| **M2** | Dashboard pilot — command hero, “Do this first”, Action/Work/Money board | **Planning** |
+| **M3** | One list page pilot — e.g. Customers; ivory cards on slate backing, brass command accents | **Planned** |
+| **M4** | One detail page pilot — e.g. Customer 360 or Job detail; section rhythm without one-off decoration | **Planned** |
+
+### M2 Scope (Dashboard Pilot Only — Planning, Not Started)
+
+- Mission Control hero
+- “Do this first” primary action
+- Action / Work / Money operating board
+- Real production dashboard data preserved
+- Existing queues and actions preserved
+- **Not in M2:** Dispatch redesign, billing redesign, mobile redesign
 
 ### Non-Negotiable Preserves
 
