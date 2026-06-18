@@ -41,6 +41,11 @@ const nextConfig: NextConfig = {
         destination: "/technician",
         permanent: false,
       },
+      {
+        source: "/sign-up",
+        destination: "/signup",
+        permanent: true,
+      },
     ];
   },
 };
