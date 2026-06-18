@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { MasterContentStack } from "./MasterContentStack";
 import { MasterPageCanvas } from "./MasterPageCanvas";
 import { MasterShellPage } from "./MasterShellPage";
-import type { MasterShellDensity } from "./tokens";
+import type { MasterPageCanvasWidth, MasterShellDensity } from "./tokens";
 
 export type MasterDetailPageLayoutProps = {
   /** Back navigation link or control (rendered above page body) */
@@ -11,6 +11,8 @@ export type MasterDetailPageLayoutProps = {
   banners?: ReactNode;
   children: ReactNode;
   density?: MasterShellDensity;
+  /** Content max width — defaults to detail (`max-w-5xl`) */
+  canvasWidth?: MasterPageCanvasWidth;
   className?: string;
 };
 
@@ -23,13 +25,14 @@ export function MasterDetailPageLayout({
   banners,
   children,
   density = "default",
+  canvasWidth = "detail",
   className = "",
 }: MasterDetailPageLayoutProps) {
   return (
     <MasterShellPage density={density} className={className}>
       {banners}
 
-      <MasterPageCanvas width="detail">
+      <MasterPageCanvas width={canvasWidth}>
         <MasterContentStack density={density}>
           {backLink}
           {children}

@@ -12,12 +12,18 @@ export const masterShellSectionGap: Record<MasterShellDensity, string> = {
   compact: "gap-2 lg:gap-2.5",
 };
 
-export type MasterPageCanvasWidth = "wide" | "standard" | "detail";
+export type MasterPageCanvasWidth =
+  | "wide"
+  | "standard"
+  | "detail"
+  | "detailWide";
 
 export const masterPageCanvasWidthClass: Record<MasterPageCanvasWidth, string> = {
   wide: "xl:max-w-[1440px]",
   standard: "max-w-full",
   detail: "max-w-5xl",
+  /** North Star Customer 360 — wider detail workspace on desktop */
+  detailWide: "max-w-[88rem]",
 };
 
 /**

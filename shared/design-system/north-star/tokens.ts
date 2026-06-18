@@ -217,6 +217,12 @@ export type NorthStarListPageTokens = {
   listSurfaceTopAccent: string;
   primaryAction: string;
   secondaryAction: string;
+  viewTabsBand: string;
+  viewTabsControl: string;
+  viewTabsItem: string;
+  viewTabsItemActive: string;
+  viewTabsCount: string;
+  viewTabsCountActive: string;
   filterBar: string;
   searchInput: string;
   filterSelect: string;
@@ -264,6 +270,16 @@ export const northStarListTokens: NorthStarListPageTokens = {
     "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3.5 py-1.5 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:-translate-y-px hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] hover:shadow-[0_4px_16px_rgba(138,99,36,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A2029] [&_svg]:text-[#17130E]",
   secondaryAction:
     "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#D6BE78] bg-[#FFF9EA] px-3 py-1.5 text-sm font-semibold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.16)] transition-colors hover:border-[#E6D092] hover:bg-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.40)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A2029] [&_svg]:text-[#8A6324]",
+  viewTabsBand:
+    "shrink-0 border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-3 py-2 sm:px-4 lg:px-5",
+  viewTabsControl:
+    "job-north-star-view-tabs flex w-full gap-0.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#EFE4CB] p-0.5 sm:w-auto",
+  viewTabsItem:
+    "min-h-9 flex-1 rounded-md px-2.5 py-1.5 text-sm font-semibold text-[#4F4638] transition-colors hover:text-[#17130E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.35)] sm:flex-none sm:px-3",
+  viewTabsItemActive:
+    "bg-[#FFF9EA] text-[#17130E] shadow-[0_1px_3px_rgba(138,99,36,0.12)] ring-1 ring-[rgba(138,99,36,0.14)]",
+  viewTabsCount: "ml-1.5 text-xs font-medium text-[#8A6324]/70",
+  viewTabsCountActive: "ml-1.5 text-xs font-medium text-[#6B6255]",
   filterBar:
     "shrink-0 border-b border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-2.5 sm:px-4 lg:px-5 lg:py-3",
   searchInput:
@@ -451,9 +467,9 @@ export const northStarDetailTokens: NorthStarDetailPageTokens = {
   commandPlate:
     "flex flex-col gap-2 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-2.5 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-3",
   workspaceGrid:
-    "grid gap-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(22rem,0.95fr)] lg:items-start",
-  workspaceMain: "flex min-w-0 flex-col gap-3",
-  workspaceSide: "flex min-w-0 flex-col gap-3",
+    "grid gap-2.5 lg:grid-cols-[minmax(0,1.55fr)_minmax(20rem,0.95fr)] lg:items-start",
+  workspaceMain: "flex min-w-0 flex-col gap-2.5",
+  workspaceSide: "flex min-w-0 flex-col gap-2.5",
   ivoryMetaRow:
     "flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-[#4F4638]",
   ivoryTagChip:
@@ -464,4 +480,107 @@ export const northStarDetailTokens: NorthStarDetailPageTokens = {
   compactSectionSurface:
     "north-star-detail-section scroll-mt-6 rounded-[1rem] p-3",
   truncatedHint: "mt-2 text-xs font-medium text-[#6B6255]",
+};
+
+/**
+ * Estimate detail / quote document — Mission Control Original Refined (M5C).
+ * Premium quote document on ivory surface inside moon graphite frame.
+ */
+export type NorthStarEstimateDocumentTokens = {
+  documentSurface: string;
+  documentSectionLabel: string;
+  documentCustomerCard: string;
+  documentLineItemsTable: string;
+  documentTotalsSurface: string;
+  documentTotalLabel: string;
+  documentTotalValue: string;
+  ivoryPrimary: string;
+  ivorySecondary: string;
+  ivoryMuted: string;
+  ivoryLink: string;
+  darkPrimary: string;
+  darkSecondary: string;
+  darkMuted: string;
+  darkLink: string;
+  overlayBodyCanvas: string;
+  overlayHeader: string;
+  overlayHeaderTitle: string;
+  overlayHeaderSubtitle: string;
+  overlayCloseButton: string;
+  overlayPanel: string;
+};
+
+/**
+ * Invoice detail / billing document — Mission Control Original Refined (M5D).
+ * Same ivory document + graphite frame language as estimates; invoice-specific surface class.
+ */
+export type NorthStarInvoiceDocumentTokens = NorthStarEstimateDocumentTokens;
+
+export const northStarInvoiceDocumentTokens: NorthStarInvoiceDocumentTokens = {
+  documentSurface:
+    "invoice-north-star-document relative flex min-h-[960px] flex-col overflow-x-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3 shadow-[0_10px_40px_-14px_rgba(3,7,12,0.28)] sm:rounded-[1.25rem] sm:p-4 print:min-h-0 print:rounded-none print:border print:border-slate-400 print:bg-white print:p-0 print:shadow-none",
+  documentSectionLabel:
+    "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6B6255] print:text-slate-600",
+  documentCustomerCard:
+    "rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-3 py-2 ring-1 ring-[rgba(138,99,36,0.08)] sm:rounded-xl sm:px-4 sm:py-3 print:rounded-none print:border-0 print:bg-white print:px-0 print:py-0 print:ring-0",
+  documentLineItemsTable: "invoice-north-star-line-items",
+  documentTotalsSurface:
+    "rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-3 py-3 sm:rounded-xl sm:px-5 sm:py-4 md:px-6 md:py-5 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white",
+  documentTotalLabel:
+    "text-right text-sm font-bold uppercase tracking-[0.08em] text-[#4F4638] print:text-slate-900",
+  documentTotalValue:
+    "text-2xl font-bold tabular-nums text-[#17130E] sm:text-3xl print:text-2xl print:text-slate-900",
+  ivoryPrimary: "text-[#17130E]",
+  ivorySecondary: "text-[#4F4638]",
+  ivoryMuted: "text-[#6B6255]",
+  ivoryLink: "text-[#9A7028] transition-colors hover:text-[#8A6324]",
+  darkPrimary: "text-[#FFF8E8]",
+  darkSecondary: "text-[#D7CDBD]",
+  darkMuted: "text-[#B8AD9E]",
+  darkLink: "text-[#D6BE78] transition-colors hover:text-[#E6D092]",
+  overlayBodyCanvas:
+    "north-star-invoice-overlay-body bg-[#1A2029] print:bg-white",
+  overlayHeader:
+    "no-print overlay-header-safe-mobile flex shrink-0 items-start gap-2 border-b border-[rgba(201,164,77,0.14)] bg-gradient-to-b from-[#273140] to-[#1A2029] px-3 py-2.5 sm:px-4 sm:py-3 lg:pt-3",
+  overlayHeaderTitle: "break-words text-base font-bold text-[#FFF8E8] sm:text-lg",
+  overlayHeaderSubtitle: "mt-0.5 text-sm text-[#D7CDBD]",
+  overlayCloseButton:
+    "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.35)] px-2 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[rgba(39,49,64,0.55)] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#D6BE78]",
+  overlayPanel:
+    "relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-[#1A2029] lg:mx-auto lg:max-w-6xl lg:shadow-[0_22px_60px_rgba(3,7,12,0.42)] lg:ring-1 lg:ring-[rgba(174,182,194,0.18)] print:bg-white print:shadow-none print:ring-0",
+};
+
+export const northStarEstimateDocumentTokens: NorthStarEstimateDocumentTokens = {
+  documentSurface:
+    "estimate-north-star-document relative flex min-h-[960px] flex-col overflow-x-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3 shadow-[0_10px_40px_-14px_rgba(3,7,12,0.28)] sm:rounded-[1.25rem] sm:p-4 print:min-h-0 print:rounded-none print:border print:border-slate-400 print:bg-white print:p-0 print:shadow-none",
+  documentSectionLabel:
+    "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6B6255] print:text-slate-600",
+  documentCustomerCard:
+    "rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-3 py-2 ring-1 ring-[rgba(138,99,36,0.08)] sm:rounded-xl sm:px-4 sm:py-3 print:rounded-none print:border-0 print:bg-white print:px-0 print:py-0 print:ring-0",
+  documentLineItemsTable: "estimate-north-star-line-items",
+  documentTotalsSurface:
+    "rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-3 py-3 sm:rounded-xl sm:px-5 sm:py-4 md:px-6 md:py-5 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white",
+  documentTotalLabel:
+    "text-right text-sm font-bold uppercase tracking-[0.08em] text-[#4F4638] print:text-slate-900",
+  documentTotalValue:
+    "text-2xl font-bold tabular-nums text-[#17130E] sm:text-3xl print:text-2xl print:text-slate-900",
+  ivoryPrimary: "text-[#17130E]",
+  ivorySecondary: "text-[#4F4638]",
+  ivoryMuted: "text-[#6B6255]",
+  ivoryLink:
+    "text-[#9A7028] transition-colors hover:text-[#8A6324]",
+  darkPrimary: "text-[#FFF8E8]",
+  darkSecondary: "text-[#D7CDBD]",
+  darkMuted: "text-[#B8AD9E]",
+  darkLink: "text-[#D6BE78] transition-colors hover:text-[#E6D092]",
+  overlayBodyCanvas:
+    "north-star-estimate-overlay-body bg-[#1A2029] print:bg-white",
+  overlayHeader:
+    "no-print overlay-header-safe-mobile flex shrink-0 items-start gap-2 border-b border-[rgba(201,164,77,0.14)] bg-gradient-to-b from-[#273140] to-[#1A2029] px-3 py-2.5 sm:px-4 sm:py-3 lg:pt-3",
+  overlayHeaderTitle: "break-words text-base font-bold text-[#FFF8E8] sm:text-lg",
+  overlayHeaderSubtitle: "mt-0.5 text-sm text-[#D7CDBD]",
+  overlayCloseButton:
+    "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.35)] px-2 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[rgba(39,49,64,0.55)] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#D6BE78]",
+  overlayPanel:
+    "relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-[#1A2029] lg:mx-auto lg:max-w-6xl lg:shadow-[0_22px_60px_rgba(3,7,12,0.42)] lg:ring-1 lg:ring-[rgba(174,182,194,0.18)] print:bg-white print:shadow-none print:ring-0",
 };

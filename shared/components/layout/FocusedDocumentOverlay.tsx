@@ -10,6 +10,7 @@ import { createPortal } from "react-dom";
 import { ArrowLeft, X } from "lucide-react";
 import { ModalPortal } from "@/shared/components/ui/ModalPortal";
 import { useScrollLock, useSheetEscape } from "@/shared/hooks/useScrollLock";
+import { northStarEstimateDocumentTokens as edt } from "@/shared/design-system/north-star/tokens";
 
 type FocusedDocumentOverlayProps = {
   isOpen: boolean;
@@ -32,6 +33,8 @@ type FocusedDocumentOverlayProps = {
    * (multi-step create forms).
    */
   bodyScroll?: "overlay" | "child";
+  /** North Star graphite overlay chrome (estimate detail pilot). */
+  northStar?: boolean;
 };
 
 const OverlayFooterSlotContext = createContext<HTMLElement | null>(null);
@@ -55,17 +58,28 @@ function OverlayHeader({
   onClose,
   closeDisabled,
   closeVariant,
+  northStar = false,
 }: Omit<FocusedDocumentOverlayProps, "isOpen" | "children" | "footer" | "ariaLabel">) {
   const CloseIcon = closeVariant === "back" ? ArrowLeft : X;
   const closeLabel = closeVariant === "back" ? "Back" : "Close";
 
   return (
-    <header className="no-print overlay-header-safe-mobile flex shrink-0 items-start gap-2 border-b border-slate-100/90 bg-white px-3 py-2.5 sm:px-4 sm:py-3 lg:pt-3">
+    <header
+      className={
+        northStar
+          ? edt.overlayHeader
+          : "no-print overlay-header-safe-mobile flex shrink-0 items-start gap-2 border-b border-slate-100/90 bg-white px-3 py-2.5 sm:px-4 sm:py-3 lg:pt-3"
+      }
+    >
       <button
         type="button"
         onClick={onClose}
         disabled={closeDisabled}
-        className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+        className={
+          northStar
+            ? edt.overlayCloseButton
+            : "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+        }
         aria-label={closeLabel}
       >
         <CloseIcon className="h-5 w-5 shrink-0" />
@@ -75,13 +89,19 @@ function OverlayHeader({
       </button>
       <div className="min-w-0 flex-1 pt-0.5">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="break-words text-base font-bold text-slate-900 sm:text-lg">
+          <h2
+            className={
+              northStar ? edt.overlayHeaderTitle : "break-words text-base font-bold text-slate-900 sm:text-lg"
+            }
+          >
             {title}
           </h2>
           {headerAside}
         </div>
         {subtitle ? (
-          <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>
+          <p className={northStar ? edt.overlayHeaderSubtitle : "mt-0.5 text-sm text-slate-500"}>
+            {subtitle}
+          </p>
         ) : null}
       </div>
       {headerTrailing ? (
@@ -106,6 +126,7 @@ export function FocusedDocumentOverlay({
   footer,
   closeVariant = "close",
   bodyScroll = "overlay",
+  northStar = false,
 }: FocusedDocumentOverlayProps) {
   const [footerSlot, setFooterSlot] = useState<HTMLElement | null>(null);
 
@@ -146,7 +167,7 @@ export function FocusedDocumentOverlay({
           disabled={closeDisabled}
           className="no-print absolute inset-0 z-0 hidden bg-slate-900/20 lg:block disabled:cursor-default"
         />
-        <div className="relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-white lg:mx-auto lg:max-w-6xl lg:shadow-2xl lg:ring-1 lg:ring-slate-200/80">
+        <div className={northStar ? edt.overlayPanel : "relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-white lg:mx-auto lg:max-w-6xl lg:shadow-2xl lg:ring-1 lg:ring-slate-200/80"}>
           <OverlayHeader
             title={title}
             subtitle={subtitle}
@@ -155,6 +176,7 @@ export function FocusedDocumentOverlay({
             onClose={onClose}
             closeDisabled={closeDisabled}
             closeVariant={closeVariant}
+            northStar={northStar}
           />
           <OverlayFooterSlotContext.Provider value={footerSlot}>
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

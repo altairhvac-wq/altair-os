@@ -15,6 +15,11 @@ export type MasterListPageLayoutProps = {
   children: ReactNode;
   density?: MasterShellDensity;
   className?: string;
+  headerClassName?: string;
+  headerSurfaceVariant?: "default" | "northStar";
+  headerTitleClassName?: string;
+  headerSubtitleClassName?: string;
+  headerEyebrowClassName?: string;
 };
 
 /**
@@ -32,6 +37,11 @@ export function MasterListPageLayout({
   children,
   density = "default",
   className = "",
+  headerClassName = "",
+  headerSurfaceVariant = "default",
+  headerTitleClassName = "",
+  headerSubtitleClassName = "",
+  headerEyebrowClassName = "",
 }: MasterListPageLayoutProps) {
   const isCompact = density === "compact";
 
@@ -46,6 +56,11 @@ export function MasterListPageLayout({
         primaryAction={primaryAction}
         secondaryAction={secondaryAction}
         density={density}
+        surfaceVariant={headerSurfaceVariant}
+        titleClassName={headerTitleClassName}
+        subtitleClassName={headerSubtitleClassName}
+        eyebrowClassName={headerEyebrowClassName}
+        className={headerClassName}
       />
 
       {summary}

@@ -9,6 +9,11 @@ export type MasterPageHeaderProps = {
   secondaryAction?: ReactNode;
   /** Slimmer title bar for dense list pages */
   density?: MasterShellDensity;
+  /** Use North Star page header surface instead of legacy admin-page-header */
+  surfaceVariant?: "default" | "northStar";
+  titleClassName?: string;
+  subtitleClassName?: string;
+  eyebrowClassName?: string;
   className?: string;
 };
 
@@ -19,6 +24,10 @@ export function MasterPageHeader({
   primaryAction,
   secondaryAction,
   density = "default",
+  surfaceVariant = "default",
+  titleClassName = "",
+  subtitleClassName = "",
+  eyebrowClassName = "",
   className = "",
 }: MasterPageHeaderProps) {
   const isCompact = density === "compact";
@@ -27,23 +36,43 @@ export function MasterPageHeader({
     ? "flex shrink-0 items-center gap-2"
     : "flex w-full shrink-0 flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center";
 
+  const surfaceClass =
+    surfaceVariant === "northStar" ? "north-star-page-header" : "admin-page-header";
+
+  const layoutClass =
+    surfaceVariant === "northStar"
+      ? isCompact
+        ? "items-start sm:items-center"
+        : "flex-wrap items-start gap-3"
+      : isCompact
+        ? "items-start px-3 py-2 sm:items-center sm:px-3.5"
+        : "flex-wrap items-start gap-3";
+
   return (
     <header
-      className={`admin-page-header flex shrink-0 justify-between gap-2 ${
-        isCompact
-          ? "items-start px-3 py-2 sm:items-center sm:px-3.5"
-          : "flex-wrap items-start gap-3"
-      } ${className}`}
+      className={`${surfaceClass} flex shrink-0 justify-between gap-2 ${layoutClass} ${className}`}
     >
       <div className={`min-w-0 flex-1 ${isCompact ? "space-y-0.5" : ""}`}>
-        {eyebrow ? <p className="admin-heading-eyebrow">{eyebrow}</p> : null}
+        {eyebrow ? (
+          <p className={eyebrowClassName || "admin-heading-eyebrow"}>{eyebrow}</p>
+        ) : null}
         {isCompact ? (
           <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
-            <h1 className="min-w-0 text-base font-bold tracking-tight text-slate-900 sm:shrink-0 sm:text-lg">
+            <h1
+              className={
+                titleClassName ||
+                "min-w-0 text-base font-bold tracking-tight text-slate-900 sm:shrink-0 sm:text-lg"
+              }
+            >
               {title}
             </h1>
             {subtitle ? (
-              <p className="min-w-0 text-xs leading-snug text-slate-500 sm:truncate">
+              <p
+                className={
+                  subtitleClassName ||
+                  "min-w-0 text-xs leading-snug text-slate-500 sm:truncate"
+                }
+              >
                 {subtitle}
               </p>
             ) : null}

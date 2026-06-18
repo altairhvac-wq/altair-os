@@ -22,14 +22,85 @@ type PageSummaryStripProps = {
   cards: PageSummaryCard[];
   /** Tailwind grid column classes for lg breakpoint */
   lgColumnsClass?: string;
+  northStar?: boolean;
 };
 
 export function PageSummaryStrip({
   cards,
   lgColumnsClass = "lg:grid-cols-4",
+  northStar = false,
 }: PageSummaryStripProps) {
   if (cards.length === 0) {
     return null;
+  }
+
+  if (northStar) {
+    return (
+      <>
+        <div
+          className="invoice-north-star-summary-strip shrink-0 overflow-x-auto border-b border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-2 sm:px-4"
+          aria-label="Summary metrics"
+        >
+          <div className="flex min-w-max items-stretch gap-0">
+            {cards.map((card, index) => (
+              <div
+                key={card.label}
+                className={`flex min-w-[4.5rem] flex-col px-3 py-0.5 ${
+                  index > 0 ? "border-l border-[rgba(138,99,36,0.18)]" : ""
+                } ${
+                  card.highlighted
+                    ? "-my-0.5 rounded-md bg-[rgba(201,164,77,0.14)] px-2 py-0.5"
+                    : ""
+                }`}
+              >
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-[#6B6255]">
+                  {card.mobileLabel ?? card.label}
+                </span>
+                <span className="text-sm font-bold tabular-nums text-[#17130E]">
+                  {card.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div
+          className={`hidden shrink-0 gap-3 sm:grid sm:grid-cols-2 ${lgColumnsClass}`}
+        >
+          {cards.map((card) => (
+            <div
+              key={card.label}
+              className={`rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-3.5 py-3 shadow-[0_2px_8px_rgba(3,7,12,0.08)] sm:px-4 sm:py-3.5 ${
+                card.highlighted
+                  ? "border-[rgba(201,164,77,0.35)] bg-[#FFF9EA] ring-1 ring-[rgba(201,164,77,0.18)]"
+                  : ""
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2 sm:gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255]">
+                    {card.label}
+                  </p>
+                  <p className="mt-0.5 text-lg font-bold tabular-nums text-[#17130E]">
+                    {card.value}
+                  </p>
+                  {card.description ? (
+                    <p className="mt-0.5 text-xs text-[#6B6255]">
+                      {card.description}
+                    </p>
+                  ) : null}
+                </div>
+                <div
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)] ${card.iconClassName}`}
+                >
+                  <card.icon className="h-4 w-4" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    );
   }
 
   return (
