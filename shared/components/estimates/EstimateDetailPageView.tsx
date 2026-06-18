@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import {
   ArrowLeft,
   Briefcase,
@@ -12,6 +11,8 @@ import {
   Receipt,
   User,
 } from "lucide-react";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
+import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { EstimateDetail } from "@/shared/types/estimate";
 import type { InvoiceDetail } from "@/shared/types/invoice";
@@ -25,8 +26,10 @@ import { getCustomerEmailSendBlockReason } from "@/shared/lib/operational-errors
 import { BillingMobileAmountHeader } from "@/shared/components/billing/BillingMobileAmountHeader";
 import { EstimateDocumentSection } from "@/shared/components/billing/EstimateDocumentSection";
 import { EstimateActivityTimeline } from "./EstimateActivityTimeline";
+import { EstimateSignatureCaptureAction } from "./EstimateSignatureCaptureAction";
 import { EstimateStatusActions } from "./EstimateStatusActions";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
+import { EstimateDetailNorthStarBody } from "./north-star-m5c";
 
 import type { BillingSignature } from "@/shared/types/billing-signature";
 import { adminCardSectionClass } from "@/shared/lib/admin-density";
@@ -37,6 +40,10 @@ import {
   MasterPageCanvas,
   masterDetailOverlayBodyInsetClass,
 } from "@/shared/design-system/shell";
+import {
+  northStarDetailTokens as dt,
+  northStarEstimateDocumentTokens as edt,
+} from "@/shared/design-system/north-star/tokens";
 
 type EstimateDetailPageViewProps = {
   estimate: EstimateDetail;
@@ -51,7 +58,94 @@ type EstimateDetailPageViewProps = {
   presentation?: "page" | "overlay";
 };
 
-export function EstimateDetailPageView({
+export function EstimateDetailPageView(props: EstimateDetailPageViewProps) {
+  if (isNorthStarShellEnabled()) {
+    return <NorthStarEstimateDetailPageView {...props} />;
+  }
+
+  return <LegacyEstimateDetailPageView {...props} />;
+}
+
+function NorthStarEstimateDetailPageView({
+  estimate,
+  activities,
+  linkedInvoice,
+  company,
+  companyTimeZone,
+  canManageEstimates,
+  canManageCustomers = false,
+  canCaptureSignature = false,
+  signature,
+  presentation = "page",
+}: EstimateDetailPageViewProps) {
+  const isOverlay = presentation === "overlay";
+  const customerEmail = estimate.customerEmail?.trim();
+  const customerEmailBlockReason = getCustomerEmailSendBlockReason(customerEmail);
+  const lastEmailSentInfo = useMemo(
+    () => getLastEstimateEmailSentInfo(activities, customerEmail),
+    [activities, customerEmail],
+  );
+  const lastEmailSentMessage = lastEmailSentInfo
+    ? formatBillingEmailSentMessage(lastEmailSentInfo, companyTimeZone)
+    : null;
+
+  function handlePrint() {
+    window.print();
+  }
+
+  const body = (
+    <EstimateDetailNorthStarBody
+      estimate={estimate}
+      activities={activities}
+      linkedInvoice={linkedInvoice}
+      company={company}
+      companyTimeZone={companyTimeZone}
+      canManageEstimates={canManageEstimates}
+      canManageCustomers={canManageCustomers}
+      canCaptureSignature={canCaptureSignature}
+      signature={signature}
+      customerEmailBlockReason={customerEmailBlockReason}
+      lastEmailSentMessage={lastEmailSentMessage}
+      presentation={presentation}
+    />
+  );
+
+  if (isOverlay) {
+    return (
+      <MasterPageCanvas
+        width="detail"
+        className={`${masterDetailOverlayBodyInsetClass} ${edt.overlayBodyCanvas}`}
+      >
+        <MasterContentStack density="default">{body}</MasterContentStack>
+      </MasterPageCanvas>
+    );
+  }
+
+  const pageBackLink = (
+    <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <Link href="/estimates" className={dt.backLink}>
+        <ArrowLeft className="h-4 w-4 shrink-0" />
+        Back to estimates
+      </Link>
+      <button type="button" onClick={handlePrint} className={dt.secondaryAction}>
+        <Printer className="h-4 w-4" />
+        Print / Save PDF
+      </button>
+    </div>
+  );
+
+  return (
+    <MasterDetailPageLayout
+      backLink={pageBackLink}
+      className={`${dt.pageCanvas} overflow-x-hidden print:max-w-none print:pb-0`}
+      canvasWidth="detailWide"
+    >
+      {body}
+    </MasterDetailPageLayout>
+  );
+}
+
+function LegacyEstimateDetailPageView({
   estimate,
   activities,
   linkedInvoice,
@@ -80,7 +174,12 @@ export function EstimateDetailPageView({
   }
 
   const headerActions = (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+      <EstimateSignatureCaptureAction
+        estimate={estimate}
+        signature={signature}
+        canCaptureSignature={canCaptureSignature}
+      />
       <button
         type="button"
         onClick={handlePrint}
@@ -263,13 +362,6 @@ export function EstimateDetailPageView({
         signature={signature}
         companyTimeZone={companyTimeZone}
         logoUrl={company.logoUrl}
-        canCaptureSignature={canCaptureSignature}
-        signatureCaptureContext={{
-          entityId: estimate.id,
-          documentNumber: estimate.estimateNumber,
-          customerId: estimate.customerId,
-          jobId: estimate.jobId,
-        }}
       />
 
       <div className="no-print">

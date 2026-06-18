@@ -14,6 +14,9 @@ type BillingTotalsSummaryProps = {
   hideTotal?: boolean;
   /** Hide the balance due row when it is already shown above the fold. */
   hideBalanceDue?: boolean;
+  /** Subtotal/tax only — no bordered totals card (estimate documents with hideTotal). */
+  compactSubtotal?: boolean;
+  northStar?: boolean;
 };
 
 function TotalsRow({
@@ -66,6 +69,8 @@ export function BillingTotalsSummary({
   documentStyle = "default",
   hideTotal = false,
   hideBalanceDue = false,
+  compactSubtotal = false,
+  northStar = false,
 }: BillingTotalsSummaryProps) {
   const isInvoiceStyle = documentStyle === "invoice";
   const isEstimateStyle = documentStyle === "estimate";
@@ -75,7 +80,9 @@ export function BillingTotalsSummary({
     amountPaid > 0 || (balanceDue > 0 && !hideBalanceDue);
   const showBalanceInTotals = balanceDue > 0 && !hideBalanceDue;
 
-  const containerClass = isPremiumStyle
+  const containerClass = northStar && isPremiumStyle
+    ? "rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-3 py-2.5 sm:rounded-xl sm:px-4 sm:py-3 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-2"
+    : isPremiumStyle
     ? "rounded-lg border border-slate-200 bg-white px-3 py-3 sm:rounded-xl sm:px-5 sm:py-4 md:px-6 md:py-5 print:break-inside-avoid print:rounded-none print:border-slate-300 print:bg-white"
     : "rounded-lg border border-slate-200 bg-white px-4 py-3 sm:px-5 sm:py-4 print:break-inside-avoid print:border-slate-300 print:bg-white";
 
@@ -83,6 +90,43 @@ export function BillingTotalsSummary({
 
   if (isPremiumStyle) {
     const totalLabel = isEstimateStyle ? "Estimated total" : "Total";
+
+    if (compactSubtotal && hideTotal) {
+      return (
+        <div className="ml-auto w-full max-w-[280px] space-y-1 print:max-w-[220px]">
+          <InvoiceTotalsRow
+            label="Subtotal"
+            value={formatCurrency(subtotal)}
+            labelClassName={
+              northStar
+                ? "text-xs text-[#6B6255] print:text-slate-600"
+                : "text-xs text-slate-500"
+            }
+            valueClassName={
+              northStar
+                ? "text-xs font-medium tabular-nums text-[#4F4638] print:text-slate-700"
+                : "text-xs font-medium tabular-nums text-slate-700"
+            }
+          />
+          {showTax ? (
+            <InvoiceTotalsRow
+              label={`Tax${taxRate > 0 ? ` (${formatTaxRate(taxRate)}%)` : ""}`}
+              value={formatCurrency(taxAmount)}
+              labelClassName={
+                northStar
+                  ? "text-xs text-[#6B6255] print:text-slate-600"
+                  : "text-xs text-slate-500"
+              }
+              valueClassName={
+                northStar
+                  ? "text-xs font-medium tabular-nums text-[#4F4638] print:text-slate-700"
+                  : "text-xs font-medium tabular-nums text-slate-700"
+              }
+            />
+          ) : null}
+        </div>
+      );
+    }
 
     return (
       <div className={containerClass}>
@@ -99,14 +143,16 @@ export function BillingTotalsSummary({
             />
           ) : null}
 
-          <div className="!mt-4 grid grid-cols-[1fr_auto] items-baseline gap-x-4 border-t-2 border-slate-900 pt-4">
-            <span className="text-right text-sm font-bold uppercase tracking-[0.08em] text-slate-900">
-              {totalLabel}
-            </span>
-            <span className="text-2xl font-bold tabular-nums text-slate-900 sm:text-3xl print:text-2xl">
-              {formatCurrency(total)}
-            </span>
-          </div>
+          {!hideTotal ? (
+            <div className={`!mt-3 grid grid-cols-[1fr_auto] items-baseline gap-x-4 border-t-2 ${northStar ? "border-[rgba(138,99,36,0.28)]" : "border-slate-900"} pt-3`}>
+              <span className={northStar ? "text-right text-sm font-bold uppercase tracking-[0.08em] text-[#4F4638] print:text-slate-900" : "text-right text-sm font-bold uppercase tracking-[0.08em] text-slate-900"}>
+                {totalLabel}
+              </span>
+              <span className={northStar ? "text-xl font-bold tabular-nums text-[#17130E] sm:text-2xl print:text-xl print:text-slate-900" : "text-2xl font-bold tabular-nums text-slate-900 sm:text-3xl print:text-2xl"}>
+                {formatCurrency(total)}
+              </span>
+            </div>
+          ) : null}
 
           {isInvoiceStyle && showPaymentSummary ? (
             <div className="!mt-4 space-y-2 border-t border-slate-200 pt-4">

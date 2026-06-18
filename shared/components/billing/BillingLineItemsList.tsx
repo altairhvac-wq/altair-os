@@ -24,6 +24,7 @@ type BillingLineItemsListProps = {
   documentStyle?: BillingDocumentStyle;
   /** Truncate descriptions to two lines (public mobile documents). */
   compactDescriptions?: boolean;
+  northStar?: boolean;
 };
 
 function descriptionClass(compactDescriptions: boolean, premium: boolean) {
@@ -42,8 +43,10 @@ export function BillingLineItemsList({
   variant = "cards",
   documentStyle = "default",
   compactDescriptions = false,
+  northStar = false,
 }: BillingLineItemsListProps) {
   const isPremiumStyle = isPremiumBillingDocumentStyle(documentStyle);
+  const useNorthStarTable = northStar && isPremiumStyle;
   const useCompactCards = compactDescriptions || variant === "cards";
   if (items.length === 0) {
     return (
@@ -57,16 +60,22 @@ export function BillingLineItemsList({
   }
 
   if (variant === "table") {
-    const headerCellClass = isPremiumStyle
-      ? "px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600"
-      : "px-3 py-2 font-semibold";
+    const headerCellClass = useNorthStarTable
+      ? "px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#4F4638]"
+      : isPremiumStyle
+        ? "px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600"
+        : "px-3 py-2 font-semibold";
     const bodyCellClass = isPremiumStyle ? "px-4 py-4" : "px-3 py-3";
-    const headerRowClass = isPremiumStyle
-      ? "border-b-2 border-slate-900 bg-white text-left print:bg-white"
-      : "border-b border-slate-300 text-left text-xs font-semibold uppercase tracking-wide text-slate-500";
-    const bodyRowClass = isPremiumStyle
-      ? "border-b border-slate-200 last:border-b-0"
-      : "border-b border-slate-200";
+    const headerRowClass = useNorthStarTable
+      ? "border-b-2 border-[rgba(138,99,36,0.22)] bg-[#EFE4CB] text-left print:bg-white"
+      : isPremiumStyle
+        ? "border-b-2 border-slate-900 bg-white text-left print:bg-white"
+        : "border-b border-slate-300 text-left text-xs font-semibold uppercase tracking-wide text-slate-500";
+    const bodyRowClass = useNorthStarTable
+      ? "border-b border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] last:border-b-0"
+      : isPremiumStyle
+        ? "border-b border-slate-200 last:border-b-0"
+        : "border-b border-slate-200";
 
     if (isPremiumStyle) {
       const mobileCards = (

@@ -16,9 +16,13 @@ import type { Estimate } from "@/shared/types/estimate";
 
 type EstimateSummaryCardsProps = {
   estimates: Estimate[];
+  northStar?: boolean;
 };
 
-export function EstimateSummaryCards({ estimates }: EstimateSummaryCardsProps) {
+export function EstimateSummaryCards({
+  estimates,
+  northStar = false,
+}: EstimateSummaryCardsProps) {
   const timeZone = useCompanyTimezone();
 
   const summary = useMemo(() => {
@@ -55,6 +59,7 @@ export function EstimateSummaryCards({ estimates }: EstimateSummaryCardsProps) {
 
   return (
     <PageSummaryStrip
+      northStar={northStar}
       cards={[
         {
           label: "Needs action",

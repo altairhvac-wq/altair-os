@@ -83,7 +83,13 @@ export async function EstimateDetailRoute({
         title={estimate.estimateNumber}
         subtitle={displayCustomerName}
         headerAside={<EstimateStatusBadge status={estimate.status} />}
-        headerTrailing={<EstimateDetailHeaderActions />}
+        headerTrailing={
+          <EstimateDetailHeaderActions
+            estimate={estimate}
+            canCaptureSignature={canCaptureSignature}
+            signature={signature}
+          />
+        }
       >
         {detailView}
       </EstimateDetailOverlayShell>

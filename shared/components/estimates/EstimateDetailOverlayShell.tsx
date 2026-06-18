@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { FocusedDocumentOverlay } from "@/shared/components/layout/FocusedDocumentOverlay";
 
 type EstimateDetailOverlayShellProps = {
@@ -22,6 +23,7 @@ export function EstimateDetailOverlayShell({
   closeDisabled = false,
 }: EstimateDetailOverlayShellProps) {
   const router = useRouter();
+  const northStar = isNorthStarShellEnabled();
 
   return (
     <FocusedDocumentOverlay
@@ -34,6 +36,7 @@ export function EstimateDetailOverlayShell({
       closeDisabled={closeDisabled}
       closeVariant="back"
       ariaLabel="Estimate details"
+      northStar={northStar}
     >
       {children}
     </FocusedDocumentOverlay>

@@ -7,6 +7,7 @@ import {
   batchSendEstimatesAction,
   createEstimateAction,
 } from "@/app/actions/estimates";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import {
   bulkArchiveEstimatesAction,
   bulkMoveEstimatesToTrashAction,
@@ -59,6 +60,7 @@ import {
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { JobsViewTabs, type TodayAllViewTab } from "@/shared/components/jobs/JobsViewTabs";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { EstimateBatchSelectionBar } from "./EstimateBatchSelectionBar";
@@ -536,14 +538,17 @@ export function EstimatesPageView({
       ? `${activeTodayCount} need attention today`
       : "Create quotes, track approvals, and convert to jobs";
 
+  const northStar = isNorthStarShellEnabled();
+
   return (
     <MasterListPageLayout
       title="Estimates"
       subtitle={subtitle}
+      eyebrow={northStar ? "Quote pipeline" : undefined}
       density="compact"
       summary={
         !hasNoEstimates ? (
-          <EstimateSummaryCards estimates={activeEstimates} />
+          <EstimateSummaryCards estimates={activeEstimates} northStar={northStar} />
         ) : null
       }
       primaryAction={
@@ -552,7 +557,11 @@ export function EstimatesPageView({
             type="button"
             onClick={handleNewEstimate}
             disabled={customers.length === 0}
-            className={`${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`}
+            className={
+              northStar
+                ? `north-star-estimates-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
+                : `${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`
+            }
           >
             <Plus className="h-3.5 w-3.5" />
             New Estimate
@@ -593,22 +602,40 @@ export function EstimatesPageView({
           </>
         ) : undefined
       }
-      className={isCreateOpen ? masterListPageMobilePanelLockClass : undefined}
+      className={`${isCreateOpen ? masterListPageMobilePanelLockClass : ""} ${
+        northStar ? lt.pageCanvas : ""
+      }`}
+      headerClassName={northStar ? lt.pageHeader : undefined}
+      headerSurfaceVariant={northStar ? "northStar" : "default"}
+      headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
+      headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
+      headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
       <MasterPageSurface
-        variant="card"
+        variant={northStar ? "northStarList" : "card"}
         className={`${masterListPageSurfaceClass} ${
           isCreateOpen ? "max-lg:hidden" : ""
-        }`}
+        } ${northStar ? lt.listSurface : ""}`}
       >
+        {northStar ? (
+          <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
+        ) : null}
+
         {!hasNoEstimates ? (
-          <div className="shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4">
+          <div
+            className={
+              northStar
+                ? lt.viewTabsBand
+                : "shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4"
+            }
+          >
             <JobsViewTabs
               activeTab={viewTab}
               onTabChange={setViewTab}
               todayCount={activeTodayCount}
               allCount={activeEstimates.length}
               allTabLabel="All"
+              northStar={northStar}
             />
           </div>
         ) : null}
@@ -624,6 +651,7 @@ export function EstimatesPageView({
             lifecycleFilter={lifecycleFilter}
             onLifecycleFilterChange={setLifecycleFilter}
             showLifecycleFilter={canManageEstimates}
+            northStar={northStar}
             batchSelectAllControl={
               selectionEnabled &&
               visibleSelectionState &&
@@ -650,11 +678,12 @@ export function EstimatesPageView({
                   ? handleNewEstimate
                   : undefined
               }
+              northStar={northStar}
             />
           ) : viewTab === "today" && hasNoTodayEstimates ? (
-            <EstimatesEmptyState variant="no-today" />
+            <EstimatesEmptyState variant="no-today" northStar={northStar} />
           ) : hasNoResults ? (
-            <EstimatesEmptyState variant="no-results" />
+            <EstimatesEmptyState variant="no-results" northStar={northStar} />
           ) : (
             <EstimatesTable
               sections={estimateListPresentation.sections}
@@ -665,6 +694,7 @@ export function EstimatesPageView({
               selectedIds={selectedEstimateIds}
               onToggleSelection={handleToggleEstimateSelection}
               onToggleAllVisible={handleToggleAllVisibleSelection}
+              northStar={northStar}
             />
           )}
 
@@ -677,6 +707,7 @@ export function EstimatesPageView({
               isLifecycleBusy={isEstimateLifecycleBusy}
               onSendSelected={handleBatchSendSelected}
               onClearSelection={handleClearSelection}
+              northStar={northStar}
               archiveAction={
                 selectedBulkEligibility &&
                 selectedBulkEligibility.archiveEligibleCount > 0

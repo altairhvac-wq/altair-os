@@ -21,6 +21,14 @@ type BillingSignatureSectionProps = {
   className?: string;
   canCaptureSignature?: boolean;
   captureContext?: BillingSignatureCaptureContext;
+  /** Tighter layout for estimate documents. */
+  compact?: boolean;
+  /** Hide signature lines on screen; visible only when printing. */
+  hideSignatureOnScreen?: boolean;
+  /** Render the capture-signature action beside this section. */
+  showCaptureAction?: boolean;
+  /** Compact blank lines for print/PDF (estimate documents). */
+  printTemplate?: boolean;
 };
 
 const captureTriggerClassName =
@@ -34,20 +42,29 @@ export function BillingSignatureSection({
   className = "",
   canCaptureSignature = false,
   captureContext,
+  compact = false,
+  hideSignatureOnScreen = false,
+  showCaptureAction = true,
+  printTemplate = false,
 }: BillingSignatureSectionProps) {
-  const showCapture = canCaptureSignature && captureContext != null;
+  const showCapture =
+    canCaptureSignature && captureContext != null && showCaptureAction;
 
   return (
-    <div className={className}>
-      <BillingSignatureBlock
-        variant={variant}
-        signature={signature}
-        companyTimeZone={companyTimeZone}
-        documentStyle={documentStyle}
-      />
+    <>
+      <div className={`estimate-signature-block ${className}`}>
+        <BillingSignatureBlock
+          variant={variant}
+          signature={signature}
+          companyTimeZone={companyTimeZone}
+          documentStyle={documentStyle}
+          compact={compact}
+          printTemplate={printTemplate}
+        />
+      </div>
 
       {showCapture ? (
-        <div className="no-print mt-4 flex justify-start sm:justify-end">
+        <div className="no-print mt-2.5 flex justify-start sm:justify-end print:hidden">
           <BillingSignatureCaptureSheet
             entityType={variant}
             entityId={captureContext.entityId}
@@ -59,6 +76,6 @@ export function BillingSignatureSection({
           />
         </div>
       ) : null}
-    </div>
+    </>
   );
 }

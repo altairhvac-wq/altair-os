@@ -30,6 +30,7 @@ import {
   type EstimateDetail,
   type EstimateStatus,
 } from "@/shared/types/estimate";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type EstimateStatusActionsProps = {
   estimate: EstimateDetail;
@@ -37,6 +38,7 @@ type EstimateStatusActionsProps = {
   customerEmailBlockReason: string | null;
   lastEmailSentMessage?: string | null;
   variant?: "inline" | "sticky" | "overlay-footer";
+  northStar?: boolean;
 };
 
 type StatusAction = {
@@ -133,12 +135,96 @@ function getStatusPendingLabel(status: EstimateStatus): string {
   }
 }
 
+function resolveActionClassName(
+  action: StatusAction,
+  northStar: boolean,
+): string {
+  if (!northStar) {
+    return action.className;
+  }
+
+  switch (action.toStatus) {
+    case "sent":
+      return dt.primaryAction;
+    case "approved":
+      return "bg-emerald-600 text-white hover:bg-emerald-700";
+    case "declined":
+    case "cancelled":
+      return dt.secondaryAction;
+    default:
+      return dt.secondaryAction;
+  }
+}
+
+function actionButtonClassName(
+  kind: "status" | "convert" | "resend" | "record",
+  northStar: boolean,
+  isMobileFooter: boolean,
+  action?: StatusAction,
+): string {
+  const disabled =
+    "disabled:cursor-not-allowed disabled:opacity-60";
+  const mobileBase =
+    `inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${disabled}`;
+  const legacyInlineBase =
+    `rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${disabled}`;
+
+  if (!northStar) {
+    if (isMobileFooter) {
+      switch (kind) {
+        case "convert":
+          return `${mobileBase} bg-violet-600 text-white hover:bg-violet-700`;
+        case "resend":
+          return `${mobileBase} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`;
+        case "record":
+          return `${mobileBase} bg-slate-900 text-white hover:bg-slate-800`;
+        case "status":
+          return `${mobileBase} ${action ? action.className : ""}`;
+      }
+    }
+
+    switch (kind) {
+      case "convert":
+        return `${legacyInlineBase} bg-violet-600 text-white hover:bg-violet-700`;
+      case "resend":
+        return `${legacyInlineBase} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`;
+      case "record":
+        return `${legacyInlineBase} bg-slate-900 text-white hover:bg-slate-800`;
+      case "status":
+        return `${legacyInlineBase} ${action ? action.className : ""}`;
+    }
+  }
+
+  if (isMobileFooter) {
+    switch (kind) {
+      case "convert":
+      case "record":
+        return `${mobileBase} ${dt.primaryAction}`;
+      case "resend":
+        return `${mobileBase} ${dt.secondaryAction}`;
+      case "status":
+        return `${mobileBase} ${action ? resolveActionClassName(action, true) : ""}`;
+    }
+  }
+
+  switch (kind) {
+    case "convert":
+    case "record":
+      return `${dt.primaryAction} ${disabled}`;
+    case "resend":
+      return `${dt.secondaryAction} ${disabled}`;
+    case "status":
+      return `${resolveActionClassName(action!, true)} ${disabled}`;
+  }
+}
+
 export function EstimateStatusActions({
   estimate,
   canManageEstimates,
   customerEmailBlockReason,
   lastEmailSentMessage,
   variant = "inline",
+  northStar = false,
 }: EstimateStatusActionsProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -339,14 +425,14 @@ export function EstimateStatusActions({
     return null;
   }
 
-  const buttonClass = isMobileFooter
-    ? "inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-    : "rounded-lg px-3 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60";
-
   const containerClass = isSticky
-    ? "admin-sticky-footer sm:hidden"
+    ? northStar
+      ? "admin-sticky-footer north-star-estimate-sticky-footer sm:hidden"
+      : "admin-sticky-footer sm:hidden"
     : isOverlayFooter
-      ? "admin-sticky-footer-inline flex flex-col px-3 py-2.5 sm:hidden"
+      ? northStar
+        ? "admin-sticky-footer-inline north-star-estimate-sticky-footer flex flex-col px-3 py-2.5 sm:hidden"
+        : "admin-sticky-footer-inline flex flex-col px-3 py-2.5 sm:hidden"
       : "flex flex-col items-start gap-2";
 
   const actionButtons = (
@@ -356,7 +442,7 @@ export function EstimateStatusActions({
           type="button"
           disabled={isPending || resendPending || convertPending}
           onClick={handleConvertToInvoice}
-          className={`${buttonClass} bg-violet-600 text-white hover:bg-violet-700`}
+          className={actionButtonClassName("convert", northStar, isMobileFooter)}
         >
           {convertPending
             ? "Converting…"
@@ -375,7 +461,7 @@ export function EstimateStatusActions({
               ? "Sends another copy to the customer's email on file."
               : customerEmailBlockReason ?? undefined
           }
-          className={`${buttonClass} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}
+          className={actionButtonClassName("resend", northStar, isMobileFooter)}
         >
           <Mail className="h-4 w-4" />
           {resendPending
@@ -390,7 +476,7 @@ export function EstimateStatusActions({
           type="button"
           disabled={workflowBusy}
           onClick={() => setOutcomeSheetOpen(true)}
-          className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-800`}
+          className={actionButtonClassName("record", northStar, isMobileFooter)}
         >
           Record outcome
         </button>
@@ -410,7 +496,7 @@ export function EstimateStatusActions({
                   : undefined
               }
               onClick={() => handleStatusChange(primaryAction.toStatus)}
-              className={`${buttonClass} ${primaryAction.className}`}
+              className={actionButtonClassName("status", northStar, isMobileFooter, primaryAction)}
             >
               {isPending && pendingStatus === primaryAction.toStatus
                 ? getStatusPendingLabel(primaryAction.toStatus)
@@ -431,7 +517,7 @@ export function EstimateStatusActions({
                   : undefined
               }
               onClick={() => handleStatusChange(action.toStatus)}
-              className={`${buttonClass} ${action.className}`}
+              className={actionButtonClassName("status", northStar, isMobileFooter, action)}
             >
               {isPending && pendingStatus === action.toStatus
                 ? getStatusPendingLabel(action.toStatus)
@@ -447,14 +533,19 @@ export function EstimateStatusActions({
 
   const helperText = emailSendBlocked
     ? customerEmailBlockReason
-    : isSentStickyWorkflow
-      ? lastEmailSentMessage ??
-        "Awaiting customer decision. You can leave and return anytime."
-      : primaryAction?.helper ??
-        (canResendEmail
-          ? lastEmailSentMessage ??
-            "Resend sends another copy to the customer's email on file."
-          : null);
+    : northStar && !isMobileFooter
+      ? canResendEmail
+        ? lastEmailSentMessage ??
+          "Resend sends another copy to the customer's email on file."
+        : null
+      : isSentStickyWorkflow
+        ? lastEmailSentMessage ??
+          "Awaiting customer decision. You can leave and return anytime."
+        : primaryAction?.helper ??
+          (canResendEmail
+            ? lastEmailSentMessage ??
+              "Resend sends another copy to the customer's email on file."
+            : null);
 
   const feedbackBanner = error ? (
     <SettingsAlertBanner tone={getBillingActionFeedbackTone(error, emailDelivery)}>
@@ -488,7 +579,7 @@ export function EstimateStatusActions({
           ) : successBanner ? (
             <div className="mt-2 w-full">{successBanner}</div>
           ) : helperText ? (
-            <p className="mt-2 text-xs text-slate-500">{helperText}</p>
+            <p className={`mt-2 text-xs ${northStar ? "text-[#4F4638]" : "text-slate-500"}`}>{helperText}</p>
           ) : null}
         </div>
         {isSticky ? <div className="admin-sticky-footer-spacer" aria-hidden /> : null}
@@ -520,7 +611,7 @@ export function EstimateStatusActions({
                       type="button"
                       disabled={workflowBusy}
                       onClick={() => handleStatusChange(action.toStatus)}
-                      className={`inline-flex min-h-11 w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${action.className}`}
+                      className={actionButtonClassName("status", northStar, true, action)}
                     >
                       {isPending && pendingStatus === action.toStatus
                         ? getStatusPendingLabel(action.toStatus)
@@ -547,7 +638,7 @@ export function EstimateStatusActions({
     <div className={containerClass}>
       {actionButtons}
       {helperText ? (
-        <p className="text-xs text-slate-500">{helperText}</p>
+        <p className={`text-xs ${northStar ? "text-[#4F4638]" : "text-slate-500"}`}>{helperText}</p>
       ) : null}
       {successBanner}
       {feedbackBanner}

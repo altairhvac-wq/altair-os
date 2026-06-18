@@ -10,6 +10,7 @@ import {
 import type { Estimate } from "@/shared/types/estimate";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
 import { EstimatesMobileCardList } from "./EstimatesMobileCardList";
@@ -23,6 +24,7 @@ type EstimatesTableProps = {
   selectedIds?: ReadonlySet<string>;
   onToggleSelection?: (estimateId: string) => void;
   onToggleAllVisible?: (selectAll: boolean) => void;
+  northStar?: boolean;
 };
 
 export function EstimatesTable({
@@ -34,6 +36,7 @@ export function EstimatesTable({
   selectedIds,
   onToggleSelection,
   onToggleAllVisible,
+  northStar = false,
 }: EstimatesTableProps) {
   const visibleEstimates = useMemo(
     () => sections.flatMap((section) => section.items),
@@ -60,37 +63,69 @@ export function EstimatesTable({
         selectionEnabled={selectionEnabled}
         selectedIds={selectedIds}
         onToggleSelection={onToggleSelection}
+        northStar={northStar}
       />
 
-      <div className="hidden overflow-x-auto md:block">
+      <div
+        className={`hidden overflow-x-auto md:block${
+          northStar ? " estimate-north-star-ledger" : ""
+        }`}
+      >
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
-            <tr className="border-b border-slate-100/90 bg-slate-50/50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <tr
+              className={
+                northStar
+                  ? lt.tableHeaderRow
+                  : "border-b border-slate-100/90 bg-slate-50/50 text-xs font-semibold uppercase tracking-wide text-slate-500"
+              }
+            >
               {selectionEnabled ? (
-                <th className="w-10 admin-table-cell">
+                <th
+                  className={`w-10 ${northStar ? lt.tableHeaderCell : "admin-table-cell"}`}
+                >
                   {headerSelection && headerSelection.selectableCount > 0 ? (
                     <BulkSelectCheckbox
                       checked={headerSelection.allSelected}
                       indeterminate={headerSelection.someSelected}
                       ariaLabel="Select all estimates on this page"
                       onChange={(checked) => onToggleAllVisible?.(checked)}
+                      variant={northStar ? "northStar" : "default"}
                     />
                   ) : null}
                 </th>
               ) : null}
-              <th className="admin-table-cell">Estimate</th>
-              <th className="admin-table-cell">Customer</th>
-              <th className="hidden admin-table-cell md:table-cell">
+              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+                Estimate
+              </th>
+              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+                Customer
+              </th>
+              <th
+                className={`hidden ${northStar ? lt.tableHeaderCell : "admin-table-cell"} md:table-cell`}
+              >
                 Line items
               </th>
-              <th className="hidden admin-table-cell lg:table-cell">
+              <th
+                className={`hidden ${northStar ? lt.tableHeaderCell : "admin-table-cell"} lg:table-cell`}
+              >
                 Valid until
               </th>
-              <th className="admin-table-cell">Total</th>
-              <th className="admin-table-cell">Status</th>
+              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+                Total
+              </th>
+              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+                Status
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-50">
+          <tbody
+            className={
+              northStar
+                ? "divide-y divide-[rgba(138,99,36,0.12)]"
+                : "divide-y divide-slate-50"
+            }
+          >
             {sections.map((section) => (
               <Fragment key={section.id}>
                 {showSectionHeaders ? (
@@ -99,6 +134,7 @@ export function EstimatesTable({
                     count={section.items.length}
                     variant="table"
                     colSpan={tableColumnCount}
+                    northStar={northStar}
                   />
                 ) : null}
                 {section.items.map((estimate) => {
@@ -113,9 +149,13 @@ export function EstimatesTable({
                     <tr
                       key={estimate.id}
                       onClick={() => onSelect(estimate)}
-                      className={`${adminTableRowClass} ${
-                        isSelected ? adminTableRowSelectedClass : ""
-                      }`}
+                      className={
+                        northStar
+                          ? `${lt.tableRow} ${isSelected ? lt.tableRowSelected : ""}`
+                          : `${adminTableRowClass} ${
+                              isSelected ? adminTableRowSelectedClass : ""
+                            }`
+                      }
                     >
                       {selectionEnabled ? (
                         <td className="admin-table-cell">
@@ -124,15 +164,26 @@ export function EstimatesTable({
                               checked={isSelected}
                               ariaLabel={`Select estimate ${estimate.estimateNumber}`}
                               onChange={() => onToggleSelection?.(estimate.id)}
+                              variant={northStar ? "northStar" : "default"}
                             />
                           ) : null}
                         </td>
                       ) : null}
                       <td className="admin-table-cell">
-                        <p className="font-semibold text-slate-900">
+                        <p
+                          className={
+                            northStar
+                              ? lt.tablePrimaryText
+                              : "font-semibold text-slate-900"
+                          }
+                        >
                           {estimate.estimateNumber}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p
+                          className={
+                            northStar ? lt.tableMutedText : "text-xs text-slate-500"
+                          }
+                        >
                           {formatDate(estimate.createdAt)}
                         </p>
                       </td>
@@ -141,19 +192,35 @@ export function EstimatesTable({
                           customerId={estimate.customerId}
                           customerName={estimate.customerName}
                           canManageCustomers={canManageCustomers}
-                          className="truncate font-medium text-slate-900"
+                          className={
+                            northStar
+                              ? `${lt.tablePrimaryText} truncate font-medium`
+                              : "truncate font-medium text-slate-900"
+                          }
                           stopRowNavigation
                         />
                       </td>
-                      <td className="hidden admin-table-cell text-slate-600 md:table-cell">
+                      <td
+                        className={`hidden admin-table-cell md:table-cell ${
+                          northStar ? "estimate-north-star-meta-cell" : "text-slate-600"
+                        }`}
+                      >
                         {lineItemCount} {lineItemCount === 1 ? "item" : "items"}
                       </td>
-                      <td className="hidden admin-table-cell text-slate-600 lg:table-cell">
+                      <td
+                        className={`hidden admin-table-cell lg:table-cell ${
+                          northStar ? "estimate-north-star-date-cell" : "text-slate-600"
+                        }`}
+                      >
                         {estimate.validUntil
                           ? formatDate(estimate.validUntil)
                           : "—"}
                       </td>
-                      <td className="admin-table-cell font-semibold text-slate-900">
+                      <td
+                        className={`admin-table-cell ${
+                          northStar ? lt.tableMetricText : "font-semibold text-slate-900"
+                        }`}
+                      >
                         {formatCurrency(estimate.total)}
                       </td>
                       <td className="admin-table-cell">

@@ -4,12 +4,13 @@ import { EstimateDocumentSection } from "@/shared/components/billing/EstimateDoc
 
 type PublicEstimateApprovalDocumentProps = {
   view: PublicEstimateApprovalView;
-  afterCustomer?: ReactNode;
+  /** Customer actions (approve, signature) rendered outside the printable document. */
+  customerActions?: ReactNode;
 };
 
 export function PublicEstimateApprovalDocument({
   view,
-  afterCustomer,
+  customerActions,
 }: PublicEstimateApprovalDocumentProps) {
   const company = view.company;
   const estimate = view.estimate;
@@ -19,16 +20,24 @@ export function PublicEstimateApprovalDocument({
   }
 
   return (
-    <EstimateDocumentSection
-      estimate={estimate}
-      company={company}
-      showStatusBadge={false}
-      showSignature={false}
-      showFooter
-      customerSectionLabel="Prepared for"
-      showApprovalGuidance={false}
-      afterCustomer={afterCustomer}
-      layoutVariant="public"
-    />
+    <>
+      <EstimateDocumentSection
+        estimate={estimate}
+        company={company}
+        showStatusBadge={false}
+        customerSectionLabel="Prepared for"
+        documentAudience="customer"
+        layoutVariant="public"
+      />
+
+      {customerActions ? (
+        <div
+          className="estimate-customer-actions mt-3 min-w-0 print:hidden"
+          data-estimate-customer-actions
+        >
+          {customerActions}
+        </div>
+      ) : null}
+    </>
   );
 }

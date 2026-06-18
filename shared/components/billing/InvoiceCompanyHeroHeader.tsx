@@ -14,7 +14,7 @@ export function InvoiceCompanyHeroHeader({
   const trimmedLogoUrl = logoUrl?.trim();
 
   return (
-    <header className="invoice-company-hero border-b-2 border-slate-900 pb-4 sm:pb-7 md:pb-8 print:border-slate-800 print:pb-8">
+    <header className="invoice-company-hero border-b-2 border-slate-900 pb-3 sm:pb-5 md:pb-6 print:border-slate-800 print:pb-3">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between print:flex-row print:items-start print:justify-between">
         <div className="flex min-w-0 items-start gap-3 sm:gap-5 md:gap-6">
           {trimmedLogoUrl ? (

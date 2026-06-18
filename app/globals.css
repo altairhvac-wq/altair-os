@@ -807,6 +807,338 @@ a[href] {
   color: #8a6324;
 }
 
+/* North Star Jobs list — work ledger (M4A) */
+.admin-north-star-shell .north-star-page-header .north-star-jobs-primary-action {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid #e6d092 !important;
+  background: linear-gradient(
+    180deg,
+    #e6d092 0%,
+    #c9a44d 45%,
+    #b88a2e 100%
+  ) !important;
+  color: #17130e !important;
+  opacity: 1 !important;
+}
+
+.admin-north-star-shell .north-star-page-header .north-star-jobs-primary-action svg {
+  color: #17130e !important;
+}
+
+.admin-north-star-shell .job-north-star-filter-bar {
+  border-bottom: 1px solid rgb(138 99 36 / 0.12);
+  background: #efe4cb;
+}
+
+.admin-north-star-shell .job-north-star-filter-bar input[type="search"],
+.admin-north-star-shell .job-north-star-filter-bar select {
+  border: 1px solid rgb(138 99 36 / 0.18);
+  background: #fff9ea;
+  color: #17130e;
+}
+
+.admin-north-star-shell .job-north-star-filter-bar input[type="search"]::placeholder {
+  color: #6b6255;
+}
+
+.admin-north-star-shell .job-north-star-filter-bar input[type="search"]:focus,
+.admin-north-star-shell .job-north-star-filter-bar select:focus {
+  border-color: #b88a2e;
+  background: #fbf7ef;
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
+}
+
+.admin-north-star-shell .job-north-star-filter-bar svg {
+  color: #8a6324;
+}
+
+.admin-north-star-shell .job-north-star-filter-bar .job-north-star-clear-filters {
+  color: #8a6324;
+}
+
+.admin-north-star-shell .job-north-star-filter-bar .job-north-star-clear-filters:hover {
+  color: #6b5a2e;
+}
+
+.admin-north-star-shell .job-north-star-ledger thead tr {
+  border-bottom: 1px solid rgb(138 99 36 / 0.12) !important;
+  background: #efe4cb !important;
+}
+
+.admin-north-star-shell .job-north-star-ledger thead th {
+  padding: 0.5625rem 0.75rem;
+  font-size: 0.625rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: #4f4638 !important;
+  background: transparent !important;
+}
+
+.admin-north-star-shell .job-north-star-ledger tbody tr {
+  background-color: #fbf7ef !important;
+  transition: background-color 0.15s ease;
+}
+
+.admin-north-star-shell .job-north-star-ledger tbody tr:hover {
+  background-color: #f3ebdd !important;
+}
+
+.admin-north-star-shell .job-north-star-ledger tbody td {
+  color: #17130e;
+}
+
+.admin-north-star-shell .job-north-star-ledger .job-north-star-scheduled-cell,
+.admin-north-star-shell .job-north-star-ledger .job-north-star-tech-cell {
+  color: #4f4638 !important;
+}
+
+.admin-north-star-shell .job-north-star-ledger .job-north-star-unassigned {
+  color: #6b6255 !important;
+}
+
+.admin-north-star-shell .job-north-star-ledger input[type="checkbox"] {
+  border-color: #b88a2e !important;
+  accent-color: #8a6324;
+  color: #c9a44d;
+}
+
+.admin-north-star-shell .job-north-star-ledger input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
+}
+
+.admin-north-star-shell .job-north-star-today-list li {
+  background-color: #fbf7ef;
+}
+
+.admin-north-star-shell .job-north-star-today-list li:hover {
+  background-color: #f3ebdd;
+}
+
+.admin-north-star-shell .job-north-star-today-list .job-north-star-row-selected {
+  background-color: rgb(201 164 77 / 0.12) !important;
+  box-shadow: inset 3px 0 0 0 #c9a44d;
+}
+
+/* North Star Invoices list — billing ledger (M5A) */
+.admin-north-star-shell .north-star-page-header .north-star-invoices-primary-action {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid #e6d092 !important;
+  background: linear-gradient(
+    180deg,
+    #e6d092 0%,
+    #c9a44d 45%,
+    #b88a2e 100%
+  ) !important;
+  color: #17130e !important;
+  opacity: 1 !important;
+}
+
+.admin-north-star-shell .north-star-page-header .north-star-invoices-primary-action svg {
+  color: #17130e !important;
+}
+
+.admin-north-star-shell .invoice-north-star-filter-bar {
+  border-bottom: 1px solid rgb(138 99 36 / 0.12);
+  background: #efe4cb;
+}
+
+.admin-north-star-shell .invoice-north-star-filter-bar input[type="search"],
+.admin-north-star-shell .invoice-north-star-filter-bar select {
+  border: 1px solid rgb(138 99 36 / 0.18);
+  background: #fff9ea;
+  color: #17130e;
+}
+
+.admin-north-star-shell .invoice-north-star-filter-bar input[type="search"]::placeholder {
+  color: #6b6255;
+}
+
+.admin-north-star-shell .invoice-north-star-filter-bar input[type="search"]:focus,
+.admin-north-star-shell .invoice-north-star-filter-bar select:focus {
+  border-color: #b88a2e;
+  background: #fbf7ef;
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
+}
+
+.admin-north-star-shell .invoice-north-star-filter-bar svg {
+  color: #8a6324;
+}
+
+.admin-north-star-shell .invoice-north-star-ledger thead tr {
+  border-bottom: 1px solid rgb(138 99 36 / 0.12) !important;
+  background: #efe4cb !important;
+}
+
+.admin-north-star-shell .invoice-north-star-ledger thead th {
+  padding: 0.5625rem 0.75rem;
+  font-size: 0.625rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: #4f4638 !important;
+  background: transparent !important;
+}
+
+.admin-north-star-shell .invoice-north-star-ledger tbody tr {
+  background-color: #fbf7ef !important;
+  transition: background-color 0.15s ease;
+}
+
+.admin-north-star-shell .invoice-north-star-ledger tbody tr:hover {
+  background-color: #f3ebdd !important;
+}
+
+.admin-north-star-shell .invoice-north-star-ledger tbody td {
+  color: #17130e;
+}
+
+.admin-north-star-shell .invoice-north-star-ledger .invoice-north-star-meta-cell,
+.admin-north-star-shell .invoice-north-star-ledger .invoice-north-star-date-cell {
+  color: #4f4638 !important;
+}
+
+.admin-north-star-shell .invoice-north-star-ledger .invoice-north-star-balance-cell {
+  color: #17130e !important;
+  font-weight: 600 !important;
+}
+
+.admin-north-star-shell .invoice-north-star-ledger input[type="checkbox"] {
+  border-color: #b88a2e !important;
+  accent-color: #8a6324;
+  color: #c9a44d;
+}
+
+.admin-north-star-shell .invoice-north-star-ledger input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
+}
+
+.admin-north-star-shell .invoice-north-star-mobile-list li {
+  background-color: #fbf7ef;
+}
+
+.admin-north-star-shell .invoice-north-star-mobile-list li:hover {
+  background-color: #f3ebdd;
+}
+
+.admin-north-star-shell .invoice-north-star-mobile-list .invoice-north-star-row-selected {
+  background-color: rgb(201 164 77 / 0.12) !important;
+  box-shadow: inset 3px 0 0 0 #c9a44d;
+}
+
+/* North Star Estimates list — quote pipeline ledger (M5B) */
+.admin-north-star-shell .north-star-page-header .north-star-estimates-primary-action {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid #e6d092 !important;
+  background: linear-gradient(
+    180deg,
+    #e6d092 0%,
+    #c9a44d 45%,
+    #b88a2e 100%
+  ) !important;
+  color: #17130e !important;
+  opacity: 1 !important;
+}
+
+.admin-north-star-shell .north-star-page-header .north-star-estimates-primary-action svg {
+  color: #17130e !important;
+}
+
+.admin-north-star-shell .estimate-north-star-filter-bar {
+  border-bottom: 1px solid rgb(138 99 36 / 0.12);
+  background: #efe4cb;
+}
+
+.admin-north-star-shell .estimate-north-star-filter-bar input[type="search"],
+.admin-north-star-shell .estimate-north-star-filter-bar select {
+  border: 1px solid rgb(138 99 36 / 0.18);
+  background: #fff9ea;
+  color: #17130e;
+}
+
+.admin-north-star-shell .estimate-north-star-filter-bar input[type="search"]::placeholder {
+  color: #6b6255;
+}
+
+.admin-north-star-shell .estimate-north-star-filter-bar input[type="search"]:focus,
+.admin-north-star-shell .estimate-north-star-filter-bar select:focus {
+  border-color: #b88a2e;
+  background: #fbf7ef;
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
+}
+
+.admin-north-star-shell .estimate-north-star-filter-bar svg {
+  color: #8a6324;
+}
+
+.admin-north-star-shell .estimate-north-star-ledger thead tr {
+  border-bottom: 1px solid rgb(138 99 36 / 0.12) !important;
+  background: #efe4cb !important;
+}
+
+.admin-north-star-shell .estimate-north-star-ledger thead th {
+  padding: 0.5625rem 0.75rem;
+  font-size: 0.625rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: #4f4638 !important;
+  background: transparent !important;
+}
+
+.admin-north-star-shell .estimate-north-star-ledger tbody tr {
+  background-color: #fbf7ef !important;
+  transition: background-color 0.15s ease;
+}
+
+.admin-north-star-shell .estimate-north-star-ledger tbody tr:hover {
+  background-color: #f3ebdd !important;
+}
+
+.admin-north-star-shell .estimate-north-star-ledger tbody td {
+  color: #17130e;
+}
+
+.admin-north-star-shell .estimate-north-star-ledger .estimate-north-star-meta-cell,
+.admin-north-star-shell .estimate-north-star-ledger .estimate-north-star-date-cell {
+  color: #4f4638 !important;
+}
+
+.admin-north-star-shell .estimate-north-star-ledger input[type="checkbox"] {
+  border-color: #b88a2e !important;
+  accent-color: #8a6324;
+  color: #c9a44d;
+}
+
+.admin-north-star-shell .estimate-north-star-ledger input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
+}
+
+.admin-north-star-shell .estimate-north-star-mobile-list li {
+  background-color: #fbf7ef;
+}
+
+.admin-north-star-shell .estimate-north-star-mobile-list li:hover {
+  background-color: #f3ebdd;
+}
+
+.admin-north-star-shell .estimate-north-star-mobile-list .estimate-north-star-row-selected {
+  background-color: rgb(201 164 77 / 0.12) !important;
+  box-shadow: inset 3px 0 0 0 #c9a44d;
+}
+
 /* North Star Customer 360 detail — moon graphite frame + premium hero + ivory sections (M3B) */
 .north-star-detail-page-canvas {
   position: relative;
@@ -864,6 +1196,113 @@ a[href] {
 
 .admin-north-star-shell .north-star-detail-section-nav {
   border-bottom: 1px solid rgb(138 99 36 / 0.1);
+}
+
+/* North Star Estimate detail document — ivory quote surface + warm ledger table (M5C) */
+.estimate-north-star-document .invoice-company-hero {
+  border-color: rgb(138 99 36 / 0.22);
+}
+
+.estimate-north-star-document .invoice-company-hero h1,
+.estimate-north-star-document .invoice-company-hero .text-slate-900 {
+  color: #17130e;
+}
+
+.estimate-north-star-document .invoice-company-hero .text-slate-500,
+.estimate-north-star-document .invoice-company-hero .text-slate-600 {
+  color: #6b6255;
+}
+
+.estimate-north-star-document .invoice-company-hero .border-slate-900,
+.estimate-north-star-document .invoice-company-hero .border-l-slate-900 {
+  border-color: rgb(138 99 36 / 0.35);
+}
+
+.estimate-north-star-line-items table thead tr {
+  border-bottom: 2px solid rgb(138 99 36 / 0.22);
+  background-color: #efe4cb;
+}
+
+.estimate-north-star-line-items table thead th {
+  color: #4f4638;
+}
+
+.estimate-north-star-line-items table tbody tr {
+  border-bottom: 1px solid rgb(138 99 36 / 0.12);
+  background-color: #fbf7ef;
+}
+
+.estimate-north-star-line-items table tbody tr:hover {
+  background-color: #f3ebdd;
+}
+
+.estimate-north-star-line-items table tbody td {
+  color: #4f4638;
+}
+
+.estimate-north-star-line-items table tbody td .font-semibold,
+.estimate-north-star-line-items table tbody td .font-medium {
+  color: #17130e;
+}
+
+.estimate-north-star-line-items .rounded-lg.border-slate-200 {
+  border-color: rgb(138 99 36 / 0.12);
+  background-color: #fff9ea;
+}
+
+.north-star-estimate-overlay-body .north-star-detail-section,
+.north-star-estimate-overlay-body .north-star-detail-section-surface {
+  border: 1px solid rgb(138 99 36 / 0.12);
+  background-color: var(--north-star-ivory);
+  box-shadow:
+    0 8px 28px -12px rgb(3 7 12 / 0.32),
+    inset 0 1px 0 rgb(255 255 255 / 0.45);
+}
+
+/* North Star estimate document — compact company header */
+.estimate-north-star-document .invoice-company-hero {
+  padding-bottom: 0.75rem;
+}
+
+/* Wet signature + print-only footer: never on screen, only in print/PDF */
+.estimate-print-signature,
+.estimate-print-only-block {
+  display: none !important;
+}
+
+@media (min-width: 640px) {
+  .estimate-north-star-document .invoice-company-hero {
+    padding-bottom: 1rem;
+  }
+}
+
+.estimate-north-star-document .invoice-company-hero .flex.flex-col {
+  gap: 1rem;
+}
+
+.estimate-north-star-document .estimate-document-meta {
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .estimate-north-star-document .estimate-document-meta {
+    padding: 0;
+  }
+}
+
+.estimate-north-star-document .border-t.border-slate-200.pt-8 {
+  padding-top: 1rem;
+  margin-top: 0.75rem;
+}
+
+.estimate-north-star-document .border-t.border-slate-200.pt-8 > .rounded-xl {
+  padding: 0.75rem 0;
+}
+
+.admin-north-star-shell .north-star-estimate-sticky-footer,
+.north-star-estimate-overlay-body .north-star-estimate-sticky-footer {
+  border-top: 1px solid rgb(138 99 36 / 0.14);
+  background-color: #efe4cb;
 }
 
 /* North Star Customers loading skeleton — warm ledger pulse */
@@ -1878,7 +2317,8 @@ a[href] {
 
 @media print {
   @page {
-    margin: 0.75in;
+    size: letter;
+    margin: 0.35in;
   }
 
   body {
@@ -1890,15 +2330,23 @@ a[href] {
   main {
     overflow: visible !important;
     padding: 0 !important;
+    min-height: auto !important;
   }
 
   .no-print,
   .admin-sticky-footer,
-  .admin-sticky-footer-spacer {
+  .admin-sticky-footer-spacer,
+  .estimate-customer-actions,
+  [data-estimate-customer-actions] {
     display: none !important;
   }
 
   .print-only {
+    display: block !important;
+  }
+
+  .estimate-print-signature,
+  .estimate-print-only-block {
     display: block !important;
   }
 
@@ -1971,7 +2419,16 @@ a[href] {
     break-inside: avoid;
   }
 
-  /* Estimate document: preserve total hero hierarchy on print */
+  /* Estimate document: compact print layout for one-page simple quotes */
+  #estimate-document {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    min-height: auto !important;
+    box-shadow: none !important;
+    font-size: 0.8125rem !important;
+  }
+
   #estimate-document .estimate-total-hero {
     background-color: #ffffff !important;
     color: #0f172a !important;
@@ -1988,10 +2445,132 @@ a[href] {
     font-weight: 700 !important;
   }
 
-  #estimate-document .invoice-company-hero,
-  #estimate-document .estimate-identity-card,
-  #estimate-document .invoice-notes-block,
-  #estimate-document .estimate-thank-you-footer {
+  #estimate-document .invoice-company-hero {
+    padding-bottom: 0.375rem !important;
     break-inside: avoid;
+  }
+
+  #estimate-document .invoice-company-hero h1 {
+    font-size: 1.25rem !important;
+    margin-top: 0.125rem !important;
+  }
+
+  #estimate-document .estimate-document-meta,
+  #estimate-document .invoice-notes-block,
+  #estimate-document .estimate-thank-you-footer,
+  #estimate-document .estimate-signature-block {
+    break-inside: avoid;
+  }
+
+  #estimate-document .estimate-signature-block .border-t {
+    margin-top: 0.25rem !important;
+    padding-top: 0.25rem !important;
+  }
+
+  #estimate-document .estimate-signature-block h3 {
+    font-size: 0.625rem !important;
+  }
+
+  #estimate-document .estimate-signature-block p {
+    font-size: 0.625rem !important;
+    line-height: 1.35 !important;
+  }
+
+  #estimate-document .estimate-line-items,
+  #estimate-document .estimate-totals-block {
+    break-inside: avoid;
+  }
+
+  #estimate-document .estimate-document-footer-anchor,
+  #estimate-document .estimate-thank-you-footer {
+    margin-top: 0.375rem !important;
+    padding-top: 0.375rem !important;
+  }
+
+  #estimate-document .estimate-thank-you-footer p {
+    font-size: 0.6875rem !important;
+    line-height: 1.35 !important;
+  }
+
+  #estimate-document table tbody tr {
+    break-inside: avoid;
+  }
+
+  /* Hide admin shell chrome when printing estimate detail */
+  .admin-north-star-shell > aside[aria-label="Desktop navigation"],
+  button[aria-label="Send feedback"],
+  .north-star-detail-hero,
+  .north-star-estimate-mobile-total {
+    display: none !important;
+  }
+
+  .north-star-detail-page-canvas,
+  .north-star-estimate-overlay-body,
+  .admin-north-star-shell .admin-shell-main {
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    min-height: auto !important;
+  }
+
+  /* North Star estimate document print refinements */
+  #estimate-document.estimate-north-star-document {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  #estimate-document.estimate-north-star-document .invoice-company-hero {
+    padding-bottom: 0.375rem !important;
+    break-inside: avoid;
+  }
+
+  #estimate-document.estimate-north-star-document .invoice-company-hero h1 {
+    font-size: 1.25rem !important;
+    margin-top: 0.125rem !important;
+  }
+
+  #estimate-document.estimate-north-star-document .estimate-document-meta {
+    break-inside: avoid;
+  }
+
+  #estimate-document.estimate-north-star-document .estimate-document-meta > p:first-child {
+    font-size: 0.875rem !important;
+  }
+
+  #estimate-document.estimate-north-star-document .estimate-total-hero {
+    break-inside: avoid;
+    padding-top: 0.125rem !important;
+    padding-bottom: 0.125rem !important;
+  }
+
+  #estimate-document.estimate-north-star-document table tbody tr,
+  #estimate-document.estimate-north-star-document .estimate-north-star-line-items table tbody tr {
+    break-inside: avoid;
+  }
+
+  #estimate-document.estimate-north-star-document .rounded-lg.border,
+  #estimate-document.estimate-north-star-document [class*="documentTotals"] {
+    break-inside: avoid;
+  }
+
+  #estimate-document.estimate-north-star-document .border-t.border-slate-200 {
+    break-inside: avoid;
+    padding-top: 0.5rem !important;
+    margin-top: 0.375rem !important;
+  }
+
+  #estimate-document.estimate-north-star-document .estimate-document-footer-anchor,
+  #estimate-document.estimate-north-star-document .estimate-thank-you-footer {
+    margin-top: 0.375rem !important;
+    padding-top: 0.375rem !important;
+  }
+
+  #estimate-document.estimate-north-star-document .estimate-thank-you-footer p {
+    font-size: 0.6875rem !important;
+    line-height: 1.35 !important;
   }
 }
