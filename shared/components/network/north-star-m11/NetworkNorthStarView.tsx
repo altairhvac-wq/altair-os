@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
-import { Eye, EyeOff, Network, Search, UserMinus, UserPlus } from "lucide-react";
+import { Eye, EyeOff, Search, UserMinus, UserPlus } from "lucide-react";
 import {
   addToMyNetworkAction,
   removeFromMyNetworkAction,
@@ -13,22 +12,13 @@ import { toggleOwnNetworkProfileVisibilityAction } from "@/app/actions/network-r
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import {
   MasterContentStack,
-  MasterPageCanvas,
   MasterPageHeader,
-  MasterPageSection,
-  MasterPageSurface,
   MasterShellPage,
-  adminSegmentedControlClass,
-  adminSegmentedItemActiveClass,
-  adminSegmentedItemClass,
-  adminPanelActionClass,
   masterListPageScrollRegionClass,
-  masterPanelHeaderClass,
-  masterSecondaryActionClass,
 } from "@/shared/design-system/shell";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { buildNetworkReferralSummaryMetrics } from "@/shared/lib/network/network-referral-metrics";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
-import { adminFormInputClass } from "@/shared/lib/admin-density";
 import {
   DIRECTORY_FILTER_OPTIONS,
   enrichMyNetworkPartners,
@@ -51,16 +41,16 @@ import {
   type NetworkInvite,
   type NetworkInvitationsTab,
 } from "@/shared/types/network-invite";
-import { IncomingNetworkInvitesCard } from "./IncomingNetworkInvitesCard";
-import { NetworkDirectoryCard } from "./NetworkDirectoryCard";
-import { NetworkInviteForm } from "./NetworkInviteForm";
-import { NetworkInvitationCard } from "./NetworkInvitationCard";
-import { NetworkInvitedByBanner } from "./NetworkInvitedByBanner";
-import { NetworkProfileDetailPanel } from "./NetworkProfileDetailPanel";
-import { NetworkReferralCard } from "./NetworkReferralCard";
-import { NetworkReferralSummaryCards } from "./NetworkReferralSummaryCards";
-import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
-import { NetworkNorthStarView } from "./north-star-m11";
+import { IncomingNetworkInvitesCard } from "../IncomingNetworkInvitesCard";
+import { NetworkDirectoryCard } from "../NetworkDirectoryCard";
+import { NetworkInviteForm } from "../NetworkInviteForm";
+import { NetworkInvitationCard } from "../NetworkInvitationCard";
+import { NetworkInvitedByBanner } from "../NetworkInvitedByBanner";
+import { NetworkProfileDetailPanel } from "../NetworkProfileDetailPanel";
+import { NetworkReferralCard } from "../NetworkReferralCard";
+import { NetworkReferralSummaryCards } from "../NetworkReferralSummaryCards";
+import { NetworkTrustedBadge } from "../NetworkTrustedBadge";
+import { st } from "./network-north-star-styles";
 
 type ProfilePanelMode = "detail" | "referral" | "empty";
 
@@ -70,7 +60,7 @@ type NetworkActionTarget = {
   action: "add" | "remove";
 };
 
-type NetworkReferralsPageViewProps = {
+export type NetworkNorthStarViewProps = {
   initialProfiles: NetworkProfile[];
   initialOwnProfile: NetworkProfile | null;
   initialSentReferrals: NetworkReferral[];
@@ -101,15 +91,7 @@ function sortProfilesWithTrustedFirst(
   });
 }
 
-export function NetworkReferralsPageView(props: NetworkReferralsPageViewProps) {
-  if (isNorthStarShellEnabled()) {
-    return <NetworkNorthStarView {...props} />;
-  }
-
-  return <NetworkReferralsPageLegacyView {...props} />;
-}
-
-function NetworkReferralsPageLegacyView({
+export function NetworkNorthStarView({
   initialProfiles,
   initialOwnProfile,
   initialSentReferrals,
@@ -122,7 +104,7 @@ function NetworkReferralsPageLegacyView({
   canSendReferral,
   canManageNetwork,
   canManageReceivedReferrals,
-}: NetworkReferralsPageViewProps) {
+}: NetworkNorthStarViewProps) {
   const router = useRouter();
   const timeZone = useCompanyTimezone();
   const [activeTab, setActiveTab] = useState<NetworkReferralsTab>("directory");
@@ -444,6 +426,7 @@ function NetworkReferralsPageLegacyView({
           }
           isNetworkActionPending={isNetworkActionPendingForProfile(profile.id)}
           networkActionError={getNetworkActionErrorForProfile(profile.id)}
+          surface="north-star"
         />
       );
     }
@@ -451,23 +434,21 @@ function NetworkReferralsPageLegacyView({
     return (
       <article
         key={partner.id}
-        className="rounded-xl border border-emerald-200 bg-emerald-50/30 p-4"
+        className={st.cardShellTrusted}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="truncate text-sm font-bold text-slate-900">
-                {displayName}
-              </p>
-              <NetworkTrustedBadge />
+              <p className={st.cardPrimary}>{displayName}</p>
+              <NetworkTrustedBadge surface="north-star" />
             </div>
-            <p className="mt-1 text-xs text-slate-600">{partner.tradeType}</p>
+            <p className={`mt-1 ${st.cardSecondary}`}>{partner.tradeType}</p>
             {partner.city || partner.state ? (
-              <p className="mt-1 text-xs text-slate-500">
+              <p className={`mt-1 ${st.cardMuted}`}>
                 {[partner.city, partner.state].filter(Boolean).join(", ")}
               </p>
             ) : null}
-            <p className="mt-2 text-xs text-slate-500">
+            <p className={`mt-2 ${st.cardMuted}`}>
               Profile is hidden from the directory. Referrals resume when they
               make their profile visible again.
             </p>
@@ -480,7 +461,7 @@ function NetworkReferralsPageLegacyView({
                 handleRemoveFromNetwork(partner.linkedCompanyId)
               }
               disabled={isNetworkActionPendingForCompany(partner.linkedCompanyId ?? "")}
-              className={`${adminPanelActionClass} disabled:cursor-not-allowed`}
+              className={`${st.panelAction} disabled:cursor-not-allowed`}
             >
               <UserMinus className="h-3.5 w-3.5" />
               {isNetworkActionPendingForCompany(partner.linkedCompanyId ?? "")
@@ -498,143 +479,170 @@ function NetworkReferralsPageLegacyView({
   }
 
   return (
-    <MasterShellPage fillViewport density="compact">
-      <MasterPageCanvas width="wide" className="min-h-0 flex-1">
-        <MasterContentStack density="compact" className="shrink-0">
-          <MasterPageHeader
-            eyebrow="Altair Network"
-            title="Send and receive trusted trade referrals."
-            subtitle="Build trusted partner relationships, pass overflow work, and keep every opportunity inside Altair."
-            density="compact"
-            secondaryAction={
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white">
-                <Network className="h-5 w-5" />
-              </div>
-            }
-          />
-
-          {ownProfile && canSendReferral ? (
-            <MasterPageSurface
-              variant="section"
-              className="flex flex-wrap items-center justify-between gap-3 !rounded-2xl !p-4"
+    <MasterShellPage fillViewport density="compact" className={st.pageCanvas}>
+      <MasterPageHeader
+        eyebrow="Partner command"
+        title="Network"
+        subtitle="Trusted partners, referral handoffs, and invitations in one operational view."
+        density="compact"
+        surfaceVariant="northStar"
+        className={`north-star-network-page-header ${st.pageHeader}`}
+        eyebrowClassName={st.pageHeaderEyebrow}
+        titleClassName={st.pageHeaderTitle}
+        subtitleClassName={st.pageHeaderSubtitle}
+        primaryAction={
+          canManageNetwork ? (
+            <button
+              type="button"
+              onClick={handleOpenInviteForm}
+              className={`north-star-network-primary-action ${st.primaryAction}`}
             >
-              <div>
-                <p className="text-sm font-semibold text-slate-900">
-                  Your network profile
-                </p>
-                <p className="text-xs text-slate-500">
-                  {ownProfile.isVisible
-                    ? "Visible in the directory for trusted referrals."
-                    : "Hidden from the directory. Turn on visibility to receive referrals."}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleToggleVisibility}
-                disabled={isVisibilityPending}
-                className={`${masterSecondaryActionClass} disabled:opacity-60`}
-              >
-                {ownProfile.isVisible ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-                {ownProfile.isVisible ? "Hide profile" : "Make profile visible"}
-              </button>
-            </MasterPageSurface>
-          ) : null}
+              <UserPlus className="h-4 w-4" />
+              Invite company
+            </button>
+          ) : undefined
+        }
+      />
 
-          {visibilityError ? (
-            <p className="text-sm text-rose-700">{visibilityError}</p>
-          ) : null}
+      <MasterContentStack density="compact" className={st.workspaceStack}>
+        {ownProfile && canSendReferral ? (
+          <div className={st.profileVisibilityStrip}>
+            <div>
+              <p className={st.sectionTitle}>Your network profile</p>
+              <p className={st.sectionSubtitle}>
+                {ownProfile.isVisible
+                  ? "Visible in the directory for trusted referrals."
+                  : "Hidden from the directory. Turn on visibility to receive referrals."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleToggleVisibility}
+              disabled={isVisibilityPending}
+              className={`${st.secondaryAction} disabled:opacity-60`}
+            >
+              {ownProfile.isVisible ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+              {ownProfile.isVisible ? "Hide profile" : "Make profile visible"}
+            </button>
+          </div>
+        ) : null}
 
-          {invitedByCompanyName ? (
-            <NetworkInvitedByBanner
-              sourceCompanyName={invitedByCompanyName}
-              companyId={companyId}
-            />
-          ) : null}
+        {visibilityError ? (
+          <p className={st.errorBanner}>{visibilityError}</p>
+        ) : null}
 
-          {incomingNetworkInvites.length > 0 ? (
-            <IncomingNetworkInvitesCard
-              invites={incomingNetworkInvites}
-              canAccept={canManageNetwork}
-              timeZone={timeZone}
-              variant={incomingNetworkInvites.length === 1 ? "banner" : "section"}
-            />
-          ) : null}
+        {invitedByCompanyName ? (
+          <NetworkInvitedByBanner
+            sourceCompanyName={invitedByCompanyName}
+            companyId={companyId}
+            surface="north-star"
+          />
+        ) : null}
 
-          {canSendReferral || canManageReceivedReferrals ? (
-            <MasterContentStack density="compact">
-              {canSendReferral ? (
-                <MasterPageSection title="Sent referrals">
+        {incomingNetworkInvites.length > 0 ? (
+          <IncomingNetworkInvitesCard
+            invites={incomingNetworkInvites}
+            canAccept={canManageNetwork}
+            timeZone={timeZone}
+            variant={incomingNetworkInvites.length === 1 ? "banner" : "section"}
+            surface="north-star"
+          />
+        ) : null}
+
+        {canSendReferral || canManageReceivedReferrals ? (
+          <div className="space-y-3">
+            {canSendReferral ? (
+              <div className={`${st.sectionSurface} overflow-hidden`}>
+                <div className={st.panelHeader}>
+                  <p className={st.sectionEyebrow}>Outbound</p>
+                  <h2 className={st.sectionTitle}>Sent referrals</h2>
+                  <p className={st.sectionSubtitle}>
+                    Track referrals awaiting partner response and closed outcomes.
+                  </p>
+                </div>
+                <div className="p-3 sm:p-4 lg:px-5">
                   <NetworkReferralSummaryCards
                     direction="sent"
                     metrics={sentReferralMetrics}
+                    surface="north-star"
                   />
-                </MasterPageSection>
-              ) : null}
-              {canManageReceivedReferrals ? (
-                <MasterPageSection title="Received referrals">
+                </div>
+              </div>
+            ) : null}
+            {canManageReceivedReferrals ? (
+              <div className={`${st.sectionSurface} overflow-hidden`}>
+                <div className={st.panelHeader}>
+                  <p className={st.sectionEyebrow}>Inbound</p>
+                  <h2 className={st.sectionTitle}>Received referrals</h2>
+                  <p className={st.sectionSubtitle}>
+                    Partner leads waiting for your response or already in pipeline.
+                  </p>
+                </div>
+                <div className="p-3 sm:p-4 lg:px-5">
                   <NetworkReferralSummaryCards
                     direction="received"
                     metrics={receivedReferralMetrics}
+                    surface="north-star"
                   />
-                </MasterPageSection>
-              ) : null}
-            </MasterContentStack>
-          ) : null}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
-          <nav
-            className={`${adminSegmentedControlClass} overflow-x-auto rounded-xl p-1`}
-            aria-label="Network sections"
-          >
-            {NETWORK_REFERRALS_TAB_OPTIONS.map((tab) => (
-              <button
-                key={tab.value}
-                type="button"
-                aria-pressed={activeTab === tab.value}
-                onClick={() => handleTabChange(tab.value)}
-                className={`${adminSegmentedItemClass} shrink-0 px-4 py-2 ${
-                  activeTab === tab.value ? adminSegmentedItemActiveClass : ""
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
+        <div className={`${st.sectionSurface} overflow-hidden`}>
+          <div className={st.tabBand}>
+            <nav
+              className={`${st.tabControl} overflow-x-auto`}
+              aria-label="Network sections"
+            >
+              {NETWORK_REFERRALS_TAB_OPTIONS.map((tab) => (
+                <button
+                  key={tab.value}
+                  type="button"
+                  aria-pressed={activeTab === tab.value}
+                  onClick={() => handleTabChange(tab.value)}
+                  className={`${st.tabItem} shrink-0 px-3 sm:px-4 ${
+                    activeTab === tab.value ? st.tabItemActive : ""
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
 
           {networkActionError && !networkActionErrorProfileId ? (
-            <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-              {networkActionError}
-            </p>
+            <div className="px-3 pt-3 sm:px-4 lg:px-5">
+              <p className={st.errorBanner}>{networkActionError}</p>
+            </div>
           ) : null}
-        </MasterContentStack>
 
-        <MasterContentStack density="compact" scrollable className="min-h-0 lg:flex-1">
-
+          <div className="min-h-0 p-3 sm:p-4 lg:px-5 lg:pb-5">
       {activeTab === "directory" ? (
-        <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-1 lg:flex-row lg:overflow-hidden">
-          <MasterPageSurface
-            variant="card"
-            className={`${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden`}
+        <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-row lg:overflow-hidden">
+          <div
+            className={`${st.sectionSurface} ${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-[24rem] lg:flex-1 lg:overflow-hidden`}
           >
-            <div className={masterPanelHeaderClass}>
+            <div className={st.panelHeader}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">Directory</h2>
-                  <p className="text-xs text-slate-500">
+                  <p className={st.sectionEyebrow}>Discover</p>
+                  <h2 className={st.sectionTitle}>Directory</h2>
+                  <p className={st.sectionSubtitle}>
                     Visible trade companies in the Altair Network
                   </p>
                 </div>
-                <p className="text-xs font-medium text-slate-500">
-                  {filteredProfiles.length} companies
-                </p>
+                <p className={st.countMeta}>{filteredProfiles.length} companies</p>
               </div>
 
               {canManageNetwork ? (
                 <div
-                  className={`${adminSegmentedControlClass} mt-3`}
+                  className={`${st.filterControl} mt-3`}
                   aria-label="Directory filter"
                 >
                   {DIRECTORY_FILTER_OPTIONS.map((option) => (
@@ -643,10 +651,8 @@ function NetworkReferralsPageLegacyView({
                       type="button"
                       aria-pressed={directoryFilter === option.value}
                       onClick={() => setDirectoryFilter(option.value)}
-                      className={`${adminSegmentedItemClass} px-3 py-2 text-xs ${
-                        directoryFilter === option.value
-                          ? adminSegmentedItemActiveClass
-                          : ""
+                      className={`${st.filterItem} px-3 py-2 text-xs ${
+                        directoryFilter === option.value ? st.filterItemActive : ""
                       }`}
                     >
                       {option.label}
@@ -656,27 +662,29 @@ function NetworkReferralsPageLegacyView({
               ) : null}
 
               <div className="relative mt-3">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search
+                  className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${lt.filterIcon}`}
+                />
                 <input
                   type="search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search companies, trades, or locations"
                   aria-label="Search network directory"
-                  className={`${adminFormInputClass} rounded-xl py-2.5 pl-9 pr-3 sm:text-base`}
+                  className={`${st.searchInput} py-2.5 pl-9 pr-3 sm:text-base`}
                 />
               </div>
             </div>
 
             <div className={`@container p-4 ${masterListPageScrollRegionClass}`}>
               {filteredProfiles.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-10 text-center">
-                  <p className="text-sm font-medium text-slate-700">
+                <div className={`${st.emptyState} px-4 py-10 text-center`}>
+                  <p className={st.emptyTitle}>
                     {directoryFilter === "my-network"
                       ? "No trusted partners in your network yet"
                       : "No visible network profiles yet"}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className={st.emptyDescription}>
                     {directoryFilter === "my-network"
                       ? MY_NETWORK_EMPTY_MESSAGE
                       : "Partner companies appear here when they make their profile visible in the network."}
@@ -722,13 +730,14 @@ function NetworkReferralsPageLegacyView({
                         networkActionError={getNetworkActionErrorForProfile(
                           profile.id,
                         )}
+                        surface="north-star"
                       />
                     );
                   })}
                 </div>
               )}
             </div>
-          </MasterPageSurface>
+          </div>
 
           <NetworkProfileDetailPanel
             mode={panelMode}
@@ -771,23 +780,22 @@ function NetworkReferralsPageLegacyView({
             }}
             onReferralSuccess={handleReferralSuccess}
             onReferralCancel={() => setPanelMode("detail")}
+            surface="north-star"
           />
         </div>
       ) : null}
 
       {activeTab === "my-network" ? (
-        <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-1 lg:flex-row lg:overflow-hidden">
-          <MasterPageSurface
-            variant="card"
-            className="flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden"
+        <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-row lg:overflow-hidden">
+          <div
+            className={`${st.sectionSurface} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-[24rem] lg:flex-1 lg:overflow-hidden`}
           >
-            <div className={masterPanelHeaderClass}>
+            <div className={st.panelHeader}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">
-                    Trusted Partners
-                  </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className={st.sectionEyebrow}>Trusted roster</p>
+                  <h2 className={st.sectionTitle}>My Network</h2>
+                  <p className={st.sectionSubtitle}>
                     Companies in your private network for quick referrals
                   </p>
                 </div>
@@ -796,32 +804,26 @@ function NetworkReferralsPageLegacyView({
                     <button
                       type="button"
                       onClick={handleOpenInviteForm}
-                      className={masterSecondaryActionClass}
+                      className={st.secondaryAction}
                     >
                       <UserPlus className="h-4 w-4" />
                       Invite company
                     </button>
                   ) : null}
-                  <p className="text-xs font-medium text-slate-500">
-                    {myNetworkEntries.length} partners
-                  </p>
+                  <p className={st.countMeta}>{myNetworkEntries.length} partners</p>
                 </div>
               </div>
             </div>
 
             <div className={`@container p-4 ${masterListPageScrollRegionClass}`}>
               {!canManageNetwork ? (
-                <p className="text-sm text-slate-600">
+                <p className={st.permissionCopy}>
                   Trusted partners are managed by company owners and admins.
                 </p>
               ) : myNetworkEntries.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-10 text-center">
-                  <p className="text-sm font-medium text-slate-700">
-                    No trusted partners yet
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {MY_NETWORK_EMPTY_MESSAGE}
-                  </p>
+                <div className={`${st.emptyState} px-4 py-10 text-center`}>
+                  <p className={st.emptyTitle}>No trusted partners yet</p>
+                  <p className={st.emptyDescription}>{MY_NETWORK_EMPTY_MESSAGE}</p>
                 </div>
               ) : (
                 <div className="grid min-w-0 grid-cols-1 gap-4 @xl:grid-cols-2">
@@ -829,7 +831,7 @@ function NetworkReferralsPageLegacyView({
                 </div>
               )}
             </div>
-          </MasterPageSurface>
+          </div>
 
           <NetworkProfileDetailPanel
             mode={panelMode}
@@ -872,29 +874,25 @@ function NetworkReferralsPageLegacyView({
             }}
             onReferralSuccess={handleReferralSuccess}
             onReferralCancel={() => setPanelMode("detail")}
+            surface="north-star"
           />
         </div>
       ) : null}
 
       {activeTab === "invitations" ? (
-        <MasterPageSurface
-          variant="card"
-          className="min-h-0 flex-1 overflow-y-auto p-4"
-        >
+        <div className={`${st.sectionSurface} min-h-0 overflow-y-auto p-4`}>
           {!canManageNetwork ? (
-            <p className="text-sm text-slate-600">
+            <p className={st.permissionCopy}>
               Network invitations are managed by company owners and admins.
             </p>
           ) : (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-5 text-white">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
-                  Grow your network
-                </p>
-                <h2 className="mt-1 text-lg font-bold">
+              <div className={st.inviteHero}>
+                <p className={st.inviteHeroEyebrow}>Grow your network</p>
+                <h2 className={st.inviteHeroTitle}>
                   Invite trusted contractors to join Altair
                 </h2>
-                <p className="mt-2 max-w-3xl text-sm text-slate-200">
+                <p className={st.inviteHeroBody}>
                   Invite trusted contractors to join Altair and build referral
                   relationships that work directly inside your operating system.
                 </p>
@@ -902,7 +900,7 @@ function NetworkReferralsPageLegacyView({
                   <button
                     type="button"
                     onClick={() => setShowInviteForm(true)}
-                    className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+                    className={`mt-4 ${st.primaryAction}`}
                   >
                     <UserPlus className="h-4 w-4" />
                     Invite company
@@ -911,11 +909,9 @@ function NetworkReferralsPageLegacyView({
               </div>
 
               {showInviteForm ? (
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Invite a company
-                  </h3>
-                  <p className="mt-1 text-xs text-slate-500">
+                <div className={st.inviteFormShell}>
+                  <h3 className={st.sectionTitle}>Invite a company</h3>
+                  <p className={st.sectionSubtitle}>
                     They&apos;ll receive a signup link and become a trusted partner
                     when they join.
                   </p>
@@ -923,40 +919,36 @@ function NetworkReferralsPageLegacyView({
                     <NetworkInviteForm
                       onSuccess={handleInviteSuccess}
                       onCancel={() => setShowInviteForm(false)}
+                      surface="north-star"
                     />
                   </div>
                 </div>
               ) : null}
 
               {latestInviteUrl ? (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3">
-                  <p className="text-sm font-semibold text-emerald-900">
+                <div className={st.inviteSuccessBanner}>
+                  <p className="text-sm font-semibold text-[#166534]">
                     Invitation created
                   </p>
-                  <p className="mt-1 break-all text-xs text-emerald-800">
+                  <p className="mt-1 break-all text-xs text-[#4F4638]">
                     {latestInviteUrl}
                   </p>
-                  <p className="mt-1 text-xs text-emerald-700">
+                  <p className="mt-1 text-xs text-[#6B6255]">
                     Copy this link from the invitation card below anytime.
                   </p>
                 </div>
               ) : null}
 
               <div>
-                <div
-                  className={adminSegmentedControlClass}
-                  aria-label="Invitation status filter"
-                >
+                <div className={st.filterControl} aria-label="Invitation status filter">
                   {NETWORK_INVITATIONS_TAB_OPTIONS.map((option) => (
                     <button
                       key={option.value}
                       type="button"
                       aria-pressed={invitationsTab === option.value}
                       onClick={() => setInvitationsTab(option.value)}
-                      className={`${adminSegmentedItemClass} px-3 py-2 text-xs ${
-                        invitationsTab === option.value
-                          ? adminSegmentedItemActiveClass
-                          : ""
+                      className={`${st.filterItem} px-3 py-2 text-xs ${
+                        invitationsTab === option.value ? st.filterItemActive : ""
                       }`}
                     >
                       {option.label}
@@ -966,11 +958,11 @@ function NetworkReferralsPageLegacyView({
 
                 <div className="mt-4 grid gap-4 lg:grid-cols-2">
                   {filteredInvites.length === 0 ? (
-                    <div className="col-span-full rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-10 text-center">
-                      <p className="text-sm font-medium text-slate-700">
+                    <div className={`col-span-full ${st.emptyState} px-4 py-10 text-center`}>
+                      <p className={st.emptyTitle}>
                         {invitationsEmptyCopy[invitationsTab].title}
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className={st.emptyDescription}>
                         {invitationsEmptyCopy[invitationsTab].description}
                       </p>
                     </div>
@@ -985,6 +977,7 @@ function NetworkReferralsPageLegacyView({
                             ? (latestInviteUrl ?? undefined)
                             : undefined
                         }
+                        surface="north-star"
                       />
                     ))
                   )}
@@ -992,22 +985,19 @@ function NetworkReferralsPageLegacyView({
               </div>
             </div>
           )}
-        </MasterPageSurface>
+        </div>
       ) : null}
 
       {activeTab === "sent-referrals" ? (
-        <MasterPageSurface
-          variant="card"
-          className="min-h-0 flex-1 overflow-y-auto p-4"
-        >
+        <div className={`${st.sectionSurface} min-h-0 overflow-y-auto p-4`}>
           {!canSendReferral ? (
-            <p className="text-sm text-slate-600">
+            <p className={st.permissionCopy}>
               Sent referrals are visible to company owners and admins.
             </p>
           ) : sentReferrals.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-10 text-center">
-              <p className="text-sm font-medium text-slate-700">No sent referrals yet</p>
-              <p className="mt-1 text-xs text-slate-500">
+            <div className={`${st.emptyState} px-4 py-10 text-center`}>
+              <p className={st.emptyTitle}>No sent referrals yet</p>
+              <p className={st.emptyDescription}>
                 Send your first referral from the directory.
               </p>
             </div>
@@ -1026,28 +1016,24 @@ function NetworkReferralsPageLegacyView({
                       ),
                     )
                   }
+                  surface="north-star"
                 />
               ))}
             </div>
           )}
-        </MasterPageSurface>
+        </div>
       ) : null}
 
       {activeTab === "received-referrals" ? (
-        <MasterPageSurface
-          variant="card"
-          className="min-h-0 flex-1 overflow-y-auto p-4"
-        >
+        <div className={`${st.sectionSurface} min-h-0 overflow-y-auto p-4`}>
           {!canManageReceivedReferrals ? (
-            <p className="text-sm text-slate-600">
+            <p className={st.permissionCopy}>
               Received referrals are visible to lead management roles.
             </p>
           ) : receivedReferrals.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-10 text-center">
-              <p className="text-sm font-medium text-slate-700">
-                No received referrals yet
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
+            <div className={`${st.emptyState} px-4 py-10 text-center`}>
+              <p className={st.emptyTitle}>No received referrals yet</p>
+              <p className={st.emptyDescription}>
                 Referred leads appear here when partner companies send work your way.
               </p>
             </div>
@@ -1066,14 +1052,16 @@ function NetworkReferralsPageLegacyView({
                       ),
                     )
                   }
+                  surface="north-star"
                 />
               ))}
             </div>
           )}
-        </MasterPageSurface>
+        </div>
       ) : null}
-        </MasterContentStack>
-      </MasterPageCanvas>
+          </div>
+        </div>
+      </MasterContentStack>
     </MasterShellPage>
   );
 }

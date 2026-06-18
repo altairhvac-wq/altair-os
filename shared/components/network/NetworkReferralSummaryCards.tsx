@@ -18,6 +18,7 @@ import { formatPercent } from "@/shared/types/analytics";
 type NetworkReferralSummaryCardsProps = {
   metrics: NetworkReferralSummaryMetrics;
   direction: "sent" | "received";
+  surface?: "legacy" | "north-star";
 };
 
 function formatRate(value: number | null): string {
@@ -27,6 +28,7 @@ function formatRate(value: number | null): string {
 export function NetworkReferralSummaryCards({
   metrics,
   direction,
+  surface = "legacy",
 }: NetworkReferralSummaryCardsProps) {
   const pendingLabel = direction === "sent" ? "Sent" : "Received";
   const pendingMobileLabel = direction === "sent" ? "Sent" : "Recv";
@@ -99,6 +101,10 @@ export function NetworkReferralSummaryCards({
   ];
 
   return (
-    <PageSummaryStrip cards={cards} lgColumnsClass="lg:grid-cols-4 xl:grid-cols-7" />
+    <PageSummaryStrip
+      cards={cards}
+      lgColumnsClass="lg:grid-cols-4 xl:grid-cols-7"
+      northStar={surface === "north-star"}
+    />
   );
 }

@@ -11,11 +11,13 @@ import {
   type NetworkReferral,
   type NetworkReferralFormData,
 } from "@/shared/types/network-referral";
+import { st, type NetworkSurface } from "./north-star-m11/network-north-star-styles";
 
 type SendReferralFormProps = {
   targetProfile: NetworkProfile;
   onSuccess: (referral: NetworkReferral) => void;
   onCancel: () => void;
+  surface?: NetworkSurface;
 };
 
 const DEFAULT_FORM: NetworkReferralFormData = {
@@ -39,7 +41,40 @@ export function SendReferralForm({
   targetProfile,
   onSuccess,
   onCancel,
+  surface = "legacy",
 }: SendReferralFormProps) {
+  const isNorthStar = surface === "north-star";
+  const inputClass = isNorthStar ? st.formInput : inputClassName;
+  const labelClass = isNorthStar ? st.formLabel : "text-xs font-semibold text-slate-700";
+  const sectionTitleClass = isNorthStar
+    ? "text-sm font-bold text-[#17130E]"
+    : "text-sm font-bold text-slate-900";
+  const sectionSubtitleClass = isNorthStar
+    ? "text-xs text-[#6B6255]"
+    : "text-xs text-slate-500";
+  const receiverCardClass = isNorthStar
+    ? "rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-4"
+    : "rounded-2xl border border-slate-200 bg-white p-4";
+  const receiverLabelClass = isNorthStar
+    ? "text-xs font-semibold uppercase tracking-wide text-[#6B6255]"
+    : "text-xs font-semibold uppercase tracking-wide text-slate-500";
+  const receiverNameClass = isNorthStar
+    ? "mt-1 text-sm font-semibold text-[#17130E]"
+    : "mt-1 text-sm font-semibold text-slate-900";
+  const receiverMetaClass = isNorthStar
+    ? "mt-0.5 text-xs text-[#6B6255]"
+    : "mt-0.5 text-xs text-slate-500";
+  const incentiveSectionClass = isNorthStar
+    ? "space-y-3 rounded-[1rem] border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] p-4"
+    : "space-y-3 rounded-2xl border border-amber-100 bg-amber-50/40 p-4";
+  const incentiveNoteClass = isNorthStar
+    ? "text-xs leading-relaxed text-[#6B6255]"
+    : "text-xs leading-relaxed text-amber-900/80";
+  const errorClass = isNorthStar
+    ? st.errorBanner
+    : "rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700";
+  const submitClass = isNorthStar ? st.saveButton : "admin-btn-primary";
+  const cancelClass = isNorthStar ? st.cancelButton : "admin-btn-secondary";
   const [formData, setFormData] = useState<NetworkReferralFormData>({
     ...DEFAULT_FORM,
     targetNetworkProfileId: targetProfile.id,
@@ -71,14 +106,10 @@ export function SendReferralForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Receiving company
-        </p>
-        <p className="mt-1 text-sm font-semibold text-slate-900">
-          {targetProfile.displayName}
-        </p>
-        <p className="mt-0.5 text-xs text-slate-500">
+      <section className={receiverCardClass}>
+        <p className={receiverLabelClass}>Receiving company</p>
+        <p className={receiverNameClass}>{targetProfile.displayName}</p>
+        <p className={receiverMetaClass}>
           {targetProfile.tradeType}
           {targetProfile.city || targetProfile.state
             ? ` · ${[targetProfile.city, targetProfile.state].filter(Boolean).join(", ")}`
@@ -88,19 +119,19 @@ export function SendReferralForm({
 
       <section className="space-y-4">
         <div>
-          <h3 className="text-sm font-bold text-slate-900">Customer / contact</h3>
-          <p className="text-xs text-slate-500">
+          <h3 className={sectionTitleClass}>Customer / contact</h3>
+          <p className={sectionSubtitleClass}>
             Share only what the receiving company needs to follow up.
           </p>
         </div>
 
         <div>
-          <label className="text-xs font-semibold text-slate-700" htmlFor="customerName">
+          <label className={labelClass} htmlFor="customerName">
             Customer name
           </label>
           <input
             id="customerName"
-            className={inputClassName}
+            className={inputClass}
             value={formData.customerName}
             onChange={(event) => updateField("customerName", event.target.value)}
             required
@@ -109,24 +140,24 @@ export function SendReferralForm({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="text-xs font-semibold text-slate-700" htmlFor="customerPhone">
+            <label className={labelClass} htmlFor="customerPhone">
               Phone
             </label>
             <input
               id="customerPhone"
-              className={inputClassName}
+              className={inputClass}
               value={formData.customerPhone}
               onChange={(event) => updateField("customerPhone", event.target.value)}
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-700" htmlFor="customerEmail">
+            <label className={labelClass} htmlFor="customerEmail">
               Email
             </label>
             <input
               id="customerEmail"
               type="email"
-              className={inputClassName}
+              className={inputClass}
               value={formData.customerEmail}
               onChange={(event) => updateField("customerEmail", event.target.value)}
             />
@@ -136,19 +167,19 @@ export function SendReferralForm({
 
       <section className="space-y-4">
         <div>
-          <h3 className="text-sm font-bold text-slate-900">Job details</h3>
-          <p className="text-xs text-slate-500">
+          <h3 className={sectionTitleClass}>Job details</h3>
+          <p className={sectionSubtitleClass}>
             This creates a new lead in their pipeline with referral context.
           </p>
         </div>
 
         <div>
-          <label className="text-xs font-semibold text-slate-700" htmlFor="serviceAddress">
+          <label className={labelClass} htmlFor="serviceAddress">
             Service address
           </label>
           <input
             id="serviceAddress"
-            className={inputClassName}
+            className={inputClass}
             value={formData.serviceAddress}
             onChange={(event) => updateField("serviceAddress", event.target.value)}
           />
@@ -156,34 +187,34 @@ export function SendReferralForm({
 
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <label className="text-xs font-semibold text-slate-700" htmlFor="city">
+            <label className={labelClass} htmlFor="city">
               City
             </label>
             <input
               id="city"
-              className={inputClassName}
+              className={inputClass}
               value={formData.city}
               onChange={(event) => updateField("city", event.target.value)}
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-700" htmlFor="state">
+            <label className={labelClass} htmlFor="state">
               State
             </label>
             <input
               id="state"
-              className={inputClassName}
+              className={inputClass}
               value={formData.state}
               onChange={(event) => updateField("state", event.target.value)}
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-700" htmlFor="zip">
+            <label className={labelClass} htmlFor="zip">
               ZIP
             </label>
             <input
               id="zip"
-              className={inputClassName}
+              className={inputClass}
               value={formData.zip}
               onChange={(event) => updateField("zip", event.target.value)}
             />
@@ -191,12 +222,12 @@ export function SendReferralForm({
         </div>
 
         <div>
-          <label className="text-xs font-semibold text-slate-700" htmlFor="requestedService">
+          <label className={labelClass} htmlFor="requestedService">
             Requested service / issue
           </label>
           <textarea
             id="requestedService"
-            className={`${inputClassName} min-h-[88px]`}
+            className={isNorthStar ? `${st.formTextarea} min-h-[88px]` : `${inputClassName} min-h-[88px]`}
             value={formData.requestedService}
             onChange={(event) => updateField("requestedService", event.target.value)}
             required
@@ -204,12 +235,12 @@ export function SendReferralForm({
         </div>
 
         <div>
-          <label className="text-xs font-semibold text-slate-700" htmlFor="urgency">
+          <label className={labelClass} htmlFor="urgency">
             Urgency
           </label>
           <select
             id="urgency"
-            className={inputClassName}
+            className={inputClass}
             value={formData.urgency}
             onChange={(event) =>
               updateField(
@@ -227,39 +258,39 @@ export function SendReferralForm({
         </div>
 
         <div>
-          <label className="text-xs font-semibold text-slate-700" htmlFor="notes">
+          <label className={labelClass} htmlFor="notes">
             Notes
           </label>
           <textarea
             id="notes"
-            className={`${inputClassName} min-h-[88px]`}
+            className={isNorthStar ? `${st.formTextarea} min-h-[88px]` : `${inputClassName} min-h-[88px]`}
             value={formData.notes}
             onChange={(event) => updateField("notes", event.target.value)}
           />
         </div>
       </section>
 
-      <section className="space-y-3 rounded-2xl border border-amber-100 bg-amber-50/40 p-4">
+      <section className={incentiveSectionClass}>
         <div>
-          <h3 className="text-sm font-bold text-slate-900">Referral note / incentive</h3>
-          <p className="text-xs text-slate-500">
+          <h3 className={sectionTitleClass}>Referral note / incentive</h3>
+          <p className={sectionSubtitleClass}>
             Optional terms or context for the receiving company.
           </p>
         </div>
         <textarea
-          className={`${inputClassName} bg-white`}
+          className={isNorthStar ? st.formTextarea : `${inputClassName} bg-white`}
           value={formData.incentiveNote}
           onChange={(event) => updateField("incentiveNote", event.target.value)}
           placeholder="Example: 10% referral fee on completed work."
         />
-        <p className="text-xs leading-relaxed text-amber-900/80">
+        <p className={incentiveNoteClass}>
           Altair tracks referral notes only. Payments and commission agreements are
           handled outside Altair.
         </p>
       </section>
 
       {error ? (
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+        <p className={errorClass}>
           {error}
         </p>
       ) : null}
@@ -268,12 +299,12 @@ export function SendReferralForm({
         <button
           type="button"
           onClick={onCancel}
-          className="admin-btn-secondary"
+          className={cancelClass}
           disabled={isPending}
         >
           Cancel
         </button>
-        <button type="submit" className="admin-btn-primary" disabled={isPending}>
+        <button type="submit" className={submitClass} disabled={isPending}>
           <AdminPendingLabel
             pending={isPending}
             pendingLabel="Sending referral…"

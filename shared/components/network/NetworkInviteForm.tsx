@@ -10,10 +10,12 @@ import {
   type NetworkInvite,
   type NetworkInviteFormData,
 } from "@/shared/types/network-invite";
+import { st, type NetworkSurface } from "./north-star-m11/network-north-star-styles";
 
 type NetworkInviteFormProps = {
   onSuccess: (invite: NetworkInvite, inviteUrl?: string) => void;
   onCancel?: () => void;
+  surface?: NetworkSurface;
 };
 
 const DEFAULT_FORM: NetworkInviteFormData = {
@@ -27,7 +29,17 @@ const DEFAULT_FORM: NetworkInviteFormData = {
 
 const inputClassName = `${adminFormInputClass} mt-1 rounded-xl`;
 
-export function NetworkInviteForm({ onSuccess, onCancel }: NetworkInviteFormProps) {
+export function NetworkInviteForm({
+  onSuccess,
+  onCancel,
+  surface = "legacy",
+}: NetworkInviteFormProps) {
+  const isNorthStar = surface === "north-star";
+  const inputClass = isNorthStar ? st.formInput : inputClassName;
+  const labelClass = isNorthStar ? st.formLabel : "text-xs font-semibold text-slate-700";
+  const optionalClass = isNorthStar ? st.formLabelOptional : "font-normal text-slate-500";
+  const submitClass = isNorthStar ? st.saveButton : "admin-btn-primary";
+  const cancelClass = isNorthStar ? st.cancelButton : "admin-btn-secondary";
   const [formData, setFormData] = useState<NetworkInviteFormData>(DEFAULT_FORM);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -62,12 +74,12 @@ export function NetworkInviteForm({ onSuccess, onCancel }: NetworkInviteFormProp
       {error ? <p className="text-sm text-rose-700">{error}</p> : null}
 
       <div>
-        <label className="text-xs font-semibold text-slate-700" htmlFor="invitedCompanyName">
+        <label className={labelClass} htmlFor="invitedCompanyName">
           Company name
         </label>
         <input
           id="invitedCompanyName"
-          className={inputClassName}
+          className={inputClass}
           value={formData.invitedCompanyName}
           onChange={(event) => updateField("invitedCompanyName", event.target.value)}
           required
@@ -75,12 +87,12 @@ export function NetworkInviteForm({ onSuccess, onCancel }: NetworkInviteFormProp
       </div>
 
       <div>
-        <label className="text-xs font-semibold text-slate-700" htmlFor="invitedContactName">
+        <label className={labelClass} htmlFor="invitedContactName">
           Contact name
         </label>
         <input
           id="invitedContactName"
-          className={inputClassName}
+          className={inputClass}
           value={formData.invitedContactName}
           onChange={(event) => updateField("invitedContactName", event.target.value)}
           required
@@ -88,13 +100,13 @@ export function NetworkInviteForm({ onSuccess, onCancel }: NetworkInviteFormProp
       </div>
 
       <div>
-        <label className="text-xs font-semibold text-slate-700" htmlFor="invitedEmail">
+        <label className={labelClass} htmlFor="invitedEmail">
           Email address
         </label>
         <input
           id="invitedEmail"
           type="email"
-          className={inputClassName}
+          className={inputClass}
           value={formData.invitedEmail}
           onChange={(event) => updateField("invitedEmail", event.target.value)}
           required
@@ -102,12 +114,12 @@ export function NetworkInviteForm({ onSuccess, onCancel }: NetworkInviteFormProp
       </div>
 
       <div>
-        <label className="text-xs font-semibold text-slate-700" htmlFor="tradeCategory">
+        <label className={labelClass} htmlFor="tradeCategory">
           Trade category
         </label>
         <select
           id="tradeCategory"
-          className={inputClassName}
+          className={inputClass}
           value={formData.tradeCategory}
           onChange={(event) =>
             updateField(
@@ -126,26 +138,26 @@ export function NetworkInviteForm({ onSuccess, onCancel }: NetworkInviteFormProp
       </div>
 
       <div>
-        <label className="text-xs font-semibold text-slate-700" htmlFor="invitedPhone">
-          Phone <span className="font-normal text-slate-500">(optional)</span>
+        <label className={labelClass} htmlFor="invitedPhone">
+          Phone <span className={optionalClass}>(optional)</span>
         </label>
         <input
           id="invitedPhone"
           type="tel"
-          className={inputClassName}
+          className={inputClass}
           value={formData.invitedPhone}
           onChange={(event) => updateField("invitedPhone", event.target.value)}
         />
       </div>
 
       <div>
-        <label className="text-xs font-semibold text-slate-700" htmlFor="personalMessage">
-          Personal message <span className="font-normal text-slate-500">(optional)</span>
+        <label className={labelClass} htmlFor="personalMessage">
+          Personal message <span className={optionalClass}>(optional)</span>
         </label>
         <textarea
           id="personalMessage"
           rows={3}
-          className={inputClassName}
+          className={inputClass}
           value={formData.personalMessage}
           onChange={(event) => updateField("personalMessage", event.target.value)}
           placeholder="Tell them why you want to connect on Altair."
@@ -156,7 +168,7 @@ export function NetworkInviteForm({ onSuccess, onCancel }: NetworkInviteFormProp
         <button
           type="submit"
           disabled={isPending}
-          className="admin-btn-primary"
+          className={submitClass}
         >
           <AdminPendingLabel
             pending={isPending}
@@ -169,7 +181,7 @@ export function NetworkInviteForm({ onSuccess, onCancel }: NetworkInviteFormProp
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="admin-btn-secondary"
+            className={cancelClass}
           >
             Cancel
           </button>
