@@ -1217,6 +1217,18 @@ a[href] {
   color: #d7cdbd !important;
 }
 
+.admin-north-star-shell .north-star-tax-summary-page-header > div > p:first-child {
+  color: #d6be78 !important;
+}
+
+.admin-north-star-shell .north-star-tax-summary-page-header h1 {
+  color: #fff8e8 !important;
+}
+
+.admin-north-star-shell .north-star-tax-summary-page-header h1 + p {
+  color: #d7cdbd !important;
+}
+
 .admin-north-star-shell .expense-north-star-filter-bar {
   border-bottom: 1px solid rgb(138 99 36 / 0.12);
   background: #efe4cb;
@@ -2892,5 +2904,31 @@ a[href] {
   #invoice-document.invoice-north-star-document .invoice-thank-you-footer p {
     font-size: 0.6875rem !important;
     line-height: 1.35 !important;
+  }
+
+  /* North Star tax summary report print refinements */
+  #tax-summary-document[data-north-star-tax-summary-document="true"] {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+  }
+
+  #tax-summary-document[data-north-star-tax-summary-document="true"] header,
+  #tax-summary-document[data-north-star-tax-summary-document="true"] footer {
+    break-inside: avoid;
+  }
+
+  #tax-summary-document[data-north-star-tax-summary-document="true"] h1,
+  #tax-summary-document[data-north-star-tax-summary-document="true"] span,
+  #tax-summary-document[data-north-star-tax-summary-document="true"] p {
+    color: #0f172a !important;
+  }
+
+  #tax-summary-document[data-north-star-tax-summary-document="true"] [class*="border-"] {
+    border-color: #cbd5e1 !important;
   }
 }
