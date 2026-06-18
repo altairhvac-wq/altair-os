@@ -1348,6 +1348,126 @@ a[href] {
   background-color: #fbf7ef;
 }
 
+/* North Star Settings (M10) — page header + team ledger scoped ownership */
+.admin-north-star-shell .north-star-settings-page-header > div > p:first-child {
+  color: #d6be78 !important;
+}
+
+.admin-north-star-shell .north-star-settings-page-header h1 {
+  color: #fff8e8 !important;
+}
+
+.admin-north-star-shell .north-star-settings-page-header h1 + p {
+  color: #d7cdbd !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-ledger thead tr {
+  border-bottom: 1px solid rgb(138 99 36 / 0.12) !important;
+  background: #efe4cb !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-ledger thead th {
+  padding: 0.75rem 1rem;
+  font-size: 0.625rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: #4f4638 !important;
+  background: transparent !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-ledger tbody tr {
+  background-color: #fbf7ef !important;
+  border-bottom: 1px solid rgb(138 99 36 / 0.1);
+  transition: background-color 0.15s ease;
+}
+
+.admin-north-star-shell .settings-north-star-team-ledger tbody tr:hover {
+  background-color: #f3ebdd !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-ledger tbody td {
+  color: #17130e;
+}
+
+.admin-north-star-shell .settings-north-star-team-ledger tbody td p.text-slate-900,
+.admin-north-star-shell .settings-north-star-team-ledger tbody td .font-semibold.text-slate-900 {
+  color: #17130e !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-ledger tbody td p.text-slate-500,
+.admin-north-star-shell .settings-north-star-team-ledger tbody td .text-slate-500,
+.admin-north-star-shell .settings-north-star-team-ledger tbody td .text-slate-600,
+.admin-north-star-shell .settings-north-star-team-ledger tbody td .text-slate-400 {
+  color: #6b6255 !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-ledger tbody td .font-medium.text-slate-700,
+.admin-north-star-shell .settings-north-star-team-ledger tbody td .text-slate-700 {
+  color: #4f4638 !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-ledger .rounded-full.bg-cyan-600 {
+  background: linear-gradient(135deg, #e6d092 0%, #c9a44d 55%, #b88a2e 100%) !important;
+  color: #17130e !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-ledger select,
+.admin-north-star-shell .settings-north-star-team-ledger input {
+  border-color: rgb(138 99 36 / 0.18) !important;
+  background: #fff9ea !important;
+  color: #17130e !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-ledger select:focus,
+.admin-north-star-shell .settings-north-star-team-ledger input:focus {
+  border-color: #b88a2e !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22) !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-ledger .bg-cyan-600 {
+  border: 1px solid #e6d092 !important;
+  background: linear-gradient(
+    180deg,
+    #e6d092 0%,
+    #c9a44d 45%,
+    #b88a2e 100%
+  ) !important;
+  color: #17130e !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-ledger .hover\:bg-cyan-700:hover {
+  background: linear-gradient(
+    180deg,
+    #f0e4b8 0%,
+    #d4b05a 45%,
+    #9a7028 100%
+  ) !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-mobile > div.rounded-xl,
+.admin-north-star-shell .settings-north-star-team-mobile > div.rounded-lg {
+  border-color: rgb(138 99 36 / 0.12) !important;
+  background: #fff9ea !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-mobile .rounded-full.bg-cyan-600 {
+  background: linear-gradient(135deg, #e6d092 0%, #c9a44d 55%, #b88a2e 100%) !important;
+  color: #17130e !important;
+}
+
+.admin-north-star-shell .settings-north-star-team-mobile .bg-cyan-600 {
+  border: 1px solid #e6d092 !important;
+  background: linear-gradient(
+    180deg,
+    #e6d092 0%,
+    #c9a44d 45%,
+    #b88a2e 100%
+  ) !important;
+  color: #17130e !important;
+}
+
 .admin-north-star-shell .expense-north-star-filter-bar {
   border-bottom: 1px solid rgb(138 99 36 / 0.12);
   background: #efe4cb;

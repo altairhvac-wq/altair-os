@@ -49,6 +49,7 @@ type TeamMemberMobileCardsProps = {
   onMemberRemoved?: (membershipId: string) => void;
   onRoleChangeError?: (message: string) => void;
   onRoleChangeSuccess?: (message: string) => void;
+  northStar?: boolean;
 };
 
 type PendingStatusAction = "suspend" | "reactivate" | "cancelInvite";
@@ -95,6 +96,7 @@ export function TeamMemberMobileCards({
   onMemberRemoved,
   onRoleChangeError,
   onRoleChangeSuccess,
+  northStar = false,
 }: TeamMemberMobileCardsProps) {
   const [isPending, startTransition] = useTransition();
   const [pendingMembershipId, setPendingMembershipId] = useState<string | null>(
@@ -290,7 +292,11 @@ export function TeamMemberMobileCards({
   }
 
   return (
-    <div className="min-w-0 space-y-2 p-3 md:hidden">
+    <div
+      className={`min-w-0 space-y-2 p-3 md:hidden${
+        northStar ? " settings-north-star-team-mobile" : ""
+      }`}
+    >
       {pendingRoleChange ? (
         <SettingsAlertBanner tone="warning">
           <p className="font-semibold">

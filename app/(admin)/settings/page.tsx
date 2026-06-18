@@ -18,6 +18,7 @@ import {
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
 import { buildOnboardingChecklist, filterOnboardingChecklistForContext } from "@/shared/lib/onboarding-checklist";
 import { hasSavedCompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { SettingsPageView } from "@/shared/components/settings/SettingsPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
@@ -130,18 +131,19 @@ export default async function SettingsPage() {
     companyContext,
   );
   const billingDefaults = getCompanyBillingDefaultsFromRow(companyContext.company);
+  const northStar = isNorthStarShellEnabled();
 
   return (
     <div className="min-w-0 max-w-full space-y-3 sm:space-y-4">
       {emailResolution.mismatch ? (
-        <SettingsAlertBanner tone="warning">
+        <SettingsAlertBanner tone="warning" northStar={northStar}>
           Your profile email and sign-in email do not match. Update them to the
           same address before you can view or accept team invitations.
         </SettingsAlertBanner>
       ) : null}
 
       {pendingInvitesResult.error ? (
-        <SettingsAlertBanner tone="error">
+        <SettingsAlertBanner tone="error" northStar={northStar}>
           {pendingInvitesResult.error}
         </SettingsAlertBanner>
       ) : null}

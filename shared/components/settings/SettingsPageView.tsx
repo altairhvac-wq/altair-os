@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
+import { SettingsNorthStarView } from "@/shared/components/settings/north-star-m10";
 import {
   Bell,
   Building2,
@@ -72,7 +74,15 @@ function buildLocationLabel(profile: CompanyProfileSummary): string | null {
   return parts.length > 0 ? parts.join(", ") : null;
 }
 
-export function SettingsPageView({
+export function SettingsPageView(props: SettingsPageViewProps) {
+  if (isNorthStarShellEnabled()) {
+    return <SettingsNorthStarView {...props} />;
+  }
+
+  return <SettingsPageLegacyView {...props} />;
+}
+
+function SettingsPageLegacyView({
   companyProfile,
   initialMembers,
   currentUserId,

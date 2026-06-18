@@ -12,6 +12,7 @@ import type { PendingTeamInvite } from "@/lib/database/queries/memberships";
 type PendingInvitesCardProps = {
   invites: PendingTeamInvite[];
   variant?: "setup" | "settings";
+  northStar?: boolean;
 };
 
 function formatInvitedAt(value: string | null): string | null {
@@ -35,10 +36,15 @@ function formatInvitedAt(value: string | null): string | null {
 export function PendingInvitesCard({
   invites,
   variant = "settings",
+  northStar = false,
 }: PendingInvitesCardProps) {
   return (
     <Suspense fallback={null}>
-      <PendingInvitesCardContent invites={invites} variant={variant} />
+      <PendingInvitesCardContent
+        invites={invites}
+        variant={variant}
+        northStar={northStar}
+      />
     </Suspense>
   );
 }
@@ -46,6 +52,7 @@ export function PendingInvitesCard({
 function PendingInvitesCardContent({
   invites,
   variant = "settings",
+  northStar = false,
 }: PendingInvitesCardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -101,15 +108,27 @@ function PendingInvitesCardContent({
   const isSettingsCompact = variant === "settings";
 
   return (
-    <section className="min-w-0 max-w-full rounded-xl border border-cyan-200 bg-cyan-50/60 shadow-sm">
+    <section
+      className={
+        northStar
+          ? "min-w-0 max-w-full rounded-[1rem] border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] shadow-[0_2px_8px_rgba(138,99,36,0.08)]"
+          : "min-w-0 max-w-full rounded-xl border border-cyan-200 bg-cyan-50/60 shadow-sm"
+      }
+    >
       <div
-        className={`border-b border-cyan-100 ${
+        className={`border-b ${
+          northStar ? "border-[rgba(138,99,36,0.12)]" : "border-cyan-100"
+        } ${
           isSettingsCompact ? "px-3 py-3 sm:px-4" : "px-4 py-4 sm:px-6"
         }`}
       >
         <div className="flex items-start gap-2.5">
           <div
-            className={`flex shrink-0 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 ${
+            className={`flex shrink-0 items-center justify-center rounded-lg ${
+              northStar
+                ? "bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.12)]"
+                : "bg-cyan-100 text-cyan-700"
+            } ${
               isSettingsCompact ? "h-9 w-9" : "h-10 w-10 rounded-xl"
             }`}
           >
@@ -117,14 +136,18 @@ function PendingInvitesCardContent({
           </div>
           <div className="min-w-0">
             <h2
-              className={`font-bold text-slate-900 ${
+              className={`font-bold ${
+                northStar ? "text-[#17130E]" : "text-slate-900"
+              } ${
                 isSettingsCompact ? "text-base" : "text-lg"
               }`}
             >
               {title}
             </h2>
             <p
-              className={`text-slate-600 ${
+              className={`${
+                northStar ? "text-[#6B6255]" : "text-slate-600"
+              } ${
                 isSettingsCompact
                   ? "mt-0.5 text-xs leading-snug"
                   : "mt-1 text-sm"
@@ -149,18 +172,34 @@ function PendingInvitesCardContent({
           return (
             <div
               key={invite.id}
-              className={`flex min-w-0 flex-col rounded-lg border border-white bg-white/90 p-3 sm:flex-row sm:items-center sm:justify-between ${
-                isSettingsCompact ? "gap-2.5" : "gap-3 rounded-xl p-4"
+              className={`flex min-w-0 flex-col rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between ${
+                northStar
+                  ? "gap-2.5 border-[rgba(138,99,36,0.12)] bg-[#FBF7EF]"
+                  : `border-white bg-white/90 ${
+                      isSettingsCompact ? "gap-2.5" : "gap-3 rounded-xl p-4"
+                    }`
               }`}
             >
               <div className="min-w-0">
-                <p className="truncate text-base font-semibold text-slate-900">
+                <p
+                  className={`truncate text-base font-semibold ${
+                    northStar ? "text-[#17130E]" : "text-slate-900"
+                  }`}
+                >
                   {invite.companyName}
                 </p>
-                <p className="mt-1 text-sm text-slate-600">
+                <p
+                  className={`mt-1 text-sm ${
+                    northStar ? "text-[#4F4638]" : "text-slate-600"
+                  }`}
+                >
                   Role: {COMPANY_ROLE_LABELS[invite.role] ?? invite.role}
                 </p>
-                <p className="mt-1 break-words text-xs text-slate-500">
+                <p
+                  className={`mt-1 break-words text-xs ${
+                    northStar ? "text-[#6B6255]" : "text-slate-500"
+                  }`}
+                >
                   Invited as {invite.inviteEmail}
                   {invitedAt ? ` · ${invitedAt}` : ""}
                 </p>
@@ -170,7 +209,11 @@ function PendingInvitesCardContent({
                 type="button"
                 onClick={() => handleAccept(invite.id, invite.companyName)}
                 disabled={isPending}
-                className="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                className={
+                  northStar
+                    ? "inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-4 py-2.5 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                    : "inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                }
               >
                 <UserCheck className="h-4 w-4" aria-hidden="true" />
                 {isAccepting ? "Accepting..." : "Accept invite"}
@@ -180,11 +223,15 @@ function PendingInvitesCardContent({
         })}
 
         {error ? (
-          <SettingsAlertBanner tone="error">{error}</SettingsAlertBanner>
+          <SettingsAlertBanner tone="error" northStar={northStar}>
+            {error}
+          </SettingsAlertBanner>
         ) : null}
 
         {success ? (
-          <SettingsAlertBanner tone="success">{success}</SettingsAlertBanner>
+          <SettingsAlertBanner tone="success" northStar={northStar}>
+            {success}
+          </SettingsAlertBanner>
         ) : null}
       </div>
     </section>

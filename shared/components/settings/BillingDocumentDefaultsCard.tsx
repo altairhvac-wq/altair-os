@@ -9,11 +9,13 @@ import {
   type CompanyBillingDefaultsInput,
 } from "@/shared/lib/company-billing-defaults";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
+import { st } from "@/shared/components/settings/north-star-m10/settings-north-star-styles";
 
 type BillingDocumentDefaultsCardProps = {
   initialDefaults: CompanyBillingDefaults;
   canManage: boolean;
   showSetupHint?: boolean;
+  northStar?: boolean;
 };
 
 type FeedbackState = {
@@ -21,13 +23,13 @@ type FeedbackState = {
   message: string;
 } | null;
 
-const inputClass =
+const legacyInputClass =
   "w-full min-h-10 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:min-h-[44px] sm:py-2.5";
 
-const textareaClass =
+const legacyTextareaClass =
   "w-full min-h-[80px] max-w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:min-h-[96px] sm:py-2.5";
 
-const labelClass = "mb-1 block text-xs font-semibold text-slate-600";
+const legacyLabelClass = "mb-1 block text-xs font-semibold text-slate-600";
 
 type CollapsibleNotesFieldProps = {
   id: string;
@@ -36,6 +38,9 @@ type CollapsibleNotesFieldProps = {
   placeholder: string;
   disabled: boolean;
   onChange: (value: string) => void;
+  labelClass: string;
+  textareaClass: string;
+  northStar?: boolean;
 };
 
 function CollapsibleNotesField({
@@ -45,6 +50,9 @@ function CollapsibleNotesField({
   placeholder,
   disabled,
   onChange,
+  labelClass,
+  textareaClass,
+  northStar = false,
 }: CollapsibleNotesFieldProps) {
   const [expanded, setExpanded] = useState(Boolean(value.trim()));
 
@@ -55,10 +63,26 @@ function CollapsibleNotesField({
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            className="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50"
+            className={
+              northStar
+                ? "flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-left text-sm transition-colors hover:bg-[#F3EBDD]"
+                : "flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50"
+            }
           >
-            <span className="font-medium text-slate-700">{label}</span>
-            <span className="shrink-0 text-xs text-slate-400">Optional</span>
+            <span
+              className={
+                northStar ? "font-medium text-[#4F4638]" : "font-medium text-slate-700"
+              }
+            >
+              {label}
+            </span>
+            <span
+              className={
+                northStar ? "shrink-0 text-xs text-[#6B6255]" : "shrink-0 text-xs text-slate-400"
+              }
+            >
+              Optional
+            </span>
           </button>
         ) : (
           <div className="space-y-1">
@@ -69,7 +93,11 @@ function CollapsibleNotesField({
               <button
                 type="button"
                 onClick={() => setExpanded(false)}
-                className="text-xs font-medium text-slate-500 hover:text-slate-700"
+                className={
+                  northStar
+                    ? "text-xs font-medium text-[#6B6255] hover:text-[#4F4638]"
+                    : "text-xs font-medium text-slate-500 hover:text-slate-700"
+                }
               >
                 Collapse
               </button>
@@ -111,6 +139,7 @@ export function BillingDocumentDefaultsCard({
   initialDefaults,
   canManage,
   showSetupHint = false,
+  northStar = false,
 }: BillingDocumentDefaultsCardProps) {
   const [formValues, setFormValues] = useState<CompanyBillingDefaultsInput>(() =>
     companyBillingDefaultsToFormValues(initialDefaults),
@@ -153,22 +182,56 @@ export function BillingDocumentDefaultsCard({
     });
   }
 
+  const inputClass = northStar ? st.formInput : legacyInputClass;
+  const textareaClass = northStar ? st.formTextarea : legacyTextareaClass;
+  const labelClass = northStar ? st.formLabel : legacyLabelClass;
+
   return (
-    <div className="admin-card min-w-0 p-3 sm:p-4">
+    <div
+      className={
+        northStar
+          ? "min-w-0 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3 sm:p-4"
+          : "admin-card min-w-0 p-3 sm:p-4"
+      }
+    >
       <div className="flex items-start gap-2.5">
-        <div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600 sm:flex">
+        <div
+          className={
+            northStar
+              ? "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.12)] sm:flex"
+              : "hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600 sm:flex"
+          }
+        >
           <FileText className="h-4 w-4" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="admin-heading-section text-sm sm:text-base">
+          <h2
+            className={
+              northStar
+                ? "text-sm font-semibold text-[#17130E] sm:text-base"
+                : "admin-heading-section text-sm sm:text-base"
+            }
+          >
             Billing Document Defaults
           </h2>
-          <p className="admin-text-helper mt-0.5 hidden sm:block">
+          <p
+            className={
+              northStar
+                ? "mt-0.5 hidden text-xs text-[#6B6255] sm:block sm:text-sm"
+                : "admin-text-helper mt-0.5 hidden sm:block"
+            }
+          >
             Default tax rate, payment terms, and notes for new estimates and
             invoices.
           </p>
           {showSetupHint && canManage ? (
-            <p className="mt-2 rounded-lg border border-cyan-100 bg-cyan-50/60 px-2.5 py-1.5 text-xs text-cyan-900 sm:text-sm">
+            <p
+              className={
+                northStar
+                  ? "mt-2 rounded-lg border border-[rgba(180,83,9,0.22)] bg-[rgba(255,247,237,0.75)] px-2.5 py-1.5 text-xs text-[#9A3412] sm:text-sm"
+                  : "mt-2 rounded-lg border border-cyan-100 bg-cyan-50/60 px-2.5 py-1.5 text-xs text-cyan-900 sm:text-sm"
+              }
+            >
               Review these defaults before creating your first estimate or invoice.
               Save once to mark this setup step complete.
             </p>
@@ -255,6 +318,9 @@ export function BillingDocumentDefaultsCard({
             placeholder="Optional notes pre-filled on new estimates"
             disabled={!canManage || isPending}
             onChange={(value) => updateField("defaultEstimateNotes", value)}
+            labelClass={labelClass}
+            textareaClass={textareaClass}
+            northStar={northStar}
           />
 
           <CollapsibleNotesField
@@ -264,27 +330,40 @@ export function BillingDocumentDefaultsCard({
             placeholder="Optional notes pre-filled on new invoices"
             disabled={!canManage || isPending}
             onChange={(value) => updateField("defaultInvoiceNotes", value)}
+            labelClass={labelClass}
+            textareaClass={textareaClass}
+            northStar={northStar}
           />
         </div>
 
         {feedback ? (
-          <SettingsAlertBanner tone={feedback.tone}>
+          <SettingsAlertBanner tone={feedback.tone} northStar={northStar}>
             {feedback.message}
           </SettingsAlertBanner>
         ) : null}
 
         {canManage ? (
-          <div className="border-t border-slate-100 pt-2.5 sm:admin-sticky-footer-inline sm:sticky sm:bottom-0 sm:-mx-4 sm:px-4 sm:py-2.5 sm:supports-[padding:max(0px)]:pb-[max(0.625rem,env(safe-area-inset-bottom))]">
+          <div
+            className={
+              northStar
+                ? "border-t border-[rgba(138,99,36,0.12)] pt-2.5 sm:sticky sm:bottom-0 sm:-mx-4 sm:px-4 sm:py-2.5 sm:supports-[padding:max(0px)]:pb-[max(0.625rem,env(safe-area-inset-bottom))]"
+                : "border-t border-slate-100 pt-2.5 sm:admin-sticky-footer-inline sm:sticky sm:bottom-0 sm:-mx-4 sm:px-4 sm:py-2.5 sm:supports-[padding:max(0px)]:pb-[max(0.625rem,env(safe-area-inset-bottom))]"
+            }
+          >
             <button
               type="submit"
               disabled={isPending}
-              className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[44px] sm:w-auto sm:py-2.5"
+              className={
+                northStar
+                  ? st.saveButton
+                  : "inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[44px] sm:w-auto sm:py-2.5"
+              }
             >
               {isPending ? "Saving..." : "Save billing defaults"}
             </button>
           </div>
         ) : (
-          <p className="text-sm text-slate-500">
+          <p className={northStar ? "text-sm text-[#6B6255]" : "text-sm text-slate-500"}>
             Billing defaults can only be changed by owner and admin roles.
           </p>
         )}

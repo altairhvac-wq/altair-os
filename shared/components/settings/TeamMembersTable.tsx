@@ -49,6 +49,7 @@ type TeamMembersTableProps = {
   onMemberRemoved?: (membershipId: string) => void;
   onRoleChangeError?: (message: string) => void;
   onRoleChangeSuccess?: (message: string) => void;
+  northStar?: boolean;
 };
 
 type PendingStatusAction = "suspend" | "reactivate" | "cancelInvite";
@@ -95,6 +96,7 @@ export function TeamMembersTable({
   onMemberRemoved,
   onRoleChangeError,
   onRoleChangeSuccess,
+  northStar = false,
 }: TeamMembersTableProps) {
   const [isPending, startTransition] = useTransition();
   const [pendingMembershipId, setPendingMembershipId] = useState<string | null>(
@@ -287,7 +289,11 @@ export function TeamMembersTable({
   }
 
   return (
-    <div className="hidden overflow-x-auto md:block">
+    <div
+      className={`hidden overflow-x-auto md:block${
+        northStar ? " settings-north-star-team-ledger" : ""
+      }`}
+    >
       {pendingRoleChange ? (
         <div className="mx-4 mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:mx-6">
           <p className="font-semibold">
