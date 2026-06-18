@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
+import { TimeNorthStarView } from "@/shared/components/time-clock/north-star-m9";
 import {
   formatDateTime,
   formatDurationMinutes,
@@ -33,7 +35,15 @@ function matchesJobFilter(entry: TimeEntry, jobId?: string): boolean {
   return !jobId || entry.jobId === jobId;
 }
 
-export function AdminTimeTrackingView({
+export function AdminTimeTrackingView(props: AdminTimeTrackingViewProps) {
+  if (isNorthStarShellEnabled()) {
+    return <TimeNorthStarView {...props} />;
+  }
+
+  return <AdminTimeTrackingLegacyView {...props} />;
+}
+
+function AdminTimeTrackingLegacyView({
   entries,
   activeEntries,
   canViewAll,
