@@ -1,4 +1,5 @@
 import { Filter, Search } from "lucide-react";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import {
   SERVICE_ITEM_LIFECYCLE_FILTER_OPTIONS,
   SERVICE_ITEM_STATUS_OPTIONS,
@@ -21,7 +22,14 @@ type ServiceItemsSearchFilterBarProps = {
     onSelectAll: () => void;
     onClearSelection: () => void;
   };
+  northStar?: boolean;
 };
+
+const legacySelectClass =
+  "appearance-none rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-10 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20";
+
+const legacySearchClass =
+  "w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20";
 
 export function ServiceItemsSearchFilterBar({
   search,
@@ -33,25 +41,44 @@ export function ServiceItemsSearchFilterBar({
   onLifecycleFilterChange,
   showLifecycleFilter = false,
   bulkSelectAllControl,
+  northStar = false,
 }: ServiceItemsSearchFilterBarProps) {
+  const searchInputClass = northStar ? lt.searchInput : legacySearchClass;
+  const selectClass = northStar ? lt.filterSelect : legacySelectClass;
+  const resultMetaClass = northStar ? lt.filterMeta : "admin-text-helper";
+
   return (
-    <div className="shrink-0 border-b border-slate-100/90 bg-white px-4 py-3">
+    <div
+      className={
+        northStar
+          ? lt.filterBar
+          : "shrink-0 border-b border-slate-100/90 bg-white px-4 py-3"
+      }
+    >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search
+            className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${
+              northStar ? lt.filterIcon : "text-slate-400"
+            }`}
+          />
           <input
             type="search"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search by name, description, or category..."
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20"
+            className={searchInputClass}
           />
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           {showLifecycleFilter && onLifecycleFilterChange ? (
             <div className="relative shrink-0">
-              <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Filter
+                className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${
+                  northStar ? lt.filterIcon : "text-slate-400"
+                }`}
+              />
               <select
                 value={lifecycleFilter}
                 onChange={(e) =>
@@ -60,7 +87,7 @@ export function ServiceItemsSearchFilterBar({
                   )
                 }
                 aria-label="Filter by lifecycle"
-                className="appearance-none rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-10 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20"
+                className={selectClass}
               >
                 {SERVICE_ITEM_LIFECYCLE_FILTER_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -71,7 +98,11 @@ export function ServiceItemsSearchFilterBar({
             </div>
           ) : null}
           <div className="relative shrink-0">
-            <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Filter
+              className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${
+                northStar ? lt.filterIcon : "text-slate-400"
+              }`}
+            />
             <select
               value={statusFilter}
               onChange={(e) =>
@@ -79,7 +110,7 @@ export function ServiceItemsSearchFilterBar({
                   e.target.value as "all" | "active" | "inactive",
                 )
               }
-              className="appearance-none rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-10 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20"
+              className={selectClass}
             >
               {SERVICE_ITEM_STATUS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -89,12 +120,12 @@ export function ServiceItemsSearchFilterBar({
             </select>
           </div>
           {bulkSelectAllControl ? (
-            <BulkSelectAllControl {...bulkSelectAllControl} />
+            <BulkSelectAllControl {...bulkSelectAllControl} northStar={northStar} />
           ) : null}
         </div>
       </div>
 
-      <p className="admin-text-helper mt-2">
+      <p className={`${resultMetaClass} mt-2`}>
         {resultCount} {resultCount === 1 ? "item" : "items"}
       </p>
     </div>

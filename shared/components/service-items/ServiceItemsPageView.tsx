@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import {
   createServiceItemAction,
   updateServiceItemAction,
@@ -40,10 +41,13 @@ import {
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { ServiceItemDetailPanel } from "./ServiceItemDetailPanel";
+import { ServiceItemsNorthStarCatalogHeading } from "./north-star-m7a";
 import { ServiceItemsEmptyState } from "./ServiceItemsEmptyState";
 import { ServiceItemsSearchFilterBar } from "./ServiceItemsSearchFilterBar";
+import { ServiceItemsSummaryCards } from "./ServiceItemsSummaryCards";
 import { ServiceItemsTable } from "./ServiceItemsTable";
 
 type PanelMode = "create" | "edit" | "empty";
@@ -283,11 +287,13 @@ export function ServiceItemsPageView({
   const hasNoItems = serviceItems.length === 0;
   const hasNoResults = !hasNoItems && filteredServiceItems.length === 0;
   const isPanelOpen = panelMode !== "empty";
+  const northStar = isNorthStarShellEnabled();
 
   return (
     <MasterListPageLayout
       title="Price book"
       subtitle="Reusable services and parts for estimate line items"
+      eyebrow={northStar ? "Service catalog" : undefined}
       density="compact"
       banners={
         lifecycleMessage ? (
@@ -305,26 +311,49 @@ export function ServiceItemsPageView({
           </SettingsAlertBanner>
         ) : undefined
       }
+      summary={
+        !hasNoItems ? (
+          <ServiceItemsSummaryCards
+            serviceItems={serviceItems}
+            northStar={northStar}
+          />
+        ) : null
+      }
       primaryAction={
         canManagePriceBook ? (
           <button
             type="button"
             onClick={handleNewItem}
-            className={masterListPagePrimaryActionClass}
+            className={
+              northStar ? lt.primaryAction : masterListPagePrimaryActionClass
+            }
           >
             <Plus className="h-3.5 w-3.5" />
             New item
           </button>
         ) : undefined
       }
-      className={isPanelOpen ? masterListPageMobilePanelLockClass : undefined}
+      className={`${isPanelOpen ? masterListPageMobilePanelLockClass : ""} ${
+        northStar ? lt.pageCanvas : ""
+      }`}
+      headerClassName={northStar ? lt.pageHeader : undefined}
+      headerSurfaceVariant={northStar ? "northStar" : "default"}
+      headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
+      headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
+      headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
       <MasterPageSurface
-        variant="card"
+        variant={northStar ? "northStarList" : "card"}
         className={`${masterListPageSurfaceClass} ${
           isPanelOpen ? "max-lg:hidden" : ""
-        }`}
+        } ${northStar ? lt.listSurface : ""}`}
       >
+        {northStar ? (
+          <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
+        ) : null}
+        {northStar && !hasNoItems ? (
+          <ServiceItemsNorthStarCatalogHeading />
+        ) : null}
         {!hasNoItems ? (
           <ServiceItemsSearchFilterBar
             search={search}
@@ -345,6 +374,7 @@ export function ServiceItemsPageView({
                   }
                 : undefined
             }
+            northStar={northStar}
           />
         ) : null}
 
@@ -353,9 +383,10 @@ export function ServiceItemsPageView({
             <ServiceItemsEmptyState
               variant="no-items"
               onCreateItem={canManagePriceBook ? handleNewItem : undefined}
+              northStar={northStar}
             />
           ) : hasNoResults ? (
-            <ServiceItemsEmptyState variant="no-results" />
+            <ServiceItemsEmptyState variant="no-results" northStar={northStar} />
           ) : (
             <ServiceItemsTable
               serviceItems={filteredServiceItems}
@@ -365,6 +396,7 @@ export function ServiceItemsPageView({
               selectedIds={selectedIds}
               onToggleSelection={toggleSelection}
               onToggleAllVisible={toggleAllVisible}
+              northStar={northStar}
             />
           )}
 
@@ -373,6 +405,7 @@ export function ServiceItemsPageView({
               entityLabel="item"
               selectedCount={selectedCount}
               lifecycleFilter={lifecycleFilter}
+              northStar={northStar}
               isArchiving={isBulkArchiving}
               isRestoring={isBulkRestoring}
               isMovingToTrash={isBulkMovingToTrash}
