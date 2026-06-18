@@ -27,6 +27,7 @@ import type {
 import { filterOperationalActivitiesForBillingAccess } from "@/shared/lib/billing-activity-visibility";
 import { OperationalActivityEntryContent } from "@/shared/components/operational/OperationalActivityEntryContent";
 import { adminCardSectionClass } from "@/shared/lib/admin-density";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type OperationalActivityTimelineProps = {
   activities: OperationalActivity[];
@@ -37,7 +38,11 @@ type OperationalActivityTimelineProps = {
   emptyDescription?: string;
   sectionId?: string;
   sectionClassName?: string;
+  northStar?: boolean;
+  compact?: boolean;
 };
+
+const COMPACT_ACTIVITY_LIMIT = 8;
 
 const ACTIVITY_ICONS: Record<
   OperationalActivityEventType,
@@ -162,48 +167,113 @@ export function OperationalActivityTimeline({
   emptyDescription = "Workflow events will appear here as work progresses.",
   sectionId,
   sectionClassName,
+  northStar = false,
+  compact = false,
 }: OperationalActivityTimelineProps) {
   const visibleActivities = filterOperationalActivitiesForBillingAccess(
     activities,
     canViewBilling,
   );
+  const sectionClass = northStar
+    ? compact
+      ? dt.compactSectionSurface
+      : dt.sectionSurface
+    : adminCardSectionClass;
+  const displayedActivities = compact
+    ? visibleActivities.slice(0, COMPACT_ACTIVITY_LIMIT)
+    : visibleActivities;
+  const hiddenActivityCount = compact
+    ? Math.max(0, visibleActivities.length - COMPACT_ACTIVITY_LIMIT)
+    : 0;
+  const entryLabelClass = northStar
+    ? "text-sm font-medium text-[#17130E]"
+    : "text-sm font-medium text-slate-900";
+  const entryTimestampClass = northStar
+    ? "shrink-0 text-[11px] text-[#6B6255]"
+    : "shrink-0 text-[11px] text-slate-400";
+  const entryDetailsClass = northStar
+    ? "mt-0.5 text-xs text-[#4F4638]"
+    : "mt-0.5 text-xs text-slate-600";
+  const entryAttributionClass = northStar
+    ? "mt-0.5 text-[11px] text-[#6B6255]"
+    : "mt-0.5 text-[11px] text-slate-400";
 
   return (
     <section
       id={sectionId}
-      className={`${adminCardSectionClass} ${sectionClassName ?? ""}`}
+      className={`${sectionClass} ${sectionClassName ?? ""}`}
     >
       <div className="flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200">
-          <History className="h-4 w-4 text-slate-500" />
+        <div
+          className={
+            northStar
+              ? dt.sectionIconWrap
+              : "flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 ring-1 ring-slate-200"
+          }
+        >
+          <History className={northStar ? "h-4 w-4" : "h-4 w-4 text-slate-500"} />
         </div>
         <div>
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <h2
+            className={
+              northStar
+                ? dt.sectionTitle
+                : "text-xs font-semibold uppercase tracking-wide text-slate-500"
+            }
+          >
             {title}
           </h2>
-          <p className="text-sm text-slate-600">{description}</p>
+          <p className={northStar ? "text-sm text-[#4F4638]" : "text-sm text-slate-600"}>
+            {description}
+          </p>
         </div>
       </div>
 
       {visibleActivities.length === 0 ? (
-        <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
-          <p className="text-sm font-medium text-slate-700">{emptyTitle}</p>
-          <p className="mt-1 text-xs text-slate-500">{emptyDescription}</p>
+        <div
+          className={
+            northStar
+              ? `mt-5 ${dt.emptyState}`
+              : "mt-5 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center"
+          }
+        >
+          <p
+            className={
+              northStar
+                ? "text-sm font-medium text-[#4F4638]"
+                : "text-sm font-medium text-slate-700"
+            }
+          >
+            {emptyTitle}
+          </p>
+          <p
+            className={
+              northStar
+                ? "mt-1 text-xs text-[#6B6255]"
+                : "mt-1 text-xs text-slate-500"
+            }
+          >
+            {emptyDescription}
+          </p>
         </div>
       ) : (
-        <ol className="mt-5 space-y-0">
-          {visibleActivities.map((activity, index) => {
+        <ol className={`${compact ? "mt-3" : "mt-5"} space-y-0`}>
+          {displayedActivities.map((activity, index) => {
             const Icon =
               WORKFLOW_ICON_OVERRIDES[activity.rawEventType] ??
               ACTIVITY_ICONS[activity.eventType];
-            const isLast = index === visibleActivities.length - 1;
+            const isLast = index === displayedActivities.length - 1;
 
             return (
-              <li key={activity.id} className="relative flex gap-4 pb-5">
+              <li key={activity.id} className={`relative flex gap-3 ${compact ? "pb-3" : "pb-5"}`}>
                 {!isLast ? (
                   <span
                     aria-hidden="true"
-                    className="absolute left-[17px] top-9 h-[calc(100%-12px)] w-px bg-slate-200"
+                    className={
+                      northStar
+                        ? "absolute left-[17px] top-9 h-[calc(100%-12px)] w-px bg-[rgba(138,99,36,0.18)]"
+                        : "absolute left-[17px] top-9 h-[calc(100%-12px)] w-px bg-slate-200"
+                    }
                   />
                 ) : null}
 
@@ -217,6 +287,10 @@ export function OperationalActivityTimeline({
                   <OperationalActivityEntryContent
                     activity={activity}
                     canViewBilling={canViewBilling}
+                    labelClassName={entryLabelClass}
+                    timestampClassName={entryTimestampClass}
+                    detailsClassName={entryDetailsClass}
+                    attributionClassName={entryAttributionClass}
                   />
                 </div>
               </li>
@@ -224,6 +298,11 @@ export function OperationalActivityTimeline({
           })}
         </ol>
       )}
+      {hiddenActivityCount > 0 ? (
+        <p className={northStar ? dt.truncatedHint : "mt-2 text-xs text-slate-500"}>
+          Showing {displayedActivities.length} of {visibleActivities.length} events
+        </p>
+      ) : null}
     </section>
   );
 }
