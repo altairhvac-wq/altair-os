@@ -70,11 +70,11 @@ export function NetworkDirectoryCard({
     : "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60";
 
   const addButtonClass = isNorthStar
-    ? st.cardActionFull
+    ? st.cardActionAccentFull
     : "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-60";
 
   const sendButtonClass = isNorthStar
-    ? `${st.cardActionAccentFull} ${canManageNetwork ? "mt-2" : "mt-4"}`
+    ? `${st.cardActionFull} ${canManageNetwork ? "mt-2" : "mt-4"}`
     : `inline-flex w-full items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800 transition hover:bg-sky-100 ${
         canManageNetwork ? "mt-2" : "mt-4"
       }`;

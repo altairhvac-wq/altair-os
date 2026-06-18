@@ -30,98 +30,38 @@ type SummaryCard = {
   description?: string;
   icon: LucideIcon;
   iconClassName: string;
+  tone?: "brass" | "success" | "muted";
 };
 
 function formatRate(value: number | null): string {
   return value === null ? "—" : formatPercent(value, 0);
 }
 
-function NorthStarMetricCard({
-  label,
-  value,
-  description,
-  icon: Icon,
-  iconTone,
-}: {
-  label: string;
-  value: string;
-  description?: string;
-  icon: LucideIcon;
-  iconTone: "brass" | "success" | "muted";
-}) {
-  const iconWrapClass =
-    iconTone === "success"
-      ? st.metricIconWrapSuccess
-      : iconTone === "muted"
-        ? st.metricIconWrapMuted
-        : st.metricIconWrapBrass;
-
+function NorthStarReferralSummary({ cards }: { cards: SummaryCard[] }) {
   return (
-    <div className={st.metricCard}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className={st.metricLabel}>{label}</p>
-          <p className={st.metricValue}>{value}</p>
-          {description ? <p className={st.metricDescription}>{description}</p> : null}
-        </div>
-        <div className={iconWrapClass}>
-          <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-        </div>
-      </div>
-    </div>
-  );
-}
+    <div
+      className="flex flex-wrap gap-1.5 sm:gap-2"
+      aria-label="Referral summary metrics"
+    >
+      {cards.map((card) => {
+        const tone = card.tone ?? "brass";
+        const chipClass =
+          tone === "success"
+            ? st.metricChipSuccess
+            : tone === "muted"
+              ? st.metricChipMuted
+              : st.metricChip;
 
-function NorthStarReferralSummary({
-  statusCards,
-  rateCards,
-}: {
-  statusCards: SummaryCard[];
-  rateCards: SummaryCard[];
-}) {
-  const iconToneForCard = (label: string): "brass" | "success" | "muted" => {
-    if (label === "Accepted" || label === "Won") {
-      return "success";
-    }
-    if (label === "Lost") {
-      return "muted";
-    }
-    return "brass";
-  };
-
-  return (
-    <div className="space-y-4">
-      <section aria-label="Referral status counts">
-        <p className={st.metricGroupLabel}>Status counts</p>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {statusCards.map((card) => (
-            <NorthStarMetricCard
-              key={card.label}
-              label={card.label}
-              value={card.value}
-              description={card.description}
-              icon={card.icon}
-              iconTone={iconToneForCard(card.label)}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section aria-label="Referral performance rates">
-        <p className={st.metricGroupLabel}>Performance rates</p>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {rateCards.map((card) => (
-            <NorthStarMetricCard
-              key={card.label}
-              label={card.label}
-              value={card.value}
-              description={card.description}
-              icon={card.icon}
-              iconTone="brass"
-            />
-          ))}
-        </div>
-      </section>
+        return (
+          <div key={card.label} className={chipClass} title={card.description}>
+            <card.icon className="h-3 w-3 shrink-0 opacity-80" aria-hidden="true" />
+            <span className={st.metricChipLabel}>
+              {card.mobileLabel ?? card.label}
+            </span>
+            <span className={st.metricChipValue}>{card.value}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -136,7 +76,7 @@ export function NetworkReferralSummaryCards({
   const winRate = getNetworkReferralWinRate(metrics);
   const conversionRate = getNetworkReferralConversionRate(metrics);
 
-  const statusCards: SummaryCard[] = [
+  const cards: SummaryCard[] = [
     {
       label: pendingLabel,
       mobileLabel: pendingMobileLabel,
@@ -147,6 +87,7 @@ export function NetworkReferralSummaryCards({
           : "Awaiting your response",
       icon: direction === "sent" ? Send : Inbox,
       iconClassName: "admin-metric-icon-teal",
+      tone: "brass",
     },
     {
       label: "Accepted",
@@ -158,6 +99,7 @@ export function NetworkReferralSummaryCards({
           : "Referrals you accepted",
       icon: CheckCircle2,
       iconClassName: "admin-metric-icon-emerald",
+      tone: "success",
     },
     {
       label: "Converted",
@@ -166,6 +108,7 @@ export function NetworkReferralSummaryCards({
       description: "Became customers",
       icon: Target,
       iconClassName: "admin-metric-icon-neutral",
+      tone: "brass",
     },
     {
       label: "Won",
@@ -174,6 +117,7 @@ export function NetworkReferralSummaryCards({
       description: "Closed successfully",
       icon: Trophy,
       iconClassName: "admin-metric-icon-emerald",
+      tone: "success",
     },
     {
       label: "Lost",
@@ -182,10 +126,8 @@ export function NetworkReferralSummaryCards({
       description: "Did not close",
       icon: XCircle,
       iconClassName: "admin-metric-icon-slate",
+      tone: "muted",
     },
-  ];
-
-  const rateCards: SummaryCard[] = [
     {
       label: "Win rate",
       mobileLabel: "Win",
@@ -193,6 +135,7 @@ export function NetworkReferralSummaryCards({
       description: "Won / accepted referrals",
       icon: Trophy,
       iconClassName: "admin-metric-icon-teal",
+      tone: "brass",
     },
     {
       label: "Conversion rate",
@@ -201,18 +144,17 @@ export function NetworkReferralSummaryCards({
       description: "(Converted + won) / accepted referrals",
       icon: TrendingUp,
       iconClassName: "admin-metric-icon-amber",
+      tone: "brass",
     },
   ];
 
   if (surface === "north-star") {
-    return (
-      <NorthStarReferralSummary statusCards={statusCards} rateCards={rateCards} />
-    );
+    return <NorthStarReferralSummary cards={cards} />;
   }
 
   return (
     <PageSummaryStrip
-      cards={[...statusCards, ...rateCards]}
+      cards={cards}
       lgColumnsClass="lg:grid-cols-4 xl:grid-cols-7"
     />
   );

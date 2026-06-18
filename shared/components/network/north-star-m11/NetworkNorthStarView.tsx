@@ -554,43 +554,33 @@ export function NetworkNorthStarView({
         ) : null}
 
         {canSendReferral || canManageReceivedReferrals ? (
-          <div className="space-y-3">
-            {canSendReferral ? (
-              <div className={`${st.sectionSurface} overflow-hidden`}>
-                <div className={st.panelHeader}>
-                  <p className={st.sectionEyebrow}>Outbound</p>
-                  <h2 className={st.sectionTitle}>Sent referrals</h2>
-                  <p className={st.sectionSubtitle}>
-                    Track referrals awaiting partner response and closed outcomes.
-                  </p>
+          <div className={st.referralPulseSurface}>
+            <div className="grid gap-3 p-3 sm:p-3.5 lg:grid-cols-2 lg:gap-4 lg:px-4 lg:py-3">
+              {canSendReferral ? (
+                <div>
+                  <p className={st.referralPulseHeading}>Sent referrals</p>
+                  <div className="mt-2">
+                    <NetworkReferralSummaryCards
+                      direction="sent"
+                      metrics={sentReferralMetrics}
+                      surface="north-star"
+                    />
+                  </div>
                 </div>
-                <div className="p-3 sm:p-4 lg:px-5">
-                  <NetworkReferralSummaryCards
-                    direction="sent"
-                    metrics={sentReferralMetrics}
-                    surface="north-star"
-                  />
+              ) : null}
+              {canManageReceivedReferrals ? (
+                <div>
+                  <p className={st.referralPulseHeading}>Received referrals</p>
+                  <div className="mt-2">
+                    <NetworkReferralSummaryCards
+                      direction="received"
+                      metrics={receivedReferralMetrics}
+                      surface="north-star"
+                    />
+                  </div>
                 </div>
-              </div>
-            ) : null}
-            {canManageReceivedReferrals ? (
-              <div className={`${st.sectionSurface} overflow-hidden`}>
-                <div className={st.panelHeader}>
-                  <p className={st.sectionEyebrow}>Inbound</p>
-                  <h2 className={st.sectionTitle}>Received referrals</h2>
-                  <p className={st.sectionSubtitle}>
-                    Partner leads waiting for your response or already in pipeline.
-                  </p>
-                </div>
-                <div className="p-3 sm:p-4 lg:px-5">
-                  <NetworkReferralSummaryCards
-                    direction="received"
-                    metrics={receivedReferralMetrics}
-                    surface="north-star"
-                  />
-                </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
         ) : null}
 
@@ -622,7 +612,7 @@ export function NetworkNorthStarView({
             </div>
           ) : null}
 
-          <div className="min-h-0 p-3 sm:p-4 lg:px-5 lg:pb-5">
+          <div className="min-h-0 p-3 pb-4 sm:p-4 sm:pb-5 lg:px-5 lg:pb-6">
       {activeTab === "directory" ? (
         <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-row lg:overflow-hidden">
           <div
@@ -676,7 +666,7 @@ export function NetworkNorthStarView({
               </div>
             </div>
 
-            <div className={`@container p-4 ${masterListPageScrollRegionClass}`}>
+            <div className={`@container p-4 pb-6 ${masterListPageScrollRegionClass}`}>
               {filteredProfiles.length === 0 ? (
                 <div className={`${st.emptyState} px-4 py-10 text-center`}>
                   <p className={st.emptyTitle}>
@@ -815,7 +805,7 @@ export function NetworkNorthStarView({
               </div>
             </div>
 
-            <div className={`@container p-4 ${masterListPageScrollRegionClass}`}>
+            <div className={`@container p-4 pb-6 ${masterListPageScrollRegionClass}`}>
               {!canManageNetwork ? (
                 <p className={st.permissionCopy}>
                   Trusted partners are managed by company owners and admins.

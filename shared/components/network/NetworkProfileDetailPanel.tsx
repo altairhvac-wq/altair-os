@@ -92,6 +92,9 @@ export function NetworkProfileDetailPanel({
     ? "mt-1 flex items-center gap-1.5 text-xs text-[#6B6255]"
     : "mt-1 flex items-center gap-1.5 text-xs text-slate-500";
   const networkButtonClass = isNorthStar
+    ? `${st.cardActionAccentFull} disabled:opacity-60`
+    : "inline-flex w-full items-center justify-center gap-2 admin-btn-secondary disabled:opacity-60";
+  const networkButtonSecondaryClass = isNorthStar
     ? `${st.cardActionFull} disabled:opacity-60`
     : "inline-flex w-full items-center justify-center gap-2 admin-btn-secondary disabled:opacity-60";
   const trustedNoticeClass = isNorthStar
@@ -101,7 +104,7 @@ export function NetworkProfileDetailPanel({
     ? "rounded-xl border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-4 py-3 text-xs text-[#6B6255]"
     : "rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-500";
   const sendButtonClass = isNorthStar
-    ? st.cardActionAccentFull
+    ? st.cardActionFull
     : "inline-flex w-full items-center justify-center gap-2 admin-btn-primary";
 
   return (
@@ -192,7 +195,7 @@ export function NetworkProfileDetailPanel({
                     type="button"
                     onClick={onRemoveFromNetwork}
                     disabled={isNetworkActionPending}
-                    className={networkButtonClass}
+                    className={networkButtonSecondaryClass}
                   >
                     <UserMinus className="h-4 w-4" />
                     {isNetworkActionPending

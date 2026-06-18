@@ -25,29 +25,13 @@ const NETWORK_TAB_COUNT = 5;
 
 function ReferralSummarySkeleton() {
   return (
-    <div className="space-y-4" aria-hidden="true">
-      <div>
-        <Skeleton className="h-2.5 w-24" />
-        <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <Skeleton
-              key={index}
-              className="h-[4.5rem] rounded-[0.875rem] border border-[rgba(138,99,36,0.10)]"
-            />
-          ))}
-        </div>
-      </div>
-      <div>
-        <Skeleton className="h-2.5 w-32" />
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, index) => (
-            <Skeleton
-              key={index}
-              className="h-[4.5rem] rounded-[0.875rem] border border-[rgba(138,99,36,0.10)]"
-            />
-          ))}
-        </div>
-      </div>
+    <div className="flex flex-wrap gap-1.5 sm:gap-2" aria-hidden="true">
+      {Array.from({ length: 7 }).map((_, index) => (
+        <Skeleton
+          key={index}
+          className="h-8 w-[5.5rem] rounded-lg border border-[rgba(138,99,36,0.10)]"
+        />
+      ))}
     </div>
   );
 }
@@ -77,14 +61,20 @@ export function NetworkNorthStarLoadingState() {
           <Skeleton className="h-9 w-36 shrink-0 rounded-lg" />
         </div>
 
-        <div className={`${st.sectionSurface} overflow-hidden`}>
-          <div className={st.panelHeader}>
-            <Skeleton className="h-2.5 w-16" />
-            <Skeleton className="mt-1.5 h-4 w-28" />
-            <Skeleton className="mt-1.5 h-3 w-56 max-w-full" />
-          </div>
-          <div className="p-3 sm:p-4 lg:px-5">
-            <ReferralSummarySkeleton />
+        <div className={st.referralPulseSurface}>
+          <div className="grid gap-3 p-3 sm:p-3.5 lg:grid-cols-2 lg:gap-4 lg:px-4 lg:py-3">
+            <div>
+              <Skeleton className="h-4 w-28" />
+              <div className="mt-2">
+                <ReferralSummarySkeleton />
+              </div>
+            </div>
+            <div>
+              <Skeleton className="h-4 w-32" />
+              <div className="mt-2">
+                <ReferralSummarySkeleton />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -97,7 +87,7 @@ export function NetworkNorthStarLoadingState() {
             </div>
           </div>
 
-          <div className="p-3 sm:p-4 lg:px-5">
+          <div className="p-3 pb-4 sm:p-4 sm:pb-5 lg:px-5 lg:pb-6">
             <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-row lg:overflow-hidden">
               <div
                 className={`${st.sectionSurface} ${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-[24rem] lg:flex-1 lg:overflow-hidden`}
