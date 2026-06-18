@@ -31,6 +31,12 @@
   --shell-nav-surface: #f0f5f9;
   --shell-nav-border: rgb(186 203 220 / 0.75);
   --shell-nav-divider: rgb(15 23 42 / 0.08);
+  --north-star-graphite-base: #0f141b;
+  --north-star-graphite-mid: #111720;
+  --north-star-graphite-border: rgb(255 255 255 / 0.08);
+  --north-star-brass: #c6a757;
+  --north-star-brass-rail: #b8943f;
+  --north-star-brass-ring: rgb(198 167 87 / 0.25);
 }
 
 @theme inline {
@@ -360,6 +366,84 @@ a[href] {
     box-shadow:
       0 1px 0 rgb(255 255 255 / 0.65) inset,
       0 1px 3px rgb(15 23 42 / 0.04) !important;
+  }
+
+  /* North Star M1 — grouped left sidebar shell (flag-gated via .admin-north-star-shell) */
+  .admin-north-star-sidebar {
+    border-right: 1px solid var(--north-star-graphite-border);
+    background: linear-gradient(
+      180deg,
+      var(--north-star-graphite-base) 0%,
+      var(--north-star-graphite-mid) 50%,
+      var(--north-star-graphite-base) 100%
+    );
+  }
+
+  .admin-north-star-shell .admin-premium-header {
+    border-bottom: 1px solid var(--north-star-graphite-border) !important;
+    background: linear-gradient(
+      180deg,
+      var(--north-star-graphite-mid) 0%,
+      var(--north-star-graphite-base) 100%
+    ) !important;
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset !important;
+  }
+
+  .admin-north-star-shell .admin-premium-header::before {
+    background:
+      radial-gradient(
+        ellipse 72% 55% at 18% -8%,
+        rgb(255 255 255 / 0.04) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 42% 38% at 82% 0%,
+        rgb(198 167 87 / 0.04) 0%,
+        transparent 52%
+      );
+  }
+
+  .admin-north-star-sidebar-group-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgb(100 116 139);
+  }
+
+  .admin-north-star-sidebar-link {
+    color: rgb(100 116 139);
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .admin-north-star-sidebar-link:hover {
+    background-color: rgb(255 255 255 / 0.04);
+    color: rgb(203 213 225);
+  }
+
+  .admin-north-star-sidebar-link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(198 167 87 / 0.35);
+  }
+
+  .admin-north-star-sidebar-link-active {
+    background-color: rgb(255 255 255 / 0.06);
+    color: rgb(248 250 252);
+    box-shadow: 0 0 0 1px var(--north-star-brass-ring);
+  }
+
+  .admin-north-star-sidebar-rail {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    height: 1.25rem;
+    width: 0.125rem;
+    transform: translateY(-50%);
+    border-radius: 0 9999px 9999px 0;
+    background-color: var(--north-star-brass-rail);
   }
 }
 

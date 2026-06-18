@@ -138,6 +138,97 @@ export function isLaborPayrollPath(pathname: string): boolean {
   );
 }
 
+/** Shared active-path matching for admin nav links (desktop, mobile, sidebar). */
+export function isAdminNavItemActive(pathname: string, href: string): boolean {
+  if (href === "/") {
+    return pathname === "/";
+  }
+
+  if (href === "/time" && isLaborPayrollPath(pathname)) {
+    return true;
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+export type NavGroup = {
+  id: string;
+  label: string;
+  hrefs: readonly string[];
+};
+
+export type NavGroupWithItems = {
+  id: string;
+  label: string;
+  items: NavItem[];
+};
+
+/** Presentation-only grouping for North Star sidebar — reuses permission-filtered nav items. */
+export const ADMIN_NAV_GROUP_DEFINITIONS: NavGroup[] = [
+  {
+    id: "command",
+    label: "Command",
+    hrefs: ["/", "/alpha-tracker", "/reports"],
+  },
+  {
+    id: "work",
+    label: "Work",
+    hrefs: ["/jobs", "/dispatch", "/estimates", "/price-book"],
+  },
+  {
+    id: "money",
+    label: "Money",
+    hrefs: ["/invoices", "/expenses", "/time"],
+  },
+  {
+    id: "relationships",
+    label: "Relationships",
+    hrefs: ["/customers", "/leads", "/network"],
+  },
+  {
+    id: "company",
+    label: "Company",
+    hrefs: ["/settings", "/platform"],
+  },
+];
+
+export function getGroupedAdminNavItems(
+  context: ActiveCompanyContext,
+  options?: { includePlatformAdmin?: boolean },
+): NavGroupWithItems[] {
+  const itemsByHref = new Map(
+    getAdminNavItems(context).map((item) => [item.href, item]),
+  );
+
+  if (options?.includePlatformAdmin) {
+    itemsByHref.set("/platform", platformAdminNavItem);
+  }
+
+  const groups: NavGroupWithItems[] = [];
+
+  for (const group of ADMIN_NAV_GROUP_DEFINITIONS) {
+    const items: NavItem[] = [];
+
+    for (const href of group.hrefs) {
+      if (href === "/platform" && !options?.includePlatformAdmin) {
+        continue;
+      }
+
+      const item = itemsByHref.get(href);
+
+      if (item) {
+        items.push(item);
+      }
+    }
+
+    if (items.length > 0) {
+      groups.push({ id: group.id, label: group.label, items });
+    }
+  }
+
+  return groups;
+}
+
 /** Two-row mobile nav: row 1 = ops hub, row 2 = billing + overflow. */
 export const PRIMARY_MOBILE_ADMIN_NAV_ROWS = [
   ["/", "/jobs", "/dispatch", "/customers"],

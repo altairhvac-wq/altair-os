@@ -5,6 +5,7 @@ import {
   resolvePostLoginRedirect,
   sanitizeNextPath,
 } from "@/lib/auth/redirects";
+import { syncSignupNetworkInviteCookieOnResponse } from "@/lib/auth/signup-invite-cookie";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getSupabaseEnv } from "./env";
 
@@ -57,6 +58,27 @@ function withSupabaseCookies(
   });
 
   return target;
+}
+
+function isSignupRoute(pathname: string) {
+  return pathname === "/signup" || pathname.startsWith("/signup/");
+}
+
+function applySignupInviteCookieSync(
+  request: NextRequest,
+  response: NextResponse,
+  pathname: string,
+): NextResponse {
+  if (!isSignupRoute(pathname)) {
+    return response;
+  }
+
+  syncSignupNetworkInviteCookieOnResponse(
+    response,
+    request.nextUrl.searchParams.get("invite"),
+  );
+
+  return response;
 }
 
 export async function updateSession(request: NextRequest) {
@@ -122,5 +144,5 @@ export async function updateSession(request: NextRequest) {
     );
   }
 
-  return supabaseResponse;
+  return applySignupInviteCookieSync(request, supabaseResponse, pathname);
 }

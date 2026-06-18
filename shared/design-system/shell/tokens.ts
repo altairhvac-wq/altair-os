@@ -67,6 +67,17 @@ export const adminNavLinkClass = "admin-nav-link";
 /** Active nav item surface (does not replace routing/active matching). */
 export const adminNavLinkActiveClass = "admin-nav-link-active";
 
+/** North Star M1 — grouped left sidebar shell (flag-gated). */
+export const northStarSidebarClass = "admin-north-star-sidebar";
+
+export const northStarSidebarGroupLabelClass =
+  "admin-north-star-sidebar-group-label";
+
+export const northStarSidebarLinkClass = "admin-north-star-sidebar-link";
+
+export const northStarSidebarLinkActiveClass =
+  "admin-north-star-sidebar-link-active";
+
 /** Segmented control track (tabs, date range, filter pills). */
 export const adminSegmentedControlClass = "admin-segmented-control";
 

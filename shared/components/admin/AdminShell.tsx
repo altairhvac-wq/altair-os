@@ -18,6 +18,8 @@ import type { Notification } from "@/shared/types/notification";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
 import { FounderMarketingDisplayProvider } from "@/shared/components/display/FounderMarketingDisplayContext";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
+import { SidebarNav } from "./SidebarNav";
 
 type AdminShellProps = {
   children: React.ReactNode;
@@ -50,6 +52,7 @@ export function AdminShell({
   const pullToRefreshEnabled =
     isMobile && isPullToRefreshRoute(pathname);
   const isMobileDashboard = isMobile && pathname === "/";
+  const northStarShell = isNorthStarShellEnabled();
   const current = getNavItemForPath(pathname, navigationContext, {
     includePlatformAdmin: showPlatformAdminNav,
   });
@@ -57,7 +60,23 @@ export function AdminShell({
   return (
     <FounderMarketingDisplayProvider hideDemoPrefixes={hideDemoPrefixes}>
     <CompanyTimezoneProvider timeZone={companyContext.company.timezone}>
-      <div className="admin-canvas admin-shell-canvas flex w-full min-w-0 max-w-full flex-col md:min-h-dvh md:h-dvh md:overflow-hidden">
+      <div
+        className={`admin-canvas admin-shell-canvas flex w-full min-w-0 max-w-full flex-col md:min-h-dvh md:h-dvh md:overflow-hidden ${
+          northStarShell ? "admin-north-star-shell md:flex-row" : ""
+        }`}
+      >
+      {northStarShell ? (
+        hideAdminNavigation ? (
+          <AdminNavSkeleton variant="desktop-sidebar" />
+        ) : (
+          <SidebarNav
+            companyContext={navigationContext}
+            showPlatformAdminNav={showPlatformAdminNav}
+          />
+        )
+      ) : null}
+
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="admin-top-shell no-print">
         <Header
           title={current.label}
@@ -70,14 +89,16 @@ export function AdminShell({
           viewMode={viewMode}
           onViewModeChange={setViewMode}
         />
-        {hideAdminNavigation ? (
-          <AdminNavSkeleton variant="desktop" />
-        ) : (
-          <DesktopNav
-            companyContext={navigationContext}
-            showPlatformAdminNav={showPlatformAdminNav}
-          />
-        )}
+        {!northStarShell ? (
+          hideAdminNavigation ? (
+            <AdminNavSkeleton variant="desktop" />
+          ) : (
+            <DesktopNav
+              companyContext={navigationContext}
+              showPlatformAdminNav={showPlatformAdminNav}
+            />
+          )
+        ) : null}
       </div>
 
       <div className="no-print md:hidden">
@@ -96,6 +117,7 @@ export function AdminShell({
           {redirectPending ? <AdminShellContentLoadingState /> : children}
         </PullToRefresh>
       </main>
+      </div>
       </div>
       {isBetaBugReportEnabled() &&
       !(isMobile && pathname.startsWith("/settings")) &&

@@ -7,10 +7,37 @@ function NavLabelSkeleton() {
 }
 
 type AdminNavSkeletonProps = {
-  variant: "mobile" | "desktop";
+  variant: "mobile" | "desktop" | "desktop-sidebar";
 };
 
 export function AdminNavSkeleton({ variant }: AdminNavSkeletonProps) {
+  if (variant === "desktop-sidebar") {
+    return (
+      <aside
+        aria-label="Loading navigation"
+        aria-busy="true"
+        className="admin-north-star-sidebar hidden w-[16rem] shrink-0 flex-col md:flex"
+      >
+        <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4">
+          <ul className="flex flex-col gap-7">
+            {Array.from({ length: 3 }).map((_, groupIndex) => (
+              <li key={groupIndex}>
+                <div className="admin-skeleton mb-2.5 ml-2.5 h-2.5 w-16 rounded" />
+                <ul className="flex flex-col gap-1">
+                  {Array.from({ length: 3 }).map((_, itemIndex) => (
+                    <li key={itemIndex}>
+                      <div className="admin-skeleton h-10 w-full rounded-xl" />
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
+    );
+  }
+
   if (variant === "desktop") {
     return (
       <nav
