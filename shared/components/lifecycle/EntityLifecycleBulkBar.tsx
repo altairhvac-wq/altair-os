@@ -1,6 +1,7 @@
 "use client";
 
 import { Archive, Ban, Loader2, RotateCcw, Trash2, X } from "lucide-react";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 
 type EntityLifecycleBulkBarProps = {
   entityLabel: string;
@@ -42,6 +43,7 @@ type EntityLifecycleBulkBarProps = {
   onRestoreFromTrash?: () => void;
   onPermanentDelete?: () => void;
   onClearSelection: () => void;
+  northStar?: boolean;
 };
 
 export function EntityLifecycleBulkBar({
@@ -84,6 +86,7 @@ export function EntityLifecycleBulkBar({
   onRestoreFromTrash,
   onPermanentDelete,
   onClearSelection,
+  northStar = false,
 }: EntityLifecycleBulkBarProps) {
   const isBusy =
     isArchiving ||
@@ -115,18 +118,40 @@ export function EntityLifecycleBulkBar({
 
   const plural = selectedCount === 1 ? entityLabel : `${entityLabel}s`;
 
+  const shellClass = northStar
+    ? lt.bulkBar
+    : "sticky bottom-0 z-20 border-t border-cyan-200 bg-cyan-50/95 px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.25)] backdrop-blur-sm sm:px-4";
+  const titleClass = northStar
+    ? lt.bulkBarTitle
+    : "text-sm font-bold text-cyan-950";
+  const hintClass = northStar
+    ? "mt-1 space-y-0.5 text-xs font-medium text-[#6B6255]"
+    : "mt-1 space-y-0.5 text-xs font-medium text-cyan-800/90";
+  const clearClass = northStar
+    ? lt.bulkClearButton
+    : "inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-cyan-200 bg-white px-3 py-1.5 text-xs font-semibold text-cyan-900 transition-colors hover:border-cyan-300 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60";
+  const secondaryActionClass = northStar
+    ? lt.bulkSecondaryAction
+    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60";
+  const primaryActionClass = northStar
+    ? lt.bulkPrimaryAction
+    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-cyan-700 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60";
+  const destructiveActionClass = northStar
+    ? lt.bulkDestructiveAction
+    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60";
+
   return (
     <div
-      className="sticky bottom-0 z-20 border-t border-cyan-200 bg-cyan-50/95 px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.25)] backdrop-blur-sm sm:px-4"
+      className={`sticky bottom-0 z-20 ${shellClass}`}
       role="region"
       aria-label={`Bulk ${entityLabel} lifecycle actions`}
     >
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-bold text-cyan-950">{selectedCount} selected</p>
+            <p className={titleClass}>{selectedCount} selected</p>
             {eligibilityHints.length > 0 ? (
-              <ul className="mt-1 space-y-0.5 text-xs font-medium text-cyan-800/90">
+              <ul className={hintClass}>
                 {eligibilityHints.map((hint) => (
                   <li key={hint}>{hint}</li>
                 ))}
@@ -137,7 +162,7 @@ export function EntityLifecycleBulkBar({
             type="button"
             onClick={onClearSelection}
             disabled={isBusy}
-            className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-cyan-200 bg-white px-3 py-1.5 text-xs font-semibold text-cyan-900 transition-colors hover:border-cyan-300 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className={clearClass}
           >
             <X className="h-3.5 w-3.5" aria-hidden="true" />
             Clear selection
@@ -157,7 +182,7 @@ export function EntityLifecycleBulkBar({
                 )
               }
               disabled={isActionDisabled(archiveEligibleCount)}
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className={secondaryActionClass}
             >
               {isArchiving ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -250,7 +275,7 @@ export function EntityLifecycleBulkBar({
                 onRestore();
               }}
               disabled={isActionDisabled(restoreEligibleCount)}
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-cyan-700 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className={primaryActionClass}
             >
               {isRestoring ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -277,7 +302,7 @@ export function EntityLifecycleBulkBar({
                 onRestoreFromTrash();
               }}
               disabled={isActionDisabled(restoreFromTrashEligibleCount)}
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-cyan-700 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className={primaryActionClass}
             >
               {isRestoringFromTrash ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -300,7 +325,7 @@ export function EntityLifecycleBulkBar({
                 )
               }
               disabled={isActionDisabled(permanentDeleteEligibleCount)}
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className={destructiveActionClass}
             >
               {isPermanentlyDeleting ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
