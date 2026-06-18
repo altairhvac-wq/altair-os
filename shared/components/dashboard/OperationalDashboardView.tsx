@@ -85,6 +85,8 @@ import {
   formatTechnicianTimeState,
   getTechnicianTimeStateStyles,
 } from "@/shared/types/time-entry";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
+import { DashboardNorthStarView } from "@/shared/components/dashboard/north-star-m2";
 import {
   MasterContentStack,
   MasterPageCanvas,
@@ -1299,54 +1301,67 @@ function DashboardContentLayout({
   };
 
   const showDemoDataSection = Boolean(demoDataStatus);
+  const northStarEnabled = isNorthStarShellEnabled();
 
   return (
     <DashboardDrilldownProvider panels={drilldownPanels}>
-      {showDemoDataSection && companyId && demoDataStatus ? (
-        <DemoDataSection
-          companyId={companyId}
-          status={demoDataStatus}
-          variant="dashboard"
-        />
-      ) : null}
-
-      {showOnboarding ? (
-        <OnboardingChecklistSection
-          checklist={onboardingChecklist}
+      {northStarEnabled ? (
+        <DashboardNorthStarView
+          data={data}
+          onboardingChecklist={onboardingChecklist}
           companyId={companyId}
           userId={userId}
-          variant="dashboard"
+          demoDataStatus={demoDataStatus}
         />
-      ) : null}
+      ) : (
+        <>
+          {showDemoDataSection && companyId && demoDataStatus ? (
+            <DemoDataSection
+              companyId={companyId}
+              status={demoDataStatus}
+              variant="dashboard"
+            />
+          ) : null}
 
-      <MasterContentStack density="compact" className="hidden lg:flex">
-        <DashboardSignatureHero data={data} variant="desktop" />
-        <AltairRecommendationsSection
-          data={data}
-          variant="desktop"
-          skipTopPriority
-        />
+          {showOnboarding ? (
+            <OnboardingChecklistSection
+              checklist={onboardingChecklist}
+              companyId={companyId}
+              userId={userId}
+              variant="dashboard"
+            />
+          ) : null}
 
-        {sectionOrder.map((sectionId) => {
-          const content = sectionContent[sectionId];
-          if (!content) {
-            return null;
-          }
+          <MasterContentStack density="compact" className="hidden lg:flex">
+            <DashboardSignatureHero data={data} variant="desktop" />
+            <AltairRecommendationsSection
+              data={data}
+              variant="desktop"
+              skipTopPriority
+            />
 
-          const labels = DASHBOARD_SECTION_LABELS[sectionId];
+            {sectionOrder.map((sectionId) => {
+              const content = sectionContent[sectionId];
+              if (!content) {
+                return null;
+              }
 
-          return (
-            <MasterPageSection
-              key={sectionId}
-              title={labels.title}
-              description={labels.description}
-              density="compact"
-            >
-              {content}
-            </MasterPageSection>
-          );
-        })}
-      </MasterContentStack>
+              const labels = DASHBOARD_SECTION_LABELS[sectionId];
+
+              return (
+                <MasterPageSection
+                  key={sectionId}
+                  title={labels.title}
+                  description={labels.description}
+                  density="compact"
+                >
+                  {content}
+                </MasterPageSection>
+              );
+            })}
+          </MasterContentStack>
+        </>
+      )}
 
       <div className="flex min-w-0 flex-col gap-2 lg:hidden">
         <DashboardSignatureHero data={data} variant="mobile" />
