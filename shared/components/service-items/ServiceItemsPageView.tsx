@@ -340,7 +340,11 @@ export function ServiceItemsPageView({
       headerSurfaceVariant={northStar ? "northStar" : "default"}
       headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
       headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
-      headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
+      headerSubtitleClassName={
+        northStar
+          ? "min-w-0 text-sm leading-snug text-[#D7CDBD] sm:truncate"
+          : undefined
+      }
     >
       <MasterPageSurface
         variant={northStar ? "northStarList" : "card"}

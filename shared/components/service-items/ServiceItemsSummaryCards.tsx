@@ -29,6 +29,8 @@ function getServiceItemsSummary(serviceItems: ServiceItem[]) {
   };
 }
 
+const northStarMetricIconClass = "[&_svg]:text-[#8A6324]";
+
 export function ServiceItemsSummaryCards({
   serviceItems,
   northStar = false,
@@ -43,7 +45,7 @@ export function ServiceItemsSummaryCards({
       value: String(sellableCount),
       description: "Active catalog items",
       icon: BookOpen,
-      iconClassName: "admin-metric-icon-cyan",
+      iconClassName: "admin-metric-icon-neutral",
       highlighted: false,
     },
     {
@@ -57,11 +59,11 @@ export function ServiceItemsSummaryCards({
     },
     {
       label: "Missing cost",
-      mobileLabel: "No cost",
+      mobileLabel: "Missing cost",
       value: String(missingCostCount),
       description: "Active items without internal cost",
       icon: DollarSign,
-      iconClassName: "admin-metric-icon-amber",
+      iconClassName: "admin-metric-icon-neutral",
       highlighted: missingCostCount > 0,
     },
     {
@@ -70,10 +72,46 @@ export function ServiceItemsSummaryCards({
       value: String(taxableCount),
       description: "Active items marked taxable",
       icon: Tag,
-      iconClassName: "admin-metric-icon-violet",
+      iconClassName: "admin-metric-icon-slate",
       highlighted: false,
     },
   ];
+
+  if (northStar) {
+    return (
+      <div className="grid shrink-0 grid-cols-2 gap-2.5 px-3 sm:gap-3 sm:px-3.5 lg:grid-cols-4 lg:px-5">
+        {cards.map((card) => (
+          <div
+            key={card.label}
+            className={`rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-3.5 py-3 shadow-[0_2px_8px_rgba(3,7,12,0.08)] sm:px-4 sm:py-3.5 ${
+              card.highlighted
+                ? "border-[rgba(138,99,36,0.28)] bg-[#FFF9EA] ring-1 ring-[rgba(138,99,36,0.16)]"
+                : ""
+            }`}
+          >
+            <div className="flex items-start justify-between gap-2 sm:gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255]">
+                  {card.label}
+                </p>
+                <p className="mt-0.5 text-lg font-bold tabular-nums text-[#17130E]">
+                  {card.value}
+                </p>
+                {card.description ? (
+                  <p className="mt-0.5 text-xs text-[#4F4638]">{card.description}</p>
+                ) : null}
+              </div>
+              <div
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)] ${northStarMetricIconClass} ${card.iconClassName}`}
+              >
+                <card.icon className="h-4 w-4" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <PageSummaryStrip

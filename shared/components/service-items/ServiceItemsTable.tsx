@@ -33,8 +33,27 @@ const northStarStatusStyles = {
   inactive: `${lt.badgeArchived}`,
 } as const;
 
-const northStarMissingValueClass =
-  "text-xs font-medium italic text-[#6B6255]";
+const northStarTableHeaderRow =
+  "border-b border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] text-xs font-semibold text-[#4F4638]";
+
+const northStarTableHeaderCell = "admin-table-cell text-xs font-semibold text-[#4F4638]";
+
+const northStarItemNameClass = "truncate text-sm font-bold text-[#17130E]";
+
+const northStarItemDescriptionClass =
+  "mt-0.5 line-clamp-2 text-sm leading-snug text-[#4F4638]";
+
+const northStarCategoryChipClass =
+  "inline-flex rounded-md bg-[#EFE4CB] px-2 py-0.5 text-xs font-semibold text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.14)]";
+
+const northStarMissingValueClass = "text-sm text-[#6B6255]";
+
+const northStarMissingCostBadgeClass =
+  "inline-flex rounded-md bg-[#F5F0E4] px-2 py-0.5 text-xs font-medium text-[#6B6255] ring-1 ring-[rgba(138,99,36,0.12)]";
+
+const northStarInternalCostClass = "text-sm font-medium tabular-nums text-[#4F4638]";
+
+const northStarCustomerPriceClass = "text-sm font-bold tabular-nums text-[#17130E]";
 
 function getCategoryLabel(category: string | undefined, northStar: boolean) {
   const trimmed = category?.trim();
@@ -51,7 +70,7 @@ function getCategoryLabel(category: string | undefined, northStar: boolean) {
 function getCostLabel(unitCost: number | null | undefined, northStar: boolean) {
   if (unitCost == null) {
     return {
-      text: northStar ? "Cost not set" : "—",
+      text: northStar ? "Missing cost" : "—",
       missing: true,
     };
   }
@@ -89,13 +108,13 @@ export function ServiceItemsTable({
           <tr
             className={
               northStar
-                ? lt.tableHeaderRow
+                ? northStarTableHeaderRow
                 : "border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500"
             }
           >
             {selectionEnabled ? (
               <th
-                className={`w-10 ${northStar ? lt.tableHeaderCell : "px-4 py-3"}`}
+                className={`w-10 ${northStar ? northStarTableHeaderCell : "px-4 py-3"}`}
               >
                 {headerSelection && headerSelection.selectableCount > 0 ? (
                   <BulkSelectCheckbox
@@ -108,24 +127,24 @@ export function ServiceItemsTable({
                 ) : null}
               </th>
             ) : null}
-            <th className={northStar ? lt.tableHeaderCell : "px-4 py-3"}>Item</th>
-            <th className={northStar ? lt.tableHeaderCell : "px-4 py-3"}>
+            <th className={northStar ? northStarTableHeaderCell : "px-4 py-3"}>Item</th>
+            <th className={northStar ? northStarTableHeaderCell : "px-4 py-3"}>
               Category
             </th>
             <th
-              className={`${northStar ? lt.tableHeaderCell : "px-4 py-3"} text-right`}
+              className={`${northStar ? northStarTableHeaderCell : "px-4 py-3"} text-right`}
             >
               Internal cost
             </th>
             <th
-              className={`${northStar ? lt.tableHeaderCell : "px-4 py-3"} text-right`}
+              className={`${northStar ? northStarTableHeaderCell : "px-4 py-3"} text-right`}
             >
               Customer price
             </th>
-            <th className={northStar ? lt.tableHeaderCell : "px-4 py-3"}>
+            <th className={northStar ? northStarTableHeaderCell : "px-4 py-3"}>
               Taxable
             </th>
-            <th className={northStar ? lt.tableHeaderCell : "px-4 py-3"}>
+            <th className={northStar ? northStarTableHeaderCell : "px-4 py-3"}>
               Status
             </th>
           </tr>
@@ -174,7 +193,7 @@ export function ServiceItemsTable({
                     <p
                       className={
                         northStar
-                          ? lt.tablePrimaryText
+                          ? northStarItemNameClass
                           : "truncate font-semibold text-slate-900"
                       }
                     >
@@ -183,7 +202,9 @@ export function ServiceItemsTable({
                     {item.description ? (
                       <p
                         className={
-                          northStar ? lt.tableMutedText : "truncate text-xs text-slate-500"
+                          northStar
+                            ? northStarItemDescriptionClass
+                            : "truncate text-xs text-slate-500"
                         }
                       >
                         {item.description}
@@ -191,18 +212,18 @@ export function ServiceItemsTable({
                     ) : null}
                   </div>
                 </td>
-                <td
-                  className={
-                    northStar
-                      ? `admin-table-cell ${
-                          category.missing
-                            ? northStarMissingValueClass
-                            : lt.tableSecondaryText
-                        }`
-                      : "px-4 py-3 text-slate-600"
-                  }
-                >
-                  {category.text}
+                <td className={northStar ? "admin-table-cell" : "px-4 py-3 text-slate-600"}>
+                  {northStar && !category.missing ? (
+                    <span className={northStarCategoryChipClass}>{category.text}</span>
+                  ) : (
+                    <span
+                      className={
+                        northStar && category.missing ? northStarMissingValueClass : ""
+                      }
+                    >
+                      {category.text}
+                    </span>
+                  )}
                 </td>
                 <td
                   className={`${
@@ -210,19 +231,25 @@ export function ServiceItemsTable({
                   } ${
                     internalCost.missing
                       ? northStar
-                        ? northStarMissingValueClass
+                        ? ""
                         : "font-medium text-slate-700"
                       : northStar
-                        ? lt.tableMetricText
+                        ? northStarInternalCostClass
                         : "font-medium text-slate-700"
                   }`}
                 >
-                  {internalCost.text}
+                  {northStar && internalCost.missing ? (
+                    <span className={northStarMissingCostBadgeClass}>
+                      {internalCost.text}
+                    </span>
+                  ) : (
+                    internalCost.text
+                  )}
                 </td>
                 <td
                   className={`${
                     northStar
-                      ? `admin-table-cell text-right ${lt.tableMetricText}`
+                      ? `admin-table-cell text-right ${northStarCustomerPriceClass}`
                       : "px-4 py-3 text-right font-medium text-slate-900"
                   }`}
                 >
