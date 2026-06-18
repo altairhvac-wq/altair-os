@@ -310,3 +310,158 @@ export const northStarListTokens: NorthStarListPageTokens = {
   emptyStateAction:
     "inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-4 py-2.5 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:-translate-y-px hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] hover:shadow-[0_4px_16px_rgba(138,99,36,0.32)] sm:w-auto sm:min-w-[9rem]",
 };
+
+/**
+ * Customer 360 detail page — Mission Control Original Refined (M3B).
+ * Premium dark hero on moon graphite frame; ivory section cards below.
+ */
+export type NorthStarDetailPageTokens = {
+  pageCanvas: string;
+  backLink: string;
+  heroShell: string;
+  heroAccentRail: string;
+  heroEyebrow: string;
+  heroTitle: string;
+  heroCompany: string;
+  heroMeta: string;
+  heroMetaIcon: string;
+  heroAvatar: string;
+  heroStatLabel: string;
+  heroStatValue: string;
+  heroLink: string;
+  sectionSurface: string;
+  sectionTitle: string;
+  sectionSubtitle: string;
+  sectionIconWrap: string;
+  sectionNav: string;
+  sectionNavLink: string;
+  primaryAction: string;
+  secondaryAction: string;
+  tertiaryAction: string;
+  metaStrip: string;
+  metaRow: string;
+  metaIcon: string;
+  tagChip: string;
+  link: string;
+  emptyState: string;
+  listRowHover: string;
+  listDivider: string;
+  notesDetails: string;
+  notesSummary: string;
+  notesBody: string;
+  innerCard: string;
+  innerCardHover: string;
+  metricCard: string;
+  metricCardHighlight: string;
+  metricLabel: string;
+  metricValue: string;
+  metricIcon: string;
+  opportunityLink: string;
+  photoCard: string;
+  photoCardHover: string;
+  bannerDeleted: string;
+  bannerArchived: string;
+  commandPlate: string;
+  workspaceGrid: string;
+  workspaceMain: string;
+  workspaceSide: string;
+  ivoryMetaRow: string;
+  ivoryTagChip: string;
+  ivoryCardPrimary: string;
+  ivoryCardSecondary: string;
+  ivoryCardMuted: string;
+  compactSectionSurface: string;
+  truncatedHint: string;
+};
+
+export const northStarDetailTokens: NorthStarDetailPageTokens = {
+  pageCanvas: "north-star-detail-page-canvas",
+  backLink:
+    "inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-[#C8D0DA] transition-colors hover:text-[#FFF9EA]",
+  heroShell: "north-star-detail-hero relative overflow-hidden rounded-[1.25rem] p-4 sm:p-5",
+  heroAccentRail:
+    "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(214,190,120,0.42)] to-transparent",
+  heroEyebrow:
+    "text-[10px] font-semibold uppercase tracking-[0.18em] text-[#D6BE78]",
+  heroTitle: "truncate text-xl font-bold tracking-tight text-[#FFF9EA] sm:text-2xl",
+  heroCompany: "mt-0.5 truncate text-sm text-[#C8D0DA]",
+  heroMeta: "text-sm text-[#C8D0DA]",
+  heroMetaIcon: "h-4 w-4 shrink-0 text-[#8A6324]",
+  heroAvatar:
+    "flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-sm font-bold text-[#17130E] ring-2 ring-[rgba(201,164,77,0.35)] shadow-[0_2px_8px_rgba(138,99,36,0.24)]",
+  heroStatLabel: "text-[10px] font-semibold uppercase tracking-[0.12em] text-[#C8D0DA]",
+  heroStatValue: "mt-0.5 text-lg font-bold tabular-nums text-[#FFF9EA]",
+  heroLink:
+    "text-xs font-semibold text-[#D6BE78] transition-colors hover:text-[#E6D092]",
+  sectionSurface:
+    "north-star-detail-section scroll-mt-6 rounded-[1.25rem] p-3.5 sm:p-4",
+  sectionTitle: "text-sm font-bold text-[#17130E]",
+  sectionSubtitle: "text-[11px] text-[#6B6255]",
+  sectionIconWrap:
+    "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)] [&_svg]:text-[#8A6324]",
+  sectionNav:
+    "-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 north-star-detail-section-nav",
+  sectionNavLink:
+    "inline-flex min-h-9 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold text-[#4F4638] transition-colors hover:bg-[rgba(201,164,77,0.10)] hover:text-[#17130E]",
+  primaryAction:
+    "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-2.5 text-xs font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:-translate-y-px hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] [&_svg]:text-[#17130E]",
+  secondaryAction:
+    "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-2.5 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] [&_svg]:text-[#8A6324]",
+  tertiaryAction:
+    "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.35)] px-2.5 text-xs font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[rgba(39,49,64,0.55)] [&_svg]:text-[#D6BE78]",
+  metaStrip:
+    "mt-3 rounded-lg border border-[rgba(201,164,77,0.14)] bg-[rgba(15,23,42,0.28)] px-3 py-2.5",
+  metaRow: "flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#C8D0DA]",
+  metaIcon: "h-3.5 w-3.5 shrink-0 text-[#8A6324]",
+  tagChip:
+    "inline-flex items-center gap-0.5 rounded-full bg-[rgba(201,164,77,0.12)] px-2 py-0.5 text-[11px] font-medium text-[#F3EBDD] ring-1 ring-[rgba(201,164,77,0.22)]",
+  link: "text-xs font-semibold text-[#8A6324] transition-colors hover:text-[#6B5A2E]",
+  emptyState:
+    "rounded-xl border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-4 py-8 text-center",
+  listRowHover:
+    "rounded-lg transition-colors hover:bg-[rgba(201,164,77,0.08)] -mx-2 px-2 py-1",
+  listDivider: "divide-[rgba(138,99,36,0.12)]",
+  notesDetails:
+    "group overflow-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF]",
+  notesSummary:
+    "flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-2.5 text-xs font-semibold text-[#4F4638] marker:content-none [&::-webkit-details-marker]:hidden",
+  notesBody: "border-t border-[rgba(138,99,36,0.12)] px-3.5 py-2.5",
+  innerCard:
+    "rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-2.5 py-2",
+  innerCardHover:
+    "rounded-md border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-2 py-1.5 transition-colors hover:border-[rgba(201,164,77,0.28)]",
+  metricCard:
+    "rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-2.5 py-2",
+  metricCardHighlight:
+    "rounded-lg border border-[rgba(245,158,11,0.35)] bg-[rgba(254,243,199,0.55)] px-2.5 py-2",
+  metricLabel:
+    "text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255]",
+  metricValue: "mt-0.5 text-sm font-bold tabular-nums text-[#17130E]",
+  metricIcon: "h-3.5 w-3.5 shrink-0 text-[#8A6324]",
+  opportunityLink:
+    "inline-flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-[#8A6324]",
+  photoCard:
+    "w-36 shrink-0 overflow-hidden rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA]",
+  photoCardHover:
+    "transition-colors hover:border-[rgba(201,164,77,0.35)]",
+  bannerDeleted:
+    "mb-2 rounded-lg border border-[rgba(251,146,60,0.35)] bg-[rgba(254,243,199,0.45)] px-3 py-2 text-sm text-[#9A3412]",
+  bannerArchived:
+    "mb-2 rounded-lg border border-[rgba(245,158,11,0.30)] bg-[rgba(254,243,199,0.40)] px-3 py-2 text-sm text-[#92400E]",
+  commandPlate:
+    "flex flex-col gap-2 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-2.5 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-3",
+  workspaceGrid:
+    "grid gap-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(22rem,0.95fr)] lg:items-start",
+  workspaceMain: "flex min-w-0 flex-col gap-3",
+  workspaceSide: "flex min-w-0 flex-col gap-3",
+  ivoryMetaRow:
+    "flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-[#4F4638]",
+  ivoryTagChip:
+    "inline-flex items-center gap-0.5 rounded-full bg-[#EFE4CB] px-2 py-0.5 text-[11px] font-medium text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.12)]",
+  ivoryCardPrimary: "text-sm font-semibold text-[#17130E]",
+  ivoryCardSecondary: "text-xs text-[#4F4638]",
+  ivoryCardMuted: "text-xs text-[#6B6255]",
+  compactSectionSurface:
+    "north-star-detail-section scroll-mt-6 rounded-[1rem] p-3",
+  truncatedHint: "mt-2 text-xs font-medium text-[#6B6255]",
+};

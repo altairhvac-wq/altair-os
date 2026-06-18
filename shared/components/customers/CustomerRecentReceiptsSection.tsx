@@ -6,10 +6,12 @@ import {
   type Expense,
 } from "@/shared/types/expense";
 import { adminCardSectionClass } from "@/shared/lib/admin-density";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type CustomerRecentReceiptsSectionProps = {
   customerId: string;
   expenses: Expense[];
+  northStar?: boolean;
 };
 
 function isReceiptImage(fileName?: string): boolean {
@@ -23,20 +25,31 @@ function isReceiptImage(fileName?: string): boolean {
 export function CustomerRecentReceiptsSection({
   customerId,
   expenses,
+  northStar = false,
 }: CustomerRecentReceiptsSectionProps) {
   if (expenses.length === 0) {
     return null;
   }
 
   return (
-    <section className={adminCardSectionClass}>
+    <section className={northStar ? dt.compactSectionSurface : adminCardSectionClass}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+        <h2
+          className={
+            northStar
+              ? dt.sectionTitle
+              : "text-[11px] font-semibold uppercase tracking-wide text-slate-500"
+          }
+        >
           Recent receipts
         </h2>
         <Link
           href={customerExpensesHref(customerId)}
-          className="min-h-11 inline-flex items-center text-xs font-semibold text-cyan-600 transition-colors hover:text-cyan-700"
+          className={
+            northStar
+              ? `min-h-11 inline-flex items-center ${dt.link}`
+              : "min-h-11 inline-flex items-center text-xs font-semibold text-cyan-600 transition-colors hover:text-cyan-700"
+          }
         >
           All
         </Link>
@@ -46,7 +59,7 @@ export function CustomerRecentReceiptsSection({
         {expenses.map((expense) => (
           <article
             key={expense.id}
-            className="w-36 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white"
+            className={northStar ? dt.photoCard : "w-36 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white"}
           >
             <div className="aspect-square bg-slate-100">
               {isReceiptImage(expense.receiptFileName) &&
@@ -58,16 +71,28 @@ export function CustomerRecentReceiptsSection({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center px-2 text-center text-[11px] font-medium text-slate-600">
+                <div
+                  className={
+                    northStar
+                      ? "flex h-full items-center justify-center px-2 text-center text-[11px] font-medium text-[#4F4638]"
+                      : "flex h-full items-center justify-center px-2 text-center text-[11px] font-medium text-slate-600"
+                  }
+                >
                   {expense.receiptFileName ?? "Receipt"}
                 </div>
               )}
             </div>
             <div className="px-2 py-2">
-              <p className="truncate text-xs font-semibold text-slate-900">
+              <p
+                className={
+                  northStar
+                    ? "truncate text-xs font-semibold text-[#17130E]"
+                    : "truncate text-xs font-semibold text-slate-900"
+                }
+              >
                 {expense.merchant.trim() || expense.expenseNumber}
               </p>
-              <p className="text-[11px] text-slate-500">
+              <p className={northStar ? "text-[11px] text-[#6B6255]" : "text-[11px] text-slate-500"}>
                 {formatExpenseAmount(expense.amount)}
               </p>
             </div>

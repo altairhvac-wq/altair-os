@@ -12,15 +12,18 @@ import {
   type Customer,
   type CustomerFormData,
 } from "@/shared/types/customer";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type CustomerEditControlProps = {
   customer: Customer;
   canManage: boolean;
+  northStar?: boolean;
 };
 
 export function CustomerEditControl({
   customer,
   canManage,
+  northStar = false,
 }: CustomerEditControlProps) {
   const router = useRouter();
   const [panelOpen, setPanelOpen] = useState(false);
@@ -73,7 +76,11 @@ export function CustomerEditControl({
       <button
         type="button"
         onClick={openPanel}
-        className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+        className={
+          northStar
+            ? dt.secondaryAction
+            : "inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+        }
       >
         <Pencil className="h-4 w-4" />
         Edit customer

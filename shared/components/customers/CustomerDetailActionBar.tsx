@@ -7,12 +7,15 @@ import {
 } from "@/shared/lib/customers/customer-action-links";
 import type { Invoice } from "@/shared/types/invoice";
 import { hasInvoiceUnpaidBalance } from "@/shared/types/invoice";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type CustomerDetailActionBarProps = {
   customerId: string;
   invoices: Invoice[];
   canCreateJob: boolean;
   canManageBilling: boolean;
+  northStar?: boolean;
+  compact?: boolean;
 };
 
 const actionClass =
@@ -34,17 +37,21 @@ export function CustomerDetailActionBar({
   invoices,
   canCreateJob,
   canManageBilling,
+  northStar = false,
+  compact = false,
 }: CustomerDetailActionBarProps) {
   const recordPaymentHref = resolveRecordPaymentHref(invoices);
+  const primaryClass = northStar ? dt.primaryAction : actionClass;
+  const secondaryClass = northStar ? dt.secondaryAction : actionClass;
 
   if (!canCreateJob && !canManageBilling) {
     return null;
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className={compact ? "flex flex-wrap gap-1.5" : "flex flex-wrap gap-2"}>
       {canCreateJob ? (
-        <Link href={createJobForCustomerHref(customerId)} className={actionClass}>
+        <Link href={createJobForCustomerHref(customerId)} className={primaryClass}>
           <Plus className="h-3.5 w-3.5" />
           New job
         </Link>
@@ -53,20 +60,20 @@ export function CustomerDetailActionBar({
         <>
           <Link
             href={createEstimateForCustomerHref(customerId)}
-            className={actionClass}
+            className={secondaryClass}
           >
             <FileText className="h-3.5 w-3.5" />
             New estimate
           </Link>
           <Link
             href={createInvoiceForCustomerHref(customerId)}
-            className={actionClass}
+            className={secondaryClass}
           >
             <Receipt className="h-3.5 w-3.5" />
             New invoice
           </Link>
           {recordPaymentHref ? (
-            <Link href={recordPaymentHref} className={actionClass}>
+            <Link href={recordPaymentHref} className={secondaryClass}>
               <DollarSign className="h-3.5 w-3.5" />
               Record payment
             </Link>

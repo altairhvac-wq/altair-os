@@ -22,17 +22,20 @@ import {
 } from "@/shared/lib/customer-lifecycle";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { formatDate, type Customer } from "@/shared/types/customer";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type CustomerLifecycleControlProps = {
   customer: Customer;
   deleteDependencies: CustomerDeleteDependencies;
   canManage: boolean;
+  northStar?: boolean;
 };
 
 export function CustomerLifecycleControl({
   customer,
   deleteDependencies,
   canManage,
+  northStar = false,
 }: CustomerLifecycleControlProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -177,6 +180,10 @@ export function CustomerLifecycleControl({
     });
   }
 
+  const secondaryButtonClass = northStar
+    ? dt.tertiaryAction
+    : "inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60";
+
   return (
     <div className="flex flex-col items-end gap-2">
       {lifecycleState === "deleted" && customer.deletedAt ? (
@@ -197,7 +204,7 @@ export function CustomerLifecycleControl({
               type="button"
               onClick={handleArchive}
               disabled={isPending}
-              className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className={secondaryButtonClass}
             >
               {isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

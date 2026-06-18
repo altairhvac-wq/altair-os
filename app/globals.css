@@ -807,6 +807,65 @@ a[href] {
   color: #8a6324;
 }
 
+/* North Star Customer 360 detail — moon graphite frame + premium hero + ivory sections (M3B) */
+.north-star-detail-page-canvas {
+  position: relative;
+}
+
+@media (min-width: 1024px) {
+  .north-star-detail-page-canvas {
+    overflow: hidden;
+    border-radius: 1.5rem;
+    padding: 1rem;
+    border: 1px solid rgb(174 182 194 / 0.18);
+    background: linear-gradient(180deg, #273140 0%, #1a2029 18%, #111821 100%);
+    box-shadow:
+      0 22px 60px rgb(3 7 12 / 0.3),
+      inset 0 1px 0 rgb(255 255 255 / 0.08);
+  }
+
+  .north-star-detail-page-canvas::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgb(214 190 120 / 0.22) 50%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+}
+
+.north-star-detail-hero {
+  border: 1px solid rgb(214 190 120 / 0.22);
+  background: linear-gradient(
+    135deg,
+    rgb(34 43 56 / 0.98) 0%,
+    rgb(23 32 43 / 0.96) 48%,
+    rgb(17 24 33 / 0.98) 100%
+  );
+  box-shadow:
+    0 12px 40px -16px rgb(3 7 12 / 0.42),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+.admin-north-star-shell .north-star-detail-section,
+.admin-north-star-shell .north-star-detail-section-surface {
+  border: 1px solid rgb(138 99 36 / 0.12);
+  background-color: var(--north-star-ivory);
+  box-shadow:
+    0 10px 40px -14px rgb(3 7 12 / 0.28),
+    inset 0 1px 0 rgb(255 255 255 / 0.45);
+}
+
+.admin-north-star-shell .north-star-detail-section-nav {
+  border-bottom: 1px solid rgb(138 99 36 / 0.1);
+}
+
 /* North Star Customers loading skeleton — warm ledger pulse */
 .north-star-skeleton {
   animation: north-star-skeleton-pulse 1.8s ease-in-out infinite;

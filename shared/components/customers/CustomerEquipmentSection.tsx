@@ -22,17 +22,24 @@ import {
 } from "@/shared/types/customer-equipment";
 import { CUSTOMER_DETAIL_EQUIPMENT_ANCHOR } from "@/shared/lib/customers/customer-detail-anchors";
 import { adminCardSectionClass } from "@/shared/lib/admin-density";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type CustomerEquipmentSectionProps = {
   customerId: string;
   equipment: CustomerEquipment[];
   canManage: boolean;
+  northStar?: boolean;
+  compact?: boolean;
 };
+
+const COMPACT_EQUIPMENT_LIMIT = 4;
 
 export function CustomerEquipmentSection({
   customerId,
   equipment: initialEquipment,
   canManage,
+  northStar = false,
+  compact = false,
 }: CustomerEquipmentSectionProps) {
   const [equipment, setEquipment] = useState(initialEquipment);
   const [isPending, startTransition] = useTransition();
@@ -119,24 +126,50 @@ export function CustomerEquipmentSection({
     });
   }
 
+  const sectionClass = northStar
+    ? compact
+      ? dt.compactSectionSurface
+      : dt.sectionSurface
+    : adminCardSectionClass;
+  const visibleEquipment = compact
+    ? equipment.slice(0, COMPACT_EQUIPMENT_LIMIT)
+    : equipment;
+  const hiddenEquipmentCount = compact
+    ? Math.max(0, equipment.length - COMPACT_EQUIPMENT_LIMIT)
+    : 0;
+
   return (
     <section
-      className={`${adminCardSectionClass} scroll-mt-6`}
+      className={`${sectionClass} scroll-mt-6`}
       id={CUSTOMER_DETAIL_EQUIPMENT_ANCHOR}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 ring-1 ring-violet-600/10">
-            <Settings2 className="h-4 w-4 text-violet-600" />
+          <div
+            className={
+              northStar
+                ? dt.sectionIconWrap
+                : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 ring-1 ring-violet-600/10"
+            }
+          >
+            <Settings2
+              className={northStar ? "h-4 w-4" : "h-4 w-4 text-violet-600"}
+            />
           </div>
-          <h2 className="text-sm font-bold text-slate-900">Equipment</h2>
+          <h2 className={northStar ? dt.sectionTitle : "text-sm font-bold text-slate-900"}>
+            Equipment
+          </h2>
         </div>
 
         {canManage ? (
           <button
             type="button"
             onClick={openCreatePanel}
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-violet-700"
+            className={
+              northStar
+                ? dt.primaryAction
+                : "inline-flex shrink-0 items-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-violet-700"
+            }
           >
             <Plus className="h-4 w-4" />
             Add equipment
@@ -145,27 +178,53 @@ export function CustomerEquipmentSection({
       </div>
 
       {equipment.length === 0 ? (
-        <div className="mt-6 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-10 text-center">
-          <p className="text-sm font-medium text-slate-700">No equipment on file</p>
-          <p className="mt-1 text-xs text-slate-500">
+        <div
+          className={
+            northStar
+              ? `mt-3 ${dt.emptyState}`
+              : "mt-6 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-10 text-center"
+          }
+        >
+          <p
+            className={
+              northStar
+                ? "text-sm font-medium text-[#4F4638]"
+                : "text-sm font-medium text-slate-700"
+            }
+          >
+            No equipment on file
+          </p>
+          <p
+            className={
+              northStar
+                ? "mt-1 text-xs text-[#6B6255]"
+                : "mt-1 text-xs text-slate-500"
+            }
+          >
             Equipment added during jobs or from the office will appear here.
           </p>
         </div>
       ) : (
-        <ul className="mt-6 divide-y divide-slate-100">
-          {equipment.map((item) => {
+        <ul className={`${compact ? "mt-3" : "mt-6"} ${northStar ? dt.listDivider : "divide-y divide-slate-100"}`}>
+          {visibleEquipment.map((item) => {
             const warrantyStatus = getWarrantyStatus(item.warrantyExpiresAt);
 
             return (
-              <li key={item.id} className="py-4 first:pt-0 last:pb-0">
+              <li key={item.id} className={`${compact ? "py-2.5" : "py-4"} first:pt-0 last:pb-0`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-slate-900">
+                      <p className={northStar ? "font-semibold text-[#17130E]" : "font-semibold text-slate-900"}>
                         <DemoDisplayName>{item.name}</DemoDisplayName>
                       </p>
                       {item.equipmentType ? (
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                        <span
+                          className={
+                            northStar
+                              ? "rounded-full bg-[#EFE4CB] px-2 py-0.5 text-xs font-medium text-[#4F4638]"
+                              : "rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
+                          }
+                        >
                           {item.equipmentType}
                         </span>
                       ) : null}
@@ -176,25 +235,35 @@ export function CustomerEquipmentSection({
                       </span>
                     </div>
 
-                    <div className="mt-2 grid gap-1 text-sm text-slate-600 sm:grid-cols-2">
+                    <div
+                      className={
+                        northStar
+                          ? "mt-1.5 grid gap-0.5 text-sm text-[#4F4638] sm:grid-cols-2"
+                          : "mt-2 grid gap-1 text-sm text-slate-600 sm:grid-cols-2"
+                      }
+                    >
                       {item.brand || item.modelNumber ? (
                         <p>
                           {[item.brand, item.modelNumber].filter(Boolean).join(" · ")}
                         </p>
                       ) : null}
                       {item.serialNumber ? (
-                        <p className="text-slate-500">S/N {item.serialNumber}</p>
+                        <p className={northStar ? "text-[#6B6255]" : "text-slate-500"}>
+                          S/N {item.serialNumber}
+                        </p>
                       ) : null}
                       {item.location ? <p>{item.location}</p> : null}
                       {item.installDate ? (
-                        <p className="text-slate-500">
+                        <p className={northStar ? "text-[#6B6255]" : "text-slate-500"}>
                           Installed {formatEquipmentDate(item.installDate)}
                         </p>
                       ) : null}
                     </div>
 
-                    {item.notes?.trim() ? (
-                      <p className="mt-2 text-sm text-slate-500">{item.notes}</p>
+                    {item.notes?.trim() && !compact ? (
+                      <p className={northStar ? "mt-2 text-sm text-[#6B6255]" : "mt-2 text-sm text-slate-500"}>
+                        {item.notes}
+                      </p>
                     ) : null}
                   </div>
 
@@ -203,7 +272,11 @@ export function CustomerEquipmentSection({
                       <button
                         type="button"
                         onClick={() => openEditPanel(item)}
-                        className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                        className={
+                          northStar
+                            ? dt.secondaryAction
+                            : "rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                        }
                       >
                         Edit
                       </button>
@@ -211,7 +284,11 @@ export function CustomerEquipmentSection({
                         type="button"
                         onClick={() => handleDeactivate(item)}
                         disabled={isPending}
-                        className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-50 disabled:opacity-60"
+                        className={
+                          northStar
+                            ? `${dt.secondaryAction} disabled:opacity-60`
+                            : "rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-50 disabled:opacity-60"
+                        }
                       >
                         Deactivate
                       </button>
@@ -223,6 +300,12 @@ export function CustomerEquipmentSection({
           })}
         </ul>
       )}
+
+      {hiddenEquipmentCount > 0 ? (
+        <p className={northStar ? dt.truncatedHint : "mt-2 text-xs text-slate-500"}>
+          Showing {visibleEquipment.length} of {equipment.length} items
+        </p>
+      ) : null}
 
       {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
 
