@@ -56,7 +56,7 @@ function PrimaryActionCard({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className={t.accentBadge}>Do this first</span>
-            <span className="text-[11px] font-medium text-slate-400">
+            <span className={`text-[11px] font-medium ${t.darkSurfaceMuted}`}>
               {formatNorthStarImpactCategoryLabel(recommendation.impactCategory)}
             </span>
           </div>
@@ -66,7 +66,7 @@ function PrimaryActionCard({
           {metric ? (
             <p className={t.primaryActionMetric}>{metric}</p>
           ) : null}
-          <p className="mt-2 text-sm font-medium text-slate-200">
+          <p className={`mt-2 ${t.darkSurfaceText}`}>
             {recommendation.description}
           </p>
           <p className={`mt-1 line-clamp-2 ${t.metaDark}`}>
@@ -96,7 +96,7 @@ function OperationsClearCard() {
           <p className="mt-2 text-lg font-semibold leading-snug text-white sm:text-xl">
             No urgent office priorities right now
           </p>
-          <p className="mt-2 text-sm font-medium text-slate-200">
+          <p className={`mt-2 ${t.darkSurfaceText}`}>
             The ranked priority queue is empty — field and billing follow-ups are
             in good shape for now.
           </p>
@@ -134,11 +134,11 @@ function SecondaryActionButton({
       className={t.secondaryAction}
     >
       <span className={t.secondaryActionIndex}>{recommendation.priority}</span>
-      <span className="text-sm font-medium text-slate-200">
+      <span className={t.darkSurfaceText}>
         {recommendation.title}
       </span>
       <ChevronRight
-        className="h-3.5 w-3.5 text-slate-500"
+        className={`h-3.5 w-3.5 ${t.darkSurfaceMuted}`}
         aria-hidden="true"
       />
     </button>
@@ -168,7 +168,7 @@ export function NorthStarMissionHero({
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2.5">
                 <span className={t.eyebrowAccent}>Operating center</span>
-                <span className="text-[11px] text-slate-400">·</span>
+                <span className={`text-[11px] ${t.darkSurfaceMuted}`}>·</span>
                 <span className={t.eyebrowLight}>{dateLabel}</span>
                 <span className={t.liveBadge}>
                   <span

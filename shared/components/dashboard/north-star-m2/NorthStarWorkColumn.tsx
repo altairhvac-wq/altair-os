@@ -130,7 +130,7 @@ export function NorthStarWorkColumn({ content, data }: NorthStarWorkColumnProps)
         <div className={`mt-auto border-t ${t.columnDivider} pt-3`}>
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
+              <Users className={`h-3.5 w-3.5 ${t.darkSurfaceMuted}`} aria-hidden="true" />
               <p className={t.eyebrowLight}>Crew load</p>
             </div>
             <Link href={content.timeHref} className={t.link}>

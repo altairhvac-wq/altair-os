@@ -151,6 +151,72 @@ const ACTIVITY_ICON_STYLES: Record<OperationalActivityEventType, string> = {
     "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
 };
 
+const NS_ICON_BRASS =
+  "bg-[rgba(201,164,77,0.18)] text-[#8A6324] ring-[rgba(201,164,77,0.24)]";
+const NS_ICON_NEUTRAL =
+  "bg-[#EFE4CB] text-[#6B6255] ring-[rgba(138,99,36,0.14)]";
+const NS_ICON_COMM =
+  "bg-[#F5F0E4] text-[#4F4638] ring-[rgba(138,99,36,0.16)]";
+const NS_ICON_SUCCESS =
+  "bg-[rgba(16,120,85,0.10)] text-emerald-800 ring-emerald-700/15";
+const NS_ICON_WARNING =
+  "bg-[rgba(180,120,30,0.12)] text-[#9A7028] ring-[rgba(138,99,36,0.20)]";
+const NS_ICON_DANGER =
+  "bg-[rgba(190,50,50,0.10)] text-rose-800 ring-rose-700/15";
+
+const NORTH_STAR_ACTIVITY_ICON_STYLES: Record<
+  OperationalActivityEventType,
+  string
+> = {
+  customer_created: NS_ICON_BRASS,
+  customer_archived: NS_ICON_NEUTRAL,
+  customer_restored: NS_ICON_COMM,
+  customer_deleted: NS_ICON_DANGER,
+  customer_moved_to_trash: NS_ICON_WARNING,
+  customer_restored_from_trash: NS_ICON_COMM,
+  customer_permanently_deleted: NS_ICON_DANGER,
+  equipment_added: NS_ICON_BRASS,
+  equipment_updated: NS_ICON_NEUTRAL,
+  warranty_expiration_recorded: NS_ICON_WARNING,
+  job_created: NS_ICON_BRASS,
+  job_status_changed: NS_ICON_NEUTRAL,
+  job_status_corrected: NS_ICON_WARNING,
+  job_reopened: NS_ICON_COMM,
+  technician_assigned: NS_ICON_BRASS,
+  technician_unassigned: NS_ICON_WARNING,
+  job_labor_auto_closed: NS_ICON_NEUTRAL,
+  work_completed: NS_ICON_SUCCESS,
+  estimate_created: NS_ICON_BRASS,
+  estimate_sent: NS_ICON_COMM,
+  estimate_email_resent: NS_ICON_COMM,
+  estimate_approved: NS_ICON_SUCCESS,
+  estimate_declined: NS_ICON_DANGER,
+  estimate_cancelled: NS_ICON_DANGER,
+  estimate_converted_to_invoice: NS_ICON_BRASS,
+  invoice_created: NS_ICON_BRASS,
+  invoice_sent: NS_ICON_COMM,
+  invoice_email_resent: NS_ICON_COMM,
+  invoice_voided: NS_ICON_DANGER,
+  invoice_updated: NS_ICON_NEUTRAL,
+  invoice_cancelled: NS_ICON_DANGER,
+  payment_recorded: NS_ICON_SUCCESS,
+  invoice_paid: NS_ICON_SUCCESS,
+  job_attachment_uploaded: NS_ICON_COMM,
+  job_material_added: NS_ICON_WARNING,
+  expense_receipt_uploaded: NS_ICON_WARNING,
+  expense_created: NS_ICON_BRASS,
+  expense_submitted: NS_ICON_COMM,
+  expense_approved: NS_ICON_SUCCESS,
+  expense_rejected: NS_ICON_DANGER,
+  expense_reimbursed: NS_ICON_BRASS,
+  status_changed: NS_ICON_NEUTRAL,
+  invoice_created_for_completed_job: NS_ICON_SUCCESS,
+  invoice_auto_created_from_completion: NS_ICON_SUCCESS,
+  labor_entries_closed: NS_ICON_SUCCESS,
+  pending_expenses_resolved: NS_ICON_SUCCESS,
+  material_costs_completed: NS_ICON_SUCCESS,
+};
+
 const WORKFLOW_ICON_OVERRIDES: Record<string, typeof History> = {
   start_route: Navigation,
   start_work: Play,
@@ -264,6 +330,10 @@ export function OperationalActivityTimeline({
               ACTIVITY_ICONS[activity.eventType];
             const isLast = index === displayedActivities.length - 1;
 
+            const iconStyle = northStar
+              ? NORTH_STAR_ACTIVITY_ICON_STYLES[activity.eventType]
+              : ACTIVITY_ICON_STYLES[activity.eventType];
+
             return (
               <li key={activity.id} className={`relative flex gap-3 ${compact ? "pb-3" : "pb-5"}`}>
                 {!isLast ? (
@@ -278,7 +348,7 @@ export function OperationalActivityTimeline({
                 ) : null}
 
                 <div
-                  className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ring-inset ${ACTIVITY_ICON_STYLES[activity.eventType]}`}
+                  className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ring-inset ${iconStyle}`}
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
                 </div>

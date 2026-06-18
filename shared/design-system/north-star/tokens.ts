@@ -104,13 +104,14 @@ export const northStarTokens: NorthStarDashboardTokens = {
   heroFooter: "border-t border-slate-700/25 bg-slate-900/20 px-5 py-4 sm:px-6",
 
   eyebrowAccent: "text-[10px] font-semibold uppercase tracking-[0.18em] text-[#C6A757]",
-  eyebrowLight: "text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400",
-  heroTitle: "text-xl font-semibold tracking-tight text-white sm:text-2xl",
-  bodySecondary: "text-sm text-slate-300",
-  meta: "text-xs text-slate-400",
-  metaDark: "text-xs text-slate-400",
-  darkSurfaceText: "text-sm font-medium text-slate-200",
-  darkSurfaceMuted: "text-xs text-slate-400",
+  eyebrowLight:
+    "text-[10px] font-semibold uppercase tracking-[0.16em] text-[#D7CDBD]",
+  heroTitle: "text-xl font-semibold tracking-tight text-[#FFF8E8] sm:text-2xl",
+  bodySecondary: "text-sm text-[#D7CDBD]",
+  meta: "text-xs text-[#B8AD9E]",
+  metaDark: "text-xs text-[#B8AD9E]",
+  darkSurfaceText: "text-sm font-medium text-[#F8F1E7]",
+  darkSurfaceMuted: "text-xs text-[#B8AD9E]",
 
   primaryAction:
     "group relative flex w-full flex-col gap-3 overflow-hidden rounded-xl border-l-[3px] border-l-[#B8943F] bg-gradient-to-br from-[#0f1a2e] via-[#0c1525] to-[#0a1220] p-4 text-left shadow-[0_10px_36px_-14px_rgba(0,0,0,0.42)] ring-1 ring-[rgba(198,167,87,0.18)] transition-all hover:border-l-[#C6A757] hover:ring-[rgba(198,167,87,0.30)] sm:flex-row sm:items-center sm:justify-between sm:p-5",
@@ -127,11 +128,11 @@ export const northStarTokens: NorthStarDashboardTokens = {
     "rounded-lg border-l-2 border-l-violet-400/60 bg-slate-800/35 px-4 py-3 ring-1 ring-slate-700/40",
   signalChip:
     "flex flex-col gap-0.5 rounded-lg border border-slate-600/40 bg-slate-800/35 px-3 py-2",
-  signalLabel: "text-[10px] leading-tight text-slate-400",
+  signalLabel: "text-[10px] leading-tight text-[#B8AD9E]",
   opsScoreInline:
     "inline-flex items-center gap-2 rounded-lg border border-[rgba(198,167,87,0.22)] bg-slate-800/40 px-3 py-1.5",
   opsScoreLabel: "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#C6A757]",
-  opsScoreValue: "text-lg font-semibold tabular-nums text-white",
+  opsScoreValue: "text-lg font-semibold tabular-nums text-[#FFF8E8]",
   opsScoreTrack: "h-1.5 w-16 overflow-hidden rounded-full bg-slate-700/80",
   opsScoreFill: "h-full rounded-full bg-gradient-to-r from-[#C6A757] to-[#8B7232]",
   opsScoreDivider: "h-4 w-px bg-[rgba(198,167,87,0.28)]",
@@ -144,7 +145,7 @@ export const northStarTokens: NorthStarDashboardTokens = {
   boardHeader: "border-b border-white/[0.08] bg-[#141e2e]/80 px-5 py-4 sm:px-6 sm:py-5",
   boardTopAccent:
     "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(198,167,87,0.38)] to-transparent",
-  boardTitle: "text-lg font-semibold text-slate-100 sm:text-xl",
+  boardTitle: "text-lg font-semibold text-[#FFF8E8] sm:text-xl",
   columnWell: "bg-[rgba(12,20,34,0.38)]",
   columnHeader:
     "rounded-lg border border-white/[0.12] bg-[#FAF9F6] px-3.5 py-3 shadow-[0_2px_10px_rgba(0,0,0,0.20)]",

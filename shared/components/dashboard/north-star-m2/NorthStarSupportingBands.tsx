@@ -96,7 +96,7 @@ export function NorthStarSupportingBands({ data }: NorthStarSupportingBandsProps
                 {content.activities.map((item) => (
                   <li key={item.id} className="flex items-baseline gap-2.5">
                     <span
-                      className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400"
+                      className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#B8943F]"
                       aria-hidden="true"
                     />
                     <span className={t.activityTitle}>{item.title}</span>

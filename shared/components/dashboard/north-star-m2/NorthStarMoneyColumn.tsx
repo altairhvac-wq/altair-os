@@ -96,7 +96,7 @@ export function NorthStarMoneyColumn({ content, data }: NorthStarMoneyColumnProp
           {content.expenseInset ? (
             <InsetCard
               inset={content.expenseInset}
-              icon={<Receipt className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />}
+              icon={<Receipt className={`h-3.5 w-3.5 ${t.intelligenceAccent}`} aria-hidden="true" />}
             />
           ) : null}
           {content.leadOpportunityInset ? (
