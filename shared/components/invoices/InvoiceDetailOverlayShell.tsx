@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { FocusedDocumentOverlay } from "@/shared/components/layout/FocusedDocumentOverlay";
 
 type InvoiceDetailOverlayShellProps = {
@@ -22,6 +23,7 @@ export function InvoiceDetailOverlayShell({
   closeDisabled = false,
 }: InvoiceDetailOverlayShellProps) {
   const router = useRouter();
+  const northStar = isNorthStarShellEnabled();
 
   return (
     <FocusedDocumentOverlay
@@ -34,6 +36,7 @@ export function InvoiceDetailOverlayShell({
       closeDisabled={closeDisabled}
       closeVariant="back"
       ariaLabel="Invoice details"
+      northStar={northStar}
     >
       {children}
     </FocusedDocumentOverlay>

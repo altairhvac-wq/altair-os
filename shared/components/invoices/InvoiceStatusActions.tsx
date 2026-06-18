@@ -27,6 +27,7 @@ import {
   type InvoiceDetail,
 } from "@/shared/types/invoice";
 import { InvoiceEditLinkButton } from "./InvoiceEditLinkButton";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type InvoiceStatusActionsProps = {
   invoice: InvoiceDetail;
@@ -34,6 +35,7 @@ type InvoiceStatusActionsProps = {
   canManageBilling: boolean;
   customerEmailBlockReason: string | null;
   lastEmailSentMessage?: string | null;
+  northStar?: boolean;
 };
 
 export function InvoiceStatusActions({
@@ -42,6 +44,7 @@ export function InvoiceStatusActions({
   canManageBilling,
   customerEmailBlockReason,
   lastEmailSentMessage,
+  northStar = false,
 }: InvoiceStatusActionsProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -259,6 +262,20 @@ export function InvoiceStatusActions({
     );
   }
 
+  const editButtonClass = northStar
+    ? dt.secondaryAction
+    : "inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50";
+  const sendButtonClass = northStar
+    ? `${dt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
+    : "inline-flex min-h-11 items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60";
+  const resendButtonClass = northStar
+    ? `${dt.secondaryAction} disabled:cursor-not-allowed disabled:opacity-60`
+    : "inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60";
+  const voidButtonClass = northStar
+    ? "inline-flex min-h-11 items-center gap-2 rounded-lg border border-[rgba(185,28,28,0.35)] bg-[#FEF2F2] px-4 py-2.5 text-sm font-semibold text-[#991B1B] transition-colors hover:border-[rgba(185,28,28,0.5)] hover:bg-[#FEE2E2] disabled:cursor-not-allowed disabled:opacity-60"
+    : "inline-flex min-h-11 items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60";
+  const helperTextClass = northStar ? "text-xs text-[#4F4638]" : "text-xs text-slate-500";
+
   return (
     <div className="flex flex-col items-start gap-2">
       <div className="flex flex-wrap gap-2">
@@ -267,7 +284,7 @@ export function InvoiceStatusActions({
             invoice={invoice}
             paymentCount={paymentCount}
             canManageBilling={canManageBilling}
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            className={editButtonClass}
           />
         ) : null}
 
@@ -281,7 +298,7 @@ export function InvoiceStatusActions({
                 ? "Emails the invoice and marks it as sent."
                 : customerEmailBlockReason ?? undefined
             }
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className={sendButtonClass}
           >
             <Send className="h-4 w-4" />
             {isPending ? "Sending…" : "Send to customer"}
@@ -298,7 +315,7 @@ export function InvoiceStatusActions({
                 ? "Sends another copy to the customer's email on file."
                 : customerEmailBlockReason ?? undefined
             }
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className={resendButtonClass}
           >
             <Mail className="h-4 w-4" />
             {resendPending ? "Resending…" : "Resend to customer"}
@@ -310,7 +327,7 @@ export function InvoiceStatusActions({
             type="button"
             disabled={workflowBusy}
             onClick={() => setShowVoidConfirm(true)}
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+            className={voidButtonClass}
           >
             <Ban className="h-4 w-4" />
             Void invoice
@@ -319,13 +336,13 @@ export function InvoiceStatusActions({
       </div>
 
       {emailSendBlocked && customerEmailBlockReason ? (
-        <p className="text-xs text-slate-500">{customerEmailBlockReason}</p>
+        <p className={helperTextClass}>{customerEmailBlockReason}</p>
       ) : canSend ? (
-        <p className="text-xs text-slate-500">
+        <p className={helperTextClass}>
           Send emails the invoice to the customer on file.
         </p>
       ) : canResendEmail ? (
-        <p className="text-xs text-slate-500">
+        <p className={helperTextClass}>
           {lastEmailSentMessage ??
             "Resend sends another copy to the customer's email on file."}
         </p>

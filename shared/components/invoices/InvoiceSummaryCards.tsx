@@ -24,11 +24,13 @@ type InvoiceSummaryCardsProps = {
   highlightedLabels?: Array<
     "Needs attention" | "Overdue" | "Due today" | "Unpaid total" | "Paid this month"
   >;
+  northStar?: boolean;
 };
 
 export function InvoiceSummaryCards({
   invoices,
   highlightedLabels = [],
+  northStar = false,
 }: InvoiceSummaryCardsProps) {
   const timeZone = useCompanyTimezone();
 
@@ -123,6 +125,7 @@ export function InvoiceSummaryCards({
   return (
     <PageSummaryStrip
       lgColumnsClass="lg:grid-cols-5"
+      northStar={northStar}
       cards={cards.map((card) => ({
         ...card,
         highlighted: highlightedLabels.includes(card.label),

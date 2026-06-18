@@ -4,6 +4,7 @@ type InvoiceIdentityCardProps = {
   invoiceNumber: string;
   issueDate: string;
   dueDate: string;
+  northStar?: boolean;
 };
 
 function MetaField({ label, value }: { label: string; value: string }) {
@@ -23,7 +24,29 @@ export function InvoiceIdentityCard({
   invoiceNumber,
   issueDate,
   dueDate,
+  northStar = false,
 }: InvoiceIdentityCardProps) {
+  if (northStar) {
+    const numberClass =
+      "text-sm font-bold tabular-nums tracking-tight text-[#17130E] sm:text-base print:text-sm";
+    const metaClass =
+      "text-xs leading-snug text-[#6B6255] print:text-slate-700";
+
+    return (
+      <div className="invoice-document-meta min-w-0">
+        <p className={numberClass}>{invoiceNumber}</p>
+        <p className={`mt-0.5 ${metaClass}`}>
+          Issued {formatDate(issueDate)}
+          <span className="text-[#8A6324]" aria-hidden>
+            {" "}
+            ·{" "}
+          </span>
+          Due {formatDate(dueDate)}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="invoice-identity-card rounded-lg border border-slate-200 bg-white px-3 py-3 ring-1 ring-slate-100 sm:rounded-xl sm:px-5 sm:py-5 md:px-6 md:py-6 print:rounded-none print:border-slate-300 print:bg-white print:px-0 print:py-0 print:ring-0">
       <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:text-[10px] sm:tracking-[0.14em] print:text-slate-600">

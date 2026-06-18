@@ -5,6 +5,7 @@ type InvoiceAmountDueHeroProps = {
   total: number;
   amountPaid?: number;
   dueDate: string;
+  northStar?: boolean;
 };
 
 export function InvoiceAmountDueHero({
@@ -12,9 +13,52 @@ export function InvoiceAmountDueHero({
   total,
   amountPaid = 0,
   dueDate,
+  northStar = false,
 }: InvoiceAmountDueHeroProps) {
   const isPaidInFull = balanceDue <= 0;
   const hasPartialPayment = amountPaid > 0 && balanceDue > 0;
+
+  if (northStar) {
+    return (
+      <div
+        className="invoice-amount-due-hero rounded-xl border border-[rgba(201,164,77,0.35)] bg-gradient-to-br from-[#273140] via-[#1F2937] to-[#17130E] px-3 py-2 text-[#FFF9EA] shadow-[0_12px_40px_-16px_rgba(3,7,12,0.42)] sm:rounded-2xl sm:px-4 sm:py-3 print:rounded-none print:border-2 print:border-slate-900 print:bg-white print:px-0 print:py-1.5 print:text-slate-900 print:shadow-none"
+        aria-label={isPaidInFull ? "Invoice paid in full" : "Amount due"}
+      >
+        <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[#D6BE78] sm:text-[10px] sm:tracking-[0.16em] print:text-slate-600">
+          {isPaidInFull ? "Payment status" : "Amount due"}
+        </p>
+
+        <p className="mt-0.5 text-xl font-bold tabular-nums tracking-tight text-[#FFF9EA] sm:text-2xl print:mt-0 print:text-2xl print:text-slate-900">
+          {isPaidInFull ? "Paid in full" : formatCurrency(balanceDue)}
+        </p>
+
+        {!isPaidInFull ? (
+          <p className="mt-1 text-xs font-medium leading-snug text-[#D7CDBD] sm:text-sm print:mt-1 print:text-slate-600">
+            Payment due by {formatDate(dueDate)}
+          </p>
+        ) : null}
+
+        {hasPartialPayment || (amountPaid > 0 && isPaidInFull) ? (
+          <dl className="mt-2 space-y-1 border-t border-[rgba(201,164,77,0.22)] pt-2 text-xs sm:mt-2.5 sm:space-y-1.5 sm:pt-2.5 sm:text-sm print:mt-2 print:border-slate-300 print:pt-2">
+            <div className="flex items-baseline justify-between gap-4">
+              <dt className="text-[#B8AD9E] print:text-slate-600">Invoice total</dt>
+              <dd className="font-semibold tabular-nums text-[#FFF8E8] print:text-slate-900">
+                {formatCurrency(total)}
+              </dd>
+            </div>
+            {amountPaid > 0 ? (
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="text-[#B8AD9E] print:text-slate-600">Amount paid</dt>
+                <dd className="font-semibold tabular-nums text-emerald-300 print:text-slate-900">
+                  {formatCurrency(amountPaid)}
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div

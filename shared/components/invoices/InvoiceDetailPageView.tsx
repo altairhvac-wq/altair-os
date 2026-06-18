@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { ArrowLeft, Briefcase, FileText, Mail, Phone, Printer, User } from "lucide-react";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import {
   canRecordInvoicePayment,
@@ -32,6 +33,7 @@ import { RecordPaymentForm } from "./RecordPaymentForm";
 import { InvoicePaymentLinkCard } from "./InvoicePaymentLinkCard";
 import { InvoiceMessageAiAssistant } from "./InvoiceMessageAiAssistant";
 import { InvoiceLifecycleControl } from "./InvoiceLifecycleControl";
+import { InvoiceDetailNorthStarBody } from "./north-star-m5d";
 
 import type { BillingSignature } from "@/shared/types/billing-signature";
 import type { InvoiceDeleteDependencies } from "@/shared/lib/invoice-lifecycle";
@@ -43,6 +45,10 @@ import {
   MasterPageCanvas,
   masterDetailOverlayBodyInsetClass,
 } from "@/shared/design-system/shell";
+import {
+  northStarDetailTokens as dt,
+  northStarInvoiceDocumentTokens as idt,
+} from "@/shared/design-system/north-star/tokens";
 
 type InvoiceDetailPageViewProps = {
   invoice: InvoiceDetail;
@@ -59,7 +65,98 @@ type InvoiceDetailPageViewProps = {
   deleteDependencies: InvoiceDeleteDependencies;
 };
 
-export function InvoiceDetailPageView({
+export function InvoiceDetailPageView(props: InvoiceDetailPageViewProps) {
+  if (isNorthStarShellEnabled()) {
+    return <NorthStarInvoiceDetailPageView {...props} />;
+  }
+
+  return <LegacyInvoiceDetailPageView {...props} />;
+}
+
+function NorthStarInvoiceDetailPageView({
+  invoice,
+  activities,
+  payments,
+  company,
+  companyTimeZone,
+  canManageBilling,
+  canManageCustomers = false,
+  canCaptureSignature = false,
+  signature,
+  presentation = "page",
+  aiFeaturesEnabled = false,
+  deleteDependencies,
+}: InvoiceDetailPageViewProps) {
+  const isOverlay = presentation === "overlay";
+  const customerEmail = invoice.customerEmail?.trim();
+  const customerEmailBlockReason = getCustomerEmailSendBlockReason(customerEmail);
+  const lastEmailSentInfo = useMemo(
+    () => getLastInvoiceEmailSentInfo(activities, customerEmail),
+    [activities, customerEmail],
+  );
+  const lastEmailSentMessage = lastEmailSentInfo
+    ? formatBillingEmailSentMessage(lastEmailSentInfo, companyTimeZone)
+    : null;
+
+  function handlePrint() {
+    window.print();
+  }
+
+  const body = (
+    <InvoiceDetailNorthStarBody
+      invoice={invoice}
+      activities={activities}
+      payments={payments}
+      company={company}
+      companyTimeZone={companyTimeZone}
+      canManageBilling={canManageBilling}
+      canManageCustomers={canManageCustomers}
+      canCaptureSignature={canCaptureSignature}
+      signature={signature}
+      customerEmailBlockReason={customerEmailBlockReason}
+      lastEmailSentMessage={lastEmailSentMessage}
+      presentation={presentation}
+      aiFeaturesEnabled={aiFeaturesEnabled}
+      deleteDependencies={deleteDependencies}
+    />
+  );
+
+  if (isOverlay) {
+    return (
+      <MasterPageCanvas
+        width="detail"
+        className={`${masterDetailOverlayBodyInsetClass} ${idt.overlayBodyCanvas}`}
+      >
+        <MasterContentStack density="default">{body}</MasterContentStack>
+      </MasterPageCanvas>
+    );
+  }
+
+  const pageBackLink = (
+    <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <Link href="/invoices" className={dt.backLink}>
+        <ArrowLeft className="h-4 w-4 shrink-0" />
+        Back to invoices
+      </Link>
+      <button type="button" onClick={handlePrint} className={dt.secondaryAction}>
+        <Printer className="h-4 w-4" />
+        Print / Save PDF
+      </button>
+    </div>
+  );
+
+  return (
+    <MasterDetailPageLayout
+      backLink={pageBackLink}
+      className={`${dt.pageCanvas} overflow-x-hidden print:max-w-none print:pb-0`}
+      canvasWidth="detailWide"
+    >
+      {body}
+    </MasterDetailPageLayout>
+  );
+}
+
+function LegacyInvoiceDetailPageView({
   invoice,
   activities,
   payments,

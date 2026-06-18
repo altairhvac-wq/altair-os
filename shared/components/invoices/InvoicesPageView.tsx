@@ -7,6 +7,7 @@ import {
   batchSendInvoicesAction,
   createInvoiceAction,
 } from "@/app/actions/invoices";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import {
   bulkArchiveInvoicesAction,
   bulkMoveInvoicesToTrashAction,
@@ -76,6 +77,7 @@ import {
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
 import { JobsViewTabs, type TodayAllViewTab } from "@/shared/components/jobs/JobsViewTabs";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
@@ -612,11 +614,17 @@ export function InvoicesPageView({
         | "Paid this month" => Boolean(label),
     );
 
+  const northStar = isNorthStarShellEnabled();
+
   return (
     <MasterListPageLayout
       title="Invoices"
       subtitle={subtitle}
-      eyebrow={invoicePageFocus?.sectionEyebrow ?? undefined}
+      eyebrow={
+        northStar
+          ? "Billing ledger"
+          : (invoicePageFocus?.sectionEyebrow ?? undefined)
+      }
       density="compact"
       banners={
         initialJobId && initialJobLabel ||
@@ -676,6 +684,7 @@ export function InvoicesPageView({
           <InvoiceSummaryCards
             invoices={activeInvoices}
             highlightedLabels={highlightedSummaryLabels}
+            northStar={northStar}
           />
         ) : null
       }
@@ -685,29 +694,51 @@ export function InvoicesPageView({
             type="button"
             onClick={handleNewInvoice}
             disabled={customers.length === 0}
-            className={`${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`}
+            className={
+              northStar
+                ? `north-star-invoices-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
+                : `${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`
+            }
           >
             <Plus className="h-3.5 w-3.5" />
             New Invoice
           </button>
         ) : undefined
       }
-      className={isCreateOpen ? masterListPageMobilePanelLockClass : undefined}
+      className={`${isCreateOpen ? masterListPageMobilePanelLockClass : ""} ${
+        northStar ? lt.pageCanvas : ""
+      }`}
+      headerClassName={northStar ? lt.pageHeader : undefined}
+      headerSurfaceVariant={northStar ? "northStar" : "default"}
+      headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
+      headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
+      headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
       <MasterPageSurface
-        variant="card"
+        variant={northStar ? "northStarList" : "card"}
         className={`${masterListPageSurfaceClass} ${
           isCreateOpen ? "max-lg:hidden" : ""
-        }`}
+        } ${northStar ? lt.listSurface : ""}`}
       >
+        {northStar ? (
+          <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
+        ) : null}
+
         {!hasNoInvoices ? (
-          <div className="shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4">
+          <div
+            className={
+              northStar
+                ? lt.viewTabsBand
+                : "shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4"
+            }
+          >
             <JobsViewTabs
               activeTab={viewTab}
               onTabChange={setViewTab}
               todayCount={activeTodayCount}
               allCount={activeInvoices.length}
               allTabLabel="All"
+              northStar={northStar}
             />
           </div>
         ) : null}
@@ -723,6 +754,7 @@ export function InvoicesPageView({
             lifecycleFilter={lifecycleFilter}
             onLifecycleFilterChange={setLifecycleFilter}
             showLifecycleFilter={canManageInvoices}
+            northStar={northStar}
             batchSelectAllControl={
               selectionEnabled &&
               visibleSelectionState &&
@@ -749,11 +781,12 @@ export function InvoicesPageView({
                   ? handleNewInvoice
                   : undefined
               }
+              northStar={northStar}
             />
           ) : viewTab === "today" && hasNoTodayInvoices ? (
-            <InvoicesEmptyState variant="no-today" />
+            <InvoicesEmptyState variant="no-today" northStar={northStar} />
           ) : hasNoResults ? (
-            <InvoicesEmptyState variant="no-results" />
+            <InvoicesEmptyState variant="no-results" northStar={northStar} />
           ) : (
             <InvoicesTable
               sections={invoiceListPresentation.sections}
@@ -764,6 +797,7 @@ export function InvoicesPageView({
               selectedIds={selectedInvoiceIds}
               onToggleSelection={handleToggleInvoiceSelection}
               onToggleAllVisible={handleToggleAllVisibleSelection}
+              northStar={northStar}
             />
           )}
 
@@ -776,6 +810,7 @@ export function InvoicesPageView({
               isLifecycleBusy={isInvoiceLifecycleBusy}
               onSendSelected={handleBatchSendSelected}
               onClearSelection={handleClearSelection}
+              northStar={northStar}
               archiveAction={
                 selectedBulkEligibility &&
                 selectedBulkEligibility.archiveEligibleCount > 0

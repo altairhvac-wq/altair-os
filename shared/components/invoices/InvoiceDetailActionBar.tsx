@@ -26,6 +26,7 @@ import {
   type InvoiceDetail,
 } from "@/shared/types/invoice";
 import { InvoiceEditLinkButton } from "./InvoiceEditLinkButton";
+import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type InvoiceDetailActionBarProps = {
   invoice: InvoiceDetail;
@@ -37,6 +38,7 @@ type InvoiceDetailActionBarProps = {
   customerEmailBlockReason: string | null;
   lastEmailSentMessage?: string | null;
   variant?: "inline" | "sticky" | "overlay-footer";
+  northStar?: boolean;
 };
 
 export function InvoiceDetailActionBar({
@@ -49,6 +51,7 @@ export function InvoiceDetailActionBar({
   customerEmailBlockReason,
   lastEmailSentMessage,
   variant = "inline",
+  northStar = false,
 }: InvoiceDetailActionBarProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -238,6 +241,22 @@ export function InvoiceDetailActionBar({
         ? "admin-sticky-footer-inline flex flex-col px-3 py-2.5 sm:hidden"
         : "hidden sm:flex sm:flex-col sm:items-end sm:gap-2";
 
+  const mobileBase =
+    "inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+  const recordPaymentClass = northStar
+    ? `${mobileBase} ${dt.primaryAction}`
+    : `${mobileBase} bg-emerald-600 text-white hover:bg-emerald-700`;
+  const sendButtonClass = northStar
+    ? `${mobileBase} ${dt.primaryAction}`
+    : `${mobileBase} bg-slate-900 text-white hover:bg-slate-800`;
+  const resendButtonClass = northStar
+    ? `${mobileBase} ${dt.secondaryAction}`
+    : `${mobileBase} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`;
+  const voidButtonClass = northStar
+    ? `${mobileBase} border border-[rgba(185,28,28,0.35)] bg-[#FEF2F2] text-[#991B1B] hover:border-[rgba(185,28,28,0.5)] hover:bg-[#FEE2E2]`
+    : `${mobileBase} border border-red-200 bg-red-50 text-red-700 hover:bg-red-100`;
+  const helperTextClass = northStar ? "text-xs text-[#4F4638]" : "text-xs text-slate-500";
+
   return (
     <>
       <div className={containerClass}>
@@ -284,7 +303,7 @@ export function InvoiceDetailActionBar({
                 disabled={actionsDisabled}
                 onClick={onRecordPayment}
                 title="Record all or part of the balance due."
-                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className={recordPaymentClass}
               >
                 Record payment
               </button>
@@ -300,7 +319,7 @@ export function InvoiceDetailActionBar({
                     ? "Emails the invoice and marks it as sent."
                     : customerEmailBlockReason ?? undefined
                 }
-                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className={sendButtonClass}
               >
                 <Send className="h-4 w-4" />
                 {isPending ? "Sending…" : "Send invoice"}
@@ -317,7 +336,7 @@ export function InvoiceDetailActionBar({
                     ? "Sends another copy to the customer's email on file."
                     : customerEmailBlockReason ?? undefined
                 }
-                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className={resendButtonClass}
               >
                 <Mail className="h-4 w-4" />
                 {resendPending ? "Resending…" : "Resend email"}
@@ -329,7 +348,7 @@ export function InvoiceDetailActionBar({
                 type="button"
                 disabled={actionsDisabled}
                 onClick={() => setShowVoidConfirm(true)}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className={voidButtonClass}
               >
                 <Ban className="h-4 w-4" />
                 Void
@@ -361,7 +380,7 @@ export function InvoiceDetailActionBar({
                     : null;
 
           return helperText ? (
-            <p className="mt-2 text-xs text-slate-500">{helperText}</p>
+            <p className={`mt-2 ${helperTextClass}`}>{helperText}</p>
           ) : null;
         })() : null}
 

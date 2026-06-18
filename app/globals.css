@@ -1284,6 +1284,73 @@ a[href] {
   padding: 0;
 }
 
+/* North Star Invoice detail document — ivory invoice surface (M5D) */
+.invoice-north-star-document .invoice-company-hero {
+  border-color: rgb(138 99 36 / 0.22);
+  padding-bottom: 0.75rem;
+}
+
+.invoice-north-star-document .invoice-company-hero h1,
+.invoice-north-star-document .invoice-company-hero .text-slate-900 {
+  color: #17130e;
+}
+
+.invoice-north-star-document .invoice-company-hero .text-slate-500,
+.invoice-north-star-document .invoice-company-hero .text-slate-600 {
+  color: #6b6255;
+}
+
+.invoice-north-star-document .invoice-company-hero .border-slate-900,
+.invoice-north-star-document .invoice-company-hero .border-l-slate-900 {
+  border-color: rgb(138 99 36 / 0.35);
+}
+
+.invoice-north-star-line-items table thead tr {
+  border-bottom: 2px solid rgb(138 99 36 / 0.22);
+  background-color: #efe4cb;
+}
+
+.invoice-north-star-line-items table thead th {
+  color: #4f4638;
+}
+
+.invoice-north-star-line-items table tbody tr {
+  border-bottom: 1px solid rgb(138 99 36 / 0.12);
+  background-color: #fbf7ef;
+}
+
+.invoice-north-star-line-items table tbody tr:hover {
+  background-color: #f3ebdd;
+}
+
+.invoice-north-star-line-items table tbody td {
+  color: #4f4638;
+}
+
+.invoice-north-star-line-items table tbody td .font-semibold,
+.invoice-north-star-line-items table tbody td .font-medium {
+  color: #17130e;
+}
+
+.invoice-north-star-document .invoice-document-meta {
+  padding: 0;
+}
+
+.north-star-invoice-overlay-body .north-star-detail-section,
+.north-star-invoice-overlay-body .north-star-detail-section-surface {
+  border: 1px solid rgb(138 99 36 / 0.12);
+  background-color: var(--north-star-ivory);
+  box-shadow:
+    0 8px 28px -12px rgb(3 7 12 / 0.32),
+    inset 0 1px 0 rgb(255 255 255 / 0.45);
+}
+
+@media (min-width: 640px) {
+  .invoice-north-star-document .invoice-company-hero {
+    padding-bottom: 1rem;
+  }
+}
+
 @media (min-width: 640px) {
   .estimate-north-star-document .estimate-document-meta {
     padding: 0;
@@ -2496,7 +2563,7 @@ a[href] {
     break-inside: avoid;
   }
 
-  /* Hide admin shell chrome when printing estimate detail */
+  /* Hide admin shell chrome when printing estimate/invoice detail */
   .admin-north-star-shell > aside[aria-label="Desktop navigation"],
   button[aria-label="Send feedback"],
   .north-star-detail-hero,
@@ -2506,6 +2573,7 @@ a[href] {
 
   .north-star-detail-page-canvas,
   .north-star-estimate-overlay-body,
+  .north-star-invoice-overlay-body,
   .admin-north-star-shell .admin-shell-main {
     background: #ffffff !important;
     border: none !important;
@@ -2570,6 +2638,72 @@ a[href] {
   }
 
   #estimate-document.estimate-north-star-document .estimate-thank-you-footer p {
+    font-size: 0.6875rem !important;
+    line-height: 1.35 !important;
+  }
+
+  /* North Star invoice document print refinements */
+  #invoice-document.invoice-north-star-document {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    min-height: auto !important;
+    box-shadow: none !important;
+    font-size: 0.8125rem !important;
+  }
+
+  #invoice-document.invoice-north-star-document .invoice-company-hero {
+    padding-bottom: 0.375rem !important;
+    break-inside: avoid;
+  }
+
+  #invoice-document.invoice-north-star-document .invoice-company-hero h1 {
+    font-size: 1.25rem !important;
+    margin-top: 0.125rem !important;
+  }
+
+  #invoice-document.invoice-north-star-document .invoice-document-meta {
+    break-inside: avoid;
+  }
+
+  #invoice-document.invoice-north-star-document .invoice-amount-due-hero {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 2px solid #0f172a !important;
+    break-inside: avoid;
+    padding-top: 0.125rem !important;
+    padding-bottom: 0.125rem !important;
+  }
+
+  #invoice-document.invoice-north-star-document .invoice-amount-due-hero p,
+  #invoice-document.invoice-north-star-document .invoice-amount-due-hero dt,
+  #invoice-document.invoice-north-star-document .invoice-amount-due-hero dd {
+    color: #0f172a !important;
+  }
+
+  #invoice-document.invoice-north-star-document .invoice-line-items,
+  #invoice-document.invoice-north-star-document .invoice-totals-block {
+    break-inside: avoid;
+  }
+
+  #invoice-document.invoice-north-star-document table tbody tr,
+  #invoice-document.invoice-north-star-document .invoice-north-star-line-items table tbody tr {
+    break-inside: avoid;
+  }
+
+  #invoice-document.invoice-north-star-document .invoice-company-hero,
+  #invoice-document.invoice-north-star-document .invoice-notes-block,
+  #invoice-document.invoice-north-star-document .invoice-thank-you-footer {
+    break-inside: avoid;
+  }
+
+  #invoice-document.invoice-north-star-document .estimate-document-footer-anchor,
+  #invoice-document.invoice-north-star-document .invoice-thank-you-footer {
+    margin-top: 0.375rem !important;
+    padding-top: 0.375rem !important;
+  }
+
+  #invoice-document.invoice-north-star-document .invoice-thank-you-footer p {
     font-size: 0.6875rem !important;
     line-height: 1.35 !important;
   }

@@ -3,12 +3,20 @@
 import { useState, useTransition } from "react";
 import { Copy, Link2 } from "lucide-react";
 import { copyInvoicePaymentLinkAction } from "@/app/actions/invoice-payment-link";
+import {
+  northStarDetailTokens as dt,
+  northStarInvoiceDocumentTokens as idt,
+} from "@/shared/design-system/north-star/tokens";
 
 type InvoicePaymentLinkCardProps = {
   invoiceId: string;
+  northStar?: boolean;
 };
 
-export function InvoicePaymentLinkCard({ invoiceId }: InvoicePaymentLinkCardProps) {
+export function InvoicePaymentLinkCard({
+  invoiceId,
+  northStar = false,
+}: InvoicePaymentLinkCardProps) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -35,14 +43,23 @@ export function InvoicePaymentLinkCard({ invoiceId }: InvoicePaymentLinkCardProp
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className={northStar ? dt.compactSectionSurface : "rounded-xl border border-slate-200 bg-white p-4"}>
       <div className="flex items-start gap-3">
-        <Link2 className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+        <Link2
+          className={`mt-0.5 h-4 w-4 shrink-0 ${northStar ? "text-[#8A6324]" : "text-slate-400"}`}
+          aria-hidden
+        />
         <div className="min-w-0 flex-1">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <h2
+            className={
+              northStar
+                ? `${dt.sectionTitle} ${idt.ivoryPrimary}`
+                : "text-xs font-semibold uppercase tracking-wide text-slate-500"
+            }
+          >
             Customer payment link
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">
+          <p className={northStar ? `mt-2 text-sm leading-relaxed ${idt.ivorySecondary}` : "mt-2 text-sm leading-relaxed text-slate-600"}>
             Share a secure link so customers can view this invoice and contact
             the office to pay. Resending the invoice email also generates a
             fresh link.
@@ -51,7 +68,11 @@ export function InvoicePaymentLinkCard({ invoiceId }: InvoicePaymentLinkCardProp
             type="button"
             onClick={handleCopyLink}
             disabled={isPending}
-            className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className={
+              northStar
+                ? `mt-4 ${dt.secondaryAction} disabled:cursor-not-allowed disabled:opacity-60`
+                : "mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            }
           >
             <Copy className="h-4 w-4 shrink-0" aria-hidden />
             {isPending
@@ -65,7 +86,7 @@ export function InvoicePaymentLinkCard({ invoiceId }: InvoicePaymentLinkCardProp
               {error}
             </p>
           ) : (
-            <p className="mt-3 text-xs text-slate-500">
+            <p className={northStar ? `mt-3 text-xs ${idt.ivoryMuted}` : "mt-3 text-xs text-slate-500"}>
               Copying creates a new link and replaces any previous unused
               payment links for this invoice.
             </p>
