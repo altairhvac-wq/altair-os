@@ -148,7 +148,7 @@ export function PlatformNorthStarView({ data }: PlatformNorthStarViewProps) {
   const hasAttention = data.diagnostics.length > 0 || openRecentBugCount > 0;
 
   return (
-    <MasterShellPage fillViewport density="compact" className={pt.pageCanvas}>
+    <MasterShellPage density="compact" className={pt.pageCanvas}>
       <MasterPageHeader
         eyebrow="Internal operations"
         title="Platform"

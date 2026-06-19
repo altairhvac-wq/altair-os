@@ -9,7 +9,7 @@ export const platformNorthStarStyles = {
   primaryAction: lt.primaryAction,
   secondaryAction: lt.secondaryAction,
   workspaceStack:
-    "platform-north-star-workspace min-w-0 space-y-3 px-3 sm:space-y-3.5 sm:px-3.5 lg:px-5",
+    "platform-north-star-workspace min-w-0 space-y-3 px-3 pb-16 sm:space-y-3.5 sm:px-3.5 sm:pb-20 lg:px-5 lg:pb-24",
   sectionSurface: "north-star-list-surface overflow-hidden rounded-[1.25rem]",
   sectionEyebrow:
     "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8A6324]",
