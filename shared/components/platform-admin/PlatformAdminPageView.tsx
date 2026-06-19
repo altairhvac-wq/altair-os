@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { formatDate } from "@/shared/types/customer";
 import { formatMembershipStatus } from "@/shared/types/team-member";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import type { PlatformAdminOverview } from "@/shared/types/platform-admin";
+import { PlatformNorthStarView } from "@/shared/components/platform-admin/north-star-m13";
 import {
   Building2,
   Briefcase,
@@ -102,6 +104,14 @@ function formatStatusLabel(value: string): string {
 }
 
 export function PlatformAdminPageView({ data }: PlatformAdminPageViewProps) {
+  if (isNorthStarShellEnabled()) {
+    return <PlatformNorthStarView data={data} />;
+  }
+
+  return <PlatformAdminLegacyPageView data={data} />;
+}
+
+function PlatformAdminLegacyPageView({ data }: PlatformAdminPageViewProps) {
   const { summary } = data;
 
   return (

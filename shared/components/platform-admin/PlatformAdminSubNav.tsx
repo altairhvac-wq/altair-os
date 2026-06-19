@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
+import { pt } from "@/shared/components/platform-admin/north-star-m13/platform-north-star-styles";
 import { Bug, LayoutDashboard } from "lucide-react";
 
 const LINKS = [
@@ -22,6 +24,36 @@ const LINKS = [
 
 export function PlatformAdminSubNav() {
   const pathname = usePathname();
+  const northStar = isNorthStarShellEnabled();
+
+  if (northStar) {
+    return (
+      <nav
+        aria-label="Platform admin"
+        className={pt.subNavBand}
+      >
+        <div className={pt.subNavControl}>
+          {LINKS.map(({ href, label, icon: Icon, match }) => {
+            const active = match(pathname);
+
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`${pt.subNavItem} ${
+                  active ? pt.subNavItemActive : ""
+                }`}
+                aria-current={active ? "page" : undefined}
+              >
+                <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav
