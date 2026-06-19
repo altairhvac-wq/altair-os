@@ -607,6 +607,7 @@ export function DispatchPageView({
               assignSuccess={selectedAssignSuccess}
               isAssignmentBusy={isAssignmentBusyForSelected}
               isOtherAssignmentPending={isOtherAssignmentPending}
+              northStar={northStar}
               lockBodyScroll={false}
               onClose={handleClosePanel}
               onAssign={handleAssign}
@@ -670,6 +671,7 @@ export function DispatchPageView({
               assignSuccess={selectedAssignSuccess}
               isAssignmentBusy={isAssignmentBusyForSelected}
               isOtherAssignmentPending={isOtherAssignmentPending}
+              northStar={northStar}
               lockBodyScroll={false}
               onClose={handleClosePanel}
               onAssign={handleAssign}

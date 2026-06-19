@@ -654,6 +654,38 @@ export type NorthStarDispatchTokens = {
   emptyStateIcon: string;
   emptyStateTitle: string;
   emptyStateDescription: string;
+  detailPanelShell: string;
+  detailPanelTopAccent: string;
+  detailPanelHeader: string;
+  detailPanelTitle: string;
+  detailPanelSubtitle: string;
+  detailPanelCustomerLink: string;
+  detailPanelCloseButton: string;
+  detailPanelBody: string;
+  detailSectionLabel: string;
+  detailIdentityCard: string;
+  detailIdentityService: string;
+  detailIdentityMeta: string;
+  detailSiteContextCard: string;
+  detailSiteContextIconWrap: string;
+  detailSiteContextAddress: string;
+  detailSectionDivider: string;
+  detailAssignmentCard: string;
+  detailTechAvatar: string;
+  detailTechName: string;
+  detailTechRole: string;
+  detailTechPhone: string;
+  detailUnassignedBanner: string;
+  detailEstimateHint: string;
+  detailSelect: string;
+  detailPrimaryButton: string;
+  detailSecondaryButton: string;
+  detailMutedText: string;
+  detailBodyText: string;
+  detailFooterLink: string;
+  detailFooterDivider: string;
+  detailPermissionNote: string;
+  detailPendingNote: string;
 };
 
 export const northStarDispatchTokens: NorthStarDispatchTokens = {
@@ -765,4 +797,56 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
     "flex h-12 w-12 items-center justify-center rounded-xl bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.14)] [&_svg]:text-[#8A6324]",
   emptyStateTitle: "mt-3 text-base font-bold text-[#17130E]",
   emptyStateDescription: "mt-1.5 text-sm text-[#6B6255]",
+  detailPanelShell:
+    "dispatch-north-star-detail-panel relative flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-t-2xl bg-[#1A2029] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38)] ring-1 ring-[rgba(174,182,194,0.18)] sm:rounded-2xl",
+  detailPanelTopAccent:
+    "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(214,190,120,0.38)] to-transparent",
+  detailPanelHeader:
+    "relative flex shrink-0 items-start justify-between border-b border-[rgba(201,164,77,0.14)] bg-gradient-to-b from-[#273140] to-[#1A2029] px-4 pb-4 pt-3 overlay-header-safe-mobile sm:px-5 lg:py-4",
+  detailPanelTitle:
+    "text-base font-bold tracking-tight text-[#FFF8E8] sm:text-lg",
+  detailPanelSubtitle: "mt-0.5 text-xs text-[#D7CDBD]",
+  detailPanelCustomerLink:
+    "text-xs text-[#D7CDBD] transition-colors hover:text-[#E6D092]",
+  detailPanelCloseButton:
+    "inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.35)] p-2 text-[#F3EBDD] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[rgba(39,49,64,0.55)] [&_svg]:text-[#D6BE78]",
+  detailPanelBody:
+    "dispatch-north-star-detail-panel-body min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#FBF7EF] px-4 py-4 pb-[max(5rem,calc(1rem+env(safe-area-inset-bottom)))] sm:px-5 sm:py-5 sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))] lg:pb-5",
+  detailSectionLabel:
+    "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6B6255]",
+  detailIdentityCard:
+    "rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-3.5 shadow-[0_2px_8px_rgba(3,7,12,0.06)] sm:p-4",
+  detailIdentityService: "text-sm font-medium text-[#4F4638]",
+  detailIdentityMeta: "text-xs text-[#6B6255]",
+  detailSiteContextCard:
+    "rounded-xl border border-[rgba(138,99,36,0.12)] bg-gradient-to-br from-[#FFF9EA] to-[#F5F0E4] p-3.5 shadow-[0_2px_8px_rgba(3,7,12,0.06)] sm:p-4",
+  detailSiteContextIconWrap:
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.14)] [&_svg]:text-[#8A6324]",
+  detailSiteContextAddress: "text-sm font-medium leading-snug text-[#17130E]",
+  detailSectionDivider: "border-[rgba(138,99,36,0.12)]",
+  detailAssignmentCard:
+    "rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-3 shadow-[0_2px_6px_rgba(3,7,12,0.05)]",
+  detailTechAvatar:
+    "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-xs font-bold text-[#17130E] ring-1 ring-[rgba(201,164,77,0.28)]",
+  detailTechName: "text-sm font-semibold text-[#17130E]",
+  detailTechRole: "text-xs text-[#4F4638]",
+  detailTechPhone: "text-xs text-[#4F4638] [&_svg]:text-[#8A6324]",
+  detailUnassignedBanner:
+    "flex items-center gap-2 text-sm font-medium text-[#92400E]",
+  detailEstimateHint:
+    "rounded-lg border border-[rgba(201,164,77,0.28)] bg-[#F5EBD4] px-3 py-2.5 text-xs font-medium text-[#4F4638] ring-1 ring-[rgba(201,164,77,0.16)]",
+  detailSelect:
+    "w-full min-h-11 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-3 text-sm text-[#17130E] outline-none focus:border-[#B88A2E] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2",
+  detailPrimaryButton:
+    "w-full min-h-11 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3 py-3 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2",
+  detailSecondaryButton:
+    "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 py-3 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2 [&_svg]:text-[#8A6324]",
+  detailMutedText: "text-xs text-[#6B6255]",
+  detailBodyText: "text-sm leading-relaxed text-[#4F4638]",
+  detailFooterLink:
+    "flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 py-3 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] sm:py-2",
+  detailFooterDivider: "border-[rgba(138,99,36,0.12)]",
+  detailPermissionNote:
+    "rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-4 py-3 text-sm text-[#4F4638]",
+  detailPendingNote: "text-xs font-medium text-[#92400E]",
 };
