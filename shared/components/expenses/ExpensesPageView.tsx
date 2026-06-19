@@ -22,7 +22,6 @@ import {
   formatBulkExpensesResultMessage,
   getExpenseLifecycleState,
 } from "@/shared/lib/expense-lifecycle";
-import { filterOperationalActive } from "@/shared/lib/operational-lifecycle";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { EntityLifecycleBulkBar } from "@/shared/components/lifecycle/EntityLifecycleBulkBar";
 import type {
@@ -52,11 +51,17 @@ import {
   hasActiveExpenseFilters,
 } from "@/shared/utils/expense-filters";
 import { ExpenseDetailsPanel } from "./ExpenseDetailsPanel";
+import { ExpenseQueueTabs } from "./ExpenseQueueTabs";
 import { ExpenseSearchFilterBar } from "./ExpenseSearchFilterBar";
-import { ExpensesNorthStarReviewQueueHeading } from "./north-star-m6a";
-import { ExpenseSummaryCards } from "./ExpenseSummaryCards";
 import { ExpensesEmptyState } from "./ExpensesEmptyState";
 import { ExpensesTable } from "./ExpensesTable";
+import {
+  countExpensesForWorkQueue,
+  filterExpensesForWorkQueue,
+  resolveDefaultExpenseWorkQueue,
+  sortExpensesForWorkQueue,
+  type ExpenseWorkQueue,
+} from "./expense-work-queues";
 
 type PanelMode = "detail" | "create" | "empty";
 
@@ -97,6 +102,11 @@ export function ExpensesPageView({
   initialStatusFilter = DEFAULT_FILTERS.statusFilter,
 }: ExpensesPageViewProps) {
   const [search, setSearch] = useState(DEFAULT_FILTERS.search);
+  const [workQueue, setWorkQueue] = useState<ExpenseWorkQueue>(() =>
+    initialStatusFilter === "submitted"
+      ? "needs-review"
+      : resolveDefaultExpenseWorkQueue(expenses),
+  );
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
   const [categoryFilter, setCategoryFilter] = useState(
     DEFAULT_FILTERS.categoryFilter,
@@ -190,22 +200,40 @@ export function ExpensesPageView({
     ],
   );
 
-  const activeExpenses = useMemo(
-    () => filterOperationalActive(localExpenses, getExpenseLifecycleState),
+  const queueCounts = useMemo(
+    () =>
+      ({
+        "needs-review": countExpensesForWorkQueue(localExpenses, "needs-review"),
+        uncategorized: countExpensesForWorkQueue(
+          localExpenses,
+          "uncategorized",
+        ),
+        approved: countExpensesForWorkQueue(localExpenses, "approved"),
+        past: countExpensesForWorkQueue(localExpenses, "past"),
+      }) satisfies Record<ExpenseWorkQueue, number>,
     [localExpenses],
+  );
+
+  const queueScopedExpenses = useMemo(
+    () => filterExpensesForWorkQueue(localExpenses, workQueue),
+    [localExpenses, workQueue],
   );
 
   const lifecycleScopedExpenses = useMemo(
     () =>
-      localExpenses.filter(
+      queueScopedExpenses.filter(
         (expense) => getExpenseLifecycleState(expense) === lifecycleFilter,
       ),
-    [localExpenses, lifecycleFilter],
+    [queueScopedExpenses, lifecycleFilter],
   );
 
   const filteredExpenses = useMemo(
-    () => filterExpenses(lifecycleScopedExpenses, listFilters),
-    [lifecycleScopedExpenses, listFilters],
+    () =>
+      sortExpensesForWorkQueue(
+        filterExpenses(lifecycleScopedExpenses, listFilters),
+        workQueue,
+      ),
+    [lifecycleScopedExpenses, listFilters, workQueue],
   );
 
   const selectionEnabled = canManageBilling;
@@ -217,7 +245,13 @@ export function ExpensesPageView({
     toggleAllVisible,
     clearSelection,
     setSelectedIds,
-  } = usePageBulkSelection(filteredExpenses, [lifecycleFilter]);
+  } = usePageBulkSelection(filteredExpenses, [lifecycleFilter, workQueue]);
+
+  useEffect(() => {
+    clearSelection();
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
+  }, [lifecycleFilter, workQueue, statusFilter, clearSelection]);
 
   function handleClearSelection() {
     clearSelection();
@@ -319,21 +353,6 @@ export function ExpensesPageView({
     setReceiptFilter(DEFAULT_FILTERS.receiptFilter);
   }
 
-  function handleNeedsReview() {
-    setStatusFilter((current) =>
-      current === "submitted" ? "all" : "submitted",
-    );
-  }
-
-  const contextLabel =
-    initialJobId && initialJobLabel
-      ? `${filteredExpenses.length} expense${filteredExpenses.length === 1 ? "" : "s"} for Job ${initialJobLabel}`
-      : initialCustomerId && !initialJobId
-        ? filteredExpenses.length === localExpenses.length
-          ? null
-          : `${filteredExpenses.length} linked expense${filteredExpenses.length === 1 ? "" : "s"}`
-        : null;
-
   function handleClosePanel() {
     setSelectedId(null);
     setPanelMode("empty");
@@ -345,11 +364,11 @@ export function ExpensesPageView({
   }
 
   const hasNoExpenses = localExpenses.length === 0;
+  const hasNoQueueExpenses = !hasNoExpenses && queueScopedExpenses.length === 0;
   const hasNoResults = !hasNoExpenses && filteredExpenses.length === 0;
   const isPanelOpen = panelMode !== "empty";
 
-  const subtitle =
-    contextLabel ?? "Capture receipts and draft expenses for later review";
+  const subtitle = "Review, categorize, and approve company spending.";
 
   const northStar = isNorthStarShellEnabled();
 
@@ -357,7 +376,6 @@ export function ExpensesPageView({
     <MasterListPageLayout
       title="Expenses"
       subtitle={subtitle}
-      eyebrow={northStar ? "Spending ledger" : undefined}
       density="compact"
       banners={
         (initialJobId && initialJobLabel) || lifecycleMessage ? (
@@ -384,11 +402,6 @@ export function ExpensesPageView({
             ) : null}
           </>
         ) : undefined
-      }
-      summary={
-        !hasNoExpenses ? (
-          <ExpenseSummaryCards expenses={activeExpenses} northStar={northStar} />
-        ) : null
       }
       primaryAction={
         <button
@@ -417,16 +430,36 @@ export function ExpensesPageView({
     >
       <MasterPageSurface
         variant={northStar ? "northStarList" : "card"}
-        className={`${masterListPageSurfaceClass} ${
+        className={`${masterListPageSurfaceClass} max-w-full ${
           isPanelOpen ? "max-lg:hidden" : ""
         } ${northStar ? lt.listSurface : ""}`}
       >
         {northStar ? (
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
         ) : null}
-        {northStar && !hasNoExpenses ? (
-          <ExpensesNorthStarReviewQueueHeading />
+
+        <div
+          className={
+            northStar ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"
+          }
+        >
+        {!hasNoExpenses ? (
+          <div
+            className={
+              northStar
+                ? lt.viewTabsBand
+                : "shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4"
+            }
+          >
+            <ExpenseQueueTabs
+              activeQueue={workQueue}
+              onQueueChange={setWorkQueue}
+              counts={queueCounts}
+              northStar={northStar}
+            />
+          </div>
         ) : null}
+
         {!hasNoExpenses ? (
           <ExpenseSearchFilterBar
             search={search}
@@ -449,15 +482,17 @@ export function ExpensesPageView({
             onPaymentFilterChange={setPaymentFilter}
             onDateFilterChange={setDateFilter}
             onReceiptFilterChange={setReceiptFilter}
-            onNeedsReview={handleNeedsReview}
             onClearFilters={handleClearFilters}
             hasActiveFilters={activeFilters}
             resultCount={filteredExpenses.length}
             lifecycleFilter={lifecycleFilter}
             onLifecycleFilterChange={setLifecycleFilter}
             showLifecycleFilter={canManageBilling}
+            showStatusFilter={workQueue === "past"}
             bulkSelectAllControl={
-              selectionEnabled && selectionState.selectableCount > 0
+              selectionEnabled &&
+              selectionState.selectableCount > 0 &&
+              !hasNoResults
                 ? {
                     selectableCount: selectionState.selectableCount,
                     allSelected: selectionState.allSelected,
@@ -477,8 +512,13 @@ export function ExpensesPageView({
               onCreateExpense={handleNewExpense}
               northStar={northStar}
             />
-          ) : hasNoResults ? (
-            <ExpensesEmptyState variant="no-results" northStar={northStar} />
+          ) : hasNoQueueExpenses || hasNoResults ? (
+            <ExpensesEmptyState
+              variant="no-results"
+              workQueue={workQueue}
+              filterEmpty={hasNoResults && !hasNoQueueExpenses}
+              northStar={northStar}
+            />
           ) : (
             <ExpensesTable
               expenses={filteredExpenses}
@@ -548,6 +588,7 @@ export function ExpensesPageView({
               onClearSelection={handleClearSelection}
             />
           ) : null}
+        </div>
         </div>
       </MasterPageSurface>
 
