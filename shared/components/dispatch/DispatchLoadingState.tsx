@@ -8,7 +8,10 @@ import {
 } from "@/shared/design-system/shell";
 import { HorizonHero } from "@/shared/design-system/signature";
 import { signatureHeroContentClass } from "@/shared/design-system/shell/tokens";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import {
+  northStarDispatchTokens as dt,
+  northStarListTokens as lt,
+} from "@/shared/design-system/north-star/tokens";
 
 function Skeleton({ className }: { className?: string }) {
   return (
@@ -108,6 +111,64 @@ function DispatchBoardSkeleton() {
   );
 }
 
+function DispatchNorthStarBoardSkeleton() {
+  return (
+    <div className={masterWorkbenchRowClass}>
+      <div className={`${dt.boardSurface} max-w-full lg:flex-1`}>
+        <div className={dt.boardSurfaceTopAccent} aria-hidden />
+        <div className={`${dt.boardHeader} flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between`}>
+          <div className="min-w-0 space-y-2">
+            <NorthStarSkeleton dark className="h-4 w-40" />
+            <NorthStarSkeleton dark className="hidden h-3 w-56 sm:block" />
+          </div>
+          <NorthStarSkeleton
+            dark
+            className="h-9 w-28 shrink-0 rounded-lg border border-[rgba(201,164,77,0.22)]"
+          />
+        </div>
+        <div className={`${dt.boardBody} space-y-2.5 sm:space-y-3`}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex min-w-0 max-w-full gap-2 overflow-hidden rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FBF7EF] sm:rounded-2xl"
+            >
+              <div className={`${dt.laneHeader} shrink-0 sm:w-44 lg:w-48`}>
+                <NorthStarSkeleton
+                  dark
+                  className="h-8 w-8 shrink-0 rounded-lg sm:h-9 sm:w-9"
+                />
+                <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2">
+                  <NorthStarSkeleton dark className="h-3.5 w-24" />
+                  <NorthStarSkeleton dark className="hidden h-2.5 w-16 sm:block" />
+                </div>
+              </div>
+              <div className="flex min-w-0 flex-1 gap-2 overflow-hidden p-2 sm:p-2.5">
+                <NorthStarSkeleton className="h-[4.75rem] w-[12rem] shrink-0 rounded-xl sm:h-[5.5rem] sm:w-[13.25rem]" />
+                <NorthStarSkeleton className="h-[4.75rem] w-[12rem] shrink-0 rounded-xl sm:h-[5.5rem] sm:w-[13.25rem]" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="hidden lg:flex lg:h-full lg:min-h-0 lg:w-[380px] lg:shrink-0 lg:flex-col lg:overflow-hidden">
+        <div className={`${dt.detailPanelShell} min-h-[20rem] flex-1`}>
+          <div className={dt.detailPanelTopAccent} aria-hidden />
+          <div className={`${dt.detailPanelHeader} space-y-2`}>
+            <NorthStarSkeleton dark className="h-5 w-32" />
+            <NorthStarSkeleton dark className="h-3 w-48" />
+          </div>
+          <div className="min-h-0 flex-1 space-y-3 bg-[#FBF7EF] p-4 sm:p-5">
+            <NorthStarSkeleton className="h-24 w-full rounded-xl" />
+            <NorthStarSkeleton className="h-20 w-full rounded-xl" />
+            <NorthStarSkeleton className="h-16 w-full rounded-xl" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function DispatchNorthStarLoadingState() {
   return (
     <MasterShellPage fillViewport density="compact" className={lt.pageCanvas}>
@@ -132,7 +193,7 @@ export function DispatchNorthStarLoadingState() {
             className="hidden h-12 shrink-0 rounded-xl border border-[rgba(138,99,36,0.12)] lg:block"
           />
 
-          <DispatchBoardSkeleton />
+          <DispatchNorthStarBoardSkeleton />
         </MasterContentStack>
       </MasterPageCanvas>
     </MasterShellPage>

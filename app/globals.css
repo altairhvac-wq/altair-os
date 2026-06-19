@@ -1479,6 +1479,56 @@ a[href] {
   }
 }
 
+/* Dispatch section sheets — graphite header, ivory body (M15E) */
+.dispatch-north-star-section-sheet header h2 {
+  color: #fff8e8;
+}
+
+.dispatch-north-star-section-sheet header p {
+  color: #d7cdbd;
+}
+
+.dispatch-north-star-section-sheet header button[aria-label="Close"] {
+  border: 1px solid rgb(174 182 194 / 0.22);
+  background: rgb(39 49 64 / 0.35);
+  color: #f3ebdd;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.dispatch-north-star-section-sheet header button[aria-label="Close"]:hover {
+  border-color: rgb(201 164 77 / 0.28);
+  background: rgb(39 49 64 / 0.55);
+  color: #fff8e8;
+}
+
+.dispatch-north-star-section-sheet header button[aria-label="Close"] svg {
+  color: #d6be78;
+}
+
+/* Dispatch unassigned jobs sheet — calm brass attention (M15E) */
+.dispatch-north-star-unassigned-sheet header h2 {
+  color: #17130e;
+}
+
+.dispatch-north-star-unassigned-sheet header p {
+  color: #6b6255;
+}
+
+.dispatch-north-star-unassigned-sheet header button[aria-label="Close"] {
+  color: #6b6255;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.dispatch-north-star-unassigned-sheet header button[aria-label="Close"]:hover {
+  background: rgb(201 164 77 / 0.12);
+  color: #4f4638;
+}
+
 .admin-north-star-shell .time-north-star-filter-bar {
   border-bottom: 1px solid rgb(138 99 36 / 0.12);
   background: #efe4cb;

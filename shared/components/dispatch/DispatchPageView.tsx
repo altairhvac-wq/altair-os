@@ -333,6 +333,8 @@ export function DispatchPageView({
     dispatchPageFocus?.boardDescription ??
     "Technician lanes with horizontally scrollable job cards";
 
+  const northStarSectionIcon = dt.sectionSheetHeaderIcon;
+
   const openSectionSheet = useMemo(() => {
     if (openSection === "summary") {
       return {
@@ -340,12 +342,15 @@ export function DispatchPageView({
         title: "Today's overview",
         subtitle: "Status counts for today's dispatch board",
         icon: <BarChart3 className="h-4 w-4" />,
-        iconClassName: "bg-blue-50 text-blue-600",
+        iconClassName: northStar
+          ? northStarSectionIcon
+          : "bg-blue-50 text-blue-600",
         content: (
           <DispatchSummaryCards
             summary={summary}
             highlightedLabels={dispatchPageFocus?.highlightedSummaryLabels}
             linkToJobs
+            northStar={northStar}
           />
         ),
       };
@@ -357,7 +362,9 @@ export function DispatchPageView({
         title: "Technician workload",
         subtitle: "Assigned jobs per technician today",
         icon: <Users className="h-4 w-4" />,
-        iconClassName: "bg-slate-100 text-slate-700",
+        iconClassName: northStar
+          ? northStarSectionIcon
+          : "bg-slate-100 text-slate-700",
         content: (
           <TechnicianWorkloadCards
             technicians={technicians}
@@ -370,6 +377,7 @@ export function DispatchPageView({
                 : null
             }
             onTechnicianClick={handleTechnicianWorkloadClick}
+            northStar={northStar}
           />
         ),
       };
@@ -381,7 +389,9 @@ export function DispatchPageView({
         title: "Search & filters",
         subtitle: "Narrow the board without leaving dispatch",
         icon: <SlidersHorizontal className="h-4 w-4" />,
-        iconClassName: "bg-cyan-50 text-cyan-700",
+        iconClassName: northStar
+          ? northStarSectionIcon
+          : "bg-cyan-50 text-cyan-700",
         content: (
           <DispatchSearchFilterBar
             search={search}
@@ -629,6 +639,7 @@ export function DispatchPageView({
           subtitle={openSectionSheet.subtitle}
           icon={openSectionSheet.icon}
           iconClassName={openSectionSheet.iconClassName}
+          northStar={northStar}
         >
           {openSectionSheet.content}
         </DispatchSectionSheet>
@@ -640,6 +651,7 @@ export function DispatchPageView({
           selectedJobId={selectedJobId}
           onSelectJob={handleSelectJob}
           onClose={handleCloseUnassignedModal}
+          northStar={northStar}
         />
       ) : null}
 

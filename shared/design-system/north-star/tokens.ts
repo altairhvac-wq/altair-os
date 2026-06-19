@@ -686,6 +686,27 @@ export type NorthStarDispatchTokens = {
   detailFooterDivider: string;
   detailPermissionNote: string;
   detailPendingNote: string;
+  sectionSheetPanel: string;
+  sectionSheetHeader: string;
+  sectionSheetHeaderIcon: string;
+  sectionSheetBody: string;
+  unassignedSheetPanel: string;
+  unassignedSheetHeader: string;
+  unassignedSheetHeaderIcon: string;
+  unassignedSheetBadge: string;
+  unassignedSheetEmpty: string;
+  summaryMetricCard: string;
+  summaryMetricCardHighlight: string;
+  summaryMetricCardInteractive: string;
+  summaryMetricLabel: string;
+  summaryMetricValue: string;
+  summaryMetricDescription: string;
+  summaryMetricIcon: string;
+  workloadCard: string;
+  workloadCardActive: string;
+  workloadCardOverloaded: string;
+  workloadCardInteractive: string;
+  workloadEmptyState: string;
 };
 
 export const northStarDispatchTokens: NorthStarDispatchTokens = {
@@ -849,4 +870,45 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   detailPermissionNote:
     "rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-4 py-3 text-sm text-[#4F4638]",
   detailPendingNote: "text-xs font-medium text-[#92400E]",
+  sectionSheetPanel:
+    "dispatch-north-star-section-sheet relative overflow-hidden rounded-t-2xl border border-[rgba(174,182,194,0.18)] bg-[#FBF7EF] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38)] sm:rounded-2xl",
+  sectionSheetHeader:
+    "border-b border-[rgba(201,164,77,0.14)] bg-gradient-to-b from-[#273140] to-[#1A2029]",
+  sectionSheetHeaderIcon:
+    "bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.14)] sm:rounded-xl [&_svg]:text-[#8A6324]",
+  sectionSheetBody:
+    "bg-[#FBF7EF] pb-[max(5rem,calc(1rem+env(safe-area-inset-bottom)))] sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))]",
+  unassignedSheetPanel:
+    "dispatch-north-star-unassigned-sheet relative overflow-hidden rounded-t-2xl border border-[rgba(201,164,77,0.22)] bg-[#FBF7EF] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38)] sm:rounded-2xl",
+  unassignedSheetHeader:
+    "border-b border-[rgba(201,164,77,0.18)] bg-gradient-to-b from-[#F5EBD4] to-[#EFE4CB]",
+  unassignedSheetHeaderIcon:
+    "bg-[rgba(201,164,77,0.18)] text-[#8A6324] ring-1 ring-[rgba(201,164,77,0.24)] sm:rounded-xl [&_svg]:text-[#8A6324]",
+  unassignedSheetBadge:
+    "rounded-full bg-[rgba(201,164,77,0.18)] px-2.5 py-0.5 text-xs font-bold tabular-nums text-[#8A6324]",
+  unassignedSheetEmpty:
+    "flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(201,164,77,0.22)] bg-[#FFF9EA] px-4 py-10 text-center",
+  summaryMetricCard:
+    "rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] p-2.5 shadow-[0_2px_8px_rgba(3,7,12,0.06)] sm:rounded-2xl sm:p-4",
+  summaryMetricCardHighlight:
+    "border-[rgba(201,164,77,0.32)] bg-[#F5EBD4] ring-1 ring-[rgba(201,164,77,0.18)]",
+  summaryMetricCardInteractive:
+    "cursor-pointer transition-[border-color,box-shadow,background-color] hover:border-[rgba(201,164,77,0.32)] hover:bg-[#F3EBDD] hover:shadow-[0_4px_14px_rgba(3,7,12,0.10)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.30)]",
+  summaryMetricLabel:
+    "truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255] sm:text-[11px]",
+  summaryMetricValue:
+    "mt-0.5 text-lg font-bold tabular-nums text-[#17130E] sm:mt-1 sm:text-2xl",
+  summaryMetricDescription: "mt-0.5 hidden text-xs text-[#6B6255] sm:block",
+  summaryMetricIcon:
+    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.14)] sm:h-10 sm:w-10 sm:rounded-xl [&_svg]:text-[#8A6324]",
+  workloadCard:
+    "rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] p-2.5 shadow-[0_2px_8px_rgba(3,7,12,0.06)] transition-[border-color,box-shadow,background-color] sm:rounded-2xl sm:p-4",
+  workloadCardActive:
+    "border-[rgba(201,164,77,0.38)] bg-[#F5EBD4] ring-2 ring-[rgba(201,164,77,0.22)]",
+  workloadCardOverloaded:
+    "border-[rgba(201,164,77,0.32)] bg-[#F5EBD4] ring-2 ring-[rgba(201,164,77,0.18)] shadow-[0_4px_14px_rgba(138,99,36,0.10)]",
+  workloadCardInteractive:
+    "cursor-pointer hover:border-[rgba(201,164,77,0.32)] hover:bg-[#F3EBDD] hover:shadow-[0_4px_14px_rgba(3,7,12,0.10)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.30)]",
+  workloadEmptyState:
+    "rounded-xl border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2.5 sm:rounded-2xl sm:px-4 sm:py-4",
 };
