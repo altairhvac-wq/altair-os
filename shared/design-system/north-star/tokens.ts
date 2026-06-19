@@ -603,6 +603,57 @@ export type NorthStarDispatchTokens = {
   focusBannerClear: string;
   statPill: string;
   statPillUnassigned: string;
+  boardSurface: string;
+  boardSurfaceTopAccent: string;
+  boardHeader: string;
+  boardHeaderTitle: string;
+  boardHeaderSubtitle: string;
+  boardBody: string;
+  boardUnassignedButton: string;
+  boardUnassignedBadge: string;
+  boardEmphasisRing: string;
+  filterBar: string;
+  filterBarCompact: string;
+  unassignedFilterButton: string;
+  unassignedFilterBadge: string;
+  lane: string;
+  laneHeader: string;
+  laneHeaderAvatar: string;
+  laneHeaderName: string;
+  laneHeaderRole: string;
+  laneHeaderStatusLabel: string;
+  laneHeaderNextJob: string;
+  laneHeaderCount: string;
+  laneJobWell: string;
+  laneEmptyWell: string;
+  laneEmptyText: string;
+  laneToggleButton: string;
+  laneToggleButtonDashed: string;
+  unassignedLane: string;
+  unassignedLaneEmphasis: string;
+  unassignedLaneHeader: string;
+  unassignedLaneIcon: string;
+  unassignedLaneTitle: string;
+  unassignedLaneSubtitle: string;
+  unassignedLaneCount: string;
+  unassignedJobWell: string;
+  unassignedEmptyWell: string;
+  jobCard: string;
+  jobCardCompact: string;
+  jobCardSelected: string;
+  jobCardAssigning: string;
+  jobCardJobNumber: string;
+  jobCardCustomer: string;
+  jobCardService: string;
+  jobCardMeta: string;
+  jobCardMetaIcon: string;
+  jobCardMetaTime: string;
+  jobCardFooter: string;
+  jobCardLoader: string;
+  emptyState: string;
+  emptyStateIcon: string;
+  emptyStateTitle: string;
+  emptyStateDescription: string;
 };
 
 export const northStarDispatchTokens: NorthStarDispatchTokens = {
@@ -629,4 +680,89 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
     "rounded-full border border-[rgba(201,164,77,0.28)] bg-[rgba(39,49,64,0.45)] px-2 py-1 text-[11px] font-semibold tabular-nums text-[#F3EBDD] shadow-sm sm:px-3 sm:py-1.5 sm:text-xs",
   statPillUnassigned:
     "rounded-full border border-[rgba(201,164,77,0.38)] bg-[rgba(201,164,77,0.14)] px-2 py-1 text-[11px] font-semibold tabular-nums text-[#E6D092] shadow-sm sm:px-3 sm:py-1.5 sm:text-xs",
+  boardSurface:
+    "relative flex min-h-0 min-w-0 max-w-full flex-col overflow-hidden rounded-[1.25rem] bg-gradient-to-b from-[#273140] via-[#1A2029] to-[#111821] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38),0_0_0_1px_rgba(255,255,255,0.06)_inset] ring-1 ring-[rgba(174,182,194,0.18)]",
+  boardSurfaceTopAccent:
+    "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(214,190,120,0.38)] to-transparent",
+  boardHeader:
+    "flex shrink-0 flex-wrap items-start justify-between gap-2 border-b border-[rgba(201,164,77,0.14)] px-3 py-2.5 sm:px-4 sm:py-3",
+  boardHeaderTitle:
+    "text-sm font-bold tracking-tight text-[#FFF8E8] sm:text-base",
+  boardHeaderSubtitle: "mt-0.5 hidden text-xs text-[#D7CDBD] sm:block",
+  boardBody:
+    "min-h-0 min-w-0 max-w-full flex-1 overflow-y-auto overscroll-contain bg-[#EFE4CB] px-2 py-2.5 pb-20 sm:px-3 sm:py-3 sm:pb-16 lg:pb-6",
+  boardUnassignedButton:
+    "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(201,164,77,0.32)] bg-[rgba(201,164,77,0.12)] px-2.5 py-1.5 text-xs font-semibold text-[#E6D092] transition-colors hover:border-[rgba(214,190,120,0.42)] hover:bg-[rgba(201,164,77,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.35)]",
+  boardUnassignedBadge:
+    "rounded-full bg-[rgba(201,164,77,0.22)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#FFF8E8]",
+  boardEmphasisRing: "ring-2 ring-[rgba(201,164,77,0.28)]",
+  filterBar:
+    "dispatch-north-star-filter-bar rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-2.5 shadow-[0_2px_8px_rgba(3,7,12,0.08)] sm:rounded-2xl sm:px-4 sm:py-3",
+  filterBarCompact: "dispatch-north-star-filter-bar px-0 py-0",
+  unassignedFilterButton:
+    "col-span-2 inline-flex min-h-[2.75rem] shrink-0 items-center justify-center gap-2 rounded-lg border border-[rgba(201,164,77,0.28)] bg-[#F5EBD4] px-3 py-2 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[rgba(201,164,77,0.38)] hover:bg-[#EFE4CB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.30)] sm:col-span-1 sm:min-h-0 sm:py-2.5",
+  unassignedFilterBadge:
+    "rounded-full bg-[rgba(201,164,77,0.18)] px-2 py-0.5 text-xs font-bold tabular-nums text-[#8A6324]",
+  lane:
+    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FBF7EF] shadow-[0_2px_10px_rgba(3,7,12,0.10)] sm:rounded-2xl",
+  laneHeader:
+    "flex shrink-0 items-center gap-2 border-b border-[rgba(138,99,36,0.12)] bg-gradient-to-b from-[#273140] to-[#1A2029] px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:border-[rgba(201,164,77,0.14)] sm:px-3 sm:py-2.5 lg:w-48",
+  laneHeaderAvatar:
+    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-xs font-bold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.20)] ring-1 ring-[rgba(201,164,77,0.28)] sm:h-9 sm:w-9 sm:rounded-xl",
+  laneHeaderName:
+    "truncate text-sm font-bold tracking-tight text-[#FFF8E8]",
+  laneHeaderRole: "truncate text-[11px] text-[#B8AD9E]",
+  laneHeaderStatusLabel: "text-[11px] font-medium text-[#D7CDBD]",
+  laneHeaderNextJob:
+    "hidden text-[10px] font-medium text-[#B8AD9E] sm:inline",
+  laneHeaderCount:
+    "rounded-full border border-[rgba(201,164,77,0.22)] bg-[rgba(39,49,64,0.55)] px-2 py-0.5 text-[11px] font-semibold tabular-nums text-[#F3EBDD]",
+  laneJobWell:
+    "flex min-h-[4.75rem] min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto bg-[#FFF9EA] p-2 sm:min-h-[5.5rem] sm:gap-2.5 sm:p-2.5",
+  laneEmptyWell:
+    "flex flex-1 items-center justify-center rounded-lg border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FBF7EF] px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3",
+  laneEmptyText: "text-[11px] font-medium text-[#6B6255]",
+  laneToggleButton:
+    "self-start rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-1.5 text-[11px] font-semibold text-[#4F4638] transition-colors hover:border-[rgba(201,164,77,0.32)] hover:bg-[#F3EBDD] sm:text-xs",
+  laneToggleButtonDashed:
+    "self-start rounded-lg border border-dashed border-[rgba(138,99,36,0.22)] bg-[#FBF7EF] px-3 py-1.5 text-[11px] font-semibold text-[#6B6255] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[#FFF9EA] sm:text-xs",
+  unassignedLane:
+    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(201,164,77,0.22)] bg-[#F5EBD4] shadow-[0_2px_10px_rgba(138,99,36,0.10)] sm:rounded-2xl",
+  unassignedLaneEmphasis:
+    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(201,164,77,0.32)] bg-[#EFE4CB] shadow-[0_4px_16px_rgba(138,99,36,0.12)] ring-1 ring-[rgba(201,164,77,0.18)] sm:rounded-2xl",
+  unassignedLaneHeader:
+    "flex shrink-0 items-center gap-2 border-b border-[rgba(201,164,77,0.18)] bg-gradient-to-b from-[#F5EBD4] to-[#EFE4CB] px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:border-[rgba(201,164,77,0.16)] sm:px-3 sm:py-2.5 lg:w-48",
+  unassignedLaneIcon:
+    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgba(201,164,77,0.18)] text-[#8A6324] ring-1 ring-[rgba(201,164,77,0.24)] sm:h-9 sm:w-9 sm:rounded-xl [&_svg]:text-[#8A6324]",
+  unassignedLaneTitle: "text-sm font-bold text-[#17130E]",
+  unassignedLaneSubtitle: "hidden text-[11px] text-[#6B6255] sm:block",
+  unassignedLaneCount:
+    "rounded-full border border-[rgba(201,164,77,0.28)] bg-[rgba(201,164,77,0.14)] px-2 py-0.5 text-[11px] font-bold tabular-nums text-[#8A6324]",
+  unassignedJobWell:
+    "flex min-h-[4.75rem] min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto bg-[#FFF9EA] p-2 sm:min-h-[5.5rem] sm:gap-2.5 sm:p-2.5",
+  unassignedEmptyWell:
+    "flex flex-1 items-center justify-center rounded-lg border border-dashed border-[rgba(201,164,77,0.22)] bg-[#FBF7EF] px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3",
+  jobCard:
+    "snap-start w-full rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] p-3.5 text-left shadow-[0_2px_8px_rgba(3,7,12,0.08)] transition-[border-color,box-shadow,background-color] hover:border-[rgba(201,164,77,0.28)] hover:shadow-[0_4px_14px_rgba(3,7,12,0.12)]",
+  jobCardCompact:
+    "snap-start w-[12rem] shrink-0 rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] p-2.5 text-left shadow-[0_2px_8px_rgba(3,7,12,0.08)] transition-[border-color,box-shadow,background-color] hover:border-[rgba(201,164,77,0.28)] hover:shadow-[0_4px_14px_rgba(3,7,12,0.12)] sm:w-[13.25rem] sm:p-3",
+  jobCardSelected:
+    "border-[rgba(201,164,77,0.45)] bg-[#F5EBD4] shadow-[0_4px_16px_rgba(138,99,36,0.14)] ring-2 ring-[rgba(201,164,77,0.28)]",
+  jobCardAssigning:
+    "border-[rgba(201,164,77,0.35)] bg-[#EFE4CB]",
+  jobCardJobNumber:
+    "font-semibold uppercase tracking-[0.12em] text-[#8A6324] tabular-nums",
+  jobCardCustomer: "truncate font-bold tracking-tight text-[#17130E]",
+  jobCardService: "truncate text-[#4F4638]",
+  jobCardMeta: "text-[#4F4638]",
+  jobCardMetaIcon: "shrink-0 text-[#8A6324]",
+  jobCardMetaTime: "font-semibold text-[#17130E]",
+  jobCardFooter: "border-t border-[rgba(138,99,36,0.12)]",
+  jobCardLoader: "h-3.5 w-3.5 animate-spin text-[#8A6324]",
+  emptyState:
+    "flex w-full max-w-md flex-col items-center rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FBF7EF] px-6 py-8 text-center shadow-[0_4px_16px_rgba(3,7,12,0.08)]",
+  emptyStateIcon:
+    "flex h-12 w-12 items-center justify-center rounded-xl bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.14)] [&_svg]:text-[#8A6324]",
+  emptyStateTitle: "mt-3 text-base font-bold text-[#17130E]",
+  emptyStateDescription: "mt-1.5 text-sm text-[#6B6255]",
 };

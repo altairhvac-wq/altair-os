@@ -38,7 +38,7 @@ import {
   MasterShellPage,
   masterWorkbenchRowClass,
 } from "@/shared/design-system/shell";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import { northStarListTokens as lt, northStarDispatchTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type DispatchPageViewProps = {
   initialJobs: DispatchJob[];
@@ -394,6 +394,7 @@ export function DispatchPageView({
             resultCount={filteredJobs.length}
             unassignedCount={unassignedJobs.length}
             onOpenUnassigned={handleOpenUnassigned}
+            northStar={northStar}
           />
         ),
       };
@@ -407,6 +408,7 @@ export function DispatchPageView({
     filteredJobs.length,
     handleOpenUnassigned,
     jobs,
+    northStar,
     openSection,
     search,
     statusFilter,
@@ -416,6 +418,102 @@ export function DispatchPageView({
     handleTechnicianWorkloadClick,
     unassignedJobs.length,
   ]);
+
+  const boardEmphasisClass = dispatchPageFocus?.emphasizeBoard
+    ? northStar
+      ? dt.boardEmphasisRing
+      : "ring-1 ring-cyan-500/20"
+    : "";
+
+  const dispatchBoardContent = (
+    <>
+      {northStar ? <div className={dt.boardSurfaceTopAccent} aria-hidden /> : null}
+      <div
+        className={
+          northStar
+            ? dt.boardHeader
+            : "admin-panel-header flex shrink-0 flex-wrap items-start justify-between gap-2 px-3 py-2 sm:px-4 sm:py-3"
+        }
+      >
+        <div className="min-w-0">
+          <h2
+            className={
+              northStar
+                ? dt.boardHeaderTitle
+                : "admin-heading-section sm:text-base"
+            }
+          >
+            {boardTitle}
+          </h2>
+          <p
+            className={
+              northStar
+                ? dt.boardHeaderSubtitle
+                : "admin-text-helper mt-0.5 hidden sm:block"
+            }
+          >
+            {boardSubtitle}
+          </p>
+        </div>
+        {unassignedJobs.length > 0 ? (
+          <button
+            type="button"
+            onClick={handleOpenUnassigned}
+            className={
+              northStar
+                ? dt.boardUnassignedButton
+                : "admin-panel-action admin-panel-action-warning min-h-9 gap-1.5 px-2.5 py-1.5"
+            }
+          >
+            Unassigned
+            <span
+              className={
+                northStar
+                  ? dt.boardUnassignedBadge
+                  : "rounded-full bg-amber-200/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums"
+              }
+            >
+              {unassignedJobs.length}
+            </span>
+          </button>
+        ) : null}
+      </div>
+
+      <div
+        className={
+          northStar
+            ? dt.boardBody
+            : "min-h-0 min-w-0 max-w-full flex-1 overflow-y-auto overscroll-contain bg-white p-2 sm:p-3"
+        }
+      >
+        {hasNoJobs ? (
+          <DispatchEmptyState
+            variant="no-jobs"
+            canDispatchJobs={canDispatchJobs}
+            northStar={northStar}
+          />
+        ) : hasNoResults ? (
+          <DispatchEmptyState variant="no-results" northStar={northStar} />
+        ) : (
+          <DispatchBoard
+            jobs={filteredJobs}
+            technicians={technicians}
+            technicianFilter={technicianFilter}
+            selectedJobId={selectedJobId}
+            pendingJobId={pendingJobId}
+            hideEmptyTechnicianLanes
+            showAllTechnicians={showAllTechnicians}
+            onSelectJob={handleSelectJob}
+            onToggleShowAllTechnicians={handleToggleShowAllTechnicians}
+            highlightUnassignedPanel={
+              dispatchPageFocus?.highlightUnassignedPanel ?? false
+            }
+            northStar={northStar}
+          />
+        )}
+      </div>
+    </>
+  );
 
   return (
     <MasterShellPage
@@ -468,67 +566,25 @@ export function DispatchPageView({
               unassignedCount={unassignedJobs.length}
               onOpenUnassigned={handleOpenUnassigned}
               compact
+              northStar={northStar}
             />
           ) : null}
 
           <div className={masterWorkbenchRowClass}>
-        <MasterPageSurface
-          variant="panel"
-          className={`max-w-full lg:flex-1 ${
-            dispatchPageFocus?.emphasizeBoard
-              ? "ring-1 ring-cyan-500/20"
-              : ""
-          }`}
-        >
-          <div className="admin-panel-header flex shrink-0 flex-wrap items-start justify-between gap-2 px-3 py-2 sm:px-4 sm:py-3">
-            <div className="min-w-0">
-              <h2 className="admin-heading-section sm:text-base">
-                {boardTitle}
-              </h2>
-              <p className="admin-text-helper mt-0.5 hidden sm:block">
-                {boardSubtitle}
-              </p>
-            </div>
-            {unassignedJobs.length > 0 ? (
-              <button
-                type="button"
-                onClick={handleOpenUnassigned}
-                className="admin-panel-action admin-panel-action-warning min-h-9 gap-1.5 px-2.5 py-1.5"
-              >
-                Unassigned
-                <span className="rounded-full bg-amber-200/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums">
-                  {unassignedJobs.length}
-                </span>
-              </button>
-            ) : null}
+        {northStar ? (
+          <div
+            className={`${dt.boardSurface} max-w-full lg:flex-1 ${boardEmphasisClass}`}
+          >
+            {dispatchBoardContent}
           </div>
-
-          <div className="min-h-0 min-w-0 max-w-full flex-1 overflow-y-auto overscroll-contain bg-white p-2 sm:p-3">
-            {hasNoJobs ? (
-              <DispatchEmptyState
-                variant="no-jobs"
-                canDispatchJobs={canDispatchJobs}
-              />
-            ) : hasNoResults ? (
-              <DispatchEmptyState variant="no-results" />
-            ) : (
-              <DispatchBoard
-                jobs={filteredJobs}
-                technicians={technicians}
-                technicianFilter={technicianFilter}
-                selectedJobId={selectedJobId}
-                pendingJobId={pendingJobId}
-                hideEmptyTechnicianLanes
-                showAllTechnicians={showAllTechnicians}
-                onSelectJob={handleSelectJob}
-                onToggleShowAllTechnicians={handleToggleShowAllTechnicians}
-                highlightUnassignedPanel={
-                  dispatchPageFocus?.highlightUnassignedPanel ?? false
-                }
-              />
-            )}
-          </div>
-        </MasterPageSurface>
+        ) : (
+          <MasterPageSurface
+            variant="panel"
+            className={`max-w-full lg:flex-1 ${boardEmphasisClass}`}
+          >
+            {dispatchBoardContent}
+          </MasterPageSurface>
+        )}
 
         {selectedJob ? (
           <div className="hidden lg:flex lg:h-full lg:min-h-0 lg:w-[380px] lg:shrink-0 lg:flex-col lg:overflow-hidden">

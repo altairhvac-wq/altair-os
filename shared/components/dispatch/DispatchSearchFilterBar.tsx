@@ -1,5 +1,9 @@
 import { Filter, Inbox, Search } from "lucide-react";
 import {
+  northStarDispatchTokens as dt,
+  northStarListTokens as lt,
+} from "@/shared/design-system/north-star/tokens";
+import {
   DISPATCH_STATUS_OPTIONS,
   type DispatchJobStatus,
   type Technician,
@@ -18,6 +22,7 @@ type DispatchSearchFilterBarProps = {
   onOpenUnassigned: () => void;
   /** Slim inline bar for desktop board header */
   compact?: boolean;
+  northStar?: boolean;
 };
 
 export function DispatchSearchFilterBar({
@@ -32,35 +37,56 @@ export function DispatchSearchFilterBar({
   unassignedCount,
   onOpenUnassigned,
   compact = false,
+  northStar = false,
 }: DispatchSearchFilterBarProps) {
-  const wrapperClass = compact
-    ? "px-0 py-0"
-    : "rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm sm:rounded-2xl sm:px-4 sm:py-3";
+  const wrapperClass = northStar
+    ? compact
+      ? dt.filterBarCompact
+      : dt.filterBar
+    : compact
+      ? "px-0 py-0"
+      : "rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm sm:rounded-2xl sm:px-4 sm:py-3";
+
+  const searchInputClass = northStar
+    ? lt.searchInput
+    : "w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:py-2.5 sm:pl-10 sm:pr-4 sm:placeholder:text-slate-400";
+
+  const filterSelectClass = northStar
+    ? lt.filterSelect
+    : "w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:py-2.5 sm:pl-10 sm:pr-10 sm:w-auto";
+
+  const filterIconClass = northStar
+    ? `pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 sm:left-3 ${lt.filterIcon}`
+    : "pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:left-3";
+
+  const searchIconClass = northStar
+    ? `pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 sm:left-3 ${lt.filterIcon}`
+    : "pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:left-3";
 
   return (
     <div className={wrapperClass}>
       <div className="flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-center">
         <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:left-3" />
+          <Search className={searchIconClass} />
           <input
             type="search"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search jobs..."
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:py-2.5 sm:pl-10 sm:pr-4 sm:placeholder:text-slate-400"
+            className={searchInputClass}
             aria-label="Search customer, job type, technician, address, or status"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:items-center sm:gap-3">
           <div className="relative min-w-0 shrink-0">
-            <Filter className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:left-3" />
+            <Filter className={filterIconClass} />
             <select
               value={statusFilter}
               onChange={(e) =>
                 onStatusFilterChange(e.target.value as DispatchJobStatus | "all")
               }
-              className="w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:py-2.5 sm:pl-10 sm:pr-10 sm:w-auto"
+              className={filterSelectClass}
             >
               {DISPATCH_STATUS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -71,11 +97,11 @@ export function DispatchSearchFilterBar({
           </div>
 
           <div className="relative min-w-0 shrink-0">
-            <Filter className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:left-3" />
+            <Filter className={filterIconClass} />
             <select
               value={technicianFilter}
               onChange={(e) => onTechnicianFilterChange(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:py-2.5 sm:pl-10 sm:pr-10 sm:w-auto"
+              className={filterSelectClass}
             >
               <option value="all">All technicians</option>
               <option value="unassigned">Unassigned only</option>
@@ -90,12 +116,22 @@ export function DispatchSearchFilterBar({
           <button
             type="button"
             onClick={onOpenUnassigned}
-            className="col-span-2 inline-flex min-h-[2.75rem] shrink-0 items-center justify-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 transition-colors hover:border-amber-300 hover:bg-amber-100 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 sm:col-span-1 sm:min-h-0 sm:py-2.5"
+            className={
+              northStar
+                ? dt.unassignedFilterButton
+                : "col-span-2 inline-flex min-h-[2.75rem] shrink-0 items-center justify-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 transition-colors hover:border-amber-300 hover:bg-amber-100 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 sm:col-span-1 sm:min-h-0 sm:py-2.5"
+            }
           >
             <Inbox className="h-4 w-4 shrink-0" />
             <span className="sm:hidden">Unassigned</span>
             <span className="hidden sm:inline">Unassigned Jobs</span>
-            <span className="rounded-full bg-amber-200/80 px-2 py-0.5 text-xs font-bold text-amber-900">
+            <span
+              className={
+                northStar
+                  ? dt.unassignedFilterBadge
+                  : "rounded-full bg-amber-200/80 px-2 py-0.5 text-xs font-bold text-amber-900"
+              }
+            >
               {unassignedCount}
             </span>
           </button>
@@ -103,7 +139,13 @@ export function DispatchSearchFilterBar({
       </div>
 
       {!compact ? (
-        <p className="mt-1 text-[11px] text-slate-500 sm:mt-2 sm:text-xs">
+        <p
+          className={
+            northStar
+              ? lt.filterMeta
+              : "mt-1 text-[11px] text-slate-500 sm:mt-2 sm:text-xs"
+          }
+        >
           {resultCount} {resultCount === 1 ? "job" : "jobs"} on board
         </p>
       ) : null}

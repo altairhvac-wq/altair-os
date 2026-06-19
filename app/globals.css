@@ -1287,6 +1287,29 @@ a[href] {
   color: #d7cdbd !important;
 }
 
+.admin-north-star-shell .dispatch-north-star-filter-bar input[type="search"],
+.admin-north-star-shell .dispatch-north-star-filter-bar select {
+  border: 1px solid rgb(138 99 36 / 0.18);
+  background: #fff9ea;
+  color: #17130e;
+}
+
+.admin-north-star-shell .dispatch-north-star-filter-bar input[type="search"]::placeholder {
+  color: #6b6255;
+}
+
+.admin-north-star-shell .dispatch-north-star-filter-bar input[type="search"]:focus,
+.admin-north-star-shell .dispatch-north-star-filter-bar select:focus {
+  border-color: #b88a2e;
+  background: #fbf7ef;
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
+}
+
+.admin-north-star-shell .dispatch-north-star-filter-bar svg {
+  color: #8a6324;
+}
+
 .admin-north-star-shell .time-north-star-filter-bar {
   border-bottom: 1px solid rgb(138 99 36 / 0.12);
   background: #efe4cb;

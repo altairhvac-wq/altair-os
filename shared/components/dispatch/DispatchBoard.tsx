@@ -3,6 +3,7 @@
 import { memo, useMemo } from "react";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
 import { formatDispatchTime } from "@/shared/types/dispatch";
+import { northStarDispatchTokens as dt } from "@/shared/design-system/north-star/tokens";
 import { TechnicianColumn } from "./TechnicianColumn";
 import { UnassignedJobsPanel } from "./UnassignedJobsPanel";
 
@@ -17,6 +18,7 @@ type DispatchBoardProps = {
   onSelectJob: (job: DispatchJob) => void;
   onToggleShowAllTechnicians: () => void;
   highlightUnassignedPanel?: boolean;
+  northStar?: boolean;
 };
 
 function groupJobsByTechnician(jobs: DispatchJob[]): Map<string, DispatchJob[]> {
@@ -57,6 +59,7 @@ export const DispatchBoard = memo(function DispatchBoard({
   onSelectJob,
   onToggleShowAllTechnicians,
   highlightUnassignedPanel = false,
+  northStar = false,
 }: DispatchBoardProps) {
   const unassignedJobs = useMemo(
     () => jobs.filter((job) => !job.technicianId),
@@ -122,6 +125,7 @@ export const DispatchBoard = memo(function DispatchBoard({
           pendingJobId={pendingJobId}
           onSelectJob={onSelectJob}
           emphasized={highlightUnassignedPanel}
+          northStar={northStar}
         />
       ) : null}
 
@@ -129,7 +133,11 @@ export const DispatchBoard = memo(function DispatchBoard({
         <button
           type="button"
           onClick={onToggleShowAllTechnicians}
-          className="self-start rounded-lg border border-dashed border-slate-200/90 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 sm:text-xs"
+          className={
+            northStar
+              ? dt.laneToggleButtonDashed
+              : "self-start rounded-lg border border-dashed border-slate-200/90 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 sm:text-xs"
+          }
         >
           Show {hiddenEmptyTechnicianCount} technician
           {hiddenEmptyTechnicianCount === 1 ? "" : "s"} with no jobs today
@@ -138,7 +146,11 @@ export const DispatchBoard = memo(function DispatchBoard({
         <button
           type="button"
           onClick={onToggleShowAllTechnicians}
-          className="self-start rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 sm:text-xs"
+          className={
+            northStar
+              ? dt.laneToggleButton
+              : "self-start rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 sm:text-xs"
+          }
         >
           Hide empty technician lanes
         </button>
@@ -159,6 +171,7 @@ export const DispatchBoard = memo(function DispatchBoard({
                 nextJobTime={
                   nextJob ? formatDispatchTime(nextJob.scheduledDate) : null
                 }
+                northStar={northStar}
                 onSelectJob={onSelectJob}
               />
             );
