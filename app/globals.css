@@ -1312,99 +1312,163 @@ a[href] {
 
 /* Dispatch detail panel — workflow + billing hints North Star (M15D) */
 .dispatch-north-star-workflow .bg-cyan-600,
-.dispatch-north-star-workflow a.bg-cyan-600 {
-  border: 1px solid #e6d092;
-  background: linear-gradient(
-    to bottom,
-    #e6d092 0%,
-    #c9a44d 45%,
-    #b88a2e 100%
-  );
-  color: #17130e;
-  box-shadow: 0 2px 10px rgb(138 99 36 / 0.28);
+.dispatch-north-star-workflow a.bg-cyan-600,
+.dispatch-north-star-workflow button.bg-cyan-600 {
+  border: 1px solid rgb(201 164 77 / 0.32) !important;
+  background: linear-gradient(to bottom, #273140 0%, #1a2029 100%) !important;
+  color: #fff8e8 !important;
+  box-shadow: 0 2px 10px rgb(3 7 12 / 0.16) !important;
 }
 
 .dispatch-north-star-workflow .bg-cyan-600:hover,
-.dispatch-north-star-workflow a.bg-cyan-600:hover {
-  background: linear-gradient(
-    to bottom,
-    #f0e4b8 0%,
-    #d4b05a 45%,
-    #9a7028 100%
-  );
+.dispatch-north-star-workflow a.bg-cyan-600:hover,
+.dispatch-north-star-workflow button.bg-cyan-600:hover {
+  border-color: rgb(214 190 120 / 0.42) !important;
+  background: linear-gradient(to bottom, #2f3d50 0%, #1f2a38 100%) !important;
+  color: #fff8e8 !important;
+}
+
+.dispatch-north-star-workflow .bg-cyan-600:active,
+.dispatch-north-star-workflow button.bg-cyan-600:active {
+  background: #1a2029 !important;
 }
 
 .dispatch-north-star-workflow .bg-indigo-600,
-.dispatch-north-star-workflow a.bg-indigo-600 {
-  border: 1px solid #e6d092;
-  background: linear-gradient(
-    to bottom,
-    #e6d092 0%,
-    #c9a44d 45%,
-    #b88a2e 100%
-  );
-  color: #17130e;
-  box-shadow: 0 2px 10px rgb(138 99 36 / 0.28);
+.dispatch-north-star-workflow a.bg-indigo-600,
+.dispatch-north-star-workflow button.bg-indigo-600 {
+  border: 1px solid rgb(201 164 77 / 0.32) !important;
+  background: linear-gradient(to bottom, #273140 0%, #1a2029 100%) !important;
+  color: #fff8e8 !important;
+  box-shadow: 0 2px 10px rgb(3 7 12 / 0.16) !important;
 }
 
 .dispatch-north-star-workflow .bg-indigo-600:hover,
-.dispatch-north-star-workflow a.bg-indigo-600:hover {
-  background: linear-gradient(
-    to bottom,
-    #f0e4b8 0%,
-    #d4b05a 45%,
-    #9a7028 100%
-  );
+.dispatch-north-star-workflow a.bg-indigo-600:hover,
+.dispatch-north-star-workflow button.bg-indigo-600:hover {
+  border-color: rgb(214 190 120 / 0.42) !important;
+  background: linear-gradient(to bottom, #2f3d50 0%, #1f2a38 100%) !important;
+  color: #fff8e8 !important;
 }
 
 .dispatch-north-star-workflow .border-indigo-200.bg-indigo-50 {
-  border-color: rgb(201 164 77 / 0.28);
-  background: #f5ebd4;
-  color: #4f4638;
+  border-color: rgb(201 164 77 / 0.28) !important;
+  background: #f5ebd4 !important;
+  color: #4f4638 !important;
 }
 
 .dispatch-north-star-workflow .border-indigo-200.bg-indigo-50.text-indigo-800,
 .dispatch-north-star-workflow .border-indigo-200.bg-indigo-50.text-indigo-900 {
-  border-color: rgb(201 164 77 / 0.28);
-  background: #f5ebd4;
-  color: #4f4638;
+  border-color: rgb(201 164 77 / 0.28) !important;
+  background: #f5ebd4 !important;
+  color: #4f4638 !important;
 }
 
 .dispatch-north-star-workflow .bg-indigo-50.text-indigo-900 {
-  background: #f5ebd4;
-  color: #4f4638;
+  background: #f5ebd4 !important;
+  color: #4f4638 !important;
+}
+
+/* Correct status card — warm ivory warning, restrained brass border */
+.dispatch-north-star-workflow .rounded-xl.border-dashed.border-amber-200,
+.dispatch-north-star-workflow .border-dashed.border-amber-200 {
+  border-color: rgb(201 164 77 / 0.28) !important;
+  background: #fff9ea !important;
+}
+
+.dispatch-north-star-workflow .rounded-xl.border-dashed.border-amber-200 [class*="bg-amber"],
+.dispatch-north-star-workflow .border-dashed.border-amber-200[class*="bg-amber"] {
+  background: #fff9ea !important;
+}
+
+.dispatch-north-star-workflow .text-amber-800 {
+  color: #8a6324 !important;
+}
+
+.dispatch-north-star-workflow .text-amber-900,
+.dispatch-north-star-workflow [class*="text-amber-900"] {
+  color: #4f4638 !important;
+}
+
+.dispatch-north-star-workflow .border-amber-200 {
+  border-color: rgb(138 99 36 / 0.18) !important;
+}
+
+.dispatch-north-star-workflow .border-amber-300 {
+  border-color: rgb(201 164 77 / 0.28) !important;
+  background: #fff9ea !important;
+  color: #4f4638 !important;
+}
+
+.dispatch-north-star-workflow .border-amber-300:hover {
+  background: #f3ebdd !important;
+  border-color: rgb(201 164 77 / 0.38) !important;
 }
 
 .dispatch-north-star-workflow .border-amber-200.bg-amber-50 {
-  border-color: rgb(201 164 77 / 0.28);
-  background: #f5ebd4;
-  color: #4f4638;
+  border-color: rgb(201 164 77 / 0.28) !important;
+  background: #fff9ea !important;
+  color: #4f4638 !important;
 }
 
 .dispatch-north-star-workflow .text-slate-500,
 .dispatch-north-star-workflow .text-slate-600 {
-  color: #6b6255;
+  color: #6b6255 !important;
 }
 
 .dispatch-north-star-workflow .border-slate-200.bg-white {
-  border-color: rgb(138 99 36 / 0.22);
-  background: #fff9ea;
-  color: #4f4638;
+  border-color: rgb(138 99 36 / 0.22) !important;
+  background: #fff9ea !important;
+  color: #4f4638 !important;
 }
 
 .dispatch-north-star-workflow .border-slate-200.bg-white:hover {
-  border-color: #c9a44d;
-  background: #f3ebdd;
+  border-color: #c9a44d !important;
+  background: #f3ebdd !important;
 }
 
 .dispatch-north-star-workflow .border-emerald-200.bg-emerald-50 {
-  border-color: rgb(201 164 77 / 0.28);
-  background: #f5ebd4;
-  color: #4f4638;
+  border-color: rgb(201 164 77 / 0.28) !important;
+  background: #f5ebd4 !important;
+  color: #4f4638 !important;
 }
 
 .dispatch-north-star-workflow .text-emerald-800 {
-  color: #065f46;
+  color: #065f46 !important;
+}
+
+/* Dispatch detail panel body — scroll comfort + softer scrollbar */
+.dispatch-north-star-detail-panel-body {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(138 99 36 / 0.22) transparent;
+}
+
+.dispatch-north-star-detail-panel-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dispatch-north-star-detail-panel-body::-webkit-scrollbar-track {
+  margin-block: 6px;
+  background: transparent;
+}
+
+.dispatch-north-star-detail-panel-body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgb(138 99 36 / 0.2);
+}
+
+.dispatch-north-star-detail-panel-body::-webkit-scrollbar-thumb:hover {
+  background: rgb(138 99 36 / 0.32);
+}
+
+/* Disabled assignment CTA — flat ivory, clearly inactive */
+.dispatch-north-star-detail-panel-body button:disabled[class*="from-[#E6D092]"] {
+  border-color: rgb(138 99 36 / 0.14) !important;
+  background: #efe4cb !important;
+  background-image: none !important;
+  color: #6b6255 !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
 }
 
 @media (max-width: 1023px) {
