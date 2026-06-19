@@ -50,6 +50,7 @@ import {
   ownerMobileHeroCardLiveClass,
   ownerMobileHeroPrimaryActionClass,
   ownerMobileHeroSecondaryActionClass,
+  ownerMobileScrollContentClass,
   ownerMobileSectionLabelClass,
   ownerMobileUpNextRowClass,
 } from "./jobs-north-star-mobile-owner-styles";
@@ -375,7 +376,7 @@ export function JobsNorthStarMobileOwnerView({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5">
+      <div className={ownerMobileScrollContentClass}>
         {isArchiveSearching ? (
           <section className="space-y-3" aria-label="Job history search results">
             <div>
