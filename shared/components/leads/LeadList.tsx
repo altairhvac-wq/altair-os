@@ -1,6 +1,7 @@
 import { LeadCard } from "@/shared/components/leads/LeadCard";
 import { LeadStatusBadge } from "@/shared/components/leads/LeadStatusBadge";
 import { getLeadLastActivityLabel } from "@/shared/lib/leads/lead-status";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import {
   adminTableRowClass,
   adminTableRowSelectedClass,
@@ -17,6 +18,7 @@ type LeadListProps = {
   selectedId: string | null;
   onSelect: (lead: Lead) => void;
   timeZone?: string;
+  northStar?: boolean;
 };
 
 export function LeadList({
@@ -24,7 +26,86 @@ export function LeadList({
   selectedId,
   onSelect,
   timeZone,
+  northStar = false,
 }: LeadListProps) {
+  if (northStar) {
+    return (
+      <>
+        <div className="hidden min-w-0 lg:block">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[920px] text-left text-sm">
+              <thead>
+                <tr className={lt.tableHeaderRow}>
+                  <th className={`${lt.tableHeaderCell} px-4 py-3`}>Lead Name</th>
+                  <th className={`${lt.tableHeaderCell} px-4 py-3`}>Phone</th>
+                  <th className={`${lt.tableHeaderCell} hidden px-4 py-3 md:table-cell`}>
+                    Source
+                  </th>
+                  <th className={`${lt.tableHeaderCell} px-4 py-3`}>Status</th>
+                  <th className={`${lt.tableHeaderCell} hidden px-4 py-3 lg:table-cell`}>
+                    Next Follow-Up
+                  </th>
+                  <th className={`${lt.tableHeaderCell} px-4 py-3`}>Last Activity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leads.map((lead) => {
+                  const isSelected = lead.id === selectedId;
+
+                  return (
+                    <tr
+                      key={lead.id}
+                      onClick={() => onSelect(lead)}
+                      className={`${lt.tableRow} ${
+                        isSelected ? lt.tableRowSelected : ""
+                      }`}
+                    >
+                      <td className={`px-4 py-3 ${lt.tablePrimaryText}`}>
+                        {formatLeadName(lead)}
+                      </td>
+                      <td className={`px-4 py-3 ${lt.tableSecondaryText}`}>
+                        {lead.phone || "—"}
+                      </td>
+                      <td
+                        className={`hidden px-4 py-3 md:table-cell ${lt.tableSecondaryText}`}
+                      >
+                        {formatLeadSource(lead.source)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <LeadStatusBadge status={lead.status} northStar />
+                      </td>
+                      <td
+                        className={`hidden px-4 py-3 lg:table-cell ${lt.tableDateText}`}
+                      >
+                        {formatLeadDate(lead.nextFollowUpAt, timeZone)}
+                      </td>
+                      <td className={`px-4 py-3 ${lt.tableMutedText}`}>
+                        {getLeadLastActivityLabel(lead)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="space-y-3 p-4 lg:hidden">
+          {leads.map((lead) => (
+            <LeadCard
+              key={lead.id}
+              lead={lead}
+              selected={lead.id === selectedId}
+              onSelect={onSelect}
+              timeZone={timeZone}
+              northStar
+            />
+          ))}
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <div className="hidden min-w-0 lg:block">

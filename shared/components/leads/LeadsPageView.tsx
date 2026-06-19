@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { prepareLeadEstimateAction } from "@/app/actions/leads";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import type { LeadAssignableMember } from "@/lib/database/queries/leads";
 import {
   MasterListPageLayout,
@@ -13,13 +14,22 @@ import {
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { LeadDetailPanel } from "@/shared/components/leads/LeadDetailPanel";
 import { LeadList } from "@/shared/components/leads/LeadList";
 import { LeadSearchFilterBar } from "@/shared/components/leads/LeadSearchFilterBar";
 import { LeadsEmptyState } from "@/shared/components/leads/LeadsEmptyState";
+import {
+  LeadsFollowUpQueue,
+  LeadsPipelineSummary,
+} from "@/shared/components/leads/north-star-m14";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import type { LeadCreateOutcome } from "@/shared/components/leads/LeadForm";
+import {
+  buildLeadPipelineMetrics,
+  selectLeadsNeedingFollowUp,
+} from "@/shared/lib/leads/lead-metrics";
 import { compareLeadsByField, isLeadFollowUpDue } from "@/shared/lib/leads/lead-status";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { LeadActivity } from "@/shared/types/lead-activity";
@@ -143,6 +153,16 @@ export function LeadsPageView({
     );
   }, [followUpDueOnly, leads, search, sortField, statusFilter, timeZone]);
 
+  const pipelineMetrics = useMemo(
+    () => buildLeadPipelineMetrics(leads, undefined, timeZone),
+    [leads, timeZone],
+  );
+
+  const followUpQueueLeads = useMemo(
+    () => selectLeadsNeedingFollowUp(leads, { limit: 5, timeZone }),
+    [leads, timeZone],
+  );
+
   const selectedLead =
     leads.find((lead) => lead.id === selectedId) ?? null;
   const selectedActivities = selectedLead
@@ -168,6 +188,18 @@ export function LeadsPageView({
     setLeads((current) =>
       current.map((lead) => (lead.id === updated.id ? updated : lead)),
     );
+  }
+
+  function handleStatusFilterChange(value: LeadStatus | "all") {
+    setStatusFilter(value);
+    if (value !== "all") {
+      setFollowUpDueOnly(false);
+    }
+  }
+
+  function handleFollowUpDueSelect() {
+    setFollowUpDueOnly(true);
+    setStatusFilter("all");
   }
 
   function handleCreateSuccess(lead: Lead, outcome: LeadCreateOutcome = "save") {
@@ -220,17 +252,27 @@ export function LeadsPageView({
   const hasNoLeads = leads.length === 0;
   const hasNoResults = !hasNoLeads && filteredLeads.length === 0;
   const isPanelOpen = panelMode !== "empty";
+  const northStar = isNorthStarShellEnabled();
 
   return (
     <MasterListPageLayout
       title="Leads"
-      subtitle="Track opportunities before they become customers"
+      subtitle={
+        northStar
+          ? "Revenue intake and follow-up command center"
+          : "Track opportunities before they become customers"
+      }
+      eyebrow={northStar ? "Opportunity intake" : undefined}
       density="compact"
       primaryAction={
         <button
           type="button"
           onClick={handleCreateLead}
-          className={masterListPagePrimaryActionClass}
+          className={
+            northStar
+              ? `north-star-leads-primary-action ${lt.primaryAction}`
+              : masterListPagePrimaryActionClass
+          }
         >
           <Plus className="h-3.5 w-3.5" />
           Create Lead
@@ -241,14 +283,49 @@ export function LeadsPageView({
           <SettingsAlertBanner tone="error">{createError}</SettingsAlertBanner>
         ) : undefined
       }
-      className={isPanelOpen ? masterListPageMobilePanelLockClass : undefined}
+      summary={
+        northStar && !hasNoLeads
+          ? (
+            <LeadsPipelineSummary
+              leads={leads}
+              statusFilter={statusFilter}
+              followUpDueOnly={followUpDueOnly}
+              followUpsDue={pipelineMetrics.followUpsDue}
+              openLeads={pipelineMetrics.openLeads}
+              onStatusFilterChange={handleStatusFilterChange}
+              onFollowUpDueSelect={handleFollowUpDueSelect}
+            />
+          )
+          : null
+      }
+      className={`${isPanelOpen ? masterListPageMobilePanelLockClass : ""} ${
+        northStar ? lt.pageCanvas : ""
+      }`}
+      headerClassName={northStar ? lt.pageHeader : undefined}
+      headerSurfaceVariant={northStar ? "northStar" : "default"}
+      headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
+      headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
+      headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
       <MasterPageSurface
-        variant="card"
+        variant={northStar ? "northStarList" : "card"}
         className={`${masterListPageSurfaceClass} ${
           isPanelOpen ? "max-lg:hidden" : ""
-        }`}
+        } ${northStar ? lt.listSurface : ""}`}
       >
+        {northStar ? (
+          <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
+        ) : null}
+
+        {northStar && !hasNoLeads && !followUpDueOnly && followUpQueueLeads.length > 0 ? (
+          <LeadsFollowUpQueue
+            leads={followUpQueueLeads}
+            timeZone={timeZone}
+            onSelectLead={handleSelectLead}
+            onViewAll={handleFollowUpDueSelect}
+          />
+        ) : null}
+
         {!hasNoLeads ? (
           <>
             <LeadSearchFilterBar
@@ -256,21 +333,27 @@ export function LeadsPageView({
               statusFilter={statusFilter}
               sortField={sortField}
               onSearchChange={setSearch}
-              onStatusFilterChange={(value) => {
-                setStatusFilter(value);
-                if (value !== "all") {
-                  setFollowUpDueOnly(false);
-                }
-              }}
+              onStatusFilterChange={handleStatusFilterChange}
               onSortFieldChange={setSortField}
               resultCount={filteredLeads.length}
+              northStar={northStar}
             />
             {followUpDueOnly ? (
-              <div className="border-b border-slate-100/90 px-4 pb-3 sm:px-5">
+              <div
+                className={
+                  northStar
+                    ? "border-b border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-3 pb-3 sm:px-4 lg:px-5"
+                    : "border-b border-slate-100/90 px-4 pb-3 sm:px-5"
+                }
+              >
                 <button
                   type="button"
                   onClick={() => setFollowUpDueOnly(false)}
-                  className="text-xs font-semibold text-cyan-700 hover:text-cyan-800"
+                  className={
+                    northStar
+                      ? "text-xs font-semibold text-[#8A6324] transition-colors hover:text-[#6B5A2E]"
+                      : "text-xs font-semibold text-cyan-700 hover:text-cyan-800"
+                  }
                 >
                   Clear follow-up due filter
                 </button>
@@ -284,15 +367,17 @@ export function LeadsPageView({
             <LeadsEmptyState
               variant="no-leads"
               onCreateLead={handleCreateLead}
+              northStar={northStar}
             />
           ) : hasNoResults ? (
-            <LeadsEmptyState variant="no-results" />
+            <LeadsEmptyState variant="no-results" northStar={northStar} />
           ) : (
             <LeadList
               leads={filteredLeads}
               selectedId={selectedId}
               onSelect={handleSelectLead}
               timeZone={timeZone}
+              northStar={northStar}
             />
           )}
         </div>
