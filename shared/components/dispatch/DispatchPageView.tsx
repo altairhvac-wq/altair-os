@@ -14,6 +14,7 @@ import {
 import type { DispatchPageFocusState } from "@/shared/lib/dispatch-page-focus";
 import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
 import { canUpdateJobWorkflowStatus } from "@/lib/database/access-control";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { useIsBelowLg } from "@/shared/components/mobile/use-mobile-viewport";
 import { DispatchBoard } from "./DispatchBoard";
 import { DispatchDashboardHeader } from "./DispatchDashboardHeader";
@@ -37,6 +38,7 @@ import {
   MasterShellPage,
   masterWorkbenchRowClass,
 } from "@/shared/design-system/shell";
+import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 
 type DispatchPageViewProps = {
   initialJobs: DispatchJob[];
@@ -125,6 +127,7 @@ export function DispatchPageView({
   const [showAllTechnicians, setShowAllTechnicians] = useState(false);
   const [, startTransition] = useTransition();
   const isBelowLg = useIsBelowLg();
+  const northStar = isNorthStarShellEnabled();
 
   const filteredJobs = useMemo(
     () =>
@@ -415,7 +418,11 @@ export function DispatchPageView({
   ]);
 
   return (
-    <MasterShellPage fillViewport density="compact">
+    <MasterShellPage
+      fillViewport
+      density="compact"
+      className={northStar ? lt.pageCanvas : undefined}
+    >
       <MasterPageCanvas width="wide" className="min-h-0 flex-1">
         <MasterContentStack
           density="compact"
@@ -425,6 +432,8 @@ export function DispatchPageView({
           <DispatchDashboardHeader
             jobCount={jobs.length}
             technicianCount={technicians.length}
+            unassignedCount={unassignedJobs.length}
+            northStar={northStar}
           />
 
           {dispatchPageFocus?.banner ? (
@@ -432,6 +441,7 @@ export function DispatchPageView({
               title={dispatchPageFocus.banner.title}
               description={dispatchPageFocus.banner.description}
               clearHref={dispatchPageFocus.banner.clearHref}
+              northStar={northStar}
             />
           ) : null}
 
@@ -442,6 +452,7 @@ export function DispatchPageView({
             filtersActive={filtersActive}
             unassignedCount={unassignedJobs.length}
             dispatchPageFocus={dispatchPageFocus}
+            northStar={northStar}
           />
 
           {!hasNoJobs && !isBelowLg ? (

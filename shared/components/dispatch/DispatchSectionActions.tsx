@@ -2,6 +2,7 @@
 
 import { BarChart3, SlidersHorizontal, Users } from "lucide-react";
 import type { DispatchPageFocusState } from "@/shared/lib/dispatch-page-focus";
+import { northStarDispatchTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 export type DispatchSection = "summary" | "workload" | "filters";
 
@@ -12,6 +13,7 @@ type DispatchSectionActionsProps = {
   filtersActive: boolean;
   unassignedCount: number;
   dispatchPageFocus?: DispatchPageFocusState;
+  northStar?: boolean;
 };
 
 type SectionButtonProps = {
@@ -22,6 +24,7 @@ type SectionButtonProps = {
   emphasized?: boolean;
   badge?: React.ReactNode;
   onClick: () => void;
+  northStar?: boolean;
 };
 
 function SectionButton({
@@ -32,7 +35,30 @@ function SectionButton({
   emphasized = false,
   badge,
   onClick,
+  northStar = false,
 }: SectionButtonProps) {
+  if (northStar) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-pressed={isOpen}
+        className={`${dt.sectionButton} ${
+          isOpen
+            ? dt.sectionButtonActive
+            : emphasized
+              ? dt.sectionButtonEmphasized
+              : ""
+        }`}
+      >
+        <Icon className="h-4 w-4 shrink-0" />
+        <span className="sm:hidden">{shortLabel}</span>
+        <span className="hidden sm:inline">{label}</span>
+        {badge}
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"
@@ -61,10 +87,30 @@ export function DispatchSectionActions({
   filtersActive,
   unassignedCount,
   dispatchPageFocus,
+  northStar = false,
 }: DispatchSectionActionsProps) {
   const emphasizeSummary =
     (dispatchPageFocus?.highlightedSummaryLabels.length ?? 0) > 0;
   const emphasizeWorkload = dispatchPageFocus?.emphasizeWorkload ?? false;
+
+  const filterBadge =
+    filtersActive || unassignedCount > 0 ? (
+      <span
+        className={
+          northStar
+            ? openSection === "filters"
+              ? dt.sectionButtonBadgeActive
+              : dt.sectionButtonBadge
+            : "rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-slate-700 sm:px-2 sm:text-xs"
+        }
+      >
+        {unassignedCount > 0
+          ? unassignedCount
+          : filtersActive
+            ? "On"
+            : null}
+      </span>
+    ) : null;
 
   return (
     <div className="flex min-w-0 max-w-full shrink-0 gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -75,6 +121,7 @@ export function DispatchSectionActions({
         isOpen={openSection === "summary"}
         emphasized={emphasizeSummary}
         onClick={() => onOpenSection("summary")}
+        northStar={northStar}
       />
 
       <SectionButton
@@ -84,6 +131,7 @@ export function DispatchSectionActions({
         isOpen={openSection === "workload"}
         emphasized={emphasizeWorkload}
         onClick={() => onOpenSection("workload")}
+        northStar={northStar}
       />
 
       {hasJobs ? (
@@ -92,21 +140,10 @@ export function DispatchSectionActions({
           shortLabel="Filters"
           icon={SlidersHorizontal}
           isOpen={openSection === "filters"}
-          emphasized={
-            dispatchPageFocus?.highlightUnassignedPanel ?? false
-          }
-          badge={
-            filtersActive || unassignedCount > 0 ? (
-              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-slate-700 sm:px-2 sm:text-xs">
-                {unassignedCount > 0
-                  ? unassignedCount
-                  : filtersActive
-                    ? "On"
-                    : null}
-              </span>
-            ) : null
-          }
+          emphasized={dispatchPageFocus?.highlightUnassignedPanel ?? false}
+          badge={filterBadge}
           onClick={() => onOpenSection("filters")}
+          northStar={northStar}
         />
       ) : null}
     </div>

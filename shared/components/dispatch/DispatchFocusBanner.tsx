@@ -1,17 +1,40 @@
 import Link from "next/link";
 import { Radio, X } from "lucide-react";
+import { northStarDispatchTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type DispatchFocusBannerProps = {
   title: string;
   description: string;
   clearHref: string;
+  northStar?: boolean;
 };
 
 export function DispatchFocusBanner({
   title,
   description,
   clearHref,
+  northStar = false,
 }: DispatchFocusBannerProps) {
+  if (northStar) {
+    return (
+      <div className={dt.focusBanner}>
+        <div className="flex min-w-0 items-start gap-2 sm:gap-3">
+          <div className={dt.focusBannerIcon}>
+            <Radio className="h-4 w-4" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className={dt.focusBannerTitle}>{title}</p>
+            <p className={dt.focusBannerDescription}>{description}</p>
+          </div>
+        </div>
+        <Link href={clearHref} className={dt.focusBannerClear}>
+          <X className="h-3.5 w-3.5" aria-hidden="true" />
+          Clear view
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-wrap items-start justify-between gap-2 rounded-xl border border-amber-200/90 bg-gradient-to-r from-amber-50/90 via-white to-white px-3 py-2 shadow-sm sm:gap-3 sm:px-4 sm:py-3">
       <div className="flex min-w-0 items-start gap-2 sm:gap-3">
