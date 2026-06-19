@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
@@ -16,7 +16,6 @@ import {
   bulkRestoreEstimatesFromTrashAction,
   bulkVoidEstimatesAction,
 } from "@/app/actions/estimates-bulk-lifecycle";
-import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { resolveSelectedItems } from "@/shared/lib/bulk-selection";
 import {
   buildJobsByIdForEstimateBatchSend,
@@ -37,10 +36,6 @@ import {
   getEstimateLifecycleState,
   summarizeEstimateBulkEligibility,
 } from "@/shared/lib/estimate-lifecycle";
-import {
-  countOperationalActive,
-  filterOperationalActive,
-} from "@/shared/lib/operational-lifecycle";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { EntityLifecycleBulkBar } from "@/shared/components/lifecycle/EntityLifecycleBulkBar";
 import type { Customer } from "@/shared/types/customer";
@@ -61,23 +56,22 @@ import {
   masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
-import { JobsViewTabs, type TodayAllViewTab } from "@/shared/components/jobs/JobsViewTabs";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { EstimateBatchSelectionBar } from "./EstimateBatchSelectionBar";
 import { EstimateDetailsPanel } from "./EstimateDetailsPanel";
+import { EstimateQueueTabs } from "./EstimateQueueTabs";
 import { EstimateSearchFilterBar } from "./EstimateSearchFilterBar";
-import { EstimateSummaryCards } from "./EstimateSummaryCards";
 import { EstimatesEmptyState } from "./EstimatesEmptyState";
 import { EstimatesTable } from "./EstimatesTable";
-import { EstimatesNorthStarMobileOwnerView } from "./EstimatesNorthStarMobileOwnerView";
 import {
-  isEstimateOpenForOwnerView,
-  sortEstimatesForOwnerView,
-} from "./estimates-north-star-mobile-owner-sort";
+  countEstimatesForWorkQueue,
+  filterEstimatesForWorkQueue,
+  sortEstimatesForWorkQueue,
+  type EstimateWorkQueue,
+} from "./estimate-work-queues";
 import {
-  filterEstimatesForTodayView,
   prepareEstimatesForListView,
-  prepareEstimatesForTodayView,
+  sortEstimatesForWorkflow,
 } from "@/shared/lib/estimate-workflow-list";
 import { formatEstimateStatus } from "@/shared/types/estimate";
 import { formatCurrency } from "@/shared/types/customer";
@@ -146,7 +140,7 @@ export function EstimatesPageView({
 }: EstimatesPageViewProps) {
   const [estimates, setEstimates] = useState(initialEstimates);
   const [search, setSearch] = useState("");
-  const [viewTab, setViewTab] = useState<TodayAllViewTab>("today");
+  const [workQueue, setWorkQueue] = useState<EstimateWorkQueue>("needs-action");
   const [statusFilter, setStatusFilter] = useState<EstimateStatus | "all">(
     "all",
   );
@@ -179,64 +173,68 @@ export function EstimatesPageView({
   const [isBulkPermanentlyDeleting, startBulkPermanentDeleteTransition] =
     useTransition();
   const router = useRouter();
-  const companyTimeZone = useCompanyTimezone();
-
-  const jobsById = useMemo(
-    () => new Map(jobs.map((job) => [job.id, job])),
-    [jobs],
-  );
 
   const batchJobsById = useMemo(
     () => buildJobsByIdForEstimateBatchSend(jobs),
     [jobs],
   );
 
-  const todayContext = useMemo(
-    () => ({
-      timeZone: companyTimeZone,
-      jobsById,
-    }),
-    [companyTimeZone, jobsById],
-  );
-
-  const todayEstimates = useMemo(
-    () => filterEstimatesForTodayView(estimates, todayContext),
-    [estimates, todayContext],
-  );
-
-  const activeEstimates = useMemo(
-    () => filterOperationalActive(estimates, getEstimateLifecycleState),
+  const queueCounts = useMemo(
+    () =>
+      ({
+        "needs-action": countEstimatesForWorkQueue(estimates, "needs-action"),
+        drafts: countEstimatesForWorkQueue(estimates, "drafts"),
+        sent: countEstimatesForWorkQueue(estimates, "sent"),
+        past: countEstimatesForWorkQueue(estimates, "past"),
+      }) satisfies Record<EstimateWorkQueue, number>,
     [estimates],
   );
 
-  const activeTodayCount = useMemo(
-    () => countOperationalActive(todayEstimates, getEstimateLifecycleState),
-    [todayEstimates],
-  );
-
-  const viewScopedEstimates = useMemo(
-    () => (viewTab === "today" ? todayEstimates : estimates),
-    [estimates, todayEstimates, viewTab],
+  const queueScopedEstimates = useMemo(
+    () => filterEstimatesForWorkQueue(estimates, workQueue),
+    [estimates, workQueue],
   );
 
   const filteredEstimates = useMemo(
     () =>
       filterEstimates(
-        viewScopedEstimates,
+        queueScopedEstimates,
         search,
         statusFilter,
         lifecycleFilter,
       ),
-    [viewScopedEstimates, search, statusFilter, lifecycleFilter],
+    [queueScopedEstimates, search, statusFilter, lifecycleFilter],
   );
 
   const estimateListPresentation = useMemo(() => {
-    if (viewTab === "today") {
-      return prepareEstimatesForTodayView(filteredEstimates);
+    if (workQueue === "needs-action") {
+      return {
+        sections: [
+          {
+            id: "needs-action",
+            label: "",
+            items: sortEstimatesForWorkflow(filteredEstimates),
+          },
+        ],
+        showSectionHeaders: false,
+      };
+    }
+
+    if (workQueue === "drafts" || workQueue === "sent" || workQueue === "past") {
+      return {
+        sections: [
+          {
+            id: workQueue,
+            label: "",
+            items: sortEstimatesForWorkQueue(filteredEstimates, workQueue),
+          },
+        ],
+        showSectionHeaders: false,
+      };
     }
 
     return prepareEstimatesForListView(filteredEstimates, statusFilter);
-  }, [filteredEstimates, statusFilter, viewTab]);
+  }, [filteredEstimates, statusFilter, workQueue]);
 
   const visibleEstimates = useMemo(
     () =>
@@ -254,7 +252,7 @@ export function EstimatesPageView({
     clearSelection,
     setSelectedIds: setSelectedEstimateIds,
   } = usePageBulkSelection(visibleEstimates, [
-    viewTab,
+    workQueue,
     statusFilter,
     lifecycleFilter,
     search,
@@ -533,57 +531,13 @@ export function EstimatesPageView({
     });
   }
 
-  const lifecycleFilteredEstimates = useMemo(
-    () =>
-      estimates.filter(
-        (estimate) => getEstimateLifecycleState(estimate) === lifecycleFilter,
-      ),
-    [estimates, lifecycleFilter],
-  );
-
-  const openCount = useMemo(
-    () =>
-      estimates.filter(
-        (estimate) =>
-          getEstimateLifecycleState(estimate) === "active" &&
-          isEstimateOpenForOwnerView(estimate),
-      ).length,
-    [estimates],
-  );
-
-  const openAttentionEstimates = useMemo(
-    () => lifecycleFilteredEstimates.filter(isEstimateOpenForOwnerView),
-    [lifecycleFilteredEstimates],
-  );
-
-  const filteredAttentionEstimates = useMemo(() => {
-    const statusScoped =
-      statusFilter === "all"
-        ? openAttentionEstimates
-        : openAttentionEstimates.filter(
-            (estimate) => estimate.status === statusFilter,
-          );
-
-    return sortEstimatesForOwnerView(statusScoped, companyTimeZone);
-  }, [companyTimeZone, openAttentionEstimates, statusFilter]);
-
-  const hasActiveFilters =
-    statusFilter !== "all" || lifecycleFilter !== "active";
-
-  const handleClearFilters = useCallback(() => {
-    setStatusFilter("all");
-    setLifecycleFilter("active");
-  }, []);
-
   const hasNoEstimates = estimates.length === 0;
-  const hasNoTodayEstimates = !hasNoEstimates && todayEstimates.length === 0;
+  const hasNoQueueEstimates =
+    !hasNoEstimates && queueScopedEstimates.length === 0;
   const hasNoResults = !hasNoEstimates && filteredEstimates.length === 0;
   const isCreateOpen = panelMode === "create";
 
-  const subtitle =
-    viewTab === "today"
-      ? `${activeTodayCount} need attention today`
-      : "Create quotes, track approvals, and convert to jobs";
+  const subtitle = "Finish, send, and follow up on estimates.";
 
   const northStar = isNorthStarShellEnabled();
 
@@ -591,28 +545,7 @@ export function EstimatesPageView({
     <MasterListPageLayout
       title="Estimates"
       subtitle={subtitle}
-      eyebrow={northStar ? "Quote pipeline" : undefined}
       density="compact"
-      headerCenter={
-        northStar && !hasNoEstimates ? (
-          <EstimateSummaryCards
-            estimates={activeEstimates}
-            northStar
-            variant="compact"
-          />
-        ) : undefined
-      }
-      summary={
-        !hasNoEstimates ? (
-          <div className={northStar ? "max-lg:hidden" : undefined}>
-            <EstimateSummaryCards
-              estimates={activeEstimates}
-              northStar={northStar}
-              variant={northStar ? "cards" : "full"}
-            />
-          </div>
-        ) : null
-      }
       primaryAction={
         canManageEstimates ? (
           <button
@@ -621,7 +554,7 @@ export function EstimatesPageView({
             disabled={customers.length === 0}
             className={
               northStar
-                ? `north-star-estimates-primary-action max-lg:hidden ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
+                ? `north-star-estimates-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
                 : `${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`
             }
           >
@@ -667,7 +600,7 @@ export function EstimatesPageView({
       className={`${isCreateOpen ? masterListPageMobilePanelLockClass : ""} ${
         northStar ? lt.pageCanvas : ""
       }`}
-      headerClassName={northStar ? `${lt.pageHeader} max-lg:hidden` : undefined}
+      headerClassName={northStar ? lt.pageHeader : undefined}
       headerSurfaceVariant={northStar ? "northStar" : "default"}
       headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
       headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
@@ -683,39 +616,9 @@ export function EstimatesPageView({
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
         ) : null}
 
-        {northStar ? (
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:hidden">
-            <EstimatesNorthStarMobileOwnerView
-              attentionEstimates={filteredAttentionEstimates}
-              archiveEstimates={lifecycleFilteredEstimates}
-              openCount={openCount}
-              totalAttentionCount={openAttentionEstimates.length}
-              hasNoEstimates={hasNoEstimates}
-              hasActiveFilters={hasActiveFilters}
-              companyTimeZone={companyTimeZone}
-              statusFilter={statusFilter}
-              lifecycleFilter={lifecycleFilter}
-              showLifecycleFilter={canManageEstimates}
-              canCreateEstimate={canManageEstimates}
-              needsCustomers={customers.length === 0}
-              onSelectEstimate={handleSelectEstimate}
-              onCreateEstimate={
-                canManageEstimates && customers.length > 0
-                  ? handleNewEstimate
-                  : undefined
-              }
-              onStatusFilterChange={setStatusFilter}
-              onLifecycleFilterChange={setLifecycleFilter}
-              onClearFilters={handleClearFilters}
-            />
-          </div>
-        ) : null}
-
         <div
           className={
-            northStar
-              ? "hidden min-h-0 min-w-0 lg:contents"
-              : "contents"
+            northStar ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"
           }
         >
         {!hasNoEstimates ? (
@@ -726,12 +629,10 @@ export function EstimatesPageView({
                 : "shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4"
             }
           >
-            <JobsViewTabs
-              activeTab={viewTab}
-              onTabChange={setViewTab}
-              todayCount={activeTodayCount}
-              allCount={activeEstimates.length}
-              allTabLabel="All"
+            <EstimateQueueTabs
+              activeQueue={workQueue}
+              onQueueChange={setWorkQueue}
+              counts={queueCounts}
               northStar={northStar}
             />
           </div>
@@ -744,7 +645,7 @@ export function EstimatesPageView({
             onSearchChange={setSearch}
             onStatusFilterChange={setStatusFilter}
             resultCount={filteredEstimates.length}
-            showStatusFilter={viewTab === "all"}
+            showStatusFilter={workQueue === "past"}
             lifecycleFilter={lifecycleFilter}
             onLifecycleFilterChange={setLifecycleFilter}
             showLifecycleFilter={canManageEstimates}
@@ -777,9 +678,7 @@ export function EstimatesPageView({
               }
               northStar={northStar}
             />
-          ) : viewTab === "today" && hasNoTodayEstimates ? (
-            <EstimatesEmptyState variant="no-today" northStar={northStar} />
-          ) : hasNoResults ? (
+          ) : hasNoQueueEstimates || hasNoResults ? (
             <EstimatesEmptyState variant="no-results" northStar={northStar} />
           ) : (
             <EstimatesTable
