@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
@@ -69,6 +69,11 @@ import { EstimateSearchFilterBar } from "./EstimateSearchFilterBar";
 import { EstimateSummaryCards } from "./EstimateSummaryCards";
 import { EstimatesEmptyState } from "./EstimatesEmptyState";
 import { EstimatesTable } from "./EstimatesTable";
+import { EstimatesNorthStarMobileOwnerView } from "./EstimatesNorthStarMobileOwnerView";
+import {
+  isEstimateOpenForOwnerView,
+  sortEstimatesForOwnerView,
+} from "./estimates-north-star-mobile-owner-sort";
 import {
   filterEstimatesForTodayView,
   prepareEstimatesForListView,
@@ -528,6 +533,48 @@ export function EstimatesPageView({
     });
   }
 
+  const lifecycleFilteredEstimates = useMemo(
+    () =>
+      estimates.filter(
+        (estimate) => getEstimateLifecycleState(estimate) === lifecycleFilter,
+      ),
+    [estimates, lifecycleFilter],
+  );
+
+  const openCount = useMemo(
+    () =>
+      estimates.filter(
+        (estimate) =>
+          getEstimateLifecycleState(estimate) === "active" &&
+          isEstimateOpenForOwnerView(estimate),
+      ).length,
+    [estimates],
+  );
+
+  const openAttentionEstimates = useMemo(
+    () => lifecycleFilteredEstimates.filter(isEstimateOpenForOwnerView),
+    [lifecycleFilteredEstimates],
+  );
+
+  const filteredAttentionEstimates = useMemo(() => {
+    const statusScoped =
+      statusFilter === "all"
+        ? openAttentionEstimates
+        : openAttentionEstimates.filter(
+            (estimate) => estimate.status === statusFilter,
+          );
+
+    return sortEstimatesForOwnerView(statusScoped, companyTimeZone);
+  }, [companyTimeZone, openAttentionEstimates, statusFilter]);
+
+  const hasActiveFilters =
+    statusFilter !== "all" || lifecycleFilter !== "active";
+
+  const handleClearFilters = useCallback(() => {
+    setStatusFilter("all");
+    setLifecycleFilter("active");
+  }, []);
+
   const hasNoEstimates = estimates.length === 0;
   const hasNoTodayEstimates = !hasNoEstimates && todayEstimates.length === 0;
   const hasNoResults = !hasNoEstimates && filteredEstimates.length === 0;
@@ -548,7 +595,9 @@ export function EstimatesPageView({
       density="compact"
       summary={
         !hasNoEstimates ? (
-          <EstimateSummaryCards estimates={activeEstimates} northStar={northStar} />
+          <div className={northStar ? "max-lg:hidden" : undefined}>
+            <EstimateSummaryCards estimates={activeEstimates} northStar={northStar} />
+          </div>
         ) : null
       }
       primaryAction={
@@ -559,7 +608,7 @@ export function EstimatesPageView({
             disabled={customers.length === 0}
             className={
               northStar
-                ? `north-star-estimates-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
+                ? `north-star-estimates-primary-action max-lg:hidden ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
                 : `${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`
             }
           >
@@ -605,7 +654,7 @@ export function EstimatesPageView({
       className={`${isCreateOpen ? masterListPageMobilePanelLockClass : ""} ${
         northStar ? lt.pageCanvas : ""
       }`}
-      headerClassName={northStar ? lt.pageHeader : undefined}
+      headerClassName={northStar ? `${lt.pageHeader} max-lg:hidden` : undefined}
       headerSurfaceVariant={northStar ? "northStar" : "default"}
       headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
       headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
@@ -621,6 +670,41 @@ export function EstimatesPageView({
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
         ) : null}
 
+        {northStar ? (
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:hidden">
+            <EstimatesNorthStarMobileOwnerView
+              attentionEstimates={filteredAttentionEstimates}
+              archiveEstimates={lifecycleFilteredEstimates}
+              openCount={openCount}
+              totalAttentionCount={openAttentionEstimates.length}
+              hasNoEstimates={hasNoEstimates}
+              hasActiveFilters={hasActiveFilters}
+              companyTimeZone={companyTimeZone}
+              statusFilter={statusFilter}
+              lifecycleFilter={lifecycleFilter}
+              showLifecycleFilter={canManageEstimates}
+              canCreateEstimate={canManageEstimates}
+              needsCustomers={customers.length === 0}
+              onSelectEstimate={handleSelectEstimate}
+              onCreateEstimate={
+                canManageEstimates && customers.length > 0
+                  ? handleNewEstimate
+                  : undefined
+              }
+              onStatusFilterChange={setStatusFilter}
+              onLifecycleFilterChange={setLifecycleFilter}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
+        ) : null}
+
+        <div
+          className={
+            northStar
+              ? "hidden min-h-0 min-w-0 flex-1 flex-col lg:flex"
+              : "contents"
+          }
+        >
         {!hasNoEstimates ? (
           <div
             className={
@@ -888,6 +972,7 @@ export function EstimatesPageView({
               onClearSelection={handleClearSelection}
             />
           ) : null}
+        </div>
         </div>
       </MasterPageSurface>
 
