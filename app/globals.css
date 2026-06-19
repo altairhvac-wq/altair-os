@@ -1462,7 +1462,7 @@ a[href] {
 }
 
 /* Disabled assignment CTA — flat ivory, clearly inactive */
-.dispatch-north-star-detail-panel-body button:disabled[class*="from-[#E6D092]"] {
+.dispatch-north-star-detail-panel-body .north-star-dispatch-disabled-action:disabled {
   border-color: rgb(138 99 36 / 0.14) !important;
   background: #efe4cb !important;
   background-image: none !important;
