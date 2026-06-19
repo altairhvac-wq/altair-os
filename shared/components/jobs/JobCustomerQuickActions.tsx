@@ -17,7 +17,7 @@ const actionClass =
   "inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors";
 
 const northStarActionClass =
-  "inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-2.5 py-2 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD]";
+  "inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-2.5 py-2 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.30)]";
 
 export function JobCustomerQuickActions({
   customerPhone,
@@ -47,7 +47,7 @@ export function JobCustomerQuickActions({
   }
 
   return (
-    <div className="flex gap-2">
+    <div className={`flex gap-2 ${northStar ? "min-w-0 max-w-full flex-wrap" : ""}`}>
       {hasPhone ? (
         <a
           href={`tel:${phone}`}

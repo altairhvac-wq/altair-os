@@ -171,7 +171,7 @@ function DispatchNorthStarBoardSkeleton() {
 
 export function DispatchNorthStarLoadingState() {
   return (
-    <MasterShellPage fillViewport density="compact" className={lt.pageCanvas}>
+    <MasterShellPage fillViewport density="compact" className={`${lt.pageCanvas} ${dt.pageCanvas}`}>
       <MasterPageCanvas width="wide" className="min-h-0 flex-1">
         <MasterContentStack
           density="compact"

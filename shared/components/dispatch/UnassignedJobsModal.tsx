@@ -42,8 +42,8 @@ export function UnassignedJobsModal({
         unstyled={northStar}
         className={
           northStar
-            ? `${dt.unassignedSheetPanel} sm:max-h-[80vh]`
-            : "sm:max-h-[80vh]"
+            ? dt.unassignedSheetPanel
+            : "flex h-[90dvh] max-h-[90dvh] min-h-0 flex-col sm:h-auto sm:max-h-[80vh]"
         }
       >
         {northStar ? (
@@ -89,8 +89,8 @@ export function UnassignedJobsModal({
           unstyled
           className={
             northStar
-              ? `bg-[#FBF7EF] p-3 pb-[max(5rem,calc(1rem+env(safe-area-inset-bottom)))] sm:p-4 sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))]`
-              : "p-3 pb-[max(5rem,calc(1rem+env(safe-area-inset-bottom)))] sm:p-4 sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))]"
+              ? `min-w-0 max-w-full overflow-x-hidden bg-[#FBF7EF] p-3 pb-[max(5.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] sm:p-4 sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))]`
+              : "min-w-0 max-w-full overflow-x-hidden p-3 pb-[max(5rem,calc(1rem+env(safe-area-inset-bottom)))] sm:p-4 sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))]"
           }
         >
           {jobs.length === 0 ? (

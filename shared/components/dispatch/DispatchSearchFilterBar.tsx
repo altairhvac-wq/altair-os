@@ -64,7 +64,7 @@ export function DispatchSearchFilterBar({
     : "pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:left-3";
 
   return (
-    <div className={wrapperClass}>
+    <div className={`min-w-0 max-w-full ${wrapperClass}`}>
       <div className="flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-center">
         <div className="relative min-w-0 flex-1">
           <Search className={searchIconClass} />

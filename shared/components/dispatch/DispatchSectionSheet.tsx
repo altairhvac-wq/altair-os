@@ -55,8 +55,8 @@ export function DispatchSectionSheet({
         unstyled={northStar}
         className={
           northStar
-            ? `${dt.sectionSheetPanel} sm:max-h-[85vh]`
-            : "sm:max-h-[85vh]"
+            ? dt.sectionSheetPanel
+            : "flex h-[90dvh] max-h-[90dvh] min-h-0 flex-col sm:h-auto sm:max-h-[85vh]"
         }
       >
         {northStar ? (
@@ -70,6 +70,7 @@ export function DispatchSectionSheet({
           title={title}
           subtitle={subtitle}
           onClose={onClose}
+          safeAreaTop
           headerClassName={northStar ? dt.sectionSheetHeader : undefined}
           icon={
             <MobileSheetHeaderIcon

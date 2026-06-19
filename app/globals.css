@@ -1287,6 +1287,13 @@ a[href] {
   color: #d7cdbd !important;
 }
 
+/* Dispatch page — mobile bottom clearance for feedback pill + safe area (M15) */
+@media (max-width: 1023px) {
+  .admin-north-star-shell .north-star-dispatch-page-canvas {
+    padding-bottom: max(4.5rem, calc(1rem + env(safe-area-inset-bottom, 0px)));
+  }
+}
+
 .admin-north-star-shell .dispatch-north-star-filter-bar input[type="search"],
 .admin-north-star-shell .dispatch-north-star-filter-bar select {
   border: 1px solid rgb(138 99 36 / 0.18);
@@ -1527,6 +1534,12 @@ a[href] {
 .dispatch-north-star-unassigned-sheet header button[aria-label="Close"]:hover {
   background: rgb(201 164 77 / 0.12);
   color: #4f4638;
+}
+
+/* Dispatch mobile job detail sheet — flex height chain for inner scroll (M15) */
+.dispatch-north-star-detail-mobile-sheet .dispatch-north-star-detail-panel {
+  flex: 1 1 0%;
+  min-height: 0;
 }
 
 .admin-north-star-shell .time-north-star-filter-bar {

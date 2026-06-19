@@ -529,13 +529,13 @@ export function DispatchPageView({
     <MasterShellPage
       fillViewport
       density="compact"
-      className={northStar ? lt.pageCanvas : undefined}
+      className={northStar ? `${lt.pageCanvas} ${dt.pageCanvas}` : undefined}
     >
       <MasterPageCanvas width="wide" className="min-h-0 flex-1">
         <MasterContentStack
           density="compact"
           scrollable
-          className="min-h-0 flex-1"
+          className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-hidden"
         >
           <DispatchDashboardHeader
             jobCount={jobs.length}
@@ -663,8 +663,18 @@ export function DispatchPageView({
           variant="responsive"
           zIndex={50}
         >
-          <MobileSheetPanel maxWidth="lg" maxHeight="90" unstyled className="min-h-0">
-            <DispatchDetailsPanel
+          <MobileSheetPanel
+            maxWidth="lg"
+            maxHeight="90"
+            unstyled
+            className={
+              northStar
+                ? dt.detailMobileSheetPanel
+                : "flex h-[90dvh] max-h-[90dvh] min-h-0 flex-col sm:h-auto"
+            }
+          >
+            <div className="flex min-h-0 flex-1 flex-col">
+              <DispatchDetailsPanel
               job={selectedJob}
               technician={selectedTechnician}
               technicians={technicians}
@@ -690,6 +700,7 @@ export function DispatchPageView({
               onUnassign={canDispatchJobs ? handleUnassign : undefined}
               onStatusUpdated={handleStatusUpdated}
             />
+            </div>
           </MobileSheetPanel>
         </MobileSheet>
       ) : null}
