@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { ArrowLeft } from "lucide-react";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
+import { TeamMemberProfileNorthStarView } from "@/shared/components/team/north-star-m12";
 import {
   updateMemberAvailabilityAction,
   updateMemberCertificationsAction,
@@ -55,7 +57,15 @@ type TeamMemberProfileViewProps = {
   backLabel?: string;
 };
 
-export function TeamMemberProfileView({
+export function TeamMemberProfileView(props: TeamMemberProfileViewProps) {
+  if (isNorthStarShellEnabled()) {
+    return <TeamMemberProfileNorthStarView {...props} />;
+  }
+
+  return <TeamMemberProfileLegacyView {...props} />;
+}
+
+function TeamMemberProfileLegacyView({
   membershipId,
   initialProfile,
   workSummary,
