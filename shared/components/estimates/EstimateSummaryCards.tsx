@@ -17,11 +17,14 @@ import type { Estimate } from "@/shared/types/estimate";
 type EstimateSummaryCardsProps = {
   estimates: Estimate[];
   northStar?: boolean;
+  /** Desktop North Star: split compact strip (header) from larger cards (summary). */
+  variant?: "full" | "compact" | "cards";
 };
 
 export function EstimateSummaryCards({
   estimates,
   northStar = false,
+  variant = "full",
 }: EstimateSummaryCardsProps) {
   const timeZone = useCompanyTimezone();
 
@@ -57,43 +60,51 @@ export function EstimateSummaryCards({
     return { needsAction, sentWaiting, approvedThisMonth, openValue };
   }, [estimates, timeZone]);
 
+  const cards = [
+    {
+      label: "Needs action",
+      mobileLabel: "Action",
+      value: String(summary.needsAction),
+      description: "Drafts and pending follow-up",
+      icon: Clock,
+      iconClassName: "admin-metric-icon-amber",
+    },
+    {
+      label: "Sent / waiting",
+      mobileLabel: "Sent",
+      value: String(summary.sentWaiting),
+      description: "Awaiting customer response",
+      icon: Send,
+      iconClassName: "admin-metric-icon-teal",
+    },
+    {
+      label: "Approved this month",
+      mobileLabel: "Approved",
+      value: String(summary.approvedThisMonth),
+      description: "Closed wins this period",
+      icon: CheckCircle2,
+      iconClassName: "admin-metric-icon-emerald",
+    },
+    {
+      label: "Open value",
+      mobileLabel: "Value",
+      value: formatCurrency(summary.openValue),
+      description: "Estimated total in pipeline",
+      icon: FileText,
+      iconClassName: "admin-metric-icon-slate",
+    },
+  ];
+
+  const showCompactStrip = variant === "full" || variant === "compact";
+  const showCards = variant === "full" || variant === "cards";
+
   return (
     <PageSummaryStrip
       northStar={northStar}
-      cards={[
-        {
-          label: "Needs action",
-          mobileLabel: "Action",
-          value: String(summary.needsAction),
-          description: "Drafts and pending follow-up",
-          icon: Clock,
-          iconClassName: "admin-metric-icon-amber",
-        },
-        {
-          label: "Sent / waiting",
-          mobileLabel: "Sent",
-          value: String(summary.sentWaiting),
-          description: "Awaiting customer response",
-          icon: Send,
-          iconClassName: "admin-metric-icon-teal",
-        },
-        {
-          label: "Approved this month",
-          mobileLabel: "Approved",
-          value: String(summary.approvedThisMonth),
-          description: "Closed wins this period",
-          icon: CheckCircle2,
-          iconClassName: "admin-metric-icon-emerald",
-        },
-        {
-          label: "Open value",
-          mobileLabel: "Value",
-          value: formatCurrency(summary.openValue),
-          description: "Estimated total in pipeline",
-          icon: FileText,
-          iconClassName: "admin-metric-icon-slate",
-        },
-      ]}
+      showCompactStrip={showCompactStrip}
+      showCards={showCards}
+      compactDensity={variant === "compact" ? "header" : "default"}
+      cards={cards}
     />
   );
 }

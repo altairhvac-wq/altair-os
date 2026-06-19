@@ -7,6 +7,8 @@ export type MasterPageHeaderProps = {
   eyebrow?: string;
   primaryAction?: ReactNode;
   secondaryAction?: ReactNode;
+  /** Optional center slot between title block and actions (e.g. compact metrics). */
+  center?: ReactNode;
   /** Slimmer title bar for dense list pages */
   density?: MasterShellDensity;
   /** Use North Star page header surface instead of legacy admin-page-header */
@@ -23,6 +25,7 @@ export function MasterPageHeader({
   eyebrow,
   primaryAction,
   secondaryAction,
+  center,
   density = "default",
   surfaceVariant = "default",
   titleClassName = "",
@@ -42,15 +45,19 @@ export function MasterPageHeader({
   const layoutClass =
     surfaceVariant === "northStar"
       ? isCompact
-        ? "items-start sm:items-center"
+        ? center
+          ? "items-center gap-3"
+          : "items-start sm:items-center"
         : "flex-wrap items-start gap-3"
       : isCompact
-        ? "items-start px-3 py-2 sm:items-center sm:px-3.5"
+        ? center
+          ? "items-center gap-3 px-3 py-2 sm:px-3.5"
+          : "items-start px-3 py-2 sm:items-center sm:px-3.5"
         : "flex-wrap items-start gap-3";
 
   return (
     <header
-      className={`${surfaceClass} flex shrink-0 justify-between gap-2 ${layoutClass} ${className}`}
+      className={`${surfaceClass} flex shrink-0 gap-2 ${center ? "" : "justify-between"} ${layoutClass} ${className}`}
     >
       <div className={`min-w-0 flex-1 ${isCompact ? "space-y-0.5" : ""}`}>
         {eyebrow ? (
@@ -86,8 +93,9 @@ export function MasterPageHeader({
           </>
         )}
       </div>
+      {center ? <div className="hidden shrink-0 lg:block">{center}</div> : null}
       {hasActions ? (
-        <div className={actionRowClass}>
+        <div className={`${actionRowClass} ${center ? "ml-auto" : ""}`}>
           {secondaryAction}
           {primaryAction}
         </div>

@@ -593,10 +593,23 @@ export function EstimatesPageView({
       subtitle={subtitle}
       eyebrow={northStar ? "Quote pipeline" : undefined}
       density="compact"
+      headerCenter={
+        northStar && !hasNoEstimates ? (
+          <EstimateSummaryCards
+            estimates={activeEstimates}
+            northStar
+            variant="compact"
+          />
+        ) : undefined
+      }
       summary={
         !hasNoEstimates ? (
           <div className={northStar ? "max-lg:hidden" : undefined}>
-            <EstimateSummaryCards estimates={activeEstimates} northStar={northStar} />
+            <EstimateSummaryCards
+              estimates={activeEstimates}
+              northStar={northStar}
+              variant={northStar ? "cards" : "full"}
+            />
           </div>
         ) : null
       }
@@ -701,7 +714,7 @@ export function EstimatesPageView({
         <div
           className={
             northStar
-              ? "hidden min-h-0 min-w-0 flex-1 flex-col lg:flex"
+              ? "hidden min-h-0 min-w-0 lg:contents"
               : "contents"
           }
         >

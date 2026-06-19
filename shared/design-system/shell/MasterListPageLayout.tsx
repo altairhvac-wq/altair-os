@@ -10,6 +10,7 @@ export type MasterListPageLayoutProps = {
   eyebrow?: string;
   primaryAction?: ReactNode;
   secondaryAction?: ReactNode;
+  headerCenter?: ReactNode;
   banners?: ReactNode;
   summary?: ReactNode;
   children: ReactNode;
@@ -32,6 +33,7 @@ export function MasterListPageLayout({
   eyebrow,
   primaryAction,
   secondaryAction,
+  headerCenter,
   banners,
   summary,
   children,
@@ -55,6 +57,7 @@ export function MasterListPageLayout({
         eyebrow={eyebrow}
         primaryAction={primaryAction}
         secondaryAction={secondaryAction}
+        center={headerCenter}
         density={density}
         surfaceVariant={headerSurfaceVariant}
         titleClassName={headerTitleClassName}

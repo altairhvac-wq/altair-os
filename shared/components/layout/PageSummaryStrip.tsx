@@ -23,29 +23,46 @@ type PageSummaryStripProps = {
   /** Tailwind grid column classes for lg breakpoint */
   lgColumnsClass?: string;
   northStar?: boolean;
+  showCompactStrip?: boolean;
+  showCards?: boolean;
+  /** Smaller inline strip styling for embedding in page headers */
+  compactDensity?: "default" | "header";
 };
 
 export function PageSummaryStrip({
   cards,
   lgColumnsClass = "lg:grid-cols-4",
   northStar = false,
+  showCompactStrip = true,
+  showCards = true,
+  compactDensity = "default",
 }: PageSummaryStripProps) {
   if (cards.length === 0) {
     return null;
   }
 
   if (northStar) {
+    const compactMetricClass =
+      compactDensity === "header"
+        ? "flex min-w-[3.75rem] flex-col px-2 py-0.5"
+        : "flex min-w-[4.5rem] flex-col px-3 py-0.5";
+    const compactStripClass =
+      compactDensity === "header"
+        ? "invoice-north-star-summary-strip shrink-0 w-fit max-w-full overflow-x-auto rounded-lg border border-[rgba(138,99,36,0.12)] bg-[rgba(239,228,203,0.55)] px-2 py-1"
+        : "invoice-north-star-summary-strip shrink-0 overflow-x-auto border-b border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-2 sm:px-4";
+
     return (
       <>
+        {showCompactStrip ? (
         <div
-          className="invoice-north-star-summary-strip shrink-0 overflow-x-auto border-b border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-2 sm:px-4"
+          className={compactStripClass}
           aria-label="Summary metrics"
         >
           <div className="flex min-w-max items-stretch gap-0">
             {cards.map((card, index) => (
               <div
                 key={card.label}
-                className={`flex min-w-[4.5rem] flex-col px-3 py-0.5 ${
+                className={`${compactMetricClass} ${
                   index > 0 ? "border-l border-[rgba(138,99,36,0.18)]" : ""
                 } ${
                   card.highlighted
@@ -63,7 +80,9 @@ export function PageSummaryStrip({
             ))}
           </div>
         </div>
+        ) : null}
 
+        {showCards ? (
         <div
           className={`hidden shrink-0 gap-3 sm:grid sm:grid-cols-2 ${lgColumnsClass}`}
         >
@@ -99,12 +118,14 @@ export function PageSummaryStrip({
             </div>
           ))}
         </div>
+        ) : null}
       </>
     );
   }
 
   return (
     <>
+      {showCompactStrip ? (
       <div
         className={adminCompactSummaryStripClass}
         aria-label="Summary metrics"
@@ -129,7 +150,9 @@ export function PageSummaryStrip({
           ))}
         </div>
       </div>
+      ) : null}
 
+      {showCards ? (
       <div
         className={`hidden shrink-0 gap-3 sm:grid sm:grid-cols-2 ${lgColumnsClass}`}
       >
@@ -155,6 +178,7 @@ export function PageSummaryStrip({
           </div>
         ))}
       </div>
+      ) : null}
     </>
   );
 }
