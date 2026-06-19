@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
@@ -16,7 +16,6 @@ import {
   bulkRestoreInvoicesFromTrashAction,
   bulkVoidInvoicesAction,
 } from "@/app/actions/invoices-bulk-lifecycle";
-import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import {
   resolveBulkSelectionState,
   resolveSelectedItems,
@@ -37,10 +36,6 @@ import {
   getInvoiceLifecycleState,
   summarizeInvoiceBulkEligibility,
 } from "@/shared/lib/invoice-lifecycle";
-import {
-  countOperationalActive,
-  filterOperationalActive,
-} from "@/shared/lib/operational-lifecycle";
 import {
   buildJobsByIdForBatchSend,
   formatBatchSendInvoicesResultMessage,
@@ -63,11 +58,7 @@ import {
   type InvoiceListStatusFilter,
   type InvoicePageFocusState,
 } from "@/shared/lib/invoice-page-focus";
-import {
-  filterInvoicesForTodayView,
-  prepareInvoicesForListView,
-  prepareInvoicesForTodayView,
-} from "@/shared/lib/invoice-workflow-list";
+import { prepareInvoicesForListView } from "@/shared/lib/invoice-workflow-list";
 import { formatCurrency } from "@/shared/types/customer";
 import {
   MasterListPageLayout,
@@ -79,21 +70,19 @@ import {
 } from "@/shared/design-system/shell";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
-import { JobsViewTabs, type TodayAllViewTab } from "@/shared/components/jobs/JobsViewTabs";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { InvoiceBatchSelectionBar } from "./InvoiceBatchSelectionBar";
-import { InvoiceCashFlowFocusBanner } from "./InvoiceCashFlowFocusBanner";
 import { InvoiceDetailsPanel } from "./InvoiceDetailsPanel";
+import { InvoiceQueueTabs } from "./InvoiceQueueTabs";
 import { InvoiceSearchFilterBar } from "./InvoiceSearchFilterBar";
-import { InvoiceSummaryCards } from "./InvoiceSummaryCards";
 import { InvoicesEmptyState } from "./InvoicesEmptyState";
-import { InvoicesNorthStarMobileOwnerView } from "./InvoicesNorthStarMobileOwnerView";
 import { InvoicesTable } from "./InvoicesTable";
 import {
-  isInvoiceNeedingCollection,
-  isInvoiceOpenForOwnerView,
-  sortInvoicesForOwnerView,
-} from "./invoices-north-star-mobile-owner-sort";
+  countInvoicesForWorkQueue,
+  filterInvoicesForWorkQueue,
+  sortInvoicesForWorkQueue,
+  type InvoiceWorkQueue,
+} from "./invoice-work-queues";
 
 type PanelMode = "create" | "empty";
 
@@ -153,15 +142,6 @@ function filterInvoices(
     : filtered;
 }
 
-const CASH_FLOW_HIGHLIGHT_MAP: Record<
-  string,
-  "Needs attention" | "Overdue" | "Due today" | "Unpaid total" | "Paid this month"
-> = {
-  Unpaid: "Unpaid total",
-  Overdue: "Overdue",
-  Paid: "Paid this month",
-};
-
 export function InvoicesPageView({
   initialInvoices,
   customers,
@@ -179,7 +159,7 @@ export function InvoicesPageView({
 }: InvoicesPageViewProps) {
   const [invoices, setInvoices] = useState(initialInvoices);
   const [search, setSearch] = useState("");
-  const [viewTab, setViewTab] = useState<TodayAllViewTab>("today");
+  const [workQueue, setWorkQueue] = useState<InvoiceWorkQueue>("needs-action");
   const [statusFilter, setStatusFilter] =
     useState<InvoiceListStatusFilter>(initialStatusFilter);
   const [lifecycleFilter, setLifecycleFilter] =
@@ -214,7 +194,6 @@ export function InvoicesPageView({
   const [isBulkPermanentlyDeleting, startBulkPermanentDeleteTransition] =
     useTransition();
   const router = useRouter();
-  const companyTimeZone = useCompanyTimezone();
 
   useEffect(() => {
     setInvoices(initialInvoices);
@@ -226,41 +205,31 @@ export function InvoicesPageView({
     setBatchSendFailureDetails(null);
     setLifecycleMessage(null);
     setLifecycleFailureDetails(null);
-  }, [lifecycleFilter, viewTab, statusFilter]);
+  }, [lifecycleFilter, workQueue, statusFilter]);
 
-  const prioritizeCashFlow = invoicePageFocus?.focus === "cash-flow";
+  const prioritizeCashFlow =
+    invoicePageFocus?.focus === "cash-flow" || workQueue === "needs-action";
 
-  const todayContext = useMemo(
-    () => ({
-      timeZone: companyTimeZone,
-    }),
-    [companyTimeZone],
-  );
-
-  const todayInvoices = useMemo(
-    () => filterInvoicesForTodayView(invoices, todayContext),
-    [invoices, todayContext],
-  );
-
-  const activeInvoices = useMemo(
-    () => filterOperationalActive(invoices, getInvoiceLifecycleState),
+  const queueCounts = useMemo(
+    () =>
+      ({
+        "needs-action": countInvoicesForWorkQueue(invoices, "needs-action"),
+        drafts: countInvoicesForWorkQueue(invoices, "drafts"),
+        "all-active": countInvoicesForWorkQueue(invoices, "all-active"),
+        past: countInvoicesForWorkQueue(invoices, "past"),
+      }) satisfies Record<InvoiceWorkQueue, number>,
     [invoices],
   );
 
-  const activeTodayCount = useMemo(
-    () => countOperationalActive(todayInvoices, getInvoiceLifecycleState),
-    [todayInvoices],
-  );
-
-  const viewScopedInvoices = useMemo(
-    () => (viewTab === "today" ? todayInvoices : invoices),
-    [invoices, todayInvoices, viewTab],
+  const queueScopedInvoices = useMemo(
+    () => filterInvoicesForWorkQueue(invoices, workQueue),
+    [invoices, workQueue],
   );
 
   const filteredInvoices = useMemo(
     () =>
       filterInvoices(
-        viewScopedInvoices,
+        queueScopedInvoices,
         search,
         statusFilter,
         lifecycleFilter,
@@ -268,7 +237,7 @@ export function InvoicesPageView({
         prioritizeCashFlow,
       ),
     [
-      viewScopedInvoices,
+      queueScopedInvoices,
       search,
       statusFilter,
       lifecycleFilter,
@@ -278,8 +247,30 @@ export function InvoicesPageView({
   );
 
   const invoiceListPresentation = useMemo(() => {
-    if (viewTab === "today") {
-      return prepareInvoicesForTodayView(filteredInvoices);
+    if (workQueue === "needs-action") {
+      return {
+        sections: [
+          {
+            id: "needs-action",
+            label: "",
+            items: sortInvoicesForCashFlowFocus(filteredInvoices),
+          },
+        ],
+        showSectionHeaders: false,
+      };
+    }
+
+    if (workQueue === "drafts" || workQueue === "past") {
+      return {
+        sections: [
+          {
+            id: workQueue,
+            label: "",
+            items: sortInvoicesForWorkQueue(filteredInvoices, workQueue),
+          },
+        ],
+        showSectionHeaders: false,
+      };
     }
 
     return prepareInvoicesForListView(
@@ -287,7 +278,7 @@ export function InvoicesPageView({
       statusFilter,
       prioritizeCashFlow,
     );
-  }, [filteredInvoices, prioritizeCashFlow, statusFilter, viewTab]);
+  }, [filteredInvoices, prioritizeCashFlow, statusFilter, workQueue]);
 
   const jobsById = useMemo(() => buildJobsByIdForBatchSend(jobs), [jobs]);
 
@@ -596,93 +587,14 @@ export function InvoicesPageView({
     });
   }
 
-  const lifecycleFilteredInvoices = useMemo(
-    () =>
-      invoices.filter(
-        (invoice) => getInvoiceLifecycleState(invoice) === lifecycleFilter,
-      ),
-    [invoices, lifecycleFilter],
-  );
-
-  const collectionCount = useMemo(
-    () =>
-      invoices.filter(
-        (invoice) =>
-          getInvoiceLifecycleState(invoice) === "active" &&
-          isInvoiceNeedingCollection(invoice),
-      ).length,
-    [invoices],
-  );
-
-  const openCount = useMemo(
-    () =>
-      invoices.filter(
-        (invoice) =>
-          getInvoiceLifecycleState(invoice) === "active" &&
-          isInvoiceOpenForOwnerView(invoice),
-      ).length,
-    [invoices],
-  );
-
-  const ownerScopedInvoices = useMemo(() => {
-    let scoped = lifecycleFilteredInvoices.filter(isInvoiceOpenForOwnerView);
-
-    if (initialJobId) {
-      scoped = scoped.filter((invoice) => invoice.jobId === initialJobId);
-    }
-
-    if (statusFilter !== "all") {
-      scoped = scoped.filter((invoice) =>
-        matchesInvoiceListStatusFilter(invoice, statusFilter),
-      );
-    }
-
-    return sortInvoicesForOwnerView(scoped, companyTimeZone);
-  }, [
-    companyTimeZone,
-    initialJobId,
-    lifecycleFilteredInvoices,
-    statusFilter,
-  ]);
-
-  const totalCollectionCount = useMemo(
-    () => lifecycleFilteredInvoices.filter(isInvoiceNeedingCollection).length,
-    [lifecycleFilteredInvoices],
-  );
-
-  const hasActiveFilters =
-    statusFilter !== "all" ||
-    lifecycleFilter !== "active" ||
-    Boolean(initialJobId);
-
-  const handleClearFilters = useCallback(() => {
-    setStatusFilter("all");
-    setLifecycleFilter("active");
-  }, []);
-
   const hasNoInvoices = invoices.length === 0;
-  const hasNoTodayInvoices = !hasNoInvoices && todayInvoices.length === 0;
+  const hasNoQueueInvoices =
+    !hasNoInvoices && queueScopedInvoices.length === 0;
   const hasNoResults = !hasNoInvoices && filteredInvoices.length === 0;
   const isCreateOpen = panelMode === "create";
 
   const subtitle =
-    viewTab === "today"
-      ? `${activeTodayCount} need attention today`
-      : (invoicePageFocus?.sectionDescription ??
-        "Track billing, payments, and outstanding balances");
-
-  const highlightedSummaryLabels = invoicePageFocus?.highlightedSummaryLabels
-    ?.map((label) => CASH_FLOW_HIGHLIGHT_MAP[label])
-    .filter(
-      (
-        label,
-      ): label is
-        | "Needs attention"
-        | "Overdue"
-        | "Due today"
-        | "Unpaid total"
-        | "Paid this month" => Boolean(label),
-    );
+    "Collect money, send invoices, and find past billing records.";
 
   const northStar = isNorthStarShellEnabled();
 
@@ -690,15 +602,10 @@ export function InvoicesPageView({
     <MasterListPageLayout
       title="Invoices"
       subtitle={subtitle}
-      eyebrow={
-        northStar
-          ? "Billing ledger"
-          : (invoicePageFocus?.sectionEyebrow ?? undefined)
-      }
+      eyebrow={invoicePageFocus?.sectionEyebrow ?? undefined}
       density="compact"
       banners={
-        initialJobId && initialJobLabel ||
-        invoicePageFocus?.banner ||
+        (initialJobId && initialJobLabel) ||
         lifecycleMessage ||
         batchSendMessage
           ? (
@@ -708,13 +615,6 @@ export function InvoicesPageView({
                     jobLabel={initialJobLabel}
                     clearHref={invoicePageFocus?.jobClearHref ?? "/invoices"}
                     variant={initialCreateMode ? "create" : "filter"}
-                  />
-                ) : null}
-                {invoicePageFocus?.banner ? (
-                  <InvoiceCashFlowFocusBanner
-                    title={invoicePageFocus.banner.title}
-                    description={invoicePageFocus.banner.description}
-                    clearHref={invoicePageFocus.banner.clearHref}
                   />
                 ) : null}
                 {lifecycleMessage ? (
@@ -749,17 +649,6 @@ export function InvoicesPageView({
             )
           : undefined
       }
-      summary={
-        !hasNoInvoices ? (
-          <div className={northStar ? "max-lg:hidden" : undefined}>
-            <InvoiceSummaryCards
-              invoices={activeInvoices}
-              highlightedLabels={highlightedSummaryLabels}
-              northStar={northStar}
-            />
-          </div>
-        ) : null
-      }
       primaryAction={
         canManageInvoices ? (
           <button
@@ -768,7 +657,7 @@ export function InvoicesPageView({
             disabled={customers.length === 0}
             className={
               northStar
-                ? `north-star-invoices-primary-action max-lg:hidden ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
+                ? `north-star-invoices-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
                 : `${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`
             }
           >
@@ -780,7 +669,7 @@ export function InvoicesPageView({
       className={`${isCreateOpen ? masterListPageMobilePanelLockClass : ""} ${
         northStar ? lt.pageCanvas : ""
       }`}
-      headerClassName={northStar ? `${lt.pageHeader} max-lg:hidden` : undefined}
+      headerClassName={northStar ? lt.pageHeader : undefined}
       headerSurfaceVariant={northStar ? "northStar" : "default"}
       headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
       headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
@@ -796,40 +685,9 @@ export function InvoicesPageView({
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
         ) : null}
 
-        {northStar ? (
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:hidden">
-            <InvoicesNorthStarMobileOwnerView
-              collectionInvoices={ownerScopedInvoices}
-              archiveInvoices={lifecycleFilteredInvoices}
-              collectionCount={collectionCount}
-              openCount={openCount}
-              totalCollectionCount={totalCollectionCount}
-              hasNoInvoices={hasNoInvoices}
-              hasActiveFilters={hasActiveFilters}
-              companyTimeZone={companyTimeZone}
-              statusFilter={statusFilter}
-              lifecycleFilter={lifecycleFilter}
-              showLifecycleFilter={canManageInvoices}
-              canManageInvoices={canManageInvoices}
-              needsCustomers={customers.length === 0}
-              onSelectInvoice={handleSelectInvoice}
-              onCreateInvoice={
-                canManageInvoices && customers.length > 0
-                  ? handleNewInvoice
-                  : undefined
-              }
-              onStatusFilterChange={setStatusFilter}
-              onLifecycleFilterChange={setLifecycleFilter}
-              onClearFilters={handleClearFilters}
-            />
-          </div>
-        ) : null}
-
         <div
           className={
-            northStar
-              ? "hidden min-h-0 min-w-0 flex-1 flex-col lg:flex"
-              : "contents"
+            northStar ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"
           }
         >
         {!hasNoInvoices ? (
@@ -840,12 +698,10 @@ export function InvoicesPageView({
                 : "shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4"
             }
           >
-            <JobsViewTabs
-              activeTab={viewTab}
-              onTabChange={setViewTab}
-              todayCount={activeTodayCount}
-              allCount={activeInvoices.length}
-              allTabLabel="All"
+            <InvoiceQueueTabs
+              activeQueue={workQueue}
+              onQueueChange={setWorkQueue}
+              counts={queueCounts}
               northStar={northStar}
             />
           </div>
@@ -858,7 +714,7 @@ export function InvoicesPageView({
             onSearchChange={setSearch}
             onStatusFilterChange={setStatusFilter}
             resultCount={filteredInvoices.length}
-            showStatusFilter={viewTab === "all"}
+            showStatusFilter={workQueue === "all-active" || workQueue === "past"}
             lifecycleFilter={lifecycleFilter}
             onLifecycleFilterChange={setLifecycleFilter}
             showLifecycleFilter={canManageInvoices}
@@ -891,9 +747,7 @@ export function InvoicesPageView({
               }
               northStar={northStar}
             />
-          ) : viewTab === "today" && hasNoTodayInvoices ? (
-            <InvoicesEmptyState variant="no-today" northStar={northStar} />
-          ) : hasNoResults ? (
+          ) : hasNoQueueInvoices || hasNoResults ? (
             <InvoicesEmptyState variant="no-results" northStar={northStar} />
           ) : (
             <InvoicesTable
