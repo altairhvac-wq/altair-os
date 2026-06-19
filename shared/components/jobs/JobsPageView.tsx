@@ -73,6 +73,7 @@ import { JobSearchFilterBar } from "./JobSearchFilterBar";
 import { JobsBulkActionBar } from "./JobsBulkActionBar";
 import { JobsEmptyState } from "./JobsEmptyState";
 import { JobsTable } from "./JobsTable";
+import { JobsNorthStarMobileOwnerView } from "./JobsNorthStarMobileOwnerView";
 import { JobsTodayCardList } from "./JobsTodayCardList";
 import { JobsViewTabs } from "./JobsViewTabs";
 
@@ -917,6 +918,37 @@ export function JobsPageView({
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
         ) : null}
 
+        {northStar ? (
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:hidden">
+            <JobsNorthStarMobileOwnerView
+              todayJobs={filteredTodayJobs}
+              archiveJobs={filteredAllJobs}
+              activeTodayCount={activeTodayCount}
+              scheduledTodayCount={lifecycleFilteredTodayJobs.length}
+              hasNoJobs={hasNoJobs}
+              hasActiveFilters={hasActiveFilters}
+              companyTimeZone={companyTimeZone}
+              statusFilter={statusFilter}
+              priorityFilter={priorityFilter}
+              lifecycleFilter={lifecycleFilter}
+              showLifecycleFilter={canDispatchJobs}
+              onSelectJob={handleSelectJob}
+              onCreateJob={canDispatchJobs ? handleNewJob : undefined}
+              onStatusFilterChange={handleStatusFilterChange}
+              onPriorityFilterChange={handlePriorityFilterChange}
+              onLifecycleFilterChange={setLifecycleFilter}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
+        ) : null}
+
+        <div
+          className={
+            northStar
+              ? "hidden min-h-0 min-w-0 flex-1 flex-col lg:flex"
+              : "contents"
+          }
+        >
         {!isSearching && !hasNoJobs ? (
           <div
             className={
@@ -963,6 +995,7 @@ export function JobsPageView({
 
         <div className={masterListPageScrollRegionClass}>
           {renderMainContent()}
+        </div>
         </div>
       </MasterPageSurface>
 
