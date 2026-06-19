@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
@@ -87,7 +87,13 @@ import { InvoiceDetailsPanel } from "./InvoiceDetailsPanel";
 import { InvoiceSearchFilterBar } from "./InvoiceSearchFilterBar";
 import { InvoiceSummaryCards } from "./InvoiceSummaryCards";
 import { InvoicesEmptyState } from "./InvoicesEmptyState";
+import { InvoicesNorthStarMobileOwnerView } from "./InvoicesNorthStarMobileOwnerView";
 import { InvoicesTable } from "./InvoicesTable";
+import {
+  isInvoiceNeedingCollection,
+  isInvoiceOpenForOwnerView,
+  sortInvoicesForOwnerView,
+} from "./invoices-north-star-mobile-owner-sort";
 
 type PanelMode = "create" | "empty";
 
@@ -590,6 +596,70 @@ export function InvoicesPageView({
     });
   }
 
+  const lifecycleFilteredInvoices = useMemo(
+    () =>
+      invoices.filter(
+        (invoice) => getInvoiceLifecycleState(invoice) === lifecycleFilter,
+      ),
+    [invoices, lifecycleFilter],
+  );
+
+  const collectionCount = useMemo(
+    () =>
+      invoices.filter(
+        (invoice) =>
+          getInvoiceLifecycleState(invoice) === "active" &&
+          isInvoiceNeedingCollection(invoice),
+      ).length,
+    [invoices],
+  );
+
+  const openCount = useMemo(
+    () =>
+      invoices.filter(
+        (invoice) =>
+          getInvoiceLifecycleState(invoice) === "active" &&
+          isInvoiceOpenForOwnerView(invoice),
+      ).length,
+    [invoices],
+  );
+
+  const ownerScopedInvoices = useMemo(() => {
+    let scoped = lifecycleFilteredInvoices.filter(isInvoiceOpenForOwnerView);
+
+    if (initialJobId) {
+      scoped = scoped.filter((invoice) => invoice.jobId === initialJobId);
+    }
+
+    if (statusFilter !== "all") {
+      scoped = scoped.filter((invoice) =>
+        matchesInvoiceListStatusFilter(invoice, statusFilter),
+      );
+    }
+
+    return sortInvoicesForOwnerView(scoped, companyTimeZone);
+  }, [
+    companyTimeZone,
+    initialJobId,
+    lifecycleFilteredInvoices,
+    statusFilter,
+  ]);
+
+  const totalCollectionCount = useMemo(
+    () => lifecycleFilteredInvoices.filter(isInvoiceNeedingCollection).length,
+    [lifecycleFilteredInvoices],
+  );
+
+  const hasActiveFilters =
+    statusFilter !== "all" ||
+    lifecycleFilter !== "active" ||
+    Boolean(initialJobId);
+
+  const handleClearFilters = useCallback(() => {
+    setStatusFilter("all");
+    setLifecycleFilter("active");
+  }, []);
+
   const hasNoInvoices = invoices.length === 0;
   const hasNoTodayInvoices = !hasNoInvoices && todayInvoices.length === 0;
   const hasNoResults = !hasNoInvoices && filteredInvoices.length === 0;
@@ -681,11 +751,13 @@ export function InvoicesPageView({
       }
       summary={
         !hasNoInvoices ? (
-          <InvoiceSummaryCards
-            invoices={activeInvoices}
-            highlightedLabels={highlightedSummaryLabels}
-            northStar={northStar}
-          />
+          <div className={northStar ? "max-lg:hidden" : undefined}>
+            <InvoiceSummaryCards
+              invoices={activeInvoices}
+              highlightedLabels={highlightedSummaryLabels}
+              northStar={northStar}
+            />
+          </div>
         ) : null
       }
       primaryAction={
@@ -696,7 +768,7 @@ export function InvoicesPageView({
             disabled={customers.length === 0}
             className={
               northStar
-                ? `north-star-invoices-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
+                ? `north-star-invoices-primary-action max-lg:hidden ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
                 : `${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`
             }
           >
@@ -708,7 +780,7 @@ export function InvoicesPageView({
       className={`${isCreateOpen ? masterListPageMobilePanelLockClass : ""} ${
         northStar ? lt.pageCanvas : ""
       }`}
-      headerClassName={northStar ? lt.pageHeader : undefined}
+      headerClassName={northStar ? `${lt.pageHeader} max-lg:hidden` : undefined}
       headerSurfaceVariant={northStar ? "northStar" : "default"}
       headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
       headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
@@ -724,6 +796,42 @@ export function InvoicesPageView({
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
         ) : null}
 
+        {northStar ? (
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:hidden">
+            <InvoicesNorthStarMobileOwnerView
+              collectionInvoices={ownerScopedInvoices}
+              archiveInvoices={lifecycleFilteredInvoices}
+              collectionCount={collectionCount}
+              openCount={openCount}
+              totalCollectionCount={totalCollectionCount}
+              hasNoInvoices={hasNoInvoices}
+              hasActiveFilters={hasActiveFilters}
+              companyTimeZone={companyTimeZone}
+              statusFilter={statusFilter}
+              lifecycleFilter={lifecycleFilter}
+              showLifecycleFilter={canManageInvoices}
+              canManageInvoices={canManageInvoices}
+              needsCustomers={customers.length === 0}
+              onSelectInvoice={handleSelectInvoice}
+              onCreateInvoice={
+                canManageInvoices && customers.length > 0
+                  ? handleNewInvoice
+                  : undefined
+              }
+              onStatusFilterChange={setStatusFilter}
+              onLifecycleFilterChange={setLifecycleFilter}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
+        ) : null}
+
+        <div
+          className={
+            northStar
+              ? "hidden min-h-0 min-w-0 flex-1 flex-col lg:flex"
+              : "contents"
+          }
+        >
         {!hasNoInvoices ? (
           <div
             className={
@@ -1009,6 +1117,7 @@ export function InvoicesPageView({
               onClearSelection={handleClearSelection}
             />
           ) : null}
+        </div>
         </div>
       </MasterPageSurface>
 
