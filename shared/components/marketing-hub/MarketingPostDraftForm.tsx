@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Check, Copy } from "lucide-react";
 import {
   createMarketingPostAction,
+  markMarketingPostPostedAction,
   updateMarketingPostAction,
 } from "@/app/actions/marketing-posts";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
@@ -71,6 +73,27 @@ function postToFormData(post: MarketingPost): DraftFormData {
   };
 }
 
+function buildMarketingPostCopyText(data: DraftFormData): string {
+  const parts: string[] = [];
+
+  const postText = data.postText.trim();
+  if (postText) {
+    parts.push(postText);
+  }
+
+  const callToAction = data.callToAction.trim();
+  if (callToAction) {
+    parts.push(callToAction);
+  }
+
+  const hashtags = normalizeSuggestedHashtagsInput(data.suggestedHashtags);
+  if (hashtags.length > 0) {
+    parts.push(formatSuggestedHashtagsForInput(hashtags));
+  }
+
+  return parts.join("\n\n");
+}
+
 function validateDraftFormData(data: DraftFormData): string | null {
   if (!data.title.trim()) {
     return "Add a post title.";
@@ -99,7 +122,11 @@ export function MarketingPostDraftForm({
     isEditMode ? postToFormData(post) : DEFAULT_FORM_DATA,
   );
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [isMarkPostedPending, startMarkPostedTransition] = useTransition();
+  const canMarkPosted =
+    isEditMode && post.status !== "posted" && post.status !== "archived";
 
   function updateField<K extends keyof DraftFormData>(
     field: K,
@@ -149,6 +176,52 @@ export function MarketingPostDraftForm({
             isEditMode
               ? "We couldn't save marketing post changes. Try again."
               : "We couldn't create this marketing post. Try again.",
+          ),
+        );
+        return;
+      }
+
+      onSuccess();
+    });
+  }
+
+  async function handleCopyPost() {
+    if (isPending || isMarkPostedPending) {
+      return;
+    }
+
+    const copyText = buildMarketingPostCopyText(formData);
+    if (!copyText) {
+      setError("Add post text before copying.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(copyText);
+      setCopied(true);
+      setError(null);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError(
+        "Could not copy to clipboard. Select the text and copy manually.",
+      );
+    }
+  }
+
+  function handleMarkPosted() {
+    if (!isEditMode || isPending || isMarkPostedPending) {
+      return;
+    }
+
+    startMarkPostedTransition(async () => {
+      setError(null);
+
+      const result = await markMarketingPostPostedAction(post.id);
+      if (result.error || !result.post) {
+        setError(
+          formatActionError(
+            result.error,
+            "We couldn't mark this post as posted. Try again.",
           ),
         );
         return;
@@ -276,14 +349,42 @@ export function MarketingPostDraftForm({
       <div className="flex flex-wrap gap-2 pt-1">
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || isMarkPostedPending}
           className="admin-btn-primary"
         >
           {isPending ? "Saving..." : isEditMode ? "Save changes" : "Save draft"}
         </button>
+        {isEditMode ? (
+          <>
+            <button
+              type="button"
+              disabled={isPending || isMarkPostedPending}
+              onClick={handleCopyPost}
+              aria-label={copied ? "Post copied" : "Copy post"}
+              className="admin-btn-secondary inline-flex items-center gap-1.5"
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              {copied ? "Copied" : "Copy post"}
+            </button>
+            {canMarkPosted ? (
+              <button
+                type="button"
+                disabled={isPending || isMarkPostedPending}
+                onClick={handleMarkPosted}
+                className="admin-btn-secondary"
+              >
+                {isMarkPostedPending ? "Marking posted..." : "Mark posted"}
+              </button>
+            ) : null}
+          </>
+        ) : null}
         <button
           type="button"
-          disabled={isPending}
+          disabled={isPending || isMarkPostedPending}
           onClick={onCancel}
           className="admin-btn-secondary"
         >
