@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Check, Copy } from "lucide-react";
 import {
+  archiveMarketingPostAction,
   createMarketingPostAction,
   markMarketingPostPostedAction,
   updateMarketingPostAction,
@@ -125,8 +126,11 @@ export function MarketingPostDraftForm({
   const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isMarkPostedPending, startMarkPostedTransition] = useTransition();
+  const [isArchivePending, startArchiveTransition] = useTransition();
+  const isActionPending = isPending || isMarkPostedPending || isArchivePending;
   const canMarkPosted =
     isEditMode && post.status !== "posted" && post.status !== "archived";
+  const canArchive = isEditMode && post.status !== "archived";
 
   function updateField<K extends keyof DraftFormData>(
     field: K,
@@ -138,7 +142,7 @@ export function MarketingPostDraftForm({
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (isPending) {
+    if (isActionPending) {
       return;
     }
 
@@ -186,7 +190,7 @@ export function MarketingPostDraftForm({
   }
 
   async function handleCopyPost() {
-    if (isPending || isMarkPostedPending) {
+    if (isActionPending) {
       return;
     }
 
@@ -209,7 +213,7 @@ export function MarketingPostDraftForm({
   }
 
   function handleMarkPosted() {
-    if (!isEditMode || isPending || isMarkPostedPending) {
+    if (!isEditMode || isActionPending) {
       return;
     }
 
@@ -222,6 +226,34 @@ export function MarketingPostDraftForm({
           formatActionError(
             result.error,
             "We couldn't mark this post as posted. Try again.",
+          ),
+        );
+        return;
+      }
+
+      onSuccess();
+    });
+  }
+
+  function handleArchive() {
+    if (!isEditMode || isActionPending) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Archive "${post.title}"?`);
+    if (!confirmed) {
+      return;
+    }
+
+    startArchiveTransition(async () => {
+      setError(null);
+
+      const result = await archiveMarketingPostAction(post.id);
+      if (result.error || !result.post) {
+        setError(
+          formatActionError(
+            result.error,
+            "We couldn't archive this post. Try again.",
           ),
         );
         return;
@@ -349,7 +381,7 @@ export function MarketingPostDraftForm({
       <div className="flex flex-wrap gap-2 pt-1">
         <button
           type="submit"
-          disabled={isPending || isMarkPostedPending}
+          disabled={isActionPending}
           className="admin-btn-primary"
         >
           {isPending ? "Saving..." : isEditMode ? "Save changes" : "Save draft"}
@@ -358,7 +390,7 @@ export function MarketingPostDraftForm({
           <>
             <button
               type="button"
-              disabled={isPending || isMarkPostedPending}
+              disabled={isActionPending}
               onClick={handleCopyPost}
               aria-label={copied ? "Post copied" : "Copy post"}
               className="admin-btn-secondary inline-flex items-center gap-1.5"
@@ -373,18 +405,28 @@ export function MarketingPostDraftForm({
             {canMarkPosted ? (
               <button
                 type="button"
-                disabled={isPending || isMarkPostedPending}
+                disabled={isActionPending}
                 onClick={handleMarkPosted}
                 className="admin-btn-secondary"
               >
                 {isMarkPostedPending ? "Marking posted..." : "Mark posted"}
               </button>
             ) : null}
+            {canArchive ? (
+              <button
+                type="button"
+                disabled={isActionPending}
+                onClick={handleArchive}
+                className="admin-btn-secondary border-rose-200 text-rose-800 hover:border-rose-300 hover:bg-rose-50"
+              >
+                {isArchivePending ? "Archiving..." : "Archive"}
+              </button>
+            ) : null}
           </>
         ) : null}
         <button
           type="button"
-          disabled={isPending || isMarkPostedPending}
+          disabled={isActionPending}
           onClick={onCancel}
           className="admin-btn-secondary"
         >
