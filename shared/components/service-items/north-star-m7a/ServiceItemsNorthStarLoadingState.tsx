@@ -38,15 +38,6 @@ function DesktopLoadingSkeleton() {
         <Skeleton className="h-9 w-28 shrink-0 rounded-lg border border-[rgba(201,164,77,0.22)]" />
       </header>
 
-      <div className="grid shrink-0 grid-cols-2 gap-2.5 px-3 sm:gap-3 sm:px-3.5 lg:grid-cols-4 lg:px-5">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <Skeleton
-            key={index}
-            className="h-[4.5rem] rounded-[1rem] border border-[rgba(138,99,36,0.12)] sm:h-[4rem]"
-          />
-        ))}
-      </div>
-
       <MasterContentStack density="compact" scrollable>
         <MasterPageSurface
           variant="northStarList"
@@ -54,15 +45,20 @@ function DesktopLoadingSkeleton() {
         >
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
 
-          <div className="shrink-0 border-b border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-3 py-2.5 sm:px-4 lg:px-5">
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="mt-1.5 h-3 w-72 max-w-full" />
+          <div className={`${lt.viewTabsBand} shrink-0`}>
+            <div className={`${lt.viewTabsControl} grid grid-cols-4 overflow-hidden sm:flex sm:w-auto`}>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  className="h-8 rounded-md sm:h-9 sm:w-28"
+                />
+              ))}
+            </div>
           </div>
 
           <div className={`${lt.filterBar} shrink-0`}>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <Skeleton className="h-9 w-full max-w-xl rounded-lg" />
-              <Skeleton className="h-9 w-36 rounded-lg" />
               <Skeleton className="h-9 w-36 rounded-lg" />
             </div>
           </div>
@@ -98,9 +94,9 @@ export function ServiceItemsNorthStarLoadingState() {
       </div>
       <div className="lg:hidden">
         <MasterListPageLoadingState
-          summaryCardCount={4}
-          showViewTabs={false}
-          filterControlCount={2}
+          summaryCardCount={0}
+          showViewTabs
+          filterControlCount={1}
         />
       </div>
     </>

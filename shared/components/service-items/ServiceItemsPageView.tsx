@@ -44,11 +44,16 @@ import {
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { ServiceItemDetailPanel } from "./ServiceItemDetailPanel";
-import { ServiceItemsNorthStarCatalogHeading } from "./north-star-m7a";
+import { ServiceItemQueueTabs } from "./ServiceItemQueueTabs";
 import { ServiceItemsEmptyState } from "./ServiceItemsEmptyState";
 import { ServiceItemsSearchFilterBar } from "./ServiceItemsSearchFilterBar";
-import { ServiceItemsSummaryCards } from "./ServiceItemsSummaryCards";
 import { ServiceItemsTable } from "./ServiceItemsTable";
+import {
+  countServiceItemsForWorkQueue,
+  filterServiceItemsForWorkQueue,
+  sortServiceItemsForWorkQueue,
+  type ServiceItemWorkQueue,
+} from "./service-item-work-queues";
 
 type PanelMode = "create" | "edit" | "empty";
 
@@ -57,24 +62,14 @@ type ServiceItemsPageViewProps = {
   canManagePriceBook: boolean;
 };
 
-function filterServiceItems(
+function filterServiceItemsBySearch(
   serviceItems: ServiceItem[],
   search: string,
-  statusFilter: "all" | "active" | "inactive",
-  lifecycleFilter: ServiceItemLifecycleState,
 ): ServiceItem[] {
   const query = search.trim().toLowerCase();
+  if (!query) return serviceItems;
 
   return serviceItems.filter((item) => {
-    const matchesLifecycle =
-      getServiceItemLifecycleState(item) === lifecycleFilter;
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" ? item.isActive : !item.isActive);
-
-    if (!matchesLifecycle || !matchesStatus) return false;
-    if (!query) return true;
-
     const haystack = [item.name, item.description ?? "", item.category ?? ""]
       .join(" ")
       .toLowerCase();
@@ -89,9 +84,7 @@ export function ServiceItemsPageView({
 }: ServiceItemsPageViewProps) {
   const [serviceItems, setServiceItems] = useState(initialServiceItems);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "active" | "inactive"
-  >("active");
+  const [workQueue, setWorkQueue] = useState<ServiceItemWorkQueue>("active");
   const [lifecycleFilter, setLifecycleFilter] =
     useState<ServiceItemLifecycleState>("active");
   const [panelMode, setPanelMode] = useState<PanelMode>("empty");
@@ -119,10 +112,46 @@ export function ServiceItemsPageView({
     setServiceItems(initialServiceItems);
   }, [initialServiceItems]);
 
+  useEffect(() => {
+    setLifecycleFilter(workQueue === "past" ? "archived" : "active");
+  }, [workQueue]);
+
+  const queueCounts = useMemo(
+    () =>
+      ({
+        active: countServiceItemsForWorkQueue(serviceItems, "active"),
+        "needs-cleanup": countServiceItemsForWorkQueue(
+          serviceItems,
+          "needs-cleanup",
+        ),
+        inactive: countServiceItemsForWorkQueue(serviceItems, "inactive"),
+        past: countServiceItemsForWorkQueue(serviceItems, "past"),
+      }) satisfies Record<ServiceItemWorkQueue, number>,
+    [serviceItems],
+  );
+
+  const queueScopedServiceItems = useMemo(
+    () => filterServiceItemsForWorkQueue(serviceItems, workQueue),
+    [serviceItems, workQueue],
+  );
+
+  const lifecycleScopedServiceItems = useMemo(() => {
+    if (workQueue !== "past") {
+      return queueScopedServiceItems;
+    }
+
+    return queueScopedServiceItems.filter(
+      (item) => getServiceItemLifecycleState(item) === lifecycleFilter,
+    );
+  }, [queueScopedServiceItems, workQueue, lifecycleFilter]);
+
   const filteredServiceItems = useMemo(
     () =>
-      filterServiceItems(serviceItems, search, statusFilter, lifecycleFilter),
-    [serviceItems, search, statusFilter, lifecycleFilter],
+      sortServiceItemsForWorkQueue(
+        filterServiceItemsBySearch(lifecycleScopedServiceItems, search),
+        workQueue,
+      ),
+    [lifecycleScopedServiceItems, search, workQueue],
   );
 
   const selectionEnabled = canManagePriceBook;
@@ -134,7 +163,13 @@ export function ServiceItemsPageView({
     toggleAllVisible,
     clearSelection,
     setSelectedIds,
-  } = usePageBulkSelection(filteredServiceItems, [lifecycleFilter]);
+  } = usePageBulkSelection(filteredServiceItems, [lifecycleFilter, workQueue]);
+
+  useEffect(() => {
+    clearSelection();
+    setLifecycleMessage(null);
+    setLifecycleFailureDetails(null);
+  }, [lifecycleFilter, workQueue, clearSelection]);
 
   function handleClearSelection() {
     clearSelection();
@@ -285,15 +320,17 @@ export function ServiceItemsPageView({
   }
 
   const hasNoItems = serviceItems.length === 0;
+  const hasNoQueueItems = !hasNoItems && queueScopedServiceItems.length === 0;
   const hasNoResults = !hasNoItems && filteredServiceItems.length === 0;
   const isPanelOpen = panelMode !== "empty";
   const northStar = isNorthStarShellEnabled();
+  const bulkLifecycleFilter: ServiceItemLifecycleState =
+    workQueue === "past" ? lifecycleFilter : "active";
 
   return (
     <MasterListPageLayout
-      title="Price book"
-      subtitle="Reusable services and parts for estimate line items"
-      eyebrow={northStar ? "Service catalog" : undefined}
+      title="Price Book"
+      subtitle="Manage services, pricing, costs, and taxable items."
       density="compact"
       banners={
         lifecycleMessage ? (
@@ -311,14 +348,6 @@ export function ServiceItemsPageView({
           </SettingsAlertBanner>
         ) : undefined
       }
-      summary={
-        !hasNoItems ? (
-          <ServiceItemsSummaryCards
-            serviceItems={serviceItems}
-            northStar={northStar}
-          />
-        ) : null
-      }
       primaryAction={
         canManagePriceBook ? (
           <button
@@ -329,7 +358,7 @@ export function ServiceItemsPageView({
             }
           >
             <Plus className="h-3.5 w-3.5" />
-            New item
+            New Service Item
           </button>
         ) : undefined
       }
@@ -341,9 +370,7 @@ export function ServiceItemsPageView({
       headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
       headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
       headerSubtitleClassName={
-        northStar
-          ? "min-w-0 text-sm leading-snug text-[#D7CDBD] sm:truncate"
-          : undefined
+        northStar ? lt.pageHeaderSubtitle : undefined
       }
     >
       <MasterPageSurface
@@ -355,111 +382,131 @@ export function ServiceItemsPageView({
         {northStar ? (
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
         ) : null}
-        {northStar && !hasNoItems ? (
-          <ServiceItemsNorthStarCatalogHeading />
-        ) : null}
-        {!hasNoItems ? (
-          <ServiceItemsSearchFilterBar
-            search={search}
-            statusFilter={statusFilter}
-            onSearchChange={setSearch}
-            onStatusFilterChange={setStatusFilter}
-            resultCount={filteredServiceItems.length}
-            lifecycleFilter={lifecycleFilter}
-            onLifecycleFilterChange={setLifecycleFilter}
-            showLifecycleFilter={canManagePriceBook}
-            bulkSelectAllControl={
-              selectionEnabled && selectionState.selectableCount > 0
-                ? {
-                    selectableCount: selectionState.selectableCount,
-                    allSelected: selectionState.allSelected,
-                    onSelectAll: () => toggleAllVisible(true),
-                    onClearSelection: handleClearSelection,
-                  }
-                : undefined
-            }
-            northStar={northStar}
-          />
-        ) : null}
 
-        <div className={masterListPageScrollRegionClass}>
-          {hasNoItems ? (
-            <ServiceItemsEmptyState
-              variant="no-items"
-              onCreateItem={canManagePriceBook ? handleNewItem : undefined}
-              northStar={northStar}
-            />
-          ) : hasNoResults ? (
-            <ServiceItemsEmptyState variant="no-results" northStar={northStar} />
-          ) : (
-            <ServiceItemsTable
-              serviceItems={filteredServiceItems}
-              selectedItemId={selectedItem?.id}
-              onSelectItem={handleSelectItem}
-              selectionEnabled={selectionEnabled}
-              selectedIds={selectedIds}
-              onToggleSelection={toggleSelection}
-              onToggleAllVisible={toggleAllVisible}
-              northStar={northStar}
-            />
-          )}
+        <div
+          className={
+            northStar ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"
+          }
+        >
+          {!hasNoItems ? (
+            <div
+              className={
+                northStar
+                  ? lt.viewTabsBand
+                  : "shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4"
+              }
+            >
+              <ServiceItemQueueTabs
+                activeQueue={workQueue}
+                onQueueChange={setWorkQueue}
+                counts={queueCounts}
+                northStar={northStar}
+              />
+            </div>
+          ) : null}
 
-          {selectionEnabled && selectedCount > 0 ? (
-            <EntityLifecycleBulkBar
-              entityLabel="item"
-              selectedCount={selectedCount}
+          {!hasNoItems ? (
+            <ServiceItemsSearchFilterBar
+              search={search}
+              onSearchChange={setSearch}
+              resultCount={filteredServiceItems.length}
               lifecycleFilter={lifecycleFilter}
+              onLifecycleFilterChange={setLifecycleFilter}
+              showLifecycleFilter={canManagePriceBook && workQueue === "past"}
+              bulkSelectAllControl={
+                selectionEnabled && selectionState.selectableCount > 0
+                  ? {
+                      selectableCount: selectionState.selectableCount,
+                      allSelected: selectionState.allSelected,
+                      onSelectAll: () => toggleAllVisible(true),
+                      onClearSelection: handleClearSelection,
+                    }
+                  : undefined
+              }
               northStar={northStar}
-              isArchiving={isBulkArchiving}
-              isRestoring={isBulkRestoring}
-              isMovingToTrash={isBulkMovingToTrash}
-              isRestoringFromTrash={isBulkRestoringFromTrash}
-              isPermanentlyDeleting={isBulkPermanentlyDeleting}
-              showArchive={lifecycleFilter === "active"}
-              showMoveToTrash={
-                lifecycleFilter === "active" || lifecycleFilter === "archived"
-              }
-              showRestore={lifecycleFilter === "archived"}
-              showRestoreFromTrash={lifecycleFilter === "deleted"}
-              showPermanentDelete={lifecycleFilter === "deleted"}
-              onArchive={() =>
-                runBulkLifecycle(
-                  bulkArchiveServiceItemsAction,
-                  "Archive",
-                  startBulkArchiveTransition,
-                )
-              }
-              onRestore={() =>
-                runBulkLifecycle(
-                  bulkRestoreServiceItemsAction,
-                  "Restore",
-                  startBulkRestoreTransition,
-                )
-              }
-              onMoveToTrash={() =>
-                runBulkLifecycle(
-                  bulkMoveServiceItemsToTrashAction,
-                  "Move to Recently Deleted",
-                  startBulkMoveToTrashTransition,
-                )
-              }
-              onRestoreFromTrash={() =>
-                runBulkLifecycle(
-                  bulkRestoreServiceItemsFromTrashAction,
-                  "Restore from Recently Deleted",
-                  startBulkRestoreFromTrashTransition,
-                )
-              }
-              onPermanentDelete={() =>
-                runBulkLifecycle(
-                  bulkPermanentlyDeleteServiceItemsAction,
-                  "Permanent delete",
-                  startBulkPermanentDeleteTransition,
-                )
-              }
-              onClearSelection={handleClearSelection}
             />
           ) : null}
+
+          <div className={masterListPageScrollRegionClass}>
+            {hasNoItems ? (
+              <ServiceItemsEmptyState
+                variant="no-items"
+                onCreateItem={canManagePriceBook ? handleNewItem : undefined}
+                northStar={northStar}
+              />
+            ) : hasNoQueueItems || hasNoResults ? (
+              <ServiceItemsEmptyState variant="no-results" northStar={northStar} />
+            ) : (
+              <ServiceItemsTable
+                serviceItems={filteredServiceItems}
+                selectedItemId={selectedItem?.id}
+                onSelectItem={handleSelectItem}
+                selectionEnabled={selectionEnabled}
+                selectedIds={selectedIds}
+                onToggleSelection={toggleSelection}
+                onToggleAllVisible={toggleAllVisible}
+                northStar={northStar}
+              />
+            )}
+
+            {selectionEnabled && selectedCount > 0 ? (
+              <EntityLifecycleBulkBar
+                entityLabel="item"
+                selectedCount={selectedCount}
+                lifecycleFilter={bulkLifecycleFilter}
+                northStar={northStar}
+                isArchiving={isBulkArchiving}
+                isRestoring={isBulkRestoring}
+                isMovingToTrash={isBulkMovingToTrash}
+                isRestoringFromTrash={isBulkRestoringFromTrash}
+                isPermanentlyDeleting={isBulkPermanentlyDeleting}
+                showArchive={bulkLifecycleFilter === "active"}
+                showMoveToTrash={
+                  bulkLifecycleFilter === "active" ||
+                  bulkLifecycleFilter === "archived"
+                }
+                showRestore={bulkLifecycleFilter === "archived"}
+                showRestoreFromTrash={bulkLifecycleFilter === "deleted"}
+                showPermanentDelete={bulkLifecycleFilter === "deleted"}
+                onArchive={() =>
+                  runBulkLifecycle(
+                    bulkArchiveServiceItemsAction,
+                    "Archive",
+                    startBulkArchiveTransition,
+                  )
+                }
+                onRestore={() =>
+                  runBulkLifecycle(
+                    bulkRestoreServiceItemsAction,
+                    "Restore",
+                    startBulkRestoreTransition,
+                  )
+                }
+                onMoveToTrash={() =>
+                  runBulkLifecycle(
+                    bulkMoveServiceItemsToTrashAction,
+                    "Move to Recently Deleted",
+                    startBulkMoveToTrashTransition,
+                  )
+                }
+                onRestoreFromTrash={() =>
+                  runBulkLifecycle(
+                    bulkRestoreServiceItemsFromTrashAction,
+                    "Restore from Recently Deleted",
+                    startBulkRestoreFromTrashTransition,
+                  )
+                }
+                onPermanentDelete={() =>
+                  runBulkLifecycle(
+                    bulkPermanentlyDeleteServiceItemsAction,
+                    "Permanent delete",
+                    startBulkPermanentDeleteTransition,
+                  )
+                }
+                onClearSelection={handleClearSelection}
+              />
+            ) : null}
+          </div>
         </div>
       </MasterPageSurface>
 

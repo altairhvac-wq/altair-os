@@ -1,16 +1,13 @@
 import { Filter, Search } from "lucide-react";
 import {
   SERVICE_ITEM_LIFECYCLE_FILTER_OPTIONS,
-  SERVICE_ITEM_STATUS_OPTIONS,
   type ServiceItemLifecycleState,
 } from "@/shared/types/service-item";
 import { BulkSelectAllControl } from "@/shared/components/bulk/BulkSelectAllControl";
 
 type ServiceItemsSearchFilterBarProps = {
   search: string;
-  statusFilter: "all" | "active" | "inactive";
   onSearchChange: (value: string) => void;
-  onStatusFilterChange: (value: "all" | "active" | "inactive") => void;
   resultCount: number;
   lifecycleFilter?: ServiceItemLifecycleState;
   onLifecycleFilterChange?: (value: ServiceItemLifecycleState) => void;
@@ -45,9 +42,7 @@ const northStarCatalogMetaClass = "mt-2 text-xs font-medium text-[#4F4638]";
 
 export function ServiceItemsSearchFilterBar({
   search,
-  statusFilter,
   onSearchChange,
-  onStatusFilterChange,
   resultCount,
   lifecycleFilter = "active",
   onLifecycleFilterChange,
@@ -98,7 +93,10 @@ export function ServiceItemsSearchFilterBar({
                 aria-label="Filter by lifecycle"
                 className={selectClass}
               >
-                {SERVICE_ITEM_LIFECYCLE_FILTER_OPTIONS.map((option) => (
+                {SERVICE_ITEM_LIFECYCLE_FILTER_OPTIONS.filter(
+                  (option) =>
+                    option.value === "archived" || option.value === "deleted",
+                ).map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -106,26 +104,6 @@ export function ServiceItemsSearchFilterBar({
               </select>
             </div>
           ) : null}
-          <div className="relative shrink-0">
-            <Filter
-              className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${filterIconClass}`}
-            />
-            <select
-              value={statusFilter}
-              onChange={(e) =>
-                onStatusFilterChange(
-                  e.target.value as "all" | "active" | "inactive",
-                )
-              }
-              className={selectClass}
-            >
-              {SERVICE_ITEM_STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
           {bulkSelectAllControl ? (
             <BulkSelectAllControl {...bulkSelectAllControl} northStar={northStar} />
           ) : null}
