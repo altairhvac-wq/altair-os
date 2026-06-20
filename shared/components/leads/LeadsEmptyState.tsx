@@ -19,7 +19,7 @@ export function LeadsEmptyState({
           <div className={`${lt.emptyState} w-full max-w-md text-center`}>
             <p className="text-sm font-semibold text-[#17130E]">No matching leads</p>
             <p className="mt-1 text-sm text-[#6B6255]">
-              Try adjusting your search or status filter.
+              Try adjusting your search or filters.
             </p>
           </div>
         </div>
@@ -31,7 +31,7 @@ export function LeadsEmptyState({
         <div className="admin-empty-state w-full max-w-md text-center">
           <p className="text-sm font-semibold text-slate-900">No matching leads</p>
           <p className="mt-1 text-sm text-slate-500">
-            Try adjusting your search or status filter.
+            Try adjusting your search or filters.
           </p>
         </div>
       </div>

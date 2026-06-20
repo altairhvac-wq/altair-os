@@ -15,6 +15,7 @@ type LeadSearchFilterBarProps = {
   onSortFieldChange: (value: LeadSortField) => void;
   resultCount: number;
   northStar?: boolean;
+  showStatusFilter?: boolean;
 };
 
 const SORT_OPTIONS: { value: LeadSortField; label: string }[] = [
@@ -37,6 +38,7 @@ export function LeadSearchFilterBar({
   onSortFieldChange,
   resultCount,
   northStar = false,
+  showStatusFilter = false,
 }: LeadSearchFilterBarProps) {
   const searchInputClass = northStar ? lt.searchInput : legacySearchInputClass;
   const selectClass = northStar ? lt.filterSelect : legacySelectClass;
@@ -66,20 +68,22 @@ export function LeadSearchFilterBar({
         </label>
 
         <div className="flex flex-wrap gap-2">
-          <select
-            value={statusFilter}
-            onChange={(event) =>
-              onStatusFilterChange(event.target.value as LeadStatus | "all")
-            }
-            className={selectClass}
-            aria-label="Filter by status"
-          >
-            {LEAD_STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          {showStatusFilter ? (
+            <select
+              value={statusFilter}
+              onChange={(event) =>
+                onStatusFilterChange(event.target.value as LeadStatus | "all")
+              }
+              className={selectClass}
+              aria-label="Filter by status"
+            >
+              {LEAD_STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          ) : null}
 
           <select
             value={sortField}

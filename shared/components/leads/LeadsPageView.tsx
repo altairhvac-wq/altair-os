@@ -18,19 +18,18 @@ import { northStarListTokens as lt } from "@/shared/design-system/north-star/tok
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { LeadDetailPanel } from "@/shared/components/leads/LeadDetailPanel";
 import { LeadList } from "@/shared/components/leads/LeadList";
+import { LeadQueueTabs } from "@/shared/components/leads/LeadQueueTabs";
 import { LeadSearchFilterBar } from "@/shared/components/leads/LeadSearchFilterBar";
 import { LeadsEmptyState } from "@/shared/components/leads/LeadsEmptyState";
 import {
-  LeadsFollowUpQueue,
-  LeadsPipelineSummary,
-} from "@/shared/components/leads/north-star-m14";
+  countLeadsForWorkQueue,
+  filterLeadsForWorkQueue,
+  resolveInitialLeadWorkQueue,
+  type LeadWorkQueue,
+} from "@/shared/components/leads/lead-work-queues";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import type { LeadCreateOutcome } from "@/shared/components/leads/LeadForm";
-import {
-  buildLeadPipelineMetrics,
-  selectLeadsNeedingFollowUp,
-} from "@/shared/lib/leads/lead-metrics";
-import { compareLeadsByField, isLeadFollowUpDue } from "@/shared/lib/leads/lead-status";
+import { compareLeadsByField } from "@/shared/lib/leads/lead-status";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { LeadActivity } from "@/shared/types/lead-activity";
 import {
@@ -60,16 +59,10 @@ function filterLeads(
   leads: Lead[],
   search: string,
   statusFilter: LeadStatus | "all",
-  followUpDueOnly: boolean,
-  timeZone: string,
 ): Lead[] {
   const query = search.trim().toLowerCase();
 
   return leads.filter((lead) => {
-    if (followUpDueOnly && !isLeadFollowUpDue(lead, undefined, timeZone)) {
-      return false;
-    }
-
     const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
     if (!matchesStatus) {
       return false;
@@ -110,10 +103,12 @@ export function LeadsPageView({
   const timeZone = useCompanyTimezone();
   const [leads, setLeads] = useState(initialLeads);
   const [search, setSearch] = useState("");
+  const [workQueue, setWorkQueue] = useState<LeadWorkQueue>(() =>
+    resolveInitialLeadWorkQueue(initialStatusFilter, initialFollowUpDue),
+  );
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">(
     initialStatusFilter ?? "all",
   );
-  const [followUpDueOnly, setFollowUpDueOnly] = useState(initialFollowUpDue);
   const [createError, setCreateError] = useState<string | null>(null);
   const [, startCreateTransition] = useTransition();
   const [sortField, setSortField] = useState<LeadSortField>("createdAt");
@@ -140,28 +135,36 @@ export function LeadsPageView({
     }
   }, [initialLeads, initialSelectedId]);
 
+  const queueCounts = useMemo(
+    () =>
+      ({
+        "needs-contact": countLeadsForWorkQueue(
+          leads,
+          "needs-contact",
+          timeZone,
+        ),
+        qualified: countLeadsForWorkQueue(leads, "qualified", timeZone),
+        "estimate-ready": countLeadsForWorkQueue(
+          leads,
+          "estimate-ready",
+          timeZone,
+        ),
+        past: countLeadsForWorkQueue(leads, "past", timeZone),
+      }) satisfies Record<LeadWorkQueue, number>,
+    [leads, timeZone],
+  );
+
+  const queueScopedLeads = useMemo(
+    () => filterLeadsForWorkQueue(leads, workQueue, timeZone),
+    [leads, workQueue, timeZone],
+  );
+
   const filteredLeads = useMemo(() => {
-    const filtered = filterLeads(
-      leads,
-      search,
-      statusFilter,
-      followUpDueOnly,
-      timeZone,
-    );
+    const filtered = filterLeads(queueScopedLeads, search, statusFilter);
     return [...filtered].sort((left, right) =>
       compareLeadsByField(left, right, sortField),
     );
-  }, [followUpDueOnly, leads, search, sortField, statusFilter, timeZone]);
-
-  const pipelineMetrics = useMemo(
-    () => buildLeadPipelineMetrics(leads, undefined, timeZone),
-    [leads, timeZone],
-  );
-
-  const followUpQueueLeads = useMemo(
-    () => selectLeadsNeedingFollowUp(leads, { limit: 5, timeZone }),
-    [leads, timeZone],
-  );
+  }, [queueScopedLeads, search, sortField, statusFilter]);
 
   const selectedLead =
     leads.find((lead) => lead.id === selectedId) ?? null;
@@ -190,15 +193,8 @@ export function LeadsPageView({
     );
   }
 
-  function handleStatusFilterChange(value: LeadStatus | "all") {
-    setStatusFilter(value);
-    if (value !== "all") {
-      setFollowUpDueOnly(false);
-    }
-  }
-
-  function handleFollowUpDueSelect() {
-    setFollowUpDueOnly(true);
+  function handleQueueChange(queue: LeadWorkQueue) {
+    setWorkQueue(queue);
     setStatusFilter("all");
   }
 
@@ -257,12 +253,7 @@ export function LeadsPageView({
   return (
     <MasterListPageLayout
       title="Leads"
-      subtitle={
-        northStar
-          ? "Revenue intake and follow-up command center"
-          : "Track opportunities before they become customers"
-      }
-      eyebrow={northStar ? "Opportunity intake" : undefined}
+      subtitle="Contact, qualify, and convert new opportunities."
       density="compact"
       primaryAction={
         <button
@@ -275,7 +266,7 @@ export function LeadsPageView({
           }
         >
           <Plus className="h-3.5 w-3.5" />
-          Create Lead
+          New Lead
         </button>
       }
       banners={
@@ -283,27 +274,11 @@ export function LeadsPageView({
           <SettingsAlertBanner tone="error">{createError}</SettingsAlertBanner>
         ) : undefined
       }
-      summary={
-        northStar && !hasNoLeads
-          ? (
-            <LeadsPipelineSummary
-              leads={leads}
-              statusFilter={statusFilter}
-              followUpDueOnly={followUpDueOnly}
-              followUpsDue={pipelineMetrics.followUpsDue}
-              openLeads={pipelineMetrics.openLeads}
-              onStatusFilterChange={handleStatusFilterChange}
-              onFollowUpDueSelect={handleFollowUpDueSelect}
-            />
-          )
-          : null
-      }
       className={`${isPanelOpen ? masterListPageMobilePanelLockClass : ""} ${
         northStar ? lt.pageCanvas : ""
       }`}
       headerClassName={northStar ? lt.pageHeader : undefined}
       headerSurfaceVariant={northStar ? "northStar" : "default"}
-      headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
       headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
       headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
@@ -317,69 +292,61 @@ export function LeadsPageView({
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
         ) : null}
 
-        {northStar && !hasNoLeads && !followUpDueOnly && followUpQueueLeads.length > 0 ? (
-          <LeadsFollowUpQueue
-            leads={followUpQueueLeads}
-            timeZone={timeZone}
-            onSelectLead={handleSelectLead}
-            onViewAll={handleFollowUpDueSelect}
-          />
-        ) : null}
+        <div
+          className={
+            northStar ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"
+          }
+        >
+          {!hasNoLeads ? (
+            <div
+              className={
+                northStar
+                  ? lt.viewTabsBand
+                  : "shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4"
+              }
+            >
+              <LeadQueueTabs
+                activeQueue={workQueue}
+                onQueueChange={handleQueueChange}
+                counts={queueCounts}
+                northStar={northStar}
+              />
+            </div>
+          ) : null}
 
-        {!hasNoLeads ? (
-          <>
+          {!hasNoLeads ? (
             <LeadSearchFilterBar
               search={search}
               statusFilter={statusFilter}
               sortField={sortField}
               onSearchChange={setSearch}
-              onStatusFilterChange={handleStatusFilterChange}
+              onStatusFilterChange={setStatusFilter}
               onSortFieldChange={setSortField}
               resultCount={filteredLeads.length}
               northStar={northStar}
+              showStatusFilter={workQueue === "past"}
             />
-            {followUpDueOnly ? (
-              <div
-                className={
-                  northStar
-                    ? "border-b border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-3 pb-3 sm:px-4 lg:px-5"
-                    : "border-b border-slate-100/90 px-4 pb-3 sm:px-5"
-                }
-              >
-                <button
-                  type="button"
-                  onClick={() => setFollowUpDueOnly(false)}
-                  className={
-                    northStar
-                      ? "text-xs font-semibold text-[#8A6324] transition-colors hover:text-[#6B5A2E]"
-                      : "text-xs font-semibold text-cyan-700 hover:text-cyan-800"
-                  }
-                >
-                  Clear follow-up due filter
-                </button>
-              </div>
-            ) : null}
-          </>
-        ) : null}
+          ) : null}
 
-        <div className={masterListPageScrollRegionClass}>
-          {hasNoLeads ? (
-            <LeadsEmptyState
-              variant="no-leads"
-              onCreateLead={handleCreateLead}
-              northStar={northStar}
-            />
-          ) : hasNoResults ? (
-            <LeadsEmptyState variant="no-results" northStar={northStar} />
-          ) : (
-            <LeadList
-              leads={filteredLeads}
-              selectedId={selectedId}
-              onSelect={handleSelectLead}
-              timeZone={timeZone}
-              northStar={northStar}
-            />
-          )}
+          <div className={masterListPageScrollRegionClass}>
+            {hasNoLeads ? (
+              <LeadsEmptyState
+                variant="no-leads"
+                onCreateLead={handleCreateLead}
+                northStar={northStar}
+              />
+            ) : hasNoResults ? (
+              <LeadsEmptyState variant="no-results" northStar={northStar} />
+            ) : (
+              <LeadList
+                leads={filteredLeads}
+                selectedId={selectedId}
+                onSelect={handleSelectLead}
+                timeZone={timeZone}
+                northStar={northStar}
+              />
+            )}
+          </div>
         </div>
       </MasterPageSurface>
 
