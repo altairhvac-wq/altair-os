@@ -18,6 +18,21 @@ export type TradeType =
   | "Landscaping"
   | "Painting";
 
+export const NETWORK_TRADE_OPTIONS: {
+  value: TradeType;
+  label: string;
+}[] = [
+  { value: "HVAC", label: "HVAC" },
+  { value: "Plumbing", label: "Plumbing" },
+  { value: "Electrical", label: "Electrical" },
+  { value: "Roofing", label: "Roofing" },
+  { value: "General Contracting", label: "General Contracting" },
+  { value: "Landscaping", label: "Landscaping" },
+  { value: "Painting", label: "Painting" },
+];
+
+export type NetworkLocationPrecision = "none" | "city" | "zip";
+
 export function getPartnerInitials(name: string): string {
   return name
     .split(" ")

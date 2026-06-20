@@ -10,8 +10,15 @@ import { mapDatabaseError } from "@/lib/database/errors";
 import type {
   NetworkProfileInsert,
   NetworkProfileRow,
+  NetworkProfileUpdate,
 } from "@/lib/database/types/core-tables";
-import type { NetworkProfile } from "@/shared/types/network-referral";
+import type {
+  NetworkProfile,
+  NetworkProfileFormData,
+} from "@/shared/types/network-referral";
+import {
+  deriveNetworkLocationPrecision,
+} from "@/shared/types/network-referral";
 import type { TradeType } from "@/shared/types/network";
 
 const TRADE_TYPES = new Set<string>([
@@ -39,6 +46,11 @@ function mapNetworkProfileRow(row: NetworkProfileRow): NetworkProfile {
     serviceArea: row.service_area,
     city: row.city,
     state: row.state,
+    postalCode: row.postal_code ?? "",
+    latitude: row.latitude ?? null,
+    longitude: row.longitude ?? null,
+    locationPrecision: row.location_precision ?? "none",
+    showOnMap: row.show_on_map ?? false,
     bio: row.bio ?? undefined,
     isVisible: row.is_visible,
     createdAt: row.created_at,
@@ -160,6 +172,49 @@ export async function updateCompanyNetworkProfileVisibility(
   const { data, error } = await supabase
     .from("network_profiles")
     .update({ is_visible: isVisible })
+    .eq("company_id", companyId)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    return { profile: null, error: mapDatabaseError(error) };
+  }
+
+  return {
+    profile: data ? mapNetworkProfileRow(data) : null,
+    error: data ? null : "Network profile not found.",
+  };
+}
+
+export async function updateCompanyNetworkProfile(
+  companyId: string,
+  input: NetworkProfileFormData,
+): Promise<{ profile: NetworkProfile | null; error: string | null }> {
+  const supabase = await createClient();
+  const locationPrecision = deriveNetworkLocationPrecision({
+    city: input.city,
+    state: input.state,
+    postalCode: input.postalCode,
+  });
+  const showOnMap =
+    input.showOnMap && locationPrecision !== "none" ? true : false;
+
+  const update: NetworkProfileUpdate = {
+    display_name: input.displayName,
+    trade_type: input.tradeType,
+    city: input.city,
+    state: input.state,
+    postal_code: input.postalCode || null,
+    service_area: input.serviceArea,
+    bio: input.bio || null,
+    is_visible: input.isVisible,
+    location_precision: locationPrecision,
+    show_on_map: showOnMap,
+  };
+
+  const { data, error } = await supabase
+    .from("network_profiles")
+    .update(update)
     .eq("company_id", companyId)
     .select("*")
     .maybeSingle();

@@ -60,7 +60,7 @@ export function NetworkProfileDetailPanel({
       : mode === "detail" && profile
         ? "Partner profile"
         : isNorthStar
-          ? "Choose a partner"
+          ? "Select a company"
           : "Network profile";
 
   const asideClass = isNorthStar
@@ -129,7 +129,7 @@ export function NetworkProfileDetailPanel({
               : mode === "detail"
                 ? profile?.displayName ?? "Trusted trade company profile"
                 : isNorthStar
-                  ? "Select a company to view trade details, trust status, and referral actions."
+                  ? "Choose a partner from the directory to view trust status, service area, and referral actions."
                   : "Select a company to view profile and send referrals"}
           </p>
         </div>
@@ -154,20 +154,12 @@ export function NetworkProfileDetailPanel({
           isNorthStar ? (
             <div className={st.detailPanelEmptyShell}>
               <div className={emptyIconWrapClass}>
-                <Users className={`h-6 w-6 ${emptyIconClass}`} />
+                <Users className={`h-4 w-4 ${emptyIconClass}`} />
               </div>
-              <p className={emptyTitleClass}>Choose a partner</p>
               <p className={emptyBodyClass}>
-                Select a company to view trade details, trust status, and
-                referral actions.
+                Choose a partner from the directory to view trust status, service
+                area, and referral actions.
               </p>
-              <div className={st.detailPanelEmptyChips}>
-                {["Profile", "Add", "Refer"].map((chip) => (
-                  <span key={chip} className={st.detailPanelEmptyChip}>
-                    {chip}
-                  </span>
-                ))}
-              </div>
             </div>
           ) : (
             <div className="flex h-full flex-col items-center justify-center py-4 text-center">

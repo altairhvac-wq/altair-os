@@ -2,14 +2,13 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, MapPin, Search, UserMinus, UserPlus } from "lucide-react";
+import { MapPin, Search, UserPlus } from "lucide-react";
 import { getPartnerInitials } from "@/shared/types/network";
 import {
   addToMyNetworkAction,
   removeFromMyNetworkAction,
 } from "@/app/actions/network-partners";
 import { NETWORK_PARTNER_MANAGER_MESSAGE } from "@/lib/database/errors";
-import { toggleOwnNetworkProfileVisibilityAction } from "@/app/actions/network-referrals";
 import {
   MasterContentStack,
   MasterPageHeader,
@@ -20,20 +19,20 @@ import { northStarListTokens as lt } from "@/shared/design-system/north-star/tok
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { useMyNetworkPartnersState } from "@/shared/hooks/useMyNetworkPartnersState";
 import {
-  DIRECTORY_FILTER_OPTIONS,
   enrichMyNetworkPartners,
   getTrustedCompanyIds,
-  MY_NETWORK_EMPTY_MESSAGE,
-  type DirectoryFilter,
   type MyNetworkPartner,
   type NetworkPartner,
 } from "@/shared/types/network-partner";
 import {
+  collectTradeTypesFromProfiles,
+  filterNetworkDirectoryProfiles,
   NETWORK_REFERRALS_TAB_OPTIONS,
   type NetworkProfile,
   type NetworkReferral,
   type NetworkReferralsTab,
 } from "@/shared/types/network-referral";
+import type { TradeType } from "@/shared/types/network";
 import {
   filterInvitesByTab,
   isNetworkInviteConnected,
@@ -48,12 +47,12 @@ import { NetworkInviteForm } from "../NetworkInviteForm";
 import { NetworkInvitationCard } from "../NetworkInvitationCard";
 import { NetworkInvitedByBanner } from "../NetworkInvitedByBanner";
 import { NetworkProfileDetailPanel } from "../NetworkProfileDetailPanel";
+import { NetworkProfileEditForm } from "../NetworkProfileEditForm";
 import { NetworkReferralCard } from "../NetworkReferralCard";
 import { NetworkTrustedBadge } from "../NetworkTrustedBadge";
 import { NetworkMapPreviewPanel } from "./NetworkMapPreviewPanel";
 import { st } from "./network-north-star-styles";
 
-type DirectoryMobileView = "map" | "list";
 type ProfilePanelMode = "detail" | "referral" | "empty";
 
 type NetworkActionTarget = {
@@ -155,10 +154,8 @@ export function NetworkNorthStarView({
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [latestInviteUrl, setLatestInviteUrl] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [directoryFilter, setDirectoryFilter] =
-    useState<DirectoryFilter>("all");
-  const [directoryMobileView, setDirectoryMobileView] =
-    useState<DirectoryMobileView>("list");
+  const [tradeFilter, setTradeFilter] = useState<TradeType | "all">("all");
+  const [locationFilter, setLocationFilter] = useState("");
   const [isDesktopLayout, setIsDesktopLayout] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<ProfilePanelMode>("empty");
@@ -168,7 +165,6 @@ export function NetworkNorthStarView({
     useState<string | null>(null);
   const [networkActionTarget, setNetworkActionTarget] =
     useState<NetworkActionTarget | null>(null);
-  const [isVisibilityPending, startVisibilityTransition] = useTransition();
   const [isNetworkActionPending, startNetworkActionTransition] = useTransition();
   const { myNetworkPartners, applyAddPartner, applyRemovePartner } =
     useMyNetworkPartnersState(initialMyNetworkPartners, companyId);
@@ -200,33 +196,30 @@ export function NetworkNorthStarView({
     ? partnerByCompanyId.get(selectedProfile.companyId)
     : undefined;
 
+  const availableTradeTypes = useMemo(
+    () => collectTradeTypesFromProfiles(profiles),
+    [profiles],
+  );
+
   const filteredProfiles = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    let nextProfiles = profiles;
-
-    if (directoryFilter === "my-network") {
-      nextProfiles = nextProfiles.filter((profile) =>
-        trustedCompanyIds.has(profile.companyId),
-      );
-    }
-
-    if (query) {
-      nextProfiles = nextProfiles.filter((profile) => {
-        const haystack = [
-          profile.displayName,
-          profile.tradeType,
-          profile.city,
-          profile.state,
-          profile.serviceArea,
-        ]
-          .join(" ")
-          .toLowerCase();
-        return haystack.includes(query);
-      });
-    }
+    const nextProfiles = filterNetworkDirectoryProfiles(
+      profiles,
+      {
+        search,
+        tradeFilter,
+        locationFilter,
+        directoryFilter: "all",
+      },
+      trustedCompanyIds,
+    );
 
     return sortProfilesWithTrustedFirst(nextProfiles, trustedCompanyIds);
-  }, [profiles, search, directoryFilter, trustedCompanyIds]);
+  }, [profiles, search, tradeFilter, locationFilter, trustedCompanyIds]);
+
+  const hasActiveDirectoryFilters =
+    search.trim().length > 0 ||
+    locationFilter.trim().length > 0 ||
+    tradeFilter !== "all";
 
   function clearNetworkActionFeedback() {
     setNetworkActionError(null);
@@ -236,7 +229,8 @@ export function NetworkNorthStarView({
   function handleTabChange(tab: NetworkReferralsTab) {
     setActiveTab(tab);
     setSearch("");
-    setDirectoryFilter("all");
+    setTradeFilter("all");
+    setLocationFilter("");
     setSelectedProfileId(null);
     setPanelMode("empty");
     clearNetworkActionFeedback();
@@ -315,24 +309,9 @@ export function NetworkNorthStarView({
     setSelectedProfileId(null);
   }
 
-  function handleToggleVisibility() {
-    if (!ownProfile) {
-      return;
-    }
-
+  function handleProfileSaved(profile: NetworkProfile) {
+    setOwnProfile(profile);
     setVisibilityError(null);
-    startVisibilityTransition(async () => {
-      const result = await toggleOwnNetworkProfileVisibilityAction(
-        !ownProfile.isVisible,
-      );
-      if (result.error) {
-        setVisibilityError(result.error);
-        return;
-      }
-      if (result.ownProfile) {
-        setOwnProfile(result.ownProfile);
-      }
-    });
   }
 
   function setNetworkActionErrorForTarget(
@@ -433,7 +412,15 @@ export function NetworkNorthStarView({
     return null;
   }
 
-  const deferCardActions = isDesktopLayout || selectedProfileId !== null;
+  const deferCardActions = true;
+
+  const myNetworkProfiles = useMemo(
+    () =>
+      myNetworkEntries
+        .map((entry) => entry.linkedProfile)
+        .filter((profile): profile is NetworkProfile => profile !== undefined),
+    [myNetworkEntries],
+  );
 
   const profileDetailPanel = (
     <NetworkProfileDetailPanel
@@ -538,50 +525,32 @@ export function NetworkNorthStarView({
     }
 
     return (
-      <article key={partner.id} className={`${st.cardShellTrusted} min-w-0`}>
-        <div className="flex items-start gap-3">
+      <article key={partner.id} className={`${st.cardShellTrusted} min-w-0 px-2 py-1.5`}>
+        <div className="flex items-center gap-2">
           <div className={st.cardIcon}>
             {getPartnerInitials(displayName)}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <p className={st.cardPrimary}>{displayName}</p>
               <NetworkTrustedBadge surface="north-star" />
             </div>
-            <p className={`mt-1 ${st.cardSecondary}`}>{partner.tradeType}</p>
+            <p className={`mt-0.5 ${st.cardSecondary}`}>{partner.tradeType}</p>
             {partner.city || partner.state ? (
-              <p className={`mt-1 flex items-center gap-1.5 ${st.cardMuted}`}>
-                <MapPin className="h-3.5 w-3.5 shrink-0 text-[#8A6324]" />
+              <p className={`mt-0.5 flex items-center gap-1 ${st.cardMuted}`}>
+                <MapPin className="h-3 w-3 shrink-0 text-[#8A6324]" />
                 {[partner.city, partner.state].filter(Boolean).join(", ")}
               </p>
-            ) : null}
-            <p className={`mt-2 ${st.cardMuted}`}>
-              Profile is hidden from the directory. Referrals resume when they
-              make their profile visible again.
-            </p>
+            ) : (
+              <p className={`mt-0.5 ${st.cardMuted}`}>
+                Profile hidden from directory
+              </p>
+            )}
           </div>
-          {canManageNetwork && !deferCardActions ? (
-            <button
-              type="button"
-              onClick={() =>
-                partner.linkedCompanyId &&
-                handleRemoveFromNetwork(partner.linkedCompanyId)
-              }
-              disabled={isNetworkActionPendingForCompany(
-                partner.linkedCompanyId ?? "",
-              )}
-              className={`${st.panelAction} disabled:cursor-not-allowed`}
-            >
-              <UserMinus className="h-3.5 w-3.5" />
-              {isNetworkActionPendingForCompany(partner.linkedCompanyId ?? "")
-                ? "Removing..."
-                : "Remove"}
-            </button>
-          ) : null}
         </div>
         {networkActionError &&
         networkActionTarget?.linkedCompanyId === partner.linkedCompanyId ? (
-          <p className="mt-2 text-xs text-rose-700">{networkActionError}</p>
+          <p className="mt-1.5 text-xs text-rose-700">{networkActionError}</p>
         ) : null}
       </article>
     );
@@ -621,39 +590,11 @@ export function NetworkNorthStarView({
 
       <MasterContentStack density="compact" className={st.workspaceStack}>
         {ownProfile && canSendReferral ? (
-          <div className={st.profileVisibilityStrip}>
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-              <p className={st.profileVisibilityLabel}>
-                Your network profile is{" "}
-                {ownProfile.isVisible ? "visible" : "hidden"}
-              </p>
-              <span
-                className={
-                  ownProfile.isVisible
-                    ? st.profileVisibilityPill
-                    : st.profileVisibilityPillHidden
-                }
-              >
-                {ownProfile.isVisible ? "Visible" : "Hidden"}
-              </span>
-              <p className={`${st.profileVisibilityHelper} basis-full sm:basis-auto`}>
-                Companies can discover you for trusted referrals.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleToggleVisibility}
-              disabled={isVisibilityPending}
-              className={`${st.secondaryAction} shrink-0 disabled:opacity-60`}
-            >
-              {ownProfile.isVisible ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-              {ownProfile.isVisible ? "Hide profile" : "Show profile"}
-            </button>
-          </div>
+          <NetworkProfileEditForm
+            profile={ownProfile}
+            onSaved={handleProfileSaved}
+            surface="north-star"
+          />
         ) : null}
 
         {visibilityError ? (
@@ -708,30 +649,12 @@ export function NetworkNorthStarView({
 
           <div className={st.tabBodyInner}>
             {activeTab === "directory" ? (
-              <div className="flex min-h-0 min-w-0 flex-col gap-4 overflow-x-hidden lg:min-h-[32rem] lg:flex-row lg:overflow-hidden">
-                <div className="hidden min-w-0 lg:flex lg:w-[380px] lg:shrink-0 lg:self-stretch xl:w-[420px]">
-                  {profileDetailPanel}
-                </div>
-
-                <div className={`${st.discoveryWorkspace} min-w-0 lg:flex-1`}>
-                  <div className={st.flatPanelHeader}>
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <p className={st.sectionEyebrow}>Partner directory</p>
-                        <h2 className={st.sectionTitle}>Discover companies</h2>
-                        <p className={st.sectionSubtitle}>
-                          Find trusted trade partners near you and send overflow
-                          work with confidence
-                        </p>
-                      </div>
-                      <p className={st.countMeta}>
-                        {filteredProfiles.length} companies
-                      </p>
-                    </div>
-
-                    <div className="relative">
+              <div className="flex min-h-0 min-w-0 flex-col gap-3 overflow-x-hidden lg:min-h-[32rem] lg:gap-4 lg:overflow-hidden">
+                <div className={st.filterToolbar}>
+                  <div className={st.filterToolbarRow}>
+                    <div className="relative min-w-0">
                       <Search
-                        className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${lt.filterIcon}`}
+                        className={`pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${lt.filterIcon}`}
                       />
                       <input
                         type="search"
@@ -739,169 +662,176 @@ export function NetworkNorthStarView({
                         onChange={(event) => setSearch(event.target.value)}
                         placeholder="Search companies, trades, or locations"
                         aria-label="Search network directory"
-                        className={`${st.searchInput} py-2.5 pl-9 pr-3 sm:text-base`}
+                        className={`${st.filterInput} pl-9 pr-3`}
                       />
                     </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      {canManageNetwork ? (
-                        <div
-                          className={st.filterControl}
-                          aria-label="Directory filter"
-                        >
-                          {DIRECTORY_FILTER_OPTIONS.map((option) => (
-                            <button
-                              key={option.value}
-                              type="button"
-                              aria-pressed={directoryFilter === option.value}
-                              onClick={() => setDirectoryFilter(option.value)}
-                              className={`${st.filterItem} px-3 py-2 text-xs ${
-                                directoryFilter === option.value
-                                  ? st.filterItemActive
-                                  : ""
-                              }`}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                        </div>
-                      ) : null}
-
-                      <div
-                        className={`${st.mobileViewToggle} lg:hidden`}
-                        aria-label="Directory view"
+                    <div className="min-w-0">
+                      <label htmlFor="networkTradeFilter" className="sr-only">
+                        Trade filter
+                      </label>
+                      <select
+                        id="networkTradeFilter"
+                        value={tradeFilter}
+                        onChange={(event) =>
+                          setTradeFilter(
+                            event.target.value as TradeType | "all",
+                          )
+                        }
+                        className={`${st.filterInput} px-3`}
+                        aria-label="Filter by trade"
                       >
-                        {(["map", "list"] as const).map((view) => (
-                          <button
-                            key={view}
-                            type="button"
-                            aria-pressed={directoryMobileView === view}
-                            onClick={() => setDirectoryMobileView(view)}
-                            className={`${st.mobileViewToggleItem} px-3 py-2 text-xs capitalize ${
-                              directoryMobileView === view
-                                ? st.mobileViewToggleItemActive
-                                : ""
-                            }`}
-                          >
-                            {view}
-                          </button>
+                        <option value="all">All trades</option>
+                        {availableTradeTypes.map((trade) => (
+                          <option key={trade} value={trade}>
+                            {trade}
+                          </option>
                         ))}
-                      </div>
+                      </select>
+                    </div>
+                    <div className="relative min-w-0">
+                      <MapPin
+                        className={`pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${lt.filterIcon}`}
+                      />
+                      <input
+                        type="search"
+                        value={locationFilter}
+                        onChange={(event) =>
+                          setLocationFilter(event.target.value)
+                        }
+                        placeholder="City, state, ZIP, or service area"
+                        aria-label="Filter by location or service area"
+                        className={`${st.filterInput} pl-9 pr-3`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-x-hidden lg:flex-row lg:gap-4 lg:overflow-hidden">
+                  <div className={st.directoryListColumn}>
+                    <div className={st.rosterSectionHeader}>
+                      <p className={st.sectionTitle}>Partner directory</p>
+                      <p className={st.countMeta}>
+                        {filteredProfiles.length} companies
+                      </p>
+                    </div>
+
+                    <div
+                      className={`@container min-w-0 ${st.discoveryListRegion} ${masterListPageScrollRegionClass}`}
+                    >
+                      {filteredProfiles.length === 0 ? (
+                        <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
+                          <p className={st.emptyTitle}>
+                            {hasActiveDirectoryFilters
+                              ? "No companies match those filters"
+                              : "No visible network profiles yet"}
+                          </p>
+                          <p className={st.emptyDescription}>
+                            {hasActiveDirectoryFilters
+                              ? "Try a different trade or location."
+                              : "Partner companies appear here when they make their profile visible in the network."}
+                          </p>
+                          {hasActiveDirectoryFilters ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSearch("");
+                                setTradeFilter("all");
+                                setLocationFilter("");
+                              }}
+                              className={`${st.emptyStateCta} mt-4`}
+                            >
+                              Clear filters
+                            </button>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <div className={st.rosterList}>
+                          {filteredProfiles.map((profile) =>
+                            renderDirectoryProfileCard(profile),
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {selectedProfileId && !isDesktopLayout ? (
-                    <div className="min-w-0 lg:hidden">{profileDetailPanel}</div>
-                  ) : null}
-
-                  <div className={st.discoveryContentGrid}>
-                    {directoryMobileView === "list" || isDesktopLayout ? (
-                      <div
-                        className={`@container order-2 min-w-0 lg:order-1 ${st.discoveryListRegion} ${masterListPageScrollRegionClass}`}
-                      >
-                        {filteredProfiles.length === 0 ? (
-                          <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
-                            <p className={st.emptyTitle}>
-                              {directoryFilter === "my-network"
-                                ? "No trusted partners in your network yet"
-                                : "No visible network profiles yet"}
-                            </p>
-                            <p className={st.emptyDescription}>
-                              {directoryFilter === "my-network"
-                                ? MY_NETWORK_EMPTY_MESSAGE
-                                : "Partner companies appear here when they make their profile visible in the network."}
-                            </p>
-                            {directoryFilter === "my-network" ? (
-                              <button
-                                type="button"
-                                onClick={() => setDirectoryFilter("all")}
-                                className={`${st.emptyStateCta} mt-4`}
-                              >
-                                Browse all companies
-                              </button>
-                            ) : null}
-                          </div>
-                        ) : (
-                          <div className={st.rosterList}>
-                            {filteredProfiles.map((profile) =>
-                              renderDirectoryProfileCard(profile),
-                            )}
-                          </div>
-                        )}
-                      </div>
+                  <div className={st.directoryDetailColumn}>
+                    {selectedProfileId && !isDesktopLayout ? (
+                      <div className="min-w-0 shrink-0">{profileDetailPanel}</div>
                     ) : null}
 
-                    {isDesktopLayout ||
-                    (directoryMobileView === "map" && !selectedProfileId) ? (
-                      <div className={`order-1 lg:order-2 ${st.discoveryMapRegion}`}>
-                        <NetworkMapPreviewPanel
-                          profiles={filteredProfiles}
-                          trustedCompanyIds={trustedCompanyIds}
-                          className="h-full"
-                        />
-                      </div>
-                    ) : null}
+                    <div className="hidden min-w-0 shrink-0 lg:block">
+                      {profileDetailPanel}
+                    </div>
+
+                    <NetworkMapPreviewPanel
+                      profiles={filteredProfiles}
+                      trustedCompanyIds={trustedCompanyIds}
+                      ownProfile={ownProfile}
+                      className={st.discoveryMapRegion}
+                    />
                   </div>
                 </div>
               </div>
             ) : null}
 
             {activeTab === "my-network" ? (
-              <div className="flex min-h-0 min-w-0 flex-col gap-4 overflow-x-hidden lg:min-h-[32rem] lg:flex-row lg:overflow-hidden">
-                <div className="hidden min-w-0 lg:flex lg:w-[380px] lg:shrink-0 lg:self-stretch xl:w-[420px]">
-                  {profileDetailPanel}
-                </div>
-
-                <div className={`${st.discoveryWorkspace} min-w-0 lg:flex-1`}>
-                  <div className={st.flatPanelHeader}>
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <p className={st.sectionEyebrow}>Trusted roster</p>
-                        <h2 className={st.sectionTitle}>My Network</h2>
-                        <p className={st.sectionSubtitle}>
-                          Your private partner list for quick referrals and
-                          overflow work
-                        </p>
-                      </div>
+              <div className="flex min-h-0 min-w-0 flex-col gap-3 overflow-x-hidden lg:min-h-[32rem] lg:gap-4 lg:overflow-hidden">
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-x-hidden lg:flex-row lg:gap-4 lg:overflow-hidden">
+                  <div className={st.directoryListColumn}>
+                    <div className={st.rosterSectionHeader}>
+                      <p className={st.sectionTitle}>My Network</p>
                       <p className={st.countMeta}>
                         {myNetworkEntries.length} partners
                       </p>
                     </div>
+
+                    <div
+                      className={`@container min-w-0 ${st.discoveryListRegion} ${masterListPageScrollRegionClass}`}
+                    >
+                      {!canManageNetwork ? (
+                        <p className={st.permissionCopy}>
+                          Trusted partners are managed by company owners and admins.
+                        </p>
+                      ) : myNetworkEntries.length === 0 ? (
+                        <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
+                          <p className={st.emptyTitle}>No trusted partners yet</p>
+                          <p className={st.emptyDescription}>
+                            Add companies from Discover so you can send overflow
+                            work and referrals faster.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => handleTabChange("directory")}
+                            className={`${st.emptyStateCta} mt-4`}
+                          >
+                            Browse Discover
+                          </button>
+                        </div>
+                      ) : (
+                        <div className={st.rosterListMyNetwork}>
+                          {myNetworkEntries.map((partner) =>
+                            renderMyNetworkPartnerCard(partner),
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {selectedProfileId && !isDesktopLayout ? (
-                    <div className="min-w-0 lg:hidden">{profileDetailPanel}</div>
-                  ) : null}
+                  <div className={st.directoryDetailColumn}>
+                    {selectedProfileId && !isDesktopLayout ? (
+                      <div className="min-w-0 shrink-0">{profileDetailPanel}</div>
+                    ) : null}
 
-                  <div
-                    className={`@container min-w-0 ${st.discoveryListRegion} ${masterListPageScrollRegionClass}`}
-                  >
-                    {!canManageNetwork ? (
-                      <p className={st.permissionCopy}>
-                        Trusted partners are managed by company owners and admins.
-                      </p>
-                    ) : myNetworkEntries.length === 0 ? (
-                      <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
-                        <p className={st.emptyTitle}>No trusted partners yet</p>
-                        <p className={st.emptyDescription}>
-                          Add companies from Discover so you can quickly send
-                          overflow work and referral leads.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => handleTabChange("directory")}
-                          className={`${st.emptyStateCta} mt-4`}
-                        >
-                          Browse Discover
-                        </button>
-                      </div>
-                    ) : (
-                      <div className={st.rosterListMyNetwork}>
-                        {myNetworkEntries.map((partner) =>
-                          renderMyNetworkPartnerCard(partner),
-                        )}
-                      </div>
-                    )}
+                    <div className="hidden min-w-0 shrink-0 lg:block">
+                      {profileDetailPanel}
+                    </div>
+
+                    <NetworkMapPreviewPanel
+                      profiles={myNetworkProfiles}
+                      trustedCompanyIds={trustedCompanyIds}
+                      ownProfile={ownProfile}
+                      className={st.discoveryMapRegion}
+                    />
                   </div>
                 </div>
               </div>
@@ -977,7 +907,7 @@ export function NetworkNorthStarView({
                             type="button"
                             aria-pressed={invitationsTab === option.value}
                             onClick={() => setInvitationsTab(option.value)}
-                            className={`${st.filterItem} px-3 py-2 text-xs ${
+                            className={`${st.filterItem} ${
                               invitationsTab === option.value
                                 ? st.filterItemActive
                                 : ""

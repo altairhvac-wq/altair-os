@@ -7,6 +7,7 @@ import {
   ensureCompanyNetworkProfile,
   getVisibleNetworkProfileById,
   listVisibleNetworkProfiles,
+  updateCompanyNetworkProfile,
 } from "@/lib/database/queries/network-profiles";
 import {
   getNetworkReferralById,
@@ -22,6 +23,9 @@ import {
 } from "@/lib/database/services/network-referral-lead";
 import type { NetworkProfile, NetworkReferral } from "@/shared/types/network-referral";
 import {
+  normalizeNetworkProfileFormData,
+  validateNetworkProfileFormData,
+  type NetworkProfileFormData,
   normalizeNetworkReferralFormData,
   validateNetworkReferralFormData,
   type NetworkReferralFormData,
@@ -336,6 +340,42 @@ export async function toggleOwnNetworkProfileVisibilityAction(
   const updated = await updateCompanyNetworkProfileVisibility(
     permission.context.company.id,
     isVisible,
+  );
+
+  revalidateNetworkPaths();
+
+  return {
+    ownProfile: updated.profile,
+    error: updated.error ?? undefined,
+  };
+}
+
+export async function updateOwnNetworkProfileAction(
+  data: NetworkProfileFormData,
+): Promise<{ ownProfile: NetworkProfile | null; error?: string }> {
+  const permission = await assertReferralSender();
+  if (permission.error || !permission.context) {
+    return { ownProfile: null, error: permission.error };
+  }
+
+  const normalized = normalizeNetworkProfileFormData(data);
+  const validationError = validateNetworkProfileFormData(normalized);
+  if (validationError) {
+    return { ownProfile: null, error: validationError };
+  }
+
+  const ensured = await ensureCompanyNetworkProfile(
+    permission.context.company.id,
+    permission.context.company.name,
+  );
+
+  if (!ensured.profile) {
+    return { ownProfile: null, error: ensured.error ?? "Network profile not found." };
+  }
+
+  const updated = await updateCompanyNetworkProfile(
+    permission.context.company.id,
+    normalized,
   );
 
   revalidateNetworkPaths();

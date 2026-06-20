@@ -3,13 +3,12 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
-import { Eye, EyeOff, Search, UserMinus, UserPlus } from "lucide-react";
+import { MapPin, Search, UserMinus, UserPlus } from "lucide-react";
 import {
   addToMyNetworkAction,
   removeFromMyNetworkAction,
 } from "@/app/actions/network-partners";
 import { NETWORK_PARTNER_MANAGER_MESSAGE } from "@/lib/database/errors";
-import { toggleOwnNetworkProfileVisibilityAction } from "@/app/actions/network-referrals";
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import {
   MasterContentStack,
@@ -38,11 +37,14 @@ import {
   type NetworkPartner,
 } from "@/shared/types/network-partner";
 import {
+  collectTradeTypesFromProfiles,
+  filterNetworkDirectoryProfiles,
   NETWORK_REFERRALS_TAB_OPTIONS,
   type NetworkProfile,
   type NetworkReferral,
   type NetworkReferralsTab,
 } from "@/shared/types/network-referral";
+import type { TradeType } from "@/shared/types/network";
 import {
   filterInvitesByTab,
   isNetworkInviteConnected,
@@ -57,6 +59,7 @@ import { NetworkInviteForm } from "./NetworkInviteForm";
 import { NetworkInvitationCard } from "./NetworkInvitationCard";
 import { NetworkInvitedByBanner } from "./NetworkInvitedByBanner";
 import { NetworkProfileDetailPanel } from "./NetworkProfileDetailPanel";
+import { NetworkProfileEditForm } from "./NetworkProfileEditForm";
 import { NetworkReferralCard } from "./NetworkReferralCard";
 import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
 import { NetworkNorthStarView } from "./north-star-m11";
@@ -160,6 +163,8 @@ function NetworkReferralsPageLegacyView({
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [latestInviteUrl, setLatestInviteUrl] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [tradeFilter, setTradeFilter] = useState<TradeType | "all">("all");
+  const [locationFilter, setLocationFilter] = useState("");
   const [directoryFilter, setDirectoryFilter] =
     useState<DirectoryFilter>("all");
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
@@ -170,7 +175,6 @@ function NetworkReferralsPageLegacyView({
     useState<string | null>(null);
   const [networkActionTarget, setNetworkActionTarget] =
     useState<NetworkActionTarget | null>(null);
-  const [isVisibilityPending, startVisibilityTransition] = useTransition();
   const [isNetworkActionPending, startNetworkActionTransition] = useTransition();
   const { myNetworkPartners, applyAddPartner, applyRemovePartner } =
     useMyNetworkPartnersState(initialMyNetworkPartners, companyId);
@@ -202,33 +206,37 @@ function NetworkReferralsPageLegacyView({
     ? partnerByCompanyId.get(selectedProfile.companyId)
     : undefined;
 
+  const availableTradeTypes = useMemo(
+    () => collectTradeTypesFromProfiles(profiles),
+    [profiles],
+  );
+
   const filteredProfiles = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    let nextProfiles = profiles;
-
-    if (directoryFilter === "my-network") {
-      nextProfiles = nextProfiles.filter((profile) =>
-        trustedCompanyIds.has(profile.companyId),
-      );
-    }
-
-    if (query) {
-      nextProfiles = nextProfiles.filter((profile) => {
-        const haystack = [
-          profile.displayName,
-          profile.tradeType,
-          profile.city,
-          profile.state,
-          profile.serviceArea,
-        ]
-          .join(" ")
-          .toLowerCase();
-        return haystack.includes(query);
-      });
-    }
+    const nextProfiles = filterNetworkDirectoryProfiles(
+      profiles,
+      {
+        search,
+        tradeFilter,
+        locationFilter,
+        directoryFilter,
+      },
+      trustedCompanyIds,
+    );
 
     return sortProfilesWithTrustedFirst(nextProfiles, trustedCompanyIds);
-  }, [profiles, search, directoryFilter, trustedCompanyIds]);
+  }, [
+    profiles,
+    search,
+    tradeFilter,
+    locationFilter,
+    directoryFilter,
+    trustedCompanyIds,
+  ]);
+
+  const hasActiveDirectoryFilters =
+    search.trim().length > 0 ||
+    locationFilter.trim().length > 0 ||
+    tradeFilter !== "all";
 
   function clearNetworkActionFeedback() {
     setNetworkActionError(null);
@@ -238,6 +246,8 @@ function NetworkReferralsPageLegacyView({
   function handleTabChange(tab: NetworkReferralsTab) {
     setActiveTab(tab);
     setSearch("");
+    setTradeFilter("all");
+    setLocationFilter("");
     setDirectoryFilter("all");
     setSelectedProfileId(null);
     setPanelMode("empty");
@@ -317,24 +327,9 @@ function NetworkReferralsPageLegacyView({
     setSelectedProfileId(null);
   }
 
-  function handleToggleVisibility() {
-    if (!ownProfile) {
-      return;
-    }
-
+  function handleProfileSaved(profile: NetworkProfile) {
+    setOwnProfile(profile);
     setVisibilityError(null);
-    startVisibilityTransition(async () => {
-      const result = await toggleOwnNetworkProfileVisibilityAction(
-        !ownProfile.isVisible,
-      );
-      if (result.error) {
-        setVisibilityError(result.error);
-        return;
-      }
-      if (result.ownProfile) {
-        setOwnProfile(result.ownProfile);
-      }
-    });
   }
 
   function setNetworkActionErrorForTarget(
@@ -532,34 +527,10 @@ function NetworkReferralsPageLegacyView({
           />
 
           {ownProfile && canSendReferral ? (
-            <MasterPageSurface
-              variant="section"
-              className="flex flex-wrap items-center justify-between gap-3 !rounded-2xl !p-4"
-            >
-              <div>
-                <p className="text-sm font-semibold text-slate-900">
-                  Your network profile
-                </p>
-                <p className="text-xs text-slate-500">
-                  {ownProfile.isVisible
-                    ? "Visible in the directory for trusted referrals."
-                    : "Hidden from the directory. Turn on visibility to receive referrals."}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleToggleVisibility}
-                disabled={isVisibilityPending}
-                className={`${masterSecondaryActionClass} disabled:opacity-60`}
-              >
-                {ownProfile.isVisible ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-                {ownProfile.isVisible ? "Hide profile" : "Make profile visible"}
-              </button>
-            </MasterPageSurface>
+            <NetworkProfileEditForm
+              profile={ownProfile}
+              onSaved={handleProfileSaved}
+            />
           ) : null}
 
           {visibilityError ? (
@@ -663,21 +634,67 @@ function NetworkReferralsPageLegacyView({
                   className={`${adminFormInputClass} rounded-xl py-2.5 pl-9 pr-3 sm:text-base`}
                 />
               </div>
+
+              <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-2">
+                <select
+                  value={tradeFilter}
+                  onChange={(event) =>
+                    setTradeFilter(event.target.value as TradeType | "all")
+                  }
+                  className={`${adminFormInputClass} rounded-xl py-2.5 sm:text-base`}
+                  aria-label="Filter by trade"
+                >
+                  <option value="all">All trades</option>
+                  {availableTradeTypes.map((trade) => (
+                    <option key={trade} value={trade}>
+                      {trade}
+                    </option>
+                  ))}
+                </select>
+                <div className="relative min-w-0">
+                  <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="search"
+                    value={locationFilter}
+                    onChange={(event) => setLocationFilter(event.target.value)}
+                    placeholder="City, state, ZIP, or service area"
+                    aria-label="Filter by location or service area"
+                    className={`${adminFormInputClass} rounded-xl py-2.5 pl-9 pr-3 sm:text-base`}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className={`@container p-4 ${masterListPageScrollRegionClass}`}>
               {filteredProfiles.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-10 text-center">
                   <p className="text-sm font-medium text-slate-700">
-                    {directoryFilter === "my-network"
-                      ? "No trusted partners in your network yet"
-                      : "No visible network profiles yet"}
+                    {hasActiveDirectoryFilters
+                      ? "No companies match those filters"
+                      : directoryFilter === "my-network"
+                        ? "No trusted partners in your network yet"
+                        : "No visible network profiles yet"}
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    {directoryFilter === "my-network"
-                      ? MY_NETWORK_EMPTY_MESSAGE
-                      : "Partner companies appear here when they make their profile visible in the network."}
+                    {hasActiveDirectoryFilters
+                      ? "Try a different trade or location."
+                      : directoryFilter === "my-network"
+                        ? MY_NETWORK_EMPTY_MESSAGE
+                        : "Partner companies appear here when they make their profile visible in the network."}
                   </p>
+                  {hasActiveDirectoryFilters ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearch("");
+                        setTradeFilter("all");
+                        setLocationFilter("");
+                      }}
+                      className={`${masterSecondaryActionClass} mt-4`}
+                    >
+                      Clear filters
+                    </button>
+                  ) : null}
                 </div>
               ) : (
                 <div className="grid min-w-0 grid-cols-1 gap-4 @xl:grid-cols-2">

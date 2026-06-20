@@ -1218,6 +1218,8 @@ export type TimeClockEntryUpdate = Partial<
   Omit<TimeClockEntryRow, "id" | "company_id" | "user_id" | "created_at">
 >;
 
+export type NetworkLocationPrecision = "none" | "city" | "zip";
+
 export type NetworkProfileRow = {
   id: UUID;
   company_id: UUID;
@@ -1226,6 +1228,11 @@ export type NetworkProfileRow = {
   service_area: string;
   city: string;
   state: string;
+  postal_code: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  location_precision: NetworkLocationPrecision;
+  show_on_map: boolean;
   bio: string | null;
   is_visible: boolean;
   created_at: Timestamp;
@@ -1240,6 +1247,11 @@ export type NetworkProfileInsert = {
   service_area?: string;
   city?: string;
   state?: string;
+  postal_code?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  location_precision?: NetworkLocationPrecision;
+  show_on_map?: boolean;
   bio?: string | null;
   is_visible?: boolean;
   created_at?: Timestamp;

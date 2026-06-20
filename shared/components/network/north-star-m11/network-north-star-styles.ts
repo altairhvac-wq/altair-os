@@ -21,9 +21,14 @@ export const networkNorthStarStyles = {
   tabControl: lt.viewTabsControl,
   tabItem: lt.viewTabsItem,
   tabItemActive: lt.viewTabsItemActive,
-  filterControl: lt.viewTabsControl,
-  filterItem: lt.viewTabsItem,
+  filterControl: `${lt.viewTabsControl} inline-flex items-center`,
+  filterItem: `${lt.viewTabsItem} inline-flex min-h-9 items-center justify-center gap-1.5 px-3 py-2 text-xs leading-none sm:flex-none`,
   filterItemActive: lt.viewTabsItemActive,
+  filterToolbar: "shrink-0 border-b border-[rgba(138,99,36,0.08)] pb-3",
+  filterToolbarRow:
+    "grid min-w-0 grid-cols-1 items-center gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,11rem)_minmax(0,11rem)] lg:grid-cols-[minmax(0,1.4fr)_minmax(0,10rem)_minmax(0,12rem)]",
+  filterInput:
+    "h-9 w-full rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] text-sm leading-normal text-[#17130E] outline-none transition-colors placeholder:text-[#6B6255] focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]",
   emptyState: lt.emptyState,
   emptyTitle: "text-sm font-semibold text-[#17130E]",
   emptyDescription: "mt-1 text-xs text-[#6B6255]",
@@ -32,31 +37,31 @@ export const networkNorthStarStyles = {
   panelActionAccent:
     "inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(201,164,77,0.42)] bg-gradient-to-b from-[#F0E4B8] from-0% via-[#D4B05A] via-[50%] to-[#C9A44D] to-100% px-2.5 py-1.5 text-xs font-semibold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.12)] transition-all hover:from-[#F5EBC8] hover:via-[#DDB868] hover:to-[#B88A2E] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#17130E]",
   cardShellTrusted:
-    "group/card relative rounded-[1rem] border border-[rgba(201,164,77,0.28)] bg-[#FFF9EA] p-4 transition-all hover:border-[rgba(201,164,77,0.42)] hover:shadow-[0_2px_12px_rgba(138,99,36,0.12)]",
-  cardPrimary: "truncate text-sm font-bold text-[#17130E]",
-  cardSecondary: "text-xs text-[#4F4638]",
-  cardMuted: "text-xs text-[#6B6255]",
+    "group/card relative rounded-lg border border-[rgba(201,164,77,0.28)] bg-[#FFF9EA] px-2 py-1.5 transition-colors hover:border-[rgba(201,164,77,0.42)] hover:bg-[#FFFDF5]",
+  cardPrimary: "truncate text-[13px] font-semibold leading-tight text-[#17130E]",
+  cardSecondary: "truncate text-[11px] leading-snug text-[#4F4638]",
+  cardMuted: "truncate text-[11px] leading-snug text-[#6B6255]",
   cardIcon:
-    "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-xs font-bold text-[#17130E] ring-1 ring-[rgba(138,99,36,0.16)]",
+    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-[10px] font-bold leading-none text-[#17130E] ring-1 ring-[rgba(138,99,36,0.16)]",
   cardActionFull:
     "inline-flex w-full min-h-8 items-center justify-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-1.5 text-xs font-semibold text-[#4F4638] transition hover:border-[rgba(201,164,77,0.38)] hover:bg-[#F3EBDD] disabled:opacity-60 [&_svg]:text-[#8A6324]",
   cardActionAccentFull:
     "inline-flex w-full min-h-8 items-center justify-center gap-1.5 rounded-lg border border-[rgba(201,164,77,0.42)] bg-gradient-to-b from-[#F0E4B8] from-0% via-[#D4B05A] via-[50%] to-[#C9A44D] to-100% px-3 py-1.5 text-xs font-semibold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.12)] transition hover:from-[#F5EBC8] hover:via-[#DDB868] hover:to-[#B88A2E] disabled:opacity-60 [&_svg]:text-[#17130E]",
   detailPanel:
-    "flex min-h-[14rem] min-w-0 flex-col overflow-hidden lg:h-full lg:min-h-[28rem] lg:w-full lg:flex-none lg:shrink-0 rounded-xl border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]/70 lg:rounded-none lg:border-0 lg:border-r lg:border-[rgba(138,99,36,0.08)] lg:bg-[#FBF7EF]/50",
+    "flex min-w-0 shrink-0 flex-col overflow-hidden rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]/80 lg:max-h-[min(22rem,45vh)]",
   detailPanelHeader:
-    "flex shrink-0 items-start justify-between border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-4 py-4 sm:px-5",
-  detailPanelTitle: "truncate text-base font-bold text-[#17130E]",
-  detailPanelSubtitle: "mt-0.5 text-xs text-[#6B6255]",
+    "flex shrink-0 items-start justify-between border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-3 py-2.5 sm:px-4",
+  detailPanelTitle: "truncate text-sm font-bold text-[#17130E]",
+  detailPanelSubtitle: "mt-0.5 text-[11px] leading-snug text-[#6B6255]",
   detailPanelClose:
     "rounded-lg p-1.5 text-[#6B6255] transition-colors hover:bg-[#EFE4CB] hover:text-[#17130E]",
   detailPanelEmptyShell:
-    "flex flex-1 flex-col items-center justify-center px-4 py-8 text-center",
+    "flex shrink-0 flex-col items-center px-4 py-5 text-center",
   detailPanelEmptyIcon:
-    "flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-[#17130E] shadow-[0_4px_16px_rgba(138,99,36,0.18)] ring-1 ring-[rgba(138,99,36,0.16)]",
-  detailPanelEmptyTitle: "mt-4 text-base font-bold text-[#17130E]",
+    "flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-[#17130E] ring-1 ring-[rgba(138,99,36,0.16)]",
+  detailPanelEmptyTitle: "mt-3 text-sm font-semibold text-[#17130E]",
   detailPanelEmptyBody:
-    "mt-2 max-w-[260px] text-xs leading-relaxed text-[#6B6255]",
+    "mt-1.5 max-w-[240px] text-[11px] leading-relaxed text-[#6B6255]",
   detailPanelEmptyChips: "mt-5 flex flex-wrap items-center justify-center gap-2",
   detailPanelEmptyChip:
     "inline-flex items-center rounded-full border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#6B6255]",
@@ -81,20 +86,21 @@ export const networkNorthStarStyles = {
   tabBodySurface:
     "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]",
   tabBodyInner: "min-h-0 flex-1 p-3 sm:p-4 lg:p-5",
-  discoveryWorkspace:
-    "flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-x-hidden lg:min-h-[28rem] lg:gap-4",
-  discoveryContentGrid:
-    "flex min-h-0 min-w-0 flex-1 flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,38%)] lg:grid-rows-[minmax(0,1fr)] lg:gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,42%)]",
+  directoryListColumn:
+    "flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-x-hidden lg:min-h-[28rem] lg:basis-[42%] lg:max-w-none lg:shrink-0",
+  directoryDetailColumn:
+    "flex min-h-0 min-w-0 flex-1 flex-col gap-2.5 overflow-x-hidden lg:min-h-[28rem] lg:basis-[58%] lg:gap-2.5",
   discoveryListRegion:
-    "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain lg:min-h-[12rem]",
-  discoveryMapRegion: "min-w-0 shrink-0 lg:min-h-0 lg:self-stretch",
+    "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain lg:min-h-[16rem] lg:max-h-full",
+  discoveryMapRegion:
+    "min-h-0 min-w-0 shrink-0 lg:max-h-[8.5rem]",
   flatPanelHeader:
     "shrink-0 space-y-2 border-b border-[rgba(138,99,36,0.08)] pb-3",
-  mobileViewToggle: lt.viewTabsControl,
-  mobileViewToggleItem: lt.viewTabsItem,
+  mobileViewToggle: `${lt.viewTabsControl} items-center`,
+  mobileViewToggleItem: `${lt.viewTabsItem} inline-flex min-h-9 items-center justify-center gap-1.5 px-3 py-2 text-xs leading-none capitalize sm:flex-none`,
   mobileViewToggleItemActive: lt.viewTabsItemActive,
   mapPreviewPanel:
-    "relative flex min-h-[11rem] flex-col overflow-hidden rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#EDE6D4] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] sm:min-h-[13rem] lg:h-full lg:min-h-[18rem] xl:min-h-[20rem]",
+    "relative flex min-h-[7rem] max-h-[8.5rem] flex-col overflow-hidden rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#EDE6D4] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] sm:min-h-[7.5rem]",
   mapPreviewCanvas:
     "pointer-events-none absolute inset-0 overflow-hidden",
   mapPreviewGrid:
@@ -105,17 +111,17 @@ export const networkNorthStarStyles = {
     "absolute left-1/2 top-[42%] h-[70%] w-[85%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(201,164,77,0.18)_0%,rgba(201,164,77,0.06)_42%,transparent_72%)]",
   mapPreviewRing:
     "absolute left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(201,164,77,0.14)]",
-  mapPreviewRingOuter: "h-[min(88%,18rem)] w-[min(88%,18rem)]",
+  mapPreviewRingOuter: "h-[min(58%,5.5rem)] w-[min(58%,5.5rem)]",
   mapPreviewRingInner:
-    "h-[min(58%,12rem)] w-[min(58%,12rem)] border-[rgba(201,164,77,0.10)]",
+    "h-[min(38%,3.5rem)] w-[min(38%,3.5rem)] border-[rgba(201,164,77,0.10)]",
   mapPreviewContent:
-    "relative z-[1] flex flex-1 flex-col justify-between px-4 py-4 sm:px-5 sm:py-5",
-  mapPreviewHeader: "flex items-start gap-3",
+    "relative z-[1] flex flex-1 flex-col justify-between px-3 py-2 sm:px-3 sm:py-2",
+  mapPreviewHeader: "flex items-start gap-2",
   mapPreviewIcon:
-    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FFF9EA] text-[#8A6324] shadow-[0_2px_8px_rgba(138,99,36,0.12)] ring-1 ring-[rgba(138,99,36,0.14)]",
-  mapPreviewTitle: "text-base font-bold text-[#17130E]",
-  mapPreviewSubtitle: "mt-0.5 text-xs leading-snug text-[#6B6255]",
-  mapPreviewMessage: "mt-2 text-xs leading-snug text-[#4F4638]",
+    "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#FFF9EA] text-[#8A6324] shadow-[0_1px_4px_rgba(138,99,36,0.10)] ring-1 ring-[rgba(138,99,36,0.12)]",
+  mapPreviewTitle: "text-xs font-bold text-[#17130E]",
+  mapPreviewSubtitle: "mt-0.5 text-[10px] leading-snug text-[#6B6255]",
+  mapPreviewMessage: "mt-1 text-[10px] leading-snug text-[#4F4638]",
   mapPreviewPill:
     "inline-flex items-center rounded-full border border-[rgba(138,99,36,0.10)] bg-[rgba(255,249,234,0.82)] px-2.5 py-0.5 text-[10px] font-semibold text-[#6B6255] backdrop-blur-[1px]",
   mapPreviewHint:
@@ -125,17 +131,18 @@ export const networkNorthStarStyles = {
   mapPreviewAreaChip:
     "inline-flex max-w-full items-center truncate rounded-full border border-[rgba(201,164,77,0.22)] bg-[rgba(255,249,234,0.88)] px-2.5 py-0.5 text-[10px] font-medium text-[#4F4638] backdrop-blur-[1px]",
   mapPreviewMeta: "text-[10px] text-[#6B6255]",
-  mapPreviewFooter: "mt-auto space-y-2.5 pt-3",
+  mapPreviewFooter: "mt-auto space-y-1.5 pt-1.5",
   cardShell:
-    "group/card relative rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-4 transition-all",
+    "group/card relative rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF] px-2 py-1.5 transition-colors hover:border-[rgba(201,164,77,0.24)] hover:bg-[#FFFDF5]",
   cardShellSelected:
-    "group/card relative rounded-[1rem] border border-[rgba(201,164,77,0.50)] bg-[#FFF9EA] p-4 shadow-[0_4px_16px_rgba(138,99,36,0.16)] ring-2 ring-[rgba(201,164,77,0.32)] transition-all",
-  cardSelectHint:
-    "mt-3 flex items-center justify-between gap-2 border-t border-[rgba(138,99,36,0.08)] pt-2.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8A6324]",
-  cardSelectHintActive: "text-[#6B4E1A]",
-  rosterList: "grid min-w-0 grid-cols-1 gap-3 @md:grid-cols-2 @2xl:grid-cols-2",
-  rosterListMyNetwork: "grid min-w-0 grid-cols-1 gap-3 @lg:grid-cols-2",
-  emptyStateStrong: "rounded-xl border border-[rgba(138,99,36,0.10)] bg-[#FFF9EA]/60 px-4 py-10 text-center sm:py-12",
+    "group/card relative rounded-lg border border-[rgba(201,164,77,0.45)] bg-[#FFF9EA] px-2 py-1.5 shadow-[0_1px_6px_rgba(138,99,36,0.08)] ring-1 ring-[rgba(201,164,77,0.28)] transition-colors",
+  rosterRowChevron:
+    "ml-1 shrink-0 self-center text-[#8A6324] opacity-0 transition-all group-hover/card:opacity-70 group-data-[selected=true]/card:opacity-100",
+  rosterRowChevronActive: "translate-x-0.5 opacity-100 text-[#6B4E1A]",
+  rosterList: "flex min-w-0 flex-col gap-0.5 divide-y divide-[rgba(138,99,36,0.06)]",
+  rosterListMyNetwork: "flex min-w-0 flex-col gap-0.5 divide-y divide-[rgba(138,99,36,0.06)]",
+  rosterSectionHeader: "flex shrink-0 items-baseline justify-between gap-2 pb-1",
+  emptyStateStrong: "rounded-xl border border-[rgba(138,99,36,0.10)] bg-[#FFF9EA]/60 px-4 py-8 text-center sm:py-9",
   emptyStateCta: lt.primaryAction,
   referralInboxHeader: "mb-4 space-y-1",
   invitationCardGrid: "grid gap-3 lg:grid-cols-2",
