@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Megaphone, Plus } from "lucide-react";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
@@ -10,6 +12,7 @@ import {
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
+import { MarketingPostDraftForm } from "@/shared/components/marketing-hub/MarketingPostDraftForm";
 import {
   formatMarketingChannel,
   formatMarketingPostStatus,
@@ -21,8 +24,15 @@ type MarketingHubPageViewProps = {
 };
 
 export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps) {
+  const router = useRouter();
   const northStar = isNorthStarShellEnabled();
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const hasNoPosts = initialPosts.length === 0;
+
+  function handleCreateSuccess() {
+    setShowCreateForm(false);
+    router.refresh();
+  }
 
   return (
     <MasterListPageLayout
@@ -32,8 +42,8 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
       primaryAction={
         <button
           type="button"
-          disabled
-          aria-disabled="true"
+          disabled={showCreateForm}
+          onClick={() => setShowCreateForm(true)}
           className={
             northStar
               ? `north-star-marketing-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
@@ -59,7 +69,14 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
         ) : null}
 
         <div className={masterListPageScrollRegionClass}>
-          {hasNoPosts ? (
+          {showCreateForm ? (
+            <div className="p-4 sm:p-6">
+              <MarketingPostDraftForm
+                onSuccess={handleCreateSuccess}
+                onCancel={() => setShowCreateForm(false)}
+              />
+            </div>
+          ) : hasNoPosts ? (
             <div className="admin-empty-wrap">
               <div
                 className={`${
