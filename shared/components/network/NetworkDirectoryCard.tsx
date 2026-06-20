@@ -3,6 +3,7 @@ import { getPartnerInitials } from "@/shared/types/network";
 import type { NetworkProfile } from "@/shared/types/network-referral";
 import { st, type NetworkSurface } from "./north-star-m11/network-north-star-styles";
 import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
+import { NetworkAcceptingReferralsBadge } from "./NetworkAcceptingReferralsBadge";
 
 type NetworkDirectoryCardProps = {
   profile: NetworkProfile;
@@ -84,6 +85,9 @@ export function NetworkDirectoryCard({
               <p className={st.cardPrimary}>{profile.displayName}</p>
               {isTrustedPartner ? (
                 <NetworkTrustedBadge surface={surface} />
+              ) : null}
+              {profile.acceptingReferrals ? (
+                <NetworkAcceptingReferralsBadge surface={surface} />
               ) : null}
             </div>
             <p className={`mt-0.5 ${st.cardSecondary}`}>{profile.tradeType}</p>
@@ -189,6 +193,9 @@ export function NetworkDirectoryCard({
               <p className={nameClass}>{profile.displayName}</p>
               {isTrustedPartner ? (
                 <NetworkTrustedBadge surface={surface} />
+              ) : null}
+              {profile.acceptingReferrals ? (
+                <NetworkAcceptingReferralsBadge surface={surface} />
               ) : null}
             </div>
             <div className={tradeClass}>

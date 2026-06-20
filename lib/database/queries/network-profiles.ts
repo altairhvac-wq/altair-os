@@ -51,6 +51,7 @@ function mapNetworkProfileRow(row: NetworkProfileRow): NetworkProfile {
     longitude: row.longitude ?? null,
     locationPrecision: row.location_precision ?? "none",
     showOnMap: row.show_on_map ?? false,
+    acceptingReferrals: row.accepting_referrals ?? true,
     bio: row.bio ?? undefined,
     isVisible: row.is_visible,
     createdAt: row.created_at,
@@ -210,6 +211,7 @@ export async function updateCompanyNetworkProfile(
     is_visible: input.isVisible,
     location_precision: locationPrecision,
     show_on_map: showOnMap,
+    accepting_referrals: input.acceptingReferrals,
   };
 
   const { data, error } = await supabase

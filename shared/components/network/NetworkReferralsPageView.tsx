@@ -165,6 +165,7 @@ function NetworkReferralsPageLegacyView({
   const [search, setSearch] = useState("");
   const [tradeFilter, setTradeFilter] = useState<TradeType | "all">("all");
   const [locationFilter, setLocationFilter] = useState("");
+  const [acceptingReferralsOnly, setAcceptingReferralsOnly] = useState(false);
   const [directoryFilter, setDirectoryFilter] =
     useState<DirectoryFilter>("all");
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
@@ -219,6 +220,7 @@ function NetworkReferralsPageLegacyView({
         tradeFilter,
         locationFilter,
         directoryFilter,
+        acceptingReferralsOnly,
       },
       trustedCompanyIds,
     );
@@ -230,13 +232,15 @@ function NetworkReferralsPageLegacyView({
     tradeFilter,
     locationFilter,
     directoryFilter,
+    acceptingReferralsOnly,
     trustedCompanyIds,
   ]);
 
   const hasActiveDirectoryFilters =
     search.trim().length > 0 ||
     locationFilter.trim().length > 0 ||
-    tradeFilter !== "all";
+    tradeFilter !== "all" ||
+    acceptingReferralsOnly;
 
   function clearNetworkActionFeedback() {
     setNetworkActionError(null);
@@ -248,6 +252,7 @@ function NetworkReferralsPageLegacyView({
     setSearch("");
     setTradeFilter("all");
     setLocationFilter("");
+    setAcceptingReferralsOnly(false);
     setDirectoryFilter("all");
     setSelectedProfileId(null);
     setPanelMode("empty");
@@ -663,6 +668,18 @@ function NetworkReferralsPageLegacyView({
                   />
                 </div>
               </div>
+
+              <label className="mt-3 flex cursor-pointer items-center gap-2 text-xs text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={acceptingReferralsOnly}
+                  onChange={(event) =>
+                    setAcceptingReferralsOnly(event.target.checked)
+                  }
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                Accepting referrals only
+              </label>
             </div>
 
             <div className={`@container p-4 ${masterListPageScrollRegionClass}`}>
@@ -689,6 +706,7 @@ function NetworkReferralsPageLegacyView({
                         setSearch("");
                         setTradeFilter("all");
                         setLocationFilter("");
+                        setAcceptingReferralsOnly(false);
                       }}
                       className={`${masterSecondaryActionClass} mt-4`}
                     >

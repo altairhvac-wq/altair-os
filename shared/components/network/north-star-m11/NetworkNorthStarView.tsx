@@ -156,6 +156,7 @@ export function NetworkNorthStarView({
   const [search, setSearch] = useState("");
   const [tradeFilter, setTradeFilter] = useState<TradeType | "all">("all");
   const [locationFilter, setLocationFilter] = useState("");
+  const [acceptingReferralsOnly, setAcceptingReferralsOnly] = useState(false);
   const [isDesktopLayout, setIsDesktopLayout] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<ProfilePanelMode>("empty");
@@ -209,17 +210,19 @@ export function NetworkNorthStarView({
         tradeFilter,
         locationFilter,
         directoryFilter: "all",
+        acceptingReferralsOnly,
       },
       trustedCompanyIds,
     );
 
     return sortProfilesWithTrustedFirst(nextProfiles, trustedCompanyIds);
-  }, [profiles, search, tradeFilter, locationFilter, trustedCompanyIds]);
+  }, [profiles, search, tradeFilter, locationFilter, acceptingReferralsOnly, trustedCompanyIds]);
 
   const hasActiveDirectoryFilters =
     search.trim().length > 0 ||
     locationFilter.trim().length > 0 ||
-    tradeFilter !== "all";
+    tradeFilter !== "all" ||
+    acceptingReferralsOnly;
 
   function clearNetworkActionFeedback() {
     setNetworkActionError(null);
@@ -231,6 +234,7 @@ export function NetworkNorthStarView({
     setSearch("");
     setTradeFilter("all");
     setLocationFilter("");
+    setAcceptingReferralsOnly(false);
     setSelectedProfileId(null);
     setPanelMode("empty");
     clearNetworkActionFeedback();
@@ -704,6 +708,17 @@ export function NetworkNorthStarView({
                       />
                     </div>
                   </div>
+                  <label className="flex cursor-pointer items-center gap-2 text-[11px] text-[#6B6255]">
+                    <input
+                      type="checkbox"
+                      checked={acceptingReferralsOnly}
+                      onChange={(event) =>
+                        setAcceptingReferralsOnly(event.target.checked)
+                      }
+                      className="h-3.5 w-3.5 rounded border-[rgba(138,99,36,0.25)]"
+                    />
+                    Accepting referrals only
+                  </label>
                 </div>
 
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-x-hidden lg:flex-row lg:gap-4 lg:overflow-hidden">
@@ -737,6 +752,7 @@ export function NetworkNorthStarView({
                                 setSearch("");
                                 setTradeFilter("all");
                                 setLocationFilter("");
+                                setAcceptingReferralsOnly(false);
                               }}
                               className={`${st.emptyStateCta} mt-4`}
                             >

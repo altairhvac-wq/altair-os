@@ -3,7 +3,7 @@
 import { Map, MapPin } from "lucide-react";
 import type { NetworkProfile } from "@/shared/types/network-referral";
 import {
-  hasNetworkProfileLocationData,
+  hasNetworkProfileMapLocation,
   summarizeMapPreviewReadiness,
 } from "@/shared/types/network-referral";
 import { st } from "./network-north-star-styles";
@@ -21,13 +21,17 @@ export function NetworkMapPreviewPanel({
   ownProfile = null,
   className = "",
 }: NetworkMapPreviewPanelProps) {
-  const readiness = summarizeMapPreviewReadiness(profiles);
+  const readiness = summarizeMapPreviewReadiness(profiles, ownProfile);
   const ownProfileNeedsLocation =
-    ownProfile !== null && !hasNetworkProfileLocationData(ownProfile);
+    ownProfile !== null && !hasNetworkProfileMapLocation(ownProfile);
+  const ownProfileNeedsMapToggle =
+    ownProfile !== null &&
+    hasNetworkProfileMapLocation(ownProfile) &&
+    !ownProfile.showOnMap;
   const trustedWithLocation = profiles.filter(
     (profile) =>
       trustedCompanyIds.has(profile.companyId) &&
-      hasNetworkProfileLocationData(profile),
+      hasNetworkProfileMapLocation(profile),
   ).length;
 
   return (
@@ -51,22 +55,46 @@ export function NetworkMapPreviewPanel({
             </div>
             <div className="min-w-0 flex-1">
               <h3 className={st.mapPreviewTitle}>Service area preview</h3>
-              <p className={st.mapPreviewSubtitle}>
-                Approximate map placement will appear as partners add location
-                details.
-              </p>
+              <p className={st.mapPreviewSubtitle}>Approximate pins</p>
             </div>
           </div>
 
-          {readiness.mapReadyCount > 0 ? (
-            <p className={st.mapPreviewMessage}>
-              {readiness.mapReadyCount}{" "}
-              {readiness.mapReadyCount === 1 ? "profile" : "profiles"} with
-              location data
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {readiness.mapReadyCount > 0 ? (
+              <span className={st.mapPreviewPill}>
+                Map-ready · {readiness.mapReadyCount}
+              </span>
+            ) : null}
+            {readiness.cityLevelCount > 0 ? (
+              <span className={st.mapPreviewPill}>
+                City-level · {readiness.cityLevelCount}
+              </span>
+            ) : null}
+            {readiness.zipLevelCount > 0 ? (
+              <span className={st.mapPreviewPill}>
+                ZIP-level · {readiness.zipLevelCount}
+              </span>
+            ) : null}
+            {readiness.ownProfileMapReady &&
+            readiness.ownProfilePrecisionLabel ? (
+              <span className={st.mapPreviewPill}>
+                Your profile · {readiness.ownProfilePrecisionLabel}
+              </span>
+            ) : null}
+          </div>
+
+          {ownProfileNeedsLocation ? (
+            <p className={st.mapPreviewHint}>
+              Add location details to prepare for map discovery.
             </p>
-          ) : ownProfileNeedsLocation ? (
-            <p className={st.mapPreviewMessage}>
-              Add your city/state or ZIP to prepare your profile.
+          ) : ownProfileNeedsMapToggle ? (
+            <p className={st.mapPreviewHint}>
+              Enable show on future map when you are ready for approximate
+              placement.
+            </p>
+          ) : readiness.mapReadyCount === 0 ? (
+            <p className={st.mapPreviewHint}>
+              Add location details to prepare for map discovery.
             </p>
           ) : null}
         </div>

@@ -1233,6 +1233,7 @@ export type NetworkProfileRow = {
   longitude: number | null;
   location_precision: NetworkLocationPrecision;
   show_on_map: boolean;
+  accepting_referrals: boolean;
   bio: string | null;
   is_visible: boolean;
   created_at: Timestamp;
@@ -1252,6 +1253,7 @@ export type NetworkProfileInsert = {
   longitude?: number | null;
   location_precision?: NetworkLocationPrecision;
   show_on_map?: boolean;
+  accepting_referrals?: boolean;
   bio?: string | null;
   is_visible?: boolean;
   created_at?: Timestamp;

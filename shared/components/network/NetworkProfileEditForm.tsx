@@ -282,6 +282,23 @@ export function NetworkProfileEditForm({
               </span>
             </label>
 
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={formData.acceptingReferrals}
+                onChange={(event) =>
+                  updateField("acceptingReferrals", event.target.checked)
+                }
+                className="mt-0.5 h-4 w-4 rounded border-slate-300"
+              />
+              <span>
+                <span className={`block ${labelClass}`}>Accepting referrals</span>
+                <span className={optionalClass}>
+                  Show that your company is open to trusted referral work.
+                </span>
+              </span>
+            </label>
+
             <label
               className={`flex items-start gap-3 ${
                 mapVisibilityAllowed ? "cursor-pointer" : "cursor-not-allowed opacity-70"

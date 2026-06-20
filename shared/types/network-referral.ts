@@ -33,6 +33,7 @@ export type NetworkProfile = {
   longitude?: number | null;
   locationPrecision: NetworkLocationPrecision;
   showOnMap: boolean;
+  acceptingReferrals: boolean;
   bio?: string;
   isVisible: boolean;
   createdAt: string;
@@ -49,6 +50,7 @@ export type NetworkProfileFormData = {
   bio: string;
   isVisible: boolean;
   showOnMap: boolean;
+  acceptingReferrals: boolean;
 };
 
 export function normalizeNetworkProfileFormData(
@@ -64,6 +66,7 @@ export function normalizeNetworkProfileFormData(
     bio: data.bio.trim(),
     isVisible: data.isVisible,
     showOnMap: data.showOnMap,
+    acceptingReferrals: data.acceptingReferrals,
   };
 }
 
@@ -119,6 +122,7 @@ export function networkProfileToFormData(
     bio: profile.bio ?? "",
     isVisible: profile.isVisible,
     showOnMap: profile.showOnMap,
+    acceptingReferrals: profile.acceptingReferrals,
   };
 }
 
@@ -141,6 +145,7 @@ export type NetworkDirectoryFilters = {
   tradeFilter: TradeType | "all";
   locationFilter: string;
   directoryFilter: DirectoryFilter;
+  acceptingReferralsOnly: boolean;
 };
 
 function profileSearchHaystack(profile: NetworkProfile): string {
@@ -173,6 +178,10 @@ export function filterNetworkDirectoryProfiles(
     nextProfiles = nextProfiles.filter(
       (profile) => profile.tradeType === filters.tradeFilter,
     );
+  }
+
+  if (filters.acceptingReferralsOnly) {
+    nextProfiles = nextProfiles.filter((profile) => profile.acceptingReferrals);
   }
 
   const locationQuery = filters.locationFilter.trim().toLowerCase();
@@ -210,18 +219,34 @@ export function collectTradeTypesFromProfiles(
   return [...trades].sort((left, right) => left.localeCompare(right));
 }
 
-export function isMapReadyForPreview(
-  profile: NetworkProfile,
+export function hasNetworkProfileMapLocation(
+  profile: Pick<NetworkProfile, "city" | "state" | "postalCode">,
 ): boolean {
-  return hasNetworkProfileLocationData(profile);
+  return canEnableNetworkMapVisibility(profile);
+}
+
+export function isMapReadyForPreview(profile: NetworkProfile): boolean {
+  return profile.showOnMap && hasNetworkProfileMapLocation(profile);
 }
 
 export function isMapPinReady(profile: NetworkProfile): boolean {
   return (
     profile.showOnMap &&
     profile.locationPrecision !== "none" &&
-    hasNetworkProfileLocationData(profile)
+    hasNetworkProfileMapLocation(profile)
   );
+}
+
+export function formatNetworkLocationPrecision(
+  precision: NetworkLocationPrecision,
+): string | null {
+  if (precision === "city") {
+    return "City-level";
+  }
+  if (precision === "zip") {
+    return "ZIP-level";
+  }
+  return null;
 }
 
 export type MapPreviewReadiness = {
@@ -230,10 +255,13 @@ export type MapPreviewReadiness = {
   cityLevelCount: number;
   zipLevelCount: number;
   sampleAreas: string[];
+  ownProfileMapReady: boolean;
+  ownProfilePrecisionLabel: string | null;
 };
 
 export function summarizeMapPreviewReadiness(
   profiles: NetworkProfile[],
+  ownProfile: NetworkProfile | null = null,
 ): MapPreviewReadiness {
   const mapReadyProfiles = profiles.filter(isMapReadyForPreview);
   const pinReadyProfiles = profiles.filter(isMapPinReady);
@@ -248,10 +276,15 @@ export function summarizeMapPreviewReadiness(
       );
     } else if (profile.city.trim() && profile.state.trim()) {
       areas.add(`${profile.city}, ${profile.state}`);
-    } else if (profile.serviceArea.trim()) {
-      areas.add(profile.serviceArea);
+    } else if (profile.city.trim() || profile.state.trim()) {
+      areas.add([profile.city, profile.state].filter(Boolean).join(", "));
     }
   }
+
+  const ownProfileMapReady = ownProfile ? isMapReadyForPreview(ownProfile) : false;
+  const ownProfilePrecisionLabel = ownProfile
+    ? formatNetworkLocationPrecision(ownProfile.locationPrecision)
+    : null;
 
   return {
     mapReadyCount: mapReadyProfiles.length,
@@ -265,6 +298,8 @@ export function summarizeMapPreviewReadiness(
     sampleAreas: [...areas]
       .sort((left, right) => left.localeCompare(right))
       .slice(0, 8),
+    ownProfileMapReady,
+    ownProfilePrecisionLabel,
   };
 }
 
