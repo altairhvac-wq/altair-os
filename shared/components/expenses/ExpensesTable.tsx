@@ -11,6 +11,7 @@ import { formatExpenseAmount, formatExpenseDate } from "@/shared/types/expense";
 import type { Expense } from "@/shared/types/expense";
 import { ExpenseCategoryBadge } from "./ExpenseCategoryBadge";
 import { ExpenseStatusBadge } from "./ExpenseStatusBadge";
+import { ExpensesMobileCardList } from "./ExpensesMobileCardList";
 
 type ExpensesTableProps = {
   expenses: Expense[];
@@ -127,9 +128,22 @@ export function ExpensesTable({
     : legacyRowStatusAccent;
 
   return (
-    <div
-      className={`overflow-x-auto${northStar ? " expense-north-star-ledger" : ""}`}
-    >
+    <>
+      <ExpensesMobileCardList
+        expenses={expenses}
+        selectedId={selectedId}
+        onSelect={onSelect}
+        selectionEnabled={selectionEnabled}
+        selectedIds={selectedIds}
+        onToggleSelection={onToggleSelection}
+        northStar={northStar}
+      />
+
+      <div
+        className={`hidden overflow-x-auto md:block${
+          northStar ? " expense-north-star-ledger" : ""
+        }`}
+      >
       <table className="w-full min-w-[880px] text-left text-sm">
         <thead>
           <tr
@@ -347,6 +361,7 @@ export function ExpensesTable({
           })}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }
