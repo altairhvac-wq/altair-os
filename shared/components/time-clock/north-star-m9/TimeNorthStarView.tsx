@@ -1,21 +1,30 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { AlertCircle, Clock, FileText } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { JobContextFilterBanner } from "@/shared/components/layout/JobContextFilterBanner";
 import {
   MasterContentStack,
   MasterPageHeader,
+  MasterPageSurface,
   MasterShellPage,
+  masterListPageScrollRegionClass,
+  masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import type { TimeEntry } from "@/shared/types/time-entry";
+import { TimeQueueTabs } from "../TimeQueueTabs";
+import { TimeTrackingSearchFilterBar } from "../TimeTrackingSearchFilterBar";
 import {
-  TimeNorthStarActiveTechnicianCard,
-  TimeNorthStarEntriesList,
-} from "./TimeNorthStarEntriesList";
-import { TimeNorthStarReviewQueueHeading } from "./TimeNorthStarReviewQueueHeading";
+  countTimeEntriesForWorkQueue,
+  filterTimeEntriesBySearch,
+  filterTimeEntriesForWorkQueue,
+  mergeTimeEntries,
+  resolveDefaultTimeWorkQueue,
+  sortTimeEntriesForWorkQueue,
+  type TimeWorkQueue,
+} from "../time-work-queues";
+import { TimeNorthStarEntriesList } from "./TimeNorthStarEntriesList";
 
 export type TimeNorthStarViewProps = {
   entries: TimeEntry[];
@@ -29,6 +38,23 @@ function matchesJobFilter(entry: TimeEntry, jobId?: string): boolean {
   return !jobId || entry.jobId === jobId;
 }
 
+function getQueueEmptyMessage(queue: TimeWorkQueue, jobLabel?: string): string {
+  const scope = jobLabel ? ` for Job ${jobLabel}` : "";
+
+  switch (queue) {
+    case "needs-review":
+      return `No time entries need review${scope}.`;
+    case "approved":
+      return `No approved time entries${scope} for the current period.`;
+    case "active":
+      return jobLabel
+        ? "No active labor entries for this job."
+        : "No technicians are currently on the clock.";
+    case "past":
+      return `No past time entries${scope} match your filters.`;
+  }
+}
+
 export function TimeNorthStarView({
   entries,
   activeEntries,
@@ -36,45 +62,75 @@ export function TimeNorthStarView({
   initialJobId,
   initialJobLabel,
 }: TimeNorthStarViewProps) {
+  const mergedEntries = useMemo(
+    () => mergeTimeEntries(entries, activeEntries),
+    [entries, activeEntries],
+  );
+
+  const [workQueue, setWorkQueue] = useState<TimeWorkQueue>(() =>
+    resolveDefaultTimeWorkQueue(entries, activeEntries),
+  );
+  const [search, setSearch] = useState("");
   const [technicianFilter, setTechnicianFilter] = useState<string>("all");
 
   const technicians = useMemo(() => {
     const scopedEntries = initialJobId
-      ? entries.filter((entry) => matchesJobFilter(entry, initialJobId))
-      : entries;
+      ? mergedEntries.filter((entry) => matchesJobFilter(entry, initialJobId))
+      : mergedEntries;
     const names = new Set(scopedEntries.map((entry) => entry.technicianName));
     return Array.from(names).sort();
-  }, [entries, initialJobId]);
+  }, [mergedEntries, initialJobId]);
 
-  const filteredActiveEntries = useMemo(() => {
-    return activeEntries.filter(
+  const scopedEntries = useMemo(() => {
+    return mergedEntries.filter(
       (entry) =>
         matchesJobFilter(entry, initialJobId) &&
         (technicianFilter === "all" ||
           entry.technicianName === technicianFilter),
     );
-  }, [activeEntries, initialJobId, technicianFilter]);
+  }, [mergedEntries, initialJobId, technicianFilter]);
 
-  const filteredEntries = useMemo(() => {
-    return entries.filter(
-      (entry) =>
-        matchesJobFilter(entry, initialJobId) &&
-        (technicianFilter === "all" ||
-          entry.technicianName === technicianFilter),
-    );
-  }, [entries, initialJobId, technicianFilter]);
+  const queueCounts = useMemo(
+    () =>
+      ({
+        "needs-review": countTimeEntriesForWorkQueue(
+          scopedEntries,
+          "needs-review",
+        ),
+        approved: countTimeEntriesForWorkQueue(scopedEntries, "approved"),
+        active: countTimeEntriesForWorkQueue(scopedEntries, "active"),
+        past: countTimeEntriesForWorkQueue(scopedEntries, "past"),
+      }) satisfies Record<TimeWorkQueue, number>,
+    [scopedEntries],
+  );
+
+  const queueScopedEntries = useMemo(
+    () => filterTimeEntriesForWorkQueue(scopedEntries, workQueue),
+    [scopedEntries, workQueue],
+  );
+
+  const filteredEntries = useMemo(
+    () =>
+      sortTimeEntriesForWorkQueue(
+        filterTimeEntriesBySearch(queueScopedEntries, search),
+        workQueue,
+      ),
+    [queueScopedEntries, search, workQueue],
+  );
+
+  const hasNoEntries = scopedEntries.length === 0;
+  const hasNoQueueEntries = !hasNoEntries && queueScopedEntries.length === 0;
+  const hasNoResults = !hasNoEntries && filteredEntries.length === 0;
 
   if (!canViewAll) {
     return (
       <MasterShellPage density="compact" className={lt.pageCanvas}>
         <MasterPageHeader
-          eyebrow="Labor control"
-          title="Time & labor review"
-          subtitle="Canonical shift, break, and job-labor entries for payroll accuracy."
+          title="Labor & Payroll"
+          subtitle="Review time entries, approve labor, and prepare payroll."
           density="compact"
           surfaceVariant="northStar"
           className={`north-star-time-page-header ${lt.pageHeader}`}
-          eyebrowClassName={lt.pageHeaderEyebrow}
           titleClassName={lt.pageHeaderTitle}
           subtitleClassName={lt.pageHeaderSubtitle}
         />
@@ -94,44 +150,16 @@ export function TimeNorthStarView({
     );
   }
 
-  const activeEmptyMessage = initialJobId
-    ? "No active labor entries for this job."
-    : "No technicians are currently on the clock.";
-
-  const entriesEmptyMessage = initialJobId
-    ? "No time entries for this job yet."
-    : "No time entries yet.";
-
   return (
     <MasterShellPage density="compact" className={lt.pageCanvas}>
       <MasterPageHeader
-        eyebrow="Labor control"
-        title="Time & labor review"
-        subtitle="Canonical shift, break, and job-labor entries for payroll accuracy."
+        title="Labor & Payroll"
+        subtitle="Review time entries, approve labor, and prepare payroll."
         density="compact"
         surfaceVariant="northStar"
         className={`north-star-time-page-header ${lt.pageHeader}`}
-        eyebrowClassName={lt.pageHeaderEyebrow}
         titleClassName={lt.pageHeaderTitle}
         subtitleClassName={lt.pageHeaderSubtitle}
-        primaryAction={
-          <Link
-            href="/reports"
-            className={`north-star-time-primary-action ${lt.primaryAction} justify-center sm:justify-start`}
-          >
-            <FileText className="h-4 w-4" aria-hidden="true" />
-            Payroll review
-          </Link>
-        }
-        secondaryAction={
-          <Link
-            href="/time-clock"
-            className={`north-star-time-secondary-action ${lt.secondaryAction} justify-center sm:justify-start`}
-          >
-            <Clock className="h-4 w-4" aria-hidden="true" />
-            Shift exceptions
-          </Link>
-        }
       />
 
       <MasterContentStack
@@ -145,76 +173,60 @@ export function TimeNorthStarView({
           />
         ) : null}
 
-        <section className="north-star-list-surface rounded-[1.25rem]">
-          <div className="shrink-0 border-b border-[rgba(138,99,36,0.12)] px-3 py-2.5 sm:px-4 sm:py-3 lg:px-5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8A6324]">
-              Live labor
-            </p>
-            <h2 className="mt-0.5 text-sm font-bold text-[#17130E]">
-              Active technicians
-            </h2>
-            <p className="mt-0.5 text-[11px] leading-snug text-[#6B6255]">
-              Technicians currently clocked in, on break, or working a job.
-            </p>
-          </div>
+        <MasterPageSurface
+          variant="northStarList"
+          className={`${masterListPageSurfaceClass} ${lt.listSurface} overflow-hidden rounded-[1.25rem]`}
+        >
+          <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
 
-          <div className="px-3 py-3 sm:px-4 sm:py-4 lg:px-5">
-            {filteredActiveEntries.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-4 py-6 text-center text-sm text-[#6B6255]">
-                {activeEmptyMessage}
-              </p>
-            ) : (
-              <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
-                {filteredActiveEntries.map((entry) => (
-                  <TimeNorthStarActiveTechnicianCard
-                    key={entry.id}
-                    entry={entry}
-                  />
-                ))}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            {!hasNoEntries ? (
+              <div className={`${lt.viewTabsBand} shrink-0`}>
+                <TimeQueueTabs
+                  activeQueue={workQueue}
+                  onQueueChange={setWorkQueue}
+                  counts={queueCounts}
+                  northStar
+                />
               </div>
-            )}
-          </div>
-        </section>
+            ) : null}
 
-        <section className="north-star-list-surface overflow-hidden rounded-[1.25rem]">
-          <TimeNorthStarReviewQueueHeading
-            entryCount={filteredEntries.length}
-            jobLabel={initialJobLabel}
-          />
-
-          <div className={`time-north-star-filter-bar ${lt.filterBar} shrink-0`}>
-            <label className="flex flex-col gap-1.5 text-sm text-[#4F4638] sm:flex-row sm:items-center sm:gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#6B6255]">
-                Technician
-              </span>
-              <select
-                value={technicianFilter}
-                onChange={(event) => setTechnicianFilter(event.target.value)}
-                className={`${lt.filterSelect} sm:min-w-[12rem]`}
-              >
-                <option value="all">All technicians</option>
-                {technicians.map((technician) => (
-                  <option key={technician} value={technician}>
-                    {technician}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          {filteredEntries.length === 0 ? (
-            <p className="px-4 py-8 text-center text-sm text-[#6B6255] sm:px-5">
-              {entriesEmptyMessage}
-            </p>
-          ) : (
-            <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5 lg:pb-5">
-              <TimeNorthStarEntriesList
-                entries={filteredEntries}
-                highlightJobId={initialJobId}
+            {!hasNoEntries ? (
+              <TimeTrackingSearchFilterBar
+                search={search}
+                onSearchChange={setSearch}
+                technicianFilter={technicianFilter}
+                onTechnicianFilterChange={setTechnicianFilter}
+                technicians={technicians}
+                resultCount={filteredEntries.length}
+                northStar
               />
+            ) : null}
+
+            <div className={masterListPageScrollRegionClass}>
+              {hasNoEntries ? (
+                <p className="px-4 py-8 text-center text-sm text-[#6B6255] sm:px-5">
+                  {initialJobId
+                    ? "No time entries for this job yet."
+                    : "No time entries yet."}
+                </p>
+              ) : hasNoQueueEntries || hasNoResults ? (
+                <p className="px-4 py-8 text-center text-sm text-[#6B6255] sm:px-5">
+                  {hasNoResults && !hasNoQueueEntries
+                    ? "No time entries match your search."
+                    : getQueueEmptyMessage(workQueue, initialJobLabel)}
+                </p>
+              ) : (
+                <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5 lg:pb-5">
+                  <TimeNorthStarEntriesList
+                    entries={filteredEntries}
+                    highlightJobId={initialJobId}
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </section>
+          </div>
+        </MasterPageSurface>
       </MasterContentStack>
     </MasterShellPage>
   );

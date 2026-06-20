@@ -2,10 +2,9 @@ import {
   MasterContentStack,
   MasterPageCanvas,
   MasterPageHeader,
-  MasterPageSection,
   MasterPageSurface,
   MasterShellPage,
-  masterPanelHeaderClass,
+  masterListPageScrollRegionClass,
 } from "@/shared/design-system/shell";
 
 function Skeleton({ className }: { className?: string }) {
@@ -18,54 +17,30 @@ export function AdminTimeTrackingLoadingState() {
       <MasterPageCanvas width="standard">
         <MasterContentStack density="compact">
           <MasterPageHeader
-            title="Time & labor review"
-            subtitle="Canonical shift, break, and job-labor entries for payroll accuracy. Technicians track time through Start work and Complete work on jobs."
+            title="Labor & Payroll"
+            subtitle="Review time entries, approve labor, and prepare payroll."
             density="compact"
           />
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-28" />
-          </div>
-
-          <MasterPageSection title="Active technicians" density="compact">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <MasterPageSurface
-                  key={index}
-                  variant="section"
-                  className="rounded-2xl p-4"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-3 w-40" />
-                    </div>
-                    <Skeleton className="h-6 w-20 rounded-full" />
-                  </div>
-                  <Skeleton className="mt-3 h-3 w-36" />
-                </MasterPageSurface>
-              ))}
-            </div>
-          </MasterPageSection>
-
           <MasterPageSurface variant="card">
-            <div
-              className={`${masterPanelHeaderClass} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}
-            >
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-12" />
-                <Skeleton className="h-3 w-48" />
+            <div className="shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4">
+              <div className="grid grid-cols-4 gap-1 sm:flex sm:w-auto">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton key={index} className="h-8 rounded-md sm:h-9 sm:w-28" />
+                ))}
               </div>
-              <Skeleton className="h-10 w-44 rounded-lg" />
             </div>
 
-            <div className="space-y-0 divide-y divide-slate-100 px-4 py-2">
+            <div className="shrink-0 border-b border-slate-100/90 px-4 py-3">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                <Skeleton className="h-10 w-full rounded-lg" />
+                <Skeleton className="h-10 w-44 rounded-lg" />
+              </div>
+            </div>
+
+            <div className={`${masterListPageScrollRegionClass} px-4 py-2`}>
               {Array.from({ length: 6 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-4 py-3"
-                >
+                <div key={index} className="flex items-center gap-4 py-3">
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-4 w-16" />
                   <Skeleton className="h-4 w-14" />
