@@ -99,7 +99,7 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
 
         <div className={masterListPageScrollRegionClass}>
           {viewMode === "create" ? (
-            <div className="p-4 sm:p-6">
+            <div className="flex justify-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
               <MarketingPostDraftForm
                 mode="create"
                 onSuccess={handleCreateSuccess}
@@ -107,7 +107,7 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
               />
             </div>
           ) : viewMode === "edit" && selectedPost ? (
-            <div className="p-4 sm:p-6">
+            <div className="flex justify-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
               <MarketingPostDraftForm
                 key={selectedPost.id}
                 mode="edit"

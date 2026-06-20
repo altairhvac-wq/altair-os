@@ -8,6 +8,7 @@ import {
   markMarketingPostPostedAction,
   updateMarketingPostAction,
 } from "@/app/actions/marketing-posts";
+import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { formatActionError } from "@/shared/lib/operational-errors";
@@ -48,8 +49,11 @@ const CHANNEL_OPTIONS: { value: MarketingChannel; label: string }[] = [
   { value: "website", label: "Website" },
 ];
 
-const inputClassName =
-  "mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm";
+const PREVIEW_GUIDANCE = [
+  "Write like a local business.",
+  "Avoid customer names or exact addresses.",
+  "Keep it short enough to paste into Facebook, Instagram, or Google.",
+];
 
 function normalizeSuggestedHashtagsInput(value: string): string[] {
   const normalized = value
@@ -111,12 +115,87 @@ function validateDraftFormData(data: DraftFormData): string | null {
   return null;
 }
 
+type PostPreviewPanelProps = {
+  formData: DraftFormData;
+  northStar: boolean;
+};
+
+function PostPreviewPanel({ formData, northStar }: PostPreviewPanelProps) {
+  const previewText = buildMarketingPostCopyText(formData);
+  const hasPreview = previewText.length > 0;
+
+  return (
+    <aside
+      className={`flex flex-col gap-4 rounded-xl border p-4 sm:p-5 ${
+        northStar
+          ? "border-[rgba(148,163,184,0.22)] bg-[#FAF6EE]/80"
+          : "border-slate-200/90 bg-slate-50/70"
+      }`}
+    >
+      <div>
+        <h3
+          className={`text-sm font-semibold ${
+            northStar ? "text-[#17130E]" : "text-slate-900"
+          }`}
+        >
+          Post preview
+        </h3>
+        <p
+          className={`mt-1 text-xs leading-relaxed ${
+            northStar ? "text-[#6B6255]" : "text-slate-500"
+          }`}
+        >
+          {formatMarketingChannel(formData.channelTarget)}
+        </p>
+      </div>
+
+      <div
+        className={`min-h-[10rem] flex-1 rounded-lg border px-3.5 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+          northStar
+            ? "border-[rgba(148,163,184,0.18)] bg-white text-[#17130E]"
+            : "border-slate-200/80 bg-white text-slate-800"
+        }`}
+      >
+        {hasPreview ? (
+          previewText
+        ) : (
+          <p
+            className={`text-sm italic ${
+              northStar ? "text-[#8A7F72]" : "text-slate-400"
+            }`}
+          >
+            Your final post preview will appear here as you write.
+          </p>
+        )}
+      </div>
+
+      <ul
+        className={`space-y-2 border-t pt-4 text-xs leading-relaxed ${
+          northStar
+            ? "border-[rgba(148,163,184,0.18)] text-[#6B6255]"
+            : "border-slate-200/80 text-slate-500"
+        }`}
+      >
+        {PREVIEW_GUIDANCE.map((tip) => (
+          <li key={tip} className="flex gap-2">
+            <span aria-hidden="true" className="shrink-0 text-[#B88A2E]">
+              •
+            </span>
+            <span>{tip}</span>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  );
+}
+
 export function MarketingPostDraftForm({
   mode = "create",
   post,
   onSuccess,
   onCancel,
 }: MarketingPostDraftFormProps) {
+  const northStar = isNorthStarShellEnabled();
   const timeZone = useCompanyTimezone();
   const isEditMode = mode === "edit" && post != null;
   const [formData, setFormData] = useState<DraftFormData>(() =>
@@ -131,6 +210,14 @@ export function MarketingPostDraftForm({
   const canMarkPosted =
     isEditMode && post.status !== "posted" && post.status !== "archived";
   const canArchive = isEditMode && post.status !== "archived";
+
+  const inputClassName = northStar
+    ? "mt-1.5 w-full rounded-lg border border-[rgba(148,163,184,0.24)] bg-white px-3.5 py-2.5 text-sm text-[#101827] shadow-sm transition-colors placeholder:text-[#6B7280] focus:border-[#B88A2E] focus:outline-none focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]"
+    : "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200/80";
+
+  const cardClassName = northStar
+    ? "overflow-hidden rounded-[1.25rem] border border-[rgba(148,163,184,0.22)] bg-[#FFFBF5] shadow-[0_8px_30px_rgba(138,99,36,0.08)] ring-1 ring-[rgba(100,116,139,0.12)]"
+    : "overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[var(--shadow-card)]";
 
   function updateField<K extends keyof DraftFormData>(
     field: K,
@@ -264,174 +351,266 @@ export function MarketingPostDraftForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto w-full max-w-2xl space-y-4">
-      <div>
-        <h2 className="text-sm font-semibold text-slate-900">
-          {isEditMode ? "Edit post draft" : "New post draft"}
-        </h2>
-        <p className="mt-0.5 text-sm text-slate-500">
-          {isEditMode
-            ? "Update the draft before posting."
-            : "Create a draft you can refine before posting."}
-        </p>
-      </div>
-
-      {isEditMode ? (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-          <span>
-            Status:{" "}
-            <span className="font-medium text-slate-700">
-              {formatMarketingPostStatus(post.status)}
-            </span>
-          </span>
-          <span>
-            Channel:{" "}
-            <span className="font-medium text-slate-700">
-              {formatMarketingChannel(post.channelTarget)}
-            </span>
-          </span>
-          <span>
-            Updated{" "}
-            {formatDateTimeInTimeZone(post.updatedAt, timeZone, {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-            })}
-          </span>
-        </div>
-      ) : null}
-
-      <label className="block text-sm">
-        <span className="font-medium text-slate-700">Title</span>
-        <input
-          value={formData.title}
-          onChange={(event) => updateField("title", event.target.value)}
-          autoComplete="off"
-          className={inputClassName}
-          placeholder="Spring tune-up reminder"
-        />
-      </label>
-
-      <label className="block text-sm">
-        <span className="font-medium text-slate-700">Channel</span>
-        <select
-          value={formData.channelTarget}
-          onChange={(event) =>
-            updateField("channelTarget", event.target.value as MarketingChannel)
-          }
-          className={inputClassName}
+    <form onSubmit={handleSubmit} className="w-full max-w-[1040px]">
+      <div className={cardClassName}>
+        <header
+          className={`border-b px-5 py-5 sm:px-7 sm:py-6 ${
+            northStar
+              ? "border-[rgba(148,163,184,0.18)] bg-[#FAF6EE]/50"
+              : "border-slate-100 bg-slate-50/50"
+          }`}
         >
-          {CHANNEL_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
+          <h2
+            className={`text-lg font-bold tracking-tight sm:text-xl ${
+              northStar ? "text-[#17130E]" : "text-slate-900"
+            }`}
+          >
+            {isEditMode ? "Edit post draft" : "New post draft"}
+          </h2>
+          <p
+            className={`mt-1.5 max-w-2xl text-sm leading-relaxed ${
+              northStar ? "text-[#6B6255]" : "text-slate-500"
+            }`}
+          >
+            {isEditMode
+              ? "Update the draft, preview how it reads, then copy or mark it posted when ready."
+              : "Draft copy your team can refine, preview, and paste into social channels."}
+          </p>
 
-      <label className="block text-sm">
-        <span className="font-medium text-slate-700">Post text</span>
-        <textarea
-          value={formData.postText}
-          onChange={(event) => updateField("postText", event.target.value)}
-          rows={6}
-          className={inputClassName}
-          placeholder="Write the post copy your team can publish."
-        />
-      </label>
-
-      <label className="block text-sm">
-        <span className="font-medium text-slate-700">
-          Suggested hashtags{" "}
-          <span className="font-normal text-slate-400">(optional)</span>
-        </span>
-        <input
-          value={formData.suggestedHashtags}
-          onChange={(event) =>
-            updateField("suggestedHashtags", event.target.value)
-          }
-          autoComplete="off"
-          className={inputClassName}
-          placeholder="#hvac, localbusiness springready"
-        />
-      </label>
-
-      <label className="block text-sm">
-        <span className="font-medium text-slate-700">
-          Call to action{" "}
-          <span className="font-normal text-slate-400">(optional)</span>
-        </span>
-        <input
-          value={formData.callToAction}
-          onChange={(event) => updateField("callToAction", event.target.value)}
-          autoComplete="off"
-          className={inputClassName}
-          placeholder="Book your tune-up today"
-        />
-      </label>
-
-      {error ? (
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-          {error}
-        </p>
-      ) : null}
-
-      <div className="flex flex-wrap gap-2 pt-1">
-        <button
-          type="submit"
-          disabled={isActionPending}
-          className="admin-btn-primary"
-        >
-          {isPending ? "Saving..." : isEditMode ? "Save changes" : "Save draft"}
-        </button>
-        {isEditMode ? (
-          <>
-            <button
-              type="button"
-              disabled={isActionPending}
-              onClick={handleCopyPost}
-              aria-label={copied ? "Post copied" : "Copy post"}
-              className="admin-btn-secondary inline-flex items-center gap-1.5"
+          {isEditMode ? (
+            <div
+              className={`mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs ${
+                northStar ? "text-[#6B6255]" : "text-slate-500"
+              }`}
             >
-              {copied ? (
-                <Check className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-              )}
-              {copied ? "Copied" : "Copy post"}
-            </button>
-            {canMarkPosted ? (
+              <span>
+                Status:{" "}
+                <span
+                  className={`font-medium ${
+                    northStar ? "text-[#17130E]" : "text-slate-700"
+                  }`}
+                >
+                  {formatMarketingPostStatus(post.status)}
+                </span>
+              </span>
+              <span>
+                Channel:{" "}
+                <span
+                  className={`font-medium ${
+                    northStar ? "text-[#17130E]" : "text-slate-700"
+                  }`}
+                >
+                  {formatMarketingChannel(post.channelTarget)}
+                </span>
+              </span>
+              <span>
+                Updated{" "}
+                {formatDateTimeInTimeZone(post.updatedAt, timeZone, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+          ) : null}
+        </header>
+
+        <div className="grid gap-8 px-5 py-6 sm:px-7 sm:py-7 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:items-start">
+          <div className="space-y-5">
+            <label className="block text-sm">
+              <span
+                className={`font-medium ${
+                  northStar ? "text-[#17130E]" : "text-slate-700"
+                }`}
+              >
+                Title
+              </span>
+              <input
+                value={formData.title}
+                onChange={(event) => updateField("title", event.target.value)}
+                autoComplete="off"
+                className={inputClassName}
+                placeholder="Spring tune-up reminder"
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span
+                className={`font-medium ${
+                  northStar ? "text-[#17130E]" : "text-slate-700"
+                }`}
+              >
+                Channel
+              </span>
+              <select
+                value={formData.channelTarget}
+                onChange={(event) =>
+                  updateField(
+                    "channelTarget",
+                    event.target.value as MarketingChannel,
+                  )
+                }
+                className={inputClassName}
+              >
+                {CHANNEL_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block text-sm">
+              <span
+                className={`font-medium ${
+                  northStar ? "text-[#17130E]" : "text-slate-700"
+                }`}
+              >
+                Post text
+              </span>
+              <textarea
+                value={formData.postText}
+                onChange={(event) => updateField("postText", event.target.value)}
+                rows={10}
+                className={`${inputClassName} min-h-[12rem] resize-y`}
+                placeholder="Write the post copy your team can publish."
+              />
+            </label>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <label className="block text-sm">
+                <span
+                  className={`font-medium ${
+                    northStar ? "text-[#17130E]" : "text-slate-700"
+                  }`}
+                >
+                  Suggested hashtags{" "}
+                  <span
+                    className={`font-normal ${
+                      northStar ? "text-[#8A7F72]" : "text-slate-400"
+                    }`}
+                  >
+                    (optional)
+                  </span>
+                </span>
+                <input
+                  value={formData.suggestedHashtags}
+                  onChange={(event) =>
+                    updateField("suggestedHashtags", event.target.value)
+                  }
+                  autoComplete="off"
+                  className={inputClassName}
+                  placeholder="#hvac, localbusiness springready"
+                />
+              </label>
+
+              <label className="block text-sm">
+                <span
+                  className={`font-medium ${
+                    northStar ? "text-[#17130E]" : "text-slate-700"
+                  }`}
+                >
+                  Call to action{" "}
+                  <span
+                    className={`font-normal ${
+                      northStar ? "text-[#8A7F72]" : "text-slate-400"
+                    }`}
+                  >
+                    (optional)
+                  </span>
+                </span>
+                <input
+                  value={formData.callToAction}
+                  onChange={(event) =>
+                    updateField("callToAction", event.target.value)
+                  }
+                  autoComplete="off"
+                  className={inputClassName}
+                  placeholder="Book your tune-up today"
+                />
+              </label>
+            </div>
+
+            {error ? (
+              <p className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
+                {error}
+              </p>
+            ) : null}
+
+            <div
+              className={`flex flex-col gap-3 border-t pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between ${
+                northStar ? "border-[rgba(148,163,184,0.18)]" : "border-slate-100"
+              }`}
+            >
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="submit"
+                  disabled={isActionPending}
+                  className="admin-btn-primary"
+                >
+                  {isPending
+                    ? "Saving..."
+                    : isEditMode
+                      ? "Save changes"
+                      : "Save draft"}
+                </button>
+                {isEditMode ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={isActionPending}
+                      onClick={handleCopyPost}
+                      aria-label={copied ? "Post copied" : "Copy post"}
+                      className="admin-btn-secondary inline-flex items-center gap-1.5"
+                    >
+                      {copied ? (
+                        <Check
+                          className="h-3.5 w-3.5 text-emerald-600"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                      )}
+                      {copied ? "Copied" : "Copy post"}
+                    </button>
+                    {canMarkPosted ? (
+                      <button
+                        type="button"
+                        disabled={isActionPending}
+                        onClick={handleMarkPosted}
+                        className="admin-btn-secondary"
+                      >
+                        {isMarkPostedPending ? "Marking posted..." : "Mark posted"}
+                      </button>
+                    ) : null}
+                    {canArchive ? (
+                      <button
+                        type="button"
+                        disabled={isActionPending}
+                        onClick={handleArchive}
+                        className="admin-btn-secondary border-rose-200 text-rose-800 hover:border-rose-300 hover:bg-rose-50"
+                      >
+                        {isArchivePending ? "Archiving..." : "Archive"}
+                      </button>
+                    ) : null}
+                  </>
+                ) : null}
+              </div>
               <button
                 type="button"
                 disabled={isActionPending}
-                onClick={handleMarkPosted}
-                className="admin-btn-secondary"
+                onClick={onCancel}
+                className="admin-btn-secondary sm:shrink-0"
               >
-                {isMarkPostedPending ? "Marking posted..." : "Mark posted"}
+                {isEditMode ? "Close" : "Cancel"}
               </button>
-            ) : null}
-            {canArchive ? (
-              <button
-                type="button"
-                disabled={isActionPending}
-                onClick={handleArchive}
-                className="admin-btn-secondary border-rose-200 text-rose-800 hover:border-rose-300 hover:bg-rose-50"
-              >
-                {isArchivePending ? "Archiving..." : "Archive"}
-              </button>
-            ) : null}
-          </>
-        ) : null}
-        <button
-          type="button"
-          disabled={isActionPending}
-          onClick={onCancel}
-          className="admin-btn-secondary"
-        >
-          {isEditMode ? "Close" : "Cancel"}
-        </button>
+            </div>
+          </div>
+
+          <PostPreviewPanel formData={formData} northStar={northStar} />
+        </div>
       </div>
     </form>
   );
