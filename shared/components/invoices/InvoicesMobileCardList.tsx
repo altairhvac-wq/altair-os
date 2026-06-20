@@ -171,7 +171,7 @@ export function InvoicesMobileCardList({
                         </div>
                         <ChevronRight
                           className={
-                            northStar ? "h-4 w-4 text-[#8A6324]/50" : "h-4 w-4 text-slate-300"
+                            northStar ? "h-4 w-4 text-[#8A6324]" : "h-4 w-4 text-slate-300"
                           }
                         />
                       </div>

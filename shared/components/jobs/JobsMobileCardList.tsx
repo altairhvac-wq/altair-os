@@ -123,7 +123,7 @@ export function JobsMobileCardList({
 
                 <ChevronRight
                   className={`mt-1 h-4 w-4 shrink-0 ${
-                    northStar ? "text-[#8A6324]/50" : "text-slate-300"
+                    northStar ? "text-[#8A6324]" : "text-slate-300"
                   }`}
                 />
               </button>

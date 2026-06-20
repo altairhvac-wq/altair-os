@@ -205,7 +205,7 @@ export const northStarTokens: NorthStarDashboardTokens = {
  * Customers list page — Mission Control Original Refined (M3A).
  * Moon graphite frame: lift #273140 · base #1A2029 · deep #111821 · silver edge #AEB6C2
  * Royal brass actions: champagne #E6D092 · royal #C9A44D · command #B88A2E
- * Light surfaces: mist #EEF1F4 / band #E3E7EC / row #F7F8FA · text #101827 / #5B6570
+ * Light surfaces: moonstone #E8EDF3 / band #DCE3EC / row #FFFFFF · text #101827 / #4B5563 / #64748B
  * Dark header text: warm ivory #F3EBDD · lunar muted #C8D0DA
  */
 export type NorthStarListPageTokens = {
@@ -264,38 +264,38 @@ export const northStarListTokens: NorthStarListPageTokens = {
   pageHeaderSubtitle:
     "min-w-0 text-xs leading-snug text-[#C8D0DA] sm:truncate",
   listSurface:
-    "relative lg:rounded-[1.25rem] lg:ring-1 lg:ring-[rgba(174,182,194,0.18)]",
+    "relative lg:rounded-[1.25rem] lg:ring-1 lg:ring-[rgba(100,116,139,0.18)]",
   listSurfaceTopAccent:
-    "pointer-events-none absolute inset-x-0 top-0 hidden h-px bg-gradient-to-r from-transparent via-[rgba(174,182,194,0.28)] to-transparent lg:block",
+    "pointer-events-none absolute inset-x-0 top-0 hidden h-px bg-gradient-to-r from-transparent via-[rgba(148,163,184,0.28)] to-transparent lg:block",
   primaryAction:
     "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3.5 py-1.5 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:-translate-y-px hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] hover:shadow-[0_4px_16px_rgba(138,99,36,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A2029] [&_svg]:text-[#17130E]",
   secondaryAction:
     "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#D6BE78] bg-[#FFF9EA] px-3 py-1.5 text-sm font-semibold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.16)] transition-colors hover:border-[#E6D092] hover:bg-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.40)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A2029] [&_svg]:text-[#8A6324]",
   viewTabsBand:
-    "shrink-0 border-b border-[rgba(174,182,194,0.18)] bg-[#E3E7EC] px-3 py-2 sm:px-4 lg:px-5",
+    "shrink-0 border-b border-[rgba(100,116,139,0.18)] bg-[#DCE3EC] px-3 py-2 sm:px-4 lg:px-5",
   viewTabsControl:
-    "job-north-star-view-tabs flex w-full gap-0.5 rounded-lg border border-[rgba(174,182,194,0.22)] bg-[#DDE3EA] p-0.5 sm:w-auto",
+    "job-north-star-view-tabs flex w-full gap-0.5 rounded-lg border border-[rgba(148,163,184,0.24)] bg-[#D8E0EA] p-0.5 sm:w-auto",
   viewTabsItem:
-    "min-h-9 flex-1 rounded-md px-2.5 py-1.5 text-sm font-semibold text-[#5B6570] transition-colors hover:text-[#101827] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.35)] sm:flex-none sm:px-3",
+    "min-h-9 flex-1 rounded-md px-2.5 py-1.5 text-sm font-semibold text-[#4B5563] transition-colors hover:text-[#101827] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.35)] sm:flex-none sm:px-3",
   viewTabsItemActive:
-    "bg-[#FFFFFF] text-[#101827] shadow-[0_1px_3px_rgba(16,24,39,0.08)] ring-1 ring-[rgba(174,182,194,0.28)]",
-  viewTabsCount: "ml-1.5 text-xs font-medium text-[#8A6324]/70",
-  viewTabsCountActive: "ml-1.5 text-xs font-medium text-[#6B6255]",
+    "bg-[#FFFFFF] text-[#101827] shadow-[0_1px_4px_rgba(16,24,39,0.10)] ring-1 ring-[rgba(148,163,184,0.24)]",
+  viewTabsCount: "ml-1.5 text-xs font-medium text-[#6B7280]",
+  viewTabsCountActive: "ml-1.5 text-xs font-medium text-[#4B5563]",
   filterBar:
-    "shrink-0 border-b border-[rgba(174,182,194,0.18)] bg-[#E3E7EC] px-3 py-2.5 sm:px-4 lg:px-5 lg:py-3",
+    "shrink-0 border-b border-[rgba(100,116,139,0.18)] bg-[#DCE3EC] px-3 py-2.5 sm:px-4 lg:px-5 lg:py-3",
   searchInput:
-    "h-9 w-full min-h-9 rounded-lg border border-[rgba(174,182,194,0.22)] bg-[#FFFFFF] py-1.5 pl-9 pr-3 text-sm text-[#101827] placeholder:text-[#5B6570] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FFFFFF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]",
+    "h-9 w-full min-h-9 rounded-lg border border-[rgba(148,163,184,0.24)] bg-[#FFFFFF] py-1.5 pl-9 pr-3 text-sm text-[#101827] placeholder:text-[#6B7280] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FFFFFF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]",
   filterSelect:
-    "h-9 w-full min-h-9 appearance-none rounded-lg border border-[rgba(174,182,194,0.22)] bg-[#FFFFFF] py-1.5 pl-9 pr-8 text-sm font-medium text-[#101827] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FFFFFF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:w-auto sm:pr-10",
+    "h-9 w-full min-h-9 appearance-none rounded-lg border border-[rgba(148,163,184,0.24)] bg-[#FFFFFF] py-1.5 pl-9 pr-8 text-sm font-medium text-[#101827] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FFFFFF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:w-auto sm:pr-10",
   filterIcon: "text-[#8A6324]",
-  filterMeta: "mt-1.5 text-[11px] text-[#6B6255] sm:text-xs",
+  filterMeta: "mt-1.5 text-[11px] text-[#64748B] sm:text-xs",
   tableHeaderRow:
-    "border-b border-[rgba(174,182,194,0.18)] bg-[#E3E7EC] text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5B6570]",
+    "border-b border-[rgba(100,116,139,0.18)] bg-[#DCE3EC] text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4B5563]",
   tableHeaderCell:
     "admin-table-cell text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4F4638]",
   tableRow:
-    "cursor-pointer border-b border-[rgba(174,182,194,0.18)] bg-[#F7F8FA] transition-colors hover:bg-[#EDF0F4]",
-  tableRowHover: "hover:bg-[#EDF0F4]",
+    "cursor-pointer border-b border-[rgba(100,116,139,0.18)] bg-[#FFFFFF] transition-colors hover:bg-[#F2F5F8]",
+  tableRowHover: "hover:bg-[#F2F5F8]",
   tableRowSelected:
     "bg-[rgba(201,164,77,0.12)] shadow-[inset_3px_0_0_0_#C9A44D] ring-1 ring-inset ring-[rgba(201,164,77,0.22)]",
   tableCheckbox:
@@ -304,7 +304,7 @@ export const northStarListTokens: NorthStarListPageTokens = {
     "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#E6D092] to-[#D4C4A0] text-xs font-bold text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.16)] shadow-[0_1px_3px_rgba(138,99,36,0.12)]",
   tablePrimaryText: "truncate font-semibold text-[#17130E]",
   tableSecondaryText: "font-medium text-[#4F4638]",
-  tableMutedText: "truncate text-xs text-[#6B6255]",
+  tableMutedText: "truncate text-xs text-[#64748B]",
   tableMetricText: "font-semibold tabular-nums text-[#17130E]",
   tableDateText: "font-medium text-[#4F4638]",
   badgeDeleted:
@@ -323,7 +323,7 @@ export const northStarListTokens: NorthStarListPageTokens = {
   bulkDestructiveAction:
     "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-[rgba(185,28,28,0.35)] bg-[#FEF2F2] px-3 py-2 text-xs font-semibold text-[#991B1B] transition-colors hover:border-[rgba(185,28,28,0.5)] hover:bg-[#FEE2E2] disabled:cursor-not-allowed disabled:opacity-60",
   emptyState:
-    "rounded-xl border border-[rgba(174,182,194,0.18)] bg-[#FFFFFF] px-6 py-8 shadow-[0_4px_16px_rgba(3,7,12,0.06)]",
+    "rounded-xl border border-[rgba(100,116,139,0.18)] bg-[#FFFFFF] px-6 py-8 shadow-[0_4px_16px_rgba(3,7,12,0.08)]",
   emptyStateAction:
     "inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-4 py-2.5 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:-translate-y-px hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] hover:shadow-[0_4px_16px_rgba(138,99,36,0.32)] sm:w-auto sm:min-w-[9rem]",
 };

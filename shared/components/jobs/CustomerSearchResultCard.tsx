@@ -78,7 +78,7 @@ export function CustomerSearchResultCard({
 
       <ChevronRight
         className={`h-4 w-4 shrink-0 ${
-          northStar ? "text-[#8A6324]/50" : "text-slate-300"
+          northStar ? "text-[#8A6324]" : "text-slate-300"
         }`}
       />
     </Link>

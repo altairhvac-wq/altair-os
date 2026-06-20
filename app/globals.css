@@ -312,15 +312,17 @@ a[href] {
   --north-star-text-muted: #6b6255;
   --north-star-text-light: #f3ebdd;
   --north-star-text-light-muted: #c9bfae;
-  --north-star-work-surface: #eef1f4;
-  --north-star-work-band: #e3e7ec;
-  --north-star-work-row: #f7f8fa;
-  --north-star-work-row-hover: #edf0f4;
+  --north-star-work-surface: #e8edf3;
+  --north-star-work-band: #dce3ec;
+  --north-star-work-row: #ffffff;
+  --north-star-work-row-hover: #f2f5f8;
   --north-star-work-input: #ffffff;
-  --north-star-work-border: rgb(174 182 194 / 0.18);
-  --north-star-work-border-strong: rgb(174 182 194 / 0.22);
+  --north-star-work-border: rgb(100 116 139 / 0.18);
+  --north-star-work-border-strong: rgb(148 163 184 / 0.24);
   --north-star-work-text: #101827;
-  --north-star-work-text-secondary: #5b6570;
+  --north-star-work-text-secondary: #4b5563;
+  --north-star-work-text-muted: #64748b;
+  --north-star-work-placeholder: #6b7280;
 }
 
 /* Admin experience — 3-tier surface system (canvas → panel → section/card) */
@@ -687,9 +689,22 @@ a[href] {
   border-radius: 1.25rem;
   border: 1px solid var(--north-star-work-border);
   background-color: var(--north-star-work-surface);
+  color: var(--north-star-work-text);
   box-shadow:
-    0 10px 40px -14px rgb(3 7 12 / 0.22),
-    inset 0 1px 0 rgb(255 255 255 / 0.55);
+    0 12px 44px -14px rgb(3 7 12 / 0.26),
+    inset 0 1px 0 rgb(255 255 255 / 0.62);
+}
+
+.admin-north-star-shell .job-north-star-view-tabs button {
+  color: var(--north-star-work-text-secondary);
+}
+
+.admin-north-star-shell .job-north-star-view-tabs button[aria-pressed="true"] {
+  color: var(--north-star-work-text);
+}
+
+.admin-north-star-shell .job-north-star-view-tabs button:hover:not([aria-pressed="true"]) {
+  color: var(--north-star-work-text);
 }
 
 /* North Star Customers ledger — scoped ownership (customer-north-star-ledger on table wrapper) */
@@ -801,7 +816,7 @@ a[href] {
 }
 
 .admin-north-star-shell .customer-north-star-filter-bar input[type="search"]::placeholder {
-  color: var(--north-star-work-text-secondary);
+  color: var(--north-star-work-placeholder);
 }
 
 .admin-north-star-shell .customer-north-star-filter-bar input[type="search"]:focus,
@@ -849,7 +864,7 @@ a[href] {
 }
 
 .admin-north-star-shell .job-north-star-filter-bar input[type="search"]::placeholder {
-  color: var(--north-star-work-text-secondary);
+  color: var(--north-star-work-placeholder);
 }
 
 .admin-north-star-shell .job-north-star-filter-bar input[type="search"]:focus,
@@ -966,7 +981,7 @@ a[href] {
 }
 
 .admin-north-star-shell .invoice-north-star-filter-bar input[type="search"]::placeholder {
-  color: var(--north-star-work-text-secondary);
+  color: var(--north-star-work-placeholder);
 }
 
 .admin-north-star-shell .invoice-north-star-filter-bar input[type="search"]:focus,
@@ -1076,7 +1091,7 @@ a[href] {
 }
 
 .admin-north-star-shell .estimate-north-star-filter-bar input[type="search"]::placeholder {
-  color: var(--north-star-work-text-secondary);
+  color: var(--north-star-work-placeholder);
 }
 
 .admin-north-star-shell .estimate-north-star-filter-bar input[type="search"]:focus,
@@ -1311,7 +1326,7 @@ a[href] {
 }
 
 .admin-north-star-shell .dispatch-north-star-filter-bar input[type="search"]::placeholder {
-  color: var(--north-star-work-text-secondary);
+  color: var(--north-star-work-placeholder);
 }
 
 .admin-north-star-shell .dispatch-north-star-filter-bar input[type="search"]:focus,
@@ -1757,7 +1772,7 @@ a[href] {
 }
 
 .admin-north-star-shell .expense-north-star-filter-bar input[type="search"]::placeholder {
-  color: var(--north-star-work-text-secondary);
+  color: var(--north-star-work-placeholder);
 }
 
 .admin-north-star-shell .expense-north-star-filter-bar input[type="search"]:focus,
