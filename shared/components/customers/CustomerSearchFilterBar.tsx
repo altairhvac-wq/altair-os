@@ -1,41 +1,36 @@
 import { Filter, Search } from "lucide-react";
 import {
   CUSTOMER_LIFECYCLE_FILTER_OPTIONS,
-  CUSTOMER_STATUS_OPTIONS,
   type CustomerLifecycleState,
-  type CustomerStatus,
 } from "@/shared/types/customer";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 
 type CustomerSearchFilterBarProps = {
   search: string;
-  statusFilter: CustomerStatus | "all";
-  lifecycleFilter: CustomerLifecycleState;
   onSearchChange: (value: string) => void;
-  onStatusFilterChange: (value: CustomerStatus | "all") => void;
-  onLifecycleFilterChange: (value: CustomerLifecycleState) => void;
   resultCount: number;
   northStar?: boolean;
+  showPastLifecycleFilter?: boolean;
+  pastLifecycleFilter?: "archived" | "deleted";
+  onPastLifecycleFilterChange?: (value: "archived" | "deleted") => void;
 };
 
 const filterSelectClass =
   "h-9 w-full min-h-9 appearance-none rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:w-auto sm:pr-10";
 
+const PAST_LIFECYCLE_OPTIONS = CUSTOMER_LIFECYCLE_FILTER_OPTIONS.filter(
+  (option) => option.value !== "active",
+);
+
 export function CustomerSearchFilterBar({
   search,
-  statusFilter,
-  lifecycleFilter,
   onSearchChange,
-  onStatusFilterChange,
-  onLifecycleFilterChange,
   resultCount,
   northStar = false,
+  showPastLifecycleFilter = false,
+  pastLifecycleFilter = "archived",
+  onPastLifecycleFilterChange,
 }: CustomerSearchFilterBarProps) {
-  const hasActiveFilters =
-    search.trim() ||
-    statusFilter !== "all" ||
-    lifecycleFilter !== "active";
-
   const searchInputClass = northStar
     ? lt.searchInput
     : "h-9 w-full min-h-9 rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20";
@@ -65,56 +60,36 @@ export function CustomerSearchFilterBar({
           />
         </div>
 
-        <div className="relative shrink-0">
-          <Filter
-            className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${
-              northStar ? lt.filterIcon : "text-slate-400"
-            }`}
-          />
-          <select
-            value={lifecycleFilter}
-            onChange={(e) =>
-              onLifecycleFilterChange(e.target.value as CustomerLifecycleState)
-            }
-            className={selectClass}
-            aria-label="Filter by lifecycle"
-          >
-            {CUSTOMER_LIFECYCLE_FILTER_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="relative shrink-0">
-          <Filter
-            className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${
-              northStar ? lt.filterIcon : "text-slate-400"
-            }`}
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) =>
-              onStatusFilterChange(e.target.value as CustomerStatus | "all")
-            }
-            className={selectClass}
-            aria-label="Filter by status"
-          >
-            {CUSTOMER_STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {showPastLifecycleFilter ? (
+          <div className="relative shrink-0">
+            <Filter
+              className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${
+                northStar ? lt.filterIcon : "text-slate-400"
+              }`}
+            />
+            <select
+              value={pastLifecycleFilter}
+              onChange={(e) =>
+                onPastLifecycleFilterChange?.(
+                  e.target.value as Exclude<CustomerLifecycleState, "active">,
+                )
+              }
+              className={selectClass}
+              aria-label="Filter past customers"
+            >
+              {PAST_LIFECYCLE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
       </div>
 
-      {hasActiveFilters ? (
-        <p className={northStar ? lt.filterMeta : "mt-1 text-[11px] text-slate-500 sm:text-xs"}>
-          {resultCount} {resultCount === 1 ? "customer" : "customers"}
-        </p>
-      ) : null}
+      <p className={northStar ? lt.filterMeta : "mt-1 text-[11px] text-slate-500 sm:text-xs"}>
+        {resultCount} {resultCount === 1 ? "customer" : "customers"}
+      </p>
     </div>
   );
 }

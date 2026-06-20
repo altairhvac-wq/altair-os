@@ -3,9 +3,9 @@ import { MasterListPageLoadingState } from "@/shared/design-system/shell";
 export function CustomersLoadingState() {
   return (
     <MasterListPageLoadingState
-      showViewTabs={false}
+      showViewTabs
       showSecondaryAction
-      filterControlCount={2}
+      filterControlCount={1}
       tableRowVariant="customer"
     />
   );

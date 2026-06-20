@@ -19,6 +19,7 @@ import {
   type Customer,
 } from "@/shared/types/customer";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import { CustomersMobileCardList } from "./CustomersMobileCardList";
 
 type CustomersTableProps = {
   customers: Customer[];
@@ -61,12 +62,15 @@ export function CustomersTable({
   );
 
   return (
-    <div
-      className={`max-w-full overflow-x-auto${
-        northStar ? " customer-north-star-ledger" : ""
-      }`}
-    >
-      <table className="w-full min-w-[640px] text-left text-sm">
+    <>
+      <CustomersMobileCardList customers={customers} northStar={northStar} />
+
+      <div
+        className={`hidden max-w-full overflow-x-auto md:block${
+          northStar ? " customer-north-star-ledger" : ""
+        }`}
+      >
+        <table className="w-full min-w-[640px] text-left text-sm">
         <thead>
           <tr
             className={
@@ -263,7 +267,8 @@ export function CustomersTable({
             );
           })}
         </tbody>
-      </table>
-    </div>
+        </table>
+      </div>
+    </>
   );
 }

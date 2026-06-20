@@ -23,8 +23,6 @@ import { formatActionError } from "@/shared/lib/operational-errors";
 import {
   type Customer,
   type CustomerFormData,
-  type CustomerLifecycleState,
-  type CustomerStatus,
   validateCustomerFormData,
 } from "@/shared/types/customer";
 import {
@@ -39,10 +37,18 @@ import {
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { CustomerDetailPanel } from "./CustomerDetailPanel";
+import { CustomerQueueTabs } from "./CustomerQueueTabs";
 import { CustomerSearchFilterBar } from "./CustomerSearchFilterBar";
 import { CustomersBulkActionBar } from "./CustomersBulkActionBar";
 import { CustomersEmptyState } from "./CustomersEmptyState";
 import { CustomersTable } from "./CustomersTable";
+import {
+  countCustomersForWorkQueue,
+  filterCustomersForWorkQueue,
+  resolveCustomerBulkLifecycleFilter,
+  resolveDefaultCustomerWorkQueue,
+  type CustomerWorkQueue,
+} from "./customer-work-queues";
 
 type PanelMode = "create" | "empty";
 
@@ -52,26 +58,14 @@ type CustomersPageViewProps = {
   canViewBilling: boolean;
 };
 
-function filterCustomers(
+function filterCustomersBySearch(
   customers: Customer[],
   search: string,
-  statusFilter: CustomerStatus | "all",
-  lifecycleFilter: CustomerLifecycleState,
 ): Customer[] {
   const query = search.trim().toLowerCase();
+  if (!query) return customers;
 
   return customers.filter((customer) => {
-    const matchesLifecycle =
-      getCustomerLifecycleState(customer) === lifecycleFilter;
-
-    if (!matchesLifecycle) return false;
-
-    const matchesStatus =
-      statusFilter === "all" || customer.status === statusFilter;
-
-    if (!matchesStatus) return false;
-    if (!query) return true;
-
     const haystack = [
       customer.name,
       customer.email,
@@ -90,15 +84,15 @@ function filterCustomers(
 export function CustomersPageView({
   initialCustomers,
   canManageCustomers,
-  canViewBilling,
 }: CustomersPageViewProps) {
   const [customers, setCustomers] = useState(initialCustomers);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<CustomerStatus | "all">(
-    "all",
+  const [workQueue, setWorkQueue] = useState<CustomerWorkQueue>(() =>
+    resolveDefaultCustomerWorkQueue(),
   );
-  const [lifecycleFilter, setLifecycleFilter] =
-    useState<CustomerLifecycleState>("active");
+  const [pastLifecycleFilter, setPastLifecycleFilter] = useState<
+    "archived" | "deleted"
+  >("archived");
   const [panelMode, setPanelMode] = useState<PanelMode>("empty");
   const router = useRouter();
   const [createError, setCreateError] = useState<string | null>(null);
@@ -124,9 +118,40 @@ export function CustomersPageView({
     setCustomers(initialCustomers);
   }, [initialCustomers]);
 
+  const queueCounts = useMemo(
+    () =>
+      ({
+        active: countCustomersForWorkQueue(customers, "active"),
+        "needs-info": countCustomersForWorkQueue(customers, "needs-info"),
+        inactive: countCustomersForWorkQueue(customers, "inactive"),
+        past: countCustomersForWorkQueue(customers, "past"),
+      }) satisfies Record<CustomerWorkQueue, number>,
+    [customers],
+  );
+
+  const queueScopedCustomers = useMemo(
+    () => filterCustomersForWorkQueue(customers, workQueue),
+    [customers, workQueue],
+  );
+
+  const lifecycleScopedCustomers = useMemo(() => {
+    if (workQueue !== "past") {
+      return queueScopedCustomers;
+    }
+
+    return queueScopedCustomers.filter(
+      (customer) => getCustomerLifecycleState(customer) === pastLifecycleFilter,
+    );
+  }, [pastLifecycleFilter, queueScopedCustomers, workQueue]);
+
   const filteredCustomers = useMemo(
-    () => filterCustomers(customers, search, statusFilter, lifecycleFilter),
-    [customers, search, statusFilter, lifecycleFilter],
+    () => filterCustomersBySearch(lifecycleScopedCustomers, search),
+    [lifecycleScopedCustomers, search],
+  );
+
+  const bulkLifecycleFilter = resolveCustomerBulkLifecycleFilter(
+    workQueue,
+    pastLifecycleFilter,
   );
 
   const selectionEnabled = canManageCustomers && !search.trim();
@@ -139,8 +164,8 @@ export function CustomersPageView({
     setSelectedIds,
   } = usePageBulkSelection(filteredCustomers, [
     search,
-    statusFilter,
-    lifecycleFilter,
+    workQueue,
+    pastLifecycleFilter,
   ]);
 
   const selectedCustomers = useMemo(
@@ -285,6 +310,12 @@ export function CustomersPageView({
     });
   }
 
+  function handleQueueChange(queue: CustomerWorkQueue) {
+    setWorkQueue(queue);
+    clearSelection();
+    clearBulkActionFeedback();
+  }
+
   function handleNewCustomer() {
     if (!canManageCustomers) {
       return;
@@ -334,6 +365,7 @@ export function CustomersPageView({
   }
 
   const hasNoCustomers = customers.length === 0;
+  const hasNoQueueCustomers = !hasNoCustomers && queueScopedCustomers.length === 0;
   const hasNoResults = !hasNoCustomers && filteredCustomers.length === 0;
   const isCreateOpen = panelMode === "create";
   const northStar = isNorthStarShellEnabled();
@@ -341,8 +373,7 @@ export function CustomersPageView({
   return (
     <MasterListPageLayout
       title="Customers"
-      subtitle="Manage profiles, locations, and service history"
-      eyebrow={northStar ? "Customer directory" : undefined}
+      subtitle="Find customers, update records, and review service history."
       density="compact"
       primaryAction={
         canManageCustomers ? (
@@ -397,7 +428,6 @@ export function CustomersPageView({
       }`}
       headerClassName={northStar ? lt.pageHeader : undefined}
       headerSurfaceVariant={northStar ? "northStar" : "default"}
-      headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
       headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
       headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
@@ -411,61 +441,83 @@ export function CustomersPageView({
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
         ) : null}
 
-        {!hasNoCustomers ? (
-          <CustomerSearchFilterBar
-            search={search}
-            statusFilter={statusFilter}
-            lifecycleFilter={lifecycleFilter}
-            onSearchChange={setSearch}
-            onStatusFilterChange={setStatusFilter}
-            onLifecycleFilterChange={setLifecycleFilter}
-            resultCount={filteredCustomers.length}
-            northStar={northStar}
-          />
-        ) : null}
-
-        <div className={masterListPageScrollRegionClass}>
-          {hasNoCustomers ? (
-            <CustomersEmptyState
-              variant="no-customers"
-              onCreateCustomer={
-                canManageCustomers ? handleNewCustomer : undefined
+        <div
+          className={
+            northStar ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"
+          }
+        >
+          {!hasNoCustomers ? (
+            <div
+              className={
+                northStar
+                  ? lt.viewTabsBand
+                  : "shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4"
               }
-              northStar={northStar}
-            />
-          ) : hasNoResults ? (
-            <CustomersEmptyState variant="no-results" northStar={northStar} />
-          ) : (
-            <CustomersTable
-              customers={filteredCustomers}
-              showRevenueStats={canViewBilling}
-              selectionEnabled={selectionEnabled}
-              selectedIds={selectedIds}
-              onToggleSelection={toggleSelection}
-              onToggleAllVisible={toggleAllVisible}
-              northStar={northStar}
-            />
-          )}
-        </div>
+            >
+              <CustomerQueueTabs
+                activeQueue={workQueue}
+                onQueueChange={handleQueueChange}
+                counts={queueCounts}
+                northStar={northStar}
+              />
+            </div>
+          ) : null}
 
-        {selectionEnabled ? (
-          <CustomersBulkActionBar
-            selectedCount={selectedCustomers.length}
-            lifecycleFilter={lifecycleFilter}
-            isArchiving={isBulkArchiving}
-            isRestoring={isBulkRestoring}
-            isMovingToTrash={isBulkMovingToTrash}
-            isRestoringFromTrash={isBulkRestoringFromTrash}
-            isPermanentlyDeleting={isBulkPermanentlyDeleting}
-            onArchive={handleBulkArchive}
-            onRestore={handleBulkRestore}
-            onMoveToTrash={handleBulkMoveToTrash}
-            onRestoreFromTrash={handleBulkRestoreFromTrash}
-            onPermanentDelete={handleBulkPermanentDelete}
-            onClearSelection={clearSelection}
-            northStar={northStar}
-          />
-        ) : null}
+          {!hasNoCustomers ? (
+            <CustomerSearchFilterBar
+              search={search}
+              onSearchChange={setSearch}
+              resultCount={filteredCustomers.length}
+              northStar={northStar}
+              showPastLifecycleFilter={workQueue === "past"}
+              pastLifecycleFilter={pastLifecycleFilter}
+              onPastLifecycleFilterChange={setPastLifecycleFilter}
+            />
+          ) : null}
+
+          <div className={masterListPageScrollRegionClass}>
+            {hasNoCustomers ? (
+              <CustomersEmptyState
+                variant="no-customers"
+                onCreateCustomer={
+                  canManageCustomers ? handleNewCustomer : undefined
+                }
+                northStar={northStar}
+              />
+            ) : hasNoQueueCustomers || hasNoResults ? (
+              <CustomersEmptyState variant="no-results" northStar={northStar} />
+            ) : (
+              <CustomersTable
+                customers={filteredCustomers}
+                showRevenueStats={false}
+                selectionEnabled={selectionEnabled}
+                selectedIds={selectedIds}
+                onToggleSelection={toggleSelection}
+                onToggleAllVisible={toggleAllVisible}
+                northStar={northStar}
+              />
+            )}
+          </div>
+
+          {selectionEnabled ? (
+            <CustomersBulkActionBar
+              selectedCount={selectedCustomers.length}
+              lifecycleFilter={bulkLifecycleFilter}
+              isArchiving={isBulkArchiving}
+              isRestoring={isBulkRestoring}
+              isMovingToTrash={isBulkMovingToTrash}
+              isRestoringFromTrash={isBulkRestoringFromTrash}
+              isPermanentlyDeleting={isBulkPermanentlyDeleting}
+              onArchive={handleBulkArchive}
+              onRestore={handleBulkRestore}
+              onMoveToTrash={handleBulkMoveToTrash}
+              onRestoreFromTrash={handleBulkRestoreFromTrash}
+              onPermanentDelete={handleBulkPermanentDelete}
+              onClearSelection={clearSelection}
+              northStar={northStar}
+            />
+          ) : null}
+        </div>
       </MasterPageSurface>
 
       <CustomerDetailPanel

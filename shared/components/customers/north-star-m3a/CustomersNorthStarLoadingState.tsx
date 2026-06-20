@@ -49,10 +49,15 @@ function DesktopLoadingSkeleton() {
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
 
           <div className={`${lt.filterBar} shrink-0`}>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className={`${lt.viewTabsBand} border-b-0 px-0 py-0`}>
+              <div className={`${lt.viewTabsControl} !grid w-full grid-cols-4`}>
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton key={index} className="h-8 rounded-lg" />
+                ))}
+              </div>
+            </div>
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
               <Skeleton className="h-9 w-full max-w-md rounded-lg" />
-              <Skeleton className="h-9 w-36 rounded-lg" />
-              <Skeleton className="h-9 w-36 rounded-lg" />
             </div>
           </div>
 
@@ -85,9 +90,9 @@ export function CustomersNorthStarLoadingState() {
       </div>
       <div className="lg:hidden">
         <MasterListPageLoadingState
-          showViewTabs={false}
+          showViewTabs
           showSecondaryAction
-          filterControlCount={2}
+          filterControlCount={1}
           tableRowVariant="customer"
         />
       </div>
