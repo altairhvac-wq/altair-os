@@ -6,8 +6,6 @@ import {
   MasterShellPage,
   masterWorkbenchRowClass,
 } from "@/shared/design-system/shell";
-import { HorizonHero } from "@/shared/design-system/signature";
-import { signatureHeroContentClass } from "@/shared/design-system/shell/tokens";
 import {
   northStarDispatchTokens as dt,
   northStarListTokens as lt,
@@ -37,48 +35,24 @@ function NorthStarSkeleton({
 
 function DispatchHeaderSkeleton() {
   return (
-    <HorizonHero tone="cyan" beamTone="cyan" beamPosition="left" size="compact">
-      <div
-        aria-hidden="true"
-        className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 ${signatureHeroContentClass}`}
-      >
-        <div className="min-w-0 flex-1">
-          <Skeleton className="h-5 w-24" />
-          <Skeleton className="mt-1.5 hidden h-3 w-56 sm:block" />
-        </div>
-        <div className="flex shrink-0 gap-2">
-          <Skeleton className="h-7 w-20 rounded-full" />
-          <Skeleton className="h-7 w-24 rounded-full" />
-        </div>
-      </div>
-    </HorizonHero>
+    <MasterPageHeader
+      density="compact"
+      title="Dispatch"
+      subtitle="Assign technicians and manage today's board."
+    />
   );
 }
 
 function DispatchNorthStarHeaderSkeleton() {
   return (
     <MasterPageHeader
-      eyebrow="Mission control"
       title="Dispatch"
-      subtitle="Today's field operations command board"
+      subtitle="Assign technicians and manage today's board."
       density="compact"
       surfaceVariant="northStar"
       className={`north-star-dispatch-page-header ${lt.pageHeader}`}
-      eyebrowClassName={lt.pageHeaderEyebrow}
       titleClassName={lt.pageHeaderTitle}
       subtitleClassName={lt.pageHeaderSubtitle}
-      secondaryAction={
-        <div className="flex shrink-0 gap-2">
-          <NorthStarSkeleton
-            dark
-            className="h-7 w-20 rounded-full border border-[rgba(201,164,77,0.22)]"
-          />
-          <NorthStarSkeleton
-            dark
-            className="h-7 w-24 rounded-full border border-[rgba(201,164,77,0.22)]"
-          />
-        </div>
-      }
     />
   );
 }
@@ -180,17 +154,8 @@ export function DispatchNorthStarLoadingState() {
         >
           <DispatchNorthStarHeaderSkeleton />
 
-          <div className="flex shrink-0 gap-2 overflow-hidden">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <NorthStarSkeleton
-                key={i}
-                className="h-10 w-28 shrink-0 rounded-xl border border-[rgba(138,99,36,0.12)]"
-              />
-            ))}
-          </div>
-
           <NorthStarSkeleton
-            className="hidden h-12 shrink-0 rounded-xl border border-[rgba(138,99,36,0.12)] lg:block"
+            className="h-12 shrink-0 rounded-xl border border-[rgba(138,99,36,0.12)]"
           />
 
           <DispatchNorthStarBoardSkeleton />
@@ -211,13 +176,7 @@ export function DispatchLoadingState() {
         >
           <DispatchHeaderSkeleton />
 
-          <div className="flex shrink-0 gap-2 overflow-hidden">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-28 shrink-0 rounded-xl" />
-            ))}
-          </div>
-
-          <Skeleton className="hidden h-12 shrink-0 rounded-xl lg:block" />
+          <Skeleton className="h-12 shrink-0 rounded-xl" />
 
           <DispatchBoardSkeleton />
         </MasterContentStack>

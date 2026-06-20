@@ -1,11 +1,9 @@
 "use client";
 
 import { useMemo, useState, useTransition, useCallback, useEffect, useRef } from "react";
-import { BarChart3, SlidersHorizontal, Users } from "lucide-react";
 import { assignJobAction, unassignJobAction } from "@/app/actions/dispatch";
 import {
   filterDispatchJobs,
-  getDispatchSummary,
   hasAssignedJobTechnician,
   type DispatchJob,
   type DispatchJobStatus,
@@ -23,13 +21,6 @@ import { MobileSheet, MobileSheetPanel } from "@/shared/components/ui/mobile-she
 import { DispatchEmptyState } from "./DispatchEmptyState";
 import { DispatchFocusBanner } from "./DispatchFocusBanner";
 import { DispatchSearchFilterBar } from "./DispatchSearchFilterBar";
-import {
-  DispatchSectionActions,
-  type DispatchSection,
-} from "./DispatchSectionActions";
-import { DispatchSectionSheet } from "./DispatchSectionSheet";
-import { DispatchSummaryCards } from "./DispatchSummaryCards";
-import { TechnicianWorkloadCards } from "./TechnicianWorkloadCards";
 import { UnassignedJobsModal } from "./UnassignedJobsModal";
 import {
   MasterContentStack,
@@ -116,7 +107,6 @@ export function DispatchPageView({
     dispatchPageFocus?.initialTechnicianFilter ?? "all",
   );
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
-  const [openSection, setOpenSection] = useState<DispatchSection | null>(null);
   const [showUnassignedModal, setShowUnassignedModal] = useState(false);
   const [assignFeedback, setAssignFeedback] = useState<{
     jobId: string;
@@ -141,8 +131,6 @@ export function DispatchPageView({
     [jobs, technicians, search, statusFilter, technicianFilter],
   );
 
-  const summary = useMemo(() => getDispatchSummary(jobs), [jobs]);
-
   const unassignedJobs = useMemo(
     () => filteredJobs.filter((job) => !job.technicianId),
     [filteredJobs],
@@ -158,7 +146,6 @@ export function DispatchPageView({
     setSelectedJobId(job.id);
     setAssignFeedback(null);
     setShowUnassignedModal(false);
-    setOpenSection(null);
   }, []);
 
   const handleClosePanel = useCallback(() => {
@@ -265,41 +252,12 @@ export function DispatchPageView({
 
   const hasNoJobs = jobs.length === 0;
   const hasNoResults = !hasNoJobs && filteredJobs.length === 0;
-  const filtersActive =
-    search.trim().length > 0 ||
-    statusFilter !== "all" ||
-    technicianFilter !== "all";
-
-  const handleOpenSection = useCallback(
-    (section: DispatchSection) => {
-      setOpenSection((current) => {
-        const isClosing = current === section;
-        if (!isClosing && isBelowLg) {
-          setSelectedJobId(null);
-          setAssignFeedback(null);
-        }
-        return isClosing ? null : section;
-      });
-    },
-    [isBelowLg],
-  );
-
-  const handleCloseSection = useCallback(() => {
-    setOpenSection(null);
-  }, []);
 
   const handleOpenUnassigned = useCallback(() => {
-    setOpenSection(null);
     setShowUnassignedModal(true);
   }, []);
 
   const handleCloseUnassignedModal = useCallback(() => {
-    setShowUnassignedModal(false);
-  }, []);
-
-  const handleTechnicianWorkloadClick = useCallback((technicianId: string) => {
-    setTechnicianFilter(technicianId);
-    setOpenSection(null);
     setShowUnassignedModal(false);
   }, []);
 
@@ -332,102 +290,6 @@ export function DispatchPageView({
   const boardSubtitle =
     dispatchPageFocus?.boardDescription ??
     "Technician lanes with horizontally scrollable job cards";
-
-  const northStarSectionIcon = dt.sectionSheetHeaderIcon;
-
-  const openSectionSheet = useMemo(() => {
-    if (openSection === "summary") {
-      return {
-        titleId: "dispatch-summary-section-title",
-        title: "Today's overview",
-        subtitle: "Status counts for today's dispatch board",
-        icon: <BarChart3 className="h-4 w-4" />,
-        iconClassName: northStar
-          ? northStarSectionIcon
-          : "bg-blue-50 text-blue-600",
-        content: (
-          <DispatchSummaryCards
-            summary={summary}
-            highlightedLabels={dispatchPageFocus?.highlightedSummaryLabels}
-            linkToJobs
-            northStar={northStar}
-          />
-        ),
-      };
-    }
-
-    if (openSection === "workload") {
-      return {
-        titleId: "dispatch-workload-section-title",
-        title: "Technician workload",
-        subtitle: "Assigned jobs per technician today",
-        icon: <Users className="h-4 w-4" />,
-        iconClassName: northStar
-          ? northStarSectionIcon
-          : "bg-slate-100 text-slate-700",
-        content: (
-          <TechnicianWorkloadCards
-            technicians={technicians}
-            jobs={jobs}
-            emphasized={dispatchPageFocus?.emphasizeWorkload}
-            highlightedTechnicianIds={dispatchPageFocus?.overloadedTechnicianIds}
-            activeTechnicianFilterId={
-              technicianFilter !== "all" && technicianFilter !== "unassigned"
-                ? technicianFilter
-                : null
-            }
-            onTechnicianClick={handleTechnicianWorkloadClick}
-            northStar={northStar}
-          />
-        ),
-      };
-    }
-
-    if (openSection === "filters") {
-      return {
-        titleId: "dispatch-filters-section-title",
-        title: "Search & filters",
-        subtitle: "Narrow the board without leaving dispatch",
-        icon: <SlidersHorizontal className="h-4 w-4" />,
-        iconClassName: northStar
-          ? northStarSectionIcon
-          : "bg-cyan-50 text-cyan-700",
-        content: (
-          <DispatchSearchFilterBar
-            search={search}
-            statusFilter={statusFilter}
-            technicianFilter={technicianFilter}
-            technicians={technicians}
-            onSearchChange={setSearch}
-            onStatusFilterChange={setStatusFilter}
-            onTechnicianFilterChange={setTechnicianFilter}
-            resultCount={filteredJobs.length}
-            unassignedCount={unassignedJobs.length}
-            onOpenUnassigned={handleOpenUnassigned}
-            northStar={northStar}
-          />
-        ),
-      };
-    }
-
-    return null;
-  }, [
-    dispatchPageFocus?.emphasizeWorkload,
-    dispatchPageFocus?.highlightedSummaryLabels,
-    dispatchPageFocus?.overloadedTechnicianIds,
-    filteredJobs.length,
-    handleOpenUnassigned,
-    jobs,
-    northStar,
-    openSection,
-    search,
-    statusFilter,
-    summary,
-    technicianFilter,
-    technicians,
-    handleTechnicianWorkloadClick,
-    unassignedJobs.length,
-  ]);
 
   const boardEmphasisClass = dispatchPageFocus?.emphasizeBoard
     ? northStar
@@ -537,12 +399,7 @@ export function DispatchPageView({
           scrollable
           className="min-h-0 min-w-0 max-w-full flex-1 overflow-x-hidden"
         >
-          <DispatchDashboardHeader
-            jobCount={jobs.length}
-            technicianCount={technicians.length}
-            unassignedCount={unassignedJobs.length}
-            northStar={northStar}
-          />
+          <DispatchDashboardHeader northStar={northStar} />
 
           {dispatchPageFocus?.banner ? (
             <DispatchFocusBanner
@@ -553,17 +410,7 @@ export function DispatchPageView({
             />
           ) : null}
 
-          <DispatchSectionActions
-            openSection={openSection}
-            onOpenSection={handleOpenSection}
-            hasJobs={!hasNoJobs}
-            filtersActive={filtersActive}
-            unassignedCount={unassignedJobs.length}
-            dispatchPageFocus={dispatchPageFocus}
-            northStar={northStar}
-          />
-
-          {!hasNoJobs && !isBelowLg ? (
+          {!hasNoJobs ? (
             <DispatchSearchFilterBar
               search={search}
               statusFilter={statusFilter}
@@ -575,7 +422,7 @@ export function DispatchPageView({
               resultCount={filteredJobs.length}
               unassignedCount={unassignedJobs.length}
               onOpenUnassigned={handleOpenUnassigned}
-              compact
+              compact={!isBelowLg}
               northStar={northStar}
             />
           ) : null}
@@ -629,21 +476,6 @@ export function DispatchPageView({
           </div>
         </MasterContentStack>
       </MasterPageCanvas>
-
-      {openSectionSheet ? (
-        <DispatchSectionSheet
-          open
-          onClose={handleCloseSection}
-          titleId={openSectionSheet.titleId}
-          title={openSectionSheet.title}
-          subtitle={openSectionSheet.subtitle}
-          icon={openSectionSheet.icon}
-          iconClassName={openSectionSheet.iconClassName}
-          northStar={northStar}
-        >
-          {openSectionSheet.content}
-        </DispatchSectionSheet>
-      ) : null}
 
       {showUnassignedModal ? (
         <UnassignedJobsModal
