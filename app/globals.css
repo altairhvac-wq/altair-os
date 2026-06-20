@@ -312,6 +312,15 @@ a[href] {
   --north-star-text-muted: #6b6255;
   --north-star-text-light: #f3ebdd;
   --north-star-text-light-muted: #c9bfae;
+  --north-star-work-surface: #eef1f4;
+  --north-star-work-band: #e3e7ec;
+  --north-star-work-row: #f7f8fa;
+  --north-star-work-row-hover: #edf0f4;
+  --north-star-work-input: #ffffff;
+  --north-star-work-border: rgb(174 182 194 / 0.18);
+  --north-star-work-border-strong: rgb(174 182 194 / 0.22);
+  --north-star-work-text: #101827;
+  --north-star-work-text-secondary: #5b6570;
 }
 
 /* Admin experience — 3-tier surface system (canvas → panel → section/card) */
@@ -676,17 +685,17 @@ a[href] {
 
 .admin-north-star-shell .north-star-list-surface {
   border-radius: 1.25rem;
-  border: 1px solid rgb(138 99 36 / 0.12);
-  background-color: var(--north-star-ivory);
+  border: 1px solid var(--north-star-work-border);
+  background-color: var(--north-star-work-surface);
   box-shadow:
-    0 10px 40px -14px rgb(3 7 12 / 0.28),
-    inset 0 1px 0 rgb(255 255 255 / 0.45);
+    0 10px 40px -14px rgb(3 7 12 / 0.22),
+    inset 0 1px 0 rgb(255 255 255 / 0.55);
 }
 
 /* North Star Customers ledger — scoped ownership (customer-north-star-ledger on table wrapper) */
 .admin-north-star-shell .customer-north-star-ledger thead tr {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12) !important;
-  background: #efe4cb !important;
+  border-bottom: 1px solid var(--north-star-work-border) !important;
+  background: var(--north-star-work-band) !important;
 }
 
 .admin-north-star-shell .customer-north-star-ledger thead th {
@@ -695,34 +704,34 @@ a[href] {
   font-weight: 700 !important;
   letter-spacing: 0.14em !important;
   text-transform: uppercase !important;
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
   background: transparent !important;
 }
 
 .admin-north-star-shell .customer-north-star-ledger tbody tr {
-  background-color: #fbf7ef !important;
+  background-color: var(--north-star-work-row) !important;
   transition: background-color 0.15s ease;
 }
 
 .admin-north-star-shell .customer-north-star-ledger tbody tr:hover {
-  background-color: #f3ebdd !important;
+  background-color: var(--north-star-work-row-hover) !important;
 }
 
 .admin-north-star-shell .customer-north-star-ledger tbody tr:nth-child(even) {
-  background-color: #fbf7ef !important;
+  background-color: var(--north-star-work-row) !important;
 }
 
 .admin-north-star-shell .customer-north-star-ledger tbody tr:nth-child(even):hover {
-  background-color: #f3ebdd !important;
+  background-color: var(--north-star-work-row-hover) !important;
 }
 
 .admin-north-star-shell .customer-north-star-ledger tbody td {
-  color: #17130e;
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .customer-north-star-ledger .customer-north-star-location-cell,
 .admin-north-star-shell .customer-north-star-ledger .customer-north-star-date-cell {
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
 }
 
 .admin-north-star-shell .customer-north-star-ledger .customer-north-star-jobs-cell {
@@ -780,25 +789,25 @@ a[href] {
 }
 
 .admin-north-star-shell .customer-north-star-filter-bar {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12);
-  background: #efe4cb;
+  border-bottom: 1px solid var(--north-star-work-border);
+  background: var(--north-star-work-band);
 }
 
 .admin-north-star-shell .customer-north-star-filter-bar input[type="search"],
 .admin-north-star-shell .customer-north-star-filter-bar select {
-  border: 1px solid rgb(138 99 36 / 0.18);
-  background: #fff9ea;
-  color: #17130e;
+  border: 1px solid var(--north-star-work-border-strong);
+  background: var(--north-star-work-input);
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .customer-north-star-filter-bar input[type="search"]::placeholder {
-  color: #6b6255;
+  color: var(--north-star-work-text-secondary);
 }
 
 .admin-north-star-shell .customer-north-star-filter-bar input[type="search"]:focus,
 .admin-north-star-shell .customer-north-star-filter-bar select:focus {
   border-color: #b88a2e;
-  background: #fbf7ef;
+  background: var(--north-star-work-input);
   outline: none;
   box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
 }
@@ -828,25 +837,25 @@ a[href] {
 }
 
 .admin-north-star-shell .job-north-star-filter-bar {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12);
-  background: #efe4cb;
+  border-bottom: 1px solid var(--north-star-work-border);
+  background: var(--north-star-work-band);
 }
 
 .admin-north-star-shell .job-north-star-filter-bar input[type="search"],
 .admin-north-star-shell .job-north-star-filter-bar select {
-  border: 1px solid rgb(138 99 36 / 0.18);
-  background: #fff9ea;
-  color: #17130e;
+  border: 1px solid var(--north-star-work-border-strong);
+  background: var(--north-star-work-input);
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .job-north-star-filter-bar input[type="search"]::placeholder {
-  color: #6b6255;
+  color: var(--north-star-work-text-secondary);
 }
 
 .admin-north-star-shell .job-north-star-filter-bar input[type="search"]:focus,
 .admin-north-star-shell .job-north-star-filter-bar select:focus {
   border-color: #b88a2e;
-  background: #fbf7ef;
+  background: var(--north-star-work-input);
   outline: none;
   box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
 }
@@ -864,8 +873,8 @@ a[href] {
 }
 
 .admin-north-star-shell .job-north-star-ledger thead tr {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12) !important;
-  background: #efe4cb !important;
+  border-bottom: 1px solid var(--north-star-work-border) !important;
+  background: var(--north-star-work-band) !important;
 }
 
 .admin-north-star-shell .job-north-star-ledger thead th {
@@ -874,30 +883,30 @@ a[href] {
   font-weight: 700 !important;
   letter-spacing: 0.14em !important;
   text-transform: uppercase !important;
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
   background: transparent !important;
 }
 
 .admin-north-star-shell .job-north-star-ledger tbody tr {
-  background-color: #fbf7ef !important;
+  background-color: var(--north-star-work-row) !important;
   transition: background-color 0.15s ease;
 }
 
 .admin-north-star-shell .job-north-star-ledger tbody tr:hover {
-  background-color: #f3ebdd !important;
+  background-color: var(--north-star-work-row-hover) !important;
 }
 
 .admin-north-star-shell .job-north-star-ledger tbody td {
-  color: #17130e;
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .job-north-star-ledger .job-north-star-scheduled-cell,
 .admin-north-star-shell .job-north-star-ledger .job-north-star-tech-cell {
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
 }
 
 .admin-north-star-shell .job-north-star-ledger .job-north-star-unassigned {
-  color: #6b6255 !important;
+  color: var(--north-star-work-text-secondary) !important;
 }
 
 .admin-north-star-shell .job-north-star-ledger input[type="checkbox"] {
@@ -912,11 +921,11 @@ a[href] {
 }
 
 .admin-north-star-shell .job-north-star-today-list li {
-  background-color: #fbf7ef;
+  background-color: var(--north-star-work-row);
 }
 
 .admin-north-star-shell .job-north-star-today-list li:hover {
-  background-color: #f3ebdd;
+  background-color: var(--north-star-work-row-hover);
 }
 
 .admin-north-star-shell .job-north-star-today-list .job-north-star-row-selected {
@@ -945,25 +954,25 @@ a[href] {
 }
 
 .admin-north-star-shell .invoice-north-star-filter-bar {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12);
-  background: #efe4cb;
+  border-bottom: 1px solid var(--north-star-work-border);
+  background: var(--north-star-work-band);
 }
 
 .admin-north-star-shell .invoice-north-star-filter-bar input[type="search"],
 .admin-north-star-shell .invoice-north-star-filter-bar select {
-  border: 1px solid rgb(138 99 36 / 0.18);
-  background: #fff9ea;
-  color: #17130e;
+  border: 1px solid var(--north-star-work-border-strong);
+  background: var(--north-star-work-input);
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .invoice-north-star-filter-bar input[type="search"]::placeholder {
-  color: #6b6255;
+  color: var(--north-star-work-text-secondary);
 }
 
 .admin-north-star-shell .invoice-north-star-filter-bar input[type="search"]:focus,
 .admin-north-star-shell .invoice-north-star-filter-bar select:focus {
   border-color: #b88a2e;
-  background: #fbf7ef;
+  background: var(--north-star-work-input);
   outline: none;
   box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
 }
@@ -973,8 +982,8 @@ a[href] {
 }
 
 .admin-north-star-shell .invoice-north-star-ledger thead tr {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12) !important;
-  background: #efe4cb !important;
+  border-bottom: 1px solid var(--north-star-work-border) !important;
+  background: var(--north-star-work-band) !important;
 }
 
 .admin-north-star-shell .invoice-north-star-ledger thead th {
@@ -983,26 +992,26 @@ a[href] {
   font-weight: 700 !important;
   letter-spacing: 0.14em !important;
   text-transform: uppercase !important;
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
   background: transparent !important;
 }
 
 .admin-north-star-shell .invoice-north-star-ledger tbody tr {
-  background-color: #fbf7ef !important;
+  background-color: var(--north-star-work-row) !important;
   transition: background-color 0.15s ease;
 }
 
 .admin-north-star-shell .invoice-north-star-ledger tbody tr:hover {
-  background-color: #f3ebdd !important;
+  background-color: var(--north-star-work-row-hover) !important;
 }
 
 .admin-north-star-shell .invoice-north-star-ledger tbody td {
-  color: #17130e;
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .invoice-north-star-ledger .invoice-north-star-meta-cell,
 .admin-north-star-shell .invoice-north-star-ledger .invoice-north-star-date-cell {
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
 }
 
 .admin-north-star-shell .invoice-north-star-ledger .invoice-north-star-balance-cell {
@@ -1022,11 +1031,11 @@ a[href] {
 }
 
 .admin-north-star-shell .invoice-north-star-mobile-list li {
-  background-color: #fbf7ef;
+  background-color: var(--north-star-work-row);
 }
 
 .admin-north-star-shell .invoice-north-star-mobile-list li:hover {
-  background-color: #f3ebdd;
+  background-color: var(--north-star-work-row-hover);
 }
 
 .admin-north-star-shell .invoice-north-star-mobile-list .invoice-north-star-row-selected {
@@ -1055,25 +1064,25 @@ a[href] {
 }
 
 .admin-north-star-shell .estimate-north-star-filter-bar {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12);
-  background: #efe4cb;
+  border-bottom: 1px solid var(--north-star-work-border);
+  background: var(--north-star-work-band);
 }
 
 .admin-north-star-shell .estimate-north-star-filter-bar input[type="search"],
 .admin-north-star-shell .estimate-north-star-filter-bar select {
-  border: 1px solid rgb(138 99 36 / 0.18);
-  background: #fff9ea;
-  color: #17130e;
+  border: 1px solid var(--north-star-work-border-strong);
+  background: var(--north-star-work-input);
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .estimate-north-star-filter-bar input[type="search"]::placeholder {
-  color: #6b6255;
+  color: var(--north-star-work-text-secondary);
 }
 
 .admin-north-star-shell .estimate-north-star-filter-bar input[type="search"]:focus,
 .admin-north-star-shell .estimate-north-star-filter-bar select:focus {
   border-color: #b88a2e;
-  background: #fbf7ef;
+  background: var(--north-star-work-input);
   outline: none;
   box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
 }
@@ -1083,8 +1092,8 @@ a[href] {
 }
 
 .admin-north-star-shell .estimate-north-star-ledger thead tr {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12) !important;
-  background: #efe4cb !important;
+  border-bottom: 1px solid var(--north-star-work-border) !important;
+  background: var(--north-star-work-band) !important;
 }
 
 .admin-north-star-shell .estimate-north-star-ledger thead th {
@@ -1093,26 +1102,26 @@ a[href] {
   font-weight: 700 !important;
   letter-spacing: 0.14em !important;
   text-transform: uppercase !important;
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
   background: transparent !important;
 }
 
 .admin-north-star-shell .estimate-north-star-ledger tbody tr {
-  background-color: #fbf7ef !important;
+  background-color: var(--north-star-work-row) !important;
   transition: background-color 0.15s ease;
 }
 
 .admin-north-star-shell .estimate-north-star-ledger tbody tr:hover {
-  background-color: #f3ebdd !important;
+  background-color: var(--north-star-work-row-hover) !important;
 }
 
 .admin-north-star-shell .estimate-north-star-ledger tbody td {
-  color: #17130e;
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .estimate-north-star-ledger .estimate-north-star-meta-cell,
 .admin-north-star-shell .estimate-north-star-ledger .estimate-north-star-date-cell {
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
 }
 
 .admin-north-star-shell .estimate-north-star-ledger input[type="checkbox"] {
@@ -1127,11 +1136,11 @@ a[href] {
 }
 
 .admin-north-star-shell .estimate-north-star-mobile-list li {
-  background-color: #fbf7ef;
+  background-color: var(--north-star-work-row);
 }
 
 .admin-north-star-shell .estimate-north-star-mobile-list li:hover {
-  background-color: #f3ebdd;
+  background-color: var(--north-star-work-row-hover);
 }
 
 .admin-north-star-shell .estimate-north-star-mobile-list .estimate-north-star-row-selected {
@@ -1296,19 +1305,19 @@ a[href] {
 
 .admin-north-star-shell .dispatch-north-star-filter-bar input[type="search"],
 .admin-north-star-shell .dispatch-north-star-filter-bar select {
-  border: 1px solid rgb(138 99 36 / 0.18);
-  background: #fff9ea;
-  color: #17130e;
+  border: 1px solid var(--north-star-work-border-strong);
+  background: var(--north-star-work-input);
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .dispatch-north-star-filter-bar input[type="search"]::placeholder {
-  color: #6b6255;
+  color: var(--north-star-work-text-secondary);
 }
 
 .admin-north-star-shell .dispatch-north-star-filter-bar input[type="search"]:focus,
 .admin-north-star-shell .dispatch-north-star-filter-bar select:focus {
   border-color: #b88a2e;
-  background: #fbf7ef;
+  background: var(--north-star-work-input);
   outline: none;
   box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
 }
@@ -1543,30 +1552,30 @@ a[href] {
 }
 
 .admin-north-star-shell .time-north-star-filter-bar {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12);
-  background: #efe4cb;
+  border-bottom: 1px solid var(--north-star-work-border);
+  background: var(--north-star-work-band);
 }
 
 .admin-north-star-shell .time-north-star-filter-bar select {
-  border: 1px solid rgb(138 99 36 / 0.18);
-  background: #fff9ea;
-  color: #17130e;
+  border: 1px solid var(--north-star-work-border-strong);
+  background: var(--north-star-work-input);
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .time-north-star-filter-bar select:focus {
   border-color: #b88a2e;
-  background: #fbf7ef;
+  background: var(--north-star-work-input);
   outline: none;
   box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
 }
 
 .admin-north-star-shell .time-north-star-active-card {
-  background-color: #fbf7ef;
+  background-color: var(--north-star-work-row);
 }
 
 .admin-north-star-shell .time-north-star-ledger thead tr {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12) !important;
-  background: #efe4cb !important;
+  border-bottom: 1px solid var(--north-star-work-border) !important;
+  background: var(--north-star-work-band) !important;
 }
 
 .admin-north-star-shell .time-north-star-ledger thead th {
@@ -1575,26 +1584,26 @@ a[href] {
   font-weight: 700 !important;
   letter-spacing: 0.14em !important;
   text-transform: uppercase !important;
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
   background: transparent !important;
 }
 
 .admin-north-star-shell .time-north-star-ledger tbody tr.time-north-star-row {
-  background-color: #fbf7ef !important;
-  border-bottom: 1px solid rgb(138 99 36 / 0.1);
+  background-color: var(--north-star-work-row) !important;
+  border-bottom: 1px solid var(--north-star-work-border);
   transition: background-color 0.15s ease;
 }
 
 .admin-north-star-shell .time-north-star-ledger tbody tr.time-north-star-row:hover {
-  background-color: #f3ebdd !important;
+  background-color: var(--north-star-work-row-hover) !important;
 }
 
 .admin-north-star-shell .time-north-star-ledger tbody tr.time-north-star-row:nth-child(even) {
-  background-color: #fff9ea !important;
+  background-color: var(--north-star-work-input) !important;
 }
 
 .admin-north-star-shell .time-north-star-ledger tbody tr.time-north-star-row:nth-child(even):hover {
-  background-color: #f3ebdd !important;
+  background-color: var(--north-star-work-row-hover) !important;
 }
 
 .admin-north-star-shell .time-north-star-ledger tbody tr.time-north-star-row-selected {
@@ -1604,15 +1613,15 @@ a[href] {
 }
 
 .admin-north-star-shell .time-north-star-ledger tbody td {
-  color: #17130e;
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .time-north-star-ledger .time-north-star-meta-cell {
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
 }
 
 .admin-north-star-shell .time-north-star-mobile-list .time-north-star-mobile-entry {
-  background-color: #fbf7ef;
+  background-color: var(--north-star-work-row);
 }
 
 /* North Star Settings (M10) — page header + team ledger scoped ownership */
@@ -1629,8 +1638,8 @@ a[href] {
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger thead tr {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12) !important;
-  background: #efe4cb !important;
+  border-bottom: 1px solid var(--north-star-work-border) !important;
+  background: var(--north-star-work-band) !important;
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger thead th {
@@ -1639,39 +1648,39 @@ a[href] {
   font-weight: 700 !important;
   letter-spacing: 0.12em !important;
   text-transform: uppercase !important;
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
   background: transparent !important;
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger tbody tr {
-  background-color: #fbf7ef !important;
-  border-bottom: 1px solid rgb(138 99 36 / 0.1);
+  background-color: var(--north-star-work-row) !important;
+  border-bottom: 1px solid var(--north-star-work-border);
   transition: background-color 0.15s ease;
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger tbody tr:hover {
-  background-color: #f3ebdd !important;
+  background-color: var(--north-star-work-row-hover) !important;
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger tbody td {
-  color: #17130e;
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger tbody td p.text-slate-900,
 .admin-north-star-shell .settings-north-star-team-ledger tbody td .font-semibold.text-slate-900 {
-  color: #17130e !important;
+  color: var(--north-star-work-text) !important;
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger tbody td p.text-slate-500,
 .admin-north-star-shell .settings-north-star-team-ledger tbody td .text-slate-500,
 .admin-north-star-shell .settings-north-star-team-ledger tbody td .text-slate-600,
 .admin-north-star-shell .settings-north-star-team-ledger tbody td .text-slate-400 {
-  color: #6b6255 !important;
+  color: var(--north-star-work-text-secondary) !important;
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger tbody td .font-medium.text-slate-700,
 .admin-north-star-shell .settings-north-star-team-ledger tbody td .text-slate-700 {
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger .rounded-full.bg-cyan-600 {
@@ -1681,9 +1690,9 @@ a[href] {
 
 .admin-north-star-shell .settings-north-star-team-ledger select,
 .admin-north-star-shell .settings-north-star-team-ledger input {
-  border-color: rgb(138 99 36 / 0.18) !important;
-  background: #fff9ea !important;
-  color: #17130e !important;
+  border-color: var(--north-star-work-border-strong) !important;
+  background: var(--north-star-work-input) !important;
+  color: var(--north-star-work-text) !important;
 }
 
 .admin-north-star-shell .settings-north-star-team-ledger select:focus,
@@ -1715,8 +1724,8 @@ a[href] {
 
 .admin-north-star-shell .settings-north-star-team-mobile > div.rounded-xl,
 .admin-north-star-shell .settings-north-star-team-mobile > div.rounded-lg {
-  border-color: rgb(138 99 36 / 0.12) !important;
-  background: #fff9ea !important;
+  border-color: var(--north-star-work-border) !important;
+  background: var(--north-star-work-input) !important;
 }
 
 .admin-north-star-shell .settings-north-star-team-mobile .rounded-full.bg-cyan-600 {
@@ -1736,25 +1745,25 @@ a[href] {
 }
 
 .admin-north-star-shell .expense-north-star-filter-bar {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12);
-  background: #efe4cb;
+  border-bottom: 1px solid var(--north-star-work-border);
+  background: var(--north-star-work-band);
 }
 
 .admin-north-star-shell .expense-north-star-filter-bar input[type="search"],
 .admin-north-star-shell .expense-north-star-filter-bar select {
-  border: 1px solid rgb(138 99 36 / 0.18);
-  background: #fff9ea;
-  color: #17130e;
+  border: 1px solid var(--north-star-work-border-strong);
+  background: var(--north-star-work-input);
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .expense-north-star-filter-bar input[type="search"]::placeholder {
-  color: #6b6255;
+  color: var(--north-star-work-text-secondary);
 }
 
 .admin-north-star-shell .expense-north-star-filter-bar input[type="search"]:focus,
 .admin-north-star-shell .expense-north-star-filter-bar select:focus {
   border-color: #b88a2e;
-  background: #fbf7ef;
+  background: var(--north-star-work-input);
   outline: none;
   box-shadow: 0 0 0 2px rgb(201 164 77 / 0.22);
 }
@@ -1764,12 +1773,12 @@ a[href] {
 }
 
 .admin-north-star-shell .expense-north-star-filter-bar .expense-north-star-result-meta {
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
 }
 
 .admin-north-star-shell .expense-north-star-ledger thead tr {
-  border-bottom: 1px solid rgb(138 99 36 / 0.12) !important;
-  background: #efe4cb !important;
+  border-bottom: 1px solid var(--north-star-work-border) !important;
+  background: var(--north-star-work-band) !important;
 }
 
 .admin-north-star-shell .expense-north-star-ledger thead th {
@@ -1778,25 +1787,25 @@ a[href] {
   font-weight: 700 !important;
   letter-spacing: 0.14em !important;
   text-transform: uppercase !important;
-  color: #5a4a32 !important;
+  color: var(--north-star-work-text-secondary) !important;
   background: transparent !important;
 }
 
 .admin-north-star-shell .expense-north-star-ledger tbody tr {
-  background-color: #fbf7ef !important;
+  background-color: var(--north-star-work-row) !important;
   transition: background-color 0.15s ease;
 }
 
 .admin-north-star-shell .expense-north-star-ledger tbody tr:hover {
-  background-color: #f3ebdd !important;
+  background-color: var(--north-star-work-row-hover) !important;
 }
 
 .admin-north-star-shell .expense-north-star-ledger tbody td {
-  color: #17130e;
+  color: var(--north-star-work-text);
 }
 
 .admin-north-star-shell .expense-north-star-ledger .expense-north-star-meta-cell {
-  color: #4f4638 !important;
+  color: var(--north-star-work-text-secondary) !important;
 }
 
 .admin-north-star-shell .expense-north-star-ledger input[type="checkbox"] {
