@@ -59,6 +59,39 @@ export function getTrustedCompanyIds(partners: NetworkPartner[]): Set<string> {
   );
 }
 
+function getNetworkPartnerDedupeKey(partner: NetworkPartner): string {
+  return partner.linkedCompanyId ?? partner.id;
+}
+
+/** Upsert an active linked partner without duplicating by linked company or id. */
+export function upsertActiveNetworkPartner(
+  partners: NetworkPartner[],
+  partner: NetworkPartner,
+): NetworkPartner[] {
+  const dedupeKey = getNetworkPartnerDedupeKey(partner);
+  const next = partners.filter(
+    (existing) => getNetworkPartnerDedupeKey(existing) !== dedupeKey,
+  );
+
+  if (partner.relationshipStatus !== "active" || !partner.linkedCompanyId) {
+    return next;
+  }
+
+  return [...next, partner].sort((left, right) =>
+    left.partnerCompanyName.localeCompare(right.partnerCompanyName),
+  );
+}
+
+/** Remove a linked partner from local My Network state after a successful remove. */
+export function removeNetworkPartnerByLinkedCompanyId(
+  partners: NetworkPartner[],
+  linkedCompanyId: string,
+): NetworkPartner[] {
+  return partners.filter(
+    (partner) => partner.linkedCompanyId !== linkedCompanyId,
+  );
+}
+
 export const MY_NETWORK_EMPTY_MESSAGE =
   "Add trusted companies to your network so you can quickly send referrals and track partner relationships.";
 

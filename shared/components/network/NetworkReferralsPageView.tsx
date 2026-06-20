@@ -32,6 +32,8 @@ import {
   enrichMyNetworkPartners,
   getTrustedCompanyIds,
   MY_NETWORK_EMPTY_MESSAGE,
+  removeNetworkPartnerByLinkedCompanyId,
+  upsertActiveNetworkPartner,
   type DirectoryFilter,
   type MyNetworkPartner,
   type NetworkPartner,
@@ -170,26 +172,33 @@ function NetworkReferralsPageLegacyView({
     useState<NetworkActionTarget | null>(null);
   const [isVisibilityPending, startVisibilityTransition] = useTransition();
   const [isNetworkActionPending, startNetworkActionTransition] = useTransition();
+  const [myNetworkPartners, setMyNetworkPartners] = useState(
+    initialMyNetworkPartners,
+  );
+
+  useEffect(() => {
+    setMyNetworkPartners(initialMyNetworkPartners);
+  }, [initialMyNetworkPartners]);
 
   const trustedCompanyIds = useMemo(
-    () => getTrustedCompanyIds(initialMyNetworkPartners),
-    [initialMyNetworkPartners],
+    () => getTrustedCompanyIds(myNetworkPartners),
+    [myNetworkPartners],
   );
 
   const myNetworkEntries = useMemo(
-    () => enrichMyNetworkPartners(initialMyNetworkPartners, profiles),
-    [initialMyNetworkPartners, profiles],
+    () => enrichMyNetworkPartners(myNetworkPartners, profiles),
+    [myNetworkPartners, profiles],
   );
 
   const partnerByCompanyId = useMemo(() => {
     const map = new Map<string, NetworkPartner>();
-    for (const partner of initialMyNetworkPartners) {
+    for (const partner of myNetworkPartners) {
       if (partner.linkedCompanyId) {
         map.set(partner.linkedCompanyId, partner);
       }
     }
     return map;
-  }, [initialMyNetworkPartners]);
+  }, [myNetworkPartners]);
 
   const selectedProfile =
     profiles.find((profile) => profile.id === selectedProfileId) ?? null;
@@ -327,10 +336,22 @@ function NetworkReferralsPageLegacyView({
     });
   }
 
+  function setNetworkActionErrorForTarget(
+    message: string,
+    profileId?: string,
+    linkedCompanyId?: string,
+  ) {
+    setNetworkActionError(message);
+    setNetworkActionErrorProfileId(profileId ?? linkedCompanyId ?? null);
+  }
+
   function handleAddToNetwork(linkedCompanyId: string, profileId?: string) {
     if (!canManageNetwork) {
-      setNetworkActionError(NETWORK_PARTNER_MANAGER_MESSAGE);
-      setNetworkActionErrorProfileId(profileId ?? linkedCompanyId);
+      setNetworkActionErrorForTarget(
+        NETWORK_PARTNER_MANAGER_MESSAGE,
+        profileId,
+        linkedCompanyId,
+      );
       return;
     }
 
@@ -339,10 +360,14 @@ function NetworkReferralsPageLegacyView({
     startNetworkActionTransition(async () => {
       const result = await addToMyNetworkAction(linkedCompanyId);
       if (result.error) {
-        setNetworkActionError(result.error);
-        setNetworkActionErrorProfileId(profileId ?? linkedCompanyId);
+        setNetworkActionErrorForTarget(result.error, profileId, linkedCompanyId);
         setNetworkActionTarget(null);
         return;
+      }
+      if (result.partner) {
+        setMyNetworkPartners((current) =>
+          upsertActiveNetworkPartner(current, result.partner!),
+        );
       }
       if (profileId) {
         setSelectedProfileId(profileId);
@@ -355,10 +380,11 @@ function NetworkReferralsPageLegacyView({
 
   function handleRemoveFromNetwork(linkedCompanyId: string, profileId?: string) {
     if (!canManageNetwork) {
-      setNetworkActionError(NETWORK_PARTNER_MANAGER_MESSAGE);
-      if (profileId) {
-        setNetworkActionErrorProfileId(profileId);
-      }
+      setNetworkActionErrorForTarget(
+        NETWORK_PARTNER_MANAGER_MESSAGE,
+        profileId ?? selectedProfileId ?? undefined,
+        linkedCompanyId,
+      );
       return;
     }
 
@@ -367,15 +393,17 @@ function NetworkReferralsPageLegacyView({
     startNetworkActionTransition(async () => {
       const result = await removeFromMyNetworkAction(linkedCompanyId);
       if (result.error) {
-        setNetworkActionError(result.error);
-        if (profileId) {
-          setNetworkActionErrorProfileId(profileId);
-        } else if (selectedProfileId) {
-          setNetworkActionErrorProfileId(selectedProfileId);
-        }
+        setNetworkActionErrorForTarget(
+          result.error,
+          profileId ?? selectedProfileId ?? undefined,
+          linkedCompanyId,
+        );
         setNetworkActionTarget(null);
         return;
       }
+      setMyNetworkPartners((current) =>
+        removeNetworkPartnerByLinkedCompanyId(current, linkedCompanyId),
+      );
       router.refresh();
       setNetworkActionTarget(null);
     });
@@ -397,7 +425,17 @@ function NetworkReferralsPageLegacyView({
   }
 
   function getNetworkActionErrorForProfile(profileId: string): string | null {
-    return networkActionErrorProfileId === profileId ? networkActionError : null;
+    if (!networkActionError || !networkActionErrorProfileId) {
+      return null;
+    }
+    if (networkActionErrorProfileId === profileId) {
+      return networkActionError;
+    }
+    const profile = profiles.find((item) => item.id === profileId);
+    if (profile && networkActionErrorProfileId === profile.companyId) {
+      return networkActionError;
+    }
+    return null;
   }
 
   function renderMyNetworkCard(partner: MyNetworkPartner) {
