@@ -19,48 +19,30 @@ export function SettingsLoadingState() {
         <MasterContentStack density="compact">
           <MasterPageHeader
             title="Settings"
-            subtitle="Workspace, team, and document defaults"
+            subtitle="Configure your company, team, billing defaults, and system preferences."
             density="compact"
-            secondaryAction={
-              <Skeleton className="hidden h-4 w-48 sm:block" />
-            }
           />
 
           <MasterPageSection
             title="Company"
-            description="Profile, locale, and workspace status"
+            description="Company name, locale, and contact information"
             density="compact"
           >
-            <MasterPageSurface variant="card" className="min-w-0 p-3 md:hidden">
-              <Skeleton className="h-3 w-28" />
-              <div className="mt-3 space-y-2">
-                {Array.from({ length: 4 }).map((_, index) => (
+            <MasterPageSurface variant="card" className="min-w-0 p-3 sm:p-4">
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, index) => (
                   <div key={index} className="flex items-center justify-between gap-3">
                     <Skeleton className="h-3 w-16" />
-                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-32" />
                   </div>
                 ))}
               </div>
             </MasterPageSurface>
-
-            <div className="hidden min-w-0 gap-2.5 md:grid md:grid-cols-2 md:gap-3 xl:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <MasterPageSurface
-                  key={index}
-                  variant="card"
-                  className="min-w-0 p-3 sm:p-3.5"
-                >
-                  <Skeleton className="h-3 w-20" />
-                  <Skeleton className="mt-3 h-6 w-32" />
-                  <Skeleton className="mt-2 h-4 w-24" />
-                </MasterPageSurface>
-              ))}
-            </div>
           </MasterPageSection>
 
           <MasterPageSection
             title="Team"
-            description="Members, invitations, and workspace access"
+            description="Members, invitations, roles, and reporting lines"
             density="compact"
           >
             <Skeleton className="h-20 rounded-xl" />
@@ -102,7 +84,7 @@ export function SettingsLoadingState() {
           </MasterPageSection>
 
           <MasterPageSection
-            title="Documents & Billing Defaults"
+            title="Billing defaults"
             description="Defaults for new estimates and invoices"
             density="compact"
           >
@@ -126,21 +108,13 @@ export function SettingsLoadingState() {
           </MasterPageSection>
 
           <MasterPageSection
-            title="Setup & Tools"
-            description="Onboarding, demo data, and diagnostics"
+            title="Integrations"
+            description="Connect external tools and services"
             density="compact"
           >
-            <div className="grid min-w-0 gap-2.5 sm:gap-3 lg:grid-cols-2 lg:items-start">
-              <Skeleton className="h-44 rounded-xl" />
-              <Skeleton className="h-44 rounded-xl" />
-            </div>
-            <Skeleton className="h-16 rounded-xl sm:max-w-xl" />
-          </MasterPageSection>
-
-          <MasterPageSection title="Coming soon" density="compact">
             <Skeleton className="h-10 rounded-xl md:hidden" />
-            <div className="hidden min-w-0 gap-2.5 md:grid md:grid-cols-2 md:gap-3 lg:grid-cols-3">
-              {Array.from({ length: 4 }).map((_, index) => (
+            <div className="hidden min-w-0 gap-2.5 md:grid md:grid-cols-2 md:gap-3">
+              {Array.from({ length: 2 }).map((_, index) => (
                 <MasterPageSurface
                   key={index}
                   variant="card"
@@ -151,6 +125,15 @@ export function SettingsLoadingState() {
                 </MasterPageSurface>
               ))}
             </div>
+          </MasterPageSection>
+
+          <MasterPageSection
+            title="System"
+            description="Diagnostics and workspace preferences"
+            density="compact"
+          >
+            <Skeleton className="h-16 rounded-xl sm:max-w-xl" />
+            <Skeleton className="mt-3 h-10 rounded-xl md:hidden" />
           </MasterPageSection>
         </MasterContentStack>
       </MasterPageCanvas>

@@ -43,6 +43,20 @@ type CollapsibleNotesFieldProps = {
   northStar?: boolean;
 };
 
+function buildBillingSummaryRows(values: CompanyBillingDefaultsInput) {
+  return [
+    { label: "Default tax rate", value: `${values.defaultTaxRate}%` },
+    {
+      label: "Invoice payment terms",
+      value: `${values.defaultPaymentTermsDays} days`,
+    },
+    {
+      label: "Estimate validity",
+      value: `${values.defaultEstimateExpirationDays} days`,
+    },
+  ];
+}
+
 function CollapsibleNotesField({
   id,
   label,
@@ -145,6 +159,7 @@ export function BillingDocumentDefaultsCard({
     companyBillingDefaultsToFormValues(initialDefaults),
   );
   const [feedback, setFeedback] = useState<FeedbackState>(null);
+  const [mobileFormExpanded, setMobileFormExpanded] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function updateField<K extends keyof CompanyBillingDefaultsInput>(
@@ -185,6 +200,22 @@ export function BillingDocumentDefaultsCard({
   const inputClass = northStar ? st.formInput : legacyInputClass;
   const textareaClass = northStar ? st.formTextarea : legacyTextareaClass;
   const labelClass = northStar ? st.formLabel : legacyLabelClass;
+  const billingSummaryRows = buildBillingSummaryRows(formValues);
+  const mobileExpandButtonClass = northStar
+    ? "flex min-h-9 w-full items-center justify-center rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD]"
+    : "flex min-h-9 w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50";
+  const mobileCollapseButtonClass = northStar
+    ? "text-xs font-medium text-[#6B6255] hover:text-[#4F4638]"
+    : "text-xs font-medium text-slate-500 hover:text-slate-700";
+  const mobileSummaryCellClass = northStar
+    ? "min-w-0 rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FFF9EA] px-2 py-1.5"
+    : "min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5";
+  const mobileSummaryLabelClass = northStar
+    ? "text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6B6255]"
+    : "text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500";
+  const mobileSummaryValueClass = northStar
+    ? "mt-0.5 truncate text-xs font-semibold text-[#17130E]"
+    : "mt-0.5 truncate text-xs font-semibold text-slate-900";
 
   return (
     <div
@@ -239,9 +270,49 @@ export function BillingDocumentDefaultsCard({
         </div>
       </div>
 
+      <div className="mt-2.5 md:hidden">
+        {!mobileFormExpanded ? (
+          <div className="space-y-2">
+            <div className="grid grid-cols-3 gap-1.5">
+              {billingSummaryRows.map((row) => (
+                <div key={row.label} className={mobileSummaryCellClass}>
+                  <p className={mobileSummaryLabelClass}>{row.label}</p>
+                  <p className={mobileSummaryValueClass}>{row.value}</p>
+                </div>
+              ))}
+            </div>
+            {canManage ? (
+              <button
+                type="button"
+                onClick={() => setMobileFormExpanded(true)}
+                className={mobileExpandButtonClass}
+              >
+                Edit billing defaults
+              </button>
+            ) : (
+              <p className={northStar ? "text-xs text-[#6B6255]" : "text-xs text-slate-500"}>
+                Billing defaults can only be changed by owner and admin roles.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setMobileFormExpanded(false)}
+              className={mobileCollapseButtonClass}
+            >
+              Collapse
+            </button>
+          </div>
+        )}
+      </div>
+
       <form
         onSubmit={handleSubmit}
-        className="mt-2.5 min-w-0 space-y-2.5 sm:mt-4 sm:space-y-3"
+        className={`min-w-0 space-y-2.5 sm:space-y-3 ${
+          mobileFormExpanded ? "mt-2.5 block" : "hidden md:block"
+        } sm:mt-4`}
         aria-label="Billing document defaults"
         aria-busy={isPending}
       >

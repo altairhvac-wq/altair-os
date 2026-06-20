@@ -6,16 +6,13 @@ import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { SettingsNorthStarView } from "@/shared/components/settings/north-star-m10";
 import {
   Bell,
-  Building2,
   CreditCard,
   GitBranch,
   Plug,
   Settings2,
   ShieldCheck,
   UserPlus,
-  Users,
 } from "lucide-react";
-import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import { getInvitableTeamRoles } from "@/lib/database/services/member-role-guard";
 import type { PendingTeamInvite } from "@/lib/database/queries/memberships";
 import {
@@ -24,9 +21,6 @@ import {
   type TeamMember,
 } from "@/shared/types/team-member";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
-import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
-import { DemoDataSection } from "@/shared/components/onboarding/DemoDataSection";
-import { shouldShowOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { CompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
 import { BillingDocumentDefaultsCard } from "./BillingDocumentDefaultsCard";
@@ -90,12 +84,9 @@ function SettingsPageLegacyView({
   canManageTeam,
   showSystemCheckLink = false,
   membersLoadError,
-  onboardingChecklist,
   billingDefaults,
   canManageBillingDefaults,
   showBillingDefaultsSetupHint = false,
-  demoDataStatus,
-  demoDataLoadError,
   pendingInvites = [],
 }: SettingsPageViewProps) {
   const [members, setMembers] = useState(initialMembers);
@@ -162,52 +153,32 @@ function SettingsPageLegacyView({
   }
 
   const location = buildLocationLabel(companyProfile);
-  const contactLine = [companyProfile.email, companyProfile.phone]
-    .filter(Boolean)
-    .join(" · ");
-  const hasContactInfo = Boolean(contactLine);
 
-  const summaryCards = [
-    {
-      label: "Workspace",
-      value: companyProfile.name,
-      description: formatCompanyStatus(companyProfile.status),
-      icon: Building2,
-      iconClass: "text-cyan-600 bg-cyan-50",
-    },
-    {
-      label: "Role",
-      value: COMPANY_ROLE_LABELS[companyProfile.currentUserRole],
-      description: "Current workspace access",
-      icon: Settings2,
-      iconClass: "text-violet-600 bg-violet-50",
-    },
-    {
-      label: "Team",
-      value:
-        companyProfile.memberCount === 1
-          ? "1 member"
-          : `${companyProfile.memberCount} members`,
-      description: "Active and invited members",
-      icon: Users,
-      iconClass: "text-emerald-600 bg-emerald-50",
-    },
-    {
-      label: "Timezone",
-      value: companyProfile.timezone,
-      description: location ?? "Company locale",
-      icon: Building2,
-      iconClass: "text-amber-600 bg-amber-50",
-    },
+  const companyFields = [
+    { label: "Company", value: companyProfile.name },
+    { label: "Status", value: formatCompanyStatus(companyProfile.status) },
+    { label: "Timezone", value: companyProfile.timezone },
+    ...(location ? [{ label: "Location", value: location }] : []),
+    ...(companyProfile.email
+      ? [{ label: "Email", value: companyProfile.email }]
+      : []),
+    ...(companyProfile.phone
+      ? [{ label: "Phone", value: companyProfile.phone }]
+      : []),
   ];
+  const primaryCompanyFields = companyFields.slice(0, 3);
+  const extraCompanyFields = companyFields.slice(3);
 
-  const comingSoonItems = [
+  const billingComingSoonItems = [
     {
       title: "Billing",
       description:
         "Subscription plans, payment methods, and invoice history.",
       icon: CreditCard,
     },
+  ];
+
+  const integrationItems = [
     {
       title: "Integrations",
       description: "Connect accounting, payroll, and field service tools.",
@@ -218,6 +189,9 @@ function SettingsPageLegacyView({
       description: "Configure alerts for jobs, billing, and team activity.",
       icon: Bell,
     },
+  ];
+
+  const systemComingSoonItems = [
     {
       title: "Company Preferences",
       description: "Company profile, branding, and operational configuration.",
@@ -225,45 +199,62 @@ function SettingsPageLegacyView({
     },
   ];
 
-  const showOnboarding =
-    onboardingChecklist &&
-    shouldShowOnboardingChecklist(onboardingChecklist);
-  const showDemoData = Boolean(demoDataStatus);
-  const showDemoDataLoadError = Boolean(demoDataLoadError);
-  const showSetupSection =
-    showOnboarding || showDemoData || showDemoDataLoadError || showSystemCheckLink;
-
   return (
     <MasterShellPage density="compact">
       <MasterPageCanvas width="standard">
         <MasterContentStack density="compact">
           <MasterPageHeader
             title="Settings"
-            subtitle="Workspace, team, and document defaults"
+            subtitle="Configure your company, team, billing defaults, and system preferences."
             density="compact"
-            secondaryAction={
-              hasContactInfo ? (
-                <p className="min-w-0 hidden break-words text-xs text-slate-500 sm:block sm:max-w-xs sm:text-right">
-                  {contactLine}
-                </p>
-              ) : undefined
-            }
           />
 
           <MasterPageSection
             title="Company"
-            description="Profile, locale, and workspace status"
+            description="Company name, locale, and contact information"
             density="compact"
           >
-            <MasterPageSurface variant="card" className="min-w-0 p-3 md:hidden">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                Company Summary
-              </p>
-              <dl className="mt-1.5 divide-y divide-slate-100">
-                {summaryCards.map((row) => (
+            <MasterPageSurface variant="card" className="min-w-0 p-2.5 sm:p-4">
+              <div className="space-y-1.5 md:hidden">
+                <div className="grid grid-cols-3 gap-1.5">
+                  {primaryCompanyFields.map((row) => (
+                    <div
+                      key={row.label}
+                      className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5"
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                        {row.label}
+                      </p>
+                      <p className="mt-0.5 truncate text-xs font-semibold text-slate-900">
+                        {row.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                {extraCompanyFields.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {extraCompanyFields.map((row) => (
+                      <div
+                        key={row.label}
+                        className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5"
+                      >
+                        <span className="shrink-0 text-[10px] font-medium text-slate-500">
+                          {row.label}
+                        </span>
+                        <span className="min-w-0 truncate text-xs font-medium text-slate-900">
+                          {row.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              <dl className="hidden divide-y divide-slate-100 md:block">
+                {companyFields.map((row) => (
                   <div
                     key={row.label}
-                    className="flex items-baseline justify-between gap-3 py-1.5 first:pt-0 last:pb-0"
+                    className="flex items-baseline justify-between gap-3 py-2 first:pt-0 last:pb-0"
                   >
                     <dt className="shrink-0 text-xs text-slate-500">
                       {row.label}
@@ -275,41 +266,12 @@ function SettingsPageLegacyView({
                 ))}
               </dl>
             </MasterPageSurface>
-
-            <div className="hidden min-w-0 gap-2.5 md:grid md:grid-cols-2 md:gap-3 xl:grid-cols-4">
-              {summaryCards.map((card) => (
-                <MasterPageSurface
-                  key={card.label}
-                  variant="card"
-                  className="min-w-0 p-3 sm:p-3.5"
-                >
-                  <div className="flex items-start justify-between gap-2.5">
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                        {card.label}
-                      </p>
-                      <p className="mt-1 truncate text-base font-bold text-slate-900">
-                        {card.value}
-                      </p>
-                      <p className="mt-0.5 text-xs text-slate-600">
-                        {card.description}
-                      </p>
-                    </div>
-                    <div
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${card.iconClass}`}
-                    >
-                      <card.icon className="h-4 w-4" aria-hidden="true" />
-                    </div>
-                  </div>
-                </MasterPageSurface>
-              ))}
-            </div>
           </MasterPageSection>
 
           <MasterPageSection
             id="team"
             title="Team"
-            description="Members, invitations, and workspace access"
+            description="Members, invitations, roles, and reporting lines"
             density="compact"
           >
             <PendingInvitesCard invites={pendingInvites} variant="settings" />
@@ -442,7 +404,7 @@ function SettingsPageLegacyView({
 
           <MasterPageSection
             id="billing-defaults"
-            title="Documents & Billing Defaults"
+            title="Billing defaults"
             description="Defaults for new estimates and invoices"
             density="compact"
           >
@@ -451,74 +413,55 @@ function SettingsPageLegacyView({
               canManage={canManageBillingDefaults}
               showSetupHint={showBillingDefaultsSetupHint}
             />
+            <div className="mt-3">
+              <SettingsComingSoonSection items={billingComingSoonItems} />
+            </div>
           </MasterPageSection>
 
-          {showSetupSection ? (
-            <MasterPageSection
-              title="Setup & Tools"
-              description="Onboarding, demo data, and diagnostics"
-              density="compact"
-            >
-          {showOnboarding || showDemoData ? (
-            <div className="grid min-w-0 gap-2.5 sm:gap-3 lg:grid-cols-2 lg:items-start">
-              {showOnboarding ? (
-                <OnboardingChecklistSection
-                  checklist={onboardingChecklist}
-                  companyId={companyProfile.id}
-                  userId={currentUserId}
-                  variant="settings"
-                />
-              ) : null}
+          <MasterPageSection
+            title="Integrations"
+            description="Connect external tools and services"
+            density="compact"
+          >
+            <SettingsComingSoonSection items={integrationItems} />
+          </MasterPageSection>
 
-              {showDemoData && demoDataStatus ? (
-                <DemoDataSection
-                  companyId={companyProfile.id}
-                  status={demoDataStatus}
-                  variant="settings"
-                />
-              ) : null}
+          <MasterPageSection
+            title="System"
+            description="Diagnostics and workspace preferences"
+            density="compact"
+          >
+            {showSystemCheckLink ? (
+              <Link
+                href="/settings/system-check"
+                className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 transition-colors hover:border-cyan-200 hover:bg-cyan-50/30 sm:max-w-xl sm:rounded-xl sm:border-cyan-200 sm:p-4"
+              >
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <ShieldCheck
+                    className="h-4 w-4 shrink-0 text-cyan-600 sm:hidden"
+                    aria-hidden="true"
+                  />
+                  <div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600 sm:flex">
+                    <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-semibold text-slate-900">
+                      System Check
+                    </h3>
+                    <p className="hidden text-xs leading-snug text-slate-600 sm:mt-0.5 sm:block sm:text-sm">
+                      Read-only production readiness checks for the internal
+                      alpha.
+                    </p>
+                  </div>
+                </div>
+                <span className="shrink-0 text-[10px] font-medium uppercase tracking-wide text-cyan-700">
+                  Owner only
+                </span>
+              </Link>
+            ) : null}
+            <div className={showSystemCheckLink ? "mt-3" : undefined}>
+              <SettingsComingSoonSection items={systemComingSoonItems} />
             </div>
-          ) : null}
-
-          {demoDataLoadError ? (
-            <SettingsAlertBanner tone="warning">
-              {demoDataLoadError}
-            </SettingsAlertBanner>
-          ) : null}
-
-          {showSystemCheckLink ? (
-            <Link
-              href="/settings/system-check"
-              className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 transition-colors hover:border-cyan-200 hover:bg-cyan-50/30 sm:max-w-xl sm:rounded-xl sm:border-cyan-200 sm:p-4"
-            >
-              <div className="flex min-w-0 items-center gap-2.5">
-                <ShieldCheck
-                  className="h-4 w-4 shrink-0 text-cyan-600 sm:hidden"
-                  aria-hidden="true"
-                />
-                <div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600 sm:flex">
-                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-sm font-semibold text-slate-900">
-                    System Check
-                  </h3>
-                  <p className="hidden text-xs leading-snug text-slate-600 sm:mt-0.5 sm:block sm:text-sm">
-                    Read-only production readiness checks for the internal
-                    alpha.
-                  </p>
-                </div>
-              </div>
-              <span className="shrink-0 text-[10px] font-medium uppercase tracking-wide text-cyan-700">
-                Owner only
-              </span>
-            </Link>
-          ) : null}
-            </MasterPageSection>
-          ) : null}
-
-          <MasterPageSection title="Coming soon" density="compact">
-            <SettingsComingSoonSection items={comingSoonItems} />
           </MasterPageSection>
 
           {isBetaBugReportEnabled() ? (

@@ -4,16 +4,13 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   Bell,
-  Building2,
   CreditCard,
   GitBranch,
   Plug,
   Settings2,
   ShieldCheck,
   UserPlus,
-  Users,
 } from "lucide-react";
-import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import { getInvitableTeamRoles } from "@/lib/database/services/member-role-guard";
 import type { PendingTeamInvite } from "@/lib/database/queries/memberships";
 import {
@@ -22,9 +19,6 @@ import {
   type TeamMember,
 } from "@/shared/types/team-member";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
-import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
-import { DemoDataSection } from "@/shared/components/onboarding/DemoDataSection";
-import { shouldShowOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { CompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
 import { BillingDocumentDefaultsCard } from "../BillingDocumentDefaultsCard";
@@ -105,12 +99,9 @@ export function SettingsNorthStarView({
   canManageTeam,
   showSystemCheckLink = false,
   membersLoadError,
-  onboardingChecklist,
   billingDefaults,
   canManageBillingDefaults,
   showBillingDefaultsSetupHint = false,
-  demoDataStatus,
-  demoDataLoadError,
   pendingInvites = [],
 }: SettingsNorthStarViewProps) {
   const [members, setMembers] = useState(initialMembers);
@@ -177,47 +168,32 @@ export function SettingsNorthStarView({
   }
 
   const location = buildLocationLabel(companyProfile);
-  const contactLine = [companyProfile.email, companyProfile.phone]
-    .filter(Boolean)
-    .join(" · ");
 
-  const summaryCards = [
-    {
-      label: "Workspace",
-      value: companyProfile.name,
-      description: formatCompanyStatus(companyProfile.status),
-      icon: Building2,
-    },
-    {
-      label: "Your role",
-      value: COMPANY_ROLE_LABELS[companyProfile.currentUserRole],
-      description: "Current workspace access",
-      icon: Settings2,
-    },
-    {
-      label: "Team",
-      value:
-        companyProfile.memberCount === 1
-          ? "1 member"
-          : `${companyProfile.memberCount} members`,
-      description: "Active and invited members",
-      icon: Users,
-    },
-    {
-      label: "Timezone",
-      value: companyProfile.timezone,
-      description: location ?? "Company locale",
-      icon: Building2,
-    },
+  const companyFields = [
+    { label: "Company", value: companyProfile.name },
+    { label: "Status", value: formatCompanyStatus(companyProfile.status) },
+    { label: "Timezone", value: companyProfile.timezone },
+    ...(location ? [{ label: "Location", value: location }] : []),
+    ...(companyProfile.email
+      ? [{ label: "Email", value: companyProfile.email }]
+      : []),
+    ...(companyProfile.phone
+      ? [{ label: "Phone", value: companyProfile.phone }]
+      : []),
   ];
+  const primaryCompanyFields = companyFields.slice(0, 3);
+  const extraCompanyFields = companyFields.slice(3);
 
-  const comingSoonItems = [
+  const billingComingSoonItems = [
     {
       title: "Billing",
       description:
         "Subscription plans, payment methods, and invoice history.",
       icon: CreditCard,
     },
+  ];
+
+  const integrationItems = [
     {
       title: "Integrations",
       description: "Connect accounting, payroll, and field service tools.",
@@ -228,6 +204,9 @@ export function SettingsNorthStarView({
       description: "Configure alerts for jobs, billing, and team activity.",
       icon: Bell,
     },
+  ];
+
+  const systemComingSoonItems = [
     {
       title: "Company Preferences",
       description: "Company profile, branding, and operational configuration.",
@@ -235,37 +214,16 @@ export function SettingsNorthStarView({
     },
   ];
 
-  const showOnboarding =
-    onboardingChecklist &&
-    shouldShowOnboardingChecklist(onboardingChecklist);
-  const showDemoData = Boolean(demoDataStatus);
-  const showDemoDataLoadError = Boolean(demoDataLoadError);
-  const showSetupSection =
-    showOnboarding || showDemoData || showDemoDataLoadError || showSystemCheckLink;
-
-  const setupReviewCount =
-    (showOnboarding ? onboardingChecklist!.totalCount - onboardingChecklist!.completedCount : 0) +
-    (showBillingDefaultsSetupHint ? 1 : 0);
-
   return (
     <MasterShellPage density="compact" className={st.pageCanvas}>
       <MasterPageHeader
-        eyebrow="Company control room"
         title="Settings"
-        subtitle="Company configuration, team access, document defaults, and workspace setup."
+        subtitle="Configure your company, team, billing defaults, and system preferences."
         density="compact"
         surfaceVariant="northStar"
         className={`north-star-settings-page-header ${st.pageHeader}`}
-        eyebrowClassName={st.pageHeaderEyebrow}
         titleClassName={st.pageHeaderTitle}
         subtitleClassName={st.pageHeaderSubtitle}
-        secondaryAction={
-          contactLine ? (
-            <p className="min-w-0 hidden max-w-xs break-words text-right text-xs text-[#C8D0DA] sm:block">
-              {contactLine}
-            </p>
-          ) : undefined
-        }
       />
 
       <MasterContentStack
@@ -274,28 +232,53 @@ export function SettingsNorthStarView({
       >
         <section className={st.sectionSurface}>
           <SettingsNorthStarSectionHeader
-            eyebrow="Company profile"
-            title="Workspace overview"
-            description="Profile, locale, and workspace status for your company."
-            status={
-              companyProfile.status === "active" ? (
-                <span className={st.statusChipCurrent}>Active</span>
-              ) : (
-                <span className={st.statusChipReview}>
-                  {formatCompanyStatus(companyProfile.status)}
-                </span>
-              )
-            }
+            eyebrow="Company"
+            title="Company profile"
+            description="Company name, locale, and contact information."
           />
 
-          <div className="px-3 py-3 sm:px-4 sm:py-4 lg:px-5">
-            <div className="min-w-0 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-3 md:hidden">
-              <p className={st.summaryLabel}>Company summary</p>
-              <dl className="mt-1.5 divide-y divide-[rgba(138,99,36,0.10)]">
-                {summaryCards.map((row) => (
+          <div className="px-3 py-2 sm:px-4 sm:py-4 lg:px-5">
+            <div className="min-w-0 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-2.5 sm:p-4">
+              <div className="space-y-1.5 md:hidden">
+                <div className="grid grid-cols-3 gap-1.5">
+                  {primaryCompanyFields.map((row) => (
+                    <div
+                      key={row.label}
+                      className="min-w-0 rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF] px-2 py-1.5"
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6B6255]">
+                        {row.label}
+                      </p>
+                      <p className="mt-0.5 truncate text-xs font-semibold text-[#17130E]">
+                        {row.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                {extraCompanyFields.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {extraCompanyFields.map((row) => (
+                      <div
+                        key={row.label}
+                        className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-2 py-0.5"
+                      >
+                        <span className="shrink-0 text-[10px] font-medium text-[#6B6255]">
+                          {row.label}
+                        </span>
+                        <span className="min-w-0 truncate text-xs font-medium text-[#17130E]">
+                          {row.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              <dl className="hidden divide-y divide-[rgba(138,99,36,0.10)] md:block">
+                {companyFields.map((row) => (
                   <div
                     key={row.label}
-                    className="flex items-baseline justify-between gap-3 py-1.5 first:pt-0 last:pb-0"
+                    className="flex items-baseline justify-between gap-3 py-2 first:pt-0 last:pb-0"
                   >
                     <dt className="shrink-0 text-xs text-[#6B6255]">
                       {row.label}
@@ -307,29 +290,12 @@ export function SettingsNorthStarView({
                 ))}
               </dl>
             </div>
-
-            <div className="hidden min-w-0 gap-2.5 md:grid md:grid-cols-2 md:gap-3 xl:grid-cols-4">
-              {summaryCards.map((card) => (
-                <div key={card.label} className={st.summaryCard}>
-                  <div className="flex items-start justify-between gap-2.5">
-                    <div className="min-w-0">
-                      <p className={st.summaryLabel}>{card.label}</p>
-                      <p className={st.summaryValue}>{card.value}</p>
-                      <p className={st.summaryMeta}>{card.description}</p>
-                    </div>
-                    <div className={st.summaryIconWrap}>
-                      <card.icon className="h-4 w-4" aria-hidden="true" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
 
         <section id="team" className={`${st.sectionSurface} overflow-hidden`}>
           <SettingsNorthStarSectionHeader
-            eyebrow="Team access"
+            eyebrow="Team"
             title="Members & invitations"
             description={
               canManageTeam
@@ -474,103 +440,57 @@ export function SettingsNorthStarView({
 
         <section id="billing-defaults" className={st.sectionSurface}>
           <SettingsNorthStarSectionHeader
-            eyebrow="Documents"
-            title="Billing & document defaults"
+            eyebrow="Billing defaults"
+            title="Document defaults"
             description="Defaults for new estimates and invoices."
-            status={
-              showBillingDefaultsSetupHint ? (
-                <span className={st.statusChipReview}>Review recommended</span>
-              ) : (
-                <span className={st.statusChipCurrent}>Configured</span>
-              )
-            }
           />
-          <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5">
+          <div className="space-y-3 px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5">
             <BillingDocumentDefaultsCard
               initialDefaults={billingDefaults}
               canManage={canManageBillingDefaults}
               showSetupHint={showBillingDefaultsSetupHint}
               northStar
             />
+            <SettingsComingSoonSection items={billingComingSoonItems} northStar />
           </div>
         </section>
 
-        {showSetupSection ? (
-          <section className={st.sectionSurface}>
-            <SettingsNorthStarSectionHeader
-              eyebrow="Setup & diagnostics"
-              title="Workspace setup & tools"
-              description="Onboarding progress, demo data, and read-only system checks."
-              status={
-                setupReviewCount > 0 ? (
-                  <span className={st.statusChipReview}>
-                    {setupReviewCount} item{setupReviewCount === 1 ? "" : "s"} open
-                  </span>
-                ) : (
-                  <span className={st.statusChipCurrent}>On track</span>
-                )
-              }
-            />
-
-            <div className="space-y-3 px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5">
-              {showOnboarding || showDemoData ? (
-                <div className="grid min-w-0 gap-2.5 sm:gap-3 lg:grid-cols-2 lg:items-start">
-                  {showOnboarding ? (
-                    <OnboardingChecklistSection
-                      checklist={onboardingChecklist}
-                      companyId={companyProfile.id}
-                      userId={currentUserId}
-                      variant="settings"
-                      northStar
-                    />
-                  ) : null}
-
-                  {showDemoData && demoDataStatus ? (
-                    <DemoDataSection
-                      companyId={companyProfile.id}
-                      status={demoDataStatus}
-                      variant="settings"
-                      northStar
-                    />
-                  ) : null}
-                </div>
-              ) : null}
-
-              {demoDataLoadError ? (
-                <SettingsAlertBanner tone="warning" northStar>
-                  {demoDataLoadError}
-                </SettingsAlertBanner>
-              ) : null}
-
-              {showSystemCheckLink ? (
-                <Link href="/settings/system-check" className={st.systemCheckLink}>
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <div className={st.systemCheckIconWrap}>
-                      <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className={st.systemCheckTitle}>System Check</h3>
-                      <p className="mt-0.5 hidden text-xs leading-snug text-[#6B6255] sm:block sm:text-sm">
-                        Read-only production readiness checks for the internal
-                        alpha.
-                      </p>
-                    </div>
-                  </div>
-                  <span className={st.systemCheckBadge}>Owner only</span>
-                </Link>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
+        <section className={st.sectionSurface}>
+          <SettingsNorthStarSectionHeader
+            eyebrow="Integrations"
+            title="External connections"
+            description="Connect external tools and services."
+          />
+          <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5">
+            <SettingsComingSoonSection items={integrationItems} northStar />
+          </div>
+        </section>
 
         <section className={st.sectionSurface}>
           <SettingsNorthStarSectionHeader
-            eyebrow="Roadmap"
-            title="Coming soon"
-            description="Planned company controls not yet available in this workspace."
+            eyebrow="System"
+            title="Diagnostics & preferences"
+            description="Diagnostics and workspace preferences."
           />
-          <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5">
-            <SettingsComingSoonSection items={comingSoonItems} northStar />
+          <div className="space-y-3 px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5">
+            {showSystemCheckLink ? (
+              <Link href="/settings/system-check" className={st.systemCheckLink}>
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <div className={st.systemCheckIconWrap}>
+                    <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className={st.systemCheckTitle}>System Check</h3>
+                    <p className="mt-0.5 hidden text-xs leading-snug text-[#6B6255] sm:block sm:text-sm">
+                      Read-only production readiness checks for the internal
+                      alpha.
+                    </p>
+                  </div>
+                </div>
+                <span className={st.systemCheckBadge}>Owner only</span>
+              </Link>
+            ) : null}
+            <SettingsComingSoonSection items={systemComingSoonItems} northStar />
           </div>
         </section>
 
