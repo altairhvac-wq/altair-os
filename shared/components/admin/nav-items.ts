@@ -7,6 +7,7 @@ import {
   DollarSign,
   FileText,
   LayoutDashboard,
+  Megaphone,
   Network,
   Receipt,
   Settings,
@@ -53,6 +54,12 @@ export const adminNavItems: NavItem[] = [
     href: "/leads",
     icon: Target,
     description: "Track opportunities before they become customers",
+  },
+  {
+    label: "Marketing",
+    href: "/marketing",
+    icon: Megaphone,
+    description: "Plan and publish company marketing posts",
   },
   {
     label: "Jobs",
@@ -183,7 +190,7 @@ export const ADMIN_NAV_GROUP_DEFINITIONS: NavGroup[] = [
   {
     id: "relationships",
     label: "Relationships",
-    hrefs: ["/customers", "/leads", "/network"],
+    hrefs: ["/customers", "/leads", "/marketing", "/network"],
   },
   {
     id: "company",
@@ -244,6 +251,7 @@ export const DESKTOP_ADMIN_NAV_WORKFLOW_ORDER = [
   "/jobs",
   "/customers",
   "/leads",
+  "/marketing",
   "/dispatch",
   "/estimates",
   "/price-book",

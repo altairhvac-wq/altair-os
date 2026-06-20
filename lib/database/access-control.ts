@@ -337,6 +337,7 @@ export type AdminNavHref =
   | "/dispatch"
   | "/customers"
   | "/leads"
+  | "/marketing"
   | "/jobs"
   | "/estimates"
   | "/price-book"
@@ -353,6 +354,7 @@ const ADMIN_NAV_HREF_SET = new Set<string>([
   "/dispatch",
   "/customers",
   "/leads",
+  "/marketing",
   "/jobs",
   "/estimates",
   "/price-book",
@@ -385,6 +387,8 @@ export function canAccessAdminNavItem(
     case "/customers":
     case "/leads":
       return access.canManageCustomers;
+    case "/marketing":
+      return permissions.dispatchJobs;
     case "/estimates":
     case "/price-book":
     case "/invoices":
@@ -419,6 +423,7 @@ export function getAccessibleAdminNavHrefs(
     "/dispatch",
     "/customers",
     "/leads",
+    "/marketing",
     "/jobs",
     "/estimates",
     "/price-book",
@@ -525,6 +530,10 @@ export function canAccessAppRedirectPath(
 
   if (path.startsWith("/reports")) {
     return canViewOperationalReports(context);
+  }
+
+  if (path.startsWith("/marketing")) {
+    return context.permissions.dispatchJobs;
   }
 
   if (path.startsWith("/network")) {
