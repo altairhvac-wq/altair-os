@@ -7,6 +7,8 @@
 
 import type { NetworkInviteStatus } from "@/lib/database/types/enums";
 import type { TradeType } from "@/shared/types/network";
+import type { NetworkPartner } from "@/shared/types/network-partner";
+import type { NetworkProfile } from "@/shared/types/network-referral";
 
 export type NetworkInvite = {
   id: string;
@@ -139,16 +141,116 @@ export function formatNetworkInviteStatus(status: NetworkInviteStatus): string {
   );
 }
 
+function normalizeInviteMatchText(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function inviteCompanyNamesMatch(left: string, right: string): boolean {
+  const normalizedLeft = normalizeInviteMatchText(left);
+  const normalizedRight = normalizeInviteMatchText(right);
+  return normalizedLeft.length > 0 && normalizedLeft === normalizedRight;
+}
+
+/**
+ * Partner relationship is canonical for connection state. Pending invite rows can
+ * remain in the DB when a company was added directly from the directory.
+ */
+export function isNetworkInviteConnected(
+  invite: NetworkInvite,
+  partners: NetworkPartner[],
+  profiles: NetworkProfile[] = [],
+): boolean {
+  if (invite.status === "accepted") {
+    return true;
+  }
+
+  if (invite.status !== "pending") {
+    return false;
+  }
+
+  const activePartners = partners.filter(
+    (partner) =>
+      partner.relationshipStatus === "active" && partner.linkedCompanyId,
+  );
+  const trustedCompanyIds = new Set(
+    activePartners.map((partner) => partner.linkedCompanyId!),
+  );
+  const normalizedInviteEmail = normalizeInviteMatchText(invite.invitedEmail);
+
+  if (
+    invite.acceptedCompanyId &&
+    trustedCompanyIds.has(invite.acceptedCompanyId)
+  ) {
+    return true;
+  }
+
+  for (const partner of activePartners) {
+    if (partner.linkedCompanyId === invite.acceptedCompanyId) {
+      return true;
+    }
+
+    const partnerEmail = normalizeInviteMatchText(partner.email);
+    if (partnerEmail && partnerEmail === normalizedInviteEmail) {
+      return true;
+    }
+
+    if (
+      inviteCompanyNamesMatch(
+        invite.invitedCompanyName,
+        partner.partnerCompanyName,
+      )
+    ) {
+      return true;
+    }
+  }
+
+  for (const profile of profiles) {
+    if (!trustedCompanyIds.has(profile.companyId)) {
+      continue;
+    }
+
+    if (
+      inviteCompanyNamesMatch(invite.invitedCompanyName, profile.displayName)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function formatNetworkInviteDisplayStatus(
+  invite: NetworkInvite,
+  connectedViaPartners: boolean,
+): string {
+  if (connectedViaPartners && invite.status === "pending") {
+    return "Connected";
+  }
+
+  return formatNetworkInviteStatus(invite.status);
+}
+
 export function filterInvitesByTab(
   invites: NetworkInvite[],
   tab: NetworkInvitationsTab,
+  partners: NetworkPartner[] = [],
+  profiles: NetworkProfile[] = [],
 ): NetworkInvite[] {
   if (tab === "pending") {
-    return invites.filter((invite) => invite.status === "pending");
+    return invites.filter(
+      (invite) =>
+        invite.status === "pending" &&
+        !isNetworkInviteConnected(invite, partners, profiles),
+    );
   }
 
   if (tab === "accepted") {
-    return invites.filter((invite) => invite.status === "accepted");
+    return invites.filter(
+      (invite) =>
+        invite.status === "accepted" ||
+        (invite.status === "pending" &&
+          isNetworkInviteConnected(invite, partners, profiles)),
+    );
   }
 
   return invites.filter(

@@ -27,13 +27,12 @@ import {
 } from "@/shared/design-system/shell";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { adminFormInputClass } from "@/shared/lib/admin-density";
+import { useMyNetworkPartnersState } from "@/shared/hooks/useMyNetworkPartnersState";
 import {
   DIRECTORY_FILTER_OPTIONS,
   enrichMyNetworkPartners,
   getTrustedCompanyIds,
   MY_NETWORK_EMPTY_MESSAGE,
-  removeNetworkPartnerByLinkedCompanyId,
-  upsertActiveNetworkPartner,
   type DirectoryFilter,
   type MyNetworkPartner,
   type NetworkPartner,
@@ -46,6 +45,7 @@ import {
 } from "@/shared/types/network-referral";
 import {
   filterInvitesByTab,
+  isNetworkInviteConnected,
   NETWORK_INVITATIONS_TAB_OPTIONS,
   type IncomingNetworkInvite,
   type NetworkInvite,
@@ -172,13 +172,8 @@ function NetworkReferralsPageLegacyView({
     useState<NetworkActionTarget | null>(null);
   const [isVisibilityPending, startVisibilityTransition] = useTransition();
   const [isNetworkActionPending, startNetworkActionTransition] = useTransition();
-  const [myNetworkPartners, setMyNetworkPartners] = useState(
-    initialMyNetworkPartners,
-  );
-
-  useEffect(() => {
-    setMyNetworkPartners(initialMyNetworkPartners);
-  }, [initialMyNetworkPartners]);
+  const { myNetworkPartners, applyAddPartner, applyRemovePartner } =
+    useMyNetworkPartnersState(initialMyNetworkPartners, companyId);
 
   const trustedCompanyIds = useMemo(
     () => getTrustedCompanyIds(myNetworkPartners),
@@ -266,8 +261,14 @@ function NetworkReferralsPageLegacyView({
   }
 
   const filteredInvites = useMemo(
-    () => filterInvitesByTab(networkInvites, invitationsTab),
-    [networkInvites, invitationsTab],
+    () =>
+      filterInvitesByTab(
+        networkInvites,
+        invitationsTab,
+        myNetworkPartners,
+        profiles,
+      ),
+    [networkInvites, invitationsTab, myNetworkPartners, profiles],
   );
 
   const invitationsEmptyCopy: Record<
@@ -365,9 +366,7 @@ function NetworkReferralsPageLegacyView({
         return;
       }
       if (result.partner) {
-        setMyNetworkPartners((current) =>
-          upsertActiveNetworkPartner(current, result.partner!),
-        );
+        applyAddPartner(result.partner);
       }
       if (profileId) {
         setSelectedProfileId(profileId);
@@ -401,9 +400,7 @@ function NetworkReferralsPageLegacyView({
         setNetworkActionTarget(null);
         return;
       }
-      setMyNetworkPartners((current) =>
-        removeNetworkPartnerByLinkedCompanyId(current, linkedCompanyId),
-      );
+      applyRemovePartner(linkedCompanyId);
       router.refresh();
       setNetworkActionTarget(null);
     });
@@ -975,6 +972,11 @@ function NetworkReferralsPageLegacyView({
                       <NetworkInvitationCard
                         key={invite.id}
                         invite={invite}
+                        connectedViaPartners={isNetworkInviteConnected(
+                          invite,
+                          myNetworkPartners,
+                          profiles,
+                        )}
                         timeZone={timeZone}
                         initialInviteUrl={
                           invite.id === networkInvites[0]?.id

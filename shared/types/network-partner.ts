@@ -92,6 +92,95 @@ export function removeNetworkPartnerByLinkedCompanyId(
   );
 }
 
+/** Tracks local add/remove mutations until server props confirm the same state. */
+export type NetworkPartnerMutations = {
+  pendingAdds: Map<string, NetworkPartner>;
+  pendingRemoves: Set<string>;
+};
+
+export function createEmptyNetworkPartnerMutations(): NetworkPartnerMutations {
+  return { pendingAdds: new Map(), pendingRemoves: new Set() };
+}
+
+export function registerNetworkPartnerAdd(
+  mutations: NetworkPartnerMutations,
+  partner: NetworkPartner,
+): NetworkPartnerMutations {
+  if (!partner.linkedCompanyId) {
+    return mutations;
+  }
+
+  const pendingAdds = new Map(mutations.pendingAdds);
+  pendingAdds.set(partner.linkedCompanyId, partner);
+
+  const pendingRemoves = new Set(mutations.pendingRemoves);
+  pendingRemoves.delete(partner.linkedCompanyId);
+
+  return { pendingAdds, pendingRemoves };
+}
+
+export function registerNetworkPartnerRemove(
+  mutations: NetworkPartnerMutations,
+  linkedCompanyId: string,
+): NetworkPartnerMutations {
+  const pendingAdds = new Map(mutations.pendingAdds);
+  pendingAdds.delete(linkedCompanyId);
+
+  const pendingRemoves = new Set(mutations.pendingRemoves);
+  pendingRemoves.add(linkedCompanyId);
+
+  return { pendingAdds, pendingRemoves };
+}
+
+/** Clear pending flags once server props reflect the same add/remove outcome. */
+export function reconcileNetworkPartnerMutations(
+  mutations: NetworkPartnerMutations,
+  serverPartners: NetworkPartner[],
+): NetworkPartnerMutations {
+  const serverLinkedIds = new Set(
+    serverPartners
+      .map((partner) => partner.linkedCompanyId)
+      .filter((linkedCompanyId): linkedCompanyId is string =>
+        Boolean(linkedCompanyId),
+      ),
+  );
+
+  const pendingAdds = new Map(mutations.pendingAdds);
+  for (const linkedCompanyId of serverLinkedIds) {
+    pendingAdds.delete(linkedCompanyId);
+  }
+
+  const pendingRemoves = new Set(mutations.pendingRemoves);
+  for (const linkedCompanyId of pendingRemoves) {
+    if (!serverLinkedIds.has(linkedCompanyId)) {
+      pendingRemoves.delete(linkedCompanyId);
+    }
+  }
+
+  return { pendingAdds, pendingRemoves };
+}
+
+/**
+ * Merge server My Network props with local mutation tracking so stale empty
+ * server data from router.refresh() cannot wipe a successful add/remove.
+ */
+export function mergeMyNetworkPartnersFromServer(
+  serverPartners: NetworkPartner[],
+  mutations: NetworkPartnerMutations,
+): NetworkPartner[] {
+  let merged = serverPartners.filter(
+    (partner) =>
+      !partner.linkedCompanyId ||
+      !mutations.pendingRemoves.has(partner.linkedCompanyId),
+  );
+
+  for (const partner of mutations.pendingAdds.values()) {
+    merged = upsertActiveNetworkPartner(merged, partner);
+  }
+
+  return merged;
+}
+
 export const MY_NETWORK_EMPTY_MESSAGE =
   "Add trusted companies to your network so you can quickly send referrals and track partner relationships.";
 

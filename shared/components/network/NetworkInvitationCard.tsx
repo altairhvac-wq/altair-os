@@ -6,13 +6,14 @@ import { copyNetworkInviteLinkAction } from "@/app/actions/network-invites";
 import { formatDate } from "@/shared/types/customer";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import {
-  formatNetworkInviteStatus,
+  formatNetworkInviteDisplayStatus,
   type NetworkInvite,
 } from "@/shared/types/network-invite";
 import { st, type NetworkSurface } from "./north-star-m11/network-north-star-styles";
 
 type NetworkInvitationCardProps = {
   invite: NetworkInvite;
+  connectedViaPartners?: boolean;
   timeZone?: string;
   initialInviteUrl?: string;
   surface?: NetworkSurface;
@@ -20,6 +21,7 @@ type NetworkInvitationCardProps = {
 
 export function NetworkInvitationCard({
   invite,
+  connectedViaPartners = false,
   timeZone,
   initialInviteUrl,
   surface = "legacy",
@@ -80,6 +82,7 @@ export function NetworkInvitationCard({
     : "truncate text-sm font-bold text-slate-900";
   const contactClass = isNorthStar ? st.cardSecondary : "mt-1 text-xs text-slate-600";
   const emailClass = isNorthStar ? st.cardMuted : "mt-1 text-xs text-slate-500";
+  const showPendingActions = invite.status === "pending" && !connectedViaPartners;
   const statusBadgeClass = isNorthStar
     ? "rounded-full bg-[rgba(201,164,77,0.12)] px-2.5 py-1 text-xs font-semibold text-[#8A6324] ring-1 ring-[rgba(201,164,77,0.22)]"
     : "rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700";
@@ -105,7 +108,9 @@ export function NetworkInvitationCard({
           <p className={contactClass}>{invite.invitedContactName}</p>
           <p className={emailClass}>{invite.invitedEmail}</p>
         </div>
-        <span className={statusBadgeClass}>{formatNetworkInviteStatus(invite.status)}</span>
+        <span className={statusBadgeClass}>
+          {formatNetworkInviteDisplayStatus(invite, connectedViaPartners)}
+        </span>
       </div>
 
       <dl className={dlClass}>
@@ -119,7 +124,7 @@ export function NetworkInvitationCard({
         </div>
       </dl>
 
-      {invite.status === "pending" ? (
+      {showPendingActions ? (
         <div className="mt-4 space-y-2">
           <div className="flex flex-wrap gap-2">
             <button
