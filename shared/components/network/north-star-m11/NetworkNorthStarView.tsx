@@ -17,7 +17,6 @@ import {
   masterListPageScrollRegionClass,
 } from "@/shared/design-system/shell";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
-import { buildNetworkReferralSummaryMetrics } from "@/shared/lib/network/network-referral-metrics";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import {
   DIRECTORY_FILTER_OPTIONS,
@@ -48,7 +47,6 @@ import { NetworkInvitationCard } from "../NetworkInvitationCard";
 import { NetworkInvitedByBanner } from "../NetworkInvitedByBanner";
 import { NetworkProfileDetailPanel } from "../NetworkProfileDetailPanel";
 import { NetworkReferralCard } from "../NetworkReferralCard";
-import { NetworkReferralSummaryCards } from "../NetworkReferralSummaryCards";
 import { NetworkTrustedBadge } from "../NetworkTrustedBadge";
 import { st } from "./network-north-star-styles";
 
@@ -244,26 +242,6 @@ export function NetworkNorthStarView({
   const filteredInvites = useMemo(
     () => filterInvitesByTab(networkInvites, invitationsTab),
     [networkInvites, invitationsTab],
-  );
-
-  const sentReferralMetrics = useMemo(
-    () =>
-      buildNetworkReferralSummaryMetrics(
-        sentReferrals.filter(
-          (referral) => referral.sourceCompanyId === companyId,
-        ),
-      ),
-    [sentReferrals, companyId],
-  );
-
-  const receivedReferralMetrics = useMemo(
-    () =>
-      buildNetworkReferralSummaryMetrics(
-        receivedReferrals.filter(
-          (referral) => referral.targetCompanyId === companyId,
-        ),
-      ),
-    [receivedReferrals, companyId],
   );
 
   const invitationsEmptyCopy: Record<
@@ -481,13 +459,11 @@ export function NetworkNorthStarView({
   return (
     <MasterShellPage fillViewport density="compact" className={st.pageCanvas}>
       <MasterPageHeader
-        eyebrow="Partner command"
         title="Network"
-        subtitle="Trusted partners, referral handoffs, and invitations in one operational view."
+        subtitle="Manage referral partners, invitations, and shared leads."
         density="compact"
         surfaceVariant="northStar"
         className={`north-star-network-page-header ${st.pageHeader}`}
-        eyebrowClassName={st.pageHeaderEyebrow}
         titleClassName={st.pageHeaderTitle}
         subtitleClassName={st.pageHeaderSubtitle}
         primaryAction={
@@ -498,7 +474,7 @@ export function NetworkNorthStarView({
               className={`north-star-network-primary-action ${st.primaryAction}`}
             >
               <UserPlus className="h-4 w-4" />
-              Invite company
+              Invite Partner
             </button>
           ) : undefined
         }
@@ -551,37 +527,6 @@ export function NetworkNorthStarView({
             variant={incomingNetworkInvites.length === 1 ? "banner" : "section"}
             surface="north-star"
           />
-        ) : null}
-
-        {canSendReferral || canManageReceivedReferrals ? (
-          <div className={st.referralPulseSurface}>
-            <div className="grid gap-3 p-3 sm:p-3.5 lg:grid-cols-2 lg:gap-4 lg:px-4 lg:py-3">
-              {canSendReferral ? (
-                <div>
-                  <p className={st.referralPulseHeading}>Sent referrals</p>
-                  <div className="mt-2">
-                    <NetworkReferralSummaryCards
-                      direction="sent"
-                      metrics={sentReferralMetrics}
-                      surface="north-star"
-                    />
-                  </div>
-                </div>
-              ) : null}
-              {canManageReceivedReferrals ? (
-                <div>
-                  <p className={st.referralPulseHeading}>Received referrals</p>
-                  <div className="mt-2">
-                    <NetworkReferralSummaryCards
-                      direction="received"
-                      metrics={receivedReferralMetrics}
-                      surface="north-star"
-                    />
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </div>
         ) : null}
 
         <div className={`${st.sectionSurface} overflow-hidden`}>
@@ -797,7 +742,7 @@ export function NetworkNorthStarView({
                       className={st.secondaryAction}
                     >
                       <UserPlus className="h-4 w-4" />
-                      Invite company
+                      Invite Partner
                     </button>
                   ) : null}
                   <p className={st.countMeta}>{myNetworkEntries.length} partners</p>
@@ -877,23 +822,21 @@ export function NetworkNorthStarView({
             </p>
           ) : (
             <div className="space-y-4">
-              <div className={st.inviteHero}>
-                <p className={st.inviteHeroEyebrow}>Grow your network</p>
-                <h2 className={st.inviteHeroTitle}>
-                  Invite trusted contractors to join Altair
-                </h2>
-                <p className={st.inviteHeroBody}>
-                  Invite trusted contractors to join Altair and build referral
-                  relationships that work directly inside your operating system.
-                </p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className={st.sectionTitle}>Invitations</h2>
+                  <p className={st.sectionSubtitle}>
+                    Pending and past partner invitations
+                  </p>
+                </div>
                 {!showInviteForm ? (
                   <button
                     type="button"
                     onClick={() => setShowInviteForm(true)}
-                    className={`mt-4 ${st.primaryAction}`}
+                    className={st.secondaryAction}
                   >
                     <UserPlus className="h-4 w-4" />
-                    Invite company
+                    Invite Partner
                   </button>
                 ) : null}
               </div>

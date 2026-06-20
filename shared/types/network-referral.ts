@@ -112,8 +112,8 @@ export const NETWORK_REFERRALS_TAB_OPTIONS: {
   { value: "directory", label: "Directory" },
   { value: "my-network", label: "My Network" },
   { value: "invitations", label: "Invitations" },
-  { value: "sent-referrals", label: "Sent Referrals" },
-  { value: "received-referrals", label: "Received Referrals" },
+  { value: "sent-referrals", label: "Sent" },
+  { value: "received-referrals", label: "Received" },
 ];
 
 export function formatNetworkReferralUrgency(

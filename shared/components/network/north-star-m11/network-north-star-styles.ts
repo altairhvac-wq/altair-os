@@ -46,19 +46,6 @@ export const networkNorthStarStyles = {
     "inline-flex w-full min-h-8 items-center justify-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-1.5 text-xs font-semibold text-[#4F4638] transition hover:border-[rgba(201,164,77,0.38)] hover:bg-[#F3EBDD] disabled:opacity-60 [&_svg]:text-[#8A6324]",
   cardActionAccentFull:
     "inline-flex w-full min-h-8 items-center justify-center gap-1.5 rounded-lg border border-[rgba(201,164,77,0.42)] bg-gradient-to-b from-[#F0E4B8] from-0% via-[#D4B05A] via-[50%] to-[#C9A44D] to-100% px-3 py-1.5 text-xs font-semibold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.12)] transition hover:from-[#F5EBC8] hover:via-[#DDB868] hover:to-[#B88A2E] disabled:opacity-60 [&_svg]:text-[#17130E]",
-  referralPulseSurface:
-    "north-star-list-surface rounded-[1.25rem] border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]",
-  referralPulseHeading:
-    "text-xs font-bold text-[#17130E]",
-  metricChip:
-    "inline-flex min-w-[4.75rem] items-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2 py-1.5 text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.06)]",
-  metricChipSuccess:
-    "inline-flex min-w-[4.75rem] items-center gap-1.5 rounded-lg border border-[rgba(22,101,52,0.16)] bg-[rgba(22,101,52,0.06)] px-2 py-1.5 text-[#166534] ring-1 ring-[rgba(22,101,52,0.08)]",
-  metricChipMuted:
-    "inline-flex min-w-[4.75rem] items-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#F5F0E4] px-2 py-1.5 text-[#6B6255] ring-1 ring-[rgba(138,99,36,0.05)]",
-  metricChipLabel:
-    "text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6B6255]",
-  metricChipValue: "text-sm font-bold tabular-nums text-[#17130E]",
   detailPanel:
     "north-star-list-surface flex min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden lg:h-full lg:min-h-0 lg:w-[420px] lg:flex-none lg:shrink-0",
   detailPanelHeader:
@@ -69,12 +56,6 @@ export const networkNorthStarStyles = {
     "rounded-lg p-1.5 text-[#6B6255] transition-colors hover:bg-[#EFE4CB] hover:text-[#17130E]",
   profileVisibilityStrip:
     "flex flex-wrap items-center justify-between gap-3 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-4 py-3.5",
-  inviteHero:
-    "rounded-[1.25rem] border border-[rgba(201,164,77,0.22)] bg-gradient-to-br from-[#273140] via-[#1A2029] to-[#111821] p-5 text-[#F8F1E7] ring-1 ring-[rgba(174,182,194,0.14)]",
-  inviteHeroEyebrow:
-    "text-[10px] font-semibold uppercase tracking-[0.16em] text-[#D6BE78]",
-  inviteHeroTitle: "mt-1 text-lg font-bold text-[#FFF9EA]",
-  inviteHeroBody: "mt-2 max-w-3xl text-sm text-[#D7CDBD]",
   inviteFormShell:
     "rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-4",
   inviteSuccessBanner:

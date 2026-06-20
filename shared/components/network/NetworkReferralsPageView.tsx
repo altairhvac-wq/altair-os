@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
-import { Eye, EyeOff, Network, Search, UserMinus, UserPlus } from "lucide-react";
+import { Eye, EyeOff, Search, UserMinus, UserPlus } from "lucide-react";
 import {
   addToMyNetworkAction,
   removeFromMyNetworkAction,
@@ -15,7 +15,6 @@ import {
   MasterContentStack,
   MasterPageCanvas,
   MasterPageHeader,
-  MasterPageSection,
   MasterPageSurface,
   MasterShellPage,
   adminSegmentedControlClass,
@@ -26,7 +25,6 @@ import {
   masterPanelHeaderClass,
   masterSecondaryActionClass,
 } from "@/shared/design-system/shell";
-import { buildNetworkReferralSummaryMetrics } from "@/shared/lib/network/network-referral-metrics";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { adminFormInputClass } from "@/shared/lib/admin-density";
 import {
@@ -58,7 +56,6 @@ import { NetworkInvitationCard } from "./NetworkInvitationCard";
 import { NetworkInvitedByBanner } from "./NetworkInvitedByBanner";
 import { NetworkProfileDetailPanel } from "./NetworkProfileDetailPanel";
 import { NetworkReferralCard } from "./NetworkReferralCard";
-import { NetworkReferralSummaryCards } from "./NetworkReferralSummaryCards";
 import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
 import { NetworkNorthStarView } from "./north-star-m11";
 
@@ -262,26 +259,6 @@ function NetworkReferralsPageLegacyView({
   const filteredInvites = useMemo(
     () => filterInvitesByTab(networkInvites, invitationsTab),
     [networkInvites, invitationsTab],
-  );
-
-  const sentReferralMetrics = useMemo(
-    () =>
-      buildNetworkReferralSummaryMetrics(
-        sentReferrals.filter(
-          (referral) => referral.sourceCompanyId === companyId,
-        ),
-      ),
-    [sentReferrals, companyId],
-  );
-
-  const receivedReferralMetrics = useMemo(
-    () =>
-      buildNetworkReferralSummaryMetrics(
-        receivedReferrals.filter(
-          (referral) => referral.targetCompanyId === companyId,
-        ),
-      ),
-    [receivedReferrals, companyId],
   );
 
   const invitationsEmptyCopy: Record<
@@ -502,14 +479,20 @@ function NetworkReferralsPageLegacyView({
       <MasterPageCanvas width="wide" className="min-h-0 flex-1">
         <MasterContentStack density="compact" className="shrink-0">
           <MasterPageHeader
-            eyebrow="Altair Network"
-            title="Send and receive trusted trade referrals."
-            subtitle="Build trusted partner relationships, pass overflow work, and keep every opportunity inside Altair."
+            title="Network"
+            subtitle="Manage referral partners, invitations, and shared leads."
             density="compact"
-            secondaryAction={
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white">
-                <Network className="h-5 w-5" />
-              </div>
+            primaryAction={
+              canManageNetwork ? (
+                <button
+                  type="button"
+                  onClick={handleOpenInviteForm}
+                  className={masterSecondaryActionClass}
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Invite Partner
+                </button>
+              ) : undefined
             }
           />
 
@@ -562,27 +545,6 @@ function NetworkReferralsPageLegacyView({
               timeZone={timeZone}
               variant={incomingNetworkInvites.length === 1 ? "banner" : "section"}
             />
-          ) : null}
-
-          {canSendReferral || canManageReceivedReferrals ? (
-            <MasterContentStack density="compact">
-              {canSendReferral ? (
-                <MasterPageSection title="Sent referrals">
-                  <NetworkReferralSummaryCards
-                    direction="sent"
-                    metrics={sentReferralMetrics}
-                  />
-                </MasterPageSection>
-              ) : null}
-              {canManageReceivedReferrals ? (
-                <MasterPageSection title="Received referrals">
-                  <NetworkReferralSummaryCards
-                    direction="received"
-                    metrics={receivedReferralMetrics}
-                  />
-                </MasterPageSection>
-              ) : null}
-            </MasterContentStack>
           ) : null}
 
           <nav
@@ -799,7 +761,7 @@ function NetworkReferralsPageLegacyView({
                       className={masterSecondaryActionClass}
                     >
                       <UserPlus className="h-4 w-4" />
-                      Invite company
+                      Invite Partner
                     </button>
                   ) : null}
                   <p className="text-xs font-medium text-slate-500">
@@ -887,25 +849,21 @@ function NetworkReferralsPageLegacyView({
             </p>
           ) : (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-5 text-white">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
-                  Grow your network
-                </p>
-                <h2 className="mt-1 text-lg font-bold">
-                  Invite trusted contractors to join Altair
-                </h2>
-                <p className="mt-2 max-w-3xl text-sm text-slate-200">
-                  Invite trusted contractors to join Altair and build referral
-                  relationships that work directly inside your operating system.
-                </p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">Invitations</h2>
+                  <p className="text-xs text-slate-500">
+                    Pending and past partner invitations
+                  </p>
+                </div>
                 {!showInviteForm ? (
                   <button
                     type="button"
                     onClick={() => setShowInviteForm(true)}
-                    className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+                    className={masterSecondaryActionClass}
                   >
                     <UserPlus className="h-4 w-4" />
-                    Invite company
+                    Invite Partner
                   </button>
                 ) : null}
               </div>

@@ -23,30 +23,15 @@ function Skeleton({
 
 const NETWORK_TAB_COUNT = 5;
 
-function ReferralSummarySkeleton() {
-  return (
-    <div className="flex flex-wrap gap-1.5 sm:gap-2" aria-hidden="true">
-      {Array.from({ length: 7 }).map((_, index) => (
-        <Skeleton
-          key={index}
-          className="h-8 w-[5.5rem] rounded-lg border border-[rgba(138,99,36,0.10)]"
-        />
-      ))}
-    </div>
-  );
-}
-
 export function NetworkNorthStarLoadingState() {
   return (
     <MasterShellPage fillViewport density="compact" className={st.pageCanvas}>
       <MasterPageHeader
-        eyebrow="Partner command"
         title="Network"
-        subtitle="Trusted partners, referral handoffs, and invitations in one operational view."
+        subtitle="Manage referral partners, invitations, and shared leads."
         density="compact"
         surfaceVariant="northStar"
         className={`north-star-network-page-header ${st.pageHeader}`}
-        eyebrowClassName={st.pageHeaderEyebrow}
         titleClassName={st.pageHeaderTitle}
         subtitleClassName={st.pageHeaderSubtitle}
         primaryAction={<Skeleton dark className="h-9 w-36 rounded-lg" />}
@@ -59,23 +44,6 @@ export function NetworkNorthStarLoadingState() {
             <Skeleton className="h-3 w-64 max-w-full" />
           </div>
           <Skeleton className="h-9 w-36 shrink-0 rounded-lg" />
-        </div>
-
-        <div className={st.referralPulseSurface}>
-          <div className="grid gap-3 p-3 sm:p-3.5 lg:grid-cols-2 lg:gap-4 lg:px-4 lg:py-3">
-            <div>
-              <Skeleton className="h-4 w-28" />
-              <div className="mt-2">
-                <ReferralSummarySkeleton />
-              </div>
-            </div>
-            <div>
-              <Skeleton className="h-4 w-32" />
-              <div className="mt-2">
-                <ReferralSummarySkeleton />
-              </div>
-            </div>
-          </div>
         </div>
 
         <div className={`${st.sectionSurface} overflow-hidden`}>

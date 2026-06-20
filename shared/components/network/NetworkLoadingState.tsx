@@ -1,14 +1,8 @@
 import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import {
-  adminCompactSummaryMetricClass,
-  adminCompactSummaryStripClass,
-  adminCompactSummaryStripInnerClass,
-} from "@/shared/lib/admin-density";
-import {
   MasterContentStack,
   MasterPageCanvas,
   MasterPageHeader,
-  MasterPageSection,
   MasterPageSurface,
   MasterShellPage,
   masterListPageScrollRegionClass,
@@ -20,34 +14,6 @@ function Skeleton({ className }: { className?: string }) {
 }
 
 const NETWORK_TAB_COUNT = 5;
-const REFERRAL_METRIC_COUNT = 7;
-
-function ReferralSummarySkeleton() {
-  return (
-    <>
-      <div className={adminCompactSummaryStripClass} aria-hidden="true">
-        <div className={adminCompactSummaryStripInnerClass}>
-          {Array.from({ length: REFERRAL_METRIC_COUNT }).map((_, index) => (
-            <div
-              key={index}
-              className={`${adminCompactSummaryMetricClass} ${
-                index > 0 ? "border-l border-slate-200 pl-3" : ""
-              }`}
-            >
-              <Skeleton className="h-3 w-8" />
-              <Skeleton className="h-4 w-6" />
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="hidden shrink-0 gap-2.5 sm:grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-        {Array.from({ length: REFERRAL_METRIC_COUNT }).map((_, index) => (
-          <Skeleton key={index} className="admin-metric-card h-24" />
-        ))}
-      </div>
-    </>
-  );
-}
 
 export function NetworkLoadingState() {
   return (
@@ -55,13 +21,10 @@ export function NetworkLoadingState() {
       <MasterPageCanvas width="wide" className="min-h-0 flex-1">
         <MasterContentStack density="compact" className="shrink-0">
           <MasterPageHeader
-            eyebrow="Altair Network"
-            title="Send and receive trusted trade referrals."
-            subtitle="Build trusted partner relationships, pass overflow work, and keep every opportunity inside Altair."
+            title="Network"
+            subtitle="Manage referral partners, invitations, and shared leads."
             density="compact"
-            secondaryAction={
-              <Skeleton className="h-11 w-11 shrink-0 rounded-2xl" />
-            }
+            primaryAction={<Skeleton className="h-9 w-36 shrink-0 rounded-xl" />}
           />
 
           <MasterPageSurface
@@ -74,16 +37,6 @@ export function NetworkLoadingState() {
             </div>
             <Skeleton className="h-9 w-36 shrink-0 rounded-xl" />
           </MasterPageSurface>
-
-          <MasterContentStack density="compact">
-            <MasterPageSection title="Sent referrals">
-              <ReferralSummarySkeleton />
-            </MasterPageSection>
-
-            <MasterPageSection title="Received referrals">
-              <ReferralSummarySkeleton />
-            </MasterPageSection>
-          </MasterContentStack>
 
           <nav
             className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1"
