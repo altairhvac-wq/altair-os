@@ -1,4 +1,4 @@
-import { MapPin, Send, UserMinus, UserPlus, Wrench } from "lucide-react";
+import { ChevronRight, MapPin, Send, UserMinus, UserPlus, Wrench } from "lucide-react";
 import { getPartnerInitials } from "@/shared/types/network";
 import type { NetworkProfile } from "@/shared/types/network-referral";
 import { st, type NetworkSurface } from "./north-star-m11/network-north-star-styles";
@@ -17,6 +17,8 @@ type NetworkDirectoryCardProps = {
   onRemoveFromNetwork?: () => void;
   isNetworkActionPending?: boolean;
   networkActionError?: string | null;
+  /** Hide Add/Send actions on the card when the detail panel handles them. */
+  deferActionsToPanel?: boolean;
   surface?: NetworkSurface;
 };
 
@@ -33,6 +35,7 @@ export function NetworkDirectoryCard({
   onRemoveFromNetwork,
   isNetworkActionPending = false,
   networkActionError = null,
+  deferActionsToPanel = false,
   surface = "legacy",
 }: NetworkDirectoryCardProps) {
   const isNorthStar = surface === "north-star";
@@ -42,7 +45,7 @@ export function NetworkDirectoryCard({
       ? st.cardShellSelected
       : priorityPartner
         ? st.cardShellTrusted
-        : `${st.cardShell} hover:border-[rgba(201,164,77,0.28)] hover:shadow-[0_2px_12px_rgba(138,99,36,0.10)]`
+        : `${st.cardShell} cursor-pointer hover:border-[rgba(201,164,77,0.28)] hover:shadow-[0_2px_12px_rgba(138,99,36,0.10)]`
     : selected
       ? "rounded-xl border p-4 transition-all border-cyan-300 bg-cyan-50/40 shadow-sm ring-1 ring-cyan-200"
       : priorityPartner
@@ -102,15 +105,35 @@ export function NetworkDirectoryCard({
                   {[profile.city, profile.state].filter(Boolean).join(", ")}
                 </span>
               </div>
+            ) : profile.serviceArea ? (
+              <div className={locationClass}>
+                <MapPin className={`h-3.5 w-3.5 shrink-0 ${tradeIconClass}`} />
+                <span className="line-clamp-1">{profile.serviceArea}</span>
+              </div>
             ) : null}
-            {profile.serviceArea ? (
+            {profile.serviceArea && (profile.city || profile.state) ? (
               <p className={serviceAreaClass}>{profile.serviceArea}</p>
             ) : null}
           </div>
         </div>
+
+        {isNorthStar ? (
+          <div
+            className={`${st.cardSelectHint} ${
+              selected ? st.cardSelectHintActive : "group-hover/card:text-[#6B4E1A]"
+            }`}
+          >
+            <span>{selected ? "Viewing profile" : "View profile"}</span>
+            <ChevronRight
+              className={`h-3.5 w-3.5 shrink-0 transition-transform ${
+                selected ? "translate-x-0.5" : "group-hover/card:translate-x-0.5"
+              }`}
+            />
+          </div>
+        ) : null}
       </button>
 
-      {canManageNetwork ? (
+      {canManageNetwork && !deferActionsToPanel ? (
         <div className={`${isNorthStar ? "mt-3" : "mt-4"} space-y-1.5`}>
           {isTrustedPartner && onRemoveFromNetwork ? (
             <button
@@ -146,7 +169,7 @@ export function NetworkDirectoryCard({
         </div>
       ) : null}
 
-      {canSendReferral && onSendReferral ? (
+      {canSendReferral && onSendReferral && !deferActionsToPanel ? (
         <button
           type="button"
           onClick={(event) => {

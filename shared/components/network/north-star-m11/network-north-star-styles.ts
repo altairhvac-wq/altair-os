@@ -31,12 +31,8 @@ export const networkNorthStarStyles = {
     "inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-2.5 py-1.5 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[rgba(201,164,77,0.38)] hover:bg-[#F3EBDD] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#8A6324]",
   panelActionAccent:
     "inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(201,164,77,0.42)] bg-gradient-to-b from-[#F0E4B8] from-0% via-[#D4B05A] via-[50%] to-[#C9A44D] to-100% px-2.5 py-1.5 text-xs font-semibold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.12)] transition-all hover:from-[#F5EBC8] hover:via-[#DDB868] hover:to-[#B88A2E] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#17130E]",
-  cardShell:
-    "rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-4 transition-all",
-  cardShellSelected:
-    "rounded-[1rem] border border-[rgba(201,164,77,0.45)] bg-[#FFF9EA] p-4 shadow-[0_2px_12px_rgba(138,99,36,0.14)] ring-1 ring-[rgba(201,164,77,0.28)] transition-all",
   cardShellTrusted:
-    "rounded-[1rem] border border-[rgba(201,164,77,0.28)] bg-[#FFF9EA] p-4 transition-all hover:border-[rgba(201,164,77,0.42)] hover:shadow-[0_2px_12px_rgba(138,99,36,0.12)]",
+    "group/card relative rounded-[1rem] border border-[rgba(201,164,77,0.28)] bg-[#FFF9EA] p-4 transition-all hover:border-[rgba(201,164,77,0.42)] hover:shadow-[0_2px_12px_rgba(138,99,36,0.12)]",
   cardPrimary: "truncate text-sm font-bold text-[#17130E]",
   cardSecondary: "text-xs text-[#4F4638]",
   cardMuted: "text-xs text-[#6B6255]",
@@ -47,15 +43,102 @@ export const networkNorthStarStyles = {
   cardActionAccentFull:
     "inline-flex w-full min-h-8 items-center justify-center gap-1.5 rounded-lg border border-[rgba(201,164,77,0.42)] bg-gradient-to-b from-[#F0E4B8] from-0% via-[#D4B05A] via-[50%] to-[#C9A44D] to-100% px-3 py-1.5 text-xs font-semibold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.12)] transition hover:from-[#F5EBC8] hover:via-[#DDB868] hover:to-[#B88A2E] disabled:opacity-60 [&_svg]:text-[#17130E]",
   detailPanel:
-    "north-star-list-surface flex min-h-[12rem] min-w-0 flex-[1_1_45%] flex-col overflow-hidden lg:h-full lg:min-h-0 lg:w-[420px] lg:flex-none lg:shrink-0",
+    "flex min-h-[14rem] min-w-0 flex-col overflow-hidden lg:h-full lg:min-h-[28rem] lg:w-full lg:flex-none lg:shrink-0 rounded-xl border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]/70 lg:rounded-none lg:border-0 lg:border-r lg:border-[rgba(138,99,36,0.08)] lg:bg-[#FBF7EF]/50",
   detailPanelHeader:
     "flex shrink-0 items-start justify-between border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-4 py-4 sm:px-5",
   detailPanelTitle: "truncate text-base font-bold text-[#17130E]",
   detailPanelSubtitle: "mt-0.5 text-xs text-[#6B6255]",
   detailPanelClose:
     "rounded-lg p-1.5 text-[#6B6255] transition-colors hover:bg-[#EFE4CB] hover:text-[#17130E]",
+  detailPanelEmptyShell:
+    "flex flex-1 flex-col items-center justify-center px-4 py-8 text-center",
+  detailPanelEmptyIcon:
+    "flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-[#17130E] shadow-[0_4px_16px_rgba(138,99,36,0.18)] ring-1 ring-[rgba(138,99,36,0.16)]",
+  detailPanelEmptyTitle: "mt-4 text-base font-bold text-[#17130E]",
+  detailPanelEmptyBody:
+    "mt-2 max-w-[260px] text-xs leading-relaxed text-[#6B6255]",
+  detailPanelEmptyChips: "mt-5 flex flex-wrap items-center justify-center gap-2",
+  detailPanelEmptyChip:
+    "inline-flex items-center rounded-full border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#6B6255]",
+  detailPanelProfileHero:
+    "rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-4 shadow-[0_2px_12px_rgba(138,99,36,0.08)]",
+  detailPanelProfileName: "text-base font-bold text-[#17130E]",
+  detailPanelConnectedBadge:
+    "inline-flex items-center gap-1 rounded-full border border-[rgba(22,101,52,0.22)] bg-[rgba(22,101,52,0.08)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#166534]",
   profileVisibilityStrip:
-    "flex flex-wrap items-center justify-between gap-3 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-4 py-3.5",
+    "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]/80 px-3 py-2 sm:px-3.5",
+  profileVisibilityLabel: "text-xs font-semibold text-[#17130E]",
+  profileVisibilityHelper: "text-[10px] leading-snug text-[#6B6255]",
+  profileVisibilityPill:
+    "inline-flex items-center rounded-full bg-[rgba(22,101,52,0.10)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#166534] ring-1 ring-[rgba(22,101,52,0.18)]",
+  profileVisibilityPillHidden:
+    "inline-flex items-center rounded-full bg-[rgba(107,98,85,0.10)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#6B6255] ring-1 ring-[rgba(107,98,85,0.18)]",
+  commandHeaderChips: "flex flex-wrap items-center gap-1.5",
+  commandHeaderChip:
+    "inline-flex items-center rounded-full border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6B6255]",
+  commandHeaderChipAccent:
+    "inline-flex items-center rounded-full border border-[rgba(201,164,77,0.28)] bg-[rgba(201,164,77,0.10)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8A6324]",
+  tabBodySurface:
+    "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]",
+  tabBodyInner: "min-h-0 flex-1 p-3 sm:p-4 lg:p-5",
+  discoveryWorkspace:
+    "flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-x-hidden lg:min-h-[28rem] lg:gap-4",
+  discoveryContentGrid:
+    "flex min-h-0 min-w-0 flex-1 flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,38%)] lg:grid-rows-[minmax(0,1fr)] lg:gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,42%)]",
+  discoveryListRegion:
+    "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain lg:min-h-[12rem]",
+  discoveryMapRegion: "min-w-0 shrink-0 lg:min-h-0 lg:self-stretch",
+  flatPanelHeader:
+    "shrink-0 space-y-2 border-b border-[rgba(138,99,36,0.08)] pb-3",
+  mobileViewToggle: lt.viewTabsControl,
+  mobileViewToggleItem: lt.viewTabsItem,
+  mobileViewToggleItemActive: lt.viewTabsItemActive,
+  mapPreviewPanel:
+    "relative flex min-h-[11rem] flex-col overflow-hidden rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#EDE6D4] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] sm:min-h-[13rem] lg:h-full lg:min-h-[18rem] xl:min-h-[20rem]",
+  mapPreviewCanvas:
+    "pointer-events-none absolute inset-0 overflow-hidden",
+  mapPreviewGrid:
+    "absolute inset-0 bg-[linear-gradient(rgba(138,99,36,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(138,99,36,0.07)_1px,transparent_1px)] bg-[size:28px_28px] [mask-image:radial-gradient(ellipse_80%_70%_at_50%_45%,black_15%,transparent_72%)]",
+  mapPreviewRoads:
+    "absolute inset-0 opacity-60 [background:repeating-linear-gradient(118deg,transparent,transparent_38px,rgba(138,99,36,0.05)_38px,rgba(138,99,36,0.05)_39px),repeating-linear-gradient(28deg,transparent,transparent_52px,rgba(201,164,77,0.06)_52px,rgba(201,164,77,0.06)_53px)]",
+  mapPreviewGlow:
+    "absolute left-1/2 top-[42%] h-[70%] w-[85%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(201,164,77,0.18)_0%,rgba(201,164,77,0.06)_42%,transparent_72%)]",
+  mapPreviewRing:
+    "absolute left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(201,164,77,0.14)]",
+  mapPreviewRingOuter: "h-[min(88%,18rem)] w-[min(88%,18rem)]",
+  mapPreviewRingInner:
+    "h-[min(58%,12rem)] w-[min(58%,12rem)] border-[rgba(201,164,77,0.10)]",
+  mapPreviewContent:
+    "relative z-[1] flex flex-1 flex-col justify-between px-4 py-4 sm:px-5 sm:py-5",
+  mapPreviewHeader: "flex items-start gap-3",
+  mapPreviewIcon:
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FFF9EA] text-[#8A6324] shadow-[0_2px_8px_rgba(138,99,36,0.12)] ring-1 ring-[rgba(138,99,36,0.14)]",
+  mapPreviewTitle: "text-base font-bold text-[#17130E]",
+  mapPreviewSubtitle: "mt-0.5 text-xs leading-snug text-[#6B6255]",
+  mapPreviewMessage: "mt-2 text-xs leading-snug text-[#4F4638]",
+  mapPreviewPill:
+    "inline-flex items-center rounded-full border border-[rgba(138,99,36,0.10)] bg-[rgba(255,249,234,0.82)] px-2.5 py-0.5 text-[10px] font-semibold text-[#6B6255] backdrop-blur-[1px]",
+  mapPreviewHint:
+    "mt-3 inline-flex w-fit items-center rounded-lg border border-dashed border-[rgba(138,99,36,0.22)] bg-[rgba(255,249,234,0.75)] px-2.5 py-1 text-[10px] font-medium text-[#8A6324] backdrop-blur-[1px]",
+  mapPreviewAreasLabel:
+    "text-[10px] font-semibold uppercase tracking-[0.1em] text-[#8A6324]",
+  mapPreviewAreaChip:
+    "inline-flex max-w-full items-center truncate rounded-full border border-[rgba(201,164,77,0.22)] bg-[rgba(255,249,234,0.88)] px-2.5 py-0.5 text-[10px] font-medium text-[#4F4638] backdrop-blur-[1px]",
+  mapPreviewMeta: "text-[10px] text-[#6B6255]",
+  mapPreviewFooter: "mt-auto space-y-2.5 pt-3",
+  cardShell:
+    "group/card relative rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-4 transition-all",
+  cardShellSelected:
+    "group/card relative rounded-[1rem] border border-[rgba(201,164,77,0.50)] bg-[#FFF9EA] p-4 shadow-[0_4px_16px_rgba(138,99,36,0.16)] ring-2 ring-[rgba(201,164,77,0.32)] transition-all",
+  cardSelectHint:
+    "mt-3 flex items-center justify-between gap-2 border-t border-[rgba(138,99,36,0.08)] pt-2.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#8A6324]",
+  cardSelectHintActive: "text-[#6B4E1A]",
+  rosterList: "grid min-w-0 grid-cols-1 gap-3 @md:grid-cols-2 @2xl:grid-cols-2",
+  rosterListMyNetwork: "grid min-w-0 grid-cols-1 gap-3 @lg:grid-cols-2",
+  emptyStateStrong: "rounded-xl border border-[rgba(138,99,36,0.10)] bg-[#FFF9EA]/60 px-4 py-10 text-center sm:py-12",
+  emptyStateCta: lt.primaryAction,
+  referralInboxHeader: "mb-4 space-y-1",
+  invitationCardGrid: "grid gap-3 lg:grid-cols-2",
   inviteFormShell:
     "rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-4",
   inviteSuccessBanner:

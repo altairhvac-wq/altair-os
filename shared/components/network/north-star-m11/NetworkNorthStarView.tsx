@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Search, UserMinus, UserPlus } from "lucide-react";
+import { Eye, EyeOff, MapPin, Search, UserMinus, UserPlus } from "lucide-react";
+import { getPartnerInitials } from "@/shared/types/network";
 import {
   addToMyNetworkAction,
   removeFromMyNetworkAction,
 } from "@/app/actions/network-partners";
 import { NETWORK_PARTNER_MANAGER_MESSAGE } from "@/lib/database/errors";
 import { toggleOwnNetworkProfileVisibilityAction } from "@/app/actions/network-referrals";
-import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import {
   MasterContentStack,
   MasterPageHeader,
@@ -50,8 +50,10 @@ import { NetworkInvitedByBanner } from "../NetworkInvitedByBanner";
 import { NetworkProfileDetailPanel } from "../NetworkProfileDetailPanel";
 import { NetworkReferralCard } from "../NetworkReferralCard";
 import { NetworkTrustedBadge } from "../NetworkTrustedBadge";
+import { NetworkMapPreviewPanel } from "./NetworkMapPreviewPanel";
 import { st } from "./network-north-star-styles";
 
+type DirectoryMobileView = "map" | "list";
 type ProfilePanelMode = "detail" | "referral" | "empty";
 
 type NetworkActionTarget = {
@@ -138,6 +140,16 @@ export function NetworkNorthStarView({
   useEffect(() => {
     setIncomingNetworkInvites(initialIncomingNetworkInvites);
   }, [initialIncomingNetworkInvites]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    function updateLayout() {
+      setIsDesktopLayout(mediaQuery.matches);
+    }
+    updateLayout();
+    mediaQuery.addEventListener("change", updateLayout);
+    return () => mediaQuery.removeEventListener("change", updateLayout);
+  }, []);
   const [invitationsTab, setInvitationsTab] =
     useState<NetworkInvitationsTab>("pending");
   const [showInviteForm, setShowInviteForm] = useState(false);
@@ -145,6 +157,9 @@ export function NetworkNorthStarView({
   const [search, setSearch] = useState("");
   const [directoryFilter, setDirectoryFilter] =
     useState<DirectoryFilter>("all");
+  const [directoryMobileView, setDirectoryMobileView] =
+    useState<DirectoryMobileView>("list");
+  const [isDesktopLayout, setIsDesktopLayout] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<ProfilePanelMode>("empty");
   const [visibilityError, setVisibilityError] = useState<string | null>(null);
@@ -418,7 +433,84 @@ export function NetworkNorthStarView({
     return null;
   }
 
-  function renderMyNetworkCard(partner: MyNetworkPartner) {
+  const deferCardActions = isDesktopLayout || selectedProfileId !== null;
+
+  const profileDetailPanel = (
+    <NetworkProfileDetailPanel
+      mode={panelMode}
+      profile={selectedProfile}
+      canSendReferral={canSendReferral}
+      canManageNetwork={canManageNetwork}
+      isInMyNetwork={Boolean(selectedPartner)}
+      myNetworkPartnerId={selectedPartner?.id}
+      networkActionError={
+        selectedProfile
+          ? getNetworkActionErrorForProfile(selectedProfile.id)
+          : null
+      }
+      isNetworkActionPending={
+        selectedProfile
+          ? isNetworkActionPendingForProfile(selectedProfile.id)
+          : false
+      }
+      onClose={handleClosePanel}
+      onSendReferral={() => {
+        if (selectedProfile) {
+          handleSendReferral(selectedProfile.id);
+        }
+      }}
+      onAddToNetwork={() => {
+        if (selectedProfile) {
+          handleAddToNetwork(selectedProfile.companyId, selectedProfile.id);
+        }
+      }}
+      onRemoveFromNetwork={() => {
+        if (selectedProfile) {
+          handleRemoveFromNetwork(
+            selectedProfile.companyId,
+            selectedProfile.id,
+          );
+        }
+      }}
+      onReferralSuccess={handleReferralSuccess}
+      onReferralCancel={() => setPanelMode("detail")}
+      surface="north-star"
+    />
+  );
+
+  function renderDirectoryProfileCard(profile: NetworkProfile) {
+    const isTrusted = trustedCompanyIds.has(profile.companyId);
+
+    return (
+      <NetworkDirectoryCard
+        key={profile.id}
+        profile={profile}
+        selected={profile.id === selectedProfileId}
+        onSelect={() => handleSelectProfile(profile.id)}
+        canSendReferral={canSendReferral}
+        onSendReferral={() => handleSendReferral(profile.id)}
+        canManageNetwork={canManageNetwork}
+        isTrustedPartner={isTrusted}
+        priorityPartner={isTrusted}
+        deferActionsToPanel={deferCardActions}
+        onAddToNetwork={
+          canManageNetwork && !isTrusted
+            ? () => handleAddToNetwork(profile.companyId, profile.id)
+            : undefined
+        }
+        onRemoveFromNetwork={
+          canManageNetwork && isTrusted
+            ? () => handleRemoveFromNetwork(profile.companyId, profile.id)
+            : undefined
+        }
+        isNetworkActionPending={isNetworkActionPendingForProfile(profile.id)}
+        networkActionError={getNetworkActionErrorForProfile(profile.id)}
+        surface="north-star"
+      />
+    );
+  }
+
+  function renderMyNetworkPartnerCard(partner: MyNetworkPartner) {
     const profile = partner.linkedProfile;
     const displayName = profile?.displayName ?? partner.partnerCompanyName;
 
@@ -434,6 +526,7 @@ export function NetworkNorthStarView({
           canManageNetwork={canManageNetwork}
           isTrustedPartner
           priorityPartner
+          deferActionsToPanel={deferCardActions}
           onRemoveFromNetwork={() =>
             handleRemoveFromNetwork(profile.companyId, profile.id)
           }
@@ -445,19 +538,20 @@ export function NetworkNorthStarView({
     }
 
     return (
-      <article
-        key={partner.id}
-        className={st.cardShellTrusted}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+      <article key={partner.id} className={`${st.cardShellTrusted} min-w-0`}>
+        <div className="flex items-start gap-3">
+          <div className={st.cardIcon}>
+            {getPartnerInitials(displayName)}
+          </div>
+          <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className={st.cardPrimary}>{displayName}</p>
               <NetworkTrustedBadge surface="north-star" />
             </div>
             <p className={`mt-1 ${st.cardSecondary}`}>{partner.tradeType}</p>
             {partner.city || partner.state ? (
-              <p className={`mt-1 ${st.cardMuted}`}>
+              <p className={`mt-1 flex items-center gap-1.5 ${st.cardMuted}`}>
+                <MapPin className="h-3.5 w-3.5 shrink-0 text-[#8A6324]" />
                 {[partner.city, partner.state].filter(Boolean).join(", ")}
               </p>
             ) : null}
@@ -466,14 +560,16 @@ export function NetworkNorthStarView({
               make their profile visible again.
             </p>
           </div>
-          {canManageNetwork ? (
+          {canManageNetwork && !deferCardActions ? (
             <button
               type="button"
               onClick={() =>
                 partner.linkedCompanyId &&
                 handleRemoveFromNetwork(partner.linkedCompanyId)
               }
-              disabled={isNetworkActionPendingForCompany(partner.linkedCompanyId ?? "")}
+              disabled={isNetworkActionPendingForCompany(
+                partner.linkedCompanyId ?? "",
+              )}
               className={`${st.panelAction} disabled:cursor-not-allowed`}
             >
               <UserMinus className="h-3.5 w-3.5" />
@@ -493,51 +589,69 @@ export function NetworkNorthStarView({
 
   return (
     <MasterShellPage fillViewport density="compact" className={st.pageCanvas}>
-      <MasterPageHeader
-        title="Network"
-        subtitle="Manage referral partners, invitations, and shared leads."
-        density="compact"
-        surfaceVariant="northStar"
-        className={`north-star-network-page-header ${st.pageHeader}`}
-        titleClassName={st.pageHeaderTitle}
-        subtitleClassName={st.pageHeaderSubtitle}
-        primaryAction={
-          canManageNetwork ? (
-            <button
-              type="button"
-              onClick={handleOpenInviteForm}
-              className={`north-star-network-primary-action ${st.primaryAction}`}
-            >
-              <UserPlus className="h-4 w-4" />
-              Invite Partner
-            </button>
-          ) : undefined
-        }
-      />
+      <div className="space-y-2 px-3 pt-3 sm:px-3.5 lg:px-5">
+        <MasterPageHeader
+          title="Network"
+          subtitle="Find trusted trade partners, share overflow work, and keep referral relationships moving."
+          density="compact"
+          surfaceVariant="northStar"
+          className={`north-star-network-page-header ${st.pageHeader}`}
+          titleClassName={st.pageHeaderTitle}
+          subtitleClassName={`${st.pageHeaderSubtitle} sm:whitespace-normal sm:truncate-none`}
+          primaryAction={
+            canManageNetwork ? (
+              <button
+                type="button"
+                onClick={handleOpenInviteForm}
+                className={`north-star-network-primary-action ${st.primaryAction}`}
+              >
+                <UserPlus className="h-4 w-4" />
+                Invite Partner
+              </button>
+            ) : undefined
+          }
+        />
+        <div className={st.commandHeaderChips}>
+          <span className={st.commandHeaderChip}>Discover</span>
+          <span className={st.commandHeaderChip}>My Network</span>
+          <span className={st.commandHeaderChip}>Referrals</span>
+          <span className={st.commandHeaderChipAccent}>Early access</span>
+        </div>
+      </div>
 
       <MasterContentStack density="compact" className={st.workspaceStack}>
         {ownProfile && canSendReferral ? (
           <div className={st.profileVisibilityStrip}>
-            <div>
-              <p className={st.sectionTitle}>Your network profile</p>
-              <p className={st.sectionSubtitle}>
-                {ownProfile.isVisible
-                  ? "Visible in the directory for trusted referrals."
-                  : "Hidden from the directory. Turn on visibility to receive referrals."}
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+              <p className={st.profileVisibilityLabel}>
+                Your network profile is{" "}
+                {ownProfile.isVisible ? "visible" : "hidden"}
+              </p>
+              <span
+                className={
+                  ownProfile.isVisible
+                    ? st.profileVisibilityPill
+                    : st.profileVisibilityPillHidden
+                }
+              >
+                {ownProfile.isVisible ? "Visible" : "Hidden"}
+              </span>
+              <p className={`${st.profileVisibilityHelper} basis-full sm:basis-auto`}>
+                Companies can discover you for trusted referrals.
               </p>
             </div>
             <button
               type="button"
               onClick={handleToggleVisibility}
               disabled={isVisibilityPending}
-              className={`${st.secondaryAction} disabled:opacity-60`}
+              className={`${st.secondaryAction} shrink-0 disabled:opacity-60`}
             >
               {ownProfile.isVisible ? (
                 <EyeOff className="h-4 w-4" />
               ) : (
                 <Eye className="h-4 w-4" />
               )}
-              {ownProfile.isVisible ? "Hide profile" : "Make profile visible"}
+              {ownProfile.isVisible ? "Hide profile" : "Show profile"}
             </button>
           </div>
         ) : null}
@@ -564,7 +678,7 @@ export function NetworkNorthStarView({
           />
         ) : null}
 
-        <div className={`${st.sectionSurface} overflow-hidden`}>
+        <div className={`${st.tabBodySurface} overflow-hidden`}>
           <div className={st.tabBand}>
             <nav
               className={`${st.tabControl} overflow-x-auto`}
@@ -592,446 +706,439 @@ export function NetworkNorthStarView({
             </div>
           ) : null}
 
-          <div className="min-h-0 p-3 pb-4 sm:p-4 sm:pb-5 lg:px-5 lg:pb-6">
-      {activeTab === "directory" ? (
-        <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-row lg:overflow-hidden">
-          <div
-            className={`${st.sectionSurface} ${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-[24rem] lg:flex-1 lg:overflow-hidden`}
-          >
-            <div className={st.panelHeader}>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className={st.sectionEyebrow}>Discover</p>
-                  <h2 className={st.sectionTitle}>Directory</h2>
-                  <p className={st.sectionSubtitle}>
-                    Visible trade companies in the Altair Network
-                  </p>
-                </div>
-                <p className={st.countMeta}>{filteredProfiles.length} companies</p>
-              </div>
-
-              {canManageNetwork ? (
-                <div
-                  className={`${st.filterControl} mt-3`}
-                  aria-label="Directory filter"
-                >
-                  {DIRECTORY_FILTER_OPTIONS.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      aria-pressed={directoryFilter === option.value}
-                      onClick={() => setDirectoryFilter(option.value)}
-                      className={`${st.filterItem} px-3 py-2 text-xs ${
-                        directoryFilter === option.value ? st.filterItemActive : ""
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-
-              <div className="relative mt-3">
-                <Search
-                  className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${lt.filterIcon}`}
-                />
-                <input
-                  type="search"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search companies, trades, or locations"
-                  aria-label="Search network directory"
-                  className={`${st.searchInput} py-2.5 pl-9 pr-3 sm:text-base`}
-                />
-              </div>
-            </div>
-
-            <div className={`@container p-4 pb-6 ${masterListPageScrollRegionClass}`}>
-              {filteredProfiles.length === 0 ? (
-                <div className={`${st.emptyState} px-4 py-10 text-center`}>
-                  <p className={st.emptyTitle}>
-                    {directoryFilter === "my-network"
-                      ? "No trusted partners in your network yet"
-                      : "No visible network profiles yet"}
-                  </p>
-                  <p className={st.emptyDescription}>
-                    {directoryFilter === "my-network"
-                      ? MY_NETWORK_EMPTY_MESSAGE
-                      : "Partner companies appear here when they make their profile visible in the network."}
-                  </p>
-                </div>
-              ) : (
-                <div className="grid min-w-0 grid-cols-1 gap-4 @xl:grid-cols-2">
-                  {filteredProfiles.map((profile) => {
-                    const isTrusted = trustedCompanyIds.has(profile.companyId);
-
-                    return (
-                      <NetworkDirectoryCard
-                        key={profile.id}
-                        profile={profile}
-                        selected={profile.id === selectedProfileId}
-                        onSelect={() => handleSelectProfile(profile.id)}
-                        canSendReferral={canSendReferral}
-                        onSendReferral={() => handleSendReferral(profile.id)}
-                        canManageNetwork={canManageNetwork}
-                        isTrustedPartner={isTrusted}
-                        priorityPartner={isTrusted}
-                        onAddToNetwork={
-                          canManageNetwork && !isTrusted
-                            ? () =>
-                                handleAddToNetwork(
-                                  profile.companyId,
-                                  profile.id,
-                                )
-                            : undefined
-                        }
-                        onRemoveFromNetwork={
-                          canManageNetwork && isTrusted
-                            ? () =>
-                                handleRemoveFromNetwork(
-                                  profile.companyId,
-                                  profile.id,
-                                )
-                            : undefined
-                        }
-                        isNetworkActionPending={isNetworkActionPendingForProfile(
-                          profile.id,
-                        )}
-                        networkActionError={getNetworkActionErrorForProfile(
-                          profile.id,
-                        )}
-                        surface="north-star"
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <NetworkProfileDetailPanel
-            mode={panelMode}
-            profile={selectedProfile}
-            canSendReferral={canSendReferral}
-            canManageNetwork={canManageNetwork}
-            isInMyNetwork={Boolean(selectedPartner)}
-            myNetworkPartnerId={selectedPartner?.id}
-            networkActionError={
-              selectedProfile
-                ? getNetworkActionErrorForProfile(selectedProfile.id)
-                : null
-            }
-            isNetworkActionPending={
-              selectedProfile
-                ? isNetworkActionPendingForProfile(selectedProfile.id)
-                : false
-            }
-            onClose={handleClosePanel}
-            onSendReferral={() => {
-              if (selectedProfile) {
-                handleSendReferral(selectedProfile.id);
-              }
-            }}
-            onAddToNetwork={() => {
-              if (selectedProfile) {
-                handleAddToNetwork(
-                  selectedProfile.companyId,
-                  selectedProfile.id,
-                );
-              }
-            }}
-            onRemoveFromNetwork={() => {
-              if (selectedProfile) {
-                handleRemoveFromNetwork(
-                  selectedProfile.companyId,
-                  selectedProfile.id,
-                );
-              }
-            }}
-            onReferralSuccess={handleReferralSuccess}
-            onReferralCancel={() => setPanelMode("detail")}
-            surface="north-star"
-          />
-        </div>
-      ) : null}
-
-      {activeTab === "my-network" ? (
-        <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-row lg:overflow-hidden">
-          <div
-            className={`${st.sectionSurface} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-[24rem] lg:flex-1 lg:overflow-hidden`}
-          >
-            <div className={st.panelHeader}>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className={st.sectionEyebrow}>Trusted roster</p>
-                  <h2 className={st.sectionTitle}>My Network</h2>
-                  <p className={st.sectionSubtitle}>
-                    Companies in your private network for quick referrals
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {canManageNetwork ? (
-                    <button
-                      type="button"
-                      onClick={handleOpenInviteForm}
-                      className={st.secondaryAction}
-                    >
-                      <UserPlus className="h-4 w-4" />
-                      Invite Partner
-                    </button>
-                  ) : null}
-                  <p className={st.countMeta}>{myNetworkEntries.length} partners</p>
-                </div>
-              </div>
-            </div>
-
-            <div className={`@container p-4 pb-6 ${masterListPageScrollRegionClass}`}>
-              {!canManageNetwork ? (
-                <p className={st.permissionCopy}>
-                  Trusted partners are managed by company owners and admins.
-                </p>
-              ) : myNetworkEntries.length === 0 ? (
-                <div className={`${st.emptyState} px-4 py-10 text-center`}>
-                  <p className={st.emptyTitle}>No trusted partners yet</p>
-                  <p className={st.emptyDescription}>{MY_NETWORK_EMPTY_MESSAGE}</p>
-                </div>
-              ) : (
-                <div className="grid min-w-0 grid-cols-1 gap-4 @xl:grid-cols-2">
-                  {myNetworkEntries.map((partner) => renderMyNetworkCard(partner))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <NetworkProfileDetailPanel
-            mode={panelMode}
-            profile={selectedProfile}
-            canSendReferral={canSendReferral}
-            canManageNetwork={canManageNetwork}
-            isInMyNetwork={Boolean(selectedPartner)}
-            myNetworkPartnerId={selectedPartner?.id}
-            networkActionError={
-              selectedProfile
-                ? getNetworkActionErrorForProfile(selectedProfile.id)
-                : null
-            }
-            isNetworkActionPending={
-              selectedProfile
-                ? isNetworkActionPendingForProfile(selectedProfile.id)
-                : false
-            }
-            onClose={handleClosePanel}
-            onSendReferral={() => {
-              if (selectedProfile) {
-                handleSendReferral(selectedProfile.id);
-              }
-            }}
-            onAddToNetwork={() => {
-              if (selectedProfile) {
-                handleAddToNetwork(
-                  selectedProfile.companyId,
-                  selectedProfile.id,
-                );
-              }
-            }}
-            onRemoveFromNetwork={() => {
-              if (selectedProfile) {
-                handleRemoveFromNetwork(
-                  selectedProfile.companyId,
-                  selectedProfile.id,
-                );
-              }
-            }}
-            onReferralSuccess={handleReferralSuccess}
-            onReferralCancel={() => setPanelMode("detail")}
-            surface="north-star"
-          />
-        </div>
-      ) : null}
-
-      {activeTab === "invitations" ? (
-        <div className={`${st.sectionSurface} min-h-0 overflow-y-auto p-4`}>
-          {!canManageNetwork ? (
-            <p className={st.permissionCopy}>
-              Network invitations are managed by company owners and admins.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className={st.sectionTitle}>Invitations</h2>
-                  <p className={st.sectionSubtitle}>
-                    Pending and past partner invitations
-                  </p>
-                </div>
-                {!showInviteForm ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowInviteForm(true)}
-                    className={st.secondaryAction}
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    Invite Partner
-                  </button>
-                ) : null}
-              </div>
-
-              {showInviteForm ? (
-                <div className={st.inviteFormShell}>
-                  <h3 className={st.sectionTitle}>Invite a company</h3>
-                  <p className={st.sectionSubtitle}>
-                    They&apos;ll receive a signup link and become a trusted partner
-                    when they join.
-                  </p>
-                  <div className="mt-4">
-                    <NetworkInviteForm
-                      onSuccess={handleInviteSuccess}
-                      onCancel={() => setShowInviteForm(false)}
-                      surface="north-star"
-                    />
-                  </div>
-                </div>
-              ) : null}
-
-              {latestInviteUrl ? (
-                <div className={st.inviteSuccessBanner}>
-                  <p className="text-sm font-semibold text-[#166534]">
-                    Invitation created
-                  </p>
-                  <p className="mt-1 break-all text-xs text-[#4F4638]">
-                    {latestInviteUrl}
-                  </p>
-                  <p className="mt-1 text-xs text-[#6B6255]">
-                    Copy this link from the invitation card below anytime.
-                  </p>
-                </div>
-              ) : null}
-
-              <div>
-                <div className={st.filterControl} aria-label="Invitation status filter">
-                  {NETWORK_INVITATIONS_TAB_OPTIONS.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      aria-pressed={invitationsTab === option.value}
-                      onClick={() => setInvitationsTab(option.value)}
-                      className={`${st.filterItem} px-3 py-2 text-xs ${
-                        invitationsTab === option.value ? st.filterItemActive : ""
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+          <div className={st.tabBodyInner}>
+            {activeTab === "directory" ? (
+              <div className="flex min-h-0 min-w-0 flex-col gap-4 overflow-x-hidden lg:min-h-[32rem] lg:flex-row lg:overflow-hidden">
+                <div className="hidden min-w-0 lg:flex lg:w-[380px] lg:shrink-0 lg:self-stretch xl:w-[420px]">
+                  {profileDetailPanel}
                 </div>
 
-                <div className="mt-4 grid gap-4 lg:grid-cols-2">
-                  {filteredInvites.length === 0 ? (
-                    <div className={`col-span-full ${st.emptyState} px-4 py-10 text-center`}>
-                      <p className={st.emptyTitle}>
-                        {invitationsEmptyCopy[invitationsTab].title}
-                      </p>
-                      <p className={st.emptyDescription}>
-                        {invitationsEmptyCopy[invitationsTab].description}
+                <div className={`${st.discoveryWorkspace} min-w-0 lg:flex-1`}>
+                  <div className={st.flatPanelHeader}>
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p className={st.sectionEyebrow}>Partner directory</p>
+                        <h2 className={st.sectionTitle}>Discover companies</h2>
+                        <p className={st.sectionSubtitle}>
+                          Find trusted trade partners near you and send overflow
+                          work with confidence
+                        </p>
+                      </div>
+                      <p className={st.countMeta}>
+                        {filteredProfiles.length} companies
                       </p>
                     </div>
-                  ) : (
-                    filteredInvites.map((invite) => (
-                      <NetworkInvitationCard
-                        key={invite.id}
-                        invite={invite}
-                        connectedViaPartners={isNetworkInviteConnected(
-                          invite,
-                          myNetworkPartners,
-                          profiles,
-                        )}
-                        timeZone={timeZone}
-                        initialInviteUrl={
-                          invite.id === networkInvites[0]?.id
-                            ? (latestInviteUrl ?? undefined)
-                            : undefined
-                        }
-                        surface="north-star"
+
+                    <div className="relative">
+                      <Search
+                        className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${lt.filterIcon}`}
                       />
-                    ))
-                  )}
+                      <input
+                        type="search"
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder="Search companies, trades, or locations"
+                        aria-label="Search network directory"
+                        className={`${st.searchInput} py-2.5 pl-9 pr-3 sm:text-base`}
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      {canManageNetwork ? (
+                        <div
+                          className={st.filterControl}
+                          aria-label="Directory filter"
+                        >
+                          {DIRECTORY_FILTER_OPTIONS.map((option) => (
+                            <button
+                              key={option.value}
+                              type="button"
+                              aria-pressed={directoryFilter === option.value}
+                              onClick={() => setDirectoryFilter(option.value)}
+                              className={`${st.filterItem} px-3 py-2 text-xs ${
+                                directoryFilter === option.value
+                                  ? st.filterItemActive
+                                  : ""
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      <div
+                        className={`${st.mobileViewToggle} lg:hidden`}
+                        aria-label="Directory view"
+                      >
+                        {(["map", "list"] as const).map((view) => (
+                          <button
+                            key={view}
+                            type="button"
+                            aria-pressed={directoryMobileView === view}
+                            onClick={() => setDirectoryMobileView(view)}
+                            className={`${st.mobileViewToggleItem} px-3 py-2 text-xs capitalize ${
+                              directoryMobileView === view
+                                ? st.mobileViewToggleItemActive
+                                : ""
+                            }`}
+                          >
+                            {view}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedProfileId && !isDesktopLayout ? (
+                    <div className="min-w-0 lg:hidden">{profileDetailPanel}</div>
+                  ) : null}
+
+                  <div className={st.discoveryContentGrid}>
+                    {directoryMobileView === "list" || isDesktopLayout ? (
+                      <div
+                        className={`@container order-2 min-w-0 lg:order-1 ${st.discoveryListRegion} ${masterListPageScrollRegionClass}`}
+                      >
+                        {filteredProfiles.length === 0 ? (
+                          <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
+                            <p className={st.emptyTitle}>
+                              {directoryFilter === "my-network"
+                                ? "No trusted partners in your network yet"
+                                : "No visible network profiles yet"}
+                            </p>
+                            <p className={st.emptyDescription}>
+                              {directoryFilter === "my-network"
+                                ? MY_NETWORK_EMPTY_MESSAGE
+                                : "Partner companies appear here when they make their profile visible in the network."}
+                            </p>
+                            {directoryFilter === "my-network" ? (
+                              <button
+                                type="button"
+                                onClick={() => setDirectoryFilter("all")}
+                                className={`${st.emptyStateCta} mt-4`}
+                              >
+                                Browse all companies
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <div className={st.rosterList}>
+                            {filteredProfiles.map((profile) =>
+                              renderDirectoryProfileCard(profile),
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+
+                    {isDesktopLayout ||
+                    (directoryMobileView === "map" && !selectedProfileId) ? (
+                      <div className={`order-1 lg:order-2 ${st.discoveryMapRegion}`}>
+                        <NetworkMapPreviewPanel
+                          profiles={filteredProfiles}
+                          trustedCompanyIds={trustedCompanyIds}
+                          className="h-full"
+                        />
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-      ) : null}
+            ) : null}
 
-      {activeTab === "sent-referrals" ? (
-        <div className={`${st.sectionSurface} min-h-0 overflow-y-auto p-4`}>
-          {!canSendReferral ? (
-            <p className={st.permissionCopy}>
-              Sent referrals are visible to company owners and admins.
-            </p>
-          ) : sentReferrals.length === 0 ? (
-            <div className={`${st.emptyState} px-4 py-10 text-center`}>
-              <p className={st.emptyTitle}>No sent referrals yet</p>
-              <p className={st.emptyDescription}>
-                Send your first referral from the directory.
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {sentReferrals.map((referral) => (
-                <NetworkReferralCard
-                  key={referral.id}
-                  referral={referral}
-                  direction="sent"
-                  timeZone={timeZone}
-                  onUpdated={(updated) =>
-                    setSentReferrals((current) =>
-                      current.map((item) =>
-                        item.id === updated.id ? updated : item,
-                      ),
-                    )
-                  }
-                  surface="north-star"
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      ) : null}
+            {activeTab === "my-network" ? (
+              <div className="flex min-h-0 min-w-0 flex-col gap-4 overflow-x-hidden lg:min-h-[32rem] lg:flex-row lg:overflow-hidden">
+                <div className="hidden min-w-0 lg:flex lg:w-[380px] lg:shrink-0 lg:self-stretch xl:w-[420px]">
+                  {profileDetailPanel}
+                </div>
 
-      {activeTab === "received-referrals" ? (
-        <div className={`${st.sectionSurface} min-h-0 overflow-y-auto p-4`}>
-          {!canManageReceivedReferrals ? (
-            <p className={st.permissionCopy}>
-              Received referrals are visible to lead management roles.
-            </p>
-          ) : receivedReferrals.length === 0 ? (
-            <div className={`${st.emptyState} px-4 py-10 text-center`}>
-              <p className={st.emptyTitle}>No received referrals yet</p>
-              <p className={st.emptyDescription}>
-                Referred leads appear here when partner companies send work your way.
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {receivedReferrals.map((referral) => (
-                <NetworkReferralCard
-                  key={referral.id}
-                  referral={referral}
-                  direction="received"
-                  timeZone={timeZone}
-                  onUpdated={(updated) =>
-                    setReceivedReferrals((current) =>
-                      current.map((item) =>
-                        item.id === updated.id ? updated : item,
-                      ),
-                    )
-                  }
-                  surface="north-star"
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      ) : null}
+                <div className={`${st.discoveryWorkspace} min-w-0 lg:flex-1`}>
+                  <div className={st.flatPanelHeader}>
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p className={st.sectionEyebrow}>Trusted roster</p>
+                        <h2 className={st.sectionTitle}>My Network</h2>
+                        <p className={st.sectionSubtitle}>
+                          Your private partner list for quick referrals and
+                          overflow work
+                        </p>
+                      </div>
+                      <p className={st.countMeta}>
+                        {myNetworkEntries.length} partners
+                      </p>
+                    </div>
+                  </div>
+
+                  {selectedProfileId && !isDesktopLayout ? (
+                    <div className="min-w-0 lg:hidden">{profileDetailPanel}</div>
+                  ) : null}
+
+                  <div
+                    className={`@container min-w-0 ${st.discoveryListRegion} ${masterListPageScrollRegionClass}`}
+                  >
+                    {!canManageNetwork ? (
+                      <p className={st.permissionCopy}>
+                        Trusted partners are managed by company owners and admins.
+                      </p>
+                    ) : myNetworkEntries.length === 0 ? (
+                      <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
+                        <p className={st.emptyTitle}>No trusted partners yet</p>
+                        <p className={st.emptyDescription}>
+                          Add companies from Discover so you can quickly send
+                          overflow work and referral leads.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => handleTabChange("directory")}
+                          className={`${st.emptyStateCta} mt-4`}
+                        >
+                          Browse Discover
+                        </button>
+                      </div>
+                    ) : (
+                      <div className={st.rosterListMyNetwork}>
+                        {myNetworkEntries.map((partner) =>
+                          renderMyNetworkPartnerCard(partner),
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {activeTab === "invitations" ? (
+              <div className="min-h-0 overflow-y-auto">
+                {!canManageNetwork ? (
+                  <p className={st.permissionCopy}>
+                    Network invitations are managed by company owners and admins.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className={st.sectionEyebrow}>Invite management</p>
+                        <h2 className={st.sectionTitle}>Invitations</h2>
+                        <p className={st.sectionSubtitle}>
+                          Track pending invites and partner onboarding status
+                        </p>
+                      </div>
+                      {!showInviteForm ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowInviteForm(true)}
+                          className={st.secondaryAction}
+                        >
+                          <UserPlus className="h-4 w-4" />
+                          Invite Partner
+                        </button>
+                      ) : null}
+                    </div>
+
+                    {showInviteForm ? (
+                      <div className={st.inviteFormShell}>
+                        <h3 className={st.sectionTitle}>Invite a company</h3>
+                        <p className={st.sectionSubtitle}>
+                          They&apos;ll receive a signup link and become a trusted
+                          partner when they join.
+                        </p>
+                        <div className="mt-4">
+                          <NetworkInviteForm
+                            onSuccess={handleInviteSuccess}
+                            onCancel={() => setShowInviteForm(false)}
+                            surface="north-star"
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {latestInviteUrl ? (
+                      <div className={st.inviteSuccessBanner}>
+                        <p className="text-sm font-semibold text-[#166534]">
+                          Invitation created
+                        </p>
+                        <p className="mt-1 break-all text-xs text-[#4F4638]">
+                          {latestInviteUrl}
+                        </p>
+                        <p className="mt-1 text-xs text-[#6B6255]">
+                          Copy this link from the invitation card below anytime.
+                        </p>
+                      </div>
+                    ) : null}
+
+                    <div>
+                      <div
+                        className={st.filterControl}
+                        aria-label="Invitation status filter"
+                      >
+                        {NETWORK_INVITATIONS_TAB_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            aria-pressed={invitationsTab === option.value}
+                            onClick={() => setInvitationsTab(option.value)}
+                            className={`${st.filterItem} px-3 py-2 text-xs ${
+                              invitationsTab === option.value
+                                ? st.filterItemActive
+                                : ""
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className={`mt-4 ${st.invitationCardGrid}`}>
+                        {filteredInvites.length === 0 ? (
+                          <div
+                            className={`col-span-full ${st.emptyState} ${st.emptyStateStrong}`}
+                          >
+                            <p className={st.emptyTitle}>
+                              {invitationsEmptyCopy[invitationsTab].title}
+                            </p>
+                            <p className={st.emptyDescription}>
+                              {invitationsEmptyCopy[invitationsTab].description}
+                            </p>
+                            {invitationsTab === "pending" && !showInviteForm ? (
+                              <button
+                                type="button"
+                                onClick={() => setShowInviteForm(true)}
+                                className={`${st.emptyStateCta} mt-4`}
+                              >
+                                <UserPlus className="h-4 w-4" />
+                                Invite Partner
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : (
+                          filteredInvites.map((invite) => (
+                            <NetworkInvitationCard
+                              key={invite.id}
+                              invite={invite}
+                              connectedViaPartners={isNetworkInviteConnected(
+                                invite,
+                                myNetworkPartners,
+                                profiles,
+                              )}
+                              timeZone={timeZone}
+                              initialInviteUrl={
+                                invite.id === networkInvites[0]?.id
+                                  ? (latestInviteUrl ?? undefined)
+                                  : undefined
+                              }
+                              surface="north-star"
+                            />
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
+
+            {activeTab === "sent-referrals" ? (
+              <div className="min-h-0 overflow-y-auto">
+                {!canSendReferral ? (
+                  <p className={st.permissionCopy}>
+                    Sent referrals are visible to company owners and admins.
+                  </p>
+                ) : (
+                  <>
+                    <div className={st.referralInboxHeader}>
+                      <p className={st.sectionEyebrow}>Outbound referrals</p>
+                      <h2 className={st.sectionTitle}>Sent</h2>
+                      <p className={st.sectionSubtitle}>
+                        Referral leads you&apos;ve sent to partner companies
+                      </p>
+                    </div>
+                    {sentReferrals.length === 0 ? (
+                      <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
+                        <p className={st.emptyTitle}>No sent referrals yet</p>
+                        <p className={st.emptyDescription}>
+                          Send overflow work from Discover or My Network when a
+                          trusted partner is the right fit.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => handleTabChange("directory")}
+                          className={`${st.secondaryAction} mt-4`}
+                        >
+                          Browse Discover
+                        </button>
+                      </div>
+                    ) : (
+                      <div className={st.invitationCardGrid}>
+                        {sentReferrals.map((referral) => (
+                          <NetworkReferralCard
+                            key={referral.id}
+                            referral={referral}
+                            direction="sent"
+                            timeZone={timeZone}
+                            onUpdated={(updated) =>
+                              setSentReferrals((current) =>
+                                current.map((item) =>
+                                  item.id === updated.id ? updated : item,
+                                ),
+                              )
+                            }
+                            surface="north-star"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : null}
+
+            {activeTab === "received-referrals" ? (
+              <div className="min-h-0 overflow-y-auto">
+                {!canManageReceivedReferrals ? (
+                  <p className={st.permissionCopy}>
+                    Received referrals are visible to lead management roles.
+                  </p>
+                ) : (
+                  <>
+                    <div className={st.referralInboxHeader}>
+                      <p className={st.sectionEyebrow}>Inbound referrals</p>
+                      <h2 className={st.sectionTitle}>Received</h2>
+                      <p className={st.sectionSubtitle}>
+                        Referral work sent to you by partner companies
+                      </p>
+                    </div>
+                    {receivedReferrals.length === 0 ? (
+                      <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
+                        <p className={st.emptyTitle}>No received referrals yet</p>
+                        <p className={st.emptyDescription}>
+                          Referred leads appear here when partner companies send
+                          overflow work your way.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className={st.invitationCardGrid}>
+                        {receivedReferrals.map((referral) => (
+                          <NetworkReferralCard
+                            key={referral.id}
+                            referral={referral}
+                            direction="received"
+                            timeZone={timeZone}
+                            onUpdated={(updated) =>
+                              setReceivedReferrals((current) =>
+                                current.map((item) =>
+                                  item.id === updated.id ? updated : item,
+                                ),
+                              )
+                            }
+                            surface="north-star"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
       </MasterContentStack>

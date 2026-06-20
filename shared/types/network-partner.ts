@@ -182,7 +182,7 @@ export function mergeMyNetworkPartnersFromServer(
 }
 
 export const MY_NETWORK_EMPTY_MESSAGE =
-  "Add trusted companies to your network so you can quickly send referrals and track partner relationships.";
+  "Add companies from Discover so you can quickly send overflow work and referrals.";
 
 export type DirectoryFilter = "all" | "my-network";
 

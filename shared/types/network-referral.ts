@@ -109,7 +109,7 @@ export const NETWORK_REFERRALS_TAB_OPTIONS: {
   value: NetworkReferralsTab;
   label: string;
 }[] = [
-  { value: "directory", label: "Directory" },
+  { value: "directory", label: "Discover" },
   { value: "my-network", label: "My Network" },
   { value: "invitations", label: "Invitations" },
   { value: "sent-referrals", label: "Sent" },
