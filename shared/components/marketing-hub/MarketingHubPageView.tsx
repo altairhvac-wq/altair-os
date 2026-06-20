@@ -19,6 +19,8 @@ import {
   type MarketingPost,
 } from "@/shared/types/marketing-post";
 
+type ViewMode = "list" | "create" | "edit";
+
 type MarketingHubPageViewProps = {
   initialPosts: MarketingPost[];
 };
@@ -26,12 +28,39 @@ type MarketingHubPageViewProps = {
 export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps) {
   const router = useRouter();
   const northStar = isNorthStarShellEnabled();
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const hasNoPosts = initialPosts.length === 0;
+  const selectedPost =
+    selectedPostId != null
+      ? initialPosts.find((post) => post.id === selectedPostId) ?? null
+      : null;
+  const isFormOpen = viewMode === "create" || viewMode === "edit";
 
   function handleCreateSuccess() {
-    setShowCreateForm(false);
+    setViewMode("list");
     router.refresh();
+  }
+
+  function handleEditSuccess() {
+    setViewMode("list");
+    setSelectedPostId(null);
+    router.refresh();
+  }
+
+  function handleOpenCreateForm() {
+    setSelectedPostId(null);
+    setViewMode("create");
+  }
+
+  function handleSelectPost(postId: string) {
+    setSelectedPostId(postId);
+    setViewMode("edit");
+  }
+
+  function handleCloseForm() {
+    setViewMode("list");
+    setSelectedPostId(null);
   }
 
   return (
@@ -42,8 +71,8 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
       primaryAction={
         <button
           type="button"
-          disabled={showCreateForm}
-          onClick={() => setShowCreateForm(true)}
+          disabled={isFormOpen}
+          onClick={handleOpenCreateForm}
           className={
             northStar
               ? `north-star-marketing-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
@@ -69,11 +98,22 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
         ) : null}
 
         <div className={masterListPageScrollRegionClass}>
-          {showCreateForm ? (
+          {viewMode === "create" ? (
             <div className="p-4 sm:p-6">
               <MarketingPostDraftForm
+                mode="create"
                 onSuccess={handleCreateSuccess}
-                onCancel={() => setShowCreateForm(false)}
+                onCancel={handleCloseForm}
+              />
+            </div>
+          ) : viewMode === "edit" && selectedPost ? (
+            <div className="p-4 sm:p-6">
+              <MarketingPostDraftForm
+                key={selectedPost.id}
+                mode="edit"
+                post={selectedPost}
+                onSuccess={handleEditSuccess}
+                onCancel={handleCloseForm}
               />
             </div>
           ) : hasNoPosts ? (
@@ -116,27 +156,34 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
           ) : (
             <ul className="divide-y divide-slate-100/90">
               {initialPosts.map((post) => (
-                <li
-                  key={post.id}
-                  className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-slate-900">
-                      {post.title}
-                    </p>
-                    <p className="mt-0.5 truncate text-xs text-slate-500">
-                      {formatMarketingChannel(post.channelTarget)}
-                    </p>
-                  </div>
-                  <span
-                    className={`inline-flex w-fit shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                <li key={post.id}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPost(post.id)}
+                    className={`flex w-full flex-col gap-1 px-4 py-3 text-left transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${
                       northStar
-                        ? "bg-[#EFE4CB] text-[#6B4E1A] ring-1 ring-[rgba(138,99,36,0.12)]"
-                        : "bg-slate-100 text-slate-700"
+                        ? "hover:bg-[#FAF6EE]/80"
+                        : "hover:bg-slate-50/80"
                     }`}
                   >
-                    {formatMarketingPostStatus(post.status)}
-                  </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-slate-900">
+                        {post.title}
+                      </p>
+                      <p className="mt-0.5 truncate text-xs text-slate-500">
+                        {formatMarketingChannel(post.channelTarget)}
+                      </p>
+                    </div>
+                    <span
+                      className={`inline-flex w-fit shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        northStar
+                          ? "bg-[#EFE4CB] text-[#6B4E1A] ring-1 ring-[rgba(138,99,36,0.12)]"
+                          : "bg-slate-100 text-slate-700"
+                      }`}
+                    >
+                      {formatMarketingPostStatus(post.status)}
+                    </span>
+                  </button>
                 </li>
               ))}
             </ul>

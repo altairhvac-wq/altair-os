@@ -1,11 +1,22 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createMarketingPostAction } from "@/app/actions/marketing-posts";
+import {
+  createMarketingPostAction,
+  updateMarketingPostAction,
+} from "@/app/actions/marketing-posts";
+import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { formatActionError } from "@/shared/lib/operational-errors";
-import type { MarketingChannel } from "@/shared/types/marketing-post";
+import type { MarketingChannel, MarketingPost } from "@/shared/types/marketing-post";
+import {
+  formatMarketingChannel,
+  formatMarketingPostStatus,
+} from "@/shared/types/marketing-post";
 
 type MarketingPostDraftFormProps = {
+  mode?: "create" | "edit";
+  post?: MarketingPost;
   onSuccess: () => void;
   onCancel: () => void;
 };
@@ -46,6 +57,20 @@ function normalizeSuggestedHashtagsInput(value: string): string[] {
   return [...new Set(normalized)];
 }
 
+function formatSuggestedHashtagsForInput(hashtags: string[]): string {
+  return hashtags.map((tag) => `#${tag}`).join(" ");
+}
+
+function postToFormData(post: MarketingPost): DraftFormData {
+  return {
+    title: post.title,
+    channelTarget: post.channelTarget,
+    postText: post.postText,
+    suggestedHashtags: formatSuggestedHashtagsForInput(post.suggestedHashtags),
+    callToAction: post.callToAction ?? "",
+  };
+}
+
 function validateDraftFormData(data: DraftFormData): string | null {
   if (!data.title.trim()) {
     return "Add a post title.";
@@ -63,10 +88,16 @@ function validateDraftFormData(data: DraftFormData): string | null {
 }
 
 export function MarketingPostDraftForm({
+  mode = "create",
+  post,
   onSuccess,
   onCancel,
 }: MarketingPostDraftFormProps) {
-  const [formData, setFormData] = useState<DraftFormData>(DEFAULT_FORM_DATA);
+  const timeZone = useCompanyTimezone();
+  const isEditMode = mode === "edit" && post != null;
+  const [formData, setFormData] = useState<DraftFormData>(() =>
+    isEditMode ? postToFormData(post) : DEFAULT_FORM_DATA,
+  );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -93,7 +124,7 @@ export function MarketingPostDraftForm({
     }
 
     startTransition(async () => {
-      const result = await createMarketingPostAction({
+      const payload = {
         title: formData.title.trim(),
         channelTarget: formData.channelTarget,
         postText: formData.postText.trim(),
@@ -101,15 +132,23 @@ export function MarketingPostDraftForm({
           formData.suggestedHashtags,
         ),
         callToAction: formData.callToAction.trim() || null,
-        status: "draft",
-        sourceType: "manual",
-      });
+      };
+
+      const result = isEditMode
+        ? await updateMarketingPostAction(post.id, payload)
+        : await createMarketingPostAction({
+            ...payload,
+            status: "draft",
+            sourceType: "manual",
+          });
 
       if (result.error || !result.post) {
         setError(
           formatActionError(
             result.error,
-            "We couldn't create this marketing post. Try again.",
+            isEditMode
+              ? "We couldn't save marketing post changes. Try again."
+              : "We couldn't create this marketing post. Try again.",
           ),
         );
         return;
@@ -122,11 +161,42 @@ export function MarketingPostDraftForm({
   return (
     <form onSubmit={handleSubmit} className="mx-auto w-full max-w-2xl space-y-4">
       <div>
-        <h2 className="text-sm font-semibold text-slate-900">New post draft</h2>
+        <h2 className="text-sm font-semibold text-slate-900">
+          {isEditMode ? "Edit post draft" : "New post draft"}
+        </h2>
         <p className="mt-0.5 text-sm text-slate-500">
-          Create a draft you can refine before posting.
+          {isEditMode
+            ? "Update the draft before posting."
+            : "Create a draft you can refine before posting."}
         </p>
       </div>
+
+      {isEditMode ? (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+          <span>
+            Status:{" "}
+            <span className="font-medium text-slate-700">
+              {formatMarketingPostStatus(post.status)}
+            </span>
+          </span>
+          <span>
+            Channel:{" "}
+            <span className="font-medium text-slate-700">
+              {formatMarketingChannel(post.channelTarget)}
+            </span>
+          </span>
+          <span>
+            Updated{" "}
+            {formatDateTimeInTimeZone(post.updatedAt, timeZone, {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            })}
+          </span>
+        </div>
+      ) : null}
 
       <label className="block text-sm">
         <span className="font-medium text-slate-700">Title</span>
@@ -209,7 +279,7 @@ export function MarketingPostDraftForm({
           disabled={isPending}
           className="admin-btn-primary"
         >
-          {isPending ? "Saving..." : "Save draft"}
+          {isPending ? "Saving..." : isEditMode ? "Save changes" : "Save draft"}
         </button>
         <button
           type="button"
@@ -217,7 +287,7 @@ export function MarketingPostDraftForm({
           onClick={onCancel}
           className="admin-btn-secondary"
         >
-          Cancel
+          {isEditMode ? "Close" : "Cancel"}
         </button>
       </div>
     </form>
