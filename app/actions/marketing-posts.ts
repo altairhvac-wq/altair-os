@@ -121,6 +121,70 @@ function validateFounderSourcePermission(
   return null;
 }
 
+function isFounderMarketingSource(
+  sourceType: MarketingPostSource | undefined,
+): boolean {
+  return (
+    sourceType !== undefined &&
+    sourceType !== null &&
+    FOUNDER_MARKETING_SOURCES.has(sourceType)
+  );
+}
+
+function normalizeFounderScreenshotReference(
+  value: string | null | undefined,
+): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function validateFounderScreenshotReferencePermission(
+  founderScreenshotReference: string | null | undefined,
+  sourceType: MarketingPostSource | undefined,
+  user: { email: string | undefined },
+): string | null {
+  const normalized = normalizeFounderScreenshotReference(
+    founderScreenshotReference,
+  );
+  if (!normalized) {
+    return null;
+  }
+
+  if (!canAccessPlatformAdmin(user)) {
+    return "You do not have permission to attach founder screenshots.";
+  }
+
+  if (!isFounderMarketingSource(sourceType)) {
+    return "Founder screenshots are only allowed on founder marketing drafts.";
+  }
+
+  return null;
+}
+
+function stripUnauthorizedFounderScreenshotReference(
+  input: MarketingPostCreateInput | MarketingPostUpdateInput,
+  user: { email: string | undefined },
+  sourceType: MarketingPostSource | undefined,
+): void {
+  if (input.founderScreenshotReference === undefined) {
+    return;
+  }
+
+  const permissionError = validateFounderScreenshotReferencePermission(
+    input.founderScreenshotReference,
+    sourceType,
+    user,
+  );
+
+  if (permissionError) {
+    delete input.founderScreenshotReference;
+  }
+}
+
 function normalizePostId(postId: string): string {
   return postId.trim();
 }
@@ -248,7 +312,8 @@ function validateUpdateMarketingPostInput(
     input.status !== undefined ||
     input.sourceType !== undefined ||
     input.sourceId !== undefined ||
-    input.scheduledAt !== undefined;
+    input.scheduledAt !== undefined ||
+    input.founderScreenshotReference !== undefined;
 
   if (!hasEditableField) {
     return "No changes were provided.";
@@ -342,6 +407,9 @@ function normalizeCreateMarketingPostInput(
     sourceId:
       sourceType === "completed_job" ? input.sourceId?.trim() || null : null,
     scheduledAt: input.scheduledAt ?? null,
+    founderScreenshotReference: normalizeFounderScreenshotReference(
+      input.founderScreenshotReference,
+    ),
   };
 
   applyScheduleStatusCouplingForCreate(normalized);
@@ -368,6 +436,11 @@ function normalizeUpdateMarketingPostInput(
   }
   if (normalized.callToAction !== undefined) {
     normalized.callToAction = normalized.callToAction?.trim() || null;
+  }
+  if (normalized.founderScreenshotReference !== undefined) {
+    normalized.founderScreenshotReference = normalizeFounderScreenshotReference(
+      normalized.founderScreenshotReference,
+    );
   }
 
   applyScheduleStatusCouplingForUpdate(normalized, existing);
@@ -416,6 +489,21 @@ export async function createMarketingPostAction(
   if (founderSourceError) {
     return { error: founderSourceError };
   }
+
+  const founderScreenshotError = validateFounderScreenshotReferencePermission(
+    input.founderScreenshotReference,
+    normalized.sourceType,
+    permission.context.user,
+  );
+  if (founderScreenshotError) {
+    return { error: founderScreenshotError };
+  }
+
+  stripUnauthorizedFounderScreenshotReference(
+    normalized,
+    permission.context.user,
+    normalized.sourceType,
+  );
 
   if (normalized.sourceType === "completed_job") {
     const sourceId = normalized.sourceId?.trim() ?? "";
@@ -485,6 +573,15 @@ export async function updateMarketingPostAction(
     return { error: "Marketing post not found." };
   }
 
+  const founderScreenshotError = validateFounderScreenshotReferencePermission(
+    input.founderScreenshotReference,
+    existing.sourceType,
+    permission.context.user,
+  );
+  if (founderScreenshotError) {
+    return { error: founderScreenshotError };
+  }
+
   if (existing.status === "archived") {
     return { error: "Archived posts cannot be edited." };
   }
@@ -497,6 +594,12 @@ export async function updateMarketingPostAction(
   // Source tracking is set at create time and must not be changed afterward.
   delete normalized.sourceType;
   delete normalized.sourceId;
+
+  stripUnauthorizedFounderScreenshotReference(
+    normalized,
+    permission.context.user,
+    existing.sourceType,
+  );
 
   const { post, error } = await updateMarketingPost(
     permission.context.company.id,

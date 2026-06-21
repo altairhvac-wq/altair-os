@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Image from "next/image";
 import { Check, Copy } from "lucide-react";
 import {
   archiveMarketingPostAction,
@@ -23,6 +24,10 @@ import type {
 import { MarketingCompletedJobDraftAiGenerator } from "@/shared/components/marketing-hub/MarketingCompletedJobDraftAiGenerator";
 import { MarketingFounderDraftAiGenerator } from "@/shared/components/marketing-hub/MarketingFounderDraftAiGenerator";
 import { MarketingPostAiAssistant } from "@/shared/components/marketing-hub/MarketingPostAiAssistant";
+import {
+  FOUNDER_MARKETING_SCREENSHOT_OPTIONS,
+  isPreviewableScreenshotReference,
+} from "@/shared/components/marketing-hub/founder-marketing-screenshots";
 import type {
   MarketingChannel,
   MarketingPost,
@@ -71,6 +76,7 @@ type DraftFormData = {
   suggestedHashtags: string;
   callToAction: string;
   scheduledAtLocal: string;
+  founderScreenshotReference: string;
 };
 
 const DEFAULT_FORM_DATA: DraftFormData = {
@@ -80,6 +86,7 @@ const DEFAULT_FORM_DATA: DraftFormData = {
   suggestedHashtags: "",
   callToAction: "",
   scheduledAtLocal: "",
+  founderScreenshotReference: "",
 };
 
 function toDatetimeLocal(iso: string): string {
@@ -138,6 +145,7 @@ function postToFormData(post: MarketingPost): DraftFormData {
     suggestedHashtags: formatSuggestedHashtagsForInput(post.suggestedHashtags),
     callToAction: post.callToAction ?? "",
     scheduledAtLocal: post.scheduledAt ? toDatetimeLocal(post.scheduledAt) : "",
+    founderScreenshotReference: post.founderScreenshotReference ?? "",
   };
 }
 
@@ -207,7 +215,16 @@ function draftStarterToFormData(
     suggestedHashtags: draftStarter.suggestedHashtags,
     callToAction: draftStarter.callToAction,
     scheduledAtLocal: "",
+    founderScreenshotReference: "",
   };
+}
+
+function isFounderMarketingSourceType(
+  sourceType: MarketingPostSource,
+): boolean {
+  return (
+    sourceType === "founder_milestone" || sourceType === "product_update"
+  );
 }
 
 function isFounderDraftStarter(
@@ -245,9 +262,66 @@ function validateDraftFormData(data: DraftFormData): string | null {
 type PostPreviewPanelProps = {
   formData: DraftFormData;
   northStar: boolean;
+  showFounderScreenshot?: boolean;
 };
 
-function PostPreviewPanel({ formData, northStar }: PostPreviewPanelProps) {
+function FounderScreenshotPreview({
+  reference,
+  northStar,
+}: {
+  reference: string;
+  northStar: boolean;
+}) {
+  const trimmed = reference.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const previewable = isPreviewableScreenshotReference(trimmed);
+
+  return (
+    <div
+      className={`rounded-lg border px-3 py-2.5 ${
+        northStar
+          ? "border-[rgba(148,163,184,0.18)] bg-white"
+          : "border-slate-200/80 bg-white"
+      }`}
+    >
+      <p
+        className={`text-xs font-medium ${
+          northStar ? "text-[#6B6255]" : "text-slate-500"
+        }`}
+      >
+        Founder screenshot
+      </p>
+      {previewable ? (
+        <div className="relative mt-2 aspect-[16/10] w-full overflow-hidden rounded-md border border-black/10">
+          <Image
+            src={trimmed}
+            alt="Founder marketing screenshot preview"
+            fill
+            className="object-cover object-top"
+            sizes="320px"
+            unoptimized={trimmed.startsWith("http")}
+          />
+        </div>
+      ) : null}
+      <p
+        className={`mt-2 break-all font-mono text-xs leading-relaxed ${
+          northStar ? "text-[#17130E]" : "text-slate-700"
+        }`}
+      >
+        {trimmed}
+      </p>
+    </div>
+  );
+}
+
+function PostPreviewPanel({
+  formData,
+  northStar,
+  showFounderScreenshot = false,
+}: PostPreviewPanelProps) {
   const previewText = buildMarketingPostCopyText(formData);
   const hasPreview = previewText.length > 0;
 
@@ -295,6 +369,14 @@ function PostPreviewPanel({ formData, northStar }: PostPreviewPanelProps) {
           </p>
         )}
       </div>
+
+      {showFounderScreenshot &&
+      formData.founderScreenshotReference.trim().length > 0 ? (
+        <FounderScreenshotPreview
+          reference={formData.founderScreenshotReference}
+          northStar={northStar}
+        />
+      ) : null}
 
       <ul
         className={`space-y-2 border-t pt-4 text-xs leading-relaxed ${
@@ -391,6 +473,12 @@ export function MarketingPostDraftForm({
     Boolean(createSource.sourceId);
   const isFounderCreate =
     !isEditMode && showFounderMarketing && isFounderDraftStarter(draftStarter);
+  const showFounderScreenshot =
+    showFounderMarketing &&
+    isFounderMarketingSourceType(rewriteSourceType);
+  const selectedFounderScreenshotOption = FOUNDER_MARKETING_SCREENSHOT_OPTIONS.find(
+    (option) => option.path === formData.founderScreenshotReference.trim(),
+  );
 
   const inputClassName = northStar
     ? "mt-1.5 w-full rounded-lg border border-[rgba(148,163,184,0.24)] bg-white px-3.5 py-2.5 text-sm text-[#101827] shadow-sm transition-colors placeholder:text-[#6B7280] focus:border-[#B88A2E] focus:outline-none focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]"
@@ -421,6 +509,7 @@ export function MarketingPostDraftForm({
       suggestedHashtags: draft.suggestedHashtags,
       callToAction: draft.callToAction,
       scheduledAtLocal: current.scheduledAtLocal,
+      founderScreenshotReference: current.founderScreenshotReference,
     }));
   }
 
@@ -449,6 +538,9 @@ export function MarketingPostDraftForm({
         ),
         callToAction: formData.callToAction.trim() || null,
         scheduledAt: scheduledAtLocalToIso(formData.scheduledAtLocal),
+        founderScreenshotReference: showFounderScreenshot
+          ? formData.founderScreenshotReference.trim() || null
+          : null,
       };
 
       const result = isEditMode
@@ -946,6 +1038,74 @@ export function MarketingPostDraftForm({
               </label>
             </div>
 
+            {showFounderScreenshot ? (
+              <div
+                className={`rounded-xl border p-4 sm:p-5 ${
+                  northStar
+                    ? "border-[rgba(184,138,46,0.28)] bg-[#FAF6EE]/50"
+                    : "border-amber-200/70 bg-amber-50/30"
+                }`}
+              >
+                <label className="block text-sm">
+                  <span
+                    className={`font-medium ${
+                      northStar ? "text-[#17130E]" : "text-slate-700"
+                    }`}
+                  >
+                    Founder screenshot{" "}
+                    <span
+                      className={`font-normal ${
+                        northStar ? "text-[#8A7F72]" : "text-slate-400"
+                      }`}
+                    >
+                      (optional)
+                    </span>
+                  </span>
+                  <select
+                    value={selectedFounderScreenshotOption?.path ?? ""}
+                    onChange={(event) => {
+                      const path = event.target.value;
+                      if (path) {
+                        updateField("founderScreenshotReference", path);
+                      }
+                    }}
+                    disabled={isReadOnly}
+                    className={inputClassName}
+                  >
+                    <option value="">
+                      Choose a product screenshot (optional)
+                    </option>
+                    {FOUNDER_MARKETING_SCREENSHOT_OPTIONS.map((option) => (
+                      <option key={option.id} value={option.path}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    value={formData.founderScreenshotReference}
+                    onChange={(event) =>
+                      updateField(
+                        "founderScreenshotReference",
+                        event.target.value,
+                      )
+                    }
+                    autoComplete="off"
+                    disabled={isReadOnly}
+                    className={`${inputClassName} mt-3`}
+                    placeholder="/marketing/screenshots/marketing-dispatch.png"
+                  />
+                  <p
+                    className={`mt-1.5 text-xs leading-relaxed ${
+                      northStar ? "text-[#6B6255]" : "text-slate-500"
+                    }`}
+                  >
+                    Add a product screenshot reference for the post. You can
+                    copy this with the final post when sharing manually.
+                  </p>
+                </label>
+              </div>
+            ) : null}
+
             {!isReadOnly ? (
               <label className="block text-sm">
                 <span
@@ -1196,6 +1356,23 @@ export function MarketingPostDraftForm({
                       )}
                       {copied ? "Copied" : "Copy post"}
                     </button>
+                    {showFounderScreenshot &&
+                    formData.founderScreenshotReference.trim().length > 0 ? (
+                      <p
+                        className={`w-full text-xs leading-relaxed ${
+                          northStar ? "text-[#6B6255]" : "text-slate-500"
+                        }`}
+                      >
+                        Screenshot reference (copy separately):{" "}
+                        <span
+                          className={`break-all font-mono ${
+                            northStar ? "text-[#17130E]" : "text-slate-700"
+                          }`}
+                        >
+                          {formData.founderScreenshotReference.trim()}
+                        </span>
+                      </p>
+                    ) : null}
                     {canMarkPosted ? (
                       <button
                         type="button"
@@ -1305,7 +1482,11 @@ export function MarketingPostDraftForm({
             </div>
           </div>
 
-          <PostPreviewPanel formData={formData} northStar={northStar} />
+          <PostPreviewPanel
+            formData={formData}
+            northStar={northStar}
+            showFounderScreenshot={showFounderScreenshot}
+          />
         </div>
       </div>
     </form>

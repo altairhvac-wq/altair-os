@@ -38,6 +38,8 @@ export type MarketingPost = {
   postedAt?: string;
   archivedAt?: string;
   deletedAt: string | null;
+  /** Platform-admin founder drafts only — product screenshot path or URL. */
+  founderScreenshotReference?: string;
   createdBy?: string;
   createdAt: string;
   updatedAt: string;
@@ -53,6 +55,7 @@ export type MarketingPostCreateInput = {
   sourceType?: MarketingPostSource;
   sourceId?: string | null;
   scheduledAt?: string | null;
+  founderScreenshotReference?: string | null;
 };
 
 export type MarketingPostUpdateInput = {
@@ -65,6 +68,7 @@ export type MarketingPostUpdateInput = {
   sourceType?: MarketingPostSource;
   sourceId?: string | null;
   scheduledAt?: string | null;
+  founderScreenshotReference?: string | null;
 };
 
 export const MARKETING_POST_STATUS_OPTIONS: {

@@ -30,6 +30,7 @@ type MarketingPostRow = {
   posted_at: string | null;
   archived_at: string | null;
   deleted_at: string | null;
+  founder_screenshot_reference: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -47,6 +48,7 @@ type MarketingPostInsert = {
   source_type?: MarketingPostSource;
   source_id?: string | null;
   scheduled_at?: string | null;
+  founder_screenshot_reference?: string | null;
 };
 
 type MarketingPostRowUpdate = {
@@ -59,6 +61,7 @@ type MarketingPostRowUpdate = {
   source_type?: MarketingPostSource;
   source_id?: string | null;
   scheduled_at?: string | null;
+  founder_screenshot_reference?: string | null;
   posted_at?: string | null;
   archived_at?: string | null;
 };
@@ -88,6 +91,7 @@ function mapMarketingPostRow(row: MarketingPostRow): MarketingPost {
     postedAt: row.posted_at ?? undefined,
     archivedAt: row.archived_at ?? undefined,
     deletedAt: row.deleted_at ?? null,
+    founderScreenshotReference: row.founder_screenshot_reference ?? undefined,
     createdBy: row.created_by ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -111,6 +115,7 @@ function mapMarketingPostCreateInputToInsert(
     source_type: input.sourceType ?? "manual",
     source_id: input.sourceId ?? null,
     scheduled_at: input.scheduledAt ?? null,
+    founder_screenshot_reference: input.founderScreenshotReference?.trim() || null,
   };
 }
 
@@ -145,6 +150,10 @@ function mapMarketingPostUpdateInputToRow(
   }
   if (input.scheduledAt !== undefined) {
     update.scheduled_at = input.scheduledAt;
+  }
+  if (input.founderScreenshotReference !== undefined) {
+    update.founder_screenshot_reference =
+      input.founderScreenshotReference?.trim() || null;
   }
 
   return update;
