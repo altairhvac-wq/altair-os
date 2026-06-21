@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { isAiFeaturesEnabled } from "@/lib/ai/env";
+import { isAiDraftingConfigured, isAiFeaturesEnabled } from "@/lib/ai/env";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { canAccessAdminNavItem } from "@/lib/database/access-control";
 import { listMarketingPosts } from "@/lib/database/queries/marketing-posts";
@@ -26,6 +26,7 @@ export default async function MarketingPage() {
       initialPosts={posts}
       companyName={companyContext.company.name}
       aiFeaturesEnabled={isAiFeaturesEnabled()}
+      aiDraftingConfigured={isAiDraftingConfigured()}
     />
   );
 }

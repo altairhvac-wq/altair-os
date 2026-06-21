@@ -20,13 +20,21 @@ type MarketingPostAiAssistantProps = {
   sourceType?: MarketingPostSource;
   sourceId?: string | null;
   aiFeaturesEnabled: boolean;
+  aiDraftingConfigured: boolean;
   disabled?: boolean;
   onApplyDraftText: (text: string) => void;
 };
 
-function getHideReason(aiFeaturesEnabled: boolean): string | null {
+function getUnavailableReason(
+  aiFeaturesEnabled: boolean,
+  aiDraftingConfigured: boolean,
+): string | null {
   if (!aiFeaturesEnabled) {
     return "AI disabled (set AI_FEATURES_ENABLED=true and restart the dev server)";
+  }
+
+  if (!aiDraftingConfigured) {
+    return "AI drafting is not configured yet (set OPENAI_API_KEY)";
   }
 
   return null;
@@ -51,6 +59,7 @@ export function MarketingPostAiAssistant({
   sourceType,
   sourceId,
   aiFeaturesEnabled,
+  aiDraftingConfigured,
   disabled = false,
   onApplyDraftText,
 }: MarketingPostAiAssistantProps) {
@@ -61,8 +70,10 @@ export function MarketingPostAiAssistant({
   const [isPending, startTransition] = useTransition();
   const lastAppliedDraftRef = useRef<string | null>(null);
 
-  const isVisible = aiFeaturesEnabled;
-  const hideReason = getHideReason(aiFeaturesEnabled);
+  const unavailableReason = getUnavailableReason(
+    aiFeaturesEnabled,
+    aiDraftingConfigured,
+  );
   const trimmedPostText = postText.trim();
   const isPostTextTooShort = trimmedPostText.length < MIN_POST_TEXT_CHARS;
 
@@ -78,20 +89,35 @@ export function MarketingPostAiAssistant({
     }
   }, [postText, showAppliedStatus]);
 
-  if (process.env.NODE_ENV === "development" && hideReason) {
-    console.debug(`[MarketingPostAiAssistant] hidden: ${hideReason}`);
+  if (process.env.NODE_ENV === "development" && unavailableReason) {
+    console.debug(
+      `[MarketingPostAiAssistant] unavailable: ${unavailableReason}`,
+    );
   }
 
-  if (!isVisible) {
-    if (process.env.NODE_ENV === "development" && hideReason) {
+  if (!aiFeaturesEnabled) {
+    if (process.env.NODE_ENV === "development" && unavailableReason) {
       return (
         <p className="mt-1.5 text-[10px] text-amber-700" aria-hidden="true">
-          Dev: AI rewrite hidden — {hideReason}
+          Dev: AI rewrite hidden — {unavailableReason}
         </p>
       );
     }
 
     return null;
+  }
+
+  if (!aiDraftingConfigured) {
+    return (
+      <p className="mt-2 text-xs text-slate-500">
+        AI rewriting is not configured yet.
+        {process.env.NODE_ENV === "development" && unavailableReason ? (
+          <span className="mt-1 block text-[10px] text-amber-700" aria-hidden="true">
+            Dev: {unavailableReason}
+          </span>
+        ) : null}
+      </p>
+    );
   }
 
   function runRewrite() {

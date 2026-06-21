@@ -32,6 +32,7 @@ type MarketingPostDraftFormProps = {
   post?: MarketingPost;
   draftStarter?: MarketingPostDraftStarter | MarketingCompletedJobDraftStarter;
   aiFeaturesEnabled?: boolean;
+  aiDraftingConfigured?: boolean;
   onSuccess: () => void;
   onCancel: () => void;
 };
@@ -235,6 +236,7 @@ export function MarketingPostDraftForm({
   post,
   draftStarter,
   aiFeaturesEnabled = false,
+  aiDraftingConfigured = false,
   onSuccess,
   onCancel,
 }: MarketingPostDraftFormProps) {
@@ -561,6 +563,7 @@ export function MarketingPostDraftForm({
                   sourceType={rewriteSourceType}
                   sourceId={rewriteSourceId}
                   aiFeaturesEnabled={aiFeaturesEnabled}
+                  aiDraftingConfigured={aiDraftingConfigured}
                   disabled={isActionPending}
                   onApplyDraftText={(text) => updateField("postText", text)}
                 />

@@ -43,6 +43,7 @@ type MarketingHubPageViewProps = {
   initialPosts: MarketingPost[];
   companyName: string;
   aiFeaturesEnabled?: boolean;
+  aiDraftingConfigured?: boolean;
 };
 
 const LIST_TABS: { id: MarketingPostListTab; label: string }[] = [
@@ -205,6 +206,7 @@ export function MarketingHubPageView({
   initialPosts,
   companyName,
   aiFeaturesEnabled = false,
+  aiDraftingConfigured = false,
 }: MarketingHubPageViewProps) {
   const router = useRouter();
   const northStar = isNorthStarShellEnabled();
@@ -350,6 +352,7 @@ export function MarketingHubPageView({
                 mode="create"
                 draftStarter={createDraftStarter ?? undefined}
                 aiFeaturesEnabled={aiFeaturesEnabled}
+                aiDraftingConfigured={aiDraftingConfigured}
                 onSuccess={handleCreateSuccess}
                 onCancel={handleCloseForm}
               />
@@ -361,6 +364,7 @@ export function MarketingHubPageView({
                 mode="edit"
                 post={selectedPost}
                 aiFeaturesEnabled={aiFeaturesEnabled}
+                aiDraftingConfigured={aiDraftingConfigured}
                 onSuccess={handleEditSuccess}
                 onCancel={handleCloseForm}
               />
