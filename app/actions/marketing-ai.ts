@@ -12,8 +12,33 @@ import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import { getCompletedJobContextForMarketing } from "@/lib/database/queries/marketing-completed-jobs";
 import type {
   MarketingPostRewriteInput,
+  MarketingPostRewriteMode,
   MarketingPostRewriteResult,
 } from "@/shared/types/marketing-ai";
+import { MARKETING_POST_REWRITE_MODES } from "@/shared/types/marketing-ai";
+
+const VALID_MARKETING_POST_REWRITE_MODES = new Set<MarketingPostRewriteMode>(
+  MARKETING_POST_REWRITE_MODES,
+);
+
+function normalizeMarketingPostRewriteMode(
+  mode: MarketingPostRewriteMode | undefined,
+): MarketingPostRewriteMode {
+  if (mode && VALID_MARKETING_POST_REWRITE_MODES.has(mode)) {
+    return mode;
+  }
+
+  return "polish";
+}
+
+function normalizeMarketingPostRewriteInput(
+  input: MarketingPostRewriteInput,
+): MarketingPostRewriteInput {
+  return {
+    ...input,
+    mode: normalizeMarketingPostRewriteMode(input.mode),
+  };
+}
 
 async function assertMarketingPostRewritePermission() {
   const context = await getActiveCompanyContext();
@@ -52,12 +77,17 @@ export async function generateMarketingPostRewriteAction(
     return { error: mapAiErrorToMessage(rateLimit.code) };
   }
 
+  const normalizedInput = normalizeMarketingPostRewriteInput(input);
+
   let completedJobContext = null;
 
-  if (input.sourceType === "completed_job" && input.sourceId?.trim()) {
+  if (
+    normalizedInput.sourceType === "completed_job" &&
+    normalizedInput.sourceId?.trim()
+  ) {
     const job = await getCompletedJobContextForMarketing(
       context.company.id,
-      input.sourceId,
+      normalizedInput.sourceId,
     );
 
     if (!job) {
@@ -75,7 +105,7 @@ export async function generateMarketingPostRewriteAction(
   }
 
   const preparation = prepareMarketingPostRewrite(
-    input,
+    normalizedInput,
     context.company.id,
     context.user.id,
     {

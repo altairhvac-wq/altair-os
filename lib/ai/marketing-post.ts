@@ -10,6 +10,7 @@ import type { GenerateDraftTextRequest } from "@/lib/ai/types";
 import type {
   MarketingPostRewriteContext,
   MarketingPostRewriteInput,
+  MarketingPostRewriteMode,
 } from "@/shared/types/marketing-ai";
 import { formatMarketingChannel } from "@/shared/types/marketing-post";
 
@@ -20,7 +21,7 @@ export const INSUFFICIENT_MARKETING_POST_CONTEXT_MESSAGE =
 
 const MIN_POST_TEXT_CHARS = 10;
 
-const MARKETING_POST_REWRITE_PROMPT = `You rewrite marketing post body text for a local field service company (HVAC, electrical, plumbing, or general trades).
+const MARKETING_POST_REWRITE_PROMPT_BASE = `You rewrite marketing post body text for a local field service company (HVAC, electrical, plumbing, or general trades).
 
 Your job is to REWRITE only the post body text into polished copy suitable for manual posting by office staff. You are not posting, scheduling, or publishing anything.
 
@@ -48,6 +49,40 @@ Rules:
 - Do not use phrases like "Here's your post" or similar meta commentary
 - You may reference the company name when provided
 - When completed-job context is provided, you may reference job type and general area (city/state) only — never customer-identifying details`;
+
+const MARKETING_POST_REWRITE_MODE_GUIDANCE: Record<
+  MarketingPostRewriteMode,
+  string
+> = {
+  polish:
+    "Rewrite mode: Polish — improve clarity and flow without changing meaning.",
+  shorter:
+    "Rewrite mode: Shorter — make the post more concise while preserving key facts and CTA intent.",
+  professional:
+    "Rewrite mode: Professional — make the post clear, trustworthy, and polished for a business audience.",
+  local:
+    "Rewrite mode: Local — make the post friendly and community-oriented without inventing specific local facts.",
+};
+
+export function getMarketingPostRewritePrompt(
+  mode: MarketingPostRewriteMode = "polish",
+): string {
+  const modeGuidance =
+    MARKETING_POST_REWRITE_MODE_GUIDANCE[mode] ??
+    MARKETING_POST_REWRITE_MODE_GUIDANCE.polish;
+
+  return `${MARKETING_POST_REWRITE_PROMPT_BASE}\n\n${modeGuidance}`;
+}
+
+function resolveMarketingPostRewriteMode(
+  mode: MarketingPostRewriteMode | undefined,
+): MarketingPostRewriteMode {
+  if (mode && mode in MARKETING_POST_REWRITE_MODE_GUIDANCE) {
+    return mode;
+  }
+
+  return "polish";
+}
 
 function hasMeaningfulPostText(postText: string | undefined): boolean {
   const trimmed = postText?.trim() ?? "";
@@ -210,9 +245,11 @@ export function buildMarketingPostRewriteRequest(
   userId: string,
   context: MarketingPostRewriteContext,
 ): GenerateDraftTextRequest {
+  const mode = resolveMarketingPostRewriteMode(input.mode);
+
   return {
     feature: MARKETING_POST_REWRITE_AI_FEATURE,
-    prompt: MARKETING_POST_REWRITE_PROMPT,
+    prompt: getMarketingPostRewritePrompt(mode),
     inputText: formatMarketingPostRewriteContext(input, context),
     companyId,
     userId,

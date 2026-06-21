@@ -3,6 +3,19 @@ import type {
   MarketingPostSource,
 } from "@/shared/types/marketing-post";
 
+export type MarketingPostRewriteMode =
+  | "polish"
+  | "shorter"
+  | "professional"
+  | "local";
+
+export const MARKETING_POST_REWRITE_MODES: MarketingPostRewriteMode[] = [
+  "polish",
+  "shorter",
+  "professional",
+  "local",
+];
+
 export type MarketingPostRewriteInput = {
   title?: string;
   postText: string;
@@ -11,6 +24,7 @@ export type MarketingPostRewriteInput = {
   suggestedHashtags?: string[];
   sourceType?: MarketingPostSource;
   sourceId?: string | null;
+  mode?: MarketingPostRewriteMode;
 };
 
 export type MarketingPostRewriteResult = {

@@ -4,12 +4,23 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Loader2, Sparkles, Undo2 } from "lucide-react";
 import { generateMarketingPostRewriteAction } from "@/app/actions/marketing-ai";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import type { MarketingPostRewriteMode } from "@/shared/types/marketing-ai";
 import type {
   MarketingChannel,
   MarketingPostSource,
 } from "@/shared/types/marketing-post";
 
 const MIN_POST_TEXT_CHARS = 10;
+
+const REWRITE_MODE_OPTIONS: {
+  mode: MarketingPostRewriteMode;
+  label: string;
+}[] = [
+  { mode: "polish", label: "Rewrite draft" },
+  { mode: "shorter", label: "Shorter" },
+  { mode: "professional", label: "Professional" },
+  { mode: "local", label: "Local" },
+];
 
 type MarketingPostAiAssistantProps = {
   title: string;
@@ -50,6 +61,13 @@ function normalizeHashtagsForAction(hashtags: string[] | undefined): string[] {
     .filter((tag) => tag.length > 0);
 }
 
+function getRewriteModeLabel(mode: MarketingPostRewriteMode): string {
+  return (
+    REWRITE_MODE_OPTIONS.find((option) => option.mode === mode)?.label ??
+    "Rewrite draft"
+  );
+}
+
 export function MarketingPostAiAssistant({
   title,
   postText,
@@ -67,6 +85,8 @@ export function MarketingPostAiAssistant({
   const [previewDraft, setPreviewDraft] = useState<string | null>(null);
   const [previousPostText, setPreviousPostText] = useState<string | null>(null);
   const [showAppliedStatus, setShowAppliedStatus] = useState(false);
+  const [lastRewriteMode, setLastRewriteMode] =
+    useState<MarketingPostRewriteMode>("polish");
   const [isPending, startTransition] = useTransition();
   const lastAppliedDraftRef = useRef<string | null>(null);
 
@@ -120,12 +140,13 @@ export function MarketingPostAiAssistant({
     );
   }
 
-  function runRewrite() {
+  function runRewrite(mode: MarketingPostRewriteMode) {
     if (disabled || isPending || isPostTextTooShort) {
       return;
     }
 
     setError(null);
+    setLastRewriteMode(mode);
 
     startTransition(async () => {
       const result = await generateMarketingPostRewriteAction({
@@ -136,6 +157,7 @@ export function MarketingPostAiAssistant({
         suggestedHashtags: normalizeHashtagsForAction(suggestedHashtags),
         sourceType,
         sourceId: sourceId ?? null,
+        mode,
       });
 
       if (result.error || !result.draftText?.trim()) {
@@ -152,14 +174,14 @@ export function MarketingPostAiAssistant({
     });
   }
 
-  function handleRewrite() {
+  function handleRewrite(mode: MarketingPostRewriteMode) {
     setPreviewDraft(null);
     setShowAppliedStatus(false);
-    runRewrite();
+    runRewrite(mode);
   }
 
   function handleTryAgain() {
-    runRewrite();
+    runRewrite(lastRewriteMode);
   }
 
   function handleUseText() {
@@ -198,31 +220,38 @@ export function MarketingPostAiAssistant({
 
   const controlsDisabled = disabled || isPending || isPostTextTooShort;
   const showPreview = previewDraft !== null;
+  const pendingLabel = getRewriteModeLabel(lastRewriteMode);
 
   return (
     <div className="mt-2 space-y-1.5">
       {!showPreview ? (
         <>
-          <button
-            type="button"
-            onClick={handleRewrite}
-            disabled={controlsDisabled}
-            aria-busy={isPending}
-            className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2.5 text-sm font-semibold text-cyan-800 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-h-9 sm:px-2.5 sm:py-1.5 sm:text-xs"
-          >
-            {isPending ? (
-              <Loader2
-                className="h-4 w-4 animate-spin sm:h-3.5 sm:w-3.5"
-                aria-hidden="true"
-              />
-            ) : (
-              <Sparkles
-                className="h-4 w-4 sm:h-3.5 sm:w-3.5"
-                aria-hidden="true"
-              />
-            )}
-            {isPending ? "Rewriting…" : "Rewrite draft"}
-          </button>
+          <div className="flex flex-wrap gap-1.5">
+            {REWRITE_MODE_OPTIONS.map((option) => {
+              const isActivePending = isPending && lastRewriteMode === option.mode;
+
+              return (
+                <button
+                  key={option.mode}
+                  type="button"
+                  onClick={() => handleRewrite(option.mode)}
+                  disabled={controlsDisabled}
+                  aria-busy={isActivePending}
+                  className="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border border-cyan-200 bg-cyan-50 px-2.5 py-2 text-xs font-semibold text-cyan-800 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9 sm:px-2 sm:py-1.5"
+                >
+                  {isActivePending ? (
+                    <Loader2
+                      className="h-3.5 w-3.5 animate-spin"
+                      aria-hidden="true"
+                    />
+                  ) : option.mode === "polish" ? (
+                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                  ) : null}
+                  {isActivePending ? "Rewriting…" : option.label}
+                </button>
+              );
+            })}
+          </div>
 
           {isPending ? (
             <p
@@ -230,7 +259,7 @@ export function MarketingPostAiAssistant({
               aria-live="polite"
               role="status"
             >
-              Altair is rewriting your post…
+              Altair is rewriting your post ({pendingLabel.toLowerCase()})…
             </p>
           ) : isPostTextTooShort ? (
             <p className="text-xs text-slate-500">
@@ -239,7 +268,7 @@ export function MarketingPostAiAssistant({
             </p>
           ) : (
             <p className="text-xs text-slate-500">
-              Polish the post body. Review before saving.
+              Polish, shorten, or adjust tone. Review before saving.
             </p>
           )}
         </>
