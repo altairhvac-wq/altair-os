@@ -19,6 +19,7 @@ import {
   adminSegmentedItemActiveClass,
   adminSegmentedItemClass,
 } from "@/shared/design-system/shell/tokens";
+import { MarketingConnectedAccountsCard } from "@/shared/components/marketing-hub/MarketingConnectedAccountsCard";
 import { MarketingCompletedJobPicker } from "@/shared/components/marketing-hub/MarketingCompletedJobPicker";
 import { MarketingPostDraftForm } from "@/shared/components/marketing-hub/MarketingPostDraftForm";
 import {
@@ -29,6 +30,7 @@ import {
   type MarketingPostDraftStarter,
   type MarketingPostTemplate,
 } from "@/shared/components/marketing-hub/marketing-post-templates";
+import type { MarketingConnectedAccount } from "@/shared/types/marketing-connected-account";
 import type { MarketingCompletedJobPickerItem } from "@/shared/types/marketing-completed-job";
 import {
   countMarketingPostsByTab,
@@ -43,6 +45,7 @@ type ViewMode = "list" | "create" | "edit" | "pick-completed-job";
 
 type MarketingHubPageViewProps = {
   initialPosts: MarketingPost[];
+  connectedAccounts: MarketingConnectedAccount[];
   companyName: string;
   aiFeaturesEnabled?: boolean;
   aiDraftingConfigured?: boolean;
@@ -220,6 +223,7 @@ function MarketingPostTemplateIdeas({
 
 export function MarketingHubPageView({
   initialPosts,
+  connectedAccounts,
   companyName,
   aiFeaturesEnabled = false,
   aiDraftingConfigured = false,
@@ -396,6 +400,11 @@ export function MarketingHubPageView({
             </div>
           ) : (
             <>
+              <MarketingConnectedAccountsCard
+                accounts={connectedAccounts}
+                northStar={northStar}
+              />
+
               <div
                 className={`shrink-0 border-b px-3 py-2 sm:px-4 ${
                   northStar
