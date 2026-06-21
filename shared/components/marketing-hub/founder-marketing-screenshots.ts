@@ -4,7 +4,7 @@ export type FounderMarketingScreenshotOption = {
   path: string;
 };
 
-/** Curated Altair OS product screenshots from public/marketing/screenshots/. */
+/** Curated Altair OS product screenshots from public/marketing/screenshots/ (social-ready assets in social/). */
 export const FOUNDER_MARKETING_SCREENSHOT_OPTIONS: FounderMarketingScreenshotOption[] =
   [
     {
@@ -20,7 +20,7 @@ export const FOUNDER_MARKETING_SCREENSHOT_OPTIONS: FounderMarketingScreenshotOpt
     {
       id: "leads",
       label: "Leads workspace",
-      path: "/marketing/screenshots/marketing-leads.png",
+      path: "/marketing/screenshots/social/leads-workspace.png",
     },
     {
       id: "expenses",

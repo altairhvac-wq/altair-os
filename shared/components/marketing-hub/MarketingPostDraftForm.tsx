@@ -1126,7 +1126,9 @@ export function MarketingPostDraftForm({
                     }`}
                   >
                     Add a product screenshot reference for the post. You can
-                    copy this with the final post when sharing manually.
+                    copy this with the final post when sharing manually. Use a
+                    social-ready screenshot where the app fills the image.
+                    Full-page screenshots may look tiny on Facebook.
                   </p>
                 </label>
               </div>
