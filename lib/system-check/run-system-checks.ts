@@ -1,4 +1,5 @@
 import { getAiConfig, isAiFeaturesEnabled } from "@/lib/ai/env";
+import { isIntegrationEncryptionConfigured } from "@/lib/integrations/env";
 import { isAlphaHardeningEnabled } from "@/lib/beta/alpha-hardening";
 import { readEmailRecipientOverrideEnv } from "@/lib/email/recipient";
 import { resolveAppBaseUrl } from "@/lib/email/env";
@@ -139,6 +140,38 @@ function checkOutboundEmailConfig(): SystemCheckResult {
     status: "warn",
     message: `Outbound email is not fully configured (${missing.join(", ")} missing).`,
     hint: "Estimate and invoice sends will stay in draft until email is set up in Vercel env vars.",
+  };
+}
+
+function checkIntegrationEncryption(): SystemCheckResult {
+  const raw = process.env.INTEGRATIONS_ENCRYPTION_KEY?.trim();
+
+  if (!raw) {
+    return {
+      id: "integration-encryption",
+      label: "Integration token encryption",
+      status: "warn",
+      message:
+        "INTEGRATIONS_ENCRYPTION_KEY is not set. Required before OAuth connect or posting.",
+      hint: "Generate with: openssl rand -base64 32",
+    };
+  }
+
+  if (!isIntegrationEncryptionConfigured()) {
+    return {
+      id: "integration-encryption",
+      label: "Integration token encryption",
+      status: "warn",
+      message: "INTEGRATIONS_ENCRYPTION_KEY must decode to 32 bytes.",
+      hint: "Generate with: openssl rand -base64 32",
+    };
+  }
+
+  return {
+    id: "integration-encryption",
+    label: "Integration token encryption",
+    status: "pass",
+    message: "INTEGRATIONS_ENCRYPTION_KEY is configured.",
   };
 }
 
@@ -574,6 +607,7 @@ export async function runSystemChecks(): Promise<SystemCheckReport> {
   const checks: SystemCheckResult[] = [
     checkRequiredEnvVars(),
     checkOptionalEnvVars(),
+    checkIntegrationEncryption(),
     checkOutboundEmailConfig(),
     checkAiConfig(),
     checkAlphaHardening(),
