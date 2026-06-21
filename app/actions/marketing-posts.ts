@@ -13,6 +13,7 @@ import {
   duplicateMarketingPost,
   getMarketingPostById,
   markMarketingPostPosted,
+  softDeleteMarketingPost,
   updateMarketingPost,
 } from "@/lib/database/queries/marketing-posts";
 import type { MarketingCompletedJobPickerItem } from "@/shared/types/marketing-completed-job";
@@ -567,6 +568,46 @@ export async function duplicateMarketingPostAction(
   if (error || !post) {
     return {
       error: error ?? "We couldn't create a copy of this post. Try again.",
+    };
+  }
+
+  revalidateMarketingPaths();
+  return { post };
+}
+
+export async function deleteMarketingPostAction(
+  postId: string,
+): Promise<MarketingPostActionResult> {
+  const permission = await assertMarketingPostManager();
+  if (permission.error || !permission.context) {
+    return { error: permission.error };
+  }
+
+  const normalizedPostId = normalizePostId(postId);
+  if (!normalizedPostId) {
+    return { error: "A valid marketing post is required." };
+  }
+
+  const existing = await getMarketingPostById(
+    permission.context.company.id,
+    normalizedPostId,
+  );
+  if (!existing) {
+    return { error: "Marketing post not found." };
+  }
+
+  if (existing.status !== "archived") {
+    return { error: "Only archived posts can be deleted." };
+  }
+
+  const { post, error } = await softDeleteMarketingPost(
+    permission.context.company.id,
+    normalizedPostId,
+  );
+
+  if (error || !post) {
+    return {
+      error: error ?? "We couldn't delete this marketing post. Try again.",
     };
   }
 

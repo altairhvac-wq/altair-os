@@ -5,6 +5,7 @@ import { Check, Copy } from "lucide-react";
 import {
   archiveMarketingPostAction,
   createMarketingPostAction,
+  deleteMarketingPostAction,
   duplicateMarketingPostAction,
   markMarketingPostPostedAction,
   updateMarketingPostAction,
@@ -289,14 +290,23 @@ export function MarketingPostDraftForm({
   const [isMarkPostedPending, startMarkPostedTransition] = useTransition();
   const [isArchivePending, startArchiveTransition] = useTransition();
   const [isReusePending, startReuseTransition] = useTransition();
+  const [isDeletePending, startDeleteTransition] = useTransition();
   const isActionPending =
-    isPending || isMarkPostedPending || isArchivePending || isReusePending;
+    isPending ||
+    isMarkPostedPending ||
+    isArchivePending ||
+    isReusePending ||
+    isDeletePending;
   const isReadOnly =
     isEditMode && (post.status === "posted" || post.status === "archived");
   const canMarkPosted =
     isEditMode && post.status !== "posted" && post.status !== "archived";
   const canArchive = isEditMode && post.status !== "archived";
   const canReuse = isReadOnly;
+  const canDelete =
+    isEditMode &&
+    post.status === "archived" &&
+    (post.deletedAt === null || post.deletedAt === undefined);
   const rewriteSourceType = isEditMode
     ? post.sourceType
     : createSource.sourceType;
@@ -463,6 +473,36 @@ export function MarketingPostDraftForm({
           formatActionError(
             result.error,
             "We couldn't create a copy of this post. Try again.",
+          ),
+        );
+        return;
+      }
+
+      onSuccess();
+    });
+  }
+
+  function handleDeletePost() {
+    if (!isEditMode || !canDelete || isActionPending) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Delete this marketing post? This removes it from Marketing Hub. This cannot be undone.",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    startDeleteTransition(async () => {
+      setError(null);
+
+      const result = await deleteMarketingPostAction(post.id);
+      if (result.error || !result.post) {
+        setError(
+          formatActionError(
+            result.error,
+            "We couldn't delete this post. Try again.",
           ),
         );
         return;
@@ -865,6 +905,27 @@ export function MarketingPostDraftForm({
                         >
                           Archive moves this post out of the main list but keeps
                           it for your records.
+                        </p>
+                      </div>
+                    ) : null}
+                    {canDelete ? (
+                      <div className="flex flex-col gap-1">
+                        <button
+                          type="button"
+                          disabled={isActionPending}
+                          onClick={handleDeletePost}
+                          className="admin-btn-secondary border-rose-200 text-rose-800 hover:border-rose-300 hover:bg-rose-50"
+                        >
+                          {isDeletePending ? "Deleting..." : "Delete post"}
+                        </button>
+                        <p
+                          className={`text-xs leading-relaxed ${
+                            northStar ? "text-[#6B6255]" : "text-slate-500"
+                          }`}
+                        >
+                          Delete is only available after a post has been
+                          archived. This only removes the record from Altair. It
+                          does not remove posts from external platforms.
                         </p>
                       </div>
                     ) : null}

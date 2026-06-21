@@ -411,3 +411,40 @@ export async function archiveMarketingPost(
     error: null,
   };
 }
+
+export async function softDeleteMarketingPost(
+  companyId: string,
+  postId: string,
+): Promise<{ post: MarketingPost | null; error: string | null }> {
+  const existing = await getMarketingPostById(companyId, postId);
+  if (!existing) {
+    return { post: null, error: "Marketing post not found." };
+  }
+
+  if (existing.status !== "archived") {
+    return { post: null, error: "Only archived posts can be deleted." };
+  }
+
+  const supabase = await createClient();
+  const now = new Date().toISOString();
+
+  const { data, error } = await marketingPostsTable(supabase)
+    .update({ deleted_at: now })
+    .eq("company_id", companyId)
+    .eq("id", postId)
+    .is("deleted_at", null)
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    return {
+      post: null,
+      error: mapDatabaseError(error),
+    };
+  }
+
+  return {
+    post: mapMarketingPostRow(data as MarketingPostRow),
+    error: null,
+  };
+}
