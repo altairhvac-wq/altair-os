@@ -10,6 +10,59 @@ import {
 
 const DEFAULT_TTL_MINUTES = 10;
 const MAX_TTL_MINUTES = 30;
+const MAX_REDIRECT_PATH_LENGTH = 300;
+const MARKETING_REDIRECT_PREFIX = "/marketing";
+
+// redirectPath is only for internal app redirects after OAuth completes.
+// Provider OAuth codes/tokens must never be stored there.
+// External URLs are rejected to prevent open redirects.
+export function normalizeMarketingOAuthRedirectPath(
+  input?: string | null,
+): string | null {
+  if (input == null) {
+    return null;
+  }
+
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (trimmed.length > MAX_REDIRECT_PATH_LENGTH) {
+    return null;
+  }
+
+  if (!trimmed.startsWith("/")) {
+    return null;
+  }
+
+  if (trimmed.startsWith("//")) {
+    return null;
+  }
+
+  if (trimmed.includes("\\")) {
+    return null;
+  }
+
+  if (trimmed.startsWith("/\\")) {
+    return null;
+  }
+
+  if (trimmed.includes("://")) {
+    return null;
+  }
+
+  // Strict V1: only /marketing, /marketing?..., /marketing/...
+  if (
+    trimmed !== MARKETING_REDIRECT_PREFIX &&
+    !trimmed.startsWith(`${MARKETING_REDIRECT_PREFIX}/`) &&
+    !trimmed.startsWith(`${MARKETING_REDIRECT_PREFIX}?`)
+  ) {
+    return null;
+  }
+
+  return trimmed;
+}
 
 const ALLOWED_PROVIDERS = new Set<MarketingConnectedProvider>(
   MARKETING_CONNECTED_PROVIDER_OPTIONS.map((option) => option.value),
@@ -84,7 +137,14 @@ export async function createMarketingOAuthState(
   const ttlMinutes = resolveTtlMinutes(input.ttlMinutes);
   const expiresAt = new Date(Date.now() + ttlMinutes * 60_000);
   const { raw, hash } = generateMarketingOAuthStateToken();
-  const redirectPath = input.redirectPath?.trim() || null;
+
+  const trimmedRedirectPath = input.redirectPath?.trim() ?? "";
+  const redirectPath = trimmedRedirectPath
+    ? normalizeMarketingOAuthRedirectPath(trimmedRedirectPath)
+    : null;
+  if (trimmedRedirectPath && redirectPath === null) {
+    return { error: "Choose a valid internal redirect path." };
+  }
 
   const supabase = createServiceRoleClient();
   const { error } = await marketingOAuthStatesTable(supabase).insert({
