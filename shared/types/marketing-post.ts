@@ -187,3 +187,34 @@ export function countMarketingPostsByTab(
 ): number {
   return filterMarketingPostsByTab(posts, tab).length;
 }
+
+export type MarketingRecurringFrequency = "weekly" | "biweekly" | "monthly";
+
+export type MarketingRecurringOccurrences = 2 | 4 | 8 | 12;
+
+export const MARKETING_RECURRING_FREQUENCY_OPTIONS = [
+  "weekly",
+  "biweekly",
+  "monthly",
+] as const;
+
+export const MARKETING_RECURRING_OCCURRENCE_OPTIONS = [2, 4, 8, 12] as const;
+
+export const MARKETING_RECURRING_FREQUENCY_LABEL_OPTIONS: {
+  value: MarketingRecurringFrequency;
+  label: string;
+}[] = [
+  { value: "weekly", label: "Weekly" },
+  { value: "biweekly", label: "Every 2 weeks" },
+  { value: "monthly", label: "Monthly" },
+];
+
+export function formatMarketingRecurringFrequency(
+  frequency: MarketingRecurringFrequency,
+): string {
+  return (
+    MARKETING_RECURRING_FREQUENCY_LABEL_OPTIONS.find(
+      (option) => option.value === frequency,
+    )?.label ?? frequency
+  );
+}

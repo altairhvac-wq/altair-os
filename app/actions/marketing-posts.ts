@@ -10,11 +10,13 @@ import {
 import {
   archiveMarketingPost,
   createMarketingPost,
+  createRecurringMarketingPostCopies,
   duplicateMarketingPost,
   getMarketingPostById,
   markMarketingPostPosted,
   softDeleteMarketingPost,
   updateMarketingPost,
+  type MarketingRecurringScheduleOptions,
 } from "@/lib/database/queries/marketing-posts";
 import type { MarketingCompletedJobPickerItem } from "@/shared/types/marketing-completed-job";
 import type {
@@ -24,11 +26,15 @@ import type {
   MarketingPostSource,
   MarketingPostStatus,
   MarketingPostUpdateInput,
+  MarketingRecurringFrequency,
+  MarketingRecurringOccurrences,
 } from "@/shared/types/marketing-post";
 import {
   MARKETING_CHANNEL_OPTIONS,
   MARKETING_POST_SOURCE_OPTIONS,
   MARKETING_POST_STATUS_OPTIONS,
+  MARKETING_RECURRING_FREQUENCY_OPTIONS,
+  MARKETING_RECURRING_OCCURRENCE_OPTIONS,
 } from "@/shared/types/marketing-post";
 
 export type MarketingPostActionResult = {
@@ -39,6 +45,11 @@ export type MarketingPostActionResult = {
 export type MarketingCompletedJobsListActionResult = {
   error?: string;
   jobs?: MarketingCompletedJobPickerItem[];
+};
+
+export type MarketingRecurringPostsActionResult = {
+  error?: string;
+  posts?: MarketingPost[];
 };
 
 const MARKETING_CHANNELS = new Set<MarketingChannel>(
@@ -54,6 +65,16 @@ const MARKETING_SOURCES = new Set<MarketingPostSource>(
 );
 
 const LIFECYCLE_STATUSES = new Set<MarketingPostStatus>(["posted", "archived"]);
+
+const MARKETING_RECURRING_FREQUENCIES = new Set<MarketingRecurringFrequency>(
+  MARKETING_RECURRING_FREQUENCY_OPTIONS,
+);
+
+const MARKETING_RECURRING_OCCURRENCES = new Set<MarketingRecurringOccurrences>(
+  MARKETING_RECURRING_OCCURRENCE_OPTIONS,
+);
+
+const RECURRING_START_TOLERANCE_MS = 60_000;
 
 function revalidateMarketingPaths() {
   revalidatePath("/marketing");
@@ -573,6 +594,75 @@ export async function duplicateMarketingPostAction(
 
   revalidateMarketingPaths();
   return { post };
+}
+
+function validateRecurringMarketingPostOptions(
+  options: MarketingRecurringScheduleOptions,
+): string | null {
+  const startAt = options.startAt?.trim() ?? "";
+  if (!startAt) {
+    return "Choose a valid recurring schedule.";
+  }
+
+  const parsedStart = Date.parse(startAt);
+  if (Number.isNaN(parsedStart)) {
+    return "Choose a valid recurring schedule.";
+  }
+
+  if (!MARKETING_RECURRING_FREQUENCIES.has(options.frequency)) {
+    return "Choose a valid recurring schedule.";
+  }
+
+  if (!MARKETING_RECURRING_OCCURRENCES.has(options.occurrences)) {
+    return "Choose a valid recurring schedule.";
+  }
+
+  if (parsedStart < Date.now() - RECURRING_START_TOLERANCE_MS) {
+    return "Choose a future start date.";
+  }
+
+  return null;
+}
+
+export async function createRecurringMarketingPostsAction(
+  sourcePostId: string,
+  options: MarketingRecurringScheduleOptions,
+): Promise<MarketingRecurringPostsActionResult> {
+  const permission = await assertMarketingPostManager();
+  if (permission.error || !permission.context) {
+    return { error: permission.error };
+  }
+
+  const normalizedSourcePostId = normalizePostId(sourcePostId);
+  if (!normalizedSourcePostId) {
+    return { error: "A valid marketing post is required." };
+  }
+
+  const validationError = validateRecurringMarketingPostOptions(options);
+  if (validationError) {
+    return { error: validationError };
+  }
+
+  const { posts, error } = await createRecurringMarketingPostCopies(
+    permission.context.company.id,
+    permission.context.user.id,
+    normalizedSourcePostId,
+    {
+      startAt: options.startAt.trim(),
+      frequency: options.frequency,
+      occurrences: options.occurrences,
+    },
+  );
+
+  if (error || !posts) {
+    return {
+      error:
+        error ?? "We couldn't schedule recurring copies of this post. Try again.",
+    };
+  }
+
+  revalidateMarketingPaths();
+  return { posts };
 }
 
 export async function deleteMarketingPostAction(

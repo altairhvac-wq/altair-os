@@ -7,6 +7,12 @@ import type {
   MarketingPostSource,
   MarketingPostStatus,
   MarketingPostUpdateInput,
+  MarketingRecurringFrequency,
+  MarketingRecurringOccurrences,
+} from "@/shared/types/marketing-post";
+import {
+  MARKETING_RECURRING_FREQUENCY_OPTIONS,
+  MARKETING_RECURRING_OCCURRENCE_OPTIONS,
 } from "@/shared/types/marketing-post";
 
 type MarketingPostRow = {
@@ -312,6 +318,158 @@ const REUSABLE_MARKETING_POST_STATUSES = new Set<MarketingPostStatus>([
   "posted",
   "archived",
 ]);
+
+const MARKETING_RECURRING_FREQUENCIES = new Set<MarketingRecurringFrequency>(
+  MARKETING_RECURRING_FREQUENCY_OPTIONS,
+);
+
+const MARKETING_RECURRING_OCCURRENCES = new Set<MarketingRecurringOccurrences>(
+  MARKETING_RECURRING_OCCURRENCE_OPTIONS,
+);
+
+export type MarketingRecurringScheduleOptions = {
+  startAt: string;
+  frequency: MarketingRecurringFrequency;
+  occurrences: MarketingRecurringOccurrences;
+};
+
+function addCalendarMonthsPreservingTime(date: Date, monthsToAdd: number): Date {
+  const year = date.getFullYear();
+  const month = date.getMonth() + monthsToAdd;
+  const day = date.getDate();
+  const lastDayOfTargetMonth = new Date(year, month + 1, 0).getDate();
+  const clampedDay = Math.min(day, lastDayOfTargetMonth);
+
+  return new Date(
+    year,
+    month,
+    clampedDay,
+    date.getHours(),
+    date.getMinutes(),
+    date.getSeconds(),
+    date.getMilliseconds(),
+  );
+}
+
+export function computeMarketingRecurringScheduleDates(
+  options: MarketingRecurringScheduleOptions,
+): string[] {
+  const start = new Date(options.startAt);
+  if (Number.isNaN(start.getTime())) {
+    throw new Error("Invalid startAt");
+  }
+
+  const dates: string[] = [];
+
+  for (let index = 0; index < options.occurrences; index++) {
+    let occurrenceDate: Date;
+
+    if (index === 0) {
+      occurrenceDate = new Date(start);
+    } else if (options.frequency === "weekly") {
+      occurrenceDate = new Date(start);
+      occurrenceDate.setDate(occurrenceDate.getDate() + 7 * index);
+    } else if (options.frequency === "biweekly") {
+      occurrenceDate = new Date(start);
+      occurrenceDate.setDate(occurrenceDate.getDate() + 14 * index);
+    } else {
+      occurrenceDate = addCalendarMonthsPreservingTime(start, index);
+    }
+
+    dates.push(occurrenceDate.toISOString());
+  }
+
+  return dates;
+}
+
+function isValidMarketingRecurringSchedule(
+  options: MarketingRecurringScheduleOptions,
+): boolean {
+  if (!options.startAt?.trim()) {
+    return false;
+  }
+
+  if (Number.isNaN(Date.parse(options.startAt))) {
+    return false;
+  }
+
+  if (!MARKETING_RECURRING_FREQUENCIES.has(options.frequency)) {
+    return false;
+  }
+
+  if (!MARKETING_RECURRING_OCCURRENCES.has(options.occurrences)) {
+    return false;
+  }
+
+  return true;
+}
+
+export async function createRecurringMarketingPostCopies(
+  companyId: string,
+  userId: string,
+  sourcePostId: string,
+  options: MarketingRecurringScheduleOptions,
+): Promise<{ posts: MarketingPost[] | null; error: string | null }> {
+  if (!isValidMarketingRecurringSchedule(options)) {
+    return { posts: null, error: "Choose a valid recurring schedule." };
+  }
+
+  const existing = await getMarketingPostById(companyId, sourcePostId);
+  if (!existing) {
+    return { posts: null, error: "Marketing post not found." };
+  }
+
+  if (!REUSABLE_MARKETING_POST_STATUSES.has(existing.status)) {
+    return {
+      posts: null,
+      error: "Only posted or archived posts can be scheduled to repeat.",
+    };
+  }
+
+  const title = existing.title?.trim() ?? "";
+  const postText = existing.postText?.trim() ?? "";
+  if (!title || !postText) {
+    return {
+      posts: null,
+      error: "This post needs text before it can be scheduled to repeat.",
+    };
+  }
+
+  const scheduledDates = computeMarketingRecurringScheduleDates(options);
+  const supabase = await createClient();
+
+  const inserts: MarketingPostInsert[] = scheduledDates.map(
+    (scheduledAt, index) => ({
+      company_id: companyId,
+      created_by: userId,
+      title: `${existing.title} (${index + 1}/${options.occurrences})`,
+      channel_target: existing.channelTarget,
+      post_text: existing.postText,
+      suggested_hashtags: existing.suggestedHashtags,
+      call_to_action: existing.callToAction?.trim() || null,
+      status: "scheduled",
+      source_type: "manual",
+      source_id: null,
+      scheduled_at: scheduledAt,
+    }),
+  );
+
+  const { data, error } = await marketingPostsTable(supabase)
+    .insert(inserts)
+    .select("*");
+
+  if (error || !data) {
+    return {
+      posts: null,
+      error: mapDatabaseError(error),
+    };
+  }
+
+  return {
+    posts: (data as MarketingPostRow[]).map(mapMarketingPostRow),
+    error: null,
+  };
+}
 
 export type DuplicateMarketingPostOptions = {
   titleSuffix?: string;
