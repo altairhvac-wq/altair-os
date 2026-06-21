@@ -23,10 +23,14 @@ import { MarketingConnectedAccountsCard } from "@/shared/components/marketing-hu
 import { MarketingCompletedJobPicker } from "@/shared/components/marketing-hub/MarketingCompletedJobPicker";
 import { MarketingPostDraftForm } from "@/shared/components/marketing-hub/MarketingPostDraftForm";
 import {
+  FOUNDER_MARKETING_TEMPLATES,
   MARKETING_POST_TEMPLATES,
   buildCompletedJobDraftStarter,
+  marketingFounderTemplateToDraftStarter,
   marketingPostTemplateToDraftStarter,
   type MarketingCompletedJobDraftStarter,
+  type MarketingFounderDraftStarter,
+  type MarketingFounderTemplate,
   type MarketingPostDraftStarter,
   type MarketingPostTemplate,
 } from "@/shared/components/marketing-hub/marketing-post-templates";
@@ -47,6 +51,7 @@ type MarketingHubPageViewProps = {
   initialPosts: MarketingPost[];
   connectedAccounts: MarketingConnectedAccount[];
   companyName: string;
+  showFounderMarketing?: boolean;
   aiFeaturesEnabled?: boolean;
   aiDraftingConfigured?: boolean;
 };
@@ -93,7 +98,9 @@ function isScheduledPostOverdue(post: MarketingPost): boolean {
 type MarketingPostTemplateIdeasProps = {
   northStar: boolean;
   disabled: boolean;
+  showFounderMarketing?: boolean;
   onUseTemplate: (template: MarketingPostTemplate) => void;
+  onUseFounderTemplate: (template: MarketingFounderTemplate) => void;
   onCreateFromCompletedJob: () => void;
   compact?: boolean;
 };
@@ -101,7 +108,9 @@ type MarketingPostTemplateIdeasProps = {
 function MarketingPostTemplateIdeas({
   northStar,
   disabled,
+  showFounderMarketing = false,
   onUseTemplate,
+  onUseFounderTemplate,
   onCreateFromCompletedJob,
   compact = false,
 }: MarketingPostTemplateIdeasProps) {
@@ -217,6 +226,71 @@ function MarketingPostTemplateIdeas({
           </div>
         </li>
       </ul>
+
+      {showFounderMarketing ? (
+        <div className={compact ? "mt-6" : "mt-8"}>
+          <div className={compact ? "" : "text-center sm:text-left"}>
+            <h3
+              className={`text-sm font-semibold ${
+                northStar ? "text-[#17130E]" : "text-slate-900"
+              }`}
+            >
+              Altair founder marketing
+            </h3>
+            <p
+              className={`mt-1 text-xs leading-relaxed ${
+                northStar ? "text-[#6B6255]" : "text-slate-500"
+              }`}
+            >
+              Create posts from product milestones, feature launches, beta
+              progress, and screenshots.
+            </p>
+          </div>
+
+          <ul
+            className={`mt-3 grid gap-2 ${
+              compact ? "sm:grid-cols-2" : "text-left sm:grid-cols-2"
+            }`}
+          >
+            {FOUNDER_MARKETING_TEMPLATES.map((template) => (
+              <li key={template.id}>
+                <div
+                  className={`flex h-full flex-col gap-3 rounded-xl border p-3 ${
+                    northStar
+                      ? "border-[rgba(184,138,46,0.28)] bg-[#FAF6EE]/70"
+                      : "border-amber-200/70 bg-amber-50/40"
+                  }`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className={`text-sm font-medium ${
+                        northStar ? "text-[#17130E]" : "text-slate-900"
+                      }`}
+                    >
+                      {template.title}
+                    </p>
+                    <p
+                      className={`mt-0.5 text-xs ${
+                        northStar ? "text-[#6B6255]" : "text-slate-500"
+                      }`}
+                    >
+                      {template.description}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => onUseFounderTemplate(template)}
+                    className="admin-btn-secondary w-full justify-center text-xs sm:w-auto"
+                  >
+                    Use template
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -225,6 +299,7 @@ export function MarketingHubPageView({
   initialPosts,
   connectedAccounts,
   companyName,
+  showFounderMarketing = false,
   aiFeaturesEnabled = false,
   aiDraftingConfigured = false,
 }: MarketingHubPageViewProps) {
@@ -235,7 +310,10 @@ export function MarketingHubPageView({
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [listTab, setListTab] = useState<MarketingPostListTab>("active");
   const [createDraftStarter, setCreateDraftStarter] = useState<
-    MarketingPostDraftStarter | MarketingCompletedJobDraftStarter | null
+    | MarketingPostDraftStarter
+    | MarketingCompletedJobDraftStarter
+    | MarketingFounderDraftStarter
+    | null
   >(null);
   const [createFormKey, setCreateFormKey] = useState("blank");
   const selectedPost =
@@ -288,6 +366,13 @@ export function MarketingHubPageView({
   function handleUseTemplate(template: MarketingPostTemplate) {
     setSelectedPostId(null);
     setCreateDraftStarter(marketingPostTemplateToDraftStarter(template));
+    setCreateFormKey(template.id);
+    setViewMode("create");
+  }
+
+  function handleUseFounderTemplate(template: MarketingFounderTemplate) {
+    setSelectedPostId(null);
+    setCreateDraftStarter(marketingFounderTemplateToDraftStarter(template));
     setCreateFormKey(template.id);
     setViewMode("create");
   }
@@ -473,7 +558,9 @@ export function MarketingHubPageView({
                 <MarketingPostTemplateIdeas
                   northStar={northStar}
                   disabled={isFormOpen}
+                  showFounderMarketing={showFounderMarketing}
                   onUseTemplate={handleUseTemplate}
+                  onUseFounderTemplate={handleUseFounderTemplate}
                   onCreateFromCompletedJob={handleOpenCompletedJobPicker}
                   compact
                 />
@@ -521,7 +608,9 @@ export function MarketingHubPageView({
                     <MarketingPostTemplateIdeas
                       northStar={northStar}
                       disabled={isFormOpen}
+                      showFounderMarketing={showFounderMarketing}
                       onUseTemplate={handleUseTemplate}
+                      onUseFounderTemplate={handleUseFounderTemplate}
                       onCreateFromCompletedJob={handleOpenCompletedJobPicker}
                     />
                   ) : null}

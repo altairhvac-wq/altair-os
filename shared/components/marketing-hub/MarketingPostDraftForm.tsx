@@ -17,6 +17,7 @@ import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type {
   MarketingCompletedJobDraftStarter,
+  MarketingFounderDraftStarter,
   MarketingPostDraftStarter,
 } from "@/shared/components/marketing-hub/marketing-post-templates";
 import { MarketingCompletedJobDraftAiGenerator } from "@/shared/components/marketing-hub/MarketingCompletedJobDraftAiGenerator";
@@ -38,7 +39,10 @@ import {
 type MarketingPostDraftFormProps = {
   mode?: "create" | "edit";
   post?: MarketingPost;
-  draftStarter?: MarketingPostDraftStarter | MarketingCompletedJobDraftStarter;
+  draftStarter?:
+    | MarketingPostDraftStarter
+    | MarketingCompletedJobDraftStarter
+    | MarketingFounderDraftStarter;
   aiFeaturesEnabled?: boolean;
   aiDraftingConfigured?: boolean;
   onSuccess: () => void;
@@ -157,7 +161,10 @@ function buildMarketingPostCopyText(data: DraftFormData): string {
 }
 
 function getCreateSourceFromDraftStarter(
-  draftStarter?: MarketingPostDraftStarter | MarketingCompletedJobDraftStarter,
+  draftStarter?:
+    | MarketingPostDraftStarter
+    | MarketingCompletedJobDraftStarter
+    | MarketingFounderDraftStarter,
 ): { sourceType: MarketingPostSource; sourceId?: string } {
   if (
     draftStarter &&
@@ -171,11 +178,25 @@ function getCreateSourceFromDraftStarter(
     };
   }
 
+  if (
+    draftStarter &&
+    "sourceType" in draftStarter &&
+    (draftStarter.sourceType === "founder_milestone" ||
+      draftStarter.sourceType === "product_update")
+  ) {
+    return {
+      sourceType: draftStarter.sourceType,
+    };
+  }
+
   return { sourceType: "manual" };
 }
 
 function draftStarterToFormData(
-  draftStarter: MarketingPostDraftStarter | MarketingCompletedJobDraftStarter,
+  draftStarter:
+    | MarketingPostDraftStarter
+    | MarketingCompletedJobDraftStarter
+    | MarketingFounderDraftStarter,
 ): DraftFormData {
   return {
     title: draftStarter.title,

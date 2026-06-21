@@ -19,6 +19,8 @@ export type MarketingPostSource =
   | "seasonal"
   | "service_area"
   | "project_gallery"
+  | "founder_milestone"
+  | "product_update"
   | "other";
 
 export type MarketingPost = {
@@ -97,6 +99,8 @@ export const MARKETING_POST_SOURCE_OPTIONS: {
   { value: "seasonal", label: "Seasonal" },
   { value: "service_area", label: "Service area" },
   { value: "project_gallery", label: "Project gallery" },
+  { value: "founder_milestone", label: "Founder milestone" },
+  { value: "product_update", label: "Product update" },
   { value: "other", label: "Other" },
 ];
 
