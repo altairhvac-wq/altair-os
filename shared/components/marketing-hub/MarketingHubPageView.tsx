@@ -17,13 +17,17 @@ import {
   adminSegmentedItemActiveClass,
   adminSegmentedItemClass,
 } from "@/shared/design-system/shell/tokens";
+import { MarketingCompletedJobPicker } from "@/shared/components/marketing-hub/MarketingCompletedJobPicker";
 import { MarketingPostDraftForm } from "@/shared/components/marketing-hub/MarketingPostDraftForm";
 import {
   MARKETING_POST_TEMPLATES,
+  buildCompletedJobDraftStarter,
   marketingPostTemplateToDraftStarter,
+  type MarketingCompletedJobDraftStarter,
   type MarketingPostDraftStarter,
   type MarketingPostTemplate,
 } from "@/shared/components/marketing-hub/marketing-post-templates";
+import type { MarketingCompletedJobPickerItem } from "@/shared/types/marketing-completed-job";
 import {
   countMarketingPostsByTab,
   filterMarketingPostsByTab,
@@ -33,10 +37,11 @@ import {
   type MarketingPostListTab,
 } from "@/shared/types/marketing-post";
 
-type ViewMode = "list" | "create" | "edit";
+type ViewMode = "list" | "create" | "edit" | "pick-completed-job";
 
 type MarketingHubPageViewProps = {
   initialPosts: MarketingPost[];
+  companyName: string;
 };
 
 const LIST_TABS: { id: MarketingPostListTab; label: string }[] = [
@@ -68,6 +73,7 @@ type MarketingPostTemplateIdeasProps = {
   northStar: boolean;
   disabled: boolean;
   onUseTemplate: (template: MarketingPostTemplate) => void;
+  onCreateFromCompletedJob: () => void;
   compact?: boolean;
 };
 
@@ -75,6 +81,7 @@ function MarketingPostTemplateIdeas({
   northStar,
   disabled,
   onUseTemplate,
+  onCreateFromCompletedJob,
   compact = false,
 }: MarketingPostTemplateIdeasProps) {
   return (
@@ -153,25 +160,67 @@ function MarketingPostTemplateIdeas({
             </div>
           </li>
         ))}
+        <li>
+          <div
+            className={`flex h-full flex-col gap-3 rounded-xl border p-3 ${
+              northStar
+                ? "border-[rgba(148,163,184,0.22)] bg-white/80"
+                : "border-slate-200/90 bg-white"
+            }`}
+          >
+            <div className="min-w-0 flex-1">
+              <p
+                className={`text-sm font-medium ${
+                  northStar ? "text-[#17130E]" : "text-slate-900"
+                }`}
+              >
+                Create from completed job
+              </p>
+              <p
+                className={`mt-0.5 text-xs ${
+                  northStar ? "text-[#6B6255]" : "text-slate-500"
+                }`}
+              >
+                Start with a safe draft from job type, city, and completion
+                date. You review before saving.
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={onCreateFromCompletedJob}
+              className="admin-btn-secondary w-full justify-center text-xs sm:w-auto"
+            >
+              Choose job
+            </button>
+          </div>
+        </li>
       </ul>
     </section>
   );
 }
 
-export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps) {
+export function MarketingHubPageView({
+  initialPosts,
+  companyName,
+}: MarketingHubPageViewProps) {
   const router = useRouter();
   const northStar = isNorthStarShellEnabled();
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [listTab, setListTab] = useState<MarketingPostListTab>("active");
-  const [createDraftStarter, setCreateDraftStarter] =
-    useState<MarketingPostDraftStarter | null>(null);
+  const [createDraftStarter, setCreateDraftStarter] = useState<
+    MarketingPostDraftStarter | MarketingCompletedJobDraftStarter | null
+  >(null);
   const [createFormKey, setCreateFormKey] = useState("blank");
   const selectedPost =
     selectedPostId != null
       ? initialPosts.find((post) => post.id === selectedPostId) ?? null
       : null;
-  const isFormOpen = viewMode === "create" || viewMode === "edit";
+  const isFormOpen =
+    viewMode === "create" ||
+    viewMode === "edit" ||
+    viewMode === "pick-completed-job";
   const filteredPosts = useMemo(
     () => filterMarketingPostsByTab(initialPosts, listTab),
     [initialPosts, listTab],
@@ -209,6 +258,30 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
     setCreateDraftStarter(marketingPostTemplateToDraftStarter(template));
     setCreateFormKey(template.id);
     setViewMode("create");
+  }
+
+  function handleOpenCompletedJobPicker() {
+    setSelectedPostId(null);
+    setCreateDraftStarter(null);
+    setCreateFormKey("blank");
+    setViewMode("pick-completed-job");
+  }
+
+  function handleSelectCompletedJob(job: MarketingCompletedJobPickerItem) {
+    const draftStarter = buildCompletedJobDraftStarter({
+      job,
+      companyName,
+      channel: "facebook",
+    });
+
+    setSelectedPostId(null);
+    setCreateDraftStarter(draftStarter);
+    setCreateFormKey(`completed-job-${job.id}`);
+    setViewMode("create");
+  }
+
+  function handleCloseCompletedJobPicker() {
+    setViewMode("list");
   }
 
   function handleSelectPost(postId: string) {
@@ -260,7 +333,15 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
         ) : null}
 
         <div className={masterListPageScrollRegionClass}>
-          {viewMode === "create" ? (
+          {viewMode === "pick-completed-job" ? (
+            <div className="flex justify-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+              <MarketingCompletedJobPicker
+                northStar={northStar}
+                onSelect={handleSelectCompletedJob}
+                onCancel={handleCloseCompletedJobPicker}
+              />
+            </div>
+          ) : viewMode === "create" ? (
             <div className="flex justify-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
               <MarketingPostDraftForm
                 key={createFormKey}
@@ -351,6 +432,7 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
                   northStar={northStar}
                   disabled={isFormOpen}
                   onUseTemplate={handleUseTemplate}
+                  onCreateFromCompletedJob={handleOpenCompletedJobPicker}
                   compact
                 />
               ) : null}
@@ -398,6 +480,7 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
                       northStar={northStar}
                       disabled={isFormOpen}
                       onUseTemplate={handleUseTemplate}
+                      onCreateFromCompletedJob={handleOpenCompletedJobPicker}
                     />
                   ) : null}
                 </div>

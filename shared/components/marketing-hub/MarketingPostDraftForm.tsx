@@ -12,8 +12,15 @@ import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { formatActionError } from "@/shared/lib/operational-errors";
-import type { MarketingPostDraftStarter } from "@/shared/components/marketing-hub/marketing-post-templates";
-import type { MarketingChannel, MarketingPost } from "@/shared/types/marketing-post";
+import type {
+  MarketingCompletedJobDraftStarter,
+  MarketingPostDraftStarter,
+} from "@/shared/components/marketing-hub/marketing-post-templates";
+import type {
+  MarketingChannel,
+  MarketingPost,
+  MarketingPostSource,
+} from "@/shared/types/marketing-post";
 import {
   formatMarketingChannel,
   formatMarketingPostStatus,
@@ -22,7 +29,7 @@ import {
 type MarketingPostDraftFormProps = {
   mode?: "create" | "edit";
   post?: MarketingPost;
-  draftStarter?: MarketingPostDraftStarter;
+  draftStarter?: MarketingPostDraftStarter | MarketingCompletedJobDraftStarter;
   onSuccess: () => void;
   onCancel: () => void;
 };
@@ -99,6 +106,36 @@ function buildMarketingPostCopyText(data: DraftFormData): string {
   }
 
   return parts.join("\n\n");
+}
+
+function getCreateSourceFromDraftStarter(
+  draftStarter?: MarketingPostDraftStarter | MarketingCompletedJobDraftStarter,
+): { sourceType: MarketingPostSource; sourceId?: string } {
+  if (
+    draftStarter &&
+    "sourceType" in draftStarter &&
+    draftStarter.sourceType === "completed_job" &&
+    draftStarter.sourceId
+  ) {
+    return {
+      sourceType: "completed_job",
+      sourceId: draftStarter.sourceId,
+    };
+  }
+
+  return { sourceType: "manual" };
+}
+
+function draftStarterToFormData(
+  draftStarter: MarketingPostDraftStarter | MarketingCompletedJobDraftStarter,
+): DraftFormData {
+  return {
+    title: draftStarter.title,
+    channelTarget: draftStarter.channelTarget,
+    postText: draftStarter.postText,
+    suggestedHashtags: draftStarter.suggestedHashtags,
+    callToAction: draftStarter.callToAction,
+  };
 }
 
 function validateDraftFormData(data: DraftFormData): string | null {
@@ -201,13 +238,16 @@ export function MarketingPostDraftForm({
   const northStar = isNorthStarShellEnabled();
   const timeZone = useCompanyTimezone();
   const isEditMode = mode === "edit" && post != null;
+  const [createSource] = useState(() =>
+    getCreateSourceFromDraftStarter(draftStarter),
+  );
   const [formData, setFormData] = useState<DraftFormData>(() => {
     if (isEditMode) {
       return postToFormData(post);
     }
 
     if (draftStarter) {
-      return { ...DEFAULT_FORM_DATA, ...draftStarter };
+      return draftStarterToFormData(draftStarter);
     }
 
     return DEFAULT_FORM_DATA;
@@ -270,7 +310,8 @@ export function MarketingPostDraftForm({
         : await createMarketingPostAction({
             ...payload,
             status: "draft",
-            sourceType: "manual",
+            sourceType: createSource.sourceType,
+            sourceId: createSource.sourceId ?? null,
           });
 
       if (result.error || !result.post) {

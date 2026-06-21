@@ -62,3 +62,37 @@ export async function listCompletedJobsForMarketing(
     mapMarketingCompletedJobRow,
   );
 }
+
+export async function isCompletedJobAvailableForMarketing(
+  companyId: string,
+  jobId: string,
+): Promise<boolean> {
+  const normalizedJobId = jobId.trim();
+  if (!normalizedJobId) {
+    return false;
+  }
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("id", normalizedJobId)
+    .eq("status", "completed")
+    .is("deleted_at", null)
+    .is("archived_at", null)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[isCompletedJobAvailableForMarketing] query failed:", {
+      companyId,
+      jobId: normalizedJobId,
+      code: error.code,
+      message: error.message,
+    });
+    return false;
+  }
+
+  return data != null;
+}

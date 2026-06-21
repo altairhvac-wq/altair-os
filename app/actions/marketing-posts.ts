@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
-import { listCompletedJobsForMarketing } from "@/lib/database/queries/marketing-completed-jobs";
+import {
+  isCompletedJobAvailableForMarketing,
+  listCompletedJobsForMarketing,
+} from "@/lib/database/queries/marketing-completed-jobs";
 import {
   archiveMarketingPost,
   createMarketingPost,
@@ -237,6 +240,8 @@ function validateUpdateMarketingPostInput(
 function normalizeCreateMarketingPostInput(
   input: MarketingPostCreateInput,
 ): MarketingPostCreateInput {
+  const sourceType = input.sourceType ?? "manual";
+
   return {
     title: input.title.trim(),
     channelTarget: input.channelTarget,
@@ -244,8 +249,9 @@ function normalizeCreateMarketingPostInput(
     suggestedHashtags: normalizeSuggestedHashtags(input.suggestedHashtags),
     callToAction: input.callToAction?.trim() || null,
     status: input.status,
-    sourceType: input.sourceType,
-    sourceId: input.sourceId ?? null,
+    sourceType,
+    sourceId:
+      sourceType === "completed_job" ? input.sourceId?.trim() || null : null,
     scheduledAt: input.scheduledAt ?? null,
   };
 }
@@ -309,6 +315,24 @@ export async function createMarketingPostAction(
   }
 
   const normalized = normalizeCreateMarketingPostInput(input);
+
+  if (normalized.sourceType === "completed_job") {
+    const sourceId = normalized.sourceId?.trim() ?? "";
+    if (!sourceId) {
+      return { error: "A completed job is required for this draft source." };
+    }
+
+    const isValidJob = await isCompletedJobAvailableForMarketing(
+      permission.context.company.id,
+      sourceId,
+    );
+    if (!isValidJob) {
+      return {
+        error: "The selected completed job is no longer available.",
+      };
+    }
+  }
+
   const { post, error } = await createMarketingPost(
     permission.context.company.id,
     permission.context.user.id,

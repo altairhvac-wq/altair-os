@@ -20,5 +20,5 @@ export default async function MarketingPage() {
 
   const posts = await listMarketingPosts(companyContext.company.id);
 
-  return <MarketingHubPageView initialPosts={posts} />;
+  return <MarketingHubPageView initialPosts={posts} companyName={companyContext.company.name} />;
 }
