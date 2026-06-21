@@ -10,6 +10,7 @@ import {
 import {
   archiveMarketingPost,
   createMarketingPost,
+  duplicateMarketingPost,
   getMarketingPostById,
   markMarketingPostPosted,
   updateMarketingPost,
@@ -523,6 +524,49 @@ export async function archiveMarketingPostAction(
   if (error || !post) {
     return {
       error: error ?? "We couldn't archive this marketing post. Try again.",
+    };
+  }
+
+  revalidateMarketingPaths();
+  return { post };
+}
+
+export async function duplicateMarketingPostAction(
+  postId: string,
+): Promise<MarketingPostActionResult> {
+  const permission = await assertMarketingPostManager();
+  if (permission.error || !permission.context) {
+    return { error: permission.error };
+  }
+
+  const normalizedPostId = normalizePostId(postId);
+  if (!normalizedPostId) {
+    return { error: "A valid marketing post is required." };
+  }
+
+  const existing = await getMarketingPostById(
+    permission.context.company.id,
+    normalizedPostId,
+  );
+  if (!existing) {
+    return { error: "Marketing post not found." };
+  }
+
+  if (existing.status !== "posted" && existing.status !== "archived") {
+    return {
+      error: "Only posted or archived posts can be reused.",
+    };
+  }
+
+  const { post, error } = await duplicateMarketingPost(
+    permission.context.company.id,
+    permission.context.user.id,
+    normalizedPostId,
+  );
+
+  if (error || !post) {
+    return {
+      error: error ?? "We couldn't create a copy of this post. Try again.",
     };
   }
 

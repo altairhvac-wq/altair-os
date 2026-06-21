@@ -302,6 +302,70 @@ export async function markMarketingPostPosted(
   };
 }
 
+const REUSABLE_MARKETING_POST_STATUSES = new Set<MarketingPostStatus>([
+  "posted",
+  "archived",
+]);
+
+export type DuplicateMarketingPostOptions = {
+  titleSuffix?: string;
+  allowedStatuses?: MarketingPostStatus[];
+};
+
+export async function duplicateMarketingPost(
+  companyId: string,
+  userId: string,
+  postId: string,
+  options?: DuplicateMarketingPostOptions,
+): Promise<{ post: MarketingPost | null; error: string | null }> {
+  const existing = await getMarketingPostById(companyId, postId);
+  if (!existing) {
+    return { post: null, error: "Marketing post not found." };
+  }
+
+  const allowedStatuses =
+    options?.allowedStatuses ?? [...REUSABLE_MARKETING_POST_STATUSES];
+  if (!allowedStatuses.includes(existing.status)) {
+    return {
+      post: null,
+      error: "Only posted or archived posts can be reused.",
+    };
+  }
+
+  const titleSuffix = options?.titleSuffix ?? " (copy)";
+  const supabase = await createClient();
+  const insert: MarketingPostInsert = {
+    company_id: companyId,
+    created_by: userId,
+    title: `${existing.title}${titleSuffix}`.trim(),
+    channel_target: existing.channelTarget,
+    post_text: existing.postText,
+    suggested_hashtags: existing.suggestedHashtags,
+    call_to_action: existing.callToAction?.trim() || null,
+    status: "draft",
+    source_type: "manual",
+    source_id: null,
+    scheduled_at: null,
+  };
+
+  const { data, error } = await marketingPostsTable(supabase)
+    .insert(insert)
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    return {
+      post: null,
+      error: mapDatabaseError(error),
+    };
+  }
+
+  return {
+    post: mapMarketingPostRow(data as MarketingPostRow),
+    error: null,
+  };
+}
+
 export async function archiveMarketingPost(
   companyId: string,
   postId: string,

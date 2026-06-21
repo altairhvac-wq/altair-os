@@ -5,6 +5,7 @@ import { Check, Copy } from "lucide-react";
 import {
   archiveMarketingPostAction,
   createMarketingPostAction,
+  duplicateMarketingPostAction,
   markMarketingPostPostedAction,
   updateMarketingPostAction,
 } from "@/app/actions/marketing-posts";
@@ -287,12 +288,15 @@ export function MarketingPostDraftForm({
   const [isPending, startTransition] = useTransition();
   const [isMarkPostedPending, startMarkPostedTransition] = useTransition();
   const [isArchivePending, startArchiveTransition] = useTransition();
-  const isActionPending = isPending || isMarkPostedPending || isArchivePending;
+  const [isReusePending, startReuseTransition] = useTransition();
+  const isActionPending =
+    isPending || isMarkPostedPending || isArchivePending || isReusePending;
   const isReadOnly =
     isEditMode && (post.status === "posted" || post.status === "archived");
   const canMarkPosted =
     isEditMode && post.status !== "posted" && post.status !== "archived";
   const canArchive = isEditMode && post.status !== "archived";
+  const canReuse = isReadOnly;
   const rewriteSourceType = isEditMode
     ? post.sourceType
     : createSource.sourceType;
@@ -418,7 +422,11 @@ export function MarketingPostDraftForm({
       return;
     }
 
-    const confirmed = window.confirm(`Archive "${post.title}"?`);
+    const confirmMessage =
+      post.status === "posted"
+        ? "Move this post to archive? It will leave Posted and appear under Archived. The original record is kept."
+        : "Move this post to archive?";
+    const confirmed = window.confirm(confirmMessage);
     if (!confirmed) {
       return;
     }
@@ -432,6 +440,29 @@ export function MarketingPostDraftForm({
           formatActionError(
             result.error,
             "We couldn't archive this post. Try again.",
+          ),
+        );
+        return;
+      }
+
+      onSuccess();
+    });
+  }
+
+  function handleReusePost() {
+    if (!isEditMode || !canReuse || isActionPending) {
+      return;
+    }
+
+    startReuseTransition(async () => {
+      setError(null);
+
+      const result = await duplicateMarketingPostAction(post.id);
+      if (result.error || !result.post) {
+        setError(
+          formatActionError(
+            result.error,
+            "We couldn't create a copy of this post. Try again.",
           ),
         );
         return;
@@ -456,7 +487,11 @@ export function MarketingPostDraftForm({
               northStar ? "text-[#17130E]" : "text-slate-900"
             }`}
           >
-            {isEditMode ? "Edit post draft" : "New post draft"}
+            {isEditMode
+              ? isReadOnly
+                ? "View post"
+                : "Edit post draft"
+              : "New post draft"}
           </h2>
           <p
             className={`mt-1.5 max-w-2xl text-sm leading-relaxed ${
@@ -466,8 +501,8 @@ export function MarketingPostDraftForm({
             {isEditMode
               ? isReadOnly
                 ? post.status === "archived"
-                  ? "This post is archived and can't be edited. Copy the text if you still need it."
-                  : "This post is posted and can't be edited here. Copy the text if you still need it."
+                  ? "This post is archived and can't be edited. Reuse it to create a new draft, or copy the text if you still need it."
+                  : "This post is posted and can't be edited here. Reuse it to create a new draft, or copy the text if you still need it."
                 : "Update the draft, preview how it reads, then copy or mark it posted manually when ready."
               : draftStarter
                 ? "This draft starter prefills the form. Edit anything you need, then save when ready."
@@ -510,6 +545,30 @@ export function MarketingPostDraftForm({
                   minute: "2-digit",
                 })}
               </span>
+              {post.postedAt ? (
+                <span>
+                  Posted manually:{" "}
+                  {formatDateTimeInTimeZone(post.postedAt, timeZone, {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </span>
+              ) : null}
+              {post.archivedAt ? (
+                <span>
+                  Archived:{" "}
+                  {formatDateTimeInTimeZone(post.archivedAt, timeZone, {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </span>
+              ) : null}
             </div>
           ) : null}
         </header>
@@ -767,15 +826,47 @@ export function MarketingPostDraftForm({
                           : "Mark posted manually"}
                       </button>
                     ) : null}
+                    {canReuse ? (
+                      <div className="flex flex-col gap-1">
+                        <button
+                          type="button"
+                          disabled={isActionPending}
+                          onClick={handleReusePost}
+                          className="admin-btn-secondary"
+                        >
+                          {isReusePending ? "Creating copy..." : "Reuse post"}
+                        </button>
+                        <p
+                          className={`text-xs leading-relaxed ${
+                            northStar ? "text-[#6B6255]" : "text-slate-500"
+                          }`}
+                        >
+                          Reuse creates a new editable copy. The original stays
+                          unchanged.
+                        </p>
+                      </div>
+                    ) : null}
                     {canArchive ? (
-                      <button
-                        type="button"
-                        disabled={isActionPending}
-                        onClick={handleArchive}
-                        className="admin-btn-secondary border-rose-200 text-rose-800 hover:border-rose-300 hover:bg-rose-50"
-                      >
-                        {isArchivePending ? "Archiving..." : "Archive"}
-                      </button>
+                      <div className="flex flex-col gap-1">
+                        <button
+                          type="button"
+                          disabled={isActionPending}
+                          onClick={handleArchive}
+                          className="admin-btn-secondary border-rose-200 text-rose-800 hover:border-rose-300 hover:bg-rose-50"
+                        >
+                          {isArchivePending
+                            ? "Moving to archive..."
+                            : "Move to archive"}
+                        </button>
+                        <p
+                          className={`text-xs leading-relaxed ${
+                            northStar ? "text-[#6B6255]" : "text-slate-500"
+                          }`}
+                        >
+                          Archive moves this post out of the main list but keeps
+                          it for your records.
+                        </p>
+                      </div>
                     ) : null}
                   </>
                 ) : null}
