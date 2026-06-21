@@ -19,6 +19,7 @@ import type {
   MarketingCompletedJobDraftStarter,
   MarketingPostDraftStarter,
 } from "@/shared/components/marketing-hub/marketing-post-templates";
+import { MarketingCompletedJobDraftAiGenerator } from "@/shared/components/marketing-hub/MarketingCompletedJobDraftAiGenerator";
 import { MarketingPostAiAssistant } from "@/shared/components/marketing-hub/MarketingPostAiAssistant";
 import type {
   MarketingChannel,
@@ -342,6 +343,12 @@ export function MarketingPostDraftForm({
   const rewriteSourceId = isEditMode
     ? post.sourceId ?? null
     : createSource.sourceId ?? null;
+  const isCompletedJobCreate =
+    !isEditMode &&
+    draftStarter != null &&
+    "sourceType" in draftStarter &&
+    draftStarter.sourceType === "completed_job" &&
+    Boolean(createSource.sourceId);
 
   const inputClassName = northStar
     ? "mt-1.5 w-full rounded-lg border border-[rgba(148,163,184,0.24)] bg-white px-3.5 py-2.5 text-sm text-[#101827] shadow-sm transition-colors placeholder:text-[#6B7280] focus:border-[#B88A2E] focus:outline-none focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]"
@@ -356,6 +363,23 @@ export function MarketingPostDraftForm({
     value: DraftFormData[K],
   ) {
     setFormData((current) => ({ ...current, [field]: value }));
+  }
+
+  function applyGeneratedDraft(draft: {
+    title: string;
+    channelTarget: MarketingChannel;
+    postText: string;
+    suggestedHashtags: string;
+    callToAction: string;
+  }) {
+    setFormData((current) => ({
+      title: draft.title,
+      channelTarget: draft.channelTarget,
+      postText: draft.postText,
+      suggestedHashtags: draft.suggestedHashtags,
+      callToAction: draft.callToAction,
+      scheduledAtLocal: current.scheduledAtLocal,
+    }));
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -706,6 +730,24 @@ export function MarketingPostDraftForm({
 
         <div className="grid gap-8 px-5 py-6 sm:px-7 sm:py-7 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:items-start">
           <div className="space-y-5">
+            {isCompletedJobCreate && createSource.sourceId ? (
+              <MarketingCompletedJobDraftAiGenerator
+                sourceId={createSource.sourceId}
+                channelTarget={formData.channelTarget}
+                currentFormSnapshot={{
+                  title: formData.title,
+                  channelTarget: formData.channelTarget,
+                  postText: formData.postText,
+                  suggestedHashtags: formData.suggestedHashtags,
+                  callToAction: formData.callToAction,
+                }}
+                aiFeaturesEnabled={aiFeaturesEnabled}
+                aiDraftingConfigured={aiDraftingConfigured}
+                disabled={isActionPending}
+                onApplyDraft={applyGeneratedDraft}
+              />
+            ) : null}
+
             <label className="block text-sm">
               <span
                 className={`font-medium ${

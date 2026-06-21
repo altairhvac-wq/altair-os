@@ -5,7 +5,10 @@ import { COMPLETION_NOTES_AI_FEATURE } from "@/lib/ai/completion-notes";
 import { INVOICE_MESSAGE_AI_FEATURE } from "@/lib/ai/invoice-message";
 import { JOB_SUMMARY_AI_FEATURE } from "@/lib/ai/job-summary";
 import { LEAD_FOLLOW_UP_AI_FEATURE } from "@/lib/ai/lead-follow-up";
-import { MARKETING_POST_REWRITE_AI_FEATURE } from "@/lib/ai/marketing-post";
+import {
+  MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE,
+  MARKETING_POST_REWRITE_AI_FEATURE,
+} from "@/lib/ai/marketing-post";
 
 export type AiUserErrorCode =
   | GenerateDraftTextErrorCode
@@ -30,6 +33,8 @@ const FEATURE_INSUFFICIENT_CONTEXT: Partial<Record<AiFeatureName, string>> = {
     "Add completion notes before polishing.",
   [MARKETING_POST_REWRITE_AI_FEATURE]:
     "Add more post text before rewriting.",
+  [MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE]:
+    "The completed job is no longer available for draft generation.",
 };
 
 const FEATURE_CONFIG_ERROR: Partial<Record<AiFeatureName, string>> = {
@@ -39,6 +44,8 @@ const FEATURE_CONFIG_ERROR: Partial<Record<AiFeatureName, string>> = {
     "AI follow-up drafting is not configured yet.",
   [MARKETING_POST_REWRITE_AI_FEATURE]:
     "AI post rewriting is not configured yet.",
+  [MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE]:
+    "AI draft generation is not configured yet.",
 };
 
 const FEATURE_PROVIDER_ERROR: Partial<Record<AiFeatureName, string>> = {
@@ -50,6 +57,8 @@ const FEATURE_PROVIDER_ERROR: Partial<Record<AiFeatureName, string>> = {
     "Could not generate a follow-up right now. Try again in a moment.",
   [MARKETING_POST_REWRITE_AI_FEATURE]:
     "Could not rewrite the post. Try again.",
+  [MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE]:
+    "Could not generate the draft. Try again.",
 };
 
 /**

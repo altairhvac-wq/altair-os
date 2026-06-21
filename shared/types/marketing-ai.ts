@@ -43,3 +43,21 @@ export type MarketingPostRewriteContext = {
   companyName: string;
   completedJob?: MarketingCompletedJobRewriteContext | null;
 };
+
+export type MarketingCompletedJobDraftGenerateInput = {
+  sourceId: string;
+  channelTarget: MarketingChannel;
+};
+
+export type MarketingCompletedJobDraftFields = {
+  title: string;
+  postText: string;
+  suggestedHashtags: string[];
+  callToAction: string;
+  channelTarget: MarketingChannel;
+};
+
+export type MarketingCompletedJobDraftGenerateResult = {
+  error?: string;
+  draft?: MarketingCompletedJobDraftFields;
+};

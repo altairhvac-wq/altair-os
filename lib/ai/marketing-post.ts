@@ -8,13 +8,20 @@ import {
 } from "@/lib/ai/limits";
 import type { GenerateDraftTextRequest } from "@/lib/ai/types";
 import type {
+  MarketingCompletedJobDraftFields,
+  MarketingCompletedJobRewriteContext,
   MarketingPostRewriteContext,
   MarketingPostRewriteInput,
   MarketingPostRewriteMode,
 } from "@/shared/types/marketing-ai";
-import { formatMarketingChannel } from "@/shared/types/marketing-post";
+import {
+  formatMarketingChannel,
+  type MarketingChannel,
+} from "@/shared/types/marketing-post";
 
 export const MARKETING_POST_REWRITE_AI_FEATURE = "marketing-post-rewrite";
+export const MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE =
+  "marketing-completed-job-draft";
 
 export const INSUFFICIENT_MARKETING_POST_CONTEXT_MESSAGE =
   "Add more post text before rewriting.";
@@ -253,5 +260,199 @@ export function buildMarketingPostRewriteRequest(
     inputText: formatMarketingPostRewriteContext(input, context),
     companyId,
     userId,
+  };
+}
+
+const MARKETING_COMPLETED_JOB_DRAFT_PROMPT = `You write marketing post drafts for a local field service company (HVAC, electrical, plumbing, or general trades).
+
+Your job is to generate an initial draft post from sanitized completed-job context. The user will review and edit before saving. You are not posting, scheduling, or publishing anything.
+
+Output requirements:
+- Output ONLY a single valid JSON object — no markdown code fences, headings, labels, preamble, or closing commentary
+- Use exactly these keys: title, post_text, suggested_hashtags, call_to_action, channel_target
+- title: short internal label for the draft (not the social post headline)
+- post_text: the main post body copy, plain text, suitable for manual copy/paste
+- suggested_hashtags: JSON array of hashtag strings without the # prefix (0–6 tags)
+- call_to_action: a clear, concise CTA line the user can append or edit separately
+- channel_target: one of facebook, instagram, google_business, website, general — match the target channel in context when sensible
+
+Channel guidance:
+- Facebook: conversational, community-focused, local business feel
+- Instagram: concise caption style; keep hashtags minimal
+- Google Business: professional, local, trustworthy; usually no hashtags
+- Website / General: clear, professional, easy to read
+
+Rules:
+- Use ONLY facts from the context below: job type, city, state, completion date, company name, and target channel
+- Do NOT mention customer names, street addresses, phone numbers, emails, or private notes
+- Do NOT invent review quotes, before/after photos, discounts, guarantees, certifications, licenses, or emergency/24-7 availability
+- Do NOT claim the post was published, scheduled, or posted
+- Do NOT mention AI, automation, or that this was generated
+- Do NOT use phrases like "Here's your post" or similar meta commentary
+- Reference the company name when provided
+- You may reference job type and general area (city/state) only
+- Keep copy editable, professional, and useful for a local HVAC/trades Facebook-style post
+- Include a clear call to action in call_to_action`;
+
+export type MarketingCompletedJobDraftContext = {
+  companyName: string;
+  channelTarget: MarketingChannel;
+  completedJob: MarketingCompletedJobRewriteContext;
+};
+
+export function formatMarketingCompletedJobDraftContext(
+  context: MarketingCompletedJobDraftContext,
+): string {
+  const sections: string[] = [];
+
+  const companyName = context.companyName?.trim();
+  if (companyName) {
+    sections.push(`Company: ${companyName}`);
+  }
+
+  sections.push(
+    `Target channel: ${formatMarketingChannel(context.channelTarget)}`,
+  );
+
+  const completedJobContext = formatCompletedJobContext(context.completedJob);
+  if (completedJobContext) {
+    sections.push(`Completed job context (sanitized):\n${completedJobContext}`);
+  }
+
+  const assembled =
+    sections.join("\n\n") || "No completed job context provided.";
+  return trimAiContextText(assembled, MARKETING_POST_CONTEXT_MAX_CHARS);
+}
+
+export type MarketingCompletedJobDraftPreparation =
+  | { kind: "static"; message: string }
+  | { kind: "request"; request: GenerateDraftTextRequest };
+
+export function prepareMarketingCompletedJobDraft(
+  context: MarketingCompletedJobDraftContext,
+  companyId: string,
+  userId: string,
+): MarketingCompletedJobDraftPreparation {
+  const jobType = context.completedJob.jobType?.trim();
+  if (!jobType) {
+    return {
+      kind: "static",
+      message: "The completed job is no longer available for draft generation.",
+    };
+  }
+
+  return {
+    kind: "request",
+    request: buildMarketingCompletedJobDraftRequest(
+      context,
+      companyId,
+      userId,
+    ),
+  };
+}
+
+export function buildMarketingCompletedJobDraftRequest(
+  context: MarketingCompletedJobDraftContext,
+  companyId: string,
+  userId: string,
+): GenerateDraftTextRequest {
+  return {
+    feature: MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE,
+    prompt: MARKETING_COMPLETED_JOB_DRAFT_PROMPT,
+    inputText: formatMarketingCompletedJobDraftContext(context),
+    companyId,
+    userId,
+  };
+}
+
+const VALID_MARKETING_CHANNELS = new Set<MarketingChannel>([
+  "facebook",
+  "instagram",
+  "google_business",
+  "website",
+  "general",
+]);
+
+function stripJsonCodeFence(text: string): string {
+  const trimmed = text.trim();
+  const fenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)```$/i);
+  if (fenceMatch) {
+    return fenceMatch[1].trim();
+  }
+  return trimmed;
+}
+
+function normalizeGeneratedHashtags(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((tag) => tag.trim().replace(/^#+/, ""))
+    .filter((tag) => tag.length > 0)
+    .slice(0, 12);
+}
+
+function resolveGeneratedChannelTarget(
+  value: unknown,
+  fallback: MarketingChannel,
+): MarketingChannel {
+  if (typeof value !== "string") {
+    return fallback;
+  }
+
+  const normalized = value.trim().toLowerCase().replace(/\s+/g, "_");
+  if (VALID_MARKETING_CHANNELS.has(normalized as MarketingChannel)) {
+    return normalized as MarketingChannel;
+  }
+
+  return fallback;
+}
+
+export function parseMarketingCompletedJobDraftResponse(
+  draftText: string,
+  fallbackChannel: MarketingChannel,
+): MarketingCompletedJobDraftFields | null {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(stripJsonCodeFence(draftText));
+  } catch {
+    return null;
+  }
+
+  if (!parsed || typeof parsed !== "object") {
+    return null;
+  }
+
+  const record = parsed as Record<string, unknown>;
+  const title = typeof record.title === "string" ? record.title.trim() : "";
+  const postText =
+    typeof record.post_text === "string" ? record.post_text.trim() : "";
+  const callToAction =
+    typeof record.call_to_action === "string"
+      ? record.call_to_action.trim()
+      : "";
+
+  if (!title || !postText) {
+    return null;
+  }
+
+  const limitedPostText = trimAiText(postText, MARKETING_POST_TEXT_MAX_CHARS);
+  const limitedTitle = trimAiText(title, 200);
+  const limitedCallToAction = callToAction
+    ? trimAiText(callToAction, 300)
+    : "";
+
+  return {
+    title: limitedTitle,
+    postText: limitedPostText,
+    suggestedHashtags: normalizeGeneratedHashtags(record.suggested_hashtags),
+    callToAction: limitedCallToAction,
+    channelTarget: resolveGeneratedChannelTarget(
+      record.channel_target,
+      fallbackChannel,
+    ),
   };
 }
