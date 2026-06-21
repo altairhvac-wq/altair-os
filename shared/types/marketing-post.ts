@@ -35,6 +35,7 @@ export type MarketingPost = {
   scheduledAt?: string;
   postedAt?: string;
   archivedAt?: string;
+  deletedAt: string | null;
   createdBy?: string;
   createdAt: string;
   updatedAt: string;
@@ -157,20 +158,23 @@ export function filterMarketingPostsByTab(
   posts: MarketingPost[],
   tab: MarketingPostListTab,
 ): MarketingPost[] {
+  const visiblePosts = posts.filter((post) => post.deletedAt === null);
   let filtered: MarketingPost[];
 
   switch (tab) {
     case "active":
-      filtered = posts.filter((post) => isActiveMarketingPostStatus(post.status));
+      filtered = visiblePosts.filter((post) =>
+        isActiveMarketingPostStatus(post.status),
+      );
       break;
     case "scheduled":
-      filtered = posts.filter(isScheduledMarketingPost);
+      filtered = visiblePosts.filter(isScheduledMarketingPost);
       break;
     case "posted":
-      filtered = posts.filter((post) => post.status === "posted");
+      filtered = visiblePosts.filter((post) => post.status === "posted");
       break;
     case "archived":
-      filtered = posts.filter((post) => post.status === "archived");
+      filtered = visiblePosts.filter((post) => post.status === "archived");
       break;
   }
 

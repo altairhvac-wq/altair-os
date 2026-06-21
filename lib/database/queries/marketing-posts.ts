@@ -23,6 +23,7 @@ type MarketingPostRow = {
   scheduled_at: string | null;
   posted_at: string | null;
   archived_at: string | null;
+  deleted_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -80,6 +81,7 @@ function mapMarketingPostRow(row: MarketingPostRow): MarketingPost {
     scheduledAt: row.scheduled_at ?? undefined,
     postedAt: row.posted_at ?? undefined,
     archivedAt: row.archived_at ?? undefined,
+    deletedAt: row.deleted_at ?? null,
     createdBy: row.created_by ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -150,6 +152,7 @@ export async function listMarketingPosts(
   const { data, error } = await marketingPostsTable(supabase)
     .select("*")
     .eq("company_id", companyId)
+    .is("deleted_at", null)
     .order("updated_at", { ascending: false });
 
   if (error) {
@@ -174,6 +177,7 @@ export async function getMarketingPostById(
     .select("*")
     .eq("company_id", companyId)
     .eq("id", postId)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (error) {
@@ -243,6 +247,7 @@ export async function updateMarketingPost(
     .update(update)
     .eq("company_id", companyId)
     .eq("id", postId)
+    .is("deleted_at", null)
     .select("*")
     .single();
 
@@ -286,6 +291,7 @@ export async function markMarketingPostPosted(
     })
     .eq("company_id", companyId)
     .eq("id", postId)
+    .is("deleted_at", null)
     .select("*")
     .single();
 
@@ -389,6 +395,7 @@ export async function archiveMarketingPost(
     })
     .eq("company_id", companyId)
     .eq("id", postId)
+    .is("deleted_at", null)
     .select("*")
     .single();
 
