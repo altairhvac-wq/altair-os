@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "capture:founder-screenshots": "node scripts/capture-founder-marketing-screenshots.mjs",
+    "capture:founder-auth": "node scripts/save-founder-playwright-auth.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
