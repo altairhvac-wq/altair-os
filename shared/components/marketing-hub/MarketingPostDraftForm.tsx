@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Image from "next/image";
 import { Check, Copy } from "lucide-react";
 import {
@@ -265,6 +265,9 @@ type PostPreviewPanelProps = {
   showFounderScreenshot?: boolean;
 };
 
+const FOUNDER_SCREENSHOT_MISSING_MESSAGE =
+  "Screenshot file not found. Add the image to public/marketing/screenshots or choose a different reference.";
+
 function FounderScreenshotPreview({
   reference,
   northStar,
@@ -273,11 +276,18 @@ function FounderScreenshotPreview({
   northStar: boolean;
 }) {
   const trimmed = reference.trim();
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+
+  useEffect(() => {
+    setImageLoadFailed(false);
+  }, [trimmed]);
+
   if (!trimmed) {
     return null;
   }
 
   const previewable = isPreviewableScreenshotReference(trimmed);
+  const showImagePreview = previewable && !imageLoadFailed;
 
   return (
     <div
@@ -294,7 +304,7 @@ function FounderScreenshotPreview({
       >
         Founder screenshot
       </p>
-      {previewable ? (
+      {showImagePreview ? (
         <div className="relative mt-2 aspect-[16/10] w-full overflow-hidden rounded-md border border-black/10">
           <Image
             src={trimmed}
@@ -303,8 +313,18 @@ function FounderScreenshotPreview({
             className="object-cover object-top"
             sizes="320px"
             unoptimized={trimmed.startsWith("http")}
+            onError={() => setImageLoadFailed(true)}
           />
         </div>
+      ) : null}
+      {previewable && imageLoadFailed ? (
+        <p
+          className={`mt-2 text-xs leading-relaxed ${
+            northStar ? "text-amber-800" : "text-amber-700"
+          }`}
+        >
+          {FOUNDER_SCREENSHOT_MISSING_MESSAGE}
+        </p>
       ) : null}
       <p
         className={`mt-2 break-all font-mono text-xs leading-relaxed ${
@@ -538,9 +558,12 @@ export function MarketingPostDraftForm({
         ),
         callToAction: formData.callToAction.trim() || null,
         scheduledAt: scheduledAtLocalToIso(formData.scheduledAtLocal),
-        founderScreenshotReference: showFounderScreenshot
-          ? formData.founderScreenshotReference.trim() || null
-          : null,
+        ...(showFounderScreenshot
+          ? {
+              founderScreenshotReference:
+                formData.founderScreenshotReference.trim() || null,
+            }
+          : {}),
       };
 
       const result = isEditMode
@@ -1062,12 +1085,15 @@ export function MarketingPostDraftForm({
                     </span>
                   </span>
                   <select
-                    value={selectedFounderScreenshotOption?.path ?? ""}
+                    value={
+                      selectedFounderScreenshotOption?.path ??
+                      formData.founderScreenshotReference.trim()
+                    }
                     onChange={(event) => {
-                      const path = event.target.value;
-                      if (path) {
-                        updateField("founderScreenshotReference", path);
-                      }
+                      updateField(
+                        "founderScreenshotReference",
+                        event.target.value,
+                      );
                     }}
                     disabled={isReadOnly}
                     className={inputClassName}

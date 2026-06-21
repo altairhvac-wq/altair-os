@@ -19,7 +19,7 @@ export const FOUNDER_MARKETING_SCREENSHOT_OPTIONS: FounderMarketingScreenshotOpt
     },
     {
       id: "leads",
-      label: "Leads pipeline",
+      label: "Leads workspace",
       path: "/marketing/screenshots/marketing-leads.png",
     },
     {

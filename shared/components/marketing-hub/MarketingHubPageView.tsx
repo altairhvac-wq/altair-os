@@ -479,6 +479,7 @@ export function MarketingHubPageView({
                 post={selectedPost}
                 aiFeaturesEnabled={aiFeaturesEnabled}
                 aiDraftingConfigured={aiDraftingConfigured}
+                showFounderMarketing={showFounderMarketing}
                 onSuccess={handleEditSuccess}
                 onCancel={handleCloseForm}
                 onRecurringCreated={handleRecurringCreated}
