@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
+import { listCompletedJobsForMarketing } from "@/lib/database/queries/marketing-completed-jobs";
 import {
   archiveMarketingPost,
   createMarketingPost,
@@ -10,6 +11,7 @@ import {
   markMarketingPostPosted,
   updateMarketingPost,
 } from "@/lib/database/queries/marketing-posts";
+import type { MarketingCompletedJobPickerItem } from "@/shared/types/marketing-completed-job";
 import type {
   MarketingChannel,
   MarketingPost,
@@ -27,6 +29,11 @@ import {
 export type MarketingPostActionResult = {
   error?: string;
   post?: MarketingPost;
+};
+
+export type MarketingCompletedJobsListActionResult = {
+  error?: string;
+  jobs?: MarketingCompletedJobPickerItem[];
 };
 
 const MARKETING_CHANNELS = new Set<MarketingChannel>(
@@ -267,6 +274,25 @@ function normalizeUpdateMarketingPostInput(
   }
 
   return normalized;
+}
+
+export async function listCompletedJobsForMarketingAction(): Promise<MarketingCompletedJobsListActionResult> {
+  const permission = await assertMarketingPostManager();
+  if (permission.error || !permission.context) {
+    return { error: permission.error };
+  }
+
+  try {
+    const jobs = await listCompletedJobsForMarketing(
+      permission.context.company.id,
+    );
+    return { jobs };
+  } catch (error) {
+    console.error("[listCompletedJobsForMarketingAction] failed:", error);
+    return {
+      error: "We couldn't load completed jobs for marketing. Try again.",
+    };
+  }
 }
 
 export async function createMarketingPostAction(

@@ -1,4 +1,5 @@
 import type { MarketingChannel } from "@/shared/types/marketing-post";
+import type { MarketingCompletedJobPickerItem } from "@/shared/types/marketing-completed-job";
 
 export type MarketingPostTemplate = {
   id: string;
@@ -16,6 +17,11 @@ export type MarketingPostDraftStarter = {
   postText: string;
   suggestedHashtags: string;
   callToAction: string;
+};
+
+export type MarketingCompletedJobDraftStarter = MarketingPostDraftStarter & {
+  sourceType: "completed_job";
+  sourceId: string;
 };
 
 export const MARKETING_POST_TEMPLATES: MarketingPostTemplate[] = [
@@ -71,4 +77,93 @@ export function marketingPostTemplateToDraftStarter(
     suggestedHashtags: template.suggestedHashtags,
     callToAction: template.callToAction,
   };
+}
+
+function normalizeCompletedJobType(jobType: string | null | undefined): string {
+  const trimmed = jobType?.trim() ?? "";
+  return trimmed || "HVAC service";
+}
+
+function formatCompletedJobLocation(
+  city: string | null | undefined,
+  state: string | null | undefined,
+): { cityLabel: string; locationLabel: string } {
+  const normalizedCity = city?.trim() ?? "";
+  const normalizedState = state?.trim() ?? "";
+
+  if (normalizedCity && normalizedState) {
+    return {
+      cityLabel: normalizedCity,
+      locationLabel: `${normalizedCity}, ${normalizedState}`,
+    };
+  }
+
+  if (normalizedCity) {
+    return {
+      cityLabel: normalizedCity,
+      locationLabel: normalizedCity,
+    };
+  }
+
+  if (normalizedState) {
+    return {
+      cityLabel: "your area",
+      locationLabel: normalizedState,
+    };
+  }
+
+  return {
+    cityLabel: "your area",
+    locationLabel: "your area",
+  };
+}
+
+export function buildCompletedJobDraftStarter({
+  job,
+  companyName,
+  channel,
+}: {
+  job: MarketingCompletedJobPickerItem;
+  companyName: string;
+  channel: MarketingChannel;
+}): MarketingCompletedJobDraftStarter {
+  const jobType = normalizeCompletedJobType(job.jobType);
+  const { cityLabel, locationLabel } = formatCompletedJobLocation(
+    job.city,
+    job.state,
+  );
+  const company = companyName.trim() || "our team";
+
+  switch (channel) {
+    case "facebook":
+      return {
+        title: `${cityLabel} ${jobType} — recent job`,
+        channelTarget: "facebook",
+        postText: `Another job wrapped up in ${locationLabel}. We helped a local homeowner with ${jobType}. Proud to keep homes comfortable in our community.`,
+        suggestedHashtags: "#localbusiness #hvac #homecomfort",
+        callToAction: "Message us to schedule your next service visit.",
+        sourceType: "completed_job",
+        sourceId: job.id,
+      };
+    case "google_business":
+      return {
+        title: `${jobType} completed in ${cityLabel}`,
+        channelTarget: "google_business",
+        postText: `Recent service call in ${locationLabel}: ${jobType}. If your system needs maintenance or repair, ${company} is here to help.`,
+        suggestedHashtags: "",
+        callToAction: "Call or book online today.",
+        sourceType: "completed_job",
+        sourceId: job.id,
+      };
+    default:
+      return {
+        title: `Completed job — ${cityLabel}`,
+        channelTarget: channel,
+        postText: `We recently completed ${jobType} work in ${locationLabel}. If your system needs attention, reach out to schedule service with ${company}.`,
+        suggestedHashtags: "#hvac #homeservice",
+        callToAction: "Contact us when you're ready to get on the schedule.",
+        sourceType: "completed_job",
+        sourceId: job.id,
+      };
+  }
 }
