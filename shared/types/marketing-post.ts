@@ -119,3 +119,39 @@ export function formatMarketingPostSource(source: MarketingPostSource): string {
       ?.label ?? source
   );
 }
+
+export type MarketingPostListTab = "active" | "posted" | "archived";
+
+const ACTIVE_MARKETING_POST_STATUSES = new Set<MarketingPostStatus>([
+  "draft",
+  "ready",
+  "scheduled",
+  "failed",
+]);
+
+export function isActiveMarketingPostStatus(
+  status: MarketingPostStatus,
+): boolean {
+  return ACTIVE_MARKETING_POST_STATUSES.has(status);
+}
+
+export function filterMarketingPostsByTab(
+  posts: MarketingPost[],
+  tab: MarketingPostListTab,
+): MarketingPost[] {
+  switch (tab) {
+    case "active":
+      return posts.filter((post) => isActiveMarketingPostStatus(post.status));
+    case "posted":
+      return posts.filter((post) => post.status === "posted");
+    case "archived":
+      return posts.filter((post) => post.status === "archived");
+  }
+}
+
+export function countMarketingPostsByTab(
+  posts: MarketingPost[],
+  tab: MarketingPostListTab,
+): number {
+  return filterMarketingPostsByTab(posts, tab).length;
+}

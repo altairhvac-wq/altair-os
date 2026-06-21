@@ -52,7 +52,7 @@ const CHANNEL_OPTIONS: { value: MarketingChannel; label: string }[] = [
 const PREVIEW_GUIDANCE = [
   "Write like a local business.",
   "Avoid customer names or exact addresses.",
-  "Keep it short enough to paste into Facebook, Instagram, or Google.",
+  "Keep it short enough to copy and paste into Facebook, Instagram, or Google.",
 ];
 
 function normalizeSuggestedHashtagsInput(value: string): string[] {
@@ -207,6 +207,8 @@ export function MarketingPostDraftForm({
   const [isMarkPostedPending, startMarkPostedTransition] = useTransition();
   const [isArchivePending, startArchiveTransition] = useTransition();
   const isActionPending = isPending || isMarkPostedPending || isArchivePending;
+  const isReadOnly =
+    isEditMode && (post.status === "posted" || post.status === "archived");
   const canMarkPosted =
     isEditMode && post.status !== "posted" && post.status !== "archived";
   const canArchive = isEditMode && post.status !== "archived";
@@ -229,7 +231,7 @@ export function MarketingPostDraftForm({
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (isActionPending) {
+    if (isActionPending || isReadOnly) {
       return;
     }
 
@@ -373,8 +375,12 @@ export function MarketingPostDraftForm({
             }`}
           >
             {isEditMode
-              ? "Update the draft, preview how it reads, then copy or mark it posted when ready."
-              : "Draft copy your team can refine, preview, and paste into social channels."}
+              ? isReadOnly
+                ? post.status === "archived"
+                  ? "This post is archived and can't be edited. Copy the text if you still need it."
+                  : "This post is posted and can't be edited here. Copy the text if you still need it."
+                : "Update the draft, preview how it reads, then copy or mark it posted manually when ready."
+              : "Write the post copy your team can copy and post manually."}
           </p>
 
           {isEditMode ? (
@@ -431,6 +437,7 @@ export function MarketingPostDraftForm({
                 value={formData.title}
                 onChange={(event) => updateField("title", event.target.value)}
                 autoComplete="off"
+                disabled={isReadOnly}
                 className={inputClassName}
                 placeholder="Spring tune-up reminder"
               />
@@ -452,6 +459,7 @@ export function MarketingPostDraftForm({
                     event.target.value as MarketingChannel,
                   )
                 }
+                disabled={isReadOnly}
                 className={inputClassName}
               >
                 {CHANNEL_OPTIONS.map((option) => (
@@ -474,8 +482,9 @@ export function MarketingPostDraftForm({
                 value={formData.postText}
                 onChange={(event) => updateField("postText", event.target.value)}
                 rows={10}
+                disabled={isReadOnly}
                 className={`${inputClassName} min-h-[12rem] resize-y`}
-                placeholder="Write the post copy your team can publish."
+                placeholder="Write the post copy your team can copy and post manually."
               />
             </label>
 
@@ -501,6 +510,7 @@ export function MarketingPostDraftForm({
                     updateField("suggestedHashtags", event.target.value)
                   }
                   autoComplete="off"
+                  disabled={isReadOnly}
                   className={inputClassName}
                   placeholder="#hvac, localbusiness springready"
                 />
@@ -527,6 +537,7 @@ export function MarketingPostDraftForm({
                     updateField("callToAction", event.target.value)
                   }
                   autoComplete="off"
+                  disabled={isReadOnly}
                   className={inputClassName}
                   placeholder="Book your tune-up today"
                 />
@@ -545,17 +556,19 @@ export function MarketingPostDraftForm({
               }`}
             >
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="submit"
-                  disabled={isActionPending}
-                  className="admin-btn-primary"
-                >
-                  {isPending
-                    ? "Saving..."
-                    : isEditMode
-                      ? "Save changes"
-                      : "Save draft"}
-                </button>
+                {!isReadOnly ? (
+                  <button
+                    type="submit"
+                    disabled={isActionPending}
+                    className="admin-btn-primary"
+                  >
+                    {isPending
+                      ? "Saving..."
+                      : isEditMode
+                        ? "Save changes"
+                        : "Save draft"}
+                  </button>
+                ) : null}
                 {isEditMode ? (
                   <>
                     <button
@@ -582,7 +595,9 @@ export function MarketingPostDraftForm({
                         onClick={handleMarkPosted}
                         className="admin-btn-secondary"
                       >
-                        {isMarkPostedPending ? "Marking posted..." : "Mark posted"}
+                        {isMarkPostedPending
+                          ? "Marking posted..."
+                          : "Mark posted manually"}
                       </button>
                     ) : null}
                     {canArchive ? (

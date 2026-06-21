@@ -220,6 +220,22 @@ export async function updateMarketingPost(
   postId: string,
   input: MarketingPostUpdateInput,
 ): Promise<{ post: MarketingPost | null; error: string | null }> {
+  const existing = await getMarketingPostById(companyId, postId);
+  if (!existing) {
+    return { post: null, error: "Marketing post not found." };
+  }
+
+  if (existing.status === "archived") {
+    return { post: null, error: "Archived posts cannot be edited." };
+  }
+
+  if (existing.status === "posted") {
+    return {
+      post: null,
+      error: "Posted posts cannot be edited from this form.",
+    };
+  }
+
   const supabase = await createClient();
   const update = mapMarketingPostUpdateInputToRow(input);
 
@@ -247,6 +263,19 @@ export async function markMarketingPostPosted(
   companyId: string,
   postId: string,
 ): Promise<{ post: MarketingPost | null; error: string | null }> {
+  const existing = await getMarketingPostById(companyId, postId);
+  if (!existing) {
+    return { post: null, error: "Marketing post not found." };
+  }
+
+  if (existing.status === "archived") {
+    return { post: null, error: "Archived posts cannot be marked posted." };
+  }
+
+  if (existing.status === "posted") {
+    return { post: existing, error: null };
+  }
+
   const supabase = await createClient();
   const now = new Date().toISOString();
 
@@ -254,7 +283,6 @@ export async function markMarketingPostPosted(
     .update({
       status: "posted",
       posted_at: now,
-      archived_at: null,
     })
     .eq("company_id", companyId)
     .eq("id", postId)
@@ -278,6 +306,15 @@ export async function archiveMarketingPost(
   companyId: string,
   postId: string,
 ): Promise<{ post: MarketingPost | null; error: string | null }> {
+  const existing = await getMarketingPostById(companyId, postId);
+  if (!existing) {
+    return { post: null, error: "Marketing post not found." };
+  }
+
+  if (existing.status === "archived") {
+    return { post: existing, error: "This post is already archived." };
+  }
+
   const supabase = await createClient();
   const now = new Date().toISOString();
 

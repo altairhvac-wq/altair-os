@@ -59,7 +59,7 @@ export const adminNavItems: NavItem[] = [
     label: "Marketing",
     href: "/marketing",
     icon: Megaphone,
-    description: "Plan and publish company marketing posts",
+    description: "Draft and track company marketing posts",
   },
   {
     label: "Jobs",

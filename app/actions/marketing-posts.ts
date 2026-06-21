@@ -326,6 +326,14 @@ export async function updateMarketingPostAction(
     return { error: "Marketing post not found." };
   }
 
+  if (existing.status === "archived") {
+    return { error: "Archived posts cannot be edited." };
+  }
+
+  if (existing.status === "posted") {
+    return { error: "Posted posts cannot be edited from this form." };
+  }
+
   const normalized = normalizeUpdateMarketingPostInput(input);
   const { post, error } = await updateMarketingPost(
     permission.context.company.id,
@@ -364,6 +372,10 @@ export async function markMarketingPostPostedAction(
     return { error: "Marketing post not found." };
   }
 
+  if (existing.status === "archived") {
+    return { error: "Archived posts cannot be marked posted." };
+  }
+
   const { post, error } = await markMarketingPostPosted(
     permission.context.company.id,
     normalizedPostId,
@@ -398,6 +410,10 @@ export async function archiveMarketingPostAction(
   );
   if (!existing) {
     return { error: "Marketing post not found." };
+  }
+
+  if (existing.status === "archived") {
+    return { error: "This post is already archived." };
   }
 
   const { post, error } = await archiveMarketingPost(
