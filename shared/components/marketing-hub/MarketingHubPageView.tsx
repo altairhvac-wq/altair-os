@@ -267,6 +267,13 @@ export function MarketingHubPageView({
     router.refresh();
   }
 
+  function handleRecurringCreated() {
+    setViewMode("list");
+    setSelectedPostId(null);
+    setListTab("scheduled");
+    router.refresh();
+  }
+
   function handleOpenCreateForm() {
     setSelectedPostId(null);
     setCreateDraftStarter(null);
@@ -384,6 +391,7 @@ export function MarketingHubPageView({
                 aiDraftingConfigured={aiDraftingConfigured}
                 onSuccess={handleEditSuccess}
                 onCancel={handleCloseForm}
+                onRecurringCreated={handleRecurringCreated}
               />
             </div>
           ) : (

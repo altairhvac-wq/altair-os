@@ -5,6 +5,7 @@ import { Check, Copy } from "lucide-react";
 import {
   archiveMarketingPostAction,
   createMarketingPostAction,
+  createRecurringMarketingPostsAction,
   deleteMarketingPostAction,
   duplicateMarketingPostAction,
   markMarketingPostPostedAction,
@@ -23,10 +24,14 @@ import type {
   MarketingChannel,
   MarketingPost,
   MarketingPostSource,
+  MarketingRecurringFrequency,
+  MarketingRecurringOccurrences,
 } from "@/shared/types/marketing-post";
 import {
   formatMarketingChannel,
   formatMarketingPostStatus,
+  MARKETING_RECURRING_FREQUENCY_LABEL_OPTIONS,
+  MARKETING_RECURRING_OCCURRENCE_OPTIONS,
 } from "@/shared/types/marketing-post";
 
 type MarketingPostDraftFormProps = {
@@ -37,6 +42,19 @@ type MarketingPostDraftFormProps = {
   aiDraftingConfigured?: boolean;
   onSuccess: () => void;
   onCancel: () => void;
+  onRecurringCreated?: () => void;
+};
+
+type RecurringFormData = {
+  startAtLocal: string;
+  frequency: MarketingRecurringFrequency;
+  occurrences: MarketingRecurringOccurrences;
+};
+
+const DEFAULT_RECURRING_FORM: RecurringFormData = {
+  startAtLocal: "",
+  frequency: "weekly",
+  occurrences: 4,
 };
 
 type DraftFormData = {
@@ -266,6 +284,7 @@ export function MarketingPostDraftForm({
   aiDraftingConfigured = false,
   onSuccess,
   onCancel,
+  onRecurringCreated,
 }: MarketingPostDraftFormProps) {
   const northStar = isNorthStarShellEnabled();
   const timeZone = useCompanyTimezone();
@@ -291,18 +310,28 @@ export function MarketingPostDraftForm({
   const [isArchivePending, startArchiveTransition] = useTransition();
   const [isReusePending, startReuseTransition] = useTransition();
   const [isDeletePending, startDeleteTransition] = useTransition();
+  const [isRecurringPending, startRecurringTransition] = useTransition();
+  const [showRecurringForm, setShowRecurringForm] = useState(false);
+  const [recurringFormData, setRecurringFormData] =
+    useState<RecurringFormData>(DEFAULT_RECURRING_FORM);
+  const [recurringError, setRecurringError] = useState<string | null>(null);
   const isActionPending =
     isPending ||
     isMarkPostedPending ||
     isArchivePending ||
     isReusePending ||
-    isDeletePending;
+    isDeletePending ||
+    isRecurringPending;
   const isReadOnly =
     isEditMode && (post.status === "posted" || post.status === "archived");
   const canMarkPosted =
     isEditMode && post.status !== "posted" && post.status !== "archived";
   const canArchive = isEditMode && post.status !== "archived";
   const canReuse = isReadOnly;
+  const canScheduleRecurring =
+    isEditMode &&
+    isReadOnly &&
+    (post.deletedAt === null || post.deletedAt === undefined);
   const canDelete =
     isEditMode &&
     post.status === "archived" &&
@@ -479,6 +508,68 @@ export function MarketingPostDraftForm({
       }
 
       onSuccess();
+    });
+  }
+
+  function handleOpenRecurringForm() {
+    if (!canScheduleRecurring || isActionPending) {
+      return;
+    }
+
+    setRecurringError(null);
+    setRecurringFormData(DEFAULT_RECURRING_FORM);
+    setShowRecurringForm(true);
+  }
+
+  function handleCloseRecurringForm() {
+    if (isRecurringPending) {
+      return;
+    }
+
+    setShowRecurringForm(false);
+    setRecurringError(null);
+    setRecurringFormData(DEFAULT_RECURRING_FORM);
+  }
+
+  function handleCreateRecurringCopies() {
+    if (!isEditMode || !canScheduleRecurring || isActionPending) {
+      return;
+    }
+
+    const startAt = scheduledAtLocalToIso(recurringFormData.startAtLocal);
+    if (!startAt) {
+      setRecurringError("Choose a start date and time.");
+      return;
+    }
+
+    startRecurringTransition(async () => {
+      setRecurringError(null);
+
+      const result = await createRecurringMarketingPostsAction(post.id, {
+        startAt,
+        frequency: recurringFormData.frequency,
+        occurrences: recurringFormData.occurrences,
+      });
+
+      if (result.error || !result.posts) {
+        setRecurringError(
+          formatActionError(
+            result.error,
+            "We couldn't schedule recurring copies of this post. Try again.",
+          ),
+        );
+        return;
+      }
+
+      setShowRecurringForm(false);
+      setRecurringFormData(DEFAULT_RECURRING_FORM);
+      setRecurringError(null);
+
+      if (onRecurringCreated) {
+        onRecurringCreated();
+      } else {
+        onSuccess();
+      }
     });
   }
 
@@ -810,6 +901,153 @@ export function MarketingPostDraftForm({
               </div>
             ) : null}
 
+            {showRecurringForm && canScheduleRecurring ? (
+              <div
+                className={`rounded-xl border p-4 sm:p-5 ${
+                  northStar
+                    ? "border-[rgba(184,138,46,0.35)] bg-[#FAF6EE]/60"
+                    : "border-amber-200/80 bg-amber-50/40"
+                }`}
+              >
+                <h3
+                  className={`text-sm font-semibold ${
+                    northStar ? "text-[#17130E]" : "text-slate-900"
+                  }`}
+                >
+                  Schedule recurring
+                </h3>
+                <p
+                  className={`mt-1 text-xs leading-relaxed ${
+                    northStar ? "text-[#6B6255]" : "text-slate-500"
+                  }`}
+                >
+                  Altair will create scheduled copies for you to copy and post
+                  manually. Nothing is posted automatically.
+                </p>
+
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <label className="block text-sm sm:col-span-2">
+                    <span
+                      className={`font-medium ${
+                        northStar ? "text-[#17130E]" : "text-slate-700"
+                      }`}
+                    >
+                      Start date/time
+                    </span>
+                    <input
+                      type="datetime-local"
+                      required
+                      value={recurringFormData.startAtLocal}
+                      onChange={(event) =>
+                        setRecurringFormData((current) => ({
+                          ...current,
+                          startAtLocal: event.target.value,
+                        }))
+                      }
+                      disabled={isRecurringPending}
+                      className={inputClassName}
+                    />
+                  </label>
+
+                  <label className="block text-sm">
+                    <span
+                      className={`font-medium ${
+                        northStar ? "text-[#17130E]" : "text-slate-700"
+                      }`}
+                    >
+                      Frequency
+                    </span>
+                    <select
+                      value={recurringFormData.frequency}
+                      onChange={(event) =>
+                        setRecurringFormData((current) => ({
+                          ...current,
+                          frequency: event.target
+                            .value as MarketingRecurringFrequency,
+                        }))
+                      }
+                      disabled={isRecurringPending}
+                      className={inputClassName}
+                    >
+                      {MARKETING_RECURRING_FREQUENCY_LABEL_OPTIONS.map(
+                        (option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </label>
+
+                  <label className="block text-sm">
+                    <span
+                      className={`font-medium ${
+                        northStar ? "text-[#17130E]" : "text-slate-700"
+                      }`}
+                    >
+                      Number of posts
+                    </span>
+                    <select
+                      value={recurringFormData.occurrences}
+                      onChange={(event) =>
+                        setRecurringFormData((current) => ({
+                          ...current,
+                          occurrences: Number(
+                            event.target.value,
+                          ) as MarketingRecurringOccurrences,
+                        }))
+                      }
+                      disabled={isRecurringPending}
+                      className={inputClassName}
+                    >
+                      {MARKETING_RECURRING_OCCURRENCE_OPTIONS.map((count) => (
+                        <option key={count} value={count}>
+                          {count}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                {recurringFormData.frequency === "monthly" ? (
+                  <p
+                    className={`mt-3 text-xs leading-relaxed ${
+                      northStar ? "text-[#6B6255]" : "text-slate-500"
+                    }`}
+                  >
+                    Monthly dates may adjust to the last day of shorter months.
+                  </p>
+                ) : null}
+
+                {recurringError ? (
+                  <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
+                    {recurringError}
+                  </p>
+                ) : null}
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={isRecurringPending}
+                    onClick={handleCreateRecurringCopies}
+                    className="admin-btn-primary"
+                  >
+                    {isRecurringPending
+                      ? "Creating scheduled copies..."
+                      : "Create scheduled copies"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isRecurringPending}
+                    onClick={handleCloseRecurringForm}
+                    className="admin-btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
             {error ? (
               <p className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
                 {error}
@@ -883,6 +1121,26 @@ export function MarketingPostDraftForm({
                         >
                           Reuse creates a new editable copy. The original stays
                           unchanged.
+                        </p>
+                      </div>
+                    ) : null}
+                    {canScheduleRecurring ? (
+                      <div className="flex flex-col gap-1">
+                        <button
+                          type="button"
+                          disabled={isActionPending || showRecurringForm}
+                          onClick={handleOpenRecurringForm}
+                          className="admin-btn-secondary border-[#B88A2E]/40 text-[#6B4E1A] hover:border-[#B88A2E]/60 hover:bg-[#FAF6EE]"
+                        >
+                          Schedule recurring
+                        </button>
+                        <p
+                          className={`text-xs leading-relaxed ${
+                            northStar ? "text-[#6B6255]" : "text-slate-500"
+                          }`}
+                        >
+                          Create multiple scheduled copies for your manual
+                          posting queue.
                         </p>
                       </div>
                     ) : null}
