@@ -237,12 +237,53 @@ function validateUpdateMarketingPostInput(
   return null;
 }
 
+function applyScheduleStatusCouplingForCreate(
+  normalized: MarketingPostCreateInput,
+): void {
+  if (normalized.scheduledAt) {
+    normalized.status = "scheduled";
+    return;
+  }
+
+  if (normalized.status === "scheduled") {
+    normalized.status = "draft";
+  }
+}
+
+function applyScheduleStatusCouplingForUpdate(
+  normalized: MarketingPostUpdateInput,
+  existing: MarketingPost,
+): void {
+  if (normalized.scheduledAt === "") {
+    normalized.scheduledAt = null;
+  }
+
+  if (normalized.scheduledAt !== undefined) {
+    if (normalized.scheduledAt) {
+      normalized.status = "scheduled";
+    } else if (existing.status === "scheduled") {
+      normalized.status = "draft";
+    }
+  }
+
+  const effectiveScheduledAt =
+    normalized.scheduledAt !== undefined
+      ? normalized.scheduledAt
+      : existing.scheduledAt ?? null;
+  const effectiveStatus =
+    normalized.status !== undefined ? normalized.status : existing.status;
+
+  if (effectiveStatus === "scheduled" && !effectiveScheduledAt) {
+    normalized.status = "draft";
+  }
+}
+
 function normalizeCreateMarketingPostInput(
   input: MarketingPostCreateInput,
 ): MarketingPostCreateInput {
   const sourceType = input.sourceType ?? "manual";
 
-  return {
+  const normalized: MarketingPostCreateInput = {
     title: input.title.trim(),
     channelTarget: input.channelTarget,
     postText: input.postText?.trim() ?? "",
@@ -254,10 +295,15 @@ function normalizeCreateMarketingPostInput(
       sourceType === "completed_job" ? input.sourceId?.trim() || null : null,
     scheduledAt: input.scheduledAt ?? null,
   };
+
+  applyScheduleStatusCouplingForCreate(normalized);
+
+  return normalized;
 }
 
 function normalizeUpdateMarketingPostInput(
   input: MarketingPostUpdateInput,
+  existing: MarketingPost,
 ): MarketingPostUpdateInput {
   const normalized: MarketingPostUpdateInput = { ...input };
 
@@ -275,9 +321,8 @@ function normalizeUpdateMarketingPostInput(
   if (normalized.callToAction !== undefined) {
     normalized.callToAction = normalized.callToAction?.trim() || null;
   }
-  if (normalized.scheduledAt === "") {
-    normalized.scheduledAt = null;
-  }
+
+  applyScheduleStatusCouplingForUpdate(normalized, existing);
 
   return normalized;
 }
@@ -384,7 +429,7 @@ export async function updateMarketingPostAction(
     return { error: "Posted posts cannot be edited from this form." };
   }
 
-  const normalized = normalizeUpdateMarketingPostInput(input);
+  const normalized = normalizeUpdateMarketingPostInput(input, existing);
   // Source tracking is set at create time and must not be changed afterward.
   delete normalized.sourceType;
   delete normalized.sourceId;

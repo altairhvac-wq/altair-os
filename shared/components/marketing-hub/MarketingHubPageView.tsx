@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Megaphone, Plus } from "lucide-react";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
+import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import {
   MasterListPageLayout,
@@ -48,6 +50,7 @@ type MarketingHubPageViewProps = {
 
 const LIST_TABS: { id: MarketingPostListTab; label: string }[] = [
   { id: "active", label: "Active" },
+  { id: "scheduled", label: "Scheduled" },
   { id: "posted", label: "Posted" },
   { id: "archived", label: "Archived" },
 ];
@@ -61,6 +64,11 @@ const EMPTY_STATE_COPY: Record<
     description:
       "Create copy-ready drafts your team can copy and post manually.",
   },
+  scheduled: {
+    title: "Nothing scheduled yet.",
+    description:
+      "Add a planned post time to a draft to build your manual posting queue.",
+  },
   posted: {
     title: "No posted marketing posts yet.",
     description: "Posts you mark posted manually will appear here.",
@@ -70,6 +78,14 @@ const EMPTY_STATE_COPY: Record<
     description: "Archived posts will appear here.",
   },
 };
+
+function isScheduledPostOverdue(post: MarketingPost): boolean {
+  if (post.status !== "scheduled" || !post.scheduledAt) {
+    return false;
+  }
+
+  return new Date(post.scheduledAt).getTime() < Date.now();
+}
 
 type MarketingPostTemplateIdeasProps = {
   northStar: boolean;
@@ -210,6 +226,7 @@ export function MarketingHubPageView({
 }: MarketingHubPageViewProps) {
   const router = useRouter();
   const northStar = isNorthStarShellEnabled();
+  const timeZone = useCompanyTimezone();
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [listTab, setListTab] = useState<MarketingPostListTab>("active");
@@ -494,37 +511,67 @@ export function MarketingHubPageView({
                 </div>
               ) : (
                 <ul className="divide-y divide-slate-100/90">
-                  {filteredPosts.map((post) => (
-                    <li key={post.id}>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectPost(post.id)}
-                        className={`flex w-full flex-col gap-1 px-4 py-3 text-left transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${
-                          northStar
-                            ? "hover:bg-[#FAF6EE]/80"
-                            : "hover:bg-slate-50/80"
-                        }`}
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-slate-900">
-                            {post.title}
-                          </p>
-                          <p className="mt-0.5 truncate text-xs text-slate-500">
-                            {formatMarketingChannel(post.channelTarget)}
-                          </p>
-                        </div>
-                        <span
-                          className={`inline-flex w-fit shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  {filteredPosts.map((post) => {
+                    const isScheduledTab = listTab === "scheduled";
+                    const overdue = isScheduledTab && isScheduledPostOverdue(post);
+
+                    return (
+                      <li key={post.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectPost(post.id)}
+                          className={`flex w-full flex-col gap-1 px-4 py-3 text-left transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${
                             northStar
-                              ? "bg-[#EFE4CB] text-[#6B4E1A] ring-1 ring-[rgba(138,99,36,0.12)]"
-                              : "bg-slate-100 text-slate-700"
+                              ? "hover:bg-[#FAF6EE]/80"
+                              : "hover:bg-slate-50/80"
                           }`}
                         >
-                          {formatMarketingPostStatus(post.status)}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-slate-900">
+                              {post.title}
+                            </p>
+                            <p className="mt-0.5 truncate text-xs text-slate-500">
+                              {formatMarketingChannel(post.channelTarget)}
+                            </p>
+                            {isScheduledTab && post.scheduledAt ? (
+                              <p className="mt-1 text-xs text-slate-600">
+                                Planned for{" "}
+                                {formatDateTimeInTimeZone(
+                                  post.scheduledAt,
+                                  timeZone,
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  },
+                                )}
+                                {" · "}
+                                Copy and post manually
+                              </p>
+                            ) : null}
+                          </div>
+                          <div className="flex shrink-0 flex-wrap items-center gap-2">
+                            {overdue ? (
+                              <span className="inline-flex w-fit rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-amber-200/80">
+                                Overdue
+                              </span>
+                            ) : null}
+                            <span
+                              className={`inline-flex w-fit shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                northStar
+                                  ? "bg-[#EFE4CB] text-[#6B4E1A] ring-1 ring-[rgba(138,99,36,0.12)]"
+                                  : "bg-slate-100 text-slate-700"
+                              }`}
+                            >
+                              {formatMarketingPostStatus(post.status)}
+                            </span>
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </>

@@ -120,12 +120,11 @@ export function formatMarketingPostSource(source: MarketingPostSource): string {
   );
 }
 
-export type MarketingPostListTab = "active" | "posted" | "archived";
+export type MarketingPostListTab = "active" | "scheduled" | "posted" | "archived";
 
 const ACTIVE_MARKETING_POST_STATUSES = new Set<MarketingPostStatus>([
   "draft",
   "ready",
-  "scheduled",
   "failed",
 ]);
 
@@ -135,18 +134,47 @@ export function isActiveMarketingPostStatus(
   return ACTIVE_MARKETING_POST_STATUSES.has(status);
 }
 
+export function isScheduledMarketingPost(post: MarketingPost): boolean {
+  return post.status === "scheduled" && Boolean(post.scheduledAt);
+}
+
+function sortMarketingPostsForTab(
+  posts: MarketingPost[],
+  tab: MarketingPostListTab,
+): MarketingPost[] {
+  if (tab === "scheduled") {
+    return [...posts].sort(
+      (left, right) =>
+        new Date(left.scheduledAt!).getTime() -
+        new Date(right.scheduledAt!).getTime(),
+    );
+  }
+
+  return posts;
+}
+
 export function filterMarketingPostsByTab(
   posts: MarketingPost[],
   tab: MarketingPostListTab,
 ): MarketingPost[] {
+  let filtered: MarketingPost[];
+
   switch (tab) {
     case "active":
-      return posts.filter((post) => isActiveMarketingPostStatus(post.status));
+      filtered = posts.filter((post) => isActiveMarketingPostStatus(post.status));
+      break;
+    case "scheduled":
+      filtered = posts.filter(isScheduledMarketingPost);
+      break;
     case "posted":
-      return posts.filter((post) => post.status === "posted");
+      filtered = posts.filter((post) => post.status === "posted");
+      break;
     case "archived":
-      return posts.filter((post) => post.status === "archived");
+      filtered = posts.filter((post) => post.status === "archived");
+      break;
   }
+
+  return sortMarketingPostsForTab(filtered, tab);
 }
 
 export function countMarketingPostsByTab(

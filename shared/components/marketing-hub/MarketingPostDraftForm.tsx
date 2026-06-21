@@ -43,6 +43,7 @@ type DraftFormData = {
   postText: string;
   suggestedHashtags: string;
   callToAction: string;
+  scheduledAtLocal: string;
 };
 
 const DEFAULT_FORM_DATA: DraftFormData = {
@@ -51,7 +52,29 @@ const DEFAULT_FORM_DATA: DraftFormData = {
   postText: "",
   suggestedHashtags: "",
   callToAction: "",
+  scheduledAtLocal: "",
 };
+
+function toDatetimeLocal(iso: string): string {
+  const date = new Date(iso);
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60 * 1000);
+  return local.toISOString().slice(0, 16);
+}
+
+function scheduledAtLocalToIso(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed.toISOString();
+}
 
 const CHANNEL_OPTIONS: { value: MarketingChannel; label: string }[] = [
   { value: "general", label: "General" },
@@ -87,6 +110,7 @@ function postToFormData(post: MarketingPost): DraftFormData {
     postText: post.postText,
     suggestedHashtags: formatSuggestedHashtagsForInput(post.suggestedHashtags),
     callToAction: post.callToAction ?? "",
+    scheduledAtLocal: post.scheduledAt ? toDatetimeLocal(post.scheduledAt) : "",
   };
 }
 
@@ -138,6 +162,7 @@ function draftStarterToFormData(
     postText: draftStarter.postText,
     suggestedHashtags: draftStarter.suggestedHashtags,
     callToAction: draftStarter.callToAction,
+    scheduledAtLocal: "",
   };
 }
 
@@ -314,6 +339,7 @@ export function MarketingPostDraftForm({
           formData.suggestedHashtags,
         ),
         callToAction: formData.callToAction.trim() || null,
+        scheduledAt: scheduledAtLocalToIso(formData.scheduledAtLocal),
       };
 
       const result = isEditMode
@@ -625,6 +651,65 @@ export function MarketingPostDraftForm({
                 />
               </label>
             </div>
+
+            {!isReadOnly ? (
+              <label className="block text-sm">
+                <span
+                  className={`font-medium ${
+                    northStar ? "text-[#17130E]" : "text-slate-700"
+                  }`}
+                >
+                  Planned post date/time{" "}
+                  <span
+                    className={`font-normal ${
+                      northStar ? "text-[#8A7F72]" : "text-slate-400"
+                    }`}
+                  >
+                    (optional)
+                  </span>
+                </span>
+                <input
+                  type="datetime-local"
+                  value={formData.scheduledAtLocal}
+                  onChange={(event) =>
+                    updateField("scheduledAtLocal", event.target.value)
+                  }
+                  disabled={isReadOnly}
+                  className={inputClassName}
+                />
+                <p
+                  className={`mt-1.5 text-xs leading-relaxed ${
+                    northStar ? "text-[#6B6255]" : "text-slate-500"
+                  }`}
+                >
+                  Altair does not post automatically. Use this to plan when
+                  your team should copy and post manually.
+                </p>
+              </label>
+            ) : isEditMode && post.scheduledAt ? (
+              <div className="block text-sm">
+                <span
+                  className={`font-medium ${
+                    northStar ? "text-[#17130E]" : "text-slate-700"
+                  }`}
+                >
+                  Planned post date/time
+                </span>
+                <p
+                  className={`mt-1.5 text-sm ${
+                    northStar ? "text-[#17130E]" : "text-slate-800"
+                  }`}
+                >
+                  {formatDateTimeInTimeZone(post.scheduledAt, timeZone, {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
+            ) : null}
 
             {error ? (
               <p className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
