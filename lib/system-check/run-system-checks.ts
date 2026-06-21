@@ -1,4 +1,8 @@
 import { getAiConfig, isAiFeaturesEnabled } from "@/lib/ai/env";
+import {
+  getMissingFacebookOAuthEnvVars,
+  isFacebookOAuthConfigured,
+} from "@/lib/integrations/facebook/env";
 import { isIntegrationEncryptionConfigured } from "@/lib/integrations/env";
 import { isAlphaHardeningEnabled } from "@/lib/beta/alpha-hardening";
 import { readEmailRecipientOverrideEnv } from "@/lib/email/recipient";
@@ -140,6 +144,28 @@ function checkOutboundEmailConfig(): SystemCheckResult {
     status: "warn",
     message: `Outbound email is not fully configured (${missing.join(", ")} missing).`,
     hint: "Estimate and invoice sends will stay in draft until email is set up in Vercel env vars.",
+  };
+}
+
+function checkFacebookOAuth(): SystemCheckResult {
+  if (isFacebookOAuthConfigured()) {
+    return {
+      id: "facebook-oauth",
+      label: "Facebook OAuth",
+      status: "info",
+      message: "Facebook OAuth is configured.",
+    };
+  }
+
+  const missing = getMissingFacebookOAuthEnvVars();
+
+  return {
+    id: "facebook-oauth",
+    label: "Facebook OAuth",
+    status: "warn",
+    message:
+      "Facebook OAuth is not configured. Required before connecting Facebook Pages.",
+    hint: missing.length > 0 ? `Missing: ${missing.join(", ")}` : undefined,
   };
 }
 
@@ -608,6 +634,7 @@ export async function runSystemChecks(): Promise<SystemCheckReport> {
     checkRequiredEnvVars(),
     checkOptionalEnvVars(),
     checkIntegrationEncryption(),
+    checkFacebookOAuth(),
     checkOutboundEmailConfig(),
     checkAiConfig(),
     checkAlphaHardening(),
