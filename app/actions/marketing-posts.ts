@@ -385,6 +385,10 @@ export async function updateMarketingPostAction(
   }
 
   const normalized = normalizeUpdateMarketingPostInput(input);
+  // Source tracking is set at create time and must not be changed afterward.
+  delete normalized.sourceType;
+  delete normalized.sourceId;
+
   const { post, error } = await updateMarketingPost(
     permission.context.company.id,
     normalizedPostId,

@@ -79,9 +79,14 @@ export function marketingPostTemplateToDraftStarter(
   };
 }
 
+const MAX_SAFE_JOB_TYPE_LENGTH = 80;
+
 function normalizeCompletedJobType(jobType: string | null | undefined): string {
   const trimmed = jobType?.trim() ?? "";
-  return trimmed || "HVAC service";
+  if (!trimmed || trimmed.length > MAX_SAFE_JOB_TYPE_LENGTH) {
+    return "HVAC service";
+  }
+  return trimmed;
 }
 
 function formatCompletedJobLocation(
