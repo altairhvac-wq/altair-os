@@ -19,6 +19,12 @@ import {
 } from "@/shared/design-system/shell/tokens";
 import { MarketingPostDraftForm } from "@/shared/components/marketing-hub/MarketingPostDraftForm";
 import {
+  MARKETING_POST_TEMPLATES,
+  marketingPostTemplateToDraftStarter,
+  type MarketingPostDraftStarter,
+  type MarketingPostTemplate,
+} from "@/shared/components/marketing-hub/marketing-post-templates";
+import {
   countMarketingPostsByTab,
   filterMarketingPostsByTab,
   formatMarketingChannel,
@@ -58,12 +64,109 @@ const EMPTY_STATE_COPY: Record<
   },
 };
 
+type MarketingPostTemplateIdeasProps = {
+  northStar: boolean;
+  disabled: boolean;
+  onUseTemplate: (template: MarketingPostTemplate) => void;
+  compact?: boolean;
+};
+
+function MarketingPostTemplateIdeas({
+  northStar,
+  disabled,
+  onUseTemplate,
+  compact = false,
+}: MarketingPostTemplateIdeasProps) {
+  return (
+    <section
+      className={`${
+        compact
+          ? "border-b px-4 py-4 sm:px-5"
+          : "mx-auto mt-6 w-full max-w-2xl px-4 text-left sm:px-0"
+      } ${
+        northStar
+          ? compact
+            ? "border-[rgba(148,163,184,0.18)] bg-[#FAF6EE]/40"
+            : ""
+          : compact
+            ? "border-slate-100/90 bg-slate-50/50"
+            : ""
+      }`}
+    >
+      <div className={compact ? "" : "text-center sm:text-left"}>
+        <h3
+          className={`text-sm font-semibold ${
+            northStar ? "text-[#17130E]" : "text-slate-900"
+          }`}
+        >
+          Start from an idea
+        </h3>
+        <p
+          className={`mt-1 text-xs leading-relaxed ${
+            northStar ? "text-[#6B6255]" : "text-slate-500"
+          }`}
+        >
+          Pick a copy-ready starter template, edit it, then save your draft.
+        </p>
+      </div>
+
+      <ul
+        className={`mt-3 grid gap-2 ${
+          compact
+            ? "sm:grid-cols-2"
+            : "text-left sm:grid-cols-2"
+        }`}
+      >
+        {MARKETING_POST_TEMPLATES.map((template) => (
+          <li key={template.id}>
+            <div
+              className={`flex h-full flex-col gap-3 rounded-xl border p-3 ${
+                northStar
+                  ? "border-[rgba(148,163,184,0.22)] bg-white/80"
+                  : "border-slate-200/90 bg-white"
+              }`}
+            >
+              <div className="min-w-0 flex-1">
+                <p
+                  className={`text-sm font-medium ${
+                    northStar ? "text-[#17130E]" : "text-slate-900"
+                  }`}
+                >
+                  {template.title}
+                </p>
+                <p
+                  className={`mt-0.5 text-xs ${
+                    northStar ? "text-[#6B6255]" : "text-slate-500"
+                  }`}
+                >
+                  {template.description}
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => onUseTemplate(template)}
+                className="admin-btn-secondary w-full justify-center text-xs sm:w-auto"
+              >
+                Use template
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps) {
   const router = useRouter();
   const northStar = isNorthStarShellEnabled();
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [listTab, setListTab] = useState<MarketingPostListTab>("active");
+  const [createDraftStarter, setCreateDraftStarter] =
+    useState<MarketingPostDraftStarter | null>(null);
+  const [createFormKey, setCreateFormKey] = useState("blank");
   const selectedPost =
     selectedPostId != null
       ? initialPosts.find((post) => post.id === selectedPostId) ?? null
@@ -96,6 +199,15 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
 
   function handleOpenCreateForm() {
     setSelectedPostId(null);
+    setCreateDraftStarter(null);
+    setCreateFormKey("blank");
+    setViewMode("create");
+  }
+
+  function handleUseTemplate(template: MarketingPostTemplate) {
+    setSelectedPostId(null);
+    setCreateDraftStarter(marketingPostTemplateToDraftStarter(template));
+    setCreateFormKey(template.id);
     setViewMode("create");
   }
 
@@ -107,7 +219,11 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
   function handleCloseForm() {
     setViewMode("list");
     setSelectedPostId(null);
+    setCreateDraftStarter(null);
+    setCreateFormKey("blank");
   }
+
+  const showTemplateIdeas = listTab === "active";
 
   return (
     <MasterListPageLayout
@@ -147,7 +263,9 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
           {viewMode === "create" ? (
             <div className="flex justify-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
               <MarketingPostDraftForm
+                key={createFormKey}
                 mode="create"
+                draftStarter={createDraftStarter ?? undefined}
                 onSuccess={handleCreateSuccess}
                 onCancel={handleCloseForm}
               />
@@ -228,6 +346,15 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
                 )}
               </div>
 
+              {showTemplateIdeas && filteredPosts.length > 0 ? (
+                <MarketingPostTemplateIdeas
+                  northStar={northStar}
+                  disabled={isFormOpen}
+                  onUseTemplate={handleUseTemplate}
+                  compact
+                />
+              ) : null}
+
               {filteredPosts.length === 0 ? (
                 <div className="admin-empty-wrap">
                   <div
@@ -265,6 +392,14 @@ export function MarketingHubPageView({ initialPosts }: MarketingHubPageViewProps
                       {emptyState.description}
                     </p>
                   </div>
+
+                  {showTemplateIdeas ? (
+                    <MarketingPostTemplateIdeas
+                      northStar={northStar}
+                      disabled={isFormOpen}
+                      onUseTemplate={handleUseTemplate}
+                    />
+                  ) : null}
                 </div>
               ) : (
                 <ul className="divide-y divide-slate-100/90">

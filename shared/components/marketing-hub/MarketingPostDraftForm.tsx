@@ -12,6 +12,7 @@ import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatDateTimeInTimeZone } from "@/shared/lib/datetime";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import type { MarketingPostDraftStarter } from "@/shared/components/marketing-hub/marketing-post-templates";
 import type { MarketingChannel, MarketingPost } from "@/shared/types/marketing-post";
 import {
   formatMarketingChannel,
@@ -21,6 +22,7 @@ import {
 type MarketingPostDraftFormProps = {
   mode?: "create" | "edit";
   post?: MarketingPost;
+  draftStarter?: MarketingPostDraftStarter;
   onSuccess: () => void;
   onCancel: () => void;
 };
@@ -192,15 +194,24 @@ function PostPreviewPanel({ formData, northStar }: PostPreviewPanelProps) {
 export function MarketingPostDraftForm({
   mode = "create",
   post,
+  draftStarter,
   onSuccess,
   onCancel,
 }: MarketingPostDraftFormProps) {
   const northStar = isNorthStarShellEnabled();
   const timeZone = useCompanyTimezone();
   const isEditMode = mode === "edit" && post != null;
-  const [formData, setFormData] = useState<DraftFormData>(() =>
-    isEditMode ? postToFormData(post) : DEFAULT_FORM_DATA,
-  );
+  const [formData, setFormData] = useState<DraftFormData>(() => {
+    if (isEditMode) {
+      return postToFormData(post);
+    }
+
+    if (draftStarter) {
+      return { ...DEFAULT_FORM_DATA, ...draftStarter };
+    }
+
+    return DEFAULT_FORM_DATA;
+  });
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -380,7 +391,9 @@ export function MarketingPostDraftForm({
                   ? "This post is archived and can't be edited. Copy the text if you still need it."
                   : "This post is posted and can't be edited here. Copy the text if you still need it."
                 : "Update the draft, preview how it reads, then copy or mark it posted manually when ready."
-              : "Write the post copy your team can copy and post manually."}
+              : draftStarter
+                ? "This draft starter prefills the form. Edit anything you need, then save when ready."
+                : "Write the post copy your team can copy and post manually."}
           </p>
 
           {isEditMode ? (
