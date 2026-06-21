@@ -61,3 +61,45 @@ export type MarketingCompletedJobDraftGenerateResult = {
   error?: string;
   draft?: MarketingCompletedJobDraftFields;
 };
+
+export type MarketingFounderMilestoneType =
+  | "feature_launch"
+  | "product_milestone"
+  | "beta_update"
+  | "before_after_improvement"
+  | "founder_story"
+  | "competitor_comparison";
+
+export const MARKETING_FOUNDER_MILESTONE_TYPE_OPTIONS: {
+  value: MarketingFounderMilestoneType;
+  label: string;
+}[] = [
+  { value: "feature_launch", label: "Feature launch" },
+  { value: "product_milestone", label: "Product milestone" },
+  { value: "beta_update", label: "Beta update" },
+  { value: "before_after_improvement", label: "Before/after improvement" },
+  { value: "founder_story", label: "Founder story" },
+  { value: "competitor_comparison", label: "Competitor comparison" },
+];
+
+export type MarketingFounderDraftGenerateInput = {
+  sourceType: Extract<
+    MarketingPostSource,
+    "founder_milestone" | "product_update"
+  >;
+  milestoneTitle: string;
+  milestoneType: MarketingFounderMilestoneType;
+  whatChanged: string;
+  whyItMatters: string;
+  targetAudience?: string;
+  callToAction?: string;
+  tone?: string;
+  channelTarget: MarketingChannel;
+};
+
+export type MarketingFounderDraftFields = MarketingCompletedJobDraftFields;
+
+export type MarketingFounderDraftGenerateResult = {
+  error?: string;
+  draft?: MarketingFounderDraftFields;
+};

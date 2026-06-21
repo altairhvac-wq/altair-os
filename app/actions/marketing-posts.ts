@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
+import { canAccessPlatformAdmin } from "@/lib/database/platform-admin";
 import {
   isCompletedJobAvailableForMarketing,
   listCompletedJobsForMarketing,
@@ -76,6 +77,11 @@ const MARKETING_RECURRING_OCCURRENCES = new Set<MarketingRecurringOccurrences>(
 
 const RECURRING_START_TOLERANCE_MS = 60_000;
 
+const FOUNDER_MARKETING_SOURCES = new Set<MarketingPostSource>([
+  "founder_milestone",
+  "product_update",
+]);
+
 function revalidateMarketingPaths() {
   revalidatePath("/marketing");
 }
@@ -94,6 +100,25 @@ async function assertMarketingPostManager() {
   }
 
   return { context } as const;
+}
+
+function validateFounderSourcePermission(
+  sourceType: MarketingPostSource | undefined,
+  user: { email: string | undefined },
+): string | null {
+  if (sourceType === undefined || sourceType === null) {
+    return null;
+  }
+
+  if (!FOUNDER_MARKETING_SOURCES.has(sourceType)) {
+    return null;
+  }
+
+  if (!canAccessPlatformAdmin(user)) {
+    return "You do not have permission to save this type of marketing post.";
+  }
+
+  return null;
 }
 
 function normalizePostId(postId: string): string {
@@ -384,6 +409,14 @@ export async function createMarketingPostAction(
 
   const normalized = normalizeCreateMarketingPostInput(input);
 
+  const founderSourceError = validateFounderSourcePermission(
+    normalized.sourceType,
+    permission.context.user,
+  );
+  if (founderSourceError) {
+    return { error: founderSourceError };
+  }
+
   if (normalized.sourceType === "completed_job") {
     const sourceId = normalized.sourceId?.trim() ?? "";
     if (!sourceId) {
@@ -434,6 +467,14 @@ export async function updateMarketingPostAction(
   const validationError = validateUpdateMarketingPostInput(input);
   if (validationError) {
     return { error: validationError };
+  }
+
+  const founderSourceError = validateFounderSourcePermission(
+    input.sourceType,
+    permission.context.user,
+  );
+  if (founderSourceError) {
+    return { error: founderSourceError };
   }
 
   const existing = await getMarketingPostById(

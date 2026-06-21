@@ -10,10 +10,13 @@ import type { GenerateDraftTextRequest } from "@/lib/ai/types";
 import type {
   MarketingCompletedJobDraftFields,
   MarketingCompletedJobRewriteContext,
+  MarketingFounderDraftGenerateInput,
+  MarketingFounderMilestoneType,
   MarketingPostRewriteContext,
   MarketingPostRewriteInput,
   MarketingPostRewriteMode,
 } from "@/shared/types/marketing-ai";
+import { MARKETING_FOUNDER_MILESTONE_TYPE_OPTIONS } from "@/shared/types/marketing-ai";
 import {
   formatMarketingChannel,
   type MarketingChannel,
@@ -22,6 +25,7 @@ import {
 export const MARKETING_POST_REWRITE_AI_FEATURE = "marketing-post-rewrite";
 export const MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE =
   "marketing-completed-job-draft";
+export const MARKETING_FOUNDER_DRAFT_AI_FEATURE = "marketing-founder-draft";
 
 export const INSUFFICIENT_MARKETING_POST_CONTEXT_MESSAGE =
   "Add more post text before rewriting.";
@@ -455,4 +459,180 @@ export function parseMarketingCompletedJobDraftResponse(
       fallbackChannel,
     ),
   };
+}
+
+const MARKETING_FOUNDER_DRAFT_PROMPT = `You write founder-led marketing post drafts for Altair OS — field-service software built for HVAC and trades contractors.
+
+Your job is to generate an initial draft post from structured founder inputs. The user will review and edit before saving. You are not posting, scheduling, or publishing anything.
+
+Output requirements:
+- Output ONLY a single valid JSON object — no markdown code fences, headings, labels, preamble, or closing commentary
+- Use exactly these keys: title, post_text, suggested_hashtags, call_to_action, channel_target
+- title: short internal label for the draft (not the social post headline)
+- post_text: the main post body copy, plain text, suitable for manual copy/paste as a Facebook business page post
+- suggested_hashtags: JSON array of hashtag strings without the # prefix (0–6 tags)
+- call_to_action: a clear, concise CTA line the user can append or edit separately
+- channel_target: one of facebook, instagram, google_business, website, general — match the target channel in context when sensible
+
+Voice and style:
+- Honest, founder-led, practical — not hypey or salesy
+- Readable for small HVAC and trades business owners
+- Translate technical progress into business-owner benefits
+- Good angles include: "I just shipped another piece of Altair OS…", "Small contractors should not need five different tools…", "This week's build moved Altair closer to helping businesses market themselves…", "I'm looking for a few business owners willing to test this…"
+- Include a clear CTA in call_to_action
+
+Rules:
+- Use ONLY facts from the structured inputs below
+- Do NOT invent customers, revenue, testimonials, or user counts
+- Do NOT claim beta users unless explicitly provided in the inputs
+- Do NOT claim integrations are live unless explicitly provided
+- Do NOT claim Facebook, Instagram, or Google publishing is live unless explicitly provided
+- Do NOT exaggerate capabilities or market position
+- Do NOT mention private repo details, internal codenames, or unreleased roadmap items not in the inputs
+- Do NOT mention AI, automation, or that this was generated
+- Do NOT claim the post was published, scheduled, or posted
+- Do NOT use phrases like "Here's your post" or similar meta commentary
+- Keep copy editable, clear, and useful for a Facebook-style founder update`;
+
+const VALID_FOUNDER_MILESTONE_TYPES = new Set<MarketingFounderMilestoneType>(
+  MARKETING_FOUNDER_MILESTONE_TYPE_OPTIONS.map((option) => option.value),
+);
+
+function formatFounderMilestoneTypeLabel(
+  milestoneType: MarketingFounderMilestoneType,
+): string {
+  return (
+    MARKETING_FOUNDER_MILESTONE_TYPE_OPTIONS.find(
+      (option) => option.value === milestoneType,
+    )?.label ?? milestoneType
+  );
+}
+
+function applyMarketingFounderDraftInputLimits(
+  input: MarketingFounderDraftGenerateInput,
+): MarketingFounderDraftGenerateInput {
+  return {
+    ...input,
+    milestoneTitle: input.milestoneTitle?.trim()
+      ? trimAiText(input.milestoneTitle.trim(), 200)
+      : "",
+    whatChanged: input.whatChanged?.trim()
+      ? trimAiText(input.whatChanged.trim(), 1500)
+      : "",
+    whyItMatters: input.whyItMatters?.trim()
+      ? trimAiText(input.whyItMatters.trim(), 1500)
+      : "",
+    targetAudience: input.targetAudience?.trim()
+      ? trimAiText(input.targetAudience.trim(), 300)
+      : input.targetAudience,
+    callToAction: input.callToAction?.trim()
+      ? trimAiText(input.callToAction.trim(), 300)
+      : input.callToAction,
+    tone: input.tone?.trim()
+      ? trimAiText(input.tone.trim(), 300)
+      : input.tone,
+  };
+}
+
+export function formatMarketingFounderDraftContext(
+  input: MarketingFounderDraftGenerateInput,
+): string {
+  const limited = applyMarketingFounderDraftInputLimits(input);
+  const sections: string[] = [];
+
+  sections.push(`Post source: ${limited.sourceType.replace(/_/g, " ")}`);
+  sections.push(`Milestone title: ${limited.milestoneTitle}`);
+  sections.push(
+    `Milestone type: ${formatFounderMilestoneTypeLabel(limited.milestoneType)}`,
+  );
+  sections.push(`What changed:\n${limited.whatChanged}`);
+  sections.push(`Why it matters:\n${limited.whyItMatters}`);
+
+  const audience =
+    limited.targetAudience?.trim() ||
+    "small HVAC and trades business owners";
+  sections.push(`Target audience: ${audience}`);
+
+  const cta =
+    limited.callToAction?.trim() ||
+    "looking for a few founding companies / beta testers";
+  sections.push(`Desired call to action: ${cta}`);
+
+  const tone =
+    limited.tone?.trim() ||
+    "honest founder update, practical, not hypey";
+  sections.push(`Tone: ${tone}`);
+
+  sections.push(
+    `Target channel: ${formatMarketingChannel(limited.channelTarget)}`,
+  );
+
+  const assembled = sections.join("\n\n");
+  return trimAiContextText(assembled, MARKETING_POST_CONTEXT_MAX_CHARS);
+}
+
+export type MarketingFounderDraftPreparation =
+  | { kind: "static"; message: string }
+  | { kind: "request"; request: GenerateDraftTextRequest };
+
+export function prepareMarketingFounderDraft(
+  input: MarketingFounderDraftGenerateInput,
+  companyId: string,
+  userId: string,
+): MarketingFounderDraftPreparation {
+  const limited = applyMarketingFounderDraftInputLimits(input);
+
+  if (!limited.milestoneTitle) {
+    return {
+      kind: "static",
+      message: "Add a milestone title before generating a draft.",
+    };
+  }
+
+  if (!VALID_FOUNDER_MILESTONE_TYPES.has(limited.milestoneType)) {
+    return {
+      kind: "static",
+      message: "Choose a valid milestone type.",
+    };
+  }
+
+  if (!limited.whatChanged?.trim()) {
+    return {
+      kind: "static",
+      message: "Describe what changed before generating a draft.",
+    };
+  }
+
+  if (!limited.whyItMatters?.trim()) {
+    return {
+      kind: "static",
+      message: "Explain why it matters before generating a draft.",
+    };
+  }
+
+  return {
+    kind: "request",
+    request: buildMarketingFounderDraftRequest(limited, companyId, userId),
+  };
+}
+
+export function buildMarketingFounderDraftRequest(
+  input: MarketingFounderDraftGenerateInput,
+  companyId: string,
+  userId: string,
+): GenerateDraftTextRequest {
+  return {
+    feature: MARKETING_FOUNDER_DRAFT_AI_FEATURE,
+    prompt: MARKETING_FOUNDER_DRAFT_PROMPT,
+    inputText: formatMarketingFounderDraftContext(input),
+    companyId,
+    userId,
+  };
+}
+
+export function parseMarketingFounderDraftResponse(
+  draftText: string,
+  fallbackChannel: MarketingChannel,
+): MarketingCompletedJobDraftFields | null {
+  return parseMarketingCompletedJobDraftResponse(draftText, fallbackChannel);
 }

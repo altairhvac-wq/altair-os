@@ -466,6 +466,7 @@ export function MarketingHubPageView({
                 draftStarter={createDraftStarter ?? undefined}
                 aiFeaturesEnabled={aiFeaturesEnabled}
                 aiDraftingConfigured={aiDraftingConfigured}
+                showFounderMarketing={showFounderMarketing}
                 onSuccess={handleCreateSuccess}
                 onCancel={handleCloseForm}
               />

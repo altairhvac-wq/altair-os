@@ -7,6 +7,7 @@ import { JOB_SUMMARY_AI_FEATURE } from "@/lib/ai/job-summary";
 import { LEAD_FOLLOW_UP_AI_FEATURE } from "@/lib/ai/lead-follow-up";
 import {
   MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE,
+  MARKETING_FOUNDER_DRAFT_AI_FEATURE,
   MARKETING_POST_REWRITE_AI_FEATURE,
 } from "@/lib/ai/marketing-post";
 
@@ -35,6 +36,8 @@ const FEATURE_INSUFFICIENT_CONTEXT: Partial<Record<AiFeatureName, string>> = {
     "Add more post text before rewriting.",
   [MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE]:
     "The completed job is no longer available for draft generation.",
+  [MARKETING_FOUNDER_DRAFT_AI_FEATURE]:
+    "Add milestone details before generating a founder draft.",
 };
 
 const FEATURE_CONFIG_ERROR: Partial<Record<AiFeatureName, string>> = {
@@ -46,6 +49,8 @@ const FEATURE_CONFIG_ERROR: Partial<Record<AiFeatureName, string>> = {
     "AI post rewriting is not configured yet.",
   [MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE]:
     "AI draft generation is not configured yet.",
+  [MARKETING_FOUNDER_DRAFT_AI_FEATURE]:
+    "AI founder draft generation is not configured yet.",
 };
 
 const FEATURE_PROVIDER_ERROR: Partial<Record<AiFeatureName, string>> = {
@@ -59,6 +64,8 @@ const FEATURE_PROVIDER_ERROR: Partial<Record<AiFeatureName, string>> = {
     "Could not rewrite the post. Try again.",
   [MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE]:
     "Could not generate the draft. Try again.",
+  [MARKETING_FOUNDER_DRAFT_AI_FEATURE]:
+    "Could not generate the founder draft. Try again.",
 };
 
 /**

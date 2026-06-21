@@ -2,9 +2,12 @@
 
 import {
   MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE,
+  MARKETING_FOUNDER_DRAFT_AI_FEATURE,
   MARKETING_POST_REWRITE_AI_FEATURE,
   parseMarketingCompletedJobDraftResponse,
+  parseMarketingFounderDraftResponse,
   prepareMarketingCompletedJobDraft,
+  prepareMarketingFounderDraft,
   prepareMarketingPostRewrite,
 } from "@/lib/ai/marketing-post";
 import { mapAiErrorToMessage } from "@/lib/ai/errors";
@@ -12,10 +15,13 @@ import { checkAiRateLimit } from "@/lib/ai/guardrails";
 import { generateDraftText } from "@/lib/ai/provider";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
+import { canAccessPlatformAdmin } from "@/lib/database/platform-admin";
 import { getCompletedJobContextForMarketing } from "@/lib/database/queries/marketing-completed-jobs";
 import type {
   MarketingCompletedJobDraftGenerateInput,
   MarketingCompletedJobDraftGenerateResult,
+  MarketingFounderDraftGenerateInput,
+  MarketingFounderDraftGenerateResult,
   MarketingPostRewriteInput,
   MarketingPostRewriteMode,
   MarketingPostRewriteResult,
@@ -75,6 +81,22 @@ async function assertMarketingAiPermission() {
   }
 
   return { context } as const;
+}
+
+async function assertMarketingFounderAiPermission() {
+  const permission = await assertMarketingAiPermission();
+
+  if (permission.error || !permission.context) {
+    return permission;
+  }
+
+  if (!canAccessPlatformAdmin(permission.context.user)) {
+    return {
+      error: "You do not have permission to use founder marketing AI features.",
+    } as const;
+  }
+
+  return permission;
 }
 
 export async function generateMarketingPostRewriteAction(
@@ -240,6 +262,65 @@ export async function generateMarketingCompletedJobDraftAction(
       error: mapAiErrorToMessage(
         "empty_response",
         MARKETING_COMPLETED_JOB_DRAFT_AI_FEATURE,
+      ),
+    };
+  }
+
+  return { draft };
+}
+
+export async function generateMarketingFounderDraftAction(
+  input: MarketingFounderDraftGenerateInput,
+): Promise<MarketingFounderDraftGenerateResult> {
+  const permission = await assertMarketingFounderAiPermission();
+
+  if (permission.error || !permission.context) {
+    return { error: permission.error };
+  }
+
+  const { context } = permission;
+
+  const rateLimit = checkAiRateLimit({
+    companyId: context.company.id,
+    userId: context.user.id,
+    feature: MARKETING_FOUNDER_DRAFT_AI_FEATURE,
+  });
+
+  if (!rateLimit.ok) {
+    return { error: mapAiErrorToMessage(rateLimit.code) };
+  }
+
+  const preparation = prepareMarketingFounderDraft(
+    input,
+    context.company.id,
+    context.user.id,
+  );
+
+  if (preparation.kind === "static") {
+    return { error: preparation.message };
+  }
+
+  const outcome = await generateDraftText(preparation.request);
+
+  if (!outcome.ok) {
+    return {
+      error: mapAiErrorToMessage(
+        outcome.error.code,
+        MARKETING_FOUNDER_DRAFT_AI_FEATURE,
+      ),
+    };
+  }
+
+  const draft = parseMarketingFounderDraftResponse(
+    outcome.result.draftText,
+    input.channelTarget,
+  );
+
+  if (!draft) {
+    return {
+      error: mapAiErrorToMessage(
+        "empty_response",
+        MARKETING_FOUNDER_DRAFT_AI_FEATURE,
       ),
     };
   }

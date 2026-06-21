@@ -21,6 +21,7 @@ import type {
   MarketingPostDraftStarter,
 } from "@/shared/components/marketing-hub/marketing-post-templates";
 import { MarketingCompletedJobDraftAiGenerator } from "@/shared/components/marketing-hub/MarketingCompletedJobDraftAiGenerator";
+import { MarketingFounderDraftAiGenerator } from "@/shared/components/marketing-hub/MarketingFounderDraftAiGenerator";
 import { MarketingPostAiAssistant } from "@/shared/components/marketing-hub/MarketingPostAiAssistant";
 import type {
   MarketingChannel,
@@ -45,6 +46,7 @@ type MarketingPostDraftFormProps = {
     | MarketingFounderDraftStarter;
   aiFeaturesEnabled?: boolean;
   aiDraftingConfigured?: boolean;
+  showFounderMarketing?: boolean;
   onSuccess: () => void;
   onCancel: () => void;
   onRecurringCreated?: () => void;
@@ -208,6 +210,22 @@ function draftStarterToFormData(
   };
 }
 
+function isFounderDraftStarter(
+  draftStarter:
+    | MarketingPostDraftStarter
+    | MarketingCompletedJobDraftStarter
+    | MarketingFounderDraftStarter
+    | undefined,
+): draftStarter is MarketingFounderDraftStarter {
+  return (
+    draftStarter != null &&
+    "sourceType" in draftStarter &&
+    (draftStarter.sourceType === "founder_milestone" ||
+      draftStarter.sourceType === "product_update") &&
+    "milestoneType" in draftStarter
+  );
+}
+
 function validateDraftFormData(data: DraftFormData): string | null {
   if (!data.title.trim()) {
     return "Add a post title.";
@@ -304,6 +322,7 @@ export function MarketingPostDraftForm({
   draftStarter,
   aiFeaturesEnabled = false,
   aiDraftingConfigured = false,
+  showFounderMarketing = false,
   onSuccess,
   onCancel,
   onRecurringCreated,
@@ -370,6 +389,8 @@ export function MarketingPostDraftForm({
     "sourceType" in draftStarter &&
     draftStarter.sourceType === "completed_job" &&
     Boolean(createSource.sourceId);
+  const isFounderCreate =
+    !isEditMode && showFounderMarketing && isFounderDraftStarter(draftStarter);
 
   const inputClassName = northStar
     ? "mt-1.5 w-full rounded-lg border border-[rgba(148,163,184,0.24)] bg-white px-3.5 py-2.5 text-sm text-[#101827] shadow-sm transition-colors placeholder:text-[#6B7280] focus:border-[#B88A2E] focus:outline-none focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]"
@@ -755,6 +776,26 @@ export function MarketingPostDraftForm({
               <MarketingCompletedJobDraftAiGenerator
                 sourceId={createSource.sourceId}
                 channelTarget={formData.channelTarget}
+                currentFormSnapshot={{
+                  title: formData.title,
+                  channelTarget: formData.channelTarget,
+                  postText: formData.postText,
+                  suggestedHashtags: formData.suggestedHashtags,
+                  callToAction: formData.callToAction,
+                }}
+                aiFeaturesEnabled={aiFeaturesEnabled}
+                aiDraftingConfigured={aiDraftingConfigured}
+                disabled={isActionPending}
+                onApplyDraft={applyGeneratedDraft}
+              />
+            ) : null}
+
+            {isFounderCreate ? (
+              <MarketingFounderDraftAiGenerator
+                sourceType={draftStarter.sourceType}
+                initialMilestoneType={draftStarter.milestoneType}
+                initialMilestoneTitle={formData.title}
+                initialChannelTarget={formData.channelTarget}
                 currentFormSnapshot={{
                   title: formData.title,
                   channelTarget: formData.channelTarget,
