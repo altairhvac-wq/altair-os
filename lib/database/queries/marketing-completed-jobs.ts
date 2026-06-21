@@ -96,3 +96,41 @@ export async function isCompletedJobAvailableForMarketing(
 
   return data != null;
 }
+
+export async function getCompletedJobContextForMarketing(
+  companyId: string,
+  jobId: string,
+): Promise<MarketingCompletedJobPickerItem | null> {
+  const normalizedJobId = jobId.trim();
+  if (!normalizedJobId) {
+    return null;
+  }
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("id, job_type, city, state, completed_at, status")
+    .eq("company_id", companyId)
+    .eq("id", normalizedJobId)
+    .eq("status", "completed")
+    .is("deleted_at", null)
+    .is("archived_at", null)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getCompletedJobContextForMarketing] query failed:", {
+      companyId,
+      jobId: normalizedJobId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapMarketingCompletedJobRow(data as MarketingCompletedJobRow);
+}

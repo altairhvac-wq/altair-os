@@ -42,6 +42,7 @@ type ViewMode = "list" | "create" | "edit" | "pick-completed-job";
 type MarketingHubPageViewProps = {
   initialPosts: MarketingPost[];
   companyName: string;
+  aiFeaturesEnabled?: boolean;
 };
 
 const LIST_TABS: { id: MarketingPostListTab; label: string }[] = [
@@ -203,6 +204,7 @@ function MarketingPostTemplateIdeas({
 export function MarketingHubPageView({
   initialPosts,
   companyName,
+  aiFeaturesEnabled = false,
 }: MarketingHubPageViewProps) {
   const router = useRouter();
   const northStar = isNorthStarShellEnabled();
@@ -347,6 +349,7 @@ export function MarketingHubPageView({
                 key={createFormKey}
                 mode="create"
                 draftStarter={createDraftStarter ?? undefined}
+                aiFeaturesEnabled={aiFeaturesEnabled}
                 onSuccess={handleCreateSuccess}
                 onCancel={handleCloseForm}
               />
@@ -357,6 +360,7 @@ export function MarketingHubPageView({
                 key={selectedPost.id}
                 mode="edit"
                 post={selectedPost}
+                aiFeaturesEnabled={aiFeaturesEnabled}
                 onSuccess={handleEditSuccess}
                 onCancel={handleCloseForm}
               />

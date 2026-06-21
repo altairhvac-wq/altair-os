@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { isAiFeaturesEnabled } from "@/lib/ai/env";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { canAccessAdminNavItem } from "@/lib/database/access-control";
 import { listMarketingPosts } from "@/lib/database/queries/marketing-posts";
@@ -20,5 +21,11 @@ export default async function MarketingPage() {
 
   const posts = await listMarketingPosts(companyContext.company.id);
 
-  return <MarketingHubPageView initialPosts={posts} companyName={companyContext.company.name} />;
+  return (
+    <MarketingHubPageView
+      initialPosts={posts}
+      companyName={companyContext.company.name}
+      aiFeaturesEnabled={isAiFeaturesEnabled()}
+    />
+  );
 }

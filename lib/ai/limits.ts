@@ -39,6 +39,12 @@ export const LEAD_FOLLOW_UP_FIELD_MAX_CHARS = 1_500;
 /** Max characters for the full lead follow-up AI context payload. */
 export const LEAD_FOLLOW_UP_CONTEXT_MAX_CHARS = 4_000;
 
+/** Max characters for marketing post body text in rewrite AI context. */
+export const MARKETING_POST_TEXT_MAX_CHARS = 2_500;
+
+/** Max characters for the full marketing post rewrite AI context payload. */
+export const MARKETING_POST_CONTEXT_MAX_CHARS = 1_500;
+
 const TRUNCATION_SUFFIX = "…";
 
 /**

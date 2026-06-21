@@ -16,6 +16,7 @@ import type {
   MarketingCompletedJobDraftStarter,
   MarketingPostDraftStarter,
 } from "@/shared/components/marketing-hub/marketing-post-templates";
+import { MarketingPostAiAssistant } from "@/shared/components/marketing-hub/MarketingPostAiAssistant";
 import type {
   MarketingChannel,
   MarketingPost,
@@ -30,6 +31,7 @@ type MarketingPostDraftFormProps = {
   mode?: "create" | "edit";
   post?: MarketingPost;
   draftStarter?: MarketingPostDraftStarter | MarketingCompletedJobDraftStarter;
+  aiFeaturesEnabled?: boolean;
   onSuccess: () => void;
   onCancel: () => void;
 };
@@ -232,6 +234,7 @@ export function MarketingPostDraftForm({
   mode = "create",
   post,
   draftStarter,
+  aiFeaturesEnabled = false,
   onSuccess,
   onCancel,
 }: MarketingPostDraftFormProps) {
@@ -263,6 +266,12 @@ export function MarketingPostDraftForm({
   const canMarkPosted =
     isEditMode && post.status !== "posted" && post.status !== "archived";
   const canArchive = isEditMode && post.status !== "archived";
+  const rewriteSourceType = isEditMode
+    ? post.sourceType
+    : createSource.sourceType;
+  const rewriteSourceId = isEditMode
+    ? post.sourceId ?? null
+    : createSource.sourceId ?? null;
 
   const inputClassName = northStar
     ? "mt-1.5 w-full rounded-lg border border-[rgba(148,163,184,0.24)] bg-white px-3.5 py-2.5 text-sm text-[#101827] shadow-sm transition-colors placeholder:text-[#6B7280] focus:border-[#B88A2E] focus:outline-none focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]"
@@ -540,6 +549,22 @@ export function MarketingPostDraftForm({
                 className={`${inputClassName} min-h-[12rem] resize-y`}
                 placeholder="Write the post copy your team can copy and post manually."
               />
+              {!isReadOnly ? (
+                <MarketingPostAiAssistant
+                  title={formData.title}
+                  postText={formData.postText}
+                  channelTarget={formData.channelTarget}
+                  callToAction={formData.callToAction}
+                  suggestedHashtags={normalizeSuggestedHashtagsInput(
+                    formData.suggestedHashtags,
+                  )}
+                  sourceType={rewriteSourceType}
+                  sourceId={rewriteSourceId}
+                  aiFeaturesEnabled={aiFeaturesEnabled}
+                  disabled={isActionPending}
+                  onApplyDraftText={(text) => updateField("postText", text)}
+                />
+              ) : null}
             </label>
 
             <div className="grid gap-5 sm:grid-cols-2">
