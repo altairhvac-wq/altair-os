@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { PwaServiceWorkerRegistration } from "@/shared/components/pwa/PwaServiceWorkerRegistration";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -67,6 +68,7 @@ export default function RootLayout({
         className="flex min-h-full max-w-full flex-col overflow-x-clip"
         style={{ backgroundColor: APP_SHELL_BACKGROUND }}
       >
+        <PwaServiceWorkerRegistration />
         {children}
       </body>
     </html>

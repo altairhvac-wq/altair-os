@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Share, Smartphone } from "lucide-react";
+import { Download, Smartphone } from "lucide-react";
 import {
   type BeforeInstallPromptEvent,
-  isIosSafari,
   isStandaloneDisplayMode,
 } from "./pwa-utils";
 
@@ -22,7 +21,6 @@ export function PwaInstallPrompt({
 }: PwaInstallPromptProps) {
   const [hydrated, setHydrated] = useState(false);
   const [standalone, setStandalone] = useState(false);
-  const [iosSafari, setIosSafari] = useState(false);
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [installing, setInstalling] = useState(false);
@@ -30,7 +28,6 @@ export function PwaInstallPrompt({
   useEffect(() => {
     setHydrated(true);
     setStandalone(isStandaloneDisplayMode());
-    setIosSafari(isIosSafari());
 
     function handleBeforeInstallPrompt(event: Event) {
       event.preventDefault();
@@ -70,7 +67,14 @@ export function PwaInstallPrompt({
   }
 
   if (!hydrated) {
-    return null;
+    return (
+      <div
+        className={`rounded-2xl border border-stone-200/80 bg-white/90 px-4 py-4 text-sm text-stone-600 ${className}`}
+        aria-hidden
+      >
+        Checking install options…
+      </div>
+    );
   }
 
   if (standalone) {
@@ -91,47 +95,25 @@ export function PwaInstallPrompt({
           type="button"
           onClick={handleInstallClick}
           disabled={installing}
-          className={`inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#0A0A0A] px-5 py-3 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2)] ring-1 ring-[#D4AF37]/30 transition-colors hover:bg-[#141414] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto ${ctaFocusClass}`}
+          className={`inline-flex min-h-[56px] w-full items-center justify-center gap-2.5 rounded-xl bg-[#0A0A0A] px-6 py-4 text-base font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2)] ring-1 ring-[#D4AF37]/30 transition-colors hover:bg-[#141414] disabled:cursor-not-allowed disabled:opacity-70 ${ctaFocusClass}`}
         >
-          <Download className="h-4 w-4" aria-hidden />
+          <Download className="h-5 w-5" aria-hidden />
           {installing ? "Installing…" : "Install Altair"}
         </button>
       </div>
     );
   }
 
-  if (iosSafari) {
-    return (
-      <div
-        className={`rounded-2xl border border-stone-200/80 bg-white/90 px-4 py-4 text-sm text-stone-700 ${className}`}
-      >
-        <p className="font-semibold text-[#0A0A0A]">Install from Safari</p>
-        <ol className="mt-3 space-y-2.5">
-          <li className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FAF4E8] text-xs font-semibold text-[#9A7209]">
-              1
-            </span>
-            <span>
-              Tap <Share className="mx-0.5 inline h-4 w-4 align-text-bottom text-[#9A7209]" aria-hidden />{" "}
-              Share at the bottom of Safari
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FAF4E8] text-xs font-semibold text-[#9A7209]">
-              2
-            </span>
-            <span>Scroll and tap Add to Home Screen</span>
-          </li>
-          <li className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FAF4E8] text-xs font-semibold text-[#9A7209]">
-              3
-            </span>
-            <span>Tap Add in the top right</span>
-          </li>
-        </ol>
-      </div>
-    );
-  }
-
-  return null;
+  return (
+    <div
+      className={`rounded-2xl border border-amber-200/80 bg-amber-50/80 px-4 py-4 text-sm text-amber-950 ${className}`}
+    >
+      <p className="font-semibold text-[#0A0A0A]">
+        Install button not showing?
+      </p>
+      <p className="mt-1.5 leading-relaxed text-amber-900/90">
+        Use the steps below for your device.
+      </p>
+    </div>
+  );
 }

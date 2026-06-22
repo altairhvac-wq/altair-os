@@ -42,10 +42,10 @@ export function PwaInstallBanner() {
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-[#0A0A0A]">
-            Install Altair on this device
+            Add Altair to your phone
           </p>
           <p className="mt-0.5 text-xs leading-relaxed text-stone-600">
-            Open it from your home screen like an app.
+            Opens like an app from your home screen.
           </p>
           <Link
             href="/install"

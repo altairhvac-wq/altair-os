@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Check,
   Copy,
@@ -16,28 +16,84 @@ import { isAndroidDevice, isIosDevice } from "./pwa-utils";
 const ctaFocusClass =
   "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20";
 
-function InstallSteps({
-  title,
-  steps,
+type InstallPlatform = "ios" | "android" | "desktop";
+
+const INSTALL_GUIDANCE: Record<
+  InstallPlatform,
+  { title: string; message: string; steps: string[] }
+> = {
+  ios: {
+    title: "Install Altair on iPhone",
+    message:
+      "Apple does not show an install button. Use Safari, tap Share, then Add to Home Screen.",
+    steps: [
+      "Open this page in Safari",
+      "Tap the Share button",
+      "Tap Add to Home Screen",
+      "Tap Add",
+    ],
+  },
+  android: {
+    title: "Install Altair on Android",
+    message:
+      "Tap the Install button if it appears. If not, open Chrome menu and choose Install app or Add to Home screen.",
+    steps: [
+      "Open this page in Chrome",
+      "Tap Install if shown",
+      "Or tap the 3-dot menu",
+      "Tap Install app / Add to Home screen",
+    ],
+  },
+  desktop: {
+    title: "Install Altair on your phone",
+    message:
+      "Open this page on your phone, or copy the link and send it to your phone.",
+    steps: [],
+  },
+};
+
+function PrimaryInstallCard({
+  platform,
 }: {
-  title: string;
-  steps: string[];
+  platform: InstallPlatform;
 }) {
+  const { title, message, steps } = INSTALL_GUIDANCE[platform];
+
   return (
-    <section className="rounded-2xl border border-stone-200/80 border-t-[3px] border-t-[#D4AF37]/55 bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] p-5 shadow-[0_4px_8px_rgba(10,10,10,0.06),0_12px_32px_rgba(10,10,10,0.08)] ring-1 ring-[#D4AF37]/14 sm:p-6">
-      <h2 className="text-base font-semibold tracking-tight text-[#0A0A0A]">
-        {title}
-      </h2>
-      <ol className="mt-4 space-y-3">
-        {steps.map((step, index) => (
-          <li key={step} className="flex gap-3 text-sm leading-relaxed text-stone-700">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FAF4E8] text-xs font-semibold text-[#9A7209]">
-              {index + 1}
-            </span>
-            <span>{step}</span>
-          </li>
-        ))}
-      </ol>
+    <section className="rounded-2xl border-2 border-[#D4AF37]/35 border-t-[4px] border-t-[#D4AF37]/70 bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] p-5 shadow-[0_4px_8px_rgba(10,10,10,0.06),0_16px_40px_rgba(10,10,10,0.1)] ring-1 ring-[#D4AF37]/18 sm:p-6">
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FAF4E8] text-[#9A7209] shadow-sm ring-1 ring-[#D4AF37]/25">
+          <Smartphone className="h-5 w-5" aria-hidden />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#9A7209]">
+            How to install
+          </p>
+          <h2 className="mt-1 text-lg font-semibold tracking-tight text-[#0A0A0A] sm:text-xl">
+            {title}
+          </h2>
+        </div>
+      </div>
+
+      <p className="mt-4 text-sm leading-relaxed text-stone-700 sm:text-base">
+        {message}
+      </p>
+
+      {steps.length > 0 ? (
+        <ol className="mt-5 space-y-3">
+          {steps.map((step, index) => (
+            <li
+              key={step}
+              className="flex gap-3 text-sm leading-relaxed text-stone-700"
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FAF4E8] text-xs font-semibold text-[#9A7209]">
+                {index + 1}
+              </span>
+              <span className="pt-0.5">{step}</span>
+            </li>
+          ))}
+        </ol>
+      ) : null}
     </section>
   );
 }
@@ -67,21 +123,24 @@ function CopyAppLinkButton() {
   );
 }
 
-export function InstallPageView() {
-  const [platformHint, setPlatformHint] = useState<"ios" | "android" | null>(
-    null,
-  );
-
-  function detectPlatform() {
-    if (isIosDevice()) {
-      setPlatformHint("ios");
-      return;
-    }
-
-    if (isAndroidDevice()) {
-      setPlatformHint("android");
-    }
+function detectInstallPlatform(): InstallPlatform {
+  if (isIosDevice()) {
+    return "ios";
   }
+
+  if (isAndroidDevice()) {
+    return "android";
+  }
+
+  return "desktop";
+}
+
+export function InstallPageView() {
+  const [platform, setPlatform] = useState<InstallPlatform>("desktop");
+
+  useEffect(() => {
+    setPlatform(detectInstallPlatform());
+  }, []);
 
   return (
     <div className="min-h-dvh bg-gradient-to-b from-stone-50 via-white to-stone-100/80">
@@ -107,22 +166,21 @@ export function InstallPageView() {
 
       <main className="relative mx-auto max-w-3xl px-5 py-8 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-8 sm:py-12">
         <div className="auth-hero-enter text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FAF4E8] text-[#9A7209] shadow-[0_4px_16px_rgba(154,114,9,0.12)] ring-1 ring-[#D4AF37]/25">
-            <Smartphone className="h-7 w-7" aria-hidden />
-          </div>
-          <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9A7209]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9A7209]">
             Mobile install
           </p>
           <h1 className="mt-3 text-[1.875rem] font-semibold tracking-tight text-[#0A0A0A] sm:text-[2.125rem]">
-            Install Altair on your phone
+            Add Altair to your home screen
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-stone-600">
-            Open Altair like an app from your home screen.
+            Open Altair like an app from your phone.
           </p>
         </div>
 
         <div className="auth-panel-enter mt-8 space-y-4">
-          <PwaInstallPrompt className="flex justify-center" />
+          <PrimaryInstallCard platform={platform} />
+
+          <PwaInstallPrompt className="w-full" />
 
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
@@ -137,57 +195,19 @@ export function InstallPageView() {
         </div>
 
         <div className="auth-panel-enter mt-8 space-y-4">
-          {platformHint === "ios" ? (
-            <InstallSteps
-              title="iPhone / iPad"
-              steps={[
-                "Open this page in Safari",
-                "Tap Share at the bottom of the screen",
-                "Tap Add to Home Screen",
-                "Tap Add",
-              ]}
-            />
-          ) : platformHint === "android" ? (
-            <InstallSteps
-              title="Android"
-              steps={[
-                "Open this page in Chrome",
-                "Tap Install when prompted",
-                "Or tap the browser menu and choose Add to Home screen / Install app",
-              ]}
-            />
-          ) : (
-            <>
-              <InstallSteps
-                title="iPhone / iPad"
-                steps={[
-                  "Open this page in Safari",
-                  "Tap Share at the bottom of the screen",
-                  "Tap Add to Home Screen",
-                  "Tap Add",
-                ]}
-              />
-              <InstallSteps
-                title="Android"
-                steps={[
-                  "Open this page in Chrome",
-                  "Tap Install when prompted",
-                  "Or tap the browser menu and choose Add to Home screen / Install app",
-                ]}
-              />
-            </>
-          )}
-
           <section className="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 px-5 py-4">
             <div className="flex items-start gap-3">
-              <Check className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" aria-hidden />
+              <Check
+                className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700"
+                aria-hidden
+              />
               <div>
                 <h2 className="text-sm font-semibold text-emerald-950">
                   Already installed?
                 </h2>
                 <p className="mt-1 text-sm leading-relaxed text-emerald-900/80">
-                  Open Altair from your home screen icon — it launches full screen
-                  like a native app.
+                  Open Altair from your home screen icon — it launches full
+                  screen like a native app.
                 </p>
               </div>
             </div>
@@ -195,15 +215,8 @@ export function InstallPageView() {
         </div>
 
         <p className="mt-8 text-center text-xs text-stone-500">
-          <button
-            type="button"
-            onClick={detectPlatform}
-            className="font-medium text-[#9A7209] underline-offset-2 hover:underline"
-          >
-            Show steps for my device
-          </button>
-          {" · "}
-          Use Safari on iPhone and Chrome on Android for the best install experience.
+          Use Safari on iPhone and Chrome on Android for the best install
+          experience.
         </p>
 
         <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-[11px] text-stone-400">
