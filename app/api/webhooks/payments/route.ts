@@ -4,6 +4,7 @@ import {
   insertPaymentProviderEvent,
   stripeEventPayload,
 } from "@/lib/payments/insert-provider-event";
+import { processStripeWebhookEvent } from "@/lib/payments/process-stripe-webhook-event";
 import {
   StripeWebhookVerificationError,
   verifyStripeWebhookEvent,
@@ -60,5 +61,18 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json({ received: true, processed: false });
+  const processResult = await processStripeWebhookEvent(supabase, event);
+
+  if ("retryable" in processResult && processResult.retryable) {
+    return NextResponse.json(
+      { received: true, processed: false, error: "Processing failed" },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({
+    received: true,
+    processed: processResult.processed,
+    ...(processResult.ignored ? { ignored: true } : {}),
+  });
 }

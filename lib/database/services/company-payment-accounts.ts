@@ -1,6 +1,11 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type Stripe from "stripe";
+import type { Database } from "@/lib/database/types";
+import type { Json } from "@/lib/database/types/enums";
 import type { CompanyPaymentAccountRow } from "@/lib/database/types/core-tables";
+import { deriveStripeAccountSyncFields } from "@/lib/payments/stripe-account-sync";
 import type { CompanyPaymentAccount } from "@/lib/payments/types";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
@@ -104,4 +109,68 @@ export async function attachStripeProviderAccountId(
   }
 
   return { account: mapCompanyPaymentAccountRow(data as CompanyPaymentAccountRow) };
+}
+
+export async function findStripeCompanyPaymentAccountByProviderAccountId(
+  supabase: SupabaseClient<Database>,
+  providerAccountId: string,
+): Promise<CompanyPaymentAccountRow | null> {
+  const { data, error } = await supabase
+    .from("company_payment_accounts")
+    .select(STRIPE_ACCOUNT_SELECT)
+    .eq("provider", "stripe")
+    .eq("provider_account_id", providerAccountId)
+    .maybeSingle();
+
+  if (error) {
+    console.error(
+      "[findStripeCompanyPaymentAccountByProviderAccountId] query failed:",
+      {
+        providerAccountId,
+        code: error.code,
+        message: error.message,
+      },
+    );
+    return null;
+  }
+
+  return (data as CompanyPaymentAccountRow | null) ?? null;
+}
+
+export async function syncStripeCompanyPaymentAccountFromWebhook(
+  supabase: SupabaseClient<Database>,
+  accountRow: CompanyPaymentAccountRow,
+  stripeAccount: Stripe.Account,
+): Promise<{ ok: boolean; error?: string }> {
+  const syncFields = deriveStripeAccountSyncFields(stripeAccount, {
+    disabledAt: accountRow.disabled_at,
+    onboardingCompletedAt: accountRow.onboarding_completed_at,
+  });
+  const nowIso = new Date().toISOString();
+
+  const { error } = await supabase
+    .from("company_payment_accounts")
+    .update({
+      status: syncFields.status,
+      charges_enabled: syncFields.chargesEnabled,
+      payouts_enabled: syncFields.payoutsEnabled,
+      onboarding_completed_at: syncFields.onboardingCompletedAt,
+      last_synced_at: nowIso,
+      provider_metadata: syncFields.providerMetadata as Json,
+    })
+    .eq("id", accountRow.id)
+    .eq("company_id", accountRow.company_id)
+    .eq("provider", "stripe");
+
+  if (error) {
+    console.error("[syncStripeCompanyPaymentAccountFromWebhook] update failed:", {
+      accountRowId: accountRow.id,
+      companyId: accountRow.company_id,
+      code: error.code,
+      message: error.message,
+    });
+    return { ok: false, error: "Failed to sync Stripe account status." };
+  }
+
+  return { ok: true };
 }
