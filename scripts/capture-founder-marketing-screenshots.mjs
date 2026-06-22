@@ -14,8 +14,7 @@
  *   BASE_URL=http://localhost:3000 node scripts/capture-founder-marketing-screenshots.mjs
  *
  * Output:
- *   public/marketing/screenshots/social/reports-full-page.png (1440×900 viewport)
- *   public/marketing/screenshots/social/leads-full-page.png (1440×900 viewport)
+ *   public/marketing/screenshots/social/*-full-page.png (1600×900 viewport)
  */
 
 import { execSync } from "child_process";
@@ -32,12 +31,25 @@ const BASE_URL = process.env.BASE_URL?.trim() || "http://localhost:3000";
 const FOUNDER_EMAIL = "altairhvac@gmail.com";
 const SUPABASE_PROJECT_REF = "acsmgzkbvstrbggsukyx";
 
-const VIEWPORT = { width: 1440, height: 900 };
+const VIEWPORT = { width: 1600, height: 900 };
 
-/** @type {Array<{ id: string; route: string; output: string; anchor: string; ready?: string }>} */
+const FEEDBACK_HIDE_CSS = `
+  div.no-print.fixed.right-4.z-40:has(button[aria-label="Send feedback"]),
+  button[aria-label="Send feedback"].rounded-full,
+  div[role="note"]:has(button[aria-label="Dismiss feedback hint"]),
+  form#${"beta-bug-report-form"},
+  [id="${"beta-bug-report-sheet-title"}"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+`;
+
+/** @type {Array<{ id: string; label: string; route: string; output: string; anchor: string; ready?: string }>} */
 const CAPTURES = [
   {
     id: "reports-workspace",
+    label: "Reports workspace",
     route: "/reports?range=30d",
     output: "reports-full-page.png",
     anchor: ".north-star-reports-page-header",
@@ -45,11 +57,89 @@ const CAPTURES = [
   },
   {
     id: "leads-workspace",
+    label: "Leads workspace",
     route: "/leads",
     output: "leads-full-page.png",
     anchor: "h1",
     ready:
       "button.north-star-leads-primary-action, .leads-north-star-filter-bar, .north-star-leads-primary-action",
+  },
+  {
+    id: "marketing-workspace",
+    label: "Marketing Hub workspace",
+    route: "/marketing",
+    output: "marketing-full-page.png",
+    anchor: ".north-star-page-header h1",
+    ready: "button.north-star-marketing-primary-action, .north-star-marketing-primary-action",
+  },
+  {
+    id: "customers-workspace",
+    label: "Customers workspace",
+    route: "/customers",
+    output: "customers-full-page.png",
+    anchor: ".north-star-page-header h1",
+    ready:
+      "button.north-star-customers-primary-action, .customer-north-star-filter-bar, .customer-north-star-ledger",
+  },
+  {
+    id: "jobs-workspace",
+    label: "Jobs workspace",
+    route: "/jobs",
+    output: "jobs-full-page.png",
+    anchor: ".north-star-page-header h1",
+    ready:
+      "button.north-star-jobs-primary-action, .job-north-star-filter-bar, .job-north-star-ledger",
+  },
+  {
+    id: "estimates-workspace",
+    label: "Estimates workspace",
+    route: "/estimates",
+    output: "estimates-full-page.png",
+    anchor: ".north-star-page-header h1",
+    ready:
+      "button.north-star-estimates-primary-action, .estimate-north-star-filter-bar, .estimate-north-star-ledger",
+  },
+  {
+    id: "invoices-workspace",
+    label: "Invoices workspace",
+    route: "/invoices",
+    output: "invoices-full-page.png",
+    anchor: ".north-star-page-header h1",
+    ready:
+      "button.north-star-invoices-primary-action, .invoice-north-star-ledger, table",
+  },
+  {
+    id: "dispatch-workspace",
+    label: "Dispatch workspace",
+    route: "/dispatch",
+    output: "dispatch-full-page.png",
+    anchor: ".north-star-dispatch-page-header",
+    ready: ".dispatch-north-star-filter-bar",
+  },
+  {
+    id: "expenses-workspace",
+    label: "Expenses workspace",
+    route: "/expenses",
+    output: "expenses-full-page.png",
+    anchor: ".north-star-expenses-page-header, .north-star-page-header h1",
+    ready:
+      "button.north-star-expenses-primary-action, .expense-north-star-filter-bar, .expense-north-star-ledger",
+  },
+  {
+    id: "pricebook-workspace",
+    label: "Price Book workspace",
+    route: "/price-book",
+    output: "pricebook-full-page.png",
+    anchor: ".north-star-page-header h1",
+    ready: "table, .north-star-page-header",
+  },
+  {
+    id: "network-workspace",
+    label: "Network workspace",
+    route: "/network",
+    output: "network-full-page.png",
+    anchor: ".north-star-network-page-header",
+    ready: "button.north-star-network-primary-action, .north-star-network-primary-action",
   },
 ];
 
@@ -189,17 +279,53 @@ async function ensureFounderAuth() {
   }
 }
 
+async function installFeedbackHiding(context) {
+  await context.addInitScript((css) => {
+    const install = () => {
+      if (document.getElementById("founder-screenshot-feedback-hide")) {
+        return;
+      }
+
+      const style = document.createElement("style");
+      style.id = "founder-screenshot-feedback-hide";
+      style.textContent = css;
+      document.head.appendChild(style);
+    };
+
+    install();
+    document.addEventListener("DOMContentLoaded", install);
+  }, FEEDBACK_HIDE_CSS);
+}
+
 /** Hide the floating beta feedback pill + hint popover without masking page content. */
 async function hideFeedbackWidget(page) {
   await page.addStyleTag({
-    content: `
-      div.no-print.fixed.right-4.z-40:has(button[aria-label="Send feedback"]),
-      button[aria-label="Send feedback"].rounded-full,
-      div[role="note"]:has(button[aria-label="Dismiss feedback hint"]) {
-        display: none !important;
-      }
-    `,
+    content: FEEDBACK_HIDE_CSS,
   });
+
+  await page.evaluate(() => {
+    document
+      .querySelectorAll('button[aria-label="Send feedback"], button[aria-label="Dismiss feedback hint"]')
+      .forEach((element) => {
+        const floatingHost = element.closest("div.no-print.fixed.right-4.z-40");
+        if (floatingHost) {
+          floatingHost.remove();
+          return;
+        }
+
+        const hint = element.closest('[role="note"]');
+        if (hint) {
+          hint.remove();
+        }
+      });
+  });
+}
+
+async function waitForLoadingSkeletonsGone(page) {
+  await page.waitForFunction(
+    () => document.querySelectorAll(".north-star-skeleton").length === 0,
+    { timeout: 45_000 },
+  );
 }
 
 async function waitForRouteReady(page, capture) {
@@ -215,10 +341,14 @@ async function waitForRouteReady(page, capture) {
     });
   }
 
+  await waitForLoadingSkeletonsGone(page);
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(400);
 }
 
+/**
+ * @returns {Promise<{ ok: true; outputPath: string; dimensions: { width: number; height: number } | null } | { ok: false; error: string }>}
+ */
 async function captureFullPageScreenshot(page, capture) {
   const url = `${BASE_URL}${capture.route}`;
   console.log(`Capturing ${capture.id} from ${url}`);
@@ -239,6 +369,15 @@ async function captureFullPageScreenshot(page, capture) {
     );
   }
 
+  const unauthorized = await page
+    .getByText("Unauthorized", { exact: false })
+    .first()
+    .isVisible()
+    .catch(() => false);
+  if (unauthorized) {
+    throw new Error(`${capture.route} returned unauthorized access for the founder account.`);
+  }
+
   await hideFeedbackWidget(page);
 
   const outputPath = path.join(OUTPUT_DIR, capture.output);
@@ -251,7 +390,8 @@ async function captureFullPageScreenshot(page, capture) {
   console.log(
     `  → ${path.relative(ROOT, outputPath)} (${dimensions?.width ?? "?"}x${dimensions?.height ?? "?"})`,
   );
-  return outputPath;
+
+  return { ok: true, outputPath, dimensions };
 }
 
 function assertAuthFile() {
@@ -269,6 +409,25 @@ function assertAuthFile() {
   process.exit(1);
 }
 
+function printSummary(results) {
+  console.log("");
+  console.log("Capture summary:");
+  console.log(
+    "Page | Route | Output | Dimensions | Status | Notes",
+  );
+  console.log("-".repeat(100));
+
+  for (const result of results) {
+    const dimensions = result.dimensions
+      ? `${result.dimensions.width}x${result.dimensions.height}`
+      : "—";
+    const status = result.ok ? "OK" : "SKIP";
+    console.log(
+      `${result.label} | ${result.route} | ${result.output} | ${dimensions} | ${status} | ${result.notes}`,
+    );
+  }
+}
+
 async function main() {
   await ensureFounderAuth();
   assertAuthFile();
@@ -280,18 +439,56 @@ async function main() {
     deviceScaleFactor: 1,
     storageState: AUTH_PATH,
   });
+  await installFeedbackHiding(context);
   const page = await context.newPage();
+
+  /** @type {Array<{ label: string; route: string; output: string; ok: boolean; dimensions: { width: number; height: number } | null; notes: string }>} */
+  const results = [];
 
   try {
     for (const capture of CAPTURES) {
-      await captureFullPageScreenshot(page, capture);
+      try {
+        const outcome = await captureFullPageScreenshot(page, capture);
+        const dimensionNote =
+          outcome.dimensions?.width === VIEWPORT.width &&
+          outcome.dimensions?.height === VIEWPORT.height
+            ? "viewport match"
+            : "unexpected dimensions";
+
+        results.push({
+          label: capture.label,
+          route: capture.route,
+          output: capture.output,
+          ok: true,
+          dimensions: outcome.dimensions,
+          notes: dimensionNote,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(`  ✗ ${capture.id}: ${message}`);
+        results.push({
+          label: capture.label,
+          route: capture.route,
+          output: capture.output,
+          ok: false,
+          dimensions: null,
+          notes: message,
+        });
+      }
     }
   } finally {
     await browser.close();
   }
 
+  printSummary(results);
+
+  const successCount = results.filter((result) => result.ok).length;
   console.log("");
-  console.log("Founder marketing screenshots captured.");
+  console.log(`Founder marketing screenshots captured: ${successCount}/${results.length} succeeded.`);
+
+  if (successCount === 0) {
+    process.exit(1);
+  }
 }
 
 main().catch((error) => {

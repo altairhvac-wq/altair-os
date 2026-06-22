@@ -8,14 +8,9 @@ export type FounderMarketingScreenshotOption = {
 export const FOUNDER_MARKETING_SCREENSHOT_OPTIONS: FounderMarketingScreenshotOption[] =
   [
     {
-      id: "dispatch",
-      label: "Dispatch command center",
-      path: "/marketing/screenshots/marketing-dispatch.png",
-    },
-    {
-      id: "customers",
-      label: "Customer 360",
-      path: "/marketing/screenshots/marketing-customers.png",
+      id: "reports",
+      label: "Reports workspace",
+      path: "/marketing/screenshots/social/reports-full-page.png",
     },
     {
       id: "leads",
@@ -23,24 +18,49 @@ export const FOUNDER_MARKETING_SCREENSHOT_OPTIONS: FounderMarketingScreenshotOpt
       path: "/marketing/screenshots/social/leads-full-page.png",
     },
     {
-      id: "expenses",
-      label: "Technician mobile / expenses",
-      path: "/marketing/screenshots/marketing-expenses.png",
+      id: "marketing",
+      label: "Marketing Hub workspace",
+      path: "/marketing/screenshots/social/marketing-full-page.png",
     },
     {
-      id: "estimate",
-      label: "Estimates & approvals",
-      path: "/marketing/screenshots/marketing-estimate.png",
+      id: "customers",
+      label: "Customers workspace",
+      path: "/marketing/screenshots/social/customers-full-page.png",
+    },
+    {
+      id: "jobs",
+      label: "Jobs workspace",
+      path: "/marketing/screenshots/social/jobs-full-page.png",
+    },
+    {
+      id: "estimates",
+      label: "Estimates workspace",
+      path: "/marketing/screenshots/social/estimates-full-page.png",
+    },
+    {
+      id: "invoices",
+      label: "Invoices workspace",
+      path: "/marketing/screenshots/social/invoices-full-page.png",
+    },
+    {
+      id: "dispatch",
+      label: "Dispatch workspace",
+      path: "/marketing/screenshots/social/dispatch-full-page.png",
+    },
+    {
+      id: "expenses",
+      label: "Expenses workspace",
+      path: "/marketing/screenshots/social/expenses-full-page.png",
     },
     {
       id: "pricebook",
-      label: "Invoicing & pricebook",
-      path: "/marketing/screenshots/marketing-pricebook.png",
+      label: "Price Book workspace",
+      path: "/marketing/screenshots/social/pricebook-full-page.png",
     },
     {
-      id: "reports",
-      label: "Reports workspace",
-      path: "/marketing/screenshots/social/reports-full-page.png",
+      id: "network",
+      label: "Network workspace",
+      path: "/marketing/screenshots/social/network-full-page.png",
     },
   ];
 
