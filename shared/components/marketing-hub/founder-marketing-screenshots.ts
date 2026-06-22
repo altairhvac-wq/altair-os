@@ -20,7 +20,7 @@ export const FOUNDER_MARKETING_SCREENSHOT_OPTIONS: FounderMarketingScreenshotOpt
     {
       id: "leads",
       label: "Leads workspace",
-      path: "/marketing/screenshots/social/leads-feature-card.png",
+      path: "/marketing/screenshots/social/leads-feature-card-v3.png",
     },
     {
       id: "expenses",
@@ -40,7 +40,7 @@ export const FOUNDER_MARKETING_SCREENSHOT_OPTIONS: FounderMarketingScreenshotOpt
     {
       id: "reports",
       label: "Reports workspace",
-      path: "/marketing/screenshots/social/reports-feature-card.png",
+      path: "/marketing/screenshots/social/reports-feature-card-v3.png",
     },
   ];
 

@@ -115,6 +115,51 @@ const FEATURE_CARDS = [
   },
 ];
 
+/** Versioned debug cards — picker uses these; do not overwrite legacy *-feature-card.png. */
+const FEATURE_CARDS_V3 = [
+  {
+    id: "reports-workspace",
+    screenshot: "reports-feature-crop.png",
+    output: "reports-feature-card-v3.png",
+    label: "Altair OS",
+    headline: "Reports that show what changed",
+    subheadline:
+      "Revenue, jobs, cash flow, and performance in one operating brief.",
+    footer: "Built for small HVAC & trades companies",
+    frameBackground:
+      "linear-gradient(180deg, rgb(16 26 40 / 0.92) 0%, rgb(11 17 24 / 0.96) 100%)",
+    objectFit: "cover",
+    proofMarker: "CARD V3",
+  },
+  {
+    id: "leads-workspace",
+    screenshot: "leads-feature-crop.png",
+    output: "leads-feature-card-v3.png",
+    label: "Altair OS",
+    headline: "Leads that stay organized",
+    subheadline:
+      "Track inquiries, follow-ups, and conversions without losing momentum.",
+    footer: "Built for small HVAC & trades companies",
+    frameBackground:
+      "linear-gradient(180deg, rgb(16 26 40 / 0.92) 0%, rgb(11 17 24 / 0.96) 100%)",
+    objectFit: "cover",
+    proofMarker: "CARD V3",
+  },
+];
+
+const V3_CONTACT_SHEET_FILES = [
+  {
+    file: "reports-feature-card.png",
+    kind: "LEGACY",
+    publicPath: "/marketing/screenshots/social/reports-feature-card.png",
+  },
+  {
+    file: "reports-feature-card-v3.png",
+    kind: "V3",
+    publicPath: "/marketing/screenshots/social/reports-feature-card-v3.png",
+  },
+];
+
 /** Fallback pixel crops from wide raw screenshots when live auth capture is unavailable. */
 const FEATURE_CROP_FROM_RAW = {
   "reports-workspace": {
@@ -571,6 +616,7 @@ function buildFeatureCardHtml({
   objectFit = "contain",
   screenshotWidth = CARD_SCREENSHOT_MAX_WIDTH,
   screenshotHeight,
+  proofMarker,
 }) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -676,6 +722,22 @@ function buildFeatureCardHtml({
       letter-spacing: 0.04em;
       text-align: center;
     }
+    .proof-marker {
+      position: fixed;
+      right: 10px;
+      bottom: 8px;
+      z-index: 10;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: rgb(7 11 16 / 0.82);
+      border: 1px solid rgb(201 164 77 / 0.55);
+      color: #f3ebdd;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
   </style>
 </head>
 <body>
@@ -691,6 +753,7 @@ function buildFeatureCardHtml({
       </div>
       <p class="footer">${escapeHtml(footer)}</p>
     </div>
+    ${proofMarker ? `<div class="proof-marker">${escapeHtml(proofMarker)}</div>` : ""}
   </div>
 </body>
 </html>`;
@@ -815,6 +878,7 @@ async function renderFeatureCard(page, card) {
     objectFit: card.objectFit ?? "contain",
     screenshotWidth: frameDimensions.width,
     screenshotHeight: frameDimensions.height,
+    proofMarker: card.proofMarker,
   });
 
   await page.setViewportSize({ width: CARD_SIZE, height: CARD_SIZE });
@@ -919,6 +983,119 @@ function buildContactSheetHtml(entries) {
   </div>
 </body>
 </html>`;
+}
+
+function buildV3DiffContactSheetHtml(entries) {
+  const panels = entries
+    .map(
+      (entry) => `<section class="panel panel-${entry.kind.toLowerCase()}">
+      <div class="meta">
+        <p class="filename">${escapeHtml(entry.file)}</p>
+        <p><strong>Version:</strong> ${escapeHtml(entry.kind)}</p>
+        <p><strong>Dimensions:</strong> ${escapeHtml(entry.dimensions)}</p>
+        <p class="path"><strong>Path:</strong> ${escapeHtml(entry.publicPath)}</p>
+        <p><strong>Proof marker:</strong> ${entry.kind === "V3" ? "CARD V3 (bottom-right)" : "none"}</p>
+      </div>
+      <img src="${entry.dataUrl}" alt="${escapeHtml(entry.file)}" />
+    </section>`,
+    )
+    .join("\n");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Reports card v3 diff</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #1a1f2a;
+      color: #f3ebdd;
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    .intro { margin: 0 0 20px; color: #c9bfae; font-size: 14px; max-width: 900px; line-height: 1.5; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .panel {
+      border-radius: 12px;
+      padding: 14px;
+      background: #0f141d;
+    }
+    .panel-legacy { border: 2px dashed #f59e0b; }
+    .panel-v3 { border: 3px solid #22c55e; }
+    .meta { margin-bottom: 10px; font-size: 13px; line-height: 1.45; }
+    .filename { margin: 0 0 6px; font-size: 15px; font-weight: 700; }
+    .path { margin: 0; word-break: break-all; font-family: Consolas, monospace; font-size: 12px; }
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid rgb(255 255 255 / 0.08);
+      background: #070b10;
+    }
+  </style>
+</head>
+<body>
+  <h1>Reports feature card — legacy vs v3</h1>
+  <p class="intro">Left: legacy reports-feature-card.png (may show beige blank block). Right: reports-feature-card-v3.png with dark glass frame, aspect-matched crop, and CARD V3 proof marker. If v3 does not show CARD V3 in the bottom-right, you are not viewing the new file.</p>
+  <div class="grid">
+    ${panels}
+  </div>
+</body>
+</html>`;
+}
+
+async function writeV3DiffContactSheet(page) {
+  const debugDir = path.join(OUTPUT_DIR, "_debug");
+  fs.mkdirSync(debugDir, { recursive: true });
+
+  const entries = V3_CONTACT_SHEET_FILES.map((item) => {
+    const filePath = path.join(OUTPUT_DIR, item.file);
+    if (!fs.existsSync(filePath)) {
+      console.warn(
+        `  ! Skipping v3 diff panel — missing ${path.relative(ROOT, filePath)}`,
+      );
+      return null;
+    }
+
+    const dimensions = readPngDimensions(filePath);
+    const dataUrl = `data:image/png;base64,${fs.readFileSync(filePath).toString("base64")}`;
+
+    return {
+      ...item,
+      dimensions: dimensions
+        ? `${dimensions.width}×${dimensions.height}`
+        : "unknown",
+      dataUrl,
+    };
+  }).filter(Boolean);
+
+  if (entries.length === 0) {
+    console.warn("  ! No v3 diff contact sheet assets available.");
+    return;
+  }
+
+  const html = buildV3DiffContactSheetHtml(entries);
+  const htmlPath = path.join(debugDir, "reports-card-v3-diff.html");
+  fs.writeFileSync(htmlPath, html, "utf8");
+  console.log(`  → ${path.relative(ROOT, htmlPath)}`);
+
+  await page.setViewportSize({ width: 1200, height: 1400 });
+  await page.setContent(html, { waitUntil: "load" });
+  await page.waitForFunction(() =>
+    [...document.images].every((img) => img.complete && img.naturalWidth > 0),
+  );
+
+  const pngPath = path.join(debugDir, "reports-card-v3-diff.png");
+  await page.screenshot({ path: pngPath, type: "png", fullPage: true });
+  console.log(`  → ${path.relative(ROOT, pngPath)}`);
 }
 
 async function writeContactSheet(page) {
@@ -1047,12 +1224,24 @@ async function main() {
     }
 
     console.log("");
+    console.log("Rendering versioned v3 feature cards...");
+
+    for (const card of FEATURE_CARDS_V3) {
+      console.log(`Feature card v3 ${card.id}`);
+      await renderFeatureCard(page, card);
+    }
+
+    console.log("");
     console.log("Rendering legacy Facebook-ready social cards...");
 
     for (const card of SOCIAL_CARDS) {
       console.log(`Card ${card.id}`);
       await renderSocialCard(page, card);
     }
+
+    console.log("");
+    console.log("Writing v3 diff contact sheet...");
+    await writeV3DiffContactSheet(page);
 
     console.log("");
     console.log("Writing contact sheet for visual verification...");
