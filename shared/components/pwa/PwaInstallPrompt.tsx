@@ -11,6 +11,9 @@ import {
 type PwaInstallPromptProps = {
   className?: string;
   onInstallResult?: (outcome: "accepted" | "dismissed" | "unavailable") => void;
+  /** When "button-only", renders only the native install button — no fallback UI. */
+  variant?: "default" | "button-only";
+  onPromptAvailabilityChange?: (available: boolean) => void;
 };
 
 const ctaFocusClass =
@@ -60,6 +63,8 @@ function PlatformInstallInstructions({ className = "" }: { className?: string })
 export function PwaInstallPrompt({
   className = "",
   onInstallResult,
+  variant = "default",
+  onPromptAvailabilityChange,
 }: PwaInstallPromptProps) {
   const [hydrated, setHydrated] = useState(false);
   const [standalone, setStandalone] = useState(false);
@@ -74,6 +79,7 @@ export function PwaInstallPrompt({
     function handleBeforeInstallPrompt(event: Event) {
       event.preventDefault();
       setDeferredPrompt(event as BeforeInstallPromptEvent);
+      onPromptAvailabilityChange?.(true);
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -84,7 +90,13 @@ export function PwaInstallPrompt({
         handleBeforeInstallPrompt,
       );
     };
-  }, []);
+  }, [onPromptAvailabilityChange]);
+
+  useEffect(() => {
+    if (hydrated && !deferredPrompt) {
+      onPromptAvailabilityChange?.(false);
+    }
+  }, [hydrated, deferredPrompt, onPromptAvailabilityChange]);
 
   async function handleInstallClick() {
     if (!deferredPrompt) {
@@ -100,6 +112,7 @@ export function PwaInstallPrompt({
       onInstallResult?.(outcome);
       if (outcome === "accepted") {
         setDeferredPrompt(null);
+        onPromptAvailabilityChange?.(false);
       }
     } catch {
       onInstallResult?.("unavailable");
@@ -109,6 +122,10 @@ export function PwaInstallPrompt({
   }
 
   if (!hydrated) {
+    if (variant === "button-only") {
+      return null;
+    }
+
     return (
       <div
         className={`rounded-2xl border border-stone-200/80 bg-white/90 px-4 py-4 text-sm text-stone-600 ${className}`}
@@ -120,6 +137,10 @@ export function PwaInstallPrompt({
   }
 
   if (standalone) {
+    if (variant === "button-only") {
+      return null;
+    }
+
     return (
       <div
         className={`flex items-center gap-3 rounded-2xl border border-emerald-200/80 bg-emerald-50/80 px-4 py-3.5 text-sm text-emerald-900 ${className}`}
@@ -144,6 +165,10 @@ export function PwaInstallPrompt({
         </button>
       </div>
     );
+  }
+
+  if (variant === "button-only") {
+    return null;
   }
 
   return <PlatformInstallInstructions className={className} />;

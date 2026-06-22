@@ -1,17 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
   Check,
   Copy,
   ExternalLink,
+  Globe,
+  MessageSquare,
+  MoreVertical,
+  PlusSquare,
   Share,
   Smartphone,
 } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import { PwaInstallPrompt } from "./PwaInstallPrompt";
 import {
+  getBetaTesterInstallMessage,
+  getInstallPageUrl,
   getPwaInstallDebugInfo,
   type PwaInstallDebugInfo,
   isAndroidDevice,
@@ -24,39 +31,67 @@ const ctaFocusClass =
 
 type InstallPlatform = "ios" | "android" | "desktop";
 
-const INSTALL_GUIDANCE: Record<
-  InstallPlatform,
-  { title: string; message: string; steps: string[] }
-> = {
-  ios: {
-    title: "Install Altair on iPhone",
-    message:
-      "Apple does not show an install button. Use Safari, tap Share, then Add to Home Screen.",
-    steps: [
-      "Open this page in Safari",
-      "Tap the Share button",
-      "Tap Add to Home Screen",
-      "Tap Add",
-    ],
-  },
-  android: {
-    title: "Install Altair on Android",
-    message:
-      "Tap the Install button if it appears. If not, open Chrome menu and choose Install app or Add to Home screen.",
-    steps: [
-      "Open this page in Chrome",
-      "Tap Install if shown",
-      "Or tap the 3-dot menu",
-      "Tap Install app / Add to Home screen",
-    ],
-  },
-  desktop: {
-    title: "Install Altair on your phone",
-    message:
-      "Open this page on your phone, or copy the link and send it to your phone.",
-    steps: [],
-  },
+type WizardStep = {
+  title: string;
+  instruction: string;
+  icon: LucideIcon;
 };
+
+const IOS_STEPS: WizardStep[] = [
+  {
+    title: "Open in Safari",
+    instruction: "Open this page in Safari for the smoothest install.",
+    icon: Globe,
+  },
+  {
+    title: "Tap Share",
+    instruction: "Tap the Share button at the bottom of Safari.",
+    icon: Share,
+  },
+  {
+    title: "Add to Home Screen",
+    instruction: "Scroll if needed and tap Add to Home Screen.",
+    icon: PlusSquare,
+  },
+  {
+    title: "Tap Add",
+    instruction: "Tap Add in the top right to confirm.",
+    icon: Check,
+  },
+  {
+    title: "Open from home screen",
+    instruction: "Open Altair from your home screen.",
+    icon: Smartphone,
+  },
+];
+
+const ANDROID_STEPS: WizardStep[] = [
+  {
+    title: "Open in Chrome",
+    instruction: "Open this page in Chrome on your Android phone.",
+    icon: Globe,
+  },
+  {
+    title: "Tap Install Altair",
+    instruction: "Tap Install Altair if the button appears at the top.",
+    icon: Smartphone,
+  },
+  {
+    title: "Or open the menu",
+    instruction: "If not, tap the three-dot menu in Chrome.",
+    icon: MoreVertical,
+  },
+  {
+    title: "Choose Install app",
+    instruction: "Tap Install app or Add to Home screen.",
+    icon: PlusSquare,
+  },
+  {
+    title: "Open from home screen",
+    instruction: "Open Altair from your home screen.",
+    icon: Check,
+  },
+];
 
 function PwaInstallDebugPanel() {
   const [debugInfo, setDebugInfo] = useState<PwaInstallDebugInfo | null>(null);
@@ -106,13 +141,49 @@ function PwaInstallDebugPanel() {
   );
 }
 
-function PrimaryInstallCard({
-  platform,
-}: {
-  platform: InstallPlatform;
-}) {
-  const { title, message, steps } = INSTALL_GUIDANCE[platform];
+function WizardStepList({ steps }: { steps: WizardStep[] }) {
+  return (
+    <ol className="mt-6 space-y-4">
+      {steps.map((step, index) => {
+        const Icon = step.icon;
 
+        return (
+          <li
+            key={step.title}
+            className="flex gap-4 rounded-xl border border-stone-200/80 bg-white/60 p-4 shadow-sm"
+          >
+            <div className="flex flex-col items-center gap-2">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FAF4E8] text-lg font-bold text-[#9A7209] ring-1 ring-[#D4AF37]/25">
+                {index + 1}
+              </span>
+            </div>
+            <div className="min-w-0 flex-1 pt-0.5">
+              <div className="flex items-center gap-2">
+                <Icon className="h-4 w-4 shrink-0 text-[#9A7209]" aria-hidden />
+                <p className="text-base font-semibold text-[#0A0A0A]">
+                  {step.title}
+                </p>
+              </div>
+              <p className="mt-1 text-sm leading-relaxed text-stone-600">
+                {step.instruction}
+              </p>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function InstallCardShell({
+  eyebrow,
+  title,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  children: ReactNode;
+}) {
   return (
     <section className="rounded-2xl border-2 border-[#D4AF37]/35 border-t-[4px] border-t-[#D4AF37]/70 bg-gradient-to-b from-white via-[#FFFCF8] to-[#FAF7F2] p-5 shadow-[0_4px_8px_rgba(10,10,10,0.06),0_16px_40px_rgba(10,10,10,0.1)] ring-1 ring-[#D4AF37]/18 sm:p-6">
       <div className="flex items-start gap-3">
@@ -121,63 +192,108 @@ function PrimaryInstallCard({
         </div>
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#9A7209]">
-            How to install
+            {eyebrow}
           </p>
           <h2 className="mt-1 text-lg font-semibold tracking-tight text-[#0A0A0A] sm:text-xl">
             {title}
           </h2>
         </div>
       </div>
-
-      <p className="mt-4 text-sm leading-relaxed text-stone-700 sm:text-base">
-        {message}
-      </p>
-
-      <PwaInstallPrompt className="mt-5 w-full" />
-
-      {steps.length > 0 ? (
-        <ol className="mt-5 space-y-3">
-          {steps.map((step, index) => (
-            <li
-              key={step}
-              className="flex gap-3 text-sm leading-relaxed text-stone-700"
-            >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FAF4E8] text-xs font-semibold text-[#9A7209]">
-                {index + 1}
-              </span>
-              <span className="pt-0.5">{step}</span>
-            </li>
-          ))}
-        </ol>
-      ) : null}
+      {children}
     </section>
+  );
+}
+
+function IosInstallWizard() {
+  return (
+    <InstallCardShell eyebrow="Step-by-step" title="Install Altair on iPhone">
+      <div className="mt-4 space-y-2 rounded-xl border border-amber-200/70 bg-amber-50/60 px-4 py-3">
+        <p className="text-sm font-medium text-amber-950">
+          Apple does not allow a one-tap install button for web apps.
+        </p>
+        <p className="text-sm text-amber-900/85">This takes about 20 seconds.</p>
+        <p className="text-sm text-amber-900/85">
+          Use Safari for the smoothest install.
+        </p>
+      </div>
+      <WizardStepList steps={IOS_STEPS} />
+    </InstallCardShell>
+  );
+}
+
+function AndroidInstallWizard() {
+  const [installPromptAvailable, setInstallPromptAvailable] = useState(false);
+  const [promptChecked, setPromptChecked] = useState(false);
+
+  const handlePromptAvailabilityChange = useCallback((available: boolean) => {
+    setInstallPromptAvailable(available);
+    setPromptChecked(true);
+  }, []);
+
+  return (
+    <InstallCardShell eyebrow="Step-by-step" title="Install Altair on Android">
+      <PwaInstallPrompt
+        className="mt-5"
+        variant="button-only"
+        onPromptAvailabilityChange={handlePromptAvailabilityChange}
+      />
+
+      {promptChecked && !installPromptAvailable ? (
+        <p className="mt-4 rounded-xl border border-stone-200/80 bg-white/70 px-4 py-3 text-sm leading-relaxed text-stone-700">
+          Install button not showing? Use Chrome menu → Install app / Add to
+          Home screen.
+        </p>
+      ) : null}
+
+      <WizardStepList steps={ANDROID_STEPS} />
+    </InstallCardShell>
+  );
+}
+
+function DesktopInstallCard() {
+  return (
+    <InstallCardShell eyebrow="Send to your phone" title="Open this page on your phone">
+      <p className="mt-4 text-sm leading-relaxed text-stone-700 sm:text-base">
+        Copy this link and send it to the phone you want to install Altair on.
+      </p>
+    </InstallCardShell>
   );
 }
 
 function InstalledStateCard() {
   return (
     <section className="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 px-5 py-5 sm:px-6">
-      <PwaInstallPrompt className="w-full" />
-      <div className="mt-4 flex items-start gap-3">
-        <Check
-          className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700"
-          aria-hidden
-        />
-        <p className="text-sm leading-relaxed text-emerald-900/80">
-          Open Altair from your home screen icon — it launches full screen like
-          a native app.
-        </p>
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+          <Check className="h-5 w-5" aria-hidden />
+        </div>
+        <div>
+          <p className="text-base font-semibold text-emerald-900">
+            Altair is installed on this device.
+          </p>
+          <p className="mt-1.5 text-sm leading-relaxed text-emerald-900/80">
+            Open it from your home screen whenever you need it.
+          </p>
+        </div>
       </div>
     </section>
   );
 }
 
-function CopyAppLinkButton() {
+function CopyButton({
+  label,
+  copiedLabel,
+  onCopy,
+}: {
+  label: string;
+  copiedLabel: string;
+  onCopy: () => Promise<void>;
+}) {
   const [copied, setCopied] = useState(false);
 
-  async function handleCopy() {
+  async function handleClick() {
     try {
-      await navigator.clipboard.writeText(window.location.origin);
+      await onCopy();
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -188,12 +304,100 @@ function CopyAppLinkButton() {
   return (
     <button
       type="button"
-      onClick={handleCopy}
+      onClick={handleClick}
       className={`inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-800 shadow-sm transition hover:bg-stone-50 sm:flex-none ${ctaFocusClass}`}
     >
       <Copy className="h-4 w-4" aria-hidden />
-      {copied ? "Link copied" : "Copy app link"}
+      {copied ? copiedLabel : label}
     </button>
+  );
+}
+
+function ShareHelpers() {
+  return (
+    <section className="rounded-2xl border border-stone-200/80 bg-white/80 p-5 sm:p-6">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500">
+        Send to phone
+      </p>
+      <p className="mt-2 text-sm text-stone-600">
+        Share the install link or a ready-made message with beta testers.
+      </p>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <CopyButton
+          label="Copy install link"
+          copiedLabel="Link copied"
+          onCopy={async () => {
+            await navigator.clipboard.writeText(getInstallPageUrl());
+          }}
+        />
+        <CopyButton
+          label="Copy beta tester message"
+          copiedLabel="Message copied"
+          onCopy={async () => {
+            await navigator.clipboard.writeText(getBetaTesterInstallMessage());
+          }}
+        />
+      </div>
+    </section>
+  );
+}
+
+function TroubleshootingSection() {
+  return (
+    <section className="rounded-2xl border border-stone-200/80 bg-stone-50/80 p-5 sm:p-6">
+      <h2 className="text-base font-semibold text-[#0A0A0A] sm:text-lg">
+        Not seeing Add to Home Screen?
+      </h2>
+
+      <div className="mt-5 space-y-5">
+        <div>
+          <p className="text-sm font-semibold text-stone-800">iPhone</p>
+          <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-stone-600">
+            <li>Make sure you are using Safari</li>
+            <li>
+              If you opened from Facebook, Messenger, or Gmail, tap the browser
+              icon or open in Safari first
+            </li>
+            <li>
+              Use the Share button in Safari, not long-press on a link
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-stone-800">Android</p>
+          <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-stone-600">
+            <li>Use Chrome</li>
+            <li>If Install does not appear, use the three-dot menu</li>
+            <li>Make sure the page is loaded over HTTPS</li>
+          </ul>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-stone-800">
+            Already installed
+          </p>
+          <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-stone-600">
+            <li>Open Altair from the home screen icon</li>
+            <li>
+              If you deleted it, reopen this page in Safari/Chrome and add it
+              again
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function IosStickyHint() {
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 border-t border-[#D4AF37]/25 bg-[#FFFCF8]/95 px-5 py-3 shadow-[0_-4px_20px_rgba(10,10,10,0.08)] backdrop-blur-sm pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <p className="mx-auto flex max-w-3xl items-center justify-center gap-2 text-center text-sm font-medium text-[#9A7209]">
+        <Share className="h-4 w-4 shrink-0" aria-hidden />
+        Next: tap the Share button in Safari
+      </p>
+    </div>
   );
 }
 
@@ -209,6 +413,18 @@ function detectInstallPlatform(): InstallPlatform {
   return "desktop";
 }
 
+function PlatformWizard({ platform }: { platform: InstallPlatform }) {
+  if (platform === "ios") {
+    return <IosInstallWizard />;
+  }
+
+  if (platform === "android") {
+    return <AndroidInstallWizard />;
+  }
+
+  return <DesktopInstallCard />;
+}
+
 export function InstallPageView() {
   const [platform, setPlatform] = useState<InstallPlatform>("desktop");
   const [standalone, setStandalone] = useState(false);
@@ -219,6 +435,8 @@ export function InstallPageView() {
     setPlatform(detectInstallPlatform());
     setStandalone(isStandaloneDisplayMode());
   }, []);
+
+  const showIosStickyHint = hydrated && platform === "ios" && !standalone;
 
   return (
     <div className="min-h-dvh bg-gradient-to-b from-stone-50 via-white to-stone-100/80">
@@ -242,7 +460,13 @@ export function InstallPageView() {
         </div>
       </header>
 
-      <main className="relative mx-auto max-w-3xl px-5 py-8 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-8 sm:py-12">
+      <main
+        className={`relative mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-12 ${
+          showIosStickyHint
+            ? "pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))]"
+            : "pb-[max(2rem,env(safe-area-inset-bottom))]"
+        }`}
+      >
         <div className="auth-hero-enter text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9A7209]">
             Mobile install
@@ -255,7 +479,7 @@ export function InstallPageView() {
           <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-stone-600">
             {hydrated && standalone
               ? "Launch Altair from your home screen icon."
-              : "Open Altair like an app from your phone."}
+              : "Follow a few quick steps and you're done."}
           </p>
         </div>
 
@@ -263,37 +487,44 @@ export function InstallPageView() {
           {hydrated && standalone ? (
             <InstalledStateCard />
           ) : (
-            <PrimaryInstallCard platform={platform} />
+            <PlatformWizard platform={platform} />
           )}
 
           {!standalone ? (
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link
-                href="/login"
-                className={`inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#0A0A0A] px-5 py-3 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2)] ring-1 ring-[#D4AF37]/30 transition-colors hover:bg-[#141414] sm:flex-none ${ctaFocusClass}`}
-              >
-                <ExternalLink className="h-4 w-4" aria-hidden />
-                Open Altair
-              </Link>
-              <CopyAppLinkButton />
-            </div>
+            <>
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                <Link
+                  href="/login"
+                  className={`inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#0A0A0A] px-5 py-3 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2)] ring-1 ring-[#D4AF37]/30 transition-colors hover:bg-[#141414] sm:flex-none ${ctaFocusClass}`}
+                >
+                  <ExternalLink className="h-4 w-4" aria-hidden />
+                  Open Altair
+                </Link>
+                <CopyButton
+                  label="Copy install link"
+                  copiedLabel="Link copied"
+                  onCopy={async () => {
+                    await navigator.clipboard.writeText(getInstallPageUrl());
+                  }}
+                />
+              </div>
+
+              <ShareHelpers />
+            </>
           ) : null}
         </div>
 
-        {!standalone ? (
-          <p className="mt-8 text-center text-xs text-stone-500">
-            Use Safari on iPhone and Chrome on Android for the best install
-            experience.
-          </p>
-        ) : null}
+        {!standalone ? <div className="mt-8"><TroubleshootingSection /></div> : null}
 
-        <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-[11px] text-stone-400">
-          <Share className="h-3 w-3" aria-hidden />
+        <p className="mt-8 flex items-center justify-center gap-1.5 text-center text-[11px] text-stone-400">
+          <MessageSquare className="h-3 w-3" aria-hidden />
           Beta testers · Add Altair to your home screen for quick access
         </p>
 
         <PwaInstallDebugPanel />
       </main>
+
+      {showIosStickyHint ? <IosStickyHint /> : null}
     </div>
   );
 }

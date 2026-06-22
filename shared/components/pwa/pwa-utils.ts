@@ -10,6 +10,23 @@ export type InstallPlatformCategory = "ios" | "android" | "desktop" | "unknown";
 export const PWA_INSTALL_BANNER_DISMISSED_KEY =
   "altair-pwa-install-banner-dismissed";
 
+export function getInstallPageUrl(): string {
+  if (typeof window === "undefined") {
+    return "/install";
+  }
+
+  return `${window.location.origin}/install`;
+}
+
+export function getBetaTesterInstallMessage(): string {
+  const url = getInstallPageUrl();
+
+  return `Install Altair on your phone here: ${url}
+
+iPhone: open in Safari, tap Share, then Add to Home Screen.
+Android: open in Chrome and tap Install, or use the three-dot menu → Install app.`;
+}
+
 export function isStandaloneDisplayMode(): boolean {
   if (typeof window === "undefined") {
     return false;

@@ -45,13 +45,13 @@ export function PwaInstallBanner() {
             Add Altair to your phone
           </p>
           <p className="mt-0.5 text-xs leading-relaxed text-stone-600">
-            Opens like an app from your home screen.
+            Get a home-screen icon so Altair opens like an app.
           </p>
           <Link
             href="/install"
             className="mt-2 inline-flex min-h-[36px] items-center rounded-lg bg-[#0A0A0A] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#141414]"
           >
-            How to install
+            Show me how
           </Link>
         </div>
       </div>
