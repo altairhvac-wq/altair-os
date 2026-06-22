@@ -1,14 +1,64 @@
 import { NextResponse } from "next/server";
+import { getStripeWebhookSecret } from "@/lib/payments/env";
+import {
+  insertPaymentProviderEvent,
+  stripeEventPayload,
+} from "@/lib/payments/insert-provider-event";
+import {
+  StripeWebhookVerificationError,
+  verifyStripeWebhookEvent,
+} from "@/lib/payments/stripe-webhook";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 
-/**
- * Payment provider webhook ingress (route shell).
- *
- * This route is intentionally no-op until provider signature verification
- * and provider expansion migrations are added.
- */
+export const runtime = "nodejs";
+
 export async function POST(request: Request) {
-  // Preserve raw body for future signature verification.
-  await request.text();
+  const rawBody = await request.text();
+  const signature = request.headers.get("stripe-signature");
+  const webhookSecret = getStripeWebhookSecret();
+
+  if (!webhookSecret) {
+    return NextResponse.json(
+      { error: "Webhook verification is not configured" },
+      { status: 400 },
+    );
+  }
+
+  let event;
+  try {
+    event = verifyStripeWebhookEvent(rawBody, signature, webhookSecret);
+  } catch (error) {
+    if (error instanceof StripeWebhookVerificationError) {
+      return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });
+    }
+
+    return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });
+  }
+
+  const supabase = createServiceRoleClient();
+  const insertResult = await insertPaymentProviderEvent(supabase, {
+    provider: "stripe",
+    provider_event_id: event.id,
+    event_type: event.type,
+    processing_status: "received",
+    payload: stripeEventPayload(event),
+    company_id: null,
+  });
+
+  if (!insertResult.ok) {
+    return NextResponse.json(
+      { error: "Failed to record webhook event" },
+      { status: 500 },
+    );
+  }
+
+  if (insertResult.duplicate) {
+    return NextResponse.json({
+      received: true,
+      processed: false,
+      duplicate: true,
+    });
+  }
 
   return NextResponse.json({ received: true, processed: false });
 }
