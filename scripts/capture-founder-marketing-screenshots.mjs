@@ -37,7 +37,10 @@ const CLIP_HEIGHT = 540;
 const CARD_SIZE = 1080;
 const CARD_SCREENSHOT_WIDTH = 980;
 const CARD_SCREENSHOT_HEIGHT = 590;
+const CARD_SCREENSHOT_MAX_WIDTH = 980;
 const FEATURE_CAPTURE_SCALE = 2;
+const FRAME_BLANK_SPACE_THRESHOLD_PX = 10;
+const FRAME_HEIGHT_MATCH_THRESHOLD_PX = 5;
 
 /** @type {Array<{ id: string; route: string; output: string; anchor: string; ready?: string }>} */
 const CAPTURES = [
@@ -96,7 +99,6 @@ const FEATURE_CARDS = [
     frameBackground:
       "linear-gradient(180deg, #fbf7ef 0%, #efe4cb 100%)",
     objectFit: "contain",
-    screenshotHeight: CARD_SIZE - 184,
   },
   {
     id: "leads-workspace",
@@ -110,7 +112,6 @@ const FEATURE_CARDS = [
     frameBackground:
       "linear-gradient(180deg, #1f2834 0%, #141c28 100%)",
     objectFit: "contain",
-    screenshotHeight: 430,
   },
 ];
 
@@ -551,6 +552,15 @@ function buildSocialCardHtml({ screenshotDataUrl, label, headline, subheadline, 
 </html>`;
 }
 
+function computeScreenshotFrameDimensions(sourceWidth, sourceHeight) {
+  const width = Math.min(
+    CARD_SCREENSHOT_MAX_WIDTH,
+    CARD_SIZE - 40,
+  );
+  const height = Math.round((width * sourceHeight) / sourceWidth);
+  return { width, height };
+}
+
 function buildFeatureCardHtml({
   screenshotDataUrl,
   label,
@@ -558,8 +568,9 @@ function buildFeatureCardHtml({
   subheadline,
   footer,
   frameBackground,
-  objectFit = "cover",
-  screenshotHeight = CARD_SIZE - 184,
+  objectFit = "contain",
+  screenshotWidth = CARD_SCREENSHOT_MAX_WIDTH,
+  screenshotHeight,
 }) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -580,7 +591,6 @@ function buildFeatureCardHtml({
       flex-direction: column;
       align-items: center;
       padding: 18px 20px 14px;
-      gap: 10px;
       border: 4px solid rgb(201 164 77 / 0.55);
       box-shadow:
         inset 0 0 0 1px rgb(255 255 255 / 0.08),
@@ -625,10 +635,19 @@ function buildFeatureCardHtml({
       line-height: 1.26;
       text-align: center;
     }
+    .media {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 0;
+      gap: 10px;
+    }
     .screenshot-frame {
       flex: 0 0 auto;
-      width: 100%;
-      max-width: 1020px;
+      width: ${screenshotWidth}px;
       height: ${screenshotHeight}px;
       padding: 0;
       display: flex;
@@ -666,10 +685,12 @@ function buildFeatureCardHtml({
       <h1 class="headline">${escapeHtml(headline)}</h1>
       <p class="subheadline">${escapeHtml(subheadline)}</p>
     </div>
-    <div class="screenshot-frame">
-      <img src="${screenshotDataUrl}" alt="" />
+    <div class="media">
+      <div class="screenshot-frame">
+        <img src="${screenshotDataUrl}" alt="" />
+      </div>
+      <p class="footer">${escapeHtml(footer)}</p>
     </div>
-    <p class="footer">${escapeHtml(footer)}</p>
   </div>
 </body>
 </html>`;
@@ -707,6 +728,60 @@ async function renderSocialCard(page, card) {
   return outputPath;
 }
 
+async function validateFeatureCardComposition(page, card, sourceDimensions, frameDimensions) {
+  const metrics = await page.evaluate(() => {
+    const frame = document.querySelector(".screenshot-frame");
+    const img = document.querySelector(".screenshot-frame img");
+    const frameRect = frame.getBoundingClientRect();
+    const imgRect = img.getBoundingClientRect();
+
+    return {
+      frame: { width: frameRect.width, height: frameRect.height },
+      rendered: { width: imgRect.width, height: imgRect.height },
+      natural: { width: img.naturalWidth, height: img.naturalHeight },
+    };
+  });
+
+  const verticalBlank = Math.max(0, metrics.frame.height - metrics.rendered.height);
+  const horizontalBlank = Math.max(0, metrics.frame.width - metrics.rendered.width);
+  const heightDelta = Math.abs(metrics.frame.height - metrics.rendered.height);
+
+  console.log(`  Validation ${card.id}:`);
+  console.log(`    card: ${CARD_SIZE}x${CARD_SIZE}`);
+  console.log(
+    `    source crop: ${sourceDimensions.width}x${sourceDimensions.height} (aspect ${(sourceDimensions.width / sourceDimensions.height).toFixed(3)})`,
+  );
+  console.log(
+    `    frame (target): ${frameDimensions.width}x${frameDimensions.height}`,
+  );
+  console.log(
+    `    frame (rendered): ${Math.round(metrics.frame.width)}x${Math.round(metrics.frame.height)}`,
+  );
+  console.log(
+    `    image (rendered): ${Math.round(metrics.rendered.width)}x${Math.round(metrics.rendered.height)}`,
+  );
+  console.log(
+    `    internal blank: ${Math.round(horizontalBlank)}px horizontal, ${Math.round(verticalBlank)}px vertical`,
+  );
+
+  if (
+    verticalBlank > FRAME_BLANK_SPACE_THRESHOLD_PX ||
+    horizontalBlank > FRAME_BLANK_SPACE_THRESHOLD_PX
+  ) {
+    console.warn(
+      `    ! Internal blank space exceeds ${FRAME_BLANK_SPACE_THRESHOLD_PX}px threshold`,
+    );
+  }
+
+  if (heightDelta > FRAME_HEIGHT_MATCH_THRESHOLD_PX) {
+    console.warn(
+      `    ! Rendered image height differs from frame by ${heightDelta.toFixed(1)}px (limit ${FRAME_HEIGHT_MATCH_THRESHOLD_PX}px)`,
+    );
+  }
+
+  return { verticalBlank, horizontalBlank, heightDelta, metrics };
+}
+
 async function renderFeatureCard(page, card) {
   const screenshotPath = path.join(OUTPUT_DIR, card.screenshot);
   if (!fs.existsSync(screenshotPath)) {
@@ -714,6 +789,18 @@ async function renderFeatureCard(page, card) {
       `Missing feature crop for card ${card.id}: ${path.relative(ROOT, screenshotPath)}`,
     );
   }
+
+  const sourceDimensions = readPngDimensions(screenshotPath);
+  if (!sourceDimensions) {
+    throw new Error(
+      `Could not read dimensions for ${path.relative(ROOT, screenshotPath)}`,
+    );
+  }
+
+  const frameDimensions = computeScreenshotFrameDimensions(
+    sourceDimensions.width,
+    sourceDimensions.height,
+  );
 
   const screenshotDataUrl = `data:image/png;base64,${fs.readFileSync(screenshotPath).toString("base64")}`;
   const html = buildFeatureCardHtml({
@@ -725,8 +812,9 @@ async function renderFeatureCard(page, card) {
     frameBackground:
       card.frameBackground ??
       "linear-gradient(180deg, rgb(16 26 40 / 0.92) 0%, rgb(11 17 24 / 0.96) 100%)",
-    objectFit: card.objectFit ?? "cover",
-    screenshotHeight: card.screenshotHeight ?? CARD_SIZE - 184,
+    objectFit: card.objectFit ?? "contain",
+    screenshotWidth: frameDimensions.width,
+    screenshotHeight: frameDimensions.height,
   });
 
   await page.setViewportSize({ width: CARD_SIZE, height: CARD_SIZE });
@@ -735,6 +823,13 @@ async function renderFeatureCard(page, card) {
     const img = document.querySelector(".screenshot-frame img");
     return Boolean(img && img.complete && img.naturalWidth > 0);
   });
+
+  await validateFeatureCardComposition(
+    page,
+    card,
+    sourceDimensions,
+    frameDimensions,
+  );
 
   const outputPath = path.join(OUTPUT_DIR, card.output);
   await page.locator(".card").screenshot({
