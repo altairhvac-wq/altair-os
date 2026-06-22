@@ -24,6 +24,7 @@ import {
   formatBillingEmailSecureLinkFallbackHtml,
   formatInvoicePaymentGuidanceHtml,
   formatInvoicePaymentGuidanceText,
+  escapeBillingEmailHtml,
   wrapBillingEmailHtml,
   type BillingEmailLineItem,
 } from "@/lib/email/billing-email-layout";
@@ -392,6 +393,100 @@ export async function sendInvoiceEmail(
     text,
     html: wrapBillingEmailHtml(htmlBody),
     logContext: "sendInvoiceEmail",
+    fromDisplayName: deliveryOptions.fromDisplayName,
+    replyTo: deliveryOptions.replyTo,
+  });
+}
+
+type SendInvoicePaymentLinkEmailInput = {
+  to: string;
+  company: BillingEmailCompanyInput;
+  customerName: string;
+  invoiceNumber: string;
+  balanceDue: number;
+  paymentUrl: string;
+};
+
+export async function sendInvoicePaymentLinkEmail(
+  input: SendInvoicePaymentLinkEmailInput,
+): Promise<SendBillingEmailResult> {
+  const companyName = input.company.name;
+  const subject = `Pay invoice ${input.invoiceNumber} from ${companyName}`;
+  const paymentUrl = input.paymentUrl.trim();
+  const companyContactText = formatBillingEmailCompanyContactText(input.company);
+  const deliveryOptions = buildBillingEmailDeliveryOptions(input.company);
+  const footer = formatBillingEmailFooter(
+    companyName,
+    deliveryOptions.hasReplyTo,
+  );
+  const paymentCtaText = formatInvoicePaymentCtaText({
+    paymentUrl,
+    balanceDue: input.balanceDue,
+  });
+  const paymentCtaHtml = formatInvoicePaymentCtaHtml({
+    paymentUrl,
+    balanceDue: input.balanceDue,
+  });
+
+  const text = [
+    `Hello ${input.customerName},`,
+    "",
+    `${companyName} sent you a secure payment link for invoice ${input.invoiceNumber}.`,
+    "You can pay securely online using this link.",
+    "",
+    `Amount due: ${formatCurrency(input.balanceDue)}`,
+    paymentCtaText,
+    companyContactText ? `\n${companyContactText}` : null,
+    "",
+    footer.text,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const htmlBody = `
+    ${formatBillingEmailCompanyHeaderHtml(input.company)}
+    ${formatBillingEmailDocumentMetaHtml({
+      documentKind: "invoice",
+      documentNumber: input.invoiceNumber,
+      customerName: input.customerName,
+    })}
+    ${formatBillingEmailGreetingHtml(
+      input.customerName,
+      "here is a secure link to pay your invoice online.",
+    )}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:12px;">
+      <tr>
+        <td style="padding:10px 12px;border:1px solid #e4e4e7;background:#fafafa;color:#3f3f46;font-size:13px;line-height:1.5;">
+          You can pay securely online using this link.
+        </td>
+      </tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:12px;border:1px solid #e4e4e7;background:#fafafa;">
+      <tr>
+        <td style="padding:12px 14px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+            <tr>
+              <td style="padding:0;color:#71717a;font-size:12px;line-height:1.4;">Amount due</td>
+              <td align="right" style="padding:0;color:#18181b;font-size:20px;font-weight:700;line-height:1.2;white-space:nowrap;">
+                ${escapeBillingEmailHtml(formatCurrency(input.balanceDue))}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    ${paymentCtaHtml}
+    ${formatBillingEmailCompanyContactHtml(input.company)}
+    ${footer.html}
+    ${formatBillingEmailSecureLinkFallbackHtml(paymentUrl)}
+  `.trim();
+
+  return sendViaResend({
+    to: input.to,
+    subject,
+    text,
+    html: wrapBillingEmailHtml(htmlBody),
+    logContext: "sendInvoicePaymentLinkEmail",
     fromDisplayName: deliveryOptions.fromDisplayName,
     replyTo: deliveryOptions.replyTo,
   });

@@ -546,6 +546,8 @@ export type InvoiceCheckoutTargetFields = {
 
 export type InvoicePaymentLinkTarget = {
   id: string;
+  invoiceNumber: string;
+  customerName: string;
   status: InvoiceStatus;
   balanceDue: number;
   jobId: string | null;
@@ -560,7 +562,7 @@ export async function getInvoicePaymentLinkTargetWithServiceRole(
 
   const { data, error } = await supabase
     .from("invoices")
-    .select("id, status, balance_due, job_id, customers(email)")
+    .select("id, invoice_number, status, balance_due, job_id, customers(name, email)")
     .eq("company_id", companyId)
     .eq("id", invoiceId)
     .maybeSingle();
@@ -581,14 +583,17 @@ export async function getInvoicePaymentLinkTargetWithServiceRole(
 
   const row = data as {
     id: string;
+    invoice_number: string;
     status: InvoiceStatus;
     balance_due: number;
     job_id: string | null;
-    customers: { email: string | null } | null;
+    customers: { name: string | null; email: string | null } | null;
   };
 
   return {
     id: row.id,
+    invoiceNumber: row.invoice_number,
+    customerName: row.customers?.name?.trim() || "Customer",
     status: row.status,
     balanceDue: Number(row.balance_due) || 0,
     jobId: row.job_id,

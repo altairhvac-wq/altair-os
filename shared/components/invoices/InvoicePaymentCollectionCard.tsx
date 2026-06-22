@@ -2,8 +2,11 @@
 
 import { useState, useTransition } from "react";
 import dynamic from "next/dynamic";
-import { Copy, ExternalLink, Link2, RefreshCw } from "lucide-react";
-import { createInvoicePaymentLinkAction } from "@/app/actions/invoice-payment-links";
+import { Copy, ExternalLink, Link2, Mail, RefreshCw } from "lucide-react";
+import {
+  createInvoicePaymentLinkAction,
+  sendInvoicePaymentLinkEmailAction,
+} from "@/app/actions/invoice-payment-links";
 import { formatCurrency } from "@/shared/types/customer";
 import {
   northStarDetailTokens as dt,
@@ -40,10 +43,13 @@ export function InvoicePaymentCollectionCard({
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isEmailPending, startEmailTransition] = useTransition();
 
   function handleCreateLink(refresh = false) {
     setError(null);
+    setEmailSuccess(null);
 
     if (refresh) {
       setPaymentUrl(null);
@@ -62,8 +68,33 @@ export function InvoicePaymentCollectionCard({
     });
   }
 
+  function handleEmailPaymentLink() {
+    setError(null);
+    setEmailSuccess(null);
+
+    startEmailTransition(async () => {
+      const result = await sendInvoicePaymentLinkEmailAction({ invoiceId, jobId });
+
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      if (result.paymentUrl) {
+        setPaymentUrl(result.paymentUrl);
+      }
+
+      setEmailSuccess(
+        result.recipientEmail
+          ? `Payment link emailed to ${result.recipientEmail}.`
+          : "Payment link emailed to the customer.",
+      );
+    });
+  }
+
   async function handleCopyLink() {
     setError(null);
+    setEmailSuccess(null);
 
     if (!paymentUrl) {
       startTransition(async () => {
@@ -128,6 +159,14 @@ export function InvoicePaymentCollectionCard({
       ? "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
       : "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60";
 
+  const disabledSecondaryButtonClass = northStar
+    ? `${dt.secondaryAction} cursor-not-allowed opacity-50`
+    : fieldVariant
+      ? "inline-flex min-h-11 w-full touch-manipulation cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-400 opacity-60"
+      : "inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-400 opacity-60";
+
+  const workflowBusy = isPending || isEmailPending;
+
   if (!onlinePaymentsEnabled) {
     return (
       <section className={sectionClass}>
@@ -180,7 +219,7 @@ export function InvoicePaymentCollectionCard({
                   <button
                     type="button"
                     onClick={() => handleCopyLink()}
-                    disabled={isPending}
+                    disabled={workflowBusy}
                     className={secondaryButtonClass}
                   >
                     <Copy className="h-4 w-4 shrink-0" aria-hidden />
@@ -198,7 +237,7 @@ export function InvoicePaymentCollectionCard({
                   <button
                     type="button"
                     onClick={() => handleCreateLink(true)}
-                    disabled={isPending}
+                    disabled={workflowBusy}
                     className={secondaryButtonClass}
                   >
                     <RefreshCw className="h-4 w-4 shrink-0" aria-hidden />
@@ -212,7 +251,7 @@ export function InvoicePaymentCollectionCard({
               <button
                 type="button"
                 onClick={() => handleCreateLink(false)}
-                disabled={isPending}
+                disabled={workflowBusy}
                 className={primaryButtonClass}
               >
                 {isPending ? "Creating link…" : "Create payment link"}
@@ -223,6 +262,37 @@ export function InvoicePaymentCollectionCard({
               </p>
             </div>
           )}
+
+          <div className={`mt-4 flex flex-col gap-2 ${fieldVariant ? "" : "sm:flex-row sm:flex-wrap"}`}>
+            <button
+              type="button"
+              onClick={handleEmailPaymentLink}
+              disabled={workflowBusy}
+              className={secondaryButtonClass}
+            >
+              <Mail className="h-4 w-4 shrink-0" aria-hidden />
+              {isEmailPending ? "Sending email…" : "Email payment link"}
+            </button>
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              title="Text message sending is coming later."
+              className={disabledSecondaryButtonClass}
+            >
+              Text payment link
+            </button>
+          </div>
+          <p className={`mt-2 ${mutedClass}`}>
+            Text message sending is coming later. Copy the link or show the QR
+            code for now.
+          </p>
+
+          {emailSuccess ? (
+            <p className="mt-3 text-sm text-emerald-800" role="status">
+              {emailSuccess}
+            </p>
+          ) : null}
 
           {error ? (
             <p className="mt-3 text-sm text-amber-800" role="alert">
