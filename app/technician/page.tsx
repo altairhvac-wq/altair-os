@@ -13,6 +13,7 @@ import {
   getCurrentTimeState,
 } from "@/lib/database/services/time-tracking";
 import { isCompanyOnlineCheckoutAvailable } from "@/lib/payments/online-checkout-availability";
+import { isSmsSendingConfigured } from "@/lib/sms/env";
 import { TechnicianAssignedJobsView } from "@/shared/components/technician/TechnicianAssignedJobsView";
 
 export default async function TechnicianPage() {
@@ -35,7 +36,7 @@ export default async function TechnicianPage() {
     context.permissions.viewAssignedJobs;
   const billingDefaults = getCompanyBillingDefaultsFromRow(context.company);
 
-  const [jobs, timeState, serviceItems, onlinePaymentsEnabled] =
+  const [jobs, timeState, serviceItems, onlinePaymentsEnabled, smsSendingConfigured] =
     await Promise.all([
     listAssignedJobsForTechnician(context.company.id, context.user.id, {
       timeZone: context.company.timezone,
@@ -44,6 +45,7 @@ export default async function TechnicianPage() {
     getCurrentTimeState(context.company.id, context.user.id),
     listActiveServiceItems(context.company.id),
     isCompanyOnlineCheckoutAvailable(context.company.id),
+    Promise.resolve(isSmsSendingConfigured()),
   ]);
 
   const billingSummaries = await listJobBillingSummariesForJobs(
@@ -71,6 +73,7 @@ export default async function TechnicianPage() {
       canViewBilling={canViewBillingData}
       canCollectPayment={canCollectPayment}
       onlinePaymentsEnabled={onlinePaymentsEnabled}
+      smsSendingConfigured={smsSendingConfigured}
       billingSummaries={billingSummaries}
       defaultTaxRate={billingDefaults.defaultTaxRate}
       companyTimeZone={context.company.timezone}

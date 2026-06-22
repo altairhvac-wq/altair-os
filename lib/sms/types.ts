@@ -1,12 +1,8 @@
 /**
- * SMS provider types — foundation only; no live sending in this phase.
+ * SMS provider types for transactional payment-link texts.
  *
- * Before enabling live SMS, implement:
- * - Customer consent capture and audit trail
- * - STOP/opt-out handling and suppression lists
- * - Sender registration (e.g. 10DLC / toll-free verification)
- * - Delivery logs and provider webhooks
- * - Rate limits and abuse prevention
+ * Live send requires Altair-managed provider env, opt-out persistence, and
+ * compliant message content. Inbound STOP automation is not implemented yet.
  */
 
 export type SmsProvider = "disabled" | "twilio" | "telnyx";

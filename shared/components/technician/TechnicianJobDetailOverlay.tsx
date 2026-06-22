@@ -20,6 +20,7 @@ type TechnicianJobDetailOverlayProps = {
   canViewBilling: boolean;
   canCollectPayment?: boolean;
   onlinePaymentsEnabled?: boolean;
+  smsSendingConfigured?: boolean;
   aiFeaturesEnabled?: boolean;
   billingSummaries: JobBillingSummariesByJobId;
   canManageTime: boolean;
@@ -37,6 +38,7 @@ export function TechnicianJobDetailOverlay({
   canViewBilling,
   canCollectPayment = false,
   onlinePaymentsEnabled = false,
+  smsSendingConfigured = false,
   aiFeaturesEnabled = false,
   billingSummaries,
   canManageTime,
@@ -69,6 +71,7 @@ export function TechnicianJobDetailOverlay({
         canViewBilling={canViewBilling}
         canCollectPayment={canCollectPayment}
         onlinePaymentsEnabled={onlinePaymentsEnabled}
+        smsSendingConfigured={smsSendingConfigured}
         aiFeaturesEnabled={aiFeaturesEnabled}
         billingContext={{
           estimates: billingSummaries.estimatesByJobId[job.id] ?? [],

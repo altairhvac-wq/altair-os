@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from "react";
 import dynamic from "next/dynamic";
-import { Copy, ExternalLink, Link2, Mail, RefreshCw } from "lucide-react";
+import { Copy, ExternalLink, Link2, Mail, MessageSquare, RefreshCw } from "lucide-react";
 import {
   createInvoicePaymentLinkAction,
   sendInvoicePaymentLinkEmailAction,
+  sendInvoicePaymentLinkSmsAction,
 } from "@/app/actions/invoice-payment-links";
 import { formatCurrency } from "@/shared/types/customer";
 import {
@@ -28,6 +29,7 @@ type InvoicePaymentCollectionCardProps = {
   jobId?: string;
   balanceDue: number;
   onlinePaymentsEnabled: boolean;
+  smsSendingConfigured?: boolean;
   northStar?: boolean;
   fieldVariant?: boolean;
 };
@@ -37,6 +39,7 @@ export function InvoicePaymentCollectionCard({
   jobId,
   balanceDue,
   onlinePaymentsEnabled,
+  smsSendingConfigured = false,
   northStar = false,
   fieldVariant = false,
 }: InvoicePaymentCollectionCardProps) {
@@ -44,12 +47,15 @@ export function InvoicePaymentCollectionCard({
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
+  const [smsSuccess, setSmsSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isEmailPending, startEmailTransition] = useTransition();
+  const [isSmsPending, startSmsTransition] = useTransition();
 
   function handleCreateLink(refresh = false) {
     setError(null);
     setEmailSuccess(null);
+    setSmsSuccess(null);
 
     if (refresh) {
       setPaymentUrl(null);
@@ -71,6 +77,7 @@ export function InvoicePaymentCollectionCard({
   function handleEmailPaymentLink() {
     setError(null);
     setEmailSuccess(null);
+    setSmsSuccess(null);
 
     startEmailTransition(async () => {
       const result = await sendInvoicePaymentLinkEmailAction({ invoiceId, jobId });
@@ -95,9 +102,38 @@ export function InvoicePaymentCollectionCard({
     });
   }
 
+  function handleSmsPaymentLink() {
+    setError(null);
+    setEmailSuccess(null);
+    setSmsSuccess(null);
+
+    startSmsTransition(async () => {
+      const result = await sendInvoicePaymentLinkSmsAction({ invoiceId, jobId });
+
+      if (result.error) {
+        if (result.paymentUrl) {
+          setPaymentUrl(result.paymentUrl);
+        }
+        setError(result.error);
+        return;
+      }
+
+      if (result.paymentUrl) {
+        setPaymentUrl(result.paymentUrl);
+      }
+
+      setSmsSuccess(
+        result.maskedRecipientPhone
+          ? `Text sent to customer ending in ${result.maskedRecipientPhone.slice(-4)}.`
+          : "Text sent to customer.",
+      );
+    });
+  }
+
   async function handleCopyLink() {
     setError(null);
     setEmailSuccess(null);
+    setSmsSuccess(null);
 
     if (!paymentUrl) {
       startTransition(async () => {
@@ -168,7 +204,7 @@ export function InvoicePaymentCollectionCard({
       ? "inline-flex min-h-11 w-full touch-manipulation cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-400 opacity-60"
       : "inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-400 opacity-60";
 
-  const workflowBusy = isPending || isEmailPending;
+  const workflowBusy = isPending || isEmailPending || isSmsPending;
 
   if (!onlinePaymentsEnabled) {
     return (
@@ -278,22 +314,40 @@ export function InvoicePaymentCollectionCard({
             </button>
             <button
               type="button"
-              disabled
-              aria-disabled="true"
-              title="Text message sending is not configured yet."
-              className={disabledSecondaryButtonClass}
+              onClick={handleSmsPaymentLink}
+              disabled={!smsSendingConfigured || workflowBusy}
+              aria-disabled={!smsSendingConfigured}
+              title={
+                smsSendingConfigured
+                  ? undefined
+                  : "Text message sending is not configured yet."
+              }
+              className={
+                smsSendingConfigured
+                  ? secondaryButtonClass
+                  : disabledSecondaryButtonClass
+              }
             >
-              Text payment link
+              <MessageSquare className="h-4 w-4 shrink-0" aria-hidden />
+              {isSmsPending ? "Sending text…" : "Text payment link"}
             </button>
           </div>
-          <p className={`mt-2 ${mutedClass}`}>
-            Text message sending is not configured yet. Use Email, Copy link, or
-            QR code for now.
-          </p>
+          {!smsSendingConfigured ? (
+            <p className={`mt-2 ${mutedClass}`}>
+              Text message sending is not configured yet. Use Email, Copy link, or
+              QR code for now.
+            </p>
+          ) : null}
 
           {emailSuccess ? (
             <p className="mt-3 text-sm text-emerald-800" role="status">
               {emailSuccess}
+            </p>
+          ) : null}
+
+          {smsSuccess ? (
+            <p className="mt-3 text-sm text-emerald-800" role="status">
+              {smsSuccess}
             </p>
           ) : null}
 

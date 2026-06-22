@@ -70,6 +70,7 @@ type TechnicianJobFieldDetailProps = {
   canViewBilling?: boolean;
   canCollectPayment?: boolean;
   onlinePaymentsEnabled?: boolean;
+  smsSendingConfigured?: boolean;
   aiFeaturesEnabled?: boolean;
   billingContext?: {
     estimates: JobEstimateSummary[];
@@ -110,6 +111,7 @@ export function TechnicianJobFieldDetail({
   canViewBilling = false,
   canCollectPayment = false,
   onlinePaymentsEnabled = false,
+  smsSendingConfigured = false,
   aiFeaturesEnabled = false,
   billingContext,
   canManageTime = false,
@@ -251,6 +253,7 @@ export function TechnicianJobFieldDetail({
               jobId={job.id}
               balanceDue={payableInvoice.balanceDue}
               onlinePaymentsEnabled={onlinePaymentsEnabled}
+              smsSendingConfigured={smsSendingConfigured}
               fieldVariant
             />
           </section>

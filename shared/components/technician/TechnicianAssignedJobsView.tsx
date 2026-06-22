@@ -44,6 +44,7 @@ type TechnicianAssignedJobsViewProps = {
   canViewBilling: boolean;
   canCollectPayment?: boolean;
   onlinePaymentsEnabled?: boolean;
+  smsSendingConfigured?: boolean;
   billingSummaries: JobBillingSummariesByJobId;
   defaultTaxRate: number;
   companyTimeZone: string;
@@ -146,6 +147,7 @@ export function TechnicianAssignedJobsView({
   canViewBilling,
   canCollectPayment = false,
   onlinePaymentsEnabled = false,
+  smsSendingConfigured = false,
   billingSummaries,
   defaultTaxRate,
   companyTimeZone,
@@ -348,6 +350,7 @@ export function TechnicianAssignedJobsView({
           canViewBilling={canViewBilling}
           canCollectPayment={canCollectPayment}
           onlinePaymentsEnabled={onlinePaymentsEnabled}
+          smsSendingConfigured={smsSendingConfigured}
           aiFeaturesEnabled={aiFeaturesEnabled}
           billingSummaries={billingSummaries}
           canManageTime={canManageTime}

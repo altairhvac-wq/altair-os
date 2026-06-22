@@ -1,12 +1,8 @@
 /**
- * SMS compliance helpers — stubs only until live sending is implemented.
+ * SMS compliance helpers for outbound payment-link texts.
  *
- * Live SMS requires:
- * - Documented customer consent before transactional/promotional texts
- * - STOP/HELP keyword handling and opt-out persistence
- * - Registered sender IDs (10DLC, toll-free verification, etc.)
- * - Delivery logging without storing unnecessary message content
- * - Rate limits and per-company quotas
+ * Opt-out is persisted in sms_opt_outs; inbound STOP webhook automation is not
+ * live yet — outbound messages still include STOP language.
  */
 
 /** Basic E.164-ish normalization for future validation; not a full libphonenumber pass. */
@@ -41,12 +37,29 @@ export function normalizePhoneNumber(raw: string): string | null {
   return numeric.length >= 8 ? `+${numeric}` : null;
 }
 
-/** Placeholder — always false until opt-out storage is implemented. */
-export function isSmsOptedOut(_phone: string, _companyId: string): boolean {
-  return false;
+/** Mask phone for UI/logging — shows last four digits only. */
+export function maskPhoneNumber(e164: string): string {
+  const digits = e164.replace(/\D/g, "");
+
+  if (digits.length < 4) {
+    return "****";
+  }
+
+  return `***${digits.slice(-4)}`;
 }
 
-/** Placeholder footer for future compliant outbound messages. */
+/** Footer included on outbound transactional SMS. */
 export function buildOptOutFooter(_companyName: string): string {
   return "Reply STOP to opt out.";
+}
+
+export function buildInvoicePaymentLinkSmsBody(input: {
+  companyName: string;
+  invoiceNumber: string;
+  paymentUrl: string;
+}): string {
+  const companyName = input.companyName.trim() || "Your service provider";
+  const footer = buildOptOutFooter(companyName);
+
+  return `${companyName}: Pay invoice ${input.invoiceNumber} securely: ${input.paymentUrl}. ${footer}`;
 }

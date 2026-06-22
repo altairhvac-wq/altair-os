@@ -19,6 +19,7 @@ type InvoiceDetailNorthStarSideRailProps = {
   canManageCustomers: boolean;
   canManageBilling: boolean;
   onlinePaymentsEnabled?: boolean;
+  smsSendingConfigured?: boolean;
 };
 
 export function InvoiceDetailNorthStarSideRail({
@@ -26,6 +27,7 @@ export function InvoiceDetailNorthStarSideRail({
   canManageCustomers,
   canManageBilling,
   onlinePaymentsEnabled = false,
+  smsSendingConfigured = false,
 }: InvoiceDetailNorthStarSideRailProps) {
   const customerEmail = invoice.customerEmail?.trim();
   const customerPhone = invoice.customerPhone?.trim();
@@ -137,6 +139,7 @@ export function InvoiceDetailNorthStarSideRail({
           jobId={invoice.jobId ?? undefined}
           balanceDue={invoice.balanceDue}
           onlinePaymentsEnabled={onlinePaymentsEnabled}
+          smsSendingConfigured={smsSendingConfigured}
           northStar
         />
       ) : null}

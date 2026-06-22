@@ -14,6 +14,7 @@ import {
 import { getBillingSignatureForEntity } from "@/lib/database/queries/billing-signatures";
 import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
 import { isCompanyOnlineCheckoutAvailable } from "@/lib/payments/online-checkout-availability";
+import { isSmsSendingConfigured } from "@/lib/sms/env";
 import { InvoiceDetailHeaderActions } from "./InvoiceDetailHeaderActions";
 import { InvoiceDetailOverlayShell } from "./InvoiceDetailOverlayShell";
 import { InvoiceDetailPageView } from "./InvoiceDetailPageView";
@@ -34,7 +35,7 @@ export async function InvoiceDetailRoute({
     notFound();
   }
 
-  const [invoice, activities, payments, signature, deleteDependencies, onlinePaymentsEnabled] =
+  const [invoice, activities, payments, signature, deleteDependencies, onlinePaymentsEnabled, smsSendingConfigured] =
     await Promise.all([
     ensureInvoiceBillingStatesSynced(
       companyContext.company.id,
@@ -49,6 +50,7 @@ export async function InvoiceDetailRoute({
     ),
     getInvoiceDeleteDependencies(companyContext.company.id, invoiceId),
     isCompanyOnlineCheckoutAvailable(companyContext.company.id),
+    Promise.resolve(isSmsSendingConfigured()),
   ]);
 
   if (!invoice) {
@@ -81,6 +83,7 @@ export async function InvoiceDetailRoute({
       aiFeaturesEnabled={isAiFeaturesEnabled()}
       deleteDependencies={deleteDependencies}
       onlinePaymentsEnabled={onlinePaymentsEnabled}
+      smsSendingConfigured={smsSendingConfigured}
     />
   );
 

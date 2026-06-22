@@ -552,6 +552,7 @@ export type InvoicePaymentLinkTarget = {
   balanceDue: number;
   jobId: string | null;
   customerEmail: string | null;
+  customerPhone: string | null;
 };
 
 export async function getInvoicePaymentLinkTargetWithServiceRole(
@@ -562,7 +563,7 @@ export async function getInvoicePaymentLinkTargetWithServiceRole(
 
   const { data, error } = await supabase
     .from("invoices")
-    .select("id, invoice_number, status, balance_due, job_id, customers(name, email)")
+    .select("id, invoice_number, status, balance_due, job_id, customers(name, email, phone)")
     .eq("company_id", companyId)
     .eq("id", invoiceId)
     .maybeSingle();
@@ -587,7 +588,7 @@ export async function getInvoicePaymentLinkTargetWithServiceRole(
     status: InvoiceStatus;
     balance_due: number;
     job_id: string | null;
-    customers: { name: string | null; email: string | null } | null;
+    customers: { name: string | null; email: string | null; phone: string | null } | null;
   };
 
   return {
@@ -598,6 +599,7 @@ export async function getInvoicePaymentLinkTargetWithServiceRole(
     balanceDue: Number(row.balance_due) || 0,
     jobId: row.job_id,
     customerEmail: row.customers?.email?.trim() || null,
+    customerPhone: row.customers?.phone?.trim() || null,
   };
 }
 

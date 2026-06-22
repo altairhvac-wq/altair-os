@@ -62,6 +62,7 @@ type InvoiceDetailPageViewProps = {
   aiFeaturesEnabled?: boolean;
   deleteDependencies: InvoiceDeleteDependencies;
   onlinePaymentsEnabled?: boolean;
+  smsSendingConfigured?: boolean;
 };
 
 export function InvoiceDetailPageView(props: InvoiceDetailPageViewProps) {
@@ -86,6 +87,7 @@ function NorthStarInvoiceDetailPageView({
   aiFeaturesEnabled = false,
   deleteDependencies,
   onlinePaymentsEnabled = false,
+  smsSendingConfigured = false,
 }: InvoiceDetailPageViewProps) {
   const isOverlay = presentation === "overlay";
   const customerEmail = invoice.customerEmail?.trim();
@@ -119,6 +121,7 @@ function NorthStarInvoiceDetailPageView({
       aiFeaturesEnabled={aiFeaturesEnabled}
       deleteDependencies={deleteDependencies}
       onlinePaymentsEnabled={onlinePaymentsEnabled}
+      smsSendingConfigured={smsSendingConfigured}
     />
   );
 
@@ -171,6 +174,7 @@ function LegacyInvoiceDetailPageView({
   aiFeaturesEnabled = false,
   deleteDependencies,
   onlinePaymentsEnabled = false,
+  smsSendingConfigured = false,
 }: InvoiceDetailPageViewProps) {
   const isOverlay = presentation === "overlay";
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -389,6 +393,7 @@ function LegacyInvoiceDetailPageView({
                 jobId={invoice.jobId ?? undefined}
                 balanceDue={invoice.balanceDue}
                 onlinePaymentsEnabled={onlinePaymentsEnabled}
+                smsSendingConfigured={smsSendingConfigured}
               />
             ) : null}
           </div>
