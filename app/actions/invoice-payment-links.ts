@@ -24,6 +24,7 @@ import {
   type BillingEmailDelivery,
 } from "@/lib/email/billing-send";
 import { resolveAppBaseUrl } from "@/lib/email/env";
+import { isSmsSendingConfigured } from "@/lib/sms/env";
 import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
 import { buildInvoicePaymentUrl } from "@/shared/lib/invoice-payment-link";
 import { isValidEmail } from "@/shared/lib/email-validation";
@@ -42,6 +43,12 @@ export type SendInvoicePaymentLinkEmailActionResult = {
   emailDelivery?: BillingEmailDelivery;
 };
 
+export type SendInvoicePaymentLinkSmsActionResult = {
+  error?: string;
+  success?: boolean;
+  paymentUrl?: string;
+};
+
 type PreparedInvoicePaymentLink = {
   paymentUrl: string;
   customerEmail: string;
@@ -49,6 +56,20 @@ type PreparedInvoicePaymentLink = {
   customerName: string;
   balanceDue: number;
 };
+
+type ValidatedInvoicePaymentLink = {
+  invoiceId: string;
+  customerEmail: string;
+  invoiceNumber: string;
+  customerName: string;
+  balanceDue: number;
+};
+
+const PAYMENT_LINK_EMAIL_FAILURE_RECOVERY =
+  " Email failed, but a new payment link was created. Copy it or show the QR code.";
+
+const SMS_NOT_CONFIGURED_MESSAGE =
+  "Text message sending is not configured yet.";
 
 async function assertInvoicePaymentLinkAccess(
   context: ActiveCompanyContext,
@@ -84,13 +105,13 @@ async function assertInvoicePaymentLinkAccess(
   return null;
 }
 
-async function prepareInvoicePaymentLink(
+async function validateInvoicePaymentLinkRequest(
   context: ActiveCompanyContext,
   input: {
     invoiceId: string;
     jobId?: string;
   },
-): Promise<{ error?: string; link?: PreparedInvoicePaymentLink }> {
+): Promise<{ error?: string; validated?: ValidatedInvoicePaymentLink }> {
   const invoiceId = input.invoiceId.trim();
 
   if (!invoiceId) {
@@ -137,7 +158,7 @@ async function prepareInvoicePaymentLink(
         ? INVALID_APP_URL_USER_MESSAGE
         : MISSING_APP_URL_USER_MESSAGE;
 
-    console.error("[prepareInvoicePaymentLink] app URL not configured:", {
+    console.error("[validateInvoicePaymentLinkRequest] app URL not configured:", {
       invoiceId,
       reason: appUrl.reason,
     });
@@ -145,10 +166,36 @@ async function prepareInvoicePaymentLink(
     return { error: getPaymentLinkFailureUserMessage(error) };
   }
 
+  return {
+    validated: {
+      invoiceId,
+      customerEmail,
+      invoiceNumber: invoice.invoiceNumber,
+      customerName: invoice.customerName,
+      balanceDue: invoice.balanceDue,
+    },
+  };
+}
+
+async function issueInvoicePaymentLinkToken(
+  context: ActiveCompanyContext,
+  validated: ValidatedInvoicePaymentLink,
+): Promise<{ error?: string; link?: PreparedInvoicePaymentLink }> {
+  const appUrl = resolveAppBaseUrl();
+
+  if (!appUrl.ok) {
+    const error =
+      appUrl.reason === "invalid"
+        ? INVALID_APP_URL_USER_MESSAGE
+        : MISSING_APP_URL_USER_MESSAGE;
+
+    return { error: getPaymentLinkFailureUserMessage(error) };
+  }
+
   const tokenInput = {
     companyId: context.company.id,
-    invoiceId,
-    customerEmail,
+    invoiceId: validated.invoiceId,
+    customerEmail: validated.customerEmail,
     createdBy: context.user.id,
   };
 
@@ -157,8 +204,8 @@ async function prepareInvoicePaymentLink(
     : await createInvoicePaymentTokenWithServiceRole(tokenInput);
 
   if (tokenError || !rawToken) {
-    console.error("[prepareInvoicePaymentLink] token creation failed:", {
-      invoiceId,
+    console.error("[issueInvoicePaymentLinkToken] token creation failed:", {
+      invoiceId: validated.invoiceId,
       error: tokenError ?? "missing raw token",
     });
 
@@ -172,12 +219,28 @@ async function prepareInvoicePaymentLink(
   return {
     link: {
       paymentUrl: buildInvoicePaymentUrl(appUrl.url, rawToken),
-      customerEmail,
-      invoiceNumber: invoice.invoiceNumber,
-      customerName: invoice.customerName,
-      balanceDue: invoice.balanceDue,
+      customerEmail: validated.customerEmail,
+      invoiceNumber: validated.invoiceNumber,
+      customerName: validated.customerName,
+      balanceDue: validated.balanceDue,
     },
   };
+}
+
+async function prepareInvoicePaymentLink(
+  context: ActiveCompanyContext,
+  input: {
+    invoiceId: string;
+    jobId?: string;
+  },
+): Promise<{ error?: string; link?: PreparedInvoicePaymentLink }> {
+  const validated = await validateInvoicePaymentLinkRequest(context, input);
+
+  if (validated.error || !validated.validated) {
+    return { error: validated.error ?? "Could not create payment link." };
+  }
+
+  return issueInvoicePaymentLinkToken(context, validated.validated);
 }
 
 export async function createInvoicePaymentLinkAction(input: {
@@ -211,13 +274,22 @@ export async function sendInvoicePaymentLinkEmailAction(input: {
     return { error: NO_ACTIVE_COMPANY_MESSAGE };
   }
 
-  const prepared = await prepareInvoicePaymentLink(context, input);
+  const validated = await validateInvoicePaymentLinkRequest(context, input);
 
-  if (prepared.error || !prepared.link) {
-    return { error: prepared.error ?? "Could not email payment link." };
+  if (validated.error || !validated.validated) {
+    return { error: validated.error ?? "Could not email payment link." };
   }
 
-  const { link } = prepared;
+  const issued = await issueInvoicePaymentLinkToken(
+    context,
+    validated.validated,
+  );
+
+  if (issued.error || !issued.link) {
+    return { error: issued.error ?? "Could not email payment link." };
+  }
+
+  const { link } = issued;
 
   const emailResult = await sendInvoicePaymentLinkEmail({
     to: link.customerEmail,
@@ -233,11 +305,14 @@ export async function sendInvoicePaymentLinkEmailAction(input: {
       invoiceId: input.invoiceId.trim(),
     });
 
+    const baseError = getBillingEmailFailureUserMessage(emailResult, {
+      document: "invoice",
+      mode: "send",
+    });
+
     return {
-      error: getBillingEmailFailureUserMessage(emailResult, {
-        document: "invoice",
-        mode: "send",
-      }),
+      error: `${baseError}${PAYMENT_LINK_EMAIL_FAILURE_RECOVERY}`,
+      paymentUrl: link.paymentUrl,
       emailDelivery: toBillingEmailDelivery(emailResult),
     };
   }
@@ -258,4 +333,27 @@ export async function sendInvoicePaymentLinkEmailAction(input: {
       ? emailDelivery
       : undefined,
   };
+}
+
+export async function sendInvoicePaymentLinkSmsAction(input: {
+  invoiceId: string;
+  jobId?: string;
+}): Promise<SendInvoicePaymentLinkSmsActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
+  }
+
+  if (!isSmsSendingConfigured()) {
+    return { error: SMS_NOT_CONFIGURED_MESSAGE };
+  }
+
+  const validated = await validateInvoicePaymentLinkRequest(context, input);
+
+  if (validated.error || !validated.validated) {
+    return { error: validated.error ?? "Could not text payment link." };
+  }
+
+  return { error: SMS_NOT_CONFIGURED_MESSAGE };
 }

@@ -76,6 +76,9 @@ export function InvoicePaymentCollectionCard({
       const result = await sendInvoicePaymentLinkEmailAction({ invoiceId, jobId });
 
       if (result.error) {
+        if (result.paymentUrl) {
+          setPaymentUrl(result.paymentUrl);
+        }
         setError(result.error);
         return;
       }
@@ -277,15 +280,15 @@ export function InvoicePaymentCollectionCard({
               type="button"
               disabled
               aria-disabled="true"
-              title="Text message sending is coming later."
+              title="Text message sending is not configured yet."
               className={disabledSecondaryButtonClass}
             >
               Text payment link
             </button>
           </div>
           <p className={`mt-2 ${mutedClass}`}>
-            Text message sending is coming later. Copy the link or show the QR
-            code for now.
+            Text message sending is not configured yet. Use Email, Copy link, or
+            QR code for now.
           </p>
 
           {emailSuccess ? (
