@@ -12,10 +12,7 @@ import {
 } from "@/shared/types/invoice-payment";
 import type { InvoiceActivity } from "@/shared/types/invoice-activity";
 import type { InvoicePayment } from "@/shared/types/invoice-payment";
-import {
-  canShowInvoicePaymentLink,
-  type InvoiceDetail,
-} from "@/shared/types/invoice";
+import type { InvoiceDetail } from "@/shared/types/invoice";
 import {
   formatBillingEmailSentMessage,
   getLastInvoiceEmailSentInfo,
@@ -30,7 +27,7 @@ import { InvoicePaymentHistory } from "./InvoicePaymentHistory";
 import { InvoiceStatusActions } from "./InvoiceStatusActions";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { RecordPaymentForm } from "./RecordPaymentForm";
-import { InvoicePaymentLinkCard } from "./InvoicePaymentLinkCard";
+import { InvoicePaymentCollectionCard } from "./InvoicePaymentCollectionCard";
 import { InvoiceInternalTestCheckoutButton } from "./InvoiceInternalTestCheckoutButton";
 import { InvoiceMessageAiAssistant } from "./InvoiceMessageAiAssistant";
 import { InvoiceLifecycleControl } from "./InvoiceLifecycleControl";
@@ -64,6 +61,7 @@ type InvoiceDetailPageViewProps = {
   presentation?: "page" | "overlay";
   aiFeaturesEnabled?: boolean;
   deleteDependencies: InvoiceDeleteDependencies;
+  onlinePaymentsEnabled?: boolean;
 };
 
 export function InvoiceDetailPageView(props: InvoiceDetailPageViewProps) {
@@ -87,6 +85,7 @@ function NorthStarInvoiceDetailPageView({
   presentation = "page",
   aiFeaturesEnabled = false,
   deleteDependencies,
+  onlinePaymentsEnabled = false,
 }: InvoiceDetailPageViewProps) {
   const isOverlay = presentation === "overlay";
   const customerEmail = invoice.customerEmail?.trim();
@@ -119,6 +118,7 @@ function NorthStarInvoiceDetailPageView({
       presentation={presentation}
       aiFeaturesEnabled={aiFeaturesEnabled}
       deleteDependencies={deleteDependencies}
+      onlinePaymentsEnabled={onlinePaymentsEnabled}
     />
   );
 
@@ -170,6 +170,7 @@ function LegacyInvoiceDetailPageView({
   presentation = "page",
   aiFeaturesEnabled = false,
   deleteDependencies,
+  onlinePaymentsEnabled = false,
 }: InvoiceDetailPageViewProps) {
   const isOverlay = presentation === "overlay";
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -382,8 +383,13 @@ function LegacyInvoiceDetailPageView({
               </section>
             ) : null}
 
-            {canManageBilling && canShowInvoicePaymentLink(invoice.status) ? (
-              <InvoicePaymentLinkCard invoiceId={invoice.id} />
+            {canManageBilling && canRecordPayment ? (
+              <InvoicePaymentCollectionCard
+                invoiceId={invoice.id}
+                jobId={invoice.jobId ?? undefined}
+                balanceDue={invoice.balanceDue}
+                onlinePaymentsEnabled={onlinePaymentsEnabled}
+              />
             ) : null}
           </div>
         </div>

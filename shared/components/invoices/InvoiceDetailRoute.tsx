@@ -13,6 +13,7 @@ import {
 } from "@/lib/database/queries/invoices";
 import { getBillingSignatureForEntity } from "@/lib/database/queries/billing-signatures";
 import { mapCompanyRowToBillingContact } from "@/shared/lib/billing-company-contact";
+import { isCompanyOnlineCheckoutAvailable } from "@/lib/payments/online-checkout-availability";
 import { InvoiceDetailHeaderActions } from "./InvoiceDetailHeaderActions";
 import { InvoiceDetailOverlayShell } from "./InvoiceDetailOverlayShell";
 import { InvoiceDetailPageView } from "./InvoiceDetailPageView";
@@ -33,7 +34,7 @@ export async function InvoiceDetailRoute({
     notFound();
   }
 
-  const [invoice, activities, payments, signature, deleteDependencies] =
+  const [invoice, activities, payments, signature, deleteDependencies, onlinePaymentsEnabled] =
     await Promise.all([
     ensureInvoiceBillingStatesSynced(
       companyContext.company.id,
@@ -47,6 +48,7 @@ export async function InvoiceDetailRoute({
       invoiceId,
     ),
     getInvoiceDeleteDependencies(companyContext.company.id, invoiceId),
+    isCompanyOnlineCheckoutAvailable(companyContext.company.id),
   ]);
 
   if (!invoice) {
@@ -78,6 +80,7 @@ export async function InvoiceDetailRoute({
       presentation={presentation}
       aiFeaturesEnabled={isAiFeaturesEnabled()}
       deleteDependencies={deleteDependencies}
+      onlinePaymentsEnabled={onlinePaymentsEnabled}
     />
   );
 

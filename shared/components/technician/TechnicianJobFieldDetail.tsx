@@ -27,6 +27,9 @@ import {
   type JobEstimateSummary,
   type JobInvoiceSummary,
 } from "@/shared/lib/job-next-business-action";
+import { InvoicePaymentCollectionCard } from "@/shared/components/invoices/InvoicePaymentCollectionCard";
+import { canRecordInvoicePayment } from "@/shared/types/invoice-payment";
+import { isActiveInvoice } from "@/shared/types/invoice";
 import type { JobStatus } from "@/shared/types/job";
 import { shouldAcceptServerWorkflowStatus } from "@/shared/types/job-workflow";
 import { getCreateEstimateJobBlockReason } from "@/shared/types/estimate";
@@ -65,6 +68,8 @@ type TechnicianJobFieldDetailProps = {
   canCreateEstimate: boolean;
   canApproveOnSite?: boolean;
   canViewBilling?: boolean;
+  canCollectPayment?: boolean;
+  onlinePaymentsEnabled?: boolean;
   aiFeaturesEnabled?: boolean;
   billingContext?: {
     estimates: JobEstimateSummary[];
@@ -79,6 +84,22 @@ type TechnicianJobFieldDetailProps = {
 const detailsClass = technicianFieldJobDetailsClass;
 const detailsSummaryClass = technicianFieldJobDetailsSummaryClass;
 
+function selectPayableInvoiceForCollection(
+  invoices: JobInvoiceSummary[],
+): JobInvoiceSummary | null {
+  return (
+    invoices
+      .filter(
+        (invoice) =>
+          isActiveInvoice(invoice) && canRecordInvoicePayment(invoice),
+      )
+      .sort(
+        (left, right) =>
+          Date.parse(right.createdAt) - Date.parse(left.createdAt),
+      )[0] ?? null
+  );
+}
+
 export function TechnicianJobFieldDetail({
   job,
   timeState,
@@ -87,6 +108,8 @@ export function TechnicianJobFieldDetail({
   canCreateEstimate,
   canApproveOnSite = false,
   canViewBilling = false,
+  canCollectPayment = false,
+  onlinePaymentsEnabled = false,
   aiFeaturesEnabled = false,
   billingContext,
   canManageTime = false,
@@ -151,6 +174,11 @@ export function TechnicianJobFieldDetail({
     Boolean(job.customerId?.trim()) &&
     getCreateEstimateJobBlockReason(status) === null;
   const useBillingGuidance = Boolean(billingContext);
+  const payableInvoice = billingContext
+    ? selectPayableInvoiceForCollection(billingContext.invoices)
+    : null;
+  const showPaymentCollection =
+    canCollectPayment && payableInvoice !== null;
   const showLegacyEstimateButton =
     showCreateEstimate && !useBillingGuidance;
 
@@ -215,6 +243,18 @@ export function TechnicianJobFieldDetail({
             />
           </div>
         </section>
+
+        {showPaymentCollection && payableInvoice ? (
+          <section>
+            <InvoicePaymentCollectionCard
+              invoiceId={payableInvoice.id}
+              jobId={job.id}
+              balanceDue={payableInvoice.balanceDue}
+              onlinePaymentsEnabled={onlinePaymentsEnabled}
+              fieldVariant
+            />
+          </section>
+        ) : null}
 
         {isActive ? (
           <section className="space-y-3">

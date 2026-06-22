@@ -6,8 +6,9 @@ import {
   Phone,
 } from "lucide-react";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
-import { canShowInvoicePaymentLink, type InvoiceDetail } from "@/shared/types/invoice";
-import { InvoicePaymentLinkCard } from "@/shared/components/invoices/InvoicePaymentLinkCard";
+import type { InvoiceDetail } from "@/shared/types/invoice";
+import { canRecordInvoicePayment } from "@/shared/types/invoice-payment";
+import { InvoicePaymentCollectionCard } from "@/shared/components/invoices/InvoicePaymentCollectionCard";
 import {
   northStarDetailTokens as dt,
   northStarInvoiceDocumentTokens as idt,
@@ -17,12 +18,14 @@ type InvoiceDetailNorthStarSideRailProps = {
   invoice: InvoiceDetail;
   canManageCustomers: boolean;
   canManageBilling: boolean;
+  onlinePaymentsEnabled?: boolean;
 };
 
 export function InvoiceDetailNorthStarSideRail({
   invoice,
   canManageCustomers,
   canManageBilling,
+  onlinePaymentsEnabled = false,
 }: InvoiceDetailNorthStarSideRailProps) {
   const customerEmail = invoice.customerEmail?.trim();
   const customerPhone = invoice.customerPhone?.trim();
@@ -128,8 +131,14 @@ export function InvoiceDetailNorthStarSideRail({
         </section>
       ) : null}
 
-      {canManageBilling && canShowInvoicePaymentLink(invoice.status) ? (
-        <InvoicePaymentLinkCard invoiceId={invoice.id} northStar />
+      {canManageBilling && canRecordInvoicePayment(invoice) ? (
+        <InvoicePaymentCollectionCard
+          invoiceId={invoice.id}
+          jobId={invoice.jobId ?? undefined}
+          balanceDue={invoice.balanceDue}
+          onlinePaymentsEnabled={onlinePaymentsEnabled}
+          northStar
+        />
       ) : null}
     </aside>
   );

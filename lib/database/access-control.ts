@@ -300,6 +300,17 @@ export function canApproveEstimateOnSite(
   return job.assignedTechnicianId === context.user.id;
 }
 
+export function canCollectInvoicePaymentOnSite(
+  context: ActiveCompanyContext,
+  job: { assignedTechnicianId?: string | null },
+): boolean {
+  if (context.permissions.manageBilling) {
+    return true;
+  }
+
+  return canViewJob(context, job);
+}
+
 export function canCaptureBillingSignature(
   context: ActiveCompanyContext,
   entityType: BillingSignatureEntityType,

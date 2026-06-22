@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import type { EstimateStatus } from "@/shared/types/estimate";
 import type { InvoiceStatus } from "@/shared/types/invoice";
 import type {
@@ -158,6 +159,46 @@ export async function listJobBillingSummariesForJobs(
     estimatesByJobId: groupSummariesByJobId(estimateRows),
     invoicesByJobId: groupSummariesByJobId(invoiceRows),
   };
+}
+
+/**
+ * Load invoice summaries for assigned jobs using the service role.
+ * Caller must pass job ids already scoped to the authenticated technician.
+ */
+export async function listJobInvoiceSummariesForAssignedJobs(
+  companyId: string,
+  assignedJobIds: string[],
+): Promise<Record<string, JobInvoiceSummary[]>> {
+  const uniqueJobIds = [...new Set(assignedJobIds.filter(Boolean))];
+
+  if (uniqueJobIds.length === 0) {
+    return {};
+  }
+
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("invoices")
+    .select(INVOICE_SUMMARY_SELECT)
+    .eq("company_id", companyId)
+    .in("job_id", uniqueJobIds)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[listJobInvoiceSummariesForAssignedJobs] query failed:", {
+      companyId,
+      jobCount: uniqueJobIds.length,
+      code: error.code,
+      message: error.message,
+    });
+    return {};
+  }
+
+  const invoiceRows = ((data ?? []) as InvoiceSummaryRow[])
+    .map(mapInvoiceSummaryRow)
+    .filter((row): row is NonNullable<typeof row> => row !== null);
+
+  return groupSummariesByJobId(invoiceRows);
 }
 
 export async function listJobBillingSummariesForJob(

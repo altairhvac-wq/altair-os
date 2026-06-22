@@ -39,6 +39,7 @@ type InvoiceDetailNorthStarBodyProps = {
   presentation: "page" | "overlay";
   aiFeaturesEnabled: boolean;
   deleteDependencies: InvoiceDeleteDependencies;
+  onlinePaymentsEnabled?: boolean;
 };
 
 function MobileStickyActions({
@@ -112,6 +113,7 @@ export function InvoiceDetailNorthStarBody({
   presentation,
   aiFeaturesEnabled,
   deleteDependencies,
+  onlinePaymentsEnabled = false,
 }: InvoiceDetailNorthStarBodyProps) {
   const isOverlay = presentation === "overlay";
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -133,6 +135,7 @@ export function InvoiceDetailNorthStarBody({
       invoice={invoice}
       canManageCustomers={canManageCustomers}
       canManageBilling={canManageBilling}
+      onlinePaymentsEnabled={onlinePaymentsEnabled}
     />
   );
 

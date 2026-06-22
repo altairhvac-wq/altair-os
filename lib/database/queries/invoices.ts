@@ -544,6 +544,58 @@ export type InvoiceCheckoutTargetFields = {
   status: InvoiceStatus;
 };
 
+export type InvoicePaymentLinkTarget = {
+  id: string;
+  status: InvoiceStatus;
+  balanceDue: number;
+  jobId: string | null;
+  customerEmail: string | null;
+};
+
+export async function getInvoicePaymentLinkTargetWithServiceRole(
+  companyId: string,
+  invoiceId: string,
+): Promise<InvoicePaymentLinkTarget | null> {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("invoices")
+    .select("id, status, balance_due, job_id, customers(email)")
+    .eq("company_id", companyId)
+    .eq("id", invoiceId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getInvoicePaymentLinkTargetWithServiceRole] query failed:", {
+      companyId,
+      invoiceId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const row = data as {
+    id: string;
+    status: InvoiceStatus;
+    balance_due: number;
+    job_id: string | null;
+    customers: { email: string | null } | null;
+  };
+
+  return {
+    id: row.id,
+    status: row.status,
+    balanceDue: Number(row.balance_due) || 0,
+    jobId: row.job_id,
+    customerEmail: row.customers?.email?.trim() || null,
+  };
+}
+
 export async function getInvoiceCheckoutTargetWithServiceRole(
   companyId: string,
   invoiceId: string,

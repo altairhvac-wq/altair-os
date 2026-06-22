@@ -144,19 +144,26 @@ export async function revokeActiveInvoicePaymentTokens(
   return {};
 }
 
-export async function createInvoicePaymentTokenForEmail(input: {
+async function insertInvoicePaymentTokenAfterRevoke(input: {
   companyId: string;
   invoiceId: string;
   customerEmail: string;
   createdBy: string;
+  supabase: Awaited<ReturnType<typeof createClient>> | ReturnType<typeof createServiceRoleClient>;
 }): Promise<{ rawToken?: string; error?: string }> {
-  const revokeResult = await revokeActiveInvoicePaymentTokens(
-    input.companyId,
-    input.invoiceId,
-  );
+  const now = new Date().toISOString();
 
-  if (revokeResult.error) {
-    return { error: revokeResult.error };
+  const { error: revokeError } = await input.supabase
+    .from("invoice_payment_tokens")
+    .update({ revoked_at: now })
+    .eq("company_id", input.companyId)
+    .eq("invoice_id", input.invoiceId)
+    .is("revoked_at", null);
+
+  if (revokeError) {
+    return {
+      error: mapDatabaseError(revokeError) ?? "Failed to rotate payment link.",
+    };
   }
 
   const { raw, hash } = generateInvoicePaymentToken();
@@ -169,8 +176,9 @@ export async function createInvoicePaymentTokenForEmail(input: {
     created_by: input.createdBy,
   };
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("invoice_payment_tokens").insert(payload);
+  const { error } = await input.supabase
+    .from("invoice_payment_tokens")
+    .insert(payload);
 
   if (error) {
     return {
@@ -180,6 +188,38 @@ export async function createInvoicePaymentTokenForEmail(input: {
   }
 
   return { rawToken: raw };
+}
+
+export async function createInvoicePaymentTokenForEmail(input: {
+  companyId: string;
+  invoiceId: string;
+  customerEmail: string;
+  createdBy: string;
+}): Promise<{ rawToken?: string; error?: string }> {
+  const supabase = await createClient();
+
+  return insertInvoicePaymentTokenAfterRevoke({
+    ...input,
+    supabase,
+  });
+}
+
+/**
+ * Create a payment token with the service role after server-side permission checks.
+ * Used when the authenticated user cannot insert via billing-manager RLS (e.g. field staff).
+ */
+export async function createInvoicePaymentTokenWithServiceRole(input: {
+  companyId: string;
+  invoiceId: string;
+  customerEmail: string;
+  createdBy: string;
+}): Promise<{ rawToken?: string; error?: string }> {
+  const supabase = createServiceRoleClient();
+
+  return insertInvoicePaymentTokenAfterRevoke({
+    ...input,
+    supabase,
+  });
 }
 
 export type PublicInvoicePaymentTokenContext =
