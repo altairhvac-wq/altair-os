@@ -1138,6 +1138,20 @@ export type Database = {
         };
         Returns: Json;
       };
+      record_invoice_payment_atomic: {
+        Args: {
+          p_company_id: string;
+          p_invoice_id: string;
+          p_amount: number;
+          p_payment_method: string;
+          p_payment_date: string;
+          p_reference?: string | null;
+          p_notes?: string | null;
+          p_expected_updated_at?: string | null;
+          p_idempotency_key?: string | null;
+        };
+        Returns: Json;
+      };
       get_public_network_invite_preview: {
         Args: {
           p_raw_token: string;

@@ -1,11 +1,11 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { mapDatabaseError } from "@/lib/database/errors";
 import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
-import type {
-  InvoicePaymentInsert,
-  InvoicePaymentRow,
-} from "@/lib/database/types/core-tables";
+import type { InvoicePaymentRow } from "@/lib/database/types/core-tables";
+import {
+  mapRecordInvoicePaymentRpcError,
+  parseRecordInvoicePaymentRpcResult,
+} from "@/lib/payments/recording";
 import { getInvoiceById } from "@/lib/database/queries/invoices";
 import {
   isInvoicePayable,
@@ -48,12 +48,6 @@ function mapPaymentRow(row: InvoicePaymentRowWithRecorder): InvoicePayment {
     }),
     createdAt: row.created_at,
   };
-}
-
-function resolveStatusAfterPayment(
-  balanceDue: number,
-): InvoiceStatus {
-  return balanceDue <= 0 ? "paid" : "partially_paid";
 }
 
 export async function listPaymentsForInvoice(
@@ -303,97 +297,59 @@ export async function recordInvoicePayment(
   const paymentDate = data.paymentDate.trim() || toDateOnly(new Date().toISOString());
   const reference = data.reference.trim() || null;
   const notes = data.notes.trim() || null;
-  const previousStatus = invoice.status;
-
-  const newAmountPaid = roundCurrency(invoice.amountPaid + amount);
-  const newBalanceDue = roundCurrency(Math.max(invoice.total - newAmountPaid, 0));
-  const newStatus = resolveStatusAfterPayment(newBalanceDue);
-  const paidAt =
-    newStatus === "paid" ? `${paymentDate}T00:00:00.000Z` : invoice.paidAt ?? null;
 
   const supabase = await createClient();
 
-  const paymentInsert: InvoicePaymentInsert = {
-    company_id: companyId,
-    invoice_id: invoiceId,
-    amount,
-    payment_method: data.paymentMethod,
-    payment_date: paymentDate,
-    reference,
-    notes,
-    recorded_by: actorId,
-  };
+  const { data: rpcData, error: rpcError } = await supabase.rpc(
+    "record_invoice_payment_atomic",
+    {
+      p_company_id: companyId,
+      p_invoice_id: invoiceId,
+      p_amount: amount,
+      p_payment_method: data.paymentMethod,
+      p_payment_date: paymentDate,
+      p_reference: reference,
+      p_notes: notes,
+    },
+  );
 
-  const { data: paymentRow, error: paymentError } = await supabase
-    .from("invoice_payments")
-    .insert(paymentInsert)
-    .select("id")
-    .single();
-
-  if (paymentError || !paymentRow) {
-    console.error("[recordInvoicePayment] insert failed:", {
+  if (rpcError) {
+    console.error("[recordInvoicePayment] rpc failed:", {
       companyId,
       invoiceId,
-      code: paymentError?.code,
-      message: paymentError?.message,
+      actorId,
+      code: rpcError.code,
+      message: rpcError.message,
     });
     return {
       payment: null,
       invoice: null,
       previousStatus: null,
-      error: paymentError
-        ? mapDatabaseError(paymentError)
-        : "Failed to record payment.",
+      error: mapRecordInvoicePaymentRpcError(rpcError),
     };
   }
 
-  const { data: updatedRow, error: updateError } = await supabase
-    .from("invoices")
-    .update({
-      amount_paid: newAmountPaid,
-      balance_due: newBalanceDue,
-      status: newStatus,
-      paid_at: paidAt,
-    })
-    .eq("company_id", companyId)
-    .eq("id", invoiceId)
-    .eq("status", previousStatus)
-    .eq("amount_paid", invoice.amountPaid)
-    .eq("balance_due", invoice.balanceDue)
-    .select("id")
-    .maybeSingle();
+  const rpcResult = parseRecordInvoicePaymentRpcResult(rpcData);
 
-  if (updateError) {
-    console.error("[recordInvoicePayment] invoice update failed:", {
+  if (!rpcResult) {
+    console.error("[recordInvoicePayment] rpc returned invalid payload:", {
       companyId,
       invoiceId,
-      paymentId: paymentRow.id,
-      code: updateError.code,
-      message: updateError.message,
+      actorId,
+      rpcData,
     });
-    await supabase.from("invoice_payments").delete().eq("id", paymentRow.id);
     return {
       payment: null,
       invoice: null,
       previousStatus: null,
-      error: mapDatabaseError(updateError),
-    };
-  }
-
-  if (!updatedRow) {
-    await supabase.from("invoice_payments").delete().eq("id", paymentRow.id);
-    return {
-      payment: null,
-      invoice: null,
-      previousStatus: null,
-      error:
-        "Invoice balance changed while recording this payment. Refresh the page and try again.",
+      error: "Failed to record payment.",
     };
   }
 
   const [payment, updatedInvoice] = await Promise.all([
     listPaymentsForInvoice(companyId, invoiceId).then(
-      (payments) => payments.find((item) => item.id === paymentRow.id) ?? null,
+      (payments) =>
+        payments.find((item) => item.id === rpcResult.payment_id) ?? null,
     ),
     getInvoiceById(companyId, invoiceId),
   ]);
@@ -401,7 +357,7 @@ export async function recordInvoicePayment(
   return {
     payment,
     invoice: updatedInvoice,
-    previousStatus,
+    previousStatus: rpcResult.previous_status,
     error: payment && updatedInvoice ? null : "Payment may have been saved. Refresh the page to confirm.",
   };
 }
