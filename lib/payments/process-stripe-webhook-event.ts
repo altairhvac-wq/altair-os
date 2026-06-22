@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type Stripe from "stripe";
 import {
+  findStripeCompanyPaymentAccountByCompanyId,
   findStripeCompanyPaymentAccountByProviderAccountId,
   syncStripeCompanyPaymentAccountFromWebhook,
 } from "@/lib/database/services/company-payment-accounts";
@@ -15,6 +16,7 @@ export type ProcessStripeWebhookEventResult =
   | { processed: false; ignored: false; retryable: true; error: string };
 
 const NO_MATCHING_ACCOUNT_MESSAGE = "No matching company payment account";
+const CHECKOUT_METADATA_PURPOSE = "invoice_payment";
 
 function sanitizeProcessingError(error: unknown): string {
   if (error instanceof Error && error.message.trim().length > 0) {
@@ -36,6 +38,38 @@ function extractStripeAccountFromEvent(event: Stripe.Event): Stripe.Account | nu
   }
 
   return account as Stripe.Account;
+}
+
+function extractCheckoutSessionFromEvent(
+  event: Stripe.Event,
+): Stripe.Checkout.Session | null {
+  if (event.type !== "checkout.session.completed") {
+    return null;
+  }
+
+  const session = event.data.object;
+
+  if (!session || typeof session !== "object" || !("id" in session)) {
+    return null;
+  }
+
+  return session as Stripe.Checkout.Session;
+}
+
+function readCheckoutSessionMetadata(
+  session: Stripe.Checkout.Session,
+): {
+  companyId: string | null;
+  invoiceId: string | null;
+  purpose: string | null;
+} {
+  const metadata = session.metadata ?? {};
+
+  return {
+    companyId: metadata.company_id?.trim() || null,
+    invoiceId: metadata.invoice_id?.trim() || null,
+    purpose: metadata.purpose?.trim() || null,
+  };
 }
 
 async function markProviderEventIgnored(
@@ -140,38 +174,94 @@ async function processAccountUpdatedEvent(
   return { processed: true, ignored: false };
 }
 
+async function processCheckoutSessionCompletedEvent(
+  supabase: SupabaseClient<Database>,
+  providerEventId: string,
+  session: Stripe.Checkout.Session,
+): Promise<ProcessStripeWebhookEventResult> {
+  const { companyId, invoiceId, purpose } = readCheckoutSessionMetadata(session);
+
+  if (!companyId || !invoiceId || purpose !== CHECKOUT_METADATA_PURPOSE) {
+    await markProviderEventIgnored(
+      supabase,
+      providerEventId,
+      "Missing or invalid checkout session metadata",
+      companyId,
+    );
+    return { processed: false, ignored: true };
+  }
+
+  const accountRow = await findStripeCompanyPaymentAccountByCompanyId(
+    supabase,
+    companyId,
+  );
+
+  if (!accountRow || !accountRow.online_payments_enabled) {
+    await markProviderEventIgnored(
+      supabase,
+      providerEventId,
+      "Online payments not enabled for company",
+      companyId,
+    );
+    return { processed: false, ignored: true };
+  }
+
+  // Actual payment recording comes in a future phase after payment intent/amount/currency validation is implemented.
+  await markProviderEventProcessed(supabase, providerEventId, companyId);
+  return { processed: true, ignored: false };
+}
+
 export async function processStripeWebhookEvent(
   supabase: SupabaseClient<Database>,
   event: Stripe.Event,
 ): Promise<ProcessStripeWebhookEventResult> {
   const providerEventId = event.id;
 
-  if (event.type !== "account.updated") {
+  try {
+    if (event.type === "account.updated") {
+      const stripeAccount = extractStripeAccountFromEvent(event);
+
+      if (!stripeAccount) {
+        await markProviderEventIgnored(
+          supabase,
+          providerEventId,
+          "Invalid Stripe account.updated payload",
+        );
+        return { processed: false, ignored: true };
+      }
+
+      return await processAccountUpdatedEvent(
+        supabase,
+        providerEventId,
+        stripeAccount,
+      );
+    }
+
+    if (event.type === "checkout.session.completed") {
+      const session = extractCheckoutSessionFromEvent(event);
+
+      if (!session) {
+        await markProviderEventIgnored(
+          supabase,
+          providerEventId,
+          "Invalid Stripe checkout.session.completed payload",
+        );
+        return { processed: false, ignored: true };
+      }
+
+      return await processCheckoutSessionCompletedEvent(
+        supabase,
+        providerEventId,
+        session,
+      );
+    }
+
     await markProviderEventIgnored(
       supabase,
       providerEventId,
       `Unsupported Stripe event type: ${event.type}`,
     );
     return { processed: false, ignored: true };
-  }
-
-  const stripeAccount = extractStripeAccountFromEvent(event);
-
-  if (!stripeAccount) {
-    await markProviderEventIgnored(
-      supabase,
-      providerEventId,
-      "Invalid Stripe account.updated payload",
-    );
-    return { processed: false, ignored: true };
-  }
-
-  try {
-    return await processAccountUpdatedEvent(
-      supabase,
-      providerEventId,
-      stripeAccount,
-    );
   } catch (error) {
     const message = sanitizeProcessingError(error);
     await markProviderEventFailed(supabase, providerEventId, message);

@@ -11,12 +11,25 @@ import {
   verifyStripeWebhookEvent,
 } from "@/lib/payments/stripe-webhook";
 import {
+  claimPaymentProviderEventForProcessing,
   claimPaymentProviderEventForReprocessing,
+  claimStaleProcessingPaymentProviderEvent,
   findPaymentProviderEvent,
+  isStalePaymentProviderEventProcessing,
+  STALE_PAYMENT_PROVIDER_EVENT_PROCESSING_MS,
 } from "@/lib/database/services/payment-provider-events";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
+
+function buildSkippedDuplicateResponse() {
+  return NextResponse.json({
+    received: true,
+    processed: false,
+    duplicate: true,
+    skipped: true,
+  });
+}
 
 function buildProcessResponse(processResult: ProcessStripeWebhookEventResult) {
   if ("retryable" in processResult && processResult.retryable) {
@@ -31,6 +44,14 @@ function buildProcessResponse(processResult: ProcessStripeWebhookEventResult) {
     processed: processResult.processed,
     ...(processResult.ignored ? { ignored: true } : {}),
   });
+}
+
+async function claimAndProcessStripeWebhookEvent(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  event: Parameters<typeof processStripeWebhookEvent>[1],
+) {
+  const processResult = await processStripeWebhookEvent(supabase, event);
+  return buildProcessResponse(processResult);
 }
 
 export async function POST(request: Request) {
@@ -87,19 +108,32 @@ export async function POST(request: Request) {
       );
     }
 
-    const { processingStatus } = existingEvent;
+    const { processingStatus, updatedAt } = existingEvent;
 
-    if (
-      processingStatus === "processed" ||
-      processingStatus === "ignored" ||
-      processingStatus === "processing"
-    ) {
-      return NextResponse.json({
-        received: true,
-        processed: false,
-        duplicate: true,
-        skipped: true,
-      });
+    if (processingStatus === "processed" || processingStatus === "ignored") {
+      return buildSkippedDuplicateResponse();
+    }
+
+    if (processingStatus === "processing") {
+      if (!isStalePaymentProviderEventProcessing(updatedAt)) {
+        return buildSkippedDuplicateResponse();
+      }
+
+      const staleBeforeIso = new Date(
+        Date.now() - STALE_PAYMENT_PROVIDER_EVENT_PROCESSING_MS,
+      ).toISOString();
+      const claimResult = await claimStaleProcessingPaymentProviderEvent(
+        supabase,
+        "stripe",
+        event.id,
+        staleBeforeIso,
+      );
+
+      if (!claimResult.claimed) {
+        return buildSkippedDuplicateResponse();
+      }
+
+      return claimAndProcessStripeWebhookEvent(supabase, event);
     }
 
     const claimResult = await claimPaymentProviderEventForReprocessing(
@@ -109,18 +143,25 @@ export async function POST(request: Request) {
     );
 
     if (!claimResult.claimed) {
-      return NextResponse.json({
-        received: true,
-        processed: false,
-        duplicate: true,
-        skipped: true,
-      });
+      return buildSkippedDuplicateResponse();
     }
 
-    const processResult = await processStripeWebhookEvent(supabase, event);
-    return buildProcessResponse(processResult);
+    return claimAndProcessStripeWebhookEvent(supabase, event);
   }
 
-  const processResult = await processStripeWebhookEvent(supabase, event);
-  return buildProcessResponse(processResult);
+  const claimResult = await claimPaymentProviderEventForProcessing(
+    supabase,
+    "stripe",
+    event.id,
+  );
+
+  if (!claimResult.claimed) {
+    return NextResponse.json({
+      received: true,
+      processed: false,
+      skipped: true,
+    });
+  }
+
+  return claimAndProcessStripeWebhookEvent(supabase, event);
 }

@@ -137,6 +137,29 @@ export async function findStripeCompanyPaymentAccountByProviderAccountId(
   return (data as CompanyPaymentAccountRow | null) ?? null;
 }
 
+export async function findStripeCompanyPaymentAccountByCompanyId(
+  supabase: SupabaseClient<Database>,
+  companyId: string,
+): Promise<CompanyPaymentAccountRow | null> {
+  const { data, error } = await supabase
+    .from("company_payment_accounts")
+    .select(STRIPE_ACCOUNT_SELECT)
+    .eq("company_id", companyId)
+    .eq("provider", "stripe")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[findStripeCompanyPaymentAccountByCompanyId] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  return (data as CompanyPaymentAccountRow | null) ?? null;
+}
+
 export async function syncStripeCompanyPaymentAccountFromWebhook(
   supabase: SupabaseClient<Database>,
   accountRow: CompanyPaymentAccountRow,

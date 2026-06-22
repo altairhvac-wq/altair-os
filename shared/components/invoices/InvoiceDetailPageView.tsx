@@ -31,6 +31,7 @@ import { InvoiceStatusActions } from "./InvoiceStatusActions";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { RecordPaymentForm } from "./RecordPaymentForm";
 import { InvoicePaymentLinkCard } from "./InvoicePaymentLinkCard";
+import { InvoiceInternalTestCheckoutButton } from "./InvoiceInternalTestCheckoutButton";
 import { InvoiceMessageAiAssistant } from "./InvoiceMessageAiAssistant";
 import { InvoiceLifecycleControl } from "./InvoiceLifecycleControl";
 import { InvoiceDetailNorthStarBody } from "./north-star-m5d";
@@ -432,6 +433,10 @@ function LegacyInvoiceDetailPageView({
         <div className="mt-4">
           <InvoicePaymentHistory payments={payments} />
         </div>
+        <InvoiceInternalTestCheckoutButton
+          invoice={invoice}
+          canManageBilling={canManageBilling}
+        />
       </section>
 
       {canManageBilling ? (

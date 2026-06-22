@@ -16,6 +16,7 @@ import { InvoiceDetailActionBar } from "@/shared/components/invoices/InvoiceDeta
 import { InvoiceLifecycleControl } from "@/shared/components/invoices/InvoiceLifecycleControl";
 import { InvoiceMessageAiAssistant } from "@/shared/components/invoices/InvoiceMessageAiAssistant";
 import { InvoicePaymentHistory } from "@/shared/components/invoices/InvoicePaymentHistory";
+import { InvoiceInternalTestCheckoutButton } from "@/shared/components/invoices/InvoiceInternalTestCheckoutButton";
 import { RecordPaymentForm } from "@/shared/components/invoices/RecordPaymentForm";
 import { FocusedDocumentOverlayFooter } from "@/shared/components/layout/FocusedDocumentOverlay";
 import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
@@ -163,6 +164,10 @@ export function InvoiceDetailNorthStarBody({
       <div className="mt-3">
         <InvoicePaymentHistory payments={payments} northStar />
       </div>
+      <InvoiceInternalTestCheckoutButton
+        invoice={invoice}
+        canManageBilling={canManageBilling}
+      />
     </section>
   );
 
