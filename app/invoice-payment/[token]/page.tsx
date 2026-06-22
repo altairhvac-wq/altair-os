@@ -1,9 +1,7 @@
-import { getCompanyPaymentAccount } from "@/lib/database/queries/company-payment-accounts";
 import {
+  getPublicInvoiceCheckoutContext,
   getPublicInvoicePaymentView,
-  resolvePublicInvoicePaymentTokenContext,
 } from "@/lib/database/queries/invoice-payment-tokens";
-import { validateStripeInvoiceCheckoutReadiness } from "@/lib/payments/stripe-checkout";
 import { PublicDocumentBrandFooter } from "@/shared/components/brand/PublicDocumentBrandFooter";
 import { PublicInvoicePaymentContactPanel } from "@/shared/components/invoices/PublicInvoicePaymentContactPanel";
 import { PublicInvoicePaymentDocument } from "@/shared/components/invoices/PublicInvoicePaymentDocument";
@@ -122,24 +120,9 @@ export default async function InvoicePaymentPage({
   let onlineCheckoutAvailable = false;
 
   if (isPayable) {
-    const tokenContext = await resolvePublicInvoicePaymentTokenContext(rawToken);
-
-    if (
-      tokenContext.state === "valid" &&
-      tokenContext.invoiceId === view.invoice.id
-    ) {
-      const paymentAccount = await getCompanyPaymentAccount(
-        tokenContext.companyId,
-        "stripe",
-      );
-      const readiness = validateStripeInvoiceCheckoutReadiness(paymentAccount, {
-        id: view.invoice.id,
-        invoiceNumber: view.invoice.invoiceNumber,
-        balanceDue: view.invoice.balanceDue,
-        status: view.invoice.status,
-      });
-      onlineCheckoutAvailable = readiness.ok;
-    }
+    const checkoutContext = await getPublicInvoiceCheckoutContext(rawToken);
+    onlineCheckoutAvailable =
+      checkoutContext.state === "valid" && checkoutContext.readiness.ok;
   }
 
   const checkoutStatusMessage =

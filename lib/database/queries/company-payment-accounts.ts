@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import type { CompanyPaymentAccountRow } from "@/lib/database/types/core-tables";
 import type {
   CompanyPaymentAccount,
@@ -36,6 +37,39 @@ function mapCompanyPaymentAccountRow(
   };
 }
 
+const COMPANY_PAYMENT_ACCOUNT_SELECT =
+  "id, company_id, provider, provider_account_id, status, charges_enabled, payouts_enabled, online_payments_enabled, onboarding_completed_at, disabled_at, last_synced_at, provider_metadata, created_at, updated_at";
+
+export async function getCompanyPaymentAccountWithServiceRole(
+  companyId: string,
+  provider: CompanyPaymentAccountProvider,
+): Promise<CompanyPaymentAccount | null> {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("company_payment_accounts")
+    .select(COMPANY_PAYMENT_ACCOUNT_SELECT)
+    .eq("company_id", companyId)
+    .eq("provider", provider)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getCompanyPaymentAccountWithServiceRole] query failed:", {
+      companyId,
+      provider,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapCompanyPaymentAccountRow(data);
+}
+
 export async function getCompanyPaymentAccount(
   companyId: string,
   provider: CompanyPaymentAccountProvider,
@@ -44,9 +78,7 @@ export async function getCompanyPaymentAccount(
 
   const { data, error } = await supabase
     .from("company_payment_accounts")
-    .select(
-      "id, company_id, provider, provider_account_id, status, charges_enabled, payouts_enabled, online_payments_enabled, onboarding_completed_at, disabled_at, last_synced_at, provider_metadata, created_at, updated_at",
-    )
+    .select(COMPANY_PAYMENT_ACCOUNT_SELECT)
     .eq("company_id", companyId)
     .eq("provider", provider)
     .maybeSingle();
@@ -75,9 +107,7 @@ export async function listCompanyPaymentAccounts(
 
   const { data, error } = await supabase
     .from("company_payment_accounts")
-    .select(
-      "id, company_id, provider, provider_account_id, status, charges_enabled, payouts_enabled, online_payments_enabled, onboarding_completed_at, disabled_at, last_synced_at, provider_metadata, created_at, updated_at",
-    )
+    .select(COMPANY_PAYMENT_ACCOUNT_SELECT)
     .eq("company_id", companyId)
     .order("provider", { ascending: true });
 

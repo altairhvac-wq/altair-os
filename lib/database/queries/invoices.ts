@@ -7,6 +7,7 @@ import {
 import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
 import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type { Database } from "@/lib/database/types";
 import type {
@@ -534,6 +535,48 @@ export async function listInvoicesForJob(
   }
 
   return ((data ?? []) as InvoiceRowWithRelations[]).map(mapInvoiceRowToInvoice);
+}
+
+export type InvoiceCheckoutTargetFields = {
+  id: string;
+  invoiceNumber: string;
+  balanceDue: number;
+  status: InvoiceStatus;
+};
+
+export async function getInvoiceCheckoutTargetWithServiceRole(
+  companyId: string,
+  invoiceId: string,
+): Promise<InvoiceCheckoutTargetFields | null> {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("invoices")
+    .select("id, invoice_number, balance_due, status")
+    .eq("company_id", companyId)
+    .eq("id", invoiceId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getInvoiceCheckoutTargetWithServiceRole] query failed:", {
+      companyId,
+      invoiceId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return {
+    id: data.id,
+    invoiceNumber: data.invoice_number,
+    balanceDue: Number(data.balance_due) || 0,
+    status: data.status as InvoiceStatus,
+  };
 }
 
 export async function getInvoiceById(

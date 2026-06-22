@@ -1,6 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import { getCompanyPaymentAccountWithServiceRole } from "@/lib/database/queries/company-payment-accounts";
+import { getInvoiceCheckoutTargetWithServiceRole } from "@/lib/database/queries/invoices";
 import { mapDatabaseError } from "@/lib/database/errors";
+import {
+  validateStripeInvoiceCheckoutReadiness,
+  type InvoiceCheckoutTarget,
+} from "@/lib/payments/stripe-checkout";
+import type { CompanyPaymentAccount } from "@/lib/payments/types";
 import type { InvoicePaymentTokenInsert } from "@/lib/database/types/core-tables";
 import {
   generateInvoicePaymentToken,
@@ -223,6 +230,62 @@ export async function resolvePublicInvoicePaymentTokenContext(
     state: "valid",
     companyId: tokenRow.company_id,
     invoiceId: tokenRow.invoice_id,
+  };
+}
+
+export type PublicInvoiceCheckoutReadiness =
+  | { ok: true; account: CompanyPaymentAccount }
+  | { ok: false; error: string };
+
+export type PublicInvoiceCheckoutContext =
+  | { state: "invalid" | "revoked" | "expired" }
+  | {
+      state: "valid";
+      companyId: string;
+      invoiceId: string;
+      invoice: InvoiceCheckoutTarget;
+      readiness: PublicInvoiceCheckoutReadiness;
+    };
+
+/**
+ * Resolve checkout readiness for a public invoice payment link.
+ * For the public invoice payment flow, possession of a valid raw token
+ * authorizes these narrowly scoped service-role reads.
+ */
+export async function getPublicInvoiceCheckoutContext(
+  rawToken: string,
+): Promise<PublicInvoiceCheckoutContext> {
+  const tokenContext = await resolvePublicInvoicePaymentTokenContext(rawToken);
+
+  if (tokenContext.state !== "valid") {
+    return { state: tokenContext.state };
+  }
+
+  const { companyId, invoiceId } = tokenContext;
+  const invoice = await getInvoiceCheckoutTargetWithServiceRole(
+    companyId,
+    invoiceId,
+  );
+
+  if (!invoice || invoice.id !== invoiceId) {
+    return { state: "invalid" };
+  }
+
+  const paymentAccount = await getCompanyPaymentAccountWithServiceRole(
+    companyId,
+    "stripe",
+  );
+  const readiness = validateStripeInvoiceCheckoutReadiness(
+    paymentAccount,
+    invoice,
+  );
+
+  return {
+    state: "valid",
+    companyId,
+    invoiceId,
+    invoice,
+    readiness,
   };
 }
 
