@@ -4,6 +4,7 @@ import {
   canAccessSystemCheck,
   canManageDemoData,
   canManageTeamMembers,
+  canStartStripeConnectOnboarding,
 } from "@/lib/database/access-control";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import { getCompanyPaymentAccount } from "@/lib/database/queries/company-payment-accounts";
@@ -26,7 +27,11 @@ import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedA
 import type { CompanyProfileSummary } from "@/shared/types/team-member";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingSnapshot } from "@/shared/types/onboarding";
-import type { StripePaymentSettingsSummary } from "@/shared/types/settings/payment-settings";
+import type {
+  PaymentSetupReturnNotice,
+  StripePaymentSettingsSummary,
+} from "@/shared/types/settings/payment-settings";
+import { isStripeConnectOnboardingConfigured } from "@/lib/payments/env";
 
 const EMPTY_ONBOARDING_SNAPSHOT: OnboardingSnapshot = {
   teamMemberCount: 0,
@@ -108,9 +113,14 @@ async function loadStripePaymentSettingsSafely(
   }
 }
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ payments?: string }>;
+}) {
   const user = await getCurrentUser();
   const companyContext = await getActiveCompanyContext();
+  const params = await searchParams;
 
   if (!companyContext) {
     redirect("/setup");
@@ -164,6 +174,12 @@ export default async function SettingsPage() {
   const billingDefaults = getCompanyBillingDefaultsFromRow(companyContext.company);
   const northStar = isNorthStarShellEnabled();
   const canViewPaymentSettings = companyContext.permissions.manageBilling;
+  const canStartStripeSetup = canStartStripeConnectOnboarding(companyContext);
+  const stripeOnboardingConfigured = isStripeConnectOnboardingConfigured();
+  const paymentSetupNotice: PaymentSetupReturnNotice | null =
+    params.payments === "return" || params.payments === "refresh"
+      ? params.payments
+      : null;
 
   const stripePaymentSettings = await loadStripePaymentSettingsSafely(
     companyContext.company.id,
@@ -204,6 +220,9 @@ export default async function SettingsPage() {
         pendingInvites={pendingInvites}
         canViewPaymentSettings={canViewPaymentSettings}
         stripePaymentSettings={stripePaymentSettings}
+        canStartStripeSetup={canStartStripeSetup}
+        stripeOnboardingConfigured={stripeOnboardingConfigured}
+        paymentSetupNotice={paymentSetupNotice}
         companyTimezone={companyContext.company.timezone}
       />
     </div>

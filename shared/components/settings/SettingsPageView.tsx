@@ -23,7 +23,10 @@ import {
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { CompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
-import type { StripePaymentSettingsSummary } from "@/shared/types/settings/payment-settings";
+import type {
+  PaymentSetupReturnNotice,
+  StripePaymentSettingsSummary,
+} from "@/shared/types/settings/payment-settings";
 import { BillingDocumentDefaultsCard } from "./BillingDocumentDefaultsCard";
 import { PaymentSettingsCard } from "./PaymentSettingsCard";
 import { PendingInvitesCard } from "./PendingInvitesCard";
@@ -65,6 +68,9 @@ type SettingsPageViewProps = {
   pendingInvites?: PendingTeamInvite[];
   canViewPaymentSettings?: boolean;
   stripePaymentSettings?: StripePaymentSettingsSummary | null;
+  canStartStripeSetup?: boolean;
+  stripeOnboardingConfigured?: boolean;
+  paymentSetupNotice?: PaymentSetupReturnNotice | null;
   companyTimezone?: string | null;
 };
 
@@ -95,6 +101,9 @@ function SettingsPageLegacyView({
   pendingInvites = [],
   canViewPaymentSettings = false,
   stripePaymentSettings = null,
+  canStartStripeSetup = false,
+  stripeOnboardingConfigured = false,
+  paymentSetupNotice = null,
   companyTimezone,
 }: SettingsPageViewProps) {
   const [members, setMembers] = useState(initialMembers);
@@ -436,6 +445,9 @@ function SettingsPageLegacyView({
               <PaymentSettingsCard
                 stripeAccount={stripePaymentSettings ?? null}
                 companyTimezone={companyTimezone}
+                canStartStripeSetup={canStartStripeSetup}
+                stripeOnboardingConfigured={stripeOnboardingConfigured}
+                paymentSetupNotice={paymentSetupNotice}
               />
             </MasterPageSection>
           ) : null}

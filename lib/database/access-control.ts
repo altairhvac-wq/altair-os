@@ -189,6 +189,22 @@ export function canViewBilling(context: ActiveCompanyContext): boolean {
   return getCompanyAccessScope(context).canViewBilling;
 }
 
+export function canStartStripeConnectOnboarding(
+  context: ActiveCompanyContext,
+): boolean {
+  return context.permissions.manageCompany;
+}
+
+export function assertStripeConnectOnboardingAccess(
+  context: ActiveCompanyContext,
+): string | null {
+  if (!canStartStripeConnectOnboarding(context)) {
+    return "You do not have permission to set up online payments.";
+  }
+
+  return null;
+}
+
 export function canViewOperationalReports(
   context: ActiveCompanyContext,
 ): boolean {

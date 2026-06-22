@@ -25,3 +25,6 @@ export const PAYMENT_ACCOUNT_STATUS_LABELS: Record<
 export function formatPaymentCapabilityEnabled(enabled: boolean): string {
   return enabled ? "Yes" : "No";
 }
+
+/** Display-only notice when returning from Stripe Connect onboarding. */
+export type PaymentSetupReturnNotice = "return" | "refresh";

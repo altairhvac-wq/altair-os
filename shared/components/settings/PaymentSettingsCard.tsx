@@ -1,16 +1,23 @@
 "use client";
 
 import { CreditCard } from "lucide-react";
+import { useState, useTransition } from "react";
+import { startStripeConnectOnboardingAction } from "@/app/actions/company-payments";
 import { formatDateTimeInTimeZone, resolveCompanyTimeZone } from "@/shared/lib/datetime";
 import {
   formatPaymentCapabilityEnabled,
   PAYMENT_ACCOUNT_STATUS_LABELS,
+  type PaymentSetupReturnNotice,
   type StripePaymentSettingsSummary,
 } from "@/shared/types/settings/payment-settings";
+
 type PaymentSettingsCardProps = {
   stripeAccount: StripePaymentSettingsSummary | null;
   companyTimezone?: string | null;
   northStar?: boolean;
+  canStartStripeSetup?: boolean;
+  stripeOnboardingConfigured?: boolean;
+  paymentSetupNotice?: PaymentSetupReturnNotice | null;
 };
 
 function formatLastSyncedAt(
@@ -65,10 +72,22 @@ export function PaymentSettingsCard({
   stripeAccount,
   companyTimezone,
   northStar = false,
+  canStartStripeSetup = false,
+  stripeOnboardingConfigured = false,
+  paymentSetupNotice = null,
 }: PaymentSettingsCardProps) {
+  const [isPending, startTransition] = useTransition();
+  const [actionError, setActionError] = useState<string | null>(null);
+
   const isConnected = stripeAccount !== null;
   const displayStatus = stripeAccount?.status ?? "not_connected";
   const statusLabel = PAYMENT_ACCOUNT_STATUS_LABELS[displayStatus];
+  const canLaunchOnboarding =
+    canStartStripeSetup &&
+    stripeOnboardingConfigured &&
+    displayStatus !== "active";
+  const startButtonLabel =
+    displayStatus === "pending" ? "Continue Stripe setup" : "Start Stripe setup";
 
   const shellClass = northStar
     ? "min-w-0 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3 sm:p-4"
@@ -90,9 +109,17 @@ export function PaymentSettingsCard({
     ? "rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-2 text-xs text-[#4F4638] sm:text-sm"
     : "rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-600 sm:text-sm";
 
+  const errorNoticeClass = northStar
+    ? "rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs text-red-700 sm:text-sm"
+    : "rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs text-red-700 sm:text-sm";
+
   const disabledButtonClass = northStar
     ? "inline-flex min-h-9 cursor-not-allowed items-center justify-center rounded-lg border border-[rgba(138,99,36,0.16)] bg-[#F5F0E4] px-3 text-xs font-semibold text-[#6B6255] opacity-80 sm:text-sm"
     : "inline-flex min-h-9 cursor-not-allowed items-center justify-center rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs font-semibold text-slate-500 sm:text-sm";
+
+  const enabledButtonClass = northStar
+    ? "inline-flex min-h-9 items-center justify-center rounded-lg border border-[rgba(138,99,36,0.24)] bg-[#8A6324] px-3 text-xs font-semibold text-white transition-colors hover:bg-[#75541F] disabled:cursor-not-allowed disabled:opacity-70 sm:text-sm"
+    : "inline-flex min-h-9 items-center justify-center rounded-lg border border-cyan-600 bg-cyan-600 px-3 text-xs font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-70 sm:text-sm";
 
   const statusBadgeClass = northStar
     ? "inline-flex items-center rounded-full bg-[rgba(138,99,36,0.10)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.16)]"
@@ -101,6 +128,17 @@ export function PaymentSettingsCard({
   const detailListClass = northStar
     ? "mt-3 divide-y divide-[rgba(138,99,36,0.10)] rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FFF9EA] px-3 py-1"
     : "mt-3 divide-y divide-slate-100 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1";
+
+  function handleStartStripeSetup() {
+    setActionError(null);
+
+    startTransition(async () => {
+      const result = await startStripeConnectOnboardingAction();
+      if (result?.error) {
+        setActionError(result.error);
+      }
+    });
+  }
 
   return (
     <div className={shellClass}>
@@ -113,11 +151,23 @@ export function PaymentSettingsCard({
             <h2 className={titleClass}>Online payments</h2>
             <span className={statusBadgeClass}>{statusLabel}</span>
           </div>
-          <p className={helperClass}>Stripe Connect account status (read-only).</p>
+          <p className={helperClass}>Stripe Connect account status.</p>
         </div>
       </div>
 
       <div className="mt-3 space-y-2">
+        {paymentSetupNotice === "return" ? (
+          <p className={noticeClass}>
+            Stripe setup returned. Status will update after Stripe confirms the
+            account.
+          </p>
+        ) : null}
+        {paymentSetupNotice === "refresh" ? (
+          <p className={noticeClass}>
+            Stripe setup needs to be completed.
+          </p>
+        ) : null}
+        {actionError ? <p className={errorNoticeClass}>{actionError}</p> : null}
         {isConnected ? (
           <>
             <p className={noticeClass}>Stripe account linked.</p>
@@ -131,8 +181,8 @@ export function PaymentSettingsCard({
           <>
             <p className={noticeClass}>Online payments are not connected yet.</p>
             <p className={noticeClass}>
-              Altair is ready for Stripe Connect, but onboarding is not enabled in
-              this build.
+              Connect Stripe to prepare for online payments. Checkout is not
+              active in this build.
             </p>
           </>
         )}
@@ -217,9 +267,24 @@ export function PaymentSettingsCard({
       ) : null}
 
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-        <button type="button" disabled className={disabledButtonClass}>
-          Stripe onboarding is not enabled yet
-        </button>
+        {canLaunchOnboarding ? (
+          <button
+            type="button"
+            onClick={handleStartStripeSetup}
+            disabled={isPending}
+            className={enabledButtonClass}
+          >
+            {isPending ? "Opening Stripe…" : startButtonLabel}
+          </button>
+        ) : (
+          <button type="button" disabled className={disabledButtonClass}>
+            {canStartStripeSetup && !stripeOnboardingConfigured
+              ? "Stripe setup unavailable (not configured)"
+              : displayStatus === "active"
+                ? "Stripe account connected"
+                : "Stripe setup requires owner or admin"}
+          </button>
+        )}
         <button type="button" disabled className={disabledButtonClass}>
           Online checkout is not active yet
         </button>
