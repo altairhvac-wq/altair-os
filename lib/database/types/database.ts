@@ -41,6 +41,8 @@ import type {
   InvoiceLineItemRow,
   InvoicePaymentInsert,
   InvoicePaymentRow,
+  PaymentProviderEventInsert,
+  PaymentProviderEventRow,
   InvoicePaymentTokenInsert,
   InvoicePaymentTokenRow,
   InvoicePaymentTokenUpdate,
@@ -950,6 +952,20 @@ export type Database = {
             columns: ["recorded_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      payment_provider_events: {
+        Row: PaymentProviderEventRow;
+        Insert: PaymentProviderEventInsert;
+        Update: Partial<PaymentProviderEventInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "payment_provider_events_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
             referencedColumns: ["id"];
           },
         ];

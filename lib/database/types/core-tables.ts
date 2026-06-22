@@ -31,10 +31,19 @@ import type {
   UUID,
 } from "./enums";
 import type {
+  PaymentProviderEvent,
+  PaymentProviderEventInsert,
+  PaymentProviderEventStatus,
+} from "@/lib/payments/provider-events";
+import type {
   PaymentProvider,
   PaymentRecordStatus,
   PaymentSource,
 } from "@/lib/payments/types";
+
+export type { PaymentProviderEventStatus };
+export type PaymentProviderEventRow = PaymentProviderEvent;
+export type { PaymentProviderEventInsert };
 
 export type CompanyRow = {
   id: UUID;

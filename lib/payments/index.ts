@@ -11,3 +11,8 @@ export type {
   ProviderPaymentFailureInput,
   ProviderPaymentSuccessInput,
 } from "./types";
+export type {
+  PaymentProviderEvent,
+  PaymentProviderEventInsert,
+  PaymentProviderEventStatus,
+} from "./provider-events";
