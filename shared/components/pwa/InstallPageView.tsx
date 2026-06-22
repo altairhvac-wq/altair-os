@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   Check,
+  ChevronDown,
   Copy,
   ExternalLink,
   Globe,
@@ -34,62 +35,74 @@ type InstallPlatform = "ios" | "android" | "desktop";
 type WizardStep = {
   title: string;
   instruction: string;
+  helperText?: string;
   icon: LucideIcon;
 };
 
 const IOS_STEPS: WizardStep[] = [
   {
-    title: "Open in Safari",
-    instruction: "Open this page in Safari for the smoothest install.",
+    title: "Open in Safari 🌐",
+    instruction: "Make sure this page is open in Safari on your iPhone.",
     icon: Globe,
   },
   {
-    title: "Tap Share",
-    instruction: "Tap the Share button at the bottom of Safari.",
+    title: "Find the Share button ⬆️",
+    instruction: "Look at the bottom of Safari and tap the Share button.",
+    helperText: "If you do not see Share, tap the three dots (⋯) first.",
     icon: Share,
   },
   {
-    title: "Add to Home Screen",
-    instruction: "Scroll if needed and tap Add to Home Screen.",
+    title: "Scroll down ⬇️",
+    instruction:
+      'In the menu that opens, scroll down until you find "Add to Home Screen."',
+    icon: ChevronDown,
+  },
+  {
+    title: "Tap Add to Home Screen ➕",
+    instruction: 'Tap "Add to Home Screen."',
     icon: PlusSquare,
   },
   {
-    title: "Tap Add",
-    instruction: "Tap Add in the top right to confirm.",
+    title: "Tap Add ✅",
+    instruction: 'Tap "Add" in the top-right corner to confirm.',
     icon: Check,
   },
   {
-    title: "Open from home screen",
-    instruction: "Open Altair from your home screen.",
+    title: "Open Altair from your home screen 📱",
+    instruction:
+      "Look for the Altair icon on your home screen and tap it to open the app.",
     icon: Smartphone,
   },
 ];
 
 const ANDROID_STEPS: WizardStep[] = [
   {
-    title: "Open in Chrome",
-    instruction: "Open this page in Chrome on your Android phone.",
+    title: "Open in Chrome 🌐",
+    instruction:
+      "Make sure this page is open in Chrome on your Android phone.",
     icon: Globe,
   },
   {
-    title: "Tap Install Altair",
-    instruction: "Tap Install Altair if the button appears at the top.",
+    title: "Tap Install if shown 📲",
+    instruction: 'If you see an "Install Altair" button at the top, tap it.',
     icon: Smartphone,
   },
   {
-    title: "Or open the menu",
-    instruction: "If not, tap the three-dot menu in Chrome.",
+    title: "Or tap the three-dot menu ⋯",
+    instruction:
+      "If Install does not appear, tap the three dots (⋯) in the top-right corner of Chrome.",
     icon: MoreVertical,
   },
   {
-    title: "Choose Install app",
-    instruction: "Tap Install app or Add to Home screen.",
+    title: "Tap Install app or Add to Home screen ➕",
+    instruction: 'Tap "Install app" or "Add to Home screen" from the menu.',
     icon: PlusSquare,
   },
   {
-    title: "Open from home screen",
-    instruction: "Open Altair from your home screen.",
-    icon: Check,
+    title: "Open Altair from your home screen 📱",
+    instruction:
+      "Look for the Altair icon on your home screen and tap it to open the app.",
+    icon: Smartphone,
   },
 ];
 
@@ -167,6 +180,11 @@ function WizardStepList({ steps }: { steps: WizardStep[] }) {
               <p className="mt-1 text-sm leading-relaxed text-stone-600">
                 {step.instruction}
               </p>
+              {step.helperText ? (
+                <p className="mt-2 rounded-lg border border-amber-200/60 bg-amber-50/70 px-3 py-2 text-xs leading-relaxed text-amber-900/90">
+                  {step.helperText}
+                </p>
+              ) : null}
             </div>
           </li>
         );
@@ -204,6 +222,28 @@ function InstallCardShell({
   );
 }
 
+function IosCantFindHelpBox() {
+  return (
+    <div className="mt-4 rounded-xl border border-amber-300/60 bg-amber-50/80 px-4 py-4">
+      <p className="text-sm font-semibold text-amber-950">
+        Can&apos;t find &ldquo;Add to Home Screen&rdquo;?
+      </p>
+      <ul className="mt-2.5 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-amber-900/90">
+        <li>Make sure you are using Safari</li>
+        <li>
+          If you opened Altair from Facebook, Messenger, Gmail, or another app,
+          open it in Safari first
+        </li>
+        <li>If you do not see Share, tap the three dots (⋯) first</li>
+        <li>
+          After tapping Share, scroll down to find &ldquo;Add to Home
+          Screen&rdquo;
+        </li>
+      </ul>
+    </div>
+  );
+}
+
 function IosInstallWizard() {
   return (
     <InstallCardShell eyebrow="Step-by-step" title="Install Altair on iPhone">
@@ -211,12 +251,15 @@ function IosInstallWizard() {
         <p className="text-sm font-medium text-amber-950">
           Apple does not allow a one-tap install button for web apps.
         </p>
-        <p className="text-sm text-amber-900/85">This takes about 20 seconds.</p>
         <p className="text-sm text-amber-900/85">
-          Use Safari for the smoothest install.
+          This only takes about 20 seconds.
+        </p>
+        <p className="text-sm text-amber-900/85">
+          We will walk you through it step by step.
         </p>
       </div>
       <WizardStepList steps={IOS_STEPS} />
+      <IosCantFindHelpBox />
     </InstallCardShell>
   );
 }
@@ -240,8 +283,8 @@ function AndroidInstallWizard() {
 
       {promptChecked && !installPromptAvailable ? (
         <p className="mt-4 rounded-xl border border-stone-200/80 bg-white/70 px-4 py-3 text-sm leading-relaxed text-stone-700">
-          Install button not showing? Use Chrome menu → Install app / Add to
-          Home screen.
+          Install button not showing? Tap the three dots (⋯) in Chrome, then tap
+          Install app or Add to Home screen.
         </p>
       ) : null}
 
@@ -392,11 +435,15 @@ function TroubleshootingSection() {
 
 function IosStickyHint() {
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 border-t border-[#D4AF37]/25 bg-[#FFFCF8]/95 px-5 py-3 shadow-[0_-4px_20px_rgba(10,10,10,0.08)] backdrop-blur-sm pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-      <p className="mx-auto flex max-w-3xl items-center justify-center gap-2 text-center text-sm font-medium text-[#9A7209]">
-        <Share className="h-4 w-4 shrink-0" aria-hidden />
-        Next: tap the Share button in Safari
-      </p>
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 border-t border-[#D4AF37]/25 bg-[#FFFCF8]/95 px-5 py-2.5 shadow-[0_-4px_20px_rgba(10,10,10,0.08)] backdrop-blur-sm pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="mx-auto max-w-3xl text-center">
+        <p className="text-sm font-medium text-[#9A7209]">
+          ⬆️ Next: tap Share at the bottom
+        </p>
+        <p className="mt-0.5 text-xs text-[#9A7209]/80">
+          If you do not see it, tap ⋯ first
+        </p>
+      </div>
     </div>
   );
 }

@@ -23,8 +23,8 @@ export function getBetaTesterInstallMessage(): string {
 
   return `Install Altair on your phone here: ${url}
 
-iPhone: open in Safari, tap Share, then Add to Home Screen.
-Android: open in Chrome and tap Install, or use the three-dot menu → Install app.`;
+iPhone: open in Safari, tap Share at the bottom (or ⋯ first), scroll down, then tap Add to Home Screen.
+Android: tap Install if shown, or open the three-dot menu (⋯) and choose Install app or Add to Home screen.`;
 }
 
 export function isStandaloneDisplayMode(): boolean {
