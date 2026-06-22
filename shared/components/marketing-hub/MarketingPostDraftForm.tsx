@@ -305,12 +305,12 @@ function FounderScreenshotPreview({
         Founder screenshot
       </p>
       {showImagePreview ? (
-        <div className="relative mt-2 aspect-[16/10] w-full overflow-hidden rounded-md border border-black/10">
+        <div className="relative mt-2 aspect-square w-full overflow-hidden rounded-md border border-black/10 bg-[#0a1018]">
           <Image
             src={trimmed}
             alt="Founder marketing screenshot preview"
             fill
-            className="object-cover object-top"
+            className="object-contain"
             sizes="320px"
             unoptimized={trimmed.startsWith("http")}
             onError={() => setImageLoadFailed(true)}
@@ -327,7 +327,14 @@ function FounderScreenshotPreview({
         </p>
       ) : null}
       <p
-        className={`mt-2 break-all font-mono text-xs leading-relaxed ${
+        className={`mt-2 text-xs leading-relaxed ${
+          northStar ? "text-[#6B6255]" : "text-slate-500"
+        }`}
+      >
+        Selected image:
+      </p>
+      <p
+        className={`break-all font-mono text-xs leading-relaxed ${
           northStar ? "text-[#17130E]" : "text-slate-700"
         }`}
       >
@@ -499,6 +506,11 @@ export function MarketingPostDraftForm({
   const selectedFounderScreenshotOption = FOUNDER_MARKETING_SCREENSHOT_OPTIONS.find(
     (option) => option.path === formData.founderScreenshotReference.trim(),
   );
+  const founderScreenshotPath = formData.founderScreenshotReference.trim();
+  const hasStaleFounderScreenshotPath =
+    showFounderScreenshot &&
+    founderScreenshotPath.length > 0 &&
+    !selectedFounderScreenshotOption;
 
   const inputClassName = northStar
     ? "mt-1.5 w-full rounded-lg border border-[rgba(148,163,184,0.24)] bg-white px-3.5 py-2.5 text-sm text-[#101827] shadow-sm transition-colors placeholder:text-[#6B7280] focus:border-[#B88A2E] focus:outline-none focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]"
@@ -1130,6 +1142,28 @@ export function MarketingPostDraftForm({
                     social-ready screenshot where the app fills the image.
                     Full-page screenshots may look tiny on Facebook.
                   </p>
+                  {founderScreenshotPath.length > 0 ? (
+                    <p
+                      className={`mt-2 break-all font-mono text-xs leading-relaxed ${
+                        northStar ? "text-[#17130E]" : "text-slate-700"
+                      }`}
+                    >
+                      Selected image: {founderScreenshotPath}
+                    </p>
+                  ) : null}
+                  {hasStaleFounderScreenshotPath ? (
+                    <p
+                      className={`mt-2 rounded-lg border px-3 py-2 text-xs leading-relaxed ${
+                        northStar
+                          ? "border-amber-300/70 bg-amber-50 text-amber-900"
+                          : "border-amber-200 bg-amber-50 text-amber-800"
+                      }`}
+                    >
+                      This draft uses an older screenshot path. Reselect Reports
+                      workspace or Leads workspace from the picker to use the
+                      current Facebook-ready card.
+                    </p>
+                  ) : null}
                 </label>
               </div>
             ) : null}
