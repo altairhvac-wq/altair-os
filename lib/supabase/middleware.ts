@@ -9,7 +9,12 @@ import { syncSignupNetworkInviteCookieOnResponse } from "@/lib/auth/signup-invit
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getSupabaseEnv } from "./env";
 
-const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
+const AUTH_ROUTES = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+];
 const PRICING_ROUTE = "/pricing";
 const INSTALL_ROUTE = "/install";
 const AUTH_CALLBACK_ROUTE = "/auth/callback";
