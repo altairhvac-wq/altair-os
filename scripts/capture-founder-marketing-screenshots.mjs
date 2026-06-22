@@ -189,6 +189,19 @@ async function ensureFounderAuth() {
   }
 }
 
+/** Hide the floating beta feedback pill + hint popover without masking page content. */
+async function hideFeedbackWidget(page) {
+  await page.addStyleTag({
+    content: `
+      div.no-print.fixed.right-4.z-40:has(button[aria-label="Send feedback"]),
+      button[aria-label="Send feedback"].rounded-full,
+      div[role="note"]:has(button[aria-label="Dismiss feedback hint"]) {
+        display: none !important;
+      }
+    `,
+  });
+}
+
 async function waitForRouteReady(page, capture) {
   await page.waitForSelector(capture.anchor, {
     state: "visible",
@@ -225,6 +238,8 @@ async function captureFullPageScreenshot(page, capture) {
       `Founder account is not bootstrapped (${capture.route} redirected to /setup). Use a founder/internal Altair account with demo data.`,
     );
   }
+
+  await hideFeedbackWidget(page);
 
   const outputPath = path.join(OUTPUT_DIR, capture.output);
   await page.screenshot({
