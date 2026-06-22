@@ -42,6 +42,8 @@ export type RecordPaymentFormData = {
   paymentDate: string;
   reference: string;
   notes: string;
+  expectedUpdatedAt?: string;
+  idempotencyKey?: string;
 };
 
 export const PAYMENT_METHOD_OPTIONS: {

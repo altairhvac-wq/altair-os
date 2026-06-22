@@ -32,6 +32,16 @@ function toDateOnly(value: string): string {
   return value.split("T")[0] ?? value;
 }
 
+function mapProviderMetadata(
+  value: InvoicePaymentRow["provider_metadata"],
+): Record<string, unknown> {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+
+  return {};
+}
+
 function mapPaymentRow(row: InvoicePaymentRowWithRecorder): InvoicePayment {
   return {
     id: row.id,
@@ -47,6 +57,15 @@ function mapPaymentRow(row: InvoicePaymentRowWithRecorder): InvoicePayment {
       subjectUserId: row.recorded_by,
     }),
     createdAt: row.created_at,
+    source: row.source,
+    provider: row.provider,
+    providerPaymentId: row.provider_payment_id,
+    providerCheckoutSessionId: row.provider_checkout_session_id,
+    idempotencyKey: row.idempotency_key,
+    status: row.status,
+    feeAmount: row.fee_amount === null ? null : Number(row.fee_amount),
+    netAmount: row.net_amount === null ? null : Number(row.net_amount),
+    providerMetadata: mapProviderMetadata(row.provider_metadata),
   };
 }
 
@@ -310,6 +329,8 @@ export async function recordInvoicePayment(
       p_payment_date: paymentDate,
       p_reference: reference,
       p_notes: notes,
+      p_expected_updated_at: data.expectedUpdatedAt ?? null,
+      p_idempotency_key: data.idempotencyKey ?? null,
     },
   );
 

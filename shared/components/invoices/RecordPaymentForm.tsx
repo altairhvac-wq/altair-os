@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CreditCard } from "lucide-react";
 import {
@@ -89,6 +89,14 @@ type RecordPaymentModalProps = {
 
 const RECORD_PAYMENT_TITLE_ID = "record-payment-modal-title";
 
+function createPaymentIdempotencyKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -99,6 +107,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
   const [paymentDate, setPaymentDate] = useState(getDefaultPaymentDate());
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
+  const idempotencyKeyRef = useRef<string | null>(null);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -120,12 +129,18 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
       return;
     }
 
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = createPaymentIdempotencyKey();
+    }
+
     const data: RecordPaymentFormData = {
       amount: parsedAmount,
       paymentMethod,
       paymentDate,
       reference,
       notes,
+      expectedUpdatedAt: invoice.updatedAt,
+      idempotencyKey: idempotencyKeyRef.current,
     };
 
     startTransition(async () => {
