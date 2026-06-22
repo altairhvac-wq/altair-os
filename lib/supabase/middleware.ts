@@ -11,6 +11,7 @@ import { getSupabaseEnv } from "./env";
 
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
 const PRICING_ROUTE = "/pricing";
+const INSTALL_ROUTE = "/install";
 const AUTH_CALLBACK_ROUTE = "/auth/callback";
 const ESTIMATE_APPROVAL_ROUTE_PREFIX = "/estimate-approval";
 const INVOICE_PAYMENT_ROUTE_PREFIX = "/invoice-payment";
@@ -39,10 +40,15 @@ function isPricingRoute(pathname: string) {
   return pathname === PRICING_ROUTE;
 }
 
+function isInstallRoute(pathname: string) {
+  return pathname === INSTALL_ROUTE;
+}
+
 function isPublicRoute(pathname: string) {
   return (
     isAuthRoute(pathname) ||
     isPricingRoute(pathname) ||
+    isInstallRoute(pathname) ||
     pathname === AUTH_CALLBACK_ROUTE ||
     isEstimateApprovalRoute(pathname) ||
     isInvoicePaymentRoute(pathname)

@@ -16,6 +16,7 @@ import { TechnicianShellContentLoadingState } from "./TechnicianShellContentLoad
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
 import { FounderMarketingDisplayProvider } from "@/shared/components/display/FounderMarketingDisplayContext";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
+import { PwaInstallBanner } from "@/shared/components/pwa/PwaInstallBanner";
 
 type TechnicianMobileShellProps = {
   children: React.ReactNode;
@@ -76,6 +77,7 @@ export function TechnicianMobileShell({
 
           <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 pb-[max(6rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] sm:px-5 sm:py-5">
             <PullToRefresh>
+              <PwaInstallBanner />
               {redirectPending ? (
                 <TechnicianShellContentLoadingState />
               ) : (

@@ -19,6 +19,7 @@ import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugRe
 import { FounderMarketingDisplayProvider } from "@/shared/components/display/FounderMarketingDisplayContext";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
+import { PwaInstallBanner } from "@/shared/components/pwa/PwaInstallBanner";
 import { SidebarNav } from "./SidebarNav";
 
 type AdminShellProps = {
@@ -114,6 +115,7 @@ export function AdminShell({
 
       <main className="admin-shell-main min-h-0 min-w-0 max-w-full overflow-x-clip px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5 md:overflow-y-auto">
         <PullToRefresh enabled={pullToRefreshEnabled}>
+          <PwaInstallBanner />
           {redirectPending ? <AdminShellContentLoadingState /> : children}
         </PullToRefresh>
       </main>
