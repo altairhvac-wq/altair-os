@@ -56,8 +56,8 @@ export function InvoiceInternalTestCheckoutButton({
         Internal test only
       </p>
       <p className="mt-1 text-xs text-amber-900/80">
-        Creates a Stripe Checkout session for {invoice.invoiceNumber}. Does not record a
-        payment in Altair yet.
+        Internal test only. Successful Stripe payments are recorded by webhook if
+        migration 101 is applied and webhooks are configured.
       </p>
       <button
         type="button"

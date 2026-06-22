@@ -4,11 +4,13 @@ import type { BillingCompanyContact } from "@/shared/lib/billing-company-contact
 type PublicInvoicePaymentContactPanelProps = {
   company: BillingCompanyContact;
   balanceDue: number;
+  variant?: "default" | "secondary";
 };
 
 export function PublicInvoicePaymentContactPanel({
   company,
   balanceDue,
+  variant = "default",
 }: PublicInvoicePaymentContactPanelProps) {
   const phone = company.phone?.trim();
   const email = company.email?.trim();
@@ -29,10 +31,25 @@ export function PublicInvoicePaymentContactPanel({
   }
 
   if (!phone && !email) {
+    if (variant === "secondary") {
+      return null;
+    }
+
     return (
       <p className="text-center text-xs leading-snug text-slate-600">
         Use the contact details from your invoice email to arrange payment.
       </p>
+    );
+  }
+
+  if (variant === "secondary") {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+        <p className="text-center text-xs text-slate-600">
+          Prefer to pay another way? Contact us directly.
+        </p>
+        <ContactActions phone={phone} email={email} className="mt-2" compact />
+      </div>
     );
   }
 
@@ -43,11 +60,13 @@ function ContactActions({
   phone,
   email,
   stacked = false,
+  compact = false,
   className = "",
 }: {
   phone?: string;
   email?: string;
   stacked?: boolean;
+  compact?: boolean;
   className?: string;
 }) {
   if (!phone && !email) {
@@ -58,12 +77,20 @@ function ContactActions({
     ? "flex flex-col gap-2"
     : "flex flex-col gap-2 sm:flex-row sm:flex-wrap";
 
+  const phoneClass = compact
+    ? "inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+    : "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-teal-800";
+
+  const emailClass = compact
+    ? "inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+    : "inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50";
+
   return (
     <div className={`${layoutClass} ${className}`}>
       {phone ? (
         <a
           href={`tel:${phone.replace(/\s/g, "")}`}
-          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-teal-800"
+          className={phoneClass}
         >
           <Phone className="h-4 w-4 shrink-0" aria-hidden />
           Call to pay
@@ -72,7 +99,7 @@ function ContactActions({
       {email ? (
         <a
           href={`mailto:${email}`}
-          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          className={emailClass}
         >
           <Mail className="h-4 w-4 shrink-0" aria-hidden />
           Email to pay

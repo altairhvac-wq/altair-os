@@ -92,6 +92,24 @@ export function buildAdminInvoiceCheckoutUrls(
   };
 }
 
+export function buildPublicInvoiceCheckoutUrls(
+  rawToken: string,
+): StripeInvoiceCheckoutUrls | null {
+  const baseUrl = getAppBaseUrl();
+
+  if (!baseUrl) {
+    return null;
+  }
+
+  const encodedToken = encodeURIComponent(rawToken.trim());
+  const invoicePaymentPath = `${baseUrl}/invoice-payment/${encodedToken}`;
+
+  return {
+    successUrl: `${invoicePaymentPath}?checkout=success`,
+    cancelUrl: `${invoicePaymentPath}?checkout=cancelled`,
+  };
+}
+
 export function validateStripeInvoiceCheckoutReadiness(
   account: CompanyPaymentAccount | null,
   invoice: InvoiceCheckoutTarget,

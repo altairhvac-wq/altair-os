@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type { InvoicePaymentTokenInsert } from "@/lib/database/types/core-tables";
 import {
   generateInvoicePaymentToken,
   getInvoicePaymentTokenExpiresAt,
+  hashInvoicePaymentToken,
 } from "@/shared/lib/invoice-payment-token";
 import type { PublicInvoicePaymentView } from "@/shared/types/public-invoice-payment";
 import type { InvoiceLineItem, InvoiceStatus } from "@/shared/types/invoice";
@@ -171,6 +173,57 @@ export async function createInvoicePaymentTokenForEmail(input: {
   }
 
   return { rawToken: raw };
+}
+
+export type PublicInvoicePaymentTokenContext =
+  | { state: "invalid" | "revoked" | "expired" }
+  | { state: "valid"; companyId: string; invoiceId: string };
+
+/**
+ * Resolve a raw payment token to company/invoice ids after validating
+ * revocation and expiry. Uses the service role because token rows are not
+ * readable by anonymous clients; possession of the raw token is the credential.
+ */
+export async function resolvePublicInvoicePaymentTokenContext(
+  rawToken: string,
+): Promise<PublicInvoicePaymentTokenContext> {
+  const trimmedToken = rawToken.trim();
+
+  if (!trimmedToken) {
+    return { state: "invalid" };
+  }
+
+  const supabase = createServiceRoleClient();
+  const tokenHash = hashInvoicePaymentToken(trimmedToken);
+
+  const { data: tokenRow, error } = await supabase
+    .from("invoice_payment_tokens")
+    .select("company_id, invoice_id, revoked_at, expires_at")
+    .eq("token_hash", tokenHash)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[resolvePublicInvoicePaymentTokenContext]", error);
+    return { state: "invalid" };
+  }
+
+  if (!tokenRow) {
+    return { state: "invalid" };
+  }
+
+  if (tokenRow.revoked_at) {
+    return { state: "revoked" };
+  }
+
+  if (new Date(tokenRow.expires_at) <= new Date()) {
+    return { state: "expired" };
+  }
+
+  return {
+    state: "valid",
+    companyId: tokenRow.company_id,
+    invoiceId: tokenRow.invoice_id,
+  };
 }
 
 export async function getPublicInvoicePaymentView(

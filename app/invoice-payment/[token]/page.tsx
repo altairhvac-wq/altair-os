@@ -1,10 +1,18 @@
-import { getPublicInvoicePaymentView } from "@/lib/database/queries/invoice-payment-tokens";
+import { getCompanyPaymentAccount } from "@/lib/database/queries/company-payment-accounts";
+import {
+  getPublicInvoicePaymentView,
+  resolvePublicInvoicePaymentTokenContext,
+} from "@/lib/database/queries/invoice-payment-tokens";
+import { validateStripeInvoiceCheckoutReadiness } from "@/lib/payments/stripe-checkout";
 import { PublicDocumentBrandFooter } from "@/shared/components/brand/PublicDocumentBrandFooter";
 import { PublicInvoicePaymentContactPanel } from "@/shared/components/invoices/PublicInvoicePaymentContactPanel";
 import { PublicInvoicePaymentDocument } from "@/shared/components/invoices/PublicInvoicePaymentDocument";
+import { PublicInvoicePayNowCard } from "@/shared/components/invoices/PublicInvoicePayNowCard";
+import { isInvoicePayable } from "@/shared/types/invoice-payment";
 
 type InvoicePaymentPageProps = {
   params: Promise<{ token: string }>;
+  searchParams: Promise<{ checkout?: string }>;
 };
 
 function PublicPaymentMessage({
@@ -33,8 +41,10 @@ function PublicPaymentMessage({
 
 export default async function InvoicePaymentPage({
   params,
+  searchParams,
 }: InvoicePaymentPageProps) {
   const { token: encodedToken } = await params;
+  const { checkout } = await searchParams;
   const rawToken = decodeURIComponent(encodedToken);
   const view = await getPublicInvoicePaymentView(rawToken);
 
@@ -104,16 +114,77 @@ export default async function InvoicePaymentPage({
   }
 
   const isPaidInFull = view.invoice.balanceDue <= 0;
+  const isPayable =
+    !isPaidInFull &&
+    isInvoicePayable(view.invoice.status) &&
+    view.invoice.balanceDue > 0;
+
+  let onlineCheckoutAvailable = false;
+
+  if (isPayable) {
+    const tokenContext = await resolvePublicInvoicePaymentTokenContext(rawToken);
+
+    if (
+      tokenContext.state === "valid" &&
+      tokenContext.invoiceId === view.invoice.id
+    ) {
+      const paymentAccount = await getCompanyPaymentAccount(
+        tokenContext.companyId,
+        "stripe",
+      );
+      const readiness = validateStripeInvoiceCheckoutReadiness(paymentAccount, {
+        id: view.invoice.id,
+        invoiceNumber: view.invoice.invoiceNumber,
+        balanceDue: view.invoice.balanceDue,
+        status: view.invoice.status,
+      });
+      onlineCheckoutAvailable = readiness.ok;
+    }
+  }
+
+  const checkoutStatusMessage =
+    checkout === "success" ? (
+      <PublicPaymentMessage
+        title="Payment submitted"
+        body="Your payment was submitted. This invoice will update once payment is confirmed."
+        tone="success"
+      />
+    ) : checkout === "cancelled" ? (
+      <PublicPaymentMessage
+        title="Payment cancelled"
+        body="Payment was cancelled. You can try again or contact the company for help."
+        tone="warning"
+      />
+    ) : null;
 
   const paymentPanel = !isPaidInFull ? (
-    <PublicInvoicePaymentContactPanel
-      company={view.company}
-      balanceDue={view.invoice.balanceDue}
-    />
+    <div className="space-y-3">
+      {onlineCheckoutAvailable ? (
+        <>
+          <PublicInvoicePayNowCard
+            token={rawToken}
+            balanceDue={view.invoice.balanceDue}
+          />
+          <PublicInvoicePaymentContactPanel
+            company={view.company}
+            balanceDue={view.invoice.balanceDue}
+            variant="secondary"
+          />
+        </>
+      ) : (
+        <PublicInvoicePaymentContactPanel
+          company={view.company}
+          balanceDue={view.invoice.balanceDue}
+        />
+      )}
+    </div>
   ) : undefined;
 
   return (
     <PublicPaymentShell>
+      {checkoutStatusMessage ? (
+        <div className="mb-4">{checkoutStatusMessage}</div>
+      ) : null}
       <PublicInvoicePaymentDocument
         view={view}
         afterCustomer={paymentPanel}
