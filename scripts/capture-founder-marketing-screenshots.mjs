@@ -31,6 +31,7 @@ const CLIP_WIDTH = 1200;
 const CLIP_HEIGHT = 540;
 const CARD_SIZE = 1080;
 const CARD_SCREENSHOT_WIDTH = 980;
+const CARD_SCREENSHOT_HEIGHT = 590;
 
 /** @type {Array<{ id: string; route: string; output: string; anchor: string; ready?: string }>} */
 const CAPTURES = [
@@ -169,7 +170,8 @@ function buildSocialCardHtml({ screenshotDataUrl, label, headline, subheadline, 
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 32px 28px 24px;
+      justify-content: space-between;
+      padding: 26px 28px 22px;
       background:
         radial-gradient(ellipse 120% 70% at 50% -10%, rgb(201 164 77 / 0.16) 0%, transparent 58%),
         radial-gradient(ellipse 90% 55% at 88% 92%, rgb(138 99 36 / 0.12) 0%, transparent 62%),
@@ -192,32 +194,32 @@ function buildSocialCardHtml({ screenshotDataUrl, label, headline, subheadline, 
       text-transform: uppercase;
     }
     .headline {
-      margin-top: 12px;
+      margin-top: 10px;
       max-width: ${CARD_SCREENSHOT_WIDTH}px;
       color: #fff9ea;
-      font-size: 40px;
+      font-size: 38px;
       font-weight: 700;
       letter-spacing: -0.02em;
       line-height: 1.08;
       text-align: center;
     }
     .subheadline {
-      margin-top: 10px;
+      margin-top: 8px;
       max-width: ${CARD_SCREENSHOT_WIDTH}px;
       color: #c9bfae;
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 500;
       line-height: 1.3;
       text-align: center;
     }
     .screenshot-frame {
-      flex: 1 1 auto;
-      min-height: 0;
-      margin-top: 18px;
+      flex: 0 0 auto;
       width: ${CARD_SCREENSHOT_WIDTH}px;
-      max-width: calc(100% - 8px);
+      height: ${CARD_SCREENSHOT_HEIGHT}px;
       padding: 8px;
       display: flex;
+      align-items: center;
+      justify-content: center;
       overflow: hidden;
       border-radius: 18px;
       border: 1px solid rgb(201 164 77 / 0.28);
@@ -231,14 +233,14 @@ function buildSocialCardHtml({ screenshotDataUrl, label, headline, subheadline, 
       display: block;
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       object-position: top center;
       border-radius: 12px;
       border: 1px solid rgb(255 255 255 / 0.06);
     }
     .footer {
       flex: 0 0 auto;
-      margin-top: 14px;
+      margin-top: 12px;
       color: #8e826f;
       font-size: 16px;
       font-weight: 600;
