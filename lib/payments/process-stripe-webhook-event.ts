@@ -8,7 +8,23 @@ import {
   syncStripeCompanyPaymentAccountFromWebhook,
 } from "@/lib/database/services/company-payment-accounts";
 import { updatePaymentProviderEvent } from "@/lib/database/services/payment-provider-events";
+import { findExistingStripeCheckoutPayment } from "@/lib/database/queries/invoice-payments";
+import { getInvoiceStripePaymentTarget } from "@/lib/database/queries/invoices";
 import type { Database } from "@/lib/database/types";
+import {
+  recordStripeCheckoutPaymentAtomic,
+} from "@/lib/payments/recording";
+import {
+  buildStripeCheckoutIdempotencyKey,
+  buildStripeCheckoutProviderMetadata,
+  invoiceBalanceDueToCents,
+  stripeUnixTimestampToDateOnly,
+} from "@/lib/payments/stripe-checkout";
+import {
+  isInvoiceBalanceConsistent,
+  roundCurrency,
+} from "@/shared/types/invoice";
+import { isInvoicePayable } from "@/shared/types/invoice-payment";
 
 export type ProcessStripeWebhookEventResult =
   | { processed: true; ignored: false }
@@ -17,6 +33,7 @@ export type ProcessStripeWebhookEventResult =
 
 const NO_MATCHING_ACCOUNT_MESSAGE = "No matching company payment account";
 const CHECKOUT_METADATA_PURPOSE = "invoice_payment";
+const CHECKOUT_METADATA_PROVIDER = "stripe";
 
 function sanitizeProcessingError(error: unknown): string {
   if (error instanceof Error && error.message.trim().length > 0) {
@@ -62,6 +79,7 @@ function readCheckoutSessionMetadata(
   companyId: string | null;
   invoiceId: string | null;
   purpose: string | null;
+  provider: string | null;
 } {
   const metadata = session.metadata ?? {};
 
@@ -69,7 +87,57 @@ function readCheckoutSessionMetadata(
     companyId: metadata.company_id?.trim() || null,
     invoiceId: metadata.invoice_id?.trim() || null,
     purpose: metadata.purpose?.trim() || null,
+    provider: metadata.provider?.trim() || null,
   };
+}
+
+function extractStripePaymentIntentId(
+  paymentIntent: Stripe.Checkout.Session["payment_intent"],
+): string | null {
+  if (typeof paymentIntent === "string") {
+    return paymentIntent.trim() || null;
+  }
+
+  if (
+    paymentIntent &&
+    typeof paymentIntent === "object" &&
+    "id" in paymentIntent &&
+    typeof paymentIntent.id === "string"
+  ) {
+    return paymentIntent.id.trim() || null;
+  }
+
+  return null;
+}
+
+/**
+ * Connect direct-charge webhooks include event.account for the connected Express account.
+ * We require this field and match it against company_payment_accounts.provider_account_id.
+ */
+function extractConnectedAccountId(event: Stripe.Event): string | null {
+  const account = event.account;
+
+  if (typeof account === "string" && account.trim().length > 0) {
+    return account.trim();
+  }
+
+  return null;
+}
+
+function isStripeCompanyPaymentAccountReady(
+  accountRow: NonNullable<
+    Awaited<ReturnType<typeof findStripeCompanyPaymentAccountByCompanyId>>
+  >,
+  connectedAccountId: string,
+): boolean {
+  return (
+    accountRow.provider_account_id === connectedAccountId &&
+    accountRow.online_payments_enabled === true &&
+    accountRow.status === "active" &&
+    accountRow.charges_enabled === true &&
+    accountRow.payouts_enabled === true &&
+    accountRow.disabled_at === null
+  );
 }
 
 async function markProviderEventIgnored(
@@ -177,15 +245,68 @@ async function processAccountUpdatedEvent(
 async function processCheckoutSessionCompletedEvent(
   supabase: SupabaseClient<Database>,
   providerEventId: string,
+  event: Stripe.Event,
   session: Stripe.Checkout.Session,
 ): Promise<ProcessStripeWebhookEventResult> {
-  const { companyId, invoiceId, purpose } = readCheckoutSessionMetadata(session);
+  const { companyId, invoiceId, purpose, provider } =
+    readCheckoutSessionMetadata(session);
 
-  if (!companyId || !invoiceId || purpose !== CHECKOUT_METADATA_PURPOSE) {
+  if (
+    !companyId ||
+    !invoiceId ||
+    purpose !== CHECKOUT_METADATA_PURPOSE ||
+    provider !== CHECKOUT_METADATA_PROVIDER
+  ) {
     await markProviderEventIgnored(
       supabase,
       providerEventId,
       "Missing or invalid checkout session metadata",
+      companyId,
+    );
+    return { processed: false, ignored: true };
+  }
+
+  const connectedAccountId = extractConnectedAccountId(event);
+
+  if (!connectedAccountId) {
+    await markProviderEventIgnored(
+      supabase,
+      providerEventId,
+      "Missing Stripe connected account context",
+      companyId,
+    );
+    return { processed: false, ignored: true };
+  }
+
+  if (session.payment_status !== "paid") {
+    await markProviderEventIgnored(
+      supabase,
+      providerEventId,
+      "Checkout session is not paid",
+      companyId,
+    );
+    return { processed: false, ignored: true };
+  }
+
+  if (
+    session.amount_total === null ||
+    session.amount_total === undefined ||
+    session.amount_total <= 0
+  ) {
+    await markProviderEventIgnored(
+      supabase,
+      providerEventId,
+      "Checkout session amount is invalid",
+      companyId,
+    );
+    return { processed: false, ignored: true };
+  }
+
+  if ((session.currency ?? "").toLowerCase() !== "usd") {
+    await markProviderEventIgnored(
+      supabase,
+      providerEventId,
+      "Checkout session currency must be USD",
       companyId,
     );
     return { processed: false, ignored: true };
@@ -196,17 +317,117 @@ async function processCheckoutSessionCompletedEvent(
     companyId,
   );
 
-  if (!accountRow || !accountRow.online_payments_enabled) {
+  if (!accountRow || !isStripeCompanyPaymentAccountReady(accountRow, connectedAccountId)) {
     await markProviderEventIgnored(
       supabase,
       providerEventId,
-      "Online payments not enabled for company",
+      "Stripe payment account is not ready for online checkout",
       companyId,
     );
     return { processed: false, ignored: true };
   }
 
-  // Actual payment recording comes in a future phase after payment intent/amount/currency validation is implemented.
+  const invoice = await getInvoiceStripePaymentTarget(
+    supabase,
+    companyId,
+    invoiceId,
+  );
+
+  if (!invoice) {
+    await markProviderEventIgnored(
+      supabase,
+      providerEventId,
+      "Invoice not found for checkout session",
+      companyId,
+    );
+    return { processed: false, ignored: true };
+  }
+
+  if (!isInvoicePayable(invoice.status) || invoice.balanceDue <= 0) {
+    await markProviderEventIgnored(
+      supabase,
+      providerEventId,
+      "Invoice is not payable",
+      companyId,
+    );
+    return { processed: false, ignored: true };
+  }
+
+  if (
+    !isInvoiceBalanceConsistent({
+      amountPaid: invoice.amountPaid,
+      balanceDue: invoice.balanceDue,
+      total: invoice.total,
+    })
+  ) {
+    await markProviderEventIgnored(
+      supabase,
+      providerEventId,
+      "Invoice balance is inconsistent",
+      companyId,
+    );
+    return { processed: false, ignored: true };
+  }
+
+  const expectedAmountCents = invoiceBalanceDueToCents(invoice.balanceDue);
+
+  if (session.amount_total !== expectedAmountCents) {
+    await markProviderEventIgnored(
+      supabase,
+      providerEventId,
+      "Checkout session amount does not match invoice balance due",
+      companyId,
+    );
+    return { processed: false, ignored: true };
+  }
+
+  const checkoutSessionId = session.id;
+  const providerPaymentId = extractStripePaymentIntentId(session.payment_intent);
+  const idempotencyKey = buildStripeCheckoutIdempotencyKey(checkoutSessionId);
+
+  const existingPayment = await findExistingStripeCheckoutPayment(supabase, companyId, {
+    checkoutSessionId,
+    providerPaymentId,
+    idempotencyKey,
+  });
+
+  if (existingPayment) {
+    await markProviderEventProcessed(supabase, providerEventId, companyId);
+    return { processed: true, ignored: false };
+  }
+
+  const paymentDate = stripeUnixTimestampToDateOnly(
+    event.created ?? session.created ?? Math.floor(Date.now() / 1000),
+  );
+  const paymentAmount = roundCurrency(session.amount_total / 100);
+
+  const recordResult = await recordStripeCheckoutPaymentAtomic(supabase, {
+    companyId,
+    invoiceId,
+    amount: paymentAmount,
+    paymentDate,
+    checkoutSessionId,
+    providerPaymentId,
+    idempotencyKey,
+    providerMetadata: buildStripeCheckoutProviderMetadata({
+      checkoutSessionId,
+      paymentIntentId: providerPaymentId,
+      amountTotal: session.amount_total,
+      currency: session.currency ?? "usd",
+      paymentStatus: session.payment_status,
+      connectedAccountId,
+    }),
+  });
+
+  if (!recordResult.ok) {
+    if (recordResult.duplicate) {
+      await markProviderEventProcessed(supabase, providerEventId, companyId);
+      return { processed: true, ignored: false };
+    }
+
+    throw new Error(recordResult.error);
+  }
+
   await markProviderEventProcessed(supabase, providerEventId, companyId);
   return { processed: true, ignored: false };
 }
@@ -252,6 +473,7 @@ export async function processStripeWebhookEvent(
       return await processCheckoutSessionCompletedEvent(
         supabase,
         providerEventId,
+        event,
         session,
       );
     }

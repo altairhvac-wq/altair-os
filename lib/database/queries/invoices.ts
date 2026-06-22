@@ -1,4 +1,5 @@
 import { cache } from "react";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   applyInvoiceCreationDefaults,
   type CompanyBillingDefaults,
@@ -7,6 +8,7 @@ import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
 import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
+import type { Database } from "@/lib/database/types";
 import type {
   InvoiceInsert,
   InvoiceLineItemInsert,
@@ -571,6 +573,49 @@ export async function getInvoiceById(
     ...row,
     invoice_line_items: sortLineItems(lineItemRows),
   });
+}
+
+export type InvoiceStripePaymentTarget = {
+  id: string;
+  status: InvoiceStatus;
+  balanceDue: number;
+  amountPaid: number;
+  total: number;
+};
+
+export async function getInvoiceStripePaymentTarget(
+  supabase: SupabaseClient<Database>,
+  companyId: string,
+  invoiceId: string,
+): Promise<InvoiceStripePaymentTarget | null> {
+  const { data, error } = await supabase
+    .from("invoices")
+    .select("id, status, balance_due, amount_paid, total")
+    .eq("company_id", companyId)
+    .eq("id", invoiceId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getInvoiceStripePaymentTarget] query failed:", {
+      companyId,
+      invoiceId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return {
+    id: data.id,
+    status: data.status as InvoiceStatus,
+    balanceDue: Number(data.balance_due) || 0,
+    amountPaid: Number(data.amount_paid) || 0,
+    total: Number(data.total) || 0,
+  };
 }
 
 export async function updateInvoiceStatus(

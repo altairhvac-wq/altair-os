@@ -4,7 +4,7 @@
  */
 
 /** How a payment entered the system. */
-export type PaymentSource = "manual";
+export type PaymentSource = "manual" | "stripe";
 
 /** Provider that processed or recorded the payment. */
 export type PaymentProvider = "manual" | "stripe";

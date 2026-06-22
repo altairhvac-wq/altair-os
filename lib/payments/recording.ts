@@ -1,8 +1,12 @@
 import { mapDatabaseError } from "@/lib/database/errors";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/database/types";
+import type { Json } from "@/lib/database/types/enums";
 import type { InvoiceStatus } from "@/shared/types/invoice";
+import type { StripeCheckoutProviderMetadata } from "./stripe-checkout";
 import type { PaymentSource } from "./types";
 
-const SUPPORTED_PAYMENT_SOURCES: readonly PaymentSource[] = ["manual"];
+const SUPPORTED_MANUAL_PAYMENT_SOURCES: readonly PaymentSource[] = ["manual"];
 
 const RECORD_INVOICE_PAYMENT_RPC_EXCEPTION_CODES = [
   "insufficient_permission",
@@ -37,8 +41,8 @@ export function normalizeManualPaymentSource(source: string): PaymentSource {
 
 export function assertSupportedPaymentSource(
   source: PaymentSource,
-): asserts source is PaymentSource {
-  if (!SUPPORTED_PAYMENT_SOURCES.includes(source)) {
+): asserts source is "manual" {
+  if (!SUPPORTED_MANUAL_PAYMENT_SOURCES.includes(source)) {
     throw new Error(`Unsupported payment source: ${source}`);
   }
 }
@@ -116,4 +120,69 @@ export function parseRecordInvoicePaymentRpcResult(
         ? null
         : String(row.paid_at),
   };
+}
+
+export type RecordStripeCheckoutPaymentInput = {
+  companyId: string;
+  invoiceId: string;
+  amount: number;
+  paymentDate: string;
+  checkoutSessionId: string;
+  providerPaymentId: string | null;
+  idempotencyKey: string;
+  providerMetadata: StripeCheckoutProviderMetadata;
+};
+
+export function isDuplicateStripePaymentRpcError(error: {
+  message?: string;
+}): boolean {
+  const rawMessage = error.message?.trim() ?? "";
+  return extractRecordInvoicePaymentRpcExceptionCode(rawMessage) ===
+    "duplicate_payment_idempotency_key";
+}
+
+export async function recordStripeCheckoutPaymentAtomic(
+  supabase: SupabaseClient<Database>,
+  input: RecordStripeCheckoutPaymentInput,
+): Promise<
+  | { ok: true; result: RecordInvoicePaymentRpcResult }
+  | { ok: false; error: string; duplicate: boolean }
+> {
+  const { data, error } = await supabase.rpc("record_invoice_payment_atomic", {
+    p_company_id: input.companyId,
+    p_invoice_id: input.invoiceId,
+    p_amount: input.amount,
+    p_payment_method: "card",
+    p_payment_date: input.paymentDate,
+    p_reference: null,
+    p_notes: null,
+    p_expected_updated_at: null,
+    p_idempotency_key: input.idempotencyKey,
+    p_source: "stripe",
+    p_provider: "stripe",
+    p_provider_checkout_session_id: input.checkoutSessionId,
+    p_provider_payment_id: input.providerPaymentId,
+    p_provider_metadata: input.providerMetadata as Json,
+  });
+
+  if (error) {
+    const duplicate = isDuplicateStripePaymentRpcError(error);
+    return {
+      ok: false,
+      error: mapRecordInvoicePaymentRpcError(error),
+      duplicate,
+    };
+  }
+
+  const result = parseRecordInvoicePaymentRpcResult(data);
+
+  if (!result) {
+    return {
+      ok: false,
+      error: "Failed to record Stripe checkout payment.",
+      duplicate: false,
+    };
+  }
+
+  return { ok: true, result };
 }

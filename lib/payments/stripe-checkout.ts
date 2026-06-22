@@ -178,3 +178,42 @@ export function validateStripeInvoiceCheckoutReadiness(
 export function isPayableInvoiceStatus(status: string): status is PayableInvoiceStatus {
   return isInvoicePayable(status);
 }
+
+export function invoiceBalanceDueToCents(balanceDue: number): number {
+  return Math.round(roundCurrency(balanceDue) * 100);
+}
+
+export function buildStripeCheckoutIdempotencyKey(sessionId: string): string {
+  return `stripe:checkout_session:${sessionId}`;
+}
+
+export type StripeCheckoutProviderMetadata = {
+  checkout_session_id: string;
+  payment_intent: string | null;
+  amount_total: number;
+  currency: string;
+  payment_status: string;
+  connected_account_id: string;
+};
+
+export function buildStripeCheckoutProviderMetadata(input: {
+  checkoutSessionId: string;
+  paymentIntentId: string | null;
+  amountTotal: number;
+  currency: string;
+  paymentStatus: string;
+  connectedAccountId: string;
+}): StripeCheckoutProviderMetadata {
+  return {
+    checkout_session_id: input.checkoutSessionId,
+    payment_intent: input.paymentIntentId,
+    amount_total: input.amountTotal,
+    currency: input.currency,
+    payment_status: input.paymentStatus,
+    connected_account_id: input.connectedAccountId,
+  };
+}
+
+export function stripeUnixTimestampToDateOnly(unixSeconds: number): string {
+  return new Date(unixSeconds * 1000).toISOString().split("T")[0] ?? "";
+}

@@ -1181,6 +1181,11 @@ export type Database = {
           p_notes?: string | null;
           p_expected_updated_at?: string | null;
           p_idempotency_key?: string | null;
+          p_source?: string;
+          p_provider?: string | null;
+          p_provider_checkout_session_id?: string | null;
+          p_provider_payment_id?: string | null;
+          p_provider_metadata?: Json;
         };
         Returns: Json;
       };

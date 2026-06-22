@@ -1,5 +1,7 @@
 import { cache } from "react";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/database/types";
 import { getDateOnlyInTimeZone } from "@/shared/lib/datetime";
 import type { InvoicePaymentRow } from "@/lib/database/types/core-tables";
 import {
@@ -381,4 +383,44 @@ export async function recordInvoicePayment(
     previousStatus: rpcResult.previous_status,
     error: payment && updatedInvoice ? null : "Payment may have been saved. Refresh the page to confirm.",
   };
+}
+
+export async function findExistingStripeCheckoutPayment(
+  supabase: SupabaseClient<Database>,
+  companyId: string,
+  options: {
+    checkoutSessionId: string;
+    providerPaymentId: string | null;
+    idempotencyKey: string;
+  },
+): Promise<{ id: string } | null> {
+  const filters = [
+    `and(provider.eq.stripe,provider_checkout_session_id.eq.${options.checkoutSessionId})`,
+    `idempotency_key.eq.${options.idempotencyKey}`,
+  ];
+
+  if (options.providerPaymentId) {
+    filters.push(
+      `and(provider.eq.stripe,provider_payment_id.eq.${options.providerPaymentId})`,
+    );
+  }
+
+  const { data, error } = await supabase
+    .from("invoice_payments")
+    .select("id")
+    .eq("company_id", companyId)
+    .or(filters.join(","))
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[findExistingStripeCheckoutPayment] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    throw new Error("Failed to check existing Stripe checkout payment.");
+  }
+
+  return data ? { id: data.id } : null;
 }
