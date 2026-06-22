@@ -23,7 +23,9 @@ import {
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { CompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
+import type { StripePaymentSettingsSummary } from "@/shared/types/settings/payment-settings";
 import { BillingDocumentDefaultsCard } from "./BillingDocumentDefaultsCard";
+import { PaymentSettingsCard } from "./PaymentSettingsCard";
 import { PendingInvitesCard } from "./PendingInvitesCard";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
 import {
@@ -61,6 +63,9 @@ type SettingsPageViewProps = {
   demoDataStatus?: DemoDataStatus;
   demoDataLoadError?: string;
   pendingInvites?: PendingTeamInvite[];
+  canViewPaymentSettings?: boolean;
+  stripePaymentSettings?: StripePaymentSettingsSummary | null;
+  companyTimezone?: string | null;
 };
 
 function buildLocationLabel(profile: CompanyProfileSummary): string | null {
@@ -88,6 +93,9 @@ function SettingsPageLegacyView({
   canManageBillingDefaults,
   showBillingDefaultsSetupHint = false,
   pendingInvites = [],
+  canViewPaymentSettings = false,
+  stripePaymentSettings = null,
+  companyTimezone,
 }: SettingsPageViewProps) {
   const [members, setMembers] = useState(initialMembers);
   const [search, setSearch] = useState("");
@@ -417,6 +425,20 @@ function SettingsPageLegacyView({
               <SettingsComingSoonSection items={billingComingSoonItems} />
             </div>
           </MasterPageSection>
+
+          {canViewPaymentSettings ? (
+            <MasterPageSection
+              id="online-payments"
+              title="Online payments"
+              description="Stripe Connect account status"
+              density="compact"
+            >
+              <PaymentSettingsCard
+                stripeAccount={stripePaymentSettings ?? null}
+                companyTimezone={companyTimezone}
+              />
+            </MasterPageSection>
+          ) : null}
 
           <MasterPageSection
             title="Integrations"

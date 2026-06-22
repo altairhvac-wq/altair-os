@@ -6,6 +6,7 @@ import {
   canManageTeamMembers,
 } from "@/lib/database/access-control";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
+import { getCompanyPaymentAccount } from "@/lib/database/queries/company-payment-accounts";
 import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getDemoDataStatusSafe } from "@/lib/database/queries/demo-data";
@@ -25,6 +26,7 @@ import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedA
 import type { CompanyProfileSummary } from "@/shared/types/team-member";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingSnapshot } from "@/shared/types/onboarding";
+import type { StripePaymentSettingsSummary } from "@/shared/types/settings/payment-settings";
 
 const EMPTY_ONBOARDING_SNAPSHOT: OnboardingSnapshot = {
   teamMemberCount: 0,
@@ -75,6 +77,35 @@ async function loadDemoDataStatusSafely(
   }
 
   return getDemoDataStatusSafe(companyId, companyContext);
+}
+
+async function loadStripePaymentSettingsSafely(
+  companyId: string,
+  canView: boolean,
+): Promise<StripePaymentSettingsSummary | null | undefined> {
+  if (!canView) {
+    return undefined;
+  }
+
+  try {
+    const account = await getCompanyPaymentAccount(companyId, "stripe");
+
+    if (!account) {
+      return null;
+    }
+
+    return {
+      provider: account.provider,
+      status: account.status,
+      chargesEnabled: account.chargesEnabled,
+      payoutsEnabled: account.payoutsEnabled,
+      onlinePaymentsEnabled: account.onlinePaymentsEnabled,
+      lastSyncedAt: account.lastSyncedAt,
+    };
+  } catch (error) {
+    console.error("[SettingsPage] stripe payment settings load failed:", error);
+    return null;
+  }
 }
 
 export default async function SettingsPage() {
@@ -132,6 +163,12 @@ export default async function SettingsPage() {
   );
   const billingDefaults = getCompanyBillingDefaultsFromRow(companyContext.company);
   const northStar = isNorthStarShellEnabled();
+  const canViewPaymentSettings = companyContext.permissions.manageBilling;
+
+  const stripePaymentSettings = await loadStripePaymentSettingsSafely(
+    companyContext.company.id,
+    canViewPaymentSettings,
+  );
 
   return (
     <div className="min-w-0 max-w-full space-y-3 sm:space-y-4">
@@ -165,6 +202,9 @@ export default async function SettingsPage() {
         demoDataStatus={demoDataResult.status ?? undefined}
         demoDataLoadError={demoDataResult.error}
         pendingInvites={pendingInvites}
+        canViewPaymentSettings={canViewPaymentSettings}
+        stripePaymentSettings={stripePaymentSettings}
+        companyTimezone={companyContext.company.timezone}
       />
     </div>
   );

@@ -21,7 +21,9 @@ import {
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { CompanyBillingDefaults } from "@/shared/lib/company-billing-defaults";
+import type { StripePaymentSettingsSummary } from "@/shared/types/settings/payment-settings";
 import { BillingDocumentDefaultsCard } from "../BillingDocumentDefaultsCard";
+import { PaymentSettingsCard } from "../PaymentSettingsCard";
 import { PendingInvitesCard } from "../PendingInvitesCard";
 import { SettingsAlertBanner } from "../SettingsAlertBanner";
 import {
@@ -54,6 +56,9 @@ export type SettingsNorthStarViewProps = {
   demoDataStatus?: DemoDataStatus;
   demoDataLoadError?: string;
   pendingInvites?: PendingTeamInvite[];
+  canViewPaymentSettings?: boolean;
+  stripePaymentSettings?: StripePaymentSettingsSummary | null;
+  companyTimezone?: string | null;
 };
 
 function buildLocationLabel(profile: CompanyProfileSummary): string | null {
@@ -103,6 +108,9 @@ export function SettingsNorthStarView({
   canManageBillingDefaults,
   showBillingDefaultsSetupHint = false,
   pendingInvites = [],
+  canViewPaymentSettings = false,
+  stripePaymentSettings = null,
+  companyTimezone,
 }: SettingsNorthStarViewProps) {
   const [members, setMembers] = useState(initialMembers);
   const [search, setSearch] = useState("");
@@ -454,6 +462,23 @@ export function SettingsNorthStarView({
             <SettingsComingSoonSection items={billingComingSoonItems} northStar />
           </div>
         </section>
+
+        {canViewPaymentSettings ? (
+          <section id="online-payments" className={st.sectionSurface}>
+            <SettingsNorthStarSectionHeader
+              eyebrow="Payments"
+              title="Online payments"
+              description="Stripe Connect account status (read-only)."
+            />
+            <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5">
+              <PaymentSettingsCard
+                stripeAccount={stripePaymentSettings ?? null}
+                companyTimezone={companyTimezone}
+                northStar
+              />
+            </div>
+          </section>
+        ) : null}
 
         <section className={st.sectionSurface}>
           <SettingsNorthStarSectionHeader
