@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
@@ -74,6 +75,28 @@ const IOS_STEPS: WizardStep[] = [
     icon: Smartphone,
   },
 ];
+
+/** Typical iPhone screenshot dimensions; used for layout ratio only. */
+const IPHONE_SCREENSHOT_WIDTH = 1170;
+const IPHONE_SCREENSHOT_HEIGHT = 2532;
+
+const IOS_SCREENSHOT_WALKTHROUGH = [
+  {
+    src: "/install/iphone-step-1-tap-dots.png",
+    alt: "Safari on iPhone with the three-dot menu next to the website bar highlighted",
+    caption: "Tap the three dots next to the website bar.",
+  },
+  {
+    src: "/install/iphone-step-2-tap-share.png",
+    alt: "Safari menu open on iPhone with Share highlighted at the top",
+    caption: "Tap Share at the top of the menu.",
+  },
+  {
+    src: "/install/iphone-step-3-add-home-screen.png",
+    alt: "iOS Share Sheet on iPhone with Add to Home Screen highlighted",
+    caption: "Scroll down and tap Add to Home Screen.",
+  },
+] as const;
 
 const ANDROID_STEPS: WizardStep[] = [
   {
@@ -222,6 +245,74 @@ function InstallCardShell({
   );
 }
 
+function IosWalkthroughScreenshot({
+  src,
+  alt,
+  caption,
+  stepNumber,
+}: {
+  src: string;
+  alt: string;
+  caption: string;
+  stepNumber: number;
+}) {
+  const [visible, setVisible] = useState(true);
+
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <figure className="space-y-3">
+      <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded-xl border border-stone-200/90 bg-white shadow-[0_2px_8px_rgba(10,10,10,0.06),0_8px_24px_rgba(10,10,10,0.08)] sm:max-w-md">
+        <Image
+          src={src}
+          alt={alt}
+          width={IPHONE_SCREENSHOT_WIDTH}
+          height={IPHONE_SCREENSHOT_HEIGHT}
+          sizes="(max-width: 640px) 90vw, 448px"
+          className="h-auto w-full"
+          onError={() => setVisible(false)}
+        />
+      </div>
+      <figcaption className="text-center text-sm leading-relaxed text-stone-600">
+        <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#FAF4E8] text-xs font-bold text-[#9A7209] ring-1 ring-[#D4AF37]/25">
+          {stepNumber}
+        </span>
+        {caption}
+      </figcaption>
+    </figure>
+  );
+}
+
+function IosScreenshotWalkthrough() {
+  return (
+    <section
+      className="mt-8 rounded-xl border border-stone-200/80 bg-white/70 p-4 sm:p-5"
+      aria-label="iPhone install screenshot walkthrough"
+    >
+      <h3 className="text-base font-semibold text-[#0A0A0A] sm:text-lg">
+        See exactly where to tap
+      </h3>
+      <div className="mt-5 space-y-8">
+        {IOS_SCREENSHOT_WALKTHROUGH.map((screenshot, index) => (
+          <IosWalkthroughScreenshot
+            key={screenshot.src}
+            src={screenshot.src}
+            alt={screenshot.alt}
+            caption={screenshot.caption}
+            stepNumber={index + 1}
+          />
+        ))}
+      </div>
+      <p className="mt-6 text-center text-xs leading-relaxed text-stone-500">
+        Screens may look slightly different depending on your iPhone version, but
+        the buttons are the same.
+      </p>
+    </section>
+  );
+}
+
 function IosCantFindHelpBox() {
   return (
     <div className="mt-4 rounded-xl border border-amber-300/60 bg-amber-50/80 px-4 py-4">
@@ -259,6 +350,7 @@ function IosInstallWizard() {
         </p>
       </div>
       <WizardStepList steps={IOS_STEPS} />
+      <IosScreenshotWalkthrough />
       <IosCantFindHelpBox />
     </InstallCardShell>
   );
