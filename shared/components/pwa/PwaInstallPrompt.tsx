@@ -29,8 +29,8 @@ function PlatformInstallInstructions({ className = "" }: { className?: string })
       >
         <p className="font-semibold text-[#0A0A0A]">Install on iPhone</p>
         <p className="mt-1.5 leading-relaxed text-amber-900/90">
-          Open in Safari, tap Share at the bottom (or ⋯ first), scroll down, then
-          tap Add to Home Screen.
+          Open in Safari, tap ⋯ beside the website bar, tap Share, scroll down,
+          then tap Add to Home Screen.
         </p>
       </div>
     );

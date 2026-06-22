@@ -3,17 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
 import {
   Check,
-  ChevronDown,
   Copy,
   ExternalLink,
-  Globe,
   MessageSquare,
-  MoreVertical,
-  PlusSquare,
-  Share,
   Smartphone,
 } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
@@ -33,47 +27,25 @@ const ctaFocusClass =
 
 type InstallPlatform = "ios" | "android" | "desktop";
 
-type WizardStep = {
-  title: string;
-  instruction: string;
-  helperText?: string;
-  icon: LucideIcon;
+type CompactStep = {
+  emoji: string;
+  label: string;
 };
 
-const IOS_STEPS: WizardStep[] = [
-  {
-    title: "Open in Safari 🌐",
-    instruction: "Make sure this page is open in Safari on your iPhone.",
-    icon: Globe,
-  },
-  {
-    title: "Find the Share button ⬆️",
-    instruction: "Look at the bottom of Safari and tap the Share button.",
-    helperText: "If you do not see Share, tap the three dots (⋯) first.",
-    icon: Share,
-  },
-  {
-    title: "Scroll down ⬇️",
-    instruction:
-      'In the menu that opens, scroll down until you find "Add to Home Screen."',
-    icon: ChevronDown,
-  },
-  {
-    title: "Tap Add to Home Screen ➕",
-    instruction: 'Tap "Add to Home Screen."',
-    icon: PlusSquare,
-  },
-  {
-    title: "Tap Add ✅",
-    instruction: 'Tap "Add" in the top-right corner to confirm.',
-    icon: Check,
-  },
-  {
-    title: "Open Altair from your home screen 📱",
-    instruction:
-      "Look for the Altair icon on your home screen and tap it to open the app.",
-    icon: Smartphone,
-  },
+const IOS_QUICK_STEPS = [
+  "Tap the three dots (⋯) beside the website bar",
+  "Tap Share",
+  'Scroll down and tap Add to Home Screen',
+  'Tap Add',
+] as const;
+
+const IOS_COMPACT_STEPS: CompactStep[] = [
+  { emoji: "⋯", label: "Tap three dots" },
+  { emoji: "⬆️", label: "Tap Share" },
+  { emoji: "⬇️", label: "Scroll down" },
+  { emoji: "➕", label: "Add to Home Screen" },
+  { emoji: "✅", label: "Tap Add" },
+  { emoji: "📱", label: "Open from home screen" },
 ];
 
 /** Typical iPhone screenshot dimensions; used for layout ratio only. */
@@ -98,35 +70,12 @@ const IOS_SCREENSHOT_WALKTHROUGH = [
   },
 ] as const;
 
-const ANDROID_STEPS: WizardStep[] = [
-  {
-    title: "Open in Chrome 🌐",
-    instruction:
-      "Make sure this page is open in Chrome on your Android phone.",
-    icon: Globe,
-  },
-  {
-    title: "Tap Install if shown 📲",
-    instruction: 'If you see an "Install Altair" button at the top, tap it.',
-    icon: Smartphone,
-  },
-  {
-    title: "Or tap the three-dot menu ⋯",
-    instruction:
-      "If Install does not appear, tap the three dots (⋯) in the top-right corner of Chrome.",
-    icon: MoreVertical,
-  },
-  {
-    title: "Tap Install app or Add to Home screen ➕",
-    instruction: 'Tap "Install app" or "Add to Home screen" from the menu.',
-    icon: PlusSquare,
-  },
-  {
-    title: "Open Altair from your home screen 📱",
-    instruction:
-      "Look for the Altair icon on your home screen and tap it to open the app.",
-    icon: Smartphone,
-  },
+const ANDROID_COMPACT_STEPS: CompactStep[] = [
+  { emoji: "🌐", label: "Open in Chrome" },
+  { emoji: "📲", label: "Tap Install if shown" },
+  { emoji: "⋯", label: "Or tap three-dot menu" },
+  { emoji: "➕", label: "Install app or Add to Home screen" },
+  { emoji: "📱", label: "Open from home screen" },
 ];
 
 function PwaInstallDebugPanel() {
@@ -177,42 +126,24 @@ function PwaInstallDebugPanel() {
   );
 }
 
-function WizardStepList({ steps }: { steps: WizardStep[] }) {
+function CompactStepList({ steps }: { steps: CompactStep[] }) {
   return (
-    <ol className="mt-6 space-y-4">
-      {steps.map((step, index) => {
-        const Icon = step.icon;
-
-        return (
-          <li
-            key={step.title}
-            className="flex gap-4 rounded-xl border border-stone-200/80 bg-white/60 p-4 shadow-sm"
+    <ul className="mt-4 divide-y divide-stone-200/80 rounded-xl border border-stone-200/80 bg-white/60">
+      {steps.map((step) => (
+        <li
+          key={step.label}
+          className="flex items-center gap-3 px-3.5 py-2.5 text-sm text-stone-700"
+        >
+          <span
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#FAF4E8] text-base ring-1 ring-[#D4AF37]/20"
+            aria-hidden
           >
-            <div className="flex flex-col items-center gap-2">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FAF4E8] text-lg font-bold text-[#9A7209] ring-1 ring-[#D4AF37]/25">
-                {index + 1}
-              </span>
-            </div>
-            <div className="min-w-0 flex-1 pt-0.5">
-              <div className="flex items-center gap-2">
-                <Icon className="h-4 w-4 shrink-0 text-[#9A7209]" aria-hidden />
-                <p className="text-base font-semibold text-[#0A0A0A]">
-                  {step.title}
-                </p>
-              </div>
-              <p className="mt-1 text-sm leading-relaxed text-stone-600">
-                {step.instruction}
-              </p>
-              {step.helperText ? (
-                <p className="mt-2 rounded-lg border border-amber-200/60 bg-amber-50/70 px-3 py-2 text-xs leading-relaxed text-amber-900/90">
-                  {step.helperText}
-                </p>
-              ) : null}
-            </div>
-          </li>
-        );
-      })}
-    </ol>
+            {step.emoji}
+          </span>
+          <span className="font-medium text-[#0A0A0A]">{step.label}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -263,20 +194,31 @@ function IosWalkthroughScreenshot({
   }
 
   return (
-    <figure className="space-y-3">
-      <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded-xl border border-stone-200/90 bg-white shadow-[0_2px_8px_rgba(10,10,10,0.06),0_8px_24px_rgba(10,10,10,0.08)] sm:max-w-md">
-        <Image
-          src={src}
-          alt={alt}
-          width={IPHONE_SCREENSHOT_WIDTH}
-          height={IPHONE_SCREENSHOT_HEIGHT}
-          sizes="(max-width: 640px) 90vw, 448px"
-          className="h-auto w-full"
-          onError={() => setVisible(false)}
-        />
-      </div>
-      <figcaption className="text-center text-sm leading-relaxed text-stone-600">
-        <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#FAF4E8] text-xs font-bold text-[#9A7209] ring-1 ring-[#D4AF37]/25">
+    <figure className="flex flex-col">
+      <a
+        href={src}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`group block rounded-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20 ${ctaFocusClass}`}
+        aria-label={`${caption} — open full-size screenshot`}
+      >
+        <div className="flex max-h-[min(420px,55vh)] items-center justify-center overflow-hidden rounded-xl border border-stone-200/90 bg-white shadow-[0_2px_8px_rgba(10,10,10,0.06)] sm:max-h-[460px]">
+          <Image
+            src={src}
+            alt={alt}
+            width={IPHONE_SCREENSHOT_WIDTH}
+            height={IPHONE_SCREENSHOT_HEIGHT}
+            sizes="(max-width: 640px) 90vw, 280px"
+            className="max-h-[min(420px,55vh)] w-full object-contain sm:max-h-[460px]"
+            onError={() => setVisible(false)}
+          />
+        </div>
+        <p className="mt-1.5 text-center text-[11px] text-stone-400 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+          Tap to open full size
+        </p>
+      </a>
+      <figcaption className="mt-2 text-center text-xs leading-relaxed text-stone-600 sm:text-sm">
+        <span className="mr-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#FAF4E8] text-xs font-bold text-[#9A7209] ring-1 ring-[#D4AF37]/25">
           {stepNumber}
         </span>
         {caption}
@@ -288,16 +230,16 @@ function IosWalkthroughScreenshot({
 function IosScreenshotWalkthrough() {
   return (
     <section
-      className="mt-8 rounded-xl border border-stone-200/80 bg-white/70 p-4 sm:p-5"
+      className="mt-6 rounded-xl border border-stone-200/80 bg-white/70 p-4 sm:p-5"
       aria-label="iPhone install screenshot walkthrough"
     >
-      <h3 className="text-base font-semibold text-[#0A0A0A] sm:text-lg">
+      <h3 className="text-sm font-semibold text-[#0A0A0A] sm:text-base">
         See exactly where to tap
       </h3>
-      <p className="mt-1.5 text-sm leading-relaxed text-stone-600">
-        These screenshots show the real iPhone Safari buttons.
+      <p className="mt-1 text-xs leading-relaxed text-stone-500 sm:text-sm">
+        Optional visual guide — tap any photo to open it full size.
       </p>
-      <div className="mt-5 space-y-8">
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
         {IOS_SCREENSHOT_WALKTHROUGH.map((screenshot, index) => (
           <IosWalkthroughScreenshot
             key={screenshot.src}
@@ -308,53 +250,31 @@ function IosScreenshotWalkthrough() {
           />
         ))}
       </div>
-      <p className="mt-6 text-center text-xs leading-relaxed text-stone-500">
-        Screens may look slightly different depending on your iPhone version, but
-        the buttons are the same.
-      </p>
     </section>
-  );
-}
-
-function IosCantFindHelpBox() {
-  return (
-    <div className="mt-4 rounded-xl border border-amber-300/60 bg-amber-50/80 px-4 py-4">
-      <p className="text-sm font-semibold text-amber-950">
-        Can&apos;t find &ldquo;Add to Home Screen&rdquo;?
-      </p>
-      <ul className="mt-2.5 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-amber-900/90">
-        <li>Make sure you are using Safari</li>
-        <li>
-          If you opened Altair from Facebook, Messenger, Gmail, or another app,
-          open it in Safari first
-        </li>
-        <li>If you do not see Share, tap the three dots (⋯) first</li>
-        <li>
-          After tapping Share, scroll down to find &ldquo;Add to Home
-          Screen&rdquo;
-        </li>
-      </ul>
-    </div>
   );
 }
 
 function IosInstallWizard() {
   return (
-    <InstallCardShell eyebrow="Step-by-step" title="Install Altair on iPhone">
-      <div className="mt-4 space-y-2 rounded-xl border border-amber-200/70 bg-amber-50/60 px-4 py-3">
-        <p className="text-sm font-medium text-amber-950">
-          Apple does not allow a one-tap install button for web apps.
-        </p>
-        <p className="text-sm text-amber-900/85">
-          This only takes about 20 seconds.
-        </p>
-        <p className="text-sm text-amber-900/85">
-          We will walk you through it step by step.
-        </p>
-      </div>
-      <WizardStepList steps={IOS_STEPS} />
+    <InstallCardShell eyebrow="Quick install" title="Install Altair on iPhone">
+      <p className="mt-3 text-sm leading-relaxed text-stone-600">
+        Apple does not allow a one-tap install button for web apps, but this
+        only takes about 20 seconds.
+      </p>
+
+      <ol className="mt-4 space-y-2 rounded-xl border border-[#D4AF37]/25 bg-[#FAF4E8]/40 px-4 py-3.5">
+        {IOS_QUICK_STEPS.map((step, index) => (
+          <li key={step} className="flex gap-3 text-sm leading-snug text-[#0A0A0A]">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-[#9A7209] ring-1 ring-[#D4AF37]/30">
+              {index + 1}
+            </span>
+            <span className="pt-0.5 font-medium">{step}</span>
+          </li>
+        ))}
+      </ol>
+
+      <CompactStepList steps={IOS_COMPACT_STEPS} />
       <IosScreenshotWalkthrough />
-      <IosCantFindHelpBox />
     </InstallCardShell>
   );
 }
@@ -369,21 +289,21 @@ function AndroidInstallWizard() {
   }, []);
 
   return (
-    <InstallCardShell eyebrow="Step-by-step" title="Install Altair on Android">
+    <InstallCardShell eyebrow="Quick install" title="Install Altair on Android">
       <PwaInstallPrompt
-        className="mt-5"
+        className="mt-4"
         variant="button-only"
         onPromptAvailabilityChange={handlePromptAvailabilityChange}
       />
 
       {promptChecked && !installPromptAvailable ? (
-        <p className="mt-4 rounded-xl border border-stone-200/80 bg-white/70 px-4 py-3 text-sm leading-relaxed text-stone-700">
+        <p className="mt-3 rounded-xl border border-stone-200/80 bg-white/70 px-3.5 py-2.5 text-sm leading-relaxed text-stone-700">
           Install button not showing? Tap the three dots (⋯) in Chrome, then tap
           Install app or Add to Home screen.
         </p>
       ) : null}
 
-      <WizardStepList steps={ANDROID_STEPS} />
+      <CompactStepList steps={ANDROID_COMPACT_STEPS} />
     </InstallCardShell>
   );
 }
@@ -391,8 +311,9 @@ function AndroidInstallWizard() {
 function DesktopInstallCard() {
   return (
     <InstallCardShell eyebrow="Send to your phone" title="Open this page on your phone">
-      <p className="mt-4 text-sm leading-relaxed text-stone-700 sm:text-base">
-        Copy this link and send it to the phone you want to install Altair on.
+      <p className="mt-3 text-sm leading-relaxed text-stone-700">
+        Copy the install link below and send it to the phone you want to install
+        Altair on.
       </p>
     </InstallCardShell>
   );
@@ -422,10 +343,12 @@ function CopyButton({
   label,
   copiedLabel,
   onCopy,
+  compact = false,
 }: {
   label: string;
   copiedLabel: string;
   onCopy: () => Promise<void>;
+  compact?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -443,9 +366,13 @@ function CopyButton({
     <button
       type="button"
       onClick={handleClick}
-      className={`inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-800 shadow-sm transition hover:bg-stone-50 sm:flex-none ${ctaFocusClass}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white font-semibold text-stone-800 shadow-sm transition hover:bg-stone-50 ${ctaFocusClass} ${
+        compact
+          ? "min-h-[40px] px-3.5 py-2 text-xs"
+          : "min-h-[48px] flex-1 px-5 py-3 text-sm sm:flex-none"
+      }`}
     >
-      <Copy className="h-4 w-4" aria-hidden />
+      <Copy className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} aria-hidden />
       {copied ? copiedLabel : label}
     </button>
   );
@@ -453,24 +380,20 @@ function CopyButton({
 
 function ShareHelpers() {
   return (
-    <section className="rounded-2xl border border-stone-200/80 bg-white/80 p-5 sm:p-6">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500">
-        Send to phone
-      </p>
-      <p className="mt-2 text-sm text-stone-600">
-        Share the install link or a ready-made message with beta testers.
-      </p>
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        <CopyButton
-          label="Copy install link"
-          copiedLabel="Link copied"
-          onCopy={async () => {
-            await navigator.clipboard.writeText(getInstallPageUrl());
-          }}
-        />
+    <section className="rounded-xl border border-stone-200/70 bg-white/60 px-4 py-3.5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+            Send to phone
+          </p>
+          <p className="mt-0.5 text-xs leading-relaxed text-stone-500">
+            Copy a ready-made message for beta testers.
+          </p>
+        </div>
         <CopyButton
           label="Copy beta tester message"
           copiedLabel="Message copied"
+          compact
           onCopy={async () => {
             await navigator.clipboard.writeText(getBetaTesterInstallMessage());
           }}
@@ -482,61 +405,84 @@ function ShareHelpers() {
 
 function TroubleshootingSection() {
   return (
-    <section className="rounded-2xl border border-stone-200/80 bg-stone-50/80 p-5 sm:p-6">
-      <h2 className="text-base font-semibold text-[#0A0A0A] sm:text-lg">
-        Not seeing Add to Home Screen?
-      </h2>
+    <details className="group rounded-xl border border-stone-200/80 bg-stone-50/80">
+      <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-semibold text-[#0A0A0A] marker:content-none sm:text-base [&::-webkit-details-marker]:hidden">
+        <span className="flex items-center justify-between gap-2">
+          Having trouble?
+          <span className="text-xs font-normal text-stone-400 group-open:hidden">
+            Tap to expand
+          </span>
+        </span>
+      </summary>
 
-      <div className="mt-5 space-y-5">
+      <div className="space-y-4 border-t border-stone-200/70 px-4 py-4 text-sm leading-relaxed text-stone-600">
         <div>
-          <p className="text-sm font-semibold text-stone-800">iPhone</p>
-          <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-stone-600">
-            <li>Make sure you are using Safari</li>
+          <p className="font-semibold text-stone-800">iPhone</p>
+          <ul className="mt-1.5 list-disc space-y-1 pl-5">
+            <li>Use Safari</li>
+            <li>Tap ⋯ beside the website bar</li>
+            <li>Tap Share</li>
+            <li>Scroll down to Add to Home Screen</li>
             <li>
-              If you opened from Facebook, Messenger, or Gmail, tap the browser
-              icon or open in Safari first
-            </li>
-            <li>
-              Use the Share button in Safari, not long-press on a link
+              If opened from Facebook/Messenger/Gmail, open in Safari first
             </li>
           </ul>
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-stone-800">Android</p>
-          <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-stone-600">
+          <p className="font-semibold text-stone-800">Android</p>
+          <ul className="mt-1.5 list-disc space-y-1 pl-5">
             <li>Use Chrome</li>
-            <li>If Install does not appear, use the three-dot menu</li>
-            <li>Make sure the page is loaded over HTTPS</li>
+            <li>Tap Install if shown</li>
+            <li>Or use three-dot menu → Install app / Add to Home screen</li>
           </ul>
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-stone-800">
-            Already installed
-          </p>
-          <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-stone-600">
-            <li>Open Altair from the home screen icon</li>
-            <li>
-              If you deleted it, reopen this page in Safari/Chrome and add it
-              again
-            </li>
+          <p className="font-semibold text-stone-800">Already installed</p>
+          <ul className="mt-1.5 list-disc space-y-1 pl-5">
+            <li>Open Altair from home screen</li>
+            <li>If deleted, reopen /install and add it again</li>
           </ul>
         </div>
       </div>
-    </section>
+    </details>
   );
 }
 
 function IosStickyHint() {
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    function updateVisibility() {
+      const scrollBottom =
+        window.scrollY + window.innerHeight >=
+        document.documentElement.scrollHeight - 140;
+      setVisible(!scrollBottom);
+    }
+
+    updateVisibility();
+    window.addEventListener("scroll", updateVisibility, { passive: true });
+    window.addEventListener("resize", updateVisibility);
+
+    return () => {
+      window.removeEventListener("scroll", updateVisibility);
+      window.removeEventListener("resize", updateVisibility);
+    };
+  }, []);
+
+  if (!visible) {
+    return null;
+  }
+
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 border-t border-[#D4AF37]/25 bg-[#FFFCF8]/95 px-5 py-2.5 shadow-[0_-4px_20px_rgba(10,10,10,0.08)] backdrop-blur-sm pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-3xl text-center">
         <p className="text-sm font-medium text-[#9A7209]">
-          ⬆️ Next: tap Share at the bottom
+          ⋯ Next: tap the three dots by altair-op.com
         </p>
         <p className="mt-0.5 text-xs text-[#9A7209]/80">
-          If you do not see it, tap ⋯ first
+          Then tap Share → Add to Home Screen
         </p>
       </div>
     </div>
@@ -605,7 +551,7 @@ export function InstallPageView() {
       <main
         className={`relative mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-12 ${
           showIosStickyHint
-            ? "pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))]"
+            ? "pb-[max(6rem,calc(env(safe-area-inset-bottom)+5rem))]"
             : "pb-[max(2rem,env(safe-area-inset-bottom))]"
         }`}
       >
@@ -621,7 +567,7 @@ export function InstallPageView() {
           <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-stone-600">
             {hydrated && standalone
               ? "Launch Altair from your home screen icon."
-              : "Follow a few quick steps and you're done."}
+              : "Do these few steps and you're done."}
           </p>
         </div>
 
@@ -656,9 +602,13 @@ export function InstallPageView() {
           ) : null}
         </div>
 
-        {!standalone ? <div className="mt-8"><TroubleshootingSection /></div> : null}
+        {!standalone ? (
+          <div className="mt-6">
+            <TroubleshootingSection />
+          </div>
+        ) : null}
 
-        <p className="mt-8 flex items-center justify-center gap-1.5 text-center text-[11px] text-stone-400">
+        <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-[11px] text-stone-400">
           <MessageSquare className="h-3 w-3" aria-hidden />
           Beta testers · Add Altair to your home screen for quick access
         </p>
