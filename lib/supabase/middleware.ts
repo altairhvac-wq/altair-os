@@ -20,6 +20,7 @@ const INSTALL_ROUTE = "/install";
 const AUTH_CALLBACK_ROUTE = "/auth/callback";
 const ESTIMATE_APPROVAL_ROUTE_PREFIX = "/estimate-approval";
 const INVOICE_PAYMENT_ROUTE_PREFIX = "/invoice-payment";
+const PAYMENT_WEBHOOK_ROUTE = "/api/webhooks/payments";
 
 function isAuthRoute(pathname: string) {
   return AUTH_ROUTES.some(
@@ -41,6 +42,10 @@ function isInvoicePaymentRoute(pathname: string) {
   );
 }
 
+function isPaymentWebhookRoute(pathname: string) {
+  return pathname === PAYMENT_WEBHOOK_ROUTE;
+}
+
 function isPricingRoute(pathname: string) {
   return pathname === PRICING_ROUTE;
 }
@@ -56,7 +61,8 @@ function isPublicRoute(pathname: string) {
     isInstallRoute(pathname) ||
     pathname === AUTH_CALLBACK_ROUTE ||
     isEstimateApprovalRoute(pathname) ||
-    isInvoicePaymentRoute(pathname)
+    isInvoicePaymentRoute(pathname) ||
+    isPaymentWebhookRoute(pathname)
   );
 }
 
