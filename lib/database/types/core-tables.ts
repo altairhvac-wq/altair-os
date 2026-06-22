@@ -30,6 +30,11 @@ import type {
   Timestamp,
   UUID,
 } from "./enums";
+import type {
+  PaymentProvider,
+  PaymentRecordStatus,
+  PaymentSource,
+} from "@/lib/payments/types";
 
 export type CompanyRow = {
   id: UUID;
@@ -888,6 +893,15 @@ export type InvoicePaymentRow = {
   notes: string | null;
   recorded_by: UUID | null;
   is_demo: boolean;
+  source: PaymentSource;
+  provider: PaymentProvider | null;
+  provider_payment_id: string | null;
+  provider_checkout_session_id: string | null;
+  idempotency_key: string | null;
+  status: PaymentRecordStatus;
+  fee_amount: number | null;
+  net_amount: number | null;
+  provider_metadata: Json;
   created_at: Timestamp;
 };
 
@@ -902,6 +916,15 @@ export type InvoicePaymentInsert = {
   notes?: string | null;
   recorded_by?: UUID | null;
   is_demo?: boolean;
+  source?: PaymentSource;
+  provider?: PaymentProvider | null;
+  provider_payment_id?: string | null;
+  provider_checkout_session_id?: string | null;
+  idempotency_key?: string | null;
+  status?: PaymentRecordStatus;
+  fee_amount?: number | null;
+  net_amount?: number | null;
+  provider_metadata?: Json;
   created_at?: Timestamp;
 };
 

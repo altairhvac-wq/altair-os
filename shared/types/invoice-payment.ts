@@ -1,4 +1,11 @@
 import { getCompanyTimeZone, getDateOnlyInTimeZone } from "@/shared/lib/datetime";
+import type {
+  PaymentProvider,
+  PaymentRecordStatus,
+  PaymentSource,
+} from "@/lib/payments/types";
+
+export type { PaymentProvider, PaymentRecordStatus, PaymentSource };
 
 export type PaymentMethod =
   | "cash"
@@ -18,6 +25,15 @@ export type InvoicePayment = {
   recordedById?: string;
   recordedByName?: string;
   createdAt: string;
+  source?: PaymentSource;
+  provider?: PaymentProvider | null;
+  providerPaymentId?: string | null;
+  providerCheckoutSessionId?: string | null;
+  idempotencyKey?: string | null;
+  status?: PaymentRecordStatus;
+  feeAmount?: number | null;
+  netAmount?: number | null;
+  providerMetadata?: Record<string, unknown>;
 };
 
 export type RecordPaymentFormData = {
