@@ -40,7 +40,7 @@ export const FOUNDER_MARKETING_SCREENSHOT_OPTIONS: FounderMarketingScreenshotOpt
     {
       id: "reports",
       label: "Reports workspace",
-      path: "/marketing/screenshots/social/reports-workspace.png",
+      path: "/marketing/screenshots/social/reports-workspace-card.png",
     },
   ];
 

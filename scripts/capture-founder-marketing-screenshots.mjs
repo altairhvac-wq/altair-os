@@ -14,6 +14,7 @@
  *
  * Output:
  *   public/marketing/screenshots/social/*.png (1200x540 social-ready crops)
+ *   public/marketing/screenshots/social/*-card.png (1080x1080 Facebook-ready cards)
  */
 
 import fs from "fs";
@@ -28,6 +29,7 @@ const BASE_URL = process.env.BASE_URL?.trim() || "http://localhost:3000";
 const VIEWPORT = { width: 1440, height: 900 };
 const CLIP_WIDTH = 1200;
 const CLIP_HEIGHT = 540;
+const CARD_SIZE = 1080;
 
 /** @type {Array<{ id: string; route: string; output: string; anchor: string; ready?: string }>} */
 const CAPTURES = [
@@ -44,6 +46,30 @@ const CAPTURES = [
     output: "leads-workspace.png",
     anchor: "h1",
     ready: "button.north-star-leads-primary-action, .leads-north-star-filter-bar, .north-star-leads-primary-action",
+  },
+];
+
+/** @type {Array<{ id: string; screenshot: string; output: string; label: string; headline: string; subheadline: string; footer: string }>} */
+const SOCIAL_CARDS = [
+  {
+    id: "reports-workspace",
+    screenshot: "reports-workspace.png",
+    output: "reports-workspace-card.png",
+    label: "Altair OS",
+    headline: "Reports that show what changed",
+    subheadline:
+      "Revenue, jobs, cash flow, and performance in one operating brief.",
+    footer: "Built for small HVAC & trades companies",
+  },
+  {
+    id: "leads-workspace",
+    screenshot: "leads-workspace.png",
+    output: "leads-workspace-card.png",
+    label: "Altair OS",
+    headline: "Leads that stay organized",
+    subheadline:
+      "Track inquiries, follow-ups, and conversions without losing momentum.",
+    footer: "Built for small HVAC & trades companies",
   },
 ];
 
@@ -114,6 +140,145 @@ async function captureSocialScreenshot(page, capture) {
   return outputPath;
 }
 
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function buildSocialCardHtml({ screenshotDataUrl, label, headline, subheadline, footer }) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: ${CARD_SIZE}px;
+      height: ${CARD_SIZE}px;
+      overflow: hidden;
+      background: #070b10;
+    }
+    .card {
+      width: ${CARD_SIZE}px;
+      height: ${CARD_SIZE}px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 44px 40px 36px;
+      background:
+        radial-gradient(ellipse 120% 70% at 50% -10%, rgb(201 164 77 / 0.16) 0%, transparent 58%),
+        radial-gradient(ellipse 90% 55% at 88% 92%, rgb(138 99 36 / 0.12) 0%, transparent 62%),
+        linear-gradient(180deg, #0e141d 0%, #070b10 100%);
+      color: #f3ebdd;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    .label {
+      color: #c9a44d;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+    .headline {
+      margin-top: 18px;
+      max-width: 920px;
+      color: #fff9ea;
+      font-size: 46px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.08;
+      text-align: center;
+    }
+    .subheadline {
+      margin-top: 14px;
+      max-width: 860px;
+      color: #c9bfae;
+      font-size: 24px;
+      font-weight: 500;
+      line-height: 1.35;
+      text-align: center;
+    }
+    .screenshot-frame {
+      margin-top: 28px;
+      width: 920px;
+      max-width: 100%;
+      padding: 10px;
+      border-radius: 18px;
+      border: 1px solid rgb(201 164 77 / 0.28);
+      background: linear-gradient(180deg, rgb(16 26 40 / 0.92) 0%, rgb(11 17 24 / 0.96) 100%);
+      box-shadow:
+        0 0 0 1px rgb(255 255 255 / 0.04),
+        0 18px 48px rgb(0 0 0 / 0.42),
+        0 0 72px rgb(201 164 77 / 0.08);
+    }
+    .screenshot-frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      border: 1px solid rgb(255 255 255 / 0.06);
+    }
+    .footer {
+      margin-top: auto;
+      padding-top: 22px;
+      color: #8e826f;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="label">${escapeHtml(label)}</div>
+    <h1 class="headline">${escapeHtml(headline)}</h1>
+    <p class="subheadline">${escapeHtml(subheadline)}</p>
+    <div class="screenshot-frame">
+      <img src="${screenshotDataUrl}" alt="" />
+    </div>
+    <p class="footer">${escapeHtml(footer)}</p>
+  </div>
+</body>
+</html>`;
+}
+
+async function renderSocialCard(page, card) {
+  const screenshotPath = path.join(OUTPUT_DIR, card.screenshot);
+  if (!fs.existsSync(screenshotPath)) {
+    throw new Error(`Missing screenshot for card ${card.id}: ${path.relative(ROOT, screenshotPath)}`);
+  }
+
+  const screenshotDataUrl = `data:image/png;base64,${fs.readFileSync(screenshotPath).toString("base64")}`;
+  const html = buildSocialCardHtml({
+    screenshotDataUrl,
+    label: card.label,
+    headline: card.headline,
+    subheadline: card.subheadline,
+    footer: card.footer,
+  });
+
+  await page.setViewportSize({ width: CARD_SIZE, height: CARD_SIZE });
+  await page.setContent(html, { waitUntil: "load" });
+  await page.waitForFunction(() => {
+    const img = document.querySelector(".screenshot-frame img");
+    return Boolean(img && img.complete && img.naturalWidth > 0);
+  });
+
+  const outputPath = path.join(OUTPUT_DIR, card.output);
+  await page.locator(".card").screenshot({
+    path: outputPath,
+    type: "png",
+  });
+
+  console.log(`  → ${path.relative(ROOT, outputPath)} (${CARD_SIZE}x${CARD_SIZE})`);
+  return outputPath;
+}
+
 function assertAuthFile() {
   if (fs.existsSync(AUTH_PATH)) {
     return;
@@ -144,6 +309,14 @@ async function main() {
   try {
     for (const capture of CAPTURES) {
       await captureSocialScreenshot(page, capture);
+    }
+
+    console.log("");
+    console.log("Rendering Facebook-ready social cards...");
+
+    for (const card of SOCIAL_CARDS) {
+      console.log(`Card ${card.id}`);
+      await renderSocialCard(page, card);
     }
   } finally {
     await browser.close();
