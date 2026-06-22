@@ -8,6 +8,11 @@ import type {
 } from "@/lib/payments/provider-events";
 import type { PaymentProvider } from "@/lib/payments/types";
 
+export type PaymentProviderEventLookup = {
+  id: string;
+  processingStatus: PaymentProviderEventStatus;
+};
+
 export type UpdatePaymentProviderEventParams = {
   provider: PaymentProvider;
   providerEventId: string;
@@ -54,4 +59,63 @@ export async function updatePaymentProviderEvent(
   }
 
   return { ok: true };
+}
+
+export async function findPaymentProviderEvent(
+  supabase: SupabaseClient<Database>,
+  provider: PaymentProvider,
+  providerEventId: string,
+): Promise<PaymentProviderEventLookup | null> {
+  const { data, error } = await supabase
+    .from("payment_provider_events")
+    .select("id, processing_status")
+    .eq("provider", provider)
+    .eq("provider_event_id", providerEventId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[findPaymentProviderEvent] query failed:", {
+      provider,
+      providerEventId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return {
+    id: data.id,
+    processingStatus: data.processing_status as PaymentProviderEventStatus,
+  };
+}
+
+export async function claimPaymentProviderEventForReprocessing(
+  supabase: SupabaseClient<Database>,
+  provider: PaymentProvider,
+  providerEventId: string,
+): Promise<{ claimed: boolean }> {
+  const { data, error } = await supabase
+    .from("payment_provider_events")
+    .update({ processing_status: "processing" })
+    .eq("provider", provider)
+    .eq("provider_event_id", providerEventId)
+    .in("processing_status", ["received", "failed"])
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[claimPaymentProviderEventForReprocessing] update failed:", {
+      provider,
+      providerEventId,
+      code: error.code,
+      message: error.message,
+    });
+    return { claimed: false };
+  }
+
+  return { claimed: data !== null };
 }

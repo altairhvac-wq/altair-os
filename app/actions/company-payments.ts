@@ -2,11 +2,16 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { assertStripeConnectOnboardingAccess } from "@/lib/database/access-control";
+import {
+  assertOnlineCheckoutManagementAccess,
+  assertStripeConnectOnboardingAccess,
+} from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyPaymentAccount } from "@/lib/database/queries/company-payment-accounts";
 import {
   attachStripeProviderAccountId,
+  disableOnlineCheckoutForCompany,
+  enableOnlineCheckoutForCompany,
   insertStripePaymentAccountForOnboarding,
 } from "@/lib/database/services/company-payment-accounts";
 import { isStripeConnectOnboardingConfigured } from "@/lib/payments/env";
@@ -20,11 +25,30 @@ export type StartStripeConnectOnboardingActionResult = {
   error?: string;
 };
 
+export type OnlineCheckoutActionResult = {
+  error?: string;
+};
+
 async function requireStripeConnectOnboardingContext() {
   const context = await getActiveCompanyContext();
 
   if (!context) {
     return { error: "No active company workspace." as const };
+  }
+
+  return { context };
+}
+
+async function requireOnlineCheckoutManagementContext() {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." as const };
+  }
+
+  const accessError = assertOnlineCheckoutManagementAccess(context);
+  if (accessError) {
+    return { error: accessError };
   }
 
   return { context };
@@ -117,4 +141,38 @@ export async function startStripeConnectOnboardingAction(): Promise<StartStripeC
 
   revalidatePath("/settings");
   redirect(onboardingUrl);
+}
+
+export async function enableOnlineCheckoutAction(): Promise<OnlineCheckoutActionResult> {
+  const contextResult = await requireOnlineCheckoutManagementContext();
+  if ("error" in contextResult) {
+    return { error: contextResult.error };
+  }
+
+  const companyId = contextResult.context.company.id;
+  const result = await enableOnlineCheckoutForCompany(companyId);
+
+  if (!result.ok) {
+    return { error: result.error ?? "Failed to enable online checkout." };
+  }
+
+  revalidatePath("/settings");
+  return {};
+}
+
+export async function disableOnlineCheckoutAction(): Promise<OnlineCheckoutActionResult> {
+  const contextResult = await requireOnlineCheckoutManagementContext();
+  if ("error" in contextResult) {
+    return { error: contextResult.error };
+  }
+
+  const companyId = contextResult.context.company.id;
+  const result = await disableOnlineCheckoutForCompany(companyId);
+
+  if (!result.ok) {
+    return { error: result.error ?? "Failed to disable online checkout." };
+  }
+
+  revalidatePath("/settings");
+  return {};
 }

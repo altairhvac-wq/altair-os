@@ -3,6 +3,7 @@ import {
   canAccessCompanySettings,
   canAccessSystemCheck,
   canManageDemoData,
+  canManageOnlineCheckout,
   canManageTeamMembers,
   canStartStripeConnectOnboarding,
 } from "@/lib/database/access-control";
@@ -105,6 +106,9 @@ async function loadStripePaymentSettingsSafely(
       chargesEnabled: account.chargesEnabled,
       payoutsEnabled: account.payoutsEnabled,
       onlinePaymentsEnabled: account.onlinePaymentsEnabled,
+      hasProviderAccountId: account.providerAccountId !== null,
+      onboardingCompletedAt: account.onboardingCompletedAt,
+      disabledAt: account.disabledAt,
       lastSyncedAt: account.lastSyncedAt,
     };
   } catch (error) {
@@ -175,6 +179,7 @@ export default async function SettingsPage({
   const northStar = isNorthStarShellEnabled();
   const canViewPaymentSettings = companyContext.permissions.manageBilling;
   const canStartStripeSetup = canStartStripeConnectOnboarding(companyContext);
+  const canManageOnlineCheckoutGate = canManageOnlineCheckout(companyContext);
   const stripeOnboardingConfigured = isStripeConnectOnboardingConfigured();
   const paymentSetupNotice: PaymentSetupReturnNotice | null =
     params.payments === "return" || params.payments === "refresh"
@@ -221,6 +226,7 @@ export default async function SettingsPage({
         canViewPaymentSettings={canViewPaymentSettings}
         stripePaymentSettings={stripePaymentSettings}
         canStartStripeSetup={canStartStripeSetup}
+        canManageOnlineCheckout={canManageOnlineCheckoutGate}
         stripeOnboardingConfigured={stripeOnboardingConfigured}
         paymentSetupNotice={paymentSetupNotice}
         companyTimezone={companyContext.company.timezone}

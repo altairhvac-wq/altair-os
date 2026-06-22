@@ -5,13 +5,33 @@ import {
   stripeEventPayload,
 } from "@/lib/payments/insert-provider-event";
 import { processStripeWebhookEvent } from "@/lib/payments/process-stripe-webhook-event";
+import type { ProcessStripeWebhookEventResult } from "@/lib/payments/process-stripe-webhook-event";
 import {
   StripeWebhookVerificationError,
   verifyStripeWebhookEvent,
 } from "@/lib/payments/stripe-webhook";
+import {
+  claimPaymentProviderEventForReprocessing,
+  findPaymentProviderEvent,
+} from "@/lib/database/services/payment-provider-events";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
+
+function buildProcessResponse(processResult: ProcessStripeWebhookEventResult) {
+  if ("retryable" in processResult && processResult.retryable) {
+    return NextResponse.json(
+      { received: true, processed: false, error: "Processing failed" },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({
+    received: true,
+    processed: processResult.processed,
+    ...(processResult.ignored ? { ignored: true } : {}),
+  });
+}
 
 export async function POST(request: Request) {
   const rawBody = await request.text();
@@ -54,25 +74,53 @@ export async function POST(request: Request) {
   }
 
   if (insertResult.duplicate) {
-    return NextResponse.json({
-      received: true,
-      processed: false,
-      duplicate: true,
-    });
+    const existingEvent = await findPaymentProviderEvent(
+      supabase,
+      "stripe",
+      event.id,
+    );
+
+    if (!existingEvent) {
+      return NextResponse.json(
+        { error: "Failed to load duplicate webhook event" },
+        { status: 500 },
+      );
+    }
+
+    const { processingStatus } = existingEvent;
+
+    if (
+      processingStatus === "processed" ||
+      processingStatus === "ignored" ||
+      processingStatus === "processing"
+    ) {
+      return NextResponse.json({
+        received: true,
+        processed: false,
+        duplicate: true,
+        skipped: true,
+      });
+    }
+
+    const claimResult = await claimPaymentProviderEventForReprocessing(
+      supabase,
+      "stripe",
+      event.id,
+    );
+
+    if (!claimResult.claimed) {
+      return NextResponse.json({
+        received: true,
+        processed: false,
+        duplicate: true,
+        skipped: true,
+      });
+    }
+
+    const processResult = await processStripeWebhookEvent(supabase, event);
+    return buildProcessResponse(processResult);
   }
 
   const processResult = await processStripeWebhookEvent(supabase, event);
-
-  if ("retryable" in processResult && processResult.retryable) {
-    return NextResponse.json(
-      { received: true, processed: false, error: "Processing failed" },
-      { status: 500 },
-    );
-  }
-
-  return NextResponse.json({
-    received: true,
-    processed: processResult.processed,
-    ...(processResult.ignored ? { ignored: true } : {}),
-  });
+  return buildProcessResponse(processResult);
 }

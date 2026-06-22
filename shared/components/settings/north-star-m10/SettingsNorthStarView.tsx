@@ -62,6 +62,7 @@ export type SettingsNorthStarViewProps = {
   canViewPaymentSettings?: boolean;
   stripePaymentSettings?: StripePaymentSettingsSummary | null;
   canStartStripeSetup?: boolean;
+  canManageOnlineCheckout?: boolean;
   stripeOnboardingConfigured?: boolean;
   paymentSetupNotice?: PaymentSetupReturnNotice | null;
   companyTimezone?: string | null;
@@ -117,6 +118,7 @@ export function SettingsNorthStarView({
   canViewPaymentSettings = false,
   stripePaymentSettings = null,
   canStartStripeSetup = false,
+  canManageOnlineCheckout = false,
   stripeOnboardingConfigured = false,
   paymentSetupNotice = null,
   companyTimezone,
@@ -484,6 +486,7 @@ export function SettingsNorthStarView({
                 stripeAccount={stripePaymentSettings ?? null}
                 companyTimezone={companyTimezone}
                 canStartStripeSetup={canStartStripeSetup}
+                canManageOnlineCheckout={canManageOnlineCheckout}
                 stripeOnboardingConfigured={stripeOnboardingConfigured}
                 paymentSetupNotice={paymentSetupNotice}
                 northStar

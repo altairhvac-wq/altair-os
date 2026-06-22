@@ -205,6 +205,20 @@ export function assertStripeConnectOnboardingAccess(
   return null;
 }
 
+export function canManageOnlineCheckout(context: ActiveCompanyContext): boolean {
+  return context.permissions.manageCompany;
+}
+
+export function assertOnlineCheckoutManagementAccess(
+  context: ActiveCompanyContext,
+): string | null {
+  if (!canManageOnlineCheckout(context)) {
+    return "You do not have permission to manage online checkout.";
+  }
+
+  return null;
+}
+
 export function canViewOperationalReports(
   context: ActiveCompanyContext,
 ): boolean {

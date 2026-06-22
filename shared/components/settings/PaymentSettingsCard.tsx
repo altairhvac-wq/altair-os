@@ -2,10 +2,16 @@
 
 import { CreditCard } from "lucide-react";
 import { useState, useTransition } from "react";
-import { startStripeConnectOnboardingAction } from "@/app/actions/company-payments";
+import {
+  disableOnlineCheckoutAction,
+  enableOnlineCheckoutAction,
+  startStripeConnectOnboardingAction,
+} from "@/app/actions/company-payments";
 import { formatDateTimeInTimeZone, resolveCompanyTimeZone } from "@/shared/lib/datetime";
 import {
+  canEnableOnlineCheckoutAccount,
   formatPaymentCapabilityEnabled,
+  getOnlineCheckoutEnableBlockedMessage,
   PAYMENT_ACCOUNT_STATUS_LABELS,
   type PaymentSetupReturnNotice,
   type StripePaymentSettingsSummary,
@@ -16,6 +22,7 @@ type PaymentSettingsCardProps = {
   companyTimezone?: string | null;
   northStar?: boolean;
   canStartStripeSetup?: boolean;
+  canManageOnlineCheckout?: boolean;
   stripeOnboardingConfigured?: boolean;
   paymentSetupNotice?: PaymentSetupReturnNotice | null;
 };
@@ -73,6 +80,7 @@ export function PaymentSettingsCard({
   companyTimezone,
   northStar = false,
   canStartStripeSetup = false,
+  canManageOnlineCheckout = false,
   stripeOnboardingConfigured = false,
   paymentSetupNotice = null,
 }: PaymentSettingsCardProps) {
@@ -88,6 +96,17 @@ export function PaymentSettingsCard({
     displayStatus !== "active";
   const startButtonLabel =
     displayStatus === "pending" ? "Continue Stripe setup" : "Start Stripe setup";
+  const canEnableCheckout =
+    isConnected &&
+    stripeAccount !== null &&
+    canEnableOnlineCheckoutAccount(stripeAccount);
+  const checkoutBlockedMessage = getOnlineCheckoutEnableBlockedMessage(stripeAccount);
+  const showEnableCheckoutButton =
+    canManageOnlineCheckout && canEnableCheckout;
+  const showDisableCheckoutButton =
+    canManageOnlineCheckout &&
+    isConnected &&
+    stripeAccount?.onlinePaymentsEnabled === true;
 
   const shellClass = northStar
     ? "min-w-0 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3 sm:p-4"
@@ -140,6 +159,28 @@ export function PaymentSettingsCard({
     });
   }
 
+  function handleEnableOnlineCheckout() {
+    setActionError(null);
+
+    startTransition(async () => {
+      const result = await enableOnlineCheckoutAction();
+      if (result?.error) {
+        setActionError(result.error);
+      }
+    });
+  }
+
+  function handleDisableOnlineCheckout() {
+    setActionError(null);
+
+    startTransition(async () => {
+      const result = await disableOnlineCheckoutAction();
+      if (result?.error) {
+        setActionError(result.error);
+      }
+    });
+  }
+
   return (
     <div className={shellClass}>
       <div className="flex items-start gap-2.5">
@@ -171,11 +212,18 @@ export function PaymentSettingsCard({
         {isConnected ? (
           <>
             <p className={noticeClass}>Stripe account linked.</p>
-            {!stripeAccount.onlinePaymentsEnabled ? (
+            {stripeAccount.onlinePaymentsEnabled ? (
               <p className={noticeClass}>
-                Checkout is still disabled until online payments are enabled.
+                Online checkout is enabled for this account. This gate does not
+                activate Pay Now or checkout sessions yet.
               </p>
-            ) : null}
+            ) : (
+              <p className={noticeClass}>
+                Online checkout is still disabled. Enabling checkout only opens
+                the account gate; Pay Now and checkout sessions are not active
+                in this build.
+              </p>
+            )}
           </>
         ) : (
           <>
@@ -285,9 +333,31 @@ export function PaymentSettingsCard({
                 : "Stripe setup requires owner or admin"}
           </button>
         )}
-        <button type="button" disabled className={disabledButtonClass}>
-          Online checkout is not active yet
-        </button>
+        {showEnableCheckoutButton ? (
+          <button
+            type="button"
+            onClick={handleEnableOnlineCheckout}
+            disabled={isPending}
+            className={enabledButtonClass}
+          >
+            {isPending ? "Enabling checkout…" : "Enable online checkout"}
+          </button>
+        ) : showDisableCheckoutButton ? (
+          <button
+            type="button"
+            onClick={handleDisableOnlineCheckout}
+            disabled={isPending}
+            className={enabledButtonClass}
+          >
+            {isPending ? "Disabling checkout…" : "Disable online checkout"}
+          </button>
+        ) : (
+          <button type="button" disabled className={disabledButtonClass}>
+            {!canManageOnlineCheckout
+              ? "Online checkout requires owner or admin"
+              : checkoutBlockedMessage}
+          </button>
+        )}
       </div>
     </div>
   );

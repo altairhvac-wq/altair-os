@@ -174,3 +174,163 @@ export async function syncStripeCompanyPaymentAccountFromWebhook(
 
   return { ok: true };
 }
+
+function validateOnlineCheckoutEnablePreconditions(
+  account: CompanyPaymentAccount,
+): { ok: true } | { ok: false; error: string } {
+  if (account.provider !== "stripe") {
+    return { ok: false, error: "Stripe payment account is required." };
+  }
+
+  if (account.status !== "active") {
+    return {
+      ok: false,
+      error: "Stripe account must be active before enabling online checkout.",
+    };
+  }
+
+  if (!account.chargesEnabled) {
+    return {
+      ok: false,
+      error: "Stripe charges must be enabled before enabling online checkout.",
+    };
+  }
+
+  if (!account.payoutsEnabled) {
+    return {
+      ok: false,
+      error: "Stripe payouts must be enabled before enabling online checkout.",
+    };
+  }
+
+  if (!account.onboardingCompletedAt) {
+    return {
+      ok: false,
+      error: "Stripe onboarding must be completed before enabling online checkout.",
+    };
+  }
+
+  if (account.disabledAt) {
+    return {
+      ok: false,
+      error: "Stripe account is disabled and cannot enable online checkout.",
+    };
+  }
+
+  if (!account.providerAccountId) {
+    return {
+      ok: false,
+      error: "Stripe account linkage is incomplete.",
+    };
+  }
+
+  if (account.onlinePaymentsEnabled) {
+    return { ok: false, error: "Online checkout is already enabled." };
+  }
+
+  return { ok: true };
+}
+
+export async function enableOnlineCheckoutForCompany(
+  companyId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("company_payment_accounts")
+    .select(STRIPE_ACCOUNT_SELECT)
+    .eq("company_id", companyId)
+    .eq("provider", "stripe")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[enableOnlineCheckoutForCompany] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return { ok: false, error: "Failed to load Stripe payment account." };
+  }
+
+  if (!data) {
+    return {
+      ok: false,
+      error: "Connect Stripe before enabling online checkout.",
+    };
+  }
+
+  const account = mapCompanyPaymentAccountRow(data as CompanyPaymentAccountRow);
+  const validation = validateOnlineCheckoutEnablePreconditions(account);
+
+  if (!validation.ok) {
+    return { ok: false, error: validation.error };
+  }
+
+  const { error: updateError } = await supabase
+    .from("company_payment_accounts")
+    .update({ online_payments_enabled: true })
+    .eq("id", account.id)
+    .eq("company_id", companyId)
+    .eq("provider", "stripe")
+    .eq("online_payments_enabled", false);
+
+  if (updateError) {
+    console.error("[enableOnlineCheckoutForCompany] update failed:", {
+      companyId,
+      accountId: account.id,
+      code: updateError.code,
+      message: updateError.message,
+    });
+    return { ok: false, error: "Failed to enable online checkout." };
+  }
+
+  return { ok: true };
+}
+
+export async function disableOnlineCheckoutForCompany(
+  companyId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("company_payment_accounts")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("provider", "stripe")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[disableOnlineCheckoutForCompany] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return { ok: false, error: "Failed to load Stripe payment account." };
+  }
+
+  if (!data) {
+    return {
+      ok: false,
+      error: "No Stripe payment account is connected for this company.",
+    };
+  }
+
+  const { error: updateError } = await supabase
+    .from("company_payment_accounts")
+    .update({ online_payments_enabled: false })
+    .eq("id", data.id)
+    .eq("company_id", companyId)
+    .eq("provider", "stripe");
+
+  if (updateError) {
+    console.error("[disableOnlineCheckoutForCompany] update failed:", {
+      companyId,
+      accountId: data.id,
+      code: updateError.code,
+      message: updateError.message,
+    });
+    return { ok: false, error: "Failed to disable online checkout." };
+  }
+
+  return { ok: true };
+}
