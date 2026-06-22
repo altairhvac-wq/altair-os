@@ -79,6 +79,8 @@ function PrimaryInstallCard({
         {message}
       </p>
 
+      <PwaInstallPrompt className="mt-5 w-full" />
+
       {steps.length > 0 ? (
         <ol className="mt-5 space-y-3">
           {steps.map((step, index) => (
@@ -179,8 +181,6 @@ export function InstallPageView() {
 
         <div className="auth-panel-enter mt-8 space-y-4">
           <PrimaryInstallCard platform={platform} />
-
-          <PwaInstallPrompt className="w-full" />
 
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
