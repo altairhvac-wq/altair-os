@@ -7,7 +7,7 @@
 export type PaymentSource = "manual";
 
 /** Provider that processed or recorded the payment. */
-export type PaymentProvider = "manual";
+export type PaymentProvider = "manual" | "stripe";
 
 /** Outcome of a payment record attempt. */
 export type PaymentRecordStatus = "succeeded";
