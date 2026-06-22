@@ -17,6 +17,7 @@
  *   public/marketing/screenshots/social/*-feature-crop.png (tight feature-focused crops)
  *   public/marketing/screenshots/social/*-feature-card.png (1080x1080 feature-focused cards)
  *   public/marketing/screenshots/social/*-facebook-card-v2.png (1080x1080 legacy full-width cards)
+ *   public/marketing/screenshots/social/*-facebook-landscape.png (1200x630 Facebook-ready landscape cards)
  *   public/marketing/screenshots/social/_debug/founder-screenshot-contact-sheet.html (visual diff aid)
  */
 
@@ -38,6 +39,8 @@ const CARD_SIZE = 1080;
 const CARD_SCREENSHOT_WIDTH = 980;
 const CARD_SCREENSHOT_HEIGHT = 590;
 const CARD_SCREENSHOT_MAX_WIDTH = 980;
+const LANDSCAPE_WIDTH = 1200;
+const LANDSCAPE_HEIGHT = 630;
 const FEATURE_CAPTURE_SCALE = 2;
 const FRAME_BLANK_SPACE_THRESHOLD_PX = 10;
 const FRAME_HEIGHT_MATCH_THRESHOLD_PX = 5;
@@ -172,6 +175,32 @@ const FEATURE_CROP_FROM_RAW = {
     clip: { x: 56, y: 84, width: 1088, height: 300 },
   },
 };
+
+/** @type {Array<{ id: string; screenshot: string; output: string; label: string; headline: string; subheadline: string; proofMarker?: string; objectFit?: string }>} */
+const LANDSCAPE_CARDS = [
+  {
+    id: "reports-workspace",
+    screenshot: "reports-workspace.png",
+    output: "reports-facebook-landscape.png",
+    label: "Altair OS",
+    headline: "Reports that show what changed",
+    subheadline:
+      "Revenue, jobs, cash flow, and performance in one operating brief.",
+    objectFit: "cover",
+    proofMarker: "LANDSCAPE V1",
+  },
+  {
+    id: "leads-workspace",
+    screenshot: "leads-workspace.png",
+    output: "leads-facebook-landscape.png",
+    label: "Altair OS",
+    headline: "Leads before they become customers",
+    subheadline:
+      "Track opportunities, follow-ups, and conversion from one workspace.",
+    objectFit: "cover",
+    proofMarker: "LANDSCAPE V1",
+  },
+];
 
 /** @type {Array<{ id: string; screenshot: string; output: string; label: string; headline: string; subheadline: string; footer: string }>} */
 const SOCIAL_CARDS = [
@@ -759,6 +788,152 @@ function buildFeatureCardHtml({
 </html>`;
 }
 
+function buildLandscapeCardHtml({
+  screenshotDataUrl,
+  label,
+  headline,
+  subheadline,
+  objectFit = "cover",
+  proofMarker,
+}) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: ${LANDSCAPE_WIDTH}px;
+      height: ${LANDSCAPE_HEIGHT}px;
+      overflow: hidden;
+      background: #0a1018;
+    }
+    .card {
+      width: ${LANDSCAPE_WIDTH}px;
+      height: ${LANDSCAPE_HEIGHT}px;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #141c28 0%, #0a1018 100%);
+      color: #f3ebdd;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    .header {
+      flex: 0 0 auto;
+      padding: 12px 20px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      max-height: 110px;
+      border-bottom: 1px solid rgb(201 164 77 / 0.22);
+    }
+    .label {
+      color: #c9a44d;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+    .headline {
+      color: #fff9ea;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.08;
+    }
+    .subheadline {
+      color: #c9bfae;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.22;
+    }
+    .screenshot-area {
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      overflow: hidden;
+    }
+    .screenshot-area img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: ${objectFit};
+      object-position: top center;
+    }
+    .proof-marker {
+      position: fixed;
+      right: 10px;
+      bottom: 8px;
+      z-index: 10;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: rgb(7 11 16 / 0.82);
+      border: 1px solid rgb(201 164 77 / 0.55);
+      color: #f3ebdd;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="label">${escapeHtml(label)}</div>
+      <h1 class="headline">${escapeHtml(headline)}</h1>
+      <p class="subheadline">${escapeHtml(subheadline)}</p>
+    </div>
+    <div class="screenshot-area">
+      <img src="${screenshotDataUrl}" alt="" />
+    </div>
+    ${proofMarker ? `<div class="proof-marker">${escapeHtml(proofMarker)}</div>` : ""}
+  </div>
+</body>
+</html>`;
+}
+
+async function renderLandscapeCard(page, card) {
+  const screenshotPath = path.join(OUTPUT_DIR, card.screenshot);
+  if (!fs.existsSync(screenshotPath)) {
+    throw new Error(
+      `Missing screenshot for landscape card ${card.id}: ${path.relative(ROOT, screenshotPath)}`,
+    );
+  }
+
+  const screenshotDataUrl = `data:image/png;base64,${fs.readFileSync(screenshotPath).toString("base64")}`;
+  const html = buildLandscapeCardHtml({
+    screenshotDataUrl,
+    label: card.label,
+    headline: card.headline,
+    subheadline: card.subheadline,
+    objectFit: card.objectFit ?? "cover",
+    proofMarker: card.proofMarker,
+  });
+
+  await page.setViewportSize({
+    width: LANDSCAPE_WIDTH,
+    height: LANDSCAPE_HEIGHT,
+  });
+  await page.setContent(html, { waitUntil: "load" });
+  await page.waitForFunction(() => {
+    const img = document.querySelector(".screenshot-area img");
+    return Boolean(img && img.complete && img.naturalWidth > 0);
+  });
+
+  const outputPath = path.join(OUTPUT_DIR, card.output);
+  await page.locator(".card").screenshot({
+    path: outputPath,
+    type: "png",
+  });
+
+  const dimensions = readPngDimensions(outputPath);
+  console.log(
+    `  → ${path.relative(ROOT, outputPath)} (${dimensions?.width ?? LANDSCAPE_WIDTH}x${dimensions?.height ?? LANDSCAPE_HEIGHT})`,
+  );
+  return outputPath;
+}
+
 async function renderSocialCard(page, card) {
   const screenshotPath = path.join(OUTPUT_DIR, card.screenshot);
   if (!fs.existsSync(screenshotPath)) {
@@ -1229,6 +1404,14 @@ async function main() {
     for (const card of FEATURE_CARDS_V3) {
       console.log(`Feature card v3 ${card.id}`);
       await renderFeatureCard(page, card);
+    }
+
+    console.log("");
+    console.log("Rendering Facebook landscape cards (1200x630)...");
+
+    for (const card of LANDSCAPE_CARDS) {
+      console.log(`Landscape card ${card.id}`);
+      await renderLandscapeCard(page, card);
     }
 
     console.log("");
