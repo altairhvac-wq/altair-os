@@ -268,6 +268,36 @@ type PostPreviewPanelProps = {
 const FOUNDER_SCREENSHOT_MISSING_MESSAGE =
   "Screenshot file not found. Add the image to public/marketing/screenshots or choose a different reference.";
 
+function buildFounderScreenshotAbsoluteUrl(reference: string): string {
+  const trimmed = reference.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+
+  if (typeof window === "undefined") {
+    return trimmed;
+  }
+
+  const path = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return `${window.location.origin}${path}`;
+}
+
+function getFounderScreenshotDownloadFilename(reference: string): string {
+  const trimmed = reference.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    try {
+      const url = new URL(trimmed);
+      const segment = url.pathname.split("/").filter(Boolean).pop();
+      return segment || "founder-screenshot.png";
+    } catch {
+      return "founder-screenshot.png";
+    }
+  }
+
+  const segment = trimmed.split("/").filter(Boolean).pop();
+  return segment || "founder-screenshot.png";
+}
+
 function FounderScreenshotPreview({
   reference,
   northStar,
@@ -277,9 +307,15 @@ function FounderScreenshotPreview({
 }) {
   const trimmed = reference.trim();
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const [imageUrlCopied, setImageUrlCopied] = useState(false);
+  const [absoluteRawImageUrl, setAbsoluteRawImageUrl] = useState(() =>
+    buildFounderScreenshotAbsoluteUrl(trimmed),
+  );
 
   useEffect(() => {
     setImageLoadFailed(false);
+    setImageUrlCopied(false);
+    setAbsoluteRawImageUrl(buildFounderScreenshotAbsoluteUrl(trimmed));
   }, [trimmed]);
 
   if (!trimmed) {
@@ -288,6 +324,17 @@ function FounderScreenshotPreview({
 
   const previewable = isPreviewableScreenshotReference(trimmed);
   const showImagePreview = previewable && !imageLoadFailed;
+  const downloadFilename = getFounderScreenshotDownloadFilename(trimmed);
+
+  async function handleCopyImageUrl() {
+    try {
+      await navigator.clipboard.writeText(absoluteRawImageUrl);
+      setImageUrlCopied(true);
+      window.setTimeout(() => setImageUrlCopied(false), 2000);
+    } catch {
+      // Clipboard access can fail in restrictive browsers.
+    }
+  }
 
   return (
     <div
@@ -326,19 +373,73 @@ function FounderScreenshotPreview({
           {FOUNDER_SCREENSHOT_MISSING_MESSAGE}
         </p>
       ) : null}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <a
+          href={absoluteRawImageUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="admin-btn-secondary inline-flex items-center text-xs"
+        >
+          Open full image
+        </a>
+        <a
+          href={absoluteRawImageUrl}
+          download={downloadFilename}
+          className="admin-btn-secondary inline-flex items-center text-xs"
+        >
+          Download full image
+        </a>
+        <button
+          type="button"
+          onClick={handleCopyImageUrl}
+          className="admin-btn-secondary inline-flex items-center gap-1.5 text-xs"
+        >
+          {imageUrlCopied ? (
+            <Check
+              className="h-3.5 w-3.5 text-emerald-600"
+              aria-hidden="true"
+            />
+          ) : (
+            <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+          )}
+          {imageUrlCopied ? "Copied URL" : "Copy image URL"}
+        </button>
+      </div>
+      <p
+        className={`mt-3 text-xs leading-relaxed ${
+          northStar ? "text-[#6B6255]" : "text-slate-500"
+        }`}
+      >
+        Selected original:{" "}
+        <span
+          className={`break-all font-mono ${
+            northStar ? "text-[#17130E]" : "text-slate-700"
+          }`}
+        >
+          {trimmed}
+        </span>
+      </p>
       <p
         className={`mt-2 text-xs leading-relaxed ${
           northStar ? "text-[#6B6255]" : "text-slate-500"
         }`}
       >
-        Selected image:
+        Full image URL:{" "}
+        <span
+          className={`break-all font-mono ${
+            northStar ? "text-[#17130E]" : "text-slate-700"
+          }`}
+        >
+          {absoluteRawImageUrl}
+        </span>
       </p>
       <p
-        className={`break-all font-mono text-xs leading-relaxed ${
-          northStar ? "text-[#17130E]" : "text-slate-700"
+        className={`mt-2 text-xs leading-relaxed ${
+          northStar ? "text-[#6B6255]" : "text-slate-500"
         }`}
       >
-        {trimmed}
+        For Facebook, use Open full image or Download full image. Do not save
+        the small in-app preview.
       </p>
     </div>
   );
