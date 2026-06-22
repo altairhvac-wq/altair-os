@@ -11,7 +11,13 @@ import {
 } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import { PwaInstallPrompt } from "./PwaInstallPrompt";
-import { isAndroidDevice, isIosDevice } from "./pwa-utils";
+import {
+  getPwaInstallDebugInfo,
+  type PwaInstallDebugInfo,
+  isAndroidDevice,
+  isIosDevice,
+  isStandaloneDisplayMode,
+} from "./pwa-utils";
 
 const ctaFocusClass =
   "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20";
@@ -51,6 +57,54 @@ const INSTALL_GUIDANCE: Record<
     steps: [],
   },
 };
+
+function PwaInstallDebugPanel() {
+  const [debugInfo, setDebugInfo] = useState<PwaInstallDebugInfo | null>(null);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") {
+      return;
+    }
+
+    let cancelled = false;
+    let beforeInstallPromptAvailable = false;
+
+    async function refreshDebugInfo() {
+      const info = await getPwaInstallDebugInfo(beforeInstallPromptAvailable);
+      if (!cancelled) {
+        setDebugInfo(info);
+        console.log("[PWA install debug]", info);
+      }
+    }
+
+    function handleBeforeInstallPrompt(event: Event) {
+      event.preventDefault();
+      beforeInstallPromptAvailable = true;
+      void refreshDebugInfo();
+    }
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    void refreshDebugInfo();
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
+    };
+  }, []);
+
+  if (process.env.NODE_ENV !== "development" || !debugInfo) {
+    return null;
+  }
+
+  return (
+    <pre className="mt-6 overflow-x-auto rounded-lg border border-dashed border-stone-300 bg-stone-100/80 p-3 text-[10px] leading-relaxed text-stone-600">
+      {JSON.stringify(debugInfo, null, 2)}
+    </pre>
+  );
+}
 
 function PrimaryInstallCard({
   platform,
@@ -100,6 +154,24 @@ function PrimaryInstallCard({
   );
 }
 
+function InstalledStateCard() {
+  return (
+    <section className="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 px-5 py-5 sm:px-6">
+      <PwaInstallPrompt className="w-full" />
+      <div className="mt-4 flex items-start gap-3">
+        <Check
+          className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700"
+          aria-hidden
+        />
+        <p className="text-sm leading-relaxed text-emerald-900/80">
+          Open Altair from your home screen icon — it launches full screen like
+          a native app.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function CopyAppLinkButton() {
   const [copied, setCopied] = useState(false);
 
@@ -139,9 +211,13 @@ function detectInstallPlatform(): InstallPlatform {
 
 export function InstallPageView() {
   const [platform, setPlatform] = useState<InstallPlatform>("desktop");
+  const [standalone, setStandalone] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    setHydrated(true);
     setPlatform(detectInstallPlatform());
+    setStandalone(isStandaloneDisplayMode());
   }, []);
 
   return (
@@ -172,57 +248,51 @@ export function InstallPageView() {
             Mobile install
           </p>
           <h1 className="mt-3 text-[1.875rem] font-semibold tracking-tight text-[#0A0A0A] sm:text-[2.125rem]">
-            Add Altair to your home screen
+            {hydrated && standalone
+              ? "Altair is on your home screen"
+              : "Add Altair to your home screen"}
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-stone-600">
-            Open Altair like an app from your phone.
+            {hydrated && standalone
+              ? "Launch Altair from your home screen icon."
+              : "Open Altair like an app from your phone."}
           </p>
         </div>
 
         <div className="auth-panel-enter mt-8 space-y-4">
-          <PrimaryInstallCard platform={platform} />
+          {hydrated && standalone ? (
+            <InstalledStateCard />
+          ) : (
+            <PrimaryInstallCard platform={platform} />
+          )}
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/login"
-              className={`inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#0A0A0A] px-5 py-3 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2)] ring-1 ring-[#D4AF37]/30 transition-colors hover:bg-[#141414] sm:flex-none ${ctaFocusClass}`}
-            >
-              <ExternalLink className="h-4 w-4" aria-hidden />
-              Open Altair
-            </Link>
-            <CopyAppLinkButton />
-          </div>
-        </div>
-
-        <div className="auth-panel-enter mt-8 space-y-4">
-          <section className="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 px-5 py-4">
-            <div className="flex items-start gap-3">
-              <Check
-                className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700"
-                aria-hidden
-              />
-              <div>
-                <h2 className="text-sm font-semibold text-emerald-950">
-                  Already installed?
-                </h2>
-                <p className="mt-1 text-sm leading-relaxed text-emerald-900/80">
-                  Open Altair from your home screen icon — it launches full
-                  screen like a native app.
-                </p>
-              </div>
+          {!standalone ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <Link
+                href="/login"
+                className={`inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#0A0A0A] px-5 py-3 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2)] ring-1 ring-[#D4AF37]/30 transition-colors hover:bg-[#141414] sm:flex-none ${ctaFocusClass}`}
+              >
+                <ExternalLink className="h-4 w-4" aria-hidden />
+                Open Altair
+              </Link>
+              <CopyAppLinkButton />
             </div>
-          </section>
+          ) : null}
         </div>
 
-        <p className="mt-8 text-center text-xs text-stone-500">
-          Use Safari on iPhone and Chrome on Android for the best install
-          experience.
-        </p>
+        {!standalone ? (
+          <p className="mt-8 text-center text-xs text-stone-500">
+            Use Safari on iPhone and Chrome on Android for the best install
+            experience.
+          </p>
+        ) : null}
 
         <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-[11px] text-stone-400">
           <Share className="h-3 w-3" aria-hidden />
           Beta testers · Add Altair to your home screen for quick access
         </p>
+
+        <PwaInstallDebugPanel />
       </main>
     </div>
   );

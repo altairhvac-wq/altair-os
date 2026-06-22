@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Download, Smartphone } from "lucide-react";
 import {
   type BeforeInstallPromptEvent,
+  getInstallPlatformCategory,
   isStandaloneDisplayMode,
 } from "./pwa-utils";
 
@@ -14,6 +15,47 @@ type PwaInstallPromptProps = {
 
 const ctaFocusClass =
   "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20";
+
+function PlatformInstallInstructions({ className = "" }: { className?: string }) {
+  const platform = getInstallPlatformCategory();
+
+  if (platform === "ios") {
+    return (
+      <div
+        className={`rounded-2xl border border-amber-200/80 bg-amber-50/80 px-4 py-4 text-sm text-amber-950 ${className}`}
+      >
+        <p className="font-semibold text-[#0A0A0A]">Install on iPhone</p>
+        <p className="mt-1.5 leading-relaxed text-amber-900/90">
+          Tap Share, then Add to Home Screen.
+        </p>
+      </div>
+    );
+  }
+
+  if (platform === "android") {
+    return (
+      <div
+        className={`rounded-2xl border border-amber-200/80 bg-amber-50/80 px-4 py-4 text-sm text-amber-950 ${className}`}
+      >
+        <p className="font-semibold text-[#0A0A0A]">Install on Android</p>
+        <p className="mt-1.5 leading-relaxed text-amber-900/90">
+          Open the Chrome menu and choose Install app or Add to Home screen.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`rounded-2xl border border-amber-200/80 bg-amber-50/80 px-4 py-4 text-sm text-amber-950 ${className}`}
+    >
+      <p className="font-semibold text-[#0A0A0A]">Install on your phone</p>
+      <p className="mt-1.5 leading-relaxed text-amber-900/90">
+        Open this page on your phone to add Altair to your home screen.
+      </p>
+    </div>
+  );
+}
 
 export function PwaInstallPrompt({
   className = "",
@@ -104,16 +146,5 @@ export function PwaInstallPrompt({
     );
   }
 
-  return (
-    <div
-      className={`rounded-2xl border border-amber-200/80 bg-amber-50/80 px-4 py-4 text-sm text-amber-950 ${className}`}
-    >
-      <p className="font-semibold text-[#0A0A0A]">
-        Install button not showing?
-      </p>
-      <p className="mt-1.5 leading-relaxed text-amber-900/90">
-        Use the steps below for your device.
-      </p>
-    </div>
-  );
+  return <PlatformInstallInstructions className={className} />;
 }
