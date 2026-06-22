@@ -43,6 +43,8 @@ import type {
   InvoicePaymentRow,
   PaymentProviderEventInsert,
   PaymentProviderEventRow,
+  CompanyPaymentAccountInsert,
+  CompanyPaymentAccountRow,
   InvoicePaymentTokenInsert,
   InvoicePaymentTokenRow,
   InvoicePaymentTokenUpdate,
@@ -963,6 +965,20 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "payment_provider_events_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      company_payment_accounts: {
+        Row: CompanyPaymentAccountRow;
+        Insert: CompanyPaymentAccountInsert;
+        Update: Partial<CompanyPaymentAccountInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "company_payment_accounts_company_id_fkey";
             columns: ["company_id"];
             isOneToOne: false;
             referencedRelation: "companies";

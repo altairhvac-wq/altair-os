@@ -41,3 +41,45 @@ export type ProviderPaymentFailureInput = {
   invoiceId: string;
   reason: string;
 };
+
+/** External provider linked to a company (not manual recording). */
+export type CompanyPaymentAccountProvider = "stripe";
+
+export type CompanyPaymentAccountStatus =
+  | "not_connected"
+  | "pending"
+  | "active"
+  | "restricted"
+  | "disabled"
+  | "error";
+
+export type CompanyPaymentAccount = {
+  id: string;
+  companyId: string;
+  provider: CompanyPaymentAccountProvider;
+  providerAccountId: string | null;
+  status: CompanyPaymentAccountStatus;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  onlinePaymentsEnabled: boolean;
+  onboardingCompletedAt: string | null;
+  disabledAt: string | null;
+  lastSyncedAt: string | null;
+  providerMetadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CompanyPaymentAccountInsert = {
+  companyId: string;
+  provider: CompanyPaymentAccountProvider;
+  providerAccountId?: string | null;
+  status?: CompanyPaymentAccountStatus;
+  chargesEnabled?: boolean;
+  payoutsEnabled?: boolean;
+  onlinePaymentsEnabled?: boolean;
+  onboardingCompletedAt?: string | null;
+  disabledAt?: string | null;
+  lastSyncedAt?: string | null;
+  providerMetadata?: Record<string, unknown>;
+};

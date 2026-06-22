@@ -3,6 +3,10 @@ export {
   normalizeManualPaymentSource,
 } from "./recording";
 export type {
+  CompanyPaymentAccount,
+  CompanyPaymentAccountInsert,
+  CompanyPaymentAccountProvider,
+  CompanyPaymentAccountStatus,
   PaymentProvider,
   PaymentRecordInput,
   PaymentRecordResult,
@@ -16,3 +20,7 @@ export type {
   PaymentProviderEventInsert,
   PaymentProviderEventStatus,
 } from "./provider-events";
+export type {
+  CompanyPaymentAccountRecord,
+  CompanyPaymentAccountRecordInsert,
+} from "./company-payment-accounts";

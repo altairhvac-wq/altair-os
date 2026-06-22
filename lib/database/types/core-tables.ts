@@ -36,6 +36,12 @@ import type {
   PaymentProviderEventStatus,
 } from "@/lib/payments/provider-events";
 import type {
+  CompanyPaymentAccountRecord,
+  CompanyPaymentAccountRecordInsert,
+  CompanyPaymentAccountProvider,
+  CompanyPaymentAccountStatus,
+} from "@/lib/payments/company-payment-accounts";
+import type {
   PaymentProvider,
   PaymentRecordStatus,
   PaymentSource,
@@ -44,6 +50,10 @@ import type {
 export type { PaymentProviderEventStatus };
 export type PaymentProviderEventRow = PaymentProviderEvent;
 export type { PaymentProviderEventInsert };
+
+export type { CompanyPaymentAccountStatus, CompanyPaymentAccountProvider };
+export type CompanyPaymentAccountRow = CompanyPaymentAccountRecord;
+export type { CompanyPaymentAccountRecordInsert as CompanyPaymentAccountInsert };
 
 export type CompanyRow = {
   id: UUID;
