@@ -38,9 +38,9 @@ export const FOUNDER_MARKETING_SCREENSHOT_OPTIONS: FounderMarketingScreenshotOpt
       path: "/marketing/screenshots/marketing-pricebook.png",
     },
     {
-      id: "dashboard",
-      label: "Reporting dashboard",
-      path: "/marketing/screenshots/marketing-dashboard.png",
+      id: "reports",
+      label: "Reports workspace",
+      path: "/marketing/screenshots/social/reports-workspace.png",
     },
   ];
 
