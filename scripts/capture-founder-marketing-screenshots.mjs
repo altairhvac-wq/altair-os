@@ -30,6 +30,7 @@ const VIEWPORT = { width: 1440, height: 900 };
 const CLIP_WIDTH = 1200;
 const CLIP_HEIGHT = 540;
 const CARD_SIZE = 1080;
+const CARD_SCREENSHOT_WIDTH = 980;
 
 /** @type {Array<{ id: string; route: string; output: string; anchor: string; ready?: string }>} */
 const CAPTURES = [
@@ -168,7 +169,7 @@ function buildSocialCardHtml({ screenshotDataUrl, label, headline, subheadline, 
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 44px 40px 36px;
+      padding: 32px 28px 24px;
       background:
         radial-gradient(ellipse 120% 70% at 50% -10%, rgb(201 164 77 / 0.16) 0%, transparent 58%),
         radial-gradient(ellipse 90% 55% at 88% 92%, rgb(138 99 36 / 0.12) 0%, transparent 62%),
@@ -176,37 +177,48 @@ function buildSocialCardHtml({ screenshotDataUrl, label, headline, subheadline, 
       color: #f3ebdd;
       font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
     }
+    .copy {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
     .label {
       color: #c9a44d;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
       letter-spacing: 0.22em;
       text-transform: uppercase;
     }
     .headline {
-      margin-top: 18px;
-      max-width: 920px;
+      margin-top: 12px;
+      max-width: ${CARD_SCREENSHOT_WIDTH}px;
       color: #fff9ea;
-      font-size: 46px;
+      font-size: 40px;
       font-weight: 700;
       letter-spacing: -0.02em;
       line-height: 1.08;
       text-align: center;
     }
     .subheadline {
-      margin-top: 14px;
-      max-width: 860px;
+      margin-top: 10px;
+      max-width: ${CARD_SCREENSHOT_WIDTH}px;
       color: #c9bfae;
-      font-size: 24px;
+      font-size: 21px;
       font-weight: 500;
-      line-height: 1.35;
+      line-height: 1.3;
       text-align: center;
     }
     .screenshot-frame {
-      margin-top: 28px;
-      width: 920px;
-      max-width: 100%;
-      padding: 10px;
+      flex: 1 1 auto;
+      min-height: 0;
+      margin-top: 18px;
+      width: ${CARD_SCREENSHOT_WIDTH}px;
+      max-width: calc(100% - 8px);
+      padding: 8px;
+      display: flex;
+      overflow: hidden;
       border-radius: 18px;
       border: 1px solid rgb(201 164 77 / 0.28);
       background: linear-gradient(180deg, rgb(16 26 40 / 0.92) 0%, rgb(11 17 24 / 0.96) 100%);
@@ -218,15 +230,17 @@ function buildSocialCardHtml({ screenshotDataUrl, label, headline, subheadline, 
     .screenshot-frame img {
       display: block;
       width: 100%;
-      height: auto;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
       border-radius: 12px;
       border: 1px solid rgb(255 255 255 / 0.06);
     }
     .footer {
-      margin-top: auto;
-      padding-top: 22px;
+      flex: 0 0 auto;
+      margin-top: 14px;
       color: #8e826f;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
       letter-spacing: 0.04em;
       text-align: center;
@@ -235,9 +249,11 @@ function buildSocialCardHtml({ screenshotDataUrl, label, headline, subheadline, 
 </head>
 <body>
   <div class="card">
-    <div class="label">${escapeHtml(label)}</div>
-    <h1 class="headline">${escapeHtml(headline)}</h1>
-    <p class="subheadline">${escapeHtml(subheadline)}</p>
+    <div class="copy">
+      <div class="label">${escapeHtml(label)}</div>
+      <h1 class="headline">${escapeHtml(headline)}</h1>
+      <p class="subheadline">${escapeHtml(subheadline)}</p>
+    </div>
     <div class="screenshot-frame">
       <img src="${screenshotDataUrl}" alt="" />
     </div>
