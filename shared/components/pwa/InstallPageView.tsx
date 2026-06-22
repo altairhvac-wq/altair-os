@@ -294,6 +294,9 @@ function IosScreenshotWalkthrough() {
       <h3 className="text-base font-semibold text-[#0A0A0A] sm:text-lg">
         See exactly where to tap
       </h3>
+      <p className="mt-1.5 text-sm leading-relaxed text-stone-600">
+        These screenshots show the real iPhone Safari buttons.
+      </p>
       <div className="mt-5 space-y-8">
         {IOS_SCREENSHOT_WALKTHROUGH.map((screenshot, index) => (
           <IosWalkthroughScreenshot
