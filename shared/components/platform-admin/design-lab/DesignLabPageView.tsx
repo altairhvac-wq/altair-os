@@ -8,6 +8,7 @@ import {
   normalizeHexColor,
   type DesignLabColors,
 } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
+import { DesignLabContrastPanel } from "@/shared/components/platform-admin/design-lab/DesignLabContrastPanel";
 import { DESIGN_LAB_PRESETS } from "@/shared/components/platform-admin/design-lab/design-lab-presets";
 
 type ColorControlProps = {
@@ -236,132 +237,136 @@ export function DesignLabPageView() {
           </div>
         </aside>
 
-        <section
-          aria-label="Scoped live preview"
-          className="overflow-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.16)] shadow-[0_8px_24px_rgba(23,19,14,0.12)]"
-        >
-          <div className="border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-3 py-2.5 sm:px-4">
-            <h2 className="text-sm font-semibold text-[#17130E]">Live preview</h2>
-            <p className="text-xs text-[#6B6255]">
-              Scoped styles — customer pages are unchanged.
-            </p>
-          </div>
-
-          <div
-            className="design-lab-preview p-4 sm:p-5"
-            style={previewVars(colors)}
+        <div className="space-y-4">
+          <section
+            aria-label="Scoped live preview"
+            className="overflow-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.16)] shadow-[0_8px_24px_rgba(23,19,14,0.12)]"
           >
-            <div
-              className="rounded-[1rem] p-4 sm:p-5"
-              style={{ backgroundColor: "var(--dl-page-bg)" }}
-            >
-              <div className="space-y-1">
-                <h3
-                  className="text-lg font-bold"
-                  style={{ color: "var(--dl-heading-text)" }}
-                >
-                  Service dashboard
-                </h3>
-                <p className="text-sm" style={{ color: "var(--dl-muted-text)" }}>
-                  Preview shell for headings, cards, and actions.
-                </p>
-              </div>
+            <div className="border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-3 py-2.5 sm:px-4">
+              <h2 className="text-sm font-semibold text-[#17130E]">Live preview</h2>
+              <p className="text-xs text-[#6B6255]">
+                Scoped styles — customer pages are unchanged.
+              </p>
+            </div>
 
+            <div
+              className="design-lab-preview p-4 sm:p-5"
+              style={previewVars(colors)}
+            >
               <div
-                className="mt-4 rounded-[0.875rem] border p-4"
-                style={{
-                  backgroundColor: "var(--dl-card-bg)",
-                  borderColor: "var(--dl-card-border)",
-                }}
+                className="rounded-[1rem] p-4 sm:p-5"
+                style={{ backgroundColor: "var(--dl-page-bg)" }}
               >
-                <h4
-                  className="text-base font-semibold"
-                  style={{ color: "var(--dl-body-text)" }}
-                >
-                  Today&apos;s jobs
-                </h4>
-                <p className="mt-1 text-sm" style={{ color: "var(--dl-body-text)" }}>
-                  Body text shows how readable copy feels on card surfaces.
-                </p>
-                <p className="mt-1 text-xs" style={{ color: "var(--dl-muted-text)" }}>
-                  Muted text for timestamps, metadata, and helper lines.
-                </p>
+                <div className="space-y-1">
+                  <h3
+                    className="text-lg font-bold"
+                    style={{ color: "var(--dl-heading-text)" }}
+                  >
+                    Service dashboard
+                  </h3>
+                  <p className="text-sm" style={{ color: "var(--dl-muted-text)" }}>
+                    Preview shell for headings, cards, and actions.
+                  </p>
+                </div>
 
                 <div
-                  className="mt-3 rounded-lg border p-3"
+                  className="mt-4 rounded-[0.875rem] border p-4"
                   style={{
                     backgroundColor: "var(--dl-card-bg)",
                     borderColor: "var(--dl-card-border)",
                   }}
                 >
-                  <p className="text-sm font-medium" style={{ color: "var(--dl-body-text)" }}>
-                    Nested section
+                  <h4
+                    className="text-base font-semibold"
+                    style={{ color: "var(--dl-body-text)" }}
+                  >
+                    Today&apos;s jobs
+                  </h4>
+                  <p className="mt-1 text-sm" style={{ color: "var(--dl-body-text)" }}>
+                    Body text shows how readable copy feels on card surfaces.
                   </p>
                   <p className="mt-1 text-xs" style={{ color: "var(--dl-muted-text)" }}>
-                    A smaller card inside the main surface.
+                    Muted text for timestamps, metadata, and helper lines.
                   </p>
+
+                  <div
+                    className="mt-3 rounded-lg border p-3"
+                    style={{
+                      backgroundColor: "var(--dl-card-bg)",
+                      borderColor: "var(--dl-card-border)",
+                    }}
+                  >
+                    <p className="text-sm font-medium" style={{ color: "var(--dl-body-text)" }}>
+                      Nested section
+                    </p>
+                    <p className="mt-1 text-xs" style={{ color: "var(--dl-muted-text)" }}>
+                      A smaller card inside the main surface.
+                    </p>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="rounded-lg px-3 py-2 text-sm font-semibold"
+                      style={{
+                        backgroundColor: "var(--dl-primary-bg)",
+                        color: "var(--dl-primary-text)",
+                      }}
+                    >
+                      Primary action
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg px-3 py-2 text-sm font-semibold"
+                      style={{
+                        backgroundColor: "var(--dl-secondary-bg)",
+                        color: "var(--dl-secondary-text)",
+                      }}
+                    >
+                      Secondary action
+                    </button>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span
+                      className="rounded-full px-2.5 py-1 text-xs font-semibold"
+                      style={{
+                        backgroundColor: "var(--dl-success-bg)",
+                        color: "var(--dl-body-text)",
+                      }}
+                    >
+                      Success
+                    </span>
+                    <span
+                      className="rounded-full px-2.5 py-1 text-xs font-semibold"
+                      style={{
+                        backgroundColor: "var(--dl-warning-bg)",
+                        color: "var(--dl-body-text)",
+                      }}
+                    >
+                      Warning
+                    </span>
+                    <span
+                      className="rounded-full px-2.5 py-1 text-xs font-semibold"
+                      style={{
+                        backgroundColor: "var(--dl-danger-bg)",
+                        color: "var(--dl-body-text)",
+                      }}
+                    >
+                      Danger
+                    </span>
+                  </div>
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className="rounded-lg px-3 py-2 text-sm font-semibold"
-                    style={{
-                      backgroundColor: "var(--dl-primary-bg)",
-                      color: "var(--dl-primary-text)",
-                    }}
-                  >
-                    Primary action
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-lg px-3 py-2 text-sm font-semibold"
-                    style={{
-                      backgroundColor: "var(--dl-secondary-bg)",
-                      color: "var(--dl-secondary-text)",
-                    }}
-                  >
-                    Secondary action
-                  </button>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <span
-                    className="rounded-full px-2.5 py-1 text-xs font-semibold"
-                    style={{
-                      backgroundColor: "var(--dl-success-bg)",
-                      color: "var(--dl-body-text)",
-                    }}
-                  >
-                    Success
-                  </span>
-                  <span
-                    className="rounded-full px-2.5 py-1 text-xs font-semibold"
-                    style={{
-                      backgroundColor: "var(--dl-warning-bg)",
-                      color: "var(--dl-body-text)",
-                    }}
-                  >
-                    Warning
-                  </span>
-                  <span
-                    className="rounded-full px-2.5 py-1 text-xs font-semibold"
-                    style={{
-                      backgroundColor: "var(--dl-danger-bg)",
-                      color: "var(--dl-body-text)",
-                    }}
-                  >
-                    Danger
-                  </span>
-                </div>
+                <p className="mt-3 text-[11px]" style={{ color: "var(--dl-muted-text)" }}>
+                  Preview CSS variables are scoped to this panel only.
+                </p>
               </div>
-
-              <p className="mt-3 text-[11px]" style={{ color: "var(--dl-muted-text)" }}>
-                Preview CSS variables are scoped to this panel only.
-              </p>
             </div>
-          </div>
-        </section>
+          </section>
+
+          <DesignLabContrastPanel colors={colors} />
+        </div>
       </div>
 
       <footer className="rounded-[1rem] border border-dashed border-[rgba(138,99,36,0.2)] bg-[#FFF9EA] px-3.5 py-3 text-xs leading-relaxed text-[#6B6255] sm:px-4">
