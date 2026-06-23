@@ -9,6 +9,7 @@ import {
   type DesignLabColors,
 } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
 import { DesignLabContrastPanel } from "@/shared/components/platform-admin/design-lab/DesignLabContrastPanel";
+import { DesignLabExportPanel } from "@/shared/components/platform-admin/design-lab/DesignLabExportPanel";
 import { DESIGN_LAB_PRESETS } from "@/shared/components/platform-admin/design-lab/design-lab-presets";
 
 type ColorControlProps = {
@@ -366,6 +367,7 @@ export function DesignLabPageView() {
           </section>
 
           <DesignLabContrastPanel colors={colors} />
+          <DesignLabExportPanel colors={colors} />
         </div>
       </div>
 
