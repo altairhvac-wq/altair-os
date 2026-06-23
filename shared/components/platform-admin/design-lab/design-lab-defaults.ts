@@ -62,13 +62,13 @@ export const DESIGN_LAB_COLOR_FIELDS: {
   },
   {
     key: "secondaryButton",
-    label: "Secondary button",
-    helper: "Secondary action surfaces.",
+    label: "Secondary action buttons",
+    helper: "Secondary actions inside the preview, such as New job.",
   },
   {
     key: "secondaryButtonText",
-    label: "Secondary button text",
-    helper: "Text inside secondary buttons.",
+    label: "Secondary action button text",
+    helper: "Text inside preview secondary action buttons.",
   },
   {
     key: "headerText",

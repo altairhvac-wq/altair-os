@@ -31,17 +31,21 @@ function StatusBadge({
   label: string;
   variant: "neutral" | "success" | "warning";
 }) {
-  const bg =
+  const style =
     variant === "success"
-      ? "var(--dl-success-bg)"
+      ? { backgroundColor: "var(--dl-success-bg)", color: "var(--dl-body-text)" }
       : variant === "warning"
-        ? "var(--dl-warning-bg)"
-        : "var(--dl-secondary-bg)";
+        ? { backgroundColor: "var(--dl-warning-bg)", color: "var(--dl-body-text)" }
+        : {
+            backgroundColor: "var(--dl-card-bg)",
+            color: "var(--dl-body-text)",
+            border: "1px solid var(--dl-card-border)",
+          };
 
   return (
     <span
       className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold"
-      style={{ backgroundColor: bg, color: "var(--dl-body-text)" }}
+      style={style}
     >
       {label}
     </span>
