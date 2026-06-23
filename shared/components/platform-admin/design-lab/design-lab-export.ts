@@ -27,6 +27,12 @@ const CSS_VARIABLE_MAP: Record<keyof DesignLabColors, string> = {
   successBadge: "--altair-success-badge",
   warningBadge: "--altair-warning-badge",
   dangerBadge: "--altair-danger-badge",
+  sidebarBackground: "--altair-sidebar-background",
+  sidebarText: "--altair-sidebar-text",
+  sidebarActiveBackground: "--altair-sidebar-active-background",
+  sidebarMutedText: "--altair-sidebar-muted-text",
+  topbarBackground: "--altair-topbar-background",
+  topbarText: "--altair-topbar-text",
 };
 
 export function getContrastSummary(

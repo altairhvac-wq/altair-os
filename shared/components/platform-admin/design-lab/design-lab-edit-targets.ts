@@ -13,7 +13,10 @@ export type DesignLabEditTargetId =
   | "muted-text"
   | "success-badge"
   | "warning-badge"
-  | "danger-badge";
+  | "danger-badge"
+  | "sidebar-shell"
+  | "sidebar-active-item"
+  | "topbar-shell";
 
 export type DesignLabEditTarget = {
   id: DesignLabEditTargetId;
@@ -82,6 +85,24 @@ export const DESIGN_LAB_EDIT_TARGETS: DesignLabEditTarget[] = [
     label: "Danger badge",
     helper: "Error or blocked status states.",
     fields: ["dangerBadge"],
+  },
+  {
+    id: "sidebar-shell",
+    label: "Sidebar shell",
+    helper: "Preview-only sidebar background and navigation text.",
+    fields: ["sidebarBackground", "sidebarText", "sidebarMutedText"],
+  },
+  {
+    id: "sidebar-active-item",
+    label: "Sidebar active item",
+    helper: "Preview-only active navigation item surface.",
+    fields: ["sidebarActiveBackground", "sidebarText"],
+  },
+  {
+    id: "topbar-shell",
+    label: "Topbar shell",
+    helper: "Preview-only top header background and text.",
+    fields: ["topbarBackground", "topbarText"],
   },
 ];
 

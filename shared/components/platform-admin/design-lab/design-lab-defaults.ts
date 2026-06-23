@@ -12,6 +12,29 @@ export type DesignLabColors = {
   successBadge: string;
   warningBadge: string;
   dangerBadge: string;
+  sidebarBackground: string;
+  sidebarText: string;
+  sidebarActiveBackground: string;
+  sidebarMutedText: string;
+  topbarBackground: string;
+  topbarText: string;
+};
+
+export const DESIGN_LAB_SHELL_CHROME: Pick<
+  DesignLabColors,
+  | "sidebarBackground"
+  | "sidebarText"
+  | "sidebarActiveBackground"
+  | "sidebarMutedText"
+  | "topbarBackground"
+  | "topbarText"
+> = {
+  sidebarBackground: "#0B1118",
+  sidebarText: "#C9BFAE",
+  sidebarActiveBackground: "#2A2418",
+  sidebarMutedText: "#C9A44D",
+  topbarBackground: "#0E141D",
+  topbarText: "#F3EBDD",
 };
 
 export const NORTH_STAR_DESIGN_LAB_DEFAULTS: DesignLabColors = {
@@ -28,6 +51,7 @@ export const NORTH_STAR_DESIGN_LAB_DEFAULTS: DesignLabColors = {
   successBadge: "#DDEDD8",
   warningBadge: "#F5E6B8",
   dangerBadge: "#F2D0C8",
+  ...DESIGN_LAB_SHELL_CHROME,
 };
 
 export const DESIGN_LAB_COLOR_FIELDS: {
@@ -99,6 +123,36 @@ export const DESIGN_LAB_COLOR_FIELDS: {
     key: "dangerBadge",
     label: "Danger badge",
     helper: "Error or blocked status states.",
+  },
+  {
+    key: "sidebarBackground",
+    label: "Sidebar background",
+    helper: "Preview-only sidebar shell surface.",
+  },
+  {
+    key: "sidebarText",
+    label: "Sidebar text",
+    helper: "Preview-only sidebar navigation labels.",
+  },
+  {
+    key: "sidebarActiveBackground",
+    label: "Sidebar active background",
+    helper: "Preview-only active nav item surface.",
+  },
+  {
+    key: "sidebarMutedText",
+    label: "Sidebar muted text",
+    helper: "Preview-only sidebar group labels.",
+  },
+  {
+    key: "topbarBackground",
+    label: "Topbar background",
+    helper: "Preview-only top header shell surface.",
+  },
+  {
+    key: "topbarText",
+    label: "Topbar text",
+    helper: "Preview-only top header titles and labels.",
   },
 ];
 

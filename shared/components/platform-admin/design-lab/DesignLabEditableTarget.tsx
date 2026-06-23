@@ -7,7 +7,8 @@ type DesignLabEditableTargetProps = {
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
-  as?: "div" | "button" | "span" | "p" | "h3" | "h4" | "li";
+  as?: "div" | "button" | "span" | "p" | "h3" | "h4" | "li" | "aside" | "header" | "nav";
+  "aria-label"?: string;
 };
 
 const EDITABLE_HOVER =
@@ -24,12 +25,17 @@ export function DesignLabEditableTarget({
   className = "",
   style,
   as: Component = "div",
+  "aria-label": ariaLabel,
 }: DesignLabEditableTargetProps) {
   const isSelected = selectedTargetId === targetId;
 
   function handleSelect(event: React.MouseEvent | React.KeyboardEvent) {
     event.stopPropagation();
     onSelectTarget(targetId);
+  }
+
+  function stopBubble(event: React.MouseEvent) {
+    event.stopPropagation();
   }
 
   const interactiveProps =
@@ -41,6 +47,7 @@ export function DesignLabEditableTarget({
       role="button"
       tabIndex={0}
       onClick={handleSelect}
+      onMouseDown={stopBubble}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
@@ -49,6 +56,7 @@ export function DesignLabEditableTarget({
       }}
       data-edit-target={targetId}
       aria-pressed={isSelected}
+      aria-label={ariaLabel}
       className={[
         "cursor-pointer rounded-sm transition-[outline,box-shadow]",
         EDITABLE_HOVER,

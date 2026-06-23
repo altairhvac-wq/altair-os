@@ -16,6 +16,7 @@ import {
 import { DesignLabEditableTarget } from "@/shared/components/platform-admin/design-lab/DesignLabEditableTarget";
 import { DESIGN_LAB_DASHBOARD_FIXTURE } from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-fixture";
 import type { DesignLabEditTargetId } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
+import { DESIGN_LAB_CARD_SURFACE_STYLE } from "@/shared/components/platform-admin/design-lab/design-lab-preview-vars";
 import { northStarTokens as t } from "@/shared/design-system/north-star/tokens";
 import { MasterContentStack, MasterPageCanvas, MasterShellPage } from "@/shared/design-system/shell";
 import { buildNorthStarBoardContent } from "@/shared/lib/dashboard-north-star-board";
@@ -338,11 +339,11 @@ export function DesignLabDashboardReplica({
         <MasterContentStack density="compact" className="hidden lg:flex">
           <section aria-label="Business command">
           <DesignLabEditableTarget
-            targetId="page-background"
+            targetId="card-surface"
             selectedTargetId={selectedTargetId}
             onSelectTarget={onSelectTarget}
             className={t.heroShell}
-            style={{ backgroundColor: "var(--dl-page-bg)" }}
+            style={DESIGN_LAB_CARD_SURFACE_STYLE}
           >
             <div aria-hidden="true" className={t.heroAccentRail} />
 
@@ -464,14 +465,11 @@ export function DesignLabDashboardReplica({
             <div className={t.heroBody}>
               {hero.primary ? (
                 <DesignLabEditableTarget
-                  targetId="primary-action"
+                  targetId="card-surface"
                   selectedTargetId={selectedTargetId}
                   onSelectTarget={onSelectTarget}
                   className={t.primaryAction}
-                  style={{
-                    backgroundColor: "var(--dl-primary-bg)",
-                    color: "var(--dl-primary-text)",
-                  }}
+                  style={DESIGN_LAB_CARD_SURFACE_STYLE}
                 >
                   <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
@@ -508,10 +506,20 @@ export function DesignLabDashboardReplica({
                         {hero.primary.reason}
                       </p>
                     </div>
-                    <span className={t.accentCta}>
+                    <DesignLabEditableTarget
+                      targetId="primary-action"
+                      selectedTargetId={selectedTargetId}
+                      onSelectTarget={onSelectTarget}
+                      as="span"
+                      className={t.accentCta}
+                      style={{
+                        backgroundColor: "var(--dl-primary-bg)",
+                        color: "var(--dl-primary-text)",
+                      }}
+                    >
                       Start now
                       <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                    </span>
+                    </DesignLabEditableTarget>
                   </div>
                 </DesignLabEditableTarget>
               ) : null}
@@ -642,11 +650,11 @@ export function DesignLabDashboardReplica({
 
           <section aria-label="Operating board">
           <DesignLabEditableTarget
-            targetId="page-background"
+            targetId="card-surface"
             selectedTargetId={selectedTargetId}
             onSelectTarget={onSelectTarget}
             className={t.operatingBoard}
-            style={{ backgroundColor: "var(--dl-page-bg)" }}
+            style={DESIGN_LAB_CARD_SURFACE_STYLE}
           >
             <div aria-hidden="true" className={t.boardTopAccent} />
 
@@ -1257,11 +1265,11 @@ export function DesignLabDashboardReplica({
 
           <footer aria-label="Supporting metrics and status">
           <DesignLabEditableTarget
-            targetId="page-background"
+            targetId="card-surface"
             selectedTargetId={selectedTargetId}
             onSelectTarget={onSelectTarget}
             className={t.footer}
-            style={{ backgroundColor: "var(--dl-page-bg)" }}
+            style={DESIGN_LAB_CARD_SURFACE_STYLE}
           >
             <div aria-hidden="true" className={t.footerTopAccent} />
 

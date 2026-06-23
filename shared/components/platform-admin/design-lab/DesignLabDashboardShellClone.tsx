@@ -10,12 +10,7 @@ import {
 import { DesignLabDashboardReplica } from "@/shared/components/platform-admin/design-lab/DesignLabDashboardReplica";
 import { DesignLabEditableTarget } from "@/shared/components/platform-admin/design-lab/DesignLabEditableTarget";
 import type { DesignLabEditTargetId } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
-import {
-  northStarSidebarClass,
-  northStarSidebarGroupLabelClass,
-  northStarSidebarLinkActiveClass,
-  northStarSidebarLinkClass,
-} from "@/shared/design-system/shell/tokens";
+import { northStarSidebarClass } from "@/shared/design-system/shell/tokens";
 
 type DesignLabDashboardShellCloneProps = {
   selectedTargetId: DesignLabEditTargetId | null;
@@ -86,13 +81,34 @@ function DesignLabDemoModeBanner() {
   );
 }
 
-function DesignLabStaticTopbar() {
+function DesignLabStaticTopbar({
+  selectedTargetId,
+  onSelectTarget,
+}: {
+  selectedTargetId: DesignLabEditTargetId | null;
+  onSelectTarget: (id: DesignLabEditTargetId) => void;
+}) {
   return (
-    <header className="admin-premium-header relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 border-b px-3 sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0">
+    <DesignLabEditableTarget
+      targetId="topbar-shell"
+      selectedTargetId={selectedTargetId}
+      onSelectTarget={onSelectTarget}
+      as="header"
+      className="admin-premium-header relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 border-b px-3 sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0"
+      style={{
+        backgroundColor: "var(--dl-topbar-bg)",
+        backgroundImage: "none",
+        borderColor: "var(--dl-card-border)",
+        color: "var(--dl-topbar-text)",
+      }}
+    >
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
-            <h1 className="truncate text-base font-bold tracking-tight sm:text-lg">
+            <h1
+              className="truncate text-base font-bold tracking-tight sm:text-lg"
+              style={{ color: "var(--dl-topbar-text)" }}
+            >
               Dashboard
             </h1>
             <span
@@ -102,7 +118,10 @@ function DesignLabStaticTopbar() {
               Alpha
             </span>
           </div>
-          <p className="hidden truncate text-sm sm:block">
+          <p
+            className="hidden truncate text-sm sm:block"
+            style={{ color: "var(--dl-sidebar-text)" }}
+          >
             Altair HVAC · Design Lab preview shell
           </p>
         </div>
@@ -111,11 +130,16 @@ function DesignLabStaticTopbar() {
       <div className="flex shrink-0 items-center gap-1 sm:gap-3">
         <span
           className="north-star-header-search hidden rounded-lg p-2 sm:inline-flex"
+          style={{ color: "var(--dl-sidebar-text)" }}
           aria-hidden="true"
         >
           <Search className="h-5 w-5" />
         </span>
-        <span className="north-star-header-bell relative rounded-lg p-2" aria-hidden="true">
+        <span
+          className="north-star-header-bell relative rounded-lg p-2"
+          style={{ color: "var(--dl-sidebar-text)" }}
+          aria-hidden="true"
+        >
           <Bell className="h-5 w-5" />
           <span className="north-star-header-bell-badge absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold">
             3
@@ -123,8 +147,12 @@ function DesignLabStaticTopbar() {
         </span>
         <div className="north-star-header-divider flex items-center gap-2 border-l pl-2 sm:ml-2 sm:gap-3 sm:pl-4">
           <div className="north-star-company-switcher hidden md:block">
-            <p className="text-xs font-semibold">Altair HVAC</p>
-            <p className="text-[10px] text-slate-400">Demo workspace</p>
+            <p className="text-xs font-semibold" style={{ color: "var(--dl-topbar-text)" }}>
+              Altair HVAC
+            </p>
+            <p className="text-[10px]" style={{ color: "var(--dl-sidebar-text)" }}>
+              Demo workspace
+            </p>
           </div>
           <div
             className="north-star-header-avatar flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ring-2"
@@ -137,21 +165,42 @@ function DesignLabStaticTopbar() {
           </span>
         </div>
       </div>
-    </header>
+    </DesignLabEditableTarget>
   );
 }
 
-function DesignLabStaticSidebar({ groups }: { groups: StaticNavGroup[] }) {
+function DesignLabStaticSidebar({
+  groups,
+  selectedTargetId,
+  onSelectTarget,
+}: {
+  groups: StaticNavGroup[];
+  selectedTargetId: DesignLabEditTargetId | null;
+  onSelectTarget: (id: DesignLabEditTargetId) => void;
+}) {
   return (
-    <aside
+    <DesignLabEditableTarget
+      targetId="sidebar-shell"
+      selectedTargetId={selectedTargetId}
+      onSelectTarget={onSelectTarget}
+      as="aside"
       aria-label="Desktop navigation"
       className={`${northStarSidebarClass} hidden shrink-0 flex-col md:flex`}
+      style={{
+        backgroundColor: "var(--dl-sidebar-bg)",
+        backgroundImage: "none",
+        borderColor: "var(--dl-card-border)",
+        color: "var(--dl-sidebar-text)",
+      }}
     >
       <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4">
         <ul className="flex flex-col gap-7">
           {groups.map((group) => (
             <li key={group.id}>
-              <p className={`mb-2.5 px-2.5 ${northStarSidebarGroupLabelClass}`}>
+              <p
+                className="mb-2.5 px-2.5 text-[10px] font-semibold uppercase tracking-[0.14em]"
+                style={{ color: "var(--dl-sidebar-muted-text)" }}
+              >
                 {group.label}
               </p>
               <ul className="flex flex-col gap-1">
@@ -159,19 +208,36 @@ function DesignLabStaticSidebar({ groups }: { groups: StaticNavGroup[] }) {
                   const Icon = item.icon;
                   const isActive = item.href === "/";
 
-                  return (
-                    <li key={item.href}>
-                      <span
-                        className={`${northStarSidebarLinkClass} group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${
-                          isActive ? northStarSidebarLinkActiveClass : ""
-                        }`}
-                      >
-                        {isActive ? (
+                  if (isActive) {
+                    return (
+                      <li key={item.href}>
+                        <DesignLabEditableTarget
+                          targetId="sidebar-active-item"
+                          selectedTargetId={selectedTargetId}
+                          onSelectTarget={onSelectTarget}
+                          className="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium"
+                          style={{
+                            backgroundColor: "var(--dl-sidebar-active-bg)",
+                            color: "var(--dl-sidebar-text)",
+                          }}
+                        >
                           <span
                             aria-hidden="true"
                             className="admin-north-star-sidebar-rail"
                           />
-                        ) : null}
+                          <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                          <span className="truncate">{item.label}</span>
+                        </DesignLabEditableTarget>
+                      </li>
+                    );
+                  }
+
+                  return (
+                    <li key={item.href}>
+                      <span
+                        className="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium"
+                        style={{ color: "var(--dl-sidebar-text)" }}
+                      >
                         <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                         <span className="truncate">{item.label}</span>
                       </span>
@@ -183,7 +249,7 @@ function DesignLabStaticSidebar({ groups }: { groups: StaticNavGroup[] }) {
           ))}
         </ul>
       </nav>
-    </aside>
+    </DesignLabEditableTarget>
   );
 }
 
@@ -194,29 +260,37 @@ export function DesignLabDashboardShellClone({
   const navGroups = useMemo(() => buildStaticNavGroups(), []);
 
   return (
-    <div className="admin-canvas admin-shell-canvas admin-north-star-shell flex w-full min-w-0 flex-col md:min-h-full md:flex-row">
-      <DesignLabStaticSidebar groups={navGroups} />
+    <div
+      className="admin-canvas admin-shell-canvas admin-north-star-shell flex w-full min-w-0 flex-col md:min-h-full md:flex-row"
+      style={{ backgroundColor: "var(--dl-page-bg)", backgroundImage: "none" }}
+    >
+      <DesignLabStaticSidebar
+        groups={navGroups}
+        selectedTargetId={selectedTargetId}
+        onSelectTarget={onSelectTarget}
+      />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <div className="admin-top-shell shrink-0">
-          <DesignLabStaticTopbar />
-        </div>
-
-        <main className="admin-shell-main min-h-0 flex-1 px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5">
-          <DesignLabEditableTarget
-            targetId="page-background"
+          <DesignLabStaticTopbar
             selectedTargetId={selectedTargetId}
             onSelectTarget={onSelectTarget}
-            className="min-h-full"
-            style={{ backgroundColor: "var(--dl-page-bg)" }}
-          >
-            <DesignLabDemoModeBanner />
-            <DesignLabDashboardReplica
-              selectedTargetId={selectedTargetId}
-              onSelectTarget={onSelectTarget}
-            />
-          </DesignLabEditableTarget>
-        </main>
+          />
+        </div>
+
+        <DesignLabEditableTarget
+          targetId="page-background"
+          selectedTargetId={selectedTargetId}
+          onSelectTarget={onSelectTarget}
+          className="admin-shell-main min-h-0 flex-1 px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5"
+          style={{ backgroundColor: "var(--dl-page-bg)", backgroundImage: "none" }}
+        >
+          <DesignLabDemoModeBanner />
+          <DesignLabDashboardReplica
+            selectedTargetId={selectedTargetId}
+            onSelectTarget={onSelectTarget}
+          />
+        </DesignLabEditableTarget>
       </div>
     </div>
   );

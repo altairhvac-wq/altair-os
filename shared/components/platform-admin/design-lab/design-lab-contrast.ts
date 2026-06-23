@@ -276,6 +276,42 @@ export function evaluateDesignLabContrast(
       "Danger badge",
       "text",
     ),
+    buildCheck(
+      "sidebar-text-on-sidebar",
+      "Sidebar text on sidebar background",
+      colors.sidebarText,
+      colors.sidebarBackground,
+      "Sidebar text",
+      "Sidebar background",
+      "text",
+    ),
+    buildCheck(
+      "sidebar-muted-on-sidebar",
+      "Sidebar muted text on sidebar background",
+      colors.sidebarMutedText,
+      colors.sidebarBackground,
+      "Sidebar muted text",
+      "Sidebar background",
+      "text",
+    ),
+    buildCheck(
+      "sidebar-text-on-active",
+      "Sidebar text on active item background",
+      colors.sidebarText,
+      colors.sidebarActiveBackground,
+      "Sidebar text",
+      "Sidebar active background",
+      "text",
+    ),
+    buildCheck(
+      "topbar-text-on-topbar",
+      "Topbar text on topbar background",
+      colors.topbarText,
+      colors.topbarBackground,
+      "Topbar text",
+      "Topbar background",
+      "text",
+    ),
   ];
 }
 

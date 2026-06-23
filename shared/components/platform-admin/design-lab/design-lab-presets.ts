@@ -1,4 +1,5 @@
 import {
+  DESIGN_LAB_SHELL_CHROME,
   NORTH_STAR_DESIGN_LAB_DEFAULTS,
   type DesignLabColors,
 } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
@@ -25,6 +26,7 @@ export const DESIGN_LAB_PRESETS: DesignLabPreset[] = [
     purpose: "Slightly richer and warmer.",
     mood: "Premium, soft, polished.",
     colors: {
+      ...DESIGN_LAB_SHELL_CHROME,
       pageBackground: "#1F1710",
       cardBackground: "#FFF4DD",
       cardBorder: "#E2C98F",
@@ -46,6 +48,7 @@ export const DESIGN_LAB_PRESETS: DesignLabPreset[] = [
     purpose: "More colorful but still Altair.",
     mood: "Energetic brass/gold with strong contrast.",
     colors: {
+      ...DESIGN_LAB_SHELL_CHROME,
       pageBackground: "#14100B",
       cardBackground: "#FFF7E2",
       cardBorder: "#D9B64A",
@@ -67,6 +70,7 @@ export const DESIGN_LAB_PRESETS: DesignLabPreset[] = [
     purpose: "Darker executive look.",
     mood: "Deeper shell, high-end, less ivory-heavy.",
     colors: {
+      ...DESIGN_LAB_SHELL_CHROME,
       pageBackground: "#0F1115",
       cardBackground: "#F7EFE0",
       cardBorder: "#CDBB94",
@@ -88,6 +92,7 @@ export const DESIGN_LAB_PRESETS: DesignLabPreset[] = [
     purpose: "Better readability and stronger separation.",
     mood: "Crisp, accessible, strong borders/text.",
     colors: {
+      ...DESIGN_LAB_SHELL_CHROME,
       pageBackground: "#0B0B0A",
       cardBackground: "#FFFBEF",
       cardBorder: "#9F7A25",
@@ -109,6 +114,7 @@ export const DESIGN_LAB_PRESETS: DesignLabPreset[] = [
     purpose: "Play with something bolder.",
     mood: "More vibrant, but not neon/cyan/mustard.",
     colors: {
+      ...DESIGN_LAB_SHELL_CHROME,
       pageBackground: "#161018",
       cardBackground: "#FFF3D6",
       cardBorder: "#D69A2D",
