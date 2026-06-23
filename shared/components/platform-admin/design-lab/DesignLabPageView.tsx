@@ -8,9 +8,13 @@ import {
   normalizeHexColor,
   type DesignLabColors,
 } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
+import { DesignLabCompactPreview } from "@/shared/components/platform-admin/design-lab/DesignLabCompactPreview";
 import { DesignLabContrastPanel } from "@/shared/components/platform-admin/design-lab/DesignLabContrastPanel";
 import { DesignLabExportPanel } from "@/shared/components/platform-admin/design-lab/DesignLabExportPanel";
+import { DesignLabFullPagePreview } from "@/shared/components/platform-admin/design-lab/DesignLabFullPagePreview";
 import { DESIGN_LAB_PRESETS } from "@/shared/components/platform-admin/design-lab/design-lab-presets";
+
+type PreviewMode = "compact" | "full";
 
 type ColorControlProps = {
   label: string;
@@ -83,24 +87,6 @@ function ColorControl({ label, helper, value, onChange }: ColorControlProps) {
   );
 }
 
-function previewVars(colors: DesignLabColors): React.CSSProperties {
-  return {
-    "--dl-page-bg": colors.pageBackground,
-    "--dl-card-bg": colors.cardBackground,
-    "--dl-card-border": colors.cardBorder,
-    "--dl-primary-bg": colors.primaryButton,
-    "--dl-primary-text": colors.primaryButtonText,
-    "--dl-secondary-bg": colors.secondaryButton,
-    "--dl-secondary-text": colors.secondaryButtonText,
-    "--dl-heading-text": colors.headerText,
-    "--dl-body-text": colors.bodyText,
-    "--dl-muted-text": colors.mutedText,
-    "--dl-success-bg": colors.successBadge,
-    "--dl-warning-bg": colors.warningBadge,
-    "--dl-danger-bg": colors.dangerBadge,
-  } as React.CSSProperties;
-}
-
 export function DesignLabPageView() {
   const [colors, setColors] = useState<DesignLabColors>(
     NORTH_STAR_DESIGN_LAB_DEFAULTS,
@@ -109,6 +95,7 @@ export function DesignLabPageView() {
     "north-star-default",
   );
   const [resetKey, setResetKey] = useState(0);
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("compact");
 
   function applyPreset(presetId: string) {
     const preset = DESIGN_LAB_PRESETS.find((entry) => entry.id === presetId);
@@ -244,126 +231,53 @@ export function DesignLabPageView() {
             className="overflow-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.16)] shadow-[0_8px_24px_rgba(23,19,14,0.12)]"
           >
             <div className="border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-3 py-2.5 sm:px-4">
-              <h2 className="text-sm font-semibold text-[#17130E]">Live preview</h2>
-              <p className="text-xs text-[#6B6255]">
-                Scoped styles — customer pages are unchanged.
-              </p>
-            </div>
-
-            <div
-              className="design-lab-preview p-4 sm:p-5"
-              style={previewVars(colors)}
-            >
-              <div
-                className="rounded-[1rem] p-4 sm:p-5"
-                style={{ backgroundColor: "var(--dl-page-bg)" }}
-              >
-                <div className="space-y-1">
-                  <h3
-                    className="text-lg font-bold"
-                    style={{ color: "var(--dl-heading-text)" }}
-                  >
-                    Service dashboard
-                  </h3>
-                  <p className="text-sm" style={{ color: "var(--dl-muted-text)" }}>
-                    Preview shell for headings, cards, and actions.
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold text-[#17130E]">Live preview</h2>
+                  <p className="text-xs text-[#6B6255]">
+                    Scoped styles — customer pages are unchanged.
                   </p>
                 </div>
-
                 <div
-                  className="mt-4 rounded-[0.875rem] border p-4"
-                  style={{
-                    backgroundColor: "var(--dl-card-bg)",
-                    borderColor: "var(--dl-card-border)",
-                  }}
+                  className="flex shrink-0 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FBF7EF] p-0.5"
+                  role="group"
+                  aria-label="Preview mode"
                 >
-                  <h4
-                    className="text-base font-semibold"
-                    style={{ color: "var(--dl-body-text)" }}
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode("compact")}
+                    aria-pressed={previewMode === "compact"}
+                    className={[
+                      "rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors",
+                      previewMode === "compact"
+                        ? "bg-[#FFF3D6] text-[#17130E] shadow-[inset_0_0_0_1px_rgba(184,148,63,0.25)]"
+                        : "text-[#6B6255] hover:text-[#17130E]",
+                    ].join(" ")}
                   >
-                    Today&apos;s jobs
-                  </h4>
-                  <p className="mt-1 text-sm" style={{ color: "var(--dl-body-text)" }}>
-                    Body text shows how readable copy feels on card surfaces.
-                  </p>
-                  <p className="mt-1 text-xs" style={{ color: "var(--dl-muted-text)" }}>
-                    Muted text for timestamps, metadata, and helper lines.
-                  </p>
-
-                  <div
-                    className="mt-3 rounded-lg border p-3"
-                    style={{
-                      backgroundColor: "var(--dl-card-bg)",
-                      borderColor: "var(--dl-card-border)",
-                    }}
+                    Compact preview
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode("full")}
+                    aria-pressed={previewMode === "full"}
+                    className={[
+                      "rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors",
+                      previewMode === "full"
+                        ? "bg-[#FFF3D6] text-[#17130E] shadow-[inset_0_0_0_1px_rgba(184,148,63,0.25)]"
+                        : "text-[#6B6255] hover:text-[#17130E]",
+                    ].join(" ")}
                   >
-                    <p className="text-sm font-medium" style={{ color: "var(--dl-body-text)" }}>
-                      Nested section
-                    </p>
-                    <p className="mt-1 text-xs" style={{ color: "var(--dl-muted-text)" }}>
-                      A smaller card inside the main surface.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      className="rounded-lg px-3 py-2 text-sm font-semibold"
-                      style={{
-                        backgroundColor: "var(--dl-primary-bg)",
-                        color: "var(--dl-primary-text)",
-                      }}
-                    >
-                      Primary action
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-lg px-3 py-2 text-sm font-semibold"
-                      style={{
-                        backgroundColor: "var(--dl-secondary-bg)",
-                        color: "var(--dl-secondary-text)",
-                      }}
-                    >
-                      Secondary action
-                    </button>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <span
-                      className="rounded-full px-2.5 py-1 text-xs font-semibold"
-                      style={{
-                        backgroundColor: "var(--dl-success-bg)",
-                        color: "var(--dl-body-text)",
-                      }}
-                    >
-                      Success
-                    </span>
-                    <span
-                      className="rounded-full px-2.5 py-1 text-xs font-semibold"
-                      style={{
-                        backgroundColor: "var(--dl-warning-bg)",
-                        color: "var(--dl-body-text)",
-                      }}
-                    >
-                      Warning
-                    </span>
-                    <span
-                      className="rounded-full px-2.5 py-1 text-xs font-semibold"
-                      style={{
-                        backgroundColor: "var(--dl-danger-bg)",
-                        color: "var(--dl-body-text)",
-                      }}
-                    >
-                      Danger
-                    </span>
-                  </div>
+                    Full page preview
+                  </button>
                 </div>
-
-                <p className="mt-3 text-[11px]" style={{ color: "var(--dl-muted-text)" }}>
-                  Preview CSS variables are scoped to this panel only.
-                </p>
               </div>
             </div>
+
+            {previewMode === "compact" ? (
+              <DesignLabCompactPreview colors={colors} />
+            ) : (
+              <DesignLabFullPagePreview colors={colors} />
+            )}
           </section>
 
           <DesignLabContrastPanel colors={colors} />
