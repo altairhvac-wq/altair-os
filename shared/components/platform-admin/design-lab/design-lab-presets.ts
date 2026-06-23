@@ -1,0 +1,127 @@
+import {
+  NORTH_STAR_DESIGN_LAB_DEFAULTS,
+  type DesignLabColors,
+} from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
+
+export type DesignLabPreset = {
+  id: string;
+  name: string;
+  purpose: string;
+  mood: string;
+  colors: DesignLabColors;
+};
+
+export const DESIGN_LAB_PRESETS: DesignLabPreset[] = [
+  {
+    id: "north-star-default",
+    name: "North Star Default",
+    purpose: "Current safe Altair look.",
+    mood: "Calm graphite, ivory, brass.",
+    colors: NORTH_STAR_DESIGN_LAB_DEFAULTS,
+  },
+  {
+    id: "warm-premium",
+    name: "Warm Premium",
+    purpose: "Slightly richer and warmer.",
+    mood: "Premium, soft, polished.",
+    colors: {
+      pageBackground: "#1F1710",
+      cardBackground: "#FFF4DD",
+      cardBorder: "#E2C98F",
+      primaryButton: "#C99A2E",
+      primaryButtonText: "#1F1710",
+      secondaryButton: "#F2E0BD",
+      secondaryButtonText: "#2C2015",
+      headerText: "#FFF6E6",
+      bodyText: "#2C2015",
+      mutedText: "#7C6143",
+      successBadge: "#D8E9D2",
+      warningBadge: "#F4D98A",
+      dangerBadge: "#EDC5B7",
+    },
+  },
+  {
+    id: "vibrant-brass",
+    name: "Vibrant Brass",
+    purpose: "More colorful but still Altair.",
+    mood: "Energetic brass/gold with strong contrast.",
+    colors: {
+      pageBackground: "#14100B",
+      cardBackground: "#FFF7E2",
+      cardBorder: "#D9B64A",
+      primaryButton: "#D6A21F",
+      primaryButtonText: "#14100B",
+      secondaryButton: "#FFE2A3",
+      secondaryButtonText: "#261A08",
+      headerText: "#FFF9EA",
+      bodyText: "#261A08",
+      mutedText: "#80632A",
+      successBadge: "#CFEBC4",
+      warningBadge: "#FFE08A",
+      dangerBadge: "#F0B4A6",
+    },
+  },
+  {
+    id: "deep-graphite",
+    name: "Deep Graphite",
+    purpose: "Darker executive look.",
+    mood: "Deeper shell, high-end, less ivory-heavy.",
+    colors: {
+      pageBackground: "#0F1115",
+      cardBackground: "#F7EFE0",
+      cardBorder: "#CDBB94",
+      primaryButton: "#BFA45B",
+      primaryButtonText: "#0F1115",
+      secondaryButton: "#292720",
+      secondaryButtonText: "#F7EFE0",
+      headerText: "#F7EFE0",
+      bodyText: "#211B14",
+      mutedText: "#746B5C",
+      successBadge: "#CFE3D0",
+      warningBadge: "#E9D18A",
+      dangerBadge: "#E8B7AC",
+    },
+  },
+  {
+    id: "high-contrast",
+    name: "High Contrast",
+    purpose: "Better readability and stronger separation.",
+    mood: "Crisp, accessible, strong borders/text.",
+    colors: {
+      pageBackground: "#0B0B0A",
+      cardBackground: "#FFFBEF",
+      cardBorder: "#9F7A25",
+      primaryButton: "#E0AA2B",
+      primaryButtonText: "#050505",
+      secondaryButton: "#FFFFFF",
+      secondaryButtonText: "#15110B",
+      headerText: "#FFFFFF",
+      bodyText: "#15110B",
+      mutedText: "#5E5548",
+      successBadge: "#BFE8B8",
+      warningBadge: "#FFD86B",
+      dangerBadge: "#F1A394",
+    },
+  },
+  {
+    id: "founder-experimental",
+    name: "Founder Experimental",
+    purpose: "Play with something bolder.",
+    mood: "More vibrant, but not neon/cyan/mustard.",
+    colors: {
+      pageBackground: "#161018",
+      cardBackground: "#FFF3D6",
+      cardBorder: "#D69A2D",
+      primaryButton: "#E08F2A",
+      primaryButtonText: "#160E08",
+      secondaryButton: "#3B2A1A",
+      secondaryButtonText: "#FFEBC2",
+      headerText: "#FFF1D0",
+      bodyText: "#24170C",
+      mutedText: "#84613C",
+      successBadge: "#BFE7C7",
+      warningBadge: "#FFD36E",
+      dangerBadge: "#F29C8F",
+    },
+  },
+];

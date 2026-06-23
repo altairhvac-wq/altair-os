@@ -8,6 +8,7 @@ import {
   normalizeHexColor,
   type DesignLabColors,
 } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
+import { DESIGN_LAB_PRESETS } from "@/shared/components/platform-admin/design-lab/design-lab-presets";
 
 type ColorControlProps = {
   label: string;
@@ -102,14 +103,30 @@ export function DesignLabPageView() {
   const [colors, setColors] = useState<DesignLabColors>(
     NORTH_STAR_DESIGN_LAB_DEFAULTS,
   );
+  const [activePresetId, setActivePresetId] = useState<string | null>(
+    "north-star-default",
+  );
   const [resetKey, setResetKey] = useState(0);
+
+  function applyPreset(presetId: string) {
+    const preset = DESIGN_LAB_PRESETS.find((entry) => entry.id === presetId);
+    if (!preset) {
+      return;
+    }
+
+    setColors({ ...preset.colors });
+    setActivePresetId(presetId);
+    setResetKey((current) => current + 1);
+  }
 
   function updateColor(key: keyof DesignLabColors, value: string) {
     setColors((current) => ({ ...current, [key]: value }));
+    setActivePresetId(null);
   }
 
   function resetToDefaults() {
     setColors(NORTH_STAR_DESIGN_LAB_DEFAULTS);
+    setActivePresetId("north-star-default");
     setResetKey((current) => current + 1);
   }
 
@@ -135,6 +152,63 @@ export function DesignLabPageView() {
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] xl:items-start">
         <aside className="space-y-3">
+          <div className="space-y-2.5">
+            <h2 className="text-sm font-bold text-[#17130E]">Preset palettes</h2>
+            <p className="text-xs leading-snug text-[#6B6255]">
+              Presets only affect this preview. They do not save or change customer
+              pages.
+            </p>
+            <div className="grid gap-2">
+              {DESIGN_LAB_PRESETS.map((preset) => {
+                const isActive = activePresetId === preset.id;
+
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => applyPreset(preset.id)}
+                    aria-pressed={isActive}
+                    className={[
+                      "rounded-xl border px-3 py-2.5 text-left transition-colors",
+                      isActive
+                        ? "border-[#B8943F] bg-[#FFF3D6] shadow-[inset_0_0_0_1px_rgba(184,148,63,0.25)]"
+                        : "border-[rgba(138,99,36,0.14)] bg-[#FBF7EF] hover:border-[rgba(201,164,77,0.35)] hover:bg-[#F7F0E2]",
+                    ].join(" ")}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-sm font-semibold text-[#17130E]">
+                        {preset.name}
+                      </span>
+                      <span className="flex shrink-0 gap-1 pt-0.5">
+                        <span
+                          className="h-3 w-3 rounded-full border border-[rgba(23,19,14,0.12)]"
+                          style={{ backgroundColor: preset.colors.pageBackground }}
+                          aria-hidden
+                        />
+                        <span
+                          className="h-3 w-3 rounded-full border border-[rgba(23,19,14,0.12)]"
+                          style={{ backgroundColor: preset.colors.cardBackground }}
+                          aria-hidden
+                        />
+                        <span
+                          className="h-3 w-3 rounded-full border border-[rgba(23,19,14,0.12)]"
+                          style={{ backgroundColor: preset.colors.primaryButton }}
+                          aria-hidden
+                        />
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] leading-snug text-[#4F4638]">
+                      {preset.purpose}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-[#6B6255]">
+                      {preset.mood}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-sm font-bold text-[#17130E]">Color controls</h2>
             <button
@@ -146,8 +220,8 @@ export function DesignLabPageView() {
             </button>
           </div>
           <p className="text-xs leading-snug text-[#6B6255]">
-            Adjust values to explore the North Star palette. Only the preview panel
-            on the right updates.
+            Adjust values to explore palettes. Only the preview panel on the right
+            updates.
           </p>
           <div key={resetKey} className="space-y-2.5">
             {DESIGN_LAB_COLOR_FIELDS.map(({ key, label, helper }) => (

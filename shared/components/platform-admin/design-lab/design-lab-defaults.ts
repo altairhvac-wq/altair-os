@@ -38,67 +38,67 @@ export const DESIGN_LAB_COLOR_FIELDS: {
   {
     key: "pageBackground",
     label: "Page background",
-    helper: "Outer shell behind cards and navigation in the preview.",
+    helper: "Outer shell and page canvas preview.",
   },
   {
     key: "cardBackground",
     label: "Card background",
-    helper: "Primary surface for panels and content blocks.",
+    helper: "Main work surfaces and cards.",
   },
   {
     key: "cardBorder",
     label: "Card border",
-    helper: "Outline around cards and nested sections.",
+    helper: "Card outlines and section dividers.",
   },
   {
     key: "primaryButton",
     label: "Primary button",
-    helper: "Main call-to-action fill color.",
+    helper: "Main action buttons.",
   },
   {
     key: "primaryButtonText",
     label: "Primary button text",
-    helper: "Label color on primary buttons.",
+    helper: "Text inside primary buttons.",
   },
   {
     key: "secondaryButton",
     label: "Secondary button",
-    helper: "Secondary action fill color.",
+    helper: "Secondary action surfaces.",
   },
   {
     key: "secondaryButtonText",
     label: "Secondary button text",
-    helper: "Label color on secondary buttons.",
+    helper: "Text inside secondary buttons.",
   },
   {
     key: "headerText",
     label: "Header text",
-    helper: "Page titles and section headings.",
+    helper: "Large titles on dark shell areas.",
   },
   {
     key: "bodyText",
     label: "Body text",
-    helper: "Default paragraph and list copy.",
+    helper: "Main readable content inside cards.",
   },
   {
     key: "mutedText",
     label: "Muted text",
-    helper: "Subtitles, captions, and de-emphasized copy.",
+    helper: "Helper text, metadata, and descriptions.",
   },
   {
     key: "successBadge",
     label: "Success badge",
-    helper: "Positive status pill background.",
+    helper: "Positive status states.",
   },
   {
     key: "warningBadge",
     label: "Warning badge",
-    helper: "Attention or pending status pill background.",
+    helper: "Needs-attention status states.",
   },
   {
     key: "dangerBadge",
     label: "Danger badge",
-    helper: "Error or critical status pill background.",
+    helper: "Error or blocked status states.",
   },
 ];
 
