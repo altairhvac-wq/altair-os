@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type CSSProperties } from "react";
 import {
   ArrowRight,
   AlertTriangle,
@@ -16,7 +16,6 @@ import {
 import { DesignLabEditableTarget } from "@/shared/components/platform-admin/design-lab/DesignLabEditableTarget";
 import { DESIGN_LAB_DASHBOARD_FIXTURE } from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-fixture";
 import type { DesignLabEditTargetId } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
-import { DESIGN_LAB_CARD_SURFACE_STYLE } from "@/shared/components/platform-admin/design-lab/design-lab-preview-vars";
 import { northStarTokens as t } from "@/shared/design-system/north-star/tokens";
 import { MasterContentStack, MasterPageCanvas, MasterShellPage } from "@/shared/design-system/shell";
 import { buildNorthStarBoardContent } from "@/shared/lib/dashboard-north-star-board";
@@ -27,6 +26,11 @@ import {
 } from "@/shared/lib/dashboard-north-star-hero";
 import { buildNorthStarSupportingBandsContent } from "@/shared/lib/dashboard-north-star-supporting-bands";
 import type { NorthStarBoardRow } from "@/shared/lib/dashboard-north-star-board";
+const DESIGN_LAB_CARD_SURFACE_STYLE: CSSProperties = {
+  backgroundColor: "var(--dl-card-bg)",
+  borderColor: "var(--dl-card-border)",
+  backgroundImage: "none",
+};
 
 type DesignLabDashboardReplicaProps = {
   selectedTargetId: DesignLabEditTargetId | null;
