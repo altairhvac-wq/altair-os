@@ -10,8 +10,10 @@ import {
 } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
 import { DesignLabCompactPreview } from "@/shared/components/platform-admin/design-lab/DesignLabCompactPreview";
 import { DesignLabContrastPanel } from "@/shared/components/platform-admin/design-lab/DesignLabContrastPanel";
+import { DesignLabEditTargetPanel } from "@/shared/components/platform-admin/design-lab/DesignLabEditTargetPanel";
 import { DesignLabExportPanel } from "@/shared/components/platform-admin/design-lab/DesignLabExportPanel";
 import { DesignLabFullPagePreview } from "@/shared/components/platform-admin/design-lab/DesignLabFullPagePreview";
+import type { DesignLabEditTargetId } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
 import { DESIGN_LAB_PRESETS } from "@/shared/components/platform-admin/design-lab/design-lab-presets";
 
 type PreviewMode = "compact" | "full";
@@ -96,6 +98,8 @@ export function DesignLabPageView() {
   );
   const [resetKey, setResetKey] = useState(0);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("compact");
+  const [selectedTargetId, setSelectedTargetId] =
+    useState<DesignLabEditTargetId | null>(null);
 
   function applyPreset(presetId: string) {
     const preset = DESIGN_LAB_PRESETS.find((entry) => entry.id === presetId);
@@ -198,6 +202,12 @@ export function DesignLabPageView() {
             </div>
           </div>
 
+          <DesignLabEditTargetPanel
+            selectedTargetId={selectedTargetId}
+            colors={colors}
+            onColorChange={updateColor}
+          />
+
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-sm font-bold text-[#17130E]">Color controls</h2>
             <button
@@ -274,9 +284,17 @@ export function DesignLabPageView() {
             </div>
 
             {previewMode === "compact" ? (
-              <DesignLabCompactPreview colors={colors} />
+              <DesignLabCompactPreview
+                colors={colors}
+                selectedTargetId={selectedTargetId}
+                onSelectTarget={setSelectedTargetId}
+              />
             ) : (
-              <DesignLabFullPagePreview colors={colors} />
+              <DesignLabFullPagePreview
+                colors={colors}
+                selectedTargetId={selectedTargetId}
+                onSelectTarget={setSelectedTargetId}
+              />
             )}
           </section>
 
