@@ -11,8 +11,13 @@ import { formatDateTimeInTimeZone, resolveCompanyTimeZone } from "@/shared/lib/d
 import {
   canEnableOnlineCheckoutAccount,
   formatPaymentCapabilityEnabled,
-  getOnlineCheckoutEnableBlockedMessage,
+  getPaymentSettingsMainCopy,
+  getPaymentSettingsPayNowClarify,
+  getPaymentSettingsPaymentLinksClarify,
+  getPaymentSettingsStatusBadge,
   PAYMENT_ACCOUNT_STATUS_LABELS,
+  PAYMENT_SETTINGS_MANUAL_RECORDING_NOTE,
+  PAYMENT_SETTINGS_STRIPE_SETUP_LATER_NOTE,
   type PaymentSetupReturnNotice,
   type StripePaymentSettingsSummary,
 } from "@/shared/types/settings/payment-settings";
@@ -24,6 +29,7 @@ type PaymentSettingsCardProps = {
   canStartStripeSetup?: boolean;
   canManageOnlineCheckout?: boolean;
   stripeOnboardingConfigured?: boolean;
+  stripeTestMode?: boolean;
   paymentSetupNotice?: PaymentSetupReturnNotice | null;
 };
 
@@ -82,6 +88,7 @@ export function PaymentSettingsCard({
   canStartStripeSetup = false,
   canManageOnlineCheckout = false,
   stripeOnboardingConfigured = false,
+  stripeTestMode = false,
   paymentSetupNotice = null,
 }: PaymentSettingsCardProps) {
   const [isPending, startTransition] = useTransition();
@@ -89,24 +96,32 @@ export function PaymentSettingsCard({
 
   const isConnected = stripeAccount !== null;
   const displayStatus = stripeAccount?.status ?? "not_connected";
-  const statusLabel = PAYMENT_ACCOUNT_STATUS_LABELS[displayStatus];
+  const statusBadge = getPaymentSettingsStatusBadge(stripeAccount);
+  const mainCopy = getPaymentSettingsMainCopy(stripeAccount);
+  const payNowClarify = getPaymentSettingsPayNowClarify(stripeAccount);
+  const paymentLinksClarify = getPaymentSettingsPaymentLinksClarify(stripeAccount);
   const canLaunchOnboarding =
     canStartStripeSetup &&
     stripeOnboardingConfigured &&
     displayStatus !== "active";
   const startButtonLabel =
-    displayStatus === "pending" ? "Continue Stripe setup" : "Start Stripe setup";
+    displayStatus === "pending" || displayStatus === "restricted"
+      ? "Continue Stripe setup"
+      : "Start Stripe setup";
   const canEnableCheckout =
     isConnected &&
     stripeAccount !== null &&
     canEnableOnlineCheckoutAccount(stripeAccount);
-  const checkoutBlockedMessage = getOnlineCheckoutEnableBlockedMessage(stripeAccount);
   const showEnableCheckoutButton =
     canManageOnlineCheckout && canEnableCheckout;
   const showDisableCheckoutButton =
     canManageOnlineCheckout &&
     isConnected &&
     stripeAccount?.onlinePaymentsEnabled === true;
+  const showCheckoutControls =
+    canManageOnlineCheckout &&
+    isConnected &&
+    (stripeAccount?.status === "active" || stripeAccount?.onlinePaymentsEnabled === true);
 
   const shellClass = northStar
     ? "min-w-0 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3 sm:p-4"
@@ -127,6 +142,10 @@ export function PaymentSettingsCard({
   const noticeClass = northStar
     ? "rounded-lg border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-2 text-xs text-[#4F4638] sm:text-sm"
     : "rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-600 sm:text-sm";
+
+  const subtleNoticeClass = northStar
+    ? "text-xs text-[#6B6255] sm:text-sm"
+    : "text-xs text-slate-500 sm:text-sm";
 
   const errorNoticeClass = northStar
     ? "rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs text-red-700 sm:text-sm"
@@ -190,9 +209,11 @@ export function PaymentSettingsCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className={titleClass}>Online payments</h2>
-            <span className={statusBadgeClass}>{statusLabel}</span>
+            <span className={statusBadgeClass}>{statusBadge}</span>
           </div>
-          <p className={helperClass}>Stripe Connect account status.</p>
+          {stripeTestMode ? (
+            <p className={helperClass}>Using Stripe test mode.</p>
+          ) : null}
         </div>
       </div>
 
@@ -209,31 +230,12 @@ export function PaymentSettingsCard({
           </p>
         ) : null}
         {actionError ? <p className={errorNoticeClass}>{actionError}</p> : null}
-        {isConnected ? (
-          <>
-            <p className={noticeClass}>Stripe account linked.</p>
-            {stripeAccount.onlinePaymentsEnabled ? (
-              <p className={noticeClass}>
-                Online checkout is enabled for this account. This gate does not
-                activate Pay Now or checkout sessions yet.
-              </p>
-            ) : (
-              <p className={noticeClass}>
-                Online checkout is still disabled. Enabling checkout only opens
-                the account gate; Pay Now and checkout sessions are not active
-                in this build.
-              </p>
-            )}
-          </>
-        ) : (
-          <>
-            <p className={noticeClass}>Online payments are not connected yet.</p>
-            <p className={noticeClass}>
-              Connect Stripe to prepare for online payments. Checkout is not
-              active in this build.
-            </p>
-          </>
-        )}
+        <p className={noticeClass}>{mainCopy}</p>
+        {payNowClarify ? <p className={subtleNoticeClass}>{payNowClarify}</p> : null}
+        {paymentLinksClarify ? (
+          <p className={subtleNoticeClass}>{paymentLinksClarify}</p>
+        ) : null}
+        <p className={subtleNoticeClass}>{PAYMENT_SETTINGS_MANUAL_RECORDING_NOTE}</p>
       </div>
 
       {isConnected ? (
@@ -262,7 +264,7 @@ export function PaymentSettingsCard({
                 northStar ? "shrink-0 text-xs text-[#6B6255]" : "shrink-0 text-xs text-slate-500"
               }
             >
-              Status
+              Account status
             </dt>
             <dd
               className={
@@ -271,7 +273,7 @@ export function PaymentSettingsCard({
                   : "min-w-0 truncate text-right text-sm font-medium text-slate-900"
               }
             >
-              {statusLabel}
+              {PAYMENT_ACCOUNT_STATUS_LABELS[stripeAccount.status]}
             </dd>
           </div>
           <CapabilityRow
@@ -327,38 +329,40 @@ export function PaymentSettingsCard({
         ) : (
           <button type="button" disabled className={disabledButtonClass}>
             {canStartStripeSetup && !stripeOnboardingConfigured
-              ? "Stripe setup unavailable (not configured)"
+              ? "Stripe setup not configured"
               : displayStatus === "active"
                 ? "Stripe account connected"
                 : "Stripe setup requires owner or admin"}
           </button>
         )}
-        {showEnableCheckoutButton ? (
-          <button
-            type="button"
-            onClick={handleEnableOnlineCheckout}
-            disabled={isPending}
-            className={enabledButtonClass}
-          >
-            {isPending ? "Enabling checkout…" : "Enable online checkout"}
-          </button>
-        ) : showDisableCheckoutButton ? (
-          <button
-            type="button"
-            onClick={handleDisableOnlineCheckout}
-            disabled={isPending}
-            className={enabledButtonClass}
-          >
-            {isPending ? "Disabling checkout…" : "Disable online checkout"}
-          </button>
-        ) : (
-          <button type="button" disabled className={disabledButtonClass}>
-            {!canManageOnlineCheckout
-              ? "Online checkout requires owner or admin"
-              : checkoutBlockedMessage}
-          </button>
-        )}
+        {showCheckoutControls ? (
+          showEnableCheckoutButton ? (
+            <button
+              type="button"
+              onClick={handleEnableOnlineCheckout}
+              disabled={isPending}
+              className={enabledButtonClass}
+            >
+              {isPending ? "Enabling online payments…" : "Enable online payments"}
+            </button>
+          ) : showDisableCheckoutButton ? (
+            <button
+              type="button"
+              onClick={handleDisableOnlineCheckout}
+              disabled={isPending}
+              className={enabledButtonClass}
+            >
+              {isPending ? "Disabling online payments…" : "Disable online payments"}
+            </button>
+          ) : null
+        ) : null}
       </div>
+
+      {!isConnected && canStartStripeSetup ? (
+        <p className={`${subtleNoticeClass} mt-2`}>
+          {PAYMENT_SETTINGS_STRIPE_SETUP_LATER_NOTE}
+        </p>
+      ) : null}
     </div>
   );
 }

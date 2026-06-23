@@ -64,6 +64,7 @@ export type SettingsNorthStarViewProps = {
   canStartStripeSetup?: boolean;
   canManageOnlineCheckout?: boolean;
   stripeOnboardingConfigured?: boolean;
+  stripeTestMode?: boolean;
   paymentSetupNotice?: PaymentSetupReturnNotice | null;
   companyTimezone?: string | null;
 };
@@ -120,6 +121,7 @@ export function SettingsNorthStarView({
   canStartStripeSetup = false,
   canManageOnlineCheckout = false,
   stripeOnboardingConfigured = false,
+  stripeTestMode = false,
   paymentSetupNotice = null,
   companyTimezone,
 }: SettingsNorthStarViewProps) {
@@ -479,7 +481,7 @@ export function SettingsNorthStarView({
             <SettingsNorthStarSectionHeader
               eyebrow="Payments"
               title="Online payments"
-              description="Stripe Connect account status (read-only)."
+              description="Connect Stripe for card payments, or keep using invoices and manual recording."
             />
             <div className="px-3 pb-3 sm:px-4 sm:pb-4 lg:px-5">
               <PaymentSettingsCard
@@ -488,6 +490,7 @@ export function SettingsNorthStarView({
                 canStartStripeSetup={canStartStripeSetup}
                 canManageOnlineCheckout={canManageOnlineCheckout}
                 stripeOnboardingConfigured={stripeOnboardingConfigured}
+                stripeTestMode={stripeTestMode}
                 paymentSetupNotice={paymentSetupNotice}
                 northStar
               />

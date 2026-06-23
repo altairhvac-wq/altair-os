@@ -71,6 +71,7 @@ type SettingsPageViewProps = {
   canStartStripeSetup?: boolean;
   canManageOnlineCheckout?: boolean;
   stripeOnboardingConfigured?: boolean;
+  stripeTestMode?: boolean;
   paymentSetupNotice?: PaymentSetupReturnNotice | null;
   companyTimezone?: string | null;
 };
@@ -105,6 +106,7 @@ function SettingsPageLegacyView({
   canStartStripeSetup = false,
   canManageOnlineCheckout = false,
   stripeOnboardingConfigured = false,
+  stripeTestMode = false,
   paymentSetupNotice = null,
   companyTimezone,
 }: SettingsPageViewProps) {
@@ -441,7 +443,7 @@ function SettingsPageLegacyView({
             <MasterPageSection
               id="online-payments"
               title="Online payments"
-              description="Stripe Connect account status"
+              description="Connect Stripe for card payments, or keep using invoices and manual recording"
               density="compact"
             >
               <PaymentSettingsCard
@@ -450,6 +452,7 @@ function SettingsPageLegacyView({
                 canStartStripeSetup={canStartStripeSetup}
                 canManageOnlineCheckout={canManageOnlineCheckout}
                 stripeOnboardingConfigured={stripeOnboardingConfigured}
+                stripeTestMode={stripeTestMode}
                 paymentSetupNotice={paymentSetupNotice}
               />
             </MasterPageSection>

@@ -1,7 +1,58 @@
 import "server-only";
 
+import Stripe from "stripe";
 import { getAppBaseUrl } from "@/lib/email/env";
 import { getStripeClient } from "@/lib/payments/stripe-client";
+
+const STRIPE_SETUP_FALLBACK_ERROR =
+  "Failed to start Stripe setup. Please try again.";
+
+const STRIPE_SETUP_INVALID_KEY_ERROR =
+  "Stripe setup could not start because the Stripe secret key is invalid. Check STRIPE_SECRET_KEY in your environment settings.";
+
+const STRIPE_SETUP_NOT_CONFIGURED_ERROR =
+  "Stripe setup is not configured yet. Add STRIPE_SECRET_KEY and NEXT_PUBLIC_APP_URL, then restart the app.";
+
+const STRIPE_SETUP_CONNECT_NOT_ENABLED_ERROR =
+  "Stripe Connect may need to be enabled in your Stripe dashboard before setup can continue.";
+
+function isStripeConnectNotEnabledMessage(message: string): boolean {
+  return (
+    /connect/i.test(message) &&
+    /not enabled|signed up for connect|enable connect|oauth is not enabled/i.test(
+      message,
+    )
+  );
+}
+
+/** Maps Stripe/setup failures to safe, user-facing settings copy (no secrets). */
+export function mapStripeConnectSetupError(error: unknown): string {
+  if (error instanceof Stripe.errors.StripeAuthenticationError) {
+    return STRIPE_SETUP_INVALID_KEY_ERROR;
+  }
+
+  if (error instanceof Stripe.errors.StripeError) {
+    const message = error.message ?? "";
+
+    if (isStripeConnectNotEnabledMessage(message)) {
+      return STRIPE_SETUP_CONNECT_NOT_ENABLED_ERROR;
+    }
+  }
+
+  if (error instanceof Error) {
+    const message = error.message;
+
+    if (/STRIPE_SECRET_KEY is not set/i.test(message)) {
+      return STRIPE_SETUP_NOT_CONFIGURED_ERROR;
+    }
+
+    if (isStripeConnectNotEnabledMessage(message)) {
+      return STRIPE_SETUP_CONNECT_NOT_ENABLED_ERROR;
+    }
+  }
+
+  return STRIPE_SETUP_FALLBACK_ERROR;
+}
 
 export type StripeConnectOnboardingUrls = {
   returnUrl: string;

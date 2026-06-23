@@ -19,6 +19,7 @@ import {
   buildStripeConnectOnboardingUrls,
   createStripeAccountOnboardingLink,
   createStripeExpressConnectedAccount,
+  mapStripeConnectSetupError,
 } from "@/lib/payments/stripe-connect";
 
 export type StartStripeConnectOnboardingActionResult = {
@@ -68,7 +69,7 @@ export async function startStripeConnectOnboardingAction(): Promise<StartStripeC
   if (!isStripeConnectOnboardingConfigured()) {
     return {
       error:
-        "Stripe Connect onboarding is not configured. Set STRIPE_SECRET_KEY and NEXT_PUBLIC_APP_URL.",
+        "Stripe setup is not configured yet. Add STRIPE_SECRET_KEY and NEXT_PUBLIC_APP_URL, then restart the app.",
     };
   }
 
@@ -121,7 +122,7 @@ export async function startStripeConnectOnboardingAction(): Promise<StartStripeC
       companyId,
       error,
     });
-    return { error: "Failed to start Stripe setup. Please try again." };
+    return { error: mapStripeConnectSetupError(error) };
   }
 
   let onboardingUrl: string;
@@ -136,7 +137,7 @@ export async function startStripeConnectOnboardingAction(): Promise<StartStripeC
       companyId,
       error,
     });
-    return { error: "Failed to create Stripe onboarding link. Please try again." };
+    return { error: mapStripeConnectSetupError(error) };
   }
 
   revalidatePath("/settings");

@@ -32,7 +32,7 @@ import type {
   PaymentSetupReturnNotice,
   StripePaymentSettingsSummary,
 } from "@/shared/types/settings/payment-settings";
-import { isStripeConnectOnboardingConfigured } from "@/lib/payments/env";
+import { isStripeConnectOnboardingConfigured, isStripeTestMode } from "@/lib/payments/env";
 
 const EMPTY_ONBOARDING_SNAPSHOT: OnboardingSnapshot = {
   teamMemberCount: 0,
@@ -181,6 +181,7 @@ export default async function SettingsPage({
   const canStartStripeSetup = canStartStripeConnectOnboarding(companyContext);
   const canManageOnlineCheckoutGate = canManageOnlineCheckout(companyContext);
   const stripeOnboardingConfigured = isStripeConnectOnboardingConfigured();
+  const stripeTestMode = isStripeTestMode();
   const paymentSetupNotice: PaymentSetupReturnNotice | null =
     params.payments === "return" || params.payments === "refresh"
       ? params.payments
@@ -228,6 +229,7 @@ export default async function SettingsPage({
         canStartStripeSetup={canStartStripeSetup}
         canManageOnlineCheckout={canManageOnlineCheckoutGate}
         stripeOnboardingConfigured={stripeOnboardingConfigured}
+        stripeTestMode={stripeTestMode}
         paymentSetupNotice={paymentSetupNotice}
         companyTimezone={companyContext.company.timezone}
       />

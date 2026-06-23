@@ -39,3 +39,9 @@ export function requireStripeSecretKey(): string {
 export function isStripeConnectOnboardingConfigured(): boolean {
   return Boolean(getStripeSecretKey()) && Boolean(getAppBaseUrl());
 }
+
+/** True when STRIPE_SECRET_KEY is a Stripe test-mode key (settings UI hint only). */
+export function isStripeTestMode(): boolean {
+  const key = getStripeSecretKey();
+  return key?.startsWith("sk_test_") ?? false;
+}
