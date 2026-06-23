@@ -12,8 +12,12 @@ import { DesignLabCompactPreview } from "@/shared/components/platform-admin/desi
 import { DesignLabContrastPanel } from "@/shared/components/platform-admin/design-lab/DesignLabContrastPanel";
 import { DesignLabEditTargetPanel } from "@/shared/components/platform-admin/design-lab/DesignLabEditTargetPanel";
 import { DesignLabExportPanel } from "@/shared/components/platform-admin/design-lab/DesignLabExportPanel";
+import { DesignLabFullPageCanvas } from "@/shared/components/platform-admin/design-lab/DesignLabFullPageCanvas";
 import { DesignLabFullPagePreview } from "@/shared/components/platform-admin/design-lab/DesignLabFullPagePreview";
-import type { DesignLabEditTargetId } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
+import {
+  getDesignLabEditTarget,
+  type DesignLabEditTargetId,
+} from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
 import { DESIGN_LAB_PRESETS } from "@/shared/components/platform-admin/design-lab/design-lab-presets";
 
 type PreviewMode = "compact" | "full";
@@ -89,6 +93,111 @@ function ColorControl({ label, helper, value, onChange }: ColorControlProps) {
   );
 }
 
+type PreviewModeToggleProps = {
+  previewMode: PreviewMode;
+  onPreviewModeChange: (mode: PreviewMode) => void;
+};
+
+function PreviewModeToggle({ previewMode, onPreviewModeChange }: PreviewModeToggleProps) {
+  return (
+    <div
+      className="flex shrink-0 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FBF7EF] p-0.5"
+      role="group"
+      aria-label="Preview mode"
+    >
+      <button
+        type="button"
+        onClick={() => onPreviewModeChange("compact")}
+        aria-pressed={previewMode === "compact"}
+        className={[
+          "rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors",
+          previewMode === "compact"
+            ? "bg-[#FFF3D6] text-[#17130E] shadow-[inset_0_0_0_1px_rgba(184,148,63,0.25)]"
+            : "text-[#6B6255] hover:text-[#17130E]",
+        ].join(" ")}
+      >
+        Compact
+      </button>
+      <button
+        type="button"
+        onClick={() => onPreviewModeChange("full")}
+        aria-pressed={previewMode === "full"}
+        className={[
+          "rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors",
+          previewMode === "full"
+            ? "bg-[#FFF3D6] text-[#17130E] shadow-[inset_0_0_0_1px_rgba(184,148,63,0.25)]"
+            : "text-[#6B6255] hover:text-[#17130E]",
+        ].join(" ")}
+      >
+        Full page
+      </button>
+    </div>
+  );
+}
+
+type DesignLabCanvasModeProps = {
+  colors: DesignLabColors;
+  selectedTargetId: DesignLabEditTargetId | null;
+  onSelectTarget: (id: DesignLabEditTargetId) => void;
+  previewMode: PreviewMode;
+  onPreviewModeChange: (mode: PreviewMode) => void;
+  onExitCanvas: () => void;
+};
+
+function DesignLabCanvasMode({
+  colors,
+  selectedTargetId,
+  onSelectTarget,
+  previewMode,
+  onPreviewModeChange,
+  onExitCanvas,
+}: DesignLabCanvasModeProps) {
+  const selectedTarget = selectedTargetId
+    ? getDesignLabEditTarget(selectedTargetId)
+    : undefined;
+
+  function handlePreviewModeChange(mode: PreviewMode) {
+    onPreviewModeChange(mode);
+    onExitCanvas();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#F5F0E4]">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[rgba(138,99,36,0.16)] bg-[#FBF7EF] px-3 py-2.5 sm:px-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={onExitCanvas}
+            className="rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-1.5 text-xs font-semibold text-[#17130E] transition-colors hover:border-[rgba(201,164,77,0.35)] hover:bg-[#F3EBDD]"
+          >
+            Back to controls
+          </button>
+          <PreviewModeToggle
+            previewMode={previewMode}
+            onPreviewModeChange={handlePreviewModeChange}
+          />
+          <span className="rounded-md bg-[#FFF3D6] px-2.5 py-1 text-[11px] font-semibold text-[#8A6324]">
+            Full page canvas
+          </span>
+        </div>
+        <p className="text-xs text-[#6B6255]">
+          {selectedTarget
+            ? `Editing: ${selectedTarget.label}`
+            : "Click a preview element to select an edit target"}
+        </p>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-auto">
+        <DesignLabFullPageCanvas
+          colors={colors}
+          selectedTargetId={selectedTargetId}
+          onSelectTarget={onSelectTarget}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function DesignLabPageView() {
   const [colors, setColors] = useState<DesignLabColors>(
     NORTH_STAR_DESIGN_LAB_DEFAULTS,
@@ -98,6 +207,7 @@ export function DesignLabPageView() {
   );
   const [resetKey, setResetKey] = useState(0);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("compact");
+  const [isCanvasMode, setIsCanvasMode] = useState(false);
   const [selectedTargetId, setSelectedTargetId] =
     useState<DesignLabEditTargetId | null>(null);
 
@@ -121,6 +231,19 @@ export function DesignLabPageView() {
     setColors(NORTH_STAR_DESIGN_LAB_DEFAULTS);
     setActivePresetId("north-star-default");
     setResetKey((current) => current + 1);
+  }
+
+  if (isCanvasMode) {
+    return (
+      <DesignLabCanvasMode
+        colors={colors}
+        selectedTargetId={selectedTargetId}
+        onSelectTarget={setSelectedTargetId}
+        previewMode={previewMode}
+        onPreviewModeChange={setPreviewMode}
+        onExitCanvas={() => setIsCanvasMode(false)}
+      />
+    );
   }
 
   return (
@@ -248,36 +371,17 @@ export function DesignLabPageView() {
                     Scoped styles — customer pages are unchanged.
                   </p>
                 </div>
-                <div
-                  className="flex shrink-0 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FBF7EF] p-0.5"
-                  role="group"
-                  aria-label="Preview mode"
-                >
+                <div className="flex flex-wrap items-center gap-2">
+                  <PreviewModeToggle
+                    previewMode={previewMode}
+                    onPreviewModeChange={setPreviewMode}
+                  />
                   <button
                     type="button"
-                    onClick={() => setPreviewMode("compact")}
-                    aria-pressed={previewMode === "compact"}
-                    className={[
-                      "rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors",
-                      previewMode === "compact"
-                        ? "bg-[#FFF3D6] text-[#17130E] shadow-[inset_0_0_0_1px_rgba(184,148,63,0.25)]"
-                        : "text-[#6B6255] hover:text-[#17130E]",
-                    ].join(" ")}
+                    onClick={() => setIsCanvasMode(true)}
+                    className="rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-2.5 py-1.5 text-xs font-semibold text-[#17130E] transition-colors hover:border-[rgba(201,164,77,0.35)] hover:bg-[#F3EBDD]"
                   >
-                    Compact preview
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewMode("full")}
-                    aria-pressed={previewMode === "full"}
-                    className={[
-                      "rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors",
-                      previewMode === "full"
-                        ? "bg-[#FFF3D6] text-[#17130E] shadow-[inset_0_0_0_1px_rgba(184,148,63,0.25)]"
-                        : "text-[#6B6255] hover:text-[#17130E]",
-                    ].join(" ")}
-                  >
-                    Full page preview
+                    Open full page canvas
                   </button>
                 </div>
               </div>
