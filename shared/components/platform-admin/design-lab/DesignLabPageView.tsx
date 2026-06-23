@@ -218,6 +218,7 @@ function DesignLabCanvasMode({
 
         <DesignLabCanvasInspector
           isOpen={inspectorOpen}
+          onOpen={() => setInspectorOpen(true)}
           onClose={() => setInspectorOpen(false)}
           selectedTargetId={selectedTargetId}
           colors={colors}

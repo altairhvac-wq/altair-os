@@ -65,7 +65,7 @@ export function DesignLabCanvasToolbar({
             className="rounded-md border border-[rgba(23,19,14,0.1)] bg-white px-2 py-1 text-xs font-medium text-[#17130E] outline-none focus:border-[#B8943F] focus:ring-1 focus:ring-[#B8943F]/30"
             aria-label="Canvas target"
           >
-            <option value="dashboard-replica">Dashboard replica</option>
+            <option value="dashboard-replica">Dashboard shell</option>
             <option value="workspace-demo">Workspace demo</option>
           </select>
         </label>

@@ -6,7 +6,7 @@ import {
   DesignLabCanvasDemoContent,
   type DesignLabCanvasDemoPageId,
 } from "@/shared/components/platform-admin/design-lab/DesignLabCanvasDemoContent";
-import { DesignLabDashboardReplica } from "@/shared/components/platform-admin/design-lab/DesignLabDashboardReplica";
+import { DesignLabDashboardShellClone } from "@/shared/components/platform-admin/design-lab/DesignLabDashboardShellClone";
 import { DesignLabEditableTarget } from "@/shared/components/platform-admin/design-lab/DesignLabEditableTarget";
 import type { DesignLabCanvasTarget } from "@/shared/components/platform-admin/design-lab/DesignLabCanvasToolbar";
 import type { DesignLabEditTargetId } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
@@ -39,18 +39,10 @@ export function DesignLabFullPageCanvas({
         className="design-lab-preview min-h-full"
         style={designLabPreviewVars(colors)}
       >
-        <DesignLabEditableTarget
-          targetId="page-background"
+        <DesignLabDashboardShellClone
           selectedTargetId={selectedTargetId}
           onSelectTarget={onSelectTarget}
-          className="min-h-full px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6"
-          style={{ backgroundColor: "var(--dl-page-bg)" }}
-        >
-          <DesignLabDashboardReplica
-            selectedTargetId={selectedTargetId}
-            onSelectTarget={onSelectTarget}
-          />
-        </DesignLabEditableTarget>
+        />
       </div>
     );
   }
