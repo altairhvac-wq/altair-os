@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   DESIGN_LAB_COLOR_FIELDS,
   NORTH_STAR_DESIGN_LAB_DEFAULTS,
@@ -10,14 +10,23 @@ import {
 } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
 import { DesignLabCompactPreview } from "@/shared/components/platform-admin/design-lab/DesignLabCompactPreview";
 import { DesignLabContrastPanel } from "@/shared/components/platform-admin/design-lab/DesignLabContrastPanel";
+import { DesignLabCanvasInspector } from "@/shared/components/platform-admin/design-lab/DesignLabCanvasInspector";
+import {
+  DesignLabCanvasToolbar,
+  type DesignLabCanvasTarget,
+} from "@/shared/components/platform-admin/design-lab/DesignLabCanvasToolbar";
 import { DesignLabEditTargetPanel } from "@/shared/components/platform-admin/design-lab/DesignLabEditTargetPanel";
 import { DesignLabExportPanel } from "@/shared/components/platform-admin/design-lab/DesignLabExportPanel";
 import { DesignLabFullPageCanvas } from "@/shared/components/platform-admin/design-lab/DesignLabFullPageCanvas";
 import { DesignLabFullPagePreview } from "@/shared/components/platform-admin/design-lab/DesignLabFullPagePreview";
 import {
-  getDesignLabEditTarget,
   type DesignLabEditTargetId,
 } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
+import {
+  evaluateDesignLabContrast,
+  getContrastOverallStatus,
+} from "@/shared/components/platform-admin/design-lab/design-lab-contrast";
+import { buildDesignLabThemeExportFromColors } from "@/shared/components/platform-admin/design-lab/design-lab-export";
 import { DESIGN_LAB_PRESETS } from "@/shared/components/platform-admin/design-lab/design-lab-presets";
 
 type PreviewMode = "compact" | "full";
@@ -140,9 +149,9 @@ type DesignLabCanvasModeProps = {
   selectedTargetId: DesignLabEditTargetId | null;
   onSelectTarget: (id: DesignLabEditTargetId) => void;
   onColorChange: (key: keyof DesignLabColors, value: string) => void;
-  previewMode: PreviewMode;
-  onPreviewModeChange: (mode: PreviewMode) => void;
   onExitCanvas: () => void;
+  onReset: () => void;
+  activePresetName: string | null;
 };
 
 function DesignLabCanvasMode({
@@ -150,79 +159,70 @@ function DesignLabCanvasMode({
   selectedTargetId,
   onSelectTarget,
   onColorChange,
-  previewMode,
-  onPreviewModeChange,
   onExitCanvas,
+  onReset,
+  activePresetName,
 }: DesignLabCanvasModeProps) {
-  const selectedTarget = selectedTargetId
-    ? getDesignLabEditTarget(selectedTargetId)
-    : undefined;
+  const [canvasTarget, setCanvasTarget] =
+    useState<DesignLabCanvasTarget>("dashboard-replica");
+  const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [exportState, setExportState] = useState<"idle" | "success" | "error">("idle");
 
-  function handlePreviewModeChange(mode: PreviewMode) {
-    onPreviewModeChange(mode);
-    onExitCanvas();
+  const readabilityStatus = useMemo(
+    () => getContrastOverallStatus(evaluateDesignLabContrast(colors)),
+    [colors],
+  );
+
+  function handleSelectTarget(id: DesignLabEditTargetId) {
+    onSelectTarget(id);
+    setInspectorOpen(true);
+  }
+
+  async function handleExport() {
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard API unavailable");
+      }
+
+      await navigator.clipboard.writeText(buildDesignLabThemeExportFromColors(colors));
+      setExportState("success");
+      window.setTimeout(() => setExportState("idle"), 2000);
+    } catch {
+      setExportState("error");
+      window.setTimeout(() => setExportState("idle"), 2500);
+    }
   }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#F5F0E4]">
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[rgba(138,99,36,0.16)] bg-[#FBF7EF] px-3 py-2.5 sm:px-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={onExitCanvas}
-            className="rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-1.5 text-xs font-semibold text-[#17130E] transition-colors hover:border-[rgba(201,164,77,0.35)] hover:bg-[#F3EBDD]"
-          >
-            Back to controls
-          </button>
-          <PreviewModeToggle
-            previewMode={previewMode}
-            onPreviewModeChange={handlePreviewModeChange}
-          />
-          <span className="rounded-md bg-[#FFF3D6] px-2.5 py-1 text-[11px] font-semibold text-[#8A6324]">
-            Full page canvas
-          </span>
-        </div>
-        <p className="text-xs text-[#6B6255]">
-          {selectedTarget
-            ? `Editing: ${selectedTarget.label}`
-            : "Click a preview element to select an edit target"}
-        </p>
-      </div>
+      <DesignLabCanvasToolbar
+        canvasTarget={canvasTarget}
+        onCanvasTargetChange={setCanvasTarget}
+        activePresetName={activePresetName}
+        readabilityStatus={readabilityStatus}
+        inspectorOpen={inspectorOpen}
+        onInspectorToggle={() => setInspectorOpen((current) => !current)}
+        onBack={onExitCanvas}
+        onReset={onReset}
+        onExport={handleExport}
+        exportState={exportState}
+      />
 
       <div className="relative min-h-0 flex-1 overflow-auto">
         <DesignLabFullPageCanvas
           colors={colors}
           selectedTargetId={selectedTargetId}
-          onSelectTarget={onSelectTarget}
+          onSelectTarget={handleSelectTarget}
+          canvasTarget={canvasTarget}
         />
 
-        <aside
-          aria-label="Canvas color editor"
-          className="pointer-events-none fixed bottom-4 right-4 top-[calc(3.5rem+1rem)] z-[60] hidden w-[min(20rem,calc(100%-2rem))] sm:block"
-        >
-          <div className="pointer-events-auto h-full overflow-y-auto rounded-xl border border-[rgba(138,99,36,0.2)] bg-[#FBF7EF] p-3 shadow-[0_12px_32px_rgba(23,19,14,0.18)]">
-            <DesignLabEditTargetPanel
-              selectedTargetId={selectedTargetId}
-              colors={colors}
-              onColorChange={onColorChange}
-              emptyStateText="Click something in the canvas to edit its color."
-            />
-          </div>
-        </aside>
-
-        <aside
-          aria-label="Canvas color editor"
-          className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] max-h-[45vh] sm:hidden"
-        >
-          <div className="pointer-events-auto overflow-y-auto rounded-t-xl border border-[rgba(138,99,36,0.2)] bg-[#FBF7EF] p-3 shadow-[0_-8px_24px_rgba(23,19,14,0.14)]">
-            <DesignLabEditTargetPanel
-              selectedTargetId={selectedTargetId}
-              colors={colors}
-              onColorChange={onColorChange}
-              emptyStateText="Click something in the canvas to edit its color."
-            />
-          </div>
-        </aside>
+        <DesignLabCanvasInspector
+          isOpen={inspectorOpen}
+          onClose={() => setInspectorOpen(false)}
+          selectedTargetId={selectedTargetId}
+          colors={colors}
+          onColorChange={onColorChange}
+        />
       </div>
     </div>
   );
@@ -264,15 +264,17 @@ export function DesignLabPageView() {
   }
 
   if (isCanvasMode) {
+    const activePreset = DESIGN_LAB_PRESETS.find((entry) => entry.id === activePresetId);
+
     return (
       <DesignLabCanvasMode
         colors={colors}
         selectedTargetId={selectedTargetId}
         onSelectTarget={setSelectedTargetId}
         onColorChange={updateColor}
-        previewMode={previewMode}
-        onPreviewModeChange={setPreviewMode}
         onExitCanvas={() => setIsCanvasMode(false)}
+        onReset={resetToDefaults}
+        activePresetName={activePreset?.name ?? null}
       />
     );
   }

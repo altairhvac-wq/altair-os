@@ -14,6 +14,7 @@ type TargetColorControlProps = {
   helper: string;
   value: string;
   onChange: (value: string) => void;
+  compact?: boolean;
 };
 
 function TargetColorControl({
@@ -21,9 +22,16 @@ function TargetColorControl({
   helper,
   value,
   onChange,
+  compact = false,
 }: TargetColorControlProps) {
   return (
-    <div className="rounded-lg border border-[rgba(138,99,36,0.14)] bg-white p-3">
+    <div
+      className={
+        compact
+          ? "rounded-md border border-[rgba(23,19,14,0.08)] bg-[#FBF7EF] p-2.5"
+          : "rounded-lg border border-[rgba(138,99,36,0.14)] bg-white p-3"
+      }
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-[#17130E]">{label}</p>
@@ -94,6 +102,7 @@ type DesignLabEditTargetPanelProps = {
   colors: DesignLabColors;
   onColorChange: (key: keyof DesignLabColors, value: string) => void;
   emptyStateText?: string;
+  variant?: "default" | "compact";
 };
 
 export function DesignLabEditTargetPanel({
@@ -101,22 +110,40 @@ export function DesignLabEditTargetPanel({
   colors,
   onColorChange,
   emptyStateText = "Click something in the preview to edit its color.",
+  variant = "default",
 }: DesignLabEditTargetPanelProps) {
   const target = selectedTargetId
     ? getDesignLabEditTarget(selectedTargetId)
     : undefined;
 
+  const isCompact = variant === "compact";
+
   return (
-    <section className="rounded-xl border border-[rgba(138,99,36,0.16)] bg-[#FFF9EA] p-3.5">
-      <h2 className="text-sm font-bold text-[#17130E]">Editing target</h2>
+    <section
+      className={
+        isCompact
+          ? ""
+          : "rounded-xl border border-[rgba(138,99,36,0.16)] bg-[#FFF9EA] p-3.5"
+      }
+    >
+      {!isCompact ? (
+        <h2 className="text-sm font-bold text-[#17130E]">Editing target</h2>
+      ) : null}
 
       {!target ? (
-        <p className="mt-2 text-xs leading-snug text-[#6B6255]">{emptyStateText}</p>
+        <p
+          className={[
+            "text-xs leading-snug text-[#6B6255]",
+            isCompact ? "" : "mt-2",
+          ].join(" ")}
+        >
+          {emptyStateText}
+        </p>
       ) : (
-        <div className="mt-2 space-y-3">
+        <div className={isCompact ? "space-y-2.5" : "mt-2 space-y-3"}>
           <div>
             <p className="text-sm font-semibold text-[#17130E]">
-              Editing: {target.label}
+              {isCompact ? target.label : `Editing: ${target.label}`}
             </p>
             <p className="mt-0.5 text-xs leading-snug text-[#6B6255]">{target.helper}</p>
           </div>
@@ -135,6 +162,7 @@ export function DesignLabEditTargetPanel({
                   helper={meta.helper}
                   value={colors[fieldKey]}
                   onChange={(value) => onColorChange(fieldKey, value)}
+                  compact={isCompact}
                 />
               );
             })}
