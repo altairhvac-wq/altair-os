@@ -19,9 +19,16 @@ import { DesignLabEditTargetPanel } from "@/shared/components/platform-admin/des
 import { DesignLabExportPanel } from "@/shared/components/platform-admin/design-lab/DesignLabExportPanel";
 import { DesignLabFullPageCanvas } from "@/shared/components/platform-admin/design-lab/DesignLabFullPageCanvas";
 import { DesignLabFullPagePreview } from "@/shared/components/platform-admin/design-lab/DesignLabFullPagePreview";
+import type { DesignLabCanvasSelection } from "@/shared/components/platform-admin/design-lab/design-lab-canvas-selection";
 import {
   type DesignLabEditTargetId,
 } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
+import {
+  resolveSurfaceStyle,
+  type DashboardSurfaceId,
+  type DashboardSurfaceOverrides,
+  type DashboardSurfaceStyle,
+} from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-surfaces";
 import {
   evaluateDesignLabContrast,
   getContrastOverallStatus,
@@ -146,9 +153,16 @@ function PreviewModeToggle({ previewMode, onPreviewModeChange }: PreviewModeTogg
 
 type DesignLabCanvasModeProps = {
   colors: DesignLabColors;
-  selectedTargetId: DesignLabEditTargetId | null;
-  onSelectTarget: (id: DesignLabEditTargetId) => void;
+  selection: DesignLabCanvasSelection | null;
+  surfaceOverrides: DashboardSurfaceOverrides;
+  onSelectGlobal: (id: DesignLabEditTargetId) => void;
+  onSelectSurface: (surfaceId: DashboardSurfaceId) => void;
   onColorChange: (key: keyof DesignLabColors, value: string) => void;
+  onSurfaceStyleChange: (
+    surfaceId: DashboardSurfaceId,
+    field: keyof DashboardSurfaceStyle,
+    value: string,
+  ) => void;
   onExitCanvas: () => void;
   onReset: () => void;
   activePresetName: string | null;
@@ -156,9 +170,12 @@ type DesignLabCanvasModeProps = {
 
 function DesignLabCanvasMode({
   colors,
-  selectedTargetId,
-  onSelectTarget,
+  selection,
+  surfaceOverrides,
+  onSelectGlobal,
+  onSelectSurface,
   onColorChange,
+  onSurfaceStyleChange,
   onExitCanvas,
   onReset,
   activePresetName,
@@ -173,8 +190,13 @@ function DesignLabCanvasMode({
     [colors],
   );
 
-  function handleSelectTarget(id: DesignLabEditTargetId) {
-    onSelectTarget(id);
+  function handleSelectGlobal(id: DesignLabEditTargetId) {
+    onSelectGlobal(id);
+    setInspectorOpen(true);
+  }
+
+  function handleSelectSurface(surfaceId: DashboardSurfaceId) {
+    onSelectSurface(surfaceId);
     setInspectorOpen(true);
   }
 
@@ -184,7 +206,9 @@ function DesignLabCanvasMode({
         throw new Error("Clipboard API unavailable");
       }
 
-      await navigator.clipboard.writeText(buildDesignLabThemeExportFromColors(colors));
+      await navigator.clipboard.writeText(
+        buildDesignLabThemeExportFromColors(colors, surfaceOverrides),
+      );
       setExportState("success");
       window.setTimeout(() => setExportState("idle"), 2000);
     } catch {
@@ -211,8 +235,10 @@ function DesignLabCanvasMode({
       <div className="relative min-h-0 flex-1 overflow-auto">
         <DesignLabFullPageCanvas
           colors={colors}
-          selectedTargetId={selectedTargetId}
-          onSelectTarget={handleSelectTarget}
+          selection={selection}
+          surfaceOverrides={surfaceOverrides}
+          onSelectGlobal={handleSelectGlobal}
+          onSelectSurface={handleSelectSurface}
           canvasTarget={canvasTarget}
         />
 
@@ -220,9 +246,11 @@ function DesignLabCanvasMode({
           isOpen={inspectorOpen}
           onOpen={() => setInspectorOpen(true)}
           onClose={() => setInspectorOpen(false)}
-          selectedTargetId={selectedTargetId}
+          selection={selection}
           colors={colors}
+          surfaceOverrides={surfaceOverrides}
           onColorChange={onColorChange}
+          onSurfaceStyleChange={onSurfaceStyleChange}
         />
       </div>
     </div>
@@ -241,6 +269,10 @@ export function DesignLabPageView() {
   const [isCanvasMode, setIsCanvasMode] = useState(false);
   const [selectedTargetId, setSelectedTargetId] =
     useState<DesignLabEditTargetId | null>(null);
+  const [canvasSelection, setCanvasSelection] =
+    useState<DesignLabCanvasSelection | null>(null);
+  const [surfaceOverrides, setSurfaceOverrides] =
+    useState<DashboardSurfaceOverrides>({});
 
   function applyPreset(presetId: string) {
     const preset = DESIGN_LAB_PRESETS.find((entry) => entry.id === presetId);
@@ -251,6 +283,8 @@ export function DesignLabPageView() {
     setColors({ ...preset.colors });
     setActivePresetId(presetId);
     setResetKey((current) => current + 1);
+    setSurfaceOverrides({});
+    setCanvasSelection(null);
   }
 
   function updateColor(key: keyof DesignLabColors, value: string) {
@@ -262,6 +296,35 @@ export function DesignLabPageView() {
     setColors(NORTH_STAR_DESIGN_LAB_DEFAULTS);
     setActivePresetId("north-star-default");
     setResetKey((current) => current + 1);
+    setSurfaceOverrides({});
+    setCanvasSelection(null);
+  }
+
+  function handleSelectGlobal(id: DesignLabEditTargetId) {
+    setCanvasSelection({ kind: "global", targetId: id });
+    setSelectedTargetId(id);
+  }
+
+  function handleSelectSurface(surfaceId: DashboardSurfaceId) {
+    setCanvasSelection({ kind: "surface", surfaceId });
+  }
+
+  function updateSurfaceStyle(
+    surfaceId: DashboardSurfaceId,
+    field: keyof DashboardSurfaceStyle,
+    value: string,
+  ) {
+    setSurfaceOverrides((current) => {
+      const resolved = resolveSurfaceStyle(surfaceId, colors, current);
+      return {
+        ...current,
+        [surfaceId]: {
+          ...resolved,
+          [field]: value,
+        },
+      };
+    });
+    setActivePresetId(null);
   }
 
   if (isCanvasMode) {
@@ -270,9 +333,12 @@ export function DesignLabPageView() {
     return (
       <DesignLabCanvasMode
         colors={colors}
-        selectedTargetId={selectedTargetId}
-        onSelectTarget={setSelectedTargetId}
+        selection={canvasSelection}
+        surfaceOverrides={surfaceOverrides}
+        onSelectGlobal={handleSelectGlobal}
+        onSelectSurface={handleSelectSurface}
         onColorChange={updateColor}
+        onSurfaceStyleChange={updateSurfaceStyle}
         onExitCanvas={() => setIsCanvasMode(false)}
         onReset={resetToDefaults}
         activePresetName={activePreset?.name ?? null}
@@ -288,7 +354,8 @@ export function DesignLabPageView() {
         </p>
         <h1 className="text-2xl font-bold text-[#17130E] sm:text-3xl">Design Lab</h1>
         <p className="max-w-2xl text-sm text-[#6B6255]">
-          Founder-only visual controls for Altair.
+          Founder-only visual controls for Altair. Full-page canvas supports per-surface
+          dashboard overrides in addition to global palette tokens.
         </p>
       </header>
 

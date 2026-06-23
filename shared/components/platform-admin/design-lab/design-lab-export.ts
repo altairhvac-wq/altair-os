@@ -1,6 +1,10 @@
 import type { DesignLabColors } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
 import { DESIGN_LAB_COLOR_FIELDS } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
 import {
+  buildSurfaceOverridesExportSection,
+  type DashboardSurfaceOverrides,
+} from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-surfaces";
+import {
   evaluateDesignLabContrast,
   getContrastOverallStatus,
   getOverallStatusLabel,
@@ -71,7 +75,9 @@ function buildTokenSummary(tokens: DesignLabColors): string {
 export function buildDesignLabThemeExport(
   tokens: DesignLabColors,
   contrastSummary: ContrastSummary,
+  surfaceOverrides: DashboardSurfaceOverrides = {},
 ): string {
+  const surfaceSection = buildSurfaceOverridesExportSection(surfaceOverrides);
   const sections = [
     "Altair Design Lab Theme Export",
     "Generated from /platform/design-lab",
@@ -84,21 +90,35 @@ export function buildDesignLabThemeExport(
     "",
     "Tokens:",
     buildTokenSummary(tokens),
+  ];
+
+  if (surfaceSection) {
+    sections.push("", surfaceSection);
+  } else {
+    sections.push(
+      "",
+      "Dashboard surface overrides: none.",
+      "Note: Dashboard surface overrides are preview-only and are not included in the global token export when none are active.",
+    );
+  }
+
+  sections.push(
     "",
     "JSON:",
     buildJsonTheme(tokens),
     "",
     "CSS variables:",
     buildCssVariableSnippet(tokens),
-  ];
+  );
 
   return sections.join("\n");
 }
 
 export function buildDesignLabThemeExportFromColors(
   tokens: DesignLabColors,
+  surfaceOverrides: DashboardSurfaceOverrides = {},
 ): string {
   const checks = evaluateDesignLabContrast(tokens);
   const contrastSummary = getContrastSummary(checks);
-  return buildDesignLabThemeExport(tokens, contrastSummary);
+  return buildDesignLabThemeExport(tokens, contrastSummary, surfaceOverrides);
 }

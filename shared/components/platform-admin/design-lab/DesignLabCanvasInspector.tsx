@@ -1,32 +1,67 @@
 "use client";
 
 import { DesignLabEditTargetPanel } from "@/shared/components/platform-admin/design-lab/DesignLabEditTargetPanel";
+import { DesignLabSurfaceInspectorPanel } from "@/shared/components/platform-admin/design-lab/DesignLabSurfaceInspectorPanel";
 import {
-  getDesignLabEditTarget,
-  type DesignLabEditTargetId,
-} from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
+  getCanvasSelectionLabel,
+  type DesignLabCanvasSelection,
+} from "@/shared/components/platform-admin/design-lab/design-lab-canvas-selection";
+import type { DesignLabEditTargetId } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
 import type { DesignLabColors } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
+import {
+  resolveSurfaceStyle,
+  type DashboardSurfaceId,
+  type DashboardSurfaceOverrides,
+  type DashboardSurfaceStyle,
+} from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-surfaces";
 
 type DesignLabCanvasInspectorProps = {
   isOpen: boolean;
   onOpen: () => void;
   onClose: () => void;
-  selectedTargetId: DesignLabEditTargetId | null;
+  selection: DesignLabCanvasSelection | null;
   colors: DesignLabColors;
+  surfaceOverrides: DashboardSurfaceOverrides;
   onColorChange: (key: keyof DesignLabColors, value: string) => void;
+  onSurfaceStyleChange: (
+    surfaceId: DashboardSurfaceId,
+    field: keyof DashboardSurfaceStyle,
+    value: string,
+  ) => void;
 };
 
 export function DesignLabCanvasInspector({
   isOpen,
   onOpen,
   onClose,
-  selectedTargetId,
+  selection,
   colors,
+  surfaceOverrides,
   onColorChange,
+  onSurfaceStyleChange,
 }: DesignLabCanvasInspectorProps) {
-  const selectedTarget = selectedTargetId
-    ? getDesignLabEditTarget(selectedTargetId)
-    : undefined;
+  const selectionLabel = getCanvasSelectionLabel(selection);
+  const selectedTargetId: DesignLabEditTargetId | null =
+    selection?.kind === "global" ? selection.targetId : null;
+
+  const inspectorBody =
+    selection?.kind === "surface" ? (
+      <DesignLabSurfaceInspectorPanel
+        surfaceId={selection.surfaceId}
+        style={resolveSurfaceStyle(selection.surfaceId, colors, surfaceOverrides)}
+        onChange={(field, value) =>
+          onSurfaceStyleChange(selection.surfaceId, field, value)
+        }
+      />
+    ) : (
+      <DesignLabEditTargetPanel
+        selectedTargetId={selectedTargetId}
+        colors={colors}
+        onColorChange={onColorChange}
+        variant="compact"
+        emptyStateText="Click an element to edit."
+      />
+    );
 
   if (!isOpen) {
     return (
@@ -38,9 +73,9 @@ export function DesignLabCanvasInspector({
         >
           Inspector
         </button>
-        {selectedTarget ? (
+        {selectionLabel ? (
           <p className="pointer-events-none truncate rounded-full border border-[rgba(23,19,14,0.1)] bg-white/90 px-2.5 py-0.5 text-[10px] text-[#17130E] shadow-sm backdrop-blur-sm">
-            {selectedTarget.label}
+            {selectionLabel}
           </p>
         ) : (
           <p className="pointer-events-none hidden rounded-full border border-[rgba(23,19,14,0.1)] bg-white/90 px-2.5 py-0.5 text-[10px] text-[#6B6255] shadow-sm backdrop-blur-sm sm:block">
@@ -69,15 +104,7 @@ export function DesignLabCanvasInspector({
               Minimize
             </button>
           </div>
-          <div className="max-h-[min(36vh,16rem)] overflow-y-auto p-2">
-            <DesignLabEditTargetPanel
-              selectedTargetId={selectedTargetId}
-              colors={colors}
-              onColorChange={onColorChange}
-              variant="compact"
-              emptyStateText="Click an element to edit."
-            />
-          </div>
+          <div className="max-h-[min(36vh,16rem)] overflow-y-auto p-2">{inspectorBody}</div>
         </div>
       </aside>
 
@@ -97,15 +124,7 @@ export function DesignLabCanvasInspector({
               Minimize
             </button>
           </div>
-          <div className="max-h-[24vh] overflow-y-auto p-2">
-            <DesignLabEditTargetPanel
-              selectedTargetId={selectedTargetId}
-              colors={colors}
-              onColorChange={onColorChange}
-              variant="compact"
-              emptyStateText="Click an element to edit."
-            />
-          </div>
+          <div className="max-h-[24vh] overflow-y-auto p-2">{inspectorBody}</div>
         </div>
       </aside>
     </>

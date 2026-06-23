@@ -8,26 +8,37 @@ import {
 } from "@/shared/components/platform-admin/design-lab/DesignLabCanvasDemoContent";
 import { DesignLabDashboardShellClone } from "@/shared/components/platform-admin/design-lab/DesignLabDashboardShellClone";
 import { DesignLabEditableTarget } from "@/shared/components/platform-admin/design-lab/DesignLabEditableTarget";
+import type { DesignLabCanvasSelection } from "@/shared/components/platform-admin/design-lab/design-lab-canvas-selection";
 import type { DesignLabCanvasTarget } from "@/shared/components/platform-admin/design-lab/DesignLabCanvasToolbar";
 import type { DesignLabEditTargetId } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
 import type { DesignLabColors } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
+import type {
+  DashboardSurfaceId,
+  DashboardSurfaceOverrides,
+} from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-surfaces";
 import { designLabPreviewVars } from "@/shared/components/platform-admin/design-lab/design-lab-preview-vars";
 
 type DesignLabFullPageCanvasProps = {
   colors: DesignLabColors;
-  selectedTargetId: DesignLabEditTargetId | null;
-  onSelectTarget: (id: DesignLabEditTargetId) => void;
+  selection: DesignLabCanvasSelection | null;
+  surfaceOverrides: DashboardSurfaceOverrides;
+  onSelectGlobal: (id: DesignLabEditTargetId) => void;
+  onSelectSurface: (surfaceId: DashboardSurfaceId) => void;
   canvasTarget: DesignLabCanvasTarget;
 };
 
 export function DesignLabFullPageCanvas({
   colors,
-  selectedTargetId,
-  onSelectTarget,
+  selection,
+  surfaceOverrides,
+  onSelectGlobal,
+  onSelectSurface,
   canvasTarget,
 }: DesignLabFullPageCanvasProps) {
   const [activeDemoPage, setActiveDemoPage] =
     useState<DesignLabCanvasDemoPageId>("dashboard");
+  const selectedTargetId =
+    selection?.kind === "global" ? selection.targetId : null;
 
   function handleNavClick(pageId: DesignLabCanvasDemoPageId) {
     setActiveDemoPage(pageId);
@@ -40,8 +51,11 @@ export function DesignLabFullPageCanvas({
         style={designLabPreviewVars(colors)}
       >
         <DesignLabDashboardShellClone
-          selectedTargetId={selectedTargetId}
-          onSelectTarget={onSelectTarget}
+          colors={colors}
+          surfaceOverrides={surfaceOverrides}
+          selection={selection}
+          onSelectGlobal={onSelectGlobal}
+          onSelectSurface={onSelectSurface}
         />
       </div>
     );
@@ -150,14 +164,14 @@ export function DesignLabFullPageCanvas({
           <DesignLabEditableTarget
             targetId="page-background"
             selectedTargetId={selectedTargetId}
-            onSelectTarget={onSelectTarget}
+            onSelectTarget={onSelectGlobal}
             className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
             style={{ backgroundColor: "var(--dl-page-bg)" }}
           >
             <DesignLabCanvasDemoContent
               pageId={activeDemoPage}
               selectedTargetId={selectedTargetId}
-              onSelectTarget={onSelectTarget}
+              onSelectTarget={onSelectGlobal}
             />
           </DesignLabEditableTarget>
         </div>

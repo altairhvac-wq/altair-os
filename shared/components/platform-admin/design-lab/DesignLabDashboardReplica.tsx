@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type CSSProperties } from "react";
+import { useMemo } from "react";
 import {
   ArrowRight,
   AlertTriangle,
@@ -13,9 +13,18 @@ import {
   Truck,
   Users,
 } from "lucide-react";
+import { DesignLabSurfaceTarget } from "@/shared/components/platform-admin/design-lab/DesignLabSurfaceContext";
 import { DesignLabEditableTarget } from "@/shared/components/platform-admin/design-lab/DesignLabEditableTarget";
 import { DESIGN_LAB_DASHBOARD_FIXTURE } from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-fixture";
 import type { DesignLabEditTargetId } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
+import {
+  metricChipSurfaceId,
+  moneyRowSurfaceId,
+  pulseMetricSurfaceId,
+  queueRowSurfaceId,
+  workMetricSurfaceId,
+  type DashboardSurfaceId,
+} from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-surfaces";
 import { northStarTokens as t } from "@/shared/design-system/north-star/tokens";
 import { MasterContentStack, MasterPageCanvas, MasterShellPage } from "@/shared/design-system/shell";
 import { buildNorthStarBoardContent } from "@/shared/lib/dashboard-north-star-board";
@@ -26,11 +35,6 @@ import {
 } from "@/shared/lib/dashboard-north-star-hero";
 import { buildNorthStarSupportingBandsContent } from "@/shared/lib/dashboard-north-star-supporting-bands";
 import type { NorthStarBoardRow } from "@/shared/lib/dashboard-north-star-board";
-const DESIGN_LAB_CARD_SURFACE_STYLE: CSSProperties = {
-  backgroundColor: "var(--dl-card-bg)",
-  borderColor: "var(--dl-card-border)",
-  backgroundImage: "none",
-};
 
 type DesignLabDashboardReplicaProps = {
   selectedTargetId: DesignLabEditTargetId | null;
@@ -120,28 +124,21 @@ function SeverityDot({
 function BoardRow({
   row,
   variant,
+  surfaceId,
   selectedTargetId,
-  onSelectTarget,
+  onSelectGlobal,
 }: {
   row: NorthStarBoardRow;
   variant: "action" | "money";
+  surfaceId: DashboardSurfaceId;
   selectedTargetId: DesignLabEditTargetId | null;
-  onSelectTarget: (id: DesignLabEditTargetId) => void;
+  onSelectGlobal: (id: DesignLabEditTargetId) => void;
 }) {
   const progress = row.progress ?? 0;
+  const onSelectTarget = onSelectGlobal;
 
   return (
-    <DesignLabEditableTarget
-      targetId="card-surface"
-      selectedTargetId={selectedTargetId}
-      onSelectTarget={onSelectTarget}
-      className={t.row}
-      style={{
-        backgroundColor: "var(--dl-card-bg)",
-        borderColor: "var(--dl-card-border)",
-      }}
-    >
-      {variant === "action" ? (
+    <DesignLabSurfaceTarget surfaceId={surfaceId} className={t.row}>{variant === "action" ? (
         <>
           <SeverityDot
             severity={row.severity}
@@ -233,7 +230,7 @@ function BoardRow({
           </DesignLabEditableTarget>
         </div>
       )}
-    </DesignLabEditableTarget>
+    </DesignLabSurfaceTarget>
   );
 }
 
@@ -243,28 +240,23 @@ function SystemHealthDock({
   statusText,
   notificationText,
   selectedTargetId,
-  onSelectTarget,
+  onSelectGlobal,
 }: {
   score: number;
   label: string;
   statusText: string;
   notificationText: string;
   selectedTargetId: DesignLabEditTargetId | null;
-  onSelectTarget: (id: DesignLabEditTargetId) => void;
+  onSelectGlobal: (id: DesignLabEditTargetId) => void;
 }) {
   const circumference = 2 * Math.PI * 20;
   const dashOffset = circumference - (score / 100) * circumference;
+  const onSelectTarget = onSelectGlobal;
 
   return (
-    <DesignLabEditableTarget
-      targetId="card-surface"
-      selectedTargetId={selectedTargetId}
-      onSelectTarget={onSelectTarget}
+    <DesignLabSurfaceTarget
+      surfaceId="system-health-dock"
       className={`${t.footerSection} ${t.footerPanel} ${t.footerDock} flex items-center gap-4 border-t px-4 py-4 lg:border-l lg:border-t-0 lg:px-5 ${t.columnDivider}`}
-      style={{
-        backgroundColor: "var(--dl-card-bg)",
-        borderColor: "var(--dl-card-border)",
-      }}
     >
       <div className="relative h-11 w-11 shrink-0">
         <svg className="h-full w-full -rotate-90" viewBox="0 0 48 48" aria-hidden="true">
@@ -323,7 +315,7 @@ function SystemHealthDock({
           </span>
         </div>
       </div>
-    </DesignLabEditableTarget>
+    </DesignLabSurfaceTarget>
   );
 }
 
@@ -342,13 +334,7 @@ export function DesignLabDashboardReplica({
       <MasterPageCanvas width="wide">
         <MasterContentStack density="compact" className="hidden lg:flex">
           <section aria-label="Business command">
-          <DesignLabEditableTarget
-            targetId="card-surface"
-            selectedTargetId={selectedTargetId}
-            onSelectTarget={onSelectTarget}
-            className={t.heroShell}
-            style={DESIGN_LAB_CARD_SURFACE_STYLE}
-          >
+          <DesignLabSurfaceTarget surfaceId="operating-center" className={t.heroShell}>
             <div aria-hidden="true" className={t.heroAccentRail} />
 
             <div className={t.heroHeader}>
@@ -417,16 +403,7 @@ export function DesignLabDashboardReplica({
                   </DesignLabEditableTarget>
                 </div>
 
-                <DesignLabEditableTarget
-                  targetId="card-surface"
-                  selectedTargetId={selectedTargetId}
-                  onSelectTarget={onSelectTarget}
-                  className={t.opsScoreInline}
-                  style={{
-                    backgroundColor: "var(--dl-card-bg)",
-                    borderColor: "var(--dl-card-border)",
-                  }}
-                >
+                <DesignLabSurfaceTarget surfaceId="ops-score-card" className={t.opsScoreInline}>
                   <DesignLabEditableTarget
                     targetId="muted-text"
                     selectedTargetId={selectedTargetId}
@@ -462,19 +439,13 @@ export function DesignLabDashboardReplica({
                       <span className="sr-only">Ops score progress</span>
                     </DesignLabEditableTarget>
                   </div>
-                </DesignLabEditableTarget>
+                </DesignLabSurfaceTarget>
               </div>
             </div>
 
             <div className={t.heroBody}>
               {hero.primary ? (
-                <DesignLabEditableTarget
-                  targetId="card-surface"
-                  selectedTargetId={selectedTargetId}
-                  onSelectTarget={onSelectTarget}
-                  className={t.primaryAction}
-                  style={DESIGN_LAB_CARD_SURFACE_STYLE}
-                >
+                <DesignLabSurfaceTarget surfaceId="priority-card" className={t.primaryAction}>
                   <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
@@ -525,10 +496,13 @@ export function DesignLabDashboardReplica({
                       <ArrowRight className="h-4 w-4" aria-hidden="true" />
                     </DesignLabEditableTarget>
                   </div>
-                </DesignLabEditableTarget>
+                </DesignLabSurfaceTarget>
               ) : null}
 
-              <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start lg:gap-6">
+              <DesignLabSurfaceTarget
+                surfaceId="then-handle-row"
+                className="mt-4 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start lg:gap-6"
+              >
                 <div className="flex flex-col gap-3">
                   <div>
                     <DesignLabEditableTarget
@@ -571,16 +545,7 @@ export function DesignLabDashboardReplica({
                   </div>
 
                   {hero.insight ? (
-                    <DesignLabEditableTarget
-                      targetId="card-surface"
-                      selectedTargetId={selectedTargetId}
-                      onSelectTarget={onSelectTarget}
-                      className={t.insightSurface}
-                      style={{
-                        backgroundColor: "var(--dl-card-bg)",
-                        borderColor: "var(--dl-card-border)",
-                      }}
-                    >
+                    <DesignLabSurfaceTarget surfaceId="insight-card" className={t.insightSurface}>
                       <DesignLabEditableTarget
                         targetId="body-text"
                         selectedTargetId={selectedTargetId}
@@ -601,65 +566,45 @@ export function DesignLabDashboardReplica({
                       >
                         {hero.insight.detail}
                       </DesignLabEditableTarget>
-                    </DesignLabEditableTarget>
+                    </DesignLabSurfaceTarget>
                   ) : null}
                 </div>
 
                 {hero.signalChips.length > 0 ? (
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:w-[20rem] lg:grid-cols-2">
-                    {hero.signalChips.map((signal) => (
-                      <DesignLabEditableTarget
+                    {hero.signalChips.map((signal, index) => (
+                      <DesignLabSurfaceTarget
                         key={signal.label}
-                        targetId="card-surface"
-                        selectedTargetId={selectedTargetId}
-                        onSelectTarget={onSelectTarget}
+                        surfaceId={metricChipSurfaceId(signal.label, index)}
                         className={t.signalChip}
-                        style={{
-                          backgroundColor: "var(--dl-card-bg)",
-                          borderColor: "var(--dl-card-border)",
-                        }}
                       >
-                        <DesignLabEditableTarget
-                          targetId="header-text"
-                          selectedTargetId={selectedTargetId}
-                          onSelectTarget={onSelectTarget}
-                          as="span"
+                        <span
                           className="text-base font-semibold tabular-nums leading-none"
-                          style={{ color: "var(--dl-heading-text)" }}
+                          style={{ color: "var(--dl-surface-text)" }}
                         >
                           {signal.value}
-                        </DesignLabEditableTarget>
-                        <DesignLabEditableTarget
-                          targetId="muted-text"
-                          selectedTargetId={selectedTargetId}
-                          onSelectTarget={onSelectTarget}
-                          as="span"
+                        </span>
+                        <span
                           className={t.signalLabel}
-                          style={{ color: "var(--dl-muted-text)" }}
+                          style={{ color: "var(--dl-surface-text)" }}
                         >
                           {signal.label}
-                        </DesignLabEditableTarget>
-                      </DesignLabEditableTarget>
+                        </span>
+                      </DesignLabSurfaceTarget>
                     ))}
                   </div>
                 ) : null}
-              </div>
+              </DesignLabSurfaceTarget>
             </div>
 
             <div aria-hidden="true" className={t.heroFooter}>
               <div className={t.accentLine} />
             </div>
-          </DesignLabEditableTarget>
+          </DesignLabSurfaceTarget>
           </section>
 
           <section aria-label="Operating board">
-          <DesignLabEditableTarget
-            targetId="card-surface"
-            selectedTargetId={selectedTargetId}
-            onSelectTarget={onSelectTarget}
-            className={t.operatingBoard}
-            style={DESIGN_LAB_CARD_SURFACE_STYLE}
-          >
+          <DesignLabSurfaceTarget surfaceId="operating-board" className={t.operatingBoard}>
             <div aria-hidden="true" className={t.boardTopAccent} />
 
             <div className={t.boardHeader}>
@@ -700,22 +645,16 @@ export function DesignLabDashboardReplica({
                 {board.connections.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {board.connections.map((link) => (
-                      <DesignLabEditableTarget
+                      <DesignLabSurfaceTarget
                         key={link.id}
-                        targetId="card-surface"
-                        selectedTargetId={selectedTargetId}
-                        onSelectTarget={onSelectTarget}
+                        surfaceId="connection-chip"
                         className={t.connectionChip}
-                        style={{
-                          backgroundColor: "var(--dl-card-bg)",
-                          borderColor: "var(--dl-card-border)",
-                          color: "var(--dl-body-text)",
-                        }}
+                        style={{ color: "var(--dl-surface-text)" }}
                       >
                         <span>{link.from}</span>
                         <ArrowRight className={t.connectionArrow} aria-hidden="true" />
                         <span>{link.to}</span>
-                      </DesignLabEditableTarget>
+                      </DesignLabSurfaceTarget>
                     ))}
                   </div>
                 ) : null}
@@ -723,20 +662,12 @@ export function DesignLabDashboardReplica({
             </div>
 
             <div className="grid lg:grid-cols-3">
-              <div
+              <DesignLabSurfaceTarget
+                surfaceId="action-column"
                 className={`relative flex flex-col gap-4 p-4 sm:p-5 lg:p-6 lg:pr-7 ${t.columnWell}`}
               >
                 <div aria-hidden="true" className={t.columnRail} />
-                <DesignLabEditableTarget
-                  targetId="card-surface"
-                  selectedTargetId={selectedTargetId}
-                  onSelectTarget={onSelectTarget}
-                  className={t.columnHeader}
-                  style={{
-                    backgroundColor: "var(--dl-card-bg)",
-                    borderColor: "var(--dl-card-border)",
-                  }}
-                >
+                <DesignLabSurfaceTarget surfaceId="blocker-card" className={t.columnHeader}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
@@ -775,15 +706,16 @@ export function DesignLabDashboardReplica({
                     </div>
                     <span className={`shrink-0 ${t.link}`}>View all</span>
                   </div>
-                </DesignLabEditableTarget>
+                </DesignLabSurfaceTarget>
                 <ul className="flex flex-col gap-2">
                   {board.action.rows.map((row) => (
                     <li key={row.id}>
                       <BoardRow
                         row={row}
                         variant="action"
+                        surfaceId={queueRowSurfaceId(row.id)}
                         selectedTargetId={selectedTargetId}
-                        onSelectTarget={onSelectTarget}
+                        onSelectGlobal={onSelectTarget}
                       />
                     </li>
                   ))}
@@ -830,22 +762,14 @@ export function DesignLabDashboardReplica({
                     </ul>
                   </div>
                 ) : null}
-              </div>
+              </DesignLabSurfaceTarget>
 
-              <div
+              <DesignLabSurfaceTarget
+                surfaceId="work-column"
                 className={`relative flex flex-col gap-4 border-t ${t.columnDivider} p-4 sm:p-5 lg:border-t-0 lg:p-6 lg:px-7 ${t.columnWell}`}
               >
                 <div aria-hidden="true" className={t.columnRail} />
-                <DesignLabEditableTarget
-                  targetId="card-surface"
-                  selectedTargetId={selectedTargetId}
-                  onSelectTarget={onSelectTarget}
-                  className={t.columnHeader}
-                  style={{
-                    backgroundColor: "var(--dl-card-bg)",
-                    borderColor: "var(--dl-card-border)",
-                  }}
-                >
+                <DesignLabSurfaceTarget surfaceId="field-work-card" className={t.columnHeader}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
@@ -884,20 +808,11 @@ export function DesignLabDashboardReplica({
                     </div>
                     <span className={`shrink-0 ${t.link}`}>Dispatch</span>
                   </div>
-                </DesignLabEditableTarget>
+                </DesignLabSurfaceTarget>
 
                 {board.work.dispatchPressure &&
                 board.work.dispatchPressure.severity !== "healthy" ? (
-                  <DesignLabEditableTarget
-                    targetId="card-surface"
-                    selectedTargetId={selectedTargetId}
-                    onSelectTarget={onSelectTarget}
-                    className={t.row}
-                    style={{
-                      backgroundColor: "var(--dl-card-bg)",
-                      borderColor: "var(--dl-card-border)",
-                    }}
-                  >
+                  <DesignLabSurfaceTarget surfaceId="dispatch-pressure-card" className={t.row}>
                     <span
                       className={`h-2 w-2 shrink-0 rounded-full ${dispatchPressureTone(board.work.dispatchPressure.severity)}`}
                       aria-hidden="true"
@@ -924,21 +839,15 @@ export function DesignLabDashboardReplica({
                         {board.work.dispatchPressure.meta}
                       </DesignLabEditableTarget>
                     </div>
-                  </DesignLabEditableTarget>
+                  </DesignLabSurfaceTarget>
                 ) : null}
 
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {board.work.statusMetrics.map((metric) => (
-                    <DesignLabEditableTarget
+                    <DesignLabSurfaceTarget
                       key={metric.label}
-                      targetId="card-surface"
-                      selectedTargetId={selectedTargetId}
-                      onSelectTarget={onSelectTarget}
+                      surfaceId={workMetricSurfaceId(metric.label)}
                       className="rounded-lg border border-slate-200/85 px-2.5 py-2 text-center shadow-[0_2px_6px_rgba(0,0,0,0.10)]"
-                      style={{
-                        backgroundColor: "var(--dl-card-bg)",
-                        borderColor: "var(--dl-card-border)",
-                      }}
                     >
                       <DesignLabEditableTarget
                         targetId="header-text"
@@ -960,7 +869,7 @@ export function DesignLabDashboardReplica({
                       >
                         {metric.label}
                       </DesignLabEditableTarget>
-                    </DesignLabEditableTarget>
+                    </DesignLabSurfaceTarget>
                   ))}
                 </div>
 
@@ -968,24 +877,16 @@ export function DesignLabDashboardReplica({
                   <BoardRow
                     row={board.work.unassignedRow}
                     variant="action"
+                    surfaceId={queueRowSurfaceId(board.work.unassignedRow.id)}
                     selectedTargetId={selectedTargetId}
-                    onSelectTarget={onSelectTarget}
+                    onSelectGlobal={onSelectTarget}
                   />
                 ) : null}
 
                 <ul className="flex flex-col gap-2">
                   {board.work.jobRows.map((job) => (
                     <li key={job.id}>
-                      <DesignLabEditableTarget
-                        targetId="card-surface"
-                        selectedTargetId={selectedTargetId}
-                        onSelectTarget={onSelectTarget}
-                        className={`flex items-center gap-3 ${t.row}`}
-                        style={{
-                          backgroundColor: "var(--dl-card-bg)",
-                          borderColor: "var(--dl-card-border)",
-                        }}
-                      >
+                      <DesignLabSurfaceTarget surfaceId={queueRowSurfaceId(job.id)} className={`flex items-center gap-3 ${t.row}`}>
                         <DesignLabEditableTarget
                           targetId="muted-text"
                           selectedTargetId={selectedTargetId}
@@ -1032,7 +933,7 @@ export function DesignLabDashboardReplica({
                         >
                           {job.status}
                         </DesignLabEditableTarget>
-                      </DesignLabEditableTarget>
+                      </DesignLabSurfaceTarget>
                     </li>
                   ))}
                 </ul>
@@ -1093,21 +994,13 @@ export function DesignLabDashboardReplica({
                     </ul>
                   </div>
                 ) : null}
-              </div>
+              </DesignLabSurfaceTarget>
 
-              <div
+              <DesignLabSurfaceTarget
+                surfaceId="money-column"
                 className={`relative flex flex-col gap-4 border-t ${t.columnDivider} p-4 sm:p-5 lg:border-t-0 lg:p-6 lg:pl-7 ${t.columnWell}`}
               >
-                <DesignLabEditableTarget
-                  targetId="card-surface"
-                  selectedTargetId={selectedTargetId}
-                  onSelectTarget={onSelectTarget}
-                  className={t.columnHeader}
-                  style={{
-                    backgroundColor: "var(--dl-card-bg)",
-                    borderColor: "var(--dl-card-border)",
-                  }}
-                >
+                <DesignLabSurfaceTarget surfaceId="billing-pressure-card" className={t.columnHeader}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
@@ -1146,7 +1039,7 @@ export function DesignLabDashboardReplica({
                     </div>
                     <span className={`shrink-0 ${t.link}`}>Billing</span>
                   </div>
-                </DesignLabEditableTarget>
+                </DesignLabSurfaceTarget>
 
                 <div className="flex flex-col gap-2">
                   {board.money.rows.map((row) => (
@@ -1154,8 +1047,9 @@ export function DesignLabDashboardReplica({
                       key={row.id}
                       row={row}
                       variant="money"
+                      surfaceId={moneyRowSurfaceId(row.id)}
                       selectedTargetId={selectedTargetId}
-                      onSelectTarget={onSelectTarget}
+                      onSelectGlobal={onSelectTarget}
                     />
                   ))}
                 </div>
@@ -1169,16 +1063,7 @@ export function DesignLabDashboardReplica({
                     }`}
                   >
                     {board.money.expenseInset ? (
-                      <DesignLabEditableTarget
-                        targetId="card-surface"
-                        selectedTargetId={selectedTargetId}
-                        onSelectTarget={onSelectTarget}
-                        className={t.surfaceInset}
-                        style={{
-                          backgroundColor: "var(--dl-card-bg)",
-                          borderColor: "var(--dl-card-border)",
-                        }}
-                      >
+                      <DesignLabSurfaceTarget surfaceId="expense-inset-card" className={t.surfaceInset}>
                         <div className="flex items-center gap-1.5">
                           <Receipt className={`h-3.5 w-3.5 ${t.intelligenceAccent}`} aria-hidden="true" />
                           <DesignLabEditableTarget
@@ -1212,19 +1097,10 @@ export function DesignLabDashboardReplica({
                         >
                           {board.money.expenseInset.meta}
                         </DesignLabEditableTarget>
-                      </DesignLabEditableTarget>
+                      </DesignLabSurfaceTarget>
                     ) : null}
                     {board.money.leadOpportunityInset ? (
-                      <DesignLabEditableTarget
-                        targetId="card-surface"
-                        selectedTargetId={selectedTargetId}
-                        onSelectTarget={onSelectTarget}
-                        className={`border-l-2 ${t.moneyLeadBorder} ${t.surfaceInset}`}
-                        style={{
-                          backgroundColor: "var(--dl-card-bg)",
-                          borderColor: "var(--dl-card-border)",
-                        }}
-                      >
+                      <DesignLabSurfaceTarget surfaceId="lead-opportunity-inset-card" className={`border-l-2 ${t.moneyLeadBorder} ${t.surfaceInset}`}>
                         <div className="flex items-center gap-1.5">
                           <Target className={`h-3.5 w-3.5 ${t.intelligenceAccent}`} aria-hidden="true" />
                           <DesignLabEditableTarget
@@ -1258,23 +1134,17 @@ export function DesignLabDashboardReplica({
                         >
                           {board.money.leadOpportunityInset.meta}
                         </DesignLabEditableTarget>
-                      </DesignLabEditableTarget>
+                      </DesignLabSurfaceTarget>
                     ) : null}
                   </div>
                 ) : null}
-              </div>
+              </DesignLabSurfaceTarget>
             </div>
-          </DesignLabEditableTarget>
+          </DesignLabSurfaceTarget>
           </section>
 
           <footer aria-label="Supporting metrics and status">
-          <DesignLabEditableTarget
-            targetId="card-surface"
-            selectedTargetId={selectedTargetId}
-            onSelectTarget={onSelectTarget}
-            className={t.footer}
-            style={DESIGN_LAB_CARD_SURFACE_STYLE}
-          >
+          <DesignLabSurfaceTarget surfaceId="business-pulse" className={t.footer}>
             <div aria-hidden="true" className={t.footerTopAccent} />
 
             <div className={`${t.footerSection} px-2 pb-2 pt-4 sm:px-3 sm:pb-3`}>
@@ -1290,16 +1160,10 @@ export function DesignLabDashboardReplica({
               </DesignLabEditableTarget>
               <div className="mt-2 grid sm:grid-cols-4">
                 {bands.pulseMetrics.map((metric) => (
-                  <DesignLabEditableTarget
+                  <DesignLabSurfaceTarget
                     key={metric.id}
-                    targetId="card-surface"
-                    selectedTargetId={selectedTargetId}
-                    onSelectTarget={onSelectTarget}
+                    surfaceId={pulseMetricSurfaceId(metric.id)}
                     className={t.footerMetric}
-                    style={{
-                      backgroundColor: "var(--dl-card-bg)",
-                      borderColor: "var(--dl-card-border)",
-                    }}
                   >
                     <DesignLabEditableTarget
                       targetId="muted-text"
@@ -1331,23 +1195,14 @@ export function DesignLabDashboardReplica({
                     >
                       {metric.delta}
                     </DesignLabEditableTarget>
-                  </DesignLabEditableTarget>
+                  </DesignLabSurfaceTarget>
                 ))}
               </div>
             </div>
 
             <div className="grid lg:grid-cols-[1fr_auto]">
               <div className={`${t.footerSection} grid gap-3 p-3 sm:p-4 lg:grid-cols-[1.2fr_0.8fr]`}>
-                <DesignLabEditableTarget
-                  targetId="card-surface"
-                  selectedTargetId={selectedTargetId}
-                  onSelectTarget={onSelectTarget}
-                  className={`${t.footerPanel} px-4 py-4 lg:px-5`}
-                  style={{
-                    backgroundColor: "var(--dl-card-bg)",
-                    borderColor: "var(--dl-card-border)",
-                  }}
-                >
+                <DesignLabSurfaceTarget surfaceId="field-activity-card" className={`${t.footerPanel} px-4 py-4 lg:px-5`}>
                   <DesignLabEditableTarget
                     targetId="muted-text"
                     selectedTargetId={selectedTargetId}
@@ -1385,18 +1240,9 @@ export function DesignLabDashboardReplica({
                       </li>
                     ))}
                   </ul>
-                </DesignLabEditableTarget>
+                </DesignLabSurfaceTarget>
 
-                <DesignLabEditableTarget
-                  targetId="card-surface"
-                  selectedTargetId={selectedTargetId}
-                  onSelectTarget={onSelectTarget}
-                  className={`${t.footerPanel} px-4 py-4 lg:px-5`}
-                  style={{
-                    backgroundColor: "var(--dl-card-bg)",
-                    borderColor: "var(--dl-card-border)",
-                  }}
-                >
+                <DesignLabSurfaceTarget surfaceId="momentum-card" className={`${t.footerPanel} px-4 py-4 lg:px-5`}>
                   <DesignLabEditableTarget
                     targetId="muted-text"
                     selectedTargetId={selectedTargetId}
@@ -1427,7 +1273,7 @@ export function DesignLabDashboardReplica({
                       </li>
                     ))}
                   </ul>
-                </DesignLabEditableTarget>
+                </DesignLabSurfaceTarget>
               </div>
 
               <SystemHealthDock
@@ -1436,10 +1282,10 @@ export function DesignLabDashboardReplica({
                 statusText={bands.systemDock.statusText}
                 notificationText={bands.systemDock.notificationText}
                 selectedTargetId={selectedTargetId}
-                onSelectTarget={onSelectTarget}
+                onSelectGlobal={onSelectTarget}
               />
             </div>
-          </DesignLabEditableTarget>
+          </DesignLabSurfaceTarget>
           </footer>
         </MasterContentStack>
 

@@ -9,12 +9,22 @@ import {
 } from "@/shared/components/admin/nav-items";
 import { DesignLabDashboardReplica } from "@/shared/components/platform-admin/design-lab/DesignLabDashboardReplica";
 import { DesignLabEditableTarget } from "@/shared/components/platform-admin/design-lab/DesignLabEditableTarget";
+import type { DesignLabCanvasSelection } from "@/shared/components/platform-admin/design-lab/design-lab-canvas-selection";
 import type { DesignLabEditTargetId } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
+import type { DesignLabColors } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
+import {
+  DesignLabSurfaceProvider,
+} from "@/shared/components/platform-admin/design-lab/DesignLabSurfaceContext";
+import type { DashboardSurfaceId } from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-surfaces";
+import type { DashboardSurfaceOverrides } from "@/shared/components/platform-admin/design-lab/design-lab-dashboard-surfaces";
 import { northStarSidebarClass } from "@/shared/design-system/shell/tokens";
 
 type DesignLabDashboardShellCloneProps = {
-  selectedTargetId: DesignLabEditTargetId | null;
-  onSelectTarget: (id: DesignLabEditTargetId) => void;
+  colors: DesignLabColors;
+  surfaceOverrides: DashboardSurfaceOverrides;
+  selection: DesignLabCanvasSelection | null;
+  onSelectGlobal: (id: DesignLabEditTargetId) => void;
+  onSelectSurface: (surfaceId: DashboardSurfaceId) => void;
 };
 
 type StaticNavGroup = {
@@ -185,7 +195,7 @@ function DesignLabStaticSidebar({
       onSelectTarget={onSelectTarget}
       as="aside"
       aria-label="Desktop navigation"
-      className={`${northStarSidebarClass} hidden shrink-0 flex-col md:flex`}
+      className={`${northStarSidebarClass} hidden w-[14.5rem] shrink-0 flex-col self-stretch border-r md:flex`}
       style={{
         backgroundColor: "var(--dl-sidebar-bg)",
         backgroundImage: "none",
@@ -254,44 +264,56 @@ function DesignLabStaticSidebar({
 }
 
 export function DesignLabDashboardShellClone({
-  selectedTargetId,
-  onSelectTarget,
+  colors,
+  surfaceOverrides,
+  selection,
+  onSelectGlobal,
+  onSelectSurface,
 }: DesignLabDashboardShellCloneProps) {
   const navGroups = useMemo(() => buildStaticNavGroups(), []);
+  const selectedTargetId =
+    selection?.kind === "global" ? selection.targetId : null;
 
   return (
-    <div
-      className="admin-canvas admin-shell-canvas admin-north-star-shell flex w-full min-w-0 flex-col md:min-h-full md:flex-row"
-      style={{ backgroundColor: "var(--dl-page-bg)", backgroundImage: "none" }}
+    <DesignLabSurfaceProvider
+      colors={colors}
+      overrides={surfaceOverrides}
+      selection={selection}
+      onSelectSurface={onSelectSurface}
     >
-      <DesignLabStaticSidebar
-        groups={navGroups}
-        selectedTargetId={selectedTargetId}
-        onSelectTarget={onSelectTarget}
-      />
-
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="admin-top-shell shrink-0">
-          <DesignLabStaticTopbar
-            selectedTargetId={selectedTargetId}
-            onSelectTarget={onSelectTarget}
-          />
-        </div>
-
-        <DesignLabEditableTarget
-          targetId="page-background"
+      <div
+        className="admin-canvas admin-shell-canvas admin-north-star-shell flex min-h-full w-full min-w-0 flex-col md:flex-row"
+        style={{ backgroundColor: "var(--dl-page-bg)", backgroundImage: "none" }}
+      >
+        <DesignLabStaticSidebar
+          groups={navGroups}
           selectedTargetId={selectedTargetId}
-          onSelectTarget={onSelectTarget}
-          className="admin-shell-main min-h-0 flex-1 px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5"
-          style={{ backgroundColor: "var(--dl-page-bg)", backgroundImage: "none" }}
-        >
-          <DesignLabDemoModeBanner />
-          <DesignLabDashboardReplica
+          onSelectTarget={onSelectGlobal}
+        />
+
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="admin-top-shell shrink-0">
+            <DesignLabStaticTopbar
+              selectedTargetId={selectedTargetId}
+              onSelectTarget={onSelectGlobal}
+            />
+          </div>
+
+          <DesignLabEditableTarget
+            targetId="page-background"
             selectedTargetId={selectedTargetId}
-            onSelectTarget={onSelectTarget}
-          />
-        </DesignLabEditableTarget>
+            onSelectTarget={onSelectGlobal}
+            className="admin-shell-main min-h-0 flex-1 px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5"
+            style={{ backgroundColor: "var(--dl-page-bg)", backgroundImage: "none" }}
+          >
+            <DesignLabDemoModeBanner />
+            <DesignLabDashboardReplica
+              selectedTargetId={selectedTargetId}
+              onSelectTarget={onSelectGlobal}
+            />
+          </DesignLabEditableTarget>
+        </div>
       </div>
-    </div>
+    </DesignLabSurfaceProvider>
   );
 }
