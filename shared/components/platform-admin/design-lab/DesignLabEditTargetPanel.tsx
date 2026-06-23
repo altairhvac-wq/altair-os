@@ -93,12 +93,14 @@ type DesignLabEditTargetPanelProps = {
   selectedTargetId: DesignLabEditTargetId | null;
   colors: DesignLabColors;
   onColorChange: (key: keyof DesignLabColors, value: string) => void;
+  emptyStateText?: string;
 };
 
 export function DesignLabEditTargetPanel({
   selectedTargetId,
   colors,
   onColorChange,
+  emptyStateText = "Click something in the preview to edit its color.",
 }: DesignLabEditTargetPanelProps) {
   const target = selectedTargetId
     ? getDesignLabEditTarget(selectedTargetId)
@@ -109,9 +111,7 @@ export function DesignLabEditTargetPanel({
       <h2 className="text-sm font-bold text-[#17130E]">Editing target</h2>
 
       {!target ? (
-        <p className="mt-2 text-xs leading-snug text-[#6B6255]">
-          Click something in the preview to edit its color.
-        </p>
+        <p className="mt-2 text-xs leading-snug text-[#6B6255]">{emptyStateText}</p>
       ) : (
         <div className="mt-2 space-y-3">
           <div>

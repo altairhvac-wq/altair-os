@@ -139,6 +139,7 @@ type DesignLabCanvasModeProps = {
   colors: DesignLabColors;
   selectedTargetId: DesignLabEditTargetId | null;
   onSelectTarget: (id: DesignLabEditTargetId) => void;
+  onColorChange: (key: keyof DesignLabColors, value: string) => void;
   previewMode: PreviewMode;
   onPreviewModeChange: (mode: PreviewMode) => void;
   onExitCanvas: () => void;
@@ -148,6 +149,7 @@ function DesignLabCanvasMode({
   colors,
   selectedTargetId,
   onSelectTarget,
+  onColorChange,
   previewMode,
   onPreviewModeChange,
   onExitCanvas,
@@ -187,12 +189,40 @@ function DesignLabCanvasMode({
         </p>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div className="relative min-h-0 flex-1 overflow-auto">
         <DesignLabFullPageCanvas
           colors={colors}
           selectedTargetId={selectedTargetId}
           onSelectTarget={onSelectTarget}
         />
+
+        <aside
+          aria-label="Canvas color editor"
+          className="pointer-events-none fixed bottom-4 right-4 top-[calc(3.5rem+1rem)] z-[60] hidden w-[min(20rem,calc(100%-2rem))] sm:block"
+        >
+          <div className="pointer-events-auto h-full overflow-y-auto rounded-xl border border-[rgba(138,99,36,0.2)] bg-[#FBF7EF] p-3 shadow-[0_12px_32px_rgba(23,19,14,0.18)]">
+            <DesignLabEditTargetPanel
+              selectedTargetId={selectedTargetId}
+              colors={colors}
+              onColorChange={onColorChange}
+              emptyStateText="Click something in the canvas to edit its color."
+            />
+          </div>
+        </aside>
+
+        <aside
+          aria-label="Canvas color editor"
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] max-h-[45vh] sm:hidden"
+        >
+          <div className="pointer-events-auto overflow-y-auto rounded-t-xl border border-[rgba(138,99,36,0.2)] bg-[#FBF7EF] p-3 shadow-[0_-8px_24px_rgba(23,19,14,0.14)]">
+            <DesignLabEditTargetPanel
+              selectedTargetId={selectedTargetId}
+              colors={colors}
+              onColorChange={onColorChange}
+              emptyStateText="Click something in the canvas to edit its color."
+            />
+          </div>
+        </aside>
       </div>
     </div>
   );
@@ -239,6 +269,7 @@ export function DesignLabPageView() {
         colors={colors}
         selectedTargetId={selectedTargetId}
         onSelectTarget={setSelectedTargetId}
+        onColorChange={updateColor}
         previewMode={previewMode}
         onPreviewModeChange={setPreviewMode}
         onExitCanvas={() => setIsCanvasMode(false)}

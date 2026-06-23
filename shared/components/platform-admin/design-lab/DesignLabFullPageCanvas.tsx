@@ -1,5 +1,12 @@
+"use client";
+
+import { useState } from "react";
+import {
+  DESIGN_LAB_CANVAS_DEMO_PAGES,
+  DesignLabCanvasDemoContent,
+  type DesignLabCanvasDemoPageId,
+} from "@/shared/components/platform-admin/design-lab/DesignLabCanvasDemoContent";
 import { DesignLabEditableTarget } from "@/shared/components/platform-admin/design-lab/DesignLabEditableTarget";
-import { DesignLabWorkspaceDemo } from "@/shared/components/platform-admin/design-lab/DesignLabWorkspaceDemo";
 import type { DesignLabEditTargetId } from "@/shared/components/platform-admin/design-lab/design-lab-edit-targets";
 import type { DesignLabColors } from "@/shared/components/platform-admin/design-lab/design-lab-defaults";
 import { designLabPreviewVars } from "@/shared/components/platform-admin/design-lab/design-lab-preview-vars";
@@ -10,20 +17,18 @@ type DesignLabFullPageCanvasProps = {
   onSelectTarget: (id: DesignLabEditTargetId) => void;
 };
 
-const LEFT_RAIL_LABELS = [
-  "Dashboard",
-  "Jobs",
-  "Customers",
-  "Estimates",
-  "Invoices",
-  "Reports",
-] as const;
-
 export function DesignLabFullPageCanvas({
   colors,
   selectedTargetId,
   onSelectTarget,
 }: DesignLabFullPageCanvasProps) {
+  const [activeDemoPage, setActiveDemoPage] =
+    useState<DesignLabCanvasDemoPageId>("dashboard");
+
+  function handleNavClick(pageId: DesignLabCanvasDemoPageId) {
+    setActiveDemoPage(pageId);
+  }
+
   return (
     <div
       className="design-lab-preview min-h-full"
@@ -53,21 +58,31 @@ export function DesignLabFullPageCanvas({
             </p>
           </div>
           <nav className="flex-1 px-2 py-3">
-            <ul className="space-y-0.5">
-              {LEFT_RAIL_LABELS.map((label, index) => (
-                <li key={label}>
-                  <span
-                    className="flex items-center rounded-lg px-3 py-2 text-sm font-medium"
-                    style={{
-                      backgroundColor:
-                        index === 1 ? "var(--dl-page-bg)" : "transparent",
-                      color: "var(--dl-body-text)",
-                    }}
-                  >
-                    {label}
-                  </span>
-                </li>
-              ))}
+            <ul className="space-y-0.5" role="tablist" aria-label="Demo pages">
+              {DESIGN_LAB_CANVAS_DEMO_PAGES.map((page) => {
+                const isActive = activeDemoPage === page.id;
+
+                return (
+                  <li key={page.id}>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleNavClick(page.id);
+                      }}
+                      className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors"
+                      style={{
+                        backgroundColor: isActive ? "var(--dl-page-bg)" : "transparent",
+                        color: "var(--dl-body-text)",
+                      }}
+                    >
+                      {page.label}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </nav>
         </aside>
@@ -118,14 +133,13 @@ export function DesignLabFullPageCanvas({
             targetId="page-background"
             selectedTargetId={selectedTargetId}
             onSelectTarget={onSelectTarget}
-            className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
+            className="flex-1 px-4 py-6 pb-[min(45vh,18rem)] sm:px-6 sm:pb-6 sm:pr-[min(22rem,calc(100%-1rem))] lg:px-8 lg:py-8"
             style={{ backgroundColor: "var(--dl-page-bg)" }}
           >
-            <DesignLabWorkspaceDemo
+            <DesignLabCanvasDemoContent
+              pageId={activeDemoPage}
               selectedTargetId={selectedTargetId}
               onSelectTarget={onSelectTarget}
-              subtitle="A full-page Design Lab canvas for judging Altair colors before promotion."
-              layout="canvas"
             />
           </DesignLabEditableTarget>
         </div>
