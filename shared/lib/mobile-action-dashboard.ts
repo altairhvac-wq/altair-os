@@ -1,5 +1,10 @@
 import type { CompanyAccessScope } from "@/lib/database/access-control";
 import { buildDashboardAttentionCards } from "@/shared/lib/dashboard-attention-cards";
+import {
+  formatAcceptedEstimateSchedulingDescription,
+  formatAcceptedEstimateSchedulingListHref,
+  formatAcceptedEstimateSchedulingTitle,
+} from "@/shared/lib/accepted-estimate-scheduling";
 import type { CommandStripPanelId } from "@/shared/lib/dashboard-command-strip";
 import type { OperationalResolutionQueueType } from "@/shared/lib/operational-resolution-queue";
 import {
@@ -11,6 +16,7 @@ import {
 } from "@/shared/lib/invoice-page-focus";
 import type {
   DashboardData,
+  DashboardAcceptedEstimateSchedulingPreview,
   DashboardLeadFollowUpPreview,
   DashboardOverdueInvoicePreview,
   DashboardTechnicianStatus,
@@ -57,6 +63,7 @@ export type MobileActionSheetData = {
   unsentEstimates: DashboardUnsentEstimatePreview[];
   staleSentEstimates: DashboardStaleSentEstimatePreview[];
   staleSentEstimateThresholdDays: number;
+  acceptedEstimatesNeedingScheduling: DashboardAcceptedEstimateSchedulingPreview[];
   leadFollowUps: DashboardLeadFollowUpPreview[];
   stalledJobs: StalledJobEntry[];
   stalledJobInactivityThresholdDays: number;
@@ -121,6 +128,8 @@ function buildDescription(
       return `${count} ${pluralize(count, "receipt", "receipts")} waiting for approval`;
     case "lead-follow-up":
       return `${count} ${pluralize(count, "lead")} with follow-up due today`;
+    case "accepted-estimates-scheduling":
+      return formatAcceptedEstimateSchedulingDescription(count);
     case "unread-notifications":
       return `${count} unread ${pluralize(count, "alert")} to review`;
     default:
@@ -137,6 +146,7 @@ const PRIMARY_IDS = new Set([
   "estimates-not-sent",
   "estimates-awaiting-approval",
   "stalled-jobs",
+  "accepted-estimates-scheduling",
   "expense-approvals",
   "lead-follow-up",
 ]);
@@ -169,6 +179,7 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
     stalledJobs,
     notifications,
     leadFollowUp,
+    acceptedEstimatesNeedingScheduling,
   } = data;
   const cards: MobileActionCard[] = [];
 
@@ -212,6 +223,29 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
       href: DISPATCH_PAGE_UNASSIGNED_HREF,
       panelId: access.canViewTechnicianRoster ? "dispatch" : undefined,
       canFix: access.canViewTechnicianRoster,
+    });
+  }
+
+  if (
+    access.canViewBilling &&
+    acceptedEstimatesNeedingScheduling.count > 0
+  ) {
+    const count = acceptedEstimatesNeedingScheduling.count;
+    cards.push({
+      id: "accepted-estimates-scheduling",
+      label: formatAcceptedEstimateSchedulingTitle(count),
+      count,
+      severity: count >= 3 ? "warning" : "info",
+      description: buildDescription(
+        "accepted-estimates-scheduling",
+        count,
+        descriptionContext,
+      ),
+      category: "critical-operations",
+      queueType: "accepted_estimate_scheduling",
+      href: formatAcceptedEstimateSchedulingListHref(count),
+      panelId: "dispatch",
+      canFix: access.canViewBilling,
     });
   }
 
@@ -468,6 +502,8 @@ export function buildMobileActionSheetData(
     unsentEstimates: data.money.unsentEstimates,
     staleSentEstimates: data.money.staleSentEstimates,
     staleSentEstimateThresholdDays: data.money.staleSentEstimateThresholdDays,
+    acceptedEstimatesNeedingScheduling:
+      data.acceptedEstimatesNeedingScheduling.estimates,
     leadFollowUps: data.leadFollowUp.leads,
     stalledJobs: data.stalledJobs.stalledJobs,
     stalledJobInactivityThresholdDays: data.stalledJobs.inactivityThresholdDays,

@@ -80,6 +80,22 @@ export type DashboardStaleSentEstimatePreview = {
   daysSinceSent: number;
 };
 
+export type DashboardAcceptedEstimateSchedulingPreview = {
+  id: string;
+  estimateNumber: string;
+  customerName: string;
+  total: number;
+  approvedAt?: string;
+  jobId?: string;
+  jobNumber?: string;
+  openHref: string;
+};
+
+export type DashboardAcceptedEstimatesNeedingSchedulingSnapshot = {
+  count: number;
+  estimates: DashboardAcceptedEstimateSchedulingPreview[];
+};
+
 export type DashboardRecentPayment = {
   id: string;
   invoiceId: string;
@@ -191,6 +207,7 @@ export type DashboardData = {
   stalledJobs: DashboardStalledJobsSnapshot;
   completedWorkAwaitingInvoicing: DashboardCompletedWorkAwaitingInvoicingSnapshot;
   completedWorkReview: DashboardCompletedWorkReviewSnapshot;
+  acceptedEstimatesNeedingScheduling: DashboardAcceptedEstimatesNeedingSchedulingSnapshot;
   leadFollowUp: DashboardLeadFollowUpSnapshot;
   leadPipelineSummary: DashboardLeadPipelineSummary;
   operationalInsights: DailyOperationsSummary;

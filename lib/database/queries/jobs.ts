@@ -313,6 +313,54 @@ function mapJobRowToJobDetail(row: JobRowWithTechnician): JobDetail {
   };
 }
 
+export type JobSchedulingSnapshot = {
+  id: string;
+  status: JobStatus;
+  assignedTechnicianId?: string | null;
+};
+
+export async function getJobSchedulingSnapshotsByIds(
+  companyId: string,
+  jobIds: string[],
+  db?: DbClient,
+): Promise<Map<string, JobSchedulingSnapshot>> {
+  const uniqueJobIds = [...new Set(jobIds.filter(Boolean))];
+
+  if (uniqueJobIds.length === 0) {
+    return new Map();
+  }
+
+  const supabase = await resolveDbClient(db);
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("id, status, assigned_technician_id")
+    .eq("company_id", companyId)
+    .in("id", uniqueJobIds);
+
+  if (error) {
+    console.error("[getJobSchedulingSnapshotsByIds] query failed:", {
+      companyId,
+      jobCount: uniqueJobIds.length,
+      code: error.code,
+      message: error.message,
+    });
+    return new Map();
+  }
+
+  const snapshots = new Map<string, JobSchedulingSnapshot>();
+
+  for (const row of data ?? []) {
+    snapshots.set(row.id, {
+      id: row.id,
+      status: row.status as JobStatus,
+      assignedTechnicianId: row.assigned_technician_id,
+    });
+  }
+
+  return snapshots;
+}
+
 export async function getJobById(
   companyId: string,
   jobId: string,

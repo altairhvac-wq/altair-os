@@ -14,6 +14,11 @@ import {
 import { filterDailyOperationsSummaryForBillingAccess } from "@/shared/lib/dashboard-operational-insights-visibility";
 import { listRecentOperationalActivitiesForCompany } from "@/lib/database/queries/dashboard";
 import { listEstimates } from "@/lib/database/queries/estimates";
+import { getJobSchedulingSnapshotsByIds } from "@/lib/database/queries/jobs";
+import {
+  buildAcceptedEstimateSchedulingPreview,
+  selectAcceptedEstimatesNeedingScheduling,
+} from "@/shared/lib/accepted-estimate-scheduling";
 import {
   buildStaleSentEstimateEntries,
   ESTIMATE_RECOVERY_THRESHOLD_DAYS,
@@ -46,6 +51,7 @@ import type { OperationalHealthReport } from "@/shared/types/operational-health-
 import type { QueueResolutionTrendSummary } from "@/shared/types/queue-resolution-trends";
 import { resolveReportDateBounds } from "@/shared/types/reports";
 import { buildReportSectionMeta } from "@/shared/types/reports";
+import type { Estimate } from "@/shared/types/estimate";
 import type { TechnicianTimeState } from "@/shared/types/time-entry";
 import type { TimeEntry } from "@/shared/types/time-entry";
 
@@ -64,6 +70,7 @@ const OVERDUE_INVOICES_DASHBOARD_LIMIT = 10;
 const UNSENT_INVOICES_DASHBOARD_LIMIT = 10;
 const UNSENT_ESTIMATES_DASHBOARD_LIMIT = 10;
 const STALE_SENT_ESTIMATES_DASHBOARD_LIMIT = 10;
+const ACCEPTED_ESTIMATES_SCHEDULING_LIMIT = 10;
 const LEAD_FOLLOW_UP_DASHBOARD_LIMIT = 10;
 /** Match Reports default lead pipeline period. */
 const DASHBOARD_LEAD_PIPELINE_DATE_RANGE = "30d" as const;
@@ -72,6 +79,12 @@ const EMPTY_LEAD_FOLLOW_UP: DashboardData["leadFollowUp"] = {
   count: 0,
   leads: [],
 };
+
+const EMPTY_ACCEPTED_ESTIMATES_SCHEDULING: DashboardData["acceptedEstimatesNeedingScheduling"] =
+  {
+    count: 0,
+    estimates: [],
+  };
 
 const EMPTY_LEAD_PIPELINE_SUMMARY: DashboardData["leadPipelineSummary"] = {
   totalLeads: 0,
@@ -271,6 +284,39 @@ function filterJobsForAccess<T extends { technicianId?: string | null }>(
   return jobs.filter((job) => job.technicianId === userId);
 }
 
+async function buildAcceptedEstimatesNeedingSchedulingSnapshot(
+  companyId: string,
+  estimates: Estimate[],
+): Promise<{
+  snapshot: DashboardData["acceptedEstimatesNeedingScheduling"];
+  estimates: Estimate[];
+}> {
+  const approvedCandidates = estimates.filter(
+    (estimate) =>
+      estimate.status === "approved" &&
+      !estimate.archivedAt &&
+      !estimate.deletedAt,
+  );
+  const linkedJobIds = approvedCandidates
+    .map((estimate) => estimate.jobId)
+    .filter((jobId): jobId is string => Boolean(jobId));
+  const jobsById = await getJobSchedulingSnapshotsByIds(companyId, linkedJobIds);
+  const needingScheduling = selectAcceptedEstimatesNeedingScheduling(
+    approvedCandidates,
+    jobsById,
+  );
+
+  return {
+    snapshot: {
+      count: needingScheduling.length,
+      estimates: needingScheduling
+        .slice(0, ACCEPTED_ESTIMATES_SCHEDULING_LIMIT)
+        .map(buildAcceptedEstimateSchedulingPreview),
+    },
+    estimates: needingScheduling,
+  };
+}
+
 export async function getDashboardData(
   context: ActiveCompanyContext,
 ): Promise<DashboardData> {
@@ -376,10 +422,17 @@ export async function getDashboardData(
     (invoice) => invoice.status === "overdue",
   );
 
+  const acceptedEstimatesScheduling = access.canViewBilling
+    ? await buildAcceptedEstimatesNeedingSchedulingSnapshot(companyId, estimates)
+    : {
+        snapshot: EMPTY_ACCEPTED_ESTIMATES_SCHEDULING,
+        estimates: [],
+      };
+  const acceptedEstimatesNeedingScheduling =
+    acceptedEstimatesScheduling.snapshot;
+
   const approvedEstimates = access.canViewBilling
-    ? estimates
-        .filter((estimate) => estimate.status === "approved")
-        .slice(0, APPROVED_ESTIMATES_LIMIT)
+    ? acceptedEstimatesScheduling.estimates.slice(0, APPROVED_ESTIMATES_LIMIT)
     : [];
 
   const unsentInvoices = access.canViewBilling
@@ -567,6 +620,7 @@ export async function getDashboardData(
           resolvedThisWeek: summarySections.completedWorkReview.resolvedThisWeek,
         }
       : { count: 0, jobs: [], resolvedThisWeek: 0 },
+    acceptedEstimatesNeedingScheduling,
     leadFollowUp: access.canManageCustomers
       ? {
           count: leadPipelineMetrics.followUpsDue,

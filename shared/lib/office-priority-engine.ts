@@ -1,6 +1,10 @@
 import type { CompanyAccessScope } from "@/lib/database/access-control";
 import { recommendTechnicianForJob } from "@/shared/lib/dispatch-recommendations";
 import {
+  formatAcceptedEstimateSchedulingDescription,
+  formatAcceptedEstimateSchedulingTitle,
+} from "@/shared/lib/accepted-estimate-scheduling";
+import {
   buildOperationalSignals,
   findOperationalSignal,
   formatLeadFollowUpSignalDescription,
@@ -26,6 +30,7 @@ export const OFFICE_PRIORITY_BASE_SCORES = {
   ready_to_invoice: 90,
   unassigned_emergency: 85,
   unassigned_normal: 70,
+  accepted_estimates_scheduling: 72,
   draft_invoices: 65,
   lead_follow_up: 50,
   stale_sent_estimates: 55,
@@ -46,6 +51,7 @@ export type OfficePriorityActionType =
   | "send_estimates"
   | "follow_up_sent_estimates"
   | "assign_job"
+  | "schedule_accepted_estimates"
   | "follow_up_leads"
   | "review_completed_jobs";
 
@@ -74,6 +80,7 @@ export type OfficePriorityEngineInput = Pick<
   | "money"
   | "operations"
   | "completedWorkAwaitingInvoicing"
+  | "acceptedEstimatesNeedingScheduling"
   | "completedWorkReview"
   | "officeReviewQueue"
   | "assignableTechnicians"
@@ -273,6 +280,35 @@ function buildUnassignedJobCandidate(
   };
 }
 
+function buildAcceptedEstimateSchedulingCandidate(
+  input: OfficePriorityEngineInput,
+  signals: OperationalSignal[],
+): OfficePriorityRecommendation | null {
+  if (!input.access.canViewBilling) {
+    return null;
+  }
+
+  const signal = findOperationalSignal(signals, "accepted_estimates_scheduling");
+  if (!signal) {
+    return null;
+  }
+
+  const count = signal.count;
+
+  return {
+    id: "schedule-accepted-estimates",
+    priority: 0,
+    title: formatAcceptedEstimateSchedulingTitle(count),
+    description: formatAcceptedEstimateSchedulingDescription(count),
+    reason: `${OFFICE_PRIORITY_BASE_SCORES.accepted_estimates_scheduling} priority — accepted estimates without scheduled work delay dispatch and revenue capture.`,
+    impactCategory: "dispatch",
+    score: OFFICE_PRIORITY_BASE_SCORES.accepted_estimates_scheduling,
+    actionType: "schedule_accepted_estimates",
+    relatedQueue: "accepted_estimate_scheduling",
+    count,
+  };
+}
+
 function buildLeadFollowUpCandidate(
   input: OfficePriorityEngineInput,
   signals: OperationalSignal[],
@@ -447,6 +483,7 @@ const CANDIDATE_BUILDERS: ((
   buildOverdueInvoicesCandidate,
   buildReadyToInvoiceCandidate,
   buildUnassignedJobCandidate,
+  buildAcceptedEstimateSchedulingCandidate,
   buildLeadFollowUpCandidate,
   buildDraftInvoicesCandidate,
   buildStaleSentEstimatesCandidate,
@@ -536,6 +573,10 @@ export type OfficePriorityEngineSnapshot = {
     | "unsentEstimateCount"
     | "staleSentEstimateCount"
   >;
+  acceptedEstimatesNeedingScheduling: Pick<
+    DashboardData["acceptedEstimatesNeedingScheduling"],
+    "count"
+  >;
   completedWorkAwaitingInvoicing: Pick<
     DashboardCompletedWorkAwaitingInvoicingSnapshot,
     "count"
@@ -559,6 +600,8 @@ export function summarizeOfficePriorityInputs(
     overdueInvoices: input.money.overdueCount,
     readyToInvoice: input.completedWorkAwaitingInvoicing.count,
     unassignedToday: input.operations.unassignedToday,
+    acceptedEstimatesScheduling:
+      input.acceptedEstimatesNeedingScheduling.count,
     draftInvoices: input.money.unsentInvoiceCount,
     draftEstimates: input.money.unsentEstimateCount,
     staleSentEstimates: input.money.staleSentEstimateCount,

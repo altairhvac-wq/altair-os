@@ -13,6 +13,7 @@ export type OperationalSignalId =
   | "overdue_invoices"
   | "ready_to_invoice"
   | "unassigned_jobs"
+  | "accepted_estimates_scheduling"
   | "lead_follow_up"
   | "stale_sent_estimates";
 
@@ -29,6 +30,7 @@ export const OPERATIONAL_SIGNAL_PRIORITY_SCORES = {
   overdue_invoices: 100,
   ready_to_invoice: 90,
   unassigned_jobs: 85,
+  accepted_estimates_scheduling: 72,
   lead_follow_up: 50,
   stale_sent_estimates: 55,
 } as const;
@@ -39,6 +41,7 @@ export type OperationalSignalsInput = Pick<
   | "money"
   | "operations"
   | "completedWorkAwaitingInvoicing"
+  | "acceptedEstimatesNeedingScheduling"
   | "leadFollowUp"
 >;
 
@@ -98,6 +101,23 @@ export function buildOperationalSignals(
         dashboardData.operations.unassignedToday >= 3 ? "critical" : "warning",
       count: dashboardData.operations.unassignedToday,
       priorityScore: OPERATIONAL_SIGNAL_PRIORITY_SCORES.unassigned_jobs,
+    });
+  }
+
+  if (
+    dashboardData.access.canViewBilling &&
+    dashboardData.acceptedEstimatesNeedingScheduling.count > 0
+  ) {
+    signals.push({
+      id: "accepted_estimates_scheduling",
+      category: "dispatch",
+      severity:
+        dashboardData.acceptedEstimatesNeedingScheduling.count >= 3
+          ? "warning"
+          : "info",
+      count: dashboardData.acceptedEstimatesNeedingScheduling.count,
+      priorityScore:
+        OPERATIONAL_SIGNAL_PRIORITY_SCORES.accepted_estimates_scheduling,
     });
   }
 

@@ -3,6 +3,7 @@ import { INVOICE_PAGE_DRAFT_HREF } from "@/shared/lib/invoice-page-focus";
 import type { MobileActionSeverity } from "@/shared/lib/mobile-action-dashboard";
 import { formatLeadFollowUpQueueTitle } from "@/shared/lib/leads/lead-status";
 import type {
+  DashboardAcceptedEstimateSchedulingPreview,
   DashboardLeadFollowUpPreview,
   DashboardOverdueInvoicePreview,
   DashboardStaleSentEstimatePreview,
@@ -29,6 +30,7 @@ export type OperationalResolutionQueueType =
   | "unsent_invoice"
   | "unsent_estimate"
   | "stale_sent_estimate"
+  | "accepted_estimate_scheduling"
   | "needs_review"
   | "stalled_job"
   | "lead_follow_up";
@@ -94,6 +96,12 @@ export type StaleSentEstimateQueueItem = OperationalResolutionQueueItemBase & {
   estimate: DashboardStaleSentEstimatePreview;
 };
 
+export type AcceptedEstimateSchedulingQueueItem =
+  OperationalResolutionQueueItemBase & {
+    queueType: "accepted_estimate_scheduling";
+    estimate: DashboardAcceptedEstimateSchedulingPreview;
+  };
+
 export type NeedsReviewQueueItem = OperationalResolutionQueueItemBase & {
   queueType: "needs_review";
   entry: CompletedWorkReviewEntry;
@@ -116,6 +124,7 @@ export type OperationalResolutionQueueItem =
   | UnsentInvoiceQueueItem
   | UnsentEstimateQueueItem
   | StaleSentEstimateQueueItem
+  | AcceptedEstimateSchedulingQueueItem
   | NeedsReviewQueueItem
   | LeadFollowUpQueueItem
   | StalledJobQueueItem;
@@ -198,6 +207,15 @@ const QUEUE_PRESENTATION: Record<
     relatedLabel: "View all estimates",
     icon: "clipboard",
     iconClassName: "bg-amber-100 text-amber-700",
+  },
+  accepted_estimate_scheduling: {
+    completionTitle: "Accepted estimates scheduled",
+    completionSubtitle:
+      "No accepted estimates waiting for scheduling remain in this preview.",
+    relatedHref: "/estimates?status=approved",
+    relatedLabel: "View approved estimates",
+    icon: "briefcase",
+    iconClassName: "bg-cyan-100 text-cyan-700",
   },
   needs_review: {
     completionTitle: "Review queue clear",
@@ -541,6 +559,35 @@ function buildStaleSentEstimateItems(
   });
 }
 
+function buildAcceptedEstimateSchedulingItems(
+  estimates: DashboardAcceptedEstimateSchedulingPreview[],
+): AcceptedEstimateSchedulingQueueItem[] {
+  return estimates.map((estimate) => ({
+    id: estimate.id,
+    queueType: "accepted_estimate_scheduling",
+    title: `Estimate ${estimate.estimateNumber}`,
+    subtitle: estimate.customerName,
+    meta: estimate.approvedAt
+      ? `Approved ${estimate.approvedAt.slice(0, 10)} · ${formatCurrency(estimate.total)}`
+      : formatCurrency(estimate.total),
+    severity: "warning",
+    openHref: estimate.openHref,
+    estimate,
+    primaryAction: {
+      kind: "open_record",
+      label: "Schedule job",
+      enabled: true,
+    },
+    secondaryActions: [
+      {
+        kind: "open_record",
+        label: estimate.jobId ? "Open job" : "Open estimate",
+        enabled: true,
+      },
+    ],
+  }));
+}
+
 export type BuildOperationalResolutionQueueInput = {
   queueType: OperationalResolutionQueueType;
   unassignedJobs: DispatchJob[];
@@ -551,6 +598,7 @@ export type BuildOperationalResolutionQueueInput = {
   unsentEstimates: DashboardUnsentEstimatePreview[];
   staleSentEstimates: DashboardStaleSentEstimatePreview[];
   staleSentEstimateThresholdDays: number;
+  acceptedEstimatesNeedingScheduling: DashboardAcceptedEstimateSchedulingPreview[];
   leadFollowUps: DashboardLeadFollowUpPreview[];
   stalledJobs: StalledJobEntry[];
   stalledJobInactivityThresholdDays: number;
@@ -575,6 +623,7 @@ export function buildOperationalResolutionQueue(
     unsentEstimates,
     staleSentEstimates,
     leadFollowUps,
+    acceptedEstimatesNeedingScheduling,
     stalledJobs,
     stalledJobInactivityThresholdDays,
     technicians,
@@ -609,6 +658,11 @@ export function buildOperationalResolutionQueue(
       break;
     case "stale_sent_estimate":
       items = buildStaleSentEstimateItems(staleSentEstimates, access);
+      break;
+    case "accepted_estimate_scheduling":
+      items = buildAcceptedEstimateSchedulingItems(
+        acceptedEstimatesNeedingScheduling,
+      );
       break;
     case "needs_review":
       items = buildNeedsReviewItems(completedWorkReviewJobs);

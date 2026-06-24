@@ -1,5 +1,10 @@
 import { buildDispatchPressureSnapshot } from "@/shared/lib/dashboard-dispatch-pressure";
 import {
+  formatAcceptedEstimateSchedulingDescription,
+  formatAcceptedEstimateSchedulingListHref,
+  formatAcceptedEstimateSchedulingTitle,
+} from "@/shared/lib/accepted-estimate-scheduling";
+import {
   DISPATCH_PAGE_TODAY_HREF,
   DISPATCH_PAGE_UNASSIGNED_HREF,
 } from "@/shared/lib/dispatch-page-focus";
@@ -253,6 +258,7 @@ function buildActionRows(
     officeReviewQueue,
     stalledJobs,
     leadFollowUp,
+    acceptedEstimatesNeedingScheduling,
   } = data;
   const rows: NorthStarBoardRow[] = [];
 
@@ -290,6 +296,23 @@ function buildActionRows(
       kind: "queue",
       queueType: "ready_to_invoice",
       href: "/reports?queue=invoicing",
+    });
+  }
+
+  if (
+    access.canViewBilling &&
+    acceptedEstimatesNeedingScheduling.count > 0
+  ) {
+    const count = acceptedEstimatesNeedingScheduling.count;
+    push({
+      id: "accepted-estimates-scheduling",
+      title: formatAcceptedEstimateSchedulingTitle(count),
+      meta: formatAcceptedEstimateSchedulingDescription(count),
+      count,
+      severity: count >= 3 ? "warning" : "info",
+      kind: "queue",
+      queueType: "accepted_estimate_scheduling",
+      href: formatAcceptedEstimateSchedulingListHref(count),
     });
   }
 
@@ -451,19 +474,6 @@ function buildMoneyRows(
       severity: "info",
       kind: "link",
       href: INVOICE_PAGE_CASH_FLOW_HREF,
-    });
-  }
-
-  if (money.approvedEstimates.length > 0) {
-    push({
-      id: "approved-estimates",
-      title: "Approved estimates",
-      meta: `${money.approvedEstimates.length} ready to convert`,
-      count: money.approvedEstimates.length,
-      progress: resolveProgress(money.approvedEstimates.length),
-      severity: "info",
-      kind: "link",
-      href: "/estimates?status=approved",
     });
   }
 

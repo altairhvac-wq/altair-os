@@ -468,6 +468,21 @@ export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
       },
     ],
   },
+  acceptedEstimatesNeedingScheduling: {
+    count: 1,
+    estimates: [
+      {
+        id: "est-demo-approved-1",
+        estimateNumber: "EST-DEMO-301",
+        customerName: "Roy Residence",
+        total: 1840,
+        approvedAt: "2026-06-23T14:00:00.000Z",
+        jobId: "job-demo-1010",
+        jobNumber: "JOB-DEMO-1010",
+        openHref: "/jobs/job-demo-1010",
+      },
+    ],
+  },
   leadFollowUp: {
     count: 2,
     leads: [

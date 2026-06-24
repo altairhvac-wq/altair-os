@@ -83,6 +83,13 @@ export function OperationalResolutionQueueItemAdapter({
           onResolved={onResolved}
         />
       );
+    case "accepted_estimate_scheduling":
+      return (
+        <AcceptedEstimateSchedulingQueueItemAdapter
+          item={item}
+          onResolved={onResolved}
+        />
+      );
     case "needs_review":
       return <NeedsReviewQueueItemAdapter item={item} />;
     case "lead_follow_up":
@@ -92,6 +99,34 @@ export function OperationalResolutionQueueItemAdapter({
     default:
       return null;
   }
+}
+
+function AcceptedEstimateSchedulingQueueItemAdapter({
+  item,
+  onResolved,
+}: {
+  item: Extract<
+    OperationalResolutionQueueItem,
+    { queueType: "accepted_estimate_scheduling" }
+  >;
+  onResolved: (itemId: string) => void;
+}) {
+  return (
+    <OperationalResolutionQueueItemView item={item}>
+      {item.openHref ? (
+        <MobileActionButton
+          label={item.primaryAction.label}
+          href={item.openHref}
+          onClick={() => onResolved(item.id)}
+        />
+      ) : null}
+      <MobileActionButton
+        label={item.secondaryActions[0]?.label ?? "Open estimate"}
+        href={`/estimates/${item.estimate.id}`}
+        variant="secondary"
+      />
+    </OperationalResolutionQueueItemView>
+  );
 }
 
 function StalledJobQueueItemAdapter({

@@ -1,3 +1,4 @@
+import { formatAcceptedEstimateSchedulingDescription } from "@/shared/lib/accepted-estimate-scheduling";
 import { buildOperationalMomentumSnapshot } from "@/shared/lib/dashboard-operational-momentum";
 import { formatTimeInTimeZone } from "@/shared/lib/datetime";
 import type { DashboardData } from "@/shared/types/dashboard";
@@ -53,14 +54,16 @@ function pluralize(
 }
 
 function buildPulseMetrics(data: DashboardData): NorthStarPulseMetric[] {
-  const { access, money, operations, operationalHealth } = data;
+  const {
+    access,
+    money,
+    operations,
+    operationalHealth,
+    acceptedEstimatesNeedingScheduling,
+  } = data;
 
   if (access.canViewBilling) {
-    const approvedCount = money.approvedEstimates.length;
-    const approvedTotal = money.approvedEstimates.reduce(
-      (sum, estimate) => sum + estimate.total,
-      0,
-    );
+    const schedulingCount = acceptedEstimatesNeedingScheduling.count;
 
     return [
       {
@@ -91,13 +94,13 @@ function buildPulseMetrics(data: DashboardData): NorthStarPulseMetric[] {
             : "Nothing overdue",
       },
       {
-        id: "approved-estimates",
-        label: "Approved estimates",
-        value: String(approvedCount),
+        id: "accepted-estimates-scheduling",
+        label: "Schedule work",
+        value: schedulingCount > 0 ? String(schedulingCount) : "Clear",
         delta:
-          approvedCount > 0
-            ? `${formatCurrency(approvedTotal)} ready to convert`
-            : "None ready to convert",
+          schedulingCount > 0
+            ? formatAcceptedEstimateSchedulingDescription(schedulingCount)
+            : "No accepted work waiting",
       },
     ];
   }
