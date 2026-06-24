@@ -78,6 +78,8 @@ export function OperationalResolutionQueueSheet({
         staleSentEstimateThresholdDays: sheetData.staleSentEstimateThresholdDays,
         acceptedEstimatesNeedingScheduling:
           sheetData.acceptedEstimatesNeedingScheduling,
+        newLeadsNeedingContact: sheetData.newLeadsNeedingContact,
+        leadsReadyForEstimate: sheetData.leadsReadyForEstimate,
         leadFollowUps: sheetData.leadFollowUps,
         stalledJobs: sheetData.stalledJobs,
         stalledJobInactivityThresholdDays:

@@ -14,7 +14,8 @@ export type OperationalSignalId =
   | "ready_to_invoice"
   | "unassigned_jobs"
   | "accepted_estimates_scheduling"
-  | "lead_follow_up"
+  | "new_lead_contact"
+  | "lead_estimate_ready"
   | "stale_sent_estimates";
 
 export type OperationalSignal = {
@@ -31,8 +32,9 @@ export const OPERATIONAL_SIGNAL_PRIORITY_SCORES = {
   ready_to_invoice: 90,
   unassigned_jobs: 85,
   accepted_estimates_scheduling: 72,
-  lead_follow_up: 50,
+  new_lead_contact: 58,
   stale_sent_estimates: 55,
+  lead_estimate_ready: 52,
 } as const;
 
 export type OperationalSignalsInput = Pick<
@@ -42,7 +44,8 @@ export type OperationalSignalsInput = Pick<
   | "operations"
   | "completedWorkAwaitingInvoicing"
   | "acceptedEstimatesNeedingScheduling"
-  | "leadFollowUp"
+  | "newLeadsNeedingContact"
+  | "leadsReadyForEstimate"
 >;
 
 function pluralize(
@@ -123,15 +126,29 @@ export function buildOperationalSignals(
 
   if (
     dashboardData.access.canManageCustomers &&
-    dashboardData.leadFollowUp.count > 0
+    dashboardData.newLeadsNeedingContact.count > 0
   ) {
     signals.push({
-      id: "lead_follow_up",
+      id: "new_lead_contact",
       category: "lead",
       severity:
-        dashboardData.leadFollowUp.count >= 5 ? "critical" : "warning",
-      count: dashboardData.leadFollowUp.count,
-      priorityScore: OPERATIONAL_SIGNAL_PRIORITY_SCORES.lead_follow_up,
+        dashboardData.newLeadsNeedingContact.count >= 3 ? "critical" : "warning",
+      count: dashboardData.newLeadsNeedingContact.count,
+      priorityScore: OPERATIONAL_SIGNAL_PRIORITY_SCORES.new_lead_contact,
+    });
+  }
+
+  if (
+    dashboardData.access.canManageCustomers &&
+    dashboardData.leadsReadyForEstimate.count > 0
+  ) {
+    signals.push({
+      id: "lead_estimate_ready",
+      category: "lead",
+      severity:
+        dashboardData.leadsReadyForEstimate.count >= 5 ? "warning" : "info",
+      count: dashboardData.leadsReadyForEstimate.count,
+      priorityScore: OPERATIONAL_SIGNAL_PRIORITY_SCORES.lead_estimate_ready,
     });
   }
 
@@ -158,6 +175,18 @@ export function formatStaleSentEstimatesSignalDescription(count: number): string
   return `${count} sent ${pluralize(count, "estimate")} awaiting follow-up — ${ESTIMATE_RECOVERY_THRESHOLD_DAYS}+ days since sent`;
 }
 
-export function formatLeadFollowUpSignalDescription(count: number): string {
-  return `${count} ${pluralize(count, "lead")} need follow-up today`;
+export function formatNewLeadContactSignalDescription(count: number): string {
+  if (count === 1) {
+    return "New lead waiting for first contact";
+  }
+
+  return `${count} new ${pluralize(count, "lead")} waiting for first contact`;
+}
+
+export function formatLeadEstimateReadySignalDescription(count: number): string {
+  if (count === 1) {
+    return "Qualified lead ready for an estimate";
+  }
+
+  return `${count} qualified ${pluralize(count, "lead")} need estimates prepared`;
 }

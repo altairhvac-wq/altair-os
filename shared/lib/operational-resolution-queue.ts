@@ -2,8 +2,15 @@ import type { CompanyAccessScope } from "@/lib/database/access-control";
 import { INVOICE_PAGE_DRAFT_HREF } from "@/shared/lib/invoice-page-focus";
 import type { MobileActionSeverity } from "@/shared/lib/mobile-action-dashboard";
 import { formatLeadFollowUpQueueTitle } from "@/shared/lib/leads/lead-status";
+import {
+  formatLeadEstimateReadyQueueTitle,
+  formatNewLeadContactQueueTitle,
+  LEADS_NEEDS_CONTACT_QUEUE_HREF,
+  LEADS_QUALIFIED_QUEUE_HREF,
+} from "@/shared/lib/lead-dashboard-attention";
 import type {
   DashboardAcceptedEstimateSchedulingPreview,
+  DashboardLeadAttentionPreview,
   DashboardLeadFollowUpPreview,
   DashboardOverdueInvoicePreview,
   DashboardStaleSentEstimatePreview,
@@ -33,7 +40,9 @@ export type OperationalResolutionQueueType =
   | "accepted_estimate_scheduling"
   | "needs_review"
   | "stalled_job"
-  | "lead_follow_up";
+  | "lead_follow_up"
+  | "new_lead_contact"
+  | "lead_estimate_ready";
 
 export type OperationalResolutionActionKind =
   | "assign_technician"
@@ -112,6 +121,16 @@ export type LeadFollowUpQueueItem = OperationalResolutionQueueItemBase & {
   lead: DashboardLeadFollowUpPreview;
 };
 
+export type NewLeadContactQueueItem = OperationalResolutionQueueItemBase & {
+  queueType: "new_lead_contact";
+  lead: DashboardLeadAttentionPreview;
+};
+
+export type LeadEstimateReadyQueueItem = OperationalResolutionQueueItemBase & {
+  queueType: "lead_estimate_ready";
+  lead: DashboardLeadAttentionPreview;
+};
+
 export type StalledJobQueueItem = OperationalResolutionQueueItemBase & {
   queueType: "stalled_job";
   entry: StalledJobEntry;
@@ -127,6 +146,8 @@ export type OperationalResolutionQueueItem =
   | AcceptedEstimateSchedulingQueueItem
   | NeedsReviewQueueItem
   | LeadFollowUpQueueItem
+  | NewLeadContactQueueItem
+  | LeadEstimateReadyQueueItem
   | StalledJobQueueItem;
 
 export type OperationalResolutionQueueSheetData = {
@@ -238,6 +259,22 @@ const QUEUE_PRESENTATION: Record<
     relatedLabel: "Open leads",
     icon: "users",
     iconClassName: "bg-cyan-100 text-cyan-700",
+  },
+  new_lead_contact: {
+    completionTitle: "New leads contacted",
+    completionSubtitle: "No new leads waiting for first contact in this preview.",
+    relatedHref: LEADS_NEEDS_CONTACT_QUEUE_HREF,
+    relatedLabel: "Open needs-contact queue",
+    icon: "users",
+    iconClassName: "bg-sky-100 text-sky-700",
+  },
+  lead_estimate_ready: {
+    completionTitle: "Lead estimates prepared",
+    completionSubtitle: "No qualified leads waiting for estimates in this preview.",
+    relatedHref: LEADS_QUALIFIED_QUEUE_HREF,
+    relatedLabel: "Open qualified queue",
+    icon: "clipboard",
+    iconClassName: "bg-violet-100 text-violet-700",
   },
 };
 
@@ -492,6 +529,86 @@ function buildLeadFollowUpItems(
   }));
 }
 
+function formatLeadAgeLabel(createdAt: string): string {
+  const createdMs = Date.parse(createdAt);
+  if (!Number.isFinite(createdMs)) {
+    return "New lead";
+  }
+
+  const days = Math.max(
+    0,
+    Math.floor((Date.now() - createdMs) / (1000 * 60 * 60 * 24)),
+  );
+
+  if (days === 0) {
+    return "Added today";
+  }
+
+  return `${days}d old`;
+}
+
+function buildNewLeadContactItems(
+  leads: DashboardLeadAttentionPreview[],
+  access: CompanyAccessScope,
+): NewLeadContactQueueItem[] {
+  const canManage = access.canManageCustomers;
+
+  return leads.map((lead) => ({
+    id: lead.id,
+    queueType: "new_lead_contact",
+    title: formatNewLeadContactQueueTitle(lead),
+    subtitle: lead.phone || lead.email || undefined,
+    meta: `${formatLeadAgeLabel(lead.createdAt)} · ${lead.sourceLabel}`,
+    severity: "warning",
+    openHref: lead.openHref,
+    lead,
+    primaryAction: {
+      kind: "open_lead",
+      label: "Contact lead",
+      enabled: canManage,
+    },
+    secondaryActions: lead.phone
+      ? [
+          {
+            kind: "open_record",
+            label: "Call lead",
+            enabled: true,
+          },
+        ]
+      : [],
+  }));
+}
+
+function buildLeadEstimateReadyItems(
+  leads: DashboardLeadAttentionPreview[],
+  access: CompanyAccessScope,
+): LeadEstimateReadyQueueItem[] {
+  const canManage = access.canManageCustomers;
+
+  return leads.map((lead) => ({
+    id: lead.id,
+    queueType: "lead_estimate_ready",
+    title: formatLeadEstimateReadyQueueTitle(lead),
+    subtitle: lead.phone || lead.email || undefined,
+    meta: `${formatLeadAgeLabel(lead.createdAt)} · ${lead.sourceLabel}`,
+    severity: "info",
+    openHref: lead.openHref,
+    lead,
+    primaryAction: {
+      kind: "open_lead",
+      label: "Prepare estimate",
+      enabled: canManage,
+    },
+    secondaryActions: [
+      {
+        kind: "open_record",
+        label: "Open lead",
+        enabled: canManage,
+      },
+    ],
+  }));
+}
+
 function buildUnsentEstimateItems(
   estimates: DashboardUnsentEstimatePreview[],
   access: CompanyAccessScope,
@@ -599,6 +716,8 @@ export type BuildOperationalResolutionQueueInput = {
   staleSentEstimates: DashboardStaleSentEstimatePreview[];
   staleSentEstimateThresholdDays: number;
   acceptedEstimatesNeedingScheduling: DashboardAcceptedEstimateSchedulingPreview[];
+  newLeadsNeedingContact: DashboardLeadAttentionPreview[];
+  leadsReadyForEstimate: DashboardLeadAttentionPreview[];
   leadFollowUps: DashboardLeadFollowUpPreview[];
   stalledJobs: StalledJobEntry[];
   stalledJobInactivityThresholdDays: number;
@@ -623,6 +742,8 @@ export function buildOperationalResolutionQueue(
     unsentEstimates,
     staleSentEstimates,
     leadFollowUps,
+    newLeadsNeedingContact,
+    leadsReadyForEstimate,
     acceptedEstimatesNeedingScheduling,
     stalledJobs,
     stalledJobInactivityThresholdDays,
@@ -669,6 +790,12 @@ export function buildOperationalResolutionQueue(
       break;
     case "lead_follow_up":
       items = buildLeadFollowUpItems(leadFollowUps, access);
+      break;
+    case "new_lead_contact":
+      items = buildNewLeadContactItems(newLeadsNeedingContact, access);
+      break;
+    case "lead_estimate_ready":
+      items = buildLeadEstimateReadyItems(leadsReadyForEstimate, access);
       break;
     case "stalled_job":
       items = buildStalledJobItems(

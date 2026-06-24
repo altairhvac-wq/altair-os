@@ -185,6 +185,25 @@ export type DashboardLeadFollowUpSnapshot = {
   leads: DashboardLeadFollowUpPreview[];
 };
 
+export type DashboardLeadAttentionPreview = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  companyName?: string;
+  phone: string;
+  email: string;
+  status: string;
+  createdAt: string;
+  sourceLabel: string;
+  nextFollowUpAt?: string;
+  openHref: string;
+};
+
+export type DashboardLeadAttentionSnapshot = {
+  count: number;
+  leads: DashboardLeadAttentionPreview[];
+};
+
 export type DashboardLeadPipelineSummary = {
   totalLeads: number;
   followUpsDue: number;
@@ -208,6 +227,8 @@ export type DashboardData = {
   completedWorkAwaitingInvoicing: DashboardCompletedWorkAwaitingInvoicingSnapshot;
   completedWorkReview: DashboardCompletedWorkReviewSnapshot;
   acceptedEstimatesNeedingScheduling: DashboardAcceptedEstimatesNeedingSchedulingSnapshot;
+  newLeadsNeedingContact: DashboardLeadAttentionSnapshot;
+  leadsReadyForEstimate: DashboardLeadAttentionSnapshot;
   leadFollowUp: DashboardLeadFollowUpSnapshot;
   leadPipelineSummary: DashboardLeadPipelineSummary;
   operationalInsights: DailyOperationsSummary;

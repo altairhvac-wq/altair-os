@@ -94,6 +94,14 @@ export function OperationalResolutionQueueItemAdapter({
       return <NeedsReviewQueueItemAdapter item={item} />;
     case "lead_follow_up":
       return <LeadFollowUpQueueItemAdapter item={item} onResolved={onResolved} />;
+    case "new_lead_contact":
+      return (
+        <LeadAttentionQueueItemAdapter item={item} onResolved={onResolved} />
+      );
+    case "lead_estimate_ready":
+      return (
+        <LeadAttentionQueueItemAdapter item={item} onResolved={onResolved} />
+      );
     case "stalled_job":
       return <StalledJobQueueItemAdapter item={item} onResolved={onResolved} />;
     default:
@@ -163,6 +171,36 @@ function LeadFollowUpQueueItemAdapter({
   onResolved,
 }: {
   item: Extract<OperationalResolutionQueueItem, { queueType: "lead_follow_up" }>;
+  onResolved: (itemId: string) => void;
+}) {
+  return (
+    <OperationalResolutionQueueItemView item={item}>
+      {item.openHref ? (
+        <MobileActionButton
+          label={item.primaryAction.label}
+          href={item.openHref}
+          onClick={() => onResolved(item.id)}
+        />
+      ) : null}
+      {item.lead.phone ? (
+        <MobileActionButton
+          label="Call lead"
+          href={`tel:${item.lead.phone}`}
+          variant="secondary"
+        />
+      ) : null}
+    </OperationalResolutionQueueItemView>
+  );
+}
+
+function LeadAttentionQueueItemAdapter({
+  item,
+  onResolved,
+}: {
+  item: Extract<
+    OperationalResolutionQueueItem,
+    { queueType: "new_lead_contact" | "lead_estimate_ready" }
+  >;
   onResolved: (itemId: string) => void;
 }) {
   return (

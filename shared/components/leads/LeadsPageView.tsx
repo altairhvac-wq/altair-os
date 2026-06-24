@@ -53,6 +53,7 @@ type LeadsPageViewProps = {
   initialCreate?: boolean;
   initialStatusFilter?: LeadStatus;
   initialFollowUpDue?: boolean;
+  initialWorkQueue?: LeadWorkQueue;
 };
 
 function filterLeads(
@@ -98,13 +99,18 @@ export function LeadsPageView({
   initialCreate = false,
   initialStatusFilter,
   initialFollowUpDue = false,
+  initialWorkQueue,
 }: LeadsPageViewProps) {
   const router = useRouter();
   const timeZone = useCompanyTimezone();
   const [leads, setLeads] = useState(initialLeads);
   const [search, setSearch] = useState("");
   const [workQueue, setWorkQueue] = useState<LeadWorkQueue>(() =>
-    resolveInitialLeadWorkQueue(initialStatusFilter, initialFollowUpDue),
+    resolveInitialLeadWorkQueue(
+      initialStatusFilter,
+      initialFollowUpDue,
+      initialWorkQueue,
+    ),
   );
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">(
     initialStatusFilter ?? "all",

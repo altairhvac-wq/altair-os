@@ -7,7 +7,8 @@ import {
 import {
   buildOperationalSignals,
   findOperationalSignal,
-  formatLeadFollowUpSignalDescription,
+  formatLeadEstimateReadySignalDescription,
+  formatNewLeadContactSignalDescription,
   formatStaleSentEstimatesSignalDescription,
   type OperationalSignal,
 } from "@/shared/lib/operational-signals";
@@ -22,6 +23,10 @@ import type {
 import type { DispatchJob, DispatchJobPriority } from "@/shared/types/dispatch";
 import type { DispatchTechnicianRecommendation } from "@/shared/types/dispatch-recommendations";
 import type { OfficeReviewQueueReport } from "@/shared/types/office-review-queue";
+import {
+  formatLeadEstimateReadyTitle,
+  formatNewLeadContactTitle,
+} from "@/shared/lib/lead-dashboard-attention";
 import { formatCurrency } from "@/shared/types/customer";
 
 /** Transparent base scores — higher means higher office priority. */
@@ -31,9 +36,10 @@ export const OFFICE_PRIORITY_BASE_SCORES = {
   unassigned_emergency: 85,
   unassigned_normal: 70,
   accepted_estimates_scheduling: 72,
-  draft_invoices: 65,
-  lead_follow_up: 50,
+  new_lead_contact: 58,
   stale_sent_estimates: 55,
+  lead_estimate_ready: 52,
+  draft_invoices: 65,
   draft_estimates: 45,
   needs_review: 40,
 } as const;
@@ -52,7 +58,8 @@ export type OfficePriorityActionType =
   | "follow_up_sent_estimates"
   | "assign_job"
   | "schedule_accepted_estimates"
-  | "follow_up_leads"
+  | "contact_new_leads"
+  | "prepare_lead_estimates"
   | "review_completed_jobs";
 
 export type OfficePriorityRecommendation = {
@@ -85,7 +92,8 @@ export type OfficePriorityEngineInput = Pick<
   | "officeReviewQueue"
   | "assignableTechnicians"
   | "technicians"
-  | "leadFollowUp"
+  | "newLeadsNeedingContact"
+  | "leadsReadyForEstimate"
 >;
 
 const EMERGENCY_PRIORITIES = new Set<DispatchJobPriority>(["urgent", "high"]);
@@ -309,7 +317,7 @@ function buildAcceptedEstimateSchedulingCandidate(
   };
 }
 
-function buildLeadFollowUpCandidate(
+function buildNewLeadContactCandidate(
   input: OfficePriorityEngineInput,
   signals: OperationalSignal[],
 ): OfficePriorityRecommendation | null {
@@ -317,7 +325,7 @@ function buildLeadFollowUpCandidate(
     return null;
   }
 
-  const signal = findOperationalSignal(signals, "lead_follow_up");
+  const signal = findOperationalSignal(signals, "new_lead_contact");
   if (!signal) {
     return null;
   }
@@ -325,15 +333,44 @@ function buildLeadFollowUpCandidate(
   const count = signal.count;
 
   return {
-    id: "lead-follow-up",
+    id: "new-lead-contact",
     priority: 0,
-    title: `Follow up with ${count} ${pluralize(count, "lead")}`,
-    description: formatLeadFollowUpSignalDescription(count),
-    reason: `${OFFICE_PRIORITY_BASE_SCORES.lead_follow_up} priority — overdue lead follow-ups slow pipeline conversion and booking.`,
+    title: formatNewLeadContactTitle(count),
+    description: formatNewLeadContactSignalDescription(count),
+    reason: `${OFFICE_PRIORITY_BASE_SCORES.new_lead_contact} priority — new leads lose value quickly without first contact.`,
     impactCategory: "revenue_capture",
-    score: OFFICE_PRIORITY_BASE_SCORES.lead_follow_up,
-    actionType: "follow_up_leads",
-    relatedQueue: "lead_follow_up",
+    score: OFFICE_PRIORITY_BASE_SCORES.new_lead_contact,
+    actionType: "contact_new_leads",
+    relatedQueue: "new_lead_contact",
+    count,
+  };
+}
+
+function buildLeadEstimateReadyCandidate(
+  input: OfficePriorityEngineInput,
+  signals: OperationalSignal[],
+): OfficePriorityRecommendation | null {
+  if (!input.access.canManageCustomers) {
+    return null;
+  }
+
+  const signal = findOperationalSignal(signals, "lead_estimate_ready");
+  if (!signal) {
+    return null;
+  }
+
+  const count = signal.count;
+
+  return {
+    id: "lead-estimate-ready",
+    priority: 0,
+    title: formatLeadEstimateReadyTitle(count),
+    description: formatLeadEstimateReadySignalDescription(count),
+    reason: `${OFFICE_PRIORITY_BASE_SCORES.lead_estimate_ready} priority — qualified leads waiting for estimates delay the sales path to booked work.`,
+    impactCategory: "revenue_capture",
+    score: OFFICE_PRIORITY_BASE_SCORES.lead_estimate_ready,
+    actionType: "prepare_lead_estimates",
+    relatedQueue: "lead_estimate_ready",
     count,
   };
 }
@@ -484,7 +521,8 @@ const CANDIDATE_BUILDERS: ((
   buildReadyToInvoiceCandidate,
   buildUnassignedJobCandidate,
   buildAcceptedEstimateSchedulingCandidate,
-  buildLeadFollowUpCandidate,
+  buildNewLeadContactCandidate,
+  buildLeadEstimateReadyCandidate,
   buildDraftInvoicesCandidate,
   buildStaleSentEstimatesCandidate,
   buildDraftEstimatesCandidate,
@@ -583,7 +621,8 @@ export type OfficePriorityEngineSnapshot = {
   >;
   completedWorkReview: Pick<DashboardCompletedWorkReviewSnapshot, "count">;
   officeReviewQueue: Pick<OfficeReviewQueueReport, "summary">;
-  leadFollowUp: Pick<DashboardData["leadFollowUp"], "count">;
+  newLeadsNeedingContact: Pick<DashboardData["newLeadsNeedingContact"], "count">;
+  leadsReadyForEstimate: Pick<DashboardData["leadsReadyForEstimate"], "count">;
 };
 
 /** Lightweight counts for diagnostics or future analytics hooks. */
@@ -605,7 +644,8 @@ export function summarizeOfficePriorityInputs(
     draftInvoices: input.money.unsentInvoiceCount,
     draftEstimates: input.money.unsentEstimateCount,
     staleSentEstimates: input.money.staleSentEstimateCount,
-    leadFollowUps: input.leadFollowUp.count,
+    newLeadsNeedingContact: input.newLeadsNeedingContact.count,
+    leadsReadyForEstimate: input.leadsReadyForEstimate.count,
     needsReview,
   };
 }

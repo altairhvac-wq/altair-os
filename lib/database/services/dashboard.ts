@@ -7,6 +7,11 @@ import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import { listDispatchJobsForToday } from "@/lib/database/queries/dispatch";
 import { listLeads } from "@/lib/database/queries/leads";
 import {
+  buildLeadDashboardAttentionPreview,
+  selectLeadsNewNeedingFirstContact,
+  selectLeadsReadyForEstimatePreparation,
+} from "@/shared/lib/lead-dashboard-attention";
+import {
   buildLeadPipelineMetrics,
   EMPTY_LEAD_PIPELINE_METRICS,
   selectLeadsNeedingFollowUp,
@@ -71,9 +76,15 @@ const UNSENT_INVOICES_DASHBOARD_LIMIT = 10;
 const UNSENT_ESTIMATES_DASHBOARD_LIMIT = 10;
 const STALE_SENT_ESTIMATES_DASHBOARD_LIMIT = 10;
 const ACCEPTED_ESTIMATES_SCHEDULING_LIMIT = 10;
+const LEAD_ATTENTION_DASHBOARD_LIMIT = 10;
 const LEAD_FOLLOW_UP_DASHBOARD_LIMIT = 10;
 /** Match Reports default lead pipeline period. */
 const DASHBOARD_LEAD_PIPELINE_DATE_RANGE = "30d" as const;
+
+const EMPTY_LEAD_ATTENTION: DashboardData["newLeadsNeedingContact"] = {
+  count: 0,
+  leads: [],
+};
 
 const EMPTY_LEAD_FOLLOW_UP: DashboardData["leadFollowUp"] = {
   count: 0,
@@ -406,6 +417,16 @@ export async function getDashboardData(
         timeZone: context.company.timezone,
       })
     : [];
+  const newLeadsNeedingContactAll = access.canManageCustomers
+    ? selectLeadsNewNeedingFirstContact(leads, {
+        timeZone: context.company.timezone,
+      })
+    : [];
+  const leadsReadyForEstimateAll = access.canManageCustomers
+    ? selectLeadsReadyForEstimatePreparation(leads, {
+        timeZone: context.company.timezone,
+      })
+    : [];
   const hasActiveLeads = access.canManageCustomers
     ? leads.some((lead) => !lead.deletedAt && !lead.archivedAt)
     : false;
@@ -621,6 +642,22 @@ export async function getDashboardData(
         }
       : { count: 0, jobs: [], resolvedThisWeek: 0 },
     acceptedEstimatesNeedingScheduling,
+    newLeadsNeedingContact: access.canManageCustomers
+      ? {
+          count: newLeadsNeedingContactAll.length,
+          leads: newLeadsNeedingContactAll
+            .slice(0, LEAD_ATTENTION_DASHBOARD_LIMIT)
+            .map(buildLeadDashboardAttentionPreview),
+        }
+      : EMPTY_LEAD_ATTENTION,
+    leadsReadyForEstimate: access.canManageCustomers
+      ? {
+          count: leadsReadyForEstimateAll.length,
+          leads: leadsReadyForEstimateAll
+            .slice(0, LEAD_ATTENTION_DASHBOARD_LIMIT)
+            .map(buildLeadDashboardAttentionPreview),
+        }
+      : EMPTY_LEAD_ATTENTION,
     leadFollowUp: access.canManageCustomers
       ? {
           count: leadPipelineMetrics.followUpsDue,

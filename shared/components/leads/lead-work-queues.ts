@@ -117,10 +117,21 @@ export function countLeadsForWorkQueue(
   return filterLeadsForWorkQueue(leads, queue, timeZone, reference).length;
 }
 
+const LEAD_WORK_QUEUE_SET = new Set<LeadWorkQueue>(LEAD_WORK_QUEUE_ORDER);
+
+export function isLeadWorkQueue(value: string): value is LeadWorkQueue {
+  return LEAD_WORK_QUEUE_SET.has(value as LeadWorkQueue);
+}
+
 export function resolveInitialLeadWorkQueue(
   initialStatusFilter?: LeadStatus,
   initialFollowUpDue = false,
+  initialQueue?: LeadWorkQueue,
 ): LeadWorkQueue {
+  if (initialQueue) {
+    return initialQueue;
+  }
+
   if (initialFollowUpDue) {
     return "needs-contact";
   }

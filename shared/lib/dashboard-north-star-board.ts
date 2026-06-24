@@ -14,6 +14,14 @@ import {
   INVOICE_PAGE_OVERDUE_HREF,
   INVOICE_PAGE_UNPAID_HREF,
 } from "@/shared/lib/invoice-page-focus";
+import {
+  formatLeadEstimateReadyDescription,
+  formatLeadEstimateReadyTitle,
+  formatNewLeadContactDescription,
+  formatNewLeadContactTitle,
+  LEADS_NEEDS_CONTACT_QUEUE_HREF,
+  LEADS_QUALIFIED_QUEUE_HREF,
+} from "@/shared/lib/lead-dashboard-attention";
 import { buildNorthStarHeroContent } from "@/shared/lib/dashboard-north-star-hero";
 import type { MobileActionSeverity } from "@/shared/lib/mobile-action-dashboard";
 import type { OperationalResolutionQueueType } from "@/shared/lib/operational-resolution-queue";
@@ -257,7 +265,8 @@ function buildActionRows(
     completedWorkReview,
     officeReviewQueue,
     stalledJobs,
-    leadFollowUp,
+    newLeadsNeedingContact,
+    leadsReadyForEstimate,
     acceptedEstimatesNeedingScheduling,
   } = data;
   const rows: NorthStarBoardRow[] = [];
@@ -369,16 +378,31 @@ function buildActionRows(
     });
   }
 
-  if (access.canManageCustomers && leadFollowUp.count > 0) {
+  if (access.canManageCustomers && newLeadsNeedingContact.count > 0) {
+    const count = newLeadsNeedingContact.count;
     push({
-      id: "lead-follow-up",
-      title: "Lead follow-ups",
-      meta: `${leadFollowUp.count} ${pluralize(leadFollowUp.count, "lead")} due today`,
-      count: leadFollowUp.count,
-      severity: leadFollowUp.count >= 5 ? "critical" : "warning",
+      id: "new-lead-contact",
+      title: formatNewLeadContactTitle(count),
+      meta: formatNewLeadContactDescription(count),
+      count,
+      severity: count >= 3 ? "critical" : "warning",
       kind: "queue",
-      queueType: "lead_follow_up",
-      href: "/leads?filter=follow_up_due",
+      queueType: "new_lead_contact",
+      href: LEADS_NEEDS_CONTACT_QUEUE_HREF,
+    });
+  }
+
+  if (access.canManageCustomers && leadsReadyForEstimate.count > 0) {
+    const count = leadsReadyForEstimate.count;
+    push({
+      id: "lead-estimate-ready",
+      title: formatLeadEstimateReadyTitle(count),
+      meta: formatLeadEstimateReadyDescription(count),
+      count,
+      severity: count >= 5 ? "warning" : "info",
+      kind: "queue",
+      queueType: "lead_estimate_ready",
+      href: LEADS_QUALIFIED_QUEUE_HREF,
     });
   }
 
@@ -616,15 +640,7 @@ function buildMoneyContent(
         }
       : null;
 
-  const leadOpportunityInset =
-    access.canManageCustomers && data.leadPipelineSummary.followUpsDue > 0
-      ? {
-          label: "Lead opportunity",
-          amount: String(data.leadPipelineSummary.followUpsDue),
-          meta: `${data.leadPipelineSummary.totalLeads} active leads · follow-ups due`,
-          href: "/leads?filter=follow_up_due",
-        }
-      : null;
+  const leadOpportunityInset = null;
 
   return {
     rows,

@@ -14,9 +14,18 @@ import {
   INVOICE_PAGE_DRAFT_HREF,
   INVOICE_PAGE_OVERDUE_HREF,
 } from "@/shared/lib/invoice-page-focus";
+import {
+  formatLeadEstimateReadyDescription,
+  formatLeadEstimateReadyTitle,
+  formatNewLeadContactDescription,
+  formatNewLeadContactTitle,
+  LEADS_NEEDS_CONTACT_QUEUE_HREF,
+  LEADS_QUALIFIED_QUEUE_HREF,
+} from "@/shared/lib/lead-dashboard-attention";
 import type {
   DashboardData,
   DashboardAcceptedEstimateSchedulingPreview,
+  DashboardLeadAttentionPreview,
   DashboardLeadFollowUpPreview,
   DashboardOverdueInvoicePreview,
   DashboardTechnicianStatus,
@@ -64,6 +73,8 @@ export type MobileActionSheetData = {
   staleSentEstimates: DashboardStaleSentEstimatePreview[];
   staleSentEstimateThresholdDays: number;
   acceptedEstimatesNeedingScheduling: DashboardAcceptedEstimateSchedulingPreview[];
+  newLeadsNeedingContact: DashboardLeadAttentionPreview[];
+  leadsReadyForEstimate: DashboardLeadAttentionPreview[];
   leadFollowUps: DashboardLeadFollowUpPreview[];
   stalledJobs: StalledJobEntry[];
   stalledJobInactivityThresholdDays: number;
@@ -126,8 +137,10 @@ function buildDescription(
     }
     case "expense-approvals":
       return `${count} ${pluralize(count, "receipt", "receipts")} waiting for approval`;
-    case "lead-follow-up":
-      return `${count} ${pluralize(count, "lead")} with follow-up due today`;
+    case "lead-new-contact":
+      return formatNewLeadContactDescription(count);
+    case "lead-estimate-ready":
+      return formatLeadEstimateReadyDescription(count);
     case "accepted-estimates-scheduling":
       return formatAcceptedEstimateSchedulingDescription(count);
     case "unread-notifications":
@@ -147,6 +160,8 @@ const PRIMARY_IDS = new Set([
   "estimates-awaiting-approval",
   "stalled-jobs",
   "accepted-estimates-scheduling",
+  "lead-new-contact",
+  "lead-estimate-ready",
   "expense-approvals",
   "lead-follow-up",
 ]);
@@ -178,7 +193,8 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
     expenses,
     stalledJobs,
     notifications,
-    leadFollowUp,
+    newLeadsNeedingContact,
+    leadsReadyForEstimate,
     acceptedEstimatesNeedingScheduling,
   } = data;
   const cards: MobileActionCard[] = [];
@@ -188,20 +204,41 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
     staleSentEstimateThresholdDays: money.staleSentEstimateThresholdDays,
   };
 
-  if (access.canManageCustomers && leadFollowUp.count > 0) {
+  if (access.canManageCustomers && newLeadsNeedingContact.count > 0) {
+    const count = newLeadsNeedingContact.count;
     cards.push({
-      id: "lead-follow-up",
-      label: "Lead follow-up",
-      count: leadFollowUp.count,
-      severity: leadFollowUp.count >= 5 ? "critical" : "warning",
+      id: "lead-new-contact",
+      label: formatNewLeadContactTitle(count),
+      count,
+      severity: count >= 3 ? "critical" : "warning",
       description: buildDescription(
-        "lead-follow-up",
-        leadFollowUp.count,
+        "lead-new-contact",
+        count,
         descriptionContext,
       ),
       category: "critical-operations",
-      queueType: "lead_follow_up",
-      href: "/leads?filter=follow_up_due",
+      queueType: "new_lead_contact",
+      href: LEADS_NEEDS_CONTACT_QUEUE_HREF,
+      panelId: "attention",
+      canFix: access.canManageCustomers,
+    });
+  }
+
+  if (access.canManageCustomers && leadsReadyForEstimate.count > 0) {
+    const count = leadsReadyForEstimate.count;
+    cards.push({
+      id: "lead-estimate-ready",
+      label: formatLeadEstimateReadyTitle(count),
+      count,
+      severity: count >= 5 ? "warning" : "info",
+      description: buildDescription(
+        "lead-estimate-ready",
+        count,
+        descriptionContext,
+      ),
+      category: "critical-operations",
+      queueType: "lead_estimate_ready",
+      href: LEADS_QUALIFIED_QUEUE_HREF,
       panelId: "attention",
       canFix: access.canManageCustomers,
     });
@@ -504,6 +541,8 @@ export function buildMobileActionSheetData(
     staleSentEstimateThresholdDays: data.money.staleSentEstimateThresholdDays,
     acceptedEstimatesNeedingScheduling:
       data.acceptedEstimatesNeedingScheduling.estimates,
+    newLeadsNeedingContact: data.newLeadsNeedingContact.leads,
+    leadsReadyForEstimate: data.leadsReadyForEstimate.leads,
     leadFollowUps: data.leadFollowUp.leads,
     stalledJobs: data.stalledJobs.stalledJobs,
     stalledJobInactivityThresholdDays: data.stalledJobs.inactivityThresholdDays,

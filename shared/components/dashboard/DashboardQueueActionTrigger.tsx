@@ -42,6 +42,8 @@ function resolveQueueCanFix(
     case "stalled_job":
       return false;
     case "lead_follow_up":
+    case "new_lead_contact":
+    case "lead_estimate_ready":
       return access.canManageCustomers;
     case "overdue_invoice":
     case "ready_to_invoice":
@@ -81,7 +83,9 @@ function resolveActionCard(
       action.queueType === "unassigned_job" ||
       action.queueType === "needs_review" ||
       action.queueType === "stalled_job" ||
-      action.queueType === "lead_follow_up"
+      action.queueType === "lead_follow_up" ||
+      action.queueType === "new_lead_contact" ||
+      action.queueType === "lead_estimate_ready"
         ? "critical-operations"
         : "money-actions",
     queueType: action.queueType,
