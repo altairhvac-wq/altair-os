@@ -90,16 +90,32 @@ const EXPENSE_SELECT = `
 async function generateExpenseNumber(companyId: string): Promise<string> {
   const supabase = await createClient();
 
-  const { count, error } = await supabase
+  const { data, error } = await supabase.rpc("generate_expense_number", {
+    p_company_id: companyId,
+  });
+
+  if (!error && typeof data === "string" && data.trim()) {
+    return data;
+  }
+
+  if (error) {
+    console.error("[generateExpenseNumber] rpc failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+  }
+
+  const { count, error: countError } = await supabase
     .from("expenses")
     .select("*", { count: "exact", head: true })
     .eq("company_id", companyId);
 
-  if (error) {
-    console.error("[generateExpenseNumber] count failed:", {
+  if (countError) {
+    console.error("[generateExpenseNumber] count fallback failed:", {
       companyId,
-      code: error.code,
-      message: error.message,
+      code: countError.code,
+      message: countError.message,
     });
     return `EXP-${Date.now()}`;
   }

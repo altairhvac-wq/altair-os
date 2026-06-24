@@ -1158,6 +1158,12 @@ export type Database = {
         };
         Returns: undefined;
       };
+      generate_expense_number: {
+        Args: {
+          p_company_id: string;
+        };
+        Returns: string;
+      };
       get_public_estimate_approval_view: {
         Args: {
           p_raw_token: string;
