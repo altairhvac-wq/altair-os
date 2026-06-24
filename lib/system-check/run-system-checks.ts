@@ -7,18 +7,42 @@ import { isIntegrationEncryptionConfigured } from "@/lib/integrations/env";
 import { isAlphaHardeningEnabled } from "@/lib/beta/alpha-hardening";
 import { readEmailRecipientOverrideEnv } from "@/lib/email/recipient";
 import { resolveAppBaseUrl } from "@/lib/email/env";
+import { getStripeSecretKey, getStripeWebhookSecret } from "@/lib/payments/env";
 import { isValidEmail } from "@/shared/lib/email-validation";
 import { getCurrentProfile, getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { COMPANY_FILES_BUCKET } from "@/lib/storage/company-files";
-import type { CompanyMembershipInsert } from "@/lib/database/types/core-tables";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  getRepoMigrationCatalog,
+  REQUIRED_DATABASE_MARKERS,
+} from "./migration-catalog";
 import type { SystemCheckReport, SystemCheckResult } from "./types";
 
-const EXPECTED_MIGRATION_COUNT = 46;
-const LATEST_MIGRATION_MARKER = "046_final_beta_rls_hardening";
 const MIGRATION_PROBE_NIL_UUID = "00000000-0000-0000-0000-000000000000";
+
+type MigrationMarkerStatus = "present" | "missing" | "unknown";
+
+type MigrationMarkerResult = {
+  migration: string;
+  label: string;
+  status: MigrationMarkerStatus;
+  detail?: string;
+};
+
+function isDbArtifactMissingError(message: string): boolean {
+  const normalized = message.toLowerCase();
+
+  return (
+    normalized.includes("could not find") ||
+    (normalized.includes("does not exist") &&
+      (normalized.includes("relation") ||
+        normalized.includes("table") ||
+        normalized.includes("function")))
+  );
+}
 
 function buildSummary(checks: SystemCheckResult[]): SystemCheckReport["summary"] {
   return checks.reduce(
@@ -92,7 +116,7 @@ function checkOutboundEmailConfig(): SystemCheckResult {
   if (overrideValue && overrideEnvName && !isValidEmail(overrideValue)) {
     return {
       id: "env-outbound-email",
-      label: "Outbound email (Resend)",
+      label: "Email sending",
       status: "fail",
       message: `${overrideEnvName} is set but is not a valid email address.`,
       hint: "Fix or remove the override env var. Invalid overrides block estimate and invoice sends before Resend is called.",
@@ -104,7 +128,7 @@ function checkOutboundEmailConfig(): SystemCheckResult {
   if (appUrl.ok === false && appUrl.reason === "invalid") {
     return {
       id: "env-outbound-email",
-      label: "Outbound email (Resend)",
+      label: "Email sending",
       status: "fail",
       message: "NEXT_PUBLIC_APP_URL is set but is not a valid URL.",
       hint: "Use a full URL with https:// (for example, https://your-app.vercel.app). Estimate approval links require this.",
@@ -114,7 +138,7 @@ function checkOutboundEmailConfig(): SystemCheckResult {
   if (recipientOverrideEnvs.length > 0 && process.env.NODE_ENV === "production") {
     return {
       id: "env-outbound-email",
-      label: "Outbound email (Resend)",
+      label: "Email sending",
       status: "warn",
       message: `Billing email recipient override is active (${recipientOverrideEnvs.join(", ")}).`,
       hint: "Remove these Vercel env vars so estimate and invoice emails go to customer addresses.",
@@ -124,9 +148,9 @@ function checkOutboundEmailConfig(): SystemCheckResult {
   if (hasApiKey && hasFromEmail) {
     return {
       id: "env-outbound-email",
-      label: "Outbound email (Resend)",
+      label: "Email sending",
       status: "pass",
-      message: "RESEND_API_KEY and RESEND_FROM_EMAIL are configured.",
+      message: "Email sending configured.",
     };
   }
 
@@ -140,10 +164,82 @@ function checkOutboundEmailConfig(): SystemCheckResult {
 
   return {
     id: "env-outbound-email",
-    label: "Outbound email (Resend)",
+    label: "Email sending",
     status: "warn",
-    message: `Outbound email is not fully configured (${missing.join(", ")} missing).`,
+    message: `Email sending is not fully configured (${missing.join(", ")} missing).`,
     hint: "Estimate and invoice sends will stay in draft until email is set up in Vercel env vars.",
+  };
+}
+
+function checkPublicAppUrl(): SystemCheckResult {
+  const appUrl = resolveAppBaseUrl();
+  const explicitAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+  if (appUrl.ok === false && appUrl.reason === "invalid") {
+    return {
+      id: "env-public-app-url",
+      label: "Public app URL",
+      status: "fail",
+      message: "NEXT_PUBLIC_APP_URL is set but is not a valid URL.",
+      hint: "Use a full URL with https:// (for example, https://your-app.vercel.app).",
+    };
+  }
+
+  if (explicitAppUrl && appUrl.ok) {
+    return {
+      id: "env-public-app-url",
+      label: "Public app URL",
+      status: "pass",
+      message: "Public app URL configured.",
+    };
+  }
+
+  if (appUrl.ok) {
+    return {
+      id: "env-public-app-url",
+      label: "Public app URL",
+      status: "warn",
+      message: "Public app URL is resolved from VERCEL_URL.",
+      hint: "Set NEXT_PUBLIC_APP_URL in production so estimate, invoice, and invite links stay stable.",
+    };
+  }
+
+  return {
+    id: "env-public-app-url",
+    label: "Public app URL",
+    status: "warn",
+    message: "NEXT_PUBLIC_APP_URL is not set.",
+    hint: "Set NEXT_PUBLIC_APP_URL in Vercel so customer-facing links use your production domain.",
+  };
+}
+
+function checkStripeCheckoutConfig(): SystemCheckResult {
+  const hasSecretKey = Boolean(getStripeSecretKey());
+  const hasWebhookSecret = Boolean(getStripeWebhookSecret());
+
+  if (hasSecretKey && hasWebhookSecret) {
+    return {
+      id: "env-stripe-checkout",
+      label: "Stripe checkout",
+      status: "pass",
+      message: "Stripe checkout env is configured.",
+    };
+  }
+
+  const missing: string[] = [];
+  if (!hasSecretKey) {
+    missing.push("STRIPE_SECRET_KEY");
+  }
+  if (!hasWebhookSecret) {
+    missing.push("STRIPE_WEBHOOK_SECRET");
+  }
+
+  return {
+    id: "env-stripe-checkout",
+    label: "Stripe checkout",
+    status: "warn",
+    message: "Stripe checkout not configured yet.",
+    hint: `${missing.join(" and ")} not set. Online payments stay disabled; manual payments are unaffected.`,
   };
 }
 
@@ -509,121 +605,189 @@ async function checkStorageBucketAccess(): Promise<SystemCheckResult> {
   }
 }
 
-async function checkMigrationMarker(): Promise<SystemCheckResult> {
+async function probeCompanyPaymentAccountsTable(
+  supabase: SupabaseClient,
+  companyId: string,
+): Promise<MigrationMarkerResult> {
+  const marker = REQUIRED_DATABASE_MARKERS[0];
+
+  const { error } = await supabase
+    .from("company_payment_accounts")
+    .select("id")
+    .eq("company_id", companyId)
+    .limit(0);
+
+  if (!error) {
+    return { ...marker, status: "present" };
+  }
+
+  if (isDbArtifactMissingError(error.message)) {
+    return { ...marker, status: "missing", detail: error.message };
+  }
+
+  return { ...marker, status: "unknown", detail: error.message };
+}
+
+async function probeStripeCheckoutPaymentRpc(
+  supabase: SupabaseClient,
+  companyId: string,
+): Promise<MigrationMarkerResult> {
+  const marker = REQUIRED_DATABASE_MARKERS[1];
+
+  const { error } = await supabase.rpc("record_invoice_payment_atomic", {
+    p_company_id: companyId,
+    p_invoice_id: MIGRATION_PROBE_NIL_UUID,
+    p_amount: -1,
+    p_payment_method: "cash",
+    p_payment_date: "2024-01-01",
+    p_source: "manual",
+  });
+
+  if (!error) {
+    return {
+      ...marker,
+      status: "unknown",
+      detail: "RPC probe returned success unexpectedly.",
+    };
+  }
+
+  const message = error.message.toLowerCase();
+
+  if (isDbArtifactMissingError(error.message)) {
+    return { ...marker, status: "missing", detail: error.message };
+  }
+
+  if (
+    message.includes("payment_amount_invalid") ||
+    message.includes("insufficient_permission") ||
+    message.includes("invoice_not_found")
+  ) {
+    return { ...marker, status: "present" };
+  }
+
+  return { ...marker, status: "unknown", detail: error.message };
+}
+
+async function probeSmsOptOutsTable(
+  supabase: SupabaseClient,
+  companyId: string,
+): Promise<MigrationMarkerResult> {
+  const marker = REQUIRED_DATABASE_MARKERS[2];
+  const untypedSupabase = supabase as SupabaseClient & {
+    from: (table: string) => ReturnType<SupabaseClient["from"]>;
+  };
+
+  const { error } = await untypedSupabase
+    .from("sms_opt_outs")
+    .select("id")
+    .eq("company_id", companyId)
+    .limit(0);
+
+  if (!error) {
+    return { ...marker, status: "present" };
+  }
+
+  if (isDbArtifactMissingError(error.message)) {
+    return { ...marker, status: "missing", detail: error.message };
+  }
+
+  return { ...marker, status: "unknown", detail: error.message };
+}
+
+async function probeRequiredDatabaseMarkers(
+  supabase: SupabaseClient,
+  companyId: string,
+): Promise<MigrationMarkerResult[]> {
+  return Promise.all([
+    probeCompanyPaymentAccountsTable(supabase, companyId),
+    probeStripeCheckoutPaymentRpc(supabase, companyId),
+    probeSmsOptOutsTable(supabase, companyId),
+  ]);
+}
+
+async function checkDatabaseFoundation(): Promise<SystemCheckResult> {
+  const catalog = getRepoMigrationCatalog();
+
+  if (!catalog.ok) {
+    return {
+      id: "database-foundation",
+      label: "Database foundation",
+      status: "warn",
+      message: "System check could not read repo migration catalog.",
+      hint: catalog.reason,
+    };
+  }
+
+  if (!hasSupabaseEnv()) {
+    return {
+      id: "database-foundation",
+      label: "Database foundation",
+      status: "warn",
+      message: "Database foundation check skipped until Supabase env vars are configured.",
+      hint: `Repo contains ${catalog.count} migrations (latest: ${catalog.latest}).`,
+    };
+  }
+
   const context = await getActiveCompanyContext();
 
-  if (!context || !hasSupabaseEnv()) {
+  if (!context) {
     return {
-      id: "migration-status",
-      label: "Production migration status",
+      id: "database-foundation",
+      label: "Database foundation",
       status: "warn",
-      message: "Migration marker check skipped until Supabase and company context are available.",
-      hint: `Expected ${EXPECTED_MIGRATION_COUNT} SQL migrations through ${LATEST_MIGRATION_MARKER}.`,
+      message: "Database foundation check skipped until company context is available.",
+      hint: `Repo contains ${catalog.count} migrations (latest: ${catalog.latest}).`,
     };
   }
 
   try {
     const supabase = await createClient();
-    const { error: deleteError } = await supabase
-      .from("company_memberships")
-      .delete()
-      .eq("id", MIGRATION_PROBE_NIL_UUID)
-      .eq("company_id", context.company.id);
+    const markerResults = await probeRequiredDatabaseMarkers(
+      supabase,
+      context.company.id,
+    );
+    const missing = markerResults.filter((result) => result.status === "missing");
+    const unknown = markerResults.filter((result) => result.status === "unknown");
 
-    if (deleteError) {
-      const message = deleteError.message.toLowerCase();
-
-      if (
-        message.includes("permission denied") &&
-        message.includes("company_memberships")
-      ) {
-        return {
-          id: "migration-status",
-          label: "Production migration status",
-          status: "fail",
-          message: "company_memberships DELETE grant is missing (invite cancellation).",
-          hint: `Apply all migrations through ${LATEST_MIGRATION_MARKER}.`,
-        };
-      }
+    if (missing.length > 0) {
+      const missingMigrations = missing.map((result) => result.migration).join(", ");
 
       return {
-        id: "migration-status",
-        label: "Production migration status",
-        status: "warn",
-        message: "Could not verify company_memberships DELETE grant.",
-        hint: deleteError.message,
-      };
-    }
-
-    const { error: insertError } = await supabase.from("company_memberships").insert({
-      company_id: context.company.id,
-      status: "invited",
-    } as CompanyMembershipInsert);
-
-    if (!insertError) {
-      return {
-        id: "migration-status",
-        label: "Production migration status",
-        status: "warn",
-        message: "Migration probe insert succeeded unexpectedly.",
-        hint: "Confirm invite/member RLS policies reject invalid membership rows.",
-      };
-    }
-
-    const insertMessage = insertError.message.toLowerCase();
-
-    if (
-      insertMessage.includes("permission denied") &&
-      insertMessage.includes("company_memberships")
-    ) {
-      return {
-        id: "migration-status",
-        label: "Production migration status",
+        id: "database-foundation",
+        label: "Database foundation",
         status: "fail",
-        message: "company_memberships INSERT grant is missing (team invites).",
-        hint: "Apply migrations through 037_grant_company_memberships_insert.sql.",
+        message: "Database is missing required migration artifacts.",
+        hint: `Apply ${missingMigrations}. Repo has ${catalog.count} migrations; latest is ${catalog.latest}.`,
       };
     }
 
-    if (
-      insertMessage.includes("row-level security") ||
-      insertMessage.includes("row level security")
-    ) {
-      return {
-        id: "migration-status",
-        label: "Production migration status",
-        status: "fail",
-        message: "company_memberships admin RLS policy is missing.",
-        hint: "Apply migrations through 038_restore_company_memberships_admin_rls.sql.",
-      };
-    }
+    if (unknown.length > 0) {
+      const unknownLabels = unknown
+        .map((result) => `${result.label} (${result.migration})`)
+        .join("; ");
 
-    if (
-      insertMessage.includes("company_memberships_invite_identity_check") ||
-      insertMessage.includes("check constraint")
-    ) {
       return {
-        id: "migration-status",
-        label: "Production migration status",
-        status: "pass",
-        message: `Latest migration marker (${LATEST_MIGRATION_MARKER}) is present.`,
-        hint: `Repo contains ${EXPECTED_MIGRATION_COUNT} migrations. Confirm Supabase matches via CLI or dashboard.`,
+        id: "database-foundation",
+        label: "Database foundation",
+        status: "warn",
+        message: "System check could not verify migration marker.",
+        hint: `${unknownLabels}. Repo latest is ${catalog.latest}. Confirm Supabase migrations via CLI or dashboard.`,
       };
     }
 
     return {
-      id: "migration-status",
-      label: "Production migration status",
-      status: "warn",
-      message: "Migration marker probe returned an unexpected insert error.",
-      hint: insertError.message,
+      id: "database-foundation",
+      label: "Database foundation",
+      status: "pass",
+      message: "Database foundation current.",
+      hint: `Verified ${markerResults.length} migration markers against repo catalog (${catalog.count} files, latest ${catalog.latest}).`,
     };
   } catch (error) {
     return {
-      id: "migration-status",
-      label: "Production migration status",
+      id: "database-foundation",
+      label: "Database foundation",
       status: "warn",
-      message: "Migration marker probe failed.",
+      message: "System check could not verify migration marker.",
       hint: error instanceof Error ? error.message : undefined,
     };
   }
@@ -633,9 +797,11 @@ export async function runSystemChecks(): Promise<SystemCheckReport> {
   const checks: SystemCheckResult[] = [
     checkRequiredEnvVars(),
     checkOptionalEnvVars(),
+    checkPublicAppUrl(),
     checkIntegrationEncryption(),
     checkFacebookOAuth(),
     checkOutboundEmailConfig(),
+    checkStripeCheckoutConfig(),
     checkAiConfig(),
     checkAlphaHardening(),
     await checkSupabaseConnection(),
@@ -643,7 +809,7 @@ export async function runSystemChecks(): Promise<SystemCheckReport> {
     await checkCurrentProfile(),
     await checkBootstrapRpc(),
     await checkStorageBucketAccess(),
-    await checkMigrationMarker(),
+    await checkDatabaseFoundation(),
   ];
 
   return {
