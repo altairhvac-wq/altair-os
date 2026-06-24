@@ -1,6 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { sanitizeNextPath } from "@/lib/auth/redirects";
 import { AuthLink, AuthShell } from "./AuthShell";
 
 type LoginPageShellProps = {
@@ -22,18 +25,30 @@ export function LoginPageShell({
       belowFooter={belowFooter}
       formAnchorId="sign-in-form"
       footer={
-        <div className="space-y-2">
-          <p>
-            New to Altair OS?{" "}
-            <AuthLink href="/signup">Create a free account</AuthLink>
-          </p>
-          <p>
-            <AuthLink href="/pricing">View pricing</AuthLink>
-          </p>
-        </div>
+        <Suspense fallback={null}>
+          <LoginPageFooter />
+        </Suspense>
       }
     >
       {children}
     </AuthShell>
+  );
+}
+
+function LoginPageFooter() {
+  const searchParams = useSearchParams();
+  const next = sanitizeNextPath(searchParams.get("next"));
+  const signupHref = next ? `/signup?next=${encodeURIComponent(next)}` : "/signup";
+
+  return (
+    <div className="space-y-2">
+      <p>
+        New to Altair OS?{" "}
+        <AuthLink href={signupHref}>Create a free account</AuthLink>
+      </p>
+      <p>
+        <AuthLink href="/pricing">View pricing</AuthLink>
+      </p>
+    </div>
   );
 }

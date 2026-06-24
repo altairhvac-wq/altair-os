@@ -8,6 +8,7 @@ import { processNetworkInviteAfterCompanyBootstrap } from "@/lib/database/servic
 import {
   RESET_PASSWORD_PATH,
 } from "./constants";
+import { userHasPendingTeamInvites } from "./pending-team-invites";
 import {
   resolvePostLoginRedirect,
   sanitizeNextPath,
@@ -52,8 +53,9 @@ export async function resolveAuthCallbackDestination(
 
   if (!companyContext && user) {
     const companyName = getCompanyNameFromUserMetadata(user);
+    const deferBootstrapForInvite = await userHasPendingTeamInvites(user);
 
-    if (companyName) {
+    if (companyName && !deferBootstrapForInvite) {
       const bootstrapResult = await bootstrapCompanyForNewUser(companyName);
 
       if (!bootstrapResult.error && bootstrapResult.companyId) {

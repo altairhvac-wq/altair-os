@@ -1,11 +1,13 @@
 "use client";
 
 import { Suspense, useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { NextRedirectField } from "./NextRedirectField";
 import {
   signupAction,
   type AuthActionState,
 } from "@/app/actions/auth";
+import { sanitizeNextPath } from "@/lib/auth/redirects";
 import {
   AuthField,
   AuthInput,
@@ -27,6 +29,8 @@ export function SignUpForm({
   inviteToken,
   invitePreview,
 }: SignUpFormProps) {
+  const searchParams = useSearchParams();
+  const setupInviteFlow = sanitizeNextPath(searchParams.get("next")) === "/setup";
   const [state, formAction, pending] = useActionState(signupAction, initialState);
   const isValidInvite = invitePreview?.state === "valid";
   const defaultCompanyName =
@@ -105,9 +109,13 @@ export function SignUpForm({
         </AuthField>
 
         <AuthField
-          label="Company name"
+          label={setupInviteFlow ? "Company name (optional)" : "Company name"}
           id="companyName"
-          hint="This becomes your workspace name."
+          hint={
+            setupInviteFlow
+              ? "Skip this if you were invited by a company — use the same email from your invite and accept it after confirming your account."
+              : "This becomes your workspace name."
+          }
         >
           <AuthInput
             id="companyName"
@@ -116,7 +124,7 @@ export function SignUpForm({
             autoComplete="organization"
             placeholder="Smith HVAC & Plumbing"
             defaultValue={defaultCompanyName}
-            required
+            required={!setupInviteFlow}
           />
         </AuthField>
 

@@ -10,7 +10,8 @@ import {
   resolveAuthRedirectOrigin,
 } from "@/lib/auth/request-origin";
 import { validateSignupNetworkInviteEmail } from "@/lib/auth/network-invite-signup";
-import { resolvePostLoginRedirect } from "@/lib/auth/redirects";
+import { userHasPendingTeamInvites } from "@/lib/auth/pending-team-invites";
+import { resolvePostLoginRedirect, sanitizeNextPath } from "@/lib/auth/redirects";
 import {
   clearSignupNetworkInviteCookie,
   readSignupNetworkInviteCookie,
@@ -49,6 +50,10 @@ async function ensureCompanyAfterAuth(
   let context = await getActiveCompanyContext();
 
   if (!context) {
+    if (await userHasPendingTeamInvites(user)) {
+      redirect("/setup");
+    }
+
     if (companyName) {
       const bootstrapResult = await bootstrapCompanyForNewUser(companyName);
 
@@ -123,9 +128,14 @@ export async function signupAction(
   const formInviteToken =
     String(formData.get("inviteToken") ?? "").trim() || null;
   const next = String(formData.get("next") ?? "").trim() || null;
+  const setupInviteFlow = sanitizeNextPath(next) === "/setup";
 
-  if (!fullName || !email || !password || !companyName) {
-    return { error: "All fields are required." };
+  if (!fullName || !email || !password || (!companyName && !setupInviteFlow)) {
+    return {
+      error: setupInviteFlow
+        ? "Full name, email, and password are required."
+        : "All fields are required.",
+    };
   }
 
   const cookieInviteToken = await readSignupNetworkInviteCookie();
@@ -163,7 +173,7 @@ export async function signupAction(
     options: {
       data: {
         full_name: fullName,
-        company_name: companyName,
+        ...(companyName ? { company_name: companyName } : {}),
         ...(inviteToken ? { network_invite_token: inviteToken } : {}),
       },
       emailRedirectTo,
@@ -184,18 +194,25 @@ export async function signupAction(
     };
   }
 
-  const bootstrapResult = await bootstrapCompanyForNewUser(companyName);
-
-  if (bootstrapResult.error) {
-    return { error: bootstrapResult.error };
+  if (data.user && (await userHasPendingTeamInvites(data.user))) {
+    await clearSignupNetworkInviteCookie();
+    return redirectAfterAuth(next);
   }
 
-  if (bootstrapResult.companyId && data.user) {
-    await processNetworkInviteAfterCompanyBootstrap({
-      user: data.user,
-      companyId: bootstrapResult.companyId,
-      inviteToken,
-    });
+  if (companyName) {
+    const bootstrapResult = await bootstrapCompanyForNewUser(companyName);
+
+    if (bootstrapResult.error) {
+      return { error: bootstrapResult.error };
+    }
+
+    if (bootstrapResult.companyId && data.user) {
+      await processNetworkInviteAfterCompanyBootstrap({
+        user: data.user,
+        companyId: bootstrapResult.companyId,
+        inviteToken,
+      });
+    }
   }
 
   await clearSignupNetworkInviteCookie();

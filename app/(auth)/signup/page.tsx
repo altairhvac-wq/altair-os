@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getPublicNetworkInvitePreview } from "@/lib/database/queries/network-invites";
 import { SignUpForm } from "@/shared/components/auth/SignUpForm";
 
@@ -13,6 +14,8 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
     : null;
 
   return (
-    <SignUpForm inviteToken={inviteToken} invitePreview={invitePreview} />
+    <Suspense fallback={null}>
+      <SignUpForm inviteToken={inviteToken} invitePreview={invitePreview} />
+    </Suspense>
   );
 }
