@@ -48,6 +48,18 @@ export type DashboardOverdueInvoicePreview = {
   status: InvoiceStatus;
 };
 
+export type DashboardUnpaidInvoiceFollowUpPreview = {
+  id: string;
+  invoiceNumber: string;
+  customerName: string;
+  customerEmail?: string;
+  balanceDue: number;
+  sentAt?: string;
+  issueDate: string;
+  daysUnpaid: number;
+  status: InvoiceStatus;
+};
+
 export type DashboardUnsentInvoicePreview = {
   id: string;
   invoiceNumber: string;
@@ -117,6 +129,10 @@ export type DashboardMoneySnapshot = {
   approvedEstimates: Estimate[];
   /** Overdue invoices (preview for mobile action sheets). */
   overdueInvoices: DashboardOverdueInvoicePreview[];
+  /** Sent unpaid invoices past the follow-up threshold (preview for action queues). */
+  unpaidInvoiceFollowUpCount: number;
+  unpaidInvoicesNeedingFollowUp: DashboardUnpaidInvoiceFollowUpPreview[];
+  unpaidInvoiceFollowUpThresholdDays: number;
   /** Draft invoices not yet sent (preview for mobile action sheets). */
   unsentInvoiceCount: number;
   unsentInvoices: DashboardUnsentInvoicePreview[];

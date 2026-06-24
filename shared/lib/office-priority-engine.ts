@@ -12,6 +12,10 @@ import {
   formatStaleSentEstimatesSignalDescription,
   type OperationalSignal,
 } from "@/shared/lib/operational-signals";
+import {
+  formatUnpaidInvoiceFollowUpDescription,
+  formatUnpaidInvoiceFollowUpTitle,
+} from "@/shared/lib/unpaid-invoice-follow-up";
 import type { OperationalResolutionQueueType } from "@/shared/lib/operational-resolution-queue";
 import type {
   DashboardCompletedWorkAwaitingInvoicingSnapshot,
@@ -37,6 +41,7 @@ export const OFFICE_PRIORITY_BASE_SCORES = {
   unassigned_normal: 70,
   accepted_estimates_scheduling: 72,
   new_lead_contact: 58,
+  unpaid_invoice_follow_up: 56,
   stale_sent_estimates: 55,
   lead_estimate_ready: 52,
   draft_invoices: 65,
@@ -56,6 +61,7 @@ export type OfficePriorityActionType =
   | "create_invoices"
   | "send_estimates"
   | "follow_up_sent_estimates"
+  | "follow_up_unpaid_invoices"
   | "assign_job"
   | "schedule_accepted_estimates"
   | "contact_new_leads"
@@ -161,6 +167,14 @@ function pickFeaturedUnassignedJob(
   return { job, isEmergency: EMERGENCY_PRIORITIES.has(job.priority) };
 }
 
+function sumUnpaidInvoiceFollowUpTotals(money: DashboardMoneySnapshot): number {
+  return money.unpaidInvoicesNeedingFollowUp.reduce(
+    (total, invoice) =>
+      total + (Number.isFinite(invoice.balanceDue) ? invoice.balanceDue : 0),
+    0,
+  );
+}
+
 function buildOverdueInvoicesCandidate(
   input: OfficePriorityEngineInput,
   signals: OperationalSignal[],
@@ -192,6 +206,37 @@ function buildOverdueInvoicesCandidate(
     relatedQueue: "overdue_invoice",
     count,
     monetaryImpact,
+  };
+}
+
+function buildUnpaidInvoiceFollowUpCandidate(
+  input: OfficePriorityEngineInput,
+  signals: OperationalSignal[],
+): OfficePriorityRecommendation | null {
+  if (!input.access.canViewBilling) {
+    return null;
+  }
+
+  const signal = findOperationalSignal(signals, "unpaid_invoice_follow_up");
+  if (!signal) {
+    return null;
+  }
+
+  const count = signal.count;
+  const monetaryImpact = sumUnpaidInvoiceFollowUpTotals(input.money);
+
+  return {
+    id: "follow-up-unpaid-invoices",
+    priority: 0,
+    title: formatUnpaidInvoiceFollowUpTitle(count),
+    description: formatUnpaidInvoiceFollowUpDescription(count),
+    reason: `${OFFICE_PRIORITY_BASE_SCORES.unpaid_invoice_follow_up} priority — sent invoices unpaid past the follow-up threshold need owner outreach before they become overdue.`,
+    impactCategory: "cash_collection",
+    score: OFFICE_PRIORITY_BASE_SCORES.unpaid_invoice_follow_up,
+    actionType: "follow_up_unpaid_invoices",
+    relatedQueue: "unpaid_invoice_follow_up",
+    count,
+    monetaryImpact: monetaryImpact > 0 ? monetaryImpact : undefined,
   };
 }
 
@@ -523,6 +568,7 @@ const CANDIDATE_BUILDERS: ((
   buildAcceptedEstimateSchedulingCandidate,
   buildNewLeadContactCandidate,
   buildLeadEstimateReadyCandidate,
+  buildUnpaidInvoiceFollowUpCandidate,
   buildDraftInvoicesCandidate,
   buildStaleSentEstimatesCandidate,
   buildDraftEstimatesCandidate,
@@ -607,6 +653,7 @@ export type OfficePriorityEngineSnapshot = {
     DashboardMoneySnapshot,
     | "overdueCount"
     | "overdueTotal"
+    | "unpaidInvoiceFollowUpCount"
     | "unsentInvoiceCount"
     | "unsentEstimateCount"
     | "staleSentEstimateCount"
@@ -637,6 +684,7 @@ export function summarizeOfficePriorityInputs(
 
   return {
     overdueInvoices: input.money.overdueCount,
+    unpaidInvoiceFollowUp: input.money.unpaidInvoiceFollowUpCount,
     readyToInvoice: input.completedWorkAwaitingInvoicing.count,
     unassignedToday: input.operations.unassignedToday,
     acceptedEstimatesScheduling:

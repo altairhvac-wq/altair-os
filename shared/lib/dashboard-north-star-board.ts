@@ -22,6 +22,10 @@ import {
   LEADS_NEEDS_CONTACT_QUEUE_HREF,
   LEADS_QUALIFIED_QUEUE_HREF,
 } from "@/shared/lib/lead-dashboard-attention";
+import {
+  formatUnpaidInvoiceFollowUpDescription,
+  formatUnpaidInvoiceFollowUpTitle,
+} from "@/shared/lib/unpaid-invoice-follow-up";
 import { buildNorthStarHeroContent } from "@/shared/lib/dashboard-north-star-hero";
 import type { MobileActionSeverity } from "@/shared/lib/mobile-action-dashboard";
 import type { OperationalResolutionQueueType } from "@/shared/lib/operational-resolution-queue";
@@ -291,6 +295,20 @@ function buildActionRows(
       kind: "queue",
       queueType: "overdue_invoice",
       href: INVOICE_PAGE_OVERDUE_HREF,
+    });
+  }
+
+  if (access.canViewBilling && money.unpaidInvoiceFollowUpCount > 0) {
+    const count = money.unpaidInvoiceFollowUpCount;
+    push({
+      id: "unpaid-invoice-follow-up",
+      title: formatUnpaidInvoiceFollowUpTitle(count),
+      meta: formatUnpaidInvoiceFollowUpDescription(count),
+      count,
+      severity: count >= 5 ? "warning" : "info",
+      kind: "queue",
+      queueType: "unpaid_invoice_follow_up",
+      href: INVOICE_PAGE_UNPAID_HREF,
     });
   }
 

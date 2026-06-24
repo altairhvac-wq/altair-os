@@ -11,6 +11,7 @@ export type OperationalSignalCategory =
 
 export type OperationalSignalId =
   | "overdue_invoices"
+  | "unpaid_invoice_follow_up"
   | "ready_to_invoice"
   | "unassigned_jobs"
   | "accepted_estimates_scheduling"
@@ -33,6 +34,7 @@ export const OPERATIONAL_SIGNAL_PRIORITY_SCORES = {
   unassigned_jobs: 85,
   accepted_estimates_scheduling: 72,
   new_lead_contact: 58,
+  unpaid_invoice_follow_up: 56,
   stale_sent_estimates: 55,
   lead_estimate_ready: 52,
 } as const;
@@ -80,6 +82,22 @@ export function buildOperationalSignals(
         dashboardData.money.overdueCount >= 5 ? "critical" : "warning",
       count: dashboardData.money.overdueCount,
       priorityScore: OPERATIONAL_SIGNAL_PRIORITY_SCORES.overdue_invoices,
+    });
+  }
+
+  if (
+    dashboardData.access.canViewBilling &&
+    dashboardData.money.unpaidInvoiceFollowUpCount > 0
+  ) {
+    signals.push({
+      id: "unpaid_invoice_follow_up",
+      category: "billing",
+      severity:
+        dashboardData.money.unpaidInvoiceFollowUpCount >= 5
+          ? "warning"
+          : "info",
+      count: dashboardData.money.unpaidInvoiceFollowUpCount,
+      priorityScore: OPERATIONAL_SIGNAL_PRIORITY_SCORES.unpaid_invoice_follow_up,
     });
   }
 

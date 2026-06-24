@@ -13,6 +13,7 @@ import type {
   DashboardLeadAttentionPreview,
   DashboardLeadFollowUpPreview,
   DashboardOverdueInvoicePreview,
+  DashboardUnpaidInvoiceFollowUpPreview,
   DashboardStaleSentEstimatePreview,
   DashboardUnsentEstimatePreview,
   DashboardUnsentInvoicePreview,
@@ -34,6 +35,7 @@ export type OperationalResolutionQueueType =
   | "unassigned_job"
   | "ready_to_invoice"
   | "overdue_invoice"
+  | "unpaid_invoice_follow_up"
   | "unsent_invoice"
   | "unsent_estimate"
   | "stale_sent_estimate"
@@ -90,6 +92,11 @@ export type OverdueInvoiceQueueItem = OperationalResolutionQueueItemBase & {
   invoice: DashboardOverdueInvoicePreview;
 };
 
+export type UnpaidInvoiceFollowUpQueueItem = OperationalResolutionQueueItemBase & {
+  queueType: "unpaid_invoice_follow_up";
+  invoice: DashboardUnpaidInvoiceFollowUpPreview;
+};
+
 export type UnsentInvoiceQueueItem = OperationalResolutionQueueItemBase & {
   queueType: "unsent_invoice";
   invoice: DashboardUnsentInvoicePreview;
@@ -140,6 +147,7 @@ export type OperationalResolutionQueueItem =
   | UnassignedJobQueueItem
   | ReadyToInvoiceQueueItem
   | OverdueInvoiceQueueItem
+  | UnpaidInvoiceFollowUpQueueItem
   | UnsentInvoiceQueueItem
   | UnsentEstimateQueueItem
   | StaleSentEstimateQueueItem
@@ -203,6 +211,15 @@ const QUEUE_PRESENTATION: Record<
     relatedLabel: "View all overdue",
     icon: "dollar",
     iconClassName: "bg-rose-100 text-rose-700",
+  },
+  unpaid_invoice_follow_up: {
+    completionTitle: "Unpaid invoices followed up",
+    completionSubtitle:
+      "No sent invoices past the follow-up threshold remain in this preview.",
+    relatedHref: "/invoices?focus=cash-flow&status=unpaid",
+    relatedLabel: "View unpaid invoices",
+    icon: "dollar",
+    iconClassName: "bg-amber-100 text-amber-700",
   },
   unsent_invoice: {
     completionTitle: "All invoices sent",
@@ -394,6 +411,36 @@ function buildOverdueInvoiceItems(
         label: "Resend invoice",
         enabled: canManage,
       },
+      {
+        kind: "open_record",
+        label: "Open invoice",
+        enabled: true,
+      },
+    ],
+  }));
+}
+
+function buildUnpaidInvoiceFollowUpItems(
+  invoices: DashboardUnpaidInvoiceFollowUpPreview[],
+  access: CompanyAccessScope,
+): UnpaidInvoiceFollowUpQueueItem[] {
+  const canManage = access.canViewBilling;
+
+  return invoices.map((invoice) => ({
+    id: invoice.id,
+    queueType: "unpaid_invoice_follow_up",
+    title: `Invoice ${invoice.invoiceNumber}`,
+    subtitle: invoice.customerName,
+    meta: `${formatCurrency(invoice.balanceDue)} · ${invoice.daysUnpaid}d unpaid`,
+    severity: "warning",
+    openHref: `/invoices/${invoice.id}`,
+    invoice,
+    primaryAction: {
+      kind: "resend_invoice",
+      label: "Send reminder",
+      enabled: canManage,
+    },
+    secondaryActions: [
       {
         kind: "open_record",
         label: "Open invoice",
@@ -711,6 +758,8 @@ export type BuildOperationalResolutionQueueInput = {
   readyToInvoiceJobs: CompletedWorkAwaitingInvoicingEntry[];
   completedWorkReviewJobs: CompletedWorkReviewEntry[];
   overdueInvoices: DashboardOverdueInvoicePreview[];
+  unpaidInvoicesNeedingFollowUp: DashboardUnpaidInvoiceFollowUpPreview[];
+  unpaidInvoiceFollowUpThresholdDays: number;
   unsentInvoices: DashboardUnsentInvoicePreview[];
   unsentEstimates: DashboardUnsentEstimatePreview[];
   staleSentEstimates: DashboardStaleSentEstimatePreview[];
@@ -738,6 +787,7 @@ export function buildOperationalResolutionQueue(
     readyToInvoiceJobs,
     completedWorkReviewJobs,
     overdueInvoices,
+    unpaidInvoicesNeedingFollowUp,
     unsentInvoices,
     unsentEstimates,
     staleSentEstimates,
@@ -770,6 +820,12 @@ export function buildOperationalResolutionQueue(
       break;
     case "overdue_invoice":
       items = buildOverdueInvoiceItems(overdueInvoices, access);
+      break;
+    case "unpaid_invoice_follow_up":
+      items = buildUnpaidInvoiceFollowUpItems(
+        unpaidInvoicesNeedingFollowUp,
+        access,
+      );
       break;
     case "unsent_invoice":
       items = buildUnsentInvoiceItems(unsentInvoices, access);

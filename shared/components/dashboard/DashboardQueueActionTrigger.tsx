@@ -46,6 +46,7 @@ function resolveQueueCanFix(
     case "lead_estimate_ready":
       return access.canManageCustomers;
     case "overdue_invoice":
+    case "unpaid_invoice_follow_up":
     case "ready_to_invoice":
     case "unsent_invoice":
     case "unsent_estimate":

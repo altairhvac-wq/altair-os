@@ -309,6 +309,9 @@ export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
         status: "overdue",
       },
     ],
+    unpaidInvoiceFollowUpCount: 0,
+    unpaidInvoicesNeedingFollowUp: [],
+    unpaidInvoiceFollowUpThresholdDays: 7,
     unsentInvoiceCount: 2,
     unsentInvoices: [
       {

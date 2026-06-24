@@ -13,6 +13,7 @@ import {
 import {
   INVOICE_PAGE_DRAFT_HREF,
   INVOICE_PAGE_OVERDUE_HREF,
+  INVOICE_PAGE_UNPAID_HREF,
 } from "@/shared/lib/invoice-page-focus";
 import {
   formatLeadEstimateReadyDescription,
@@ -22,12 +23,17 @@ import {
   LEADS_NEEDS_CONTACT_QUEUE_HREF,
   LEADS_QUALIFIED_QUEUE_HREF,
 } from "@/shared/lib/lead-dashboard-attention";
+import {
+  formatUnpaidInvoiceFollowUpDescription,
+  formatUnpaidInvoiceFollowUpTitle,
+} from "@/shared/lib/unpaid-invoice-follow-up";
 import type {
   DashboardData,
   DashboardAcceptedEstimateSchedulingPreview,
   DashboardLeadAttentionPreview,
   DashboardLeadFollowUpPreview,
   DashboardOverdueInvoicePreview,
+  DashboardUnpaidInvoiceFollowUpPreview,
   DashboardTechnicianStatus,
   DashboardStaleSentEstimatePreview,
   DashboardUnsentEstimatePreview,
@@ -68,6 +74,8 @@ export type MobileActionSheetData = {
   readyToInvoiceJobs: CompletedWorkAwaitingInvoicingEntry[];
   completedWorkReviewJobs: CompletedWorkReviewEntry[];
   overdueInvoices: DashboardOverdueInvoicePreview[];
+  unpaidInvoicesNeedingFollowUp: DashboardUnpaidInvoiceFollowUpPreview[];
+  unpaidInvoiceFollowUpThresholdDays: number;
   unsentInvoices: DashboardUnsentInvoicePreview[];
   unsentEstimates: DashboardUnsentEstimatePreview[];
   staleSentEstimates: DashboardStaleSentEstimatePreview[];
@@ -119,6 +127,8 @@ function buildDescription(
       return `${count} ${pluralize(count, "job")} on today's board need a technician`;
     case "overdue-invoices":
       return `${count} ${pluralize(count, "invoice")} past due — follow up to collect`;
+    case "unpaid-invoice-follow-up":
+      return formatUnpaidInvoiceFollowUpDescription(count);
     case "ready-to-invoice":
       return `${count} completed ${pluralize(count, "job")} waiting for an invoice`;
     case "invoices-not-sent":
@@ -153,6 +163,7 @@ function buildDescription(
 const PRIMARY_IDS = new Set([
   "unassigned-jobs",
   "overdue-invoices",
+  "unpaid-invoice-follow-up",
   "needs-review",
   "ready-to-invoice",
   "invoices-not-sent",
@@ -357,6 +368,26 @@ export function buildMobileActionCards(data: DashboardData): MobileActionCard[] 
     });
   }
 
+  if (access.canViewBilling && money.unpaidInvoiceFollowUpCount > 0) {
+    const count = money.unpaidInvoiceFollowUpCount;
+    cards.push({
+      id: "unpaid-invoice-follow-up",
+      label: formatUnpaidInvoiceFollowUpTitle(count),
+      count,
+      severity: count >= 5 ? "warning" : "info",
+      description: buildDescription(
+        "unpaid-invoice-follow-up",
+        count,
+        descriptionContext,
+      ),
+      category: "money-actions",
+      queueType: "unpaid_invoice_follow_up",
+      href: INVOICE_PAGE_UNPAID_HREF,
+      panelId: "cash-flow",
+      canFix: access.canViewBilling,
+    });
+  }
+
   if (
     access.canViewOperationalReports &&
     completedWorkAwaitingInvoicing.count > 0
@@ -535,6 +566,9 @@ export function buildMobileActionSheetData(
     readyToInvoiceJobs: data.completedWorkAwaitingInvoicing.jobs,
     completedWorkReviewJobs: data.completedWorkReview.jobs,
     overdueInvoices: data.money.overdueInvoices,
+    unpaidInvoicesNeedingFollowUp: data.money.unpaidInvoicesNeedingFollowUp,
+    unpaidInvoiceFollowUpThresholdDays:
+      data.money.unpaidInvoiceFollowUpThresholdDays,
     unsentInvoices: data.money.unsentInvoices,
     unsentEstimates: data.money.unsentEstimates,
     staleSentEstimates: data.money.staleSentEstimates,

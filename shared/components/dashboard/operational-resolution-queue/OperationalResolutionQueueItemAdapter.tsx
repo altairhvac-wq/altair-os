@@ -59,6 +59,14 @@ export function OperationalResolutionQueueItemAdapter({
           onResolved={onResolved}
         />
       );
+    case "unpaid_invoice_follow_up":
+      return (
+        <UnpaidInvoiceFollowUpQueueItemAdapter
+          item={item}
+          sheetData={sheetData}
+          onResolved={onResolved}
+        />
+      );
     case "unsent_invoice":
       return (
         <UnsentInvoiceQueueItemAdapter
@@ -450,6 +458,73 @@ function OverdueInvoiceQueueItemAdapter({
           label="Open invoice"
           href={item.openHref}
           variant="secondary"
+        />
+      ) : null}
+    </OperationalResolutionQueueItemView>
+  );
+}
+
+function UnpaidInvoiceFollowUpQueueItemAdapter({
+  item,
+  sheetData,
+  onResolved,
+}: {
+  item: Extract<
+    OperationalResolutionQueueItem,
+    { queueType: "unpaid_invoice_follow_up" }
+  >;
+  sheetData: OperationalResolutionQueueSheetData;
+  onResolved: (itemId: string) => void;
+}) {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const { access } = sheetData;
+  const invoice = item.invoice;
+  const canManage = access.canViewBilling;
+  const canResend =
+    canManage &&
+    canResendInvoiceEmail(invoice.status) &&
+    hasValidCustomerEmailForSend(invoice.customerEmail);
+
+  function handleResend() {
+    if (isPending) {
+      return;
+    }
+
+    setError(null);
+
+    startTransition(async () => {
+      try {
+        const result = await resendInvoiceEmailAction(invoice.id);
+
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+
+        onResolved(item.id);
+        router.refresh();
+      } catch {
+        setError("We couldn't send this reminder. Try again.");
+      }
+    });
+  }
+
+  return (
+    <OperationalResolutionQueueItemView item={item} error={error}>
+      {canResend ? (
+        <MobileActionButton
+          label={item.primaryAction.label}
+          onClick={handleResend}
+          pending={isPending}
+        />
+      ) : null}
+      {item.openHref ? (
+        <MobileActionButton
+          label="Open invoice"
+          href={item.openHref}
+          variant={canResend ? "secondary" : "primary"}
         />
       ) : null}
     </OperationalResolutionQueueItemView>

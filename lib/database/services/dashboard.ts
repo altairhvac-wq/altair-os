@@ -28,6 +28,10 @@ import {
   buildStaleSentEstimateEntries,
   ESTIMATE_RECOVERY_THRESHOLD_DAYS,
 } from "@/shared/lib/estimate-recovery";
+import {
+  buildUnpaidInvoiceFollowUpEntries,
+  UNPAID_INVOICE_FOLLOW_UP_THRESHOLD_DAYS,
+} from "@/shared/lib/unpaid-invoice-follow-up";
 import { listExpenses } from "@/lib/database/queries/expenses";
 import { listInvoicesWithBillingSync } from "@/lib/database/services/invoice-billing";
 import { listRecentPayments } from "@/lib/database/queries/invoice-payments";
@@ -72,6 +76,7 @@ const COMPLETED_WORK_DASHBOARD_LIMIT = 5;
 const COMPLETED_WORK_REVIEW_DASHBOARD_LIMIT = 5;
 const UNASSIGNED_JOBS_DASHBOARD_LIMIT = 10;
 const OVERDUE_INVOICES_DASHBOARD_LIMIT = 10;
+const UNPAID_INVOICE_FOLLOW_UP_DASHBOARD_LIMIT = 10;
 const UNSENT_INVOICES_DASHBOARD_LIMIT = 10;
 const UNSENT_ESTIMATES_DASHBOARD_LIMIT = 10;
 const STALE_SENT_ESTIMATES_DASHBOARD_LIMIT = 10;
@@ -117,6 +122,9 @@ const EMPTY_MONEY: DashboardData["money"] = {
   recentPayments: [],
   approvedEstimates: [],
   overdueInvoices: [],
+  unpaidInvoiceFollowUpCount: 0,
+  unpaidInvoicesNeedingFollowUp: [],
+  unpaidInvoiceFollowUpThresholdDays: UNPAID_INVOICE_FOLLOW_UP_THRESHOLD_DAYS,
   unsentInvoiceCount: 0,
   unsentInvoices: [],
   unsentEstimateCount: 0,
@@ -468,6 +476,10 @@ export async function getDashboardData(
     ? buildStaleSentEstimateEntries(estimates)
     : [];
 
+  const unpaidInvoiceFollowUpEntries = access.canViewBilling
+    ? buildUnpaidInvoiceFollowUpEntries(invoices)
+    : [];
+
   const submittedExpenses = access.canViewCompanyExpenses
     ? expenses.filter((expense) => expense.status === "submitted")
     : [];
@@ -550,6 +562,22 @@ export async function getDashboardData(
               dueDate: invoice.dueDate,
               status: invoice.status,
             })),
+          unpaidInvoiceFollowUpCount: unpaidInvoiceFollowUpEntries.length,
+          unpaidInvoicesNeedingFollowUp: unpaidInvoiceFollowUpEntries
+            .slice(0, UNPAID_INVOICE_FOLLOW_UP_DASHBOARD_LIMIT)
+            .map((entry) => ({
+              id: entry.invoiceId,
+              invoiceNumber: entry.invoiceNumber,
+              customerName: entry.customerName,
+              customerEmail: entry.customerEmail,
+              balanceDue: entry.balanceDue,
+              sentAt: entry.sentAt,
+              issueDate: entry.issueDate,
+              daysUnpaid: entry.daysUnpaid,
+              status: entry.status,
+            })),
+          unpaidInvoiceFollowUpThresholdDays:
+            UNPAID_INVOICE_FOLLOW_UP_THRESHOLD_DAYS,
           unsentInvoiceCount: unsentInvoices.length,
           unsentInvoices: unsentInvoices
             .slice(0, UNSENT_INVOICES_DASHBOARD_LIMIT)
