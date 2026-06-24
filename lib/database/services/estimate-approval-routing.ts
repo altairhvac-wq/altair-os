@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { mapDatabaseError } from "@/lib/database/errors";
 import {
   getEstimateById,
@@ -42,6 +42,8 @@ export type ApplyEstimateApprovalRoutingInput = {
   jobId?: string | null;
   signerName?: string;
   timeZone?: string;
+  /** Server-only privileged client for public-link routing after token RPC approval. */
+  db?: DbClient;
 };
 
 function isSafeToUnassignForRemoteApproval(job: {
@@ -63,10 +65,11 @@ function isSafeToUnassignForRemoteApproval(job: {
   return true;
 }
 
-async function getCompanyTimeZone(companyId: string): Promise<string> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
+async function getCompanyTimeZone(
+  companyId: string,
+  db: DbClient,
+): Promise<string> {
+  const { data, error } = await db
     .from("companies")
     .select("timezone")
     .eq("id", companyId)
@@ -82,11 +85,11 @@ async function getCompanyTimeZone(companyId: string): Promise<string> {
 async function unassignJobForRemoteApproval(
   companyId: string,
   jobId: string,
+  db: DbClient,
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient();
   const now = new Date().toISOString();
 
-  const { data: jobRow, error: jobError } = await supabase
+  const { data: jobRow, error: jobError } = await db
     .from("jobs")
     .select("id, status, assigned_technician_id")
     .eq("company_id", companyId)
@@ -101,7 +104,7 @@ async function unassignJobForRemoteApproval(
     return { error: null };
   }
 
-  const { error: assignmentError } = await supabase
+  const { error: assignmentError } = await db
     .from("dispatch_assignments")
     .update({ status: "unassigned", unassigned_at: now })
     .eq("company_id", companyId)
@@ -112,7 +115,7 @@ async function unassignJobForRemoteApproval(
     return { error: mapDatabaseError(assignmentError) };
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await db
     .from("jobs")
     .update({ assigned_technician_id: null })
     .eq("company_id", companyId)
@@ -129,8 +132,9 @@ async function alignJobToTodaysDispatchBoard(input: {
   companyId: string;
   jobId: string;
   timeZone: string;
+  db: DbClient;
 }): Promise<void> {
-  const job = await getJobById(input.companyId, input.jobId);
+  const job = await getJobById(input.companyId, input.jobId, input.db);
 
   if (!job || job.status !== "scheduled" || job.assignedTechnicianId) {
     return;
@@ -141,9 +145,8 @@ async function alignJobToTodaysDispatchBoard(input: {
   }
 
   const { start: scheduledAt } = getDayBoundsInTimeZone(input.timeZone);
-  const supabase = await createClient();
 
-  const { error } = await supabase
+  const { error } = await input.db
     .from("jobs")
     .update({ scheduled_at: scheduledAt })
     .eq("company_id", input.companyId)
@@ -169,33 +172,38 @@ async function recordEstimateRoutedToDispatch(input: {
   signerName?: string;
   previousJobId?: string;
   previousJobNumber?: string;
+  db: DbClient;
 }): Promise<void> {
   const alreadyRecorded = await jobHasActivityEvent(
     input.companyId,
     input.jobId,
     "estimate_routed_to_dispatch",
+    input.db,
   );
 
   if (alreadyRecorded) {
     return;
   }
 
-  await recordJobActivity({
-    company_id: input.companyId,
-    job_id: input.jobId,
-    actor_id: null,
-    event_type: "estimate_routed_to_dispatch",
-    metadata: {
-      estimate_id: input.estimateId,
-      estimate_number: input.estimateNumber,
-      customer_id: input.customerId,
-      job_number: input.jobNumber,
-      approval_source: "public_link",
-      signer_name: input.signerName,
-      previous_job_id: input.previousJobId,
-      previous_job_number: input.previousJobNumber,
+  await recordJobActivity(
+    {
+      company_id: input.companyId,
+      job_id: input.jobId,
+      actor_id: null,
+      event_type: "estimate_routed_to_dispatch",
+      metadata: {
+        estimate_id: input.estimateId,
+        estimate_number: input.estimateNumber,
+        customer_id: input.customerId,
+        job_number: input.jobNumber,
+        approval_source: "public_link",
+        signer_name: input.signerName,
+        previous_job_id: input.previousJobId,
+        previous_job_number: input.previousJobNumber,
+      },
     },
-  });
+    input.db,
+  );
 }
 
 async function finalizeNewApprovedEstimateJob(input: {
@@ -209,6 +217,7 @@ async function finalizeNewApprovedEstimateJob(input: {
   previousJobId?: string;
   previousJobNumber?: string;
   linkMode: "new" | "follow_up";
+  db: DbClient;
 }): Promise<string> {
   const estimateNumber = input.estimateNumber ?? input.estimate.estimateNumber;
 
@@ -219,8 +228,14 @@ async function finalizeNewApprovedEstimateJob(input: {
           input.estimate.id,
           input.jobId,
           input.previousJobId,
+          input.db,
         )
-      : await linkEstimateToJob(input.companyId, input.estimate.id, input.jobId);
+      : await linkEstimateToJob(
+          input.companyId,
+          input.estimate.id,
+          input.jobId,
+          input.db,
+        );
 
   if (linkResult.error) {
     console.error("[finalizeNewApprovedEstimateJob] link estimate failed:", {
@@ -235,26 +250,30 @@ async function finalizeNewApprovedEstimateJob(input: {
     input.companyId,
     input.jobId,
     "job_created",
+    input.db,
   );
 
   if (!alreadyCreated) {
-    await recordJobActivity({
-      company_id: input.companyId,
-      job_id: input.jobId,
-      actor_id: null,
-      event_type: "job_created",
-      metadata: {
-        customer_id: input.customerId,
+    await recordJobActivity(
+      {
+        company_id: input.companyId,
         job_id: input.jobId,
-        job_number: input.jobNumber,
-        estimate_id: input.estimate.id,
-        estimate_number: estimateNumber,
-        approval_source: "public_link",
-        source: "automatic",
-        previous_job_id: input.previousJobId,
-        previous_job_number: input.previousJobNumber,
+        actor_id: null,
+        event_type: "job_created",
+        metadata: {
+          customer_id: input.customerId,
+          job_id: input.jobId,
+          job_number: input.jobNumber,
+          estimate_id: input.estimate.id,
+          estimate_number: estimateNumber,
+          approval_source: "public_link",
+          source: "automatic",
+          previous_job_id: input.previousJobId,
+          previous_job_number: input.previousJobNumber,
+        },
       },
-    });
+      input.db,
+    );
   }
 
   await recordEstimateRoutedToDispatch({
@@ -267,6 +286,7 @@ async function finalizeNewApprovedEstimateJob(input: {
     signerName: input.signerName,
     previousJobId: input.previousJobId,
     previousJobNumber: input.previousJobNumber,
+    db: input.db,
   });
 
   return input.jobId;
@@ -282,6 +302,7 @@ async function createApprovedEstimateJob(input: {
   previousJobId?: string;
   previousJobNumber?: string;
   linkMode: "new" | "follow_up";
+  db: DbClient;
 }): Promise<string | null> {
   const estimateNumber = input.estimateNumber ?? input.estimate.estimateNumber;
   const noteLines = [input.estimate.notes?.trim()];
@@ -292,15 +313,18 @@ async function createApprovedEstimateJob(input: {
     );
   }
 
-  const { jobId, jobNumber, error } = await createJobFromApprovedEstimate({
-    companyId: input.companyId,
-    estimateId: input.estimate.id,
-    customerId: input.customerId,
-    estimateNumber,
-    notes: noteLines.filter(Boolean).join("\n\n"),
-    lineItems: input.estimate.lineItems,
-    timeZone: input.timeZone,
-  });
+  const { jobId, jobNumber, error } = await createJobFromApprovedEstimate(
+    {
+      companyId: input.companyId,
+      estimateId: input.estimate.id,
+      customerId: input.customerId,
+      estimateNumber,
+      notes: noteLines.filter(Boolean).join("\n\n"),
+      lineItems: input.estimate.lineItems,
+      timeZone: input.timeZone,
+    },
+    input.db,
+  );
 
   if (error || !jobId || !jobNumber) {
     console.error("[createApprovedEstimateJob] job creation failed:", {
@@ -321,6 +345,7 @@ async function createApprovedEstimateJob(input: {
     previousJobId: input.previousJobId,
     previousJobNumber: input.previousJobNumber,
     linkMode: input.linkMode,
+    db: input.db,
   });
 }
 
@@ -332,18 +357,26 @@ async function ensureFollowUpJobForTerminalLink(input: {
   terminalJobId: string;
   signerName?: string;
   timeZone: string;
+  db: DbClient;
 }): Promise<string | null> {
-  const terminalJob = await getJobById(input.companyId, input.terminalJobId);
+  const terminalJob = await getJobById(
+    input.companyId,
+    input.terminalJobId,
+    input.db,
+  );
 
   if (!terminalJob || !isTerminalJobStatus(terminalJob.status)) {
     return null;
   }
 
-  const existingFollowUp = await findFollowUpJobForApprovedEstimate({
-    companyId: input.companyId,
-    estimateId: input.estimate.id,
-    terminalJobId: input.terminalJobId,
-  });
+  const existingFollowUp = await findFollowUpJobForApprovedEstimate(
+    {
+      companyId: input.companyId,
+      estimateId: input.estimate.id,
+      terminalJobId: input.terminalJobId,
+    },
+    input.db,
+  );
 
   if (existingFollowUp) {
     await linkEstimateToFollowUpJob(
@@ -351,6 +384,7 @@ async function ensureFollowUpJobForTerminalLink(input: {
       input.estimate.id,
       existingFollowUp.jobId,
       input.terminalJobId,
+      input.db,
     );
 
     return existingFollowUp.jobId;
@@ -374,6 +408,7 @@ async function ensureFollowUpJobForTerminalLink(input: {
     previousJobId: terminalJob.id,
     previousJobNumber: terminalJob.jobNumber,
     linkMode: "follow_up",
+    db: input.db,
   });
 }
 
@@ -384,15 +419,24 @@ async function ensureJobForPublicLinkApproval(input: {
   customerId?: string;
   signerName?: string;
   timeZone: string;
+  db: DbClient;
 }): Promise<string | null> {
-  const estimate = await getEstimateById(input.companyId, input.estimateId);
+  const estimate = await getEstimateById(
+    input.companyId,
+    input.estimateId,
+    input.db,
+  );
 
   if (!estimate || estimate.status !== "approved") {
     return null;
   }
 
   if (estimate.jobId) {
-    const linkedJob = await getJobById(input.companyId, estimate.jobId);
+    const linkedJob = await getJobById(
+      input.companyId,
+      estimate.jobId,
+      input.db,
+    );
 
     if (linkedJob && !isTerminalJobStatus(linkedJob.status)) {
       return linkedJob.id;
@@ -407,6 +451,7 @@ async function ensureJobForPublicLinkApproval(input: {
         terminalJobId: linkedJob.id,
         signerName: input.signerName,
         timeZone: input.timeZone,
+        db: input.db,
       });
     }
   }
@@ -427,6 +472,7 @@ async function ensureJobForPublicLinkApproval(input: {
     signerName: input.signerName,
     timeZone: input.timeZone,
     linkMode: "new",
+    db: input.db,
   });
 }
 
@@ -437,6 +483,7 @@ async function resolveOperationalJobForPublicLinkApproval(input: {
   customerId?: string;
   signerName?: string;
   timeZone: string;
+  db: DbClient;
 }): Promise<string | null> {
   return ensureJobForPublicLinkApproval(input);
 }
@@ -449,8 +496,9 @@ async function routePublicLinkApproval(input: {
   jobId: string;
   signerName?: string;
   timeZone: string;
+  db: DbClient;
 }): Promise<void> {
-  const job = await getJobById(input.companyId, input.jobId);
+  const job = await getJobById(input.companyId, input.jobId, input.db);
 
   if (!job) {
     return;
@@ -462,6 +510,7 @@ async function routePublicLinkApproval(input: {
     const { error } = await unassignJobForRemoteApproval(
       input.companyId,
       input.jobId,
+      input.db,
     );
 
     if (error) {
@@ -481,6 +530,7 @@ async function routePublicLinkApproval(input: {
       companyId: input.companyId,
       jobId: input.jobId,
       timeZone: input.timeZone,
+      db: input.db,
     });
 
     await recordEstimateRoutedToDispatch({
@@ -491,6 +541,7 @@ async function routePublicLinkApproval(input: {
       jobId: input.jobId,
       jobNumber: job.jobNumber,
       signerName: input.signerName,
+      db: input.db,
     });
   }
 }
@@ -503,8 +554,9 @@ async function routeTechnicianDeviceApproval(input: {
   customerId?: string;
   jobId: string;
   signerName?: string;
+  db: DbClient;
 }): Promise<void> {
-  const job = await getJobById(input.companyId, input.jobId);
+  const job = await getJobById(input.companyId, input.jobId, input.db);
 
   if (!job) {
     return;
@@ -514,27 +566,31 @@ async function routeTechnicianDeviceApproval(input: {
     input.companyId,
     input.jobId,
     "estimate_authorized_on_site",
+    input.db,
   );
 
   if (alreadyRecorded) {
     return;
   }
 
-  await recordJobActivity({
-    company_id: input.companyId,
-    job_id: input.jobId,
-    actor_id: input.actorId,
-    event_type: "estimate_authorized_on_site",
-    metadata: {
-      estimate_id: input.estimateId,
-      estimate_number: input.estimateNumber,
-      customer_id: input.customerId,
-      job_number: job.jobNumber,
-      approval_source: "technician_device",
-      signer_name: input.signerName,
-      technician_id: job.assignedTechnicianId ?? undefined,
+  await recordJobActivity(
+    {
+      company_id: input.companyId,
+      job_id: input.jobId,
+      actor_id: input.actorId,
+      event_type: "estimate_authorized_on_site",
+      metadata: {
+        estimate_id: input.estimateId,
+        estimate_number: input.estimateNumber,
+        customer_id: input.customerId,
+        job_number: job.jobNumber,
+        approval_source: "technician_device",
+        signer_name: input.signerName,
+        technician_id: job.assignedTechnicianId ?? undefined,
+      },
     },
-  });
+    input.db,
+  );
 }
 
 /**
@@ -545,14 +601,16 @@ export async function applyEstimateApprovalRouting(
   input: ApplyEstimateApprovalRoutingInput,
 ): Promise<void> {
   try {
+    const db = await resolveDbClient(input.db);
+
     const estimate =
-      (await getEstimateById(input.companyId, input.estimateId)) ?? null;
+      (await getEstimateById(input.companyId, input.estimateId, db)) ?? null;
 
     const estimateNumber =
       input.estimateNumber ?? estimate?.estimateNumber ?? undefined;
     const customerId = input.customerId ?? estimate?.customerId ?? undefined;
     const timeZone =
-      input.timeZone?.trim() || (await getCompanyTimeZone(input.companyId));
+      input.timeZone?.trim() || (await getCompanyTimeZone(input.companyId, db));
 
     if (input.approvalSource === "public_link") {
       const jobId = await resolveOperationalJobForPublicLinkApproval({
@@ -562,6 +620,7 @@ export async function applyEstimateApprovalRouting(
         customerId,
         signerName: input.signerName,
         timeZone,
+        db,
       });
 
       if (jobId) {
@@ -573,6 +632,7 @@ export async function applyEstimateApprovalRouting(
           jobId,
           signerName: input.signerName,
           timeZone,
+          db,
         });
       }
 
@@ -599,6 +659,7 @@ export async function applyEstimateApprovalRouting(
         customerId,
         jobId,
         signerName: input.signerName,
+        db,
       });
 
       await emitEstimateApprovedEvent({

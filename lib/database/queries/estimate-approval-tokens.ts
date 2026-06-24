@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service";
+import type { DbClient } from "@/lib/database/db-client";
 import { mapDatabaseError } from "@/lib/database/errors";
 import { getEstimateById } from "@/lib/database/queries/estimates";
 import { applyEstimateApprovalRouting } from "@/lib/database/services/estimate-approval-routing";
@@ -209,6 +211,18 @@ export async function getPublicEstimateApprovalView(
   return mapPublicEstimateApprovalView(data as Record<string, unknown>);
 }
 
+function resolvePublicApprovalRoutingClient(): DbClient | undefined {
+  try {
+    return createServiceRoleClient();
+  } catch (error) {
+    console.error(
+      "[submitPublicEstimateApproval] privileged routing client unavailable:",
+      error,
+    );
+    return undefined;
+  }
+}
+
 export type SubmitPublicEstimateApprovalResult = {
   ok?: boolean;
   error?: string;
@@ -279,6 +293,8 @@ export async function submitPublicEstimateApproval(input: {
   let resolvedJobId = jobId ?? null;
 
   if (estimateId && companyId) {
+    const routingDb = resolvePublicApprovalRoutingClient();
+
     await applyEstimateApprovalRouting({
       companyId,
       estimateId,
@@ -288,9 +304,14 @@ export async function submitPublicEstimateApproval(input: {
       customerId,
       jobId: jobId ?? null,
       signerName: input.signerName,
+      db: routingDb,
     });
 
-    const refreshedEstimate = await getEstimateById(companyId, estimateId);
+    const refreshedEstimate = await getEstimateById(
+      companyId,
+      estimateId,
+      routingDb,
+    );
     resolvedJobId = refreshedEstimate?.jobId ?? resolvedJobId;
   }
 

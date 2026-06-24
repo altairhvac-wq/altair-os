@@ -1,3 +1,4 @@
+import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import type {
@@ -50,8 +51,9 @@ function mapJobActivityRow(row: JobActivityRowWithActor): JobActivity {
 
 export async function recordJobActivity(
   input: JobActivityInsert,
+  db?: DbClient,
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient();
+  const supabase = await resolveDbClient(db);
 
   const { error } = await supabase.from("job_activities").insert({
     company_id: input.company_id,
@@ -132,12 +134,15 @@ export async function countJobReviewBlockerResolutionsSince(
   return count ?? 0;
 }
 
-export async function findFollowUpJobForApprovedEstimate(input: {
-  companyId: string;
-  estimateId: string;
-  terminalJobId: string;
-}): Promise<{ jobId: string; jobNumber: string } | null> {
-  const supabase = await createClient();
+export async function findFollowUpJobForApprovedEstimate(
+  input: {
+    companyId: string;
+    estimateId: string;
+    terminalJobId: string;
+  },
+  db?: DbClient,
+): Promise<{ jobId: string; jobNumber: string } | null> {
+  const supabase = await resolveDbClient(db);
 
   const { data, error } = await supabase
     .from("job_activities")
@@ -210,8 +215,9 @@ export async function jobHasActivityEvent(
   companyId: string,
   jobId: string,
   eventType: JobActivityType,
+  db?: DbClient,
 ): Promise<boolean> {
-  const supabase = await createClient();
+  const supabase = await resolveDbClient(db);
 
   const { count, error } = await supabase
     .from("job_activities")

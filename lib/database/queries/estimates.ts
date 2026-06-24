@@ -479,8 +479,9 @@ export async function linkEstimateToJob(
   companyId: string,
   estimateId: string,
   jobId: string,
+  db?: DbClient,
 ): Promise<{ linked: boolean; error: string | null }> {
-  const supabase = await createClient();
+  const supabase = await resolveDbClient(db);
 
   const { data, error } = await supabase
     .from("estimates")
@@ -513,8 +514,9 @@ export async function linkEstimateToFollowUpJob(
   estimateId: string,
   followUpJobId: string,
   fromTerminalJobId: string,
+  db?: DbClient,
 ): Promise<{ linked: boolean; error: string | null }> {
-  const supabase = await createClient();
+  const supabase = await resolveDbClient(db);
 
   const { data, error } = await supabase
     .from("estimates")

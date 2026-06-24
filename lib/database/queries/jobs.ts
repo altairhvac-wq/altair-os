@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import {
@@ -112,8 +113,11 @@ export type ListJobsOptions = {
   assignedTechnicianId?: string;
 };
 
-async function generateJobNumber(companyId: string): Promise<string> {
-  const supabase = await createClient();
+async function generateJobNumber(
+  companyId: string,
+  db?: DbClient,
+): Promise<string> {
+  const supabase = await resolveDbClient(db);
 
   const { count, error } = await supabase
     .from("jobs")
@@ -312,8 +316,9 @@ function mapJobRowToJobDetail(row: JobRowWithTechnician): JobDetail {
 export async function getJobById(
   companyId: string,
   jobId: string,
+  db?: DbClient,
 ): Promise<JobDetail | null> {
-  const supabase = await createClient();
+  const supabase = await resolveDbClient(db);
 
   const { data, error } = await supabase
     .from("jobs")
@@ -439,8 +444,9 @@ export type CreateJobFromApprovedEstimateInput = {
  */
 export async function createJobFromApprovedEstimate(
   input: CreateJobFromApprovedEstimateInput,
+  db?: DbClient,
 ): Promise<{ jobId: string | null; jobNumber: string | null; error: string | null }> {
-  const supabase = await createClient();
+  const supabase = await resolveDbClient(db);
   const timeZone = input.timeZone?.trim() || resolveCompanyTimeZone();
   const { start: scheduledAt } = getDayBoundsInTimeZone(timeZone);
 
@@ -472,7 +478,7 @@ export async function createJobFromApprovedEstimate(
     .filter(Boolean)
     .join(", ");
 
-  const jobNumber = await generateJobNumber(input.companyId);
+  const jobNumber = await generateJobNumber(input.companyId, db);
   const estimateLabel = input.estimateNumber.trim() || "estimate";
   const description = `Approved estimate ${estimateLabel}`;
   const notes = [input.notes?.trim(), `Created from approved estimate ${estimateLabel}.`]
