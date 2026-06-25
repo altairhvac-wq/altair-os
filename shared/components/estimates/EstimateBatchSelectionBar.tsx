@@ -54,7 +54,7 @@ export function EstimateBatchSelectionBar({
   }
 
   const hintClass = northStar
-    ? "mt-1 space-y-0.5 text-xs font-medium text-[#6B6255]"
+    ? "mt-1 space-y-0.5 text-xs font-medium text-[#64748B]"
     : "mt-1 space-y-0.5 text-xs font-medium text-cyan-800/90";
 
   return (

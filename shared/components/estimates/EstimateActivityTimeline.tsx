@@ -52,12 +52,12 @@ const ACTIVITY_ICON_STYLES: Record<EstimateActivityType, string> = {
 
 const NORTH_STAR_ACTIVITY_ICON_STYLES: Record<EstimateActivityType, string> = {
   estimate_created: "bg-[#EFE4CB] text-[#8A6324] ring-[rgba(138,99,36,0.18)]",
-  status_changed: "bg-[#F1E7D2] text-[#6B6255] ring-[rgba(138,99,36,0.12)]",
+  status_changed: "bg-[#F1E7D2] text-[#4F4638] ring-[rgba(138,99,36,0.12)]",
   estimate_sent: "bg-[#F5E6C8] text-[#8A6324] ring-[rgba(138,99,36,0.18)]",
   estimate_email_resent: "bg-[#F5E6C8] text-[#8A6324] ring-[rgba(138,99,36,0.18)]",
   estimate_approved: "bg-emerald-50 text-emerald-800 ring-emerald-600/15",
   estimate_declined: "bg-rose-50 text-rose-800 ring-rose-600/15",
-  estimate_cancelled: "bg-[#F1E7D2] text-[#6B6255] ring-[rgba(138,99,36,0.12)]",
+  estimate_cancelled: "bg-[#F1E7D2] text-[#4F4638] ring-[rgba(138,99,36,0.12)]",
   estimate_converted: "bg-[#EFE4CB] text-[#8A6324] ring-[rgba(138,99,36,0.18)]",
 };
 
@@ -128,7 +128,7 @@ export function EstimateActivityTimeline({
             const Icon = ACTIVITY_ICONS[activity.eventType] ?? History;
             const iconStyle = northStar
               ? (NORTH_STAR_ACTIVITY_ICON_STYLES[activity.eventType] ??
-                "bg-[#F1E7D2] text-[#6B6255] ring-[rgba(138,99,36,0.12)]")
+                "bg-[#F1E7D2] text-[#4F4638] ring-[rgba(138,99,36,0.12)]")
               : (ACTIVITY_ICON_STYLES[activity.eventType] ??
                 "bg-slate-100 text-slate-600 ring-slate-500/15");
             const details = formatEstimateActivityDetails(activity);

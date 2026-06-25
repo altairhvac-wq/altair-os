@@ -25,7 +25,7 @@ export function BillingMobileAmountHeader({
         <span
           className={
             northStar
-              ? "text-xs font-semibold uppercase tracking-wide text-[#6B6255]"
+              ? "text-xs font-semibold uppercase tracking-wide text-[#4F4638]"
               : "text-xs font-semibold uppercase tracking-wide text-slate-500"
           }
         >

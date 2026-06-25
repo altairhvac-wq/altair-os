@@ -17,7 +17,7 @@ export function BillingWorkflowSectionHeader({
     <span
       className={
         northStar
-          ? "inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#EFE4CB] px-1.5 text-[10px] font-bold tabular-nums text-[#6B6255] ring-1 ring-[rgba(138,99,36,0.12)]"
+          ? "inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#EFE4CB] px-1.5 text-[10px] font-bold tabular-nums text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.12)]"
           : "inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-slate-200/90 px-1.5 text-[10px] font-bold tabular-nums text-slate-600"
       }
     >

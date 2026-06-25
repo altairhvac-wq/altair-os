@@ -99,7 +99,7 @@ export function BillingTotalsSummary({
             value={formatCurrency(subtotal)}
             labelClassName={
               northStar
-                ? "text-xs text-[#6B6255] print:text-slate-600"
+                ? "text-xs text-[#4F4638] print:text-slate-600"
                 : "text-xs text-slate-500"
             }
             valueClassName={
@@ -114,7 +114,7 @@ export function BillingTotalsSummary({
               value={formatCurrency(taxAmount)}
               labelClassName={
                 northStar
-                  ? "text-xs text-[#6B6255] print:text-slate-600"
+                  ? "text-xs text-[#4F4638] print:text-slate-600"
                   : "text-xs text-slate-500"
               }
               valueClassName={

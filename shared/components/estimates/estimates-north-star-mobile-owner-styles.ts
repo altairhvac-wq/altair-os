@@ -21,16 +21,16 @@ export const estimatesOwnerMobileSectionLabelClass =
   "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4F4638]";
 
 export const estimatesOwnerMobileSectionMetaClass =
-  "text-[10px] font-medium tabular-nums text-[#6B6255]";
+  "text-[10px] font-medium tabular-nums text-[#64748B]";
 
 export const estimatesOwnerMobileRowAmountClass =
-  "shrink-0 text-[11px] font-medium tabular-nums text-[#6B6255]";
+  "shrink-0 text-[11px] font-medium tabular-nums text-[#17130E]";
 
 export const estimatesOwnerMobileRowMetaClass =
-  "truncate text-xs text-[#6B6255]";
+  "truncate text-xs text-[#64748B]";
 
 export const estimatesOwnerMobileRowDateClass =
-  "truncate text-[11px] text-[#6B6255]";
+  "truncate text-[11px] text-[#64748B]";
 
 export const estimatesOwnerMobileRowChevronClass =
   "h-4 w-4 shrink-0 text-[#8A6324]/65";
@@ -42,6 +42,6 @@ export const estimatesOwnerMobileArchiveSearchIconClass =
   "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8A6324]";
 
 export const estimatesOwnerMobileArchiveInputClass =
-  "h-10 w-full min-h-10 rounded-xl border border-slate-200/90 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-[#6B6255] outline-none transition-colors focus:border-[rgba(198,167,87,0.45)] focus:ring-2 focus:ring-[rgba(198,167,87,0.18)]";
+  "h-10 w-full min-h-10 rounded-xl border border-slate-200/90 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-[#64748B] outline-none transition-colors focus:border-[rgba(198,167,87,0.45)] focus:ring-2 focus:ring-[rgba(198,167,87,0.18)]";
 
-export const estimatesOwnerMobileSearchResultsMetaClass = "mt-1 text-sm text-[#6B6255]";
+export const estimatesOwnerMobileSearchResultsMetaClass = "mt-1 text-sm text-[#64748B]";

@@ -21,7 +21,7 @@ export function InvoiceNotesBlock({ notes, northStar = false }: InvoiceNotesBloc
       <p
         className={
           northStar
-            ? "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6B6255] print:text-slate-600"
+            ? "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4F4638] print:text-slate-600"
             : "text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 print:text-slate-600"
         }
       >

@@ -18,7 +18,7 @@ export function EstimateIdentityCard({
     ? "text-sm font-bold tabular-nums tracking-tight text-[#17130E] sm:text-base print:text-sm"
     : "text-sm font-bold tabular-nums tracking-tight text-slate-900 sm:text-base print:text-sm";
   const metaClass = northStar
-    ? "text-xs leading-snug text-[#6B6255] print:text-slate-700"
+    ? "text-xs leading-snug text-[#64748B] print:text-slate-700"
     : "text-xs leading-snug text-slate-600 print:text-slate-700";
 
   return (

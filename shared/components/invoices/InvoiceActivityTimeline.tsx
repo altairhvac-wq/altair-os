@@ -60,10 +60,10 @@ const NORTH_STAR_ACTIVITY_ICON_STYLES: Record<InvoiceActivityType, string> = {
   invoice_created: "bg-[#EFE4CB] text-[#8A6324] ring-[rgba(138,99,36,0.18)]",
   invoice_sent: "bg-[#F5E6C8] text-[#8A6324] ring-[rgba(138,99,36,0.18)]",
   invoice_email_resent: "bg-[#F5E6C8] text-[#8A6324] ring-[rgba(138,99,36,0.18)]",
-  status_changed: "bg-[#F1E7D2] text-[#6B6255] ring-[rgba(138,99,36,0.12)]",
+  status_changed: "bg-[#F1E7D2] text-[#4F4638] ring-[rgba(138,99,36,0.12)]",
   invoice_converted_from_estimate: "bg-[#EFE4CB] text-[#8A6324] ring-[rgba(138,99,36,0.18)]",
-  invoice_voided: "bg-[#F1E7D2] text-[#6B6255] ring-[rgba(138,99,36,0.12)]",
-  invoice_cancelled: "bg-[#F1E7D2] text-[#6B6255] ring-[rgba(138,99,36,0.12)]",
+  invoice_voided: "bg-[#F1E7D2] text-[#4F4638] ring-[rgba(138,99,36,0.12)]",
+  invoice_cancelled: "bg-[#F1E7D2] text-[#4F4638] ring-[rgba(138,99,36,0.12)]",
   invoice_updated: "bg-[#EFE4CB] text-[#8A6324] ring-[rgba(138,99,36,0.18)]",
   payment_recorded: "bg-emerald-50 text-emerald-800 ring-emerald-600/15",
   invoice_paid: "bg-emerald-50 text-emerald-800 ring-emerald-600/15",
@@ -124,7 +124,7 @@ export function InvoiceActivityTimeline({
             const Icon = ACTIVITY_ICONS[activity.eventType] ?? History;
             const iconStyle = northStar
               ? NORTH_STAR_ACTIVITY_ICON_STYLES[activity.eventType] ??
-                "bg-[#F1E7D2] text-[#6B6255] ring-[rgba(138,99,36,0.12)]"
+                "bg-[#F1E7D2] text-[#4F4638] ring-[rgba(138,99,36,0.12)]"
               : ACTIVITY_ICON_STYLES[activity.eventType] ??
                 "bg-slate-100 text-slate-600 ring-slate-500/15";
             const details = formatInvoiceActivityDetails(activity);

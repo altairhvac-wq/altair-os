@@ -48,7 +48,7 @@ export function InvoicePaymentHistory({
     ? "hidden overflow-hidden rounded-lg border border-[rgba(138,99,36,0.12)] sm:block"
     : "hidden overflow-hidden rounded-xl border border-slate-200 sm:block";
   const headerCellClass = northStar
-    ? "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#6B6255]"
+    ? "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#4F4638]"
     : "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500";
 
   return (
