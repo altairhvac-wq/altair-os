@@ -63,7 +63,7 @@ function CapabilityRow({
     <div className="flex items-baseline justify-between gap-3 py-2 first:pt-0 last:pb-0">
       <dt
         className={
-          northStar ? "shrink-0 text-xs text-[#6B6255]" : "shrink-0 text-xs text-slate-500"
+          northStar ? "shrink-0 text-xs text-[#4F4638]" : "shrink-0 text-xs text-slate-500"
         }
       >
         {label}
@@ -136,7 +136,7 @@ export function PaymentSettingsCard({
     : "admin-heading-section text-sm sm:text-base";
 
   const helperClass = northStar
-    ? "mt-0.5 text-xs text-[#6B6255] sm:text-sm"
+    ? "mt-0.5 text-xs text-[#64748B] sm:text-sm"
     : "admin-text-helper mt-0.5 text-xs sm:text-sm";
 
   const noticeClass = northStar
@@ -144,7 +144,7 @@ export function PaymentSettingsCard({
     : "rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-600 sm:text-sm";
 
   const subtleNoticeClass = northStar
-    ? "text-xs text-[#6B6255] sm:text-sm"
+    ? "text-xs text-[#64748B] sm:text-sm"
     : "text-xs text-slate-500 sm:text-sm";
 
   const errorNoticeClass = northStar
@@ -152,7 +152,7 @@ export function PaymentSettingsCard({
     : "rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs text-red-700 sm:text-sm";
 
   const disabledButtonClass = northStar
-    ? "inline-flex min-h-9 cursor-not-allowed items-center justify-center rounded-lg border border-[rgba(138,99,36,0.16)] bg-[#F5F0E4] px-3 text-xs font-semibold text-[#6B6255] opacity-80 sm:text-sm"
+    ? "inline-flex min-h-9 cursor-not-allowed items-center justify-center rounded-lg border border-[rgba(138,99,36,0.16)] bg-[#F5F0E4] px-3 text-xs font-semibold text-[#4F4638] opacity-80 sm:text-sm"
     : "inline-flex min-h-9 cursor-not-allowed items-center justify-center rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs font-semibold text-slate-500 sm:text-sm";
 
   const enabledButtonClass = northStar
@@ -243,7 +243,7 @@ export function PaymentSettingsCard({
           <div className="flex items-baseline justify-between gap-3 py-2 first:pt-0">
             <dt
               className={
-                northStar ? "shrink-0 text-xs text-[#6B6255]" : "shrink-0 text-xs text-slate-500"
+                northStar ? "shrink-0 text-xs text-[#4F4638]" : "shrink-0 text-xs text-slate-500"
               }
             >
               Provider
@@ -261,7 +261,7 @@ export function PaymentSettingsCard({
           <div className="flex items-baseline justify-between gap-3 py-2">
             <dt
               className={
-                northStar ? "shrink-0 text-xs text-[#6B6255]" : "shrink-0 text-xs text-slate-500"
+                northStar ? "shrink-0 text-xs text-[#4F4638]" : "shrink-0 text-xs text-slate-500"
               }
             >
               Account status
@@ -296,7 +296,7 @@ export function PaymentSettingsCard({
               <dt
                 className={
                   northStar
-                    ? "shrink-0 text-xs text-[#6B6255]"
+                    ? "shrink-0 text-xs text-[#4F4638]"
                     : "shrink-0 text-xs text-slate-500"
                 }
               >

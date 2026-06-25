@@ -450,7 +450,7 @@ export function TeamMemberProfileNorthStarView({
 
                 {profile.certifications.length === 0 ? (
                   <div className={`${tm.emptyState} mt-3`}>
-                    <p className="text-sm font-medium text-[#6B6255]">
+                    <p className="text-sm font-medium text-[#64748B]">
                       Add certifications.
                     </p>
                   </div>
@@ -514,7 +514,7 @@ export function TeamMemberProfileNorthStarView({
 
                   {!hasLaborRate && !canEditProfitability ? (
                     <div className={`${tm.emptyState} mt-3`}>
-                      <p className="text-sm font-medium text-[#6B6255]">
+                      <p className="text-sm font-medium text-[#64748B]">
                         Add a labor cost rate to unlock profitability reporting.
                       </p>
                     </div>
@@ -528,7 +528,7 @@ export function TeamMemberProfileNorthStarView({
                           Labor cost rate
                         </label>
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
-                          <span className="text-sm font-medium text-[#6B6255]">
+                          <span className="text-sm font-medium text-[#4F4638]">
                             $
                           </span>
                           <input
@@ -543,7 +543,7 @@ export function TeamMemberProfileNorthStarView({
                             disabled={isPending}
                             className={`${tm.formInput} min-w-0 flex-1`}
                           />
-                          <span className="shrink-0 text-sm font-medium text-[#6B6255]">
+                          <span className="shrink-0 text-sm font-medium text-[#4F4638]">
                             /hr
                           </span>
                         </div>
@@ -563,7 +563,7 @@ export function TeamMemberProfileNorthStarView({
                     </p>
                   ) : (
                     <div className={`${tm.emptyState} mt-3`}>
-                      <p className="text-sm font-medium text-[#6B6255]">
+                      <p className="text-sm font-medium text-[#64748B]">
                         Add a labor cost rate to unlock profitability reporting.
                       </p>
                     </div>
@@ -683,21 +683,21 @@ function WorkSummarySection({
     <section className={tm.sectionSurface}>
       <div className="flex items-center justify-between gap-2">
         <h2 className={tm.sectionTitle}>Work summary</h2>
-        <span className="text-[11px] font-medium text-[#6B6255]">
+        <span className="text-[11px] font-medium text-[#64748B]">
           {summary.periodLabel}
         </span>
       </div>
 
       {isPendingInvite ? (
         <div className={`${tm.emptyState} mt-3`}>
-          <p className="text-sm font-medium text-[#6B6255]">
+          <p className="text-sm font-medium text-[#64748B]">
             Work summary will be available after this member accepts their
             invite.
           </p>
         </div>
       ) : !hasData ? (
         <div className={`${tm.emptyState} mt-3`}>
-          <p className="text-sm font-medium text-[#6B6255]">
+          <p className="text-sm font-medium text-[#64748B]">
             Work summary will appear once this member has completed jobs.
           </p>
         </div>
@@ -764,7 +764,7 @@ function ActivitySection({
 
       {activity.length === 0 ? (
         <div className={`${tm.emptyState} mt-3`}>
-          <p className="text-sm font-medium text-[#6B6255]">
+          <p className="text-sm font-medium text-[#64748B]">
             Recent activity will appear here.
           </p>
         </div>

@@ -191,7 +191,7 @@ export function TeamInviteForm({
           onClick={() => onExpandedChange(false)}
           className={`inline-flex min-h-10 w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition sm:hidden ${
             northStar
-              ? "text-[#6B6255] hover:bg-[#F3EBDD]"
+              ? "text-[#4F4638] hover:bg-[#F3EBDD]"
               : "text-slate-500 hover:bg-slate-50"
           }`}
         >
@@ -205,7 +205,7 @@ export function TeamInviteForm({
     <label className="block min-w-0">
       <span
         className={`mb-1 block text-xs font-semibold uppercase tracking-wide ${
-          northStar ? "text-[#6B6255]" : "text-slate-500"
+          northStar ? "text-[#4F4638]" : "text-slate-500"
         }`}
       >
         Email
@@ -293,7 +293,7 @@ export function TeamInviteForm({
                 <p className="text-xs leading-snug text-[#4F4638]">
                   {roleDescription.summary}
                 </p>
-                <p className="mt-0.5 text-[11px] leading-snug text-[#6B6255]">
+                <p className="mt-0.5 text-[11px] leading-snug text-[#64748B]">
                   {roleDescription.access}
                 </p>
               </div>
@@ -349,7 +349,7 @@ export function TeamInviteForm({
         <p
           className={`text-xs ${
             northStar
-              ? "hidden leading-snug text-[#6B6255] lg:block"
+              ? "hidden leading-snug text-[#64748B] lg:block"
               : "hidden leading-relaxed text-slate-500 sm:block"
           }`}
         >

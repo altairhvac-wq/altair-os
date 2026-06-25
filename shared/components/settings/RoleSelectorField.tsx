@@ -48,7 +48,7 @@ export function RoleSelectorField({
       <label className="block" htmlFor={id}>
         <span
           className={`mb-1 block text-xs font-semibold uppercase tracking-wide ${
-            northStar ? "text-[#6B6255]" : "text-slate-500"
+            northStar ? "text-[#4F4638]" : "text-slate-500"
           }`}
         >
           {label}
@@ -84,7 +84,7 @@ export function RoleSelectorField({
             </p>
             <p
               className={`mt-0.5 text-[11px] leading-snug ${
-                northStar ? "text-[#6B6255]" : "text-slate-500"
+                northStar ? "text-[#64748B]" : "text-slate-500"
               }`}
             >
               {description.access}
@@ -107,7 +107,7 @@ export function RoleSelectorField({
             </p>
             <p
               className={`mt-1 text-xs ${
-                northStar ? "text-[#6B6255]" : "text-slate-500"
+                northStar ? "text-[#64748B]" : "text-slate-500"
               }`}
             >
               {description.access}

@@ -18,7 +18,7 @@ export const teamMemberNorthStarStyles = {
   sectionTitle: dt.sectionTitle,
   sectionSubtitle: dt.sectionSubtitle,
   metaRow: "flex flex-wrap items-start justify-between gap-x-4 gap-y-1 border-b border-[rgba(138,99,36,0.08)] py-2.5 last:border-b-0",
-  metaLabel: "text-xs font-semibold text-[#6B6255]",
+  metaLabel: "text-xs font-semibold text-[#4F4638]",
   metaValue: "text-sm font-medium text-[#17130E]",
   tagChip: dt.ivoryTagChip,
   emptyState: dt.emptyState,
@@ -28,8 +28,8 @@ export const teamMemberNorthStarStyles = {
   activityType:
     "text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8A6324]",
   activityLabel: "text-sm font-semibold text-[#17130E]",
-  activityDetail: "mt-0.5 truncate text-xs text-[#6B6255]",
-  activityTime: "mt-0.5 text-[11px] text-[#6B6255]",
+  activityDetail: "mt-0.5 truncate text-xs text-[#64748B]",
+  activityTime: "mt-0.5 text-[11px] text-[#64748B]",
   metricCard: dt.metricCard,
   metricLabel: dt.metricLabel,
   metricValue: dt.metricValue,
@@ -52,13 +52,13 @@ export const teamMemberNorthStarStyles = {
   statusInvited:
     "inline-flex items-center rounded-full bg-[rgba(245,158,11,0.12)] px-2.5 py-0.5 text-xs font-medium text-amber-900 ring-1 ring-[rgba(245,158,11,0.22)]",
   statusSuspended:
-    "inline-flex items-center rounded-full bg-[rgba(138,99,36,0.08)] px-2.5 py-0.5 text-xs font-medium text-[#6B6255] ring-1 ring-[rgba(138,99,36,0.14)]",
+    "inline-flex items-center rounded-full bg-[rgba(138,99,36,0.08)] px-2.5 py-0.5 text-xs font-medium text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.14)]",
   toggleTrackOn: "bg-[#B88A2E]",
   toggleTrackOff: "bg-[rgba(138,99,36,0.18)]",
   certChip:
     "inline-flex items-center gap-1 rounded-full border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-1 text-sm font-medium text-[#4F4638]",
   certRemove:
-    "ml-0.5 text-[#6B6255] transition-colors hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-60",
+    "ml-0.5 text-[#64748B] transition-colors hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-60",
 } as const;
 
 export const tm = teamMemberNorthStarStyles;
