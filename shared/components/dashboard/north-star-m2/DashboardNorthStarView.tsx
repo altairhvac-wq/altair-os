@@ -9,6 +9,7 @@ import { DashboardNorthStarMobileView } from "./DashboardNorthStarMobileView";
 import { NorthStarMissionHero } from "./NorthStarMissionHero";
 import { NorthStarOperatingBoard } from "./NorthStarOperatingBoard";
 import { NorthStarSupportingBands } from "./NorthStarSupportingBands";
+import { WorkflowRemindersSection } from "@/shared/components/dashboard/WorkflowRemindersSection";
 
 export type DashboardNorthStarViewProps = {
   data: DashboardData;
@@ -61,6 +62,11 @@ export function DashboardNorthStarView({
 
       <MasterContentStack density="compact" className="hidden lg:flex">
         <NorthStarMissionHero data={data} dateLabel={dateLabel} />
+        <WorkflowRemindersSection
+          snapshot={data.workflowReminders}
+          canManage={data.access.canViewBilling}
+          variant="north-star"
+        />
         <NorthStarOperatingBoard data={data} />
         <NorthStarSupportingBands data={data} />
       </MasterContentStack>

@@ -235,3 +235,108 @@ export async function completeWorkflowReminder(
     snoozed_until: null,
   });
 }
+
+export async function getWorkflowReminderById(
+  companyId: string,
+  reminderId: string,
+): Promise<WorkflowReminderRow | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("workflow_reminders")
+    .select("*")
+    .eq("company_id", companyId)
+    .eq("id", reminderId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getWorkflowReminderById] query failed:", {
+      companyId,
+      reminderId,
+      error,
+    });
+    return null;
+  }
+
+  return (data as WorkflowReminderRow | null) ?? null;
+}
+
+export type DashboardWorkflowRemindersLoadResult = {
+  reminders: WorkflowReminderRow[];
+  totalActiveCount: number;
+};
+
+export const DASHBOARD_WORKFLOW_REMINDERS_LIMIT = 8;
+
+export const getDashboardWorkflowRemindersForCompany = cache(
+  async function getDashboardWorkflowRemindersForCompany(
+    companyId: string,
+    options?: { limit?: number },
+  ): Promise<DashboardWorkflowRemindersLoadResult> {
+    const limit = options?.limit ?? DASHBOARD_WORKFLOW_REMINDERS_LIMIT;
+    const supabase = await createClient();
+
+    const { data, error, count } = await supabase
+      .from("workflow_reminders")
+      .select("*", { count: "exact" })
+      .eq("company_id", companyId)
+      .eq("status", "active")
+      .order("triggered_at", { ascending: true })
+      .limit(limit);
+
+    if (error) {
+      console.error("[getDashboardWorkflowRemindersForCompany] query failed:", {
+        companyId,
+        error,
+      });
+      return { reminders: [], totalActiveCount: 0 };
+    }
+
+    return {
+      reminders: (data ?? []) as WorkflowReminderRow[],
+      totalActiveCount: count ?? 0,
+    };
+  },
+);
+
+export async function snoozeWorkflowReminder(
+  companyId: string,
+  reminderId: string,
+  snoozedUntil: string,
+): Promise<{ reminder: WorkflowReminderRow | null; error: string | null }> {
+  const supabase = await createClient();
+  return updateWorkflowReminder(supabase, companyId, reminderId, {
+    status: "snoozed",
+    snoozed_until: snoozedUntil,
+  });
+}
+
+export async function dismissWorkflowReminder(
+  companyId: string,
+  reminderId: string,
+  userId: string,
+  dismissedAt: string,
+): Promise<{ reminder: WorkflowReminderRow | null; error: string | null }> {
+  const supabase = await createClient();
+  return updateWorkflowReminder(supabase, companyId, reminderId, {
+    status: "dismissed",
+    dismissed_at: dismissedAt,
+    dismissed_by: userId,
+    snoozed_until: null,
+  });
+}
+
+export async function completeWorkflowReminderByUser(
+  companyId: string,
+  reminderId: string,
+  userId: string,
+  completedAt: string,
+): Promise<{ reminder: WorkflowReminderRow | null; error: string | null }> {
+  const supabase = await createClient();
+  return updateWorkflowReminder(supabase, companyId, reminderId, {
+    status: "completed",
+    completed_at: completedAt,
+    completed_by: userId,
+    snoozed_until: null,
+  });
+}

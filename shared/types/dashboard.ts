@@ -1,4 +1,8 @@
 import type { CompanyAccessScope } from "@/lib/database/access-control";
+import type {
+  WorkflowReminderKind,
+  WorkflowReminderSourceEntityType,
+} from "@/lib/database/types/enums";
 import { isSameCalendarDayInTimeZone } from "@/shared/lib/datetime";
 import { getOperationalDayJobCounts } from "@/shared/lib/scheduled-today";
 import type { DispatchJob, Technician } from "@/shared/types/dispatch";
@@ -228,6 +232,27 @@ export type DashboardLeadPipelineSummary = {
   hasLeads: boolean;
 };
 
+export type DashboardWorkflowReminderPreview = {
+  id: string;
+  title: string;
+  message: string | null;
+  triggeredAt: string;
+  reminderKind: WorkflowReminderKind;
+  sourceEntityType: WorkflowReminderSourceEntityType;
+  sourceEntityId: string;
+  kindLabel: string;
+  sourceLabel: string;
+  ageLabel: string;
+  openHref: string;
+  openLabel: string;
+};
+
+export type DashboardWorkflowRemindersSnapshot = {
+  totalActiveCount: number;
+  visibleCount: number;
+  reminders: DashboardWorkflowReminderPreview[];
+};
+
 export type DashboardData = {
   access: CompanyAccessScope;
   analytics: DashboardAnalyticsSnapshot;
@@ -247,6 +272,7 @@ export type DashboardData = {
   leadsReadyForEstimate: DashboardLeadAttentionSnapshot;
   leadFollowUp: DashboardLeadFollowUpSnapshot;
   leadPipelineSummary: DashboardLeadPipelineSummary;
+  workflowReminders: DashboardWorkflowRemindersSnapshot;
   operationalInsights: DailyOperationsSummary;
   operationalHealth: OperationalHealthReport;
   recentActivity: OperationalActivity[];

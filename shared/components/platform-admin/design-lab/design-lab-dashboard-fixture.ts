@@ -549,6 +549,26 @@ export const DESIGN_LAB_DASHBOARD_FIXTURE: DashboardData = {
     lostLeads: 1,
     hasLeads: true,
   },
+  workflowReminders: {
+    totalActiveCount: 3,
+    visibleCount: 3,
+    reminders: [
+      {
+        id: "demo-reminder-1",
+        title: "Invoice INV-1042 unpaid 7+ days",
+        message: "Follow up with Riverside Mechanical on $1,240 balance.",
+        triggeredAt: "2026-06-20T14:00:00.000Z",
+        reminderKind: "unpaid_invoice_7d",
+        sourceEntityType: "invoice",
+        sourceEntityId: "demo-invoice-1",
+        kindLabel: "Unpaid invoice",
+        sourceLabel: "Invoice",
+        ageLabel: "4 days ago",
+        openHref: "/invoices/demo-invoice-1",
+        openLabel: "Open invoice",
+      },
+    ],
+  },
   operationalInsights: {
     generatedAt: DEMO_NOW,
     sections: {

@@ -87,6 +87,7 @@ import {
 } from "@/shared/types/time-entry";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { DashboardNorthStarView } from "@/shared/components/dashboard/north-star-m2";
+import { WorkflowRemindersSection } from "@/shared/components/dashboard/WorkflowRemindersSection";
 import {
   MasterContentStack,
   MasterPageCanvas,
@@ -1217,6 +1218,14 @@ function DashboardContentLayout({
 
   const needsAttentionContent = access.canViewOperationalReports ? (
     <div className="grid min-w-0 gap-2 lg:grid-cols-2 lg:gap-3">
+      {access.canViewBilling ? (
+        <div className="lg:col-span-2">
+          <WorkflowRemindersSection
+            snapshot={data.workflowReminders}
+            canManage={access.canViewBilling}
+          />
+        </div>
+      ) : null}
       <DashboardCompactAttentionSummary data={data} />
       {access.canManageCustomers ? (
         <DashboardCompactLeadPipelineSection

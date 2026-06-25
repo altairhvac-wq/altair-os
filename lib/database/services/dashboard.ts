@@ -18,6 +18,9 @@ import {
 } from "@/shared/lib/leads/lead-metrics";
 import { filterDailyOperationsSummaryForBillingAccess } from "@/shared/lib/dashboard-operational-insights-visibility";
 import { listRecentOperationalActivitiesForCompany } from "@/lib/database/queries/dashboard";
+import {
+  getDashboardWorkflowRemindersForCompany,
+} from "@/lib/database/queries/workflow-reminders";
 import { listEstimates } from "@/lib/database/queries/estimates";
 import { getJobSchedulingSnapshotsByIds } from "@/lib/database/queries/jobs";
 import {
@@ -60,6 +63,7 @@ import type { OperationalHealthReport } from "@/shared/types/operational-health-
 import type { QueueResolutionTrendSummary } from "@/shared/types/queue-resolution-trends";
 import { resolveReportDateBounds } from "@/shared/types/reports";
 import { buildReportSectionMeta } from "@/shared/types/reports";
+import { buildDashboardWorkflowReminderPreview } from "@/shared/lib/workflow-reminder-display";
 import type { Estimate } from "@/shared/types/estimate";
 import type { TechnicianTimeState } from "@/shared/types/time-entry";
 import type { TimeEntry } from "@/shared/types/time-entry";
@@ -108,6 +112,12 @@ const EMPTY_LEAD_PIPELINE_SUMMARY: DashboardData["leadPipelineSummary"] = {
   wonLeads: 0,
   lostLeads: 0,
   hasLeads: false,
+};
+
+const EMPTY_WORKFLOW_REMINDERS: DashboardData["workflowReminders"] = {
+  totalActiveCount: 0,
+  visibleCount: 0,
+  reminders: [],
 };
 /** Match admin layout fetch so React cache dedupes within the request. */
 const NOTIFICATIONS_FETCH_LIMIT = 20;
@@ -370,6 +380,7 @@ export async function getDashboardData(
     operationsSummary,
     officeReviewQueueReport,
     leads,
+    workflowRemindersLoad,
   ] = await Promise.all([
     access.canViewTechnicianRoster
       ? listTechnicians(companyId, context, todayJobs)
@@ -407,6 +418,9 @@ export async function getDashboardData(
     access.canManageCustomers
       ? listLeads(companyId, { includeLatestActivity: false })
       : Promise.resolve([]),
+    access.canViewBilling
+      ? getDashboardWorkflowRemindersForCompany(companyId)
+      : Promise.resolve({ reminders: [], totalActiveCount: 0 }),
   ]);
 
   const leadPipelineDateBounds = resolveReportDateBounds(
@@ -710,6 +724,23 @@ export async function getDashboardData(
           hasLeads: hasActiveLeads,
         }
       : EMPTY_LEAD_PIPELINE_SUMMARY,
+    workflowReminders: access.canViewBilling
+      ? {
+          totalActiveCount: workflowRemindersLoad.totalActiveCount,
+          visibleCount: workflowRemindersLoad.reminders.length,
+          reminders: workflowRemindersLoad.reminders.map((reminder) =>
+            buildDashboardWorkflowReminderPreview({
+              id: reminder.id,
+              title: reminder.title,
+              message: reminder.message,
+              triggeredAt: reminder.triggered_at,
+              reminderKind: reminder.reminder_kind,
+              sourceEntityType: reminder.source_entity_type,
+              sourceEntityId: reminder.source_entity_id,
+            }),
+          ),
+        }
+      : EMPTY_WORKFLOW_REMINDERS,
     operationalInsights: access.canViewOperationalReports
       ? filterDailyOperationsSummaryForBillingAccess(
           operationsSummary,
