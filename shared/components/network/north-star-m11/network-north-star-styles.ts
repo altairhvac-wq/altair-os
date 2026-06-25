@@ -13,7 +13,7 @@ export const networkNorthStarStyles = {
   sectionEyebrow:
     "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8A6324]",
   sectionTitle: "text-sm font-bold text-[#17130E]",
-  sectionSubtitle: "text-[11px] leading-snug text-[#6B6255]",
+  sectionSubtitle: "text-[11px] leading-snug text-[#4F4638]",
   panelHeader:
     "shrink-0 border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-3 py-2.5 sm:px-4 lg:px-5",
   scrollRegion: "flex-1 overflow-y-auto overscroll-contain",
@@ -30,10 +30,10 @@ export const networkNorthStarStyles = {
   filterToolbarRow:
     "grid min-w-0 grid-cols-1 items-center gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,11rem)_minmax(0,11rem)] lg:grid-cols-[minmax(0,1.4fr)_minmax(0,10rem)_minmax(0,12rem)]",
   filterInput:
-    "h-9 w-full rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] text-sm leading-normal text-[#17130E] outline-none transition-colors placeholder:text-[#6B6255] focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]",
+    "h-9 w-full rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] text-sm leading-normal text-[#17130E] outline-none transition-colors placeholder:text-[#64748B] focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]",
   emptyState: lt.emptyState,
   emptyTitle: "text-sm font-semibold text-[#17130E]",
-  emptyDescription: "mt-1 text-xs text-[#6B6255]",
+  emptyDescription: "mt-1 text-xs text-[#64748B]",
   panelAction:
     "inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-2.5 py-1.5 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[rgba(201,164,77,0.38)] hover:bg-[#F3EBDD] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#8A6324]",
   panelActionAccent:
@@ -42,7 +42,7 @@ export const networkNorthStarStyles = {
     "group/card relative rounded-lg border border-[rgba(201,164,77,0.28)] bg-[#FFF9EA] px-2 py-1.5 transition-colors hover:border-[rgba(201,164,77,0.42)] hover:bg-[#FFFDF5]",
   cardPrimary: "truncate text-[13px] font-semibold leading-tight text-[#17130E]",
   cardSecondary: "truncate text-[11px] leading-snug text-[#4F4638]",
-  cardMuted: "truncate text-[11px] leading-snug text-[#6B6255]",
+  cardMuted: "truncate text-[11px] leading-snug text-[#64748B]",
   cardIcon:
     "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-[10px] font-bold leading-none text-[#17130E] ring-1 ring-[rgba(138,99,36,0.16)]",
   cardActionFull:
@@ -54,19 +54,19 @@ export const networkNorthStarStyles = {
   detailPanelHeader:
     "flex shrink-0 items-start justify-between border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-3 py-2.5 sm:px-4",
   detailPanelTitle: "truncate text-sm font-bold text-[#17130E]",
-  detailPanelSubtitle: "mt-0.5 text-[11px] leading-snug text-[#6B6255]",
+  detailPanelSubtitle: "mt-0.5 text-[11px] leading-snug text-[#4F4638]",
   detailPanelClose:
-    "rounded-lg p-1.5 text-[#6B6255] transition-colors hover:bg-[#EFE4CB] hover:text-[#17130E]",
+    "rounded-lg p-1.5 text-[#64748B] transition-colors hover:bg-[#EFE4CB] hover:text-[#17130E]",
   detailPanelEmptyShell:
     "flex shrink-0 flex-col items-center px-4 py-5 text-center",
   detailPanelEmptyIcon:
     "flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-[#17130E] ring-1 ring-[rgba(138,99,36,0.16)]",
   detailPanelEmptyTitle: "mt-3 text-sm font-semibold text-[#17130E]",
   detailPanelEmptyBody:
-    "mt-1.5 max-w-[240px] text-[11px] leading-relaxed text-[#6B6255]",
+    "mt-1.5 max-w-[240px] text-[11px] leading-relaxed text-[#64748B]",
   detailPanelEmptyChips: "mt-5 flex flex-wrap items-center justify-center gap-2",
   detailPanelEmptyChip:
-    "inline-flex items-center rounded-full border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#6B6255]",
+    "inline-flex items-center rounded-full border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#4F4638]",
   detailPanelProfileHero:
     "rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-4 shadow-[0_2px_12px_rgba(138,99,36,0.08)]",
   detailPanelProfileName: "text-base font-bold text-[#17130E]",
@@ -75,14 +75,14 @@ export const networkNorthStarStyles = {
   profileVisibilityStrip:
     "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]/80 px-3 py-2 sm:px-3.5",
   profileVisibilityLabel: "text-xs font-semibold text-[#17130E]",
-  profileVisibilityHelper: "text-[10px] leading-snug text-[#6B6255]",
+  profileVisibilityHelper: "text-[10px] leading-snug text-[#64748B]",
   profileVisibilityPill:
     "inline-flex items-center rounded-full bg-[rgba(22,101,52,0.10)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#166534] ring-1 ring-[rgba(22,101,52,0.18)]",
   profileVisibilityPillHidden:
-    "inline-flex items-center rounded-full bg-[rgba(107,98,85,0.10)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#6B6255] ring-1 ring-[rgba(107,98,85,0.18)]",
+    "inline-flex items-center rounded-full bg-[rgba(107,98,85,0.10)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#4F4638] ring-1 ring-[rgba(107,98,85,0.18)]",
   commandHeaderChips: "flex flex-wrap items-center gap-1.5",
   commandHeaderChip:
-    "inline-flex items-center rounded-full border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6B6255]",
+    "inline-flex items-center rounded-full border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#4F4638]",
   commandHeaderChipAccent:
     "inline-flex items-center rounded-full border border-[rgba(201,164,77,0.28)] bg-[rgba(201,164,77,0.10)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8A6324]",
   tabBodySurface:
@@ -122,17 +122,17 @@ export const networkNorthStarStyles = {
   mapPreviewIcon:
     "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#FFF9EA] text-[#8A6324] shadow-[0_1px_4px_rgba(138,99,36,0.10)] ring-1 ring-[rgba(138,99,36,0.12)]",
   mapPreviewTitle: "text-xs font-bold text-[#17130E]",
-  mapPreviewSubtitle: "mt-0.5 text-[10px] leading-snug text-[#6B6255]",
+  mapPreviewSubtitle: "mt-0.5 text-[10px] leading-snug text-[#4F4638]",
   mapPreviewMessage: "mt-1 text-[10px] leading-snug text-[#4F4638]",
   mapPreviewPill:
-    "inline-flex items-center rounded-full border border-[rgba(138,99,36,0.10)] bg-[rgba(255,249,234,0.82)] px-2.5 py-0.5 text-[10px] font-semibold text-[#6B6255] backdrop-blur-[1px]",
+    "inline-flex items-center rounded-full border border-[rgba(138,99,36,0.10)] bg-[rgba(255,249,234,0.82)] px-2.5 py-0.5 text-[10px] font-semibold text-[#64748B] backdrop-blur-[1px]",
   mapPreviewHint:
     "mt-3 inline-flex w-fit items-center rounded-lg border border-dashed border-[rgba(138,99,36,0.22)] bg-[rgba(255,249,234,0.75)] px-2.5 py-1 text-[10px] font-medium text-[#8A6324] backdrop-blur-[1px]",
   mapPreviewAreasLabel:
     "text-[10px] font-semibold uppercase tracking-[0.1em] text-[#8A6324]",
   mapPreviewAreaChip:
     "inline-flex max-w-full items-center truncate rounded-full border border-[rgba(201,164,77,0.22)] bg-[rgba(255,249,234,0.88)] px-2.5 py-0.5 text-[10px] font-medium text-[#4F4638] backdrop-blur-[1px]",
-  mapPreviewMeta: "text-[10px] text-[#6B6255]",
+  mapPreviewMeta: "text-[10px] text-[#64748B]",
   mapPreviewFooter: "mt-auto space-y-1.5 pt-1.5",
   cardShell:
     "group/card relative rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF] px-2 py-1.5 transition-colors hover:border-[rgba(201,164,77,0.24)] hover:bg-[#FFFDF5]",
@@ -155,17 +155,17 @@ export const networkNorthStarStyles = {
   errorBanner:
     "rounded-xl border border-[rgba(185,28,28,0.22)] bg-[#FEF2F2] px-4 py-3 text-sm text-[#991B1B]",
   formInput:
-    "mt-1 w-full min-h-10 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] placeholder:text-[#6B6255] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:min-h-[44px] sm:py-2.5",
+    "mt-1 w-full min-h-10 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] placeholder:text-[#64748B] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:min-h-[44px] sm:py-2.5",
   formTextarea:
-    "mt-1 w-full min-h-[80px] max-w-full resize-y rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] placeholder:text-[#6B6255] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:min-h-[96px] sm:py-2.5",
+    "mt-1 w-full min-h-[80px] max-w-full resize-y rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] placeholder:text-[#64748B] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:min-h-[96px] sm:py-2.5",
   formLabel: "text-xs font-semibold text-[#4F4638]",
-  formLabelOptional: "font-normal text-[#6B6255]",
+  formLabelOptional: "font-normal text-[#64748B]",
   saveButton:
     "inline-flex min-h-10 items-center justify-center rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-4 py-2 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[44px] sm:py-2.5",
   cancelButton:
     "inline-flex min-h-10 items-center justify-center rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-4 py-2 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[44px] sm:py-2.5",
   permissionCopy: "text-sm text-[#4F4638]",
-  countMeta: "text-xs font-medium text-[#6B6255]",
+  countMeta: "text-xs font-medium text-[#64748B]",
   workspaceStack:
     "network-north-star-workspace flex min-h-0 min-w-0 flex-1 flex-col space-y-3 overflow-x-hidden overflow-y-auto overscroll-contain px-3 pb-12 sm:space-y-3.5 sm:px-3.5 sm:pb-14 lg:px-5 lg:pb-16",
 } as const;

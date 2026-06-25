@@ -7,7 +7,7 @@ export const nsReportChart = {
   gridLine: "border-t border-[rgba(138,99,36,0.07)]",
   track: "overflow-hidden rounded-md bg-[#EDE3C8]",
   trackSegmented: "flex gap-0.5 overflow-hidden rounded-md bg-[#EDE3C8] p-0.5",
-  axisLabel: "text-[10px] font-medium tabular-nums leading-none text-[#6B6255]",
+  axisLabel: "text-[10px] font-medium tabular-nums leading-none text-[#64748B]",
   chartFrame:
     "relative overflow-hidden rounded-lg border border-[rgba(138,99,36,0.08)] bg-gradient-to-b from-[#FFF9EA]/70 to-[#FBF7EF]",
   chartPlot: "absolute inset-x-3 inset-y-2 sm:inset-x-4 sm:inset-y-3",
@@ -53,6 +53,6 @@ export const nsReportChart = {
   table: {
     row: "px-3 py-3 transition-colors hover:bg-[#FFF9EA]/55 sm:px-4",
     header:
-      "text-[10px] font-bold uppercase tracking-[0.14em] text-[#6B6255]",
+      "text-[10px] font-bold uppercase tracking-[0.14em] text-[#4F4638]",
   },
 } as const;

@@ -310,7 +310,7 @@ export const northStarListTokens: NorthStarListPageTokens = {
   badgeDeleted:
     "inline-flex shrink-0 rounded-full bg-[rgba(138,99,36,0.10)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.18)]",
   badgeArchived:
-    "inline-flex shrink-0 rounded-full bg-[#F1E7D2] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#6B6255] ring-1 ring-[rgba(138,99,36,0.12)]",
+    "inline-flex shrink-0 rounded-full bg-[#F1E7D2] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.12)]",
   bulkBar:
     "sticky bottom-0 z-20 border-t border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(3,7,12,0.18)] sm:px-4 lg:bg-[#FBF7EF] lg:px-5",
   bulkBarTitle: "text-sm font-bold text-[#17130E]",
@@ -413,7 +413,7 @@ export const northStarDetailTokens: NorthStarDetailPageTokens = {
   sectionSurface:
     "north-star-detail-section scroll-mt-6 rounded-[1.25rem] p-3.5 sm:p-4",
   sectionTitle: "text-sm font-bold text-[#17130E]",
-  sectionSubtitle: "text-[11px] text-[#6B6255]",
+  sectionSubtitle: "text-[11px] text-[#4F4638]",
   sectionIconWrap:
     "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)] [&_svg]:text-[#8A6324]",
   sectionNav:
@@ -452,7 +452,7 @@ export const northStarDetailTokens: NorthStarDetailPageTokens = {
   metricCardHighlight:
     "rounded-lg border border-[rgba(245,158,11,0.35)] bg-[rgba(254,243,199,0.55)] px-2.5 py-2",
   metricLabel:
-    "text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255]",
+    "text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638]",
   metricValue: "mt-0.5 text-sm font-bold tabular-nums text-[#17130E]",
   metricIcon: "h-3.5 w-3.5 shrink-0 text-[#8A6324]",
   opportunityLink:
@@ -477,10 +477,10 @@ export const northStarDetailTokens: NorthStarDetailPageTokens = {
     "inline-flex items-center gap-0.5 rounded-full bg-[#EFE4CB] px-2 py-0.5 text-[11px] font-medium text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.12)]",
   ivoryCardPrimary: "text-sm font-semibold text-[#17130E]",
   ivoryCardSecondary: "text-xs text-[#4F4638]",
-  ivoryCardMuted: "text-xs text-[#6B6255]",
+  ivoryCardMuted: "text-xs text-[#64748B]",
   compactSectionSurface:
     "north-star-detail-section scroll-mt-6 rounded-[1rem] p-3",
-  truncatedHint: "mt-2 text-xs font-medium text-[#6B6255]",
+  truncatedHint: "mt-2 text-xs font-medium text-[#64748B]",
 };
 
 /**
@@ -521,7 +521,7 @@ export const northStarInvoiceDocumentTokens: NorthStarInvoiceDocumentTokens = {
   documentSurface:
     "invoice-north-star-document relative flex min-h-[960px] flex-col overflow-x-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3 shadow-[0_10px_40px_-14px_rgba(3,7,12,0.28)] sm:rounded-[1.25rem] sm:p-4 print:min-h-0 print:rounded-none print:border print:border-slate-400 print:bg-white print:p-0 print:shadow-none",
   documentSectionLabel:
-    "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6B6255] print:text-slate-600",
+    "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4F4638] print:text-slate-600",
   documentCustomerCard:
     "rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-3 py-2 ring-1 ring-[rgba(138,99,36,0.08)] sm:rounded-xl sm:px-4 sm:py-3 print:rounded-none print:border-0 print:bg-white print:px-0 print:py-0 print:ring-0",
   documentLineItemsTable: "invoice-north-star-line-items",
@@ -533,7 +533,7 @@ export const northStarInvoiceDocumentTokens: NorthStarInvoiceDocumentTokens = {
     "text-2xl font-bold tabular-nums text-[#17130E] sm:text-3xl print:text-2xl print:text-slate-900",
   ivoryPrimary: "text-[#17130E]",
   ivorySecondary: "text-[#4F4638]",
-  ivoryMuted: "text-[#6B6255]",
+  ivoryMuted: "text-[#64748B]",
   ivoryLink: "text-[#9A7028] transition-colors hover:text-[#8A6324]",
   darkPrimary: "text-[#FFF8E8]",
   darkSecondary: "text-[#D7CDBD]",
@@ -555,7 +555,7 @@ export const northStarEstimateDocumentTokens: NorthStarEstimateDocumentTokens = 
   documentSurface:
     "estimate-north-star-document relative flex min-h-[960px] flex-col overflow-x-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3 shadow-[0_10px_40px_-14px_rgba(3,7,12,0.28)] sm:rounded-[1.25rem] sm:p-4 print:min-h-0 print:rounded-none print:border print:border-slate-400 print:bg-white print:p-0 print:shadow-none",
   documentSectionLabel:
-    "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6B6255] print:text-slate-600",
+    "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4F4638] print:text-slate-600",
   documentCustomerCard:
     "rounded-lg border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-3 py-2 ring-1 ring-[rgba(138,99,36,0.08)] sm:rounded-xl sm:px-4 sm:py-3 print:rounded-none print:border-0 print:bg-white print:px-0 print:py-0 print:ring-0",
   documentLineItemsTable: "estimate-north-star-line-items",
@@ -567,7 +567,7 @@ export const northStarEstimateDocumentTokens: NorthStarEstimateDocumentTokens = 
     "text-2xl font-bold tabular-nums text-[#17130E] sm:text-3xl print:text-2xl print:text-slate-900",
   ivoryPrimary: "text-[#17130E]",
   ivorySecondary: "text-[#4F4638]",
-  ivoryMuted: "text-[#6B6255]",
+  ivoryMuted: "text-[#64748B]",
   ivoryLink:
     "text-[#9A7028] transition-colors hover:text-[#8A6324]",
   darkPrimary: "text-[#FFF8E8]",
@@ -719,7 +719,7 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   sectionButtonEmphasized:
     "border-[rgba(201,164,77,0.42)] bg-[#F5EBD4] text-[#17130E] ring-2 ring-[rgba(201,164,77,0.28)] [&_svg]:text-[#8A6324]",
   sectionButtonBadge:
-    "rounded-full bg-[rgba(138,99,36,0.10)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#6B6255] sm:px-2 sm:text-xs",
+    "rounded-full bg-[rgba(138,99,36,0.10)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#64748B] sm:px-2 sm:text-xs",
   sectionButtonBadgeActive:
     "rounded-full bg-[rgba(201,164,77,0.18)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#8A6324] sm:px-2 sm:text-xs",
   focusBanner:
@@ -776,11 +776,11 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
     "flex min-h-[4.75rem] min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain bg-[#FFF9EA] p-2 sm:min-h-[5.5rem] sm:gap-2.5 sm:p-2.5",
   laneEmptyWell:
     "flex flex-1 items-center justify-center rounded-lg border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FBF7EF] px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3",
-  laneEmptyText: "text-[11px] font-medium text-[#6B6255]",
+  laneEmptyText: "text-[11px] font-medium text-[#64748B]",
   laneToggleButton:
     "self-start rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-1.5 text-[11px] font-semibold text-[#4F4638] transition-colors hover:border-[rgba(201,164,77,0.32)] hover:bg-[#F3EBDD] sm:text-xs",
   laneToggleButtonDashed:
-    "self-start rounded-lg border border-dashed border-[rgba(138,99,36,0.22)] bg-[#FBF7EF] px-3 py-1.5 text-[11px] font-semibold text-[#6B6255] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[#FFF9EA] sm:text-xs",
+    "self-start rounded-lg border border-dashed border-[rgba(138,99,36,0.22)] bg-[#FBF7EF] px-3 py-1.5 text-[11px] font-semibold text-[#4F4638] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[#FFF9EA] sm:text-xs",
   unassignedLane:
     "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(201,164,77,0.22)] bg-[#F5EBD4] shadow-[0_2px_10px_rgba(138,99,36,0.10)] sm:rounded-2xl",
   unassignedLaneEmphasis:
@@ -790,7 +790,7 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   unassignedLaneIcon:
     "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgba(201,164,77,0.18)] text-[#8A6324] ring-1 ring-[rgba(201,164,77,0.24)] sm:h-9 sm:w-9 sm:rounded-xl [&_svg]:text-[#8A6324]",
   unassignedLaneTitle: "text-sm font-bold text-[#17130E]",
-  unassignedLaneSubtitle: "hidden text-[11px] text-[#6B6255] sm:block",
+  unassignedLaneSubtitle: "hidden text-[11px] text-[#4F4638] sm:block",
   unassignedLaneCount:
     "rounded-full border border-[rgba(201,164,77,0.28)] bg-[rgba(201,164,77,0.14)] px-2 py-0.5 text-[11px] font-bold tabular-nums text-[#8A6324]",
   unassignedJobWell:
@@ -819,7 +819,7 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   emptyStateIcon:
     "flex h-12 w-12 items-center justify-center rounded-xl bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.14)] [&_svg]:text-[#8A6324]",
   emptyStateTitle: "mt-3 text-base font-bold text-[#17130E]",
-  emptyStateDescription: "mt-1.5 text-sm text-[#6B6255]",
+  emptyStateDescription: "mt-1.5 text-sm text-[#64748B]",
   detailPanelShell:
     "dispatch-north-star-detail-panel relative flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-t-2xl bg-[#1A2029] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38)] ring-1 ring-[rgba(174,182,194,0.18)] sm:rounded-2xl",
   detailPanelTopAccent:
@@ -836,11 +836,11 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   detailPanelBody:
     "dispatch-north-star-detail-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-[#FBF7EF] pl-4 pr-5 py-4 pb-[max(6rem,calc(1.5rem+env(safe-area-inset-bottom)))] sm:pl-5 sm:pr-6 sm:py-5 sm:pb-[max(4.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] lg:pb-6",
   detailSectionLabel:
-    "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6B6255]",
+    "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4F4638]",
   detailIdentityCard:
     "rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-3.5 shadow-[0_2px_8px_rgba(3,7,12,0.06)] sm:p-4",
   detailIdentityService: "text-sm font-medium text-[#4F4638]",
-  detailIdentityMeta: "text-xs text-[#6B6255]",
+  detailIdentityMeta: "text-xs text-[#64748B]",
   detailSiteContextCard:
     "rounded-xl border border-[rgba(138,99,36,0.12)] bg-gradient-to-br from-[#FFF9EA] to-[#F5F0E4] p-3.5 shadow-[0_2px_8px_rgba(3,7,12,0.06)] sm:p-4",
   detailSiteContextIconWrap:
@@ -861,10 +861,10 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   detailSelect:
     "w-full min-h-11 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-3 text-sm text-[#17130E] outline-none focus:border-[#B88A2E] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2",
   detailPrimaryButton:
-    "north-star-dispatch-disabled-action w-full min-h-11 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3 py-3 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:border-[rgba(138,99,36,0.14)] disabled:from-[#EFE4CB] disabled:via-[#EFE4CB] disabled:to-[#EFE4CB] disabled:text-[#6B6255] disabled:shadow-none sm:py-2",
+    "north-star-dispatch-disabled-action w-full min-h-11 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3 py-3 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:border-[rgba(138,99,36,0.14)] disabled:from-[#EFE4CB] disabled:via-[#EFE4CB] disabled:to-[#EFE4CB] disabled:text-[#64748B] disabled:shadow-none sm:py-2",
   detailSecondaryButton:
     "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 py-3 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2 [&_svg]:text-[#8A6324]",
-  detailMutedText: "text-xs text-[#6B6255]",
+  detailMutedText: "text-xs text-[#64748B]",
   detailBodyText: "text-sm leading-relaxed text-[#4F4638]",
   detailFooterLink:
     "flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 py-3 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] sm:py-2",
@@ -900,10 +900,10 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   summaryMetricCardInteractive:
     "cursor-pointer transition-[border-color,box-shadow,background-color] hover:border-[rgba(201,164,77,0.32)] hover:bg-[#F3EBDD] hover:shadow-[0_4px_14px_rgba(3,7,12,0.10)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.30)]",
   summaryMetricLabel:
-    "truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255] sm:text-[11px]",
+    "truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638] sm:text-[11px]",
   summaryMetricValue:
     "mt-0.5 text-lg font-bold tabular-nums text-[#17130E] sm:mt-1 sm:text-2xl",
-  summaryMetricDescription: "mt-0.5 hidden text-xs text-[#6B6255] sm:block",
+  summaryMetricDescription: "mt-0.5 hidden text-xs text-[#64748B] sm:block",
   summaryMetricIcon:
     "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.14)] sm:h-10 sm:w-10 sm:rounded-xl [&_svg]:text-[#8A6324]",
   workloadCard:

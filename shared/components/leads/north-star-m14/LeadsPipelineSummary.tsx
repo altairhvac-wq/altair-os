@@ -55,7 +55,7 @@ function SummaryChip({ label, value, active = false, onClick }: SummaryChipProps
 
   const content = (
     <>
-      <p className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255]">
+      <p className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638]">
         {label}
       </p>
       <p className="mt-0.5 text-base font-bold tabular-nums text-[#17130E] sm:text-lg">
@@ -135,7 +135,7 @@ export function LeadsPipelineSummary({
               }`}
             >
               <span>{formatLeadStatus(status)}</span>
-              <span className="tabular-nums text-[#6B6255]">{count}</span>
+              <span className="tabular-nums text-[#64748B]">{count}</span>
             </button>
           );
         })}

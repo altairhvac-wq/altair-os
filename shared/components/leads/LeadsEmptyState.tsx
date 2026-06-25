@@ -18,7 +18,7 @@ export function LeadsEmptyState({
         <div className="admin-empty-wrap">
           <div className={`${lt.emptyState} w-full max-w-md text-center`}>
             <p className="text-sm font-semibold text-[#17130E]">No matching leads</p>
-            <p className="mt-1 text-sm text-[#6B6255]">
+            <p className="mt-1 text-sm text-[#64748B]">
               Try adjusting your search or filters.
             </p>
           </div>
@@ -48,7 +48,7 @@ export function LeadsEmptyState({
             <Users className="h-6 w-6 text-[#8A6324]" />
           </div>
           <p className="mt-4 text-sm font-semibold text-[#17130E]">No leads yet.</p>
-          <p className="mt-1 text-sm text-[#6B6255]">
+          <p className="mt-1 text-sm text-[#64748B]">
             Capture new opportunities before they become customers.
           </p>
           {onCreateLead ? (

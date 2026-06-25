@@ -44,7 +44,7 @@
   --north-star-ivory-strong: #fff9ea;
   --north-star-text-dark: #17130e;
   --north-star-text-secondary: #4f4638;
-  --north-star-text-muted: #6b6255;
+  --north-star-text-muted: #64748b;
   --north-star-text-light: #f3ebdd;
   --north-star-text-light-muted: #c9bfae;
   --north-star-graphite-base: var(--north-star-sidebar);
@@ -309,7 +309,7 @@ a[href] {
   --north-star-ivory-strong: #fff9ea;
   --north-star-text-dark: #17130e;
   --north-star-text-secondary: #4f4638;
-  --north-star-text-muted: #6b6255;
+  --north-star-text-muted: var(--north-star-work-text-muted);
   --north-star-text-light: #f3ebdd;
   --north-star-text-light-muted: #c9bfae;
   --north-star-work-surface: #e8edf3;
@@ -1503,9 +1503,12 @@ a[href] {
   color: #4f4638 !important;
 }
 
-.dispatch-north-star-workflow .text-slate-500,
+.dispatch-north-star-workflow .text-slate-500 {
+  color: #4f4638 !important;
+}
+
 .dispatch-north-star-workflow .text-slate-600 {
-  color: #6b6255 !important;
+  color: #64748b !important;
 }
 
 .dispatch-north-star-workflow .border-slate-200.bg-white {
@@ -1998,9 +2001,12 @@ a[href] {
   color: #17130e;
 }
 
-.estimate-north-star-document .invoice-company-hero .text-slate-500,
+.estimate-north-star-document .invoice-company-hero .text-slate-500 {
+  color: #4f4638;
+}
+
 .estimate-north-star-document .invoice-company-hero .text-slate-600 {
-  color: #6b6255;
+  color: #64748b;
 }
 
 .estimate-north-star-document .invoice-company-hero .border-slate-900,
@@ -2085,9 +2091,12 @@ a[href] {
   color: #17130e;
 }
 
-.invoice-north-star-document .invoice-company-hero .text-slate-500,
+.invoice-north-star-document .invoice-company-hero .text-slate-500 {
+  color: #4f4638;
+}
+
 .invoice-north-star-document .invoice-company-hero .text-slate-600 {
-  color: #6b6255;
+  color: #64748b;
 }
 
 .invoice-north-star-document .invoice-company-hero .border-slate-900,

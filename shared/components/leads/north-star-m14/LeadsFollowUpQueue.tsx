@@ -32,7 +32,7 @@ export function LeadsFollowUpQueue({
           <h2 className="mt-0.5 text-sm font-bold text-[#17130E]">
             {leads.length} lead{leads.length === 1 ? "" : "s"} need contact
           </h2>
-          <p className="mt-0.5 text-[11px] leading-snug text-[#6B6255]">
+          <p className="mt-0.5 text-[11px] leading-snug text-[#64748B]">
             Next touchpoints due today or overdue — prioritize before they cool off.
           </p>
         </div>
@@ -68,7 +68,7 @@ export function LeadsFollowUpQueue({
                 <p className="mt-0.5 text-xs text-[#4F4638]">
                   {formatLeadFollowUpQueueTitle(lead)}
                 </p>
-                <p className="mt-1 text-[11px] font-medium text-[#6B6255]">
+                <p className="mt-1 text-[11px] font-medium text-[#64748B]">
                   Due {formatLeadDate(lead.nextFollowUpAt, timeZone)}
                 </p>
               </div>

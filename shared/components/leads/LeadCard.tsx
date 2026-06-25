@@ -75,7 +75,7 @@ export function LeadCard({
               ) : null}
             </div>
 
-            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-[#6B6255]">
+            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-[#4F4638]">
               <div>
                 <p className="font-medium uppercase tracking-wide">Source</p>
                 <p className="mt-0.5 text-[#4F4638]">
@@ -90,7 +90,7 @@ export function LeadCard({
               </div>
             </div>
 
-            <p className="mt-2 line-clamp-2 text-[11px] text-[#6B6255]">
+            <p className="mt-2 line-clamp-2 text-[11px] text-[#64748B]">
               {getLeadLastActivityLabel(lead)}
             </p>
           </div>
