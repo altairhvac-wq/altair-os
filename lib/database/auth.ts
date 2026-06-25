@@ -2,6 +2,10 @@ import type { User } from "@supabase/supabase-js";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { ProfileRow } from "@/lib/database/types/core-tables";
+import {
+  normalizeTradeKey,
+  type TradeKey,
+} from "@/shared/lib/trades/trade-options";
 import { mapDatabaseError } from "./errors";
 
 export type BootstrapCompanyResult = {
@@ -99,6 +103,7 @@ export async function ensureProfileExists(
 
 export async function bootstrapCompanyForNewUser(
   companyName: string,
+  trade?: TradeKey | null,
 ): Promise<BootstrapCompanyResult> {
   const trimmedName = companyName.trim();
 
@@ -107,9 +112,21 @@ export async function bootstrapCompanyForNewUser(
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("bootstrap_company_for_new_user", {
+  const rpcArgs: {
+    p_company_name: string;
+    p_trade?: string;
+  } = {
     p_company_name: trimmedName,
-  });
+  };
+
+  if (trade) {
+    rpcArgs.p_trade = trade;
+  }
+
+  const { data, error } = await supabase.rpc(
+    "bootstrap_company_for_new_user",
+    rpcArgs,
+  );
 
   if (error) {
     console.error("[bootstrapCompanyForNewUser] RPC bootstrap_company_for_new_user failed:", {
@@ -136,8 +153,9 @@ export async function bootstrapCompanyForNewUser(
 
 export async function ensureOwnerMembershipExists(
   companyName: string,
+  trade?: TradeKey | null,
 ): Promise<BootstrapCompanyResult> {
-  return bootstrapCompanyForNewUser(companyName);
+  return bootstrapCompanyForNewUser(companyName, trade);
 }
 
 export function getCompanyNameFromUserMetadata(
@@ -151,4 +169,8 @@ export function getCompanyNameFromUserMetadata(
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+export function getTradeFromUserMetadata(user: User): TradeKey | null {
+  return normalizeTradeKey(user.user_metadata?.trade);
 }

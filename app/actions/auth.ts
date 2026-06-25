@@ -23,9 +23,14 @@ import {
   bootstrapCompanyForNewUser,
   getActiveCompanyContext,
   getCompanyNameFromUserMetadata,
+  getTradeFromUserMetadata,
 } from "@/lib/database";
 import { processNetworkInviteAfterCompanyBootstrap } from "@/lib/database/services/network-invite-acceptance";
 import { mapAuthError } from "@/lib/database/errors";
+import {
+  normalizeTradeKey,
+  type TradeKey,
+} from "@/shared/lib/trades/trade-options";
 
 export type AuthActionState = {
   error?: string;
@@ -46,6 +51,7 @@ async function redirectAfterAuth(next?: string | null): Promise<never> {
 async function ensureCompanyAfterAuth(
   user: User,
   companyName?: string,
+  trade?: TradeKey | null,
 ): Promise<AuthActionState | null> {
   let context = await getActiveCompanyContext();
 
@@ -55,7 +61,10 @@ async function ensureCompanyAfterAuth(
     }
 
     if (companyName) {
-      const bootstrapResult = await bootstrapCompanyForNewUser(companyName);
+      const bootstrapResult = await bootstrapCompanyForNewUser(
+        companyName,
+        trade,
+      );
 
       if (bootstrapResult.error) {
         return { error: bootstrapResult.error };
@@ -106,8 +115,13 @@ export async function loginAction(
   const companyName = data.user
     ? getCompanyNameFromUserMetadata(data.user)
     : null;
+  const trade = data.user ? getTradeFromUserMetadata(data.user) : null;
   const setupResult = data.user
-    ? await ensureCompanyAfterAuth(data.user, companyName ?? undefined)
+    ? await ensureCompanyAfterAuth(
+        data.user,
+        companyName ?? undefined,
+        trade,
+      )
     : null;
 
   if (setupResult?.error) {
@@ -125,10 +139,12 @@ export async function signupAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const companyName = String(formData.get("companyName") ?? "").trim();
+  const tradeRaw = String(formData.get("trade") ?? "").trim();
   const formInviteToken =
     String(formData.get("inviteToken") ?? "").trim() || null;
   const next = String(formData.get("next") ?? "").trim() || null;
   const setupInviteFlow = sanitizeNextPath(next) === "/setup";
+  const trade = normalizeTradeKey(tradeRaw);
 
   if (!fullName || !email || !password || (!companyName && !setupInviteFlow)) {
     return {
@@ -136,6 +152,10 @@ export async function signupAction(
         ? "Full name, email, and password are required."
         : "All fields are required.",
     };
+  }
+
+  if (!setupInviteFlow && !trade) {
+    return { error: "Please choose a trade." };
   }
 
   const cookieInviteToken = await readSignupNetworkInviteCookie();
@@ -196,6 +216,7 @@ export async function signupAction(
       data: {
         full_name: fullName,
         ...(companyName ? { company_name: companyName } : {}),
+        ...(trade ? { trade } : {}),
         ...(inviteToken ? { network_invite_token: inviteToken } : {}),
       },
       emailRedirectTo,
@@ -230,7 +251,10 @@ export async function signupAction(
   }
 
   if (companyName) {
-    const bootstrapResult = await bootstrapCompanyForNewUser(companyName);
+    const bootstrapResult = await bootstrapCompanyForNewUser(
+      companyName,
+      trade,
+    );
 
     if (bootstrapResult.error) {
       return { error: bootstrapResult.error };
@@ -255,10 +279,16 @@ export async function setupCompanyAction(
   formData: FormData,
 ): Promise<AuthActionState> {
   const companyName = String(formData.get("companyName") ?? "").trim();
+  const tradeRaw = String(formData.get("trade") ?? "").trim();
   const next = String(formData.get("next") ?? "").trim() || null;
+  const trade = normalizeTradeKey(tradeRaw);
 
   if (!companyName) {
     return { error: "Company name is required." };
+  }
+
+  if (!trade) {
+    return { error: "Please choose a trade." };
   }
 
   const supabase = await createClient();
@@ -276,7 +306,7 @@ export async function setupCompanyAction(
     return redirectAfterAuth(next);
   }
 
-  const bootstrapResult = await bootstrapCompanyForNewUser(companyName);
+  const bootstrapResult = await bootstrapCompanyForNewUser(companyName, trade);
 
   if (bootstrapResult.error) {
     console.error("[setupCompanyAction] company bootstrap failed:", {

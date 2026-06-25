@@ -14,6 +14,7 @@ import {
   AuthShell,
   AuthSubmitButton,
 } from "./AuthShell";
+import { TradeSelectField } from "./TradeSelectField";
 
 const initialState: AuthActionState = {};
 
@@ -90,6 +91,8 @@ export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
             disabled={pending}
           />
         </AuthField>
+
+        <TradeSelectField disabled={pending} />
 
         <div className="pt-1">
           <AuthSubmitButton pending={pending}>

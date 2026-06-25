@@ -400,6 +400,15 @@ export function AuthInput(props: React.ComponentProps<"input">) {
   );
 }
 
+export function AuthSelect(props: React.ComponentProps<"select">) {
+  return (
+    <select
+      {...props}
+      className={`w-full rounded-lg border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-[#0A0A0A] shadow-sm shadow-black/[0.02] outline-none transition-all duration-200 hover:border-stone-300 focus:border-[#B8860B] focus:ring-4 focus:ring-[#D4AF37]/10 focus-visible:border-[#B8860B] focus-visible:ring-4 focus-visible:ring-[#D4AF37]/10 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60 ${props.className ?? ""}`}
+    />
+  );
+}
+
 export function AuthSubmitButton({
   pending,
   children,

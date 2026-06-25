@@ -16,6 +16,7 @@ import {
   AuthSubmitButton,
   AuthLink,
 } from "./AuthShell";
+import { TradeSelectField } from "./TradeSelectField";
 import type { PublicNetworkInvitePreview } from "@/shared/types/network-invite";
 
 const initialState: AuthActionState = {};
@@ -127,6 +128,8 @@ export function SignUpForm({
             required={!setupInviteFlow}
           />
         </AuthField>
+
+        {!setupInviteFlow ? <TradeSelectField disabled={pending} /> : null}
 
         <AuthField
           label="Work email"

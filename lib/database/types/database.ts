@@ -1149,6 +1149,7 @@ export type Database = {
       bootstrap_company_for_new_user: {
         Args: {
           p_company_name: string;
+          p_trade?: string | null;
         };
         Returns: string;
       };

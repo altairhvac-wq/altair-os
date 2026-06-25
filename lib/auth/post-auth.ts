@@ -1,6 +1,7 @@
 import {
   bootstrapCompanyForNewUser,
   getCompanyNameFromUserMetadata,
+  getTradeFromUserMetadata,
   getCurrentUser,
 } from "@/lib/database/auth";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
@@ -53,10 +54,14 @@ export async function resolveAuthCallbackDestination(
 
   if (!companyContext && user) {
     const companyName = getCompanyNameFromUserMetadata(user);
+    const trade = getTradeFromUserMetadata(user);
     const deferBootstrapForInvite = await userHasPendingTeamInvites(user);
 
     if (companyName && !deferBootstrapForInvite) {
-      const bootstrapResult = await bootstrapCompanyForNewUser(companyName);
+      const bootstrapResult = await bootstrapCompanyForNewUser(
+        companyName,
+        trade,
+      );
 
       if (!bootstrapResult.error && bootstrapResult.companyId) {
         companyContext = await getActiveCompanyContext({

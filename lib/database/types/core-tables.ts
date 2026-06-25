@@ -62,6 +62,7 @@ export type CompanyRow = {
   id: UUID;
   name: string;
   slug: string;
+  trade: string | null;
   status: CompanyStatus;
   timezone: string;
   phone: string | null;

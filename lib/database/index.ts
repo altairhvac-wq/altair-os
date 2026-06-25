@@ -3,6 +3,7 @@ export {
   ensureOwnerMembershipExists,
   ensureProfileExists,
   getCompanyNameFromUserMetadata,
+  getTradeFromUserMetadata,
   getCurrentProfile,
   getCurrentUser,
 } from "./auth";
