@@ -8,6 +8,7 @@ import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { addDaysToDateOnly, getDateOnlyInTimeZone } from "@/shared/lib/datetime";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { getEditableLeadStatusOptions } from "@/shared/lib/leads/lead-status-transitions";
+import { ls } from "@/shared/components/leads/north-star-m14/lead-north-star-styles";
 import {
   LEAD_SOURCE_OPTIONS,
   LEAD_STATUS_OPTIONS,
@@ -26,6 +27,7 @@ type LeadFormProps = {
   assignableMembers: LeadAssignableMember[];
   onSuccess: (lead: Lead, outcome?: LeadCreateOutcome) => void;
   onCancel: () => void;
+  northStar?: boolean;
 };
 
 type FollowUpPreset = "none" | "today" | "tomorrow" | "next_week" | "custom";
@@ -43,7 +45,7 @@ const DEFAULT_FORM_DATA: LeadFormData = {
   nextFollowUpAt: "",
 };
 
-const inputClassName =
+const LEGACY_INPUT_CLASS =
   "mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm";
 
 function resolveFollowUpDate(
@@ -74,8 +76,18 @@ export function LeadForm({
   assignableMembers,
   onSuccess,
   onCancel,
+  northStar = false,
 }: LeadFormProps) {
   const timeZone = useCompanyTimezone();
+  const inputClass = northStar ? ls.formInput : LEGACY_INPUT_CLASS;
+  const textareaClass = northStar ? ls.formTextarea : LEGACY_INPUT_CLASS;
+  const selectClass = northStar ? ls.formSelect : LEGACY_INPUT_CLASS;
+  const labelClass = northStar
+    ? ls.formLabel
+    : "font-medium text-slate-700";
+  const sectionLabelClass = northStar
+    ? `${ls.sectionLabel} block`
+    : "text-sm font-medium text-slate-700";
   const [formData, setFormData] = useState<LeadFormData>(
     lead ? mapLeadToFormData(lead) : DEFAULT_FORM_DATA,
   );
@@ -186,58 +198,58 @@ export function LeadForm({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">
-            <span className="font-medium text-slate-700">First name</span>
+            <span className={labelClass}>First name</span>
             <input
               value={formData.firstName}
               onChange={(event) => updateField("firstName", event.target.value)}
               autoComplete="given-name"
-              className={inputClassName}
+              className={inputClass}
             />
           </label>
           <label className="block text-sm">
-            <span className="font-medium text-slate-700">Company name</span>
+            <span className={labelClass}>Company name</span>
             <input
               value={formData.companyName}
               onChange={(event) =>
                 updateField("companyName", event.target.value)
               }
               autoComplete="organization"
-              className={inputClassName}
+              className={inputClass}
             />
           </label>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">
-            <span className="font-medium text-slate-700">Phone</span>
+            <span className={labelClass}>Phone</span>
             <input
               type="tel"
               value={formData.phone}
               onChange={(event) => updateField("phone", event.target.value)}
               autoComplete="tel"
-              className={inputClassName}
+              className={inputClass}
             />
           </label>
           <label className="block text-sm">
-            <span className="font-medium text-slate-700">Email</span>
+            <span className={labelClass}>Email</span>
             <input
               type="email"
               value={formData.email}
               onChange={(event) => updateField("email", event.target.value)}
               autoComplete="email"
-              className={inputClassName}
+              className={inputClass}
             />
           </label>
         </div>
 
         <label className="block text-sm">
-          <span className="font-medium text-slate-700">Source</span>
+          <span className={labelClass}>Source</span>
           <select
             value={formData.source}
             onChange={(event) =>
               updateField("source", event.target.value as LeadFormData["source"])
             }
-            className={inputClassName}
+            className={selectClass}
           >
             {LEAD_SOURCE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -248,7 +260,7 @@ export function LeadForm({
         </label>
 
         <div>
-          <p className="text-sm font-medium text-slate-700">Follow-up</p>
+          <p className={sectionLabelClass}>Follow-up</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {(
               [
@@ -263,11 +275,15 @@ export function LeadForm({
                 key={preset}
                 type="button"
                 onClick={() => handleFollowUpPresetChange(preset)}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ring-inset transition-colors ${
+                className={
                   followUpPreset === preset
-                    ? "bg-cyan-50 text-cyan-800 ring-cyan-600/20"
-                    : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"
-                }`}
+                    ? northStar
+                      ? ls.followUpChipActive
+                      : "rounded-full bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-800 ring-1 ring-inset ring-cyan-600/20"
+                    : northStar
+                      ? ls.followUpChipInactive
+                      : "rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200 transition-colors hover:bg-slate-50"
+                }
               >
                 {label}
               </button>
@@ -278,7 +294,7 @@ export function LeadForm({
               type="date"
               value={customFollowUpDate}
               onChange={(event) => handleCustomFollowUpChange(event.target.value)}
-              className={`${inputClassName} mt-2`}
+              className={northStar ? `${inputClass} mt-2` : `${LEGACY_INPUT_CLASS} mt-2`}
             />
           ) : null}
         </div>
@@ -286,30 +302,40 @@ export function LeadForm({
         <button
           type="button"
           onClick={() => setShowOptionalFields((current) => !current)}
-          className="text-xs font-semibold text-cyan-700 hover:text-cyan-800"
+          className={
+            northStar
+              ? ls.toggleLink
+              : "text-xs font-semibold text-cyan-700 hover:text-cyan-800"
+          }
         >
           {showOptionalFields ? "Hide optional fields" : "Add optional fields"}
         </button>
 
         {showOptionalFields ? (
-          <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+          <div
+            className={
+              northStar
+                ? ls.optionalFieldsCard
+                : "space-y-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3"
+            }
+          >
             <label className="block text-sm">
-              <span className="font-medium text-slate-700">Last name</span>
+              <span className={labelClass}>Last name</span>
               <input
                 value={formData.lastName}
                 onChange={(event) => updateField("lastName", event.target.value)}
                 autoComplete="family-name"
-                className={inputClassName}
+                className={inputClass}
               />
             </label>
             <label className="block text-sm">
-              <span className="font-medium text-slate-700">Assigned user</span>
+              <span className={labelClass}>Assigned user</span>
               <select
                 value={formData.assignedUserId}
                 onChange={(event) =>
                   updateField("assignedUserId", event.target.value)
                 }
-                className={inputClassName}
+                className={selectClass}
               >
                 <option value="">Unassigned</option>
                 {assignableMembers.map((member) => (
@@ -320,12 +346,12 @@ export function LeadForm({
               </select>
             </label>
             <label className="block text-sm">
-              <span className="font-medium text-slate-700">Notes</span>
+              <span className={labelClass}>Notes</span>
               <textarea
                 value={formData.notes}
                 onChange={(event) => updateField("notes", event.target.value)}
                 rows={3}
-                className={inputClassName}
+                className={textareaClass}
                 placeholder="Call summary or context"
               />
             </label>
@@ -342,7 +368,11 @@ export function LeadForm({
           <button
             type="submit"
             disabled={isPending}
-            className="admin-btn-primary w-full sm:flex-1"
+            className={
+              northStar
+                ? `${ls.saveButton} w-full sm:flex-1`
+                : "admin-btn-primary w-full sm:flex-1"
+            }
           >
             {isPending ? "Saving..." : "Save lead"}
           </button>
@@ -353,7 +383,11 @@ export function LeadForm({
               onClick={() => setSaveMenuOpen((current) => !current)}
               aria-haspopup="menu"
               aria-expanded={saveMenuOpen}
-              className="admin-btn-secondary flex w-full items-center justify-center gap-1.5 sm:min-w-[10rem]"
+              className={
+                northStar
+                  ? `${ls.secondaryButton} flex w-full items-center justify-center gap-1.5 sm:min-w-[10rem]`
+                  : "admin-btn-secondary flex w-full items-center justify-center gap-1.5 sm:min-w-[10rem]"
+              }
             >
               More save options
               <ChevronDown className="h-4 w-4" />
@@ -361,14 +395,22 @@ export function LeadForm({
             {saveMenuOpen ? (
               <div
                 role="menu"
-                className="absolute bottom-full right-0 z-10 mb-1 min-w-[12rem] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg sm:bottom-auto sm:top-full sm:mb-0 sm:mt-1"
+                className={
+                  northStar
+                    ? ls.menuShell
+                    : "absolute bottom-full right-0 z-10 mb-1 min-w-[12rem] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg sm:bottom-auto sm:top-full sm:mb-0 sm:mt-1"
+                }
               >
                 <button
                   type="button"
                   role="menuitem"
                   disabled={isPending}
                   onClick={() => submitLead("open")}
-                  className="block w-full px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className={
+                    northStar
+                      ? ls.menuItem
+                      : "block w-full px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  }
                 >
                   Save and open
                 </button>
@@ -377,7 +419,11 @@ export function LeadForm({
                   role="menuitem"
                   disabled={isPending}
                   onClick={() => submitLead("estimate")}
-                  className="block w-full px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className={
+                    northStar
+                      ? ls.menuItem
+                      : "block w-full px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  }
                 >
                   Save and create estimate
                 </button>
@@ -388,7 +434,11 @@ export function LeadForm({
             type="button"
             disabled={isPending}
             onClick={onCancel}
-            className="admin-btn-secondary w-full sm:w-auto"
+            className={
+              northStar
+                ? `${ls.secondaryButton} w-full sm:w-auto`
+                : "admin-btn-secondary w-full sm:w-auto"
+            }
           >
             Cancel
           </button>
@@ -401,61 +451,61 @@ export function LeadForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-sm">
-          <span className="font-medium text-slate-700">First name</span>
+          <span className={labelClass}>First name</span>
           <input
             value={formData.firstName}
             onChange={(event) => updateField("firstName", event.target.value)}
-            className={inputClassName}
+            className={inputClass}
           />
         </label>
         <label className="block text-sm">
-          <span className="font-medium text-slate-700">Last name</span>
+          <span className={labelClass}>Last name</span>
           <input
             value={formData.lastName}
             onChange={(event) => updateField("lastName", event.target.value)}
-            className={inputClassName}
+            className={inputClass}
           />
         </label>
       </div>
 
       <label className="block text-sm">
-        <span className="font-medium text-slate-700">Company name</span>
+        <span className={labelClass}>Company name</span>
         <input
           value={formData.companyName}
           onChange={(event) => updateField("companyName", event.target.value)}
-          className={inputClassName}
+          className={inputClass}
         />
       </label>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-sm">
-          <span className="font-medium text-slate-700">Email</span>
+          <span className={labelClass}>Email</span>
           <input
             type="email"
             value={formData.email}
             onChange={(event) => updateField("email", event.target.value)}
-            className={inputClassName}
+            className={inputClass}
           />
         </label>
         <label className="block text-sm">
-          <span className="font-medium text-slate-700">Phone</span>
+          <span className={labelClass}>Phone</span>
           <input
             value={formData.phone}
             onChange={(event) => updateField("phone", event.target.value)}
-            className={inputClassName}
+            className={inputClass}
           />
         </label>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-sm">
-          <span className="font-medium text-slate-700">Source</span>
+          <span className={labelClass}>Source</span>
           <select
             value={formData.source}
             onChange={(event) =>
               updateField("source", event.target.value as LeadFormData["source"])
             }
-            className={inputClassName}
+            className={selectClass}
           >
             {LEAD_SOURCE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -466,13 +516,13 @@ export function LeadForm({
         </label>
 
         <label className="block text-sm">
-          <span className="font-medium text-slate-700">Status</span>
+          <span className={labelClass}>Status</span>
           <select
             value={formData.status}
             onChange={(event) =>
               updateField("status", event.target.value as LeadFormData["status"])
             }
-            className={inputClassName}
+            className={selectClass}
           >
             {LEAD_STATUS_OPTIONS.filter(
               (option) =>
@@ -488,11 +538,11 @@ export function LeadForm({
       </div>
 
       <label className="block text-sm">
-        <span className="font-medium text-slate-700">Assigned user</span>
+        <span className={labelClass}>Assigned user</span>
         <select
           value={formData.assignedUserId}
           onChange={(event) => updateField("assignedUserId", event.target.value)}
-          className={inputClassName}
+          className={selectClass}
         >
           <option value="">Unassigned</option>
           {assignableMembers.map((member) => (
@@ -504,22 +554,22 @@ export function LeadForm({
       </label>
 
       <label className="block text-sm">
-        <span className="font-medium text-slate-700">Next follow-up</span>
+        <span className={labelClass}>Next follow-up</span>
         <input
           type="date"
           value={formData.nextFollowUpAt}
           onChange={(event) => updateField("nextFollowUpAt", event.target.value)}
-          className={inputClassName}
+          className={inputClass}
         />
       </label>
 
       <label className="block text-sm">
-        <span className="font-medium text-slate-700">Notes</span>
+        <span className={labelClass}>Notes</span>
         <textarea
           value={formData.notes}
           onChange={(event) => updateField("notes", event.target.value)}
           rows={4}
-          className={inputClassName}
+          className={textareaClass}
         />
       </label>
 
@@ -533,14 +583,14 @@ export function LeadForm({
         <button
           type="submit"
           disabled={isPending}
-          className="admin-btn-primary"
+          className={northStar ? ls.saveButton : "admin-btn-primary"}
         >
           {isPending ? "Saving..." : "Save changes"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="admin-btn-secondary"
+          className={northStar ? ls.secondaryButton : "admin-btn-secondary"}
         >
           Cancel
         </button>

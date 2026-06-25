@@ -367,6 +367,7 @@ export function LeadsPageView({
         onCreateSuccess={handleCreateSuccess}
         onCreateCancel={handleClosePanel}
         onLeadUpdated={handleLeadUpdated}
+        northStar={northStar}
       />
     </MasterListPageLayout>
   );

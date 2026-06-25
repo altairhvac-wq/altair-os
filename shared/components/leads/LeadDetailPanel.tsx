@@ -32,6 +32,7 @@ import {
   type LeadCreateOutcome,
 } from "@/shared/components/leads/LeadForm";
 import { LeadStatusBadge } from "@/shared/components/leads/LeadStatusBadge";
+import { ls } from "@/shared/components/leads/north-star-m14/lead-north-star-styles";
 import { NetworkReferralAttribution } from "@/shared/components/leads/NetworkReferralBadge";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { shouldPromptConvertOnWon } from "@/shared/lib/leads/lead-conversion";
@@ -58,6 +59,7 @@ type LeadDetailPanelProps = {
   onCreateSuccess: (lead: Lead, outcome?: LeadCreateOutcome) => void;
   onCreateCancel: () => void;
   onLeadUpdated: (lead: Lead) => void;
+  northStar?: boolean;
 };
 
 export function LeadDetailPanel({
@@ -71,6 +73,7 @@ export function LeadDetailPanel({
   onCreateSuccess,
   onCreateCancel,
   onLeadUpdated,
+  northStar = false,
 }: LeadDetailPanelProps) {
   const router = useRouter();
   const timeZone = useCompanyTimezone();
@@ -286,46 +289,77 @@ export function LeadDetailPanel({
           assignableMembers={assignableMembers}
           onSuccess={onCreateSuccess}
           onCancel={onCreateCancel}
+          northStar={northStar}
         />
       ) : null}
 
       {mode === "detail" && lead ? (
         <div className="space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <div
+            className={
+              northStar
+                ? ls.sectionCard
+                : "rounded-xl border border-slate-200 bg-white p-4"
+            }
+          >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">
+                <h3
+                  className={
+                    northStar
+                      ? "text-lg font-bold text-[#17130E]"
+                      : "text-lg font-bold text-slate-900"
+                  }
+                >
                   {lead.convertedCustomerId ? (
                     <CustomerNameLink
                       customerId={lead.convertedCustomerId}
                       customerName={formatLeadName(lead)}
                       canManageCustomers
-                      linkClassName="text-lg font-bold text-slate-900 transition-colors hover:text-cyan-700"
+                      linkClassName={
+                        northStar
+                          ? "text-lg font-bold text-[#17130E] transition-colors hover:text-[#B88A2E]"
+                          : "text-lg font-bold text-slate-900 transition-colors hover:text-cyan-700"
+                      }
                     />
                   ) : (
                     formatLeadName(lead)
                   )}
                 </h3>
-                <div className="mt-2 space-y-1 text-sm text-slate-600">
+                <div
+                  className={`mt-2 space-y-1 text-sm ${
+                    northStar ? ls.secondaryText : "text-slate-600"
+                  }`}
+                >
                   {lead.phone ? <p>{lead.phone}</p> : null}
                   {lead.email ? <p>{lead.email}</p> : null}
                 </div>
               </div>
-              <LeadStatusBadge status={lead.status} />
+              <LeadStatusBadge status={lead.status} northStar={northStar} />
             </div>
 
             <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <dt
+                  className={
+                    northStar ? ls.sectionLabel : "text-xs font-medium uppercase tracking-wide text-slate-500"
+                  }
+                >
                   Source
                 </dt>
-                <dd className="mt-1 text-slate-800">{formatLeadSource(lead.source)}</dd>
+                <dd className={northStar ? ls.sectionValue : "mt-1 text-slate-800"}>
+                  {formatLeadSource(lead.source)}
+                </dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <dt
+                  className={
+                    northStar ? ls.sectionLabel : "text-xs font-medium uppercase tracking-wide text-slate-500"
+                  }
+                >
                   Assigned user
                 </dt>
-                <dd className="mt-1 text-slate-800">
+                <dd className={northStar ? ls.sectionValue : "mt-1 text-slate-800"}>
                   {lead.assignedUserName ?? "Unassigned"}
                 </dd>
               </div>
@@ -341,7 +375,11 @@ export function LeadDetailPanel({
               <p className="mt-4 text-sm">
                 <Link
                   href={`/customers/${lead.convertedCustomerId}`}
-                  className="font-medium text-cyan-700 hover:text-cyan-800"
+                  className={
+                    northStar
+                      ? ls.linkAccent
+                      : "font-medium text-cyan-700 hover:text-cyan-800"
+                  }
                 >
                   View customer record
                 </Link>
@@ -351,7 +389,14 @@ export function LeadDetailPanel({
 
           <div className="flex flex-wrap gap-2">
             {lead.phone ? (
-              <a href={`tel:${lead.phone}`} className="admin-btn-secondary text-xs">
+              <a
+                href={`tel:${lead.phone}`}
+                className={
+                  northStar
+                    ? `${ls.secondaryButton} text-xs`
+                    : "admin-btn-secondary text-xs"
+                }
+              >
                 <Phone className="mr-1.5 inline h-3.5 w-3.5" />
                 Call
               </a>
@@ -359,7 +404,11 @@ export function LeadDetailPanel({
             {lead.email ? (
               <a
                 href={`mailto:${lead.email}`}
-                className="admin-btn-secondary text-xs"
+                className={
+                  northStar
+                    ? `${ls.secondaryButton} text-xs`
+                    : "admin-btn-secondary text-xs"
+                }
               >
                 <Mail className="mr-1.5 inline h-3.5 w-3.5" />
                 Email
@@ -369,7 +418,11 @@ export function LeadDetailPanel({
               type="button"
               disabled={isPending || isLeadClosed(lead.status)}
               onClick={handleCreateEstimate}
-              className="admin-btn-secondary text-xs"
+              className={
+                northStar
+                  ? `${ls.secondaryButton} text-xs`
+                  : "admin-btn-secondary text-xs"
+              }
             >
               <FileText className="mr-1.5 inline h-3.5 w-3.5" />
               Create estimate
@@ -382,7 +435,11 @@ export function LeadDetailPanel({
                 isLeadClosed(lead.status)
               }
               onClick={handleConvert}
-              className="admin-btn-secondary text-xs"
+              className={
+                northStar
+                  ? `${ls.secondaryButton} text-xs`
+                  : "admin-btn-secondary text-xs"
+              }
             >
               <UserPlus className="mr-1.5 inline h-3.5 w-3.5" />
               Convert to customer
@@ -391,7 +448,11 @@ export function LeadDetailPanel({
               type="button"
               disabled={isPending || isLeadClosed(lead.status)}
               onClick={handleMarkWon}
-              className="admin-btn-secondary text-xs"
+              className={
+                northStar
+                  ? `${ls.secondaryButton} text-xs`
+                  : "admin-btn-secondary text-xs"
+              }
             >
               <CheckCircle2 className="mr-1.5 inline h-3.5 w-3.5" />
               Mark won
@@ -399,13 +460,25 @@ export function LeadDetailPanel({
           </div>
 
           {!isLeadClosed(lead.status) ? (
-            <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <div
+              className={
+                northStar
+                  ? ls.sectionCard
+                  : "rounded-xl border border-slate-200 bg-white p-4"
+              }
+            >
               <label className="block text-sm">
-                <span className="font-medium text-slate-700">Mark lost</span>
+                <span className={northStar ? ls.formLabel : "font-medium text-slate-700"}>
+                  Mark lost
+                </span>
                 <select
                   value={lostReason}
                   onChange={(event) => setLostReason(event.target.value)}
-                  className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
+                  className={
+                    northStar
+                      ? `${ls.formSelect} mt-2`
+                      : "mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
+                  }
                 >
                   <option value="">No reason (optional)</option>
                   {LEAD_LOST_REASON_OPTIONS.map((reason) => (
@@ -419,7 +492,11 @@ export function LeadDetailPanel({
                 type="button"
                 disabled={isPending}
                 onClick={handleMarkLost}
-                className="mt-3 admin-btn-secondary text-xs"
+                className={
+                  northStar
+                    ? `mt-3 ${ls.secondaryButton} text-xs`
+                    : "mt-3 admin-btn-secondary text-xs"
+                }
               >
                 <XCircle className="mr-1.5 inline h-3.5 w-3.5" />
                 Mark lost
@@ -427,16 +504,29 @@ export function LeadDetailPanel({
             </div>
           ) : null}
 
-          <LeadFollowUpCard lead={lead} onLeadUpdated={onLeadUpdated} />
+          <LeadFollowUpCard
+            lead={lead}
+            onLeadUpdated={onLeadUpdated}
+            northStar={northStar}
+          />
 
           <LeadFollowUpAiAssistant
             leadId={lead.id}
             aiFeaturesEnabled={aiFeaturesEnabled}
             aiDraftingConfigured={aiDraftingConfigured}
+            northStar={northStar}
           />
 
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <h3 className="text-sm font-semibold text-slate-900">Edit lead</h3>
+          <div
+            className={
+              northStar
+                ? ls.sectionCard
+                : "rounded-xl border border-slate-200 bg-white p-4"
+            }
+          >
+            <h3 className={northStar ? ls.sectionTitle : "text-sm font-semibold text-slate-900"}>
+              Edit lead
+            </h3>
             <div className="mt-4">
               <LeadForm
                 mode="edit"
@@ -444,17 +534,30 @@ export function LeadDetailPanel({
                 assignableMembers={assignableMembers}
                 onSuccess={onLeadUpdated}
                 onCancel={() => undefined}
+                northStar={northStar}
               />
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <h3 className="text-sm font-semibold text-slate-900">Add note</h3>
+          <div
+            className={
+              northStar
+                ? ls.sectionCard
+                : "rounded-xl border border-slate-200 bg-white p-4"
+            }
+          >
+            <h3 className={northStar ? ls.sectionTitle : "text-sm font-semibold text-slate-900"}>
+              Add note
+            </h3>
             <textarea
               value={note}
               onChange={(event) => setNote(event.target.value)}
               rows={3}
-              className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
+              className={
+                northStar
+                  ? `${ls.formTextarea} mt-3`
+                  : "mt-3 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
+              }
               placeholder="Log a call summary or internal note"
             />
             <div className="mt-3 flex flex-wrap gap-2">
@@ -462,7 +565,11 @@ export function LeadDetailPanel({
                 type="button"
                 disabled={isPending}
                 onClick={handleAddNote}
-                className="admin-btn-secondary text-xs"
+                className={
+                  northStar
+                    ? `${ls.secondaryButton} text-xs`
+                    : "admin-btn-secondary text-xs"
+                }
               >
                 Save note
               </button>
@@ -470,7 +577,11 @@ export function LeadDetailPanel({
                 type="button"
                 disabled={isPending}
                 onClick={handleLogCall}
-                className="admin-btn-secondary text-xs"
+                className={
+                  northStar
+                    ? `${ls.secondaryButton} text-xs`
+                    : "admin-btn-secondary text-xs"
+                }
               >
                 Log call
               </button>
@@ -478,17 +589,33 @@ export function LeadDetailPanel({
                 type="button"
                 disabled={isPending}
                 onClick={handleLogEmail}
-                className="admin-btn-secondary text-xs"
+                className={
+                  northStar
+                    ? `${ls.secondaryButton} text-xs`
+                    : "admin-btn-secondary text-xs"
+                }
               >
                 Log email
               </button>
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <h3 className="text-sm font-semibold text-slate-900">Activity</h3>
+          <div
+            className={
+              northStar
+                ? ls.sectionCard
+                : "rounded-xl border border-slate-200 bg-white p-4"
+            }
+          >
+            <h3 className={northStar ? ls.sectionTitle : "text-sm font-semibold text-slate-900"}>
+              Activity
+            </h3>
             <div className="mt-4">
-              <LeadActivityTimeline activities={activities} timeZone={timeZone} />
+              <LeadActivityTimeline
+                activities={activities}
+                timeZone={timeZone}
+                northStar={northStar}
+              />
             </div>
           </div>
 
