@@ -169,7 +169,7 @@ export function CompanySwitcher({
         <div
           role="listbox"
           aria-label="Companies"
-          className={`absolute z-30 mt-1 w-56 rounded-lg border border-slate-200 bg-white py-1 shadow-lg ${
+          className={`north-star-header-dropdown-panel absolute z-30 mt-1 w-56 rounded-lg border border-slate-200 bg-white py-1 shadow-lg ${
             variant === "technician" ? "left-0" : "right-0"
           }`}
         >

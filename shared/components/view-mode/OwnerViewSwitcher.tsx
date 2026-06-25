@@ -91,7 +91,7 @@ export function OwnerViewSwitcher({
         <div
           role="listbox"
           aria-label="View as"
-          className="absolute right-0 z-40 mt-1 w-64 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+          className="north-star-header-dropdown-panel absolute right-0 z-40 mt-1 w-64 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
         >
           <p className="border-b border-slate-100 px-3 py-2 text-[11px] leading-snug text-slate-500">
             Preview navigation only. Your owner permissions are unchanged.

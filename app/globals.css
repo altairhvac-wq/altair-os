@@ -611,6 +611,28 @@ a[href] {
     background-color: rgb(201 164 77 / 0.1);
   }
 
+  /* Header dropdown panels — white panels need dark text, not header muted tan */
+  .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel {
+    color: var(--north-star-text-dark);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel p,
+  .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel span.text-slate-900,
+  .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel .font-medium.text-slate-900,
+  .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel .font-semibold.text-slate-900 {
+    color: var(--north-star-text-dark) !important;
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel p.text-slate-500,
+  .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel span.text-slate-500,
+  .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel .text-xs.text-slate-500 {
+    color: var(--north-star-text-secondary) !important;
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-header-dropdown-panel .text-cyan-600 {
+    color: var(--north-star-bronze) !important;
+  }
+
   .admin-north-star-sidebar-group-label {
     font-size: 0.625rem;
     font-weight: 600;
