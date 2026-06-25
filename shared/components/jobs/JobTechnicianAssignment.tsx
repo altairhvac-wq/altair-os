@@ -249,13 +249,13 @@ export function JobTechnicianAssignment({
             </button>
           </div>
         ) : (
-          <p className={northStar ? "text-sm text-[#6B6255]" : "text-sm text-slate-500"}>
+          <p className={northStar ? "text-sm text-[#64748B]" : "text-sm text-slate-500"}>
             No team members are available to assign. Add active company members
             to enable assignments.
           </p>
         )
       ) : (
-        <p className={northStar ? "text-sm text-[#6B6255]" : "text-sm text-slate-500"}>
+        <p className={northStar ? "text-sm text-[#64748B]" : "text-sm text-slate-500"}>
           You do not have permission to assign technicians to this job.
         </p>
       )}

@@ -26,7 +26,7 @@ const northStarSelectClass =
   "min-w-0 flex-1 rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-2.5 py-2 text-sm text-[#17130E] outline-none focus:border-[#B88A2E] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] disabled:opacity-60";
 
 const northStarFieldLabelClass =
-  "text-[11px] font-semibold uppercase tracking-wide text-[#6B6255]";
+  "text-[11px] font-semibold uppercase tracking-wide text-[#4F4638]";
 
 export function JobsBulkActionBar({
   selectedJobs,

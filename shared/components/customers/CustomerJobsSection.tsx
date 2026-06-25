@@ -141,7 +141,7 @@ export function CustomerJobsSection({
                     />
                     <div>
                       <p>{job.serviceAddress}</p>
-                      <p className={northStar ? "text-xs text-[#6B6255]" : "text-xs text-slate-500"}>
+                      <p className={northStar ? "text-xs text-[#64748B]" : "text-xs text-slate-500"}>
                         {job.city}, {job.state} {job.zip}
                       </p>
                     </div>

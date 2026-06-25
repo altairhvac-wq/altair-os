@@ -450,7 +450,7 @@ function NorthStarMainColumn({
       >
         <div className="grid gap-3 lg:grid-cols-2">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638]">
               Description
             </p>
             <p className={`mt-1.5 ${jobDetailBodyTextClass(true)}`}>
@@ -460,7 +460,7 @@ function NorthStarMainColumn({
             </p>
           </div>
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638]">
               Notes
             </p>
             <p className={`mt-1.5 ${jobDetailBodyTextClass(true)}`}>

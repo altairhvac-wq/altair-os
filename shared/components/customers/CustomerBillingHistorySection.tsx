@@ -94,7 +94,7 @@ export function CustomerBillingHistorySection({
     ? "font-semibold text-[#17130E]"
     : "font-semibold text-slate-900";
   const secondaryTextClass = northStar
-    ? "mt-0.5 text-xs text-[#6B6255]"
+    ? "mt-0.5 text-xs text-[#64748B]"
     : "mt-0.5 text-xs text-slate-500";
   const amountClass = northStar
     ? "text-sm font-semibold text-[#17130E]"

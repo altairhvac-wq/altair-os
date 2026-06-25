@@ -25,7 +25,7 @@ const statusStyles: Record<Customer["status"], string> = {
 
 const northStarStatusStyles: Record<Customer["status"], string> = {
   active: "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80",
-  inactive: "bg-[#F1E7D2] text-[#6B6255] ring-1 ring-[rgba(138,99,36,0.12)]",
+  inactive: "bg-[#F1E7D2] text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.12)]",
 };
 
 function formatCustomerContactLine(customer: Customer): string {

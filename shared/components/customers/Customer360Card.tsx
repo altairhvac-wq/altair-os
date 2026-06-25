@@ -589,7 +589,7 @@ function RecentActivitySection({
                     }
                     timestampClassName={
                       northStar
-                        ? "shrink-0 text-[11px] text-[#6B6255]"
+                        ? "shrink-0 text-[11px] text-[#64748B]"
                         : "shrink-0 text-[11px] text-slate-400"
                     }
                     detailsClassName={
@@ -599,7 +599,7 @@ function RecentActivitySection({
                     }
                     attributionClassName={
                       northStar
-                        ? "mt-0.5 text-[11px] text-[#6B6255]"
+                        ? "mt-0.5 text-[11px] text-[#64748B]"
                         : "mt-0.5 text-[11px] text-slate-400"
                     }
                   />

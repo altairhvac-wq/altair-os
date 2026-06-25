@@ -92,7 +92,7 @@ export function CustomerRecentReceiptsSection({
               >
                 {expense.merchant.trim() || expense.expenseNumber}
               </p>
-              <p className={northStar ? "text-[11px] text-[#6B6255]" : "text-[11px] text-slate-500"}>
+              <p className={northStar ? "text-[11px] text-[#64748B]" : "text-[11px] text-slate-500"}>
                 {formatExpenseAmount(expense.amount)}
               </p>
             </div>

@@ -41,7 +41,7 @@ export function jobDetailEmptyTitleClass(northStar?: boolean) {
 }
 
 export function jobDetailEmptyHintClass(northStar?: boolean) {
-  return northStar ? "mt-1 text-xs text-[#6B6255]" : "mt-1 text-xs text-slate-500";
+  return northStar ? "mt-1 text-xs text-[#64748B]" : "mt-1 text-xs text-slate-500";
 }
 
 export function jobDetailPrimaryTextClass(northStar?: boolean) {
@@ -53,7 +53,7 @@ export function jobDetailSecondaryTextClass(northStar?: boolean) {
 }
 
 export function jobDetailMutedTextClass(northStar?: boolean) {
-  return northStar ? "text-xs text-[#6B6255]" : "text-xs text-slate-500";
+  return northStar ? "text-xs text-[#64748B]" : "text-xs text-slate-500";
 }
 
 export function jobDetailLinkClass(northStar?: boolean) {

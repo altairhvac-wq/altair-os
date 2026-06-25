@@ -74,14 +74,14 @@ export function ExpensesEmptyState({
     return (
       <div className={adminEmptyWrapClass}>
         <div className={`${lt.emptyState} w-full max-w-md text-center`}>
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F5F1E8] text-[#6B6255] ring-1 ring-[rgba(79,70,56,0.10)]">
-            <Icon className="h-6 w-6" />
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)]">
+            <Icon className="h-6 w-6 text-[#8A6324]" />
           </div>
 
           <h3 className="mt-4 text-base font-semibold text-[#17130E]">{title}</h3>
 
           {description ? (
-            <p className="mt-2 text-sm text-[#6B6255]">{description}</p>
+            <p className="mt-2 text-sm text-[#64748B]">{description}</p>
           ) : null}
 
           {!isNoResults && onCreateExpense ? (
