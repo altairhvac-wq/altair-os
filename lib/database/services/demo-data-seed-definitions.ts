@@ -109,6 +109,69 @@ export type EquipmentSeed = {
   location: string;
 };
 
+export type MaterialSeed = {
+  customerKey: string;
+  jobKey: string;
+  serviceItemKey: string;
+  name: string;
+  quantity: number;
+  unitCost: number;
+  unitPrice: number;
+};
+
+export type EstimateLineItemSeed = {
+  serviceItemKey: string;
+  name: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+};
+
+export type EstimateSeed = {
+  key: string;
+  customerKey: string;
+  jobKey?: string;
+  estimateNumber: string;
+  status: "draft" | "sent" | "approved" | "declined";
+  subtotal: number;
+  validUntilDaysFromNow: number;
+  notes: string;
+  createdDaysAgo: number;
+  lineItems: EstimateLineItemSeed[];
+};
+
+export type InvoicePaymentSeed = {
+  amount: number;
+  paymentDaysAgo: number;
+  reference: string;
+  notes: string;
+};
+
+export type InvoiceSeed = {
+  key: string;
+  customerKey: string;
+  jobKey?: string;
+  invoiceNumber: string;
+  status: "paid" | "partially_paid" | "overdue" | "sent";
+  subtotal: number;
+  amountPaid: number;
+  issueDaysAgo: number;
+  dueDaysFromNow: number;
+  paidDaysAgo?: number;
+  notes: string;
+  lineItems: EstimateLineItemSeed[];
+  payments?: InvoicePaymentSeed[];
+};
+
+export type NotificationSeed = {
+  type: string;
+  title: string;
+  message: string;
+  entityType: "job" | "invoice";
+  jobKey?: string;
+  invoiceKey?: string;
+};
+
 export const DEMO_TAX_RATE = 8.25;
 
 export const DEMO_SERVICE_ITEMS: ServiceItemSeed[] = [

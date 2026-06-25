@@ -16,14 +16,10 @@ import {
 } from "@/shared/lib/demo-data-identifiers";
 import { withDemoName } from "@/shared/lib/demo-data-settings";
 import {
-  DEMO_CUSTOMERS,
-  DEMO_EQUIPMENT,
-  DEMO_JOBS,
-  DEMO_LEADS,
-  DEMO_SERVICE_ITEMS,
   DEMO_TAX_RATE,
   type JobSeed,
 } from "@/lib/database/services/demo-data-seed-definitions";
+import { getDemoSeedDefinitionsForTrade } from "@/lib/database/services/demo-data-seed-pack";
 
 type SeedContext = {
   companyId: string;
@@ -445,13 +441,15 @@ export async function seedCompanyDemoData(
     now: new Date(),
   };
 
+  const pack = getDemoSeedDefinitionsForTrade(context.company.trade);
+
   const serviceItemIds: Record<string, string> = {};
   const customerIds: Record<string, string> = {};
   const leadIds: Record<string, string> = {};
   const jobIds: Record<string, string> = {};
 
   try {
-    for (const item of DEMO_SERVICE_ITEMS) {
+    for (const item of pack.serviceItems) {
       const result = await insertRow("seed_service_items", companyId, "service_items", {
         company_id: companyId,
         name: withDemoName(item.name),
@@ -471,7 +469,7 @@ export async function seedCompanyDemoData(
       serviceItemIds[item.key] = result.id;
     }
 
-    for (const customer of DEMO_CUSTOMERS) {
+    for (const customer of pack.customers) {
       const result = await insertRow("seed_customers", companyId, "customers", {
         company_id: companyId,
         name: withDemoName(customer.name),
@@ -502,7 +500,7 @@ export async function seedCompanyDemoData(
       customerIds[customer.key] = result.id;
     }
 
-    for (const lead of DEMO_LEADS) {
+    for (const lead of pack.leads) {
       const convertedCustomerId = lead.convertedCustomerKey
         ? customerIds[lead.convertedCustomerKey]
         : null;
@@ -533,7 +531,7 @@ export async function seedCompanyDemoData(
       leadIds[lead.key] = result.id;
     }
 
-    for (const lead of DEMO_LEADS) {
+    for (const lead of pack.leads) {
       const leadId = leadIds[lead.key];
       if (!leadId) {
         continue;
@@ -577,7 +575,7 @@ export async function seedCompanyDemoData(
       }
     }
 
-    for (const equipment of DEMO_EQUIPMENT) {
+    for (const equipment of pack.equipment) {
       const customerId = customerIds[equipment.customerKey];
       if (!customerId) {
         continue;
@@ -601,7 +599,7 @@ export async function seedCompanyDemoData(
       });
     }
 
-    for (const jobSeed of DEMO_JOBS) {
+    for (const jobSeed of pack.jobs) {
       const scheduledAt = buildJobSchedule(jobSeed, seedContext.now);
       const timestamps = buildJobTimestamps(jobSeed, scheduledAt);
       const customerId = customerIds[jobSeed.customerKey];
@@ -643,7 +641,7 @@ export async function seedCompanyDemoData(
       jobIds[jobSeed.key] = result.id;
     }
 
-    for (const jobSeed of DEMO_JOBS) {
+    for (const jobSeed of pack.jobs) {
       const jobId = jobIds[jobSeed.key];
       if (!jobId) {
         continue;
@@ -674,7 +672,7 @@ export async function seedCompanyDemoData(
       }
     }
 
-    for (const jobSeed of DEMO_JOBS) {
+    for (const jobSeed of pack.jobs) {
       const jobId = jobIds[jobSeed.key];
       if (!jobId) {
         continue;
@@ -726,359 +724,33 @@ export async function seedCompanyDemoData(
       }
     }
 
-    const materialSeeds = [
-      {
-        customer_id: customerIds.james,
-        job_id: jobIds.completedJamesMaint,
-        service_item_id: serviceItemIds.furnace,
-        name: "Furnace filter — 16x25x1",
-        quantity: 1,
-        unit_cost: 18,
-        unit_price: 32,
-      },
-      {
-        customer_id: customerIds.james,
-        job_id: jobIds.completedJamesCap,
-        service_item_id: serviceItemIds.capacitor,
-        name: "45/5 MFD run capacitor",
-        quantity: 1,
-        unit_cost: 42,
-        unit_price: 275,
-      },
-      {
-        customer_id: customerIds.greenfield,
-        job_id: jobIds.completedGreenfieldMaint,
-        service_item_id: serviceItemIds["tune-up"],
-        name: "Condenser coil cleaner",
-        quantity: 2,
-        unit_cost: 12,
-        unit_price: 28,
-      },
-      {
-        customer_id: customerIds.lakewood,
-        job_id: jobIds.completedLakewoodWater,
-        service_item_id: serviceItemIds["water-heater"],
-        name: "Upper thermostat — 4500W",
-        quantity: 1,
-        unit_cost: 28,
-        unit_price: 95,
-      },
-      {
-        customer_id: customerIds.marcus,
-        job_id: jobIds.completedMarcusNoCool,
-        service_item_id: serviceItemIds["refrigerant-leak"],
-        name: "R-410A refrigerant — 2 lb",
-        quantity: 2,
-        unit_cost: 45,
-        unit_price: 85,
-      },
-      {
-        customer_id: customerIds.sarah,
-        job_id: jobIds.completedSarahCap,
-        service_item_id: serviceItemIds.capacitor,
-        name: "45/5 MFD run capacitor",
-        quantity: 1,
-        unit_cost: 38,
-        unit_price: 275,
-      },
-      {
-        customer_id: customerIds.ridgewood,
-        job_id: jobIds.completedRidgewoodBlower,
-        service_item_id: serviceItemIds["blower-motor"],
-        name: "ECM blower motor — 1/2 HP",
-        quantity: 1,
-        unit_cost: 285,
-        unit_price: 685,
-      },
-      {
-        customer_id: customerIds.bistro84,
-        job_id: jobIds.completedBistroRefrigerant,
-        service_item_id: serviceItemIds["refrigerant-leak"],
-        name: "Flare fitting repair kit",
-        quantity: 1,
-        unit_cost: 22,
-        unit_price: 65,
-      },
-      {
-        customer_id: customerIds.mainStreet,
-        job_id: jobIds.completedMainStreetThermostat,
-        service_item_id: serviceItemIds["thermostat-install"],
-        name: "Programmable thermostat",
-        quantity: 1,
-        unit_cost: 85,
-        unit_price: 195,
-      },
-      {
-        customer_id: customerIds.sunrise,
-        job_id: jobIds.completedSunriseMaint,
-        service_item_id: serviceItemIds["tune-up"],
-        name: "RTU belt set",
-        quantity: 1,
-        unit_cost: 35,
-        unit_price: 78,
-      },
-      {
-        customer_id: customerIds.westlake,
-        job_id: jobIds.completedWestlakeMaint,
-        service_item_id: serviceItemIds["tune-up"],
-        name: "MERV-13 filter — 20x25x4",
-        quantity: 2,
-        unit_cost: 28,
-        unit_price: 55,
-      },
-      {
-        customer_id: customerIds.techHub,
-        job_id: jobIds.completedTechHubNoCool,
-        service_item_id: serviceItemIds.diagnostic,
-        name: "VRF communication board",
-        quantity: 1,
-        unit_cost: 320,
-        unit_price: 580,
-      },
-    ];
+    for (const material of pack.materials) {
+      const customerId = customerIds[material.customerKey];
+      const jobId = jobIds[material.jobKey];
+      const serviceItemId = serviceItemIds[material.serviceItemKey];
+      if (!customerId || !jobId || !serviceItemId) {
+        continue;
+      }
 
-    for (const material of materialSeeds) {
       await insertRow("seed_job_materials", companyId, "job_materials", {
         company_id: companyId,
-        customer_id: material.customer_id,
-        job_id: material.job_id,
-        service_item_id: material.service_item_id,
+        customer_id: customerId,
+        job_id: jobId,
+        service_item_id: serviceItemId,
         name: withDemoName(material.name),
         description: "Demo material for profitability reporting.",
         quantity: material.quantity,
-        unit_cost: material.unit_cost,
-        unit_price: material.unit_price,
+        unit_cost: material.unitCost,
+        unit_price: material.unitPrice,
         taxable: true,
         added_by: seedContext.actorId,
         is_demo: true,
       });
     }
 
-    type EstimateSeed = {
-      key: string;
-      customerKey: string;
-      jobKey?: string;
-      estimateNumber: string;
-      status: "draft" | "sent" | "approved" | "declined";
-      subtotal: number;
-      validUntilDaysFromNow: number;
-      notes: string;
-      createdDaysAgo: number;
-      lineItems: Array<{
-        serviceItemKey: string;
-        name: string;
-        description: string;
-        quantity: number;
-        unitPrice: number;
-      }>;
-    };
-
-    const estimateSeeds: EstimateSeed[] = [
-      {
-        key: "draftFurnace",
-        customerKey: "emily",
-        jobKey: "furnaceQuoteTomorrow",
-        estimateNumber: "EST-DEMO-2001",
-        status: "approved",
-        subtotal: 4200,
-        validUntilDaysFromNow: 21,
-        notes: "Approved furnace replacement — installation scheduled after on-site measurement.",
-        createdDaysAgo: 4,
-        lineItems: [
-          {
-            serviceItemKey: "furnace-replacement",
-            name: "Gas Furnace Replacement",
-            description: "80% AFUE furnace replacement with startup and permit.",
-            quantity: 1,
-            unitPrice: 4200,
-          },
-        ],
-      },
-      {
-        key: "sentMaintenance",
-        customerKey: "james",
-        estimateNumber: "EST-DEMO-2002",
-        status: "approved",
-        subtotal: 349,
-        validUntilDaysFromNow: 10,
-        notes: "Approved annual maintenance package — first visit booked.",
-        createdDaysAgo: 12,
-        lineItems: [
-          {
-            serviceItemKey: "maintenance-package",
-            name: "Annual Maintenance Package",
-            description: "Two seasonal tune-ups plus priority scheduling.",
-            quantity: 1,
-            unitPrice: 349,
-          },
-        ],
-      },
-      {
-        key: "approvedRtu",
-        customerKey: "greenfield",
-        jobKey: "completedGreenfieldMaint",
-        estimateNumber: "EST-DEMO-2003",
-        status: "approved",
-        subtotal: 7850,
-        validUntilDaysFromNow: 30,
-        notes: "Approved packaged RTU replacement — installation scheduled with permit pulled.",
-        createdDaysAgo: 35,
-        lineItems: [
-          {
-            serviceItemKey: "system-replacement",
-            name: "Packaged RTU Replacement",
-            description: "Remove existing rooftop unit and install new packaged system.",
-            quantity: 1,
-            unitPrice: 7850,
-          },
-        ],
-      },
-      {
-        key: "draftDuctwork",
-        customerKey: "mainStreet",
-        estimateNumber: "EST-DEMO-2004",
-        status: "approved",
-        subtotal: 890,
-        validUntilDaysFromNow: 14,
-        notes: "Approved ductwork repair — scheduled with retail RTU maintenance visit.",
-        createdDaysAgo: 2,
-        lineItems: [
-          {
-            serviceItemKey: "ductwork-repair",
-            name: "Ductwork Repair",
-            description: "Seal and repair disconnected supply duct in ceiling plenum.",
-            quantity: 1,
-            unitPrice: 890,
-          },
-        ],
-      },
-      {
-        key: "sentRtuRepair",
-        customerKey: "bistro84",
-        estimateNumber: "EST-DEMO-2005",
-        status: "approved",
-        subtotal: 1425,
-        validUntilDaysFromNow: 21,
-        notes: "Approved commercial RTU repair — parts ordered, install window confirmed.",
-        createdDaysAgo: 5,
-        lineItems: [
-          {
-            serviceItemKey: "rtu-repair",
-            name: "Commercial RTU Repair",
-            description: "Diagnose and repair rooftop packaged unit components.",
-            quantity: 1,
-            unitPrice: 475,
-          },
-          {
-            serviceItemKey: "labor",
-            name: "Standard Labor Rate",
-            description: "Additional labor for compressor swap.",
-            quantity: 10,
-            unitPrice: 95,
-          },
-        ],
-      },
-      {
-        key: "sentIaq",
-        customerKey: "westlake",
-        estimateNumber: "EST-DEMO-2006",
-        status: "approved",
-        subtotal: 1150,
-        validUntilDaysFromNow: 30,
-        notes: "Approved indoor air quality upgrade for medical office waiting room.",
-        createdDaysAgo: 4,
-        lineItems: [
-          {
-            serviceItemKey: "iaq-addon",
-            name: "Indoor Air Quality Add-On",
-            description: "UV light and MERV-13 media filter upgrade.",
-            quantity: 1,
-            unitPrice: 1150,
-          },
-        ],
-      },
-      {
-        key: "approvedMaintPackage",
-        customerKey: "sunrise",
-        estimateNumber: "EST-DEMO-2007",
-        status: "approved",
-        subtotal: 698,
-        validUntilDaysFromNow: 45,
-        notes: "Approved annual maintenance package for both buildings.",
-        createdDaysAgo: 40,
-        lineItems: [
-          {
-            serviceItemKey: "maintenance-package",
-            name: "Annual Maintenance Package",
-            description: "Two seasonal tune-ups per building.",
-            quantity: 2,
-            unitPrice: 349,
-          },
-        ],
-      },
-      {
-        key: "approvedBlower",
-        customerKey: "ridgewood",
-        jobKey: "completedRidgewoodBlower",
-        estimateNumber: "EST-DEMO-2008",
-        status: "approved",
-        subtotal: 685,
-        validUntilDaysFromNow: 60,
-        notes: "Approved blower motor replacement for clubhouse unit.",
-        createdDaysAgo: 42,
-        lineItems: [
-          {
-            serviceItemKey: "blower-motor",
-            name: "Blower Motor Replacement",
-            description: "Replace failed ECM blower motor and verify airflow.",
-            quantity: 1,
-            unitPrice: 685,
-          },
-        ],
-      },
-      {
-        key: "declinedReplacement",
-        customerKey: "marcus",
-        estimateNumber: "EST-DEMO-2009",
-        status: "sent",
-        subtotal: 6200,
-        validUntilDaysFromNow: 14,
-        notes: "Dual-zone system upgrade proposal — customer reviewing financing options.",
-        createdDaysAgo: 4,
-        lineItems: [
-          {
-            serviceItemKey: "system-replacement",
-            name: "Packaged RTU Replacement",
-            description: "Full dual-zone system replacement proposal.",
-            quantity: 1,
-            unitPrice: 6200,
-          },
-        ],
-      },
-      {
-        key: "declinedOld",
-        customerKey: "oakwood",
-        estimateNumber: "EST-DEMO-2010",
-        status: "approved",
-        subtotal: 4200,
-        validUntilDaysFromNow: 60,
-        notes: "Approved central plant controls upgrade — phased install over two weekends.",
-        createdDaysAgo: 45,
-        lineItems: [
-          {
-            serviceItemKey: "furnace-replacement",
-            name: "Boiler Component Upgrade",
-            description: "Replace aging boiler controls and zone valves.",
-            quantity: 1,
-            unitPrice: 4200,
-          },
-        ],
-      },
-    ];
-
     const estimateIds: Record<string, string> = {};
 
-    for (const estimate of estimateSeeds) {
+    for (const estimate of pack.estimates) {
       const { tax, total } = computeTax(estimate.subtotal);
       const result = await insertRow("seed_estimates", companyId, "estimates", {
         company_id: companyId,
@@ -1118,326 +790,10 @@ export async function seedCompanyDemoData(
       }
     }
 
-    type InvoiceSeed = {
-      key: string;
-      customerKey: string;
-      jobKey?: string;
-      invoiceNumber: string;
-      status: "paid" | "partially_paid" | "overdue" | "sent";
-      subtotal: number;
-      amountPaid: number;
-      issueDaysAgo: number;
-      dueDaysFromNow: number;
-      paidDaysAgo?: number;
-      notes: string;
-      lineItems: Array<{
-        serviceItemKey: string;
-        name: string;
-        description: string;
-        quantity: number;
-        unitPrice: number;
-      }>;
-      payments?: Array<{
-        amount: number;
-        paymentDaysAgo: number;
-        reference: string;
-        notes: string;
-      }>;
-    };
-
-    const invoiceSeeds: InvoiceSeed[] = [
-      {
-        key: "paidDiag",
-        customerKey: "lakewood",
-        jobKey: "completedLakewoodDiag",
-        invoiceNumber: "INV-DEMO-3001",
-        status: "paid",
-        subtotal: 129,
-        amountPaid: 0,
-        issueDaysAgo: 24,
-        dueDaysFromNow: 6,
-        paidDaysAgo: 20,
-        notes: "Diagnostic visit — paid in full.",
-        lineItems: [
-          {
-            serviceItemKey: "diagnostic",
-            name: "AC System Diagnostic",
-            description: "Cooling diagnostic and airflow verification.",
-            quantity: 1,
-            unitPrice: 129,
-          },
-        ],
-        payments: [
-          {
-            amount: 0,
-            paymentDaysAgo: 20,
-            reference: "DEMO-PAY-3001",
-            notes: "Paid in full — check.",
-          },
-        ],
-      },
-      {
-        key: "partialMaint",
-        customerKey: "greenfield",
-        jobKey: "completedGreenfieldMaint",
-        invoiceNumber: "INV-DEMO-3002",
-        status: "partially_paid",
-        subtotal: 1890,
-        amountPaid: 1000,
-        issueDaysAgo: 38,
-        dueDaysFromNow: 12,
-        notes: "Quarterly maintenance — deposit received, final balance on net-30 terms.",
-        lineItems: [
-          {
-            serviceItemKey: "tune-up",
-            name: "HVAC Seasonal Tune-Up",
-            description: "Quarterly commercial maintenance service.",
-            quantity: 10,
-            unitPrice: 189,
-          },
-        ],
-        payments: [
-          {
-            amount: 600,
-            paymentDaysAgo: 35,
-            reference: "DEMO-PAY-3002A",
-            notes: "Initial deposit.",
-          },
-          {
-            amount: 400,
-            paymentDaysAgo: 8,
-            reference: "DEMO-PAY-3002B",
-            notes: "Second installment.",
-          },
-        ],
-      },
-      {
-        key: "overdueFurnace",
-        customerKey: "james",
-        jobKey: "completedJamesMaint",
-        invoiceNumber: "INV-DEMO-3003",
-        status: "paid",
-        subtotal: 165,
-        amountPaid: 0,
-        issueDaysAgo: 20,
-        dueDaysFromNow: 6,
-        paidDaysAgo: 16,
-        notes: "Furnace maintenance completed — paid in full.",
-        lineItems: [
-          {
-            serviceItemKey: "furnace",
-            name: "Furnace Maintenance",
-            description: "Annual furnace maintenance service.",
-            quantity: 1,
-            unitPrice: 165,
-          },
-        ],
-        payments: [
-          {
-            amount: 0,
-            paymentDaysAgo: 16,
-            reference: "DEMO-PAY-3003",
-            notes: "Paid in full — card on file.",
-          },
-        ],
-      },
-      {
-        key: "paidHistoricalCap",
-        customerKey: "james",
-        jobKey: "completedJamesCap",
-        invoiceNumber: "INV-DEMO-3004",
-        status: "paid",
-        subtotal: 275,
-        amountPaid: 0,
-        issueDaysAgo: 54,
-        dueDaysFromNow: -24,
-        paidDaysAgo: 50,
-        notes: "Capacitor replacement — paid in full.",
-        lineItems: [
-          {
-            serviceItemKey: "capacitor",
-            name: "Capacitor Replacement",
-            description: "Replace failed run capacitor.",
-            quantity: 1,
-            unitPrice: 275,
-          },
-        ],
-        payments: [
-          {
-            amount: 0,
-            paymentDaysAgo: 50,
-            reference: "DEMO-PAY-3004",
-            notes: "Historical paid invoice for revenue reporting.",
-          },
-        ],
-      },
-      {
-        key: "paidMarcus",
-        customerKey: "marcus",
-        jobKey: "completedMarcusNoCool",
-        invoiceNumber: "INV-DEMO-3005",
-        status: "paid",
-        subtotal: 520,
-        amountPaid: 0,
-        issueDaysAgo: 10,
-        dueDaysFromNow: 20,
-        paidDaysAgo: 7,
-        notes: "Refrigerant leak repair — paid via card on-site.",
-        lineItems: [
-          {
-            serviceItemKey: "refrigerant-leak",
-            name: "Refrigerant Leak Repair",
-            description: "Locate leak, repair line set, evacuate, and recharge.",
-            quantity: 1,
-            unitPrice: 520,
-          },
-        ],
-        payments: [
-          {
-            amount: 0,
-            paymentDaysAgo: 7,
-            reference: "DEMO-PAY-3005",
-            notes: "Paid in full — card on-site.",
-          },
-        ],
-      },
-      {
-        key: "partialBistro",
-        customerKey: "bistro84",
-        jobKey: "completedBistroRefrigerant",
-        invoiceNumber: "INV-DEMO-3006",
-        status: "partially_paid",
-        subtotal: 520,
-        amountPaid: 300,
-        issueDaysAgo: 12,
-        dueDaysFromNow: 18,
-        notes: "Refrigerant repair — deposit received, final balance due on net-30 terms.",
-        lineItems: [
-          {
-            serviceItemKey: "refrigerant-leak",
-            name: "Refrigerant Leak Repair",
-            description: "Kitchen make-up air unit leak repair.",
-            quantity: 1,
-            unitPrice: 520,
-          },
-        ],
-        payments: [
-          {
-            amount: 300,
-            paymentDaysAgo: 42,
-            reference: "DEMO-PAY-3006",
-            notes: "Partial payment — restaurant manager check.",
-          },
-        ],
-      },
-      {
-        key: "overdueSunrise",
-        customerKey: "sunrise",
-        jobKey: "completedSunriseMaint",
-        invoiceNumber: "INV-DEMO-3007",
-        status: "paid",
-        subtotal: 189,
-        amountPaid: 0,
-        issueDaysAgo: 28,
-        dueDaysFromNow: 2,
-        paidDaysAgo: 24,
-        notes: "Quarterly RTU maintenance — paid via ACH.",
-        lineItems: [
-          {
-            serviceItemKey: "tune-up",
-            name: "HVAC Seasonal Tune-Up",
-            description: "Quarterly RTU maintenance service.",
-            quantity: 1,
-            unitPrice: 189,
-          },
-        ],
-        payments: [
-          {
-            amount: 0,
-            paymentDaysAgo: 24,
-            reference: "DEMO-PAY-3007",
-            notes: "Paid in full — ACH transfer.",
-          },
-        ],
-      },
-      {
-        key: "sentSarah",
-        customerKey: "sarah",
-        jobKey: "completedSarahCap",
-        invoiceNumber: "INV-DEMO-3008",
-        status: "sent",
-        subtotal: 275,
-        amountPaid: 0,
-        issueDaysAgo: 3,
-        dueDaysFromNow: 27,
-        notes: "Capacitor replacement — recently sent, awaiting payment.",
-        lineItems: [
-          {
-            serviceItemKey: "capacitor",
-            name: "Capacitor Replacement",
-            description: "Replace failed run capacitor on outdoor condenser.",
-            quantity: 1,
-            unitPrice: 275,
-          },
-        ],
-      },
-      {
-        key: "sentOakwood",
-        customerKey: "oakwood",
-        jobKey: "completedOakwoodDiag",
-        invoiceNumber: "INV-DEMO-3009",
-        status: "sent",
-        subtotal: 129,
-        amountPaid: 0,
-        issueDaysAgo: 5,
-        dueDaysFromNow: 25,
-        notes: "Zone valve diagnostic — invoice sent to property management.",
-        lineItems: [
-          {
-            serviceItemKey: "diagnostic",
-            name: "AC System Diagnostic",
-            description: "Central plant zone valve diagnostic.",
-            quantity: 1,
-            unitPrice: 129,
-          },
-        ],
-      },
-      {
-        key: "paidWestlake",
-        customerKey: "westlake",
-        jobKey: "completedWestlakeMaint",
-        invoiceNumber: "INV-DEMO-3010",
-        status: "paid",
-        subtotal: 189,
-        amountPaid: 0,
-        issueDaysAgo: 65,
-        dueDaysFromNow: -35,
-        paidDaysAgo: 60,
-        notes: "Semi-annual medical office maintenance — paid via ACH.",
-        lineItems: [
-          {
-            serviceItemKey: "tune-up",
-            name: "HVAC Seasonal Tune-Up",
-            description: "Semi-annual preventive maintenance.",
-            quantity: 1,
-            unitPrice: 189,
-          },
-        ],
-        payments: [
-          {
-            amount: 0,
-            paymentDaysAgo: 60,
-            reference: "DEMO-PAY-3010",
-            notes: "Paid via ACH — medical office billing.",
-          },
-        ],
-      },
-    ];
-
     const invoiceIds: Record<string, string> = {};
     const invoiceTotals: Record<string, number> = {};
 
-    for (const invoice of invoiceSeeds) {
+    for (const invoice of pack.invoices) {
       const { tax, total } = computeTax(invoice.subtotal);
       const amountPaid =
         invoice.status === "paid"
@@ -1513,7 +869,7 @@ export async function seedCompanyDemoData(
 
     await closeOpenDemoTimeEntries(companyId, seedContext.technicianId);
 
-    for (const jobSeed of DEMO_JOBS) {
+    for (const jobSeed of pack.jobs) {
       const jobId = jobIds[jobSeed.key];
       if (!jobId) {
         continue;
@@ -1600,60 +956,37 @@ export async function seedCompanyDemoData(
       is_demo: true,
     });
 
-    const notifications = [
-      {
-        type: "job_assigned",
-        title: "Job assigned",
-        message: "You were assigned JOB-DEMO-1001 — HVAC Maintenance for James Chen.",
-        entity_type: "job",
-        entity_id: jobIds.maintenanceToday,
-      },
-      {
-        type: "job_completed",
-        title: "Job completed",
-        message: "JOB-DEMO-1032 preventive maintenance completed at Lakewood Apartments.",
-        entity_type: "job",
-        entity_id: jobIds.completedTodayLakewood,
-      },
-      {
-        type: "invoice_paid",
-        title: "Payment received",
-        message: `INV-DEMO-3001 was paid in full ($${invoiceTotals.paidDiag.toFixed(2)}).`,
-        entity_type: "invoice",
-        entity_id: invoiceIds.paidDiag,
-      },
-      {
-        type: "job_completed",
-        title: "Job completed",
-        message: "JOB-DEMO-1037 capacitor replacement completed for James Chen.",
-        entity_type: "job",
-        entity_id: jobIds.completedTodayJames,
-      },
-      {
-        type: "invoice_paid",
-        title: "Payment received",
-        message: `INV-DEMO-3005 was paid in full ($${invoiceTotals.paidMarcus.toFixed(2)}).`,
-        entity_type: "invoice",
-        entity_id: invoiceIds.paidMarcus,
-      },
-      {
-        type: "job_completed",
-        title: "Job completed",
-        message: "JOB-DEMO-1017 blower motor replacement completed at Ridgewood Estates.",
-        entity_type: "job",
-        entity_id: jobIds.completedRidgewoodBlower,
-      },
-    ] as const;
+    for (const notification of pack.notifications) {
+      const entityId =
+        notification.entityType === "job" && notification.jobKey
+          ? jobIds[notification.jobKey]
+          : notification.invoiceKey
+            ? invoiceIds[notification.invoiceKey]
+            : undefined;
 
-    for (const notification of notifications) {
+      if (!entityId) {
+        continue;
+      }
+
+      let message = notification.message;
+      if (notification.type === "invoice_paid" && notification.invoiceKey) {
+        const total = invoiceTotals[notification.invoiceKey];
+        const invoiceNumber = pack.invoices.find(
+          (invoice) => invoice.key === notification.invoiceKey,
+        )?.invoiceNumber;
+        if (total !== undefined && invoiceNumber) {
+          message = `${invoiceNumber} was paid in full ($${total.toFixed(2)}).`;
+        }
+      }
+
       await insertRow("seed_notifications", companyId, "notifications", {
         company_id: companyId,
         user_id: seedContext.actorId,
         type: notification.type,
         title: notification.title,
-        message: notification.message,
-        entity_type: notification.entity_type,
-        entity_id: notification.entity_id,
+        message,
+        entity_type: notification.entityType,
+        entity_id: entityId,
         metadata: { source: "demo_seed" },
         is_demo: true,
       });
