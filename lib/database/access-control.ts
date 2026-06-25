@@ -582,7 +582,8 @@ export function canAccessAppRedirectPath(
     return (
       permissions.dispatchJobs ||
       permissions.manageCompany ||
-      permissions.manageBilling
+      permissions.manageBilling ||
+      permissions.manageCustomers
     );
   }
 

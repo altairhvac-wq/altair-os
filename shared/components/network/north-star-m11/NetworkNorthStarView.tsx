@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Search, UserPlus } from "lucide-react";
+import { MapPin, Search, UserMinus, UserPlus } from "lucide-react";
 import { getPartnerInitials } from "@/shared/types/network";
 import {
   addToMyNetworkAction,
@@ -19,8 +19,11 @@ import { northStarListTokens as lt } from "@/shared/design-system/north-star/tok
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { useMyNetworkPartnersState } from "@/shared/hooks/useMyNetworkPartnersState";
 import {
+  DIRECTORY_FILTER_OPTIONS,
   enrichMyNetworkPartners,
   getTrustedCompanyIds,
+  MY_NETWORK_EMPTY_MESSAGE,
+  type DirectoryFilter,
   type MyNetworkPartner,
   type NetworkPartner,
 } from "@/shared/types/network-partner";
@@ -157,6 +160,8 @@ export function NetworkNorthStarView({
   const [tradeFilter, setTradeFilter] = useState<TradeType | "all">("all");
   const [locationFilter, setLocationFilter] = useState("");
   const [acceptingReferralsOnly, setAcceptingReferralsOnly] = useState(false);
+  const [directoryFilter, setDirectoryFilter] =
+    useState<DirectoryFilter>("all");
   const [isDesktopLayout, setIsDesktopLayout] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<ProfilePanelMode>("empty");
@@ -209,14 +214,22 @@ export function NetworkNorthStarView({
         search,
         tradeFilter,
         locationFilter,
-        directoryFilter: "all",
+        directoryFilter,
         acceptingReferralsOnly,
       },
       trustedCompanyIds,
     );
 
     return sortProfilesWithTrustedFirst(nextProfiles, trustedCompanyIds);
-  }, [profiles, search, tradeFilter, locationFilter, acceptingReferralsOnly, trustedCompanyIds]);
+  }, [
+    profiles,
+    search,
+    tradeFilter,
+    locationFilter,
+    directoryFilter,
+    acceptingReferralsOnly,
+    trustedCompanyIds,
+  ]);
 
   const hasActiveDirectoryFilters =
     search.trim().length > 0 ||
@@ -235,6 +248,7 @@ export function NetworkNorthStarView({
     setTradeFilter("all");
     setLocationFilter("");
     setAcceptingReferralsOnly(false);
+    setDirectoryFilter("all");
     setSelectedProfileId(null);
     setPanelMode("empty");
     clearNetworkActionFeedback();
@@ -530,27 +544,47 @@ export function NetworkNorthStarView({
 
     return (
       <article key={partner.id} className={`${st.cardShellTrusted} min-w-0 px-2 py-1.5`}>
-        <div className="flex items-center gap-2">
-          <div className={st.cardIcon}>
-            {getPartnerInitials(displayName)}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <p className={st.cardPrimary}>{displayName}</p>
-              <NetworkTrustedBadge surface="north-star" />
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <div className={st.cardIcon}>
+              {getPartnerInitials(displayName)}
             </div>
-            <p className={`mt-0.5 ${st.cardSecondary}`}>{partner.tradeType}</p>
-            {partner.city || partner.state ? (
-              <p className={`mt-0.5 flex items-center gap-1 ${st.cardMuted}`}>
-                <MapPin className="h-3 w-3 shrink-0 text-[#8A6324]" />
-                {[partner.city, partner.state].filter(Boolean).join(", ")}
-              </p>
-            ) : (
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <p className={st.cardPrimary}>{displayName}</p>
+                <NetworkTrustedBadge surface="north-star" />
+              </div>
+              <p className={`mt-0.5 ${st.cardSecondary}`}>{partner.tradeType}</p>
+              {partner.city || partner.state ? (
+                <p className={`mt-0.5 flex items-center gap-1 ${st.cardMuted}`}>
+                  <MapPin className="h-3 w-3 shrink-0 text-[#8A6324]" />
+                  {[partner.city, partner.state].filter(Boolean).join(", ")}
+                </p>
+              ) : null}
               <p className={`mt-0.5 ${st.cardMuted}`}>
-                Profile hidden from directory
+                Profile is hidden from the directory. Referrals resume when they
+                make their profile visible again.
               </p>
-            )}
+            </div>
           </div>
+          {canManageNetwork ? (
+            <button
+              type="button"
+              onClick={() =>
+                partner.linkedCompanyId &&
+                handleRemoveFromNetwork(partner.linkedCompanyId)
+              }
+              disabled={isNetworkActionPendingForCompany(
+                partner.linkedCompanyId ?? "",
+              )}
+              className={`${st.panelAction} disabled:cursor-not-allowed`}
+            >
+              <UserMinus className="h-3.5 w-3.5" />
+              {isNetworkActionPendingForCompany(partner.linkedCompanyId ?? "")
+                ? "Removing..."
+                : "Remove"}
+            </button>
+          ) : null}
         </div>
         {networkActionError &&
         networkActionTarget?.linkedCompanyId === partner.linkedCompanyId ? (
@@ -655,6 +689,28 @@ export function NetworkNorthStarView({
             {activeTab === "directory" ? (
               <div className="flex min-h-0 min-w-0 flex-col gap-3 overflow-x-hidden lg:min-h-[32rem] lg:gap-4 lg:overflow-hidden">
                 <div className={st.filterToolbar}>
+                  {canManageNetwork ? (
+                    <div
+                      className={`${st.filterControl} mb-3`}
+                      aria-label="Directory filter"
+                    >
+                      {DIRECTORY_FILTER_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          aria-pressed={directoryFilter === option.value}
+                          onClick={() => setDirectoryFilter(option.value)}
+                          className={`${st.filterItem} ${
+                            directoryFilter === option.value
+                              ? st.filterItemActive
+                              : ""
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
                   <div className={st.filterToolbarRow}>
                     <div className="relative min-w-0">
                       <Search
@@ -733,17 +789,26 @@ export function NetworkNorthStarView({
                     <div
                       className={`@container min-w-0 ${st.discoveryListRegion} ${masterListPageScrollRegionClass}`}
                     >
-                      {filteredProfiles.length === 0 ? (
+                      {!canSendReferral ? (
+                        <p className={st.permissionCopy}>
+                          Directory and referrals are available to owners and
+                          admins.
+                        </p>
+                      ) : filteredProfiles.length === 0 ? (
                         <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
                           <p className={st.emptyTitle}>
                             {hasActiveDirectoryFilters
                               ? "No companies match those filters"
-                              : "No visible network profiles yet"}
+                              : directoryFilter === "my-network"
+                                ? "No trusted partners in your network yet"
+                                : "No visible network profiles yet"}
                           </p>
                           <p className={st.emptyDescription}>
                             {hasActiveDirectoryFilters
                               ? "Try a different trade or location."
-                              : "Partner companies appear here when they make their profile visible in the network."}
+                              : directoryFilter === "my-network"
+                                ? MY_NETWORK_EMPTY_MESSAGE
+                                : "Partner companies appear here when they make their profile visible in the network."}
                           </p>
                           {hasActiveDirectoryFilters ? (
                             <button
