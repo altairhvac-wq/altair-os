@@ -161,12 +161,34 @@ export async function signupAction(
     }
   }
 
-  const supabase = await createClient();
-  const { origin } = await resolveAuthRedirectOrigin();
-  const emailRedirectTo = origin
-    ? buildAuthCallbackUrl(origin)
-    : undefined;
+  const { origin, source } = await resolveAuthRedirectOrigin();
 
+  if (!origin) {
+    console.error(
+      "[signupAction] missing request origin for redirect URL",
+      { source },
+    );
+    return {
+      error: "Sign up is temporarily unavailable. Please try again later.",
+    };
+  }
+
+  let emailRedirectTo: string;
+
+  try {
+    emailRedirectTo = buildAuthCallbackUrl(origin);
+  } catch (error) {
+    console.error("[signupAction] invalid redirect URL:", {
+      origin,
+      source,
+      error,
+    });
+    return {
+      error: "Sign up is temporarily unavailable. Please try again later.",
+    };
+  }
+
+  const supabase = createAuthEmailClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -182,6 +204,14 @@ export async function signupAction(
 
   if (error) {
     return { error: mapAuthError(error) };
+  }
+
+  if (data.session) {
+    const ssrClient = await createClient();
+    await ssrClient.auth.setSession({
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+    });
   }
 
   if (!data.session) {

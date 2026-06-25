@@ -23,6 +23,17 @@ function authCallbackErrorRedirect(origin: string) {
   return NextResponse.redirect(`${origin}/login?error=auth_callback`);
 }
 
+function withSupabaseCookies(
+  target: NextResponse,
+  source: NextResponse,
+): NextResponse {
+  source.cookies.getAll().forEach(({ name, value, ...options }) => {
+    target.cookies.set(name, value, options);
+  });
+
+  return target;
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const origin = requestUrl.origin;
@@ -47,13 +58,22 @@ export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
   const { url, anonKey } = getSupabaseEnv();
 
+  let supabaseResponse = NextResponse.next({ request });
+
   const supabase = createServerClient<Database>(url, anonKey, {
     cookies: {
       getAll() {
-        return cookieStore.getAll();
+        return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => {
+          request.cookies.set(name, value);
+        });
+
+        supabaseResponse = NextResponse.next({ request });
+
         cookiesToSet.forEach(({ name, value, options }) => {
+          supabaseResponse.cookies.set(name, value, options);
           cookieStore.set(name, value, options);
         });
       },
@@ -97,5 +117,8 @@ export async function GET(request: NextRequest) {
     typeParam,
   );
 
-  return NextResponse.redirect(`${origin}${destination}`);
+  return withSupabaseCookies(
+    NextResponse.redirect(`${origin}${destination}`),
+    supabaseResponse,
+  );
 }
