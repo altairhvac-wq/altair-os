@@ -21,6 +21,8 @@ export const networkNorthStarStyles = {
   tabControl: lt.viewTabsControl,
   tabItem: lt.viewTabsItem,
   tabItemActive: lt.viewTabsItemActive,
+  tabAttentionBadge:
+    "ml-1.5 inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-[#B88A2E] ring-2 ring-[#FBF7EF]",
   filterControl: `${lt.viewTabsControl} inline-flex items-center`,
   filterItem: `${lt.viewTabsItem} inline-flex min-h-9 items-center justify-center gap-1.5 px-3 py-2 text-xs leading-none sm:flex-none`,
   filterItemActive: lt.viewTabsItemActive,

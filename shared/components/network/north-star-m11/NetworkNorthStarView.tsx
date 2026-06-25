@@ -19,22 +19,30 @@ import { northStarListTokens as lt } from "@/shared/design-system/north-star/tok
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { useMyNetworkPartnersState } from "@/shared/hooks/useMyNetworkPartnersState";
 import {
-  DIRECTORY_FILTER_OPTIONS,
   enrichMyNetworkPartners,
   getTrustedCompanyIds,
   MY_NETWORK_EMPTY_MESSAGE,
-  type DirectoryFilter,
   type MyNetworkPartner,
   type NetworkPartner,
 } from "@/shared/types/network-partner";
 import {
   collectTradeTypesFromProfiles,
   filterNetworkDirectoryProfiles,
-  NETWORK_REFERRALS_TAB_OPTIONS,
   type NetworkProfile,
   type NetworkReferral,
-  type NetworkReferralsTab,
 } from "@/shared/types/network-referral";
+import {
+  getDefaultNetworkReferralsSubTab,
+  getDefaultNetworkWorkspaceTab,
+  getVisibleNetworkReferralsSubTabs,
+  getVisibleNetworkWorkspaceTabs,
+  hasInvitationsAttention,
+  hasReferralsAttention,
+  NETWORK_REFERRALS_SUB_TAB_OPTIONS,
+  NETWORK_WORKSPACE_TAB_OPTIONS,
+  type NetworkReferralsSubTab,
+  type NetworkWorkspaceTab,
+} from "@/shared/lib/network/workspace-tabs";
 import type { TradeType } from "@/shared/types/network";
 import {
   filterInvitesByTab,
@@ -111,7 +119,37 @@ export function NetworkNorthStarView({
 }: NetworkNorthStarViewProps) {
   const router = useRouter();
   const timeZone = useCompanyTimezone();
-  const [activeTab, setActiveTab] = useState<NetworkReferralsTab>("directory");
+  const workspacePermissions = useMemo(
+    () => ({
+      canSendReferral,
+      canManageNetwork,
+      canManageReceivedReferrals,
+    }),
+    [canSendReferral, canManageNetwork, canManageReceivedReferrals],
+  );
+  const visibleWorkspaceTabs = useMemo(
+    () => getVisibleNetworkWorkspaceTabs(workspacePermissions),
+    [workspacePermissions],
+  );
+  const visibleReferralsSubTabs = useMemo(
+    () => getVisibleNetworkReferralsSubTabs(workspacePermissions),
+    [workspacePermissions],
+  );
+  const [activeTab, setActiveTab] = useState<NetworkWorkspaceTab>(() =>
+    getDefaultNetworkWorkspaceTab({
+      canSendReferral,
+      canManageNetwork,
+      canManageReceivedReferrals,
+    }),
+  );
+  const [referralsSubTab, setReferralsSubTab] =
+    useState<NetworkReferralsSubTab>(() =>
+      getDefaultNetworkReferralsSubTab({
+        canSendReferral,
+        canManageNetwork,
+        canManageReceivedReferrals,
+      }),
+    );
   const [profiles, setProfiles] = useState(initialProfiles);
   const [ownProfile, setOwnProfile] = useState(initialOwnProfile);
   const [sentReferrals, setSentReferrals] = useState(initialSentReferrals);
@@ -160,8 +198,6 @@ export function NetworkNorthStarView({
   const [tradeFilter, setTradeFilter] = useState<TradeType | "all">("all");
   const [locationFilter, setLocationFilter] = useState("");
   const [acceptingReferralsOnly, setAcceptingReferralsOnly] = useState(false);
-  const [directoryFilter, setDirectoryFilter] =
-    useState<DirectoryFilter>("all");
   const [isDesktopLayout, setIsDesktopLayout] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<ProfilePanelMode>("empty");
@@ -214,7 +250,7 @@ export function NetworkNorthStarView({
         search,
         tradeFilter,
         locationFilter,
-        directoryFilter,
+        directoryFilter: "all",
         acceptingReferralsOnly,
       },
       trustedCompanyIds,
@@ -226,10 +262,14 @@ export function NetworkNorthStarView({
     search,
     tradeFilter,
     locationFilter,
-    directoryFilter,
     acceptingReferralsOnly,
     trustedCompanyIds,
   ]);
+
+  const showInvitationsAttention = hasInvitationsAttention(
+    incomingNetworkInvites,
+  );
+  const showReferralsAttention = hasReferralsAttention(receivedReferrals);
 
   const hasActiveDirectoryFilters =
     search.trim().length > 0 ||
@@ -242,13 +282,12 @@ export function NetworkNorthStarView({
     setNetworkActionErrorProfileId(null);
   }
 
-  function handleTabChange(tab: NetworkReferralsTab) {
+  function handleTabChange(tab: NetworkWorkspaceTab) {
     setActiveTab(tab);
     setSearch("");
     setTradeFilter("all");
     setLocationFilter("");
     setAcceptingReferralsOnly(false);
-    setDirectoryFilter("all");
     setSelectedProfileId(null);
     setPanelMode("empty");
     clearNetworkActionFeedback();
@@ -322,7 +361,8 @@ export function NetworkNorthStarView({
 
   function handleReferralSuccess(referral: NetworkReferral) {
     setSentReferrals((current) => [referral, ...current]);
-    setActiveTab("sent-referrals");
+    setActiveTab("referrals");
+    setReferralsSubTab("sent");
     setPanelMode("empty");
     setSelectedProfileId(null);
   }
@@ -618,23 +658,9 @@ export function NetworkNorthStarView({
             ) : undefined
           }
         />
-        <div className={st.commandHeaderChips}>
-          <span className={st.commandHeaderChip}>Discover</span>
-          <span className={st.commandHeaderChip}>My Network</span>
-          <span className={st.commandHeaderChip}>Referrals</span>
-          <span className={st.commandHeaderChipAccent}>Early access</span>
-        </div>
       </div>
 
       <MasterContentStack density="compact" className={st.workspaceStack}>
-        {ownProfile && canSendReferral ? (
-          <NetworkProfileEditForm
-            profile={ownProfile}
-            onSaved={handleProfileSaved}
-            surface="north-star"
-          />
-        ) : null}
-
         {visibilityError ? (
           <p className={st.errorBanner}>{visibilityError}</p>
         ) : null}
@@ -663,7 +689,9 @@ export function NetworkNorthStarView({
               className={`${st.tabControl} overflow-x-auto`}
               aria-label="Network sections"
             >
-              {NETWORK_REFERRALS_TAB_OPTIONS.map((tab) => (
+              {NETWORK_WORKSPACE_TAB_OPTIONS.filter((tab) =>
+                visibleWorkspaceTabs.includes(tab.value),
+              ).map((tab) => (
                 <button
                   key={tab.value}
                   type="button"
@@ -673,7 +701,22 @@ export function NetworkNorthStarView({
                     activeTab === tab.value ? st.tabItemActive : ""
                   }`}
                 >
-                  {tab.label}
+                  <span className="inline-flex items-center">
+                    {tab.label}
+                    {tab.value === "invitations" &&
+                    showInvitationsAttention ? (
+                      <span
+                        className={st.tabAttentionBadge}
+                        aria-label="Incoming invitations need attention"
+                      />
+                    ) : null}
+                    {tab.value === "referrals" && showReferralsAttention ? (
+                      <span
+                        className={st.tabAttentionBadge}
+                        aria-label="Received referrals need attention"
+                      />
+                    ) : null}
+                  </span>
                 </button>
               ))}
             </nav>
@@ -688,29 +731,15 @@ export function NetworkNorthStarView({
           <div className={st.tabBodyInner}>
             {activeTab === "directory" ? (
               <div className="flex min-h-0 min-w-0 flex-col gap-3 overflow-x-hidden lg:min-h-[32rem] lg:gap-4 lg:overflow-hidden">
+                {ownProfile && canSendReferral ? (
+                  <NetworkProfileEditForm
+                    profile={ownProfile}
+                    onSaved={handleProfileSaved}
+                    surface="north-star"
+                  />
+                ) : null}
+
                 <div className={st.filterToolbar}>
-                  {canManageNetwork ? (
-                    <div
-                      className={`${st.filterControl} mb-3`}
-                      aria-label="Directory filter"
-                    >
-                      {DIRECTORY_FILTER_OPTIONS.map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          aria-pressed={directoryFilter === option.value}
-                          onClick={() => setDirectoryFilter(option.value)}
-                          className={`${st.filterItem} ${
-                            directoryFilter === option.value
-                              ? st.filterItemActive
-                              : ""
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
                   <div className={st.filterToolbarRow}>
                     <div className="relative min-w-0">
                       <Search
@@ -799,16 +828,12 @@ export function NetworkNorthStarView({
                           <p className={st.emptyTitle}>
                             {hasActiveDirectoryFilters
                               ? "No companies match those filters"
-                              : directoryFilter === "my-network"
-                                ? "No trusted partners in your network yet"
-                                : "No visible network profiles yet"}
+                              : "No visible network profiles yet"}
                           </p>
                           <p className={st.emptyDescription}>
                             {hasActiveDirectoryFilters
                               ? "Try a different trade or location."
-                              : directoryFilter === "my-network"
-                                ? MY_NETWORK_EMPTY_MESSAGE
-                                : "Partner companies appear here when they make their profile visible in the network."}
+                              : "Partner companies appear here when they make their profile visible in the network."}
                           </p>
                           {hasActiveDirectoryFilters ? (
                             <button
@@ -855,12 +880,12 @@ export function NetworkNorthStarView({
               </div>
             ) : null}
 
-            {activeTab === "my-network" ? (
+            {activeTab === "partners" ? (
               <div className="flex min-h-0 min-w-0 flex-col gap-3 overflow-x-hidden lg:min-h-[32rem] lg:gap-4 lg:overflow-hidden">
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-x-hidden lg:flex-row lg:gap-4 lg:overflow-hidden">
                   <div className={st.directoryListColumn}>
                     <div className={st.rosterSectionHeader}>
-                      <p className={st.sectionTitle}>My Network</p>
+                      <p className={st.sectionTitle}>Partners</p>
                       <p className={st.countMeta}>
                         {myNetworkEntries.length} partners
                       </p>
@@ -877,15 +902,14 @@ export function NetworkNorthStarView({
                         <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
                           <p className={st.emptyTitle}>No trusted partners yet</p>
                           <p className={st.emptyDescription}>
-                            Add companies from Discover so you can send overflow
-                            work and referrals faster.
+                            {MY_NETWORK_EMPTY_MESSAGE}
                           </p>
                           <button
                             type="button"
                             onClick={() => handleTabChange("directory")}
                             className={`${st.emptyStateCta} mt-4`}
                           >
-                            Browse Discover
+                            Browse Directory
                           </button>
                         </div>
                       ) : (
@@ -1048,64 +1072,97 @@ export function NetworkNorthStarView({
               </div>
             ) : null}
 
-            {activeTab === "sent-referrals" ? (
+            {activeTab === "referrals" ? (
               <div className="min-h-0 overflow-y-auto">
-                {!canSendReferral ? (
-                  <p className={st.permissionCopy}>
-                    Sent referrals are visible to company owners and admins.
-                  </p>
-                ) : (
-                  <>
-                    <div className={st.referralInboxHeader}>
-                      <p className={st.sectionEyebrow}>Outbound referrals</p>
-                      <h2 className={st.sectionTitle}>Sent</h2>
-                      <p className={st.sectionSubtitle}>
-                        Referral leads you&apos;ve sent to partner companies
-                      </p>
-                    </div>
-                    {sentReferrals.length === 0 ? (
-                      <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
-                        <p className={st.emptyTitle}>No sent referrals yet</p>
-                        <p className={st.emptyDescription}>
-                          Send overflow work from Discover or My Network when a
-                          trusted partner is the right fit.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => handleTabChange("directory")}
-                          className={`${st.secondaryAction} mt-4`}
-                        >
-                          Browse Discover
-                        </button>
-                      </div>
-                    ) : (
-                      <div className={st.invitationCardGrid}>
-                        {sentReferrals.map((referral) => (
-                          <NetworkReferralCard
-                            key={referral.id}
-                            referral={referral}
-                            direction="sent"
-                            timeZone={timeZone}
-                            onUpdated={(updated) =>
-                              setSentReferrals((current) =>
-                                current.map((item) =>
-                                  item.id === updated.id ? updated : item,
-                                ),
-                              )
-                            }
-                            surface="north-star"
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            ) : null}
+                {visibleReferralsSubTabs.length > 1 ? (
+                  <div
+                    className={`${st.filterControl} mb-4`}
+                    aria-label="Referral direction"
+                  >
+                    {NETWORK_REFERRALS_SUB_TAB_OPTIONS.filter((option) =>
+                      visibleReferralsSubTabs.includes(option.value),
+                    ).map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        aria-pressed={referralsSubTab === option.value}
+                        onClick={() => setReferralsSubTab(option.value)}
+                        className={`${st.filterItem} ${
+                          referralsSubTab === option.value
+                            ? st.filterItemActive
+                            : ""
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
 
-            {activeTab === "received-referrals" ? (
-              <div className="min-h-0 overflow-y-auto">
-                {!canManageReceivedReferrals ? (
+                {referralsSubTab === "sent" ? (
+                  !canSendReferral ? (
+                    <p className={st.permissionCopy}>
+                      Sent referrals are visible to company owners and admins.
+                    </p>
+                  ) : (
+                    <>
+                      <div className={st.referralInboxHeader}>
+                        <p className={st.sectionEyebrow}>Outbound referrals</p>
+                        <h2 className={st.sectionTitle}>Sent</h2>
+                        <p className={st.sectionSubtitle}>
+                          Referral leads you&apos;ve sent to partner companies
+                        </p>
+                      </div>
+                      {sentReferrals.length === 0 ? (
+                        <div
+                          className={`${st.emptyState} ${st.emptyStateStrong}`}
+                        >
+                          <p className={st.emptyTitle}>No sent referrals yet</p>
+                          <p className={st.emptyDescription}>
+                            Send overflow work from Partners or the Directory
+                            when a trusted partner is the right fit.
+                          </p>
+                          {canManageNetwork ? (
+                            <button
+                              type="button"
+                              onClick={() => handleTabChange("partners")}
+                              className={`${st.secondaryAction} mt-4`}
+                            >
+                              View Partners
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleTabChange("directory")}
+                              className={`${st.secondaryAction} mt-4`}
+                            >
+                              Browse Directory
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className={st.invitationCardGrid}>
+                          {sentReferrals.map((referral) => (
+                            <NetworkReferralCard
+                              key={referral.id}
+                              referral={referral}
+                              direction="sent"
+                              timeZone={timeZone}
+                              onUpdated={(updated) =>
+                                setSentReferrals((current) =>
+                                  current.map((item) =>
+                                    item.id === updated.id ? updated : item,
+                                  ),
+                                )
+                              }
+                              surface="north-star"
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )
+                ) : !canManageReceivedReferrals ? (
                   <p className={st.permissionCopy}>
                     Received referrals are visible to lead management roles.
                   </p>
@@ -1119,7 +1176,9 @@ export function NetworkNorthStarView({
                       </p>
                     </div>
                     {receivedReferrals.length === 0 ? (
-                      <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
+                      <div
+                        className={`${st.emptyState} ${st.emptyStateStrong}`}
+                      >
                         <p className={st.emptyTitle}>No received referrals yet</p>
                         <p className={st.emptyDescription}>
                           Referred leads appear here when partner companies send

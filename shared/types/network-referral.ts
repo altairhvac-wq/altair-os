@@ -413,6 +413,13 @@ export function formatNetworkReferralRequest(
   return `${referral.customerName} — ${referral.requestedService}`;
 }
 
+/** Received referrals awaiting accept/decline. */
+export function isActionableReceivedNetworkReferral(
+  referral: NetworkReferral,
+): boolean {
+  return referral.status === "sent";
+}
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function normalizeNetworkReferralFormData(

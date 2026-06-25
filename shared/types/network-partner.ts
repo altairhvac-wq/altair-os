@@ -182,7 +182,7 @@ export function mergeMyNetworkPartnersFromServer(
 }
 
 export const MY_NETWORK_EMPTY_MESSAGE =
-  "Add companies from Discover so you can quickly send overflow work and referrals.";
+  "Add companies from the Directory so you can quickly send overflow work and referrals.";
 
 export type DirectoryFilter = "all" | "my-network";
 
