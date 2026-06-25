@@ -44,7 +44,7 @@ export function AiBusinessSummaryCard({
             <Sparkles className="h-4 w-4 text-[#8A6324]" aria-hidden="true" />
             <h3 className="text-sm font-bold text-[#17130E]">AI business review</h3>
           </div>
-          <p className="mt-0.5 text-xs text-[#6B6255]">
+          <p className="mt-0.5 text-xs text-[#64748B]">
             Plain-English summary for this reporting period.
           </p>
         </div>
@@ -58,7 +58,7 @@ export function AiBusinessSummaryCard({
           ) : summary ? (
             <>
               {summary.fromCache ? (
-                <p className="text-[11px] font-medium text-[#6B6255]">
+                <p className="text-[11px] font-medium text-[#64748B]">
                   Cached for this period · generated {formatGeneratedAt(summary.generatedAt)}
                 </p>
               ) : null}
@@ -86,7 +86,7 @@ export function AiBusinessSummaryCard({
 
               <div className="flex flex-wrap items-center gap-3 border-t border-[rgba(138,99,36,0.12)] pt-3">
                 {!summary.fromCache ? (
-                  <p className="text-[11px] text-[#6B6255]">
+                  <p className="text-[11px] text-[#64748B]">
                     Generated {formatGeneratedAt(summary.generatedAt)}
                   </p>
                 ) : null}

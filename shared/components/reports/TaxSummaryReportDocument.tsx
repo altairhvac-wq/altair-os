@@ -78,7 +78,7 @@ function EmptyRowMessage({
 }) {
   return (
     <p
-      className={`py-3 text-sm ${northStar ? "text-[#6B6255]" : "text-slate-500"}`}
+      className={`py-3 text-sm ${northStar ? "text-[#64748B]" : "text-slate-500"}`}
     >
       {children}
     </p>
@@ -97,7 +97,7 @@ function ReportSection({
   if (northStar) {
     return (
       <section>
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B6255]">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#4F4638]">
           {title}
         </h2>
         <div className="mt-2">{children}</div>
@@ -132,7 +132,7 @@ export function TaxSummaryReportDocument({
     : "border-b border-slate-200 pb-6";
 
   const footerClass = northStar
-    ? "mt-10 border-t border-[rgba(138,99,36,0.12)] pt-4 text-xs text-[#6B6255]"
+    ? "mt-10 border-t border-[rgba(138,99,36,0.12)] pt-4 text-xs text-[#64748B]"
     : "mt-10 border-t border-slate-200 pt-4 text-xs text-slate-500";
 
   const documentInner = (
@@ -169,7 +169,7 @@ export function TaxSummaryReportDocument({
         <p
           className={
             northStar
-              ? "mt-1 text-xs leading-relaxed text-[#6B6255]"
+              ? "mt-1 text-xs leading-relaxed text-[#64748B]"
               : "mt-1 text-xs text-slate-500"
           }
         >

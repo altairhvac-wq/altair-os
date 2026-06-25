@@ -43,7 +43,7 @@ export function ReportKpiCard({
       <p
         className={
           northStar
-            ? "text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255] sm:text-[11px]"
+            ? "text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638] sm:text-[11px]"
             : "text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:text-xs"
         }
       >

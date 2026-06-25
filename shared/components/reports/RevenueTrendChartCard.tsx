@@ -212,7 +212,7 @@ export function RevenueTrendChartCard({
                   key={point.label}
                   className={
                     northStar
-                      ? "text-[10px] font-medium tracking-wide text-[#6B6255]"
+                      ? "text-[10px] font-medium tracking-wide text-[#64748B]"
                       : "text-[10px] font-medium text-slate-400"
                   }
                 >

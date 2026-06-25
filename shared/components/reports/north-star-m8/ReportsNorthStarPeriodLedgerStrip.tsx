@@ -53,7 +53,7 @@ export function ReportsNorthStarPeriodLedgerStrip({
           <h2 className="mt-0.5 text-sm font-bold text-[#17130E]">
             {periodLabel} operating snapshot
           </h2>
-          <p className="mt-0.5 text-xs text-[#6B6255]">
+          <p className="mt-0.5 text-xs text-[#64748B]">
             Bookkeeping totals from records entered in Altair OS.
           </p>
         </div>
@@ -71,7 +71,7 @@ export function ReportsNorthStarPeriodLedgerStrip({
             key={metric.id}
             className="bg-[#FBF7EF] px-4 py-3.5 sm:px-5 sm:py-4"
           >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638]">
               {metric.label}
             </p>
             <p className="mt-1.5 truncate text-lg font-bold tabular-nums tracking-tight text-[#17130E] sm:text-xl">

@@ -117,7 +117,7 @@ export function CashHealthChartCard({
                   return (
                     <span
                       key={item.key}
-                      className="inline-flex items-center gap-1.5 text-[10px] font-medium text-[#6B6255]"
+                      className="inline-flex items-center gap-1.5 text-[10px] font-medium text-[#64748B]"
                     >
                       <span
                         className={`h-1.5 w-1.5 shrink-0 rounded-full ${item.dotClass}`}

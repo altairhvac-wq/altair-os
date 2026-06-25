@@ -58,7 +58,7 @@ export function ReportChartCard({
         <p
           className={
             northStar
-              ? "mt-0.5 text-xs text-[#6B6255]"
+              ? "mt-0.5 text-xs text-[#64748B]"
               : "admin-text-helper mt-0.5 text-[11px] sm:text-xs"
           }
         >
@@ -78,7 +78,7 @@ export function ReportChartCard({
             <p
               className={
                 northStar
-                  ? "max-w-sm text-xs text-[#6B6255] sm:text-sm"
+                  ? "max-w-sm text-xs text-[#64748B] sm:text-sm"
                   : "max-w-sm text-xs text-slate-500 sm:text-sm"
               }
             >

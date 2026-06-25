@@ -28,7 +28,7 @@ export function AccountantSummaryCard({
             <p className="mt-0.5 text-xs leading-relaxed text-[#4F4638]">
               Export a printable bookkeeping summary based on records entered in Altair OS.
             </p>
-            <p className="mt-1.5 text-[11px] leading-relaxed text-[#6B6255]">
+            <p className="mt-1.5 text-[11px] leading-relaxed text-[#64748B]">
               For bookkeeping review only. This does not replace tax or accounting advice.
             </p>
           </div>

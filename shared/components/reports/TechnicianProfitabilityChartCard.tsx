@@ -42,7 +42,7 @@ function SingleTechnicianProfile({
         <p
           className={
             northStar
-              ? "text-[11px] font-semibold uppercase tracking-wide text-[#6B6255]"
+              ? "text-[11px] font-semibold uppercase tracking-wide text-[#4F4638]"
               : "text-[11px] font-semibold uppercase tracking-wide text-slate-500"
           }
         >
@@ -70,7 +70,7 @@ function SingleTechnicianProfile({
           <p
             className={
               northStar
-                ? "text-[10px] font-semibold uppercase tracking-wide text-[#6B6255]"
+                ? "text-[10px] font-semibold uppercase tracking-wide text-[#4F4638]"
                 : "text-[10px] font-semibold uppercase tracking-wide text-slate-400"
             }
           >
@@ -90,7 +90,7 @@ function SingleTechnicianProfile({
           <p
             className={
               northStar
-                ? "text-[10px] font-semibold uppercase tracking-wide text-[#6B6255]"
+                ? "text-[10px] font-semibold uppercase tracking-wide text-[#4F4638]"
                 : "text-[10px] font-semibold uppercase tracking-wide text-slate-400"
             }
           >
@@ -112,7 +112,7 @@ function SingleTechnicianProfile({
               <p
                 className={
                   northStar
-                    ? "text-[10px] font-semibold uppercase tracking-wide text-[#6B6255]"
+                    ? "text-[10px] font-semibold uppercase tracking-wide text-[#4F4638]"
                     : "text-[10px] font-semibold uppercase tracking-wide text-slate-400"
                 }
               >
@@ -132,7 +132,7 @@ function SingleTechnicianProfile({
               <p
                 className={
                   northStar
-                    ? "text-[10px] font-semibold uppercase tracking-wide text-[#6B6255]"
+                    ? "text-[10px] font-semibold uppercase tracking-wide text-[#4F4638]"
                     : "text-[10px] font-semibold uppercase tracking-wide text-slate-400"
                 }
               >
@@ -152,7 +152,7 @@ function SingleTechnicianProfile({
               <p
                 className={
                   northStar
-                    ? "text-[10px] font-semibold uppercase tracking-wide text-[#6B6255]"
+                    ? "text-[10px] font-semibold uppercase tracking-wide text-[#4F4638]"
                     : "text-[10px] font-semibold uppercase tracking-wide text-slate-400"
                 }
               >
@@ -174,7 +174,7 @@ function SingleTechnicianProfile({
             <p
               className={
                 northStar
-                  ? "text-[10px] font-semibold uppercase tracking-wide text-[#6B6255]"
+                  ? "text-[10px] font-semibold uppercase tracking-wide text-[#4F4638]"
                   : "text-[10px] font-semibold uppercase tracking-wide text-slate-400"
               }
             >
@@ -183,7 +183,7 @@ function SingleTechnicianProfile({
             <p
               className={
                 northStar
-                  ? "mt-0.5 text-sm font-bold text-[#6B6255]"
+                  ? "mt-0.5 text-sm font-bold text-[#64748B]"
                   : "mt-0.5 text-sm font-bold text-slate-500"
               }
             >
@@ -192,7 +192,7 @@ function SingleTechnicianProfile({
             <p
               className={
                 northStar
-                  ? "mt-1 text-[11px] leading-relaxed text-[#6B6255]"
+                  ? "mt-1 text-[11px] leading-relaxed text-[#64748B]"
                   : "mt-1 text-[11px] leading-relaxed text-slate-500"
               }
             >
@@ -283,7 +283,7 @@ export function TechnicianProfitabilityChartCard({
                   <p
                     className={
                       northStar
-                        ? "mt-0.5 text-[11px] leading-relaxed text-[#6B6255]"
+                        ? "mt-0.5 text-[11px] leading-relaxed text-[#64748B]"
                         : "text-[11px] text-slate-500"
                     }
                   >
@@ -334,7 +334,7 @@ export function TechnicianProfitabilityChartCard({
           <p
             className={
               northStar
-                ? "text-[11px] leading-relaxed text-[#6B6255]"
+                ? "text-[11px] leading-relaxed text-[#64748B]"
                 : "text-[11px] leading-relaxed text-slate-500"
             }
           >

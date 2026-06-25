@@ -25,7 +25,7 @@ function LeadKpiCard({ label, value, variant = "legacy" }: LeadKpiCardProps) {
   if (northStar) {
     return (
       <div className="min-w-0 rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-3 py-3 shadow-[0_4px_16px_rgba(3,7,12,0.08)] sm:px-4 sm:py-3.5">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6B6255] sm:text-[11px]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638] sm:text-[11px]">
           {label}
         </p>
         <p className="mt-1.5 truncate text-2xl font-extrabold tabular-nums tracking-tight text-[#17130E] sm:text-[1.75rem] sm:leading-none">
@@ -77,7 +77,7 @@ export function LeadPipelineSection({
         <p
           className={
             northStar
-              ? "mt-0.5 text-xs text-[#6B6255]"
+              ? "mt-0.5 text-xs text-[#64748B]"
               : "admin-text-helper mt-0.5 text-[11px] sm:text-xs"
           }
         >
@@ -105,7 +105,7 @@ export function LeadPipelineSection({
           <p
             className={
               northStar
-                ? "mt-1 text-xs text-[#6B6255]"
+                ? "mt-1 text-xs text-[#64748B]"
                 : "admin-text-helper mt-1 text-xs"
             }
           >
@@ -150,7 +150,7 @@ export function LeadPipelineSection({
           <p
             className={
               northStar
-                ? "text-[11px] text-[#6B6255] sm:text-xs"
+                ? "text-[11px] text-[#64748B] sm:text-xs"
                 : "text-[11px] text-slate-500 sm:text-xs"
             }
           >
@@ -243,7 +243,7 @@ export function LeadPipelineSection({
                 <li
                   className={
                     northStar
-                      ? "px-3 py-4 text-center text-xs text-[#6B6255] sm:px-4"
+                      ? "px-3 py-4 text-center text-xs text-[#64748B] sm:px-4"
                       : "px-3 py-4 text-center text-xs text-slate-500 sm:px-4"
                   }
                 >
@@ -274,7 +274,7 @@ export function LeadPipelineSection({
                     <span
                       className={
                         northStar
-                          ? "text-[10px] font-semibold uppercase tracking-wide text-[#6B6255] sm:hidden"
+                          ? "text-[10px] font-semibold uppercase tracking-wide text-[#4F4638] sm:hidden"
                           : "text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:hidden"
                       }
                     >
@@ -294,7 +294,7 @@ export function LeadPipelineSection({
                     <span
                       className={
                         northStar
-                          ? "text-[10px] font-semibold uppercase tracking-wide text-[#6B6255] sm:hidden"
+                          ? "text-[10px] font-semibold uppercase tracking-wide text-[#4F4638] sm:hidden"
                           : "text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:hidden"
                       }
                     >
@@ -314,7 +314,7 @@ export function LeadPipelineSection({
                     <span
                       className={
                         northStar
-                          ? "text-[10px] font-semibold uppercase tracking-wide text-[#6B6255] sm:hidden"
+                          ? "text-[10px] font-semibold uppercase tracking-wide text-[#4F4638] sm:hidden"
                           : "text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:hidden"
                       }
                     >

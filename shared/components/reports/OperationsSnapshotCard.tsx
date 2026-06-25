@@ -30,7 +30,7 @@ function SnapshotList({
       <div className="min-w-0 rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-3 py-3.5 shadow-[0_4px_16px_rgba(3,7,12,0.08)] sm:px-4 sm:py-4">
         <h4 className="text-xs font-bold tracking-wide text-[#17130E]">{title}</h4>
         {rows.length === 0 ? (
-          <p className="mt-2.5 text-[11px] leading-relaxed text-[#6B6255]">{emptyMessage}</p>
+          <p className="mt-2.5 text-[11px] leading-relaxed text-[#64748B]">{emptyMessage}</p>
         ) : (
           <ul className="mt-2.5 space-y-0">
             {rows.map((row) => (
@@ -59,7 +59,7 @@ function SnapshotList({
                     )}
                   </p>
                   {row.detail ? (
-                    <p className="mt-0.5 truncate text-[11px] text-[#6B6255]">{row.detail}</p>
+                    <p className="mt-0.5 truncate text-[11px] text-[#64748B]">{row.detail}</p>
                   ) : null}
                 </div>
                 <span className="shrink-0 text-sm font-extrabold tabular-nums tracking-tight text-[#17130E]">
@@ -154,7 +154,7 @@ export function OperationsSnapshotSection({
         <p
           className={
             northStar
-              ? "mt-0.5 text-xs text-[#6B6255]"
+              ? "mt-0.5 text-xs text-[#64748B]"
               : "admin-text-helper mt-0.5 text-[11px] sm:text-xs"
           }
         >
