@@ -1,10 +1,17 @@
 import "server-only";
 
 import { cache } from "react";
+import type { DbClient } from "@/lib/database/db-client";
+import { mapDatabaseError } from "@/lib/database/errors";
 import { createClient } from "@/lib/supabase/server";
-import type { WorkflowReminderRow } from "@/lib/database/types/core-tables";
+import type {
+  WorkflowReminderInsert,
+  WorkflowReminderRow,
+  WorkflowReminderUpdate,
+} from "@/lib/database/types/core-tables";
 import type {
   WorkflowReminderKind,
+  WorkflowReminderSourceEntityType,
   WorkflowReminderStatus,
 } from "@/lib/database/types/enums";
 
@@ -14,6 +21,21 @@ export type WorkflowReminderCounts = {
   completed: number;
   dismissed: number;
 };
+
+export const PHASE_1_WORKFLOW_REMINDER_KINDS = [
+  "unpaid_invoice_7d",
+  "stale_estimate_7d",
+  "lead_follow_up_due",
+  "ready_to_invoice",
+] as const satisfies readonly WorkflowReminderKind[];
+
+export function workflowReminderIdempotencyKey(input: {
+  reminderKind: WorkflowReminderKind;
+  sourceEntityType: WorkflowReminderSourceEntityType;
+  sourceEntityId: string;
+}): string {
+  return `${input.reminderKind}:${input.sourceEntityType}:${input.sourceEntityId}`;
+}
 
 export const listActiveWorkflowRemindersForCompany = cache(
   async function listActiveWorkflowRemindersForCompany(
@@ -128,3 +150,88 @@ export const getWorkflowReminderCountsForCompany = cache(
     return counts;
   },
 );
+
+export async function listWorkflowRemindersForEvaluation(
+  companyId: string,
+  client: DbClient,
+  kinds: readonly WorkflowReminderKind[] = PHASE_1_WORKFLOW_REMINDER_KINDS,
+): Promise<WorkflowReminderRow[]> {
+  const { data, error } = await client
+    .from("workflow_reminders")
+    .select("*")
+    .eq("company_id", companyId)
+    .in("reminder_kind", [...kinds]);
+
+  if (error) {
+    console.error("[listWorkflowRemindersForEvaluation] query failed:", {
+      companyId,
+      error,
+    });
+    throw new Error(mapDatabaseError(error));
+  }
+
+  return (data ?? []) as WorkflowReminderRow[];
+}
+
+export async function insertWorkflowReminder(
+  client: DbClient,
+  row: WorkflowReminderInsert,
+): Promise<{ reminder: WorkflowReminderRow | null; error: string | null }> {
+  const { data, error } = await client
+    .from("workflow_reminders")
+    .insert(row)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("[insertWorkflowReminder] insert failed:", {
+      companyId: row.company_id,
+      reminderKind: row.reminder_kind,
+      sourceEntityId: row.source_entity_id,
+      error,
+    });
+    return { reminder: null, error: mapDatabaseError(error) };
+  }
+
+  return { reminder: data as WorkflowReminderRow, error: null };
+}
+
+export async function updateWorkflowReminder(
+  client: DbClient,
+  companyId: string,
+  reminderId: string,
+  update: WorkflowReminderUpdate,
+): Promise<{ reminder: WorkflowReminderRow | null; error: string | null }> {
+  const { data, error } = await client
+    .from("workflow_reminders")
+    .update(update)
+    .eq("company_id", companyId)
+    .eq("id", reminderId)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[updateWorkflowReminder] update failed:", {
+      companyId,
+      reminderId,
+      error,
+    });
+    return { reminder: null, error: mapDatabaseError(error) };
+  }
+
+  return { reminder: (data as WorkflowReminderRow | null) ?? null, error: null };
+}
+
+export async function completeWorkflowReminder(
+  client: DbClient,
+  companyId: string,
+  reminderId: string,
+  completedAt: string,
+): Promise<{ reminder: WorkflowReminderRow | null; error: string | null }> {
+  return updateWorkflowReminder(client, companyId, reminderId, {
+    status: "completed",
+    completed_at: completedAt,
+    completed_by: null,
+    snoozed_until: null,
+  });
+}
