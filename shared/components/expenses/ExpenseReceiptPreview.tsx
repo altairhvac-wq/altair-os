@@ -35,7 +35,7 @@ export function ExpenseReceiptPreview({
         <div
           className={`flex items-center gap-3 rounded-xl border border-dashed text-left ${
             northStar
-              ? "border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] text-[#6B6255]"
+              ? "border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] text-[#64748B]"
               : "border-slate-200 bg-white text-slate-500"
           } ${compact ? "px-3 py-4" : "px-4 py-6"}`}
         >
@@ -58,7 +58,7 @@ export function ExpenseReceiptPreview({
             >
               No receipt attached
             </p>
-            <p className={`text-xs ${northStar ? "text-[#6B6255]" : "text-slate-500"}`}>
+            <p className={`text-xs ${northStar ? "text-[#64748B]" : "text-slate-500"}`}>
               {formatReceiptStatus(expense.receiptStatus)}
             </p>
           </div>
@@ -129,7 +129,7 @@ export function ExpenseReceiptPreview({
           >
             {expense.receiptFileName ?? "Receipt attached"}
           </p>
-          <p className={`text-xs ${northStar ? "text-[#6B6255]" : "text-slate-500"}`}>
+          <p className={`text-xs ${northStar ? "text-[#64748B]" : "text-slate-500"}`}>
             Uploaded {uploadedLabel}
           </p>
         </div>
@@ -213,7 +213,7 @@ function ExpenseReceiptPreviewModal({
             >
               {expense.receiptFileName ?? "Receipt preview"}
             </h2>
-            <p className={`text-xs ${northStar ? "text-[#6B6255]" : "text-slate-500"}`}>
+            <p className={`text-xs ${northStar ? "text-[#64748B]" : "text-slate-500"}`}>
               {expense.expenseNumber} · Uploaded {formatExpenseDate(expense.createdAt)}
             </p>
           </div>
@@ -238,7 +238,7 @@ function ExpenseReceiptPreviewModal({
             aria-label="Close"
             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
               northStar
-                ? "text-[#6B6255] hover:bg-[#EFE4CB] hover:text-[#17130E]"
+                ? "text-[#64748B] hover:bg-[#EFE4CB] hover:text-[#17130E]"
                 : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
             }`}
           >
@@ -279,7 +279,7 @@ function ExpenseReceiptPreviewModal({
                 >
                   {expense.receiptFileName ?? "Receipt file"}
                 </p>
-                <p className={`mt-1 text-xs ${northStar ? "text-[#6B6255]" : "text-slate-500"}`}>
+                <p className={`mt-1 text-xs ${northStar ? "text-[#64748B]" : "text-slate-500"}`}>
                   PDF or non-image receipt — open in a new tab to view.
                 </p>
               </div>

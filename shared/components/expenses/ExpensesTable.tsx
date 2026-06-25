@@ -39,7 +39,7 @@ const northStarRowStatusAccent: Partial<Record<Expense["status"], string>> = {
 };
 
 const northStarMissingValueClass =
-  "text-xs font-medium italic text-[#6B6255]";
+  "text-xs font-medium italic text-[#64748B]";
 
 function getExpenseMerchantLabel(merchant: string, northStar: boolean) {
   const trimmed = merchant.trim();

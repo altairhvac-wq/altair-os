@@ -177,7 +177,7 @@ export function ExpenseWorkflowActions({
               Rejection reason{" "}
               <span
                 className={`font-normal ${
-                  northStar ? "text-[#6B6255]" : "text-slate-400"
+                  northStar ? "text-[#64748B]" : "text-slate-400"
                 }`}
               >
                 (optional)
@@ -191,7 +191,7 @@ export function ExpenseWorkflowActions({
               placeholder="What needs to change?"
               className={
                 northStar
-                  ? "w-full rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2.5 text-sm text-[#17130E] outline-none transition-colors placeholder:text-[#6B6255] focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]"
+                  ? "w-full rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2.5 text-sm text-[#17130E] outline-none transition-colors placeholder:text-[#64748B] focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)]"
                   : "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
               }
             />

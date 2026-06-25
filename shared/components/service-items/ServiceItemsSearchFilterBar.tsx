@@ -31,12 +31,12 @@ const northStarCatalogToolbarClass =
   "shrink-0 border-b-2 border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 py-3 sm:px-4 lg:px-5";
 
 const northStarCatalogSearchClass =
-  "h-9 w-full min-h-9 rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FBF7EF] py-1.5 pl-9 pr-3 text-sm font-medium text-[#17130E] placeholder:text-[#6B6255] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FFF9EA] focus:ring-2 focus:ring-[rgba(201,164,77,0.18)]";
+  "h-9 w-full min-h-9 rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FBF7EF] py-1.5 pl-9 pr-3 text-sm font-medium text-[#17130E] placeholder:text-[#64748B] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FFF9EA] focus:ring-2 focus:ring-[rgba(201,164,77,0.18)]";
 
 const northStarCatalogSelectClass =
   "h-9 w-full min-h-9 appearance-none rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FBF7EF] py-1.5 pl-9 pr-8 text-sm font-semibold text-[#17130E] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FFF9EA] focus:ring-2 focus:ring-[rgba(201,164,77,0.18)] sm:w-auto sm:pr-10";
 
-const northStarCatalogFilterIconClass = "text-[#6B6255]";
+const northStarCatalogFilterIconClass = "text-[#64748B]";
 
 const northStarCatalogMetaClass = "mt-2 text-xs font-medium text-[#4F4638]";
 

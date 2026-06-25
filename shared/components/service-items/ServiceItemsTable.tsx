@@ -46,10 +46,10 @@ const northStarItemDescriptionClass =
 const northStarCategoryChipClass =
   "inline-flex rounded-md bg-[#EFE4CB] px-2 py-0.5 text-xs font-semibold text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.14)]";
 
-const northStarMissingValueClass = "text-sm text-[#6B6255]";
+const northStarMissingValueClass = "text-sm text-[#64748B]";
 
 const northStarMissingCostBadgeClass =
-  "inline-flex rounded-md bg-[#F5F0E4] px-2 py-0.5 text-xs font-medium text-[#6B6255] ring-1 ring-[rgba(138,99,36,0.12)]";
+  "inline-flex rounded-md bg-[#F5F0E4] px-2 py-0.5 text-xs font-medium text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.12)]";
 
 const northStarInternalCostClass = "text-sm font-medium tabular-nums text-[#4F4638]";
 
