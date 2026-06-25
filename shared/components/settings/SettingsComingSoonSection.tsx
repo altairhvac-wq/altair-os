@@ -30,7 +30,7 @@ export function SettingsComingSoonSection({
               <span className="text-sm font-semibold text-[#17130E]">
                 Coming soon
               </span>
-              <span className="text-xs text-[#6B6255]">{count} planned</span>
+              <span className="text-xs text-[#4F4638]">{count} planned</span>
             </div>
             <ChevronDown
               className="h-4 w-4 shrink-0 text-[#8A6324] transition-transform group-open:rotate-180"
@@ -53,7 +53,7 @@ export function SettingsComingSoonSection({
                   <span className="min-w-0 flex-1 truncate text-sm text-[#4F4638]">
                     {item.title}
                   </span>
-                  <span className="shrink-0 text-[10px] font-medium uppercase tracking-wide text-[#6B6255]">
+                  <span className="shrink-0 text-[10px] font-medium uppercase tracking-wide text-[#4F4638]">
                     Soon
                   </span>
                 </li>

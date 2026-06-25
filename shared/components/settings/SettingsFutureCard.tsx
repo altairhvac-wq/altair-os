@@ -25,7 +25,7 @@ export function SettingsFutureCard({
             <p className="mt-0.5 text-xs leading-snug text-[#4F4638] sm:text-sm">
               {description}
             </p>
-            <p className="mt-1.5 text-[10px] font-medium uppercase tracking-wide text-[#6B6255]">
+            <p className="mt-1.5 text-[10px] font-medium uppercase tracking-wide text-[#4F4638]">
               Coming soon
             </p>
           </div>

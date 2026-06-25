@@ -267,7 +267,7 @@ export function SettingsNorthStarView({
                       key={row.label}
                       className="min-w-0 rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF] px-2 py-1.5"
                     >
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6B6255]">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#4F4638]">
                         {row.label}
                       </p>
                       <p className="mt-0.5 truncate text-xs font-semibold text-[#17130E]">
@@ -283,7 +283,7 @@ export function SettingsNorthStarView({
                         key={row.label}
                         className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-2 py-0.5"
                       >
-                        <span className="shrink-0 text-[10px] font-medium text-[#6B6255]">
+                        <span className="shrink-0 text-[10px] font-medium text-[#4F4638]">
                           {row.label}
                         </span>
                         <span className="min-w-0 truncate text-xs font-medium text-[#17130E]">
@@ -301,7 +301,7 @@ export function SettingsNorthStarView({
                     key={row.label}
                     className="flex items-baseline justify-between gap-3 py-2 first:pt-0 last:pb-0"
                   >
-                    <dt className="shrink-0 text-xs text-[#6B6255]">
+                    <dt className="shrink-0 text-xs text-[#4F4638]">
                       {row.label}
                     </dt>
                     <dd className="min-w-0 truncate text-right text-sm font-medium text-[#17130E]">
@@ -336,7 +336,7 @@ export function SettingsNorthStarView({
                 <div className="flex min-w-0 items-center justify-between gap-2 sm:block">
                   <div className="min-w-0">
                     <h3 className="text-sm font-semibold text-[#17130E]">Members</h3>
-                    <p className="mt-0.5 hidden text-xs text-[#6B6255] sm:block">
+                    <p className="mt-0.5 hidden text-xs text-[#4F4638] sm:block">
                       {canManageTeam
                         ? "Search, invite, and manage workspace access."
                         : "View the current team roster."}
@@ -524,7 +524,7 @@ export function SettingsNorthStarView({
                   </div>
                   <div className="min-w-0">
                     <h3 className={st.systemCheckTitle}>System Check</h3>
-                    <p className="mt-0.5 hidden text-xs leading-snug text-[#6B6255] sm:block sm:text-sm">
+                    <p className="mt-0.5 hidden text-xs leading-snug text-[#4F4638] sm:block sm:text-sm">
                       Read-only production readiness checks for the internal
                       alpha.
                     </p>

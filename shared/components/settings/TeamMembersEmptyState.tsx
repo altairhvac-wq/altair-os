@@ -29,7 +29,7 @@ export function TeamMembersEmptyState({
             {isNoResults ? "No members match your search" : "You're the only member so far"}
           </h3>
 
-          <p className="mt-2 max-w-sm text-sm text-[#6B6255]">
+          <p className="mt-2 max-w-sm text-sm text-[#4F4638]">
             {isNoResults
               ? "Try a different name, email, or role."
               : canManageTeam
@@ -38,7 +38,7 @@ export function TeamMembersEmptyState({
           </p>
 
           {!isNoResults && canManageTeam ? (
-            <p className="mt-4 flex items-center gap-2 text-xs text-[#6B6255]">
+            <p className="mt-4 flex items-center gap-2 text-xs text-[#4F4638]">
               <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
               Invites stay pending until the teammate signs up with the same email
             </p>

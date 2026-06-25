@@ -117,9 +117,9 @@ export function NotificationBell({
       </button>
 
       {open ? (
-        <div className="fixed left-1/2 top-[calc(3.75rem+env(safe-area-inset-top,0px))] z-50 w-[calc(100vw-1rem)] max-w-none -translate-x-1/2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 sm:max-w-md sm:translate-x-0">
+        <div className="fixed left-1/2 top-[calc(3.75rem+env(safe-area-inset-top,0px))] z-50 w-[calc(100vw-1rem)] max-w-none -translate-x-1/2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 sm:max-w-md sm:translate-x-0 north-star-notification-panel">
           <div className="flex min-w-0 items-center justify-between gap-2 border-b border-slate-200 px-3 py-2.5">
-            <p className="min-w-0 truncate text-sm font-semibold text-slate-900">
+            <p className="north-star-notification-title min-w-0 truncate text-sm font-semibold text-slate-900">
               Notifications
             </p>
             {unreadCount > 0 ? (
@@ -142,10 +142,10 @@ export function NotificationBell({
             ) : null}
             {notifications.length === 0 ? (
               <div className="px-2 py-4 text-center">
-                <p className="text-sm font-medium text-slate-700">
+                <p className="north-star-notification-empty text-sm font-medium text-slate-700">
                   No notifications yet
                 </p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="north-star-notification-helper mt-1 text-sm text-slate-500">
                   Job updates and billing activity will appear here.
                 </p>
               </div>

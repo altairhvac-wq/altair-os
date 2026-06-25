@@ -92,7 +92,7 @@ function CollapsibleNotesField({
             </span>
             <span
               className={
-                northStar ? "shrink-0 text-xs text-[#6B6255]" : "shrink-0 text-xs text-slate-400"
+                northStar ? "shrink-0 text-xs text-[#4F4638]" : "shrink-0 text-xs text-slate-400"
               }
             >
               Optional
@@ -109,7 +109,7 @@ function CollapsibleNotesField({
                 onClick={() => setExpanded(false)}
                 className={
                   northStar
-                    ? "text-xs font-medium text-[#6B6255] hover:text-[#4F4638]"
+                    ? "text-xs font-medium text-[#4F4638] hover:text-[#4F4638]"
                     : "text-xs font-medium text-slate-500 hover:text-slate-700"
                 }
               >
@@ -205,13 +205,13 @@ export function BillingDocumentDefaultsCard({
     ? "flex min-h-9 w-full items-center justify-center rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD]"
     : "flex min-h-9 w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50";
   const mobileCollapseButtonClass = northStar
-    ? "text-xs font-medium text-[#6B6255] hover:text-[#4F4638]"
+    ? "text-xs font-medium text-[#4F4638] hover:text-[#4F4638]"
     : "text-xs font-medium text-slate-500 hover:text-slate-700";
   const mobileSummaryCellClass = northStar
     ? "min-w-0 rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FFF9EA] px-2 py-1.5"
     : "min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5";
   const mobileSummaryLabelClass = northStar
-    ? "text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6B6255]"
+    ? "text-[10px] font-semibold uppercase tracking-[0.08em] text-[#4F4638]"
     : "text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500";
   const mobileSummaryValueClass = northStar
     ? "mt-0.5 truncate text-xs font-semibold text-[#17130E]"
@@ -248,7 +248,7 @@ export function BillingDocumentDefaultsCard({
           <p
             className={
               northStar
-                ? "mt-0.5 hidden text-xs text-[#6B6255] sm:block sm:text-sm"
+                ? "mt-0.5 hidden text-xs text-[#4F4638] sm:block sm:text-sm"
                 : "admin-text-helper mt-0.5 hidden sm:block"
             }
           >
@@ -290,7 +290,7 @@ export function BillingDocumentDefaultsCard({
                 Edit billing defaults
               </button>
             ) : (
-              <p className={northStar ? "text-xs text-[#6B6255]" : "text-xs text-slate-500"}>
+              <p className={northStar ? "text-xs text-[#4F4638]" : "text-xs text-slate-500"}>
                 Billing defaults can only be changed by owner and admin roles.
               </p>
             )}
@@ -434,7 +434,7 @@ export function BillingDocumentDefaultsCard({
             </button>
           </div>
         ) : (
-          <p className={northStar ? "text-sm text-[#6B6255]" : "text-sm text-slate-500"}>
+          <p className={northStar ? "text-sm text-[#4F4638]" : "text-sm text-slate-500"}>
             Billing defaults can only be changed by owner and admin roles.
           </p>
         )}

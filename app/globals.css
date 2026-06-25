@@ -557,6 +557,46 @@ a[href] {
     color: var(--north-star-text-dark);
   }
 
+  /* Notification dropdown — ivory panel needs dark text, not header muted tan */
+  .admin-north-star-shell .admin-premium-header .north-star-notification-panel {
+    color: var(--north-star-text-dark);
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-notification-panel .north-star-notification-title {
+    color: var(--north-star-text-dark) !important;
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-notification-panel .north-star-notification-empty {
+    color: var(--north-star-text-secondary) !important;
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-notification-panel .north-star-notification-helper {
+    color: var(--north-star-text-secondary) !important;
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-notification-panel button.text-cyan-700 {
+    color: var(--north-star-bronze) !important;
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-notification-panel button.text-cyan-700:hover {
+    color: var(--north-star-brass) !important;
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-notification-panel p.text-slate-900,
+  .admin-north-star-shell .admin-premium-header .north-star-notification-panel .font-semibold.text-slate-900 {
+    color: var(--north-star-text-dark) !important;
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-notification-panel p.text-slate-600,
+  .admin-north-star-shell .admin-premium-header .north-star-notification-panel p.text-slate-700 {
+    color: var(--north-star-text-secondary) !important;
+  }
+
+  .admin-north-star-shell .admin-premium-header .north-star-notification-panel p.text-slate-400,
+  .admin-north-star-shell .admin-premium-header .north-star-notification-panel p.text-slate-500 {
+    color: var(--north-star-text-secondary) !important;
+  }
+
   .admin-north-star-shell .admin-premium-header .north-star-view-switcher p,
   .admin-north-star-shell .admin-premium-header .north-star-view-switcher span {
     color: var(--north-star-text-light);
