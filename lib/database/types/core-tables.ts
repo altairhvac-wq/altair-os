@@ -29,6 +29,9 @@ import type {
   NotificationType,
   Timestamp,
   UUID,
+  WorkflowReminderKind,
+  WorkflowReminderSourceEntityType,
+  WorkflowReminderStatus,
 } from "./enums";
 import type {
   PaymentProviderEvent,
@@ -1137,6 +1140,52 @@ export type NotificationInsert = {
 
 export type NotificationUpdate = Partial<
   Pick<NotificationRow, "read_at">
+>;
+
+export type WorkflowReminderRow = {
+  id: UUID;
+  company_id: UUID;
+  reminder_kind: WorkflowReminderKind;
+  source_entity_type: WorkflowReminderSourceEntityType;
+  source_entity_id: UUID;
+  status: WorkflowReminderStatus;
+  snoozed_until: Timestamp | null;
+  assigned_user_id: UUID | null;
+  title: string;
+  message: string | null;
+  metadata: Json;
+  triggered_at: Timestamp;
+  completed_at: Timestamp | null;
+  completed_by: UUID | null;
+  dismissed_at: Timestamp | null;
+  dismissed_by: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type WorkflowReminderInsert = {
+  id?: UUID;
+  company_id: UUID;
+  reminder_kind: WorkflowReminderKind;
+  source_entity_type: WorkflowReminderSourceEntityType;
+  source_entity_id: UUID;
+  status?: WorkflowReminderStatus;
+  snoozed_until?: Timestamp | null;
+  assigned_user_id?: UUID | null;
+  title: string;
+  message?: string | null;
+  metadata?: Json;
+  triggered_at?: Timestamp;
+  completed_at?: Timestamp | null;
+  completed_by?: UUID | null;
+  dismissed_at?: Timestamp | null;
+  dismissed_by?: UUID | null;
+  created_at?: Timestamp;
+  updated_at?: Timestamp;
+};
+
+export type WorkflowReminderUpdate = Partial<
+  Omit<WorkflowReminderRow, "id" | "company_id" | "created_at" | "updated_at">
 >;
 
 export type AlphaTrackerType =

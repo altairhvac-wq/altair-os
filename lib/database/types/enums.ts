@@ -242,6 +242,24 @@ export type NotificationEntityType =
   | "expense"
   | "time_entry";
 
+export type WorkflowReminderStatus =
+  | "active"
+  | "snoozed"
+  | "completed"
+  | "dismissed";
+
+export type WorkflowReminderKind =
+  | "unpaid_invoice_7d"
+  | "stale_estimate_7d"
+  | "lead_follow_up_due"
+  | "ready_to_invoice";
+
+export type WorkflowReminderSourceEntityType =
+  | "invoice"
+  | "estimate"
+  | "lead"
+  | "job";
+
 export type Json =
   | string
   | number

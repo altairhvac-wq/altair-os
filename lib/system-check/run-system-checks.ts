@@ -694,6 +694,29 @@ async function probeSmsOptOutsTable(
   return { ...marker, status: "unknown", detail: error.message };
 }
 
+async function probeWorkflowRemindersTable(
+  supabase: SupabaseClient,
+  companyId: string,
+): Promise<MigrationMarkerResult> {
+  const marker = REQUIRED_DATABASE_MARKERS[3];
+
+  const { error } = await supabase
+    .from("workflow_reminders")
+    .select("id")
+    .eq("company_id", companyId)
+    .limit(0);
+
+  if (!error) {
+    return { ...marker, status: "present" };
+  }
+
+  if (isDbArtifactMissingError(error.message)) {
+    return { ...marker, status: "missing", detail: error.message };
+  }
+
+  return { ...marker, status: "unknown", detail: error.message };
+}
+
 async function probeRequiredDatabaseMarkers(
   supabase: SupabaseClient,
   companyId: string,
@@ -702,6 +725,7 @@ async function probeRequiredDatabaseMarkers(
     probeCompanyPaymentAccountsTable(supabase, companyId),
     probeStripeCheckoutPaymentRpc(supabase, companyId),
     probeSmsOptOutsTable(supabase, companyId),
+    probeWorkflowRemindersTable(supabase, companyId),
   ]);
 }
 

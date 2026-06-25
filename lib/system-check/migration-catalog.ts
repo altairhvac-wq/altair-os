@@ -60,4 +60,8 @@ export const REQUIRED_DATABASE_MARKERS = [
     migration: "102_sms_opt_outs_foundation.sql",
     label: "SMS opt-out persistence",
   },
+  {
+    migration: "105_workflow_reminders_foundation.sql",
+    label: "workflow reminders foundation",
+  },
 ] as const;

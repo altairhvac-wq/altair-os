@@ -79,6 +79,9 @@ import type {
   NotificationInsert,
   NotificationRow,
   NotificationUpdate,
+  WorkflowReminderInsert,
+  WorkflowReminderRow,
+  WorkflowReminderUpdate,
   AlphaTrackerItemInsert,
   AlphaTrackerItemRow,
   AlphaTrackerItemUpdate,
@@ -1101,6 +1104,20 @@ export type Database = {
             columns: ["actor_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      workflow_reminders: {
+        Row: WorkflowReminderRow;
+        Insert: WorkflowReminderInsert;
+        Update: WorkflowReminderUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "workflow_reminders_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
             referencedColumns: ["id"];
           },
         ];
