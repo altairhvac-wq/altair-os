@@ -16,9 +16,9 @@ Run this checklist after each production or preview deploy that matters for inte
 ### Signup → setup → dashboard
 
 - [ ] Open `/signup` on deployed URL
-- [ ] Create a new account with company name
+- [ ] Create a new account with company name and trade selection
 - [ ] If email confirmation is enabled: confirm email, then sign in
-- [ ] If no company context: complete `/setup` with company name
+- [ ] If no company context: complete `/setup` with company name and trade
 - [ ] Land on admin dashboard (`/`) without errors
 - [ ] Internal Alpha banner visible in admin shell (production)
 
@@ -82,8 +82,17 @@ Run this checklist after each production or preview deploy that matters for inte
 - [ ] Navigate to `/invoices`
 - [ ] Create or open an invoice linked to customer/job as supported
 - [ ] Update invoice status (draft → sent or equivalent)
-- [ ] Record a payment if payment UI is available
-- [ ] Invoice detail reflects status changes after refresh
+- [ ] Record a manual payment if payment UI is available
+- [ ] If Stripe configured: open public Pay Now link and complete checkout (or verify gated state when not configured)
+- [ ] Invoice detail reflects status and balance changes after refresh
+
+---
+
+## Workflow reminders (dashboard)
+
+- [ ] Sign in as owner/admin with operational data (overdue invoice, stale estimate, or lead follow-up)
+- [ ] Dashboard shows workflow reminders section (North Star or legacy view)
+- [ ] Reminder links route to the correct entity
 
 ---
 

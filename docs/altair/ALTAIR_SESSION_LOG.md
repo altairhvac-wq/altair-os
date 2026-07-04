@@ -311,3 +311,28 @@
 **Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md`, `ALTAIR_ART_DIRECTION.md`, `shared/design-system/shell/README.md`, this log.
 
 **Recommended next prompt:** North Star M1 polish and screenshot review; then M2 dashboard pilot planning.
+
+---
+
+## 2026-07-03 — Documentation Recovery Sprint (Living Docs Sync)
+
+**Scope:** Documentation recovery only. No app code changes.
+
+**Context:** ~187 commits landed since 2026-06-17 doc sync. Living documentation no longer reflected repository reality.
+
+**Major corrections documented:**
+
+- North Star M2–M14 + dispatch pilots **complete** behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true` (was: M1 only, M2 planning)
+- Stripe Connect payments, public Pay Now, webhooks, SMS payment links **shipped**
+- Workflow reminder engine with hourly cron **shipped**
+- Trade-aware signup/setup **shipped**
+- Marketing hub, design lab, mobile install, dashboard action prioritization **shipped**
+- Current sprint updated to Beta Readiness & Production Hardening
+
+**Hierarchy established:** MASTER_STATUS (product state), CURRENT_SPRINT (active sprint), BRAIN (inventory), ROADMAP (future), SESSION_LOG (history), ART_DIRECTION (philosophy).
+
+**Session workflow restored:** `CHAT_START_PROMPT.md` and `SESSION_CLOSE_PROMPT.md` populated as operational checklists.
+
+**Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_BRAIN.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md`, `ALTAIR_ART_DIRECTION.md`, `ALTAIR_FEATURE_INVENTORY.md`, `ALTAIR_VISUAL_IDENTITY.md`, `ALTAIR_DESIGN_MANIFESTO.md`, `shared/design-system/shell/README.md`, `docs/backend-data-map.md` (outdated banner), `docs/internal-alpha-smoke-test.md`, this log.
+
+**Recommended next prompt:** Run authenticated production smoke per `ALTair_CURRENT_SPRINT.md`.

@@ -1,3 +1,5 @@
+> **⚠️ OUTDATED — Planning document only.** This file describes pre-Supabase mock prototypes. All core modules are wired to Supabase in production. For confirmed inventory see `docs/altair/ALTair_BRAIN.md`. For current state see `docs/altair/ALTair_MASTER_STATUS.md`.
+
 # Altair OS — Backend Data Map
 
 > **Purpose:** Map every existing frontend module and its mock data to the backend schema required for a production trades SaaS platform.  

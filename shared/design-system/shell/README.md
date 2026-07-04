@@ -4,42 +4,30 @@ Reusable page structure inside `AdminShell` main. Does not replace global naviga
 
 Master Shell V2 architecture migration is **complete** across major admin surfaces. Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete**.
 
-**Current status:** Beta-ready foundation complete. Master Shell V2, Visual Polish A–F, Micro-Interaction A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete** on major admin surfaces. **North Star Phase M1 complete** — grouped desktop left sidebar behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`.
+**Current status:** Beta-ready. Master Shell V2 complete. **North Star M1–M14 + dispatch complete** behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. See `docs/altair/ALTair_MASTER_STATUS.md`.
 
 ## Approved North Star (2026-06-16)
 
-**Mission Control Original Refined** — founder-approved shell direction. Concept iteration stopped. **M1 complete (2026-06-17).**
+**Mission Control Original Refined** — founder-approved shell direction. Concept iteration stopped. **M1–M14 complete (2026-07-03).**
 
-**Visual formula:** graphite shell + brass command accents + slate operating backing (M2+) + ivory work cards (M2+).
+**Visual formula:** graphite shell + brass command accents + slate operating backing + ivory work cards.
 
 | Layer | North Star treatment |
 |-------|---------------------|
-| Global chrome | Dark graphite grouped left sidebar — **M1 complete** when `NEXT_PUBLIC_NORTH_STAR_SHELL=true`; legacy horizontal nav when off |
-| Mobile chrome | Unchanged in M1 — existing mobile nav preserved |
-| Command hero | Dark hero band with brass accents — **M2 target** |
-| Operating canvas | Slate/blue backing — **M2+ target** |
-| Work cards | Ivory surfaces with readable dark text — **M2+ target** |
+| Global chrome | Dark graphite grouped left sidebar — **M1 complete** when flag on |
+| Mobile chrome | Unchanged from pre-M1 baseline |
+| Command hero | Dark hero band with brass accents — **M2 complete** |
+| Operating canvas | Slate/blue backing — **M2+ complete** |
+| Work cards | Ivory surfaces with readable dark text — **M3+ complete** |
 | Status | Semantic colors separate from brand/command accents |
 
 **Primary reference:** `/altair-shell-color-lab-v1` — palette `mission-control-refined`.
 
 **Concept routes (reference only):** `/altair-shell-north-star-v1`, `/altair-shell-north-star-v2`, `/altair-shell-north-star-v3`, `/command-center-v1`, `/workspace-v1`, `/altair-design-lab`. Retain; do not productionize wholesale.
 
-**Flag:** `NEXT_PUBLIC_NORTH_STAR_SHELL=true` enables the North Star grouped left sidebar. See `lib/beta/north-star-shell.ts`.
+**Flag:** `NEXT_PUBLIC_NORTH_STAR_SHELL=true` enables the North Star experience layer. See `lib/beta/north-star-shell.ts`.
 
-## North Star Phase M1 — Complete (2026-06-17)
-
-**Scope:** Shell/chrome migration only — not a dashboard redesign.
-
-- Grouped desktop left sidebar on admin routes when flag enabled
-- Legacy horizontal nav when flag off or unset
-- Mobile navigation and page interiors intentionally unchanged
-- Routes, permissions, RBAC, Dispatch, overlays, billing, print, technician app preserved
-- Production smoke looked good on desktop; mobile unchanged
-
-**Next:** M1 polish and screenshot review. M2 dashboard planning after M1 is stable — do not start M2 implementation yet.
-
-**M2 scope (planning only):** Mission Control hero, “Do this first”, Action/Work/Money operating board; real production dashboard data and existing queues preserved; no Dispatch/billing/mobile redesign.
+**Founder design lab:** `/platform/design-lab` — live token editing and dashboard replica preview.
 
 See `docs/altair/ALTAIR_ART_DIRECTION.md` and Phase 9 in `docs/altair/ALTair_V2_ROADMAP.md`.
 
@@ -146,7 +134,7 @@ Board-style pages keep the main surface and desktop detail panel as **siblings**
 
 **Not in scope:** page interiors in M1. Dispatch workbench row tokenized in Phase 4; board internals and mobile sheets unchanged.
 
-**North Star M1 (global chrome):** Grouped desktop left sidebar behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`; legacy horizontal nav when off; mobile nav unchanged.
+**North Star (global chrome + page pilots):** M1–M14 + dispatch complete behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. Legacy UI when flag off. Code in `shared/components/*/north-star-m*`.
 
 ## Detail-page shell
 
@@ -217,9 +205,7 @@ Reference: Operational Dashboard, Reports, Tax Summary.
 
 **Deferred post-beta (unless smoke finds gaps):** Dispatch Phase 5 mobile viewport lock, Micro-Interaction Batch C, overlay/detail consistency pass, broad dark mode, route/page transitions.
 
-**Next design track — North Star M2 Dashboard Pilot (Phase 9):** M1 grouped desktop shell **complete**. Next: M1 polish, then M2 dashboard pilot planning — command hero, “Do this first”, Action/Work/Money board; real production data and existing queues preserved. **Do not start M2 until M1 is stable.** Must preserve routes, product logic, Supabase/RLS/server actions, Dispatch behavior, billing/print/overlay, and mobile sheets. Do not productionize concept routes wholesale. See `docs/altair/ALTAIR_ART_DIRECTION.md`, `docs/altair/ALTair_V2_ROADMAP.md`, and `docs/altair/ALTair_MASTER_STATUS.md`.
-
-**Next operational step:** Authenticated production/user-data smoke before first external company onboarding.
+**Next operational step:** Authenticated production/user-data smoke before first external company onboarding. See `docs/altair/ALTair_CURRENT_SPRINT.md`.
 
 **Active layout helpers:**
 

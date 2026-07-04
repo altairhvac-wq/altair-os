@@ -1,8 +1,9 @@
 # ALTAIR BRAIN
 
 > Single source of truth for Altair OS — confirmed production inventory only.  
-> Last updated: Phase 1 audit (June 2026).  
-> Rule: nothing is documented here unless confirmed in code, migrations, or explicit project docs.
+> Last updated: 2026-07-03 (documentation recovery sync).  
+> Rule: nothing is documented here unless confirmed in code, migrations, or explicit project docs.  
+> For current product state see `ALTair_MASTER_STATUS.md`. For active sprint see `ALTair_CURRENT_SPRINT.md`.
 
 ---
 
@@ -12,7 +13,7 @@
 
 **Mission:** A Living Operating System for trades businesses — unified dispatch, customers, billing, field work, and operational intelligence in one company-scoped platform.
 
-**Current Development Stage:** Internal alpha / beta preparation. Production deploy on Vercel with Supabase backend. Alpha hardening infrastructure exists; Coming Soon nav gates are currently **empty** (all admin modules reachable in production).
+**Current Development Stage:** Beta-ready. Production deploy on Vercel with Supabase backend (109 migrations). Alpha hardening infrastructure exists; Coming Soon nav gates are currently **empty** (all admin modules reachable in production). North Star experience layer ships behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`.
 
 **Target Industries:** Home and commercial trades — HVAC, plumbing, electrical, roofing, general contracting, landscaping, painting (confirmed via network trade types and job/estimate workflows).
 
@@ -24,6 +25,8 @@
 - Tailwind CSS 4
 - Server Actions
 - OpenAI (`openai` package) — env-gated AI assistants
+- Stripe (`stripe` package) — Stripe Connect + checkout when configured
+- Twilio (`twilio` package) — SMS payment links when configured
 - Lucide React icons
 
 **Architecture Principles:**
@@ -48,6 +51,7 @@
 - Active workspace: `getActiveCompanyContext()` powers all admin queries
 - Company switcher for users in multiple companies (`app/actions/company-switcher.ts`)
 - Signup bootstrap RPC creates company + owner membership (`supabase/migrations/003_auth_bootstrap.sql`)
+- Trade-aware bootstrap — company `trade` stored at signup/setup (`107_company_trade.sql`); invited users defer bootstrap until invite acceptance
 - Setup flow at `/setup` for first-time company configuration
 
 ### Authentication
@@ -85,7 +89,7 @@
 
 **Status:** Production
 
-- 80+ Supabase migrations (`supabase/migrations/001` through `084+`)
+- 109 Supabase migrations (`supabase/migrations/001` through `107+`)
 - Core entities: customers, jobs, estimates, invoices, invoice_payments, expenses, time_entries, dispatch_assignments, leads, notifications, service_items, customer_equipment, job_activities, job_materials, job_attachments, network_*, alpha_tracker, beta_feedback
 - Entity lifecycle: archive, trash, cancel patterns (`067_entity_lifecycle.sql`, customer/job/estimate/invoice lifecycle)
 - Activity/audit trails per entity type
@@ -98,7 +102,7 @@
 **Status:** Production
 
 **Admin modules (role-filtered):**
-Dashboard, Dispatch, Customers, Leads, Jobs, Estimates, Price Book, Invoices, Expenses, Labor & payroll, Network, Reports, Alpha Tracker, Settings
+Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, Invoices, Expenses, Labor & payroll, Network, Reports, Alpha Tracker, Settings
 
 **Platform admin (app owner only):** Platform, Bug reports
 
@@ -112,9 +116,14 @@ Dashboard, Dispatch, Customers, Leads, Jobs, Estimates, Price Book, Invoices, Ex
 
 ### Shared Design System
 
-**Status:** In Progress (V2 design system sprint — components only, no route/logic changes)
+**Status:** Production (Master Shell V2 complete; V2 components built; North Star adoption behind flag)
 
-Existing production UI uses Tailwind utility patterns, admin shell (desktop + mobile nav), technician shell, glass/surface styling on auth and marketing pages. V2 component library (HeroHeader, PriorityCard, etc.) listed in `ALTair_CURRENT_SPRINT.md` — **not started in code**.
+- Master Shell primitives in `shared/design-system/shell/` — adopted across major admin surfaces
+- V2 component library in `shared/design-system/components/` (HeroHeader, PriorityCard, MetricCard, etc.)
+- Signature layer in `shared/design-system/signature/` (AtmosphereBackground, BusinessTerrain, etc.)
+- North Star visual layer in `shared/components/*/north-star-m*` — active when `NEXT_PUBLIC_NORTH_STAR_SHELL=true`
+- Founder design lab at `/platform/design-lab` for token editing and dashboard replica preview
+- Concept routes retained for reference: `/altair-design-lab`, `/command-center-v1`, `/workspace-v1`, `/altair-shell-color-lab-v1`
 
 ---
 
@@ -122,9 +131,9 @@ Existing production UI uses Tailwind utility patterns, admin shell (desktop + mo
 
 ### Dashboard
 
-**Status:** Production (Production Hardened — de-duplication and routing passes)
+**Status:** Production (Production Hardened — operational prioritization and North Star M2 view)
 
-**Description:** Company command center aggregating dispatch, money, leads, operations queues, and notifications.
+**Description:** Company command center aggregating dispatch, money, leads, operations queues, workflow reminders, and notifications.
 
 **Features:**
 - Today's dispatch jobs, unassigned jobs, technician time states
@@ -136,11 +145,13 @@ Existing production UI uses Tailwind utility patterns, admin shell (desktop + mo
 - Daily operations summary highlights
 - Recent operational activities
 - Notifications widget (unread + recent)
+- Workflow reminders (unpaid invoice, stale estimate, lead follow-up, ready-to-invoice)
 - Onboarding checklist
 - Demo data status (owners)
 - Technicians redirected to `/technician`
+- North Star view (`DashboardNorthStarView`) when `NEXT_PUBLIC_NORTH_STAR_SHELL=true` — Mission Control hero, Action/Work/Money operating board
 
-**Dependencies:** dispatch, jobs, leads, estimates, invoices, expenses, time-entries, technicians, notifications, operational-activities, reports services
+**Dependencies:** dispatch, jobs, leads, estimates, invoices, expenses, time-entries, technicians, notifications, operational-activities, workflow-reminders, reports services
 
 ---
 
@@ -317,17 +328,22 @@ Existing production UI uses Tailwind utility patterns, admin shell (desktop + mo
 
 ### Payments
 
-**Status:** Production
+**Status:** Production (manual recording + Stripe Connect online checkout)
 
-**Description:** Payment recording and customer payment links.
+**Description:** Payment recording, customer payment links, and Stripe Connect online checkout.
 
 **Features:**
-- Record partial/full payments (`invoice_payments`)
-- Payment link generation (`/invoice-payment/[token]`)
-- Payment activity logging
-- Balance due updates on invoice
+- Record partial/full payments via atomic RPC (`invoice_payments`)
+- Payment link generation (`/invoice-payment/[token]`) with token-scoped reads
+- Public Pay Now checkout sessions (Stripe — gated by company payment account status)
+- Stripe Connect Express onboarding from Settings
+- Stripe webhook verification and atomic checkout payment recording
+- Payment link email sending
+- Technician-facing payment link generation
+- Twilio SMS payment links (when `TWILIO_*` env configured)
+- Payment activity logging and balance due updates on invoice
 
-**Dependencies:** invoice-payments, invoice-payment-tokens, invoices
+**Dependencies:** invoice-payments, invoice-payment-tokens, invoices, company-payment-accounts, stripe webhooks, `lib/payments/*`
 
 ---
 
@@ -531,6 +547,72 @@ Existing production UI uses Tailwind utility patterns, admin shell (desktop + mo
 
 ---
 
+### Marketing Hub
+
+**Status:** Production (founder/owner marketing workflow)
+
+**Description:** Company marketing post drafts, AI rewrite, and connected accounts foundation.
+
+**Features:**
+- Marketing post CRUD with draft/edit/archive/delete lifecycle
+- AI rewrite assistant (env-gated)
+- Completed job marketing draft picker
+- Connected accounts foundation (Facebook OAuth helpers, encrypted token storage)
+- Scheduled post queue and recurring post UI
+- Route: `/marketing`
+
+**Dependencies:** marketing-posts, marketing-connected-accounts, marketing-ai actions
+
+---
+
+### Workflow Reminders
+
+**Status:** Production
+
+**Description:** Durable internal workflow reminders evaluated from live operational data.
+
+**Features:**
+- Reminder kinds: `unpaid_invoice_7d`, `stale_estimate_7d`, `lead_follow_up_due`, `ready_to_invoice`
+- Snooze, dismiss, complete with idempotency keys
+- Evaluator service (`lib/database/services/evaluate-workflow-reminders.ts`)
+- Hourly production cron (`/api/cron/workflow-reminders`)
+- Dashboard surfacing via `WorkflowRemindersSection`
+
+**Dependencies:** workflow-reminders table (`105_workflow_reminders_foundation.sql`), leads, estimates, invoices, jobs
+
+---
+
+### Mobile Install
+
+**Status:** Production
+
+**Description:** Guided PWA install experience for technicians and field users.
+
+**Features:**
+- Route: `/install`
+- Device-specific install walkthrough with annotated screenshots
+- PWA installed-state detection
+
+**Dependencies:** none (client-side)
+
+---
+
+### Design Lab
+
+**Status:** Production (platform admin / founder tool)
+
+**Description:** Live North Star token editing and dashboard replica preview.
+
+**Features:**
+- Click-to-edit color targets across admin chrome and dashboard replica
+- Color presets, contrast guardrails, theme export
+- Dashboard shell clone with scoped surface editing
+- Route: `/platform/design-lab` (platform admin access)
+
+**Dependencies:** platform admin access
+
+---
+
 ### Additional Confirmed Modules
 
 | Module | Status | Route | Notes |
@@ -539,9 +621,10 @@ Existing production UI uses Tailwind utility patterns, admin shell (desktop + mo
 | Beta Bug Report | Production | In-app button | Submits to platform bug reports |
 | Customer CSV Import | Production | `/customers/import` | Smart column mapping |
 | Public Estimate Approval | Production | `/estimate-approval/[token]` | Token-based, no auth |
-| Public Invoice Payment | Production | `/invoice-payment/[token]` | Token-based, no auth |
+| Public Invoice Payment | Production | `/invoice-payment/[token]` | Token-based Pay Now + Stripe checkout when configured |
 | Marketing / Pricing | Production | `/pricing`, auth marketing panels | Founding beta pricing page |
-| Onboarding Setup | Production | `/setup` | First-time company bootstrap |
+| Onboarding Setup | Production | `/setup` | First-time company bootstrap with trade selection |
+| Mobile Install | Production | `/install` | PWA install guidance |
 
 ---
 
@@ -649,6 +732,7 @@ All AI features require `AI_FEATURES_ENABLED=true` and `OPENAI_API_KEY`. Guardra
 | Operational Inconsistencies | Data/workflow mismatches flagged for office |
 | Dispatch Pressure | Dashboard section for today's dispatch load |
 | Mobile Operations Hub | Priority signals for mobile dashboard |
+| Workflow Reminder Engine | Evaluated reminders for unpaid invoices, stale estimates, lead follow-ups, ready-to-invoice jobs |
 
 ---
 
@@ -679,11 +763,13 @@ Documented completed hardening passes only (from migrations and git history):
 
 ## 7. IN PROGRESS WORK
 
-### V2 Design System Foundation
+See `ALTair_CURRENT_SPRINT.md` for active sprint scope.
 
-**System:** Shared UI component library  
-**Current Status:** Sprint defined in `ALTair_CURRENT_SPRINT.md` — Phase 1, not started  
-**Remaining Work:** Build HeroHeader, PriorityCard, InsightCard, MetricCard, GlassPanel, PulseCard, ActionCard, StatusPill, CelebrationBanner, ProgressRing, TimelineCard, EmptyState, WorkspaceSection — explicitly **without** altering DB, server actions, permissions, routes, or business logic
+### Authenticated Production Smoke
+
+**System:** Beta readiness  
+**Current Status:** Recommended before first external company onboarding  
+**Remaining Work:** Run `docs/internal-alpha-smoke-test.md` on production with real tenant data
 
 ### Technician `/tech` Root Mock Dashboard
 
@@ -694,14 +780,20 @@ Documented completed hardening passes only (from migrations and git history):
 ### Alpha Coming Soon Gates
 
 **System:** Alpha deployment hardening  
-**Current Status:** Infrastructure live; `ALPHA_HIDDEN_ADMIN_NAV_HREFS`, `ALPHA_COMING_SOON_PATH_PREFIXES`, and `ALPHA_COMING_SOON_NAV_HREFS` are **empty arrays**  
-**Remaining Work:** Populate arrays to match `docs/internal-alpha-smoke-test.md` expectations (estimates, price-book, network Coming Soon) — docs describe behavior not yet active in code
+**Current Status:** Infrastructure live; gate arrays are **empty**  
+**Remaining Work:** Populate arrays only if internal alpha needs module hiding — not active today
 
 ### Network External Partner CRM
 
 **System:** Network  
 **Current Status:** `network_partners` rows without `linked_company_id` exist in schema; no UI  
 **Remaining Work:** External/manual subs partner CRM (explicitly labeled future in `shared/components/network/README.md`)
+
+### North Star Default-On Decision
+
+**System:** Experience layer  
+**Current Status:** M1–M14 complete behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`  
+**Remaining Work:** Monitor flag-on stability; consider default-on after beta smoke passes
 
 ---
 
@@ -711,20 +803,22 @@ Documented completed hardening passes only (from migrations and git history):
 
 ### Altair OS V2 Roadmap Phases
 
-**Source:** `docs/ALTair_DESIGN_SYSTEM.md/ALTair_V2_ROADMAP.md` — all marked "Not started"
+**Source:** `docs/altair/ALTair_V2_ROADMAP.md`
 
-| Idea | Description | Difficulty | Priority |
-|------|-------------|------------|----------|
-| Design System Foundation | Reusable V2 components before page redesigns | Medium | Phase 1 |
-| Command Center V2 | Dashboard redesign | High | Phase 2 |
-| Customers V2 | Customer module redesign | High | Phase 3 |
-| Dispatch V2 | Dispatch board redesign | High | Phase 4 |
-| Jobs V2 | Jobs module redesign | High | Phase 5 |
-| Reports V2 | Reports redesign; wire real-data equivalents per `AnalyticsPageView.tsx` TODO | High | Phase 6 |
-| Leads V2 | Lead pipeline redesign | Medium | Phase 7 |
-| Team V2 | Team module redesign | Medium | Phase 8 |
-| Technician Experience V2 | Mobile experience redesign | High | Phase 9 |
-| Micro Interactions & Polish | Animation and polish pass | Low | Phase 10 |
+| Idea | Description | Status |
+|------|-------------|--------|
+| Design System Foundation | Reusable V2 components | **Complete** — components built |
+| Master Shell Architecture | Page shell primitives | **Complete** |
+| Command Center V2 / Dashboard | Dashboard North Star M2 | **Complete** (behind flag) |
+| Customers V2 | Customer module North Star M3 | **Complete** (behind flag) |
+| Dispatch V2 | Dispatch North Star command shell | **Complete** (behind flag) |
+| Jobs V2 | Jobs module North Star M4 | **Complete** (behind flag) |
+| Reports V2 | Reports North Star M8 | **Complete** (behind flag) |
+| Leads V2 | Lead pipeline North Star M14 | **Complete** (behind flag) |
+| Team V2 | Team member profile North Star M12 | **Complete** (behind flag) |
+| Technician Experience V2 | Mobile experience redesign | **Deferred** — post-beta |
+| Experience Prototype Adoption | Command Center / Workspace wholesale | **Deferred** — Phase 6 |
+| Micro Interactions Batch C | Additional polish | **Deferred** — only if smoke finds gaps |
 
 ### Network Subcontract Jobs
 
@@ -785,7 +879,14 @@ Major completed milestones (chronological, newest first — from git history):
 
 | Period | Milestone |
 |--------|-----------|
-| Jun 2026 | In-platform network invite acceptance; network partner architecture consolidation and hardening |
+| Jul 2026 | Documentation recovery sync; ~187 commits since 2026-06-17 doc sync |
+| Jul 2026 | Workflow reminder engine — evaluator, cron, dashboard surfacing |
+| Jul 2026 | Stripe Connect — onboarding, checkout, webhooks, Pay Now, SMS links |
+| Jul 2026 | Trade-aware signup and company bootstrap |
+| Jul 2026 | North Star M2–M14 + dispatch pilots (behind flag) |
+| Jul 2026 | Marketing hub, design lab, mobile install, dashboard action prioritization |
+| Jul 2026 | Production RLS and public token RPC hardening |
+| Jun 2026 | North Star Phase M1 — grouped desktop sidebar behind flag |
 | Jun 2026 | Network referral lead sharing; referral outcome sync from lead pipeline |
 | Jun 2026 | Trusted network invitations and My Network partner management |
 | Jun 2026 | Smart customer CSV import |
@@ -824,8 +925,59 @@ When new information is provided (status reports, screenshots, completion report
 6. Move items from In Progress → Production when confirmed shipped
 
 **Related docs (not duplicates of this inventory):**
-- `docs/ALTair_DESIGN_SYSTEM.md/ALTair_CURRENT_SPRINT.md` — active design sprint scope
-- `docs/ALTair_DESIGN_SYSTEM.md/ALTair_V2_ROADMAP.md` — future redesign phases
+- `docs/altair/ALTair_MASTER_STATUS.md` — current product state
+- `docs/altair/ALTair_CURRENT_SPRINT.md` — active sprint scope
+- `docs/altair/ALTair_V2_ROADMAP.md` — future experience-layer phases
 - `docs/internal-alpha-smoke-test.md` — deploy verification checklist
 - `docs/backend-data-map.md` — **outdated planning doc** (pre-Supabase wiring); do not treat as production truth
 - `shared/components/network/README.md` — network model canonical reference
+
+# 11. SYSTEM DEPENDENCIES
+
+Dashboard
+├── Dispatch
+├── Jobs
+├── Leads
+├── Reports
+├── Expenses
+├── Notifications
+└── Operations Engine
+
+Customer 360
+├── Customers
+├── Jobs
+├── Estimates
+├── Invoices
+├── Payments
+├── Equipment
+└── Expenses
+
+Lead Pipeline
+├── Customers
+├── Estimates
+├── Network
+
+Reports V1
+├── Invoices
+├── Payments
+├── Leads
+├── Jobs
+├── Time Entries
+└── Operations Engine
+
+Dispatch
+├── Jobs
+├── Team Management
+└── Dispatch Assignments
+
+Technician Mobile
+├── Jobs
+├── Time Clock
+├── Expenses
+├── Notifications
+└── Estimates
+
+Network
+├── Leads
+├── Team Management
+└── Customers

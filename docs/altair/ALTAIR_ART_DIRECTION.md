@@ -115,13 +115,11 @@ Not:
 
 ---
 
-# Living Note (2026-06-17)
+# Living Note (2026-07-03)
 
-Master Shell V2, Visual Polish A–F, and Micro-Interaction A–B are **complete** on major admin surfaces. **North Star Phase M1 is complete** — grouped desktop left sidebar live behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. Legacy horizontal nav when flag off; mobile nav and page interiors unchanged.
+Master Shell V2, Visual Polish A–F, and Micro-Interaction A–B are **complete** on major admin surfaces. **North Star Phases M1–M14 and dispatch are complete** behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. Legacy UI when flag off.
 
-M1 was shell/chrome migration only — not a dashboard redesign. Command hero, slate operating backing, and ivory work cards remain **M2+** targets. Next: M1 polish and screenshot review, then M2 dashboard planning. Do **not** start M2 until M1 is stable.
-
-Do not loop on small polish passes or new palette concepts. See `ALTair_MASTER_STATUS.md` for scope, preserves, and anti-patterns.
+Next operational focus: authenticated production smoke and first external beta companies — not additional concept iteration. See `ALTair_MASTER_STATUS.md` and `ALTair_CURRENT_SPRINT.md`.
 
 ---
 
@@ -179,35 +177,28 @@ This direction is **good enough** to stop concept iteration for now.
 
 | Surface | Status |
 |---------|--------|
-| **Production app (M1)** | Grouped desktop left sidebar when `NEXT_PUBLIC_NORTH_STAR_SHELL=true`; legacy horizontal nav when off; mobile nav and page interiors unchanged |
-| **Production app (M2+)** | Dashboard pilot next — command hero, “Do this first”, Action/Work/Money board; then list/detail pilots |
+| **Production app (flag on)** | North Star M1–M14 + dispatch — grouped sidebar, dashboard command hero, workspace/intelligence/operations pilots |
+| **Production app (flag off)** | Legacy Master Shell V2 UI |
 | **Concept routes** | Research/reference only — not production targets to copy wholesale |
 
 **Primary reference:** `/altair-shell-color-lab-v1` — palette `mission-control-refined` (Mission Control Original Refined).
 
 **Other concept routes (retain, do not delete):** `/altair-shell-north-star-v1`, `/altair-shell-north-star-v2`, `/altair-shell-north-star-v3`, `/command-center-v1`, `/workspace-v1`, `/altair-design-lab`.
 
-## Next Step: M1 Polish, Then M2 Dashboard Planning
+**Founder design lab:** `/platform/design-lab` — live token editing and dashboard replica preview.
 
-North Star M1 landed the grouped desktop shell behind a flag. The next design track is **M1 polish and screenshot review**, then **M2 dashboard pilot planning** — not additional palette exploration or blind shell redesign. **Do not start M2 implementation until M1 is considered stable.**
+## Next Step: Beta Smoke, Not More Concepting
 
-### Phased Migration
+North Star production migration is **complete behind flag**. The next track is **authenticated production smoke** and **first external beta companies** — not additional palette exploration or blind shell redesign.
+
+### Phased Migration (Complete)
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| **M1** | Grouped left sidebar shell (desktop admin chrome) | **Complete** — `NEXT_PUBLIC_NORTH_STAR_SHELL=true` |
-| **M2** | Dashboard pilot — command hero, “Do this first”, Action/Work/Money board | **Planning** |
-| **M3** | One list page pilot — e.g. Customers; ivory cards on slate backing, brass command accents | **Planned** |
-| **M4** | One detail page pilot — e.g. Customer 360 or Job detail; section rhythm without one-off decoration | **Planned** |
-
-### M2 Scope (Dashboard Pilot Only — Planning, Not Started)
-
-- Mission Control hero
-- “Do this first” primary action
-- Action / Work / Money operating board
-- Real production dashboard data preserved
-- Existing queues and actions preserved
-- **Not in M2:** Dispatch redesign, billing redesign, mobile redesign
+| **M1** | Grouped left sidebar shell | **Complete** |
+| **M2** | Dashboard pilot | **Complete** |
+| **M3–M14** | List/detail/workspace pilots | **Complete** |
+| **Dispatch** | Command shell + mobile polish | **Complete** |
 
 ### Non-Negotiable Preserves
 
@@ -217,4 +208,4 @@ North Star M1 landed the grouped desktop shell behind a flag. The next design tr
 - Dispatch behavior (board internals, mobile sheets, workbench row)
 - Do **not** productionize concept routes wholesale
 
-See `ALTair_MASTER_STATUS.md`, `ALTair_V2_ROADMAP.md` Phase 9, and `shared/design-system/shell/README.md` for migration sequencing and shell constraints.
+See `ALTair_MASTER_STATUS.md`, `ALTair_V2_ROADMAP.md` Phase 9, and `shared/design-system/shell/README.md`.

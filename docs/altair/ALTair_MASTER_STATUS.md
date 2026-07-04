@@ -1,311 +1,169 @@
 # ALTAIR MASTER STATUS
 
-Last Updated: 2026-06-17
+Last Updated: 2026-07-03
+
+> **Source of truth for current product state.** For production module inventory see `ALTair_BRAIN.md`. For active sprint scope see `ALTair_CURRENT_SPRINT.md`. For future experience sequencing see `ALTair_V2_ROADMAP.md`.
+
+---
+
+## Documentation Hierarchy
+
+| Document | Responsibility |
+|----------|----------------|
+| `ALTair_MASTER_STATUS.md` | Current product state only |
+| `ALTair_CURRENT_SPRINT.md` | Active sprint only |
+| `ALTair_BRAIN.md` | Architecture and confirmed production inventory |
+| `ALTair_V2_ROADMAP.md` | Future experience-layer sequencing |
+| `ALTAIR_SESSION_LOG.md` | Historical session record |
+| `ALTAIR_ART_DIRECTION.md` | Permanent design philosophy |
+| `ALTAIR_EXPERIENCE_MAP.md` | Experience architecture (Command Center, Workspace, Operations, Intelligence) |
+| `ALTAIR_COMPONENT_SYSTEM.md` | Reusable V2 component definitions |
+| `FOUNDER_MODE.md` | Founder operating rules |
+| `CHAT_START_PROMPT.md` / `SESSION_CLOSE_PROMPT.md` | Session workflow checklists |
+| `docs/internal-alpha-smoke-test.md` | Deploy verification checklist |
+| `docs/backend-data-map.md` | **Outdated planning doc** — do not treat as production truth |
+
+---
 
 ## Current Stage
 
-Status: **Beta-ready foundation complete; North Star Phase M1 shipped behind flag — M1 polish next, M2 dashboard planning queued**
+**Status: Beta-ready — North Star experience layer shipped behind flag; Stripe payments, workflow reminders, and trade-aware onboarding live; authenticated production smoke recommended before first external company**
 
-Altair OS is a production-grade multi-tenant field service operating system preparing for small company beta testing.
+Altair OS is a production-grade multi-tenant field service operating system on Vercel + Supabase, preparing for small-company beta testing.
 
-Master Shell V2 architecture migration, Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete** on major admin surfaces. Focused smoke test passed (2026-06-16).
+**North Star flag:** `NEXT_PUBLIC_NORTH_STAR_SHELL=true` enables Mission Control Original Refined across admin surfaces. Legacy UI remains when the flag is off. See `lib/beta/north-star-shell.ts`.
 
-**Beta status:** Beta-ready with authenticated production/user-data smoke recommended before first external company onboarding.
-
-**Next major design track:** **North Star Phase M1 polish and screenshot review**, then **M2 dashboard planning** — not more concept iteration or blind shell redesign. M2 must not begin until M1 is considered stable.
-
-**Approved North Star (2026-06-16):** **Mission Control Original Refined** — graphite shell + brass command accents + slate operating backing + ivory work cards. See `ALTAIR_ART_DIRECTION.md`.
-
-**North Star Phase M1 (2026-06-17):** Grouped desktop left sidebar shell **complete** and live behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. Legacy horizontal nav remains when the flag is off. Mobile navigation and page interiors intentionally unchanged. M1 was shell/chrome migration only — not a dashboard redesign.
-
-Parallel tracks:
-
-1. **Beta readiness** — authenticated smoke on production/user data, onboarding, operational trust
-2. **North Star M1 polish** — screenshot review, stability check; then M2 dashboard pilot planning (do not start M2 implementation until M1 is stable)
-3. **Deferred experience tracks** — Command Center / Workspace composition adoption, Technician Experience V2, broad dark mode, route transitions (after M2+ phased migration unless smoke finds gaps)
-
-The redesign is **experience-layer architecture**, not feature work. Shell, polish, and signature layers do not change product logic, routes, server actions, Supabase behavior, or RLS assumptions.
-
-**North star:** Reduce mental load. Altair should feel calm, organized, intelligent, and premium — not like another management system.
+**Beta status:** Beta-ready. Run authenticated production/user-data smoke (`docs/internal-alpha-smoke-test.md`) before first external company onboarding.
 
 ---
 
-## V2 Master Shell — Current State
+## What Shipped Since Last Doc Sync (2026-06-17 → 2026-07-03)
 
-### Complete (major admin surfaces)
+~187 commits. Confirmed in code:
 
-Master Shell V2 architecture migration is **complete** across major admin app surfaces. All page-family patterns are established and adopted on production routes.
-
-**Master List Shell (7 pages)**
-
-Customers, Leads, Jobs, Estimates, Invoices, Expenses, Service Items / Price Book — all on `MasterListPageLayout` with compact density and exported list-page shell tokens (`masterListPagePrimaryActionClass`, `masterListPageMobilePanelLockClass`, `masterListPageSurfaceClass`, `masterListPageScrollRegionClass`).
-
-**Master List Loading State (7 pages)**
-
-All seven list pages use `MasterListPageLoadingState` matching their loaded layout.
-
-**Master Detail Shell (5 pages)**
-
-Customer 360, Job Detail, Estimate Detail, Invoice Detail, Team Member Profile — all on `MasterDetailPageLayout`.
-
-**Hub pages**
-
-- **Network** — tabbed relationship hub on Master Shell primitives (`MasterShellPage`, `MasterPageCanvas`, `MasterPageHeader`, `MasterPageSection`, etc.)
-
-**Form / admin hub pages**
-
-- **Settings** — admin/form hub with compact density
-- **System Check** — admin/form hub with compact density
-- **Invoice Edit** — form-edit route on Master Shell primitives
-- **Customer Import Wizard** — multi-step wizard at `/customers/import` on Master Shell primitives
-
-**Time / Time Clock**
-
-- **Time Clock** — admin time-clock surfaces on Master Shell primitives
-- **Admin Time Tracking** — admin time surfaces on Master Shell primitives
-
-**Report / dashboard pages**
-
-- **Reports** — report shell on Master Shell primitives
-- **Tax Summary** — report shell on Master Shell primitives
-- **Dashboard loaded view** — `OperationalDashboardView` on `MasterShellPage`
-- **Dashboard loading state** — `OperationalDashboardLoadingState` aligned to Master Shell skeleton
-
-**Board / workbench shell (Dispatch)**
-
-- **Dispatch** — Phases 1–4 complete; desktop and mobile smoke tests passed
-  - Phase 1: shell wrapper/header
-  - Phase 2: loading state alignment
-  - Phase 3: board panel surface
-  - Phase 4: workbench row token alignment (`masterWorkbenchRowClass`)
-- **Phase 5 mobile viewport lock** — intentionally **deferred**. Dispatch mobile behavior differs from list pages; the board should remain visible under sheets.
-
-**Legacy cleanup (done)**
-
-- `ListCommandCenterLayout` — **removed** (zero active imports; deleted)
-- `ListCommandCenterLoadingState` — **removed** (zero active imports; deleted)
-
-### Page-family shell patterns
-
-| Pattern | Status | Notes |
-|---------|--------|-------|
-| List page shell | **Done** | 7 pages + exported shell tokens |
-| Detail page shell | **Done** | 5 reference implementations |
-| Hub page shell | **Done** | Network reference |
-| Settings / admin form hub shell | **Done** | Settings, System Check, Invoice Edit, Customer Import |
-| Report / dashboard shell | **Done** | Reports, Tax Summary, Dashboard (loaded + loading) |
-| Board / workbench shell | **Done (Phase 4)** | Dispatch; Phase 5 mobile viewport lock deferred |
-
-### Out of scope (not major admin surfaces)
-
-| Surface | Status | Notes |
-|---------|--------|-------|
-| Platform / alpha internal utility | Not migrated | `/alpha-tracker`, `/platform`, `/platform/bugs` |
-| Design prototypes | Not migrated — research/reference only | `/workspace-v1`, `/command-center-v1`, `/altair-design-lab`, `/altair-shell-color-lab-v1`, `/altair-shell-north-star-v1`, `/altair-shell-north-star-v2`, `/altair-shell-north-star-v3` |
-| Global `AdminShell` chrome | **M1 complete (flagged)** | Grouped left sidebar when `NEXT_PUBLIC_NORTH_STAR_SHELL=true`; legacy horizontal nav when off; mobile nav unchanged |
-
----
-
-## V2 Visual Polish — Complete (Passes A–F)
-
-Visual polish on migrated admin surfaces is **complete**. No further polish passes are required before beta unless authenticated smoke finds gaps.
-
-| Pass | Focus | Status |
-|------|-------|--------|
-| **A** | Surface/canvas foundation | **Complete** |
-| **B** | Action/header rhythm | **Complete** |
-| **C** | Loading fidelity | **Complete** |
-| **D** | Detail section surface alignment | **Complete** |
-| **E** | Billing overlay loaded/loading parity | **Complete** |
-| **F** | Narrow density standardization | **Complete** |
-
----
-
-## V2 Micro-Interactions — Complete (Batches A–B)
-
-| Batch | Focus | Status |
-|-------|-------|--------|
-| **A** | List row feedback; nav focus/`aria-current`; dispatch workload active filter state; secondary button press feedback; segmented-control tokens | **Complete** |
-| **B** | Form focus polish; empty-state action polish; pending feedback; panel/header micro-states; reduced-motion coverage | **Complete** |
-| **C** | Additional micro-interactions | **Deferred** — only if beta smoke finds gaps |
-
----
-
-## Interaction Bug-Fix Pass A — Complete
-
-| Fix | Status |
-|-----|--------|
-| `/time` nav mismatch | **Complete** |
-| Customer Import drag/drop | **Complete** |
-| Invoice Edit validation feedback | **Complete** |
-| Invoices selection reset behavior | **Complete** |
-| Dispatch feedback scoping | **Complete** |
-
----
-
-## Pre-Beta Interaction Fixes — Complete
-
-Focused smoke test passed (2026-06-16):
-
-| Fix | Status |
-|-----|--------|
-| Dispatch pending assignment guard (assign/unassign) | **Complete** |
-| Dispatch desktop Escape no longer unexpectedly closes inline detail panel | **Complete** |
-| Invoices bulk selection during search/filter changes | **Complete** |
-| Labor nav href mismatch (`/time`, `/time-clock`) | **Complete** |
-
-No obvious regressions found in focused smoke.
-
----
-
-## North Star Shell Direction — Approved (2026-06-16)
-
-**Status:** Founder-approved. Concept iteration **stopped**. **Phase M1 complete (2026-06-17).**
-
-After multiple isolated concept routes and palette explorations, the preferred direction is **Mission Control Original Refined**.
-
-**Visual formula:** dark graphite grouped left shell · brass command accents · dark command hero (M2+) · slate/blue operating backing (M2+) · ivory work cards (M2+) · readable dark text on light cards · semantic status colors kept separate.
-
-**What this means:**
-
-- **Production app (M1):** Desktop admin routes use the grouped left sidebar shell when `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. Legacy horizontal nav when the flag is off. Mobile navigation and page interiors unchanged.
-- **Concept routes** remain research/reference only — do not delete; do not productionize wholesale.
-- **Next step:** M1 polish and screenshot review; then M2 dashboard planning — not more palette concepts or blind shell redesign.
-
-**Primary reference:** `/altair-shell-color-lab-v1` — palette `mission-control-refined`.
-
-**Also retained (reference):** `/altair-shell-north-star-v1`, `/altair-shell-north-star-v2`, `/altair-shell-north-star-v3`, `/command-center-v1`, `/workspace-v1`, `/altair-design-lab`, V2 components in `shared/design-system/components/`, signature primitives in `shared/design-system/signature/`.
-
-See `ALTAIR_ART_DIRECTION.md` for what worked, what did not work, and founder constraints.
-
----
-
-## North Star Phase M1 — Complete (2026-06-17)
-
-**Status:** **Complete** — shipped behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`.
-
-**Scope:** Shell/chrome migration only — not a dashboard redesign.
-
-**Delivered:**
-
-- Grouped desktop left sidebar on admin routes when the flag is enabled
-- Legacy horizontal nav preserved when the flag is off or unset
-- Mobile navigation intentionally left unchanged
-- Page interiors intentionally left unchanged
-- Routes, permissions, RBAC, Dispatch behavior, overlays, billing, print, and technician app preserved
-
-**Validation:** Production smoke looked good on desktop; mobile behavior unchanged.
-
-**Flag:** `NEXT_PUBLIC_NORTH_STAR_SHELL=true` enables the North Star grouped left sidebar. Roll back by unsetting the flag or setting it to anything other than `"true"`. See `lib/beta/north-star-shell.ts`.
-
-**Also completed separately:** Signup hotfix — `/signup` renders correctly; `/sign-up` redirects to `/signup`.
-
-**Next:** M1 polish and screenshot review. Do **not** start M2 until M1 is considered stable.
-
----
-
-## North Star Production Migration — Phased Track
-
-**Status:** M1 complete; M2 planning next (do not implement until M1 stable)
-
-The app is structurally consistent and beta-ready after Master Shell V2. North Star M1 landed the grouped desktop shell behind a flag. Remaining migration phases stay incremental — not additional concepting or tiny polish passes.
-
-**Phased migration (sequence):**
+### North Star Production Migration (Phase 9 — behind flag)
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| **M1** | Grouped left sidebar shell (desktop admin chrome) | **Complete** — `NEXT_PUBLIC_NORTH_STAR_SHELL=true` |
-| **M2** | Dashboard pilot — command hero, “Do this first”, Action/Work/Money operating board | **Planning** — do not start until M1 stable |
-| **M3+** | One list page pilot, one detail page pilot, token/backing refinements | **Planned** |
+| **M1** | Grouped desktop left sidebar shell | **Complete** |
+| **M2** | Dashboard pilot — Mission Control hero, Action/Work/Money operating board | **Complete** |
+| **M3** | Customers list + Customer 360 detail pilot | **Complete** |
+| **M4** | Jobs list + job detail pilot | **Complete** |
+| **M5** | Estimates + invoices list/detail/document pilots | **Complete** |
+| **M6** | Expenses list + detail pilot | **Complete** |
+| **M7** | Price book / service items catalog pilot | **Complete** |
+| **M8** | Reports + tax summary pilot | **Complete** |
+| **M9** | Admin time / labor review pilot | **Complete** |
+| **M10** | Settings configuration workspace pilot | **Complete** |
+| **M11** | Network referral workspace pilot | **Complete** |
+| **M12** | Team member profile pilot | **Complete** |
+| **M13** | Platform admin pilot | **Complete** |
+| **M14** | Leads work queue pilot | **Complete** |
+| **Dispatch** | North Star command shell + mobile polish | **Complete** |
 
-**M2 scope (dashboard pilot only — planning, not started):**
+Code lives in `shared/components/*/north-star-m*` folders. Primary reference remains `/altair-shell-color-lab-v1` (palette `mission-control-refined`).
 
-- Mission Control hero
-- “Do this first” primary action
-- Action / Work / Money operating board
-- Real production dashboard data preserved
-- Existing queues and actions preserved
-- **Not in M2:** Dispatch redesign, billing redesign, mobile redesign
+### Payments (Stripe Connect)
 
-**Must preserve (non-negotiable):**
+- Company payment accounts foundation
+- Stripe Connect Express onboarding from Settings
+- Public invoice Pay Now (`/invoice-payment/[token]`) with gated checkout sessions
+- Stripe webhook verification and atomic checkout payment recording
+- Manual payment recording via atomic RPC
+- Payment link email sending
+- Technician-facing payment link generation
+- Twilio SMS payment links (when configured)
 
-- Routes
-- Product logic
-- Supabase / RLS / server actions
-- Dispatch behavior
-- Billing / print / overlay behavior
-- Mobile sheets
+### Workflow Reminder Engine
 
-**Is not:**
+- Durable `workflow_reminders` table with snooze/dismiss/complete
+- Evaluator service for unpaid invoices (7d), stale estimates (7d), lead follow-ups, ready-to-invoice jobs
+- Hourly production cron (`/api/cron/workflow-reminders`)
+- Dashboard surfacing via `WorkflowRemindersSection`
 
-- More palette concepts
-- Blind shell redesign
-- Productionizing concept routes wholesale
-- Random gradients, flashy animation, Dribbble redesign
-- Fake AI features, gamification, broad route transitions
-- Page-by-page one-off decoration
+### Trade-Aware Onboarding
 
-See `ALTAIR_ART_DIRECTION.md`, `ALTair_V2_ROADMAP.md` Phase 9, and `shared/design-system/shell/README.md`.
+- Company `trade` column on bootstrap (`supabase/migrations/107_company_trade.sql`)
+- Trade selection on signup and `/setup`
+- Invited users defer company bootstrap until invite acceptance
+
+### Design Lab
+
+- Founder design lab at `/platform/design-lab` — click-to-edit color targets, presets, contrast guardrails, theme export, dashboard replica canvas
+
+### Dashboard Brain (Operational Prioritization)
+
+- Dashboard action queue prioritization and secondary band collapse
+- Lead actions, accepted estimates, and unpaid invoice follow-ups surfaced on dashboard
+- Scoped dashboard surface editing (design lab integration)
+
+### Production Hardening
+
+- Operational RLS tightening (`103_tighten_operational_rls.sql`)
+- Public token RPC hardening (`104_harden_public_token_rpcs.sql`)
+- Signup email verification callback fix
+- Smoke workflow hardening (draft estimates, billing view refresh after payment)
+- North Star contrast polish across major admin surfaces
+
+### Other Confirmed Additions
+
+- Marketing hub (`/marketing`) — post drafts, AI rewrite, connected accounts foundation
+- Mobile install experience (`/install`) — PWA guidance with device-specific walkthrough
+- Electrical demo seed pack
+- Network workspace tab restructure and parity fixes
+
+---
+
+## Foundation Already Complete (Pre-2026-06-17)
+
+Master Shell V2, Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes remain **complete** on major admin surfaces. Focused smoke test passed (2026-06-16).
+
+Legacy `ListCommandCenterLayout` and `ListCommandCenterLoadingState` **removed**.
+
+Dispatch Phase 5 mobile viewport lock remains **intentionally deferred** (board must stay visible under mobile sheets).
 
 ---
 
 ## Current Priorities
 
-### Priority 1: Beta Readiness (Active)
+### Priority 1: Authenticated Production Smoke (Active)
 
-Prepare Altair for real companies to onboard and operate daily.
+Exercise core workflows on real tenant data before first external company onboarding. Checklist: `docs/internal-alpha-smoke-test.md`.
 
-**Next operational step:** Authenticated production/user-data smoke — exercise core workflows (customers, estimates, jobs, dispatch, invoicing, time) on real tenant data before first external company onboarding.
+Focus areas: signup/trade onboarding, customers → jobs → dispatch → technician completion → estimate → invoice → Stripe/manual payment, workflow reminders, time/expenses.
 
-Focus: friction reduction, trust, onboarding, duplicate workflow elimination.
+### Priority 2: First External Beta Companies (Next)
 
-### Priority 2: North Star M1 Polish + M2 Dashboard Planning (Next Design Track)
+Onboard a small number of real companies after smoke passes. Reduce friction, validate operational trust, collect feedback via Alpha Tracker and beta bug reports.
 
-M1 grouped desktop sidebar is **complete** behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. Next: M1 polish and screenshot review, then plan **M2 dashboard pilot only** (command hero, “Do this first”, Action/Work/Money board — real production data and existing queues preserved).
+### Priority 3: Deferred Experience Tracks
 
-Do **not** start M2 implementation until M1 is considered stable. Do **not** create more palette concepts. Do **not** redesign Dispatch, billing, or mobile in M2.
-
-### Priority 3: Deferred Experience Tracks (After North Star Migration)
-
-- Command Center / Workspace production adoption (Phase 6)
 - Technician Experience V2 — eliminate `/tech` mock infrastructure
-- Dispatch Phase 5 mobile viewport lock
+- Command Center / Workspace prototype wholesale adoption (Phase 6)
 - Micro-Interaction Batch C
-- Broad dark mode
-- Route/page transitions
-
-### Priority 4: Internal / Platform Surfaces
-
-Migrate only if needed for beta: `/alpha-tracker`, `/platform`, `/platform/bugs`.
+- Broad dark mode, route/page transitions
+- Overlay/detail consistency for estimate/invoice overlays
+- Platform/alpha utility shell migration (`/alpha-tracker`, `/platform`, `/platform/bugs`) — only if needed for beta
 
 ---
 
 ## Active Work
 
-### In Progress
-
+- Authenticated production/user-data smoke validation
 - Beta onboarding preparation
-- Authenticated production/user-data smoke (recommended before first external company)
-- North Star M1 polish and screenshot review
-
-### Upcoming
-
-- North Star M2 dashboard pilot planning (after M1 stable — no M2 implementation yet)
-- North Star M3+ list/detail pilots (after M2)
-- First external company beta testing
-- Command Center / Workspace production adoption (Phase 6) — after North Star migration
-- Technician Experience V2 shell alignment — deferred
+- North Star flag-on stability monitoring across admin surfaces
 
 ---
 
-## Current Known Issues (Non-Blocking for Beta)
+## Known Issues (Non-Blocking for Beta)
 
 - `/tech` root still contains mock infrastructure (Technician Experience V2 deferred)
-- Dispatch Phase 5 mobile viewport lock intentionally deferred — board remains visible under mobile sheets
-- `EstimatesLoadingState` uses default skeleton props (no summary strip skeleton); loaded page shows summary cards when data exists
-- Invoice/estimate overlay modes use raw `max-w-5xl` + `adminPageStackClass` instead of `MasterDetailPageLayout` (overlay consistency deferred)
-- Some alpha deployment docs are outdated
-- Coming Soon infrastructure exists but is not populated
+- Dispatch Phase 5 mobile viewport lock intentionally deferred
+- `EstimatesLoadingState` uses default skeleton props (no summary strip skeleton)
+- Invoice/estimate overlay modes use raw layout instead of `MasterDetailPageLayout` (overlay consistency deferred)
+- North Star experience requires `NEXT_PUBLIC_NORTH_STAR_SHELL=true` — not yet default-on
+- Stripe Connect and Twilio SMS require environment configuration per company/deploy
+- `docs/backend-data-map.md` describes pre-Supabase mock state — outdated
 
 ---
 
@@ -316,24 +174,13 @@ Get Altair into the hands of a small number of real companies after authenticate
 Success metrics:
 
 - Authenticated smoke passes on production/user data
-- Companies can onboard themselves
-- Companies can create customers, estimates, jobs, and dispatch technicians
-- Technicians can complete work; companies can invoice and collect payments
-- Admin surfaces feel consistent, calm, and premium under Master Shell patterns
-- North Star M1 stable behind flag; M2 dashboard plan approved before M2 implementation (post-smoke)
+- Companies can onboard with trade selection
+- Companies can create customers, estimates, jobs, dispatch technicians, and collect payments (manual + Stripe when configured)
+- Workflow reminders surface actionable follow-ups on dashboard
+- Admin surfaces feel consistent and premium under North Star when flag is enabled
 
 ---
 
 ## Long-Term Vision
 
-Altair OS becomes a Living Operating System that trades companies genuinely enjoy opening every morning.
-
-It should feel:
-
-- Intelligent
-- Helpful
-- Calm
-- Organized
-- Delightful
-
-Rather than feeling like another management system.
+Altair OS becomes a Living Operating System that trades companies genuinely enjoy opening every morning — intelligent, helpful, calm, organized, and delightful rather than feeling like another management system.
