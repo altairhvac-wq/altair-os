@@ -89,9 +89,20 @@ import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { DashboardNorthStarView } from "@/shared/components/dashboard/north-star-m2";
 import { WorkflowRemindersSection } from "@/shared/components/dashboard/WorkflowRemindersSection";
 import {
+  CollapsibleSectionShell,
+  DashboardCollapsiblePageSection,
+} from "@/shared/components/dashboard/DashboardCollapsiblePageSection";
+import {
+  DASHBOARD_COLLAPSED_SECTIONS,
+  DASHBOARD_SECTION_LABELS,
+  getDashboardRoleFocus,
+  getDashboardSectionOrder,
+  getDashboardSectionSummaryHint,
+  type DashboardPrioritySectionId,
+} from "@/shared/lib/dashboard-section-priority";
+import {
   MasterContentStack,
   MasterPageCanvas,
-  MasterPageSection,
   MasterShellPage,
 } from "@/shared/design-system/shell";
 
@@ -102,90 +113,6 @@ type OperationalDashboardViewProps = {
   userId?: string;
   demoDataStatus?: DemoDataStatus | null;
 };
-
-type DashboardRoleFocus = "command" | "dispatch" | "office";
-
-type DashboardPrioritySectionId =
-  | "needs-attention"
-  | "todays-work"
-  | "revenue-billing"
-  | "operational-health"
-  | "next-steps";
-
-const DASHBOARD_SECTION_LABELS: Record<
-  DashboardPrioritySectionId,
-  { title: string; description?: string }
-> = {
-  "needs-attention": {
-    title: "Needs attention",
-    description: "Priority signals and open queues",
-  },
-  "todays-work": { title: "Today's work" },
-  "revenue-billing": { title: "Revenue and billing" },
-  "operational-health": { title: "Operational health" },
-  "next-steps": {
-    title: "Next steps",
-    description: "Action playbook and recent activity",
-  },
-};
-
-function getDashboardRoleFocus(access: DashboardData["access"]): DashboardRoleFocus {
-  if (access.canViewBilling && access.canViewTechnicianRoster) {
-    return "command";
-  }
-  if (access.canViewTechnicianRoster && !access.canViewBilling) {
-    return "dispatch";
-  }
-  if (access.canViewBilling && !access.canViewTechnicianRoster) {
-    return "office";
-  }
-  return "command";
-}
-
-function getDashboardSectionOrder(
-  access: DashboardData["access"],
-  roleFocus: DashboardRoleFocus,
-): DashboardPrioritySectionId[] {
-  if (!access.canViewOperationalReports) {
-    const sections: DashboardPrioritySectionId[] = ["todays-work"];
-    if (access.canViewBilling || access.canViewCompanyExpenses) {
-      sections.push("revenue-billing");
-    }
-    sections.push("next-steps");
-    return sections;
-  }
-
-  switch (roleFocus) {
-    case "dispatch": {
-      const sections: DashboardPrioritySectionId[] = [
-        "operational-health",
-        "todays-work",
-        "needs-attention",
-        "next-steps",
-      ];
-      if (access.canViewCompanyExpenses) {
-        sections.splice(2, 0, "revenue-billing");
-      }
-      return sections;
-    }
-    case "office":
-      return [
-        "operational-health",
-        "todays-work",
-        "revenue-billing",
-        "needs-attention",
-        "next-steps",
-      ];
-    default:
-      return [
-        "operational-health",
-        "todays-work",
-        "revenue-billing",
-        "needs-attention",
-        "next-steps",
-      ];
-  }
-}
 
 function formatJobLocation(city?: string, state?: string): string {
   const parts = [city?.trim(), state?.trim()].filter(Boolean);
@@ -1239,10 +1166,35 @@ function DashboardContentLayout({
         canManageCustomers={access.canManageCustomers}
       />
       <div className="lg:col-span-2">
-        <NotificationsSummarySection
-          notifications={data.notifications}
-          notificationAccess={notificationAccess}
-        />
+        <CollapsibleSectionShell
+          title="Notifications"
+          description={
+            data.notifications.recent.length === 0
+              ? "All caught up"
+              : data.notifications.unreadCount > 0
+                ? `${data.notifications.unreadCount} unread`
+                : "Recent alerts"
+          }
+          summaryHint={
+            data.notifications.unreadCount > 0
+              ? `${data.notifications.unreadCount} unread`
+              : data.notifications.recent.length > 0
+                ? `${data.notifications.recent.length} recent`
+                : undefined
+          }
+        >
+          {data.notifications.recent.length === 0 ? (
+            <EmptyState
+              title="No notifications yet"
+              description="Job, dispatch, and billing alerts will show up here as work happens."
+            />
+          ) : (
+            <DashboardNotificationsList
+              notifications={data.notifications.recent}
+              notificationAccess={notificationAccess}
+            />
+          )}
+        </CollapsibleSectionShell>
       </div>
     </div>
   ) : access.canManageCustomers ? (
@@ -1356,16 +1308,24 @@ function DashboardContentLayout({
               }
 
               const labels = DASHBOARD_SECTION_LABELS[sectionId];
+              const defaultCollapsed =
+                DASHBOARD_COLLAPSED_SECTIONS.has(sectionId);
 
               return (
-                <MasterPageSection
+                <DashboardCollapsiblePageSection
                   key={sectionId}
                   title={labels.title}
                   description={labels.description}
                   density="compact"
+                  defaultCollapsed={defaultCollapsed}
+                  summaryHint={
+                    defaultCollapsed
+                      ? getDashboardSectionSummaryHint(sectionId, data)
+                      : undefined
+                  }
                 >
                   {content}
-                </MasterPageSection>
+                </DashboardCollapsiblePageSection>
               );
             })}
           </MasterContentStack>

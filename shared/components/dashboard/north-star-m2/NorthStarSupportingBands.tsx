@@ -1,4 +1,4 @@
-import { Bell, ShieldCheck } from "lucide-react";
+import { Bell, ChevronRight, ShieldCheck } from "lucide-react";
 import { northStarTokens as t } from "@/shared/design-system/north-star/tokens";
 import { buildNorthStarSupportingBandsContent } from "@/shared/lib/dashboard-north-star-supporting-bands";
 import type { NorthStarSystemDockContent } from "@/shared/lib/dashboard-north-star-supporting-bands";
@@ -65,63 +65,89 @@ type NorthStarSupportingBandsProps = {
 
 export function NorthStarSupportingBands({ data }: NorthStarSupportingBandsProps) {
   const content = buildNorthStarSupportingBandsContent(data);
+  const summaryHint = `${content.systemDock.score} · ${content.systemDock.label}`;
 
   return (
-    <footer aria-label="Supporting metrics and status" className={t.footer}>
-      <div aria-hidden="true" className={t.footerTopAccent} />
-
-      <div className={`${t.footerSection} px-2 pb-2 pt-4 sm:px-3 sm:pb-3`}>
-        <p className={`px-2 sm:px-3 ${t.eyebrowLight}`}>Business pulse</p>
-        <div className="mt-2 grid sm:grid-cols-4">
-          {content.pulseMetrics.map((metric) => (
-            <div key={metric.id} className={t.footerMetric}>
-              <p className={t.metricLabel}>{metric.label}</p>
-              <p className={`mt-0.5 text-lg font-bold tabular-nums ${t.workspaceSubheading}`}>
-                {metric.value}
-              </p>
-              <p className={t.metricDelta}>{metric.delta}</p>
-            </div>
-          ))}
+    <details className="group">
+      <summary
+        className={`${t.footer} cursor-pointer list-none marker:content-none [&::-webkit-details-marker]:hidden`}
+      >
+        <div aria-hidden="true" className={t.footerTopAccent} />
+        <div className="flex items-center justify-between gap-3 px-3 py-3 sm:px-4">
+          <div className="min-w-0">
+            <p className={t.eyebrowLight}>Supporting context</p>
+            <p className={`mt-0.5 text-sm font-semibold ${t.workspaceSubheading}`}>
+              Business pulse, activity, and system health
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="hidden text-xs font-semibold tabular-nums text-slate-500 sm:inline">
+              {summaryHint}
+            </span>
+            <ChevronRight
+              className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-90"
+              aria-hidden="true"
+            />
+          </div>
         </div>
-      </div>
+      </summary>
 
-      <div className="grid lg:grid-cols-[1fr_auto]">
-        <div className={`${t.footerSection} grid gap-3 p-3 sm:p-4 lg:grid-cols-[1.2fr_0.8fr]`}>
-          <div className={`${t.footerPanel} px-4 py-4 lg:px-5`}>
-            <p className={t.lightCardLabel}>Field activity</p>
-            {content.activities.length === 0 ? (
-              <p className={`mt-3 ${t.lightSurfaceMuted}`}>No recent activity yet.</p>
-            ) : (
-              <ul className="mt-3 space-y-2">
-                {content.activities.map((item) => (
-                  <li key={item.id} className="flex items-baseline gap-2.5">
-                    <span
-                      className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#B8943F]"
-                      aria-hidden="true"
-                    />
-                    <span className={t.activityTitle}>{item.title}</span>
-                    <span className={t.activityTime}>{item.time}</span>
+      <div aria-label="Supporting metrics and status" className={t.footer}>
+        <div aria-hidden="true" className={t.footerTopAccent} />
+
+        <div className={`${t.footerSection} px-2 pb-2 pt-4 sm:px-3 sm:pb-3`}>
+          <p className={`px-2 sm:px-3 ${t.eyebrowLight}`}>Business pulse</p>
+          <div className="mt-2 grid sm:grid-cols-4">
+            {content.pulseMetrics.map((metric) => (
+              <div key={metric.id} className={t.footerMetric}>
+                <p className={t.metricLabel}>{metric.label}</p>
+                <p className={`mt-0.5 text-lg font-bold tabular-nums ${t.workspaceSubheading}`}>
+                  {metric.value}
+                </p>
+                <p className={t.metricDelta}>{metric.delta}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-[1fr_auto]">
+          <div className={`${t.footerSection} grid gap-3 p-3 sm:p-4 lg:grid-cols-[1.2fr_0.8fr]`}>
+            <div className={`${t.footerPanel} px-4 py-4 lg:px-5`}>
+              <p className={t.lightCardLabel}>Field activity</p>
+              {content.activities.length === 0 ? (
+                <p className={`mt-3 ${t.lightSurfaceMuted}`}>No recent activity yet.</p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {content.activities.map((item) => (
+                    <li key={item.id} className="flex items-baseline gap-2.5">
+                      <span
+                        className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#B8943F]"
+                        aria-hidden="true"
+                      />
+                      <span className={t.activityTitle}>{item.title}</span>
+                      <span className={t.activityTime}>{item.time}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className={`${t.footerPanel} px-4 py-4 lg:px-5`}>
+              <p className={t.lightCardLabel}>Today&apos;s momentum</p>
+              <ul className="mt-3 space-y-1.5">
+                {content.momentumLines.map((item) => (
+                  <li key={item.id} className={`flex items-start gap-2 ${t.lightSurfaceMuted}`}>
+                    <span className={t.momentumDot} aria-hidden="true" />
+                    {item.text}
                   </li>
                 ))}
               </ul>
-            )}
+            </div>
           </div>
 
-          <div className={`${t.footerPanel} px-4 py-4 lg:px-5`}>
-            <p className={t.lightCardLabel}>Today&apos;s momentum</p>
-            <ul className="mt-3 space-y-1.5">
-              {content.momentumLines.map((item) => (
-                <li key={item.id} className={`flex items-start gap-2 ${t.lightSurfaceMuted}`}>
-                  <span className={t.momentumDot} aria-hidden="true" />
-                  {item.text}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <NorthStarSystemDock dock={content.systemDock} />
         </div>
-
-        <NorthStarSystemDock dock={content.systemDock} />
       </div>
-    </footer>
+    </details>
   );
 }
