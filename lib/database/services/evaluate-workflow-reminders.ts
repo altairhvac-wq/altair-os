@@ -60,6 +60,19 @@ export type WorkflowReminderEvaluationResult = {
   errors: WorkflowReminderEvaluationError[];
 };
 
+export type WorkflowReminderBatchEvaluationResult = {
+  evaluatedAt: string;
+  companyCount: number;
+  totals: {
+    created: number;
+    updated: number;
+    completed: number;
+    skipped: number;
+  };
+  companies: WorkflowReminderEvaluationResult[];
+  errors: WorkflowReminderEvaluationError[];
+};
+
 type EligibleWorkflowReminderCandidate = {
   reminderKind: WorkflowReminderKind;
   sourceEntityType: WorkflowReminderSourceEntityType;
@@ -775,4 +788,113 @@ export async function evaluateWorkflowRemindersForCompany(input: {
   }
 
   return result;
+}
+
+async function listCompanyIdsForReminderEvaluation(
+  client: DbClient,
+): Promise<string[]> {
+  const { data, error } = await client
+    .from("companies")
+    .select("id")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((row) => row.id);
+}
+
+/**
+ * Idempotent Phase 1 workflow reminder evaluation for every company tenant.
+ * Intended for scheduled cron execution via service role.
+ */
+export async function evaluateWorkflowRemindersForAllCompanies(input?: {
+  evaluatedAt?: string | Date;
+  client?: DbClient;
+}): Promise<WorkflowReminderBatchEvaluationResult> {
+  const evaluatedAt =
+    input?.evaluatedAt != null
+      ? new Date(toIsoTimestamp(input.evaluatedAt))
+      : new Date();
+  const evaluatedAtIso = evaluatedAt.toISOString();
+
+  const emptyBatchResult: WorkflowReminderBatchEvaluationResult = {
+    evaluatedAt: evaluatedAtIso,
+    companyCount: 0,
+    totals: {
+      created: 0,
+      updated: 0,
+      completed: 0,
+      skipped: 0,
+    },
+    companies: [],
+    errors: [],
+  };
+
+  let client: DbClient;
+
+  try {
+    client = resolvePrivilegedDbClient(input?.client);
+  } catch (error) {
+    return {
+      ...emptyBatchResult,
+      errors: [
+        {
+          kind: "client",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Service role client unavailable",
+        },
+      ],
+    };
+  }
+
+  let companyIds: string[];
+
+  try {
+    companyIds = await listCompanyIdsForReminderEvaluation(client);
+  } catch (error) {
+    return {
+      ...emptyBatchResult,
+      errors: [
+        {
+          kind: "companies",
+          message:
+            error instanceof Error ? error.message : "Company lookup failed",
+        },
+      ],
+    };
+  }
+
+  const companies: WorkflowReminderEvaluationResult[] = [];
+  const totals = {
+    created: 0,
+    updated: 0,
+    completed: 0,
+    skipped: 0,
+  };
+
+  for (const companyId of companyIds) {
+    const result = await evaluateWorkflowRemindersForCompany({
+      companyId,
+      evaluatedAt,
+      client,
+    });
+
+    companies.push(result);
+    totals.created += result.created;
+    totals.updated += result.updated;
+    totals.completed += result.completed;
+    totals.skipped += result.skipped;
+  }
+
+  return {
+    evaluatedAt: evaluatedAtIso,
+    companyCount: companyIds.length,
+    totals,
+    companies,
+    errors: companies.flatMap((result) => result.errors),
+  };
 }
