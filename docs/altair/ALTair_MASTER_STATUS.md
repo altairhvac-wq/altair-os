@@ -100,10 +100,12 @@ Code lives in `shared/components/*/north-star-m*` folders. Primary reference rem
 ### Founder Brain Foundation (Platform Admin)
 
 - `/platform` Mission Hero — one clear "do this first" founder action from ranked signals
-- Platform priority engine — blocking/high bugs, stuck onboarding, inactive companies, diagnostics
+- Platform priority engine — blocking/high bugs, stuck onboarding, inactive companies, diagnostics, **reliability signals**
 - Needs Attention panel — ranked cross-tenant signals with deep links
 - Cross-tenant activation funnel — customer → job → estimate → invoice → payment → fully activated
-- Reuses existing `platform-admin` service role queries; no new migrations
+- **Reliability Pulse** — cron health, payment webhooks, Stripe Connect risks, platform env checks
+- `platform_automation_runs` table — durable workflow reminder cron run tracking (migration `108`)
+- Reuses `payment_provider_events` and `company_payment_accounts` for payment/Stripe health (read-only)
 
 ### Production Hardening
 

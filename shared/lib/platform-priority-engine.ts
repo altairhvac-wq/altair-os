@@ -8,7 +8,13 @@ import type {
   PlatformPrioritySignal,
   PlatformPrioritySignalKind,
   PlatformPrioritySeverity,
+  PlatformReliabilityPulseItem,
+  PlatformReliabilitySnapshot,
 } from "@/shared/types/platform-admin";
+import type { PlatformReliabilityData } from "@/shared/types/platform-reliability";
+
+/** Hourly cron — treat as stale after 3 hours without a successful run. */
+const WORKFLOW_CRON_STALE_MS = 3 * 60 * 60 * 1000;
 
 const MS_PER_DAY = 86_400_000;
 
@@ -19,8 +25,15 @@ const INACTIVE_AFTER_SIGNUP_DAYS = 14;
 const BASE_SCORES: Record<PlatformPrioritySignalKind, number> = {
   blocking_bug: 100,
   high_bug: 85,
+  payment_webhook_failed: 100,
+  workflow_cron_failed: 95,
+  payment_event_stuck: 90,
+  workflow_cron_stale: 85,
   diagnostic_warning: 80,
+  platform_system_warning: 80,
+  stripe_connect_restricted: 75,
   onboarding_stuck: 70,
+  stripe_connect_incomplete: 65,
   inactive_company: 65,
   recent_signup_no_customer: 60,
   recent_signup_no_job: 55,
@@ -29,8 +42,15 @@ const BASE_SCORES: Record<PlatformPrioritySignalKind, number> = {
 const SEVERITY_BY_KIND: Record<PlatformPrioritySignalKind, PlatformPrioritySeverity> = {
   blocking_bug: "critical",
   high_bug: "high",
+  payment_webhook_failed: "critical",
+  workflow_cron_failed: "critical",
+  payment_event_stuck: "critical",
+  workflow_cron_stale: "high",
   diagnostic_warning: "high",
+  platform_system_warning: "high",
+  stripe_connect_restricted: "high",
   onboarding_stuck: "medium",
+  stripe_connect_incomplete: "medium",
   inactive_company: "medium",
   recent_signup_no_customer: "medium",
   recent_signup_no_job: "low",
@@ -54,6 +74,312 @@ function pluralize(
   plural = `${singular}s`,
 ): string {
   return count === 1 ? singular : plural;
+}
+
+function formatRelativeHours(hours: number): string {
+  if (hours < 1) {
+    return "less than 1 hour ago";
+  }
+
+  if (hours === 1) {
+    return "1 hour ago";
+  }
+
+  return `${hours} hours ago`;
+}
+
+function buildReliabilitySignals(
+  reliability: PlatformReliabilityData,
+): PlatformPrioritySignal[] {
+  const signals: PlatformPrioritySignal[] = [];
+  const { cron, payments, stripeConnect, systemChecks } = reliability;
+
+  if (payments.queryable && payments.failedRecentCount > 0) {
+    signals.push({
+      id: `payment-webhook-failed-${payments.failedRecentCount}`,
+      kind: "payment_webhook_failed",
+      severity: SEVERITY_BY_KIND.payment_webhook_failed,
+      title:
+        payments.failedRecentCount === 1
+          ? "1 payment webhook failed in the last 24 hours"
+          : `${payments.failedRecentCount} payment webhooks failed in the last 24 hours`,
+      description:
+        payments.latestFailedMessage ??
+        "Stripe webhook events failed processing — customer payments may not be recorded.",
+      reason: "Failed payment webhooks silently block checkout reconciliation.",
+      actionLabel: "Review reliability",
+      href: "/platform#platform-reliability",
+      score: BASE_SCORES.payment_webhook_failed + Math.min(payments.failedRecentCount - 1, 3),
+      createdAt: payments.latestFailedAt ?? undefined,
+    });
+  }
+
+  if (cron.queryable && cron.lastFailed && cron.latestRun) {
+    signals.push({
+      id: "workflow-cron-failed",
+      kind: "workflow_cron_failed",
+      severity: SEVERITY_BY_KIND.workflow_cron_failed,
+      title: "Workflow reminder cron failed",
+      description:
+        cron.latestRun.errorSummary ??
+        "The hourly workflow reminder evaluator did not complete successfully.",
+      reason: "Dashboard follow-up reminders stop updating when this cron fails.",
+      actionLabel: "Review reliability",
+      href: "/platform#platform-reliability",
+      score: BASE_SCORES.workflow_cron_failed,
+      createdAt: cron.latestRun.startedAt,
+    });
+  }
+
+  if (payments.queryable && payments.stuckCount > 0) {
+    signals.push({
+      id: `payment-event-stuck-${payments.stuckCount}`,
+      kind: "payment_event_stuck",
+      severity: SEVERITY_BY_KIND.payment_event_stuck,
+      title:
+        payments.stuckCount === 1
+          ? "1 payment webhook event is stuck"
+          : `${payments.stuckCount} payment webhook events are stuck`,
+      description:
+        "Events remain unprocessed in received or processing state beyond the safe window.",
+      reason: "Stuck payment events mean checkout or Connect updates may not land.",
+      actionLabel: "Review reliability",
+      href: "/platform#platform-reliability",
+      score: BASE_SCORES.payment_event_stuck + Math.min(payments.stuckCount - 1, 3),
+    });
+  }
+
+  if (cron.queryable && cron.isStale && !cron.lastFailed) {
+    const staleHours = cron.latestSuccessfulRun
+      ? Math.floor(
+          (Date.now() - Date.parse(cron.latestSuccessfulRun.startedAt)) /
+            (60 * 60 * 1000),
+        )
+      : null;
+
+    signals.push({
+      id: "workflow-cron-stale",
+      kind: "workflow_cron_stale",
+      severity: SEVERITY_BY_KIND.workflow_cron_stale,
+      title: cron.latestSuccessfulRun
+        ? "Workflow reminder cron is stale"
+        : "Workflow reminder cron has no successful run recorded",
+      description: cron.latestSuccessfulRun
+        ? `Last success ${staleHours != null ? formatRelativeHours(staleHours) : "unknown"}. Expected hourly.`
+        : "No successful workflow reminder run is recorded yet.",
+      reason: `Dashboard reminders depend on hourly evaluation (stale threshold ${WORKFLOW_CRON_STALE_MS / (60 * 60 * 1000)}h).`,
+      actionLabel: "Review reliability",
+      href: "/platform#platform-reliability",
+      score: BASE_SCORES.workflow_cron_stale,
+      createdAt: cron.latestSuccessfulRun?.startedAt,
+    });
+  }
+
+  const criticalChecks = systemChecks.checks.filter((check) => check.status === "fail");
+
+  if (criticalChecks.length > 0) {
+    const featured = criticalChecks[0];
+    signals.push({
+      id: `platform-system-warning-${criticalChecks.length}`,
+      kind: "platform_system_warning",
+      severity: SEVERITY_BY_KIND.platform_system_warning,
+      title:
+        criticalChecks.length === 1
+          ? `Platform config issue: ${featured.label}`
+          : `${criticalChecks.length} critical platform configuration issues`,
+      description: featured.message,
+      reason: "Missing platform env blocks cron, payments, or core runtime behavior.",
+      actionLabel: "Review reliability",
+      href: "/platform#platform-reliability",
+      score: BASE_SCORES.platform_system_warning + Math.min(criticalChecks.length - 1, 3),
+    });
+  }
+
+  if (stripeConnect.queryable && stripeConnect.restricted.length > 0) {
+    const featured = stripeConnect.restricted[0];
+    signals.push({
+      id: `stripe-connect-restricted-${stripeConnect.restricted.length}`,
+      kind: "stripe_connect_restricted",
+      severity: SEVERITY_BY_KIND.stripe_connect_restricted,
+      title:
+        stripeConnect.restricted.length === 1
+          ? `${featured.companyName} Stripe Connect is restricted`
+          : `${stripeConnect.restricted.length} companies have restricted Stripe Connect`,
+      description: featured.reason,
+      reason: "Online Pay Now is blocked for companies with billing activity.",
+      actionLabel: "View companies",
+      href: "/platform#platform-companies",
+      score:
+        BASE_SCORES.stripe_connect_restricted +
+        Math.min(stripeConnect.restricted.length - 1, 4),
+      companyId: featured.companyId,
+      companyName: featured.companyName,
+    });
+  }
+
+  if (stripeConnect.queryable && stripeConnect.incompleteWithInvoices.length > 0) {
+    const featured = stripeConnect.incompleteWithInvoices[0];
+    signals.push({
+      id: `stripe-connect-incomplete-${stripeConnect.incompleteWithInvoices.length}`,
+      kind: "stripe_connect_incomplete",
+      severity: SEVERITY_BY_KIND.stripe_connect_incomplete,
+      title:
+        stripeConnect.incompleteWithInvoices.length === 1
+          ? `${featured.companyName} needs Stripe Connect setup`
+          : `${stripeConnect.incompleteWithInvoices.length} invoicing companies lack Stripe Connect`,
+      description: featured.reason,
+      reason: "Beta companies with invoices expect online payment collection.",
+      actionLabel: "View companies",
+      href: "/platform#platform-companies",
+      score:
+        BASE_SCORES.stripe_connect_incomplete +
+        Math.min(stripeConnect.incompleteWithInvoices.length - 1, 4),
+      companyId: featured.companyId,
+      companyName: featured.companyName,
+    });
+  }
+
+  return signals;
+}
+
+export function buildPlatformReliabilityPulse(
+  reliability: PlatformReliabilityData,
+): PlatformReliabilitySnapshot {
+  const { cron, payments, stripeConnect, systemChecks, deferredSignals } = reliability;
+
+  const pulse: PlatformReliabilityPulseItem[] = [];
+
+  if (!cron.queryable) {
+    pulse.push({
+      id: "cron",
+      label: "Workflow cron",
+      status: "unknown",
+      detail: "Cron health data unavailable.",
+    });
+  } else if (cron.lastFailed) {
+    pulse.push({
+      id: "cron",
+      label: "Workflow cron",
+      status: "critical",
+      detail: cron.latestRun?.errorSummary ?? "Last run failed.",
+    });
+  } else if (cron.isStale) {
+    pulse.push({
+      id: "cron",
+      label: "Workflow cron",
+      status: "warning",
+      detail: cron.latestSuccessfulRun
+        ? `Last success ${formatRelativeDays(
+            daysSince(cron.latestSuccessfulRun.startedAt, Date.now()),
+          )}.`
+        : "No successful run recorded.",
+    });
+  } else {
+    pulse.push({
+      id: "cron",
+      label: "Workflow cron",
+      status: "healthy",
+      detail: cron.latestSuccessfulRun
+        ? `Healthy — last run ${formatRelativeDays(
+            daysSince(cron.latestSuccessfulRun.startedAt, Date.now()),
+          )}.`
+        : "Healthy.",
+    });
+  }
+
+  if (!payments.queryable) {
+    pulse.push({
+      id: "payments",
+      label: "Payment webhooks",
+      status: "unknown",
+      detail: "Payment event data unavailable.",
+    });
+  } else if (payments.failedRecentCount > 0 || payments.stuckCount > 0) {
+    pulse.push({
+      id: "payments",
+      label: "Payment webhooks",
+      status: "critical",
+      detail: `${payments.failedRecentCount} failed, ${payments.stuckCount} stuck (24h).`,
+    });
+  } else {
+    pulse.push({
+      id: "payments",
+      label: "Payment webhooks",
+      status: "healthy",
+      detail: "No failed or stuck events.",
+    });
+  }
+
+  const stripeIssueCount =
+    stripeConnect.restricted.length + stripeConnect.incompleteWithInvoices.length;
+
+  if (!stripeConnect.queryable) {
+    pulse.push({
+      id: "stripe",
+      label: "Stripe Connect",
+      status: "unknown",
+      detail: "Stripe Connect data unavailable.",
+    });
+  } else if (stripeConnect.restricted.length > 0) {
+    pulse.push({
+      id: "stripe",
+      label: "Stripe Connect",
+      status: "critical",
+      detail: `${stripeConnect.restricted.length} restricted, ${stripeConnect.incompleteWithInvoices.length} incomplete.`,
+    });
+  } else if (stripeConnect.incompleteWithInvoices.length > 0) {
+    pulse.push({
+      id: "stripe",
+      label: "Stripe Connect",
+      status: "warning",
+      detail: `${stripeConnect.incompleteWithInvoices.length} invoicing ${stripeIssueCount === 1 ? "company" : "companies"} need setup.`,
+    });
+  } else {
+    pulse.push({
+      id: "stripe",
+      label: "Stripe Connect",
+      status: "healthy",
+      detail: "No invoicing companies blocked.",
+    });
+  }
+
+  if (systemChecks.criticalFailureCount > 0) {
+    pulse.push({
+      id: "config",
+      label: "Platform config",
+      status: "critical",
+      detail: `${systemChecks.criticalFailureCount} critical env ${systemChecks.criticalFailureCount === 1 ? "issue" : "issues"}.`,
+    });
+  } else if (systemChecks.warningCount > 0) {
+    pulse.push({
+      id: "config",
+      label: "Platform config",
+      status: "warning",
+      detail: `${systemChecks.warningCount} optional env ${systemChecks.warningCount === 1 ? "warning" : "warnings"}.`,
+    });
+  } else {
+    pulse.push({
+      id: "config",
+      label: "Platform config",
+      status: "healthy",
+      detail: "Critical env configured.",
+    });
+  }
+
+  for (const deferred of deferredSignals) {
+    pulse.push({
+      id: deferred.kind,
+      label: deferred.kind === "email_delivery_failure" ? "Email delivery" : "SMS delivery",
+      status: "deferred",
+      detail: "Not tracked durably yet.",
+    });
+  }
+
+  return {
+    isReliabilityHealthy: reliability.isReliabilityHealthy,
+    pulse,
+    deferredSignals,
+  };
 }
 
 function buildBugSignals(
@@ -306,13 +632,14 @@ function formatRelativeDays(days: number): string {
 export function buildPlatformPrioritySignals(
   input: Pick<
     PlatformAdminOverview,
-    "companies" | "diagnostics" | "openBlockingBugs" | "openHighBugs"
+    "companies" | "diagnostics" | "openBlockingBugs" | "openHighBugs" | "reliabilityData"
   >,
   now: Date = new Date(),
 ): PlatformPrioritySignal[] {
   const nowMs = now.getTime();
 
   const signals = [
+    ...buildReliabilitySignals(input.reliabilityData),
     ...buildBugSignals(input.openBlockingBugs, input.openHighBugs),
     ...buildDiagnosticSignals(input.diagnostics),
     ...buildCompanySignals(input.companies, nowMs),
@@ -380,7 +707,7 @@ export function buildPlatformMissionHeroContent(
     return {
       title: "Platform clear",
       operatingMessage:
-        "No urgent founder actions right now — beta companies and bug queues look stable.",
+        "No urgent founder actions — beta companies, platform reliability, and bug queues look stable.",
       primarySignal: null,
       secondarySignals: [],
       isPlatformClear: true,
@@ -399,7 +726,10 @@ export function buildPlatformMissionHeroContent(
 }
 
 export function buildPlatformBrainSnapshot(
-  overview: PlatformAdminOverview,
+  overview: Pick<
+    PlatformAdminOverview,
+    "companies" | "diagnostics" | "openBlockingBugs" | "openHighBugs" | "reliabilityData"
+  >,
   paymentsQueryable: boolean,
   now: Date = new Date(),
 ): PlatformBrainSnapshot {
@@ -409,11 +739,13 @@ export function buildPlatformBrainSnapshot(
     paymentsQueryable,
   );
   const missionHero = buildPlatformMissionHeroContent(signals, activationFunnel);
+  const reliability = buildPlatformReliabilityPulse(overview.reliabilityData);
 
   return {
     signals,
     topSignals: signals.slice(0, TOP_SIGNAL_LIMIT),
     missionHero,
     activationFunnel,
+    reliability,
   };
 }

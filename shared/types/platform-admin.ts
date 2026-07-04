@@ -1,5 +1,6 @@
 import type { CompanyRole, MembershipStatus } from "@/lib/database/types/enums";
 import type { BetaFeedbackSeverity, BetaFeedbackStatus } from "@/shared/types/beta-feedback";
+import type { PlatformReliabilityData } from "@/shared/types/platform-reliability";
 
 export type PlatformAdminSummary = {
   totalAuthUsers: number;
@@ -68,7 +69,14 @@ export type PlatformPrioritySignalKind =
   | "onboarding_stuck"
   | "inactive_company"
   | "recent_signup_no_customer"
-  | "recent_signup_no_job";
+  | "recent_signup_no_job"
+  | "workflow_cron_failed"
+  | "workflow_cron_stale"
+  | "payment_webhook_failed"
+  | "payment_event_stuck"
+  | "stripe_connect_incomplete"
+  | "stripe_connect_restricted"
+  | "platform_system_warning";
 
 export type PlatformPrioritySeverity = "critical" | "high" | "medium" | "low";
 
@@ -112,6 +120,20 @@ export type PlatformBrainSnapshot = {
   topSignals: PlatformPrioritySignal[];
   missionHero: PlatformMissionHeroContent;
   activationFunnel: PlatformActivationFunnel;
+  reliability: PlatformReliabilitySnapshot;
+};
+
+export type PlatformReliabilityPulseItem = {
+  id: string;
+  label: string;
+  status: "healthy" | "warning" | "critical" | "unknown" | "deferred";
+  detail: string;
+};
+
+export type PlatformReliabilitySnapshot = {
+  isReliabilityHealthy: boolean;
+  pulse: PlatformReliabilityPulseItem[];
+  deferredSignals: { kind: string; reason: string }[];
 };
 
 export type PlatformAdminRecentBugReport = {
@@ -136,6 +158,7 @@ export type PlatformAdminOverview = {
   companies: PlatformAdminCompanyRow[];
   diagnostics: string[];
   paymentsQueryable: boolean;
+  reliabilityData: PlatformReliabilityData;
   brain: PlatformBrainSnapshot;
 };
 

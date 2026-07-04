@@ -17,6 +17,7 @@ import type {
   PlatformOpenBugBrief,
 } from "@/shared/types/platform-admin";
 import { buildPlatformBrainSnapshot } from "@/shared/lib/platform-priority-engine";
+import { fetchPlatformReliabilitySnapshot } from "@/lib/database/services/platform-reliability";
 
 const RECENT_LIMIT = 8;
 const BUG_REPORT_PREVIEW_LIMIT = 5;
@@ -710,6 +711,15 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     lastActivityAt: lastActivityByCompany.get(company.id) ?? company.updated_at,
   }));
 
+  const reliabilityData = await fetchPlatformReliabilitySnapshot({
+    companies: platformCompanies.map((company) => ({
+      companyId: company.id,
+      companyName: company.name,
+      invoiceCount: company.invoiceCount,
+    })),
+    diagnostics,
+  });
+
   const totalAuthUsers = authUsersError ? 0 : authUsers.length;
 
   const overviewWithoutBrain: Omit<PlatformAdminOverview, "brain"> = {
@@ -731,6 +741,7 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     companies: platformCompanies,
     diagnostics,
     paymentsQueryable,
+    reliabilityData,
   };
 
   return {

@@ -139,7 +139,7 @@ export function PlatformNeedsAttentionPanel({
           {signals.length === 0 ? (
             <p className={pt.emptyCopy}>
               No platform signals right now — Altair looks healthy from this
-              vantage point.
+              vantage point, including platform reliability checks.
             </p>
           ) : (
             <ul className={pt.listDivider}>
@@ -167,7 +167,7 @@ export function PlatformNeedsAttentionPanel({
       {signals.length === 0 ? (
         <p className="mt-3 text-sm text-slate-500">
           No platform signals right now — Altair looks healthy from this vantage
-          point.
+          point, including platform reliability checks.
         </p>
       ) : (
         <ul className="mt-3 divide-y divide-slate-100">

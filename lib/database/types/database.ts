@@ -43,6 +43,8 @@ import type {
   InvoicePaymentRow,
   PaymentProviderEventInsert,
   PaymentProviderEventRow,
+  PlatformAutomationRunInsert,
+  PlatformAutomationRunRow,
   CompanyPaymentAccountInsert,
   CompanyPaymentAccountRow,
   InvoicePaymentTokenInsert,
@@ -974,6 +976,12 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      platform_automation_runs: {
+        Row: PlatformAutomationRunRow;
+        Insert: PlatformAutomationRunInsert;
+        Update: Partial<PlatformAutomationRunInsert>;
+        Relationships: [];
       };
       company_payment_accounts: {
         Row: CompanyPaymentAccountRow;

@@ -525,10 +525,17 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 **Description:** Internal app-owner visibility — not tenant-scoped.
 
 **Features:**
-- Platform overview (`/platform`) — companies, users, **Founder Brain** (Mission Hero, priority engine, activation funnel)
+- Platform overview (`/platform`) — companies, users, **Founder Brain** (Mission Hero, priority engine, activation funnel, **Reliability Pulse**)
 - Beta bug reports (`/platform/bugs`)
 
-**Dependencies:** `lib/database/services/platform-admin.ts` (service role client)
+**Founder Brain reliability (Sprint 2B):**
+- Workflow reminder cron health via `platform_automation_runs` + hourly cron recording
+- Payment webhook failures and stuck events from `payment_provider_events` (read-only)
+- Stripe Connect incomplete/restricted companies with invoices (cross-tenant service role query)
+- Platform env checks (Supabase, CRON_SECRET, Stripe, Resend, Twilio) — presence only, no secrets
+- Email/SMS delivery failures **deferred** — console/inline only, no durable ledger yet
+
+**Dependencies:** `lib/database/services/platform-admin.ts`, `platform-reliability.ts`, `platform-automation-runs.ts` (service role client)
 
 ---
 
@@ -880,7 +887,8 @@ Major completed milestones (chronological, newest first — from git history):
 | Period | Milestone |
 |--------|-----------|
 | Jul 2026 | Documentation recovery sync; ~187 commits since 2026-06-17 doc sync |
-| Jul 2026 | Workflow reminder engine — evaluator, cron, dashboard surfacing |
+| Jul 2026 | Founder Brain reliability signals — cron tracking, payment webhook health, Stripe Connect risks, Reliability Pulse |
+| Jul 2026 | Founder Brain foundation — Mission Hero, priority engine, activation funnel on `/platform` |
 | Jul 2026 | Stripe Connect — onboarding, checkout, webhooks, Pay Now, SMS links |
 | Jul 2026 | Trade-aware signup and company bootstrap |
 | Jul 2026 | North Star M2–M14 + dispatch pilots (behind flag) |

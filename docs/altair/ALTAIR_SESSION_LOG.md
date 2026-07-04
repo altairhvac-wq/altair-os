@@ -358,3 +358,30 @@
 **Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_BRAIN.md`, this log.
 
 **Recommended next prompt:** Authenticated production smoke; monitor Founder Brain signals during first external beta onboarding.
+
+---
+
+## 2026-07-03 — Sprint 2B: Founder Brain Reliability Signals
+
+**Scope:** Extend Founder Brain so Jeremiah can immediately know whether Altair itself is healthy — silent backend failures visible on `/platform`.
+
+**Built:**
+
+- `supabase/migrations/108_platform_automation_runs.sql` — durable cron run ledger (service_role only, RLS, no user policies)
+- `lib/database/services/platform-automation-runs.ts` — record started/succeeded/failed runs
+- `lib/database/services/platform-reliability.ts` — payment events, Stripe Connect risks, cron health queries
+- `lib/system-check/run-platform-system-checks.ts` — platform-level env checks (no secrets exposed)
+- `shared/types/platform-reliability.ts` — shared reliability data types
+- `shared/lib/platform-priority-engine.ts` — reliability signal kinds and Reliability Pulse builder
+- `shared/components/platform-admin/PlatformReliabilityPulse.tsx` — compact reliability section on `/platform`
+- `app/api/cron/workflow-reminders/route.ts` — records automation run status on each invocation
+
+**Signals implemented:** `workflow_cron_failed`, `workflow_cron_stale`, `payment_webhook_failed`, `payment_event_stuck`, `stripe_connect_incomplete`, `stripe_connect_restricted`, `platform_system_warning`.
+
+**Deferred:** `email_delivery_failure`, `sms_delivery_failure` — failures logged inline/console only; no durable cross-tenant ledger.
+
+**Validation:** `npx tsc --noEmit` and `npm run build` passed.
+
+**Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_BRAIN.md`, this log.
+
+**Recommended next prompt:** Apply migration `108` on Supabase; run authenticated production smoke.

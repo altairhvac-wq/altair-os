@@ -4,6 +4,12 @@ import {
   isAuthorizedCronRequest,
 } from "@/lib/automation/env";
 import { evaluateWorkflowRemindersForAllCompanies } from "@/lib/database/services/evaluate-workflow-reminders";
+import {
+  recordPlatformAutomationRunFinished,
+  recordPlatformAutomationRunStarted,
+  sanitizeErrorSummary,
+  WORKFLOW_REMINDERS_AUTOMATION_KEY,
+} from "@/lib/database/services/platform-automation-runs";
 
 export const runtime = "nodejs";
 
@@ -19,13 +25,48 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await evaluateWorkflowRemindersForAllCompanies();
+  const { runId, startedAt } = await recordPlatformAutomationRunStarted(
+    WORKFLOW_REMINDERS_AUTOMATION_KEY,
+  );
 
-  return NextResponse.json({
-    ok: true,
-    evaluatedAt: result.evaluatedAt,
-    companyCount: result.companyCount,
-    totals: result.totals,
-    errorCount: result.errors.length,
-  });
+  try {
+    const result = await evaluateWorkflowRemindersForAllCompanies();
+    const hasErrors = result.errors.length > 0;
+
+    await recordPlatformAutomationRunFinished(runId, {
+      automationKey: WORKFLOW_REMINDERS_AUTOMATION_KEY,
+      startedAt,
+      status: hasErrors ? "failed" : "succeeded",
+      companyCount: result.companyCount,
+      totals: {
+        ...result.totals,
+        errorCount: result.errors.length,
+      },
+      errorSummary: hasErrors
+        ? sanitizeErrorSummary(
+            `${result.errors.length} company evaluation ${result.errors.length === 1 ? "error" : "errors"}`,
+          )
+        : null,
+    });
+
+    return NextResponse.json({
+      ok: !hasErrors,
+      evaluatedAt: result.evaluatedAt,
+      companyCount: result.companyCount,
+      totals: result.totals,
+      errorCount: result.errors.length,
+    });
+  } catch (error) {
+    await recordPlatformAutomationRunFinished(runId, {
+      automationKey: WORKFLOW_REMINDERS_AUTOMATION_KEY,
+      startedAt,
+      status: "failed",
+      errorSummary: sanitizeErrorSummary(error),
+    });
+
+    return NextResponse.json(
+      { error: "Workflow reminder evaluation failed" },
+      { status: 500 },
+    );
+  }
 }

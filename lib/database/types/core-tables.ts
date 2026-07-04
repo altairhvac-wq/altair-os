@@ -54,6 +54,11 @@ export type { PaymentProviderEventStatus };
 export type PaymentProviderEventRow = PaymentProviderEvent;
 export type { PaymentProviderEventInsert };
 
+export type {
+  PlatformAutomationRunRow,
+  PlatformAutomationRunInsert,
+} from "./platform-automation-runs";
+
 export type { CompanyPaymentAccountStatus, CompanyPaymentAccountProvider };
 export type CompanyPaymentAccountRow = CompanyPaymentAccountRecord;
 export type { CompanyPaymentAccountRecordInsert as CompanyPaymentAccountInsert };

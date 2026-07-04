@@ -55,8 +55,8 @@ function NorthStarClearCard() {
             No urgent founder actions right now
           </p>
           <p className={`mt-2 ${t.darkSurfaceText}`}>
-            Beta companies and bug queues look stable — check activation progress
-            below when you have a minute.
+            Beta companies, platform reliability, and bug queues look stable — check
+            activation progress below when you have a minute.
           </p>
         </div>
       </div>
@@ -105,7 +105,7 @@ function LegacyClearCard() {
         No urgent founder actions right now
       </p>
       <p className="mt-2 text-sm text-emerald-900/80">
-        Beta companies and bug queues look stable.
+        Beta companies, platform reliability, and bug queues look stable.
       </p>
     </div>
   );

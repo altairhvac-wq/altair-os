@@ -19,7 +19,8 @@ North Star experience layer (M1–M14 + dispatch), Stripe Connect payments, work
 ## Completed This Sprint Window
 
 1. **Founder Brain foundation (Sprint 2A)** — `/platform` Mission Hero, priority engine, Needs Attention panel, cross-tenant activation funnel
-2. **First 10 Minutes activation** — dashboard onboarding hero and checklist improvements (prior session)
+2. **Founder Brain reliability signals (Sprint 2B)** — cron health tracking, payment webhook visibility, Stripe Connect risks, platform env checks, Reliability Pulse UI
+3. **First 10 Minutes activation** — dashboard onboarding hero and checklist improvements (prior session)
 
 ---
 
@@ -50,7 +51,7 @@ Prioritize these workflows during smoke (all must pass before external beta):
 - First external company beta onboarding
 - Address any smoke blockers only — no speculative feature work
 - Consider default-on North Star flag after sustained flag-on stability
-- Founder Brain phase 2 (cron/webhook/Stripe health) — only when data sources exist safely
+- Founder Brain phase 3 (email/SMS delivery ledger) — only when durable tracking exists
 
 ---
 
@@ -61,7 +62,6 @@ Prioritize these workflows during smoke (all must pass before external beta):
 - Technician Experience V2 (`/tech` mock cleanup) — deferred post-beta unless smoke blocks
 - Database schema changes, new server actions, or route additions unless smoke finds a blocker
 - Founder Brain expansion beyond foundation (Stripe analytics, cron health, impersonation)
-- Documentation-only work beyond keeping status docs aligned after meaningful milestones
 
 ---
 
