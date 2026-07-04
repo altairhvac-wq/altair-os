@@ -1,6 +1,7 @@
-import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
-import { DemoDataSection } from "@/shared/components/onboarding/DemoDataSection";
-import { shouldShowOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
+import {
+  DashboardOnboardingBands,
+  shouldUseDashboardActivationHero,
+} from "@/shared/components/onboarding/DashboardOnboardingBands";
 import type { DashboardData } from "@/shared/types/dashboard";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
@@ -34,44 +35,44 @@ export function DashboardNorthStarView({
   userId,
   demoDataStatus,
 }: DashboardNorthStarViewProps) {
-  const showOnboarding =
-    onboardingChecklist &&
-    companyId &&
-    shouldShowOnboardingChecklist(onboardingChecklist);
-  const showDemoDataSection = Boolean(demoDataStatus);
+  const useActivationHero = shouldUseDashboardActivationHero(
+    onboardingChecklist,
+    demoDataStatus,
+  );
   const dateLabel = formatDateLabel(new Date());
 
   return (
     <>
-      {showDemoDataSection && companyId && demoDataStatus ? (
-        <DemoDataSection
-          companyId={companyId}
-          status={demoDataStatus}
-          variant="dashboard"
-        />
-      ) : null}
-
-      {showOnboarding ? (
-        <OnboardingChecklistSection
-          checklist={onboardingChecklist}
-          companyId={companyId}
-          userId={userId}
-          variant="dashboard"
-        />
-      ) : null}
+      <DashboardOnboardingBands
+        onboardingChecklist={onboardingChecklist}
+        companyId={companyId}
+        userId={userId}
+        demoDataStatus={demoDataStatus}
+        northStar
+      />
 
       <MasterContentStack density="compact" className="hidden lg:flex">
-        <NorthStarMissionHero data={data} dateLabel={dateLabel} />
-        <WorkflowRemindersSection
-          snapshot={data.workflowReminders}
-          canManage={data.access.canViewBilling}
-          variant="north-star"
-        />
-        <NorthStarOperatingBoard data={data} />
-        <NorthStarSupportingBands data={data} />
+        {!useActivationHero ? (
+          <NorthStarMissionHero data={data} dateLabel={dateLabel} />
+        ) : null}
+        {!useActivationHero ? (
+          <WorkflowRemindersSection
+            snapshot={data.workflowReminders}
+            canManage={data.access.canViewBilling}
+            variant="north-star"
+          />
+        ) : null}
+        {!useActivationHero ? (
+          <NorthStarOperatingBoard data={data} />
+        ) : null}
+        {!useActivationHero ? (
+          <NorthStarSupportingBands data={data} />
+        ) : null}
       </MasterContentStack>
 
-      <DashboardNorthStarMobileView data={data} dateLabel={dateLabel} />
+      {!useActivationHero ? (
+        <DashboardNorthStarMobileView data={data} dateLabel={dateLabel} />
+      ) : null}
     </>
   );
 }

@@ -5,6 +5,8 @@ export type OnboardingSnapshot = {
   leadCount: number;
   jobCount: number;
   serviceItemCount: number;
+  estimateCount: number;
+  invoiceCount: number;
   hasBillingDefaultsConfigured: boolean;
 };
 
@@ -14,6 +16,7 @@ export type OnboardingChecklistItemId =
   | "add-lead"
   | "create-job"
   | "setup-price-book"
+  | "money-path"
   | "billing-defaults";
 
 export type OnboardingChecklistItem = {

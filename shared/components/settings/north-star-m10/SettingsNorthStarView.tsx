@@ -42,6 +42,7 @@ import { TeamMembersTable } from "../TeamMembersTable";
 import { CompanyOrgTreeSheet } from "../CompanyOrgTreeSheet";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
+import { SettingsOnboardingSection } from "@/shared/components/onboarding/SettingsOnboardingSection";
 import { st } from "./settings-north-star-styles";
 
 export type SettingsNorthStarViewProps = {
@@ -112,9 +113,12 @@ export function SettingsNorthStarView({
   canManageTeam,
   showSystemCheckLink = false,
   membersLoadError,
+  onboardingChecklist,
   billingDefaults,
   canManageBillingDefaults,
   showBillingDefaultsSetupHint = false,
+  demoDataStatus,
+  demoDataLoadError,
   pendingInvites = [],
   canViewPaymentSettings = false,
   stripePaymentSettings = null,
@@ -251,6 +255,15 @@ export function SettingsNorthStarView({
         density="compact"
         className="settings-north-star-workspace min-w-0 space-y-3 px-3 sm:space-y-3.5 sm:px-3.5 lg:px-5"
       >
+        <SettingsOnboardingSection
+          onboardingChecklist={onboardingChecklist}
+          companyId={companyProfile.id}
+          userId={currentUserId}
+          demoDataStatus={demoDataStatus}
+          demoDataLoadError={demoDataLoadError}
+          northStar
+        />
+
         <section className={st.sectionSurface}>
           <SettingsNorthStarSectionHeader
             eyebrow="Company"

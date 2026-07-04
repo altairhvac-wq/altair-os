@@ -50,6 +50,7 @@ import { TeamMembersTable } from "./TeamMembersTable";
 import { CompanyOrgTreeSheet } from "./CompanyOrgTreeSheet";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
+import { SettingsOnboardingSection } from "@/shared/components/onboarding/SettingsOnboardingSection";
 
 type SettingsPageViewProps = {
   companyProfile: CompanyProfileSummary;
@@ -97,9 +98,12 @@ function SettingsPageLegacyView({
   canManageTeam,
   showSystemCheckLink = false,
   membersLoadError,
+  onboardingChecklist,
   billingDefaults,
   canManageBillingDefaults,
   showBillingDefaultsSetupHint = false,
+  demoDataStatus,
+  demoDataLoadError,
   pendingInvites = [],
   canViewPaymentSettings = false,
   stripePaymentSettings = null,
@@ -228,6 +232,14 @@ function SettingsPageLegacyView({
             title="Settings"
             subtitle="Configure your company, team, billing defaults, and system preferences."
             density="compact"
+          />
+
+          <SettingsOnboardingSection
+            onboardingChecklist={onboardingChecklist}
+            companyId={companyProfile.id}
+            userId={currentUserId}
+            demoDataStatus={demoDataStatus}
+            demoDataLoadError={demoDataLoadError}
           />
 
           <MasterPageSection

@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
+import { getOnboardingDismissStorageKey } from "@/shared/lib/onboarding-activation";
 
 type OnboardingChecklistSectionProps = {
   checklist: OnboardingChecklist;
@@ -20,9 +21,7 @@ type OnboardingChecklistSectionProps = {
 };
 
 function getDismissStorageKey(companyId: string, userId?: string): string {
-  return userId
-    ? `altair-onboarding-dismissed:${companyId}:${userId}`
-    : `altair-onboarding-dismissed:${companyId}`;
+  return getOnboardingDismissStorageKey(companyId, userId);
 }
 
 export function OnboardingChecklistSection({
@@ -64,7 +63,7 @@ export function OnboardingChecklistSection({
   const description =
     variant === "settings"
       ? "Complete the required steps below to get your company operational for beta. Optional steps can wait."
-      : `${checklist.completedCount} of ${checklist.totalCount} required steps done — finish the rest to start dispatching work.`;
+      : `${checklist.completedCount} of ${checklist.totalCount} required steps done — your next action is highlighted above.`;
 
   const isSettingsCompact = variant === "settings";
 

@@ -41,6 +41,8 @@ const EMPTY_ONBOARDING_SNAPSHOT: OnboardingSnapshot = {
   leadCount: 0,
   jobCount: 0,
   serviceItemCount: 0,
+  estimateCount: 0,
+  invoiceCount: 0,
   hasBillingDefaultsConfigured: false,
 };
 

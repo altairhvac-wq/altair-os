@@ -67,6 +67,34 @@ async function countTableRows(
   return count ?? 0;
 }
 
+async function countBillingDocumentRows(
+  table: "estimates" | "invoices",
+  companyId: string,
+): Promise<number> {
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from(table)
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .is("deleted_at", null);
+
+  if (error) {
+    if (isMissingDatabaseColumnError(error)) {
+      return 0;
+    }
+
+    console.error(`[onboarding-snapshot] ${table} count failed:`, {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
 async function countLeadRows(companyId: string): Promise<number> {
   const supabase = await createClient();
 
@@ -103,6 +131,8 @@ export async function getOnboardingSnapshot(
     leadCount,
     jobCount,
     serviceItemCount,
+    estimateCount,
+    invoiceCount,
     teamMemberCount,
     companyResult,
   ] = await Promise.all([
@@ -110,6 +140,8 @@ export async function getOnboardingSnapshot(
     countLeadRows(companyId),
     countTableRows("jobs", companyId),
     countTableRows("service_items", companyId),
+    countBillingDocumentRows("estimates", companyId),
+    countBillingDocumentRows("invoices", companyId),
     countTableRows("company_memberships", companyId),
     supabase.from("companies").select("settings").eq("id", companyId).maybeSingle(),
   ]);
@@ -129,6 +161,8 @@ export async function getOnboardingSnapshot(
     leadCount,
     jobCount,
     serviceItemCount,
+    estimateCount,
+    invoiceCount,
     hasBillingDefaultsConfigured: hasSavedCompanyBillingDefaults(
       companyResult.data?.settings,
     ),

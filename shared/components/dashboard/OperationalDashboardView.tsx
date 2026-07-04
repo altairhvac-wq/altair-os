@@ -52,8 +52,10 @@ import {
   INVOICE_PAGE_OVERDUE_HREF,
   INVOICE_PAGE_UNPAID_HREF,
 } from "@/shared/lib/invoice-page-focus";
-import { OnboardingChecklistSection } from "@/shared/components/onboarding/OnboardingChecklistSection";
-import { DemoDataSection } from "@/shared/components/onboarding/DemoDataSection";
+import {
+  DashboardOnboardingBands,
+  shouldUseDashboardActivationHero,
+} from "@/shared/components/onboarding/DashboardOnboardingBands";
 import { shouldShowOnboardingChecklist } from "@/shared/lib/onboarding-checklist";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import { OperationalMomentumSection } from "@/shared/components/dashboard/OperationalMomentumSection";
@@ -1063,9 +1065,14 @@ function DashboardContentLayout({
     onboardingChecklist &&
     companyId &&
     shouldShowOnboardingChecklist(onboardingChecklist);
+  const useActivationHero = shouldUseDashboardActivationHero(
+    onboardingChecklist,
+    demoDataStatus,
+  );
   const showLiveMetrics =
     access.canViewOperationalReports &&
-    !(showOnboarding && onboardingChecklist && !onboardingChecklist.isComplete);
+    !(showOnboarding && onboardingChecklist && !onboardingChecklist.isComplete) &&
+    !useActivationHero;
 
   const drilldownPanels: Partial<Record<CommandStripPanelId, React.ReactNode>> = {
     ...(access.canViewOperationalReports
@@ -1261,7 +1268,6 @@ function DashboardContentLayout({
     "next-steps": nextStepsContent,
   };
 
-  const showDemoDataSection = Boolean(demoDataStatus);
   const northStarEnabled = isNorthStarShellEnabled();
 
   return (
@@ -1276,70 +1282,68 @@ function DashboardContentLayout({
         />
       ) : (
         <>
-          {showDemoDataSection && companyId && demoDataStatus ? (
-            <DemoDataSection
-              companyId={companyId}
-              status={demoDataStatus}
-              variant="dashboard"
-            />
-          ) : null}
-
-          {showOnboarding ? (
-            <OnboardingChecklistSection
-              checklist={onboardingChecklist}
-              companyId={companyId}
-              userId={userId}
-              variant="dashboard"
-            />
-          ) : null}
+          <DashboardOnboardingBands
+            onboardingChecklist={onboardingChecklist}
+            companyId={companyId}
+            userId={userId}
+            demoDataStatus={demoDataStatus}
+          />
 
           <MasterContentStack density="compact" className="hidden lg:flex">
-            <DashboardSignatureHero data={data} variant="desktop" />
-            <AltairRecommendationsSection
-              data={data}
-              variant="desktop"
-              skipTopPriority
-            />
+            {!useActivationHero ? (
+              <>
+                <DashboardSignatureHero data={data} variant="desktop" />
+                <AltairRecommendationsSection
+                  data={data}
+                  variant="desktop"
+                  skipTopPriority
+                />
 
-            {sectionOrder.map((sectionId) => {
-              const content = sectionContent[sectionId];
-              if (!content) {
-                return null;
-              }
-
-              const labels = DASHBOARD_SECTION_LABELS[sectionId];
-              const defaultCollapsed =
-                DASHBOARD_COLLAPSED_SECTIONS.has(sectionId);
-
-              return (
-                <DashboardCollapsiblePageSection
-                  key={sectionId}
-                  title={labels.title}
-                  description={labels.description}
-                  density="compact"
-                  defaultCollapsed={defaultCollapsed}
-                  summaryHint={
-                    defaultCollapsed
-                      ? getDashboardSectionSummaryHint(sectionId, data)
-                      : undefined
+                {sectionOrder.map((sectionId) => {
+                  const content = sectionContent[sectionId];
+                  if (!content) {
+                    return null;
                   }
-                >
-                  {content}
-                </DashboardCollapsiblePageSection>
-              );
-            })}
+
+                  const labels = DASHBOARD_SECTION_LABELS[sectionId];
+                  const defaultCollapsed =
+                    DASHBOARD_COLLAPSED_SECTIONS.has(sectionId);
+
+                  return (
+                    <DashboardCollapsiblePageSection
+                      key={sectionId}
+                      title={labels.title}
+                      description={labels.description}
+                      density="compact"
+                      defaultCollapsed={defaultCollapsed}
+                      summaryHint={
+                        defaultCollapsed
+                          ? getDashboardSectionSummaryHint(sectionId, data)
+                          : undefined
+                      }
+                    >
+                      {content}
+                    </DashboardCollapsiblePageSection>
+                  );
+                })}
+              </>
+            ) : null}
           </MasterContentStack>
         </>
       )}
 
       {!northStarEnabled ? (
         <div className="flex min-w-0 flex-col gap-2 lg:hidden">
-          <DashboardSignatureHero data={data} variant="mobile" />
-          <MobileOperationsHub
-            data={data}
-            notificationAccess={notificationAccess}
-            showLiveMetrics={showLiveMetrics}
-          />
+          {!useActivationHero ? (
+            <DashboardSignatureHero data={data} variant="mobile" />
+          ) : null}
+          {!useActivationHero ? (
+            <MobileOperationsHub
+              data={data}
+              notificationAccess={notificationAccess}
+              showLiveMetrics={showLiveMetrics}
+            />
+          ) : null}
         </div>
       ) : null}
     </DashboardDrilldownProvider>

@@ -52,10 +52,10 @@ export function buildOnboardingChecklist(
       id: "create-job",
       title: "Schedule your first job",
       description:
-        "Create a job to put work on the board and test dispatch plus technician workflows.",
+        "Create a job to put work on the board — then send an estimate and invoice from that job.",
       href: "/jobs",
       completed: snapshot.jobCount > 0,
-      tip: "A simple test job is enough to walk through the mobile flow.",
+      tip: "A simple test job is enough to walk through dispatch and the money path.",
     },
     {
       id: "setup-price-book",
@@ -65,6 +65,16 @@ export function buildOnboardingChecklist(
       href: "/price-book",
       completed: snapshot.serviceItemCount > 0,
       tip: "Three to five frequent services is a good starting set.",
+    },
+    {
+      id: "money-path",
+      title: "Walk the money path",
+      description:
+        "Send an estimate, convert it to an invoice, and record a payment — Altair tracks revenue at every step.",
+      href: "/estimates",
+      completed: snapshot.estimateCount > 0 && snapshot.invoiceCount > 0,
+      optional: true,
+      tip: "Open any job to create an estimate, then invoice and collect payment when ready.",
     },
     {
       id: "billing-defaults",
