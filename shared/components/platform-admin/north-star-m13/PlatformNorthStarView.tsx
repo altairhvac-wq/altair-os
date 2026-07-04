@@ -4,6 +4,7 @@ import { formatDate } from "@/shared/types/customer";
 import { formatMembershipStatus } from "@/shared/types/team-member";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import type { PlatformAdminOverview } from "@/shared/types/platform-admin";
+import { PlatformBrainFoundation } from "@/shared/components/platform-admin/PlatformBrainFoundation";
 import {
   MasterContentStack,
   MasterPageHeader,
@@ -142,17 +143,15 @@ function RecentList({
 
 export function PlatformNorthStarView({ data }: PlatformNorthStarViewProps) {
   const { summary } = data;
-  const openRecentBugCount = data.recentBugReports.filter(
-    (report) => report.status === "open",
-  ).length;
-  const hasAttention = data.diagnostics.length > 0 || openRecentBugCount > 0;
+  const openBugCount =
+    data.openBlockingBugs.length + data.openHighBugs.length;
 
   return (
     <MasterShellPage density="compact" className={pt.pageCanvas}>
       <MasterPageHeader
         eyebrow="Internal operations"
         title="Platform"
-        subtitle="Cross-tenant visibility and internal admin controls for the app owner."
+        subtitle="What deserves your attention today — risk before metrics."
         density="compact"
         surfaceVariant="northStar"
         className={`north-star-platform-page-header ${pt.pageHeader}`}
@@ -160,7 +159,7 @@ export function PlatformNorthStarView({ data }: PlatformNorthStarViewProps) {
         titleClassName={pt.pageHeaderTitle}
         subtitleClassName={pt.pageHeaderSubtitle}
         secondaryAction={
-          data.recentBugReports.length > 0 ? (
+          openBugCount > 0 || data.recentBugReports.length > 0 ? (
             <Link
               href="/platform/bugs"
               className={`north-star-platform-secondary-action ${pt.secondaryAction} justify-center sm:justify-start`}
@@ -173,6 +172,8 @@ export function PlatformNorthStarView({ data }: PlatformNorthStarViewProps) {
       />
 
       <MasterContentStack density="compact" className={pt.workspaceStack}>
+        <PlatformBrainFoundation brain={data.brain} northStar />
+
         <div className={pt.noticeShell}>
           <div className="flex items-start gap-2.5">
             <Shield className={pt.noticeIcon} aria-hidden="true" />
@@ -189,6 +190,7 @@ export function PlatformNorthStarView({ data }: PlatformNorthStarViewProps) {
 
         {data.diagnostics.length > 0 ? (
           <section
+            id="platform-diagnostics"
             className={pt.diagnosticsShell}
             aria-label="Platform admin diagnostics"
           >
@@ -244,27 +246,6 @@ export function PlatformNorthStarView({ data }: PlatformNorthStarViewProps) {
           </div>
         </section>
 
-        {hasAttention ? (
-          <section className={pt.attentionShell} aria-label="Needs attention">
-            <p className={pt.attentionTitle}>Needs attention</p>
-            <div className="mt-1 space-y-1">
-              {data.diagnostics.length > 0 ? (
-                <p className={pt.attentionBody}>
-                  {data.diagnostics.length} diagnostic
-                  {data.diagnostics.length === 1 ? "" : "s"} reported during
-                  overview load.
-                </p>
-              ) : null}
-              {openRecentBugCount > 0 ? (
-                <p className={pt.attentionBody}>
-                  {openRecentBugCount} open bug report
-                  {openRecentBugCount === 1 ? "" : "s"} in the latest preview.
-                </p>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
-
         <section className={pt.sectionSurface}>
           <PlatformSectionHeader
             eyebrow="Internal tools"
@@ -299,7 +280,7 @@ export function PlatformNorthStarView({ data }: PlatformNorthStarViewProps) {
           </div>
         </section>
 
-        <div className="grid min-w-0 gap-3 lg:grid-cols-2 lg:gap-4">
+        <div className="grid min-w-0 gap-3 lg:grid-cols-2 lg:gap-4" id="platform-recent-companies">
           <RecentList
             eyebrow="Onboarding"
             title="Recent companies"
@@ -457,7 +438,7 @@ export function PlatformNorthStarView({ data }: PlatformNorthStarViewProps) {
           </div>
         </section>
 
-        <section className={pt.sectionSurface}>
+        <section className={pt.sectionSurface} id="platform-companies">
           <PlatformSectionHeader
             eyebrow="Workspaces"
             title="Platform companies"

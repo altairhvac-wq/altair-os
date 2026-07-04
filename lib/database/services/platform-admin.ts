@@ -14,7 +14,9 @@ import type {
   PlatformAdminUserRow,
   PlatformBugReport,
   PlatformBugReportsLoadResult,
+  PlatformOpenBugBrief,
 } from "@/shared/types/platform-admin";
+import { buildPlatformBrainSnapshot } from "@/shared/lib/platform-priority-engine";
 
 const RECENT_LIMIT = 8;
 const BUG_REPORT_PREVIEW_LIMIT = 5;
@@ -66,6 +68,7 @@ type BetaFeedbackReportQueryRow = {
   page_url: string;
   message: string;
   status: string;
+  company_id?: string | null;
   company: { name: string } | null;
 };
 
@@ -126,6 +129,72 @@ function truncateMessagePreview(message: string): string {
   }
 
   return `${trimmed.slice(0, BUG_REPORT_MESSAGE_PREVIEW_LENGTH).trimEnd()}…`;
+}
+
+async function fetchOpenPriorityBugReports(
+  diagnostics: string[],
+): Promise<{ blocking: PlatformOpenBugBrief[]; high: PlatformOpenBugBrief[] }> {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("beta_feedback_reports")
+    .select(
+      "id, created_at, severity, message, status, company_id, company:companies(name)",
+    )
+    .in("status", ["open", "reviewing"])
+    .in("severity", ["blocking", "high"])
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    const message = formatQueryError("open priority bug reports query failed", error);
+    console.error(`[platform-admin] ${message}`);
+    pushDiagnostic(diagnostics, message);
+    return { blocking: [], high: [] };
+  }
+
+  const blocking: PlatformOpenBugBrief[] = [];
+  const high: PlatformOpenBugBrief[] = [];
+
+  for (const row of (data ?? []) as BetaFeedbackReportQueryRow[]) {
+    const severity = normalizeBugReportSeverity(row.severity);
+    const brief: PlatformOpenBugBrief = {
+      id: row.id,
+      createdAt: row.created_at,
+      companyId: row.company_id ?? null,
+      companyName: row.company?.name ?? null,
+      messagePreview: truncateMessagePreview(row.message),
+      severity,
+      status: normalizeBugReportStatus(row.status),
+    };
+
+    if (severity === "blocking") {
+      blocking.push(brief);
+    } else if (severity === "high") {
+      high.push(brief);
+    }
+  }
+
+  return { blocking, high };
+}
+
+async function fetchPaymentCountsByCompany(
+  diagnostics: string[],
+): Promise<{ counts: Map<string, number>; queryable: boolean }> {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("invoice_payments")
+    .select("company_id");
+
+  if (error) {
+    const message = formatQueryError("invoice_payments query failed", error);
+    console.error(`[platform-admin] ${message}`);
+    pushDiagnostic(diagnostics, message);
+    return { counts: new Map(), queryable: false };
+  }
+
+  return { counts: countByCompanyId(data), queryable: true };
 }
 
 async function fetchRecentBugReports(
@@ -425,6 +494,8 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     profilesResult,
     memberships,
     recentBugReports,
+    openPriorityBugs,
+    paymentCountsResult,
     jobsCompanyIdsResult,
     customersCompanyIdsResult,
     estimatesCompanyIdsResult,
@@ -450,6 +521,8 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
       .order("created_at", { ascending: false }),
     fetchMembershipRows(diagnostics),
     fetchRecentBugReports(diagnostics),
+    fetchOpenPriorityBugReports(diagnostics),
+    fetchPaymentCountsByCompany(diagnostics),
     supabase.from("jobs").select("company_id"),
     supabase.from("customers").select("company_id"),
     supabase.from("estimates").select("company_id"),
@@ -540,6 +613,8 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
   const customerCounts = countByCompanyId(customersCompanyIdsResult.data);
   const estimateCounts = countByCompanyId(estimatesCompanyIdsResult.data);
   const invoiceCounts = countByCompanyId(invoicesCompanyIdsResult.data);
+  const paymentCounts = paymentCountsResult.counts;
+  const paymentsQueryable = paymentCountsResult.queryable;
 
   const memberCounts = new Map<string, number>();
   const ownerCounts = new Map<string, number>();
@@ -631,12 +706,13 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     customerCount: customerCounts.get(company.id) ?? 0,
     estimateCount: estimateCounts.get(company.id) ?? 0,
     invoiceCount: invoiceCounts.get(company.id) ?? 0,
+    paymentCount: paymentCounts.get(company.id) ?? 0,
     lastActivityAt: lastActivityByCompany.get(company.id) ?? company.updated_at,
   }));
 
   const totalAuthUsers = authUsersError ? 0 : authUsers.length;
 
-  return {
+  const overviewWithoutBrain: Omit<PlatformAdminOverview, "brain"> = {
     summary: {
       totalAuthUsers,
       totalCompanies: companiesCount.error ? companies.length : companiesCount.count,
@@ -649,8 +725,19 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     recentCompanies,
     recentUsers,
     recentBugReports,
+    openBlockingBugs: openPriorityBugs.blocking,
+    openHighBugs: openPriorityBugs.high,
     users,
     companies: platformCompanies,
     diagnostics,
+    paymentsQueryable,
+  };
+
+  return {
+    ...overviewWithoutBrain,
+    brain: buildPlatformBrainSnapshot(
+      overviewWithoutBrain as PlatformAdminOverview,
+      paymentsQueryable,
+    ),
   };
 }

@@ -27,7 +27,7 @@ Last Updated: 2026-07-03
 
 ## Current Stage
 
-**Status: Beta-ready — North Star experience layer shipped behind flag; Stripe payments, workflow reminders, and trade-aware onboarding live; authenticated production smoke recommended before first external company**
+**Status: Beta-ready — Founder Brain foundation on `/platform`; North Star experience layer shipped behind flag; Stripe payments, workflow reminders, and trade-aware onboarding live; authenticated production smoke recommended before first external company**
 
 Altair OS is a production-grade multi-tenant field service operating system on Vercel + Supabase, preparing for small-company beta testing.
 
@@ -96,6 +96,14 @@ Code lives in `shared/components/*/north-star-m*` folders. Primary reference rem
 - Dashboard action queue prioritization and secondary band collapse
 - Lead actions, accepted estimates, and unpaid invoice follow-ups surfaced on dashboard
 - Scoped dashboard surface editing (design lab integration)
+
+### Founder Brain Foundation (Platform Admin)
+
+- `/platform` Mission Hero — one clear "do this first" founder action from ranked signals
+- Platform priority engine — blocking/high bugs, stuck onboarding, inactive companies, diagnostics
+- Needs Attention panel — ranked cross-tenant signals with deep links
+- Cross-tenant activation funnel — customer → job → estimate → invoice → payment → fully activated
+- Reuses existing `platform-admin` service role queries; no new migrations
 
 ### Production Hardening
 

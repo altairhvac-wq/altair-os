@@ -47,7 +47,71 @@ export type PlatformAdminCompanyRow = {
   customerCount: number;
   estimateCount: number;
   invoiceCount: number;
+  paymentCount: number;
   lastActivityAt: string | null;
+};
+
+export type PlatformOpenBugBrief = {
+  id: string;
+  createdAt: string;
+  companyId: string | null;
+  companyName: string | null;
+  messagePreview: string;
+  severity: BetaFeedbackSeverity;
+  status: BetaFeedbackStatus;
+};
+
+export type PlatformPrioritySignalKind =
+  | "blocking_bug"
+  | "high_bug"
+  | "diagnostic_warning"
+  | "onboarding_stuck"
+  | "inactive_company"
+  | "recent_signup_no_customer"
+  | "recent_signup_no_job";
+
+export type PlatformPrioritySeverity = "critical" | "high" | "medium" | "low";
+
+export type PlatformPrioritySignal = {
+  id: string;
+  kind: PlatformPrioritySignalKind;
+  severity: PlatformPrioritySeverity;
+  title: string;
+  description: string;
+  reason: string;
+  actionLabel: string;
+  href: string;
+  score: number;
+  companyId?: string;
+  companyName?: string;
+  createdAt?: string;
+  lastActivityAt?: string;
+};
+
+export type PlatformActivationFunnel = {
+  totalCompanies: number;
+  withFirstCustomer: number;
+  withFirstJob: number;
+  withFirstEstimate: number;
+  withFirstInvoice: number;
+  withFirstPayment: number | null;
+  fullyActivated: number;
+};
+
+export type PlatformMissionHeroContent = {
+  title: string;
+  operatingMessage: string;
+  primarySignal: PlatformPrioritySignal | null;
+  secondarySignals: PlatformPrioritySignal[];
+  isPlatformClear: boolean;
+  signalChips: { label: string; value: string }[];
+};
+
+export type PlatformBrainSnapshot = {
+  signals: PlatformPrioritySignal[];
+  topSignals: PlatformPrioritySignal[];
+  missionHero: PlatformMissionHeroContent;
+  activationFunnel: PlatformActivationFunnel;
 };
 
 export type PlatformAdminRecentBugReport = {
@@ -66,9 +130,13 @@ export type PlatformAdminOverview = {
   recentCompanies: PlatformAdminRecentCompany[];
   recentUsers: PlatformAdminRecentUser[];
   recentBugReports: PlatformAdminRecentBugReport[];
+  openBlockingBugs: PlatformOpenBugBrief[];
+  openHighBugs: PlatformOpenBugBrief[];
   users: PlatformAdminUserRow[];
   companies: PlatformAdminCompanyRow[];
   diagnostics: string[];
+  paymentsQueryable: boolean;
+  brain: PlatformBrainSnapshot;
 };
 
 export type PlatformBugReport = {

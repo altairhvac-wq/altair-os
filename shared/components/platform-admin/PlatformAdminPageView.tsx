@@ -4,6 +4,7 @@ import { formatDate } from "@/shared/types/customer";
 import { formatMembershipStatus } from "@/shared/types/team-member";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import type { PlatformAdminOverview } from "@/shared/types/platform-admin";
+import { PlatformBrainFoundation } from "@/shared/components/platform-admin/PlatformBrainFoundation";
 import { PlatformNorthStarView } from "@/shared/components/platform-admin/north-star-m13";
 import {
   Building2,
@@ -116,6 +117,8 @@ function PlatformAdminLegacyPageView({ data }: PlatformAdminPageViewProps) {
 
   return (
     <div className="mx-auto min-w-0 max-w-6xl space-y-6">
+      <PlatformBrainFoundation brain={data.brain} />
+
       <div className="rounded-2xl border border-cyan-200/80 bg-cyan-50/50 px-4 py-3">
         <div className="flex items-start gap-2">
           <Shield className="mt-0.5 h-4 w-4 shrink-0 text-cyan-800" aria-hidden="true" />
@@ -133,6 +136,7 @@ function PlatformAdminLegacyPageView({ data }: PlatformAdminPageViewProps) {
 
       {data.diagnostics.length > 0 ? (
         <section
+          id="platform-diagnostics"
           className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3"
           aria-label="Platform admin diagnostics"
         >
@@ -163,7 +167,7 @@ function PlatformAdminLegacyPageView({ data }: PlatformAdminPageViewProps) {
         <SummaryCard label="Invoices" value={summary.totalInvoices} icon={Receipt} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2" id="platform-recent-companies">
         <RecentList
           title="Recent companies"
           items={data.recentCompanies.map((company) => ({
@@ -323,7 +327,7 @@ function PlatformAdminLegacyPageView({ data }: PlatformAdminPageViewProps) {
         </div>
       </section>
 
-      <section className="admin-card overflow-hidden">
+      <section className="admin-card overflow-hidden" id="platform-companies">
         <div className="admin-panel-header px-4 py-3">
           <h2 className="text-sm font-bold text-slate-900">Platform companies</h2>
           <p className="text-xs text-slate-500">

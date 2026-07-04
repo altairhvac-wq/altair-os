@@ -525,7 +525,7 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 **Description:** Internal app-owner visibility — not tenant-scoped.
 
 **Features:**
-- Platform overview (`/platform`) — companies, users
+- Platform overview (`/platform`) — companies, users, **Founder Brain** (Mission Hero, priority engine, activation funnel)
 - Beta bug reports (`/platform/bugs`)
 
 **Dependencies:** `lib/database/services/platform-admin.ts` (service role client)

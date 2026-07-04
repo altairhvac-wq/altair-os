@@ -336,3 +336,25 @@
 **Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_BRAIN.md`, `ALTair_V2_ROADMAP.md`, `ALTAIR_EXPERIENCE_MAP.md`, `ALTAIR_ART_DIRECTION.md`, `ALTAIR_FEATURE_INVENTORY.md`, `ALTAIR_VISUAL_IDENTITY.md`, `ALTAIR_DESIGN_MANIFESTO.md`, `shared/design-system/shell/README.md`, `docs/backend-data-map.md` (outdated banner), `docs/internal-alpha-smoke-test.md`, this log.
 
 **Recommended next prompt:** Run authenticated production smoke per `ALTair_CURRENT_SPRINT.md`.
+
+---
+
+## 2026-07-03 — Sprint 2A: Founder Brain Foundation
+
+**Scope:** Turn `/platform` from statistics overview into the operational Brain for Altair itself.
+
+**Built:**
+
+- `shared/lib/platform-priority-engine.ts` — typed platform signals, ranking, activation funnel, mission hero content
+- `shared/types/platform-admin.ts` — `PlatformPrioritySignal`, `PlatformBrainSnapshot`, activation funnel types
+- `lib/database/services/platform-admin.ts` — open blocking/high bug queries, cross-tenant payment counts, brain snapshot assembly
+- `shared/components/platform-admin/PlatformBrainFoundation.tsx` — Mission Hero, Needs Attention panel, Activation Funnel
+- Wired into `PlatformNorthStarView` and legacy `PlatformAdminPageView` — existing tables and bug routes preserved
+
+**Signals implemented:** blocking/high open bugs, diagnostics warnings, onboarding-stuck companies, inactive companies, recent signups without customer/job.
+
+**Validation:** `npx tsc --noEmit` and `npm run build` passed.
+
+**Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_BRAIN.md`, this log.
+
+**Recommended next prompt:** Authenticated production smoke; monitor Founder Brain signals during first external beta onboarding.
