@@ -385,3 +385,27 @@
 **Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_BRAIN.md`, this log.
 
 **Recommended next prompt:** Apply migration `108` on Supabase; run authenticated production smoke.
+
+---
+
+## 2026-07-03 — Sprint 2C: Founder Brain Customer Health
+
+**Scope:** Extend Founder Brain so Jeremiah can see which beta companies are succeeding, stuck, or at risk — without building a CRM or analytics platform.
+
+**Built:**
+
+- `shared/types/platform-customer-health.ts` — `CompanyHealthSummary`, activation stages, health snapshot types
+- `shared/lib/platform-customer-health.ts` — health scoring, risk reasons, priority signal builder
+- `shared/components/platform-admin/PlatformCustomerHealthPulse.tsx` — Healthy / Watch / Needs Help counts and top outreach list
+- `lib/database/services/platform-admin.ts` — real-usage counts (`is_demo` exclusion), demo flags from company settings, first-invoice timestamps, Stripe Connect lookup
+- `shared/lib/platform-priority-engine.ts` — customer health signal kinds integrated below reliability and blocking bugs
+
+**Signals implemented:** `company_blocking_feedback`, `company_stripe_blocking_billing`, `company_invoice_no_payment`, `company_stuck_before_billing`, `company_no_first_customer`, `company_dormant`, `company_no_first_job`.
+
+**Deferred:** onboarding dismiss without setup (client-side `localStorage` only), alpha tracker cross-tenant health tie-in, per-company onboarding checklist snapshot (tenant-scoped query only).
+
+**Validation:** `npx tsc --noEmit` and `npm run build` passed.
+
+**Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_BRAIN.md`, this log.
+
+**Recommended next prompt:** Authenticated production smoke; use Customer Health Pulse during first external beta onboarding outreach.

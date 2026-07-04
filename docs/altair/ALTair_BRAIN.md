@@ -525,7 +525,7 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 **Description:** Internal app-owner visibility — not tenant-scoped.
 
 **Features:**
-- Platform overview (`/platform`) — companies, users, **Founder Brain** (Mission Hero, priority engine, activation funnel, **Reliability Pulse**)
+- Platform overview (`/platform`) — companies, users, **Founder Brain** (Mission Hero, priority engine, activation funnel, **Reliability Pulse**, **Customer Health Pulse**)
 - Beta bug reports (`/platform/bugs`)
 
 **Founder Brain reliability (Sprint 2B):**
@@ -535,7 +535,14 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 - Platform env checks (Supabase, CRON_SECRET, Stripe, Resend, Twilio) — presence only, no secrets
 - Email/SMS delivery failures **deferred** — console/inline only, no durable ledger yet
 
-**Dependencies:** `lib/database/services/platform-admin.ts`, `platform-reliability.ts`, `platform-automation-runs.ts` (service role client)
+**Founder Brain customer health (Sprint 2C):**
+- Per-company activation stages — signed up → first customer → job → estimate → invoice → payment → activated
+- Healthy / watch / needs-help classification from existing cross-tenant counts, auth last sign-in, beta feedback, Stripe Connect risks
+- Real-usage counts exclude `is_demo` rows; demo-only workspaces flagged separately
+- Customer health signals feed Mission Hero and Needs Attention below critical reliability and blocking bugs
+- Onboarding dismiss state **deferred** — stored client-side only (`localStorage`), not queryable cross-tenant
+
+**Dependencies:** `lib/database/services/platform-admin.ts`, `platform-reliability.ts`, `platform-automation-runs.ts`, `shared/lib/platform-customer-health.ts` (service role client)
 
 ---
 
@@ -887,6 +894,7 @@ Major completed milestones (chronological, newest first — from git history):
 | Period | Milestone |
 |--------|-----------|
 | Jul 2026 | Documentation recovery sync; ~187 commits since 2026-06-17 doc sync |
+| Jul 2026 | Founder Brain customer health — per-company activation pulse, outreach signals, demo-only exclusion on `/platform` |
 | Jul 2026 | Founder Brain reliability signals — cron tracking, payment webhook health, Stripe Connect risks, Reliability Pulse |
 | Jul 2026 | Founder Brain foundation — Mission Hero, priority engine, activation funnel on `/platform` |
 | Jul 2026 | Stripe Connect — onboarding, checkout, webhooks, Pay Now, SMS links |

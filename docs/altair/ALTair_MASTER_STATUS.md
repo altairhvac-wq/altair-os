@@ -104,6 +104,7 @@ Code lives in `shared/components/*/north-star-m*` folders. Primary reference rem
 - Needs Attention panel — ranked cross-tenant signals with deep links
 - Cross-tenant activation funnel — customer → job → estimate → invoice → payment → fully activated
 - **Reliability Pulse** — cron health, payment webhooks, Stripe Connect risks, platform env checks
+- **Customer Health Pulse** — per-company activation stage, healthy/watch/needs-help counts, top outreach targets (Sprint 2C)
 - `platform_automation_runs` table — durable workflow reminder cron run tracking (migration `108`)
 - Reuses `payment_provider_events` and `company_payment_accounts` for payment/Stripe health (read-only)
 

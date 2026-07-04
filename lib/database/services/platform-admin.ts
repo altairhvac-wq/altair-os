@@ -18,6 +18,8 @@ import type {
 } from "@/shared/types/platform-admin";
 import { buildPlatformBrainSnapshot } from "@/shared/lib/platform-priority-engine";
 import { fetchPlatformReliabilitySnapshot } from "@/lib/database/services/platform-reliability";
+import { parseCompanyDemoDataSettings } from "@/shared/lib/demo-data-settings";
+import type { Json } from "@/lib/database/types/enums";
 
 const RECENT_LIMIT = 8;
 const BUG_REPORT_PREVIEW_LIMIT = 5;
@@ -32,7 +34,10 @@ const VALID_BUG_REPORT_STATUSES = new Set<BetaFeedbackStatus>([
 ]);
 
 type CompanyIdRow = { company_id: string };
+type CompanyDemoRow = { company_id: string; is_demo: boolean | null };
 type CompanyActivityRow = { company_id: string; updated_at?: string | null; created_at?: string | null };
+type CompanySettingsRow = { id: string; settings: Json | null };
+type InvoiceCreatedRow = { company_id: string; created_at: string };
 
 type CountResult = { count: number; error: string | null };
 
@@ -301,6 +306,104 @@ function formatQueryError(context: string, error: { message: string; code?: stri
   return `${context}: ${error.message}${code}`;
 }
 
+function countRealByCompanyId(rows: CompanyDemoRow[] | null): Map<string, number> {
+  const counts = new Map<string, number>();
+
+  for (const row of rows ?? []) {
+    if (row.is_demo === true) {
+      continue;
+    }
+
+    counts.set(row.company_id, (counts.get(row.company_id) ?? 0) + 1);
+  }
+
+  return counts;
+}
+
+function buildRealCountsByCompany(
+  customers: CompanyDemoRow[] | null,
+  jobs: CompanyDemoRow[] | null,
+  estimates: CompanyDemoRow[] | null,
+  invoices: CompanyDemoRow[] | null,
+): Map<
+  string,
+  { customers: number; jobs: number; estimates: number; invoices: number }
+> {
+  const customerCounts = countRealByCompanyId(customers);
+  const jobCounts = countRealByCompanyId(jobs);
+  const estimateCounts = countRealByCompanyId(estimates);
+  const invoiceCounts = countRealByCompanyId(invoices);
+  const companyIds = collectDistinctCompanyIds(customers, jobs, estimates, invoices);
+  const result = new Map<
+    string,
+    { customers: number; jobs: number; estimates: number; invoices: number }
+  >();
+
+  for (const companyId of companyIds) {
+    result.set(companyId, {
+      customers: customerCounts.get(companyId) ?? 0,
+      jobs: jobCounts.get(companyId) ?? 0,
+      estimates: estimateCounts.get(companyId) ?? 0,
+      invoices: invoiceCounts.get(companyId) ?? 0,
+    });
+  }
+
+  return result;
+}
+
+function buildCompanyDemoFlags(
+  companies: CompanySettingsRow[],
+): Map<string, boolean> {
+  const flags = new Map<string, boolean>();
+
+  for (const company of companies) {
+    flags.set(company.id, parseCompanyDemoDataSettings(company.settings) !== null);
+  }
+
+  return flags;
+}
+
+function buildFirstInvoiceAtByCompany(
+  invoices: InvoiceCreatedRow[] | null,
+  paymentCounts: Map<string, number>,
+): Map<string, string> {
+  const earliest = new Map<string, string>();
+
+  for (const row of invoices ?? []) {
+    if ((paymentCounts.get(row.company_id) ?? 0) > 0) {
+      continue;
+    }
+
+    const current = earliest.get(row.company_id);
+    if (!current || Date.parse(row.created_at) < Date.parse(current)) {
+      earliest.set(row.company_id, row.created_at);
+    }
+  }
+
+  return earliest;
+}
+
+async function fetchStripeConnectedCompanyIds(
+  diagnostics: string[],
+): Promise<Set<string>> {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("company_payment_accounts")
+    .select("company_id")
+    .eq("provider", "stripe")
+    .eq("status", "active");
+
+  if (error) {
+    const message = formatQueryError("company_payment_accounts active query failed", error);
+    console.error(`[platform-admin] ${message}`);
+    pushDiagnostic(diagnostics, message);
+    return new Set();
+  }
+
+  return new Set((data ?? []).map((row) => row.company_id));
+}
+
 function countByCompanyId(rows: CompanyIdRow[] | null): Map<string, number> {
   const counts = new Map<string, number>();
 
@@ -510,11 +613,16 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     customersCount,
     estimatesCount,
     invoicesCount,
+    realCustomersResult,
+    realJobsResult,
+    realEstimatesResult,
+    realInvoicesResult,
+    stripeConnectedCompanyIds,
   ] = await Promise.all([
     authUsersPromise,
     supabase
       .from("companies")
-      .select("id, name, created_at, updated_at")
+      .select("id, name, created_at, updated_at, settings")
       .order("created_at", { ascending: false }),
     supabase
       .from("profiles")
@@ -537,6 +645,11 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     countAll("customers"),
     countAll("estimates"),
     countAll("invoices"),
+    supabase.from("customers").select("company_id, is_demo"),
+    supabase.from("jobs").select("company_id, is_demo"),
+    supabase.from("estimates").select("company_id, is_demo"),
+    supabase.from("invoices").select("company_id, is_demo, created_at"),
+    fetchStripeConnectedCompanyIds(diagnostics),
   ]);
 
   const { users: authUsers, error: authUsersError } = authUsersResult;
@@ -568,6 +681,19 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
   ]) {
     if (result.error) {
       pushDiagnostic(diagnostics, result.error);
+    }
+  }
+
+  for (const [label, result] of [
+    ["customers is_demo", realCustomersResult],
+    ["jobs is_demo", realJobsResult],
+    ["estimates is_demo", realEstimatesResult],
+    ["invoices is_demo", realInvoicesResult],
+  ] as const) {
+    if (result.error) {
+      const message = formatQueryError(`${label} query failed`, result.error);
+      console.error(`[platform-admin] ${message}`);
+      pushDiagnostic(diagnostics, message);
     }
   }
 
@@ -720,6 +846,25 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     diagnostics,
   });
 
+  const companyDemoFlags = buildCompanyDemoFlags(
+    companies.map((company) => ({
+      id: company.id,
+      settings: company.settings ?? null,
+    })),
+  );
+
+  const realCountsByCompany = buildRealCountsByCompany(
+    realCustomersResult.error ? null : (realCustomersResult.data as CompanyDemoRow[]),
+    realJobsResult.error ? null : (realJobsResult.data as CompanyDemoRow[]),
+    realEstimatesResult.error ? null : (realEstimatesResult.data as CompanyDemoRow[]),
+    realInvoicesResult.error ? null : (realInvoicesResult.data as CompanyDemoRow[]),
+  );
+
+  const firstInvoiceAtByCompany = buildFirstInvoiceAtByCompany(
+    realInvoicesResult.error ? null : (realInvoicesResult.data as InvoiceCreatedRow[]),
+    paymentCounts,
+  );
+
   const totalAuthUsers = authUsersError ? 0 : authUsers.length;
 
   const overviewWithoutBrain: Omit<PlatformAdminOverview, "brain"> = {
@@ -747,7 +892,13 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
   return {
     ...overviewWithoutBrain,
     brain: buildPlatformBrainSnapshot(
-      overviewWithoutBrain as PlatformAdminOverview,
+      {
+        ...overviewWithoutBrain,
+        companyDemoFlags,
+        realCountsByCompany,
+        firstInvoiceAtByCompany,
+        stripeConnectedCompanyIds,
+      },
       paymentsQueryable,
     ),
   };

@@ -20,7 +20,8 @@ North Star experience layer (M1–M14 + dispatch), Stripe Connect payments, work
 
 1. **Founder Brain foundation (Sprint 2A)** — `/platform` Mission Hero, priority engine, Needs Attention panel, cross-tenant activation funnel
 2. **Founder Brain reliability signals (Sprint 2B)** — cron health tracking, payment webhook visibility, Stripe Connect risks, platform env checks, Reliability Pulse UI
-3. **First 10 Minutes activation** — dashboard onboarding hero and checklist improvements (prior session)
+3. **Founder Brain customer health (Sprint 2C)** — per-company activation stages, healthy/watch/needs-help pulse, customer-health priority signals, demo-only exclusion
+4. **First 10 Minutes activation** — dashboard onboarding hero and checklist improvements (prior session)
 
 ---
 
@@ -52,6 +53,7 @@ Prioritize these workflows during smoke (all must pass before external beta):
 - Address any smoke blockers only — no speculative feature work
 - Consider default-on North Star flag after sustained flag-on stability
 - Founder Brain phase 3 (email/SMS delivery ledger) — only when durable tracking exists
+- Founder Brain CRM/analytics expansion — customer health pulse is the current customer-success surface
 
 ---
 

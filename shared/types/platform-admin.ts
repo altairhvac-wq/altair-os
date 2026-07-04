@@ -1,5 +1,6 @@
 import type { CompanyRole, MembershipStatus } from "@/lib/database/types/enums";
 import type { BetaFeedbackSeverity, BetaFeedbackStatus } from "@/shared/types/beta-feedback";
+import type { PlatformCustomerHealthSnapshot } from "@/shared/types/platform-customer-health";
 import type { PlatformReliabilityData } from "@/shared/types/platform-reliability";
 
 export type PlatformAdminSummary = {
@@ -76,7 +77,15 @@ export type PlatformPrioritySignalKind =
   | "payment_event_stuck"
   | "stripe_connect_incomplete"
   | "stripe_connect_restricted"
-  | "platform_system_warning";
+  | "platform_system_warning"
+  | "company_blocking_feedback"
+  | "company_stripe_blocking_billing"
+  | "company_invoice_no_payment"
+  | "company_stuck_before_billing"
+  | "company_no_first_customer"
+  | "company_dormant"
+  | "company_no_first_job"
+  | "company_healthy_milestone";
 
 export type PlatformPrioritySeverity = "critical" | "high" | "medium" | "low";
 
@@ -121,6 +130,7 @@ export type PlatformBrainSnapshot = {
   missionHero: PlatformMissionHeroContent;
   activationFunnel: PlatformActivationFunnel;
   reliability: PlatformReliabilitySnapshot;
+  customerHealth: PlatformCustomerHealthSnapshot;
 };
 
 export type PlatformReliabilityPulseItem = {

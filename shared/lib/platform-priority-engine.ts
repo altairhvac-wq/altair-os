@@ -11,6 +11,11 @@ import type {
   PlatformReliabilityPulseItem,
   PlatformReliabilitySnapshot,
 } from "@/shared/types/platform-admin";
+import {
+  buildCustomerHealthPrioritySignals,
+  buildCustomerHealthSnapshot,
+  type BuildCustomerHealthSnapshotInput,
+} from "@/shared/lib/platform-customer-health";
 import type { PlatformReliabilityData } from "@/shared/types/platform-reliability";
 
 /** Hourly cron — treat as stale after 3 hours without a successful run. */
@@ -37,6 +42,14 @@ const BASE_SCORES: Record<PlatformPrioritySignalKind, number> = {
   inactive_company: 65,
   recent_signup_no_customer: 60,
   recent_signup_no_job: 55,
+  company_blocking_feedback: 95,
+  company_stripe_blocking_billing: 90,
+  company_invoice_no_payment: 85,
+  company_stuck_before_billing: 80,
+  company_no_first_customer: 75,
+  company_dormant: 70,
+  company_no_first_job: 60,
+  company_healthy_milestone: 40,
 };
 
 const SEVERITY_BY_KIND: Record<PlatformPrioritySignalKind, PlatformPrioritySeverity> = {
@@ -54,6 +67,14 @@ const SEVERITY_BY_KIND: Record<PlatformPrioritySignalKind, PlatformPrioritySever
   inactive_company: "medium",
   recent_signup_no_customer: "medium",
   recent_signup_no_job: "low",
+  company_blocking_feedback: "critical",
+  company_stripe_blocking_billing: "critical",
+  company_invoice_no_payment: "high",
+  company_stuck_before_billing: "high",
+  company_no_first_customer: "medium",
+  company_dormant: "medium",
+  company_no_first_job: "medium",
+  company_healthy_milestone: "low",
 };
 
 const TOP_SIGNAL_LIMIT = 8;
@@ -469,7 +490,7 @@ function buildDiagnosticSignals(diagnostics: string[]): PlatformPrioritySignal[]
   ];
 }
 
-function buildCompanySignals(
+function buildLegacyCompanySignals(
   companies: PlatformAdminCompanyRow[],
   nowMs: number,
 ): PlatformPrioritySignal[] {
@@ -633,16 +654,27 @@ export function buildPlatformPrioritySignals(
   input: Pick<
     PlatformAdminOverview,
     "companies" | "diagnostics" | "openBlockingBugs" | "openHighBugs" | "reliabilityData"
-  >,
+  > & {
+    customerHealth?: import("@/shared/types/platform-customer-health").PlatformCustomerHealthSnapshot;
+  },
   now: Date = new Date(),
 ): PlatformPrioritySignal[] {
   const nowMs = now.getTime();
+
+  const customerHealthSignals = input.customerHealth
+    ? buildCustomerHealthPrioritySignals(input.customerHealth)
+    : [];
+
+  const legacyCompanySignals = input.customerHealth
+    ? []
+    : buildLegacyCompanySignals(input.companies, nowMs);
 
   const signals = [
     ...buildReliabilitySignals(input.reliabilityData),
     ...buildBugSignals(input.openBlockingBugs, input.openHighBugs),
     ...buildDiagnosticSignals(input.diagnostics),
-    ...buildCompanySignals(input.companies, nowMs),
+    ...customerHealthSignals,
+    ...legacyCompanySignals,
   ];
 
   return signals.sort((left, right) => right.score - left.score);
@@ -728,12 +760,41 @@ export function buildPlatformMissionHeroContent(
 export function buildPlatformBrainSnapshot(
   overview: Pick<
     PlatformAdminOverview,
-    "companies" | "diagnostics" | "openBlockingBugs" | "openHighBugs" | "reliabilityData"
-  >,
+    | "companies"
+    | "diagnostics"
+    | "openBlockingBugs"
+    | "openHighBugs"
+    | "reliabilityData"
+    | "users"
+  > & {
+    companyDemoFlags?: Map<string, boolean>;
+    realCountsByCompany?: BuildCustomerHealthSnapshotInput["realCountsByCompany"];
+    firstInvoiceAtByCompany?: Map<string, string>;
+    stripeConnectedCompanyIds?: Set<string>;
+  },
   paymentsQueryable: boolean,
   now: Date = new Date(),
 ): PlatformBrainSnapshot {
-  const signals = buildPlatformPrioritySignals(overview, now);
+  const customerHealth = buildCustomerHealthSnapshot(
+    {
+      companies: overview.companies,
+      users: overview.users ?? [],
+      openBlockingBugs: overview.openBlockingBugs,
+      openHighBugs: overview.openHighBugs,
+      reliabilityData: overview.reliabilityData,
+      companyDemoFlags: overview.companyDemoFlags ?? new Map(),
+      realCountsByCompany: overview.realCountsByCompany ?? new Map(),
+      firstInvoiceAtByCompany: overview.firstInvoiceAtByCompany ?? new Map(),
+      stripeConnectedCompanyIds: overview.stripeConnectedCompanyIds ?? new Set(),
+      paymentsQueryable,
+    },
+    now,
+  );
+
+  const signals = buildPlatformPrioritySignals(
+    { ...overview, customerHealth },
+    now,
+  );
   const activationFunnel = buildPlatformActivationFunnel(
     overview.companies,
     paymentsQueryable,
@@ -747,5 +808,6 @@ export function buildPlatformBrainSnapshot(
     missionHero,
     activationFunnel,
     reliability,
+    customerHealth,
   };
 }
