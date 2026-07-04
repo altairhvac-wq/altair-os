@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { revalidateInvoiceOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import { recordInvoicePayment } from "@/lib/database/queries/invoice-payments";
 import {
   recordInvoicePaidActivity,
@@ -72,8 +73,8 @@ export async function recordInvoicePaymentAction(
     });
   }
 
-  revalidatePath("/invoices");
-  revalidatePath(`/invoices/${invoiceId}`);
+  revalidateInvoiceOperationalPages(invoiceId);
+  revalidatePath("/reports");
   revalidatePath("/customers");
   revalidatePath(`/customers/${invoice.customerId}`);
 

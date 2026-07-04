@@ -1,6 +1,8 @@
 import "server-only";
 
+import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { revalidateInvoiceOperationalPages } from "@/lib/database/revalidation/operational-pages";
 import type Stripe from "stripe";
 import {
   findStripeCompanyPaymentAccountByCompanyId,
@@ -429,6 +431,8 @@ async function processCheckoutSessionCompletedEvent(
   }
 
   await markProviderEventProcessed(supabase, providerEventId, companyId);
+  revalidateInvoiceOperationalPages(invoiceId);
+  revalidatePath("/reports");
   return { processed: true, ignored: false };
 }
 

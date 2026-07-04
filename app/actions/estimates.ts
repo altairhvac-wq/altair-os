@@ -120,6 +120,7 @@ export async function createEstimateAction(
     billingDefaults,
     context.company.timezone,
   );
+  normalizedData.status = "draft";
 
   const { estimate, error } = await createEstimate(
     context.company.id,
