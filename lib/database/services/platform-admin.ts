@@ -18,6 +18,7 @@ import type {
 } from "@/shared/types/platform-admin";
 import { buildPlatformBrainSnapshot } from "@/shared/lib/platform-priority-engine";
 import { fetchPlatformReliabilitySnapshot } from "@/lib/database/services/platform-reliability";
+import { fetchPlatformFounderSignalActions } from "@/lib/database/services/platform-founder-signal-actions";
 import { parseCompanyDemoDataSettings } from "@/shared/lib/demo-data-settings";
 import type { Json } from "@/lib/database/types/enums";
 
@@ -846,6 +847,8 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
     diagnostics,
   });
 
+  const founderSignalActions = await fetchPlatformFounderSignalActions();
+
   const companyDemoFlags = buildCompanyDemoFlags(
     companies.map((company) => ({
       id: company.id,
@@ -898,6 +901,7 @@ export async function getPlatformAdminOverview(): Promise<PlatformAdminOverview>
         realCountsByCompany,
         firstInvoiceAtByCompany,
         stripeConnectedCompanyIds,
+        founderSignalActions,
       },
       paymentsQueryable,
     ),

@@ -45,6 +45,8 @@ import type {
   PaymentProviderEventRow,
   PlatformAutomationRunInsert,
   PlatformAutomationRunRow,
+  PlatformFounderSignalActionInsert,
+  PlatformFounderSignalActionRow,
   CompanyPaymentAccountInsert,
   CompanyPaymentAccountRow,
   InvoicePaymentTokenInsert,
@@ -982,6 +984,20 @@ export type Database = {
         Insert: PlatformAutomationRunInsert;
         Update: Partial<PlatformAutomationRunInsert>;
         Relationships: [];
+      };
+      platform_founder_signal_actions: {
+        Row: PlatformFounderSignalActionRow;
+        Insert: PlatformFounderSignalActionInsert;
+        Update: Partial<PlatformFounderSignalActionInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "platform_founder_signal_actions_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       company_payment_accounts: {
         Row: CompanyPaymentAccountRow;

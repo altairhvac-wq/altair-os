@@ -1,6 +1,6 @@
 # ALTAIR MASTER STATUS
 
-Last Updated: 2026-07-03
+Last Updated: 2026-07-05
 
 > **Source of truth for current product state.** For production module inventory see `ALTair_BRAIN.md`. For active sprint scope see `ALTair_CURRENT_SPRINT.md`. For future experience sequencing see `ALTair_V2_ROADMAP.md`.
 
@@ -105,6 +105,8 @@ Code lives in `shared/components/*/north-star-m*` folders. Primary reference rem
 - Cross-tenant activation funnel — customer → job → estimate → invoice → payment → fully activated
 - **Reliability Pulse** — cron health, payment webhooks, Stripe Connect risks, platform env checks
 - **Customer Health Pulse** — per-company activation stage, healthy/watch/needs-help counts, top outreach targets (Sprint 2C)
+- **Founder Action Loop** — mark contacted, snooze, resolve, notes on derived founder signals; fingerprint-based re-surfacing (Sprint 2D)
+- `platform_founder_signal_actions` table — durable founder outreach state on signal keys (migration `109`)
 - `platform_automation_runs` table — durable workflow reminder cron run tracking (migration `108`)
 - Reuses `payment_provider_events` and `company_payment_accounts` for payment/Stripe health (read-only)
 

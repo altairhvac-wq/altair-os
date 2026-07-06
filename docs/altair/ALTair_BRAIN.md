@@ -1,7 +1,7 @@
 # ALTAIR BRAIN
 
 > Single source of truth for Altair OS — confirmed production inventory only.  
-> Last updated: 2026-07-03 (documentation recovery sync).  
+> Last updated: 2026-07-05 (Sprint 2D founder action loop sync).  
 > Rule: nothing is documented here unless confirmed in code, migrations, or explicit project docs.  
 > For current product state see `ALTair_MASTER_STATUS.md`. For active sprint see `ALTair_CURRENT_SPRINT.md`.
 
@@ -13,7 +13,7 @@
 
 **Mission:** A Living Operating System for trades businesses — unified dispatch, customers, billing, field work, and operational intelligence in one company-scoped platform.
 
-**Current Development Stage:** Beta-ready. Production deploy on Vercel with Supabase backend (109 migrations). Alpha hardening infrastructure exists; Coming Soon nav gates are currently **empty** (all admin modules reachable in production). North Star experience layer ships behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`.
+**Current Development Stage:** Beta-ready. Production deploy on Vercel with Supabase backend (110 migrations). Alpha hardening infrastructure exists; Coming Soon nav gates are currently **empty** (all admin modules reachable in production). North Star experience layer ships behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`.
 
 **Target Industries:** Home and commercial trades — HVAC, plumbing, electrical, roofing, general contracting, landscaping, painting (confirmed via network trade types and job/estimate workflows).
 
@@ -89,7 +89,7 @@
 
 **Status:** Production
 
-- 109 Supabase migrations (`supabase/migrations/001` through `107+`)
+- 110 Supabase migrations (`supabase/migrations/001` through `109+`)
 - Core entities: customers, jobs, estimates, invoices, invoice_payments, expenses, time_entries, dispatch_assignments, leads, notifications, service_items, customer_equipment, job_activities, job_materials, job_attachments, network_*, alpha_tracker, beta_feedback
 - Entity lifecycle: archive, trash, cancel patterns (`067_entity_lifecycle.sql`, customer/job/estimate/invoice lifecycle)
 - Activity/audit trails per entity type
@@ -525,7 +525,7 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 **Description:** Internal app-owner visibility — not tenant-scoped.
 
 **Features:**
-- Platform overview (`/platform`) — companies, users, **Founder Brain** (Mission Hero, priority engine, activation funnel, **Reliability Pulse**, **Customer Health Pulse**)
+- Platform overview (`/platform`) — companies, users, **Founder Brain** (Mission Hero, priority engine, activation funnel, **Reliability Pulse**, **Customer Health Pulse**, **Founder Action Loop**)
 - Beta bug reports (`/platform/bugs`)
 
 **Founder Brain reliability (Sprint 2B):**
@@ -542,7 +542,13 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 - Customer health signals feed Mission Hero and Needs Attention below critical reliability and blocking bugs
 - Onboarding dismiss state **deferred** — stored client-side only (`localStorage`), not queryable cross-tenant
 
-**Dependencies:** `lib/database/services/platform-admin.ts`, `platform-reliability.ts`, `platform-automation-runs.ts`, `shared/lib/platform-customer-health.ts` (service role client)
+**Founder Brain action loop (Sprint 2D):**
+- `platform_founder_signal_actions` table — contacted / snoozed / resolved / notes on stable signal keys (service_role only)
+- Actionable signals: customer health risks, Stripe Connect risks, reliability failures (not blocking/high bugs — those use `/platform/bugs`)
+- Fingerprint-based re-surfacing — resolved reliability failures return when underlying state changes
+- UI: Mission Hero secondary actions, Needs Attention panel controls, contacted badge on Customer Health Pulse
+
+**Dependencies:** `lib/database/services/platform-admin.ts`, `platform-reliability.ts`, `platform-automation-runs.ts`, `platform-founder-signal-actions.ts`, `shared/lib/platform-customer-health.ts`, `shared/lib/platform-founder-signal-actions.ts` (service role client)
 
 ---
 
@@ -894,6 +900,7 @@ Major completed milestones (chronological, newest first — from git history):
 | Period | Milestone |
 |--------|-----------|
 | Jul 2026 | Documentation recovery sync; ~187 commits since 2026-06-17 doc sync |
+| Jul 2026 | Founder Brain action loop — founder signal actions, snooze/resolve/contacted, fingerprint suppression on `/platform` |
 | Jul 2026 | Founder Brain customer health — per-company activation pulse, outreach signals, demo-only exclusion on `/platform` |
 | Jul 2026 | Founder Brain reliability signals — cron tracking, payment webhook health, Stripe Connect risks, Reliability Pulse |
 | Jul 2026 | Founder Brain foundation — Mission Hero, priority engine, activation funnel on `/platform` |

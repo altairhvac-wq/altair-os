@@ -409,3 +409,29 @@
 **Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_BRAIN.md`, this log.
 
 **Recommended next prompt:** Authenticated production smoke; use Customer Health Pulse during first external beta onboarding outreach.
+
+---
+
+## 2026-07-05 — Sprint 2D: Founder Brain Action Loop
+
+**Scope:** Turn Founder Brain signals into trackable founder actions — contacted, snooze, resolve, notes — without building a CRM.
+
+**Built:**
+
+- `supabase/migrations/109_platform_founder_signal_actions.sql` — durable founder action state on stable signal keys (service_role only, RLS enabled)
+- `shared/lib/platform-signal-keys.ts` — signal key/fingerprint helpers for derived signals
+- `shared/lib/platform-founder-signal-actions.ts` — merge action state into priority signals; outreach briefs for customer health
+- `lib/database/services/platform-founder-signal-actions.ts` — CRUD via service role
+- `app/actions/platform-founder-signals.ts` — platform-admin-only server actions
+- `shared/components/platform-admin/PlatformSignalActionControls.tsx` — compact action UI
+- Mission Hero, Needs Attention, Customer Health Pulse, Reliability Pulse — action state integration
+
+**Actionable signal kinds:** customer health risks, Stripe Connect risks, reliability failures. Blocking/high bugs remain on `/platform/bugs`.
+
+**Deferred:** bulk actions, assignment queues, full CRM history, email/SMS delivery ledger tie-in.
+
+**Validation:** `npx tsc --noEmit` and `npm run build` passed.
+
+**Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_BRAIN.md`, this log.
+
+**Recommended next prompt:** Apply migration `109` on Supabase; exercise founder actions on `/platform` during beta outreach.

@@ -16,6 +16,20 @@ import {
   buildCustomerHealthSnapshot,
   type BuildCustomerHealthSnapshotInput,
 } from "@/shared/lib/platform-customer-health";
+import {
+  applyFounderActionsToSignals,
+  attachFounderOutreachToCompanies,
+  buildFounderOutreachByCompanyId,
+  buildReliabilityActionHints,
+  enrichSignalsWithActionSupport,
+  type PlatformFounderSignalActionRecord,
+} from "@/shared/lib/platform-founder-signal-actions";
+import {
+  buildPlatformSignalKey,
+  computeCompanyHealthSignalFingerprint,
+  computeReliabilitySignalFingerprint,
+  computeStripeCompanySignalFingerprint,
+} from "@/shared/lib/platform-signal-keys";
 import type { PlatformReliabilityData } from "@/shared/types/platform-reliability";
 
 /** Hourly cron — treat as stale after 3 hours without a successful run. */
@@ -116,9 +130,10 @@ function buildReliabilitySignals(
   const { cron, payments, stripeConnect, systemChecks } = reliability;
 
   if (payments.queryable && payments.failedRecentCount > 0) {
+    const kind = "payment_webhook_failed" as const;
     signals.push({
       id: `payment-webhook-failed-${payments.failedRecentCount}`,
-      kind: "payment_webhook_failed",
+      kind,
       severity: SEVERITY_BY_KIND.payment_webhook_failed,
       title:
         payments.failedRecentCount === 1
@@ -132,13 +147,16 @@ function buildReliabilitySignals(
       href: "/platform#platform-reliability",
       score: BASE_SCORES.payment_webhook_failed + Math.min(payments.failedRecentCount - 1, 3),
       createdAt: payments.latestFailedAt ?? undefined,
+      signalKey: buildPlatformSignalKey(kind),
+      fingerprint: computeReliabilitySignalFingerprint(kind, reliability),
     });
   }
 
   if (cron.queryable && cron.lastFailed && cron.latestRun) {
+    const kind = "workflow_cron_failed" as const;
     signals.push({
       id: "workflow-cron-failed",
-      kind: "workflow_cron_failed",
+      kind,
       severity: SEVERITY_BY_KIND.workflow_cron_failed,
       title: "Workflow reminder cron failed",
       description:
@@ -149,13 +167,16 @@ function buildReliabilitySignals(
       href: "/platform#platform-reliability",
       score: BASE_SCORES.workflow_cron_failed,
       createdAt: cron.latestRun.startedAt,
+      signalKey: buildPlatformSignalKey(kind),
+      fingerprint: computeReliabilitySignalFingerprint(kind, reliability),
     });
   }
 
   if (payments.queryable && payments.stuckCount > 0) {
+    const kind = "payment_event_stuck" as const;
     signals.push({
       id: `payment-event-stuck-${payments.stuckCount}`,
-      kind: "payment_event_stuck",
+      kind,
       severity: SEVERITY_BY_KIND.payment_event_stuck,
       title:
         payments.stuckCount === 1
@@ -167,6 +188,8 @@ function buildReliabilitySignals(
       actionLabel: "Review reliability",
       href: "/platform#platform-reliability",
       score: BASE_SCORES.payment_event_stuck + Math.min(payments.stuckCount - 1, 3),
+      signalKey: buildPlatformSignalKey(kind),
+      fingerprint: computeReliabilitySignalFingerprint(kind, reliability),
     });
   }
 
@@ -178,9 +201,10 @@ function buildReliabilitySignals(
         )
       : null;
 
+    const kind = "workflow_cron_stale" as const;
     signals.push({
       id: "workflow-cron-stale",
-      kind: "workflow_cron_stale",
+      kind,
       severity: SEVERITY_BY_KIND.workflow_cron_stale,
       title: cron.latestSuccessfulRun
         ? "Workflow reminder cron is stale"
@@ -193,6 +217,8 @@ function buildReliabilitySignals(
       href: "/platform#platform-reliability",
       score: BASE_SCORES.workflow_cron_stale,
       createdAt: cron.latestSuccessfulRun?.startedAt,
+      signalKey: buildPlatformSignalKey(kind),
+      fingerprint: computeReliabilitySignalFingerprint(kind, reliability),
     });
   }
 
@@ -200,9 +226,10 @@ function buildReliabilitySignals(
 
   if (criticalChecks.length > 0) {
     const featured = criticalChecks[0];
+    const kind = "platform_system_warning" as const;
     signals.push({
       id: `platform-system-warning-${criticalChecks.length}`,
-      kind: "platform_system_warning",
+      kind,
       severity: SEVERITY_BY_KIND.platform_system_warning,
       title:
         criticalChecks.length === 1
@@ -213,14 +240,17 @@ function buildReliabilitySignals(
       actionLabel: "Review reliability",
       href: "/platform#platform-reliability",
       score: BASE_SCORES.platform_system_warning + Math.min(criticalChecks.length - 1, 3),
+      signalKey: buildPlatformSignalKey(kind),
+      fingerprint: computeReliabilitySignalFingerprint(kind, reliability),
     });
   }
 
   if (stripeConnect.queryable && stripeConnect.restricted.length > 0) {
     const featured = stripeConnect.restricted[0];
+    const kind = "stripe_connect_restricted" as const;
     signals.push({
       id: `stripe-connect-restricted-${stripeConnect.restricted.length}`,
-      kind: "stripe_connect_restricted",
+      kind,
       severity: SEVERITY_BY_KIND.stripe_connect_restricted,
       title:
         stripeConnect.restricted.length === 1
@@ -235,14 +265,20 @@ function buildReliabilitySignals(
         Math.min(stripeConnect.restricted.length - 1, 4),
       companyId: featured.companyId,
       companyName: featured.companyName,
+      signalKey: buildPlatformSignalKey(kind, featured.companyId),
+      fingerprint: computeStripeCompanySignalFingerprint(
+        featured.companyId,
+        featured.invoiceCount,
+      ),
     });
   }
 
   if (stripeConnect.queryable && stripeConnect.incompleteWithInvoices.length > 0) {
     const featured = stripeConnect.incompleteWithInvoices[0];
+    const kind = "stripe_connect_incomplete" as const;
     signals.push({
       id: `stripe-connect-incomplete-${stripeConnect.incompleteWithInvoices.length}`,
-      kind: "stripe_connect_incomplete",
+      kind,
       severity: SEVERITY_BY_KIND.stripe_connect_incomplete,
       title:
         stripeConnect.incompleteWithInvoices.length === 1
@@ -257,6 +293,11 @@ function buildReliabilitySignals(
         Math.min(stripeConnect.incompleteWithInvoices.length - 1, 4),
       companyId: featured.companyId,
       companyName: featured.companyName,
+      signalKey: buildPlatformSignalKey(kind, featured.companyId),
+      fingerprint: computeStripeCompanySignalFingerprint(
+        featured.companyId,
+        featured.invoiceCount,
+      ),
     });
   }
 
@@ -265,6 +306,7 @@ function buildReliabilitySignals(
 
 export function buildPlatformReliabilityPulse(
   reliability: PlatformReliabilityData,
+  actionHints?: Map<string, import("@/shared/types/platform-founder-actions").PlatformFounderSignalActionState | null>,
 ): PlatformReliabilitySnapshot {
   const { cron, payments, stripeConnect, systemChecks, deferredSignals } = reliability;
 
@@ -396,9 +438,14 @@ export function buildPlatformReliabilityPulse(
     });
   }
 
+  const pulseWithActions = pulse.map((item) => ({
+    ...item,
+    founderAction: actionHints?.get(item.id) ?? null,
+  }));
+
   return {
     isReliabilityHealthy: reliability.isReliabilityHealthy,
-    pulse,
+    pulse: pulseWithActions,
     deferredSignals,
   };
 }
@@ -771,6 +818,7 @@ export function buildPlatformBrainSnapshot(
     realCountsByCompany?: BuildCustomerHealthSnapshotInput["realCountsByCompany"];
     firstInvoiceAtByCompany?: Map<string, string>;
     stripeConnectedCompanyIds?: Set<string>;
+    founderSignalActions?: PlatformFounderSignalActionRecord[];
   },
   paymentsQueryable: boolean,
   now: Date = new Date(),
@@ -791,16 +839,38 @@ export function buildPlatformBrainSnapshot(
     now,
   );
 
-  const signals = buildPlatformPrioritySignals(
-    { ...overview, customerHealth },
+  const rawSignals = enrichSignalsWithActionSupport(
+    buildPlatformPrioritySignals({ ...overview, customerHealth }, now),
+  );
+
+  const actionsByKey = new Map(
+    (overview.founderSignalActions ?? []).map((action) => [action.signalKey, action]),
+  );
+
+  const signals = applyFounderActionsToSignals(rawSignals, actionsByKey, now);
+  const outreachByCompanyId = buildFounderOutreachByCompanyId(
+    overview.founderSignalActions ?? [],
     now,
   );
+  const customerHealthWithOutreach = {
+    ...customerHealth,
+    companies: attachFounderOutreachToCompanies(customerHealth.companies, outreachByCompanyId),
+    topNeedsAttention: attachFounderOutreachToCompanies(
+      customerHealth.topNeedsAttention,
+      outreachByCompanyId,
+    ),
+  };
+
   const activationFunnel = buildPlatformActivationFunnel(
     overview.companies,
     paymentsQueryable,
   );
   const missionHero = buildPlatformMissionHeroContent(signals, activationFunnel);
-  const reliability = buildPlatformReliabilityPulse(overview.reliabilityData);
+  const reliabilityActionHints = buildReliabilityActionHints(signals);
+  const reliability = buildPlatformReliabilityPulse(
+    overview.reliabilityData,
+    reliabilityActionHints,
+  );
 
   return {
     signals,
@@ -808,6 +878,6 @@ export function buildPlatformBrainSnapshot(
     missionHero,
     activationFunnel,
     reliability,
-    customerHealth,
+    customerHealth: customerHealthWithOutreach,
   };
 }

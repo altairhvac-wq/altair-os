@@ -7,6 +7,10 @@ import type {
   PlatformPrioritySeverity,
 } from "@/shared/types/platform-admin";
 import type { PlatformReliabilityData } from "@/shared/types/platform-reliability";
+import {
+  buildPlatformSignalKey,
+  computeCompanyHealthSignalFingerprint,
+} from "@/shared/lib/platform-signal-keys";
 import type {
   CompanyActivationStage,
   CompanyHealthRiskReason,
@@ -727,6 +731,8 @@ export function buildCustomerHealthPrioritySignals(
       companyName: summary.companyName,
       createdAt: summary.createdAt,
       lastActivityAt: summary.lastActivityAt ?? undefined,
+      signalKey: buildPlatformSignalKey(kind, summary.companyId),
+      fingerprint: computeCompanyHealthSignalFingerprint(summary),
     });
   }
 

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, Brain } from "lucide-react";
 import { northStarTokens as t } from "@/shared/design-system/north-star/tokens";
-import type { PlatformBrainSnapshot } from "@/shared/types/platform-admin";
+import type { PlatformBrainSnapshot, PlatformPrioritySignal } from "@/shared/types/platform-admin";
+import { PlatformSignalActionControls } from "@/shared/components/platform-admin/PlatformSignalActionControls";
 
 type PlatformMissionHeroProps = {
   brain: PlatformBrainSnapshot;
@@ -13,16 +14,18 @@ function NorthStarPrimaryAction({
   description,
   actionLabel,
   href,
+  signal,
 }: {
   title: string;
   description: string;
   actionLabel: string;
   href: string;
+  signal?: PlatformPrioritySignal | null;
 }) {
   return (
-    <Link href={href} className={`group block ${t.primaryAction}`}>
+    <div className={`group block ${t.primaryAction}`}>
       <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className={t.accentBadge}>Do this first</span>
           </div>
@@ -30,16 +33,21 @@ function NorthStarPrimaryAction({
             {title}
           </p>
           <p className={`mt-2 ${t.darkSurfaceText}`}>{description}</p>
+          {signal?.supportsFounderActions ? (
+            <div className="mt-3 [&_button]:border-white/20 [&_button]:bg-white/10 [&_button]:text-white [&_button]:hover:bg-white/20">
+              <PlatformSignalActionControls signal={signal} compact northStar />
+            </div>
+          ) : null}
         </div>
-        <span className={t.accentCta}>
+        <Link href={href} className={t.accentCta}>
           {actionLabel}
           <ArrowRight
             className="h-4 w-4 transition-transform group-hover:translate-x-1"
             aria-hidden="true"
           />
-        </span>
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -69,29 +77,36 @@ function LegacyPrimaryAction({
   description,
   actionLabel,
   href,
+  signal,
 }: {
   title: string;
   description: string;
   actionLabel: string;
   href: string;
+  signal?: PlatformPrioritySignal | null;
 }) {
   return (
-    <Link
-      href={href}
-      className="group flex flex-col gap-3 rounded-xl border border-cyan-200 bg-gradient-to-br from-cyan-950 via-slate-900 to-slate-950 p-4 text-white transition hover:border-cyan-300 sm:flex-row sm:items-center sm:justify-between sm:p-5"
-    >
-      <div className="min-w-0">
+    <div className="group flex flex-col gap-3 rounded-xl border border-cyan-200 bg-gradient-to-br from-cyan-950 via-slate-900 to-slate-950 p-4 text-white sm:flex-row sm:items-center sm:justify-between sm:p-5">
+      <div className="min-w-0 flex-1">
         <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">
           Do this first
         </p>
         <p className="mt-2 text-lg font-bold leading-snug">{title}</p>
         <p className="mt-2 text-sm text-slate-300">{description}</p>
+        {signal?.supportsFounderActions ? (
+          <div className="mt-3 [&_button]:border-white/20 [&_button]:bg-white/10 [&_button]:text-white [&_button]:hover:bg-white/20">
+            <PlatformSignalActionControls signal={signal} compact />
+          </div>
+        ) : null}
       </div>
-      <span className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-white group-hover:bg-cyan-400">
+      <Link
+        href={href}
+        className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-400"
+      >
         {actionLabel}
         <ArrowRight className="h-4 w-4" aria-hidden="true" />
-      </span>
-    </Link>
+      </Link>
+    </div>
   );
 }
 
@@ -145,6 +160,7 @@ export function PlatformMissionHero({
               description={primary.description}
               actionLabel={primary.actionLabel}
               href={primary.href}
+              signal={primary}
             />
           ) : (
             <NorthStarClearCard />
@@ -196,6 +212,7 @@ export function PlatformMissionHero({
             description={primary.description}
             actionLabel={primary.actionLabel}
             href={primary.href}
+            signal={primary}
           />
         ) : (
           <LegacyClearCard />

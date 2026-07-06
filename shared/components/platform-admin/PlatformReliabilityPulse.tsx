@@ -98,6 +98,30 @@ function PulseItem({
       >
         {item.detail}
       </p>
+      {item.founderAction?.status === "contacted" ? (
+        <p
+          className={
+            northStar
+              ? "mt-1 text-[10px] font-medium text-[#166534]"
+              : "mt-1 text-[10px] font-medium text-emerald-700"
+          }
+        >
+          Founder contacted
+        </p>
+      ) : null}
+      {item.founderAction?.note ? (
+        <p
+          className={
+            northStar
+              ? "mt-0.5 text-[10px] leading-snug text-[#6B6255]"
+              : "mt-0.5 text-[10px] leading-snug text-slate-500"
+          }
+        >
+          {item.founderAction.note.length > 80
+            ? `${item.founderAction.note.slice(0, 77).trimEnd()}…`
+            : item.founderAction.note}
+        </p>
+      ) : null}
     </div>
   );
 }

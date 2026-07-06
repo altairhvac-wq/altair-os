@@ -1,5 +1,6 @@
 import type { CompanyRole, MembershipStatus } from "@/lib/database/types/enums";
 import type { BetaFeedbackSeverity, BetaFeedbackStatus } from "@/shared/types/beta-feedback";
+import type { PlatformFounderSignalActionState } from "@/shared/types/platform-founder-actions";
 import type { PlatformCustomerHealthSnapshot } from "@/shared/types/platform-customer-health";
 import type { PlatformReliabilityData } from "@/shared/types/platform-reliability";
 
@@ -103,6 +104,10 @@ export type PlatformPrioritySignal = {
   companyName?: string;
   createdAt?: string;
   lastActivityAt?: string;
+  signalKey?: string;
+  fingerprint?: string;
+  supportsFounderActions?: boolean;
+  founderAction?: PlatformFounderSignalActionState | null;
 };
 
 export type PlatformActivationFunnel = {
@@ -138,6 +143,7 @@ export type PlatformReliabilityPulseItem = {
   label: string;
   status: "healthy" | "warning" | "critical" | "unknown" | "deferred";
   detail: string;
+  founderAction?: PlatformFounderSignalActionState | null;
 };
 
 export type PlatformReliabilitySnapshot = {

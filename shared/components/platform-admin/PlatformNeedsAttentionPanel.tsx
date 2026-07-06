@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { PlatformBrainSnapshot, PlatformPrioritySignal } from "@/shared/types/platform-admin";
+import {
+  PlatformSignalActionBadge,
+  PlatformSignalActionControls,
+} from "@/shared/components/platform-admin/PlatformSignalActionControls";
 import { pt } from "@/shared/components/platform-admin/north-star-m13/platform-north-star-styles";
 
 type PlatformNeedsAttentionPanelProps = {
@@ -51,70 +55,101 @@ function SignalRow({
 
   return (
     <li>
-      <Link
-        href={signal.href}
+      <div
         className={
           northStar
-            ? "group flex items-start gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-[#F3EBDD] sm:px-3"
-            : "group flex items-start gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-slate-50 sm:px-3"
+            ? "rounded-xl px-2 py-2.5 sm:px-3"
+            : "rounded-lg px-2 py-2.5 sm:px-3"
         }
       >
-        <span
+        <Link
+          href={signal.href}
           className={
             northStar
-              ? "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EFE4CB] text-[11px] font-bold text-[#8A6324]"
-              : "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-600"
+              ? "group flex items-start gap-3 transition-colors hover:opacity-90"
+              : "group flex items-start gap-3 transition-colors hover:opacity-90"
           }
         >
-          {rank}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p
-              className={
-                northStar
-                  ? "text-sm font-semibold text-[#17130E]"
-                  : "text-sm font-semibold text-slate-900"
-              }
-            >
-              {signal.title}
-            </p>
-            <span
-              className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${badgeClass}`}
-            >
-              {formatSeverityLabel(signal.severity)}
-            </span>
-          </div>
-          <p
+          <span
             className={
               northStar
-                ? "mt-0.5 text-xs leading-snug text-[#4F4638]"
-                : "mt-0.5 text-xs leading-snug text-slate-600"
+                ? "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EFE4CB] text-[11px] font-bold text-[#8A6324]"
+                : "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-600"
             }
           >
-            {signal.description}
-          </p>
-          {signal.companyName ? (
+            {rank}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p
+                className={
+                  northStar
+                    ? "text-sm font-semibold text-[#17130E]"
+                    : "text-sm font-semibold text-slate-900"
+                }
+              >
+                {signal.title}
+              </p>
+              <span
+                className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${badgeClass}`}
+              >
+                {formatSeverityLabel(signal.severity)}
+              </span>
+              <PlatformSignalActionBadge signal={signal} northStar={northStar} />
+            </div>
             <p
               className={
                 northStar
-                  ? "mt-1 text-[11px] font-medium text-[#8A6324]"
-                  : "mt-1 text-[11px] font-medium text-cyan-700"
+                  ? "mt-0.5 text-xs leading-snug text-[#4F4638]"
+                  : "mt-0.5 text-xs leading-snug text-slate-600"
               }
             >
-              {signal.companyName}
+              {signal.description}
             </p>
-          ) : null}
-        </div>
-        <ChevronRight
-          className={
-            northStar
-              ? "mt-1 h-4 w-4 shrink-0 text-[#8A6324] transition-transform group-hover:translate-x-0.5"
-              : "mt-1 h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5"
-          }
-          aria-hidden="true"
-        />
-      </Link>
+            {signal.companyName ? (
+              <p
+                className={
+                  northStar
+                    ? "mt-1 text-[11px] font-medium text-[#8A6324]"
+                    : "mt-1 text-[11px] font-medium text-cyan-700"
+                }
+              >
+                {signal.companyName}
+              </p>
+            ) : null}
+            {signal.founderAction?.note ? (
+              <p
+                className={
+                  northStar
+                    ? "mt-1 text-[11px] leading-snug text-[#6B6255]"
+                    : "mt-1 text-[11px] leading-snug text-slate-500"
+                }
+              >
+                Note: {signal.founderAction.note.length > 120
+                  ? `${signal.founderAction.note.slice(0, 117).trimEnd()}…`
+                  : signal.founderAction.note}
+              </p>
+            ) : null}
+          </div>
+          <ChevronRight
+            className={
+              northStar
+                ? "mt-1 h-4 w-4 shrink-0 text-[#8A6324] transition-transform group-hover:translate-x-0.5"
+                : "mt-1 h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5"
+            }
+            aria-hidden="true"
+          />
+        </Link>
+        {signal.supportsFounderActions ? (
+          <div className="pl-9 sm:pl-12">
+            <PlatformSignalActionControls
+              signal={signal}
+              compact
+              northStar={northStar}
+            />
+          </div>
+        ) : null}
+      </div>
     </li>
   );
 }

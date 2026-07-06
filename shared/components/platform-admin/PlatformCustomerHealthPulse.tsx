@@ -121,6 +121,17 @@ function CompanyHealthRow({
             >
               {healthStatusLabel(company.healthStatus)}
             </span>
+            {company.founderOutreach?.status === "contacted" ? (
+              <span
+                className={
+                  northStar
+                    ? "inline-flex rounded-full bg-[rgba(22,101,52,0.1)] px-2 py-0.5 text-[10px] font-semibold text-[#166534] ring-1 ring-[rgba(22,101,52,0.16)]"
+                    : "inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 ring-1 ring-emerald-600/10"
+                }
+              >
+                Contacted
+              </span>
+            ) : null}
             <span
               className={
                 northStar
@@ -140,6 +151,17 @@ function CompanyHealthRow({
           >
             {topReason ?? company.nextBestAction}
           </p>
+          {company.founderOutreach?.notePreview ? (
+            <p
+              className={
+                northStar
+                  ? "mt-1 text-[11px] leading-snug text-[#6B6255]"
+                  : "mt-1 text-[11px] leading-snug text-slate-500"
+              }
+            >
+              Note: {company.founderOutreach.notePreview}
+            </p>
+          ) : null}
         </div>
         <ChevronRight
           className={

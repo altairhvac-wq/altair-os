@@ -39,6 +39,8 @@ export type CompanyHealthFlags = {
   hasBlockingFeedback: boolean;
 };
 
+import type { PlatformFounderOutreachBrief } from "@/shared/types/platform-founder-actions";
+
 export type CompanyHealthSummary = {
   companyId: string;
   companyName: string;
@@ -54,6 +56,7 @@ export type CompanyHealthSummary = {
   actionHref: string;
   counts: CompanyHealthCounts;
   flags: CompanyHealthFlags;
+  founderOutreach?: PlatformFounderOutreachBrief | null;
 };
 
 export type PlatformCustomerHealthSnapshot = {

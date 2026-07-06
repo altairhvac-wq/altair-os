@@ -59,6 +59,11 @@ export type {
   PlatformAutomationRunInsert,
 } from "./platform-automation-runs";
 
+export type {
+  PlatformFounderSignalActionRow,
+  PlatformFounderSignalActionInsert,
+} from "./platform-founder-signal-actions";
+
 export type { CompanyPaymentAccountStatus, CompanyPaymentAccountProvider };
 export type CompanyPaymentAccountRow = CompanyPaymentAccountRecord;
 export type { CompanyPaymentAccountRecordInsert as CompanyPaymentAccountInsert };
