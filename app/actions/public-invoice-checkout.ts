@@ -5,6 +5,7 @@ import { isStripeConnectOnboardingConfigured } from "@/lib/payments/env";
 import {
   buildPublicInvoiceCheckoutUrls,
   createStripeInvoiceCheckoutSession,
+  mapStripeCheckoutError,
 } from "@/lib/payments/stripe-checkout";
 
 export type CreatePublicInvoiceCheckoutSessionActionResult = {
@@ -71,6 +72,6 @@ export async function createPublicInvoiceCheckoutSessionAction(
       invoiceId: invoice.id,
       error,
     });
-    return { error: "Failed to start checkout. Please try again." };
+    return { error: mapStripeCheckoutError(error, "Failed to start checkout. Please try again.") };
   }
 }

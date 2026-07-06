@@ -23,7 +23,10 @@ import {
   createStripeExpressConnectedAccount,
   mapStripeConnectSetupError,
 } from "@/lib/payments/stripe-connect";
-import { formatStripeRefreshStatusMessage } from "@/shared/types/settings/payment-settings";
+import {
+  buildStripePaymentSettingsSummary,
+  formatStripeRefreshStatusMessage,
+} from "@/shared/types/settings/payment-settings";
 
 export type StartStripeConnectOnboardingActionResult = {
   error?: string;
@@ -37,27 +40,6 @@ export type RefreshStripePaymentAccountStatusActionResult = {
   error?: string;
   message?: string;
 };
-
-function stripeAccountHasOutstandingRequirements(
-  providerMetadata: Record<string, unknown>,
-): boolean {
-  const requirements = providerMetadata.requirements;
-
-  if (!requirements || typeof requirements !== "object" || Array.isArray(requirements)) {
-    return false;
-  }
-
-  const requirementRecord = requirements as Record<string, unknown>;
-  const currentlyDueCount = requirementRecord.currently_due_count;
-  const pastDueCount = requirementRecord.past_due_count;
-  const disabledReason = requirementRecord.disabled_reason;
-
-  return (
-    (typeof currentlyDueCount === "number" && currentlyDueCount > 0) ||
-    (typeof pastDueCount === "number" && pastDueCount > 0) ||
-    (typeof disabledReason === "string" && disabledReason.length > 0)
-  );
-}
 
 async function requireStripeConnectOnboardingContext() {
   const context = await getActiveCompanyContext();
@@ -235,14 +217,26 @@ export async function refreshStripePaymentAccountStatusAction(): Promise<Refresh
 
   revalidatePath("/settings");
 
+  const summary = buildStripePaymentSettingsSummary({
+    provider: result.account.provider,
+    status: result.account.status,
+    chargesEnabled: result.account.chargesEnabled,
+    payoutsEnabled: result.account.payoutsEnabled,
+    onlinePaymentsEnabled: result.account.onlinePaymentsEnabled,
+    providerAccountId: result.account.providerAccountId,
+    onboardingCompletedAt: result.account.onboardingCompletedAt,
+    disabledAt: result.account.disabledAt,
+    lastSyncedAt: result.account.lastSyncedAt,
+    providerMetadata: result.account.providerMetadata,
+  });
+
   return {
     message: formatStripeRefreshStatusMessage({
-      status: result.account.status,
-      chargesEnabled: result.account.chargesEnabled,
-      payoutsEnabled: result.account.payoutsEnabled,
-      hasOutstandingRequirements: stripeAccountHasOutstandingRequirements(
-        result.account.providerMetadata,
-      ),
+      status: summary.status,
+      chargesEnabled: summary.chargesEnabled,
+      payoutsEnabled: summary.payoutsEnabled,
+      hasOutstandingRequirements: summary.hasOutstandingStripeRequirements,
+      cardPaymentsCapability: summary.cardPaymentsCapability,
     }),
   };
 }

@@ -2,6 +2,7 @@ import "server-only";
 
 import Stripe from "stripe";
 import { getAppBaseUrl } from "@/lib/email/env";
+import type { StripeCapabilityStatus } from "@/lib/payments/stripe-account-sync";
 import { getStripeClient } from "@/lib/payments/stripe-client";
 
 const STRIPE_SETUP_FALLBACK_ERROR =
@@ -72,6 +73,11 @@ export function buildStripeConnectOnboardingUrls(): StripeConnectOnboardingUrls 
   };
 }
 
+const STRIPE_CONNECT_CAPABILITIES = {
+  card_payments: { requested: true },
+  transfers: { requested: true },
+} as const;
+
 export async function createStripeExpressConnectedAccount(
   companyId: string,
 ): Promise<string> {
@@ -79,6 +85,7 @@ export async function createStripeExpressConnectedAccount(
 
   const account = await stripe.accounts.create({
     type: "express",
+    capabilities: STRIPE_CONNECT_CAPABILITIES,
     metadata: {
       altair_company_id: companyId,
     },
@@ -97,6 +104,31 @@ export async function retrieveStripeConnectedAccount(
   const stripe = getStripeClient();
 
   return stripe.accounts.retrieve(providerAccountId);
+}
+
+function stripeCapabilityNeedsRequest(
+  status: StripeCapabilityStatus | undefined,
+): boolean {
+  return status === undefined || status === "unrequested";
+}
+
+export function stripeConnectedAccountNeedsCapabilityRequest(
+  account: Stripe.Account,
+): boolean {
+  return (
+    stripeCapabilityNeedsRequest(account.capabilities?.card_payments) ||
+    stripeCapabilityNeedsRequest(account.capabilities?.transfers)
+  );
+}
+
+export async function requestStripeConnectedAccountCapabilities(
+  providerAccountId: string,
+): Promise<Stripe.Account> {
+  const stripe = getStripeClient();
+
+  return stripe.accounts.update(providerAccountId, {
+    capabilities: STRIPE_CONNECT_CAPABILITIES,
+  });
 }
 
 export async function createStripeAccountOnboardingLink(

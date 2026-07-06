@@ -33,6 +33,7 @@ import type {
   PaymentSetupReturnNotice,
   StripePaymentSettingsSummary,
 } from "@/shared/types/settings/payment-settings";
+import { buildStripePaymentSettingsSummary } from "@/shared/types/settings/payment-settings";
 import { isStripeConnectOnboardingConfigured, isStripeTestMode } from "@/lib/payments/env";
 
 const EMPTY_ONBOARDING_SNAPSHOT: OnboardingSnapshot = {
@@ -103,17 +104,18 @@ async function loadStripePaymentSettingsSafely(
       return null;
     }
 
-    return {
+    return buildStripePaymentSettingsSummary({
       provider: account.provider,
       status: account.status,
       chargesEnabled: account.chargesEnabled,
       payoutsEnabled: account.payoutsEnabled,
       onlinePaymentsEnabled: account.onlinePaymentsEnabled,
-      hasProviderAccountId: account.providerAccountId !== null,
+      providerAccountId: account.providerAccountId,
       onboardingCompletedAt: account.onboardingCompletedAt,
       disabledAt: account.disabledAt,
       lastSyncedAt: account.lastSyncedAt,
-    };
+      providerMetadata: account.providerMetadata,
+    });
   } catch (error) {
     console.error("[SettingsPage] stripe payment settings load failed:", error);
     return null;

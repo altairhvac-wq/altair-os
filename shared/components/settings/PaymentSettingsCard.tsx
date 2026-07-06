@@ -11,7 +11,10 @@ import {
 import { formatDateTimeInTimeZone, resolveCompanyTimeZone } from "@/shared/lib/datetime";
 import {
   canEnableOnlineCheckoutAccount,
+  CARD_PAYMENTS_DISPLAY_LABELS,
   formatPaymentCapabilityEnabled,
+  getCardPaymentsDisplayStatus,
+  getCardPaymentsPendingGuidance,
   getPaymentSettingsMainCopy,
   getPaymentSettingsPayNowClarify,
   getPaymentSettingsPaymentLinksClarify,
@@ -104,6 +107,10 @@ export function PaymentSettingsCard({
   const mainCopy = getPaymentSettingsMainCopy(stripeAccount);
   const payNowClarify = getPaymentSettingsPayNowClarify(stripeAccount);
   const paymentLinksClarify = getPaymentSettingsPaymentLinksClarify(stripeAccount);
+  const cardPaymentsGuidance = getCardPaymentsPendingGuidance(stripeAccount);
+  const cardPaymentsDisplayStatus = stripeAccount
+    ? getCardPaymentsDisplayStatus(stripeAccount)
+    : null;
   const canLaunchOnboarding =
     canStartStripeSetup &&
     stripeOnboardingConfigured &&
@@ -266,6 +273,9 @@ export function PaymentSettingsCard({
         {paymentLinksClarify ? (
           <p className={subtleNoticeClass}>{paymentLinksClarify}</p>
         ) : null}
+        {cardPaymentsGuidance ? (
+          <p className={noticeClass}>{cardPaymentsGuidance}</p>
+        ) : null}
         <p className={subtleNoticeClass}>{PAYMENT_SETTINGS_MANUAL_RECORDING_NOTE}</p>
       </div>
 
@@ -317,6 +327,28 @@ export function PaymentSettingsCard({
             enabled={stripeAccount.payoutsEnabled}
             northStar={northStar}
           />
+          {cardPaymentsDisplayStatus ? (
+            <div className="flex items-baseline justify-between gap-3 py-2">
+              <dt
+                className={
+                  northStar
+                    ? "shrink-0 text-xs text-[#4F4638]"
+                    : "shrink-0 text-xs text-slate-500"
+                }
+              >
+                Card payments
+              </dt>
+              <dd
+                className={
+                  northStar
+                    ? "min-w-0 truncate text-right text-sm font-medium text-[#17130E]"
+                    : "min-w-0 truncate text-right text-sm font-medium text-slate-900"
+                }
+              >
+                {CARD_PAYMENTS_DISPLAY_LABELS[cardPaymentsDisplayStatus]}
+              </dd>
+            </div>
+          ) : null}
           <CapabilityRow
             label="Online payments enabled"
             enabled={stripeAccount.onlinePaymentsEnabled}

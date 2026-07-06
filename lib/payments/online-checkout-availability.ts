@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getCompanyPaymentAccountWithServiceRole } from "@/lib/database/queries/company-payment-accounts";
+import { isStripeConnectOnboardingConfigured } from "@/lib/payments/env";
 import { validateStripeInvoiceCheckoutReadiness } from "@/lib/payments/stripe-checkout";
 
 const PAYABLE_INVOICE_STUB = {
@@ -13,10 +14,19 @@ const PAYABLE_INVOICE_STUB = {
 export async function isCompanyOnlineCheckoutAvailable(
   companyId: string,
 ): Promise<boolean> {
+  if (!isStripeConnectOnboardingConfigured()) {
+    return false;
+  }
+
   const paymentAccount = await getCompanyPaymentAccountWithServiceRole(
     companyId,
     "stripe",
   );
+
+  if (!paymentAccount) {
+    return false;
+  }
+
   const readiness = validateStripeInvoiceCheckoutReadiness(
     paymentAccount,
     PAYABLE_INVOICE_STUB,

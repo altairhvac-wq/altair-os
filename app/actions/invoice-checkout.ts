@@ -8,6 +8,7 @@ import { isStripeConnectOnboardingConfigured } from "@/lib/payments/env";
 import {
   buildAdminInvoiceCheckoutUrls,
   createStripeInvoiceCheckoutSession,
+  mapStripeCheckoutError,
   validateStripeInvoiceCheckoutReadiness,
 } from "@/lib/payments/stripe-checkout";
 
@@ -90,6 +91,6 @@ export async function createInvoiceCheckoutSessionAction(
       invoiceId: trimmedInvoiceId,
       error,
     });
-    return { error: "Failed to create checkout session. Please try again." };
+    return { error: mapStripeCheckoutError(error) };
   }
 }

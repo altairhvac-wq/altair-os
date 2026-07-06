@@ -3,6 +3,36 @@ import "server-only";
 import type Stripe from "stripe";
 import type { CompanyPaymentAccountStatus } from "./types";
 
+export type StripeCapabilityStatus =
+  | "active"
+  | "inactive"
+  | "pending"
+  | "unrequested";
+
+export function isCardPaymentsCapabilityActive(
+  account: Stripe.Account,
+): boolean {
+  return account.capabilities?.card_payments === "active";
+}
+
+export function isCardPaymentsCapabilityActiveFromProviderMetadata(
+  providerMetadata: Record<string, unknown>,
+): boolean {
+  const capabilities = providerMetadata.capabilities;
+
+  if (
+    !capabilities ||
+    typeof capabilities !== "object" ||
+    Array.isArray(capabilities)
+  ) {
+    return false;
+  }
+
+  return (
+    (capabilities as Record<string, unknown>).card_payments === "active"
+  );
+}
+
 export type StripeAccountSyncFields = {
   status: CompanyPaymentAccountStatus;
   chargesEnabled: boolean;
@@ -69,10 +99,18 @@ export function buildStripeAccountProviderMetadata(
     country: account.country ?? null,
     default_currency: account.default_currency ?? null,
     details_submitted: account.details_submitted ?? false,
+    charges_enabled: account.charges_enabled === true,
+    payouts_enabled: account.payouts_enabled === true,
+    capabilities: {
+      card_payments: account.capabilities?.card_payments ?? null,
+      transfers: account.capabilities?.transfers ?? null,
+    },
     requirements: {
+      currently_due: requirements?.currently_due ?? [],
+      past_due: requirements?.past_due ?? [],
+      disabled_reason: requirements?.disabled_reason ?? null,
       currently_due_count: requirements?.currently_due?.length ?? 0,
       past_due_count: requirements?.past_due?.length ?? 0,
-      disabled_reason: requirements?.disabled_reason ?? null,
     },
   };
 }

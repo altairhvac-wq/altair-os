@@ -5,10 +5,15 @@ import type Stripe from "stripe";
 import type { Database } from "@/lib/database/types";
 import type { Json } from "@/lib/database/types/enums";
 import type { CompanyPaymentAccountRow } from "@/lib/database/types/core-tables";
-import { deriveStripeAccountSyncFields } from "@/lib/payments/stripe-account-sync";
+import {
+  deriveStripeAccountSyncFields,
+  isCardPaymentsCapabilityActiveFromProviderMetadata,
+} from "@/lib/payments/stripe-account-sync";
 import {
   mapStripeConnectSetupError,
+  requestStripeConnectedAccountCapabilities,
   retrieveStripeConnectedAccount,
+  stripeConnectedAccountNeedsCapabilityRequest,
 } from "@/lib/payments/stripe-connect";
 import type { CompanyPaymentAccount } from "@/lib/payments/types";
 import { createServiceRoleClient } from "@/lib/supabase/service";
@@ -231,6 +236,12 @@ export async function refreshStripeCompanyPaymentAccountStatus(
     stripeAccount = await retrieveStripeConnectedAccount(
       accountRow.provider_account_id,
     );
+
+    if (stripeConnectedAccountNeedsCapabilityRequest(stripeAccount)) {
+      stripeAccount = await requestStripeConnectedAccountCapabilities(
+        accountRow.provider_account_id,
+      );
+    }
   } catch (error) {
     console.error("[refreshStripeCompanyPaymentAccountStatus] retrieve failed:", {
       companyId,
@@ -316,6 +327,14 @@ function validateOnlineCheckoutEnablePreconditions(
     return {
       ok: false,
       error: "Stripe account linkage is incomplete.",
+    };
+  }
+
+  if (!isCardPaymentsCapabilityActiveFromProviderMetadata(account.providerMetadata)) {
+    return {
+      ok: false,
+      error:
+        "Stripe card payments must be active before enabling online checkout.",
     };
   }
 

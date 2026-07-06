@@ -1,8 +1,10 @@
 import "server-only";
 
+import Stripe from "stripe";
 import { getAppBaseUrl } from "@/lib/email/env";
 import type { CompanyPaymentAccount } from "@/lib/payments/types";
 import { getStripeClient } from "@/lib/payments/stripe-client";
+import { isCardPaymentsCapabilityActiveFromProviderMetadata } from "@/lib/payments/stripe-account-sync";
 import {
   isInvoicePayable,
   type PayableInvoiceStatus,
@@ -171,6 +173,14 @@ export function validateStripeInvoiceCheckoutReadiness(
     };
   }
 
+  if (!isCardPaymentsCapabilityActiveFromProviderMetadata(account.providerMetadata)) {
+    return {
+      ok: false,
+      error:
+        "Stripe card payments are not active for this company yet. Refresh Stripe status or continue Stripe setup.",
+    };
+  }
+
   if (invoice.balanceDue <= 0) {
     return { ok: false, error: "This invoice has no balance due." };
   }
@@ -234,4 +244,34 @@ export function buildStripeCheckoutProviderMetadata(input: {
 
 export function stripeUnixTimestampToDateOnly(unixSeconds: number): string {
   return new Date(unixSeconds * 1000).toISOString().split("T")[0] ?? "";
+}
+
+const STRIPE_CARD_PAYMENTS_NOT_ACTIVE_ERROR =
+  "Stripe card payments are not active for this company yet. Refresh Stripe status or continue Stripe setup.";
+
+const STRIPE_CHECKOUT_FALLBACK_ERROR =
+  "Failed to create checkout session. Please try again.";
+
+/** Maps Stripe checkout failures to safe, user-facing copy (no secrets). */
+export function mapStripeCheckoutError(
+  error: unknown,
+  fallback = STRIPE_CHECKOUT_FALLBACK_ERROR,
+): string {
+  if (error instanceof Stripe.errors.StripeError) {
+    const message = error.message ?? "";
+
+    if (/card_payments capability/i.test(message)) {
+      return STRIPE_CARD_PAYMENTS_NOT_ACTIVE_ERROR;
+    }
+  }
+
+  if (error instanceof Error) {
+    const message = error.message;
+
+    if (/card_payments capability/i.test(message)) {
+      return STRIPE_CARD_PAYMENTS_NOT_ACTIVE_ERROR;
+    }
+  }
+
+  return fallback;
 }
