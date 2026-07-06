@@ -1,6 +1,6 @@
 # Altair Current Sprint
 
-Sprint: **Beta Readiness & Production Hardening**
+Sprint: **Beta Launch Dry Run (2E)**
 
 Last Updated: 2026-07-05
 
@@ -10,26 +10,22 @@ Last Updated: 2026-07-05
 
 ## Goal
 
-Validate that Altair is ready for first external company beta testing after the major post-M1 delivery window (~187 commits since 2026-06-17).
-
-North Star experience layer (M1–M14 + dispatch), Stripe Connect payments, workflow reminders, trade-aware onboarding, dashboard operational prioritization, and **Founder Brain foundation on `/platform`** are **shipped**. This sprint focuses on **trust verification** — not speculative feature expansion.
+Complete a full beta launch dry run — audit signup through Founder Brain without feature work. Fix only true P0/P1 launch blockers.
 
 ---
 
 ## Completed This Sprint Window
 
-1. **Founder Brain foundation (Sprint 2A)** — `/platform` Mission Hero, priority engine, Needs Attention panel, cross-tenant activation funnel
-2. **Founder Brain reliability signals (Sprint 2B)** — cron health tracking, payment webhook visibility, Stripe Connect risks, platform env checks, Reliability Pulse UI
-3. **Founder Brain customer health (Sprint 2C)** — per-company activation stages, healthy/watch/needs-help pulse, customer-health priority signals, demo-only exclusion
-4. **Founder Brain action loop (Sprint 2D)** — founder signal actions (contacted, snooze, resolve, notes), fingerprint-based suppression, UI on Mission Hero and Needs Attention
-5. **First 10 Minutes activation** — dashboard onboarding hero and checklist improvements (prior session)
+1. **Beta launch dry run audit (Sprint 2E)** — traced signup → onboarding → core workflow → payments → bug reporting → Founder Brain → automation; classified findings; `npx tsc --noEmit` and `npm run build` passed; no code P0 blockers found
+2. **Deployment checklist sync** — `docs/internal-alpha-deployment-checklist.md` updated for beta-required env vars and migrations `108`/`109`
+3. **Founder Brain foundation (Sprint 2A–2D)** — Mission Hero, Reliability Pulse, Customer Health Pulse, Needs Attention, activation funnel, founder action loop (prior sprints)
 
 ---
 
 ## In Progress
 
-1. **Authenticated production/user-data smoke** — run `docs/internal-alpha-smoke-test.md` against deployed production with real tenant data
-2. **Beta onboarding preparation** — confirm signup → trade setup → core operating loop works end-to-end
+1. **Authenticated production/user-data smoke** — run `docs/internal-alpha-smoke-test.md` against deployed production with real tenant data (operational gate before first HVAC beta company)
+2. **Supabase migrations `108` and `109`** — apply on production if not yet applied
 3. **North Star flag-on stability** — monitor admin surfaces with `NEXT_PUBLIC_NORTH_STAR_SHELL=true`
 
 ---

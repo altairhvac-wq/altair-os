@@ -435,3 +435,33 @@
 **Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTair_BRAIN.md`, this log.
 
 **Recommended next prompt:** Apply migration `109` on Supabase; exercise founder actions on `/platform` during beta outreach.
+
+---
+
+## 2026-07-05 — Sprint 2E: Beta Launch Dry Run
+
+**Scope:** Full beta lifecycle audit — signup through Founder Brain — without feature work. Fix only true P0/P1 launch blockers.
+
+**Audit completed:**
+
+- **Phase 1 (Deployment):** Migrations `108` and `109` exist in repo and are referenced in code/types/docs. `.env.example` documents required beta env vars. `docs/internal-alpha-deployment-checklist.md` was outdated (migration count, service role guidance) — synced.
+- **Phase 2 (New company):** Signup → bootstrap → trade (HVAC) → dashboard activation hero → demo data → checklist → money path routes verified in code. Payment step weakest in onboarding (hero mentions it; checklist does not track it). P2 polish.
+- **Phase 3 (Core workflow):** Lead/customer/job/dispatch/technician/estimate approval/invoice/manual+online payment/dashboard/reports routes and actions present. No code blockers found.
+- **Phase 4 (Founder Brain):** `/platform` gated by email allowlist; Mission Hero, Reliability Pulse, Customer Health Pulse, Needs Attention, Activation Funnel wired; founder actions (contacted/note/snooze/resolve/reopen) on actionable signals; bugs separate on `/platform/bugs`.
+- **Phase 5 (Bug reporting):** `BetaBugReportButton` enabled by default; reports flow to `beta_feedback_reports`; blocking/high bugs surface in priority engine; not duplicated by founder signal actions.
+- **Phase 6 (Automation):** `/api/cron/workflow-reminders` in `vercel.json`; `CRON_SECRET` enforced; writes to `platform_automation_runs`; Reliability Pulse reflects cron status; tenant snooze/dismiss/complete on workflow reminders intact.
+- **Phase 7 (Payments):** Stripe Connect in Settings; public `/invoice-payment/[token]`; webhook at `/api/webhooks/payments`; manual payment via invoice detail; incomplete Stripe companies surface in Reliability Pulse and customer health signals.
+
+**P0 code blockers found:** None.
+
+**P1 issues found:** Outdated deployment checklist (fixed); operational env/migration/smoke gates not yet verified on production.
+
+**Fixes implemented:** `docs/internal-alpha-deployment-checklist.md` — beta-required env vars, migration count through `109`, beta-critical migration callouts.
+
+**Validation:** `npx tsc --noEmit` and `npm run build` passed.
+
+**Docs synced:** `ALTair_MASTER_STATUS.md`, `ALTair_CURRENT_SPRINT.md`, `ALTAIR_SESSION_LOG.md`, deployment checklist.
+
+**Verdict:** Jeremiah can invite one HVAC company after operational prerequisites (migrations `108`/`109`, Vercel env, production smoke).
+
+**Recommended next prompt:** Run authenticated production smoke; apply migrations `108`/`109` on Supabase if not applied; invite first HVAC beta company.

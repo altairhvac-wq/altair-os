@@ -27,7 +27,7 @@ Last Updated: 2026-07-05
 
 ## Current Stage
 
-**Status: Beta-ready — Founder Brain foundation on `/platform`; North Star experience layer shipped behind flag; Stripe payments, workflow reminders, and trade-aware onboarding live; authenticated production smoke recommended before first external company**
+**Status: Beta-ready — Sprint 2E dry run passed (no code P0 blockers); Founder Brain foundation on `/platform`; North Star experience layer shipped behind flag; Stripe payments, workflow reminders, and trade-aware onboarding live; authenticated production smoke + migrations `108`/`109` on Supabase required before first external company**
 
 Altair OS is a production-grade multi-tenant field service operating system on Vercel + Supabase, preparing for small-company beta testing.
 
@@ -162,9 +162,22 @@ Onboard a small number of real companies after smoke passes. Reduce friction, va
 
 ## Active Work
 
-- Authenticated production/user-data smoke validation
-- Beta onboarding preparation
+- Authenticated production/user-data smoke validation (operational gate)
+- Confirm Supabase migrations `108` and `109` applied on production
 - North Star flag-on stability monitoring across admin surfaces
+
+## Sprint 2E Dry Run Verdict (2026-07-05)
+
+**Code:** Ready for first HVAC beta company after operational prerequisites. `npx tsc --noEmit` and `npm run build` passed with no route, type, or permission regressions found in audit.
+
+**Operational gates before invite:**
+
+- Apply all Supabase migrations through `109_platform_founder_signal_actions.sql`
+- Set Vercel env: `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL` (required); Stripe + Resend recommended
+- Run `docs/internal-alpha-smoke-test.md` on production with real tenant data
+- Configure Supabase Auth redirect URLs for production domain
+
+**Deferred (non-blocking):** payment step not in onboarding checklist; no bug-submit push notification; expired snooze badge UX; `docs/internal-alpha-smoke-test.md` Coming Soon section outdated (alpha gates currently empty).
 
 ---
 

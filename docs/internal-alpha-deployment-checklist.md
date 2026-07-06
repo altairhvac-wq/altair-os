@@ -1,12 +1,12 @@
-# Internal Alpha Deployment Checklist
+# Internal Alpha / Beta Deployment Checklist
 
-Use this checklist before and after deploying Altair OS to a private Vercel project for internal alpha testing.
+Use this checklist before and after deploying Altair OS to Vercel for internal alpha or first external beta companies.
 
 ## Deployment target
 
 - **Platform:** Vercel (private project, invite-only team access)
-- **Database:** Supabase project with all repo migrations applied
-- **Audience:** Internal testers only — not public launch
+- **Database:** Supabase project with all repo migrations applied (through `109_platform_founder_signal_actions.sql`)
+- **Audience:** Internal testers and invited beta companies — not public launch
 
 ---
 
@@ -21,17 +21,32 @@ Set these in **Project Settings → Environment Variables**.
 | `NEXT_PUBLIC_SUPABASE_URL` | Production, Preview | Supabase project URL. Safe for browser. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production, Preview | Supabase anon/public key. Safe for browser. |
 
-### Recommended
+### Required for beta launch (Production — server-only, never expose to browser)
 
 | Variable | Scope | Notes |
 |----------|-------|-------|
-| `NEXT_PUBLIC_ALPHA_HARDENING` | Preview (optional) | Set to `true` on Preview if you want alpha nav/Coming Soon behavior before Production. **Production enables alpha hardening automatically** via `NODE_ENV=production`. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Production | Required for `/platform` Founder Brain, bug report admin, workflow reminder cron, founder signal actions, and cross-tenant platform queries. `/platform` will error if missing. |
+| `CRON_SECRET` | Production | Vercel cron sends `Authorization: Bearer <CRON_SECRET>`. Without it, `/api/cron/workflow-reminders` returns 503 and workflow reminders never evaluate. |
+| `NEXT_PUBLIC_APP_URL` | Production, Preview | Full `https://` origin for invite emails, estimate approval links, and invoice payment links. Falls back to `VERCEL_URL` on Vercel when unset. |
 
-### Optional (not required for web app runtime)
+### Recommended for beta launch (Production)
 
 | Variable | Scope | Notes |
 |----------|-------|-------|
-| `SUPABASE_SERVICE_ROLE_KEY` | Development only (local) | Used by local workflow scripts. **Do not add to Vercel** unless you have a specific server-only need. Never expose to the browser. |
+| `STRIPE_SECRET_KEY` | Production | Stripe Connect onboarding and public Pay Now checkout. Manual payments work without Stripe. |
+| `STRIPE_WEBHOOK_SECRET` | Production | Required for checkout payment recording and Connect account sync. |
+| `RESEND_API_KEY` | Production | Team invite and billing email delivery. Invites still save without Resend; UI reports delivery honestly. |
+| `RESEND_FROM_EMAIL` | Production | Verified sender domain for Resend. |
+| `NEXT_PUBLIC_ALPHA_HARDENING` | Preview (optional) | Set to `true` on Preview if you want alpha nav/Coming Soon behavior before Production. **Production enables alpha hardening automatically** via `NODE_ENV=production`. Coming Soon path lists are currently **empty** — estimates, price book, and network are reachable in production. |
+
+### Optional (SMS payment links)
+
+| Variable | Scope | Notes |
+|----------|-------|-------|
+| `SMS_PROVIDER` | Production | Set to `twilio` when SMS is enabled. |
+| `TWILIO_ACCOUNT_SID` | Production | Twilio account SID (server-only). |
+| `TWILIO_AUTH_TOKEN` | Production | Twilio auth token (server-only). |
+| `SMS_FROM_NUMBER` | Production | Twilio sender number. |
 
 ### Verify after deploy
 
@@ -126,14 +141,20 @@ Migration: `supabase/migrations/031_setup_profile_rls_recursion_fix.sql` (and or
 
 ## 6. Production migration status
 
-The repo currently contains **33** migrations through:
+The repo currently contains **109** migrations through:
 
 ```
-033_membership_activities_foundation.sql
+109_platform_founder_signal_actions.sql
 ```
+
+Beta-critical recent migrations:
+
+- `105_workflow_reminders_foundation.sql` — workflow reminders + dashboard surfacing
+- `108_platform_automation_runs.sql` — cron health ledger for Reliability Pulse
+- `109_platform_founder_signal_actions.sql` — founder action loop (contacted/snooze/resolve)
 
 - [ ] All migrations applied to the Supabase project (`supabase db push` or CI pipeline)
-- [ ] System check passes **Production migration status** (membership_activities marker)
+- [ ] System check passes **Production migration status** (repo catalog matches Supabase)
 - [ ] No pending migration drift between repo and Supabase
 
 **RLS note:** Do not modify RLS migrations for alpha deploy unless fixing a verified blocker. Document any RLS-related failures in launch blockers.
