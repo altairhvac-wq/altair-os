@@ -21,6 +21,7 @@ const AUTH_CALLBACK_ROUTE = "/auth/callback";
 const ESTIMATE_APPROVAL_ROUTE_PREFIX = "/estimate-approval";
 const INVOICE_PAYMENT_ROUTE_PREFIX = "/invoice-payment";
 const PAYMENT_WEBHOOK_ROUTE = "/api/webhooks/payments";
+const WORKFLOW_REMINDERS_CRON_ROUTE = "/api/cron/workflow-reminders";
 
 function isAuthRoute(pathname: string) {
   return AUTH_ROUTES.some(
@@ -46,6 +47,10 @@ function isPaymentWebhookRoute(pathname: string) {
   return pathname === PAYMENT_WEBHOOK_ROUTE;
 }
 
+function isWorkflowRemindersCronRoute(pathname: string) {
+  return pathname === WORKFLOW_REMINDERS_CRON_ROUTE;
+}
+
 function isPricingRoute(pathname: string) {
   return pathname === PRICING_ROUTE;
 }
@@ -62,7 +67,8 @@ function isPublicRoute(pathname: string) {
     pathname === AUTH_CALLBACK_ROUTE ||
     isEstimateApprovalRoute(pathname) ||
     isInvoicePaymentRoute(pathname) ||
-    isPaymentWebhookRoute(pathname)
+    isPaymentWebhookRoute(pathname) ||
+    isWorkflowRemindersCronRoute(pathname)
   );
 }
 
