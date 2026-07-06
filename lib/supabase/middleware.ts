@@ -48,7 +48,10 @@ function isPaymentWebhookRoute(pathname: string) {
 }
 
 function isWorkflowRemindersCronRoute(pathname: string) {
-  return pathname === WORKFLOW_REMINDERS_CRON_ROUTE;
+  return (
+    pathname === WORKFLOW_REMINDERS_CRON_ROUTE ||
+    pathname === `${WORKFLOW_REMINDERS_CRON_ROUTE}/`
+  );
 }
 
 function isPricingRoute(pathname: string) {

@@ -13,16 +13,21 @@ import {
 
 export const runtime = "nodejs";
 
+const ROUTE_NAME = "workflow-reminders";
+
 export async function GET(request: Request) {
   if (!getCronSecret()) {
     return NextResponse.json(
-      { error: "Cron secret is not configured" },
+      { ok: false, route: ROUTE_NAME, error: "Cron secret is not configured" },
       { status: 503 },
     );
   }
 
   if (!isAuthorizedCronRequest(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { ok: false, route: ROUTE_NAME, error: "Unauthorized" },
+      { status: 401 },
+    );
   }
 
   const { runId, startedAt } = await recordPlatformAutomationRunStarted(
@@ -51,6 +56,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       ok: !hasErrors,
+      route: ROUTE_NAME,
+      processed: true,
       evaluatedAt: result.evaluatedAt,
       companyCount: result.companyCount,
       totals: result.totals,
@@ -65,7 +72,12 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json(
-      { error: "Workflow reminder evaluation failed" },
+      {
+        ok: false,
+        route: ROUTE_NAME,
+        processed: false,
+        error: "Workflow reminder evaluation failed",
+      },
       { status: 500 },
     );
   }
