@@ -155,5 +155,41 @@ export const PAYMENT_SETTINGS_MANUAL_RECORDING_NOTE =
 export const PAYMENT_SETTINGS_STRIPE_SETUP_LATER_NOTE =
   "Stripe setup can be completed later from this page.";
 
+export function formatStripeRefreshStatusMessage(input: {
+  status: CompanyPaymentAccountStatus;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  hasOutstandingRequirements: boolean;
+}): string {
+  if (input.status === "active") {
+    return "Stripe account is active. You can enable online payments.";
+  }
+
+  const details: string[] = [];
+
+  if (!input.chargesEnabled) {
+    details.push("charges are disabled");
+  }
+
+  if (!input.payoutsEnabled) {
+    details.push("payouts are disabled");
+  }
+
+  if (input.hasOutstandingRequirements) {
+    details.push("Stripe still lists outstanding requirements");
+  }
+
+  if (details.length === 0) {
+    return "Stripe account status was refreshed, but online payments are not active yet.";
+  }
+
+  const formattedDetails =
+    details.length === 1
+      ? details[0]!
+      : `${details.slice(0, -1).join(", ")}, and ${details[details.length - 1]}`;
+
+  return `Stripe account status was refreshed. ${formattedDetails.charAt(0).toUpperCase()}${formattedDetails.slice(1)}.`;
+}
+
 /** Display-only notice when returning from Stripe Connect onboarding. */
 export type PaymentSetupReturnNotice = "return" | "refresh";

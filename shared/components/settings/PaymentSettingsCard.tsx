@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import {
   disableOnlineCheckoutAction,
   enableOnlineCheckoutAction,
+  refreshStripePaymentAccountStatusAction,
   startStripeConnectOnboardingAction,
 } from "@/app/actions/company-payments";
 import { formatDateTimeInTimeZone, resolveCompanyTimeZone } from "@/shared/lib/datetime";
@@ -28,6 +29,7 @@ type PaymentSettingsCardProps = {
   northStar?: boolean;
   canStartStripeSetup?: boolean;
   canManageOnlineCheckout?: boolean;
+  canRefreshStripeStatus?: boolean;
   stripeOnboardingConfigured?: boolean;
   stripeTestMode?: boolean;
   paymentSetupNotice?: PaymentSetupReturnNotice | null;
@@ -87,12 +89,14 @@ export function PaymentSettingsCard({
   northStar = false,
   canStartStripeSetup = false,
   canManageOnlineCheckout = false,
+  canRefreshStripeStatus = false,
   stripeOnboardingConfigured = false,
   stripeTestMode = false,
   paymentSetupNotice = null,
 }: PaymentSettingsCardProps) {
   const [isPending, startTransition] = useTransition();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
   const isConnected = stripeAccount !== null;
   const displayStatus = stripeAccount?.status ?? "not_connected";
@@ -122,6 +126,8 @@ export function PaymentSettingsCard({
     canManageOnlineCheckout &&
     isConnected &&
     (stripeAccount?.status === "active" || stripeAccount?.onlinePaymentsEnabled === true);
+  const showRefreshStripeStatusButton =
+    isConnected && canRefreshStripeStatus;
 
   const shellClass = northStar
     ? "min-w-0 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-3 sm:p-4"
@@ -151,6 +157,10 @@ export function PaymentSettingsCard({
     ? "rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs text-red-700 sm:text-sm"
     : "rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs text-red-700 sm:text-sm";
 
+  const successNoticeClass = northStar
+    ? "rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-xs text-emerald-800 sm:text-sm"
+    : "rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-xs text-emerald-800 sm:text-sm";
+
   const disabledButtonClass = northStar
     ? "inline-flex min-h-9 cursor-not-allowed items-center justify-center rounded-lg border border-[rgba(138,99,36,0.16)] bg-[#F5F0E4] px-3 text-xs font-semibold text-[#4F4638] opacity-80 sm:text-sm"
     : "inline-flex min-h-9 cursor-not-allowed items-center justify-center rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs font-semibold text-slate-500 sm:text-sm";
@@ -169,6 +179,7 @@ export function PaymentSettingsCard({
 
   function handleStartStripeSetup() {
     setActionError(null);
+    setActionSuccess(null);
 
     startTransition(async () => {
       const result = await startStripeConnectOnboardingAction();
@@ -180,6 +191,7 @@ export function PaymentSettingsCard({
 
   function handleEnableOnlineCheckout() {
     setActionError(null);
+    setActionSuccess(null);
 
     startTransition(async () => {
       const result = await enableOnlineCheckoutAction();
@@ -191,11 +203,29 @@ export function PaymentSettingsCard({
 
   function handleDisableOnlineCheckout() {
     setActionError(null);
+    setActionSuccess(null);
 
     startTransition(async () => {
       const result = await disableOnlineCheckoutAction();
       if (result?.error) {
         setActionError(result.error);
+      }
+    });
+  }
+
+  function handleRefreshStripeStatus() {
+    setActionError(null);
+    setActionSuccess(null);
+
+    startTransition(async () => {
+      const result = await refreshStripePaymentAccountStatusAction();
+      if (result?.error) {
+        setActionError(result.error);
+        return;
+      }
+
+      if (result?.message) {
+        setActionSuccess(result.message);
       }
     });
   }
@@ -230,6 +260,7 @@ export function PaymentSettingsCard({
           </p>
         ) : null}
         {actionError ? <p className={errorNoticeClass}>{actionError}</p> : null}
+        {actionSuccess ? <p className={successNoticeClass}>{actionSuccess}</p> : null}
         <p className={noticeClass}>{mainCopy}</p>
         {payNowClarify ? <p className={subtleNoticeClass}>{payNowClarify}</p> : null}
         {paymentLinksClarify ? (
@@ -355,6 +386,16 @@ export function PaymentSettingsCard({
               {isPending ? "Disabling online payments…" : "Disable online payments"}
             </button>
           ) : null
+        ) : null}
+        {showRefreshStripeStatusButton ? (
+          <button
+            type="button"
+            onClick={handleRefreshStripeStatus}
+            disabled={isPending}
+            className={enabledButtonClass}
+          >
+            {isPending ? "Refreshing Stripe status…" : "Refresh Stripe status"}
+          </button>
         ) : null}
       </div>
 

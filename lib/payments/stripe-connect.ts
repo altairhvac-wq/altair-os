@@ -91,6 +91,14 @@ export async function createStripeExpressConnectedAccount(
   return account.id;
 }
 
+export async function retrieveStripeConnectedAccount(
+  providerAccountId: string,
+): Promise<Stripe.Account> {
+  const stripe = getStripeClient();
+
+  return stripe.accounts.retrieve(providerAccountId);
+}
+
 export async function createStripeAccountOnboardingLink(
   providerAccountId: string,
   urls: StripeConnectOnboardingUrls,

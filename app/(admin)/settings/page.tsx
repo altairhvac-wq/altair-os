@@ -5,6 +5,7 @@ import {
   canManageDemoData,
   canManageOnlineCheckout,
   canManageTeamMembers,
+  canRefreshStripePaymentAccountStatus,
   canStartStripeConnectOnboarding,
 } from "@/lib/database/access-control";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
@@ -182,6 +183,7 @@ export default async function SettingsPage({
   const canViewPaymentSettings = companyContext.permissions.manageBilling;
   const canStartStripeSetup = canStartStripeConnectOnboarding(companyContext);
   const canManageOnlineCheckoutGate = canManageOnlineCheckout(companyContext);
+  const canRefreshStripeStatus = canRefreshStripePaymentAccountStatus(companyContext);
   const stripeOnboardingConfigured = isStripeConnectOnboardingConfigured();
   const stripeTestMode = isStripeTestMode();
   const paymentSetupNotice: PaymentSetupReturnNotice | null =
@@ -230,6 +232,7 @@ export default async function SettingsPage({
         stripePaymentSettings={stripePaymentSettings}
         canStartStripeSetup={canStartStripeSetup}
         canManageOnlineCheckout={canManageOnlineCheckoutGate}
+        canRefreshStripeStatus={canRefreshStripeStatus}
         stripeOnboardingConfigured={stripeOnboardingConfigured}
         stripeTestMode={stripeTestMode}
         paymentSetupNotice={paymentSetupNotice}

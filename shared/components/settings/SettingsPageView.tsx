@@ -71,6 +71,7 @@ type SettingsPageViewProps = {
   stripePaymentSettings?: StripePaymentSettingsSummary | null;
   canStartStripeSetup?: boolean;
   canManageOnlineCheckout?: boolean;
+  canRefreshStripeStatus?: boolean;
   stripeOnboardingConfigured?: boolean;
   stripeTestMode?: boolean;
   paymentSetupNotice?: PaymentSetupReturnNotice | null;
@@ -109,6 +110,7 @@ function SettingsPageLegacyView({
   stripePaymentSettings = null,
   canStartStripeSetup = false,
   canManageOnlineCheckout = false,
+  canRefreshStripeStatus = false,
   stripeOnboardingConfigured = false,
   stripeTestMode = false,
   paymentSetupNotice = null,
@@ -463,6 +465,7 @@ function SettingsPageLegacyView({
                 companyTimezone={companyTimezone}
                 canStartStripeSetup={canStartStripeSetup}
                 canManageOnlineCheckout={canManageOnlineCheckout}
+                canRefreshStripeStatus={canRefreshStripeStatus}
                 stripeOnboardingConfigured={stripeOnboardingConfigured}
                 stripeTestMode={stripeTestMode}
                 paymentSetupNotice={paymentSetupNotice}

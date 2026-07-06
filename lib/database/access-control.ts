@@ -219,6 +219,24 @@ export function assertOnlineCheckoutManagementAccess(
   return null;
 }
 
+export function canRefreshStripePaymentAccountStatus(
+  context: ActiveCompanyContext,
+): boolean {
+  return (
+    context.permissions.manageCompany || context.permissions.manageBilling
+  );
+}
+
+export function assertStripePaymentAccountRefreshAccess(
+  context: ActiveCompanyContext,
+): string | null {
+  if (!canRefreshStripePaymentAccountStatus(context)) {
+    return "You do not have permission to refresh Stripe account status.";
+  }
+
+  return null;
+}
+
 export function canViewOperationalReports(
   context: ActiveCompanyContext,
 ): boolean {

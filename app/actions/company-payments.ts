@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import {
   assertOnlineCheckoutManagementAccess,
   assertStripeConnectOnboardingAccess,
+  assertStripePaymentAccountRefreshAccess,
 } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyPaymentAccount } from "@/lib/database/queries/company-payment-accounts";
@@ -13,6 +14,7 @@ import {
   disableOnlineCheckoutForCompany,
   enableOnlineCheckoutForCompany,
   insertStripePaymentAccountForOnboarding,
+  refreshStripeCompanyPaymentAccountStatus,
 } from "@/lib/database/services/company-payment-accounts";
 import { isStripeConnectOnboardingConfigured } from "@/lib/payments/env";
 import {
@@ -21,6 +23,7 @@ import {
   createStripeExpressConnectedAccount,
   mapStripeConnectSetupError,
 } from "@/lib/payments/stripe-connect";
+import { formatStripeRefreshStatusMessage } from "@/shared/types/settings/payment-settings";
 
 export type StartStripeConnectOnboardingActionResult = {
   error?: string;
@@ -29,6 +32,32 @@ export type StartStripeConnectOnboardingActionResult = {
 export type OnlineCheckoutActionResult = {
   error?: string;
 };
+
+export type RefreshStripePaymentAccountStatusActionResult = {
+  error?: string;
+  message?: string;
+};
+
+function stripeAccountHasOutstandingRequirements(
+  providerMetadata: Record<string, unknown>,
+): boolean {
+  const requirements = providerMetadata.requirements;
+
+  if (!requirements || typeof requirements !== "object" || Array.isArray(requirements)) {
+    return false;
+  }
+
+  const requirementRecord = requirements as Record<string, unknown>;
+  const currentlyDueCount = requirementRecord.currently_due_count;
+  const pastDueCount = requirementRecord.past_due_count;
+  const disabledReason = requirementRecord.disabled_reason;
+
+  return (
+    (typeof currentlyDueCount === "number" && currentlyDueCount > 0) ||
+    (typeof pastDueCount === "number" && pastDueCount > 0) ||
+    (typeof disabledReason === "string" && disabledReason.length > 0)
+  );
+}
 
 async function requireStripeConnectOnboardingContext() {
   const context = await getActiveCompanyContext();
@@ -176,4 +205,44 @@ export async function disableOnlineCheckoutAction(): Promise<OnlineCheckoutActio
 
   revalidatePath("/settings");
   return {};
+}
+
+export async function refreshStripePaymentAccountStatusAction(): Promise<RefreshStripePaymentAccountStatusActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: "No active company workspace." };
+  }
+
+  const accessError = assertStripePaymentAccountRefreshAccess(context);
+  if (accessError) {
+    return { error: accessError };
+  }
+
+  if (!isStripeConnectOnboardingConfigured()) {
+    return {
+      error:
+        "Stripe setup is not configured yet. Add STRIPE_SECRET_KEY and NEXT_PUBLIC_APP_URL, then restart the app.",
+    };
+  }
+
+  const companyId = context.company.id;
+  const result = await refreshStripeCompanyPaymentAccountStatus(companyId);
+
+  if (!result.ok) {
+    return { error: result.error };
+  }
+
+  revalidatePath("/settings");
+
+  return {
+    message: formatStripeRefreshStatusMessage({
+      status: result.account.status,
+      chargesEnabled: result.account.chargesEnabled,
+      payoutsEnabled: result.account.payoutsEnabled,
+      hasOutstandingRequirements: stripeAccountHasOutstandingRequirements(
+        result.account.providerMetadata,
+      ),
+    }),
+  };
 }

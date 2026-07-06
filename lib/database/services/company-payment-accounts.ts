@@ -6,6 +6,10 @@ import type { Database } from "@/lib/database/types";
 import type { Json } from "@/lib/database/types/enums";
 import type { CompanyPaymentAccountRow } from "@/lib/database/types/core-tables";
 import { deriveStripeAccountSyncFields } from "@/lib/payments/stripe-account-sync";
+import {
+  mapStripeConnectSetupError,
+  retrieveStripeConnectedAccount,
+} from "@/lib/payments/stripe-connect";
 import type { CompanyPaymentAccount } from "@/lib/payments/types";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
@@ -196,6 +200,74 @@ export async function syncStripeCompanyPaymentAccountFromWebhook(
   }
 
   return { ok: true };
+}
+
+export async function refreshStripeCompanyPaymentAccountStatus(
+  companyId: string,
+): Promise<
+  | { ok: true; account: CompanyPaymentAccount }
+  | { ok: false; error: string }
+> {
+  const supabase = createServiceRoleClient();
+  const accountRow = await findStripeCompanyPaymentAccountByCompanyId(
+    supabase,
+    companyId,
+  );
+
+  if (!accountRow) {
+    return {
+      ok: false,
+      error: "No Stripe payment account is connected for this company.",
+    };
+  }
+
+  if (!accountRow.provider_account_id) {
+    return { ok: false, error: "Stripe account linkage is incomplete." };
+  }
+
+  let stripeAccount: Stripe.Account;
+
+  try {
+    stripeAccount = await retrieveStripeConnectedAccount(
+      accountRow.provider_account_id,
+    );
+  } catch (error) {
+    console.error("[refreshStripeCompanyPaymentAccountStatus] retrieve failed:", {
+      companyId,
+      error,
+    });
+    return { ok: false, error: mapStripeConnectSetupError(error) };
+  }
+
+  const syncResult = await syncStripeCompanyPaymentAccountFromWebhook(
+    supabase,
+    accountRow,
+    stripeAccount,
+  );
+
+  if (!syncResult.ok) {
+    return {
+      ok: false,
+      error: syncResult.error ?? "Failed to sync Stripe account status.",
+    };
+  }
+
+  const updatedAccountRow = await findStripeCompanyPaymentAccountByCompanyId(
+    supabase,
+    companyId,
+  );
+
+  if (!updatedAccountRow) {
+    return {
+      ok: false,
+      error: "Failed to load updated Stripe account status.",
+    };
+  }
+
+  return {
+    ok: true,
+    account: mapCompanyPaymentAccountRow(updatedAccountRow),
+  };
 }
 
 function validateOnlineCheckoutEnablePreconditions(
