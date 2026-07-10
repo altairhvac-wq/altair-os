@@ -1347,7 +1347,11 @@ export async function convertEstimateToInvoice(
     });
 
     const supabase = await resolveDbClient(db);
-    await supabase.from("invoices").delete().eq("id", invoice.id);
+    await supabase
+      .from("invoices")
+      .delete()
+      .eq("id", invoice.id)
+      .eq("company_id", companyId);
 
     return {
       invoice: null,

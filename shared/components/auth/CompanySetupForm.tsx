@@ -78,7 +78,7 @@ export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
         <AuthField
           label="Company name"
           id="companyName"
-          hint="Use your real business name — at least 2 characters. You can change this later."
+          hint="Use your real business name — at least 2 characters."
         >
           <AuthInput
             id="companyName"

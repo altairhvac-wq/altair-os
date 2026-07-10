@@ -20,7 +20,13 @@ export function InvoiceInternalTestCheckoutButton({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  if (!canManageBilling || !isInvoicePayable(invoice.status) || invoice.balanceDue <= 0) {
+  // Keep internal checkout out of production beta tenants.
+  if (
+    process.env.NODE_ENV === "production" ||
+    !canManageBilling ||
+    !isInvoicePayable(invoice.status) ||
+    invoice.balanceDue <= 0
+  ) {
     return null;
   }
 

@@ -246,7 +246,7 @@ function SettingsPageLegacyView({
 
           <MasterPageSection
             title="Company"
-            description="Company name, locale, and contact information"
+            description="Company name, locale, and contact information (view only for beta)"
             density="compact"
           >
             <MasterPageSurface variant="card" className="min-w-0 p-2.5 sm:p-4">

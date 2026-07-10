@@ -92,33 +92,42 @@ async function loadDemoDataStatusSafely(
 async function loadStripePaymentSettingsSafely(
   companyId: string,
   canView: boolean,
-): Promise<StripePaymentSettingsSummary | null | undefined> {
+): Promise<{
+  summary: StripePaymentSettingsSummary | null | undefined;
+  error?: string;
+}> {
   if (!canView) {
-    return undefined;
+    return { summary: undefined };
   }
 
   try {
     const account = await getCompanyPaymentAccount(companyId, "stripe");
 
     if (!account) {
-      return null;
+      return { summary: null };
     }
 
-    return buildStripePaymentSettingsSummary({
-      provider: account.provider,
-      status: account.status,
-      chargesEnabled: account.chargesEnabled,
-      payoutsEnabled: account.payoutsEnabled,
-      onlinePaymentsEnabled: account.onlinePaymentsEnabled,
-      providerAccountId: account.providerAccountId,
-      onboardingCompletedAt: account.onboardingCompletedAt,
-      disabledAt: account.disabledAt,
-      lastSyncedAt: account.lastSyncedAt,
-      providerMetadata: account.providerMetadata,
-    });
+    return {
+      summary: buildStripePaymentSettingsSummary({
+        provider: account.provider,
+        status: account.status,
+        chargesEnabled: account.chargesEnabled,
+        payoutsEnabled: account.payoutsEnabled,
+        onlinePaymentsEnabled: account.onlinePaymentsEnabled,
+        providerAccountId: account.providerAccountId,
+        onboardingCompletedAt: account.onboardingCompletedAt,
+        disabledAt: account.disabledAt,
+        lastSyncedAt: account.lastSyncedAt,
+        providerMetadata: account.providerMetadata,
+      }),
+    };
   } catch (error) {
     console.error("[SettingsPage] stripe payment settings load failed:", error);
-    return null;
+    return {
+      summary: null,
+      error:
+        "We couldn't load Stripe payment status. Refresh the page or try again in a moment.",
+    };
   }
 }
 
@@ -193,10 +202,11 @@ export default async function SettingsPage({
       ? params.payments
       : null;
 
-  const stripePaymentSettings = await loadStripePaymentSettingsSafely(
+  const stripePaymentSettingsResult = await loadStripePaymentSettingsSafely(
     companyContext.company.id,
     canViewPaymentSettings,
   );
+  const stripePaymentSettings = stripePaymentSettingsResult.summary;
 
   return (
     <div className="min-w-0 max-w-full space-y-3 sm:space-y-4">
@@ -210,6 +220,12 @@ export default async function SettingsPage({
       {pendingInvitesResult.error ? (
         <SettingsAlertBanner tone="error" northStar={northStar}>
           {pendingInvitesResult.error}
+        </SettingsAlertBanner>
+      ) : null}
+
+      {stripePaymentSettingsResult.error ? (
+        <SettingsAlertBanner tone="error" northStar={northStar}>
+          {stripePaymentSettingsResult.error}
         </SettingsAlertBanner>
       ) : null}
 

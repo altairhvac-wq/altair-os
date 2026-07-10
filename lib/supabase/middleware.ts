@@ -29,6 +29,13 @@ function isAuthRoute(pathname: string) {
   );
 }
 
+/** Recovery session must stay on this route to set a new password. */
+function isResetPasswordRoute(pathname: string) {
+  return (
+    pathname === "/reset-password" || pathname.startsWith("/reset-password/")
+  );
+}
+
 function isEstimateApprovalRoute(pathname: string) {
   return (
     pathname === ESTIMATE_APPROVAL_ROUTE_PREFIX ||
@@ -150,7 +157,9 @@ export async function updateSession(request: NextRequest) {
     );
   }
 
-  if (user && isAuthRoute(pathname)) {
+  // Logged-in users leave login/signup/forgot-password, but must stay on
+  // /reset-password after the recovery callback creates a session.
+  if (user && isAuthRoute(pathname) && !isResetPasswordRoute(pathname)) {
     const redirectUrl = request.nextUrl.clone();
     const companyContext = await getActiveCompanyContext();
     const nextParam = request.nextUrl.searchParams.get("next");

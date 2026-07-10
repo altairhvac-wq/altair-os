@@ -270,7 +270,7 @@ export function SettingsNorthStarView({
           <SettingsNorthStarSectionHeader
             eyebrow="Company"
             title="Company profile"
-            description="Company name, locale, and contact information."
+            description="Company name, locale, and contact information (view only for beta)."
           />
 
           <div className="px-3 py-2 sm:px-4 sm:py-4 lg:px-5">
