@@ -35,6 +35,8 @@ type FocusedDocumentOverlayProps = {
   bodyScroll?: "overlay" | "child";
   /** North Star graphite overlay chrome (estimate detail pilot). */
   northStar?: boolean;
+  /** Applied to the fixed overlay root (e.g. `lg:hidden`). */
+  rootClassName?: string;
 };
 
 const OverlayFooterSlotContext = createContext<HTMLElement | null>(null);
@@ -127,6 +129,7 @@ export function FocusedDocumentOverlay({
   closeVariant = "close",
   bodyScroll = "overlay",
   northStar = false,
+  rootClassName,
 }: FocusedDocumentOverlayProps) {
   const [footerSlot, setFooterSlot] = useState<HTMLElement | null>(null);
 
@@ -149,13 +152,13 @@ export function FocusedDocumentOverlay({
 
   const bodyClassName =
     bodyScroll === "child"
-      ? "overlay-form-shell"
+      ? "overlay-form-shell overflow-hidden"
       : "overlay-form-scroll overlay-scroll-body touch-pan-y";
 
   return (
     <ModalPortal>
       <div
-        className="fixed inset-0 z-50 flex h-dvh max-h-dvh flex-col overflow-hidden"
+        className={`fixed inset-0 z-50 flex flex-col overflow-hidden ${rootClassName ?? ""}`}
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel ?? title}
@@ -181,7 +184,7 @@ export function FocusedDocumentOverlay({
           <OverlayFooterSlotContext.Provider value={footerSlot}>
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <div
-                className={`${bodyClassName} min-w-0`}
+                className={`${bodyClassName} min-h-0 min-w-0`}
                 data-no-pull-refresh
               >
                 {children}

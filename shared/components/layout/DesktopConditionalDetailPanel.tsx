@@ -15,6 +15,8 @@ type DesktopConditionalDetailPanelProps = {
   ariaLabel?: string;
   /** Sticky footer region (form actions, etc.) */
   footer?: ReactNode;
+  /** When false, skip the mobile inline aside (use a separate mobile overlay). */
+  showMobileAside?: boolean;
 };
 
 function PanelHeader({
@@ -112,6 +114,7 @@ export function DesktopConditionalDetailPanel({
   closeDisabled = false,
   ariaLabel,
   footer,
+  showMobileAside = true,
 }: DesktopConditionalDetailPanelProps) {
   if (!isOpen) {
     return null;
@@ -130,24 +133,26 @@ export function DesktopConditionalDetailPanel({
         {children}
       </DesktopDrawer>
 
-      <aside className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden admin-card lg:hidden">
-        <PanelHeader
-          title={title}
-          subtitle={subtitle}
-          onClose={onClose}
-          closeDisabled={closeDisabled}
-        />
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-2.5">
-            {children}
-          </div>
-          {footer ? (
-            <div className="overlay-form-actions admin-sticky-footer-inline shrink-0 px-3 py-2.5">
-              {footer}
+      {showMobileAside ? (
+        <aside className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden admin-card lg:hidden">
+          <PanelHeader
+            title={title}
+            subtitle={subtitle}
+            onClose={onClose}
+            closeDisabled={closeDisabled}
+          />
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-2.5">
+              {children}
             </div>
-          ) : null}
-        </div>
-      </aside>
+            {footer ? (
+              <div className="overlay-form-actions admin-sticky-footer-inline shrink-0 px-3 py-2.5">
+                {footer}
+              </div>
+            ) : null}
+          </div>
+        </aside>
+      ) : null}
     </>
   );
 }

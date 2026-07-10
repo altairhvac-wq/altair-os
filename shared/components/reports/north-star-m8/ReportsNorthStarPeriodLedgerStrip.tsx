@@ -44,7 +44,7 @@ export function ReportsNorthStarPeriodLedgerStrip({
   ];
 
   return (
-    <section className="rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] shadow-[0_4px_16px_rgba(3,7,12,0.08)]">
+    <section className="min-w-0 overflow-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] shadow-[0_4px_16px_rgba(3,7,12,0.08)]">
       <div className="flex flex-col gap-3 border-b border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div className="min-w-0">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8A6324]">
@@ -69,12 +69,12 @@ export function ReportsNorthStarPeriodLedgerStrip({
         {metrics.map((metric) => (
           <div
             key={metric.id}
-            className="bg-[#FBF7EF] px-4 py-3.5 sm:px-5 sm:py-4"
+            className="min-w-0 bg-[#FBF7EF] px-3 py-3.5 sm:px-5 sm:py-4"
           >
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638]">
               {metric.label}
             </p>
-            <p className="mt-1.5 truncate text-lg font-bold tabular-nums tracking-tight text-[#17130E] sm:text-xl">
+            <p className="mt-1.5 truncate text-base font-bold tabular-nums tracking-tight text-[#17130E] sm:text-xl">
               {metric.value}
             </p>
           </div>

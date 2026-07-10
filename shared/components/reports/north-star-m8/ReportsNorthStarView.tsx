@@ -89,45 +89,45 @@ export function ReportsNorthStarView({
         subtitle="Revenue, cash flow, tax readiness, and operational signals for your business."
         density="compact"
         surfaceVariant="northStar"
-        className={`north-star-reports-page-header ${lt.pageHeader}`}
+        className={`north-star-reports-page-header ${lt.pageHeader} max-sm:flex-col max-sm:items-stretch`}
         eyebrowClassName={lt.pageHeaderEyebrow}
         titleClassName={lt.pageHeaderTitle}
         subtitleClassName={lt.pageHeaderSubtitle}
-        secondaryAction={
-          <button
-            type="button"
-            className={`north-star-reports-secondary-action ${lt.secondaryAction} justify-center sm:justify-start`}
-            onClick={() => handleGenerateSummary(false)}
-            disabled={!aiFeaturesEnabled || isSummaryPending}
-          >
-            {isSummaryPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-            )}
-            Generate AI Summary
-          </button>
-        }
         primaryAction={
-          <Link
-            href={taxSummaryHref}
-            className={`north-star-reports-primary-action ${lt.primaryAction} justify-center sm:justify-start`}
-          >
-            <FileText className="h-4 w-4" aria-hidden="true" />
-            Export Tax Summary
-          </Link>
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <button
+              type="button"
+              className={`north-star-reports-secondary-action ${lt.secondaryAction} w-full justify-center sm:w-auto sm:justify-start`}
+              onClick={() => handleGenerateSummary(false)}
+              disabled={!aiFeaturesEnabled || isSummaryPending}
+            >
+              {isSummaryPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+              )}
+              Generate AI Summary
+            </button>
+            <Link
+              href={taxSummaryHref}
+              className={`north-star-reports-primary-action ${lt.primaryAction} w-full justify-center sm:w-auto sm:justify-start`}
+            >
+              <FileText className="h-4 w-4" aria-hidden="true" />
+              Export Tax Summary
+            </Link>
+          </div>
         }
       />
 
       <MasterContentStack
         density="compact"
-        className="reports-north-star-brief min-w-0 px-3 sm:px-3.5 lg:px-5"
+        className="reports-north-star-brief min-w-0 overflow-x-hidden px-3 sm:px-3.5 lg:px-5"
       >
         <ReportDateRangeBar range={data.dateRange} variant="northStar" />
 
         <ReportsNorthStarPeriodLedgerStrip summary={data.accountantSummary} />
 
-        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-3">
+        <div className="grid min-w-0 gap-2.5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-3">
           {data.kpis.map((metric) => (
             <ReportKpiCard key={metric.id} metric={metric} variant="northStar" />
           ))}
@@ -144,21 +144,21 @@ export function ReportsNorthStarView({
           />
         ) : null}
 
-        <div className="grid gap-2.5 lg:grid-cols-12 lg:gap-3">
-          <div className="lg:col-span-8">
+        <div className="grid min-w-0 gap-2.5 lg:grid-cols-12 lg:gap-3">
+          <div className="min-w-0 lg:col-span-8">
             <RevenueTrendChartCard
               data={data.revenueTrend}
               variant="northStar"
             />
           </div>
-          <div className="lg:col-span-4">
+          <div className="min-w-0 lg:col-span-4">
             <CashHealthChartCard data={data.cashHealth} variant="northStar" />
           </div>
-          <div className="lg:col-span-6">
+          <div className="min-w-0 lg:col-span-6">
             <SalesFunnelChartCard stages={data.salesFunnel} variant="northStar" />
           </div>
           {data.showTechnicianProfitability ? (
-            <div className="lg:col-span-6">
+            <div className="min-w-0 lg:col-span-6">
               <TechnicianProfitabilityChartCard
                 technicians={data.technicianProfitability}
                 variant="northStar"

@@ -36,8 +36,8 @@ export function ReportDateRangeBar({
 
   if (northStar) {
     return (
-      <div className="flex flex-wrap items-center gap-2 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-2.5 sm:px-4">
-        <div className="flex w-full flex-wrap gap-0.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#E8DCC4] p-0.5 sm:w-auto">
+      <div className="min-w-0 overflow-x-auto rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-2.5 sm:px-4">
+        <div className="flex w-max min-w-full flex-wrap gap-0.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#E8DCC4] p-0.5 sm:w-auto">
           {REPORTS_PAGE_DATE_RANGE_OPTIONS.map((option) => {
             const isActive = option.value === range;
 

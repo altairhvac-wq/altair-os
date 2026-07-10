@@ -160,7 +160,7 @@ export function EstimateForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="overlay-form-shell px-3 py-3 sm:px-4 sm:py-4"
+      className="overlay-form-shell min-h-0 flex-1 px-3 py-3 sm:px-4 sm:py-4"
       aria-busy={isSubmitting}
     >
       <div className="mb-2 shrink-0">
@@ -178,7 +178,7 @@ export function EstimateForm({
         </div>
       ) : null}
 
-      <div className="overlay-form-scroll overflow-x-hidden">
+      <div className="overlay-form-scroll min-h-0 overflow-x-hidden pb-2">
         <fieldset
           disabled={isSubmitting}
           className="m-0 min-w-0 border-0 p-0"
@@ -323,7 +323,7 @@ export function EstimateForm({
         </fieldset>
       </div>
 
-      <div className={`${adminFormActionsClass} overlay-form-actions bg-white`}>
+      <div className={`${adminFormActionsClass} overlay-form-actions admin-sticky-footer-inline bg-white`}>
         {step === "info" ? (
           <>
             <button
