@@ -26,7 +26,9 @@ const rootVariantClass: Record<MobileSheetVariant, string> = {
 const zIndexClass: Record<40 | 50 | 60, string> = {
   40: "z-40",
   50: "z-50",
-  60: "z-60",
+  // Tailwind's default scale stops at 50; use arbitrary value so sheets
+  // can stack above FocusedDocumentOverlay (z-50).
+  60: "z-[60]",
 };
 
 export function MobileSheet({

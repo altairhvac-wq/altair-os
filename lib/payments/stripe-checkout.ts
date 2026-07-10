@@ -2,6 +2,7 @@ import "server-only";
 
 import Stripe from "stripe";
 import { getAppBaseUrl } from "@/lib/email/env";
+import { getStripeSecretKey } from "@/lib/payments/env";
 import type { CompanyPaymentAccount } from "@/lib/payments/types";
 import { getStripeClient } from "@/lib/payments/stripe-client";
 import { isCardPaymentsCapabilityActiveFromProviderMetadata } from "@/lib/payments/stripe-account-sync";
@@ -69,6 +70,23 @@ export async function createStripeInvoiceCheckoutSession(
       stripeAccount: connectedAccountId,
     },
   );
+
+  const stripeSecretKey = getStripeSecretKey();
+  console.info("[stripe-checkout-mode]", {
+    keyMode: stripeSecretKey?.startsWith("sk_live")
+      ? "live"
+      : stripeSecretKey?.startsWith("sk_test")
+        ? "test"
+        : "unknown",
+    sessionMode: session.id.startsWith("cs_live")
+      ? "live"
+      : session.id.startsWith("cs_test")
+        ? "test"
+        : "unknown",
+    hasConnectedAccount: Boolean(connectedAccountId),
+    hasCompanyId: Boolean(companyId),
+    hasInvoiceId: Boolean(invoice.id),
+  });
 
   if (!session.url) {
     throw new Error("Stripe did not return a checkout session URL.");

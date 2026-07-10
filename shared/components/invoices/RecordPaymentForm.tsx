@@ -168,6 +168,7 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
       closeDisabled={closeDisabled}
       ariaLabelledBy={RECORD_PAYMENT_TITLE_ID}
       variant="responsive"
+      zIndex={60}
     >
       <MobileSheetPanel maxWidth="lg" maxHeight="90" responsiveRounded>
         <MobileSheetHeader
