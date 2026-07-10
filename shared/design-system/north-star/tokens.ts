@@ -588,7 +588,7 @@ export const northStarEstimateDocumentTokens: NorthStarEstimateDocumentTokens = 
 
 /**
  * Dispatch command shell — Mission Control Original Refined (M15B).
- * Graphite command header, ivory section controls, brass accents.
+ * Graphite command header, dark elevated lanes/cards, brass accents.
  */
 export type NorthStarDispatchTokens = {
   sectionButton: string;
@@ -713,24 +713,24 @@ export type NorthStarDispatchTokens = {
 
 export const northStarDispatchTokens: NorthStarDispatchTokens = {
   sectionButton:
-    "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-2.5 py-2 text-xs font-semibold text-[#4F4638] shadow-[0_1px_3px_rgba(138,99,36,0.10)] transition-colors hover:border-[rgba(201,164,77,0.32)] hover:bg-[#F3EBDD] sm:min-h-11 sm:gap-2 sm:px-3 sm:text-sm [&_svg]:text-[#8A6324]",
+    "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.45)] px-2.5 py-2 text-xs font-semibold text-[#F3EBDD] shadow-[0_1px_3px_rgba(3,7,12,0.18)] transition-colors hover:border-[rgba(201,164,77,0.32)] hover:bg-[rgba(39,49,64,0.65)] sm:min-h-11 sm:gap-2 sm:px-3 sm:text-sm [&_svg]:text-[#D6BE78]",
   sectionButtonActive:
-    "border-[rgba(201,164,77,0.38)] bg-[#EFE4CB] text-[#17130E] ring-2 ring-[rgba(201,164,77,0.22)] [&_svg]:text-[#8A6324]",
+    "border-[rgba(201,164,77,0.42)] bg-[rgba(201,164,77,0.16)] text-[#FFF8E8] ring-2 ring-[rgba(201,164,77,0.24)] [&_svg]:text-[#E6D092]",
   sectionButtonEmphasized:
-    "border-[rgba(201,164,77,0.42)] bg-[#F5EBD4] text-[#17130E] ring-2 ring-[rgba(201,164,77,0.28)] [&_svg]:text-[#8A6324]",
+    "border-[rgba(201,164,77,0.48)] bg-[rgba(201,164,77,0.20)] text-[#FFF8E8] ring-2 ring-[rgba(201,164,77,0.30)] [&_svg]:text-[#E6D092]",
   sectionButtonBadge:
-    "rounded-full bg-[rgba(138,99,36,0.10)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#64748B] sm:px-2 sm:text-xs",
+    "rounded-full bg-[rgba(174,182,194,0.14)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#AEB6C2] sm:px-2 sm:text-xs",
   sectionButtonBadgeActive:
-    "rounded-full bg-[rgba(201,164,77,0.18)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#8A6324] sm:px-2 sm:text-xs",
+    "rounded-full bg-[rgba(201,164,77,0.22)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#E6D092] sm:px-2 sm:text-xs",
   focusBanner:
-    "flex flex-wrap items-start justify-between gap-2 rounded-xl border border-[rgba(201,164,77,0.22)] bg-[#FBF7EF] px-3 py-2 shadow-[0_2px_8px_rgba(138,99,36,0.08)] sm:gap-3 sm:px-4 sm:py-3",
+    "flex flex-wrap items-start justify-between gap-2 rounded-xl border border-[rgba(201,164,77,0.28)] bg-[rgba(39,49,64,0.55)] px-3 py-2 shadow-[0_2px_8px_rgba(3,7,12,0.18)] sm:gap-3 sm:px-4 sm:py-3",
   focusBannerIcon:
-    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.14)] sm:h-9 sm:w-9 sm:rounded-xl",
-  focusBannerTitle: "text-xs font-bold text-[#17130E] sm:text-sm",
+    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgba(201,164,77,0.16)] text-[#E6D092] ring-1 ring-[rgba(201,164,77,0.24)] sm:h-9 sm:w-9 sm:rounded-xl",
+  focusBannerTitle: "text-xs font-bold text-[#FFF8E8] sm:text-sm",
   focusBannerDescription:
-    "mt-0.5 hidden text-[11px] leading-snug text-[#4F4638] sm:mt-1 sm:block sm:text-xs sm:leading-relaxed",
+    "mt-0.5 hidden text-[11px] leading-snug text-[#D7CDBD] sm:mt-1 sm:block sm:text-xs sm:leading-relaxed",
   focusBannerClear:
-    "inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#8A6324] transition-colors hover:text-[#6B5A2E]",
+    "inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#E6D092] transition-colors hover:text-[#F0E4B8]",
   statPill:
     "rounded-full border border-[rgba(201,164,77,0.28)] bg-[rgba(39,49,64,0.45)] px-2 py-1 text-[11px] font-semibold tabular-nums text-[#F3EBDD] shadow-sm sm:px-3 sm:py-1.5 sm:text-xs",
   statPillUnassigned:
@@ -745,23 +745,23 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
     "text-sm font-bold tracking-tight text-[#FFF8E8] sm:text-base",
   boardHeaderSubtitle: "mt-0.5 hidden text-xs text-[#D7CDBD] sm:block",
   boardBody:
-    "min-h-0 min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-[#EFE4CB] px-2 py-2.5 pb-[max(5rem,calc(1rem+env(safe-area-inset-bottom)))] sm:px-3 sm:py-3 sm:pb-16 lg:pb-6",
+    "min-h-0 min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-[#141c26] px-2 py-2.5 pb-[max(5rem,calc(1rem+env(safe-area-inset-bottom)))] sm:px-3 sm:py-3 sm:pb-16 lg:pb-6",
   boardUnassignedButton:
     "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(201,164,77,0.32)] bg-[rgba(201,164,77,0.12)] px-2.5 py-1.5 text-xs font-semibold text-[#E6D092] transition-colors hover:border-[rgba(214,190,120,0.42)] hover:bg-[rgba(201,164,77,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.35)]",
   boardUnassignedBadge:
     "rounded-full bg-[rgba(201,164,77,0.22)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#FFF8E8]",
   boardEmphasisRing: "ring-2 ring-[rgba(201,164,77,0.28)]",
   filterBar:
-    "dispatch-north-star-filter-bar rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-2.5 shadow-[0_2px_8px_rgba(3,7,12,0.08)] sm:rounded-2xl sm:px-4 sm:py-3",
+    "dispatch-north-star-filter-bar rounded-xl border border-[rgba(174,182,194,0.18)] bg-[#1A2029] px-3 py-2.5 shadow-[0_2px_8px_rgba(3,7,12,0.18)] sm:rounded-2xl sm:px-4 sm:py-3",
   filterBarCompact: "dispatch-north-star-filter-bar px-0 py-0",
   unassignedFilterButton:
-    "col-span-2 inline-flex min-h-[2.75rem] shrink-0 items-center justify-center gap-2 rounded-lg border border-[rgba(201,164,77,0.28)] bg-[#F5EBD4] px-3 py-2 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[rgba(201,164,77,0.38)] hover:bg-[#EFE4CB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.30)] sm:col-span-1 sm:min-h-0 sm:py-2.5",
+    "col-span-2 inline-flex min-h-[2.75rem] shrink-0 items-center justify-center gap-2 rounded-lg border border-[rgba(201,164,77,0.32)] bg-[rgba(201,164,77,0.14)] px-3 py-2 text-sm font-semibold text-[#E6D092] transition-colors hover:border-[rgba(201,164,77,0.42)] hover:bg-[rgba(201,164,77,0.20)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.30)] sm:col-span-1 sm:min-h-0 sm:py-2.5",
   unassignedFilterBadge:
-    "rounded-full bg-[rgba(201,164,77,0.18)] px-2 py-0.5 text-xs font-bold tabular-nums text-[#8A6324]",
+    "rounded-full bg-[rgba(201,164,77,0.22)] px-2 py-0.5 text-xs font-bold tabular-nums text-[#FFF8E8]",
   lane:
-    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FBF7EF] shadow-[0_2px_10px_rgba(3,7,12,0.10)] sm:rounded-2xl",
+    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#1F2A38] shadow-[0_2px_10px_rgba(3,7,12,0.22)] sm:rounded-2xl",
   laneHeader:
-    "flex shrink-0 items-center gap-2 border-b border-[rgba(138,99,36,0.12)] bg-gradient-to-b from-[#273140] to-[#1A2029] px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:border-[rgba(201,164,77,0.14)] sm:px-3 sm:py-2.5 lg:w-48",
+    "flex shrink-0 items-center gap-2 border-b border-[rgba(174,182,194,0.12)] bg-gradient-to-b from-[#273140] to-[#1A2029] px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:border-[rgba(201,164,77,0.14)] sm:px-3 sm:py-2.5 lg:w-48",
   laneHeaderAvatar:
     "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-xs font-bold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.20)] ring-1 ring-[rgba(201,164,77,0.28)] sm:h-9 sm:w-9 sm:rounded-xl",
   laneHeaderName:
@@ -773,53 +773,53 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   laneHeaderCount:
     "rounded-full border border-[rgba(201,164,77,0.22)] bg-[rgba(39,49,64,0.55)] px-2 py-0.5 text-[11px] font-semibold tabular-nums text-[#F3EBDD]",
   laneJobWell:
-    "flex min-h-[4.75rem] min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain bg-[#FFF9EA] p-2 sm:min-h-[5.5rem] sm:gap-2.5 sm:p-2.5",
+    "flex min-h-[4.75rem] min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain bg-[#151d28] p-2 sm:min-h-[5.5rem] sm:gap-2.5 sm:p-2.5",
   laneEmptyWell:
-    "flex flex-1 items-center justify-center rounded-lg border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FBF7EF] px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3",
-  laneEmptyText: "text-[11px] font-medium text-[#64748B]",
+    "flex flex-1 items-center justify-center rounded-lg border border-dashed border-[rgba(174,182,194,0.18)] bg-[rgba(39,49,64,0.28)] px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3",
+  laneEmptyText: "text-[11px] font-medium text-[#AEB6C2]",
   laneToggleButton:
-    "self-start rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-1.5 text-[11px] font-semibold text-[#4F4638] transition-colors hover:border-[rgba(201,164,77,0.32)] hover:bg-[#F3EBDD] sm:text-xs",
+    "self-start rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.45)] px-3 py-1.5 text-[11px] font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(201,164,77,0.32)] hover:bg-[rgba(39,49,64,0.65)] sm:text-xs",
   laneToggleButtonDashed:
-    "self-start rounded-lg border border-dashed border-[rgba(138,99,36,0.22)] bg-[#FBF7EF] px-3 py-1.5 text-[11px] font-semibold text-[#4F4638] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[#FFF9EA] sm:text-xs",
+    "self-start rounded-lg border border-dashed border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.28)] px-3 py-1.5 text-[11px] font-semibold text-[#D7CDBD] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[rgba(39,49,64,0.45)] sm:text-xs",
   unassignedLane:
-    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(201,164,77,0.22)] bg-[#F5EBD4] shadow-[0_2px_10px_rgba(138,99,36,0.10)] sm:rounded-2xl",
+    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(201,164,77,0.28)] bg-[#243044] shadow-[0_2px_10px_rgba(3,7,12,0.22)] sm:rounded-2xl",
   unassignedLaneEmphasis:
-    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(201,164,77,0.32)] bg-[#EFE4CB] shadow-[0_4px_16px_rgba(138,99,36,0.12)] ring-1 ring-[rgba(201,164,77,0.18)] sm:rounded-2xl",
+    "min-w-0 max-w-full overflow-hidden rounded-xl border border-[rgba(201,164,77,0.42)] bg-[#2A3648] shadow-[0_4px_16px_rgba(3,7,12,0.24)] ring-1 ring-[rgba(201,164,77,0.22)] sm:rounded-2xl",
   unassignedLaneHeader:
-    "flex shrink-0 items-center gap-2 border-b border-[rgba(201,164,77,0.18)] bg-gradient-to-b from-[#F5EBD4] to-[#EFE4CB] px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:border-[rgba(201,164,77,0.16)] sm:px-3 sm:py-2.5 lg:w-48",
+    "flex shrink-0 items-center gap-2 border-b border-[rgba(201,164,77,0.18)] bg-gradient-to-b from-[#2F3D50] to-[#243044] px-2.5 py-2 sm:gap-2.5 sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r sm:border-[rgba(201,164,77,0.16)] sm:px-3 sm:py-2.5 lg:w-48",
   unassignedLaneIcon:
-    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgba(201,164,77,0.18)] text-[#8A6324] ring-1 ring-[rgba(201,164,77,0.24)] sm:h-9 sm:w-9 sm:rounded-xl [&_svg]:text-[#8A6324]",
-  unassignedLaneTitle: "text-sm font-bold text-[#17130E]",
-  unassignedLaneSubtitle: "hidden text-[11px] text-[#4F4638] sm:block",
+    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgba(201,164,77,0.18)] text-[#E6D092] ring-1 ring-[rgba(201,164,77,0.28)] sm:h-9 sm:w-9 sm:rounded-xl [&_svg]:text-[#E6D092]",
+  unassignedLaneTitle: "text-sm font-bold text-[#FFF8E8]",
+  unassignedLaneSubtitle: "hidden text-[11px] text-[#D7CDBD] sm:block",
   unassignedLaneCount:
-    "rounded-full border border-[rgba(201,164,77,0.28)] bg-[rgba(201,164,77,0.14)] px-2 py-0.5 text-[11px] font-bold tabular-nums text-[#8A6324]",
+    "rounded-full border border-[rgba(201,164,77,0.32)] bg-[rgba(201,164,77,0.16)] px-2 py-0.5 text-[11px] font-bold tabular-nums text-[#E6D092]",
   unassignedJobWell:
-    "flex min-h-[4.75rem] min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain bg-[#FFF9EA] p-2 sm:min-h-[5.5rem] sm:gap-2.5 sm:p-2.5",
+    "flex min-h-[4.75rem] min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain bg-[#151d28] p-2 sm:min-h-[5.5rem] sm:gap-2.5 sm:p-2.5",
   unassignedEmptyWell:
-    "flex flex-1 items-center justify-center rounded-lg border border-dashed border-[rgba(201,164,77,0.22)] bg-[#FBF7EF] px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3",
+    "flex flex-1 items-center justify-center rounded-lg border border-dashed border-[rgba(201,164,77,0.24)] bg-[rgba(39,49,64,0.28)] px-3 py-2.5 text-center sm:rounded-xl sm:px-4 sm:py-3",
   jobCard:
-    "snap-start w-full rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] p-3.5 text-left shadow-[0_2px_8px_rgba(3,7,12,0.08)] transition-[border-color,box-shadow,background-color] hover:border-[rgba(201,164,77,0.28)] hover:shadow-[0_4px_14px_rgba(3,7,12,0.12)]",
+    "snap-start w-full rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#273140] p-3.5 text-left shadow-[0_2px_8px_rgba(3,7,12,0.22)] transition-[border-color,box-shadow,background-color] hover:border-[rgba(201,164,77,0.32)] hover:shadow-[0_4px_14px_rgba(3,7,12,0.28)]",
   jobCardCompact:
-    "snap-start w-[12rem] shrink-0 rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] p-2.5 text-left shadow-[0_2px_8px_rgba(3,7,12,0.08)] transition-[border-color,box-shadow,background-color] hover:border-[rgba(201,164,77,0.28)] hover:shadow-[0_4px_14px_rgba(3,7,12,0.12)] sm:w-[13.25rem] sm:p-3",
+    "snap-start w-[12rem] shrink-0 rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#273140] p-2.5 text-left shadow-[0_2px_8px_rgba(3,7,12,0.22)] transition-[border-color,box-shadow,background-color] hover:border-[rgba(201,164,77,0.32)] hover:shadow-[0_4px_14px_rgba(3,7,12,0.28)] sm:w-[13.25rem] sm:p-3",
   jobCardSelected:
-    "border-[rgba(201,164,77,0.45)] bg-[#F5EBD4] shadow-[0_4px_16px_rgba(138,99,36,0.14)] ring-2 ring-[rgba(201,164,77,0.28)]",
+    "border-[rgba(201,164,77,0.48)] bg-[#2F3D50] shadow-[0_4px_16px_rgba(3,7,12,0.28)] ring-2 ring-[rgba(201,164,77,0.28)]",
   jobCardAssigning:
-    "border-[rgba(201,164,77,0.35)] bg-[#EFE4CB]",
+    "border-[rgba(201,164,77,0.35)] bg-[#243044] opacity-90",
   jobCardJobNumber:
-    "font-semibold uppercase tracking-[0.12em] text-[#8A6324] tabular-nums",
-  jobCardCustomer: "truncate font-bold tracking-tight text-[#17130E]",
-  jobCardService: "truncate text-[#4F4638]",
-  jobCardMeta: "text-[#4F4638]",
-  jobCardMetaIcon: "shrink-0 text-[#8A6324]",
-  jobCardMetaTime: "font-semibold text-[#17130E]",
-  jobCardFooter: "border-t border-[rgba(138,99,36,0.12)]",
-  jobCardLoader: "h-3.5 w-3.5 animate-spin text-[#8A6324]",
+    "font-semibold uppercase tracking-[0.12em] text-[#D6BE78] tabular-nums",
+  jobCardCustomer: "truncate font-bold tracking-tight text-[#FFF8E8]",
+  jobCardService: "truncate text-[#D7CDBD]",
+  jobCardMeta: "text-[#D7CDBD]",
+  jobCardMetaIcon: "shrink-0 text-[#D6BE78]",
+  jobCardMetaTime: "font-semibold text-[#F3EBDD]",
+  jobCardFooter: "border-t border-[rgba(174,182,194,0.14)]",
+  jobCardLoader: "h-3.5 w-3.5 animate-spin text-[#D6BE78]",
   emptyState:
-    "flex w-full max-w-md flex-col items-center rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FBF7EF] px-6 py-8 text-center shadow-[0_4px_16px_rgba(3,7,12,0.08)]",
+    "flex w-full max-w-md flex-col items-center rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#1F2A38] px-6 py-8 text-center shadow-[0_4px_16px_rgba(3,7,12,0.22)]",
   emptyStateIcon:
-    "flex h-12 w-12 items-center justify-center rounded-xl bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.14)] [&_svg]:text-[#8A6324]",
-  emptyStateTitle: "mt-3 text-base font-bold text-[#17130E]",
-  emptyStateDescription: "mt-1.5 text-sm text-[#64748B]",
+    "flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(201,164,77,0.14)] ring-1 ring-[rgba(201,164,77,0.22)] [&_svg]:text-[#D6BE78]",
+  emptyStateTitle: "mt-3 text-base font-bold text-[#FFF8E8]",
+  emptyStateDescription: "mt-1.5 text-sm text-[#AEB6C2]",
   detailPanelShell:
     "dispatch-north-star-detail-panel relative flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-t-2xl bg-[#1A2029] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38)] ring-1 ring-[rgba(174,182,194,0.18)] sm:rounded-2xl",
   detailPanelTopAccent:
@@ -834,86 +834,86 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
   detailPanelCloseButton:
     "inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.35)] p-2 text-[#F3EBDD] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[rgba(39,49,64,0.55)] [&_svg]:text-[#D6BE78]",
   detailPanelBody:
-    "dispatch-north-star-detail-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-[#FBF7EF] pl-4 pr-5 py-4 pb-[max(6rem,calc(1.5rem+env(safe-area-inset-bottom)))] sm:pl-5 sm:pr-6 sm:py-5 sm:pb-[max(4.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] lg:pb-6",
+    "dispatch-north-star-detail-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-[#141c26] pl-4 pr-5 py-4 pb-[max(6rem,calc(1.5rem+env(safe-area-inset-bottom)))] sm:pl-5 sm:pr-6 sm:py-5 sm:pb-[max(4.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] lg:pb-6",
   detailSectionLabel:
-    "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4F4638]",
+    "text-[10px] font-semibold uppercase tracking-[0.14em] text-[#AEB6C2]",
   detailIdentityCard:
-    "rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-3.5 shadow-[0_2px_8px_rgba(3,7,12,0.06)] sm:p-4",
-  detailIdentityService: "text-sm font-medium text-[#4F4638]",
-  detailIdentityMeta: "text-xs text-[#64748B]",
+    "rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#1F2A38] p-3.5 shadow-[0_2px_8px_rgba(3,7,12,0.18)] sm:p-4",
+  detailIdentityService: "text-sm font-medium text-[#D7CDBD]",
+  detailIdentityMeta: "text-xs text-[#AEB6C2]",
   detailSiteContextCard:
-    "rounded-xl border border-[rgba(138,99,36,0.12)] bg-gradient-to-br from-[#FFF9EA] to-[#F5F0E4] p-3.5 shadow-[0_2px_8px_rgba(3,7,12,0.06)] sm:p-4",
+    "rounded-xl border border-[rgba(174,182,194,0.16)] bg-gradient-to-br from-[#243044] to-[#1F2A38] p-3.5 shadow-[0_2px_8px_rgba(3,7,12,0.18)] sm:p-4",
   detailSiteContextIconWrap:
-    "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.14)] [&_svg]:text-[#8A6324]",
-  detailSiteContextAddress: "text-sm font-medium leading-snug text-[#17130E]",
-  detailSectionDivider: "border-[rgba(138,99,36,0.12)]",
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgba(201,164,77,0.14)] ring-1 ring-[rgba(201,164,77,0.22)] [&_svg]:text-[#D6BE78]",
+  detailSiteContextAddress: "text-sm font-medium leading-snug text-[#F3EBDD]",
+  detailSectionDivider: "border-[rgba(174,182,194,0.14)]",
   detailAssignmentCard:
-    "rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-3 shadow-[0_2px_6px_rgba(3,7,12,0.05)]",
+    "rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#1F2A38] p-3 shadow-[0_2px_6px_rgba(3,7,12,0.16)]",
   detailTechAvatar:
     "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-xs font-bold text-[#17130E] ring-1 ring-[rgba(201,164,77,0.28)]",
-  detailTechName: "text-sm font-semibold text-[#17130E]",
-  detailTechRole: "text-xs text-[#4F4638]",
-  detailTechPhone: "text-xs text-[#4F4638] [&_svg]:text-[#8A6324]",
+  detailTechName: "text-sm font-semibold text-[#FFF8E8]",
+  detailTechRole: "text-xs text-[#D7CDBD]",
+  detailTechPhone: "text-xs text-[#D7CDBD] [&_svg]:text-[#D6BE78]",
   detailUnassignedBanner:
-    "flex items-center gap-2 text-sm font-medium text-[#92400E]",
+    "flex items-center gap-2 text-sm font-medium text-[#E6D092]",
   detailEstimateHint:
-    "rounded-lg border border-[rgba(201,164,77,0.28)] bg-[#F5EBD4] px-3 py-2.5 text-xs font-medium text-[#4F4638] ring-1 ring-[rgba(201,164,77,0.16)]",
+    "rounded-lg border border-[rgba(201,164,77,0.28)] bg-[rgba(201,164,77,0.12)] px-3 py-2.5 text-xs font-medium text-[#E6D092] ring-1 ring-[rgba(201,164,77,0.16)]",
   detailSelect:
-    "w-full min-h-11 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-3 text-sm text-[#17130E] outline-none focus:border-[#B88A2E] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2",
+    "w-full min-h-11 rounded-lg border border-[rgba(148,163,184,0.24)] bg-[#FFFFFF] px-3 py-3 text-sm text-[#101827] outline-none focus:border-[#B88A2E] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2",
   detailPrimaryButton:
-    "north-star-dispatch-disabled-action w-full min-h-11 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3 py-3 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:border-[rgba(138,99,36,0.14)] disabled:from-[#EFE4CB] disabled:via-[#EFE4CB] disabled:to-[#EFE4CB] disabled:text-[#64748B] disabled:shadow-none sm:py-2",
+    "north-star-dispatch-disabled-action w-full min-h-11 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3 py-3 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:border-[rgba(174,182,194,0.18)] disabled:from-[#2A3648] disabled:via-[#2A3648] disabled:to-[#2A3648] disabled:text-[#AEB6C2] disabled:shadow-none sm:py-2",
   detailSecondaryButton:
-    "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 py-3 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2 [&_svg]:text-[#8A6324]",
-  detailMutedText: "text-xs text-[#64748B]",
-  detailBodyText: "text-sm leading-relaxed text-[#4F4638]",
+    "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.45)] px-3 py-3 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(201,164,77,0.32)] hover:bg-[rgba(39,49,64,0.65)] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2 [&_svg]:text-[#D6BE78]",
+  detailMutedText: "text-xs text-[#AEB6C2]",
+  detailBodyText: "text-sm leading-relaxed text-[#D7CDBD]",
   detailFooterLink:
-    "flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 py-3 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] sm:py-2",
-  detailFooterDivider: "border-[rgba(138,99,36,0.12)]",
+    "flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.45)] px-3 py-3 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(201,164,77,0.32)] hover:bg-[rgba(39,49,64,0.65)] sm:py-2",
+  detailFooterDivider: "border-[rgba(174,182,194,0.14)]",
   detailPermissionNote:
-    "rounded-xl border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-4 py-3 text-sm text-[#4F4638]",
-  detailPendingNote: "text-xs font-medium text-[#92400E]",
+    "rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#1F2A38] px-4 py-3 text-sm text-[#D7CDBD]",
+  detailPendingNote: "text-xs font-medium text-[#E6D092]",
   pageCanvas: "north-star-dispatch-page-canvas",
   sectionSheetPanel:
-    "dispatch-north-star-section-sheet relative flex h-[90dvh] max-h-[90dvh] min-h-0 flex-col overflow-hidden rounded-t-2xl border border-[rgba(174,182,194,0.18)] bg-[#FBF7EF] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38)] sm:h-auto sm:max-h-[85dvh] sm:rounded-2xl",
+    "dispatch-north-star-section-sheet relative flex h-[90dvh] max-h-[90dvh] min-h-0 flex-col overflow-hidden rounded-t-2xl border border-[rgba(174,182,194,0.18)] bg-[#1A2029] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38)] sm:h-auto sm:max-h-[85dvh] sm:rounded-2xl",
   sectionSheetHeader:
     "border-b border-[rgba(201,164,77,0.14)] bg-gradient-to-b from-[#273140] to-[#1A2029]",
   sectionSheetHeaderIcon:
-    "bg-[#EFE4CB] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.14)] sm:rounded-xl [&_svg]:text-[#8A6324]",
+    "bg-[rgba(201,164,77,0.14)] text-[#D6BE78] ring-1 ring-[rgba(201,164,77,0.22)] sm:rounded-xl [&_svg]:text-[#D6BE78]",
   sectionSheetBody:
-    "min-w-0 overflow-x-hidden bg-[#FBF7EF] pb-[max(5.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))]",
+    "min-w-0 overflow-x-hidden bg-[#141c26] pb-[max(5.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))]",
   detailMobileSheetPanel:
     "dispatch-north-star-detail-mobile-sheet flex h-[90dvh] max-h-[90dvh] min-h-0 flex-col sm:h-auto sm:max-h-[90dvh]",
   unassignedSheetPanel:
-    "dispatch-north-star-unassigned-sheet relative flex h-[90dvh] max-h-[90dvh] min-h-0 flex-col overflow-hidden rounded-t-2xl border border-[rgba(201,164,77,0.22)] bg-[#FBF7EF] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38)] sm:h-auto sm:max-h-[80vh] sm:rounded-2xl",
+    "dispatch-north-star-unassigned-sheet relative flex h-[90dvh] max-h-[90dvh] min-h-0 flex-col overflow-hidden rounded-t-2xl border border-[rgba(201,164,77,0.28)] bg-[#1A2029] shadow-[0_14px_48px_-14px_rgba(0,0,0,0.38)] sm:h-auto sm:max-h-[80vh] sm:rounded-2xl",
   unassignedSheetHeader:
-    "border-b border-[rgba(201,164,77,0.18)] bg-gradient-to-b from-[#F5EBD4] to-[#EFE4CB]",
+    "border-b border-[rgba(201,164,77,0.18)] bg-gradient-to-b from-[#273140] to-[#1A2029]",
   unassignedSheetHeaderIcon:
-    "bg-[rgba(201,164,77,0.18)] text-[#8A6324] ring-1 ring-[rgba(201,164,77,0.24)] sm:rounded-xl [&_svg]:text-[#8A6324]",
+    "bg-[rgba(201,164,77,0.18)] text-[#E6D092] ring-1 ring-[rgba(201,164,77,0.28)] sm:rounded-xl [&_svg]:text-[#E6D092]",
   unassignedSheetBadge:
-    "rounded-full bg-[rgba(201,164,77,0.18)] px-2.5 py-0.5 text-xs font-bold tabular-nums text-[#8A6324]",
+    "rounded-full bg-[rgba(201,164,77,0.22)] px-2.5 py-0.5 text-xs font-bold tabular-nums text-[#FFF8E8]",
   unassignedSheetEmpty:
-    "flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(201,164,77,0.22)] bg-[#FFF9EA] px-4 py-10 text-center",
+    "flex flex-col items-center justify-center rounded-xl border border-dashed border-[rgba(201,164,77,0.24)] bg-[rgba(39,49,64,0.28)] px-4 py-10 text-center",
   summaryMetricCard:
-    "rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] p-2.5 shadow-[0_2px_8px_rgba(3,7,12,0.06)] sm:rounded-2xl sm:p-4",
+    "rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#1F2A38] p-2.5 shadow-[0_2px_8px_rgba(3,7,12,0.18)] sm:rounded-2xl sm:p-4",
   summaryMetricCardHighlight:
-    "border-[rgba(201,164,77,0.32)] bg-[#F5EBD4] ring-1 ring-[rgba(201,164,77,0.18)]",
+    "border-[rgba(201,164,77,0.32)] bg-[rgba(201,164,77,0.12)] ring-1 ring-[rgba(201,164,77,0.18)]",
   summaryMetricCardInteractive:
-    "cursor-pointer transition-[border-color,box-shadow,background-color] hover:border-[rgba(201,164,77,0.32)] hover:bg-[#F3EBDD] hover:shadow-[0_4px_14px_rgba(3,7,12,0.10)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.30)]",
+    "cursor-pointer transition-[border-color,box-shadow,background-color] hover:border-[rgba(201,164,77,0.32)] hover:bg-[#243044] hover:shadow-[0_4px_14px_rgba(3,7,12,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.30)]",
   summaryMetricLabel:
-    "truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638] sm:text-[11px]",
+    "truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-[#AEB6C2] sm:text-[11px]",
   summaryMetricValue:
-    "mt-0.5 text-lg font-bold tabular-nums text-[#17130E] sm:mt-1 sm:text-2xl",
-  summaryMetricDescription: "mt-0.5 hidden text-xs text-[#64748B] sm:block",
+    "mt-0.5 text-lg font-bold tabular-nums text-[#FFF8E8] sm:mt-1 sm:text-2xl",
+  summaryMetricDescription: "mt-0.5 hidden text-xs text-[#AEB6C2] sm:block",
   summaryMetricIcon:
-    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.14)] sm:h-10 sm:w-10 sm:rounded-xl [&_svg]:text-[#8A6324]",
+    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgba(201,164,77,0.14)] ring-1 ring-[rgba(201,164,77,0.22)] sm:h-10 sm:w-10 sm:rounded-xl [&_svg]:text-[#D6BE78]",
   workloadCard:
-    "rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] p-2.5 shadow-[0_2px_8px_rgba(3,7,12,0.06)] transition-[border-color,box-shadow,background-color] sm:rounded-2xl sm:p-4",
+    "rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#1F2A38] p-2.5 shadow-[0_2px_8px_rgba(3,7,12,0.18)] transition-[border-color,box-shadow,background-color] sm:rounded-2xl sm:p-4",
   workloadCardActive:
-    "border-[rgba(201,164,77,0.38)] bg-[#F5EBD4] ring-2 ring-[rgba(201,164,77,0.22)]",
+    "border-[rgba(201,164,77,0.42)] bg-[rgba(201,164,77,0.12)] ring-2 ring-[rgba(201,164,77,0.22)]",
   workloadCardOverloaded:
-    "border-[rgba(201,164,77,0.32)] bg-[#F5EBD4] ring-2 ring-[rgba(201,164,77,0.18)] shadow-[0_4px_14px_rgba(138,99,36,0.10)]",
+    "border-[rgba(201,164,77,0.38)] bg-[rgba(201,164,77,0.10)] ring-2 ring-[rgba(201,164,77,0.18)] shadow-[0_4px_14px_rgba(3,7,12,0.22)]",
   workloadCardInteractive:
-    "min-h-11 cursor-pointer hover:border-[rgba(201,164,77,0.32)] hover:bg-[#F3EBDD] hover:shadow-[0_4px_14px_rgba(3,7,12,0.10)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.30)]",
+    "min-h-11 cursor-pointer hover:border-[rgba(201,164,77,0.32)] hover:bg-[#243044] hover:shadow-[0_4px_14px_rgba(3,7,12,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.30)]",
   workloadEmptyState:
-    "rounded-xl border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2.5 sm:rounded-2xl sm:px-4 sm:py-4",
+    "rounded-xl border border-dashed border-[rgba(174,182,194,0.18)] bg-[rgba(39,49,64,0.28)] px-3 py-2.5 sm:rounded-2xl sm:px-4 sm:py-4",
 };

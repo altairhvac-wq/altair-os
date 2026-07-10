@@ -163,7 +163,7 @@ export function DispatchDetailsPanel({
     : "space-y-3 border-b border-slate-100 pb-4";
 
   const addressIconClass = northStar
-    ? "mt-0.5 h-4 w-4 shrink-0 text-[#8A6324]"
+    ? "mt-0.5 h-4 w-4 shrink-0 text-[#D6BE78]"
     : "mt-0.5 h-4 w-4 shrink-0 text-slate-400";
 
   const assignmentCardClass = northStar
@@ -278,7 +278,7 @@ export function DispatchDetailsPanel({
               </div>
             ) : (
               <div className="flex items-start justify-between gap-3">
-                <p className={`${identityServiceClass} font-semibold text-[#17130E]`}>
+                <p className={`${identityServiceClass} font-semibold text-[#FFF8E8]`}>
                   {job.jobType}
                 </p>
                 <DispatchPriorityBadge priority={job.priority} northStar />
@@ -288,7 +288,7 @@ export function DispatchDetailsPanel({
               <DispatchStatusBadge status={job.status} northStar={northStar} />
               <span className={identityMetaClass}>
                 {formatDispatchDate(job.scheduledDate)} ·{" "}
-                <span className={northStar ? "font-semibold text-[#17130E]" : ""}>
+                <span className={northStar ? "font-semibold text-[#F3EBDD]" : ""}>
                   {formatDispatchTime(job.scheduledDate)}
                 </span>
               </span>
@@ -361,7 +361,7 @@ export function DispatchDetailsPanel({
                       <MapPin className="h-5 w-5" aria-hidden />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8A6324]">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#D6BE78]">
                         Service address
                       </p>
                       <p className={`${dt.detailSiteContextAddress} mt-1 break-words`}>

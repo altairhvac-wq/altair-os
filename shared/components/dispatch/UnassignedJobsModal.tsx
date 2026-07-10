@@ -89,17 +89,17 @@ export function UnassignedJobsModal({
           unstyled
           className={
             northStar
-              ? `min-w-0 max-w-full overflow-x-hidden bg-[#FBF7EF] p-3 pb-[max(5.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] sm:p-4 sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))]`
+              ? `min-w-0 max-w-full overflow-x-hidden bg-[#141c26] p-3 pb-[max(5.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] sm:p-4 sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))]`
               : "min-w-0 max-w-full overflow-x-hidden p-3 pb-[max(5rem,calc(1rem+env(safe-area-inset-bottom)))] sm:p-4 sm:pb-[max(4rem,calc(1rem+env(safe-area-inset-bottom)))]"
           }
         >
           {jobs.length === 0 ? (
             northStar ? (
               <div className={dt.unassignedSheetEmpty}>
-                <p className="text-sm font-medium text-[#4F4638]">
+                <p className="text-sm font-medium text-[#D7CDBD]">
                   No unassigned jobs match your filters
                 </p>
-                <p className="mt-1 text-xs text-[#6B6255]">
+                <p className="mt-1 text-xs text-[#AEB6C2]">
                   Adjust search or filters to see the queue
                 </p>
               </div>

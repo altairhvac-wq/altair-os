@@ -9,17 +9,17 @@ import {
 
 const NORTH_STAR_DISPATCH_STATUS_STYLES: Record<DispatchJobStatus, string> = {
   scheduled:
-    "bg-[#EFE4CB] text-[#4F4638] ring-[rgba(138,99,36,0.18)]",
+    "bg-[rgba(174,182,194,0.14)] text-[#D7CDBD] ring-[rgba(174,182,194,0.22)]",
   dispatched:
-    "bg-[#F1E7D2] text-[#6B6255] ring-[rgba(138,99,36,0.16)]",
+    "bg-[rgba(201,164,77,0.14)] text-[#E6D092] ring-[rgba(201,164,77,0.24)]",
   arrived:
-    "bg-[#F5EBD4] text-[#8A6324] ring-[rgba(201,164,77,0.22)]",
+    "bg-[rgba(201,164,77,0.18)] text-[#D6BE78] ring-[rgba(201,164,77,0.28)]",
   in_progress:
-    "bg-[rgba(201,164,77,0.14)] text-[#6B5A2E] ring-[rgba(201,164,77,0.24)]",
+    "bg-[rgba(201,164,77,0.22)] text-[#E6D092] ring-[rgba(201,164,77,0.30)]",
   completed:
-    "bg-[rgba(16,185,129,0.12)] text-[#065F46] ring-[rgba(16,185,129,0.22)]",
+    "bg-[rgba(16,185,129,0.16)] text-emerald-300 ring-[rgba(16,185,129,0.28)]",
   cancelled:
-    "bg-[#F1E7D2] text-[#6B6255] ring-[rgba(138,99,36,0.12)]",
+    "bg-[rgba(174,182,194,0.10)] text-[#AEB6C2] ring-[rgba(174,182,194,0.16)]",
 };
 
 type DispatchStatusBadgeProps = {

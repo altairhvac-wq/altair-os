@@ -1445,98 +1445,98 @@ a[href] {
 
 .dispatch-north-star-workflow .border-indigo-200.bg-indigo-50 {
   border-color: rgb(201 164 77 / 0.28) !important;
-  background: #f5ebd4 !important;
-  color: #4f4638 !important;
+  background: rgb(39 49 64 / 0.55) !important;
+  color: #f3ebdd !important;
 }
 
 .dispatch-north-star-workflow .border-indigo-200.bg-indigo-50.text-indigo-800,
 .dispatch-north-star-workflow .border-indigo-200.bg-indigo-50.text-indigo-900 {
   border-color: rgb(201 164 77 / 0.28) !important;
-  background: #f5ebd4 !important;
-  color: #4f4638 !important;
+  background: rgb(39 49 64 / 0.55) !important;
+  color: #f3ebdd !important;
 }
 
 .dispatch-north-star-workflow .bg-indigo-50.text-indigo-900 {
-  background: #f5ebd4 !important;
-  color: #4f4638 !important;
+  background: rgb(39 49 64 / 0.55) !important;
+  color: #f3ebdd !important;
 }
 
-/* Correct status card — warm ivory warning, restrained brass border */
+/* Correct status card — dark elevated warning, restrained brass border */
 .dispatch-north-star-workflow .rounded-xl.border-dashed.border-amber-200,
 .dispatch-north-star-workflow .border-dashed.border-amber-200 {
   border-color: rgb(201 164 77 / 0.28) !important;
-  background: #fff9ea !important;
+  background: rgb(39 49 64 / 0.45) !important;
 }
 
 .dispatch-north-star-workflow .rounded-xl.border-dashed.border-amber-200 [class*="bg-amber"],
 .dispatch-north-star-workflow .border-dashed.border-amber-200[class*="bg-amber"] {
-  background: #fff9ea !important;
+  background: rgb(39 49 64 / 0.45) !important;
 }
 
 .dispatch-north-star-workflow .text-amber-800 {
-  color: #8a6324 !important;
+  color: #e6d092 !important;
 }
 
 .dispatch-north-star-workflow .text-amber-900,
 .dispatch-north-star-workflow [class*="text-amber-900"] {
-  color: #4f4638 !important;
+  color: #f3ebdd !important;
 }
 
 .dispatch-north-star-workflow .border-amber-200 {
-  border-color: rgb(138 99 36 / 0.18) !important;
+  border-color: rgb(174 182 194 / 0.18) !important;
 }
 
 .dispatch-north-star-workflow .border-amber-300 {
   border-color: rgb(201 164 77 / 0.28) !important;
-  background: #fff9ea !important;
-  color: #4f4638 !important;
+  background: rgb(39 49 64 / 0.45) !important;
+  color: #f3ebdd !important;
 }
 
 .dispatch-north-star-workflow .border-amber-300:hover {
-  background: #f3ebdd !important;
+  background: rgb(39 49 64 / 0.65) !important;
   border-color: rgb(201 164 77 / 0.38) !important;
 }
 
 .dispatch-north-star-workflow .border-amber-200.bg-amber-50 {
   border-color: rgb(201 164 77 / 0.28) !important;
-  background: #fff9ea !important;
-  color: #4f4638 !important;
+  background: rgb(39 49 64 / 0.45) !important;
+  color: #f3ebdd !important;
 }
 
 .dispatch-north-star-workflow .text-slate-500 {
-  color: #4f4638 !important;
+  color: #aeb6c2 !important;
 }
 
 .dispatch-north-star-workflow .text-slate-600 {
-  color: #64748b !important;
+  color: #d7cdbd !important;
 }
 
 .dispatch-north-star-workflow .border-slate-200.bg-white {
-  border-color: rgb(138 99 36 / 0.22) !important;
-  background: #fff9ea !important;
-  color: #4f4638 !important;
+  border-color: rgb(174 182 194 / 0.22) !important;
+  background: rgb(39 49 64 / 0.45) !important;
+  color: #f3ebdd !important;
 }
 
 .dispatch-north-star-workflow .border-slate-200.bg-white:hover {
-  border-color: #c9a44d !important;
-  background: #f3ebdd !important;
+  border-color: rgb(201 164 77 / 0.32) !important;
+  background: rgb(39 49 64 / 0.65) !important;
 }
 
 .dispatch-north-star-workflow .border-emerald-200.bg-emerald-50 {
-  border-color: rgb(201 164 77 / 0.28) !important;
-  background: #f5ebd4 !important;
-  color: #4f4638 !important;
+  border-color: rgb(16 185 129 / 0.28) !important;
+  background: rgb(16 185 129 / 0.12) !important;
+  color: #6ee7b7 !important;
 }
 
 .dispatch-north-star-workflow .text-emerald-800 {
-  color: #065f46 !important;
+  color: #6ee7b7 !important;
 }
 
 /* Dispatch detail panel body — scroll comfort + softer scrollbar */
 .dispatch-north-star-detail-panel-body {
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: rgb(138 99 36 / 0.22) transparent;
+  scrollbar-color: rgb(174 182 194 / 0.28) transparent;
 }
 
 .dispatch-north-star-detail-panel-body::-webkit-scrollbar {
@@ -1550,19 +1550,19 @@ a[href] {
 
 .dispatch-north-star-detail-panel-body::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: rgb(138 99 36 / 0.2);
+  background: rgb(174 182 194 / 0.22);
 }
 
 .dispatch-north-star-detail-panel-body::-webkit-scrollbar-thumb:hover {
-  background: rgb(138 99 36 / 0.32);
+  background: rgb(174 182 194 / 0.36);
 }
 
-/* Disabled assignment CTA — flat ivory, clearly inactive */
+/* Disabled assignment CTA — flat graphite, clearly inactive */
 .dispatch-north-star-detail-panel-body .north-star-dispatch-disabled-action:disabled {
-  border-color: rgb(138 99 36 / 0.14) !important;
-  background: #efe4cb !important;
+  border-color: rgb(174 182 194 / 0.18) !important;
+  background: #2a3648 !important;
   background-image: none !important;
-  color: #6b6255 !important;
+  color: #aeb6c2 !important;
   box-shadow: none !important;
   cursor: not-allowed;
 }
@@ -1575,7 +1575,7 @@ a[href] {
   }
 }
 
-/* Dispatch section sheets — graphite header, ivory body (M15E) */
+/* Dispatch section sheets — graphite header + dark body (M15E) */
 .dispatch-north-star-section-sheet header h2 {
   color: #fff8e8;
 }
@@ -1604,17 +1604,17 @@ a[href] {
   color: #d6be78;
 }
 
-/* Dispatch unassigned jobs sheet — calm brass attention (M15E) */
+/* Dispatch unassigned jobs sheet — dark shell, brass attention (M15E) */
 .dispatch-north-star-unassigned-sheet header h2 {
-  color: #17130e;
+  color: #fff8e8;
 }
 
 .dispatch-north-star-unassigned-sheet header p {
-  color: #6b6255;
+  color: #d7cdbd;
 }
 
 .dispatch-north-star-unassigned-sheet header button[aria-label="Close"] {
-  color: #6b6255;
+  color: #d7cdbd;
   transition:
     background-color 0.2s ease,
     color 0.2s ease;
@@ -1622,7 +1622,7 @@ a[href] {
 
 .dispatch-north-star-unassigned-sheet header button[aria-label="Close"]:hover {
   background: rgb(201 164 77 / 0.12);
-  color: #4f4638;
+  color: #fff8e8;
 }
 
 /* Dispatch mobile job detail sheet — flex height chain for inner scroll (M15) */

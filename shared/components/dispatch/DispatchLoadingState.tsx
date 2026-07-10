@@ -104,7 +104,7 @@ function DispatchNorthStarBoardSkeleton() {
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="flex min-w-0 max-w-full gap-2 overflow-hidden rounded-xl border border-[rgba(138,99,36,0.14)] bg-[#FBF7EF] sm:rounded-2xl"
+              className="flex min-w-0 max-w-full gap-2 overflow-hidden rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#1F2A38] sm:rounded-2xl"
             >
               <div className={`${dt.laneHeader} shrink-0 sm:w-44 lg:w-48`}>
                 <NorthStarSkeleton
@@ -117,8 +117,8 @@ function DispatchNorthStarBoardSkeleton() {
                 </div>
               </div>
               <div className="flex min-w-0 flex-1 gap-2 overflow-hidden p-2 sm:p-2.5">
-                <NorthStarSkeleton className="h-[4.75rem] w-[12rem] shrink-0 rounded-xl sm:h-[5.5rem] sm:w-[13.25rem]" />
-                <NorthStarSkeleton className="h-[4.75rem] w-[12rem] shrink-0 rounded-xl sm:h-[5.5rem] sm:w-[13.25rem]" />
+                <NorthStarSkeleton dark className="h-[4.75rem] w-[12rem] shrink-0 rounded-xl sm:h-[5.5rem] sm:w-[13.25rem]" />
+                <NorthStarSkeleton dark className="h-[4.75rem] w-[12rem] shrink-0 rounded-xl sm:h-[5.5rem] sm:w-[13.25rem]" />
               </div>
             </div>
           ))}
@@ -132,10 +132,10 @@ function DispatchNorthStarBoardSkeleton() {
             <NorthStarSkeleton dark className="h-5 w-32" />
             <NorthStarSkeleton dark className="h-3 w-48" />
           </div>
-          <div className="min-h-0 flex-1 space-y-3 bg-[#FBF7EF] p-4 sm:p-5">
-            <NorthStarSkeleton className="h-24 w-full rounded-xl" />
-            <NorthStarSkeleton className="h-20 w-full rounded-xl" />
-            <NorthStarSkeleton className="h-16 w-full rounded-xl" />
+          <div className="min-h-0 flex-1 space-y-3 bg-[#141c26] p-4 sm:p-5">
+            <NorthStarSkeleton dark className="h-24 w-full rounded-xl" />
+            <NorthStarSkeleton dark className="h-20 w-full rounded-xl" />
+            <NorthStarSkeleton dark className="h-16 w-full rounded-xl" />
           </div>
         </div>
       </div>

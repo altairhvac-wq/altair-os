@@ -5,10 +5,10 @@ import {
 import type { DispatchJobPriority } from "@/shared/types/dispatch";
 
 const NORTH_STAR_DISPATCH_PRIORITY_STYLES: Record<DispatchJobPriority, string> = {
-  low: "bg-[#F1E7D2] text-[#6B6255] ring-[rgba(138,99,36,0.12)]",
-  normal: "bg-[#EFE4CB] text-[#4F4638] ring-[rgba(138,99,36,0.16)]",
-  high: "bg-[rgba(201,164,77,0.16)] text-[#8A6324] ring-[rgba(201,164,77,0.24)]",
-  urgent: "bg-[rgba(185,28,28,0.10)] text-[#991B1B] ring-[rgba(185,28,28,0.22)]",
+  low: "bg-[rgba(174,182,194,0.12)] text-[#AEB6C2] ring-[rgba(174,182,194,0.18)]",
+  normal: "bg-[rgba(174,182,194,0.14)] text-[#D7CDBD] ring-[rgba(174,182,194,0.22)]",
+  high: "bg-[rgba(201,164,77,0.18)] text-[#E6D092] ring-[rgba(201,164,77,0.28)]",
+  urgent: "bg-[rgba(248,113,113,0.16)] text-rose-300 ring-[rgba(248,113,113,0.28)]",
 };
 
 type DispatchPriorityBadgeProps = {

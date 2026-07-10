@@ -42,10 +42,10 @@ export function TechnicianWorkloadCards({
     if (northStar) {
       return (
         <div className={dt.workloadEmptyState}>
-          <p className="text-xs font-semibold text-[#17130E] sm:text-sm">
+          <p className="text-xs font-semibold text-[#FFF8E8] sm:text-sm">
             No technicians on roster
           </p>
-          <p className="mt-0.5 hidden text-xs text-[#6B6255] sm:mt-1 sm:block">
+          <p className="mt-0.5 hidden text-xs text-[#AEB6C2] sm:mt-1 sm:block">
             Invite team members with the technician role to enable assignments.
             Technician availability and specialties are not modeled in the database
             yet.
@@ -109,7 +109,7 @@ export function TechnicianWorkloadCards({
                 <p
                   className={
                     northStar
-                      ? "truncate text-xs font-bold text-[#17130E] sm:text-sm"
+                      ? "truncate text-xs font-bold text-[#FFF8E8] sm:text-sm"
                       : "truncate text-xs font-bold text-slate-900 sm:text-sm"
                   }
                 >
@@ -118,7 +118,7 @@ export function TechnicianWorkloadCards({
                 <p
                   className={
                     northStar
-                      ? "hidden truncate text-xs text-[#6B6255] sm:block"
+                      ? "hidden truncate text-xs text-[#AEB6C2] sm:block"
                       : "hidden truncate text-xs text-slate-500 sm:block"
                   }
                 >
@@ -129,7 +129,7 @@ export function TechnicianWorkloadCards({
                 <p
                   className={
                     northStar
-                      ? "text-lg font-black tabular-nums text-[#17130E] sm:text-2xl"
+                      ? "text-lg font-black tabular-nums text-[#FFF8E8] sm:text-2xl"
                       : "text-lg font-black tabular-nums text-slate-900 sm:text-2xl"
                   }
                 >
@@ -138,7 +138,7 @@ export function TechnicianWorkloadCards({
                 <p
                   className={
                     northStar
-                      ? "text-[10px] font-medium text-[#6B6255] sm:text-[11px]"
+                      ? "text-[10px] font-medium text-[#AEB6C2] sm:text-[11px]"
                       : "text-[10px] font-medium text-slate-500 sm:text-[11px]"
                   }
                 >
@@ -178,8 +178,8 @@ export function TechnicianWorkloadCards({
 
   if (northStar) {
     return (
-      <section className="rounded-xl border border-[rgba(201,164,77,0.22)] bg-[#F5EBD4] p-2 shadow-sm ring-1 ring-[rgba(201,164,77,0.14)] sm:rounded-2xl sm:p-4">
-        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#4F4638] sm:mb-3 sm:text-xs">
+      <section className="rounded-xl border border-[rgba(201,164,77,0.28)] bg-[rgba(39,49,64,0.45)] p-2 shadow-sm ring-1 ring-[rgba(201,164,77,0.16)] sm:rounded-2xl sm:p-4">
+        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#E6D092] sm:mb-3 sm:text-xs">
           Technician workload today
         </p>
         {grid}
