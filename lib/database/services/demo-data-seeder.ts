@@ -856,7 +856,7 @@ export async function seedCompanyDemoData(
             company_id: companyId,
             invoice_id: result.id,
             amount: paymentAmount,
-            payment_method: "card",
+            payment_method: payment.paymentMethod ?? "card",
             payment_date: toDateOnly(addDays(seedContext.now, -payment.paymentDaysAgo)),
             reference: payment.reference,
             notes: payment.notes,

@@ -145,6 +145,8 @@ export type InvoicePaymentSeed = {
   paymentDaysAgo: number;
   reference: string;
   notes: string;
+  /** Defaults to card when omitted. */
+  paymentMethod?: "cash" | "check" | "card" | "bank_transfer" | "other";
 };
 
 export type InvoiceSeed = {

@@ -16,7 +16,7 @@ import type {
   DemoDataStatus,
 } from "@/shared/types/demo-data";
 
-const DEMO_DATA_VERSION = 4;
+const DEMO_DATA_VERSION = 5;
 
 type DemoCountableTable =
   | "customers"
