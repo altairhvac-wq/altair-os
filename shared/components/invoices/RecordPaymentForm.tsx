@@ -14,7 +14,7 @@ import {
 import { recordInvoicePaymentAction } from "@/app/actions/invoice-payments";
 import { formatActionError, formatRetryGuidance } from "@/shared/lib/operational-errors";
 import { formatCurrency } from "@/shared/types/customer";
-import type { InvoiceDetail } from "@/shared/types/invoice";
+import { roundCurrency, type InvoiceDetail } from "@/shared/types/invoice";
 import {
   canRecordInvoicePayment,
   getDefaultPaymentDate,
@@ -117,14 +117,15 @@ function RecordPaymentModal({ invoice, onClose }: RecordPaymentModalProps) {
 
     setError(null);
 
-    const parsedAmount = Number.parseFloat(amount);
+    const parsedAmount = roundCurrency(Number.parseFloat(amount));
+    const balanceDue = roundCurrency(invoice.balanceDue);
 
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       setError("Payment amount must be greater than zero.");
       return;
     }
 
-    if (parsedAmount > invoice.balanceDue) {
+    if (parsedAmount > balanceDue) {
       setError("Payment amount cannot exceed the balance due.");
       return;
     }

@@ -107,6 +107,14 @@ export function getRecordPaymentBlockReason(invoice: {
       return "This invoice is fully paid.";
     }
 
+    if (invoice.status === "void") {
+      return "This invoice is void and cannot accept payments.";
+    }
+
+    if (invoice.status === "cancelled") {
+      return "This invoice is cancelled and cannot accept payments.";
+    }
+
     return "This invoice cannot accept payments in its current status.";
   }
 

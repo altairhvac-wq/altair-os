@@ -57,8 +57,7 @@ export async function createInvoiceCheckoutSessionAction(
 
   if (!isStripeConnectOnboardingConfigured()) {
     return {
-      error:
-        "Stripe checkout is not configured. Set STRIPE_SECRET_KEY and NEXT_PUBLIC_APP_URL.",
+      error: "Online checkout is not available right now. Try again later.",
     };
   }
 
@@ -66,8 +65,7 @@ export async function createInvoiceCheckoutSessionAction(
 
   if (!checkoutUrls) {
     return {
-      error:
-        "App URL is not configured. Set NEXT_PUBLIC_APP_URL before creating checkout sessions.",
+      error: "Online checkout is not available right now. Try again later.",
     };
   }
 

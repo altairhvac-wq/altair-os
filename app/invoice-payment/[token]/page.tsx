@@ -127,11 +127,19 @@ export default async function InvoicePaymentPage({
 
   const checkoutStatusMessage =
     checkout === "success" ? (
-      <PublicPaymentMessage
-        title="Payment submitted"
-        body="Your payment was submitted. This invoice will update once payment is confirmed."
-        tone="success"
-      />
+      isPaidInFull ? (
+        <PublicPaymentMessage
+          title="Payment confirmed"
+          body="Thank you. This invoice is paid in full."
+          tone="success"
+        />
+      ) : (
+        <PublicPaymentMessage
+          title="Payment submitted"
+          body="Your payment was submitted. This invoice will update once payment is confirmed. Refresh this page in a moment if the balance still shows as due."
+          tone="success"
+        />
+      )
     ) : checkout === "cancelled" ? (
       <PublicPaymentMessage
         title="Payment cancelled"
@@ -140,7 +148,12 @@ export default async function InvoicePaymentPage({
       />
     ) : null;
 
-  const paymentPanel = !isPaidInFull ? (
+  const paymentPanel = isPaidInFull ? (
+    <PublicInvoicePaymentContactPanel
+      company={view.company}
+      balanceDue={view.invoice.balanceDue}
+    />
+  ) : (
     <div className="space-y-3">
       {onlineCheckoutAvailable ? (
         <>
@@ -161,7 +174,7 @@ export default async function InvoicePaymentPage({
         />
       )}
     </div>
-  ) : undefined;
+  );
 
   return (
     <PublicPaymentShell>

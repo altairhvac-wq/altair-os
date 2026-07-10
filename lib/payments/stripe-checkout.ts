@@ -35,6 +35,10 @@ export async function createStripeInvoiceCheckoutSession(
   connectedAccountId: string,
   urls: StripeInvoiceCheckoutUrls,
 ): Promise<string> {
+  if (!isInvoicePayable(invoice.status)) {
+    throw new Error("This invoice cannot accept online payment in its current status.");
+  }
+
   const stripe = getStripeClient();
   const amountCents = Math.round(roundCurrency(invoice.balanceDue) * 100);
 
@@ -210,6 +214,17 @@ export function validateStripeInvoiceCheckoutReadiness(
 
     if (invoice.status === "paid") {
       return { ok: false, error: "This invoice is fully paid." };
+    }
+
+    if (invoice.status === "void") {
+      return { ok: false, error: "This invoice is void and cannot accept payment." };
+    }
+
+    if (invoice.status === "cancelled") {
+      return {
+        ok: false,
+        error: "This invoice is cancelled and cannot accept payment.",
+      };
     }
 
     return {

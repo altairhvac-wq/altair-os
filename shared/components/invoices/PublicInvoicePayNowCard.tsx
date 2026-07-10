@@ -19,7 +19,7 @@ export function PublicInvoicePayNowCard({
   const [error, setError] = useState<string | null>(null);
 
   function handlePayNow() {
-    if (isPending) {
+    if (isPending || balanceDue <= 0) {
       return;
     }
 
@@ -53,7 +53,7 @@ export function PublicInvoicePayNowCard({
       <p className="mt-1 text-xs text-slate-600">Amount due</p>
       <button
         type="button"
-        disabled={isPending}
+        disabled={isPending || balanceDue <= 0}
         onClick={handlePayNow}
         className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
       >
