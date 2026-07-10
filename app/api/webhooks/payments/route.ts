@@ -60,6 +60,7 @@ export async function POST(request: Request) {
   const webhookSecret = getStripeWebhookSecret();
 
   if (!webhookSecret) {
+    console.error("[stripe-webhook] STRIPE_WEBHOOK_SECRET is not configured");
     return NextResponse.json(
       { error: "Webhook verification is not configured" },
       { status: 400 },
@@ -70,12 +71,21 @@ export async function POST(request: Request) {
   try {
     event = verifyStripeWebhookEvent(rawBody, signature, webhookSecret);
   } catch (error) {
+    console.error("[stripe-webhook] signature verification failed", {
+      hasSignature: Boolean(signature),
+    });
     if (error instanceof StripeWebhookVerificationError) {
       return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });
     }
 
     return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });
   }
+
+  console.info("[stripe-webhook] event verified", {
+    eventId: event.id,
+    eventType: event.type,
+    hasEventAccount: typeof event.account === "string" && event.account.length > 0,
+  });
 
   const supabase = createServiceRoleClient();
   const insertResult = await insertPaymentProviderEvent(supabase, {
@@ -88,6 +98,10 @@ export async function POST(request: Request) {
   });
 
   if (!insertResult.ok) {
+    console.error("[payment-provider-event] ledger insert failed", {
+      eventId: event.id,
+      eventType: event.type,
+    });
     return NextResponse.json(
       { error: "Failed to record webhook event" },
       { status: 500 },

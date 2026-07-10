@@ -244,6 +244,21 @@ async function processAccountUpdatedEvent(
   return { processed: true, ignored: false };
 }
 
+async function ignoreCheckoutSessionEvent(
+  supabase: SupabaseClient<Database>,
+  providerEventId: string,
+  reason: string,
+  companyId: string | null = null,
+): Promise<ProcessStripeWebhookEventResult> {
+  console.info("[stripe-webhook] checkout ignored", {
+    eventId: providerEventId,
+    reason,
+    hasCompanyId: Boolean(companyId),
+  });
+  await markProviderEventIgnored(supabase, providerEventId, reason, companyId);
+  return { processed: false, ignored: true };
+}
+
 async function processCheckoutSessionCompletedEvent(
   supabase: SupabaseClient<Database>,
   providerEventId: string,
@@ -252,6 +267,24 @@ async function processCheckoutSessionCompletedEvent(
 ): Promise<ProcessStripeWebhookEventResult> {
   const { companyId, invoiceId, purpose, provider } =
     readCheckoutSessionMetadata(session);
+  const connectedAccountId = extractConnectedAccountId(event);
+  const checkoutSessionId = session.id;
+
+  console.info("[stripe-webhook] checkout.session.completed received", {
+    eventId: providerEventId,
+    checkoutSessionId,
+    hasEventAccount: Boolean(connectedAccountId),
+    hasSessionMetadata: Boolean(session.metadata),
+    hasCompanyId: Boolean(companyId),
+    hasInvoiceId: Boolean(invoiceId),
+    hasPurpose: Boolean(purpose),
+    hasProvider: Boolean(provider),
+    purpose,
+    provider,
+    paymentStatus: session.payment_status ?? null,
+    amountTotal: session.amount_total ?? null,
+    currency: session.currency ?? null,
+  });
 
   if (
     !companyId ||
@@ -259,35 +292,30 @@ async function processCheckoutSessionCompletedEvent(
     purpose !== CHECKOUT_METADATA_PURPOSE ||
     provider !== CHECKOUT_METADATA_PROVIDER
   ) {
-    await markProviderEventIgnored(
+    return ignoreCheckoutSessionEvent(
       supabase,
       providerEventId,
       "Missing or invalid checkout session metadata",
       companyId,
     );
-    return { processed: false, ignored: true };
   }
 
-  const connectedAccountId = extractConnectedAccountId(event);
-
   if (!connectedAccountId) {
-    await markProviderEventIgnored(
+    return ignoreCheckoutSessionEvent(
       supabase,
       providerEventId,
       "Missing Stripe connected account context",
       companyId,
     );
-    return { processed: false, ignored: true };
   }
 
   if (session.payment_status !== "paid") {
-    await markProviderEventIgnored(
+    return ignoreCheckoutSessionEvent(
       supabase,
       providerEventId,
       "Checkout session is not paid",
       companyId,
     );
-    return { processed: false, ignored: true };
   }
 
   if (
@@ -295,23 +323,21 @@ async function processCheckoutSessionCompletedEvent(
     session.amount_total === undefined ||
     session.amount_total <= 0
   ) {
-    await markProviderEventIgnored(
+    return ignoreCheckoutSessionEvent(
       supabase,
       providerEventId,
       "Checkout session amount is invalid",
       companyId,
     );
-    return { processed: false, ignored: true };
   }
 
   if ((session.currency ?? "").toLowerCase() !== "usd") {
-    await markProviderEventIgnored(
+    return ignoreCheckoutSessionEvent(
       supabase,
       providerEventId,
       "Checkout session currency must be USD",
       companyId,
     );
-    return { processed: false, ignored: true };
   }
 
   const accountRow = await findStripeCompanyPaymentAccountByCompanyId(
@@ -320,13 +346,12 @@ async function processCheckoutSessionCompletedEvent(
   );
 
   if (!accountRow || !isStripeCompanyPaymentAccountReady(accountRow, connectedAccountId)) {
-    await markProviderEventIgnored(
+    return ignoreCheckoutSessionEvent(
       supabase,
       providerEventId,
       "Stripe payment account is not ready for online checkout",
       companyId,
     );
-    return { processed: false, ignored: true };
   }
 
   const invoice = await getInvoiceStripePaymentTarget(
@@ -336,23 +361,21 @@ async function processCheckoutSessionCompletedEvent(
   );
 
   if (!invoice) {
-    await markProviderEventIgnored(
+    return ignoreCheckoutSessionEvent(
       supabase,
       providerEventId,
       "Invoice not found for checkout session",
       companyId,
     );
-    return { processed: false, ignored: true };
   }
 
   if (!isInvoicePayable(invoice.status) || invoice.balanceDue <= 0) {
-    await markProviderEventIgnored(
+    return ignoreCheckoutSessionEvent(
       supabase,
       providerEventId,
       "Invoice is not payable",
       companyId,
     );
-    return { processed: false, ignored: true };
   }
 
   if (
@@ -362,28 +385,31 @@ async function processCheckoutSessionCompletedEvent(
       total: invoice.total,
     })
   ) {
-    await markProviderEventIgnored(
+    return ignoreCheckoutSessionEvent(
       supabase,
       providerEventId,
       "Invoice balance is inconsistent",
       companyId,
     );
-    return { processed: false, ignored: true };
   }
 
   const expectedAmountCents = invoiceBalanceDueToCents(invoice.balanceDue);
 
   if (session.amount_total !== expectedAmountCents) {
-    await markProviderEventIgnored(
+    console.info("[stripe-checkout-recording] amount mismatch", {
+      eventId: providerEventId,
+      checkoutSessionId,
+      amountTotal: session.amount_total,
+      expectedAmountCents,
+    });
+    return ignoreCheckoutSessionEvent(
       supabase,
       providerEventId,
       "Checkout session amount does not match invoice balance due",
       companyId,
     );
-    return { processed: false, ignored: true };
   }
 
-  const checkoutSessionId = session.id;
   const providerPaymentId = extractStripePaymentIntentId(session.payment_intent);
   const idempotencyKey = buildStripeCheckoutIdempotencyKey(checkoutSessionId);
 
@@ -394,6 +420,10 @@ async function processCheckoutSessionCompletedEvent(
   });
 
   if (existingPayment) {
+    console.info("[stripe-checkout-recording] duplicate payment already recorded", {
+      eventId: providerEventId,
+      checkoutSessionId,
+    });
     await markProviderEventProcessed(supabase, providerEventId, companyId);
     return { processed: true, ignored: false };
   }
@@ -402,6 +432,14 @@ async function processCheckoutSessionCompletedEvent(
     event.created ?? session.created ?? Math.floor(Date.now() / 1000),
   );
   const paymentAmount = roundCurrency(session.amount_total / 100);
+
+  console.info("[stripe-checkout-recording] calling record_invoice_payment_atomic", {
+    eventId: providerEventId,
+    checkoutSessionId,
+    amount: paymentAmount,
+    currency: session.currency ?? "usd",
+    hasProviderPaymentId: Boolean(providerPaymentId),
+  });
 
   const recordResult = await recordStripeCheckoutPaymentAtomic(supabase, {
     companyId,
@@ -423,16 +461,33 @@ async function processCheckoutSessionCompletedEvent(
 
   if (!recordResult.ok) {
     if (recordResult.duplicate) {
+      console.info("[stripe-checkout-recording] RPC duplicate treated as success", {
+        eventId: providerEventId,
+        checkoutSessionId,
+      });
       await markProviderEventProcessed(supabase, providerEventId, companyId);
       return { processed: true, ignored: false };
     }
 
+    console.error("[stripe-checkout-recording] RPC failed", {
+      eventId: providerEventId,
+      checkoutSessionId,
+      errorSummary: recordResult.error.slice(0, 200),
+    });
     throw new Error(recordResult.error);
   }
 
   await markProviderEventProcessed(supabase, providerEventId, companyId);
   revalidateInvoiceOperationalPages(invoiceId);
+  revalidatePath("/invoice-payment", "layout");
   revalidatePath("/reports");
+  console.info("[stripe-checkout-recording] recorded successfully", {
+    eventId: providerEventId,
+    checkoutSessionId,
+    newStatus: recordResult.result.new_status,
+    amountPaid: recordResult.result.amount_paid,
+    balanceDue: recordResult.result.balance_due,
+  });
   return { processed: true, ignored: false };
 }
 
@@ -487,9 +542,19 @@ export async function processStripeWebhookEvent(
       providerEventId,
       `Unsupported Stripe event type: ${event.type}`,
     );
+    console.info("[stripe-webhook] unsupported event ignored", {
+      eventId: providerEventId,
+      eventType: event.type,
+    });
     return { processed: false, ignored: true };
   } catch (error) {
     const message = sanitizeProcessingError(error);
+    console.error("[payment-provider-event] processing failed", {
+      eventId: providerEventId,
+      eventType: event.type,
+      hasEventAccount: Boolean(extractConnectedAccountId(event)),
+      errorSummary: message,
+    });
     await markProviderEventFailed(supabase, providerEventId, message);
     return {
       processed: false,

@@ -44,7 +44,10 @@ function isInvoicePaymentRoute(pathname: string) {
 }
 
 function isPaymentWebhookRoute(pathname: string) {
-  return pathname === PAYMENT_WEBHOOK_ROUTE;
+  return (
+    pathname === PAYMENT_WEBHOOK_ROUTE ||
+    pathname === `${PAYMENT_WEBHOOK_ROUTE}/`
+  );
 }
 
 function isWorkflowRemindersCronRoute(pathname: string) {
