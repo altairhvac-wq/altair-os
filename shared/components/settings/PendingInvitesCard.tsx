@@ -8,6 +8,8 @@ import { formatInviteAcceptError } from "@/shared/lib/operational-errors";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
 import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import type { PendingTeamInvite } from "@/lib/database/queries/memberships";
+import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import { formatDateInTimeZone } from "@/shared/lib/datetime";
 
 type PendingInvitesCardProps = {
   invites: PendingTeamInvite[];
@@ -15,7 +17,10 @@ type PendingInvitesCardProps = {
   northStar?: boolean;
 };
 
-function formatInvitedAt(value: string | null): string | null {
+function formatInvitedAt(
+  value: string | null,
+  timeZone: string,
+): string | null {
   if (!value) {
     return null;
   }
@@ -26,7 +31,7 @@ function formatInvitedAt(value: string | null): string | null {
     return null;
   }
 
-  return date.toLocaleDateString(undefined, {
+  return formatDateInTimeZone(date, timeZone, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -62,6 +67,7 @@ function PendingInvitesCardContent({
   const [success, setSuccess] = useState<string | null>(null);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const timeZone = useCompanyTimezone();
 
   if (items.length === 0) {
     return null;
@@ -166,7 +172,7 @@ function PendingInvitesCardContent({
         aria-busy={isPending}
       >
         {items.map((invite) => {
-          const invitedAt = formatInvitedAt(invite.invitedAt);
+          const invitedAt = formatInvitedAt(invite.invitedAt, timeZone);
           const isAccepting = isPending && acceptingId === invite.id;
 
           return (

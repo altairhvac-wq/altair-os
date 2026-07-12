@@ -9,6 +9,11 @@ import {
   seedDemoDataAction,
 } from "@/app/actions/demo-data";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
+import { useCompanyTimezone } from "@/shared/lib/company-timezone";
+import {
+  formatDateInTimeZone,
+  formatDateTimeInTimeZone,
+} from "@/shared/lib/datetime";
 
 type DemoDataSectionProps = {
   companyId: string;
@@ -30,9 +35,11 @@ export function DemoDataSection({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [confirmSeedOpen, setConfirmSeedOpen] = useState(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
+  const timeZone = useCompanyTimezone();
 
   useEffect(() => {
-    setStatus(initialStatus);
+    const timeout = window.setTimeout(() => setStatus(initialStatus), 0);
+    return () => window.clearTimeout(timeout);
   }, [initialStatus]);
 
   const showSeedCard = !status.hasDemoData;
@@ -121,7 +128,7 @@ export function DemoDataSection({
                 <p className="mt-0.5 text-xs font-medium text-slate-700">
                   Sample records are active
                   {status.seededAt
-                    ? ` · loaded ${new Date(status.seededAt).toLocaleDateString()}`
+                    ? ` · loaded ${formatDateInTimeZone(status.seededAt, timeZone)}`
                     : ""}
                   . Tagged{" "}
                   <span className="font-semibold text-slate-800">[Demo]</span>.
@@ -427,7 +434,7 @@ export function DemoDataSection({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-600">
               {status.seededAt
-                ? `Loaded ${new Date(status.seededAt).toLocaleString()}.`
+                ? `Loaded ${formatDateTimeInTimeZone(status.seededAt, timeZone)}.`
                 : "Demo records are active in this workspace."}
             </p>
             {confirmClearOpen ? (
