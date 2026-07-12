@@ -3049,7 +3049,20 @@ a[href] {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;
+  scroll-padding-block: 0.75rem max(1rem, env(safe-area-inset-bottom, 0px));
   -webkit-overflow-scrolling: touch;
+}
+
+/*
+ * Create/edit forms keep their final controls above the iOS home indicator.
+ * The outer overlay remains the only scrollport, including while the visual
+ * viewport contracts for the software keyboard.
+ */
+.overlay-form-scroll > form {
+  padding-bottom: max(
+    0.75rem,
+    calc(0.75rem + env(safe-area-inset-bottom, 0px))
+  );
 }
 
 .overlay-form-actions {
