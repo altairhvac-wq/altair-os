@@ -32,8 +32,8 @@ import {
 } from "@/shared/lib/platform-signal-keys";
 import type { PlatformReliabilityData } from "@/shared/types/platform-reliability";
 
-/** Hourly cron — treat as stale after 3 hours without a successful run. */
-const WORKFLOW_CRON_STALE_MS = 3 * 60 * 60 * 1000;
+/** Daily Hobby-plan cron; allow schedule/build jitter before marking it stale. */
+const WORKFLOW_CRON_STALE_MS = 36 * 60 * 60 * 1000;
 
 const MS_PER_DAY = 86_400_000;
 
@@ -161,7 +161,7 @@ function buildReliabilitySignals(
       title: "Workflow reminder cron failed",
       description:
         cron.latestRun.errorSummary ??
-        "The hourly workflow reminder evaluator did not complete successfully.",
+        "The daily workflow reminder evaluator did not complete successfully.",
       reason: "Dashboard follow-up reminders stop updating when this cron fails.",
       actionLabel: "Review reliability",
       href: "/platform#platform-reliability",
@@ -210,9 +210,9 @@ function buildReliabilitySignals(
         ? "Workflow reminder cron is stale"
         : "Workflow reminder cron has no successful run recorded",
       description: cron.latestSuccessfulRun
-        ? `Last success ${staleHours != null ? formatRelativeHours(staleHours) : "unknown"}. Expected hourly.`
+        ? `Last success ${staleHours != null ? formatRelativeHours(staleHours) : "unknown"}. Expected daily.`
         : "No successful workflow reminder run is recorded yet.",
-      reason: `Dashboard reminders depend on hourly evaluation (stale threshold ${WORKFLOW_CRON_STALE_MS / (60 * 60 * 1000)}h).`,
+      reason: `Dashboard reminders depend on daily evaluation (stale threshold ${WORKFLOW_CRON_STALE_MS / (60 * 60 * 1000)}h).`,
       actionLabel: "Review reliability",
       href: "/platform#platform-reliability",
       score: BASE_SCORES.workflow_cron_stale,

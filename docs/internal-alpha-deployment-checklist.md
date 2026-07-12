@@ -29,6 +29,8 @@ Set these in **Project Settings → Environment Variables**.
 | `CRON_SECRET` | Production | Vercel cron sends `Authorization: Bearer <CRON_SECRET>`. Without it, `/api/cron/workflow-reminders` returns 503 and workflow reminders never evaluate. |
 | `NEXT_PUBLIC_APP_URL` | Production, Preview | Full `https://` origin for invite emails, estimate approval links, and invoice payment links. Falls back to `VERCEL_URL` on Vercel when unset. |
 
+The project currently uses the Vercel Hobby-compatible daily schedule `0 12 * * *` (12:00 UTC). Reliability marks the workflow cron stale after 36 hours so normal schedule and build jitter do not create false alarms. Hourly cron schedules require a Vercel plan that supports more than one run per day.
+
 ### Recommended for beta launch (Production)
 
 | Variable | Scope | Notes |

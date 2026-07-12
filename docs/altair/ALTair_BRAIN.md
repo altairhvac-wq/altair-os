@@ -529,7 +529,7 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 - Beta bug reports (`/platform/bugs`)
 
 **Founder Brain reliability (Sprint 2B):**
-- Workflow reminder cron health via `platform_automation_runs` + hourly cron recording
+- Workflow reminder cron health via `platform_automation_runs` + daily cron recording
 - Payment webhook failures and stuck events from `payment_provider_events` (read-only)
 - Stripe Connect incomplete/restricted companies with invoices (cross-tenant service role query)
 - Platform env checks (Supabase, CRON_SECRET, Stripe, Resend, Twilio) — presence only, no secrets
@@ -595,7 +595,7 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 - Reminder kinds: `unpaid_invoice_7d`, `stale_estimate_7d`, `lead_follow_up_due`, `ready_to_invoice`
 - Snooze, dismiss, complete with idempotency keys
 - Evaluator service (`lib/database/services/evaluate-workflow-reminders.ts`)
-- Hourly production cron (`/api/cron/workflow-reminders`)
+- Daily production cron at 12:00 UTC (`/api/cron/workflow-reminders`), with a 36-hour stale threshold for schedule/build jitter
 - Dashboard surfacing via `WorkflowRemindersSection`
 
 **Dependencies:** workflow-reminders table (`105_workflow_reminders_foundation.sql`), leads, estimates, invoices, jobs

@@ -78,7 +78,7 @@ Code lives in `shared/components/*/north-star-m*` folders. Primary reference rem
 
 - Durable `workflow_reminders` table with snooze/dismiss/complete
 - Evaluator service for unpaid invoices (7d), stale estimates (7d), lead follow-ups, ready-to-invoice jobs
-- Hourly production cron (`/api/cron/workflow-reminders`)
+- Daily production cron at 12:00 UTC (`/api/cron/workflow-reminders`), compatible with the current Vercel Hobby plan
 - Dashboard surfacing via `WorkflowRemindersSection`
 
 ### Trade-Aware Onboarding

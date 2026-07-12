@@ -17,8 +17,8 @@ import type {
   PlatformStripeConnectRisk,
 } from "@/shared/types/platform-reliability";
 
-/** Hourly cron — treat as stale after 3 hours without a successful run. */
-const WORKFLOW_CRON_STALE_MS = 3 * 60 * 60 * 1000;
+/** Daily Hobby-plan cron; allow schedule/build jitter before marking it stale. */
+const WORKFLOW_CRON_STALE_MS = 36 * 60 * 60 * 1000;
 
 /** Surface recent webhook failures from the last 24 hours. */
 const PAYMENT_FAILURE_LOOKBACK_MS = 24 * 60 * 60 * 1000;
