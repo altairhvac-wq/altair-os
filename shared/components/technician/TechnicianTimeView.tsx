@@ -13,6 +13,7 @@ import {
   stopClockAction,
   type TimeEntryActionResult,
 } from "@/app/actions/time-entries";
+import { correctOpenShiftAction } from "@/app/actions/time-clock";
 import { CompactTimeClockBar } from "@/shared/components/time-clock/CompactTimeClockBar";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import {
@@ -45,6 +46,9 @@ export function TechnicianTimeView({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [now, setNow] = useState(Date.now());
+  const [showRecovery, setShowRecovery] = useState(false);
+  const [recoveryEndedAt, setRecoveryEndedAt] = useState("");
+  const [recoveryReason, setRecoveryReason] = useState("");
 
   useEffect(() => {
     setState(initialState);
@@ -169,6 +173,41 @@ export function TechnicianTimeView({
     }
   }
 
+  const staleShift =
+    state.openClockEntry &&
+    now - Date.parse(state.openClockEntry.startedAt) >= 12 * 60 * 60 * 1000
+      ? state.openClockEntry
+      : null;
+
+  function beginRecovery() {
+    const localNow = new Date(now - new Date(now).getTimezoneOffset() * 60_000)
+      .toISOString()
+      .slice(0, 16);
+    setRecoveryEndedAt(localNow);
+    setRecoveryReason("");
+    setShowRecovery(true);
+    setError(null);
+  }
+
+  function recoverMissedClockOut() {
+    if (!staleShift || isPending) return;
+
+    setError(null);
+    startTransition(async () => {
+      const result = await correctOpenShiftAction({
+        entryId: staleShift.id,
+        endedAt: new Date(recoveryEndedAt).toISOString(),
+        reason: recoveryReason,
+      });
+      if (result.error) {
+        setError(formatActionError(result.error, "Could not correct your shift."));
+        return;
+      }
+
+      window.location.reload();
+    });
+  }
+
   return (
     <div className="space-y-4">
       <div className="space-y-1">
@@ -189,6 +228,55 @@ export function TechnicianTimeView({
         error={error}
         onToggle={clockToggleAction ? handleClockToggle : undefined}
       />
+
+      {staleShift ? (
+        <section className="rounded-xl border border-rose-200 bg-rose-50 p-3.5">
+          <p className="text-sm font-bold text-rose-900">Still clocked in from an earlier shift?</p>
+          <p className="mt-1 text-xs text-rose-700">
+            This shift has been open for 12 hours or longer. Enter when you actually finished; the correction and reason will be recorded for review.
+          </p>
+          {showRecovery ? (
+            <div className="mt-3 space-y-2">
+              <label className="block text-xs font-semibold text-rose-900">
+                Actual finish time
+                <input
+                  type="datetime-local"
+                  value={recoveryEndedAt}
+                  onChange={(event) => setRecoveryEndedAt(event.target.value)}
+                  className="mt-1 w-full rounded-lg border border-rose-200 bg-white px-3 py-2.5 text-sm text-slate-900"
+                />
+              </label>
+              <label className="block text-xs font-semibold text-rose-900">
+                What happened?
+                <textarea
+                  value={recoveryReason}
+                  onChange={(event) => setRecoveryReason(event.target.value)}
+                  placeholder="For example: Forgot to clock out after the final appointment"
+                  rows={2}
+                  className="mt-1 w-full rounded-lg border border-rose-200 bg-white px-3 py-2.5 text-sm text-slate-900"
+                />
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={isPending || !recoveryEndedAt || recoveryReason.trim().length < 5}
+                  onClick={recoverMissedClockOut}
+                  className="min-h-11 rounded-xl bg-rose-700 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {isPending ? "Saving…" : "Submit correction"}
+                </button>
+                <button type="button" onClick={() => setShowRecovery(false)} className="min-h-11 px-3 text-sm font-semibold text-rose-800">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" onClick={beginRecovery} className="mt-3 min-h-11 rounded-xl bg-rose-700 px-4 py-2.5 text-sm font-semibold text-white">
+              Fix missed clock-out
+            </button>
+          )}
+        </section>
+      ) : null}
 
       <section className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">

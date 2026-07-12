@@ -330,6 +330,33 @@ export async function listActiveTechnicianTimeEntries(
   );
 }
 
+export async function listOpenClockEntriesForCompany(
+  companyId: string,
+): Promise<TimeEntry[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("time_entries")
+    .select(TIME_ENTRY_SELECT)
+    .eq("company_id", companyId)
+    .eq("entry_type", "clock")
+    .is("ended_at", null)
+    .order("started_at", { ascending: true });
+
+  if (error) {
+    console.error("[listOpenClockEntriesForCompany] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return (data ?? []).map((row) =>
+    mapTimeEntryRow(row as TimeEntryRowWithRelations),
+  );
+}
+
 function mapActiveEntryConstraintError(entryType: TimeEntryType): string {
   switch (entryType) {
     case "clock":

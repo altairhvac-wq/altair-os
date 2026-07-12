@@ -4,8 +4,12 @@ import {
   getOpenBreakEntryForTechnician,
   getOpenClockEntryForTechnician,
   getOpenJobLaborEntryForTechnician,
+  getTechnicianOpenTimeEntries,
+  getTimeEntryById,
+  listOpenClockEntriesForCompany,
   listTimeEntries,
 } from "@/lib/database/queries/time-entries";
+import { recordTimeActivity } from "@/lib/database/queries/time-activities";
 import {
   recordTechnicianClockedInActivity,
   recordTechnicianClockedOutActivity,
@@ -62,6 +66,13 @@ export async function listTimeClockEntries(
     limit: options.limit ?? 100,
   });
 
+  return entries.map(mapClockTimeEntryToTimeClockEntry);
+}
+
+export async function listOpenTimeClockEntries(
+  companyId: string,
+): Promise<TimeClockEntry[]> {
+  const entries = await listOpenClockEntriesForCompany(companyId);
   return entries.map(mapClockTimeEntryToTimeClockEntry);
 }
 
@@ -165,4 +176,88 @@ export async function clockOutTimeClockEntry(
     entry: mapClockTimeEntryToTimeClockEntry(entry),
     error: null,
   };
+}
+
+export async function correctOpenShiftTimeClockEntry(input: {
+  companyId: string;
+  entryId: string;
+  actorId: string;
+  endedAt: string;
+  reason: string;
+}): Promise<{ entry: TimeClockEntry | null; error: string | null }> {
+  const reason = input.reason.trim();
+  if (reason.length < 5) {
+    return { entry: null, error: "Enter a correction reason of at least 5 characters." };
+  }
+
+  const shift = await getTimeEntryById(input.companyId, input.entryId);
+  if (!shift || shift.entryType !== "clock" || shift.endedAt) {
+    return { entry: null, error: "Open shift not found." };
+  }
+
+  const endedMs = Date.parse(input.endedAt);
+  const startedMs = Date.parse(shift.startedAt);
+  if (!Number.isFinite(endedMs) || endedMs < startedMs || endedMs > Date.now()) {
+    return { entry: null, error: "Correction time must be after clock-in and not in the future." };
+  }
+
+  const { entries, error: openError } = await getTechnicianOpenTimeEntries(
+    input.companyId,
+    shift.technicianId,
+  );
+  if (openError) return { entry: null, error: openError };
+
+  const segments = [entries.jobLabor, entries.breakEntry, entries.clock].filter(
+    (entry): entry is TimeEntry => Boolean(entry),
+  );
+
+  for (const segment of segments) {
+    if (Date.parse(segment.startedAt) > endedMs) {
+      return {
+        entry: null,
+        error: `Correction time is earlier than the active ${segment.entryType.replace("_", " ")} start.`,
+      };
+    }
+  }
+
+  let correctedShift: TimeEntry | null = null;
+  for (const segment of segments) {
+    const durationMinutes = calculateDurationMinutes(segment.startedAt, input.endedAt);
+    const { entry, error } = await closeTimeEntry(
+      input.companyId,
+      segment.id,
+      input.endedAt,
+      durationMinutes,
+      segment.notes,
+    );
+    if (error || !entry) return { entry: null, error: error ?? "Failed to correct shift." };
+
+    await recordTimeActivity({
+      company_id: input.companyId,
+      time_entry_id: entry.id,
+      technician_id: entry.technicianId,
+      job_id: entry.jobId ?? null,
+      actor_id: input.actorId,
+      event_type:
+        entry.entryType === "clock"
+          ? "technician_clocked_out"
+          : entry.entryType === "break"
+            ? "break_ended"
+            : "job_labor_ended",
+      metadata: {
+        action_id: "missed_clock_out_correction",
+        correction_reason: reason,
+        original_started_at: segment.startedAt,
+        original_ended_at: segment.endedAt,
+        corrected_ended_at: input.endedAt,
+        corrected_duration_minutes: durationMinutes,
+      },
+    });
+
+    if (entry.entryType === "clock") correctedShift = entry;
+  }
+
+  return correctedShift
+    ? { entry: mapClockTimeEntryToTimeClockEntry(correctedShift), error: null }
+    : { entry: null, error: "Open shift not found." };
 }

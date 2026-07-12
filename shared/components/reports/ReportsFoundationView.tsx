@@ -250,7 +250,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
           <ReportsSummaryCard
             label="Total hours today"
             value={`${labor.totalHoursToday}h`}
-            description="Shift clock + job labor"
+            description="Payroll shift clock time"
             icon={Timer}
             iconClassName="admin-metric-icon-slate"
             accentClassName="border-violet-100"
@@ -276,6 +276,30 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
             accentClassName="border-rose-100"
           />
         </div>
+
+        {labor.staleOpenShifts.length > 0 ? (
+          <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-rose-800">
+              Long-running shifts needing review
+            </p>
+            <p className="mt-1 text-xs text-rose-700">
+              Open for 12 hours or longer. No time records were changed.
+            </p>
+            <ul className="mt-3 space-y-2">
+              {labor.staleOpenShifts.map((entry) => (
+                <li
+                  key={entry.id}
+                  className="flex flex-wrap items-center justify-between gap-2 text-sm text-rose-900"
+                >
+                  <span className="font-medium">{entry.technicianName}</span>
+                  <span className="text-rose-700">
+                    Since {formatDateTime(entry.startedAt)} · {entry.elapsedHours}h open
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         {labor.currentlyWorking.length > 0 ? (
           <div className="mt-4 rounded-xl border border-cyan-100 bg-cyan-50/50 p-4">

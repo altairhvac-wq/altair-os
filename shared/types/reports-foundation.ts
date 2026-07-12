@@ -29,6 +29,13 @@ export type ReportsLaborActiveEntry = {
   startedAt: string;
 };
 
+export type ReportsStaleShiftEntry = {
+  id: string;
+  technicianName: string;
+  startedAt: string;
+  elapsedHours: number;
+};
+
 export type ReportsLaborSummary = {
   currentlyWorkingCount: number;
   currentlyWorking: ReportsLaborActiveEntry[];
@@ -36,6 +43,7 @@ export type ReportsLaborSummary = {
   totalHoursToday: number;
   openEntryCount: number;
   exceptionCount: number;
+  staleOpenShifts: ReportsStaleShiftEntry[];
 };
 
 export type ReportsTimeClockSummary = {

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   clockInAction,
   clockOutAction,
+  correctOpenShiftAction,
 } from "@/app/actions/time-clock";
 import { CompactTimeClockBar } from "@/shared/components/time-clock/CompactTimeClockBar";
 import {
@@ -29,6 +30,7 @@ type TimeClockFoundationViewProps = {
   currentUserId: string;
   currentUserName: string;
   canViewCompanyEntries: boolean;
+  canCorrectEntries: boolean;
 };
 
 export function TimeClockFoundationView({
@@ -37,12 +39,16 @@ export function TimeClockFoundationView({
   currentUserId,
   currentUserName,
   canViewCompanyEntries,
+  canCorrectEntries,
 }: TimeClockFoundationViewProps) {
   const [openEntry, setOpenEntry] = useState(initialOpenEntry);
   const [entries, setEntries] = useState(initialEntries);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [now, setNow] = useState(Date.now());
+  const [correctingEntryId, setCorrectingEntryId] = useState<string | null>(null);
+  const [correctionEndedAt, setCorrectionEndedAt] = useState("");
+  const [correctionReason, setCorrectionReason] = useState("");
 
   useEffect(() => {
     setOpenEntry(initialOpenEntry);
@@ -110,6 +116,36 @@ export function TimeClockFoundationView({
         setOpenEntry(null);
         upsertEntry(result.entry);
       }
+    });
+  }
+
+  function beginCorrection(entry: TimeClockEntry) {
+    const localNow = new Date(now - new Date(now).getTimezoneOffset() * 60_000)
+      .toISOString()
+      .slice(0, 16);
+    setCorrectingEntryId(entry.id);
+    setCorrectionEndedAt(localNow);
+    setCorrectionReason("");
+    setError(null);
+  }
+
+  function runCorrection(entry: TimeClockEntry) {
+    setError(null);
+    startTransition(async () => {
+      const result = await correctOpenShiftAction({
+        entryId: entry.id,
+        endedAt: new Date(correctionEndedAt).toISOString(),
+        reason: correctionReason,
+      });
+      if (result.error) {
+        setError(formatActionError(result.error, "Could not correct this shift."));
+        return;
+      }
+      if (result.entry) {
+        upsertEntry(result.entry);
+        if (openEntry?.id === result.entry.id) setOpenEntry(null);
+      }
+      setCorrectingEntryId(null);
     });
   }
 
@@ -193,6 +229,11 @@ export function TimeClockFoundationView({
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                         Status
                       </th>
+                      {canCorrectEntries ? (
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Review
+                        </th>
+                      ) : null}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -217,6 +258,45 @@ export function TimeClockFoundationView({
                         <td className="px-4 py-3 text-sm text-slate-700">
                           {entry.status === "open" ? "Open" : "Closed"}
                         </td>
+                        {canCorrectEntries ? (
+                          <td className="px-4 py-3 text-sm">
+                            {entry.status === "open" ? (
+                              correctingEntryId === entry.id ? (
+                                <div className="min-w-64 space-y-2">
+                                  <input
+                                    type="datetime-local"
+                                    value={correctionEndedAt}
+                                    onChange={(event) => setCorrectionEndedAt(event.target.value)}
+                                    className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm"
+                                  />
+                                  <input
+                                    value={correctionReason}
+                                    onChange={(event) => setCorrectionReason(event.target.value)}
+                                    placeholder="Reason for correction"
+                                    className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm"
+                                  />
+                                  <div className="flex gap-2">
+                                    <button
+                                      type="button"
+                                      disabled={isPending || !correctionEndedAt || correctionReason.trim().length < 5}
+                                      onClick={() => runCorrection(entry)}
+                                      className="rounded-lg bg-rose-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                                    >
+                                      Close corrected shift
+                                    </button>
+                                    <button type="button" onClick={() => setCorrectingEntryId(null)} className="px-2 text-xs font-semibold text-slate-600">
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button type="button" onClick={() => beginCorrection(entry)} className="font-semibold text-rose-700 hover:text-rose-800">
+                                  Correct missed clock-out
+                                </button>
+                              )
+                            ) : "—"}
+                          </td>
+                        ) : null}
                       </tr>
                     ))}
                   </tbody>

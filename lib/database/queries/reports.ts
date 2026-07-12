@@ -8,6 +8,7 @@ import { listJobs } from "@/lib/database/queries/jobs";
 import { listLeads } from "@/lib/database/queries/leads";
 import {
   listCompanyJobLaborEntries,
+  listOpenClockEntriesForCompany,
   listTodayTimeEntriesForCompany,
 } from "@/lib/database/queries/time-entries";
 import { createClient } from "@/lib/supabase/server";
@@ -43,6 +44,7 @@ const CLOSED_JOB_STATUSES: ReadonlySet<JobStatus> = new Set([
 
 const RECENT_TIME_CLOCK_LIMIT = 10;
 const TIME_CLOCK_FETCH_LIMIT = 100;
+const STALE_OPEN_SHIFT_HOURS = 12;
 
 async function listTechnicianLaborCostRates(
   companyId: string,
@@ -129,12 +131,13 @@ export async function getReportsFoundationData(
   companyId: string,
   timeZone?: string,
 ): Promise<ReportsFoundationData> {
-  const [jobs, invoices, estimates, timeClockEntries, todayJobs, operations, laborEntries, todayTimeEntries, inconsistenciesReport] =
+  const [jobs, invoices, estimates, timeClockEntries, openClockEntries, todayJobs, operations, laborEntries, todayTimeEntries, inconsistenciesReport] =
     await Promise.all([
       listJobs(companyId),
       listInvoicesWithBillingSync(companyId, timeZone),
       listEstimates(companyId),
       listTimeClockEntries(companyId, { limit: TIME_CLOCK_FETCH_LIMIT }),
+      listOpenClockEntriesForCompany(companyId),
       listDispatchJobsForToday(companyId, { timeZone }),
       getDailyOperationsSummary(companyId, timeZone),
       listCompanyJobLaborEntries(companyId),
@@ -150,17 +153,39 @@ export async function getReportsFoundationData(
     (invoice) => invoice.status === "overdue",
   );
   const invoiceTotals = getInvoiceSummary(invoices);
-  const clockedInUsers = timeClockEntries.filter(
-    (entry) => entry.status === "open",
-  );
+  const clockedInUsers = openClockEntries.map((entry) => ({
+    id: entry.id,
+    companyId: entry.companyId,
+    userId: entry.technicianId,
+    userName: entry.technicianName,
+    clockInAt: entry.startedAt,
+    clockOutAt: entry.endedAt,
+    status: "open" as const,
+    notes: entry.notes,
+    createdAt: entry.createdAt,
+    updatedAt: entry.updatedAt,
+  }));
   const activeLaborEntries = laborEntries.filter((entry) => entry.endedAt == null);
   const openBreakEntries = todayTimeEntries.filter(
     (entry) => entry.entryType === "break" && entry.endedAt == null,
   );
   const todayTimeSummary = summarizeTodayEntries(todayTimeEntries);
   const totalHoursToday = roundJobMaterialAmount(
-    (todayTimeSummary.clockMinutes + todayTimeSummary.jobLaborMinutes) / 60,
+    todayTimeSummary.clockMinutes / 60,
   );
+  const now = Date.now();
+  const staleOpenShifts = openClockEntries
+    .map((entry) => ({
+      id: entry.id,
+      technicianName: entry.technicianName,
+      startedAt: entry.startedAt,
+      elapsedHours: Math.max(
+        0,
+        Math.round(((now - new Date(entry.startedAt).getTime()) / 3_600_000) * 10) /
+          10,
+      ),
+    }))
+    .filter((entry) => entry.elapsedHours >= STALE_OPEN_SHIFT_HOURS);
   const startedTodayTechnicians = new Set(
     todayTimeEntries
       .filter((entry) => entry.entryType === "clock")
@@ -205,7 +230,8 @@ export async function getReportsFoundationData(
       totalHoursToday,
       openEntryCount:
         clockedInUsers.length + activeLaborEntries.length + openBreakEntries.length,
-      exceptionCount: timeExceptions.length,
+      exceptionCount: timeExceptions.length + staleOpenShifts.length,
+      staleOpenShifts,
     },
     timeClock: {
       clockedInCount: clockedInUsers.length,

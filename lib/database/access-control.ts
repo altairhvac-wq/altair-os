@@ -270,6 +270,12 @@ export function canViewCompanyTimeEntries(
   );
 }
 
+export function canCorrectCompanyTimeEntries(
+  context: ActiveCompanyContext,
+): boolean {
+  return context.permissions.manageCompany || context.permissions.manageBilling;
+}
+
 export function canUpdateJobWorkflowStatus(
   permissions: ActiveCompanyContext["permissions"],
   userId: string,
