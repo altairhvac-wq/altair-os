@@ -28,6 +28,7 @@ import { RevenueTrendChartCard } from "./RevenueTrendChartCard";
 import { SalesFunnelChartCard } from "./SalesFunnelChartCard";
 import { TechnicianProfitabilityChartCard } from "./TechnicianProfitabilityChartCard";
 import { LeadPipelineSection } from "./LeadPipelineSection";
+import { TimeTrackingSummaryCard } from "./TimeTrackingSummaryCard";
 import { ReportsNorthStarView } from "./north-star-m8";
 
 type ReportsPageViewProps = {
@@ -173,6 +174,8 @@ export function ReportsPageView({
           {data.showLeadPipeline ? (
             <LeadPipelineSection metrics={data.leadPipeline} />
           ) : null}
+
+          <TimeTrackingSummaryCard summary={data.timeTracking} />
 
           <OperationsSnapshotSection
             topCustomers={data.operationsSnapshot.topCustomers}

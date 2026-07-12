@@ -25,6 +25,7 @@ import { ReportKpiCard } from "../ReportKpiCard";
 import { RevenueTrendChartCard } from "../RevenueTrendChartCard";
 import { SalesFunnelChartCard } from "../SalesFunnelChartCard";
 import { TechnicianProfitabilityChartCard } from "../TechnicianProfitabilityChartCard";
+import { TimeTrackingSummaryCard } from "../TimeTrackingSummaryCard";
 import { ReportsNorthStarPeriodLedgerStrip } from "./ReportsNorthStarPeriodLedgerStrip";
 
 export type ReportsNorthStarViewProps = {
@@ -170,6 +171,8 @@ export function ReportsNorthStarView({
         {data.showLeadPipeline ? (
           <LeadPipelineSection metrics={data.leadPipeline} variant="northStar" />
         ) : null}
+
+        <TimeTrackingSummaryCard summary={data.timeTracking} variant="northStar" />
 
         <OperationsSnapshotSection
           topCustomers={data.operationsSnapshot.topCustomers}

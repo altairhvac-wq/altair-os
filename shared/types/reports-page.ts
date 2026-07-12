@@ -84,6 +84,19 @@ export type ReportOperationsSnapshot = {
   workCompleted: ReportSnapshotRow[];
 };
 
+export type ReportStaleOpenShift = {
+  id: string;
+  technicianName: string;
+  startedAt: string;
+  elapsedHours: number;
+};
+
+export type ReportTimeTrackingSummary = {
+  shiftHoursToday: number;
+  openShiftCount: number;
+  staleOpenShifts: ReportStaleOpenShift[];
+};
+
 export type ReportPaymentMethodTotal = {
   method: string;
   amount: number;
@@ -123,6 +136,7 @@ export type ReportsPageData = {
   technicianProfitability: ReportTechnicianProfitability[];
   showTechnicianProfitability: boolean;
   operationsSnapshot: ReportOperationsSnapshot;
+  timeTracking: ReportTimeTrackingSummary;
   accountantSummary: AccountantSummaryData;
   leadPipeline: LeadPipelineMetrics;
   showLeadPipeline: boolean;

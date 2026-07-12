@@ -905,6 +905,11 @@ export function buildReportsPageData(input: {
     technicianProfitability,
     showTechnicianProfitability: input.showTechnicianProfitability,
     operationsSnapshot: buildOperationsSnapshot(input.datasets, dateBounds),
+    timeTracking: {
+      shiftHoursToday: 0,
+      openShiftCount: 0,
+      staleOpenShifts: [],
+    },
     accountantSummary: buildAccountantSummary(
       input.companyName,
       input.dateRange,

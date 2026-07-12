@@ -94,7 +94,7 @@ export async function getReportsPageData(
 ): Promise<ReportsPageData> {
   const showLeadPipeline = options.showLeadPipeline ?? false;
 
-  const [invoices, payments, estimates, jobs, expenses, leads, chartSeries, laborEntries, laborCostRates] =
+  const [invoices, payments, estimates, jobs, expenses, leads, chartSeries, laborEntries, laborCostRates, openClockEntries, todayTimeEntries] =
     await Promise.all([
       listInvoices(companyId),
       listInvoicePayments(companyId),
@@ -105,9 +105,11 @@ export async function getReportsPageData(
       getCompanyReportChartSeries(companyId, { dateRange }),
       listCompanyJobLaborEntries(companyId),
       listTechnicianLaborCostRates(companyId),
+      listOpenClockEntriesForCompany(companyId),
+      listTodayTimeEntriesForCompany(companyId, options.timeZone),
     ]);
 
-  return buildReportsPageData({
+  const report = buildReportsPageData({
     companyName,
     dateRange,
     showTechnicianProfitability: options.showTechnicianPerformance ?? true,
@@ -125,6 +127,29 @@ export async function getReportsPageData(
       laborCostRates,
     },
   });
+
+  const now = Date.now();
+  const todayTimeSummary = summarizeTodayEntries(todayTimeEntries);
+  const staleOpenShifts = openClockEntries
+    .map((entry) => ({
+      id: entry.id,
+      technicianName: entry.technicianName,
+      startedAt: entry.startedAt,
+      elapsedHours: Math.max(
+        0,
+        Math.round(((now - Date.parse(entry.startedAt)) / 3_600_000) * 10) / 10,
+      ),
+    }))
+    .filter((entry) => entry.elapsedHours >= STALE_OPEN_SHIFT_HOURS);
+
+  return {
+    ...report,
+    timeTracking: {
+      shiftHoursToday: roundJobMaterialAmount(todayTimeSummary.clockMinutes / 60),
+      openShiftCount: openClockEntries.length,
+      staleOpenShifts,
+    },
+  };
 }
 
 export async function getReportsFoundationData(
@@ -173,19 +198,6 @@ export async function getReportsFoundationData(
   const totalHoursToday = roundJobMaterialAmount(
     todayTimeSummary.clockMinutes / 60,
   );
-  const now = Date.now();
-  const staleOpenShifts = openClockEntries
-    .map((entry) => ({
-      id: entry.id,
-      technicianName: entry.technicianName,
-      startedAt: entry.startedAt,
-      elapsedHours: Math.max(
-        0,
-        Math.round(((now - new Date(entry.startedAt).getTime()) / 3_600_000) * 10) /
-          10,
-      ),
-    }))
-    .filter((entry) => entry.elapsedHours >= STALE_OPEN_SHIFT_HOURS);
   const startedTodayTechnicians = new Set(
     todayTimeEntries
       .filter((entry) => entry.entryType === "clock")
@@ -230,8 +242,7 @@ export async function getReportsFoundationData(
       totalHoursToday,
       openEntryCount:
         clockedInUsers.length + activeLaborEntries.length + openBreakEntries.length,
-      exceptionCount: timeExceptions.length + staleOpenShifts.length,
-      staleOpenShifts,
+      exceptionCount: timeExceptions.length,
     },
     timeClock: {
       clockedInCount: clockedInUsers.length,
