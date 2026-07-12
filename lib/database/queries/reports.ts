@@ -31,6 +31,7 @@ import {
 import type { ReportsFoundationData } from "@/shared/types/reports-foundation";
 import { roundJobMaterialAmount } from "@/shared/types/job-material";
 import { summarizeTodayEntries } from "@/shared/types/time-entry";
+import { getDayBoundsInTimeZone } from "@/shared/lib/datetime";
 
 
 const TIME_RELATED_INCONSISTENCY_KINDS = new Set([
@@ -129,7 +130,30 @@ export async function getReportsPageData(
   });
 
   const now = Date.now();
-  const todayTimeSummary = summarizeTodayEntries(todayTimeEntries);
+  const { start: todayStart, end: todayEnd } = getDayBoundsInTimeZone(
+    options.timeZone,
+  );
+  const todayStartMs = Date.parse(todayStart);
+  const todayEndMs = Date.parse(todayEnd);
+  const clockEntriesForToday = new Map(
+    todayTimeEntries
+      .filter((entry) => entry.entryType === "clock")
+      .map((entry) => [entry.id, entry]),
+  );
+  for (const entry of openClockEntries) {
+    clockEntriesForToday.set(entry.id, entry);
+  }
+  const shiftMinutesToday = [...clockEntriesForToday.values()].reduce(
+    (total, entry) => {
+      const overlapStart = Math.max(Date.parse(entry.startedAt), todayStartMs);
+      const overlapEnd = Math.min(
+        entry.endedAt ? Date.parse(entry.endedAt) : now,
+        todayEndMs,
+      );
+      return total + Math.max(0, Math.round((overlapEnd - overlapStart) / 60_000));
+    },
+    0,
+  );
   const staleOpenShifts = openClockEntries
     .map((entry) => ({
       id: entry.id,
@@ -145,7 +169,7 @@ export async function getReportsPageData(
   return {
     ...report,
     timeTracking: {
-      shiftHoursToday: roundJobMaterialAmount(todayTimeSummary.clockMinutes / 60),
+      shiftHoursToday: roundJobMaterialAmount(shiftMinutesToday / 60),
       openShiftCount: openClockEntries.length,
       staleOpenShifts,
     },
