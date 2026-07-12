@@ -305,8 +305,8 @@ a[href] {
   --north-star-brass: #b88a2e;
   --north-star-gold: #c9a44d;
   --north-star-champagne: #e6d092;
-  --north-star-ivory: #fbf7ef;
-  --north-star-ivory-strong: #fff9ea;
+  --north-star-ivory: #f8fafc;
+  --north-star-ivory-strong: #ffffff;
   --north-star-text-dark: #17130e;
   --north-star-text-secondary: #4f4638;
   --north-star-text-muted: var(--north-star-work-text-muted);
@@ -323,6 +323,38 @@ a[href] {
   --north-star-work-text-secondary: #4b5563;
   --north-star-work-text-muted: #64748b;
   --north-star-work-placeholder: #6b7280;
+}
+
+/*
+ * Operational surfaces use the same cool blue-gray/white palette throughout
+ * the signed-in application. Older North Star components still carry literal
+ * ivory utility classes; normalize them here until those components fully use
+ * the shared work-surface tokens. Print styles below continue to force billing
+ * and tax documents to white.
+ */
+.admin-north-star-shell .bg-\[\#FBF7EF\] {
+  background-color: var(--north-star-work-row) !important;
+}
+
+.admin-north-star-shell .bg-\[\#FFF9EA\] {
+  background-color: #ffffff !important;
+}
+
+.admin-north-star-shell .bg-\[\#F5F0E4\],
+.admin-north-star-shell .bg-\[\#F3EBDD\],
+.admin-north-star-shell .bg-\[\#F7F0E2\] {
+  background-color: var(--north-star-work-band) !important;
+}
+
+.admin-north-star-shell .hover\:bg-\[\#FFF9EA\]:hover,
+.admin-north-star-shell .hover\:bg-\[\#F3EBDD\]:hover,
+.admin-north-star-shell .hover\:bg-\[\#F7F0E2\]:hover {
+  background-color: var(--north-star-work-row-hover) !important;
+}
+
+.admin-north-star-shell .focus\:bg-\[\#FBF7EF\]:focus,
+.admin-north-star-shell .focus\:bg-\[\#FFF9EA\]:focus {
+  background-color: #ffffff !important;
 }
 
 /* Admin experience — 3-tier surface system (canvas → panel → section/card) */
