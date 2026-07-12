@@ -548,7 +548,7 @@ export const northStarInvoiceDocumentTokens: NorthStarInvoiceDocumentTokens = {
   overlayCloseButton:
     "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.35)] px-2 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[rgba(39,49,64,0.55)] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#D6BE78]",
   overlayPanel:
-    "relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-[#1A2029] lg:mx-auto lg:max-w-6xl lg:shadow-[0_22px_60px_rgba(3,7,12,0.42)] lg:ring-1 lg:ring-[rgba(174,182,194,0.18)] print:bg-white print:shadow-none print:ring-0",
+    "relative z-10 flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-[#1A2029] lg:mx-auto lg:max-w-6xl lg:shadow-[0_22px_60px_rgba(3,7,12,0.42)] lg:ring-1 lg:ring-[rgba(174,182,194,0.18)] print:bg-white print:shadow-none print:ring-0",
 };
 
 export const northStarEstimateDocumentTokens: NorthStarEstimateDocumentTokens = {
@@ -583,7 +583,7 @@ export const northStarEstimateDocumentTokens: NorthStarEstimateDocumentTokens = 
   overlayCloseButton:
     "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.35)] px-2 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[rgba(39,49,64,0.55)] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#D6BE78]",
   overlayPanel:
-    "relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-[#1A2029] lg:mx-auto lg:max-w-6xl lg:shadow-[0_22px_60px_rgba(3,7,12,0.42)] lg:ring-1 lg:ring-[rgba(174,182,194,0.18)] print:bg-white print:shadow-none print:ring-0",
+    "relative z-10 flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-[#1A2029] lg:mx-auto lg:max-w-6xl lg:shadow-[0_22px_60px_rgba(3,7,12,0.42)] lg:ring-1 lg:ring-[rgba(174,182,194,0.18)] print:bg-white print:shadow-none print:ring-0",
 };
 
 /**

@@ -2998,6 +2998,42 @@ a[href] {
   -webkit-overflow-scrolling: touch;
 }
 
+/*
+ * Full-viewport focused overlays (create/edit forms, billing detail).
+ * Stretch with inset (top/bottom) — do not use max-height: 100dvh, which can
+ * leave a body/canvas strip below the overlay on mobile. Paint the mobile
+ * surface here so short forms never show --surface-canvas through a
+ * transparent root/scrollport. Desktop keeps a transparent root for the dimmed
+ * backdrop (see max-width media query).
+ */
+.overlay-form-root {
+  width: 100%;
+  min-height: 100%;
+  min-height: -webkit-fill-available;
+  min-height: 100dvh;
+}
+
+@supports not (min-height: 100dvh) {
+  .overlay-form-root {
+    min-height: 100vh;
+  }
+}
+
+@media (max-width: 1023px) {
+  .overlay-form-root {
+    background-color: #ffffff;
+  }
+
+  .overlay-form-root[data-overlay-surface="north-star"] {
+    background-color: #1a2029;
+  }
+
+  .overlay-form-root .overlay-form-scroll,
+  .overlay-form-root .overlay-form-shell {
+    background-color: inherit;
+  }
+}
+
 /* Flex column shell for full-viewport forms with pinned footers. */
 .overlay-form-shell {
   display: flex;

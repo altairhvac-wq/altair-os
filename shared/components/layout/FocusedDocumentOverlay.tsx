@@ -150,6 +150,7 @@ export function FocusedDocumentOverlay({
     </div>
   ) : null;
 
+  const surfaceClass = northStar ? "bg-[#1A2029]" : "bg-white";
   const bodyClassName =
     bodyScroll === "child"
       ? "overlay-form-shell overflow-hidden"
@@ -158,7 +159,10 @@ export function FocusedDocumentOverlay({
   return (
     <ModalPortal>
       <div
-        className={`fixed inset-0 z-50 flex flex-col overflow-hidden ${rootClassName ?? ""}`}
+        className={`overlay-form-root fixed inset-0 z-50 flex min-h-dvh flex-col overflow-hidden ${
+          northStar ? "max-lg:bg-[#1A2029]" : "max-lg:bg-white"
+        } ${rootClassName ?? ""}`}
+        data-overlay-surface={northStar ? "north-star" : "default"}
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel ?? title}
@@ -170,7 +174,13 @@ export function FocusedDocumentOverlay({
           disabled={closeDisabled}
           className="no-print absolute inset-0 z-0 hidden bg-slate-900/20 lg:block disabled:cursor-default"
         />
-        <div className={northStar ? edt.overlayPanel : "relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-white lg:mx-auto lg:max-w-6xl lg:shadow-2xl lg:ring-1 lg:ring-slate-200/80"}>
+        <div
+          className={
+            northStar
+              ? edt.overlayPanel
+              : `relative z-10 flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden ${surfaceClass} lg:mx-auto lg:max-w-6xl lg:shadow-2xl lg:ring-1 lg:ring-slate-200/80`
+          }
+        >
           <OverlayHeader
             title={title}
             subtitle={subtitle}
@@ -182,9 +192,9 @@ export function FocusedDocumentOverlay({
             northStar={northStar}
           />
           <OverlayFooterSlotContext.Provider value={footerSlot}>
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className={`flex min-h-0 flex-1 flex-col overflow-hidden ${surfaceClass}`}>
               <div
-                className={`${bodyClassName} min-h-0 min-w-0`}
+                className={`${bodyClassName} min-h-0 min-w-0 ${surfaceClass}`}
                 data-no-pull-refresh
               >
                 {children}
