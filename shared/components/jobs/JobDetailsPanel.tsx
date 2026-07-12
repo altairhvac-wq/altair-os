@@ -54,7 +54,6 @@ export function JobDetailsPanel({
         closeDisabled={isSubmitting}
         closeVariant="back"
         ariaLabel="Create job"
-        bodyScroll="child"
       >
         {form}
       </FocusedDocumentOverlay>

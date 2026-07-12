@@ -50,7 +50,6 @@ import {
 import {
   MasterListPageLayout,
   MasterPageSurface,
-  masterListPageMobilePanelLockClass,
   masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
@@ -535,7 +534,6 @@ export function EstimatesPageView({
   const hasNoQueueEstimates =
     !hasNoEstimates && queueScopedEstimates.length === 0;
   const hasNoResults = !hasNoEstimates && filteredEstimates.length === 0;
-  const isCreateOpen = panelMode === "create";
 
   const subtitle = "Finish, send, and follow up on estimates.";
 
@@ -597,9 +595,7 @@ export function EstimatesPageView({
           </>
         ) : undefined
       }
-      className={`${isCreateOpen ? masterListPageMobilePanelLockClass : ""} ${
-        northStar ? lt.pageCanvas : ""
-      }`}
+      className={northStar ? lt.pageCanvas : undefined}
       headerClassName={northStar ? lt.pageHeader : undefined}
       headerSurfaceVariant={northStar ? "northStar" : "default"}
       headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
@@ -608,9 +604,7 @@ export function EstimatesPageView({
     >
       <MasterPageSurface
         variant={northStar ? "northStarList" : "card"}
-        className={`${masterListPageSurfaceClass} ${
-          isCreateOpen ? "max-lg:hidden" : ""
-        } ${northStar ? lt.listSurface : ""}`}
+        className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
       >
         {northStar ? (
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />

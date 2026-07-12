@@ -51,7 +51,7 @@ export const masterPanelHeaderClass = "admin-panel-header shrink-0";
 /** Grouped section surface — details, settings, forms (maps to `.admin-section-surface`). */
 export const masterSectionSurfaceClass = "admin-section-surface p-2.5";
 
-/** Mobile viewport lock when a list detail/create panel is open (checklist item 7). */
+/** @deprecated Prefer FocusedDocumentOverlay for mobile create/detail. Kept for any residual imports. */
 export const masterListPageMobilePanelLockClass =
   "max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden";
 

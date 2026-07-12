@@ -43,7 +43,6 @@ export function InvoiceDetailsPanel({
       closeDisabled={isSubmitting}
       closeVariant="back"
       ariaLabel="Create invoice"
-      bodyScroll="child"
     >
       <InvoiceForm
           customers={customers}

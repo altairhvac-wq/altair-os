@@ -36,7 +36,6 @@ import type {
 import {
   MasterListPageLayout,
   MasterPageSurface,
-  masterListPageMobilePanelLockClass,
   masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
@@ -366,7 +365,6 @@ export function ExpensesPageView({
   const hasNoExpenses = localExpenses.length === 0;
   const hasNoQueueExpenses = !hasNoExpenses && queueScopedExpenses.length === 0;
   const hasNoResults = !hasNoExpenses && filteredExpenses.length === 0;
-  const isPanelOpen = panelMode !== "empty";
 
   const subtitle = "Review, categorize, and approve company spending.";
 
@@ -417,9 +415,7 @@ export function ExpensesPageView({
           New Expense
         </button>
       }
-      className={`${isPanelOpen ? masterListPageMobilePanelLockClass : ""} ${
-        northStar ? lt.pageCanvas : ""
-      }`}
+      className={northStar ? lt.pageCanvas : undefined}
       headerClassName={
         northStar ? `${lt.pageHeader} north-star-expenses-page-header` : undefined
       }
@@ -430,9 +426,7 @@ export function ExpensesPageView({
     >
       <MasterPageSurface
         variant={northStar ? "northStarList" : "card"}
-        className={`${masterListPageSurfaceClass} max-w-full ${
-          isPanelOpen ? "max-lg:hidden" : ""
-        } ${northStar ? lt.listSurface : ""}`}
+        className={`${masterListPageSurfaceClass} max-w-full ${northStar ? lt.listSurface : ""}`}
       >
         {northStar ? (
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />

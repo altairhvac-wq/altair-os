@@ -160,10 +160,10 @@ export function EstimateForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="overlay-form-shell min-h-0 flex-1 px-3 py-3 sm:px-4 sm:py-4"
+      className="space-y-2.5 px-3 py-3 sm:px-4 sm:py-4"
       aria-busy={isSubmitting}
     >
-      <div className="mb-2 shrink-0">
+      <div>
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
           Step {step === "info" ? "1" : "2"} of 2
         </p>
@@ -173,13 +173,12 @@ export function EstimateForm({
       </div>
 
       {displayError ? (
-        <div className="mb-2 shrink-0 rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-700">
+        <div className="rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-sm text-red-700">
           {displayError}
         </div>
       ) : null}
 
-      <div className="overlay-form-scroll min-h-0 overflow-x-hidden pb-2">
-        <fieldset
+      <fieldset
           disabled={isSubmitting}
           className="m-0 min-w-0 border-0 p-0"
         >
@@ -321,9 +320,8 @@ export function EstimateForm({
             </div>
           )}
         </fieldset>
-      </div>
 
-      <div className={`${adminFormActionsClass} overlay-form-actions admin-sticky-footer-inline bg-white`}>
+      <div className={`${adminFormActionsClass} border-t border-slate-100 pt-3`}>
         {step === "info" ? (
           <>
             <button

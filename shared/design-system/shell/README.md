@@ -87,7 +87,7 @@ Reference implementations: Customers, Leads, Jobs, Estimates, Invoices, Expenses
 4. **Main list card**: `MasterPageSurface` `variant="card"`.
 5. **Scroll region**: inside the surface, use `min-h-0 min-w-0 flex-1 overflow-x-hidden lg:overflow-y-auto`.
 6. **Detail/create panel**: sibling of `MasterPageSurface`, not nested inside it.
-7. **Mobile panel open**: viewport-lock class on the layout (`max-lg:h-[calc(100dvh-7rem)] max-lg:min-h-0 max-lg:overflow-hidden`); hide the list surface with `max-lg:hidden`.
+7. **Mobile panel open**: use `FocusedDocumentOverlay` (via `DesktopConditionalDetailPanel` or directly). Do **not** apply viewport-lock height classes or hide the list behind an inline `flex-1` aside — that hybrid caused blank dead space below forms.
 8. **Primary action**: compact h-9 button — `inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm`.
 9. **Subtitles**: static or contextual (counts, filter state).
 10. **Loading states**: use `MasterListPageLoadingState` with the same density and summary/tab props as the loaded page.
@@ -99,7 +99,7 @@ Exported from `tokens.ts` for repeated class strings across migrated list pages:
 | Token | Use |
 |-------|-----|
 | `masterListPagePrimaryActionClass` | Compact primary header button |
-| `masterListPageMobilePanelLockClass` | `MasterListPageLayout` `className` when a panel is open on mobile |
+| `masterListPageMobilePanelLockClass` | **Deprecated** — do not use; causes mobile form dead space |
 | `masterListPageSurfaceClass` | `MasterPageSurface` card flex shell |
 | `masterListPageScrollRegionClass` | Inner scroll container inside the list card |
 | `masterSectionSurfaceClass` | Section/card grouping surface (detail sections, `MasterPageSurface` section variant) |

@@ -28,7 +28,6 @@ import {
 import {
   MasterListPageLayout,
   MasterPageSurface,
-  masterListPageMobilePanelLockClass,
   masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
@@ -367,7 +366,6 @@ export function CustomersPageView({
   const hasNoCustomers = customers.length === 0;
   const hasNoQueueCustomers = !hasNoCustomers && queueScopedCustomers.length === 0;
   const hasNoResults = !hasNoCustomers && filteredCustomers.length === 0;
-  const isCreateOpen = panelMode === "create";
   const northStar = isNorthStarShellEnabled();
 
   return (
@@ -423,9 +421,7 @@ export function CustomersPageView({
           </SettingsAlertBanner>
         ) : undefined
       }
-      className={`${isCreateOpen ? masterListPageMobilePanelLockClass : ""} ${
-        northStar ? lt.pageCanvas : ""
-      }`}
+      className={northStar ? lt.pageCanvas : undefined}
       headerClassName={northStar ? lt.pageHeader : undefined}
       headerSurfaceVariant={northStar ? "northStar" : "default"}
       headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
@@ -433,9 +429,7 @@ export function CustomersPageView({
     >
       <MasterPageSurface
         variant={northStar ? "northStarList" : "card"}
-        className={`${masterListPageSurfaceClass} ${
-          isCreateOpen ? "max-lg:hidden" : ""
-        } ${northStar ? lt.listSurface : ""}`}
+        className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
       >
         {northStar ? (
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />

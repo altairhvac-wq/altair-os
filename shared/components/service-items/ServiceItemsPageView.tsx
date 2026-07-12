@@ -36,7 +36,6 @@ import type {
 import {
   MasterListPageLayout,
   MasterPageSurface,
-  masterListPageMobilePanelLockClass,
   masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
@@ -322,7 +321,6 @@ export function ServiceItemsPageView({
   const hasNoItems = serviceItems.length === 0;
   const hasNoQueueItems = !hasNoItems && queueScopedServiceItems.length === 0;
   const hasNoResults = !hasNoItems && filteredServiceItems.length === 0;
-  const isPanelOpen = panelMode !== "empty";
   const northStar = isNorthStarShellEnabled();
   const bulkLifecycleFilter: ServiceItemLifecycleState =
     workQueue === "past" ? lifecycleFilter : "active";
@@ -362,9 +360,7 @@ export function ServiceItemsPageView({
           </button>
         ) : undefined
       }
-      className={`${isPanelOpen ? masterListPageMobilePanelLockClass : ""} ${
-        northStar ? lt.pageCanvas : ""
-      }`}
+      className={northStar ? lt.pageCanvas : undefined}
       headerClassName={northStar ? lt.pageHeader : undefined}
       headerSurfaceVariant={northStar ? "northStar" : "default"}
       headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
@@ -375,9 +371,7 @@ export function ServiceItemsPageView({
     >
       <MasterPageSurface
         variant={northStar ? "northStarList" : "card"}
-        className={`${masterListPageSurfaceClass} ${
-          isPanelOpen ? "max-lg:hidden" : ""
-        } ${northStar ? lt.listSurface : ""}`}
+        className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
       >
         {northStar ? (
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />

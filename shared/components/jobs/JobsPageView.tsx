@@ -60,7 +60,6 @@ import type { JobWorkflowActionId } from "@/shared/types/job-workflow";
 import {
   MasterListPageLayout,
   MasterPageSurface,
-  masterListPageMobilePanelLockClass,
   masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
@@ -696,7 +695,6 @@ export function JobsPageView({
   const hasNoJobs = jobs.length === 0;
   const showCustomerSearch = isSearching && customers.length > 0;
   const showCustomerSearchUnavailable = isSearching && customers.length === 0;
-  const isCreateOpen = panelMode === "create";
 
   const hasActiveFilters = hasActiveJobsPageFilters({
     viewTab,
@@ -899,9 +897,7 @@ export function JobsPageView({
           </SettingsAlertBanner>
         ) : undefined
       }
-      className={`${isCreateOpen ? masterListPageMobilePanelLockClass : ""} ${
-        northStar ? lt.pageCanvas : ""
-      }`}
+      className={northStar ? lt.pageCanvas : undefined}
       headerClassName={northStar ? lt.pageHeader : undefined}
       headerSurfaceVariant={northStar ? "northStar" : "default"}
       headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
@@ -910,9 +906,7 @@ export function JobsPageView({
     >
       <MasterPageSurface
         variant={northStar ? "northStarList" : "card"}
-        className={`${masterListPageSurfaceClass} ${
-          isCreateOpen ? "max-lg:hidden" : ""
-        } ${northStar ? lt.listSurface : ""}`}
+        className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
       >
         {northStar ? (
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />

@@ -63,7 +63,6 @@ import { formatCurrency } from "@/shared/types/customer";
 import {
   MasterListPageLayout,
   MasterPageSurface,
-  masterListPageMobilePanelLockClass,
   masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
@@ -591,7 +590,6 @@ export function InvoicesPageView({
   const hasNoQueueInvoices =
     !hasNoInvoices && queueScopedInvoices.length === 0;
   const hasNoResults = !hasNoInvoices && filteredInvoices.length === 0;
-  const isCreateOpen = panelMode === "create";
 
   const subtitle =
     "Collect money, send invoices, and find past billing records.";
@@ -666,9 +664,7 @@ export function InvoicesPageView({
           </button>
         ) : undefined
       }
-      className={`${isCreateOpen ? masterListPageMobilePanelLockClass : ""} ${
-        northStar ? lt.pageCanvas : ""
-      }`}
+      className={northStar ? lt.pageCanvas : undefined}
       headerClassName={northStar ? lt.pageHeader : undefined}
       headerSurfaceVariant={northStar ? "northStar" : "default"}
       headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
@@ -677,9 +673,7 @@ export function InvoicesPageView({
     >
       <MasterPageSurface
         variant={northStar ? "northStarList" : "card"}
-        className={`${masterListPageSurfaceClass} ${
-          isCreateOpen ? "max-lg:hidden" : ""
-        } ${northStar ? lt.listSurface : ""}`}
+        className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
       >
         {northStar ? (
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />

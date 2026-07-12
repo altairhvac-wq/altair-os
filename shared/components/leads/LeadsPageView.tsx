@@ -9,7 +9,6 @@ import type { LeadAssignableMember } from "@/lib/database/queries/leads";
 import {
   MasterListPageLayout,
   MasterPageSurface,
-  masterListPageMobilePanelLockClass,
   masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
@@ -253,7 +252,6 @@ export function LeadsPageView({
 
   const hasNoLeads = leads.length === 0;
   const hasNoResults = !hasNoLeads && filteredLeads.length === 0;
-  const isPanelOpen = panelMode !== "empty";
   const northStar = isNorthStarShellEnabled();
 
   return (
@@ -280,9 +278,7 @@ export function LeadsPageView({
           <SettingsAlertBanner tone="error">{createError}</SettingsAlertBanner>
         ) : undefined
       }
-      className={`${isPanelOpen ? masterListPageMobilePanelLockClass : ""} ${
-        northStar ? lt.pageCanvas : ""
-      }`}
+      className={northStar ? lt.pageCanvas : undefined}
       headerClassName={northStar ? lt.pageHeader : undefined}
       headerSurfaceVariant={northStar ? "northStar" : "default"}
       headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
@@ -290,9 +286,7 @@ export function LeadsPageView({
     >
       <MasterPageSurface
         variant={northStar ? "northStarList" : "card"}
-        className={`${masterListPageSurfaceClass} ${
-          isPanelOpen ? "max-lg:hidden" : ""
-        } ${northStar ? lt.listSurface : ""}`}
+        className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
       >
         {northStar ? (
           <div aria-hidden="true" className={lt.listSurfaceTopAccent} />

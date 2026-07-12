@@ -65,11 +65,7 @@ export function CustomerForm({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="overlay-form-shell min-h-0 flex-1"
-    >
-      <div className="overlay-form-scroll space-y-5 pb-1">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label htmlFor="name" className={labelClass}>
@@ -227,11 +223,8 @@ export function CustomerForm({
           {error}
         </p>
       ) : null}
-      </div>
 
-      <div
-        className={`${adminFormActionsClass} overlay-form-actions admin-sticky-footer-inline bg-white`}
-      >
+      <div className={`${adminFormActionsClass} border-t border-slate-100 pt-4`}>
         <button
           type="submit"
           disabled={isSubmitting}

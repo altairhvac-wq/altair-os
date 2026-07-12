@@ -47,7 +47,6 @@ export function EstimateDetailsPanel({
       closeDisabled={isSubmitting}
       closeVariant="back"
       ariaLabel="Create estimate"
-      bodyScroll="child"
     >
       <EstimateForm
           customers={customers}

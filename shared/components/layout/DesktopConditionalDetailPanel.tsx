@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { X } from "lucide-react";
 import { ModalPortal } from "@/shared/components/ui/ModalPortal";
 import { useScrollLock, useSheetEscape } from "@/shared/hooks/useScrollLock";
+import { FocusedDocumentOverlay } from "@/shared/components/layout/FocusedDocumentOverlay";
 
 type DesktopConditionalDetailPanelProps = {
   isOpen: boolean;
@@ -15,7 +16,7 @@ type DesktopConditionalDetailPanelProps = {
   ariaLabel?: string;
   /** Sticky footer region (form actions, etc.) */
   footer?: ReactNode;
-  /** When false, skip the mobile inline aside (use a separate mobile overlay). */
+  /** When false, skip the mobile overlay (use a separate mobile overlay). */
   showMobileAside?: boolean;
 };
 
@@ -105,6 +106,11 @@ function DesktopDrawer({
   );
 }
 
+/**
+ * Desktop: right drawer. Mobile: true full-screen overlay (not an inline
+ * flex-1 aside inside a viewport-locked list page — that hybrid caused the
+ * blank dead-space below create forms).
+ */
 export function DesktopConditionalDetailPanel({
   isOpen,
   onClose,
@@ -134,24 +140,19 @@ export function DesktopConditionalDetailPanel({
       </DesktopDrawer>
 
       {showMobileAside ? (
-        <aside className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden admin-card lg:hidden">
-          <PanelHeader
-            title={title}
-            subtitle={subtitle}
-            onClose={onClose}
-            closeDisabled={closeDisabled}
-          />
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-2.5">
-              {children}
-            </div>
-            {footer ? (
-              <div className="overlay-form-actions admin-sticky-footer-inline shrink-0 px-3 py-2.5">
-                {footer}
-              </div>
-            ) : null}
-          </div>
-        </aside>
+        <FocusedDocumentOverlay
+          isOpen={isOpen}
+          onClose={onClose}
+          title={title}
+          subtitle={subtitle}
+          closeDisabled={closeDisabled}
+          ariaLabel={ariaLabel}
+          footer={footer}
+          closeVariant="back"
+          rootClassName="lg:hidden"
+        >
+          <div className="px-3 py-2.5 sm:px-4 sm:py-3">{children}</div>
+        </FocusedDocumentOverlay>
       ) : null}
     </>
   );
