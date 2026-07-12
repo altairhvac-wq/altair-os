@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { LogOut, Search } from "lucide-react";
 import { getCompanyAccessScope } from "@/lib/database/access-control";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { logoutAction } from "@/app/actions/auth";
@@ -85,7 +85,9 @@ export function Header({
             >
               {title}
             </h1>
-            <AlphaIndicator tone={chromeTone} northStar={northStarChrome} />
+            <span className="hidden min-[430px]:inline-flex">
+              <AlphaIndicator tone={chromeTone} northStar={northStarChrome} />
+            </span>
           </div>
           {description ? (
             <p
@@ -151,7 +153,7 @@ export function Header({
             className={
               northStarChrome
                 ? "north-star-header-avatar flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ring-2"
-                : "flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white md:ring-white/25"
+                : "hidden h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 text-sm font-bold text-white shadow-sm shadow-cyan-600/30 ring-2 ring-white sm:flex md:ring-white/25"
             }
             title={displayName}
           >
@@ -160,13 +162,15 @@ export function Header({
           <form action={logoutAction}>
             <button
               type="submit"
-              className={`rounded-lg px-2 py-1 text-xs font-semibold transition-colors ${
+              aria-label="Sign out"
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold transition-colors sm:h-auto sm:w-auto sm:px-2 sm:py-1 ${
                 northStarChrome
                   ? "north-star-header-signout"
                   : "text-slate-500 hover:bg-slate-100 hover:text-slate-700 md:text-slate-300 md:hover:bg-white/10 md:hover:text-white"
               }`}
             >
-              Sign out
+              <LogOut className="h-4 w-4 sm:hidden" aria-hidden="true" />
+              <span className="hidden sm:inline">Sign out</span>
             </button>
           </form>
         </div>

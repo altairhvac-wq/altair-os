@@ -236,10 +236,10 @@ export function getGroupedAdminNavItems(
   return groups;
 }
 
-/** Two-row mobile nav: row 1 = ops hub, row 2 = billing + overflow. */
+/** Single-row mobile nav: four daily destinations plus the More menu. */
 export const PRIMARY_MOBILE_ADMIN_NAV_ROWS = [
   ["/", "/jobs", "/dispatch", "/customers"],
-  ["/leads", "/estimates", "/invoices", "/price-book"],
+  [],
 ] as const;
 
 export const PRIMARY_MOBILE_ADMIN_NAV_HREFS =

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Smartphone, X } from "lucide-react";
 import { useMobileViewport } from "@/shared/components/mobile/use-mobile-viewport";
 import {
@@ -11,18 +12,15 @@ import {
 
 export function PwaInstallBanner() {
   const isMobile = useMobileViewport();
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (isStandaloneDisplayMode()) {
-      setVisible(false);
-      return;
-    }
-
-    const dismissed = window.localStorage.getItem(
-      PWA_INSTALL_BANNER_DISMISSED_KEY,
-    );
-    setVisible(!dismissed);
+    const shouldShow =
+      !isStandaloneDisplayMode() &&
+      !window.localStorage.getItem(PWA_INSTALL_BANNER_DISMISSED_KEY);
+    const timeout = window.setTimeout(() => setVisible(shouldShow), 0);
+    return () => window.clearTimeout(timeout);
   }, []);
 
   function handleDismiss() {
@@ -30,28 +28,23 @@ export function PwaInstallBanner() {
     setVisible(false);
   }
 
-  if (!isMobile || !visible) {
+  if (!isMobile || !visible || (pathname !== "/" && pathname !== "/technician")) {
     return null;
   }
 
   return (
-    <div className="mb-3 flex items-start justify-between gap-3 rounded-2xl border border-[#D4AF37]/30 bg-gradient-to-r from-[#FDF9F0] via-[#FFFCF8] to-[#FAF7F2] px-4 py-3 shadow-[0_2px_8px_rgba(10,10,10,0.05)] ring-1 ring-[#D4AF37]/15">
-      <div className="flex min-w-0 items-start gap-3">
-        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FAF4E8] text-[#9A7209]">
+    <div className="mb-2.5 flex items-center justify-between gap-2 rounded-xl border border-[#D4AF37]/25 bg-[#FDF9F0] px-3 py-2 shadow-sm">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#9A7209]">
           <Smartphone className="h-4 w-4" aria-hidden />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-[#0A0A0A]">
-            Add Altair to your phone
-          </p>
-          <p className="mt-0.5 text-xs leading-relaxed text-stone-600">
-            Get a home-screen icon so Altair opens like an app.
-          </p>
+          <p className="truncate text-xs font-semibold text-[#0A0A0A]">Install Altair for quicker access</p>
           <Link
             href="/install"
-            className="mt-2 inline-flex min-h-[36px] items-center rounded-lg bg-[#0A0A0A] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#141414]"
+            className="mt-0.5 inline-flex text-xs font-semibold text-[#8A6324] hover:text-[#6F4E16]"
           >
-            Show me how
+            View instructions
           </Link>
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Lightbulb, MessageCircle, X } from "lucide-react";
+import { useState } from "react";
+import { Lightbulb, MessageCircle } from "lucide-react";
 import { submitBetaFeedbackReportAction } from "@/app/actions/beta-feedback";
 import {
   MobileSheet,
@@ -22,7 +22,6 @@ import {
 
 const TITLE_ID = "beta-bug-report-sheet-title";
 const FORM_ID = "beta-bug-report-form";
-const FEEDBACK_HINT_DISMISSED_KEY = "altair-feedback-hint-dismissed";
 
 const textareaClassName =
   "mt-1.5 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none ring-slate-900/5 transition-shadow placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20";
@@ -47,21 +46,8 @@ export function BetaBugReportButton({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [hintDismissed, setHintDismissed] = useState(true);
-  const [hintHydrated, setHintHydrated] = useState(false);
 
   const closeDisabled = isSubmitting || showSuccess;
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(FEEDBACK_HINT_DISMISSED_KEY);
-    setHintDismissed(stored === "true");
-    setHintHydrated(true);
-  }, []);
-
-  function dismissHint() {
-    window.localStorage.setItem(FEEDBACK_HINT_DISMISSED_KEY, "true");
-    setHintDismissed(true);
-  }
 
   function resetForm() {
     setMessage("");
@@ -74,7 +60,6 @@ export function BetaBugReportButton({
   function handleOpen() {
     resetForm();
     setOpen(true);
-    dismissHint();
   }
 
   function handleClose() {
@@ -118,8 +103,6 @@ export function BetaBugReportButton({
     ? "bottom-[max(5.5rem,calc(5rem+env(safe-area-inset-bottom,0px)))]"
     : "bottom-[max(1rem,env(safe-area-inset-bottom))]";
 
-  const showHint = hintHydrated && !hintDismissed && !open && !inlineOnly;
-
   return (
     <>
       {inlineOnly ? (
@@ -138,38 +121,17 @@ export function BetaBugReportButton({
       <div
         className={`no-print fixed right-4 z-40 flex flex-col items-end gap-2 ${positionClassName}`}
       >
-        {showHint ? (
-          <div
-            role="note"
-            className="relative max-w-[13.5rem] rounded-xl border border-slate-200/80 bg-white/95 px-3 py-2.5 pr-8 text-xs leading-snug text-slate-600 shadow-md ring-1 ring-slate-900/5 backdrop-blur-sm"
-          >
-            <p>See something broken or confusing?</p>
-            <button
-              type="button"
-              onClick={dismissHint}
-              aria-label="Dismiss feedback hint"
-              className="absolute right-1.5 top-1.5 inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-            >
-              <X className="h-3.5 w-3.5" aria-hidden="true" />
-            </button>
-            <span
-              aria-hidden="true"
-              className="absolute -bottom-1.5 right-6 h-3 w-3 rotate-45 border-b border-r border-slate-200 bg-white"
-            />
-          </div>
-        ) : null}
-
         <button
           type="button"
           onClick={handleOpen}
           aria-label="Send feedback"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-cyan-200/80 bg-white/95 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-lg ring-1 ring-cyan-500/10 backdrop-blur-sm transition-all hover:border-cyan-300 hover:bg-cyan-50/70 hover:text-cyan-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-cyan-200/80 bg-white/95 text-slate-700 shadow-md ring-1 ring-cyan-500/10 backdrop-blur-sm transition-all hover:border-cyan-300 hover:bg-cyan-50/70 hover:text-cyan-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 sm:h-11 sm:w-auto sm:gap-1.5 sm:px-4"
         >
           <MessageCircle
             className="h-4 w-4 shrink-0 text-cyan-600"
             aria-hidden="true"
           />
-          Feedback
+          <span className="sr-only sm:not-sr-only">Feedback</span>
         </button>
       </div>
       )}

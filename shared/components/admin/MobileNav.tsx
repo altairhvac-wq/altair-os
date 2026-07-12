@@ -34,37 +34,29 @@ type MobileNavLinkProps = {
   onNavigate?: () => void;
 };
 
-type MobileNavLinkDensity = "default" | "compact";
-
 function MobileNavLink({
   item,
   active,
   onNavigate,
-  density = "default",
-}: MobileNavLinkProps & { density?: MobileNavLinkDensity }) {
+}: MobileNavLinkProps) {
   const Icon = item.icon;
-  const compact = density === "compact";
 
   return (
     <Link
       href={item.href}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
-      className={`${adminNavLinkClass} flex min-w-0 flex-1 touch-manipulation flex-col items-center justify-center rounded-lg px-0.5 ${
-        compact ? "min-h-10 gap-0.5" : "min-h-11 gap-0.5"
-      } ${
+      className={`${adminNavLinkClass} flex min-h-12 min-w-0 flex-1 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 ${
         active
           ? `${adminNavLinkActiveClass} text-cyan-900`
           : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
       }`}
     >
       <Icon
-        className={`shrink-0 ${compact ? "h-4 w-4" : "h-4 w-4"} ${active ? "stroke-[2.5] text-cyan-700" : ""}`}
+        className={`h-[18px] w-[18px] shrink-0 ${active ? "stroke-[2.5] text-cyan-700" : ""}`}
       />
       <span
-        className={`w-full truncate text-center font-semibold leading-tight ${
-          compact ? "text-[10px]" : "text-[10px]"
-        }`}
+        className="w-full truncate text-center text-[10px] font-semibold leading-tight"
       >
         {item.label}
       </span>
@@ -93,15 +85,6 @@ export function MobileNav({
     isActivePath(pathname, item.href),
   );
   const moreActive = Boolean(moreActiveItem);
-  const compactMoreMode = moreActive && !moreOpen;
-  const showSecondRow =
-    !compactMoreMode &&
-    (primaryRows[1].length > 0 || secondary.length > 0);
-  const navDensity: MobileNavLinkDensity = compactMoreMode ? "compact" : "default";
-
-  useEffect(() => {
-    setMoreOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     if (!moreOpen) {
@@ -137,46 +120,31 @@ export function MobileNav({
         moreOpen ? "z-50" : "z-30"
       }`}
     >
-      <div
-        className={`flex flex-col px-1 ${compactMoreMode ? "gap-0 py-1" : "gap-0.5 py-1"}`}
-      >
-        <ul className="flex w-full items-stretch gap-0.5">
+      <div className="px-1.5 py-1.5">
+        <ul className="flex w-full items-stretch gap-1">
           {primaryRows[0].map((item) => (
             <li key={item.href} className="flex min-w-0 flex-1">
               <MobileNavLink
                 item={item}
                 active={isActivePath(pathname, item.href)}
-                density={navDensity}
               />
             </li>
           ))}
-
-          {compactMoreMode && moreActiveItem ? (
-            <li className="flex min-w-0 flex-[1.15]">
-              <Link
-                href={moreActiveItem.href}
-                aria-current="page"
-                className={`${adminNavLinkClass} ${adminNavLinkActiveClass} flex min-h-10 w-full min-w-0 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 text-cyan-900`}
-              >
-                <moreActiveItem.icon className="h-4 w-4 shrink-0 stroke-[2.5] text-cyan-700" />
-                <span className="w-full truncate text-center text-[10px] font-semibold leading-tight">
-                  {moreActiveItem.label}
-                </span>
-              </Link>
-            </li>
-          ) : null}
-
-          {compactMoreMode && secondary.length > 0 ? (
-            <li className="flex min-w-0 flex-none">
+          {secondary.length > 0 ? (
+            <li className="flex min-w-0 flex-1">
               <button
                 type="button"
                 aria-expanded={moreOpen}
                 aria-haspopup="menu"
                 aria-label="More navigation"
                 onClick={() => setMoreOpen((open) => !open)}
-                className={`${adminNavLinkClass} flex min-h-10 min-w-[2.75rem] touch-manipulation flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-slate-600 hover:bg-slate-50 hover:text-slate-900`}
+                className={`${adminNavLinkClass} flex min-h-12 w-full min-w-0 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 ${
+                  moreActive || moreOpen
+                    ? `${adminNavLinkActiveClass} text-cyan-800`
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
               >
-                <MoreHorizontal className="h-4 w-4 shrink-0" />
+                <MoreHorizontal className={`h-[18px] w-[18px] shrink-0 ${moreActive || moreOpen ? "stroke-[2.5] text-cyan-700" : ""}`} />
                 <span className="text-[10px] font-semibold leading-tight">
                   More
                 </span>
@@ -184,44 +152,6 @@ export function MobileNav({
             </li>
           ) : null}
         </ul>
-
-        {showSecondRow ? (
-          <ul className="flex w-full items-stretch gap-0.5">
-            {primaryRows[1].map((item) => (
-              <li key={item.href} className="flex min-w-0 flex-1">
-                <MobileNavLink
-                  item={item}
-                  active={isActivePath(pathname, item.href)}
-                  density={navDensity}
-                />
-              </li>
-            ))}
-
-            {secondary.length > 0 ? (
-              <li className="flex min-w-0 flex-1">
-                <button
-                  type="button"
-                  aria-expanded={moreOpen}
-                  aria-haspopup="menu"
-                  aria-label="More navigation"
-                  onClick={() => setMoreOpen((open) => !open)}
-                  className={`${adminNavLinkClass} flex min-h-11 w-full min-w-0 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 ${
-                    moreActive || moreOpen
-                      ? `${adminNavLinkActiveClass} text-cyan-800`
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
-                >
-                  <MoreHorizontal
-                    className={`h-4 w-4 shrink-0 ${moreActive || moreOpen ? "stroke-[2.5] text-cyan-700" : ""}`}
-                  />
-                  <span className="w-full truncate text-center text-[10px] font-semibold leading-tight">
-                    More
-                  </span>
-                </button>
-              </li>
-            ) : null}
-          </ul>
-        ) : null}
       </div>
 
       {moreOpen && secondary.length > 0 ? (
