@@ -342,8 +342,14 @@ a[href] {
 
 .admin-north-star-shell .bg-\[\#F5F0E4\],
 .admin-north-star-shell .bg-\[\#F3EBDD\],
-.admin-north-star-shell .bg-\[\#F7F0E2\] {
+.admin-north-star-shell .bg-\[\#F7F0E2\],
+.admin-north-star-shell .bg-\[\#EFE4CB\],
+.admin-north-star-shell .bg-\[\#E8DCC4\] {
   background-color: var(--north-star-work-band) !important;
+}
+
+.admin-north-star-shell .bg-\[\#EDE3C8\] {
+  background-color: #d7dee8 !important;
 }
 
 .admin-north-star-shell .hover\:bg-\[\#FFF9EA\]:hover,
