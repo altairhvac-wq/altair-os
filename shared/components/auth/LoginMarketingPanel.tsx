@@ -1,299 +1,203 @@
-import Link from "next/link";
 import {
-  BarChart3,
-  Bot,
-  CalendarClock,
-  Check,
-  CreditCard,
-  FileCheck,
-  Receipt,
-  Smartphone,
+  BriefcaseBusiness,
+  CalendarDays,
+  CheckCircle2,
+  CircleDollarSign,
+  ClipboardCheck,
+  FileText,
+  Radio,
+  ReceiptText,
   Users,
   Wrench,
+  type LucideIcon,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
-import { SeeAltairInActionSection } from "@/shared/components/marketing/SeeAltairInActionSection";
-import {
-  FOUNDING_BETA_OFFER,
-  FOUNDING_PLANS,
-} from "@/shared/data/founding-pricing";
 
-export const LOGIN_HERO_TITLE =
-  "Run Your Entire Service Business From One Platform";
+export const LOGIN_HERO_TITLE = "Every handoff. One operating system.";
 
 export const LOGIN_HERO_SUBCOPY =
-  "Altair OS brings dispatch, customers, jobs, estimates, invoices, payments, equipment, technician workflows, reporting, and AI-powered operations tools into one modern platform.";
+  "Altair keeps the office, field, and financial side of the business moving through one connected workflow.";
 
-const FEATURE_HIGHLIGHTS: { label: string; icon: LucideIcon }[] = [
-  { label: "Dispatch & Scheduling", icon: CalendarClock },
-  { label: "Customer 360", icon: Users },
-  { label: "Estimates & Approvals", icon: FileCheck },
-  { label: "Invoices & Payments", icon: Receipt },
-  { label: "Technician Mobile App", icon: Smartphone },
-  { label: "Equipment Tracking", icon: Wrench },
-  { label: "Reporting & Business Review", icon: BarChart3 },
-  { label: "AI Assistants", icon: Bot },
+type WorkflowStage = {
+  label: string;
+  icon: LucideIcon;
+};
+
+const WORKFLOW_STAGES: WorkflowStage[] = [
+  { label: "Lead", icon: Users },
+  { label: "Estimate", icon: FileText },
+  { label: "Schedule", icon: CalendarDays },
+  { label: "Field", icon: Wrench },
+  { label: "Review", icon: ClipboardCheck },
+  { label: "Invoice", icon: ReceiptText },
+  { label: "Paid", icon: CircleDollarSign },
 ];
 
-const ctaFocusClass =
-  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20";
+const OPERATING_LAYERS = [
+  {
+    label: "Office",
+    detail: "Customers, jobs, and dispatch",
+    icon: BriefcaseBusiness,
+  },
+  {
+    label: "Field",
+    detail: "Technicians and work execution",
+    icon: Radio,
+  },
+  {
+    label: "Finance",
+    detail: "Invoices, payments, and reporting",
+    icon: CircleDollarSign,
+  },
+] as const;
 
-function MarketingBackdrop() {
-  return (
-    <>
-      <div className="auth-grid pointer-events-none absolute inset-0 opacity-70" />
-      <div className="auth-grid-fine pointer-events-none absolute inset-0 opacity-50" />
-      <div className="auth-noise pointer-events-none absolute inset-0 opacity-40" />
-      <div className="pointer-events-none absolute -left-24 -top-20 h-[480px] w-[480px] bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.18)_0%,rgba(212,175,55,0.06)_38%,transparent_72%)]" />
-      <div className="pointer-events-none absolute left-[28%] top-[38%] h-72 w-72 -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.1)_0%,rgba(154,114,9,0.04)_45%,transparent_70%)]" />
-      <div className="pointer-events-none absolute -bottom-28 right-8 h-96 w-96 bg-[radial-gradient(circle_at_center,rgba(154,114,9,0.12)_0%,rgba(212,175,55,0.04)_40%,transparent_68%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_75%_at_50%_42%,transparent_0%,rgba(10,10,10,0.35)_58%,rgba(10,10,10,0.82)_100%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/30 to-transparent" />
-    </>
-  );
-}
-
-function BetaOfferCard({ compact = false }: { compact?: boolean }) {
-  return (
-    <div
-      className={[
-        "rounded-2xl border border-[#D4AF37]/34 bg-gradient-to-b from-[#242019] via-[#1C1A17] to-[#12100D] shadow-[0_16px_52px_rgba(0,0,0,0.58),0_6px_18px_rgba(0,0,0,0.38),0_0_0_1px_rgba(212,175,55,0.06),inset_0_1px_0_rgba(245,230,163,0.2)]",
-        compact ? "p-4" : "p-5",
-      ].join(" ")}
-    >
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#D4AF37]/90">
-        {FOUNDING_BETA_OFFER[0]}
-      </p>
-      <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="font-mono text-2xl font-semibold tracking-tight text-white">
-          {FOUNDING_BETA_OFFER[1]}
-        </span>
-        <span className="flex items-center gap-1.5 text-sm text-neutral-400">
-          <CreditCard className="h-3.5 w-3.5 text-[#D4AF37]/80" aria-hidden="true" />
-          {FOUNDING_BETA_OFFER[2]}
-        </span>
+function WorkflowTrack({ compact = false }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <div className="flex snap-x gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-7 sm:overflow-visible sm:pb-0">
+        {WORKFLOW_STAGES.map((stage) => (
+          <div
+            key={stage.label}
+            className="flex min-h-11 min-w-[5.75rem] snap-start items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-2 text-[10px] font-semibold text-slate-600 shadow-sm sm:min-w-0"
+          >
+            <stage.icon className="h-3 w-3 shrink-0 text-[#9A7209]" aria-hidden="true" />
+            <span className="whitespace-nowrap">{stage.label}</span>
+          </div>
+        ))}
       </div>
-      <p className="mt-2 text-sm text-neutral-400">{FOUNDING_BETA_OFFER[3]}</p>
-    </div>
-  );
-}
+    );
+  }
 
-function PricingTeaser({ compact = false }: { compact?: boolean }) {
   return (
-    <div
-      className={[
-        "grid gap-2.5",
-        compact ? "grid-cols-3" : "grid-cols-3 gap-3",
-      ].join(" ")}
-    >
-      {FOUNDING_PLANS.map((plan) => (
-        <div
-          key={plan.id}
-          className="rounded-xl border border-[#D4AF37]/20 bg-gradient-to-b from-[#FFFCF6] via-[#FAF7F0] to-[#F3EDE2] px-3 py-2.5 shadow-[inset_0_2px_5px_rgba(0,0,0,0.08),0_6px_16px_rgba(0,0,0,0.32),0_2px_6px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.94)]"
-        >
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-600">
-            {plan.name}
-          </p>
-          <p className="mt-1 font-mono text-sm font-semibold tabular-nums tracking-tight text-[#0A0A0A]">
-            ${plan.postBetaPrice}
-            <span className="text-[10px] font-medium text-stone-500">/mo</span>
-          </p>
-          <p className="mt-0.5 text-[9px] font-medium uppercase tracking-wide text-stone-500">
-            after beta
+    <div className="login-flow-track relative grid grid-cols-7 gap-1.5">
+      {WORKFLOW_STAGES.map((stage) => (
+        <div key={stage.label} className="relative z-10 min-w-0 text-center">
+          <span className="mx-auto flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-[#0c1728] text-[#e6d092] shadow-[0_6px_18px_rgba(0,0,0,0.3),0_0_0_3px_rgba(201,164,77,0.05)]">
+            <stage.icon className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <p className="mt-2 truncate text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-300">
+            {stage.label}
           </p>
         </div>
       ))}
-    </div>
-  );
-}
-
-function FeatureGrid({ compact = false }: { compact?: boolean }) {
-  return (
-    <ul
-      className={[
-        "grid gap-2",
-        compact ? "grid-cols-2" : "grid-cols-2 gap-2.5",
-      ].join(" ")}
-    >
-      {FEATURE_HIGHLIGHTS.map((feature) => (
-        <li
-          key={feature.label}
-          className="flex items-start gap-2 rounded-lg border border-[#D4AF37]/14 bg-[#FFFCF8]/95 px-2.5 py-2"
-        >
-          <feature.icon
-            className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#D4AF37]"
-            aria-hidden="true"
-          />
-          <span
-            className={[
-              "font-medium leading-snug text-[#0A0A0A]",
-              compact ? "text-[11px]" : "text-xs",
-            ].join(" ")}
-          >
-            {feature.label}
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function MarketingCtas({ layout }: { layout: "desktop" | "mobile" }) {
-  const signInClass =
-    layout === "desktop"
-      ? "border border-[#D4AF37]/35 bg-transparent text-white hover:border-[#D4AF37]/55 hover:bg-white/5"
-      : "border border-stone-300/80 bg-white text-[#0A0A0A] shadow-sm hover:border-[#D4AF37]/40 hover:bg-[#FFFCF8]";
-
-  const primaryClass =
-    "bg-[#0A0A0A] text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2),0_0_22px_rgba(212,175,55,0.1)] ring-1 ring-[#D4AF37]/30 hover:bg-[#141414] hover:ring-[#D4AF37]/42";
-
-  const secondaryClass =
-    layout === "desktop"
-      ? "border border-[#D4AF37]/30 bg-[#FFFCF8]/10 text-[#F5E6A3] hover:border-[#D4AF37]/50 hover:bg-[#FFFCF8]/15"
-      : "border border-[#D4AF37]/35 bg-white text-[#9A7209] shadow-sm hover:border-[#D4AF37]/55 hover:bg-[#FFFCF8]";
-
-  const base = [
-    "inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-all",
-    ctaFocusClass,
-  ].join(" ");
-
-  return (
-    <div
-      className={[
-        "flex gap-2.5",
-        layout === "mobile" ? "flex-col sm:flex-row" : "flex-wrap",
-      ].join(" ")}
-    >
-      <a href="#sign-in-form" className={`${base} ${signInClass}`}>
-        Sign in
-      </a>
-      <Link href="/signup" className={`${base} ${primaryClass}`}>
-        Create free account
-      </Link>
-      <Link href="/pricing" className={`${base} ${secondaryClass}`}>
-        View pricing
-      </Link>
     </div>
   );
 }
 
 export function LoginMarketingPanel() {
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[#0A0A0A]">
-      <MarketingBackdrop />
+    <section className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[#07101d] text-white">
+      <div className="auth-grid pointer-events-none absolute inset-0 opacity-60" />
+      <div className="auth-noise pointer-events-none absolute inset-0 opacity-30" />
+      <div className="login-aurora login-aurora-one pointer-events-none absolute" />
+      <div className="login-aurora login-aurora-two pointer-events-none absolute" />
+      <div className="login-orbit pointer-events-none absolute left-[9%] top-[24%] h-[28rem] w-[28rem] rounded-full border border-[#c9a44d]/10" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_80%_at_48%_45%,transparent_25%,rgba(2,6,13,0.58)_100%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#e6d092]/45 to-transparent" />
 
-      <div className="relative z-10 flex h-full min-h-0 flex-col overflow-y-auto px-8 py-8 lg:px-10 lg:py-10 xl:px-12">
-        <div className="auth-hero-enter shrink-0">
+      <div className="relative z-10 flex h-full min-h-0 flex-col px-8 py-7 lg:px-10 lg:py-8 xl:px-12 xl:py-10">
+        <header className="flex shrink-0 items-center justify-between gap-4">
           <AltairLogo
             variant="white"
             size="lg"
             showWordmark
-            className="drop-shadow-[0_2px_16px_rgba(212,175,55,0.18)]"
+            className="drop-shadow-[0_3px_18px_rgba(201,164,77,0.18)]"
           />
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.055] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.13em] text-slate-300 backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+            Operations connected
+          </span>
+        </header>
 
-          <div className="mt-8 max-w-xl xl:mt-10">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#D4AF37]/90">
-              Service business platform
+        <div className="flex min-h-0 flex-1 flex-col justify-center py-6 xl:py-8">
+          <div className="auth-hero-enter max-w-[40rem]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#c9a44d]">
+              The operating layer for field service
             </p>
-            <h2 className="mt-3 text-[1.65rem] font-semibold leading-[1.12] tracking-tight text-white xl:text-[2rem]">
+            <h2 className="mt-3 max-w-[36rem] text-[2rem] font-semibold leading-[1.04] tracking-[-0.035em] text-[#f8fafc] xl:text-[2.55rem]">
               {LOGIN_HERO_TITLE}
             </h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-neutral-400">
+            <p className="mt-4 max-w-[35rem] text-sm leading-6 text-slate-400 xl:text-[15px]">
               {LOGIN_HERO_SUBCOPY}
             </p>
           </div>
+
+          <div className="login-command-card auth-panel-enter relative mt-6 overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#0b1626]/85 p-4 shadow-[0_28px_80px_-32px_rgba(0,0,0,0.8),0_0_0_1px_rgba(201,164,77,0.05)_inset] backdrop-blur-xl xl:mt-8 xl:p-5">
+            <div className="login-scan-line pointer-events-none absolute inset-x-0 top-0 h-px" />
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#c9a44d]">
+                  Altair control loop
+                </p>
+                <p className="mt-1 text-sm font-semibold text-white">
+                  From first call to final payment
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/15 bg-emerald-400/[0.07] px-2 py-1 text-[10px] font-medium text-emerald-300">
+                <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                One connected record
+              </span>
+            </div>
+
+            <div className="mt-5 rounded-xl border border-white/[0.07] bg-black/15 px-3 py-4">
+              <WorkflowTrack />
+            </div>
+
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {OPERATING_LAYERS.map((layer) => (
+                <div
+                  key={layer.label}
+                  className="group rounded-xl border border-white/[0.08] bg-white/[0.045] px-3 py-2.5 transition-colors hover:bg-white/[0.07]"
+                >
+                  <div className="flex items-center gap-2">
+                    <layer.icon className="h-3.5 w-3.5 text-[#c9a44d]" aria-hidden="true" />
+                    <p className="text-xs font-semibold text-slate-100">{layer.label}</p>
+                  </div>
+                  <p className="mt-1 text-[10px] leading-snug text-slate-500">
+                    {layer.detail}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="auth-hero-enter mt-6 shrink-0 xl:mt-8">
-          <BetaOfferCard />
-        </div>
-
-        <div className="auth-hero-enter mt-5 shrink-0">
-          <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
-            Pricing after beta
-          </p>
-          <PricingTeaser />
-        </div>
-
-        <div className="auth-hero-enter mt-5 shrink-0">
-          <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
-            Platform highlights
-          </p>
-          <FeatureGrid />
-        </div>
-
-        <div className="auth-hero-enter mt-8 min-h-0 flex-1 pb-2 xl:mt-10">
-          <SeeAltairInActionSection variant="dark" />
-        </div>
-
-        <div className="auth-panel-enter mt-6 shrink-0 border-t border-[#D4AF37]/15 pt-6">
-          <MarketingCtas layout="desktop" />
-        </div>
+        <footer className="flex shrink-0 items-center justify-between gap-4 border-t border-white/[0.07] pt-4 text-[10px] uppercase tracking-[0.13em] text-slate-500">
+          <span>Built for trades and field service</span>
+          <span className="hidden items-center gap-2 sm:inline-flex">
+            Observe
+            <span className="text-[#8a6324]">/</span>
+            Prioritize
+            <span className="text-[#8a6324]">/</span>
+            Act
+          </span>
+        </footer>
       </div>
-    </div>
+    </section>
   );
 }
 
 export function LoginMobileMarketing() {
   return (
     <section
-      aria-label="About Altair OS"
-      className="auth-panel-enter mt-8 overflow-hidden rounded-2xl border border-stone-200/80 bg-gradient-to-b from-[#0A0A0A] via-[#12100D] to-[#0A0A0A] shadow-[0_8px_24px_rgba(10,10,10,0.12)] ring-1 ring-[#D4AF37]/18 lg:hidden"
+      aria-labelledby="mobile-operating-loop-title"
+      className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3.5 shadow-sm lg:hidden"
     >
-      <div className="relative px-5 py-6 sm:px-6">
-        <MarketingBackdrop />
-
-        <div className="relative z-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#D4AF37]/90">
-            Service business platform
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#8a6324]">
+            One connected workflow
           </p>
-          <h2 className="mt-2 text-xl font-semibold leading-snug tracking-tight text-white">
-            {LOGIN_HERO_TITLE}
+          <h2
+            id="mobile-operating-loop-title"
+            className="mt-0.5 text-sm font-semibold text-slate-900"
+          >
+            First call to final payment
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-neutral-400">
-            {LOGIN_HERO_SUBCOPY}
-          </p>
-
-          <div className="mt-5">
-            <BetaOfferCard compact />
-          </div>
-
-          <div className="mt-4">
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
-              Pricing after beta
-            </p>
-            <PricingTeaser compact />
-          </div>
-
-          <div className="mt-4">
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
-              Platform highlights
-            </p>
-            <FeatureGrid compact />
-          </div>
-
-          <div className="mt-6">
-            <SeeAltairInActionSection variant="dark" compact />
-          </div>
-
-          <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
-            {FOUNDING_BETA_OFFER.map((item) => (
-              <li
-                key={item}
-                className="flex items-center gap-1.5 text-xs text-neutral-400"
-              >
-                <Check className="h-3 w-3 shrink-0 text-[#D4AF37]" aria-hidden="true" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-5">
-            <MarketingCtas layout="mobile" />
-          </div>
         </div>
+        <span className="text-[10px] font-medium text-slate-400">Altair OS</span>
       </div>
+      <WorkflowTrack compact />
     </section>
   );
 }

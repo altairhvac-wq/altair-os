@@ -395,7 +395,7 @@ export function AuthInput(props: React.ComponentProps<"input">) {
   return (
     <input
       {...props}
-      className={`w-full rounded-lg border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-[#0A0A0A] shadow-sm shadow-black/[0.02] outline-none transition-all duration-200 placeholder:text-stone-400 hover:border-stone-300 focus:border-[#B8860B] focus:ring-4 focus:ring-[#D4AF37]/10 focus-visible:border-[#B8860B] focus-visible:ring-4 focus-visible:ring-[#D4AF37]/10 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60 ${props.className ?? ""}`}
+      className={`min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-[#0A0A0A] shadow-sm shadow-black/[0.02] outline-none transition-all duration-200 placeholder:text-stone-400 hover:border-stone-300 focus:border-[#B8860B] focus:ring-4 focus:ring-[#D4AF37]/10 focus-visible:border-[#B8860B] focus-visible:ring-4 focus-visible:ring-[#D4AF37]/10 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60 ${props.className ?? ""}`}
     />
   );
 }
@@ -420,7 +420,7 @@ export function AuthSubmitButton({
     <button
       type="submit"
       disabled={pending}
-      className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0A0A0A] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2),0_0_22px_rgba(212,175,55,0.1),inset_0_1px_0_rgba(245,230,163,0.14)] ring-1 ring-[#D4AF37]/30 transition-all duration-200 hover:bg-[#141414] hover:shadow-[0_1px_2px_rgba(10,10,10,0.22),0_6px_22px_rgba(212,175,55,0.26),0_0_26px_rgba(212,175,55,0.14),inset_0_1px_0_rgba(245,230,163,0.16)] hover:ring-[#D4AF37]/42 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#D4AF37]/20 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70 disabled:shadow-none disabled:active:scale-100"
+      className="group flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[#111b2e] to-[#080f1c] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_5px_20px_rgba(138,99,36,0.2),inset_0_1px_0_rgba(230,208,146,0.16)] ring-1 ring-[#c9a44d]/30 transition-all duration-200 hover:-translate-y-0.5 hover:from-[#17243b] hover:to-[#0b1423] hover:shadow-[0_8px_24px_-10px_rgba(15,23,42,0.7),0_5px_22px_rgba(138,99,36,0.24)] hover:ring-[#c9a44d]/45 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#c9a44d]/20 active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-70 disabled:shadow-none disabled:active:scale-100"
     >
       {pending ? (
         <>

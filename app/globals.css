@@ -234,6 +234,101 @@ a[href] {
   animation-delay: 0.28s;
 }
 
+/* Login experience — connected operating-system entrance */
+.login-access-panel {
+  isolation: isolate;
+}
+
+.login-access-grid {
+  background-image:
+    linear-gradient(to right, rgb(71 85 105 / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(71 85 105 / 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 90% 80% at 60% 45%, black 15%, transparent 78%);
+}
+
+.login-aurora {
+  border-radius: 9999px;
+  filter: blur(2px);
+  animation: login-aurora-drift 12s ease-in-out infinite alternate;
+}
+
+.login-aurora-one {
+  left: -9rem;
+  top: -8rem;
+  width: 30rem;
+  height: 30rem;
+  background: radial-gradient(circle, rgb(201 164 77 / 0.16), transparent 68%);
+}
+
+.login-aurora-two {
+  right: -10rem;
+  bottom: -12rem;
+  width: 34rem;
+  height: 34rem;
+  background: radial-gradient(circle, rgb(14 116 144 / 0.13), transparent 68%);
+  animation-delay: -4s;
+}
+
+.login-orbit {
+  box-shadow:
+    0 0 0 4rem rgb(201 164 77 / 0.018),
+    0 0 0 8rem rgb(201 164 77 / 0.012);
+  animation: login-orbit-breathe 7s ease-in-out infinite;
+}
+
+.login-command-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 25%,
+    rgb(230 208 146 / 0.035) 48%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  animation: login-command-sheen 9s ease-in-out infinite;
+}
+
+.login-scan-line {
+  background: linear-gradient(
+    90deg,
+    transparent 5%,
+    rgb(230 208 146 / 0.5) 48%,
+    transparent 95%
+  );
+}
+
+.login-flow-track::before {
+  content: "";
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 1.1rem;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgb(138 99 36 / 0.25),
+    rgb(230 208 146 / 0.48),
+    rgb(14 116 144 / 0.28)
+  );
+}
+
+.login-flow-track::after {
+  content: "";
+  position: absolute;
+  left: 7%;
+  top: calc(1.1rem - 2px);
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: #e6d092;
+  box-shadow: 0 0 12px rgb(230 208 146 / 0.9);
+  animation: login-flow-signal 4.8s ease-in-out infinite;
+}
+
 @keyframes auth-panel-enter {
   from {
     opacity: 0;
@@ -281,11 +376,69 @@ a[href] {
   }
 }
 
+@keyframes login-flow-signal {
+  0% {
+    left: 7%;
+    opacity: 0;
+  }
+
+  10%,
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    left: 93%;
+    opacity: 0;
+  }
+}
+
+@keyframes login-command-sheen {
+  0%,
+  64% {
+    transform: translateX(-100%);
+  }
+
+  86%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes login-aurora-drift {
+  from {
+    transform: translate3d(-1rem, -0.5rem, 0) scale(0.96);
+    opacity: 0.72;
+  }
+
+  to {
+    transform: translate3d(1.5rem, 1rem, 0) scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes login-orbit-breathe {
+  0%,
+  100% {
+    transform: scale(0.96);
+    opacity: 0.45;
+  }
+
+  50% {
+    transform: scale(1.04);
+    opacity: 0.75;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth-panel-enter,
   .auth-hero-enter,
   .auth-tier,
-  .auth-metric-pulse {
+  .auth-metric-pulse,
+  .login-aurora,
+  .login-orbit,
+  .login-command-card::after,
+  .login-flow-track::after {
     animation: none;
   }
 
