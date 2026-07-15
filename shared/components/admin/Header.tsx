@@ -76,15 +76,15 @@ export function Header({
   return (
     <header className="admin-premium-header mobile-chrome-header-safe relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 border-b border-slate-200/90 bg-white px-3 shadow-[0_1px_3px_rgb(15_23_42_/_0.04)] sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0">
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 md:hidden">
           <div className="flex min-w-0 items-center gap-2">
-            <h1
+            <p
               className={`truncate text-base font-bold tracking-tight sm:text-lg ${
                 northStarChrome ? "" : "text-slate-900 md:text-slate-50"
               }`}
             >
               {title}
-            </h1>
+            </p>
             <span className="hidden min-[430px]:inline-flex">
               <AlphaIndicator tone={chromeTone} northStar={northStarChrome} />
             </span>

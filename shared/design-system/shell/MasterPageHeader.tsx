@@ -35,6 +35,8 @@ export function MasterPageHeader({
 }: MasterPageHeaderProps) {
   const isCompact = density === "compact";
   const hasActions = Boolean(primaryAction || secondaryAction);
+  const hasMobileContent = Boolean(subtitle || eyebrow || hasActions);
+  const responsiveTitleClass = "sr-only md:not-sr-only";
   const actionRowClass = isCompact
     ? "flex shrink-0 items-center gap-2"
     : "flex w-full shrink-0 flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center";
@@ -57,7 +59,7 @@ export function MasterPageHeader({
 
   return (
     <header
-      className={`${surfaceClass} flex shrink-0 gap-2 ${center ? "" : "justify-between"} ${layoutClass} ${className}`}
+      className={`${surfaceClass} ${hasMobileContent ? "flex" : "hidden md:flex"} shrink-0 gap-2 ${center ? "" : "justify-between"} ${layoutClass} ${className}`}
     >
       <div className={`min-w-0 flex-1 ${isCompact ? "space-y-0.5" : ""}`}>
         {eyebrow ? (
@@ -66,10 +68,10 @@ export function MasterPageHeader({
         {isCompact ? (
           <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
             <h1
-              className={
+              className={`${
                 titleClassName ||
                 "min-w-0 text-base font-bold tracking-tight text-slate-900 sm:shrink-0 sm:text-lg"
-              }
+              } ${responsiveTitleClass}`}
             >
               {title}
             </h1>
@@ -86,7 +88,7 @@ export function MasterPageHeader({
           </div>
         ) : (
           <>
-            <h1 className="admin-heading-page">{title}</h1>
+            <h1 className={`admin-heading-page ${responsiveTitleClass}`}>{title}</h1>
             {subtitle ? (
               <p className="admin-text-helper mt-1 max-w-2xl">{subtitle}</p>
             ) : null}

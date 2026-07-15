@@ -97,11 +97,11 @@ export function MasterListPageLoadingState({
       >
         <div className="flex min-w-0 flex-1 items-baseline gap-2">
           {title ? (
-            <h1 className="shrink-0 text-base font-bold tracking-tight text-slate-900 sm:text-lg">
+            <h1 className="sr-only shrink-0 text-base font-bold tracking-tight text-slate-900 md:not-sr-only md:text-lg">
               {title}
             </h1>
           ) : (
-            <Skeleton className="h-5 w-32 shrink-0 sm:h-6 sm:w-40" />
+            <Skeleton className="hidden h-5 w-32 shrink-0 md:block md:h-6 md:w-40" />
           )}
           {subtitle ? (
             <p className="min-w-0 truncate text-xs text-slate-500">{subtitle}</p>
