@@ -11,25 +11,23 @@ import { AuthLink } from "./AuthShell";
 type LoginPageShellProps = {
   children: ReactNode;
   heroPanel: ReactNode;
-  belowFooter: ReactNode;
 };
 
 export function LoginPageShell({
   children,
   heroPanel,
-  belowFooter,
 }: LoginPageShellProps) {
   return (
-    <div className="flex min-h-dvh flex-col bg-[#e8edf3] lg:h-dvh lg:flex-row lg:overflow-hidden">
-      <div className="hidden min-h-0 lg:block lg:w-[56%]">{heroPanel}</div>
+    <div className="flex min-h-dvh flex-col bg-[#050b14] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(390px,36vw)] lg:items-start">
+      <div className="order-2 min-w-0 lg:order-1">{heroPanel}</div>
 
-      <main className="login-access-panel relative flex min-h-dvh min-w-0 flex-1 flex-col overflow-hidden bg-[#eef3f8] lg:min-h-0 lg:w-[44%] lg:overflow-y-auto">
+      <main className="login-access-panel relative order-1 flex min-h-dvh min-w-0 flex-col overflow-hidden bg-[#eef3f8] lg:sticky lg:top-0 lg:order-2 lg:h-dvh">
         <div className="login-access-grid pointer-events-none absolute inset-0" />
         <div className="pointer-events-none absolute -right-28 -top-24 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(201,164,77,0.12)_0%,rgba(201,164,77,0.025)_45%,transparent_72%)]" />
         <div className="pointer-events-none absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(71,85,105,0.11)_0%,rgba(71,85,105,0.02)_48%,transparent_72%)]" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c9a44d]/45 to-transparent" />
 
-        <div className="relative flex min-h-full flex-1 flex-col px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top,0px))] sm:px-8 sm:py-8 lg:justify-center lg:px-10 lg:py-10 xl:px-14">
+        <div className="relative flex min-h-full flex-1 flex-col px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top,0px))] sm:px-8 sm:py-8 lg:justify-center lg:px-8 lg:py-8 xl:px-12">
           <header className="flex items-center justify-between border-b border-slate-200/80 pb-4 lg:hidden">
             <AltairLogo variant="primary" size="md" showWordmark />
             <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
@@ -76,8 +74,6 @@ export function LoginPageShell({
             <Suspense fallback={null}>
               <LoginPageFooter />
             </Suspense>
-
-            {belowFooter}
 
             <p className="mt-6 text-center text-[10px] uppercase tracking-[0.12em] text-slate-400">
               © {new Date().getFullYear()} Altair · Built for trades and field service

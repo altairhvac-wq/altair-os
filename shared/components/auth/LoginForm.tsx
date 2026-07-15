@@ -97,7 +97,7 @@ export function LoginFormFields() {
 
       <div className="pt-2">
         <AuthSubmitButton pending={pending}>
-          <span>Sign in to workspace</span>
+          <span>Sign in</span>
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </AuthSubmitButton>
       </div>
