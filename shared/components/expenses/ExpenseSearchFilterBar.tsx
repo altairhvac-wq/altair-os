@@ -60,10 +60,10 @@ type ExpenseSearchFilterBarProps = {
 };
 
 const legacyFilterSelectClass =
-  "w-full appearance-none rounded-lg border border-slate-200/90 bg-white py-2 pl-10 pr-10 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:w-auto sm:min-w-[10rem]";
+  "h-11 min-h-11 w-full appearance-none rounded-lg border border-slate-200/90 bg-white py-2 pl-10 pr-10 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 sm:w-auto sm:min-w-[10rem] md:h-10 md:min-h-10";
 
 const legacySearchClass =
-  "w-full rounded-lg border border-slate-200/90 bg-white py-2 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
+  "h-11 min-h-11 w-full rounded-lg border border-slate-200/90 bg-white py-2 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 md:h-10 md:min-h-10";
 
 export function ExpenseSearchFilterBar({
   search,

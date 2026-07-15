@@ -35,14 +35,14 @@ export const ownerMobileUpNextRowClass =
   "flex w-full touch-manipulation items-center gap-3 rounded-xl border border-slate-200/70 bg-white px-3.5 py-3 text-left shadow-[0_1px_6px_-2px_rgba(15,23,42,0.08)] transition-colors active:bg-slate-50/80";
 
 export const ownerMobileArchiveInputClass =
-  "h-10 w-full min-h-10 rounded-xl border border-slate-200/90 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition-colors focus:border-[rgba(198,167,87,0.45)] focus:ring-2 focus:ring-[rgba(198,167,87,0.18)]";
+  "h-11 w-full min-h-11 rounded-xl border border-slate-200/90 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition-colors focus:border-[rgba(198,167,87,0.45)] focus:ring-2 focus:ring-[rgba(198,167,87,0.18)]";
 
 export const ownerMobileArchiveResultRowClass =
   "flex w-full touch-manipulation items-center gap-3 rounded-xl border border-slate-200/70 bg-white px-3.5 py-3 text-left shadow-[0_1px_6px_-2px_rgba(15,23,42,0.06)] transition-colors active:bg-slate-50/80";
 
 /** Dark compact hero — light tappable pill with graphite label on white surface. */
 export const ownerMobileFiltersButtonClass =
-  "inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 active:bg-slate-100";
+  "inline-flex min-h-11 shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 active:bg-slate-100";
 
 export const ownerMobileEmptyCardClass =
   "rounded-2xl border border-slate-200/70 bg-white px-5 py-8 text-center shadow-[0_1px_8px_-2px_rgba(15,23,42,0.06)]";

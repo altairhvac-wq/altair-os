@@ -2370,6 +2370,14 @@ a[href] {
   transform: none;
 }
 
+@media (max-width: 767px) {
+  .admin-btn-primary,
+  .admin-btn-secondary,
+  .admin-panel-action {
+    min-height: 2.75rem;
+  }
+}
+
 .admin-form-input,
 .admin-input {
   width: 100%;

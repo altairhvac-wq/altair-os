@@ -49,11 +49,11 @@ export function DispatchSearchFilterBar({
 
   const searchInputClass = northStar
     ? lt.searchInput
-    : "w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:py-2.5 sm:pl-10 sm:pr-4 sm:placeholder:text-slate-400";
+    : "h-11 min-h-11 w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:py-2.5 sm:pl-10 sm:pr-4 sm:placeholder:text-slate-400 md:h-10 md:min-h-10";
 
   const filterSelectClass = northStar
     ? lt.filterSelect
-    : "w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:py-2.5 sm:pl-10 sm:pr-10 sm:w-auto";
+    : "h-11 min-h-11 w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:py-2.5 sm:pl-10 sm:pr-10 sm:w-auto md:h-10 md:min-h-10";
 
   const filterIconClass = northStar
     ? `pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 sm:left-3 ${lt.filterIcon}`

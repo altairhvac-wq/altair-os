@@ -25,9 +25,9 @@ const SORT_OPTIONS: { value: LeadSortField; label: string }[] = [
 ];
 
 const legacySearchInputClass =
-  "w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-900 outline-none ring-cyan-500/20 transition focus:border-cyan-500 focus:ring-2";
+  "h-11 min-h-11 w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-900 outline-none ring-cyan-500/20 transition focus:border-cyan-500 focus:ring-2 md:h-10 md:min-h-10";
 const legacySelectClass =
-  "rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none ring-cyan-500/20 transition focus:border-cyan-500 focus:ring-2";
+  "h-11 min-h-11 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none ring-cyan-500/20 transition focus:border-cyan-500 focus:ring-2 md:h-10 md:min-h-10";
 
 export function LeadSearchFilterBar({
   search,

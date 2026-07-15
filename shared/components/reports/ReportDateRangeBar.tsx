@@ -47,7 +47,7 @@ export function ReportDateRangeBar({
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => handleRangeChange(option.value)}
-                className={`min-h-11 min-w-0 rounded-md px-2 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.35)] sm:min-h-9 sm:shrink-0 sm:px-3 sm:py-1.5 ${
+                className={`min-h-11 min-w-0 rounded-md px-2 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.35)] sm:shrink-0 sm:px-3 sm:py-1.5 md:min-h-9 ${
                   isActive
                     ? "bg-[#FFF9EA] text-[#17130E] shadow-[0_1px_3px_rgba(138,99,36,0.12)] ring-1 ring-[rgba(138,99,36,0.14)]"
                     : "text-[#4F4638] hover:text-[#17130E]"

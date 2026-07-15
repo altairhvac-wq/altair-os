@@ -288,7 +288,7 @@ export function InvoicesNorthStarMobileOwnerView({
   const upNextInvoices = collectionInvoices.slice(1, 1 + UP_NEXT_LIMIT);
 
   const filterSelectClass =
-    "h-10 w-full min-h-10 appearance-none rounded-xl border border-slate-200/90 bg-white py-2 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-[rgba(198,167,87,0.45)] focus:ring-2 focus:ring-[rgba(198,167,87,0.18)]";
+    "h-11 w-full min-h-11 appearance-none rounded-xl border border-slate-200/90 bg-white py-2 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-[rgba(198,167,87,0.45)] focus:ring-2 focus:ring-[rgba(198,167,87,0.18)]";
 
   const countLine = hasActiveFilters
     ? collectionCount > 0

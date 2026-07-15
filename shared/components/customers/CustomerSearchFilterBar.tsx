@@ -16,7 +16,7 @@ type CustomerSearchFilterBarProps = {
 };
 
 const filterSelectClass =
-  "h-9 w-full min-h-9 appearance-none rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:w-auto sm:pr-10";
+  "h-11 w-full min-h-11 appearance-none rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 sm:w-auto sm:pr-10 md:h-9 md:min-h-9";
 
 const PAST_LIFECYCLE_OPTIONS = CUSTOMER_LIFECYCLE_FILTER_OPTIONS.filter(
   (option) => option.value !== "active",
@@ -33,7 +33,7 @@ export function CustomerSearchFilterBar({
 }: CustomerSearchFilterBarProps) {
   const searchInputClass = northStar
     ? lt.searchInput
-    : "h-9 w-full min-h-9 rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20";
+    : "h-11 w-full min-h-11 rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 md:h-9 md:min-h-9";
   const selectClass = northStar ? lt.filterSelect : filterSelectClass;
 
   return (

@@ -11,7 +11,7 @@ export const estimatesOwnerMobileHeroTitleClass =
 
 /** Compact gold/champagne hero CTA — matches /jobs mobile New Job button treatment. */
 export const estimatesOwnerMobileHeroPrimaryActionClass =
-  "inline-flex h-9 shrink-0 touch-manipulation items-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3.5 py-1.5 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:-translate-y-px hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] hover:shadow-[0_4px_16px_rgba(138,99,36,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273140] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#17130E]";
+  "inline-flex min-h-11 shrink-0 touch-manipulation items-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3.5 py-1.5 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:-translate-y-px hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] hover:shadow-[0_4px_16px_rgba(138,99,36,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273140] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#17130E]";
 
 /** Readable muted line on dark graphite — matches approved /jobs command hero subtitle. */
 export const estimatesOwnerMobileHeroMutedClass = "text-xs text-[#C8D0DA]";
@@ -42,6 +42,6 @@ export const estimatesOwnerMobileArchiveSearchIconClass =
   "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8A6324]";
 
 export const estimatesOwnerMobileArchiveInputClass =
-  "h-10 w-full min-h-10 rounded-xl border border-slate-200/90 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-[#64748B] outline-none transition-colors focus:border-[rgba(198,167,87,0.45)] focus:ring-2 focus:ring-[rgba(198,167,87,0.18)]";
+  "h-11 w-full min-h-11 rounded-xl border border-slate-200/90 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-[#64748B] outline-none transition-colors focus:border-[rgba(198,167,87,0.45)] focus:ring-2 focus:ring-[rgba(198,167,87,0.18)]";
 
 export const estimatesOwnerMobileSearchResultsMetaClass = "mt-1 text-sm text-[#64748B]";
