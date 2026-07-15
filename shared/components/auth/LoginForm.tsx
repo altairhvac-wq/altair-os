@@ -52,7 +52,7 @@ export function LoginFormFields() {
             autoComplete="email"
             inputMode="email"
             placeholder="you@company.com"
-            className="pl-10"
+            className="border-white/10 bg-white/[0.035] pl-10 text-slate-100 placeholder:text-slate-500 hover:border-white/20"
             required
           />
         </div>
@@ -63,7 +63,7 @@ export function LoginFormFields() {
           <label htmlFor="password" className="block text-sm font-medium text-stone-700">
             Password
           </label>
-          <AuthLink href="/forgot-password">Forgot password?</AuthLink>
+          <AuthLink href="/forgot-password" variant="dark">Forgot password?</AuthLink>
         </div>
         <div className="relative mt-1.5">
           <LockKeyhole
@@ -76,13 +76,13 @@ export function LoginFormFields() {
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             placeholder="Enter your password"
-            className="pl-10 pr-12"
+            className="border-white/10 bg-white/[0.035] pl-10 pr-12 text-slate-100 placeholder:text-slate-500 hover:border-white/20"
             required
           />
           <button
             type="button"
             onClick={() => setShowPassword((visible) => !visible)}
-            className="absolute inset-y-0 right-0 flex min-h-11 w-12 items-center justify-center rounded-r-lg text-slate-400 transition-colors hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#c9a44d]/40"
+            className="absolute inset-y-0 right-0 flex min-h-11 w-12 items-center justify-center rounded-r-lg text-slate-400 transition-colors hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#c9a44d]/40"
             aria-label={showPassword ? "Hide password" : "Show password"}
             aria-pressed={showPassword}
           >
@@ -96,7 +96,7 @@ export function LoginFormFields() {
       </div>
 
       <div className="pt-2">
-        <AuthSubmitButton pending={pending}>
+        <AuthSubmitButton pending={pending} variant="gold">
           <span>Sign in</span>
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </AuthSubmitButton>

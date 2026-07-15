@@ -412,15 +412,22 @@ export function AuthSelect(props: React.ComponentProps<"select">) {
 export function AuthSubmitButton({
   pending,
   children,
+  variant = "default",
 }: {
   pending?: boolean;
   children: ReactNode;
+  variant?: "default" | "gold";
 }) {
+  const className =
+    variant === "gold"
+      ? "group flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[#e5bd59] to-[#bc852c] px-4 py-2.5 text-sm font-semibold text-[#07101d] shadow-[0_10px_26px_-12px_rgba(201,164,77,0.7),inset_0_1px_0_rgba(255,249,218,0.65)] ring-1 ring-[#f0cf78]/40 transition-all duration-200 hover:-translate-y-0.5 hover:from-[#edca70] hover:to-[#c89134] hover:shadow-[0_14px_30px_-12px_rgba(201,164,77,0.8)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#c9a44d]/25 active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-70 disabled:shadow-none disabled:active:scale-100"
+      : "group flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[#111b2e] to-[#080f1c] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_5px_20px_rgba(138,99,36,0.2),inset_0_1px_0_rgba(230,208,146,0.16)] ring-1 ring-[#c9a44d]/30 transition-all duration-200 hover:-translate-y-0.5 hover:from-[#17243b] hover:to-[#0b1423] hover:shadow-[0_8px_24px_-10px_rgba(15,23,42,0.7),0_5px_22px_rgba(138,99,36,0.24)] hover:ring-[#c9a44d]/45 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#c9a44d]/20 active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-70 disabled:shadow-none disabled:active:scale-100";
+
   return (
     <button
       type="submit"
       disabled={pending}
-      className="group flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[#111b2e] to-[#080f1c] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_5px_20px_rgba(138,99,36,0.2),inset_0_1px_0_rgba(230,208,146,0.16)] ring-1 ring-[#c9a44d]/30 transition-all duration-200 hover:-translate-y-0.5 hover:from-[#17243b] hover:to-[#0b1423] hover:shadow-[0_8px_24px_-10px_rgba(15,23,42,0.7),0_5px_22px_rgba(138,99,36,0.24)] hover:ring-[#c9a44d]/45 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#c9a44d]/20 active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-70 disabled:shadow-none disabled:active:scale-100"
+      className={className}
     >
       {pending ? (
         <>
@@ -461,14 +468,21 @@ export function AuthMessage({
 export function AuthLink({
   href,
   children,
+  variant = "default",
 }: {
   href: string;
   children: ReactNode;
+  variant?: "default" | "dark";
 }) {
+  const className =
+    variant === "dark"
+      ? "font-semibold text-[#e6d092] underline-offset-4 transition-colors hover:text-[#fff3c4] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e6d092]/45"
+      : "font-semibold text-[#9A7209] underline-offset-4 transition-colors hover:text-[#7A5A07] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/30";
+
   return (
     <Link
       href={href}
-      className="font-semibold text-[#9A7209] underline-offset-4 transition-colors hover:text-[#7A5A07] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/30"
+      className={className}
     >
       {children}
     </Link>

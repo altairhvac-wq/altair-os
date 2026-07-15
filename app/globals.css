@@ -237,6 +237,35 @@ a[href] {
 /* Login experience — connected operating-system entrance */
 .login-access-panel {
   isolation: isolate;
+  color-scheme: dark;
+  scrollbar-color: rgb(148 163 184 / 0.28) transparent;
+  scrollbar-width: thin;
+}
+
+.login-access-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.login-access-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.login-access-panel::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgb(148 163 184 / 0.24);
+}
+
+.login-access-panel label {
+  color: rgb(203 213 225);
+}
+
+.login-access-panel input:-webkit-autofill,
+.login-access-panel input:-webkit-autofill:hover,
+.login-access-panel input:-webkit-autofill:focus {
+  -webkit-text-fill-color: rgb(241 245 249);
+  caret-color: rgb(241 245 249);
+  box-shadow: 0 0 0 1000px #0d1724 inset;
+  transition: background-color 9999s ease-out;
 }
 
 .login-access-grid {
@@ -269,6 +298,37 @@ a[href] {
     rgb(230 208 146 / 0.5) 48%,
     transparent 95%
   );
+}
+
+.login-control-loop-track::before {
+  content: "";
+  position: absolute;
+  left: 6.25%;
+  right: 6.25%;
+  top: 1.5rem;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgb(201 164 77 / 0.18),
+    rgb(230 208 146 / 0.5),
+    rgb(14 116 144 / 0.28)
+  );
+}
+
+.login-control-loop-signal {
+  position: absolute;
+  z-index: 20;
+  left: 6.25%;
+  top: calc(1.5rem - 4px);
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgb(255 249 218 / 0.85);
+  border-radius: 9999px;
+  background: #e0b84f;
+  box-shadow:
+    0 0 0 4px rgb(201 164 77 / 0.08),
+    0 0 16px rgb(230 208 146 / 0.9);
+  animation: login-control-loop-signal 8s ease-in-out infinite;
 }
 
 @keyframes auth-panel-enter {
@@ -330,12 +390,74 @@ a[href] {
   }
 }
 
+@keyframes login-control-loop-signal {
+  0%,
+  4% {
+    left: 6.25%;
+    opacity: 0;
+  }
+
+  7%,
+  11% {
+    left: 6.25%;
+    opacity: 1;
+  }
+
+  15%,
+  23% {
+    left: 18.75%;
+    opacity: 1;
+  }
+
+  27%,
+  35% {
+    left: 31.25%;
+    opacity: 1;
+  }
+
+  39%,
+  47% {
+    left: 43.75%;
+    opacity: 1;
+  }
+
+  51%,
+  59% {
+    left: 56.25%;
+    opacity: 1;
+  }
+
+  63%,
+  71% {
+    left: 68.75%;
+    opacity: 1;
+  }
+
+  75%,
+  83% {
+    left: 81.25%;
+    opacity: 1;
+  }
+
+  87%,
+  96% {
+    left: 93.75%;
+    opacity: 1;
+  }
+
+  100% {
+    left: 93.75%;
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth-panel-enter,
   .auth-hero-enter,
   .auth-tier,
   .auth-metric-pulse,
-  .login-command-card::after {
+  .login-command-card::after,
+  .login-control-loop-signal {
     animation: none;
   }
 
