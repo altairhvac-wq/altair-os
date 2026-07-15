@@ -69,7 +69,7 @@ function PrimaryActionCard({
           <p className={`mt-2 ${t.darkSurfaceText}`}>
             {recommendation.description}
           </p>
-          <p className={`mt-1 line-clamp-2 ${t.metaDark}`}>
+          <p className={`mt-1 hidden line-clamp-2 sm:block ${t.metaDark}`}>
             {recommendation.reason}
           </p>
         </div>
@@ -133,7 +133,12 @@ function SecondaryActionButton({
       onClick={onSelect}
       className={t.secondaryAction}
     >
-      <span className={t.secondaryActionIndex}>{recommendation.priority}</span>
+      <span
+        className={t.secondaryActionIndex}
+        aria-label={`Priority ${recommendation.priority}`}
+      >
+        P{recommendation.priority}
+      </span>
       <span className={t.darkSurfaceText}>
         {recommendation.title}
       </span>
@@ -208,7 +213,7 @@ export function NorthStarMissionHero({
             <OperationsClearCard />
           )}
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start lg:gap-6">
+          <div className="mt-3 grid gap-3 sm:mt-4 sm:gap-4 lg:grid-cols-[1fr_auto] lg:items-start lg:gap-6">
             <div className="flex flex-col gap-3">
               <div>
                 <p className={t.eyebrowLight}>Then handle</p>
@@ -232,7 +237,7 @@ export function NorthStarMissionHero({
               </div>
 
               {content.insight ? (
-                <div className={t.insightSurface}>
+                <div className={`${t.insightSurface} hidden sm:block`}>
                   <p className="text-sm font-medium leading-snug text-white">
                     {content.insight.title}
                   </p>

@@ -99,9 +99,9 @@ export const northStarTokens: NorthStarDashboardTokens = {
     "relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#111b2e]/98 via-[#0e1726]/96 to-[#0b1220]/98 shadow-[0_16px_48px_-16px_rgba(0,0,0,0.48),0_0_0_1px_rgba(255,255,255,0.04)_inset] ring-1 ring-[rgba(198,167,87,0.14)]",
   heroAccentRail:
     "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(198,167,87,0.42)] to-transparent",
-  heroHeader: "border-b border-slate-700/30 px-5 py-4 sm:px-6 sm:py-5",
-  heroBody: "px-5 py-4 sm:px-6 sm:py-5",
-  heroFooter: "border-t border-slate-700/25 bg-slate-900/20 px-5 py-4 sm:px-6",
+  heroHeader: "border-b border-slate-700/30 px-4 py-3.5 sm:px-6 sm:py-5",
+  heroBody: "px-4 py-3.5 sm:px-6 sm:py-5",
+  heroFooter: "border-t border-slate-700/25 bg-slate-900/20 px-4 py-2 sm:px-6",
 
   eyebrowAccent: "text-[10px] font-semibold uppercase tracking-[0.18em] text-[#C6A757]",
   eyebrowLight:
@@ -114,7 +114,7 @@ export const northStarTokens: NorthStarDashboardTokens = {
   darkSurfaceMuted: "text-xs text-[#B8AD9E]",
 
   primaryAction:
-    "group relative flex w-full flex-col gap-3 overflow-hidden rounded-xl border-l-[3px] border-l-[#B8943F] bg-gradient-to-br from-[#0f1a2e] via-[#0c1525] to-[#0a1220] p-4 text-left shadow-[0_10px_36px_-14px_rgba(0,0,0,0.42)] ring-1 ring-[rgba(198,167,87,0.18)] transition-all hover:border-l-[#C6A757] hover:ring-[rgba(198,167,87,0.30)] sm:flex-row sm:items-center sm:justify-between sm:p-5",
+    "group relative flex w-full flex-col gap-3 overflow-hidden rounded-xl border-l-[3px] border-l-[#B8943F] bg-gradient-to-br from-[#0f1a2e] via-[#0c1525] to-[#0a1220] p-3.5 text-left shadow-[0_10px_36px_-14px_rgba(0,0,0,0.42)] ring-1 ring-[rgba(198,167,87,0.18)] transition-all hover:border-l-[#C6A757] hover:ring-[rgba(198,167,87,0.30)] sm:flex-row sm:items-center sm:justify-between sm:p-5",
   accentCta:
     "relative inline-flex shrink-0 items-center gap-2 self-start rounded-lg bg-[#B8943F] px-4 py-2.5 text-sm font-semibold text-[#FCFBF8] shadow-[0_2px_10px_rgba(184,148,63,0.28)] transition-all group-hover:bg-[#C6A757] sm:self-center",
   accentBadge:

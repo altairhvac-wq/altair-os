@@ -10,7 +10,8 @@ import { DashboardNorthStarMobileView } from "./DashboardNorthStarMobileView";
 import { NorthStarMissionHero } from "./NorthStarMissionHero";
 import { NorthStarOperatingBoard } from "./NorthStarOperatingBoard";
 import { NorthStarSupportingBands } from "./NorthStarSupportingBands";
-import { WorkflowRemindersSection } from "@/shared/components/dashboard/WorkflowRemindersSection";
+import { NorthStarWorkflowMemory } from "./NorthStarWorkflowMemory";
+import { NorthStarWorkflowRail } from "./NorthStarWorkflowRail";
 
 export type DashboardNorthStarViewProps = {
   data: DashboardData;
@@ -56,15 +57,12 @@ export function DashboardNorthStarView({
           <NorthStarMissionHero data={data} dateLabel={dateLabel} />
         ) : null}
         {!useActivationHero ? (
-          <WorkflowRemindersSection
-            snapshot={data.workflowReminders}
-            canManage={data.access.canViewBilling}
-            variant="north-star"
-          />
+          <NorthStarWorkflowRail data={data} />
         ) : null}
         {!useActivationHero ? (
           <NorthStarOperatingBoard data={data} />
         ) : null}
+        {!useActivationHero ? <NorthStarWorkflowMemory data={data} /> : null}
         {!useActivationHero ? (
           <NorthStarSupportingBands data={data} />
         ) : null}

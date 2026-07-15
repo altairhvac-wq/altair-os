@@ -7,11 +7,12 @@ import { buildNorthStarBoardContent } from "@/shared/lib/dashboard-north-star-bo
 import { buildNorthStarSupportingBandsContent } from "@/shared/lib/dashboard-north-star-supporting-bands";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { MasterContentStack } from "@/shared/design-system/shell";
-import { WorkflowRemindersSection } from "@/shared/components/dashboard/WorkflowRemindersSection";
 import { NorthStarMissionHero } from "./NorthStarMissionHero";
 import { NorthStarActionColumn } from "./NorthStarActionColumn";
 import { NorthStarWorkColumn } from "./NorthStarWorkColumn";
 import { NorthStarMoneyColumn } from "./NorthStarMoneyColumn";
+import { NorthStarWorkflowMemory } from "./NorthStarWorkflowMemory";
+import { NorthStarWorkflowRail } from "./NorthStarWorkflowRail";
 
 type DashboardNorthStarMobileViewProps = {
   data: DashboardData;
@@ -179,14 +180,9 @@ export function DashboardNorthStarMobileView({
   return (
     <MasterContentStack density="compact" className="min-w-0 lg:hidden">
       <NorthStarMissionHero data={data} dateLabel={dateLabel} />
-      {data.access.canViewBilling ? (
-        <WorkflowRemindersSection
-          snapshot={data.workflowReminders}
-          canManage={data.access.canViewBilling}
-          variant="north-star"
-        />
-      ) : null}
+      <NorthStarWorkflowRail data={data} />
       <NorthStarMobileOperatingBoard data={data} />
+      <NorthStarWorkflowMemory data={data} />
       <NorthStarMobileSupportingSection data={data} />
     </MasterContentStack>
   );

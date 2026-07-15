@@ -457,7 +457,7 @@ function buildMoneyRows(
   data: DashboardData,
   featuredQueueType: OperationalResolutionQueueType | null,
 ): NorthStarBoardRow[] {
-  const { access, money, expenses } = data;
+  const { access, money } = data;
   const rows: NorthStarBoardRow[] = [];
 
   const push = (row: Omit<NorthStarBoardRow, "featured"> | null) => {
@@ -676,7 +676,14 @@ function buildMoneyContent(
 export function buildNorthStarBoardContent(data: DashboardData): NorthStarBoardContent {
   const hero = buildNorthStarHeroContent(data);
   const featuredQueueType = hero.primary?.relatedQueue ?? null;
-  const actionRows = buildActionRows(data, featuredQueueType);
+  const heroQueueTypes = new Set(
+    [hero.primary, ...hero.secondary]
+      .filter((recommendation) => recommendation !== null)
+      .map((recommendation) => recommendation.relatedQueue),
+  );
+  const actionRows = buildActionRows(data, featuredQueueType).filter(
+    (row) => !row.queueType || !heroQueueTypes.has(row.queueType),
+  );
   const officeFollowUps = buildOfficeFollowUps(data);
 
   return {

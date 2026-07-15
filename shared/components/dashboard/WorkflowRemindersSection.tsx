@@ -21,6 +21,7 @@ type WorkflowRemindersSectionProps = {
   snapshot: DashboardData["workflowReminders"];
   canManage: boolean;
   variant?: "default" | "north-star";
+  showHeader?: boolean;
 };
 
 const SNOOZE_OPTIONS: Array<{ days: WorkflowReminderSnoozeDays; label: string }> =
@@ -53,7 +54,7 @@ function ReminderActions({
   const isPending = pendingAction?.startsWith(`${reminderId}:`) ?? false;
   const actionButtonClass =
     variant === "north-star"
-      ? "rounded-md border border-slate-300/80 bg-white/80 px-2 py-1 text-[11px] font-medium text-slate-700 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+      ? "inline-flex min-h-11 items-center rounded-md border border-slate-300/80 bg-white/80 px-2.5 py-1 text-[11px] font-medium text-slate-700 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-0 sm:px-2"
       : "rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
@@ -161,6 +162,7 @@ export function WorkflowRemindersSection({
   snapshot,
   canManage,
   variant = "default",
+  showHeader = true,
 }: WorkflowRemindersSectionProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -228,49 +230,46 @@ export function WorkflowRemindersSection({
 
   return (
     <section className={shellClass} aria-label="Workflow reminders">
-      <div className={headerClass}>
-        <div className="flex min-w-0 items-start gap-2">
-          <div
-            className={
-              variant === "north-star"
-                ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100"
-                : "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 shadow-sm ring-1 ring-slate-200/70"
-            }
-          >
-            <Bell
+      {showHeader ? (
+        <div className={headerClass}>
+          <div className="flex min-w-0 items-start gap-2">
+            <div
               className={
                 variant === "north-star"
-                  ? "h-3.5 w-3.5 text-slate-600"
-                  : "h-3.5 w-3.5 text-slate-600"
-              }
-              aria-hidden="true"
-            />
-          </div>
-          <div className="min-w-0">
-            <h2
-              className={
-                variant === "north-star"
-                  ? `text-sm font-semibold ${t.workspaceSubheading}`
-                  : "admin-heading-section"
+                  ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100"
+                  : "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 shadow-sm ring-1 ring-slate-200/70"
               }
             >
-              Workflow reminders
-            </h2>
-            <p
-              className={
-                variant === "north-star" ? t.lightSurfaceMuted : "admin-text-helper"
-              }
-            >
-              Saved follow-ups Altair is tracking for your office.
-            </p>
-            {countLabel ? (
-              <p className="mt-1 text-[11px] font-medium text-slate-500">
-                {countLabel}
+              <Bell className="h-3.5 w-3.5 text-slate-600" aria-hidden="true" />
+            </div>
+            <div className="min-w-0">
+              <h2
+                className={
+                  variant === "north-star"
+                    ? `text-sm font-semibold ${t.workspaceSubheading}`
+                    : "admin-heading-section"
+                }
+              >
+                Workflow reminders
+              </h2>
+              <p
+                className={
+                  variant === "north-star"
+                    ? t.lightSurfaceMuted
+                    : "admin-text-helper"
+                }
+              >
+                Saved follow-ups Altair is tracking for your office.
               </p>
-            ) : null}
+              {countLabel ? (
+                <p className="mt-1 text-[11px] font-medium text-slate-500">
+                  {countLabel}
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       <div className={variant === "north-star" ? "px-4 py-4 sm:px-5" : "admin-card-body"}>
         {error ? (
