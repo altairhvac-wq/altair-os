@@ -18,7 +18,8 @@ export const networkNorthStarStyles = {
     "shrink-0 border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-3 py-2.5 sm:px-4 lg:px-5",
   scrollRegion: "flex-1 overflow-y-auto overscroll-contain",
   tabBand: lt.viewTabsBand,
-  tabControl: lt.viewTabsControl,
+  tabControl:
+    "job-north-star-view-tabs grid w-full grid-cols-2 gap-0.5 rounded-lg border border-[rgba(148,163,184,0.24)] bg-[#D8E0EA] p-0.5 min-[360px]:grid-cols-4 sm:flex sm:w-auto",
   tabItem: lt.viewTabsItem,
   tabItemActive: lt.viewTabsItemActive,
   tabAttentionBadge:

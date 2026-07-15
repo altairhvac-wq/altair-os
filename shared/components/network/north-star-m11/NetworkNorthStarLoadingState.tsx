@@ -48,9 +48,12 @@ export function NetworkNorthStarLoadingState() {
 
         <div className={`${st.sectionSurface} overflow-hidden`}>
           <div className={st.tabBand}>
-            <div className={`${st.tabControl} overflow-x-auto`} aria-hidden="true">
+            <div className={st.tabControl} aria-hidden="true">
               {Array.from({ length: NETWORK_TAB_COUNT }).map((_, index) => (
-                <Skeleton key={index} className="h-9 w-28 shrink-0 rounded-md" />
+                <Skeleton
+                  key={index}
+                  className="h-9 min-w-0 rounded-md sm:w-28 sm:shrink-0"
+                />
               ))}
             </div>
           </div>

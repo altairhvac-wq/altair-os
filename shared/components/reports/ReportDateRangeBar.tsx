@@ -36,8 +36,8 @@ export function ReportDateRangeBar({
 
   if (northStar) {
     return (
-      <div className="min-w-0 overflow-x-auto rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-2.5 sm:px-4">
-        <div className="flex w-max min-w-full flex-wrap gap-0.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#E8DCC4] p-0.5 sm:w-auto">
+      <div className="min-w-0 rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-2.5 sm:px-4">
+        <div className="grid w-full grid-cols-2 gap-0.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#E8DCC4] p-0.5 sm:flex sm:w-auto">
           {REPORTS_PAGE_DATE_RANGE_OPTIONS.map((option) => {
             const isActive = option.value === range;
 
@@ -47,7 +47,7 @@ export function ReportDateRangeBar({
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => handleRangeChange(option.value)}
-                className={`min-h-9 shrink-0 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.35)] ${
+                className={`min-h-11 min-w-0 rounded-md px-2 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.35)] sm:min-h-9 sm:shrink-0 sm:px-3 sm:py-1.5 ${
                   isActive
                     ? "bg-[#FFF9EA] text-[#17130E] shadow-[0_1px_3px_rgba(138,99,36,0.12)] ring-1 ring-[rgba(138,99,36,0.14)]"
                     : "text-[#4F4638] hover:text-[#17130E]"

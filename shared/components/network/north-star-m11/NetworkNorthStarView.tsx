@@ -686,7 +686,7 @@ export function NetworkNorthStarView({
         <div className={`${st.tabBodySurface} overflow-hidden`}>
           <div className={st.tabBand}>
             <nav
-              className={`${st.tabControl} overflow-x-auto`}
+              className={st.tabControl}
               aria-label="Network sections"
             >
               {NETWORK_WORKSPACE_TAB_OPTIONS.filter((tab) =>
@@ -697,11 +697,11 @@ export function NetworkNorthStarView({
                   type="button"
                   aria-pressed={activeTab === tab.value}
                   onClick={() => handleTabChange(tab.value)}
-                  className={`${st.tabItem} shrink-0 px-3 sm:px-4 ${
+                  className={`${st.tabItem} min-w-0 px-2 text-xs min-[360px]:px-1.5 sm:px-4 sm:text-sm ${
                     activeTab === tab.value ? st.tabItemActive : ""
                   }`}
                 >
-                  <span className="inline-flex items-center">
+                  <span className="inline-flex min-w-0 items-center justify-center">
                     {tab.label}
                     {tab.value === "invitations" &&
                     showInvitationsAttention ? (
