@@ -40,7 +40,7 @@ every page and component that happened to hardcode that color.
 There is one canonical set of tokens, not a parallel system per module. Do not
 add a second token file for a specific page or feature — extend this one.
 
-## The sixteen roles
+## The roles
 
 Each role maps to one of the Foundation's five materials or its Color System
 table. Values are defined once per theme scope; the role name never changes.
@@ -59,14 +59,49 @@ table. Values are defined once per theme scope; the role name never changes.
 | `border-strong` | Deliberate emphasis (selection, focus) | "Strong Border" |
 | `brass` | Brass — the one command per screen | "Primary Command" |
 | `brass-interactive` | Brass, hover/active state | (Primary Command interaction state) |
-| `success` | Completed / healthy / resolved | "Success" |
-| `warning` | Needs attention soon | "Warning" |
-| `danger` | Failed / blocking | "Danger" |
-| `information` | Neutral system communication | "Information" |
+| `success` | Completed / healthy / resolved — icon/dot/border strength | "Success" |
+| `warning` | Needs attention soon — icon/dot/border strength | "Warning" |
+| `danger` | Failed / blocking — icon/dot/border strength | "Danger" |
+| `information` | Neutral system communication — icon/dot/border strength | "Information" |
+| `success-foreground` | Success, small-text-safe reading strength | "Success" (text on a light surface) |
+| `success-surface` | Success, quiet tinted background | "Success" (background) |
+| `warning-foreground` | Warning, small-text-safe reading strength | "Warning" (text on a light surface) |
+| `warning-surface` | Warning, quiet tinted background | "Warning" (background) |
+| `danger-foreground` | Danger, small-text-safe reading strength | "Danger" (text on a light surface) |
+| `danger-surface` | Danger, quiet tinted background | "Danger" (background) |
+| `information-foreground` | Information, small-text-safe reading strength | "Information" (text on a light surface) |
+| `information-surface` | Information, quiet tinted background | "Information" (background) |
 
 `brass` and `brass-interactive` must never be reused to represent status —
-use `success` / `warning` / `danger` / `information` instead. This mirrors the
-Foundation's rule that command and status must never visually collide.
+use `success` / `warning` / `danger` / `information` (and their `-foreground`
+/ `-surface` pairs) instead. This mirrors the Foundation's rule that command
+and status must never visually collide.
+
+### Why status roles come in three strengths
+
+`success`, `warning`, `danger`, and `information` are tuned as a mid-strength
+hue — the right strength for an icon, a dot, or a 15%-opacity border, but not
+dark enough to read as small text at the Foundation's 4.5:1 threshold on a
+Paper-family surface. The Status Pill pilot proved this by calculation: the
+plain `success` token measured as low as 3.35:1 as small badge text on a
+Paper-family surface.
+
+Rather than darken the base role (and break its job as an icon/border color)
+or accept an inaccessible badge, each status role gained two companions:
+
+- `{status}-foreground` — the same hue, darkened until it clears 4.5:1 as
+  normal-sized text against the surfaces it is paired with.
+- `{status}-surface` — a quiet, pale tint of the same hue, calibrated to pair
+  with `{status}-foreground`.
+
+These two are defined identically in `:root` and `[data-theme="dark"]`,
+because they are calibrated against Paper, and Paper itself never changes
+value between the two themes (see `paper` / `paper-elevated` above, which set
+that precedent already). Any status feedback surface that renders small text
+on a Paper-family background — a badge, an inline alert, a banner — should
+reach for `{status}-foreground` / `{status}-surface`, not the base
+`{status}` role, whenever it is rendering text rather than an icon, dot, or
+border.
 
 ## Light and dark, one component
 

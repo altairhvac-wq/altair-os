@@ -116,6 +116,28 @@
   --altair-warning: #d97706;
   --altair-danger: #dc2626;
   --altair-information: #2563eb;
+
+  /*
+   * Status foreground/surface pairs — small-text-safe reading of each status
+   * role. `--altair-success` etc. above stay the mid-strength hue used for
+   * icons, dots, and borders; these pairs exist because that mid-strength hue
+   * does not clear 4.5:1 as small badge/label text on a Paper-family surface
+   * (proven during the Status Pill pilot — see altair-tokens.ts README).
+   * Reusable by any small status-feedback surface (badges, alerts, banners),
+   * not a StatusPill-specific implementation detail.
+   *
+   * Identical in :root and [data-theme="dark"], on purpose: they are
+   * calibrated against Paper, and Paper itself never changes between themes
+   * (see --altair-paper below) — the same precedent already set for Paper.
+   */
+  --altair-success-foreground: #047653;
+  --altair-success-surface: #ecfdf5;
+  --altair-warning-foreground: #9f5704;
+  --altair-warning-surface: #fffbeb;
+  --altair-danger-foreground: #d32222;
+  --altair-danger-surface: #fff1f2;
+  --altair-information-foreground: #1a5bea;
+  --altair-information-surface: #f0f9ff;
 }
 
 [data-theme="dark"] {
@@ -144,6 +166,16 @@
   --altair-warning: #fbbf24;
   --altair-danger: #f87171;
   --altair-information: #60a5fa;
+
+  /* Paper-anchored — identical to :root. See the comment on these roles above. */
+  --altair-success-foreground: #047653;
+  --altair-success-surface: #ecfdf5;
+  --altair-warning-foreground: #9f5704;
+  --altair-warning-surface: #fffbeb;
+  --altair-danger-foreground: #d32222;
+  --altair-danger-surface: #fff1f2;
+  --altair-information-foreground: #1a5bea;
+  --altair-information-surface: #f0f9ff;
 }
 
 @theme inline {
@@ -169,6 +201,14 @@
   --color-altair-warning: var(--altair-warning);
   --color-altair-danger: var(--altair-danger);
   --color-altair-information: var(--altair-information);
+  --color-altair-success-foreground: var(--altair-success-foreground);
+  --color-altair-success-surface: var(--altair-success-surface);
+  --color-altair-warning-foreground: var(--altair-warning-foreground);
+  --color-altair-warning-surface: var(--altair-warning-surface);
+  --color-altair-danger-foreground: var(--altair-danger-foreground);
+  --color-altair-danger-surface: var(--altair-danger-surface);
+  --color-altair-information-foreground: var(--altair-information-foreground);
+  --color-altair-information-surface: var(--altair-information-surface);
 }
 
 @media (prefers-color-scheme: dark) {

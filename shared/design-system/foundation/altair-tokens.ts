@@ -41,7 +41,15 @@ export type AltairSemanticRole =
   | "success"
   | "warning"
   | "danger"
-  | "information";
+  | "information"
+  | "successForeground"
+  | "successSurface"
+  | "warningForeground"
+  | "warningSurface"
+  | "dangerForeground"
+  | "dangerSurface"
+  | "informationForeground"
+  | "informationSurface";
 
 /** Maps each semantic role to its backing CSS custom property name (defined in app/globals.css). */
 export const altairTokenVar: Record<AltairSemanticRole, string> = {
@@ -61,6 +69,14 @@ export const altairTokenVar: Record<AltairSemanticRole, string> = {
   warning: "--altair-warning",
   danger: "--altair-danger",
   information: "--altair-information",
+  successForeground: "--altair-success-foreground",
+  successSurface: "--altair-success-surface",
+  warningForeground: "--altair-warning-foreground",
+  warningSurface: "--altair-warning-surface",
+  dangerForeground: "--altair-danger-foreground",
+  dangerSurface: "--altair-danger-surface",
+  informationForeground: "--altair-information-foreground",
+  informationSurface: "--altair-information-surface",
 };
 
 /**
@@ -85,6 +101,14 @@ export const altairTokenClassName: Record<AltairSemanticRole, string> = {
   warning: "altair-warning",
   danger: "altair-danger",
   information: "altair-information",
+  successForeground: "altair-success-foreground",
+  successSurface: "altair-success-surface",
+  warningForeground: "altair-warning-foreground",
+  warningSurface: "altair-warning-surface",
+  dangerForeground: "altair-danger-foreground",
+  dangerSurface: "altair-danger-surface",
+  informationForeground: "altair-information-foreground",
+  informationSurface: "altair-information-surface",
 };
 
 /**

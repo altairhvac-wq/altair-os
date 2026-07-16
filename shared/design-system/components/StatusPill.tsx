@@ -19,11 +19,11 @@ const sizeStyles: Record<StatusPillSize, string> = {
 };
 
 const toneStyles: Record<StatusPillTone, string> = {
-  neutral: "bg-slate-100/95 text-slate-700 ring-slate-400/15",
-  success: "bg-emerald-50/95 text-emerald-800 ring-emerald-500/15",
-  warning: "bg-amber-50/95 text-amber-800 ring-amber-500/15",
-  danger: "bg-rose-50/95 text-rose-800 ring-rose-500/15",
-  info: "bg-sky-50/95 text-sky-800 ring-sky-500/15",
+  neutral: "bg-altair-paper-subtle text-altair-ink-secondary ring-altair-border",
+  success: "bg-altair-success-surface text-altair-success-foreground ring-altair-success/15",
+  warning: "bg-altair-warning-surface text-altair-warning-foreground ring-altair-warning/15",
+  danger: "bg-altair-danger-surface text-altair-danger-foreground ring-altair-danger/15",
+  info: "bg-altair-information-surface text-altair-information-foreground ring-altair-information/15",
 };
 
 export function StatusPill({
