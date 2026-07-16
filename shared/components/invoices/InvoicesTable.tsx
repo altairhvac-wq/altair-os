@@ -1,4 +1,6 @@
 import { Fragment, useMemo } from "react";
+import Link from "next/link";
+import type { MouseEvent } from "react";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
@@ -14,6 +16,20 @@ import { northStarListTokens as lt } from "@/shared/design-system/north-star/tok
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { InvoicesMobileCardList } from "./InvoicesMobileCardList";
+
+/**
+ * Focus ring for the primary invoice-number link: the same Paper-surface
+ * treatment already used for the Customers and Jobs ledgers' primary-cell
+ * links (see CustomersTable.tsx / JobsTable.tsx) — reused rather than
+ * inventing a new focus token, so the ring stays non-cyan and visible in
+ * both themes.
+ */
+const invoiceNumberLinkFocusClass =
+  "hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
+
+function handleInvoiceLinkClick(event: MouseEvent<HTMLAnchorElement>) {
+  event.stopPropagation();
+}
 
 type InvoicesTableProps = {
   sections: BillingWorkflowListSection<Invoice>[];
@@ -173,15 +189,17 @@ export function InvoicesTable({
                         </td>
                       ) : null}
                       <td className="admin-table-cell">
-                        <p
+                        <Link
+                          href={`/invoices/${invoice.id}`}
+                          onClick={handleInvoiceLinkClick}
                           className={
                             northStar
-                              ? lt.tablePrimaryText
-                              : "font-semibold text-slate-900"
+                              ? `${lt.tablePrimaryText} ${invoiceNumberLinkFocusClass}`
+                              : `font-semibold text-slate-900 ${invoiceNumberLinkFocusClass}`
                           }
                         >
                           {invoice.invoiceNumber}
-                        </p>
+                        </Link>
                         <p
                           className={
                             northStar ? lt.tableMutedText : "text-xs text-slate-500"
