@@ -49,7 +49,7 @@ Page command rows use `.admin-page-header`. Secondary header actions: `masterSec
 
 `adminCardSectionClass` in `shared/lib/admin-density.ts` aliases `masterSectionSurfaceClass` — detail sections and `MasterPageSurface` `variant="section"` share one treatment.
 
-### Canonical Surface pilot (Customers)
+### Canonical Surface pilot (Customers, Leads)
 
 `MasterPageSurface` `variant="workspace"` is the first production consumer of the
 Altair Design Foundation semantic tokens (`docs/altair/ALTAIR_DESIGN_FOUNDATION.md`,
@@ -58,17 +58,19 @@ Altair Design Foundation semantic tokens (`docs/altair/ALTAIR_DESIGN_FOUNDATION.
 and `--altair-border`, reusing the existing global `--shadow-card` token (no new
 shadow token, no gradient). `.altair-surface-workspace table ...` rules in
 `app/globals.css` recolor the nested table's header/zebra/hover chrome to
-match, so `CustomersTable` / `CustomersMobileCardList` need no changes of their
-own.
+match, so `CustomersTable` / `CustomersMobileCardList` and the desktop table in
+`LeadList` need no changes of their own.
 
-Only the Customers list page (`CustomersPageView`, legacy/non-North-Star
-branch) opts into this variant today. `.admin-card` and every other
-`MasterPageSurface` consumer are unaffected — this is a single-surface pilot,
-not a repository-wide Surface migration. A canonical `Card` primitive was not
-created in this phase: the pilot target is a page-level Surface (structural
-placement for the whole list workspace), not a bounded Paper unit containing
-one related group of content, so no repository evidence yet justifies a
-separate `Card` component distinct from `MasterPageSurface`.
+The Customers list page (`CustomersPageView`) and the Leads list page
+(`LeadsPageView`), both legacy/non-North-Star branches, opt into this variant
+today. `.admin-card` and every other `MasterPageSurface` consumer are
+unaffected — this remains a targeted per-page rollout, not an automatic
+repository-wide Surface migration; each additional page is still adopted one
+at a time. A canonical `Card` primitive was not created in this phase: the
+pilot target is a page-level Surface (structural placement for the whole list
+workspace), not a bounded Paper unit containing one related group of content,
+so no repository evidence yet justifies a separate `Card` component distinct
+from `MasterPageSurface`.
 
 ## Components
 

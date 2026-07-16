@@ -2615,10 +2615,11 @@ a[href] {
  * --surface-card, slate --border-subtle) with warm Paper, warm Border, and the
  * existing global --shadow-card token — no new shadow token, no gradient.
  *
- * Only the Customers list workspace opts into this variant today (the pilot).
- * .admin-card remains unchanged and every other MasterPageSurface consumer is
- * unaffected. Do not add page-specific spacing, business status, or raw colors
- * here — this class owns material only.
+ * Customers and Leads (legacy/non-North-Star list branches) opt into this
+ * variant today. .admin-card remains unchanged and every other
+ * MasterPageSurface consumer is unaffected. Do not add page-specific
+ * spacing, business status, or raw colors here — this class owns material
+ * only.
  */
 .altair-surface-workspace {
   border-radius: 1rem;
@@ -2628,10 +2629,11 @@ a[href] {
 }
 
 /*
- * Tables rendered inside the pilot Surface inherit their header/zebra/hover
- * chrome from here (mirrors ".admin-card table ..." below, recolored to
- * semantic tokens) so CustomersTable/CustomersMobileCardList need no changes
- * of their own — the row markup and business logic stay exactly as they are.
+ * Tables rendered inside the Surface inherit their header/zebra/hover chrome
+ * from here (mirrors ".admin-card table ..." below, recolored to semantic
+ * tokens) so consumers (CustomersTable/CustomersMobileCardList, the desktop
+ * table in LeadList) need no changes of their own — the row markup and
+ * business logic stay exactly as they are.
  */
 .altair-surface-workspace table thead tr {
   border-bottom: 1px solid var(--altair-border);
