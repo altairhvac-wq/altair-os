@@ -16,6 +16,7 @@ import type {
 } from "@/shared/lib/customers/customer-360";
 import { filterOperationalActivitiesForBillingAccess } from "@/shared/lib/billing-activity-visibility";
 import { CUSTOMER_DETAIL_360_ANCHOR } from "@/shared/lib/customers/customer-detail-anchors";
+import { CustomerStatusBadge } from "@/shared/components/customers/CustomerStatusBadge";
 import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { OperationalActivityEntryContent } from "@/shared/components/operational/OperationalActivityEntryContent";
 import {
@@ -218,15 +219,7 @@ function CustomerFactsSection({
           </div>
         ) : null}
         {!heroCoversIdentity ? (
-          <span
-            className={
-              northStar
-                ? "mt-2 inline-flex items-center rounded-full bg-[#EFE4CB] px-2 py-0.5 text-[11px] font-medium text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.12)]"
-                : "mt-2 inline-flex items-center rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200"
-            }
-          >
-            {identity.statusLabel}
-          </span>
+          <CustomerStatusBadge status={identity.status} size="sm" className="mt-2" />
         ) : null}
       </div>
 
@@ -293,15 +286,7 @@ function IdentitySection({
             </p>
           </div>
         </div>
-        <span
-          className={
-            northStar
-              ? "inline-flex items-center rounded-full bg-[#EFE4CB] px-2 py-0.5 text-[11px] font-medium text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.12)]"
-              : "inline-flex items-center rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200"
-          }
-        >
-          {identity.statusLabel}
-        </span>
+        <CustomerStatusBadge status={identity.status} size="sm" />
       </div>
       <div className={`mt-1.5 ${northStar ? dt.ivoryMetaRow : adminMetaRowClass}`}>
         <MapPin className={northStar ? dt.metaIcon : "h-3.5 w-3.5 shrink-0 text-slate-400"} />

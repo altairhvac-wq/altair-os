@@ -2,9 +2,9 @@
 
 import { Mail, MapPin, Phone } from "lucide-react";
 import { useFormatDemoDisplayName } from "@/shared/components/display/FounderMarketingDisplayContext";
+import { CustomerStatusBadge } from "@/shared/components/customers/CustomerStatusBadge";
 import {
   formatCurrency,
-  formatCustomerStatusLabel,
   formatDate,
   getCustomerInitials,
   type Customer,
@@ -16,11 +16,6 @@ type CustomerCardProps = {
   compact?: boolean;
   showRevenueStats?: boolean;
   financialSummary?: CustomerFinancialSummary;
-};
-
-const statusStyles: Record<Customer["status"], string> = {
-  active: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-  inactive: "bg-slate-100 text-slate-600 ring-slate-500/20",
 };
 
 export function CustomerCard({
@@ -46,11 +41,7 @@ export function CustomerCard({
             <h3 className="truncate text-base font-bold text-slate-900">
               {displayName}
             </h3>
-            <span
-              className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset ${statusStyles[customer.status]}`}
-            >
-              {formatCustomerStatusLabel(customer.status)}
-            </span>
+            <CustomerStatusBadge status={customer.status} />
           </div>
 
           {customer.company ? (

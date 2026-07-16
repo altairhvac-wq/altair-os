@@ -13,12 +13,12 @@ import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { isCustomerArchived, isCustomerDeleted } from "@/shared/lib/customer-lifecycle";
 import {
   formatCurrency,
-  formatCustomerStatusLabel,
   formatDate,
   getCustomerInitials,
   type Customer,
 } from "@/shared/types/customer";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import { CustomerStatusBadge } from "./CustomerStatusBadge";
 import { CustomersMobileCardList } from "./CustomersMobileCardList";
 
 type CustomersTableProps = {
@@ -29,16 +29,6 @@ type CustomersTableProps = {
   onToggleSelection?: (customerId: string) => void;
   onToggleAllVisible?: (selectAll: boolean) => void;
   northStar?: boolean;
-};
-
-const statusStyles: Record<Customer["status"], string> = {
-  active: "bg-emerald-50 text-emerald-700",
-  inactive: "bg-slate-100 text-slate-600",
-};
-
-const northStarStatusStyles: Record<Customer["status"], string> = {
-  active: "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80",
-  inactive: "bg-[#F1E7D2] text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.12)]",
 };
 
 export function CustomersTable({
@@ -213,15 +203,7 @@ export function CustomersTable({
                 </div>
               </td>
               <td className="admin-table-cell">
-                <span
-                  className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${
-                    northStar
-                      ? northStarStatusStyles[customer.status]
-                      : statusStyles[customer.status]
-                  }`}
-                >
-                  {formatCustomerStatusLabel(customer.status)}
-                </span>
+                <CustomerStatusBadge status={customer.status} />
               </td>
               <td
                 className={`admin-table-cell${

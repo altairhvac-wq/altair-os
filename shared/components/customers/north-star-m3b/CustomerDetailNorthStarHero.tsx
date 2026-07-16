@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Calendar, Mail, MapPin, Phone, Tag } from "lucide-react";
 import { CustomerEditControl } from "../CustomerEditControl";
 import { CustomerLifecycleControl } from "../CustomerLifecycleControl";
+import { CustomerStatusBadge } from "../CustomerStatusBadge";
 import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 import {
@@ -12,18 +13,10 @@ import type { Customer360Data } from "@/shared/lib/customers/customer-360";
 import type { CustomerFinancialSummary } from "@/shared/types/customer-financial";
 import {
   formatCurrency,
-  formatCustomerStatusLabel,
   formatDate,
   getCustomerInitials,
   type Customer,
 } from "@/shared/types/customer";
-
-const statusStyles: Record<Customer["status"], string> = {
-  active:
-    "bg-[rgba(16,185,129,0.15)] text-emerald-200 ring-[rgba(16,185,129,0.35)]",
-  inactive:
-    "bg-[rgba(148,163,184,0.15)] text-[#C8D0DA] ring-[rgba(148,163,184,0.25)]",
-};
 
 type CustomerDetailNorthStarHeroProps = {
   customer: Customer;
@@ -63,11 +56,7 @@ export function CustomerDetailNorthStarHero({
               <h1 className={dt.heroTitle}>
                 <DemoDisplayName>{customer.name}</DemoDisplayName>
               </h1>
-              <span
-                className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset ${statusStyles[customer.status]}`}
-              >
-                {formatCustomerStatusLabel(customer.status)}
-              </span>
+              <CustomerStatusBadge status={customer.status} />
             </div>
 
             {customer.company ? (
