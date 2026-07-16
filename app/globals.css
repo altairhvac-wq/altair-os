@@ -2603,6 +2603,61 @@ a[href] {
   box-shadow: var(--shadow-card);
 }
 
+/*
+ * ============================================================================
+ * Altair Design Foundation — canonical Surface ("workspace" variant)
+ * ============================================================================
+ * Source of truth: docs/altair/ALTAIR_DESIGN_FOUNDATION.md
+ *
+ * This is MasterPageSurface's `variant="workspace"` — the first material-bearing
+ * consumer of the semantic --altair-* tokens (see the Altair Design Foundation
+ * block above). It replaces the legacy .admin-card material (cool near-white
+ * --surface-card, slate --border-subtle) with warm Paper, warm Border, and the
+ * existing global --shadow-card token — no new shadow token, no gradient.
+ *
+ * Only the Customers list workspace opts into this variant today (the pilot).
+ * .admin-card remains unchanged and every other MasterPageSurface consumer is
+ * unaffected. Do not add page-specific spacing, business status, or raw colors
+ * here — this class owns material only.
+ */
+.altair-surface-workspace {
+  border-radius: 1rem;
+  border: 1px solid var(--altair-border);
+  background-color: var(--altair-paper);
+  box-shadow: var(--shadow-card);
+}
+
+/*
+ * Tables rendered inside the pilot Surface inherit their header/zebra/hover
+ * chrome from here (mirrors ".admin-card table ..." below, recolored to
+ * semantic tokens) so CustomersTable/CustomersMobileCardList need no changes
+ * of their own — the row markup and business logic stay exactly as they are.
+ */
+.altair-surface-workspace table thead tr {
+  border-bottom: 1px solid var(--altair-border);
+  background-color: var(--altair-paper-subtle);
+}
+
+.altair-surface-workspace table thead th {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--altair-ink-on-paper-muted);
+}
+
+.altair-surface-workspace table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.altair-surface-workspace table tbody tr:nth-child(even) {
+  background-color: var(--altair-paper-subtle);
+}
+
+.altair-surface-workspace table tbody tr:hover {
+  background-color: var(--altair-paper-elevated);
+}
+
 .admin-panel-header {
   padding: 0.625rem 0.875rem;
   border-bottom: 1px solid var(--border-subtle);

@@ -441,7 +441,7 @@ export function CustomersPageView({
       headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
       <MasterPageSurface
-        variant={northStar ? "northStarList" : "card"}
+        variant={northStar ? "northStarList" : "workspace"}
         className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
       >
         {northStar ? (
@@ -458,7 +458,7 @@ export function CustomersPageView({
               className={
                 northStar
                   ? lt.viewTabsBand
-                  : "shrink-0 border-b border-slate-100/90 px-3 py-1.5 sm:px-4"
+                  : "shrink-0 border-b border-altair-border px-3 py-1.5 sm:px-4"
               }
             >
               <CustomerQueueTabs

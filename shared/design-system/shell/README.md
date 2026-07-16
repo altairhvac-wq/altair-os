@@ -41,12 +41,34 @@ Three shared tiers — defined in `app/globals.css`, consumed via CSS classes an
 | **Panel** | `.admin-panel` | `--surface-panel`, `--radius-panel` | Large structural containers — list cards, Dispatch board, workbench panels |
 | **Card** | `.admin-card` | same radius as panel | Primary content cards with card shadow |
 | **Section** | `.admin-section-surface` | `masterSectionSurfaceClass` | Grouped blocks inside detail/settings/forms — slightly smaller radius (`--radius-section`) |
+| **Workspace** *(pilot)* | `.altair-surface-workspace` | `--altair-paper`, `--altair-border`, `--shadow-card` | Canonical Altair Design Foundation Surface — warm Paper on warm Border, semantic tokens only. `MasterPageSurface` `variant="workspace"`. |
 
 Panel headers use `.admin-panel-header` (`masterPanelHeaderClass`) with default padding; pages may override with Tailwind utilities.
 
 Page command rows use `.admin-page-header`. Secondary header actions: `masterSecondaryActionClass`.
 
 `adminCardSectionClass` in `shared/lib/admin-density.ts` aliases `masterSectionSurfaceClass` — detail sections and `MasterPageSurface` `variant="section"` share one treatment.
+
+### Canonical Surface pilot (Customers)
+
+`MasterPageSurface` `variant="workspace"` is the first production consumer of the
+Altair Design Foundation semantic tokens (`docs/altair/ALTAIR_DESIGN_FOUNDATION.md`,
+`shared/design-system/foundation/`). It replaces `.admin-card`'s legacy cool
+`--surface-card` / slate `--border-subtle` material with warm `--altair-paper`
+and `--altair-border`, reusing the existing global `--shadow-card` token (no new
+shadow token, no gradient). `.altair-surface-workspace table ...` rules in
+`app/globals.css` recolor the nested table's header/zebra/hover chrome to
+match, so `CustomersTable` / `CustomersMobileCardList` need no changes of their
+own.
+
+Only the Customers list page (`CustomersPageView`, legacy/non-North-Star
+branch) opts into this variant today. `.admin-card` and every other
+`MasterPageSurface` consumer are unaffected — this is a single-surface pilot,
+not a repository-wide Surface migration. A canonical `Card` primitive was not
+created in this phase: the pilot target is a page-level Surface (structural
+placement for the whole list workspace), not a bounded Paper unit containing
+one related group of content, so no repository evidence yet justifies a
+separate `Card` component distinct from `MasterPageSurface`.
 
 ## Components
 
