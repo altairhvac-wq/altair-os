@@ -1,6 +1,8 @@
+import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 import {
   ActionCard,
+  Button,
   CelebrationBanner,
   EmptyState,
   HeroHeader,
@@ -268,6 +270,58 @@ export default function AltairDesignLabPage() {
           <StatusPill tone="warning" size="sm">
             Needs attention
           </StatusPill>
+        </div>
+      </LabSection>
+
+      <LabSection
+        name="Button"
+        description="Canonical action primitive — primary, secondary, destructive, and quiet variants, plus disabled, loading, and Link-rendered states."
+      >
+        <div className="flex flex-col gap-4">
+          <div className="rounded-2xl border border-slate-200/70 bg-altair-paper p-4 shadow-sm sm:p-6">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+              Light Paper context
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button variant="primary">Primary action</Button>
+              <Button variant="secondary">Secondary action</Button>
+              <Button variant="destructive">Delete customer</Button>
+              <Button variant="quiet">Quiet action</Button>
+              <Button variant="primary" disabled>
+                Disabled
+              </Button>
+              <Button variant="primary" loading>
+                Saving
+              </Button>
+              <Button href="/altair-design-lab" variant="secondary" trailingIcon={<ArrowRight className="h-4 w-4" />}>
+                Link action
+              </Button>
+              <Button href="/altair-design-lab" variant="secondary" disabled>
+                Disabled link
+              </Button>
+            </div>
+          </div>
+
+          <div
+            data-theme="dark"
+            className="rounded-2xl bg-altair-graphite p-4 shadow-sm sm:p-6"
+          >
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-altair-ink-muted">
+              Graphite context
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button variant="primary">Primary action</Button>
+              <Button variant="secondary">Secondary action</Button>
+              <Button variant="destructive">Delete customer</Button>
+              <Button variant="quiet">Quiet action</Button>
+              <Button variant="primary" disabled>
+                Disabled
+              </Button>
+              <Button variant="primary" loading>
+                Saving
+              </Button>
+            </div>
+          </div>
         </div>
       </LabSection>
 

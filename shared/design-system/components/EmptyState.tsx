@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { Button } from "./Button";
 
 export type EmptyStateTone = "neutral" | "success" | "warning" | "danger" | "info";
 
@@ -41,27 +41,20 @@ type EmptyStateActionButtonProps = {
 };
 
 function EmptyStateActionButton({ action, variant }: EmptyStateActionButtonProps) {
-  const className =
-    variant === "primary"
-      ? "inline-flex w-full items-center justify-center gap-1.5 admin-btn-primary sm:w-auto sm:min-w-[9rem]"
-      : "inline-flex w-full items-center justify-center gap-1.5 admin-btn-secondary sm:w-auto sm:min-w-[9rem]";
+  const className = "w-full sm:w-auto sm:min-w-[9rem]";
 
   if (action.href) {
     return (
-      <Link href={action.href} className={className}>
+      <Button href={action.href} variant={variant} className={className}>
         {action.label}
-      </Link>
+      </Button>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={action.onClick}
-      className={className}
-    >
+    <Button type="button" onClick={action.onClick} variant={variant} className={className}>
       {action.label}
-    </button>
+    </Button>
   );
 }
 

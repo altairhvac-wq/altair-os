@@ -18,6 +18,15 @@ export {
 } from "./CelebrationBanner";
 
 export {
+  Button,
+  type ButtonAsButtonProps,
+  type ButtonAsLinkProps,
+  type ButtonProps,
+  type ButtonSize,
+  type ButtonVariant,
+} from "./Button";
+
+export {
   EmptyState,
   type EmptyStateAction,
   type EmptyStateProps,

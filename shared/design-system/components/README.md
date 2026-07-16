@@ -423,6 +423,84 @@ Use `href` for navigation. Use `onClick` for in-page actions. If both are provid
 
 ---
 
+## Button
+
+Canonical Altair action primitive. Expresses one of the four approved action
+types from `docs/altair/ALTAIR_DESIGN_FOUNDATION.md` ("Buttons" section) —
+`primary`, `secondary`, `destructive`, `quiet` — and nothing else. This is
+the first and, for now, the *only* migrated consumer of `Button`; every
+other button surface in the product (admin `admin-btn-*`, Master Shell
+`masterListPagePrimaryActionClass`/`masterSecondaryActionClass`, North Star,
+technician, auth, MobileSheet footers) remains on its existing contract
+until a deliberate future adoption pass.
+
+### Import
+
+```tsx
+import { Button } from "@/shared/design-system/components";
+```
+
+### Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `variant` | `"primary"` \| `"secondary"` \| `"destructive"` \| `"quiet"` | No | Action hierarchy — defaults to `"primary"` |
+| `size` | `"sm"` \| `"md"` | No | Defaults to `"md"` (matches the current `admin-btn-*` footprint) |
+| `href` | `string` | No | Renders a Next.js `Link` instead of a `<button>`. Mutually exclusive with `type` |
+| `type` | `"button"` \| `"submit"` \| `"reset"` | No | Native button type. Not allowed together with `href` — the TypeScript API rejects that combination |
+| `disabled` | `boolean` | No | Native `disabled` for the button branch; renders an inert, non-navigating element for the `href` branch |
+| `loading` | `boolean` | No | Shows a decorative spinner, sets `aria-busy`, and blocks activation on both branches |
+| `leadingIcon` | `ReactNode` | No | Rendered before the label, `aria-hidden`. Suppressed while `loading` |
+| `trailingIcon` | `ReactNode` | No | Rendered after the label, `aria-hidden`. Suppressed while `loading` |
+| `className` | `string` | No | Additive layout classes only — see the extension policy below |
+
+### Button vs Link
+
+`Button` is a discriminated union: pass `href` for navigation (renders a
+Next.js `Link`), or omit it for an in-page action (renders a native
+`<button>`). The two branches are mutually exclusive at the type level —
+`href` together with `type="submit"` does not type-check.
+
+```tsx
+<Button onClick={handleSave}>Save changes</Button>
+<Button href="/customers/new" variant="secondary">Add customer</Button>
+```
+
+### Disabled and loading
+
+A disabled or loading `href` button never renders a live `<a>` — it renders
+an inert element instead, because an anchor can be activated by more than
+`onClick` (middle click, ctrl/cmd+click, keyboard), so `aria-disabled` alone
+on a real anchor would not prevent navigation. The button branch uses the
+native `disabled` attribute, which already blocks activation and removes
+the control from tab order.
+
+### Class extension policy
+
+`className` exists for additive layout only — width, alignment, margin in
+composition contexts, responsive visibility. It is not a supported way to
+override background, foreground, border, radius, padding, or focus
+treatment; Tailwind's cascade does not guarantee a caller's classes win
+over the variant's own classes, so attempting to override core styling
+through `className` is unsupported and may render inconsistently. If a
+screen needs a fifth visual treatment, that is a signal to extend `Button`,
+not to override it from a call site.
+
+### Design notes
+
+- Every variant's focus ring reuses that variant's own foreground token as
+  the ring color and background token as the ring-offset color, so it
+  inherits the same contrast proof as the label text (see the Foundation
+  audit's contrast matrix for exact ratios).
+- Primary uses `bg-altair-graphite` / `text-altair-paper` rather than a
+  Brass fill — pairing Brass with Ink text was measured to fail contrast in
+  the dark theme (Ink flips light-on-light against Brass there). Brass
+  appears only as a hover/active border accent on Primary, consistent with
+  the Foundation's "Brass appears on Graphite as the accent" relationship.
+- Not yet adopted anywhere except `EmptyState`.
+
+---
+
 ## EmptyState
 
 Replaces dead empty states with helpful, calm guidance. Answers: **"What should I do here?"**
@@ -474,7 +552,8 @@ Use `href` for navigation. Use `onClick` for in-page actions. If both are provid
 ### Design notes
 
 - Centered layout with dashed border — clearly distinct from content cards
-- Primary action uses cyan CTA; secondary uses outline styling
+- Actions render through the canonical `Button` primitive (`variant="primary"` /
+  `variant="secondary"`) — the first production-compatible `Button` pilot
 - No action area when both `action` and `secondaryAction` are omitted
 - Not yet adopted on production routes
 
