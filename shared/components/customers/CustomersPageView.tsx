@@ -28,11 +28,10 @@ import {
 import {
   MasterListPageLayout,
   MasterPageSurface,
-  masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
-  masterSecondaryActionClass,
 } from "@/shared/design-system/shell";
+import { Button } from "@/shared/design-system/components";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { CustomerDetailPanel } from "./CustomerDetailPanel";
@@ -375,34 +374,48 @@ export function CustomersPageView({
       density="compact"
       primaryAction={
         canManageCustomers ? (
-          <button
-            type="button"
-            onClick={handleNewCustomer}
-            className={
-              northStar
-                ? `north-star-customers-primary-action ${lt.primaryAction}`
-                : masterListPagePrimaryActionClass
-            }
-          >
-            <UserPlus className="h-3.5 w-3.5" />
-            New Customer
-          </button>
+          northStar ? (
+            <button
+              type="button"
+              onClick={handleNewCustomer}
+              className={`north-star-customers-primary-action ${lt.primaryAction}`}
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              New Customer
+            </button>
+          ) : (
+            <Button
+              size="sm"
+              onClick={handleNewCustomer}
+              leadingIcon={<UserPlus className="h-3.5 w-3.5" />}
+            >
+              New Customer
+            </Button>
+          )
         ) : undefined
       }
       secondaryAction={
         canManageCustomers ? (
-          <Link
-            href="/customers/import"
-            className={
-              northStar
-                ? `north-star-customers-secondary-action ${lt.secondaryAction}`
-                : masterSecondaryActionClass
-            }
-          >
-            <Upload className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Import Customers</span>
-            <span className="sm:hidden">Import</span>
-          </Link>
+          northStar ? (
+            <Link
+              href="/customers/import"
+              className={`north-star-customers-secondary-action ${lt.secondaryAction}`}
+            >
+              <Upload className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Import Customers</span>
+              <span className="sm:hidden">Import</span>
+            </Link>
+          ) : (
+            <Button
+              href="/customers/import"
+              size="sm"
+              variant="secondary"
+              leadingIcon={<Upload className="h-3.5 w-3.5" />}
+            >
+              <span className="hidden sm:inline">Import Customers</span>
+              <span className="sm:hidden">Import</span>
+            </Button>
+          )
         ) : undefined
       }
       banners={
