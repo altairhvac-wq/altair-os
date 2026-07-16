@@ -41,6 +41,8 @@ import type {
   InvoiceLineItemRow,
   InvoicePaymentInsert,
   InvoicePaymentRow,
+  PaymentAttemptInsert,
+  PaymentAttemptRow,
   PaymentProviderEventInsert,
   PaymentProviderEventRow,
   PlatformAutomationRunInsert,
@@ -979,6 +981,27 @@ export type Database = {
           },
         ];
       };
+      payment_attempts: {
+        Row: PaymentAttemptRow;
+        Insert: PaymentAttemptInsert;
+        Update: Partial<PaymentAttemptInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "payment_attempts_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_attempts_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       platform_automation_runs: {
         Row: PlatformAutomationRunRow;
         Insert: PlatformAutomationRunInsert;
@@ -1350,6 +1373,7 @@ export type Database = {
       invoice_status: InvoiceRow["status"];
       invoice_activity_type: InvoiceActivityRow["event_type"];
       invoice_payment_method: InvoicePaymentRow["payment_method"];
+      payment_attempt_status: PaymentAttemptRow["status"];
       expense_status: ExpenseRow["status"];
       expense_category: ExpenseRow["category"];
       expense_payment_method: ExpenseRow["payment_method"];

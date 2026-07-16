@@ -23,6 +23,10 @@ import {
   stripeUnixTimestampToDateOnly,
 } from "@/lib/payments/stripe-checkout";
 import {
+  findPaymentAttemptByCheckoutSessionId,
+  markPaymentAttemptCompleted,
+} from "@/lib/payments/payment-attempts-service";
+import {
   isInvoiceBalanceConsistent,
   roundCurrency,
 } from "@/shared/types/invoice";
@@ -265,8 +269,12 @@ async function processCheckoutSessionCompletedEvent(
   event: Stripe.Event,
   session: Stripe.Checkout.Session,
 ): Promise<ProcessStripeWebhookEventResult> {
-  const { companyId, invoiceId, purpose, provider } =
-    readCheckoutSessionMetadata(session);
+  const {
+    companyId: metadataCompanyId,
+    invoiceId: metadataInvoiceId,
+    purpose,
+    provider,
+  } = readCheckoutSessionMetadata(session);
   const connectedAccountId = extractConnectedAccountId(event);
   const checkoutSessionId = session.id;
 
@@ -275,8 +283,8 @@ async function processCheckoutSessionCompletedEvent(
     checkoutSessionId,
     hasEventAccount: Boolean(connectedAccountId),
     hasSessionMetadata: Boolean(session.metadata),
-    hasCompanyId: Boolean(companyId),
-    hasInvoiceId: Boolean(invoiceId),
+    hasCompanyId: Boolean(metadataCompanyId),
+    hasInvoiceId: Boolean(metadataInvoiceId),
     hasPurpose: Boolean(purpose),
     hasProvider: Boolean(provider),
     purpose,
@@ -287,8 +295,6 @@ async function processCheckoutSessionCompletedEvent(
   });
 
   if (
-    !companyId ||
-    !invoiceId ||
     purpose !== CHECKOUT_METADATA_PURPOSE ||
     provider !== CHECKOUT_METADATA_PROVIDER
   ) {
@@ -296,9 +302,51 @@ async function processCheckoutSessionCompletedEvent(
       supabase,
       providerEventId,
       "Missing or invalid checkout session metadata",
-      companyId,
+      metadataCompanyId,
     );
   }
+
+  // Rule 5: resolve against the Payment Attempt first — it is the authoritative
+  // source for which company/invoice this checkout session belongs to.
+  const attempt = await findPaymentAttemptByCheckoutSessionId(
+    supabase,
+    checkoutSessionId,
+  );
+
+  if (!attempt) {
+    return ignoreCheckoutSessionEvent(
+      supabase,
+      providerEventId,
+      "No payment attempt found for checkout session",
+      metadataCompanyId,
+    );
+  }
+
+  if (
+    attempt.company_id !== metadataCompanyId ||
+    attempt.invoice_id !== metadataInvoiceId
+  ) {
+    return ignoreCheckoutSessionEvent(
+      supabase,
+      providerEventId,
+      "Payment attempt does not match checkout session metadata",
+      attempt.company_id,
+    );
+  }
+
+  // Rule 6: safely ignore expired, invalidated, or failed attempts. "completed" is
+  // allowed through so redelivered webhooks hit the existing dedupe path below.
+  if (attempt.status !== "active" && attempt.status !== "completed") {
+    return ignoreCheckoutSessionEvent(
+      supabase,
+      providerEventId,
+      `Payment attempt is ${attempt.status}, not active`,
+      attempt.company_id,
+    );
+  }
+
+  const companyId = attempt.company_id;
+  const invoiceId = attempt.invoice_id;
 
   if (!connectedAccountId) {
     return ignoreCheckoutSessionEvent(
@@ -424,6 +472,7 @@ async function processCheckoutSessionCompletedEvent(
       eventId: providerEventId,
       checkoutSessionId,
     });
+    await markPaymentAttemptCompleted(supabase, attempt.id, providerPaymentId);
     await markProviderEventProcessed(supabase, providerEventId, companyId);
     return { processed: true, ignored: false };
   }
@@ -465,6 +514,7 @@ async function processCheckoutSessionCompletedEvent(
         eventId: providerEventId,
         checkoutSessionId,
       });
+      await markPaymentAttemptCompleted(supabase, attempt.id, providerPaymentId);
       await markProviderEventProcessed(supabase, providerEventId, companyId);
       return { processed: true, ignored: false };
     }
@@ -477,6 +527,7 @@ async function processCheckoutSessionCompletedEvent(
     throw new Error(recordResult.error);
   }
 
+  await markPaymentAttemptCompleted(supabase, attempt.id, providerPaymentId);
   await markProviderEventProcessed(supabase, providerEventId, companyId);
   revalidateInvoiceOperationalPages(invoiceId);
   revalidatePath("/invoice-payment", "layout");

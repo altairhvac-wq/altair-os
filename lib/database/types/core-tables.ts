@@ -49,10 +49,19 @@ import type {
   PaymentRecordStatus,
   PaymentSource,
 } from "@/lib/payments/types";
+import type {
+  PaymentAttemptRecord,
+  PaymentAttemptRecordInsert,
+  PaymentAttemptStatus,
+} from "@/lib/payments/payment-attempts";
 
 export type { PaymentProviderEventStatus };
 export type PaymentProviderEventRow = PaymentProviderEvent;
 export type { PaymentProviderEventInsert };
+
+export type { PaymentAttemptStatus };
+export type PaymentAttemptRow = PaymentAttemptRecord;
+export type PaymentAttemptInsert = PaymentAttemptRecordInsert;
 
 export type {
   PlatformAutomationRunRow,

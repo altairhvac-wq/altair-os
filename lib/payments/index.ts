@@ -24,3 +24,9 @@ export type {
   CompanyPaymentAccountRecord,
   CompanyPaymentAccountRecordInsert,
 } from "./company-payment-accounts";
+export type {
+  PaymentAttemptProvider,
+  PaymentAttemptRecord,
+  PaymentAttemptRecordInsert,
+  PaymentAttemptStatus,
+} from "./payment-attempts";

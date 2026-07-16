@@ -24,17 +24,50 @@ export type StripeInvoiceCheckoutUrls = {
   cancelUrl: string;
 };
 
+export type StripeInvoiceCheckoutSessionOptions = {
+  /** Unix seconds. Stripe requires this between 30 minutes and 24 hours from creation. */
+  expiresAtUnixSeconds?: number;
+  /** Recorded in session metadata for traceability back to the owning payment attempt. */
+  paymentAttemptId?: string;
+};
+
+export type StripeInvoiceCheckoutSessionResult = {
+  url: string;
+  sessionId: string;
+  paymentIntentId: string | null;
+  expiresAt: number | null;
+};
+
+function extractPaymentIntentIdFromSession(
+  paymentIntent: Stripe.Checkout.Session["payment_intent"],
+): string | null {
+  if (typeof paymentIntent === "string") {
+    return paymentIntent.trim() || null;
+  }
+
+  if (paymentIntent && typeof paymentIntent === "object" && "id" in paymentIntent) {
+    return paymentIntent.id;
+  }
+
+  return null;
+}
+
 /**
  * Stripe Connect direct charge on the connected Express account.
  * Altair is not merchant of record; funds settle to the connected account.
  * @see https://docs.stripe.com/connect/direct-charges
+ *
+ * Callers should go through lib/payments/payment-attempts-service.ts rather than
+ * calling this directly, so that at most one active Checkout Session exists per
+ * invoice (see supabase/migrations/112_payment_attempts.sql).
  */
 export async function createStripeInvoiceCheckoutSession(
   companyId: string,
   invoice: InvoiceCheckoutTarget,
   connectedAccountId: string,
   urls: StripeInvoiceCheckoutUrls,
-): Promise<string> {
+  options: StripeInvoiceCheckoutSessionOptions = {},
+): Promise<StripeInvoiceCheckoutSessionResult> {
   if (!isInvoicePayable(invoice.status)) {
     throw new Error("This invoice cannot accept online payment in its current status.");
   }
@@ -63,11 +96,17 @@ export async function createStripeInvoiceCheckoutSession(
       ],
       success_url: urls.successUrl,
       cancel_url: urls.cancelUrl,
+      ...(options.expiresAtUnixSeconds
+        ? { expires_at: options.expiresAtUnixSeconds }
+        : {}),
       metadata: {
         company_id: companyId,
         invoice_id: invoice.id,
         provider: "stripe",
         purpose: "invoice_payment",
+        ...(options.paymentAttemptId
+          ? { payment_attempt_id: options.paymentAttemptId }
+          : {}),
       },
     },
     {
@@ -96,7 +135,12 @@ export async function createStripeInvoiceCheckoutSession(
     throw new Error("Stripe did not return a checkout session URL.");
   }
 
-  return session.url;
+  return {
+    url: session.url,
+    sessionId: session.id,
+    paymentIntentId: extractPaymentIntentIdFromSession(session.payment_intent),
+    expiresAt: session.expires_at ?? null,
+  };
 }
 
 export function buildAdminInvoiceCheckoutUrls(

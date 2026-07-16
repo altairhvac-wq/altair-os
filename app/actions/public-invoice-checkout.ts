@@ -4,9 +4,10 @@ import { getPublicInvoiceCheckoutContext } from "@/lib/database/queries/invoice-
 import { isStripeConnectOnboardingConfigured } from "@/lib/payments/env";
 import {
   buildPublicInvoiceCheckoutUrls,
-  createStripeInvoiceCheckoutSession,
   mapStripeCheckoutError,
 } from "@/lib/payments/stripe-checkout";
+import { resolveStripeInvoiceCheckoutSession } from "@/lib/payments/payment-attempts-service";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 
 export type CreatePublicInvoiceCheckoutSessionActionResult = {
   error?: string;
@@ -58,12 +59,13 @@ export async function createPublicInvoiceCheckoutSessionAction(
   const { account } = checkoutContext.readiness;
 
   try {
-    const checkoutUrl = await createStripeInvoiceCheckoutSession(
+    const supabase = createServiceRoleClient();
+    const checkoutUrl = await resolveStripeInvoiceCheckoutSession(supabase, {
       companyId,
       invoice,
-      account.providerAccountId!,
-      checkoutUrls,
-    );
+      connectedAccountId: account.providerAccountId!,
+      urls: checkoutUrls,
+    });
 
     return { checkoutUrl };
   } catch (error) {

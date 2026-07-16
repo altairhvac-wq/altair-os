@@ -7,10 +7,11 @@ import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
 import { isStripeConnectOnboardingConfigured } from "@/lib/payments/env";
 import {
   buildAdminInvoiceCheckoutUrls,
-  createStripeInvoiceCheckoutSession,
   mapStripeCheckoutError,
   validateStripeInvoiceCheckoutReadiness,
 } from "@/lib/payments/stripe-checkout";
+import { resolveStripeInvoiceCheckoutSession } from "@/lib/payments/payment-attempts-service";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 
 export type CreateInvoiceCheckoutSessionActionResult = {
   error?: string;
@@ -70,17 +71,18 @@ export async function createInvoiceCheckoutSessionAction(
   }
 
   try {
-    const checkoutUrl = await createStripeInvoiceCheckoutSession(
+    const supabase = createServiceRoleClient();
+    const checkoutUrl = await resolveStripeInvoiceCheckoutSession(supabase, {
       companyId,
-      {
+      invoice: {
         id: invoice.id,
         invoiceNumber: invoice.invoiceNumber,
         balanceDue: invoice.balanceDue,
         status: invoice.status,
       },
-      readiness.account.providerAccountId!,
-      checkoutUrls,
-    );
+      connectedAccountId: readiness.account.providerAccountId!,
+      urls: checkoutUrls,
+    });
 
     return { checkoutUrl };
   } catch (error) {
