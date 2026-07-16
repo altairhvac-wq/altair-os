@@ -103,6 +103,23 @@
   --altair-ink-secondary: #4f4638;
   --altair-ink-muted: #64748b;
 
+  /*
+   * Ink-on-Paper — the same three Ink strengths, but anchored to Paper-family
+   * surfaces (`paper`, `paper-elevated`) instead of the theme's dominant
+   * surface. Necessary because `paper`/`paper-elevated` never change value
+   * between themes (see below), while `--altair-ink` intentionally flips to
+   * light text for dark Graphite/Stone chrome. Any control whose content
+   * sits directly on a Paper-family surface — form controls being the first
+   * concrete case — must not use the flipping `ink` role, or dark-theme text
+   * renders light-on-light. Identical in :root and [data-theme="dark"] on
+   * purpose, mirroring the existing status foreground/surface precedent
+   * below. Reusable by any interactive control anchored to Paper, not an
+   * Input-specific implementation detail.
+   */
+  --altair-ink-on-paper: #17130e;
+  --altair-ink-on-paper-secondary: #4f4638;
+  --altair-ink-on-paper-muted: #64748b;
+
   /* Border — quiet separation; Border Strong — deliberate emphasis (selection, focus). */
   --altair-border: rgb(100 116 139 / 0.18);
   --altair-border-strong: rgb(148 163 184 / 0.35);
@@ -155,6 +172,11 @@
   --altair-ink-secondary: #d7cdbd;
   --altair-ink-muted: #aeb6c2;
 
+  /* Paper-anchored — identical to :root. See the comment on these roles above. */
+  --altair-ink-on-paper: #17130e;
+  --altair-ink-on-paper-secondary: #4f4638;
+  --altair-ink-on-paper-muted: #64748b;
+
   --altair-border: rgb(174 182 194 / 0.18);
   --altair-border-strong: rgb(174 182 194 / 0.35);
 
@@ -193,6 +215,9 @@
   --color-altair-ink: var(--altair-ink);
   --color-altair-ink-secondary: var(--altair-ink-secondary);
   --color-altair-ink-muted: var(--altair-ink-muted);
+  --color-altair-ink-on-paper: var(--altair-ink-on-paper);
+  --color-altair-ink-on-paper-secondary: var(--altair-ink-on-paper-secondary);
+  --color-altair-ink-on-paper-muted: var(--altair-ink-on-paper-muted);
   --color-altair-border: var(--altair-border);
   --color-altair-border-strong: var(--altair-border-strong);
   --color-altair-brass: var(--altair-brass);

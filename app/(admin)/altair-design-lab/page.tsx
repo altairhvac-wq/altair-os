@@ -5,12 +5,16 @@ import {
   Button,
   CelebrationBanner,
   EmptyState,
+  Field,
   HeroHeader,
+  Input,
   InsightCard,
   MetricCard,
   PriorityCard,
   PulseCard,
+  Select,
   StatusPill,
+  Textarea,
   WorkspaceSection,
 } from "@/shared/design-system/components";
 
@@ -320,6 +324,85 @@ export default function AltairDesignLabPage() {
               <Button variant="primary" loading>
                 Saving
               </Button>
+            </div>
+          </div>
+        </div>
+      </LabSection>
+
+      <LabSection
+        name="Input, Textarea, Select, Field"
+        description="Canonical native form-control primitives — label/description/error composition, disabled vs read-only, and invalid state, in both theme scopes."
+      >
+        <div className="flex flex-col gap-4">
+          <div className="rounded-2xl border border-slate-200/70 bg-altair-paper p-4 shadow-sm sm:p-6">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+              Light Paper context
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Default input">
+                <Input name="lab-default" defaultValue="Acme Plumbing" />
+              </Field>
+              <Field label="Placeholder input" description="Placeholder is never a substitute for this label.">
+                <Input name="lab-placeholder" placeholder="Jane Smith" />
+              </Field>
+              <Field label="Disabled input">
+                <Input name="lab-disabled" defaultValue="Cannot be edited" disabled />
+              </Field>
+              <Field label="Read-only input" description="Focusable and selectable — still submits its value.">
+                <Input name="lab-readonly" defaultValue="Locked after approval" readOnly />
+              </Field>
+              <Field
+                label="Invalid input"
+                required
+                error="Enter a valid email address."
+              >
+                <Input name="lab-invalid" type="email" defaultValue="not-an-email" />
+              </Field>
+              <Field label="Select" description="Native options, native keyboard navigation.">
+                <Select name="lab-select" defaultValue="active">
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </Select>
+              </Field>
+              <Field label="Textarea" className="sm:col-span-2">
+                <Textarea
+                  name="lab-textarea"
+                  rows={3}
+                  placeholder="Scheduling preferences, access codes, etc."
+                />
+              </Field>
+            </div>
+          </div>
+
+          <div
+            data-theme="dark"
+            className="rounded-2xl bg-altair-graphite p-4 shadow-sm sm:p-6"
+          >
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-altair-ink-muted">
+              Graphite context
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Default input">
+                <Input name="lab-default-dark" defaultValue="Acme Plumbing" />
+              </Field>
+              <Field label="Required field" required description="Native `required` plus a restrained visual indicator.">
+                <Input name="lab-required-dark" placeholder="Street address" />
+              </Field>
+              <Field label="Disabled input">
+                <Input name="lab-disabled-dark" defaultValue="Cannot be edited" disabled />
+              </Field>
+              <Field label="Invalid input" error="This field is required.">
+                <Input name="lab-invalid-dark" />
+              </Field>
+              <Field label="Select">
+                <Select name="lab-select-dark" defaultValue="active">
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </Select>
+              </Field>
+              <Field label="Textarea">
+                <Textarea name="lab-textarea-dark" rows={3} placeholder="Notes" />
+              </Field>
             </div>
           </div>
         </div>

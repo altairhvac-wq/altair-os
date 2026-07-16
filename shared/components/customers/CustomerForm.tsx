@@ -6,6 +6,7 @@ import {
   type CustomerStatus,
 } from "@/shared/types/customer";
 import { adminFormActionsClass } from "@/shared/lib/admin-density";
+import { Field, Input } from "@/shared/design-system/components";
 
 type CustomerFormProps = {
   initialData?: Partial<CustomerFormData>;
@@ -149,57 +150,33 @@ export function CustomerForm({
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
           Service location
         </p>
+        {/*
+          Canonical Input/Field pilot (Design Foundation Phase 6). Isolated
+          from the contact-identity grid above, which stays on the existing
+          admin-form-input contract for this phase — see
+          shared/design-system/components/README.md for the migration
+          rationale and shared/lib/admin-density.ts / app/globals.css for the
+          untouched legacy contract.
+        */}
         <div className="grid gap-4">
-          <div>
-            <label htmlFor="address" className={labelClass}>
-              Street address
-            </label>
-            <input
+          <Field label="Street address" required>
+            <Input
               id="address"
               name="address"
-              required
               defaultValue={defaults.address}
               placeholder="123 Main St"
-              className={inputClass}
             />
-          </div>
+          </Field>
           <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <label htmlFor="city" className={labelClass}>
-                City
-              </label>
-              <input
-                id="city"
-                name="city"
-                required
-                defaultValue={defaults.city}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="state" className={labelClass}>
-                State
-              </label>
-              <input
-                id="state"
-                name="state"
-                required
-                defaultValue={defaults.state}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="zip" className={labelClass}>
-                ZIP
-              </label>
-              <input
-                id="zip"
-                name="zip"
-                required
-                defaultValue={defaults.zip}
-                className={inputClass}
-              />
-            </div>
+            <Field label="City" required>
+              <Input id="city" name="city" defaultValue={defaults.city} />
+            </Field>
+            <Field label="State" required>
+              <Input id="state" name="state" defaultValue={defaults.state} />
+            </Field>
+            <Field label="ZIP" required>
+              <Input id="zip" name="zip" defaultValue={defaults.zip} />
+            </Field>
           </div>
         </div>
       </div>

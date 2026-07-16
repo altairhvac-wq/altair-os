@@ -559,6 +559,180 @@ Use `href` for navigation. Use `onClick` for in-page actions. If both are provid
 
 ---
 
+## Input
+
+Canonical native `<input>` primitive. Answers: **"How does a text field look and behave everywhere in Altair?"**
+
+### Import
+
+```tsx
+import { Input } from "@/shared/design-system/components";
+```
+
+### Contract
+
+Input wraps a plain native `<input>` and forwards every native attribute
+and event untouched — `type`, `name`, `value`, `defaultValue`, `onChange`,
+`onBlur`, `autoComplete`, `inputMode`, `placeholder`, `required`,
+`disabled`, `readOnly`, `aria-*`, `data-*`, and a forwarded ref to the
+underlying `HTMLInputElement`. It owns only the shared visual treatment and
+its focus/disabled/read-only/invalid presentation — it does not own a
+label, description, error text, id generation, or `aria-describedby`/
+`aria-invalid` wiring. That composition belongs to `Field`.
+
+Input does **not** accept `tone`, `label`, `errorMessage`, or any other
+bespoke prop — if a screen needs a fifth visual treatment, that is a signal
+to extend Input, not to add a one-off prop or override it from a call site.
+
+### Disabled vs read-only
+
+The two states are deliberately different, not just the same treatment at
+different opacity:
+
+- **Disabled** — native `disabled`; cannot receive input; excluded from
+  form submission by native behavior; `bg-altair-paper-subtle` +
+  `text-altair-ink-muted` + reduced opacity + `cursor-not-allowed`.
+- **Read-only** — native `readOnly`; remains focusable/selectable and still
+  submits its value under native form behavior; `bg-altair-stone` (a
+  distinct material, not a dimmed Paper) + full-strength text +
+  `cursor-default`.
+
+### Invalid state
+
+Input does not accept an `invalid` prop. It reacts to the real
+`aria-invalid="true"` attribute (which `Field` sets automatically whenever
+it is given an `error`) via `aria-[invalid=true]:` Tailwind variants —
+`border-altair-danger-foreground` at rest, and a danger-colored focus ring
+when focused. This keeps invalid styling driven by real ARIA state instead
+of a parallel boolean that could drift out of sync with it.
+
+### className policy
+
+Same policy as `Button` — additive layout only (width, grid placement,
+responsive visibility, margin). Not a supported way to override background,
+border, focus, radius, or padding.
+
+### Design notes
+
+- Uses the Paper-anchored `ink-on-paper` token family, not the
+  theme-switching `ink` family — see
+  shared/design-system/foundation/README.md ("Why Ink needed a
+  Paper-anchored companion") for why, and the Foundation phase's final
+  report for the measured contrast evidence.
+- Mobile font-size zoom avoidance is already handled by an existing global
+  rule in app/globals.css (`font-size: 1rem !important` under 768px for
+  every native input/select/textarea) — Input does not need its own
+  mobile-specific text size.
+- Not yet adopted repository-wide — see CustomerForm's "Service location"
+  fields for the first production pilot.
+
+---
+
+## Textarea
+
+Canonical native `<textarea>` primitive. Shares Input's visual and
+accessibility contract exactly.
+
+### Import
+
+```tsx
+import { Textarea } from "@/shared/design-system/components";
+```
+
+### Contract
+
+Same token usage, focus/disabled/read-only/invalid presentation, and
+className policy as `Input` — see Input's contract above. Differences:
+
+- `resize-y` (vertical-only) by default, and a `min-h-24` starting height
+  instead of Input's single-line `min-h-11`.
+- No rich-text behavior and no built-in character counter.
+
+---
+
+## Select
+
+Canonical native `<select>` primitive.
+
+### Import
+
+```tsx
+import { Select } from "@/shared/design-system/components";
+```
+
+### Contract
+
+Wraps a plain native `<select>` — native `<option>` children,
+`value`/`defaultValue`, change events, keyboard navigation, and form
+submission are all untouched. Shares Input's visual language so a Select
+sitting next to an Input or Button in the same form row reads as the same
+control family. Renders the browser's native dropdown affordance — no
+custom arrow, menu, or combobox.
+
+HTML has no `readOnly` attribute for `<select>` — only `disabled` exists as
+an inert state here, unlike Input/Textarea.
+
+---
+
+## Field
+
+Canonical field composition — the relationship between a label, an
+optional description, an optional error, and exactly one control.
+
+### Import
+
+```tsx
+import { Field, Input } from "@/shared/design-system/components";
+```
+
+### Example
+
+```tsx
+<Field label="Street address" required error={errors.address}>
+  <Input name="address" defaultValue={value} />
+</Field>
+```
+
+### Contract
+
+Field clones its single child (`Input`, `Textarea`, or `Select`) to inject:
+
+- `id` — generated via `useId()` unless the child already supplies its own.
+- `required` — forwarded to the control whenever `Field`'s own `required`
+  prop is true, or the child already declared `required` itself.
+- `aria-invalid="true"` — set automatically whenever `error` is present.
+- `aria-describedby` — merges the child's own `aria-describedby` (if any)
+  with generated description/error ids, rather than overwriting it.
+
+The error message renders with `role="alert"`. Because the error paragraph
+only exists in the DOM once `error` is truthy, this naturally limits
+announcements to genuine state changes (e.g. a failed submit) instead of
+announcing on every render — it is not used for merely informational,
+always-present text.
+
+The required indicator is a restrained `aria-hidden` asterisk next to the
+label; the required *semantic* comes from the native `required` attribute
+Field forwards to the control, not from the asterisk. The indicator is
+never colored with the Danger role — required and invalid are two
+different signals and must not be visually conflated.
+
+### Why cloning, not a render prop
+
+Field's child-cloning approach only works safely because Input/Textarea/
+Select are controlled by this same design system and are guaranteed to
+forward `id`, `required`, and `aria-*` straight onto the native element.
+Field is not designed to wrap an arbitrary third-party component.
+
+### Design notes
+
+- Label/description text uses the Paper-anchored `ink-on-paper` token
+  family for the same reason Input does — see Input's design notes above.
+- Field does not own business validation, database field names, or
+  submission logic — only the accessibility wiring around whatever `error`
+  a caller already computed.
+
+---
+
 ## WorkspaceSection
 
 Reusable section wrapper for page content. Answers: **"What am I working on in this area?"**

@@ -55,6 +55,9 @@ table. Values are defined once per theme scope; the role name never changes.
 | `ink` | Ink, full strength | "Primary Text" |
 | `ink-secondary` | Ink, supporting strength | "Secondary Text" |
 | `ink-muted` | Ink, quietest strength | "Muted Text" |
+| `ink-on-paper` | Ink, full strength, anchored to Paper (not the theme's dominant surface) | "Primary Text" on a Paper-family surface |
+| `ink-on-paper-secondary` | Ink, supporting strength, anchored to Paper | "Secondary Text" on a Paper-family surface |
+| `ink-on-paper-muted` | Ink, quietest strength, anchored to Paper | "Muted Text" on a Paper-family surface |
 | `border` | Quiet separation | "Border" |
 | `border-strong` | Deliberate emphasis (selection, focus) | "Strong Border" |
 | `brass` | Brass — the one command per screen | "Primary Command" |
@@ -102,6 +105,31 @@ on a Paper-family background — a badge, an inline alert, a banner — should
 reach for `{status}-foreground` / `{status}-surface`, not the base
 `{status}` role, whenever it is rendering text rather than an icon, dot, or
 border.
+
+### Why Ink needed a Paper-anchored companion
+
+`ink` / `ink-secondary` / `ink-muted` are calibrated against whichever
+surface *dominates that theme* — dark text on light Paper in `:root`, light
+text on dark Graphite/Stone chrome in `[data-theme="dark"]`. That is correct
+for content sitting on the theme's dominant surface, but `paper` and
+`paper-elevated` are deliberately **theme-invariant** (see above — Paper
+never changes value between themes, because it is meant to visually "lift"
+off the darker dark-theme backdrop as a bright card). Pairing the flipping
+`ink` role directly against theme-invariant Paper produces light-text-on
+-light-Paper in the dark theme — proven by measurement during the Input/
+Field pilot (`text-altair-ink` measured 1.18:1 against `bg-altair-paper
+-elevated` in the dark scope, against a 4.5:1 requirement).
+
+`ink-on-paper` / `ink-on-paper-secondary` / `ink-on-paper-muted` exist for
+exactly this case: any control whose content sits directly on a Paper-family
+surface, regardless of theme. They are defined identically in `:root` and
+`[data-theme="dark"]`, using the same three hex values as `:root`'s existing
+`ink` family — the same precedent already set by the status foreground/
+surface pairs above. Any interactive control anchored to Paper (Input,
+Textarea, Select today) should reach for these instead of the flipping
+`ink` family; anything anchored to Stone or Graphite chrome should keep
+using the flipping `ink` family as before, since Stone and Graphite *are*
+theme-adaptive and pair correctly with it.
 
 ## Light and dark, one component
 
