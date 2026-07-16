@@ -62,11 +62,113 @@
   --north-star-sidebar-icon-active: var(--north-star-champagne);
 }
 
+/*
+ * ============================================================================
+ * Altair Design Foundation — semantic tokens
+ * ============================================================================
+ * Source of truth: docs/altair/ALTAIR_DESIGN_FOUNDATION.md
+ *
+ * These are the ONLY approved semantic color roles for new UI work. Every
+ * token below names a material role from the Foundation — Stone, Paper,
+ * Graphite, Ink, Brass — never a raw hue. Components and pages must consume
+ * these roles (directly, or via the `--color-altair-*` Tailwind utilities
+ * generated below) instead of hardcoding hex values.
+ *
+ * This block is infrastructure only: nothing in the product consumes these
+ * tokens yet, so introducing them changes no rendered pixel. Future
+ * migrations move existing legacy/North Star colors onto this layer —
+ * see the Migration Philosophy section of the Foundation.
+ *
+ * Light values live on `:root` (Paper-forward). Dark values live under
+ * `[data-theme="dark"]` (Graphite-forward) for the future theming surface
+ * that will set that attribute — no toggle exists yet, so only this
+ * selector's presence is new, not its effect on any current screen.
+ */
+:root {
+  /* Stone — secondary structural backing between Graphite and Paper. */
+  --altair-stone: #dce3ec;
+
+  /* Paper — the work surface: cards, panels, forms, documents. */
+  --altair-paper: #fbf7ef;
+  /* Paper Elevated — the brightest Paper tone; the surface currently active/focused. */
+  --altair-paper-elevated: #ffffff;
+  /* Paper Subtle — Paper's palest, quietest register; a resting canvas plane. */
+  --altair-paper-subtle: #eef2f6;
+
+  /* Graphite — the operating shell: chrome that asserts Altair's own structure. */
+  --altair-graphite: #1a2029;
+
+  /* Ink — text and numerals, at three strengths, on the theme's dominant surface. */
+  --altair-ink: #17130e;
+  --altair-ink-secondary: #4f4638;
+  --altair-ink-muted: #64748b;
+
+  /* Border — quiet separation; Border Strong — deliberate emphasis (selection, focus). */
+  --altair-border: rgb(100 116 139 / 0.18);
+  --altair-border-strong: rgb(148 163 184 / 0.35);
+
+  /* Brass — the one primary command per screen; Brass Interactive — its hover/active state. */
+  --altair-brass: #b88a2e;
+  --altair-brass-interactive: #c9a44d;
+
+  /* Status roles — conventional hues, deliberately distinct from Brass. */
+  --altair-success: #059669;
+  --altair-warning: #d97706;
+  --altair-danger: #dc2626;
+  --altair-information: #2563eb;
+}
+
+[data-theme="dark"] {
+  --altair-stone: #1f2a38;
+
+  --altair-paper: #fbf7ef;
+  --altair-paper-elevated: #ffffff;
+  /* On dark chrome, Paper Subtle is a faint ivory-tinted overlay rather than a flat fill. */
+  --altair-paper-subtle: rgb(255 255 255 / 0.06);
+
+  --altair-graphite: #111821;
+
+  /* Ink flips to light, warm text for legibility against dark Graphite/Stone chrome. */
+  --altair-ink: #f3ebdd;
+  --altair-ink-secondary: #d7cdbd;
+  --altair-ink-muted: #aeb6c2;
+
+  --altair-border: rgb(174 182 194 / 0.18);
+  --altair-border-strong: rgb(174 182 194 / 0.35);
+
+  /* Brass runs brighter against the dark field — this is where it does its most important work. */
+  --altair-brass: #c9a44d;
+  --altair-brass-interactive: #e6d092;
+
+  --altair-success: #34d399;
+  --altair-warning: #fbbf24;
+  --altair-danger: #f87171;
+  --altair-information: #60a5fa;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Altair Design Foundation semantic tokens — see block above for values/docs. */
+  --color-altair-stone: var(--altair-stone);
+  --color-altair-paper: var(--altair-paper);
+  --color-altair-paper-elevated: var(--altair-paper-elevated);
+  --color-altair-paper-subtle: var(--altair-paper-subtle);
+  --color-altair-graphite: var(--altair-graphite);
+  --color-altair-ink: var(--altair-ink);
+  --color-altair-ink-secondary: var(--altair-ink-secondary);
+  --color-altair-ink-muted: var(--altair-ink-muted);
+  --color-altair-border: var(--altair-border);
+  --color-altair-border-strong: var(--altair-border-strong);
+  --color-altair-brass: var(--altair-brass);
+  --color-altair-brass-interactive: var(--altair-brass-interactive);
+  --color-altair-success: var(--altair-success);
+  --color-altair-warning: var(--altair-warning);
+  --color-altair-danger: var(--altair-danger);
+  --color-altair-information: var(--altair-information);
 }
 
 @media (prefers-color-scheme: dark) {
