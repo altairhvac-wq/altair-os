@@ -111,11 +111,30 @@ export async function findPaymentProviderEvent(
   };
 }
 
+/**
+ * Result of a conditional claim update against payment_provider_events.
+ *
+ * `claimed: false, error: false` means the conditional UPDATE ran successfully but
+ * matched zero rows — a legitimate concurrent race (another request already claimed
+ * or finalized this event). It is safe for the caller to treat this as "someone else
+ * has it" and respond 200 to Stripe.
+ *
+ * `claimed: false, error: true` means the UPDATE itself failed (transient DB/network
+ * failure) — we do not know who, if anyone, holds the claim. Callers MUST NOT treat
+ * this as a benign skip: per the payment integrity invariant, an unresolved claim on a
+ * conclusively paid checkout session must produce HTTP 500 so Stripe retries, never a
+ * silent 200.
+ */
+export type ClaimPaymentProviderEventResult =
+  | { claimed: true; error: false }
+  | { claimed: false; error: false }
+  | { claimed: false; error: true };
+
 export async function claimPaymentProviderEventForProcessing(
   supabase: SupabaseClient<Database>,
   provider: PaymentProvider,
   providerEventId: string,
-): Promise<{ claimed: boolean }> {
+): Promise<ClaimPaymentProviderEventResult> {
   const { data, error } = await supabase
     .from("payment_provider_events")
     .update({ processing_status: "processing" })
@@ -132,10 +151,12 @@ export async function claimPaymentProviderEventForProcessing(
       code: error.code,
       message: error.message,
     });
-    return { claimed: false };
+    return { claimed: false, error: true };
   }
 
-  return { claimed: data !== null };
+  return data !== null
+    ? { claimed: true, error: false }
+    : { claimed: false, error: false };
 }
 
 export async function claimStaleProcessingPaymentProviderEvent(
@@ -143,7 +164,7 @@ export async function claimStaleProcessingPaymentProviderEvent(
   provider: PaymentProvider,
   providerEventId: string,
   staleBeforeIso: string,
-): Promise<{ claimed: boolean }> {
+): Promise<ClaimPaymentProviderEventResult> {
   const { data, error } = await supabase
     .from("payment_provider_events")
     .update({ processing_status: "processing" })
@@ -161,17 +182,19 @@ export async function claimStaleProcessingPaymentProviderEvent(
       code: error.code,
       message: error.message,
     });
-    return { claimed: false };
+    return { claimed: false, error: true };
   }
 
-  return { claimed: data !== null };
+  return data !== null
+    ? { claimed: true, error: false }
+    : { claimed: false, error: false };
 }
 
 export async function claimPaymentProviderEventForReprocessing(
   supabase: SupabaseClient<Database>,
   provider: PaymentProvider,
   providerEventId: string,
-): Promise<{ claimed: boolean }> {
+): Promise<ClaimPaymentProviderEventResult> {
   const { data, error } = await supabase
     .from("payment_provider_events")
     .update({ processing_status: "processing" })
@@ -188,8 +211,10 @@ export async function claimPaymentProviderEventForReprocessing(
       code: error.code,
       message: error.message,
     });
-    return { claimed: false };
+    return { claimed: false, error: true };
   }
 
-  return { claimed: data !== null };
+  return data !== null
+    ? { claimed: true, error: false }
+    : { claimed: false, error: false };
 }

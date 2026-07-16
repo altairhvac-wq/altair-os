@@ -82,6 +82,14 @@ export async function createStripeInvoiceCheckoutSession(
   const session = await stripe.checkout.sessions.create(
     {
       mode: "payment",
+      // Card is the only payment method Altair supports end-to-end. The webhook
+      // handler only understands checkout.session.completed with an immediately
+      // final payment_status ("paid"/"unpaid") — it has no handling for
+      // checkout.session.async_payment_succeeded/failed. Letting Stripe's automatic
+      // payment methods offer bank debits, redirects, or BNPL would let a customer
+      // pay via a method that settles asynchronously days later with no code path to
+      // ever record it, so payment methods are explicitly pinned to card only.
+      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {

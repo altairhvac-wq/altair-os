@@ -31,6 +31,20 @@ function buildSkippedDuplicateResponse() {
   });
 }
 
+/**
+ * Payment integrity invariant: a transient failure while claiming a provider event for
+ * processing means we do not know whether this event's payment has been (or will be)
+ * committed. Unlike a legitimate lost claim race (another request already holds or
+ * finalized the event), this is an unresolved DB/network failure — it must surface as
+ * HTTP 500 so Stripe retries the delivery, never a silent 200.
+ */
+function buildClaimFailedResponse() {
+  return NextResponse.json(
+    { error: "Failed to claim webhook event for processing" },
+    { status: 500 },
+  );
+}
+
 function buildProcessResponse(processResult: ProcessStripeWebhookEventResult) {
   if ("retryable" in processResult && processResult.retryable) {
     return NextResponse.json(
@@ -147,6 +161,10 @@ export async function POST(request: Request) {
         staleBeforeIso,
       );
 
+      if (claimResult.error) {
+        return buildClaimFailedResponse();
+      }
+
       if (!claimResult.claimed) {
         return buildSkippedDuplicateResponse();
       }
@@ -159,6 +177,10 @@ export async function POST(request: Request) {
       "stripe",
       event.id,
     );
+
+    if (claimResult.error) {
+      return buildClaimFailedResponse();
+    }
 
     if (!claimResult.claimed) {
       return buildSkippedDuplicateResponse();
@@ -173,7 +195,13 @@ export async function POST(request: Request) {
     event.id,
   );
 
+  if (claimResult.error) {
+    return buildClaimFailedResponse();
+  }
+
   if (!claimResult.claimed) {
+    // Another concurrent delivery already claimed this freshly-inserted event and is
+    // actively processing it — not a failure, just a lost race.
     return NextResponse.json({
       received: true,
       processed: false,
