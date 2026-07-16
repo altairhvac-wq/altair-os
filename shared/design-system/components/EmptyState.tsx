@@ -20,19 +20,19 @@ export type EmptyStateProps = {
 };
 
 const accentStyles: Record<EmptyStateTone, string> = {
-  neutral: "border-slate-200/65",
-  success: "border-emerald-200/55",
-  warning: "border-amber-200/55",
-  danger: "border-rose-200/55",
-  info: "border-sky-200/55",
+  neutral: "border-altair-border",
+  success: "border-altair-success/35",
+  warning: "border-altair-warning/35",
+  danger: "border-altair-danger/35",
+  info: "border-altair-information/35",
 };
 
 const titleStyles: Record<EmptyStateTone, string> = {
-  neutral: "text-slate-900",
-  success: "text-emerald-900",
-  warning: "text-amber-900",
-  danger: "text-rose-900",
-  info: "text-sky-900",
+  neutral: "text-altair-ink",
+  success: "text-altair-success",
+  warning: "text-altair-warning",
+  danger: "text-altair-danger",
+  info: "text-altair-information",
 };
 
 type EmptyStateActionButtonProps = {
@@ -78,12 +78,12 @@ export function EmptyState({
 
   return (
     <div
-      className={`rounded-2xl border border-dashed bg-white/90 px-5 py-10 text-center shadow-[var(--shadow-card)] sm:px-8 sm:py-12 ${accentStyles[tone]} ${className}`}
+      className={`rounded-2xl border border-dashed bg-altair-paper-subtle px-5 py-10 text-center shadow-[var(--shadow-card)] sm:px-8 sm:py-12 ${accentStyles[tone]} ${className}`}
     >
       <div className="mx-auto max-w-md">
         {icon ? (
           <div
-            className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200/60 bg-gradient-to-br from-slate-50 to-slate-100/80 text-slate-500 shadow-sm"
+            className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-altair-border bg-altair-stone text-altair-ink-muted shadow-sm"
             aria-hidden="true"
           >
             {icon}
@@ -93,7 +93,7 @@ export function EmptyState({
           {title}
         </h3>
         {description ? (
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">{description}</p>
+          <p className="mt-2 text-sm leading-relaxed text-altair-ink-secondary">{description}</p>
         ) : null}
 
         {hasActions ? (
