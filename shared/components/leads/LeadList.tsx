@@ -13,6 +13,19 @@ import {
   type Lead,
 } from "@/shared/types/lead";
 
+/**
+ * Leads have no dedicated detail route (a lead opens in the in-page panel
+ * via `onSelect`, not a navigation) — so the primary cell cannot use a real
+ * `<Link>` the way Customers/Jobs/Invoices/Estimates do. This button reuses
+ * the same "text link masquerading as a button" quiet-action pattern (see
+ * the Buttons section of the Altair Design Foundation) so the row's primary
+ * action stays keyboard-focusable without inventing a new control. Same
+ * focus ring as the other ledgers' primary-cell links, reused rather than a
+ * new token.
+ */
+const leadNameButtonFocusClass =
+  "text-left hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
+
 type LeadListProps = {
   leads: Lead[];
   selectedId: string | null;
@@ -60,8 +73,17 @@ export function LeadList({
                         isSelected ? lt.tableRowSelected : ""
                       }`}
                     >
-                      <td className={`px-4 py-3 ${lt.tablePrimaryText}`}>
-                        {formatLeadName(lead)}
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onSelect(lead);
+                          }}
+                          className={`${lt.tablePrimaryText} ${leadNameButtonFocusClass}`}
+                        >
+                          {formatLeadName(lead)}
+                        </button>
                       </td>
                       <td className={`px-4 py-3 ${lt.tableSecondaryText}`}>
                         {lead.phone || "—"}
@@ -133,8 +155,17 @@ export function LeadList({
                       isSelected ? adminTableRowSelectedClass : ""
                     }`}
                   >
-                    <td className="px-4 py-3 font-medium text-slate-900">
-                      {formatLeadName(lead)}
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onSelect(lead);
+                        }}
+                        className={`font-medium text-slate-900 ${leadNameButtonFocusClass}`}
+                      >
+                        {formatLeadName(lead)}
+                      </button>
                     </td>
                     <td className="px-4 py-3 text-slate-600">{lead.phone || "—"}</td>
                     <td className="hidden px-4 py-3 text-slate-600 md:table-cell">

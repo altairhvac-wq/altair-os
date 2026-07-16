@@ -13,6 +13,19 @@ import { ExpenseCategoryBadge } from "./ExpenseCategoryBadge";
 import { ExpenseStatusBadge } from "./ExpenseStatusBadge";
 import { ExpensesMobileCardList } from "./ExpensesMobileCardList";
 
+/**
+ * Expenses have no dedicated detail route (the record opens in an in-page
+ * panel via `onSelect`, not a navigation) — so the primary cell cannot use a
+ * real `<Link>` the way Customers/Jobs/Invoices/Estimates do. This button
+ * reuses the same "text link masquerading as a button" quiet-action pattern
+ * (see the Buttons section of the Altair Design Foundation) so the row's
+ * primary action stays keyboard-focusable without inventing a new control.
+ * Same focus ring as the other ledgers' primary-cell links, reused rather
+ * than a new token.
+ */
+const expenseNumberButtonFocusClass =
+  "text-left hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
+
 type ExpensesTableProps = {
   expenses: Expense[];
   selectedId: string | null;
@@ -155,7 +168,7 @@ export function ExpensesTable({
           >
             {selectionEnabled ? (
               <th
-                className={`w-10 ${northStar ? lt.tableHeaderCell : "px-4 py-3"}`}
+                className={`w-10 ${northStar ? lt.tableHeaderCell : "admin-table-cell"}`}
               >
                 {headerSelection && headerSelection.selectableCount > 0 ? (
                   <BulkSelectCheckbox
@@ -168,34 +181,34 @@ export function ExpensesTable({
                 ) : null}
               </th>
             ) : null}
-            <th className={northStar ? lt.tableHeaderCell : "px-4 py-3"}>
+            <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
               Expense
             </th>
-            <th className={northStar ? lt.tableHeaderCell : "px-4 py-3"}>
+            <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
               Merchant
             </th>
             <th
-              className={`hidden ${northStar ? lt.tableHeaderCell : "px-4 py-3"} md:table-cell`}
+              className={`hidden ${northStar ? lt.tableHeaderCell : "admin-table-cell"} md:table-cell`}
             >
               Category
             </th>
             <th
-              className={`hidden ${northStar ? lt.tableHeaderCell : "px-4 py-3"} lg:table-cell`}
+              className={`hidden ${northStar ? lt.tableHeaderCell : "admin-table-cell"} lg:table-cell`}
             >
               Technician
             </th>
             <th
-              className={`hidden ${northStar ? lt.tableHeaderCell : "px-4 py-3"} lg:table-cell`}
+              className={`hidden ${northStar ? lt.tableHeaderCell : "admin-table-cell"} lg:table-cell`}
             >
               Job
             </th>
-            <th className={northStar ? lt.tableHeaderCell : "px-4 py-3"}>
+            <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
               Receipt
             </th>
-            <th className={northStar ? lt.tableHeaderCell : "px-4 py-3"}>
+            <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
               Amount
             </th>
-            <th className={northStar ? lt.tableHeaderCell : "px-4 py-3"}>
+            <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
               Status
             </th>
           </tr>
@@ -242,7 +255,7 @@ export function ExpensesTable({
                 }
               >
                 {selectionEnabled ? (
-                  <td className={northStar ? "admin-table-cell" : "px-4 py-3"}>
+                  <td className="admin-table-cell">
                     <BulkSelectCheckbox
                       checked={isBulkSelected}
                       ariaLabel={`Select expense ${expense.expenseNumber}`}
@@ -251,14 +264,21 @@ export function ExpensesTable({
                     />
                   </td>
                 ) : null}
-                <td className={northStar ? "admin-table-cell" : "px-4 py-3"}>
-                  <p
+                <td className="admin-table-cell">
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onSelect(expense);
+                    }}
                     className={
-                      northStar ? lt.tablePrimaryText : "font-semibold text-slate-900"
+                      northStar
+                        ? `${lt.tablePrimaryText} ${expenseNumberButtonFocusClass}`
+                        : `font-semibold text-slate-900 ${expenseNumberButtonFocusClass}`
                     }
                   >
                     {expense.expenseNumber}
-                  </p>
+                  </button>
                   <p
                     className={
                       northStar
@@ -271,7 +291,7 @@ export function ExpensesTable({
                     {purchaseDate.text}
                   </p>
                 </td>
-                <td className={northStar ? "admin-table-cell" : "px-4 py-3"}>
+                <td className="admin-table-cell">
                   <p
                     className={
                       northStar
@@ -284,13 +304,11 @@ export function ExpensesTable({
                     {merchant.text}
                   </p>
                 </td>
-                <td
-                  className={`hidden ${northStar ? "admin-table-cell" : "px-4 py-3"} md:table-cell`}
-                >
+                <td className="hidden admin-table-cell md:table-cell">
                   <ExpenseCategoryBadge category={expense.category} northStar={northStar} />
                 </td>
                 <td
-                  className={`hidden ${northStar ? `admin-table-cell expense-north-star-meta-cell` : "px-4 py-3 text-slate-600"} lg:table-cell`}
+                  className={`hidden ${northStar ? `admin-table-cell expense-north-star-meta-cell` : "admin-table-cell text-slate-600"} lg:table-cell`}
                 >
                   <span
                     className={
@@ -303,7 +321,7 @@ export function ExpensesTable({
                   </span>
                 </td>
                 <td
-                  className={`hidden ${northStar ? `admin-table-cell expense-north-star-meta-cell` : "px-4 py-3 text-slate-600"} lg:table-cell`}
+                  className={`hidden ${northStar ? `admin-table-cell expense-north-star-meta-cell` : "admin-table-cell text-slate-600"} lg:table-cell`}
                 >
                   <span
                     className={
@@ -315,7 +333,7 @@ export function ExpensesTable({
                     {job.text}
                   </span>
                 </td>
-                <td className={northStar ? "admin-table-cell" : "px-4 py-3"}>
+                <td className="admin-table-cell">
                   {hasReceipt ? (
                     <span
                       className={
@@ -340,7 +358,7 @@ export function ExpensesTable({
                     </span>
                   )}
                 </td>
-                <td className={northStar ? "admin-table-cell" : "px-4 py-3"}>
+                <td className="admin-table-cell">
                   <span
                     className={
                       northStar
@@ -353,7 +371,7 @@ export function ExpensesTable({
                     {amount.text}
                   </span>
                 </td>
-                <td className={northStar ? "admin-table-cell" : "px-4 py-3"}>
+                <td className="admin-table-cell">
                   <ExpenseStatusBadge status={expense.status} northStar={northStar} />
                 </td>
               </tr>

@@ -1,4 +1,6 @@
 import { Fragment, useMemo } from "react";
+import Link from "next/link";
+import type { MouseEvent } from "react";
 import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
@@ -14,6 +16,20 @@ import { northStarListTokens as lt } from "@/shared/design-system/north-star/tok
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
 import { EstimatesMobileCardList } from "./EstimatesMobileCardList";
+
+/**
+ * Focus ring for the primary estimate-number link: the same Paper-surface
+ * treatment already used for the Customers/Jobs/Invoices ledgers' primary-cell
+ * links (see CustomersTable.tsx / JobsTable.tsx / InvoicesTable.tsx) — reused
+ * rather than inventing a new focus token, so the ring stays non-cyan and
+ * visible in both themes.
+ */
+const estimateNumberLinkFocusClass =
+  "hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
+
+function handleEstimateLinkClick(event: MouseEvent<HTMLAnchorElement>) {
+  event.stopPropagation();
+}
 
 type EstimatesTableProps = {
   sections: BillingWorkflowListSection<Estimate>[];
@@ -170,15 +186,17 @@ export function EstimatesTable({
                         </td>
                       ) : null}
                       <td className="admin-table-cell">
-                        <p
+                        <Link
+                          href={`/estimates/${estimate.id}`}
+                          onClick={handleEstimateLinkClick}
                           className={
                             northStar
-                              ? lt.tablePrimaryText
-                              : "font-semibold text-slate-900"
+                              ? `${lt.tablePrimaryText} ${estimateNumberLinkFocusClass}`
+                              : `font-semibold text-slate-900 ${estimateNumberLinkFocusClass}`
                           }
                         >
                           {estimate.estimateNumber}
-                        </p>
+                        </Link>
                         <p
                           className={
                             northStar ? lt.tableMutedText : "text-xs text-slate-500"
