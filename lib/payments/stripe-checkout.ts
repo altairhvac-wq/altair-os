@@ -143,6 +143,112 @@ export async function createStripeInvoiceCheckoutSession(
   };
 }
 
+export type StripeCheckoutSessionExpireOutcome =
+  | "expired"
+  | "already_complete"
+  | "already_expired"
+  | "not_found"
+  | "failed";
+
+export type StripeCheckoutSessionExpireResult = {
+  outcome: StripeCheckoutSessionExpireOutcome;
+};
+
+/**
+ * Best-effort Checkout Session expiration (Layer 1 of the stale-capture safety design).
+ * Never throws — callers must not let a failed expiration reverse an already-committed
+ * invoice mutation. The durable webhook reconciliation path remains the final financial
+ * safety boundary regardless of what this helper reports.
+ *
+ * Safe to log: only ids and outcomes, never secrets or payment details.
+ */
+export async function expireStripeCheckoutSessionBestEffort(input: {
+  checkoutSessionId: string;
+  connectedAccountId: string | null;
+  /** Safe identifiers (ids only) attached to log lines for investigation. */
+  context?: Record<string, string | null | undefined>;
+}): Promise<StripeCheckoutSessionExpireResult> {
+  const { checkoutSessionId, connectedAccountId, context = {} } = input;
+
+  if (!checkoutSessionId || !connectedAccountId) {
+    console.error("[stripe-checkout-expire] missing session or account id", {
+      ...context,
+      hasCheckoutSessionId: Boolean(checkoutSessionId),
+      hasConnectedAccountId: Boolean(connectedAccountId),
+    });
+    return { outcome: "failed" };
+  }
+
+  const stripe = getStripeClient();
+
+  try {
+    await stripe.checkout.sessions.expire(
+      checkoutSessionId,
+      {},
+      { stripeAccount: connectedAccountId },
+    );
+
+    console.info("[stripe-checkout-expire] expired", {
+      ...context,
+      checkoutSessionId,
+    });
+
+    return { outcome: "expired" };
+  } catch (error) {
+    // Stripe's "already complete" / "already expired" rejections are benign races, not
+    // failures — determine the authoritative current state instead of parsing error text.
+    try {
+      const current = await stripe.checkout.sessions.retrieve(
+        checkoutSessionId,
+        {},
+        { stripeAccount: connectedAccountId },
+      );
+
+      if (current.status === "complete") {
+        console.info("[stripe-checkout-expire] already complete (benign race)", {
+          ...context,
+          checkoutSessionId,
+        });
+        return { outcome: "already_complete" };
+      }
+
+      if (current.status === "expired") {
+        console.info("[stripe-checkout-expire] already expired (benign race)", {
+          ...context,
+          checkoutSessionId,
+        });
+        return { outcome: "already_expired" };
+      }
+    } catch (retrieveError) {
+      if (
+        retrieveError instanceof Stripe.errors.StripeInvalidRequestError &&
+        retrieveError.statusCode === 404
+      ) {
+        console.warn("[stripe-checkout-expire] session not found", {
+          ...context,
+          checkoutSessionId,
+        });
+        return { outcome: "not_found" };
+      }
+
+      console.error("[stripe-checkout-expire] retrieve after expire failure also failed", {
+        ...context,
+        checkoutSessionId,
+        errorType:
+          retrieveError instanceof Error ? retrieveError.constructor.name : typeof retrieveError,
+      });
+      return { outcome: "failed" };
+    }
+
+    console.error("[stripe-checkout-expire] unexpected expiration failure", {
+      ...context,
+      checkoutSessionId,
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
+    });
+    return { outcome: "failed" };
+  }
+}
+
 export function buildAdminInvoiceCheckoutUrls(
   invoiceId: string,
 ): StripeInvoiceCheckoutUrls | null {

@@ -30,3 +30,10 @@ export type {
   PaymentAttemptRecordInsert,
   PaymentAttemptStatus,
 } from "./payment-attempts";
+export type {
+  PaymentReconciliationProvider,
+  PaymentReconciliationReasonCode,
+  PaymentReconciliationRecord,
+  PaymentReconciliationRecordInsert,
+  PaymentReconciliationStatus,
+} from "./payment-reconciliations";

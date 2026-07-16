@@ -45,6 +45,8 @@ import type {
   PaymentAttemptRow,
   PaymentProviderEventInsert,
   PaymentProviderEventRow,
+  PaymentReconciliationInsert,
+  PaymentReconciliationRow,
   PlatformAutomationRunInsert,
   PlatformAutomationRunRow,
   PlatformFounderSignalActionInsert,
@@ -1002,6 +1004,41 @@ export type Database = {
           },
         ];
       };
+      payment_reconciliations: {
+        Row: PaymentReconciliationRow;
+        Insert: PaymentReconciliationInsert;
+        Update: Partial<PaymentReconciliationInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "payment_reconciliations_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_reconciliations_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_reconciliations_payment_attempt_id_fkey";
+            columns: ["payment_attempt_id"];
+            isOneToOne: false;
+            referencedRelation: "payment_attempts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_reconciliations_provider_event_id_fkey";
+            columns: ["provider_event_id"];
+            isOneToOne: true;
+            referencedRelation: "payment_provider_events";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       platform_automation_runs: {
         Row: PlatformAutomationRunRow;
         Insert: PlatformAutomationRunInsert;
@@ -1257,6 +1294,21 @@ export type Database = {
           p_provider_checkout_session_id?: string | null;
           p_provider_payment_id?: string | null;
           p_provider_metadata?: Json;
+        };
+        Returns: Json;
+      };
+      record_payment_reconciliation_atomic: {
+        Args: {
+          p_company_id: string;
+          p_invoice_id: string;
+          p_payment_attempt_id: string;
+          p_provider_event_id: string;
+          p_provider_checkout_session_id: string;
+          p_captured_amount: number;
+          p_reason_code: string;
+          p_provider?: string;
+          p_provider_payment_id?: string | null;
+          p_currency?: string;
         };
         Returns: Json;
       };

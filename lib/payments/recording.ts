@@ -4,6 +4,7 @@ import type { Database } from "@/lib/database/types";
 import type { Json } from "@/lib/database/types/enums";
 import type { InvoiceStatus } from "@/shared/types/invoice";
 import type { StripeCheckoutProviderMetadata } from "./stripe-checkout";
+import type { PaymentReconciliationReasonCode } from "./payment-reconciliations";
 import type { PaymentSource } from "./types";
 
 const SUPPORTED_MANUAL_PAYMENT_SOURCES: readonly PaymentSource[] = ["manual"];
@@ -141,12 +142,44 @@ export function isDuplicateStripePaymentRpcError(error: {
     "duplicate_payment_idempotency_key";
 }
 
+/**
+ * Maps a subset of record_invoice_payment_atomic's recognized stale-state exceptions to
+ * a payment reconciliation reason code. Everything else (permission, not-found, invalid
+ * amount, concurrency conflict) is NOT reconciliation-eligible — those indicate a
+ * programming error or genuinely unexpected state and must surface as a failure instead
+ * of a silent requires_review record.
+ */
+const RECONCILIATION_ELIGIBLE_RPC_EXCEPTION_REASONS: Partial<
+  Record<RecordInvoicePaymentRpcExceptionCode, PaymentReconciliationReasonCode>
+> = {
+  invoice_not_payable: "invoice_not_payable",
+  payment_exceeds_balance: "balance_conflict",
+};
+
+export function classifyRecordInvoicePaymentRpcReconciliationReason(error: {
+  message?: string;
+}): PaymentReconciliationReasonCode | null {
+  const rawMessage = error.message?.trim() ?? "";
+  const exceptionCode = extractRecordInvoicePaymentRpcExceptionCode(rawMessage);
+
+  if (!exceptionCode) {
+    return null;
+  }
+
+  return RECONCILIATION_ELIGIBLE_RPC_EXCEPTION_REASONS[exceptionCode] ?? null;
+}
+
 export async function recordStripeCheckoutPaymentAtomic(
   supabase: SupabaseClient<Database>,
   input: RecordStripeCheckoutPaymentInput,
 ): Promise<
   | { ok: true; result: RecordInvoicePaymentRpcResult }
-  | { ok: false; error: string; duplicate: boolean }
+  | {
+      ok: false;
+      error: string;
+      duplicate: boolean;
+      reconciliationReason: PaymentReconciliationReasonCode | null;
+    }
 > {
   const { data, error } = await supabase.rpc("record_invoice_payment_atomic", {
     p_company_id: input.companyId,
@@ -171,6 +204,9 @@ export async function recordStripeCheckoutPaymentAtomic(
       ok: false,
       error: mapRecordInvoicePaymentRpcError(error),
       duplicate,
+      reconciliationReason: duplicate
+        ? null
+        : classifyRecordInvoicePaymentRpcReconciliationReason(error),
     };
   }
 
@@ -181,6 +217,7 @@ export async function recordStripeCheckoutPaymentAtomic(
       ok: false,
       error: "Failed to record Stripe checkout payment.",
       duplicate: false,
+      reconciliationReason: null,
     };
   }
 

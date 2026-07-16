@@ -9,6 +9,7 @@ import {
   parseRecordInvoicePaymentRpcResult,
 } from "@/lib/payments/recording";
 import { getInvoiceById } from "@/lib/database/queries/invoices";
+import { expireStaleCheckoutSessionsForInvoice } from "@/lib/payments/payment-attempts-service";
 import {
   isInvoicePayable,
   type InvoicePayment,
@@ -376,6 +377,21 @@ export async function recordInvoicePayment(
     ),
     getInvoiceById(companyId, invoiceId),
   ]);
+
+  // Layer 1 (best-effort, preventative): the RPC above already committed this manual
+  // payment and the migration 112 trigger already invalidated any active Payment
+  // Attempt for this invoice. Try to expire the corresponding Stripe Checkout Session so
+  // a customer can no longer complete a stale session for the old balance. Never allowed
+  // to affect the payment we just successfully recorded.
+  try {
+    await expireStaleCheckoutSessionsForInvoice(supabase, companyId, invoiceId);
+  } catch (expireError) {
+    console.error("[recordInvoicePayment] stale session expiration failed:", {
+      companyId,
+      invoiceId,
+      expireError,
+    });
+  }
 
   return {
     payment,

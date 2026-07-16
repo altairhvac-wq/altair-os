@@ -6,6 +6,7 @@ import { roundCurrency } from "@/shared/types/invoice";
 import { getStripeClient } from "@/lib/payments/stripe-client";
 import {
   createStripeInvoiceCheckoutSession,
+  expireStripeCheckoutSessionBestEffort,
   type InvoiceCheckoutTarget,
   type StripeInvoiceCheckoutUrls,
 } from "@/lib/payments/stripe-checkout";
@@ -250,20 +251,56 @@ async function createNewPaymentAttemptAndCheckoutSession(
       },
     );
 
-    const { error: linkError } = await supabase
+    // Required sequence (see Implementation Requirement 6): Stripe has already created
+    // a payable Session at this point, so the linkage persist below MUST succeed before
+    // we ever return session.url. A caller must never receive a Checkout URL for a
+    // Session that isn't durably linked to its owning Payment Attempt — the webhook's
+    // authoritative lookup (findPaymentAttemptByCheckoutSessionId) depends on that link.
+    const { data: linked, error: linkError } = await supabase
       .from("payment_attempts")
       .update({
         stripe_checkout_session_id: session.sessionId,
         stripe_payment_intent_id: session.paymentIntentId,
       })
-      .eq("id", attempt.id);
+      .eq("id", attempt.id)
+      .select("id")
+      .maybeSingle();
 
-    if (linkError) {
-      console.error("[createNewPaymentAttemptAndCheckoutSession] session link failed:", {
-        attemptId: attempt.id,
-        code: linkError.code,
-        message: linkError.message,
+    if (linkError || !linked) {
+      console.error(
+        "[createNewPaymentAttemptAndCheckoutSession] session link persistence failed:",
+        {
+          attemptId: attempt.id,
+          checkoutSessionId: session.sessionId,
+          code: linkError?.code,
+          message: linkError?.message,
+        },
+      );
+
+      const expireResult = await expireStripeCheckoutSessionBestEffort({
+        checkoutSessionId: session.sessionId,
+        connectedAccountId,
+        context: {
+          paymentAttemptId: attempt.id,
+          invoiceId: invoice.id,
+          companyId,
+        },
       });
+
+      console.info(
+        "[createNewPaymentAttemptAndCheckoutSession] expired unlinked session after persistence failure",
+        {
+          attemptId: attempt.id,
+          checkoutSessionId: session.sessionId,
+          outcome: expireResult.outcome,
+        },
+      );
+
+      await markPaymentAttemptClosed(supabase, attempt.id, "failed");
+
+      throw new Error(
+        "Failed to start a new payment attempt. Please try again.",
+      );
     }
 
     return session.url;
@@ -310,4 +347,80 @@ export async function resolveStripeInvoiceCheckoutSession(
   }
 
   return createNewPaymentAttemptAndCheckoutSession(supabase, input);
+}
+
+export type ExpireStaleCheckoutSessionsResult = {
+  attemptsChecked: number;
+  expiredCount: number;
+};
+
+/**
+ * Layer 1 (preventative) of the stale-capture safety design: after an invoice mutation
+ * has already committed and the database trigger from migration 112 has invalidated any
+ * active Payment Attempt, make a best-effort attempt to expire the associated Stripe
+ * Checkout Session(s) so a customer can no longer complete a stale session.
+ *
+ * This is intentionally best-effort and never throws — callers must call this only
+ * after their own mutation has successfully committed, and a failure here must never
+ * reverse that mutation. The webhook's reconciliation path (Layer 2) remains the final
+ * financial safety boundary regardless of what happens here.
+ *
+ * Only considers attempts our own bookkeeping has already marked invalidated/expired
+ * (the DB trigger remains the sole authority for that) and whose Stripe-side expiry
+ * hasn't passed yet, so this never touches the invoice's current active attempt and
+ * avoids redundant Stripe calls for sessions long past their own TTL.
+ */
+export async function expireStaleCheckoutSessionsForInvoice(
+  supabase: SupabaseClient<Database>,
+  companyId: string,
+  invoiceId: string,
+): Promise<ExpireStaleCheckoutSessionsResult> {
+  const nowIso = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("payment_attempts")
+    .select("id, stripe_checkout_session_id, provider_account_id, status")
+    .eq("company_id", companyId)
+    .eq("invoice_id", invoiceId)
+    .in("status", ["invalidated", "expired"])
+    .not("stripe_checkout_session_id", "is", null)
+    .gt("expires_at", nowIso);
+
+  if (error) {
+    console.error("[expireStaleCheckoutSessionsForInvoice] query failed:", {
+      companyId,
+      invoiceId,
+      code: error.code,
+      message: error.message,
+    });
+    return { attemptsChecked: 0, expiredCount: 0 };
+  }
+
+  const candidates = data ?? [];
+  let expiredCount = 0;
+
+  for (const row of candidates) {
+    const checkoutSessionId = row.stripe_checkout_session_id;
+    const connectedAccountId = row.provider_account_id;
+
+    if (!checkoutSessionId || !connectedAccountId) {
+      continue;
+    }
+
+    const result = await expireStripeCheckoutSessionBestEffort({
+      checkoutSessionId,
+      connectedAccountId,
+      context: {
+        paymentAttemptId: row.id,
+        invoiceId,
+        companyId,
+      },
+    });
+
+    if (result.outcome === "expired") {
+      expiredCount += 1;
+    }
+  }
+
+  return { attemptsChecked: candidates.length, expiredCount };
 }

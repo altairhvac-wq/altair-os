@@ -23,6 +23,7 @@ import {
 import { recordInvoiceActivity } from "@/lib/database/queries/invoice-activities";
 import { getEstimateById, updateEstimateStatus } from "@/lib/database/queries/estimates";
 import { validateServiceItemIdsBelongToCompany } from "@/lib/database/queries/service-items";
+import { expireStaleCheckoutSessionsForInvoice } from "@/lib/payments/payment-attempts-service";
 import {
   calculateInvoiceTotals,
   canEditInvoice,
@@ -85,6 +86,30 @@ const INVOICE_DETAIL_SELECT = `
 
 function toDateOnly(value: string): string {
   return value.split("T")[0] ?? value;
+}
+
+/**
+ * Layer 1 (best-effort, preventative): call only after an invoice mutation has already
+ * committed. The migration 112 trigger has already invalidated any active Payment
+ * Attempt by the time this runs; this best-effort expires the corresponding stale Stripe
+ * Checkout Session(s). A failure here must never affect the mutation that already
+ * succeeded — callers must not await this in a way that can roll anything back.
+ */
+async function expireStaleCheckoutSessionsBestEffort(
+  supabase: SupabaseClient<Database>,
+  companyId: string,
+  invoiceId: string,
+  callerLabel: string,
+): Promise<void> {
+  try {
+    await expireStaleCheckoutSessionsForInvoice(supabase, companyId, invoiceId);
+  } catch (expireError) {
+    console.error(`[${callerLabel}] stale session expiration failed:`, {
+      companyId,
+      invoiceId,
+      expireError,
+    });
+  }
 }
 
 function mapLineItemRow(row: InvoiceLineItemRow): InvoiceLineItem {
@@ -859,6 +884,13 @@ export async function syncOverdueInvoiceStatuses(
       });
     }
 
+    await expireStaleCheckoutSessionsBestEffort(
+      supabase,
+      companyId,
+      candidate.id,
+      "syncOverdueInvoiceStatuses",
+    );
+
     updatedCount += 1;
   }
 
@@ -926,6 +958,8 @@ export async function voidInvoice(
   }
 
   const updatedInvoice = await getInvoiceById(companyId, invoiceId);
+
+  await expireStaleCheckoutSessionsBestEffort(supabase, companyId, invoiceId, "voidInvoice");
 
   return {
     invoice: updatedInvoice,
@@ -1258,6 +1292,8 @@ export async function updateInvoice(
   }
 
   const invoice = await getInvoiceById(companyId, invoiceId);
+
+  await expireStaleCheckoutSessionsBestEffort(supabase, companyId, invoiceId, "updateInvoice");
 
   return {
     invoice,

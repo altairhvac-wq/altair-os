@@ -124,7 +124,11 @@ export async function POST(request: Request) {
 
     const { processingStatus, updatedAt } = existingEvent;
 
-    if (processingStatus === "processed" || processingStatus === "ignored") {
+    if (
+      processingStatus === "processed" ||
+      processingStatus === "ignored" ||
+      processingStatus === "reconciliation_required"
+    ) {
       return buildSkippedDuplicateResponse();
     }
 

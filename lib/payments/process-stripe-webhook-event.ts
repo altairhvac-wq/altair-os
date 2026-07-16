@@ -9,7 +9,10 @@ import {
   findStripeCompanyPaymentAccountByProviderAccountId,
   syncStripeCompanyPaymentAccountFromWebhook,
 } from "@/lib/database/services/company-payment-accounts";
-import { updatePaymentProviderEvent } from "@/lib/database/services/payment-provider-events";
+import {
+  findPaymentProviderEvent,
+  updatePaymentProviderEvent,
+} from "@/lib/database/services/payment-provider-events";
 import { findExistingStripeCheckoutPayment } from "@/lib/database/queries/invoice-payments";
 import { getInvoiceStripePaymentTarget } from "@/lib/database/queries/invoices";
 import type { Database } from "@/lib/database/types";
@@ -26,6 +29,9 @@ import {
   findPaymentAttemptByCheckoutSessionId,
   markPaymentAttemptCompleted,
 } from "@/lib/payments/payment-attempts-service";
+import { recordPaymentReconciliationAtomic } from "@/lib/payments/payment-reconciliation-service";
+import type { PaymentAttemptRecord } from "@/lib/payments/payment-attempts";
+import type { PaymentReconciliationReasonCode } from "@/lib/payments/payment-reconciliations";
 import {
   isInvoiceBalanceConsistent,
   roundCurrency,
@@ -263,6 +269,87 @@ async function ignoreCheckoutSessionEvent(
   return { processed: false, ignored: true };
 }
 
+/**
+ * Financial safety invariant (see supabase/migrations/113_payment_reconciliations.sql):
+ * once Stripe has conclusively captured funds for a checkout session that identifies
+ * itself as one of Altair's invoice-payment sessions, every remaining branch below must
+ * end in exactly one of:
+ *   - a normal invoice payment (the existing atomic RPC path), or
+ *   - a durable payment_reconciliations "requires_review" record, or
+ *   - a thrown error (HTTP 500, so Stripe retries).
+ * A captured-funds event must never again reach markProviderEventIgnored.
+ */
+async function reconcileStaleCapturedCheckoutSession(
+  supabase: SupabaseClient<Database>,
+  input: {
+    providerEventId: string;
+    companyId: string;
+    invoiceId: string;
+    attempt: PaymentAttemptRecord;
+    session: Stripe.Checkout.Session;
+    reasonCode: PaymentReconciliationReasonCode;
+  },
+): Promise<ProcessStripeWebhookEventResult> {
+  const { providerEventId, companyId, invoiceId, attempt, session, reasonCode } = input;
+  const checkoutSessionId = session.id;
+  const providerPaymentId = extractStripePaymentIntentId(session.payment_intent);
+  const capturedAmount = roundCurrency((session.amount_total ?? 0) / 100);
+
+  console.info(
+    "[stripe-checkout-reconciliation] recognized stale capture, recording reconciliation",
+    {
+      eventId: providerEventId,
+      checkoutSessionId,
+      invoiceId,
+      paymentAttemptId: attempt.id,
+      reasonCode,
+    },
+  );
+
+  const providerEventRecord = await findPaymentProviderEvent(
+    supabase,
+    "stripe",
+    providerEventId,
+  );
+
+  if (!providerEventRecord) {
+    throw new Error(
+      "Provider event record not found while recording payment reconciliation",
+    );
+  }
+
+  const reconcileResult = await recordPaymentReconciliationAtomic(supabase, {
+    companyId,
+    invoiceId,
+    paymentAttemptId: attempt.id,
+    providerEventId: providerEventRecord.id,
+    checkoutSessionId,
+    providerPaymentId,
+    capturedAmount,
+    currency: (session.currency ?? "usd").toLowerCase(),
+    reasonCode,
+  });
+
+  if (!reconcileResult.ok) {
+    console.error("[stripe-checkout-reconciliation] RPC failed", {
+      eventId: providerEventId,
+      checkoutSessionId,
+      errorSummary: reconcileResult.error.slice(0, 200),
+    });
+    throw new Error(reconcileResult.error);
+  }
+
+  console.info("[stripe-checkout-reconciliation] recorded", {
+    eventId: providerEventId,
+    checkoutSessionId,
+    reconciliationId: reconcileResult.result.reconciliation_id,
+    created: reconcileResult.result.created,
+  });
+
+  revalidateInvoiceOperationalPages(invoiceId);
+  return { processed: true, ignored: false };
+}
+
 async function processCheckoutSessionCompletedEvent(
   supabase: SupabaseClient<Database>,
   providerEventId: string,
@@ -298,6 +385,8 @@ async function processCheckoutSessionCompletedEvent(
     purpose !== CHECKOUT_METADATA_PURPOSE ||
     provider !== CHECKOUT_METADATA_PROVIDER
   ) {
+    // Not a session Altair's invoice-payment flow created — nothing to associate,
+    // reconcile, or record regardless of payment status.
     return ignoreCheckoutSessionEvent(
       supabase,
       providerEventId,
@@ -306,19 +395,45 @@ async function processCheckoutSessionCompletedEvent(
     );
   }
 
-  // Rule 5: resolve against the Payment Attempt first — it is the authoritative
-  // source for which company/invoice this checkout session belongs to.
+  // "Is this a currently supported successfully paid Checkout event?" — decided before
+  // any attempt/invoice resolution, per the required webhook decision flow. Everything
+  // past this gate is a conclusively captured payment and must not be silently ignored.
+  const isSupportedPaidCheckout =
+    session.payment_status === "paid" &&
+    typeof session.amount_total === "number" &&
+    session.amount_total > 0 &&
+    (session.currency ?? "").toLowerCase() === "usd";
+
+  if (!isSupportedPaidCheckout) {
+    return ignoreCheckoutSessionEvent(
+      supabase,
+      providerEventId,
+      "Checkout session is not a supported successful payment",
+      metadataCompanyId,
+    );
+  }
+
+  if (!connectedAccountId) {
+    throw new Error(
+      "Paid checkout session missing Stripe connected account context",
+    );
+  }
+
+  // Rule 5: resolve against the Payment Attempt — it is the authoritative source for
+  // which company/invoice this checkout session belongs to, never client metadata alone.
   const attempt = await findPaymentAttemptByCheckoutSessionId(
     supabase,
     checkoutSessionId,
   );
 
   if (!attempt) {
-    return ignoreCheckoutSessionEvent(
-      supabase,
-      providerEventId,
-      "No payment attempt found for checkout session",
-      metadataCompanyId,
+    // Funds were captured for a session that presents itself as one of ours, but no
+    // Payment Attempt links to it. Requirement 6 guarantees every session Altair now
+    // creates is durably linked before its URL is ever returned, so this indicates a
+    // missing authoritative record rather than a normal business-state conflict — it
+    // must not be silently ignored and must not be guessed into a reconciliation record.
+    throw new Error(
+      "Paid checkout session has no matching payment attempt record",
     );
   }
 
@@ -326,141 +441,35 @@ async function processCheckoutSessionCompletedEvent(
     attempt.company_id !== metadataCompanyId ||
     attempt.invoice_id !== metadataInvoiceId
   ) {
-    return ignoreCheckoutSessionEvent(
-      supabase,
-      providerEventId,
-      "Payment attempt does not match checkout session metadata",
-      attempt.company_id,
-    );
-  }
-
-  // Rule 6: safely ignore expired, invalidated, or failed attempts. "completed" is
-  // allowed through so redelivered webhooks hit the existing dedupe path below.
-  if (attempt.status !== "active" && attempt.status !== "completed") {
-    return ignoreCheckoutSessionEvent(
-      supabase,
-      providerEventId,
-      `Payment attempt is ${attempt.status}, not active`,
-      attempt.company_id,
+    throw new Error(
+      "Paid checkout session payment attempt does not match session metadata",
     );
   }
 
   const companyId = attempt.company_id;
   const invoiceId = attempt.invoice_id;
 
-  if (!connectedAccountId) {
-    return ignoreCheckoutSessionEvent(
-      supabase,
+  // Rule 6 (extended): a stale attempt no longer means "ignore" — Stripe already
+  // captured the money, so this routes to the durable reconciliation record instead.
+  // "completed" is allowed through so redelivered webhooks hit the dedupe path below.
+  if (attempt.status !== "active" && attempt.status !== "completed") {
+    return reconcileStaleCapturedCheckoutSession(supabase, {
       providerEventId,
-      "Missing Stripe connected account context",
       companyId,
-    );
-  }
-
-  if (session.payment_status !== "paid") {
-    return ignoreCheckoutSessionEvent(
-      supabase,
-      providerEventId,
-      "Checkout session is not paid",
-      companyId,
-    );
-  }
-
-  if (
-    session.amount_total === null ||
-    session.amount_total === undefined ||
-    session.amount_total <= 0
-  ) {
-    return ignoreCheckoutSessionEvent(
-      supabase,
-      providerEventId,
-      "Checkout session amount is invalid",
-      companyId,
-    );
-  }
-
-  if ((session.currency ?? "").toLowerCase() !== "usd") {
-    return ignoreCheckoutSessionEvent(
-      supabase,
-      providerEventId,
-      "Checkout session currency must be USD",
-      companyId,
-    );
-  }
-
-  const accountRow = await findStripeCompanyPaymentAccountByCompanyId(
-    supabase,
-    companyId,
-  );
-
-  if (!accountRow || !isStripeCompanyPaymentAccountReady(accountRow, connectedAccountId)) {
-    return ignoreCheckoutSessionEvent(
-      supabase,
-      providerEventId,
-      "Stripe payment account is not ready for online checkout",
-      companyId,
-    );
-  }
-
-  const invoice = await getInvoiceStripePaymentTarget(
-    supabase,
-    companyId,
-    invoiceId,
-  );
-
-  if (!invoice) {
-    return ignoreCheckoutSessionEvent(
-      supabase,
-      providerEventId,
-      "Invoice not found for checkout session",
-      companyId,
-    );
-  }
-
-  if (!isInvoicePayable(invoice.status) || invoice.balanceDue <= 0) {
-    return ignoreCheckoutSessionEvent(
-      supabase,
-      providerEventId,
-      "Invoice is not payable",
-      companyId,
-    );
-  }
-
-  if (
-    !isInvoiceBalanceConsistent({
-      amountPaid: invoice.amountPaid,
-      balanceDue: invoice.balanceDue,
-      total: invoice.total,
-    })
-  ) {
-    return ignoreCheckoutSessionEvent(
-      supabase,
-      providerEventId,
-      "Invoice balance is inconsistent",
-      companyId,
-    );
-  }
-
-  const expectedAmountCents = invoiceBalanceDueToCents(invoice.balanceDue);
-
-  if (session.amount_total !== expectedAmountCents) {
-    console.info("[stripe-checkout-recording] amount mismatch", {
-      eventId: providerEventId,
-      checkoutSessionId,
-      amountTotal: session.amount_total,
-      expectedAmountCents,
+      invoiceId,
+      attempt,
+      session,
+      reasonCode: "attempt_invalidated",
     });
-    return ignoreCheckoutSessionEvent(
-      supabase,
-      providerEventId,
-      "Checkout session amount does not match invoice balance due",
-      companyId,
-    );
   }
 
   const providerPaymentId = extractStripePaymentIntentId(session.payment_intent);
   const idempotencyKey = buildStripeCheckoutIdempotencyKey(checkoutSessionId);
 
+  // Redelivery/idempotency check must happen before evaluating the invoice's *current*
+  // payable/balance state: a webhook retry for an already-recorded Stripe payment will
+  // legitimately find the invoice now "paid" (or its balance already reduced), which
+  // must resolve as idempotent success rather than a spurious reconciliation record.
   const existingPayment = await findExistingStripeCheckoutPayment(supabase, companyId, {
     checkoutSessionId,
     providerPaymentId,
@@ -475,6 +484,71 @@ async function processCheckoutSessionCompletedEvent(
     await markPaymentAttemptCompleted(supabase, attempt.id, providerPaymentId);
     await markProviderEventProcessed(supabase, providerEventId, companyId);
     return { processed: true, ignored: false };
+  }
+
+  const accountRow = await findStripeCompanyPaymentAccountByCompanyId(
+    supabase,
+    companyId,
+  );
+
+  if (!accountRow || !isStripeCompanyPaymentAccountReady(accountRow, connectedAccountId)) {
+    throw new Error(
+      "Stripe payment account is not ready for a captured checkout session",
+    );
+  }
+
+  const invoice = await getInvoiceStripePaymentTarget(
+    supabase,
+    companyId,
+    invoiceId,
+  );
+
+  if (!invoice) {
+    throw new Error(
+      "Paid checkout session invoice record could not be loaded",
+    );
+  }
+
+  if (!isInvoicePayable(invoice.status) || invoice.balanceDue <= 0) {
+    return reconcileStaleCapturedCheckoutSession(supabase, {
+      providerEventId,
+      companyId,
+      invoiceId,
+      attempt,
+      session,
+      reasonCode: "invoice_not_payable",
+    });
+  }
+
+  if (
+    !isInvoiceBalanceConsistent({
+      amountPaid: invoice.amountPaid,
+      balanceDue: invoice.balanceDue,
+      total: invoice.total,
+    })
+  ) {
+    throw new Error(
+      "Invoice balance is inconsistent for a captured checkout session",
+    );
+  }
+
+  const expectedAmountCents = invoiceBalanceDueToCents(invoice.balanceDue);
+
+  if (session.amount_total !== expectedAmountCents) {
+    console.info("[stripe-checkout-recording] amount mismatch", {
+      eventId: providerEventId,
+      checkoutSessionId,
+      amountTotal: session.amount_total,
+      expectedAmountCents,
+    });
+    return reconcileStaleCapturedCheckoutSession(supabase, {
+      providerEventId,
+      companyId,
+      invoiceId,
+      attempt,
+      session,
+      reasonCode: "amount_mismatch",
+    });
   }
 
   const paymentDate = stripeUnixTimestampToDateOnly(
@@ -517,6 +591,22 @@ async function processCheckoutSessionCompletedEvent(
       await markPaymentAttemptCompleted(supabase, attempt.id, providerPaymentId);
       await markProviderEventProcessed(supabase, providerEventId, companyId);
       return { processed: true, ignored: false };
+    }
+
+    if (recordResult.reconciliationReason) {
+      console.info("[stripe-checkout-recording] RPC rejected with recognized stale-state conflict", {
+        eventId: providerEventId,
+        checkoutSessionId,
+        reasonCode: recordResult.reconciliationReason,
+      });
+      return reconcileStaleCapturedCheckoutSession(supabase, {
+        providerEventId,
+        companyId,
+        invoiceId,
+        attempt,
+        session,
+        reasonCode: recordResult.reconciliationReason,
+      });
     }
 
     console.error("[stripe-checkout-recording] RPC failed", {

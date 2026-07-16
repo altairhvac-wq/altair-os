@@ -54,6 +54,13 @@ import type {
   PaymentAttemptRecordInsert,
   PaymentAttemptStatus,
 } from "@/lib/payments/payment-attempts";
+import type {
+  PaymentReconciliationProvider,
+  PaymentReconciliationReasonCode,
+  PaymentReconciliationRecord,
+  PaymentReconciliationRecordInsert,
+  PaymentReconciliationStatus,
+} from "@/lib/payments/payment-reconciliations";
 
 export type { PaymentProviderEventStatus };
 export type PaymentProviderEventRow = PaymentProviderEvent;
@@ -62,6 +69,14 @@ export type { PaymentProviderEventInsert };
 export type { PaymentAttemptStatus };
 export type PaymentAttemptRow = PaymentAttemptRecord;
 export type PaymentAttemptInsert = PaymentAttemptRecordInsert;
+
+export type {
+  PaymentReconciliationProvider,
+  PaymentReconciliationReasonCode,
+  PaymentReconciliationStatus,
+};
+export type PaymentReconciliationRow = PaymentReconciliationRecord;
+export type PaymentReconciliationInsert = PaymentReconciliationRecordInsert;
 
 export type {
   PlatformAutomationRunRow,

@@ -11,7 +11,8 @@ export type PaymentProviderEventStatus =
   | "processing"
   | "processed"
   | "failed"
-  | "ignored";
+  | "ignored"
+  | "reconciliation_required";
 
 export type PaymentProviderEvent = {
   id: UUID;
