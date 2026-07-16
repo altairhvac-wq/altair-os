@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import Link from "next/link";
+import type { MouseEvent } from "react";
 import {
   formatScheduledDate,
   formatScheduledTime,
@@ -29,15 +31,17 @@ type JobsTableProps = {
 
 const jobRowClassName = adminTableRowClass;
 
-function handleJobRowKeyDown(
-  event: React.KeyboardEvent<HTMLTableRowElement>,
-  onSelect: (job: Job) => void,
-  job: Job,
-) {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
-    onSelect(job);
-  }
+/**
+ * Focus ring for the primary job-number link: the same Paper-surface
+ * treatment already used for the Customers ledger's primary-cell link (see
+ * CustomersTable.tsx) — reused rather than inventing a new focus token, so
+ * the ring stays non-cyan and visible in both themes.
+ */
+const jobNumberLinkFocusClass =
+  "hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
+
+function handleJobLinkClick(event: MouseEvent<HTMLAnchorElement>) {
+  event.stopPropagation();
 }
 
 export function JobsTable({
@@ -132,13 +136,7 @@ export function JobsTable({
               return (
                 <tr
                   key={job.id}
-                  tabIndex={0}
-                  role="link"
                   onClick={() => onSelect(job)}
-                  onKeyDown={(event) =>
-                    handleJobRowKeyDown(event, onSelect, job)
-                  }
-                  aria-label={`Open job ${job.jobNumber} for ${job.customerName}`}
                   className={
                     northStar
                       ? `${lt.tableRow} ${isSelected ? lt.tableRowSelected : ""}`
@@ -158,13 +156,17 @@ export function JobsTable({
                     </td>
                   ) : null}
                   <td className="admin-table-cell">
-                    <p
+                    <Link
+                      href={`/jobs/${job.id}`}
+                      onClick={handleJobLinkClick}
                       className={
-                        northStar ? lt.tablePrimaryText : "font-semibold text-slate-900"
+                        northStar
+                          ? `${lt.tablePrimaryText} ${jobNumberLinkFocusClass}`
+                          : `font-semibold text-slate-900 ${jobNumberLinkFocusClass}`
                       }
                     >
                       {job.jobNumber}
-                    </p>
+                    </Link>
                   </td>
                   <td
                     className={`admin-table-cell ${
