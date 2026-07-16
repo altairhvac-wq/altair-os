@@ -1,11 +1,17 @@
 import { useMemo } from "react";
 import { ImageIcon, Receipt } from "lucide-react";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
-import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import {
-  adminTableRowClass,
-  adminTableRowSelectedClass,
-} from "@/shared/lib/admin-density";
+  AltairTable,
+  AltairTableBody,
+  AltairTableCell,
+  AltairTableHead,
+  AltairTableHeader,
+  AltairTablePrimaryCell,
+  AltairTableRow,
+  AltairTableSecondaryText,
+} from "@/shared/design-system/table";
+import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { formatExpenseAmount, formatExpenseDate } from "@/shared/types/expense";
 import type { Expense } from "@/shared/types/expense";
@@ -157,228 +163,220 @@ export function ExpensesTable({
           northStar ? " expense-north-star-ledger" : ""
         }`}
       >
-      <table className="w-full min-w-[880px] text-left text-sm">
-        <thead>
-          <tr
-            className={
-              northStar
-                ? lt.tableHeaderRow
-                : "border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500"
-            }
-          >
-            {selectionEnabled ? (
-              <th
-                className={`w-10 ${northStar ? lt.tableHeaderCell : "admin-table-cell"}`}
-              >
-                {headerSelection && headerSelection.selectableCount > 0 ? (
-                  <BulkSelectCheckbox
-                    checked={headerSelection.allSelected}
-                    indeterminate={headerSelection.someSelected}
-                    ariaLabel="Select all visible expenses"
-                    onChange={(checked) => onToggleAllVisible?.(checked)}
-                    variant={northStar ? "northStar" : "default"}
-                  />
-                ) : null}
-              </th>
-            ) : null}
-            <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
-              Expense
-            </th>
-            <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
-              Merchant
-            </th>
-            <th
-              className={`hidden ${northStar ? lt.tableHeaderCell : "admin-table-cell"} md:table-cell`}
-            >
-              Category
-            </th>
-            <th
-              className={`hidden ${northStar ? lt.tableHeaderCell : "admin-table-cell"} lg:table-cell`}
-            >
-              Technician
-            </th>
-            <th
-              className={`hidden ${northStar ? lt.tableHeaderCell : "admin-table-cell"} lg:table-cell`}
-            >
-              Job
-            </th>
-            <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
-              Receipt
-            </th>
-            <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
-              Amount
-            </th>
-            <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
-              Status
-            </th>
-          </tr>
-        </thead>
-        <tbody
-          className={
-            northStar
-              ? "divide-y divide-[rgba(138,99,36,0.12)]"
-              : "divide-y divide-slate-50"
-          }
-        >
-          {expenses.map((expense) => {
-            const isSelected = expense.id === selectedId;
-            const isBulkSelected = selectedIds?.has(expense.id) ?? false;
-            const hasReceipt = expense.receiptStatus === "attached";
-            const isRowHighlighted = isSelected || isBulkSelected;
-            const merchant = getExpenseMerchantLabel(
-              expense.merchant,
-              northStar,
-            );
-            const purchaseDate = getExpenseDateLabel(
-              expense.purchaseDate,
-              northStar,
-            );
-            const amount = getExpenseAmountLabel(expense.amount, northStar);
-            const technician = getExpenseTechnicianLabel(
-              expense.technician,
-              northStar,
-            );
-            const job = getExpenseJobLabel(expense.jobNumber, northStar);
-
-            return (
-              <tr
-                key={expense.id}
-                onClick={() => onSelect(expense)}
-                className={
-                  northStar
-                    ? `${lt.tableRow} ${rowStatusAccent[expense.status] ?? ""} ${
-                        isRowHighlighted ? lt.tableRowSelected : ""
-                      }`
-                    : `${adminTableRowClass} ${
-                        rowStatusAccent[expense.status] ?? ""
-                      } ${isRowHighlighted ? adminTableRowSelectedClass : ""}`
-                }
-              >
-                {selectionEnabled ? (
-                  <td className="admin-table-cell">
+        <AltairTable className="min-w-[880px]">
+          <AltairTableHeader>
+            <AltairTableRow className={northStar ? lt.tableHeaderRow : undefined}>
+              {selectionEnabled ? (
+                <AltairTableHead
+                  className={`w-10 ${northStar ? lt.tableHeaderCell : ""}`}
+                >
+                  {headerSelection && headerSelection.selectableCount > 0 ? (
                     <BulkSelectCheckbox
-                      checked={isBulkSelected}
-                      ariaLabel={`Select expense ${expense.expenseNumber}`}
-                      onChange={() => onToggleSelection?.(expense.id)}
+                      checked={headerSelection.allSelected}
+                      indeterminate={headerSelection.someSelected}
+                      ariaLabel="Select all visible expenses"
+                      onChange={(checked) => onToggleAllVisible?.(checked)}
                       variant={northStar ? "northStar" : "default"}
                     />
-                  </td>
-                ) : null}
-                <td className="admin-table-cell">
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onSelect(expense);
-                    }}
-                    className={
-                      northStar
-                        ? `${lt.tablePrimaryText} ${expenseNumberButtonFocusClass}`
-                        : `font-semibold text-slate-900 ${expenseNumberButtonFocusClass}`
-                    }
-                  >
-                    {expense.expenseNumber}
-                  </button>
-                  <p
-                    className={
-                      northStar
-                        ? purchaseDate.missing
-                          ? northStarMissingValueClass
-                          : lt.tableMutedText
-                        : "text-xs text-slate-500"
-                    }
-                  >
-                    {purchaseDate.text}
-                  </p>
-                </td>
-                <td className="admin-table-cell">
-                  <p
-                    className={
-                      northStar
-                        ? merchant.missing
-                          ? northStarMissingValueClass
-                          : `truncate ${lt.tableSecondaryText}`
-                        : "truncate font-medium text-slate-900"
-                    }
-                  >
-                    {merchant.text}
-                  </p>
-                </td>
-                <td className="hidden admin-table-cell md:table-cell">
-                  <ExpenseCategoryBadge category={expense.category} northStar={northStar} />
-                </td>
-                <td
-                  className={`hidden ${northStar ? `admin-table-cell expense-north-star-meta-cell` : "admin-table-cell text-slate-600"} lg:table-cell`}
+                  ) : null}
+                </AltairTableHead>
+              ) : null}
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
+                Expense
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
+                Merchant
+              </AltairTableHead>
+              <AltairTableHead
+                className={`hidden md:table-cell ${northStar ? lt.tableHeaderCell : ""}`}
+              >
+                Category
+              </AltairTableHead>
+              <AltairTableHead
+                className={`hidden lg:table-cell ${northStar ? lt.tableHeaderCell : ""}`}
+              >
+                Technician
+              </AltairTableHead>
+              <AltairTableHead
+                className={`hidden lg:table-cell ${northStar ? lt.tableHeaderCell : ""}`}
+              >
+                Job
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
+                Receipt
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
+                Amount
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
+                Status
+              </AltairTableHead>
+            </AltairTableRow>
+          </AltairTableHeader>
+          <AltairTableBody>
+            {expenses.map((expense) => {
+              const isSelected = expense.id === selectedId;
+              const isBulkSelected = selectedIds?.has(expense.id) ?? false;
+              const hasReceipt = expense.receiptStatus === "attached";
+              const isRowHighlighted = isSelected || isBulkSelected;
+              const merchant = getExpenseMerchantLabel(
+                expense.merchant,
+                northStar,
+              );
+              const purchaseDate = getExpenseDateLabel(
+                expense.purchaseDate,
+                northStar,
+              );
+              const amount = getExpenseAmountLabel(expense.amount, northStar);
+              const technician = getExpenseTechnicianLabel(
+                expense.technician,
+                northStar,
+              );
+              const job = getExpenseJobLabel(expense.jobNumber, northStar);
+              const statusAccent = rowStatusAccent[expense.status] ?? "";
+
+              return (
+                <AltairTableRow
+                  key={expense.id}
+                  selected={isRowHighlighted}
+                  onClick={() => onSelect(expense)}
+                  className={
+                    northStar
+                      ? `${lt.tableRow} ${statusAccent}`.trim()
+                      : statusAccent || undefined
+                  }
                 >
-                  <span
-                    className={
-                      northStar && technician.missing
-                        ? northStarMissingValueClass
-                        : undefined
+                  {selectionEnabled ? (
+                    <AltairTableCell>
+                      <BulkSelectCheckbox
+                        checked={isBulkSelected}
+                        ariaLabel={`Select expense ${expense.expenseNumber}`}
+                        onChange={() => onToggleSelection?.(expense.id)}
+                        variant={northStar ? "northStar" : "default"}
+                      />
+                    </AltairTableCell>
+                  ) : null}
+                  <AltairTablePrimaryCell
+                    primary={
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onSelect(expense);
+                        }}
+                        className={
+                          northStar
+                            ? `${lt.tablePrimaryText} ${expenseNumberButtonFocusClass}`
+                            : `font-semibold text-slate-900 ${expenseNumberButtonFocusClass}`
+                        }
+                      >
+                        {expense.expenseNumber}
+                      </button>
                     }
-                  >
-                    {technician.text}
-                  </span>
-                </td>
-                <td
-                  className={`hidden ${northStar ? `admin-table-cell expense-north-star-meta-cell` : "admin-table-cell text-slate-600"} lg:table-cell`}
-                >
-                  <span
-                    className={
-                      northStar && job.missing
-                        ? northStarMissingValueClass
-                        : undefined
+                    secondary={
+                      <AltairTableSecondaryText
+                        className={
+                          northStar
+                            ? purchaseDate.missing
+                              ? northStarMissingValueClass
+                              : lt.tableMutedText
+                            : "text-xs text-slate-500"
+                        }
+                      >
+                        {purchaseDate.text}
+                      </AltairTableSecondaryText>
                     }
+                  />
+                  <AltairTableCell>
+                    <AltairTableSecondaryText
+                      className={
+                        northStar
+                          ? merchant.missing
+                            ? northStarMissingValueClass
+                            : `truncate ${lt.tableSecondaryText}`
+                          : "truncate font-medium text-slate-900"
+                      }
+                    >
+                      {merchant.text}
+                    </AltairTableSecondaryText>
+                  </AltairTableCell>
+                  <AltairTableCell className="hidden md:table-cell">
+                    <ExpenseCategoryBadge category={expense.category} northStar={northStar} />
+                  </AltairTableCell>
+                  <AltairTableCell
+                    className={`hidden lg:table-cell ${
+                      northStar ? "expense-north-star-meta-cell" : "text-slate-600"
+                    }`}
                   >
-                    {job.text}
-                  </span>
-                </td>
-                <td className="admin-table-cell">
-                  {hasReceipt ? (
+                    <span
+                      className={
+                        northStar && technician.missing
+                          ? northStarMissingValueClass
+                          : undefined
+                      }
+                    >
+                      {technician.text}
+                    </span>
+                  </AltairTableCell>
+                  <AltairTableCell
+                    className={`hidden lg:table-cell ${
+                      northStar ? "expense-north-star-meta-cell" : "text-slate-600"
+                    }`}
+                  >
+                    <span
+                      className={
+                        northStar && job.missing ? northStarMissingValueClass : undefined
+                      }
+                    >
+                      {job.text}
+                    </span>
+                  </AltairTableCell>
+                  <AltairTableCell>
+                    {hasReceipt ? (
+                      <span
+                        className={
+                          northStar
+                            ? "inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-600/20"
+                            : "inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-600/15"
+                        }
+                      >
+                        <ImageIcon className="h-3 w-3" />
+                        Attached
+                      </span>
+                    ) : (
+                      <span
+                        className={
+                          northStar
+                            ? "inline-flex items-center gap-1 rounded-full bg-[#EFE4CB] px-2 py-0.5 text-xs font-semibold text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.14)]"
+                            : "inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500"
+                        }
+                      >
+                        <Receipt className="h-3 w-3" />
+                        Missing
+                      </span>
+                    )}
+                  </AltairTableCell>
+                  <AltairTableCell>
                     <span
                       className={
                         northStar
-                          ? "inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-600/20"
-                          : "inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-600/15"
+                          ? amount.missing
+                            ? northStarMissingValueClass
+                            : "text-base font-bold tabular-nums text-[#17130E]"
+                          : "font-semibold text-slate-900"
                       }
                     >
-                      <ImageIcon className="h-3 w-3" />
-                      Attached
+                      {amount.text}
                     </span>
-                  ) : (
-                    <span
-                      className={
-                        northStar
-                          ? "inline-flex items-center gap-1 rounded-full bg-[#EFE4CB] px-2 py-0.5 text-xs font-semibold text-[#4F4638] ring-1 ring-[rgba(138,99,36,0.14)]"
-                          : "inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500"
-                      }
-                    >
-                      <Receipt className="h-3 w-3" />
-                      Missing
-                    </span>
-                  )}
-                </td>
-                <td className="admin-table-cell">
-                  <span
-                    className={
-                      northStar
-                        ? amount.missing
-                          ? northStarMissingValueClass
-                          : "text-base font-bold tabular-nums text-[#17130E]"
-                        : "font-semibold text-slate-900"
-                    }
-                  >
-                    {amount.text}
-                  </span>
-                </td>
-                <td className="admin-table-cell">
-                  <ExpenseStatusBadge status={expense.status} northStar={northStar} />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  </AltairTableCell>
+                  <AltairTableCell>
+                    <ExpenseStatusBadge status={expense.status} northStar={northStar} />
+                  </AltairTableCell>
+                </AltairTableRow>
+              );
+            })}
+          </AltairTableBody>
+        </AltairTable>
       </div>
     </>
   );

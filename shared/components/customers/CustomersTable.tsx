@@ -5,9 +5,15 @@ import { useRouter } from "next/navigation";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { useFormatDemoDisplayName } from "@/shared/components/display/FounderMarketingDisplayContext";
 import {
-  adminTableRowClass,
-  adminTableRowSelectedClass,
-} from "@/shared/lib/admin-density";
+  AltairTable,
+  AltairTableBody,
+  AltairTableCell,
+  AltairTableHead,
+  AltairTableHeader,
+  AltairTablePrimaryCell,
+  AltairTableRow,
+  AltairTableSecondaryText,
+} from "@/shared/design-system/table";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { isCustomerArchived, isCustomerDeleted } from "@/shared/lib/customer-lifecycle";
 import {
@@ -72,105 +78,88 @@ export function CustomersTable({
           northStar ? " customer-north-star-ledger" : ""
         }`}
       >
-        <table className="w-full min-w-[640px] text-left text-sm">
-        <thead>
-          <tr
-            className={
-              northStar
-                ? lt.tableHeaderRow
-                : "border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500"
-            }
-          >
-            {selectionEnabled ? (
-              <th
-                className={`w-10 ${northStar ? lt.tableHeaderCell : "admin-table-cell"}`}
-              >
-                {headerSelection && headerSelection.selectableCount > 0 ? (
-                  <BulkSelectCheckbox
-                    checked={headerSelection.allSelected}
-                    indeterminate={headerSelection.someSelected}
-                    ariaLabel="Select all visible customers"
-                    onChange={(checked) => onToggleAllVisible?.(checked)}
-                    variant={northStar ? "northStar" : "default"}
-                  />
-                ) : null}
-              </th>
-            ) : null}
-            <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
-              Customer
-            </th>
-            <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
-              Status
-            </th>
-            <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
-              Location
-            </th>
-            <th
-              className={`${northStar ? lt.tableHeaderCell : "admin-table-cell"} text-right`}
-            >
-              Jobs
-            </th>
-            {showRevenueStats ? (
-              <th
-                className={`${northStar ? lt.tableHeaderCell : "admin-table-cell"} text-right`}
-              >
-                Revenue
-              </th>
-            ) : null}
-            <th
-              className={`hidden ${northStar ? lt.tableHeaderCell : "admin-table-cell"} lg:table-cell`}
-            >
-              Last service
-            </th>
-          </tr>
-        </thead>
-        <tbody
-          className={
-            northStar
-              ? "divide-y divide-[rgba(79,70,56,0.08)]"
-              : "divide-y divide-slate-50"
-          }
-        >
-          {customers.map((customer) => {
-            const isBulkSelected = selectedIds?.has(customer.id) ?? false;
-
-            return (
-            <tr
-              key={customer.id}
-              onClick={() => router.push(`/customers/${customer.id}`)}
-              className={
-                northStar
-                  ? `${lt.tableRow} ${
-                      isBulkSelected ? lt.tableRowSelected : ""
-                    }`
-                  : `${adminTableRowClass} ${
-                      isBulkSelected ? adminTableRowSelectedClass : ""
-                    }`
-              }
-            >
+        <AltairTable className="min-w-[640px]">
+          <AltairTableHeader>
+            <AltairTableRow className={northStar ? lt.tableHeaderRow : undefined}>
               {selectionEnabled ? (
-                <td className="admin-table-cell">
-                  <BulkSelectCheckbox
-                    checked={selectedIds?.has(customer.id) ?? false}
-                    ariaLabel={`Select ${customer.name}`}
-                    onChange={() => onToggleSelection?.(customer.id)}
-                    variant={northStar ? "northStar" : "default"}
-                  />
-                </td>
+                <AltairTableHead
+                  className={`w-10 ${northStar ? lt.tableHeaderCell : ""}`}
+                >
+                  {headerSelection && headerSelection.selectableCount > 0 ? (
+                    <BulkSelectCheckbox
+                      checked={headerSelection.allSelected}
+                      indeterminate={headerSelection.someSelected}
+                      ariaLabel="Select all visible customers"
+                      onChange={(checked) => onToggleAllVisible?.(checked)}
+                      variant={northStar ? "northStar" : "default"}
+                    />
+                  ) : null}
+                </AltairTableHead>
               ) : null}
-              <td className="admin-table-cell">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={
-                      northStar
-                        ? lt.tableAvatar
-                        : "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-400 text-xs font-bold text-white"
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
+                Customer
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
+                Status
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
+                Location
+              </AltairTableHead>
+              <AltairTableHead
+                align="right"
+                className={northStar ? lt.tableHeaderCell : undefined}
+              >
+                Jobs
+              </AltairTableHead>
+              {showRevenueStats ? (
+                <AltairTableHead
+                  align="right"
+                  className={northStar ? lt.tableHeaderCell : undefined}
+                >
+                  Revenue
+                </AltairTableHead>
+              ) : null}
+              <AltairTableHead
+                className={`hidden lg:table-cell ${northStar ? lt.tableHeaderCell : ""}`}
+              >
+                Last service
+              </AltairTableHead>
+            </AltairTableRow>
+          </AltairTableHeader>
+          <AltairTableBody>
+            {customers.map((customer) => {
+              const isBulkSelected = selectedIds?.has(customer.id) ?? false;
+
+              return (
+                <AltairTableRow
+                  key={customer.id}
+                  selected={isBulkSelected}
+                  onClick={() => router.push(`/customers/${customer.id}`)}
+                  className={northStar ? lt.tableRow : undefined}
+                >
+                  {selectionEnabled ? (
+                    <AltairTableCell>
+                      <BulkSelectCheckbox
+                        checked={selectedIds?.has(customer.id) ?? false}
+                        ariaLabel={`Select ${customer.name}`}
+                        onChange={() => onToggleSelection?.(customer.id)}
+                        variant={northStar ? "northStar" : "default"}
+                      />
+                    </AltairTableCell>
+                  ) : null}
+                  <AltairTablePrimaryCell
+                    leading={
+                      <div
+                        className={
+                          northStar
+                            ? lt.tableAvatar
+                            : "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-400 text-xs font-bold text-white"
+                        }
+                      >
+                        {getCustomerInitials(formatDisplayName(customer.name))}
+                      </div>
                     }
-                  >
-                    {getCustomerInitials(formatDisplayName(customer.name))}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
+                    primary={
                       <CustomerNameLink
                         customerId={customer.id}
                         customerName={customer.name}
@@ -187,7 +176,9 @@ export function CustomersTable({
                         }
                         stopRowNavigation
                       />
-                      {isCustomerDeleted(customer) ? (
+                    }
+                    trailing={
+                      isCustomerDeleted(customer) ? (
                         <span
                           className={
                             northStar
@@ -207,68 +198,64 @@ export function CustomersTable({
                         >
                           Archived
                         </span>
-                      ) : null}
-                    </div>
-                    <p
+                      ) : null
+                    }
+                    secondary={
+                      <AltairTableSecondaryText
+                        className={
+                          northStar
+                            ? lt.tableSecondaryText
+                            : "truncate text-xs text-slate-500"
+                        }
+                      >
+                        {customer.company ?? customer.email}
+                      </AltairTableSecondaryText>
+                    }
+                  />
+                  <AltairTableCell>
+                    <CustomerStatusBadge status={customer.status} />
+                  </AltairTableCell>
+                  <AltairTableCell
+                    className={northStar ? "customer-north-star-location-cell" : "text-slate-600"}
+                  >
+                    {customer.city}, {customer.state}
+                  </AltairTableCell>
+                  <AltairTableCell
+                    align="right"
+                    className={
+                      northStar
+                        ? "customer-north-star-jobs-cell"
+                        : "font-medium text-slate-900"
+                    }
+                  >
+                    {customer.totalJobs}
+                  </AltairTableCell>
+                  {showRevenueStats ? (
+                    <AltairTableCell
+                      align="right"
                       className={
                         northStar
-                          ? lt.tableSecondaryText
-                          : "truncate text-xs text-slate-500"
+                          ? "customer-north-star-revenue-cell"
+                          : "font-medium text-slate-900"
                       }
                     >
-                      {customer.company ?? customer.email}
-                    </p>
-                  </div>
-                </div>
-              </td>
-              <td className="admin-table-cell">
-                <CustomerStatusBadge status={customer.status} />
-              </td>
-              <td
-                className={`admin-table-cell${
-                  northStar
-                    ? " customer-north-star-location-cell"
-                    : " text-slate-600"
-                }`}
-              >
-                {customer.city}, {customer.state}
-              </td>
-              <td
-                className={`admin-table-cell text-right${
-                  northStar
-                    ? " customer-north-star-jobs-cell"
-                    : " font-medium text-slate-900"
-                }`}
-              >
-                {customer.totalJobs}
-              </td>
-              {showRevenueStats ? (
-                <td
-                  className={`admin-table-cell text-right${
-                    northStar
-                      ? " customer-north-star-revenue-cell"
-                      : " font-medium text-slate-900"
-                  }`}
-                >
-                  {formatCurrency(customer.totalRevenue)}
-                </td>
-              ) : null}
-              <td
-                className={`hidden admin-table-cell lg:table-cell${
-                  northStar
-                    ? " customer-north-star-date-cell"
-                    : " text-slate-500"
-                }`}
-              >
-                {customer.lastServiceDate
-                  ? formatDate(customer.lastServiceDate)
-                  : "—"}
-              </td>
-            </tr>
-            );
-          })}
-        </tbody>
-        </table>
+                      {formatCurrency(customer.totalRevenue)}
+                    </AltairTableCell>
+                  ) : null}
+                  <AltairTableCell
+                    className={`hidden lg:table-cell ${
+                      northStar ? "customer-north-star-date-cell" : "text-slate-500"
+                    }`}
+                  >
+                    {customer.lastServiceDate
+                      ? formatDate(customer.lastServiceDate)
+                      : "—"}
+                  </AltairTableCell>
+                </AltairTableRow>
+              );
+            })}
+          </AltairTableBody>
+        </AltairTable>
       </div>
     </>
   );

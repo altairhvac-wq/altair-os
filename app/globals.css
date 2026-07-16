@@ -2660,6 +2660,84 @@ a[href] {
   background-color: var(--altair-paper-elevated);
 }
 
+/*
+ * ============================================================================
+ * Altair Design Foundation — canonical Table primitives
+ * ============================================================================
+ * Source of truth: docs/altair/ALTAIR_DESIGN_FOUNDATION.md ("Tables"),
+ * shared/design-system/table/README.md (contract + composition).
+ *
+ * These classes belong to shared/design-system/table/AltairTable.tsx only.
+ * Unlike ".altair-surface-workspace table ..." above (an ambient wrapper
+ * selector any nested <table> inherits from), these are explicit, stable
+ * classes the primitives render themselves, so a table's material no longer
+ * depends on which page surface happens to wrap it. Same semantic token
+ * values as the workspace-table rules above — no new colors, no visual
+ * change for the two migrated ledgers' legacy branch.
+ *
+ * Every rule is wrapped in :where(...), which carries zero specificity. This
+ * is the escape hatch North Star needs: North Star passes its own gold/ivory
+ * Tailwind utility classes (northStarListTokens) as `className` onto these
+ * same primitives, and a plain utility class (specificity 0,1,0) must always
+ * beat this file's defaults, in any build's class order, the same way
+ * Button.tsx's README already flags Tailwind's cascade as unreliable for
+ * className-based overrides otherwise. Without :where(), a North Star header
+ * row's "bg-[#DCE3EC]" or a body row's "hover:bg-[#F2F5F8]" could lose to
+ * these defaults depending on Tailwind's generated stylesheet order.
+ *
+ * "altair-table-header tr" only sets background — the header row's border
+ * comes from "altair-table-row" below (the header row is itself an
+ * AltairTableRow). Hover/zebra/selected are scoped under "tbody" so a header
+ * row rendered with AltairTableRow never picks up body-only interaction
+ * styling. "altair-table-head" carries the default header-cell typography so
+ * AltairTableHead never needs to bake competing Tailwind color/weight
+ * utilities directly onto the <th> (which North Star's own utilities could
+ * not reliably beat).
+ */
+:where(.altair-table-header tr) {
+  background-color: var(--altair-paper-subtle);
+}
+
+:where(.altair-table-head) {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--altair-ink-on-paper-muted);
+}
+
+:where(.altair-table-row) {
+  border-bottom: 1px solid var(--altair-border);
+}
+
+:where(tbody .altair-table-row) {
+  transition: background-color 0.15s ease;
+}
+
+:where(tbody .altair-table-row:nth-of-type(even)) {
+  background-color: var(--altair-paper-subtle);
+}
+
+:where(tbody .altair-table-row:hover) {
+  background-color: var(--altair-paper-elevated);
+}
+
+/*
+ * Selected rows use Strong Border (the Foundation's dedicated "selection and
+ * focus containment" role) rather than the legacy cyan tint the un-migrated
+ * ".admin-table-row-selected" class still uses — see the README's "Row
+ * interaction contract" for why this is an intentional, minimal difference.
+ */
+:where(tbody .altair-table-row-selected),
+:where(tbody .altair-table-row-selected:nth-of-type(even)) {
+  background-color: var(--altair-paper-elevated);
+  box-shadow: inset 0 0 0 1px var(--altair-border-strong);
+}
+
+:where(tbody .altair-table-row-selected:hover) {
+  background-color: var(--altair-paper-elevated);
+}
+
 .admin-panel-header {
   padding: 0.625rem 0.875rem;
   border-bottom: 1px solid var(--border-subtle);
