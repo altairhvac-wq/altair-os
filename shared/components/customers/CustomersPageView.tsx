@@ -502,6 +502,7 @@ export function CustomersPageView({
                 onToggleSelection={toggleSelection}
                 onToggleAllVisible={toggleAllVisible}
                 northStar={northStar}
+                canManageCustomers={canManageCustomers}
               />
             )}
           </div>

@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
-import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { useFormatDemoDisplayName } from "@/shared/components/display/FounderMarketingDisplayContext";
 import {
   adminTableRowClass,
@@ -18,8 +17,19 @@ import {
   type Customer,
 } from "@/shared/types/customer";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import { CustomerNameLink } from "./CustomerNameLink";
 import { CustomerStatusBadge } from "./CustomerStatusBadge";
 import { CustomersMobileCardList } from "./CustomersMobileCardList";
+
+/**
+ * Focus ring for the primary customer-name link: the same Paper-surface
+ * treatment already used by Input/Select/Textarea (see
+ * shared/design-system/components/Input.tsx). Reused rather than inventing a
+ * new focus token — ink-on-paper/paper-elevated stay anchored to Paper in
+ * both themes, so the ring stays visible and non-cyan regardless of theme.
+ */
+const customerNameLinkFocusClass =
+  "hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-ink-on-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-elevated";
 
 type CustomersTableProps = {
   customers: Customer[];
@@ -29,6 +39,7 @@ type CustomersTableProps = {
   onToggleSelection?: (customerId: string) => void;
   onToggleAllVisible?: (selectAll: boolean) => void;
   northStar?: boolean;
+  canManageCustomers?: boolean;
 };
 
 export function CustomersTable({
@@ -39,6 +50,7 @@ export function CustomersTable({
   onToggleSelection,
   onToggleAllVisible,
   northStar = false,
+  canManageCustomers = false,
 }: CustomersTableProps) {
   const router = useRouter();
   const formatDisplayName = useFormatDemoDisplayName();
@@ -159,15 +171,22 @@ export function CustomersTable({
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <p
+                      <CustomerNameLink
+                        customerId={customer.id}
+                        customerName={customer.name}
+                        canManageCustomers={canManageCustomers}
                         className={
                           northStar
                             ? lt.tablePrimaryText
                             : "truncate font-semibold text-slate-900"
                         }
-                      >
-                        <DemoDisplayName>{customer.name}</DemoDisplayName>
-                      </p>
+                        linkClassName={
+                          northStar
+                            ? `${lt.tablePrimaryText} ${customerNameLinkFocusClass}`
+                            : `truncate font-semibold text-slate-900 ${customerNameLinkFocusClass}`
+                        }
+                        stopRowNavigation
+                      />
                       {isCustomerDeleted(customer) ? (
                         <span
                           className={
