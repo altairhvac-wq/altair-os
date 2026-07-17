@@ -6,6 +6,7 @@ import { JobAttachmentUploadBox } from "@/shared/components/jobs/JobAttachmentUp
 import {
   MobileSheet,
   MobileSheetBody,
+  MobileSheetFooter,
   MobileSheetHeader,
   MobileSheetHeaderIcon,
   MobileSheetPanel,
@@ -27,6 +28,7 @@ export function TechnicianPhotoSheet({
   onUploaded,
 }: TechnicianPhotoSheetProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadedCount, setUploadedCount] = useState(0);
 
   return (
     <MobileSheet
@@ -47,7 +49,14 @@ export function TechnicianPhotoSheet({
             </MobileSheetHeaderIcon>
           }
         />
-        <MobileSheetBody className="pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <MobileSheetBody className="pb-2">
+          {uploadedCount > 0 ? (
+            <p className="mb-3 rounded-xl bg-emerald-50 px-3.5 py-2.5 text-sm font-medium text-emerald-800">
+              {uploadedCount === 1
+                ? "1 photo saved — add another or done"
+                : `${uploadedCount} photos saved — add another or done`}
+            </p>
+          ) : null}
           <JobAttachmentUploadBox
             jobId={jobId}
             defaultAttachmentType="general"
@@ -56,11 +65,23 @@ export function TechnicianPhotoSheet({
             showTypeSelector={false}
             onPendingChange={setIsUploading}
             onUploaded={() => {
+              setUploadedCount((current) => current + 1);
               onUploaded?.();
-              onClose();
             }}
           />
         </MobileSheetBody>
+        {uploadedCount > 0 ? (
+          <MobileSheetFooter>
+            <button
+              type="button"
+              disabled={isUploading}
+              onClick={onClose}
+              className="inline-flex min-h-12 w-full touch-manipulation items-center justify-center rounded-xl bg-cyan-600 px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-cyan-700 active:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Done
+            </button>
+          </MobileSheetFooter>
+        ) : null}
       </MobileSheetPanel>
     </MobileSheet>
   );

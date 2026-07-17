@@ -149,11 +149,11 @@ export function getTechnicianNotificationHref(
 
   switch (notification.entityType) {
     case "job":
-      return "/technician";
+      return `/technician?jobId=${encodeURIComponent(notification.entityId)}`;
     case "expense":
       return `/tech/receipts?selected=${notification.entityId}`;
     case "time_entry":
-      return "/technician";
+      return "/tech/time";
     default:
       return null;
   }

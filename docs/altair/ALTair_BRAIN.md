@@ -108,8 +108,8 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 
 **Technician app (`/technician`, `/tech/*`):**
 - Primary home: `/technician` (assigned jobs)
-- Enabled nav: Today, Receipts, Alerts
-- Time accessible via in-app links (`/tech/time`) — not in bottom nav
+- Enabled nav: Today, Time, Receipts, Alerts
+- Time / breaks: `/tech/time`
 - Legacy mock route: `/tech` root (orphan mock dashboard)
 
 **Mobile:** Two-row primary nav + overflow; pull-to-refresh on selected routes

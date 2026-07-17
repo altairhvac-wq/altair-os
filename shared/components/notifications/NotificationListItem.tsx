@@ -52,17 +52,16 @@ export function NotificationListItem({
     return true;
   }
 
-  async function handleUnreadActivate(event: React.MouseEvent) {
+  function handleUnreadActivate(event: React.MouseEvent) {
     event.preventDefault();
 
-    const marked = await markReadIfNeeded();
-
-    if (!marked || !href) {
+    if (!href) {
       return;
     }
 
     onNavigate?.();
     router.push(href);
+    void markReadIfNeeded();
   }
 
   const content = (

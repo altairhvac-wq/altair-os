@@ -49,6 +49,7 @@ type TechnicianAssignedJobsViewProps = {
   defaultTaxRate: number;
   companyTimeZone: string;
   aiFeaturesEnabled?: boolean;
+  initialSelectedJobId?: string | null;
 };
 
 function TechnicianJobsEmptyState({
@@ -152,6 +153,7 @@ export function TechnicianAssignedJobsView({
   defaultTaxRate,
   companyTimeZone,
   aiFeaturesEnabled = false,
+  initialSelectedJobId = null,
 }: TechnicianAssignedJobsViewProps) {
   const router = useRouter();
   const [jobs, setJobs] = useState(initialJobs);
@@ -166,7 +168,10 @@ export function TechnicianAssignedJobsView({
   const [selectedDateOnly, setSelectedDateOnly] = useState(
     () => scheduleContext.todayDateOnly,
   );
-  const [selectedJob, setSelectedJob] = useState<TechnicianJob | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(
+    () => initialSelectedJobId,
+  );
+  const [deepLinkedJobId] = useState(initialSelectedJobId);
 
   const markRefreshComplete = useCallback(() => {
     setIsRefreshing(false);
@@ -229,15 +234,18 @@ export function TechnicianAssignedJobsView({
   }
 
   function handleSelectJob(job: TechnicianJob) {
-    setSelectedJob(job);
+    setSelectedJobId(job.id);
   }
 
   function handleCloseJobDetail() {
-    setSelectedJob(null);
+    setSelectedJobId(null);
+    if (deepLinkedJobId) {
+      router.replace("/technician");
+    }
   }
 
-  const selectedJobRecord = selectedJob
-    ? (jobs.find((job) => job.id === selectedJob.id) ?? selectedJob)
+  const selectedJobRecord = selectedJobId
+    ? (jobs.find((job) => job.id === selectedJobId) ?? null)
     : null;
 
   const selectedDayJobs = filterJobsForTechnicianScheduleDay(
@@ -308,7 +316,7 @@ export function TechnicianAssignedJobsView({
             <CompletedTodaySection
               jobs={jobs}
               companyTimeZone={companyTimeZone}
-              selectedJobId={selectedJob?.id ?? null}
+              selectedJobId={selectedJobId}
               onSelectJob={handleSelectJob}
             />
           ) : null}
@@ -321,7 +329,7 @@ export function TechnicianAssignedJobsView({
           <TechnicianJobList
             deckKey={selectedDateOnly}
             jobs={deckJobs}
-            selectedJobId={selectedJob?.id ?? null}
+            selectedJobId={selectedJobId}
             timeState={timeState}
             heroSectionLabel={heroSectionCopy.label}
             heroSectionAriaLabel={heroSectionCopy.ariaLabel}
@@ -333,7 +341,7 @@ export function TechnicianAssignedJobsView({
             <CompletedTodaySection
               jobs={jobs}
               companyTimeZone={companyTimeZone}
-              selectedJobId={selectedJob?.id ?? null}
+              selectedJobId={selectedJobId}
               onSelectJob={handleSelectJob}
             />
           ) : null}

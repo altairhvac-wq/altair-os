@@ -5,14 +5,12 @@ import {
   Camera,
   Calculator,
   Clock,
-  FileText,
   Mail,
   MapPin,
   Navigation,
   Package,
   Phone,
   Receipt,
-  StickyNote,
 } from "lucide-react";
 import { JobSummaryAiAssistant } from "@/shared/components/jobs/JobSummaryAiAssistant";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
@@ -46,14 +44,13 @@ import { TechnicianExpenseSheet } from "./TechnicianExpenseSheet";
 import { TechnicianJobEquipmentSummary } from "./TechnicianJobEquipmentSummary";
 import { TechnicianJobLaborStatus } from "./TechnicianJobLaborStatus";
 import { TechnicianJobShiftStatus } from "./TechnicianJobShiftStatus";
+import { TechnicianJobWorkHistory } from "./TechnicianJobWorkHistory";
 import { TechnicianMaterialSheet } from "./TechnicianMaterialSheet";
 import { TechnicianPhotoSheet } from "./TechnicianPhotoSheet";
 import {
   technicianFieldContactPrimaryClass,
   technicianFieldContactSecondaryClass,
   technicianFieldContextBlockClass,
-  technicianFieldJobDetailsClass,
-  technicianFieldJobDetailsSummaryClass,
   technicianFieldReferenceSectionClass,
   technicianFieldSectionLabelClass,
   technicianFieldUtilityActionClass,
@@ -81,9 +78,6 @@ type TechnicianJobFieldDetailProps = {
   onStatusUpdated?: (status: JobStatus) => void;
   onSheetOpenChange?: (hasOpenSheet: boolean) => void;
 };
-
-const detailsClass = technicianFieldJobDetailsClass;
-const detailsSummaryClass = technicianFieldJobDetailsSummaryClass;
 
 function selectPayableInvoiceForCollection(
   invoices: JobInvoiceSummary[],
@@ -130,6 +124,7 @@ export function TechnicianJobFieldDetail({
     ? selectActiveEstimate(billingContext.estimates.filter((e) => e.status === "sent"))
     : null;
   const [completeSheetOpen, setCompleteSheetOpen] = useState(false);
+  const [workHistoryRefreshKey, setWorkHistoryRefreshKey] = useState(0);
 
   useEffect(() => {
     setStatus((current) =>
@@ -154,8 +149,6 @@ export function TechnicianJobFieldDetail({
     onStatusUpdated?.(nextStatus);
   }
 
-  const hasDescription = Boolean(job.description?.trim());
-  const hasNotes = Boolean(job.notes?.trim());
   const addressParts = {
     serviceAddress: job.serviceAddress,
     city: job.city,
@@ -394,6 +387,13 @@ export function TechnicianJobFieldDetail({
           </section>
         ) : null}
 
+        <TechnicianJobWorkHistory
+          key={`${job.id}-${workHistoryRefreshKey}`}
+          jobId={job.id}
+          notes={job.notes}
+          description={job.description}
+        />
+
         <section className={technicianFieldReferenceSectionClass}>
           <h3 className={technicianFieldSectionLabelClass}>Reference</h3>
           <div className="mt-2 space-y-2">
@@ -404,30 +404,6 @@ export function TechnicianJobFieldDetail({
             />
 
             <TechnicianJobEquipmentSummary customerId={job.customerId} />
-
-            {hasDescription ? (
-              <details className={detailsClass}>
-                <summary className={detailsSummaryClass}>
-                  <FileText className="h-3.5 w-3.5 text-slate-400" />
-                  Summary
-                </summary>
-                <p className="px-3 py-2.5 text-sm leading-snug text-slate-800">
-                  {job.description}
-                </p>
-              </details>
-            ) : null}
-
-            {hasNotes ? (
-              <details className={detailsClass}>
-                <summary className={detailsSummaryClass}>
-                  <StickyNote className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                  Office notes
-                </summary>
-                <p className="px-3 py-2.5 text-sm leading-snug text-slate-700">
-                  {job.notes}
-                </p>
-              </details>
-            ) : null}
           </div>
         </section>
       </div>
@@ -438,6 +414,9 @@ export function TechnicianJobFieldDetail({
           jobNumber={job.jobNumber}
           serviceItems={serviceItems}
           onClose={() => setActiveSheet(null)}
+          onSaved={() =>
+            setWorkHistoryRefreshKey((current) => current + 1)
+          }
         />
       ) : null}
 
@@ -446,6 +425,9 @@ export function TechnicianJobFieldDetail({
           jobId={job.id}
           jobNumber={job.jobNumber}
           onClose={() => setActiveSheet(null)}
+          onSaved={() =>
+            setWorkHistoryRefreshKey((current) => current + 1)
+          }
         />
       ) : null}
 
@@ -454,6 +436,9 @@ export function TechnicianJobFieldDetail({
           jobId={job.id}
           jobNumber={job.jobNumber}
           onClose={() => setActiveSheet(null)}
+          onUploaded={() =>
+            setWorkHistoryRefreshKey((current) => current + 1)
+          }
         />
       ) : null}
 

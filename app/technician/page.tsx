@@ -17,12 +17,20 @@ import { isCompanyOnlineCheckoutAvailable } from "@/lib/payments/online-checkout
 import { isSmsSendingConfigured } from "@/lib/sms/env";
 import { TechnicianAssignedJobsView } from "@/shared/components/technician/TechnicianAssignedJobsView";
 
-export default async function TechnicianPage() {
+type TechnicianPageProps = {
+  searchParams: Promise<{ jobId?: string }>;
+};
+
+export default async function TechnicianPage({
+  searchParams,
+}: TechnicianPageProps) {
   const context = await getActiveCompanyContext();
 
   if (!context) {
     redirect("/setup");
   }
+
+  const { jobId: initialJobId } = await searchParams;
 
   const canManageTime = context.permissions.viewAssignedJobs;
   const canCreateEstimate =
@@ -87,6 +95,7 @@ export default async function TechnicianPage() {
       defaultTaxRate={billingDefaults.defaultTaxRate}
       companyTimeZone={context.company.timezone}
       aiFeaturesEnabled={isAiFeaturesEnabled()}
+      initialSelectedJobId={initialJobId?.trim() || null}
     />
   );
 }
