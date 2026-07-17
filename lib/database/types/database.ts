@@ -1260,6 +1260,17 @@ export type Database = {
         };
         Returns: undefined;
       };
+      transition_job_workflow_status: {
+        Args: {
+          p_company_id: string;
+          p_job_id: string;
+          p_from_status: JobRow["status"];
+          p_action_id: string;
+          p_completion_notes?: string | null;
+          p_follow_up_notes?: string | null;
+        };
+        Returns: undefined;
+      };
       generate_expense_number: {
         Args: {
           p_company_id: string;

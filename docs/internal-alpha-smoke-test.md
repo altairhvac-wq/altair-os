@@ -70,7 +70,7 @@ Run this checklist after each production or preview deploy that matters for inte
 
 ## Clock in/out
 
-- [ ] Navigate to `/time` (admin) or technician time UI
+- [ ] Navigate to `/time-clock` (admin) or `/tech/time` (technician)
 - [ ] Clock in for a technician/time entry
 - [ ] Clock out — entry shows completed duration/status
 - [ ] Entry visible in time list after refresh
@@ -113,6 +113,9 @@ Run this checklist after each production or preview deploy that matters for inte
 - [ ] Lands on `/technician` (not admin dashboard)
 - [ ] Technician nav shows expected items only
 - [ ] Assigned job from dispatch appears on technician job list
+- [ ] Technician workflow transitions (En Route → Arrived → Start Work → Complete) succeed via the trusted RPC path
+
+> **Security (migration 116):** Assigned technicians no longer have a direct `UPDATE` policy on `jobs`. Workflow status changes go exclusively through `transition_job_workflow_status` (migration 115). Dispatcher direct updates remain allowed for dispatch/admin job edits.
 
 ---
 

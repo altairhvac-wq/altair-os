@@ -16,9 +16,9 @@ import { maybeAutoCreateDraftInvoiceForCompletedJob } from "@/lib/database/servi
 import {
   recordJobCreatedActivity,
   recordJobReopenedActivity,
-  recordJobStatusChangedActivity,
   recordJobStatusCorrectedActivity,
 } from "@/lib/database/services/job-activity";
+import { emitWorkCompletedEvent } from "@/lib/database/services/operational-events";
 import type { CompletionDraftInvoiceOutcome } from "@/shared/types/completion-draft-invoice";
 import {
   ensureTimeTrackingForStartWork,
@@ -203,18 +203,18 @@ export async function updateJobStatusAction(
     }
   }
 
-  await recordJobStatusChangedActivity({
-    companyId: context.company.id,
-    jobId,
-    actorId: context.user.id,
-    actionId,
-    fromStatus: existingJob.status,
-    toStatus: nextStatus,
-    customerId: job.customerId,
-    jobNumber: job.jobNumber,
-    completionNotes: payload?.completionNotes,
-    followUpNotes: payload?.followUpNotes,
-  });
+  // The activity record (job_activities insert) is written atomically inside
+  // the transition_job_workflow_status RPC.  Only the work-completed
+  // notification event needs to fire from application code.
+  if (actionId === "complete") {
+    emitWorkCompletedEvent({
+      companyId: context.company.id,
+      jobId,
+      actorId: context.user.id,
+      customerId: job.customerId,
+      jobNumber: job.jobNumber,
+    });
+  }
 
   let draftInvoiceOutcome: CompletionDraftInvoiceOutcome | undefined;
 

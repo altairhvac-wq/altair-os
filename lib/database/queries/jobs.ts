@@ -3,7 +3,6 @@ import { resolveDbClient, type DbClient } from "@/lib/database/db-client";
 import { createClient } from "@/lib/supabase/server";
 import { mapDatabaseError } from "@/lib/database/errors";
 import {
-  finalizeActiveDispatchAssignments,
   reactivateDispatchAssignmentForReopenedJob,
 } from "@/lib/database/queries/dispatch";
 import { fetchOperationalDayJobRows } from "@/lib/database/queries/scheduled-today-jobs";
@@ -670,126 +669,78 @@ export async function updateJobWorkflowStatus(
   companyId: string,
   jobId: string,
   fromStatus: JobStatus,
-  toStatus: JobStatus,
+  _toStatus: JobStatus,
   actionId: JobWorkflowActionId,
   payload?: JobWorkflowCompletionPayload,
 ): Promise<{ job: Job | null; error: string | null }> {
   const supabase = await createClient();
-  const now = new Date().toISOString();
 
-  const updatePayload: JobUpdate = { status: toStatus };
+  // All validation (membership, role, assignment, transition matrix,
+  // terminal-state protection, optimistic lock), the job UPDATE, dispatch
+  // assignment finalization, and the job_activities insert are now handled
+  // atomically inside the transition_job_workflow_status SECURITY DEFINER RPC
+  // (migration 115).  This replaces the previous pattern of a direct table
+  // UPDATE followed by separate finalization and activity calls.
+  const { error: rpcError } = await supabase.rpc(
+    "transition_job_workflow_status",
+    {
+      p_company_id:       companyId,
+      p_job_id:           jobId,
+      p_from_status:      fromStatus,
+      p_action_id:        actionId,
+      p_completion_notes: payload?.completionNotes ?? null,
+      p_follow_up_notes:  payload?.followUpNotes ?? null,
+    },
+  );
 
-  switch (actionId) {
-    case "arrive":
-      updatePayload.arrived_at = now;
-      break;
-    case "start_work":
-      updatePayload.work_started_at = now;
-      break;
-    case "complete": {
-      updatePayload.completed_at = now;
-      const completionNotes = payload?.completionNotes?.trim();
-      const followUpNotes = payload?.followUpNotes?.trim();
-      if (completionNotes) {
-        updatePayload.completion_notes = completionNotes;
-      }
-      if (followUpNotes) {
-        updatePayload.follow_up_notes = followUpNotes;
-      }
-      break;
-    }
-    default:
-      break;
-  }
-
-  const { data: row, error } = await supabase
-    .from("jobs")
-    .update(updatePayload)
-    .eq("company_id", companyId)
-    .eq("id", jobId)
-    .eq("status", fromStatus)
-    .select(JOB_TECHNICIAN_SELECT)
-    .maybeSingle();
-
-  if (error) {
-    console.error("[updateJobWorkflowStatus] update failed:", {
+  if (rpcError) {
+    console.error("[updateJobWorkflowStatus] rpc failed:", {
       companyId,
       jobId,
       fromStatus,
-      toStatus,
       actionId,
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
+      code:    rpcError.code,
+      message: rpcError.message,
+      details: rpcError.details,
+      hint:    rpcError.hint,
     });
-    return { job: null, error: mapDatabaseError(error) };
+
+    // Surface the transition-matrix / optimistic-lock messages verbatim so
+    // that the UI can show them directly to the technician.
+    const msg = rpcError.message ?? "";
+    if (
+      msg.includes("Job status has changed") ||
+      msg.includes("terminal state") ||
+      msg.includes("Cannot ") ||
+      msg.includes("Unknown workflow action")
+    ) {
+      return { job: null, error: msg };
+    }
+
+    return { job: null, error: mapDatabaseError(rpcError) };
   }
 
-  if (!row) {
-    return {
-      job: null,
-      error: "Job status has changed. Refresh the page and try again.",
-    };
-  }
+  // Fetch the updated job row so callers receive the current state.
+  const { data: row, error: fetchError } = await supabase
+    .from("jobs")
+    .select(JOB_TECHNICIAN_SELECT)
+    .eq("company_id", companyId)
+    .eq("id", jobId)
+    .maybeSingle();
 
-  if (actionId === "complete" || actionId === "cancel") {
-    const finalStatus = actionId === "complete" ? "completed" : "cancelled";
-    let finalizeResult = await finalizeActiveDispatchAssignments(
+  if (fetchError || !row) {
+    console.error("[updateJobWorkflowStatus] post-rpc fetch failed:", {
       companyId,
       jobId,
-      finalStatus,
-    );
-
-    if (finalizeResult.error) {
-      console.error(
-        "[updateJobWorkflowStatus] assignment finalization failed, retrying:",
-        {
-          companyId,
-          jobId,
-          actionId,
-          error: finalizeResult.error,
-        },
-      );
-      finalizeResult = await finalizeActiveDispatchAssignments(
-        companyId,
-        jobId,
-        finalStatus,
-      );
-
-      if (finalizeResult.error) {
-        console.error(
-          "[updateJobWorkflowStatus] assignment finalization failed after retry:",
-          {
-            companyId,
-            jobId,
-            actionId,
-            error: finalizeResult.error,
-          },
-        );
-        return {
-          job: mapJobRowToJob(row as JobRowWithTechnician),
-          error:
-            "Job status updated but dispatch assignment could not be finalized. Refresh and contact support if the issue persists.",
-        };
-      }
-    }
-
-    if (actionId === "cancel") {
-      const { data: refreshed, error: refreshError } = await supabase
-        .from("jobs")
-        .select(JOB_TECHNICIAN_SELECT)
-        .eq("company_id", companyId)
-        .eq("id", jobId)
-        .maybeSingle();
-
-      if (!refreshError && refreshed) {
-        return {
-          job: mapJobRowToJob(refreshed as JobRowWithTechnician),
-          error: null,
-        };
-      }
-    }
+      actionId,
+      code:    fetchError?.code,
+      message: fetchError?.message,
+    });
+    return {
+      job: null,
+      error:
+        "Job status was updated but could not be read back. Refresh the page.",
+    };
   }
 
   return {
