@@ -5,14 +5,20 @@ import { formatCurrency, formatDate } from "@/shared/types/customer";
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { canSelectInvoiceForBulkLifecycle } from "@/shared/lib/invoice-lifecycle";
-import {
-  adminTableRowClass,
-  adminTableRowSelectedClass,
-} from "@/shared/lib/admin-density";
 import type { Invoice } from "@/shared/types/invoice";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import {
+  AltairTable,
+  AltairTableBody,
+  AltairTableCell,
+  AltairTableHead,
+  AltairTableHeader,
+  AltairTablePrimaryCell,
+  AltairTableRow,
+  AltairTableSecondaryText,
+} from "@/shared/design-system/table";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { InvoicesMobileCardList } from "./InvoicesMobileCardList";
@@ -87,18 +93,12 @@ export function InvoicesTable({
           northStar ? " invoice-north-star-ledger" : ""
         }`}
       >
-        <table className="w-full min-w-[760px] text-left text-sm">
-          <thead>
-            <tr
-              className={
-                northStar
-                  ? lt.tableHeaderRow
-                  : "border-b border-slate-100/90 bg-slate-50/50 text-xs font-semibold uppercase tracking-wide text-slate-500"
-              }
-            >
+        <AltairTable className="min-w-[760px]">
+          <AltairTableHeader>
+            <AltairTableRow className={northStar ? lt.tableHeaderRow : undefined}>
               {selectionEnabled ? (
-                <th
-                  className={`w-10 ${northStar ? lt.tableHeaderCell : "admin-table-cell"}`}
+                <AltairTableHead
+                  className={`w-10 ${northStar ? lt.tableHeaderCell : ""}`}
                 >
                   {headerSelection && headerSelection.selectableCount > 0 ? (
                     <BulkSelectCheckbox
@@ -109,44 +109,38 @@ export function InvoicesTable({
                       variant={northStar ? "northStar" : "default"}
                     />
                   ) : null}
-                </th>
+                </AltairTableHead>
               ) : null}
-              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
                 Invoice
-              </th>
-              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
                 Customer
-              </th>
-              <th
-                className={`hidden ${northStar ? lt.tableHeaderCell : "admin-table-cell"} lg:table-cell`}
+              </AltairTableHead>
+              <AltairTableHead
+                className={`hidden lg:table-cell ${northStar ? lt.tableHeaderCell : ""}`}
               >
                 Job
-              </th>
-              <th
-                className={`hidden ${northStar ? lt.tableHeaderCell : "admin-table-cell"} xl:table-cell`}
+              </AltairTableHead>
+              <AltairTableHead
+                className={`hidden xl:table-cell ${northStar ? lt.tableHeaderCell : ""}`}
               >
                 Due date
-              </th>
-              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
                 Total
-              </th>
-              <th
-                className={`hidden ${northStar ? lt.tableHeaderCell : "admin-table-cell"} sm:table-cell`}
+              </AltairTableHead>
+              <AltairTableHead
+                className={`hidden sm:table-cell ${northStar ? lt.tableHeaderCell : ""}`}
               >
                 Balance
-              </th>
-              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
                 Status
-              </th>
-            </tr>
-          </thead>
-          <tbody
-            className={
-              northStar
-                ? "divide-y divide-[rgba(138,99,36,0.12)]"
-                : "divide-y divide-slate-50"
-            }
-          >
+              </AltairTableHead>
+            </AltairTableRow>
+          </AltairTableHeader>
+          <AltairTableBody>
             {sections.map((section) => (
               <Fragment key={section.id}>
                 {showSectionHeaders ? (
@@ -165,19 +159,14 @@ export function InvoicesTable({
                   const isSelected = selectedIds?.has(invoice.id) ?? false;
 
                   return (
-                    <tr
+                    <AltairTableRow
                       key={invoice.id}
+                      selected={isSelected}
                       onClick={() => onSelect(invoice)}
-                      className={
-                        northStar
-                          ? `${lt.tableRow} ${isSelected ? lt.tableRowSelected : ""}`
-                          : `${adminTableRowClass} ${
-                              isSelected ? adminTableRowSelectedClass : ""
-                            }`
-                      }
+                      className={northStar ? lt.tableRow : undefined}
                     >
                       {selectionEnabled ? (
-                        <td className="admin-table-cell">
+                        <AltairTableCell>
                           {isSelectable ? (
                             <BulkSelectCheckbox
                               checked={isSelected}
@@ -186,29 +175,33 @@ export function InvoicesTable({
                               variant={northStar ? "northStar" : "default"}
                             />
                           ) : null}
-                        </td>
+                        </AltairTableCell>
                       ) : null}
-                      <td className="admin-table-cell">
-                        <Link
-                          href={`/invoices/${invoice.id}`}
-                          onClick={handleInvoiceLinkClick}
-                          className={
-                            northStar
-                              ? `${lt.tablePrimaryText} ${invoiceNumberLinkFocusClass}`
-                              : `font-semibold text-slate-900 ${invoiceNumberLinkFocusClass}`
-                          }
-                        >
-                          {invoice.invoiceNumber}
-                        </Link>
-                        <p
-                          className={
-                            northStar ? lt.tableMutedText : "text-xs text-slate-500"
-                          }
-                        >
-                          {formatDate(invoice.issueDate)}
-                        </p>
-                      </td>
-                      <td className="admin-table-cell">
+                      <AltairTablePrimaryCell
+                        primary={
+                          <Link
+                            href={`/invoices/${invoice.id}`}
+                            onClick={handleInvoiceLinkClick}
+                            className={
+                              northStar
+                                ? `${lt.tablePrimaryText} ${invoiceNumberLinkFocusClass}`
+                                : `font-semibold text-slate-900 ${invoiceNumberLinkFocusClass}`
+                            }
+                          >
+                            {invoice.invoiceNumber}
+                          </Link>
+                        }
+                        secondary={
+                          <AltairTableSecondaryText
+                            className={
+                              northStar ? lt.tableMutedText : "text-xs text-slate-500"
+                            }
+                          >
+                            {formatDate(invoice.issueDate)}
+                          </AltairTableSecondaryText>
+                        }
+                      />
+                      <AltairTableCell>
                         <CustomerNameLink
                           customerId={invoice.customerId}
                           customerName={invoice.customerName}
@@ -220,47 +213,47 @@ export function InvoicesTable({
                           }
                           stopRowNavigation
                         />
-                      </td>
-                      <td
-                        className={`hidden admin-table-cell lg:table-cell ${
+                      </AltairTableCell>
+                      <AltairTableCell
+                        className={`hidden lg:table-cell ${
                           northStar ? "invoice-north-star-meta-cell" : "text-slate-600"
                         }`}
                       >
                         {invoice.jobNumber ?? "—"}
-                      </td>
-                      <td
-                        className={`hidden admin-table-cell xl:table-cell ${
+                      </AltairTableCell>
+                      <AltairTableCell
+                        className={`hidden xl:table-cell ${
                           northStar ? "invoice-north-star-date-cell" : "text-slate-600"
                         }`}
                       >
                         {formatDate(invoice.dueDate)}
-                      </td>
-                      <td
-                        className={`admin-table-cell ${
+                      </AltairTableCell>
+                      <AltairTableCell
+                        className={
                           northStar ? lt.tableMetricText : "font-semibold text-slate-900"
-                        }`}
+                        }
                       >
                         {formatCurrency(invoice.total)}
-                      </td>
-                      <td
-                        className={`hidden admin-table-cell sm:table-cell ${
+                      </AltairTableCell>
+                      <AltairTableCell
+                        className={`hidden sm:table-cell ${
                           northStar
                             ? "invoice-north-star-balance-cell font-semibold tabular-nums"
                             : "font-medium text-slate-700"
                         }`}
                       >
                         {formatCurrency(invoice.balanceDue)}
-                      </td>
-                      <td className="admin-table-cell">
+                      </AltairTableCell>
+                      <AltairTableCell>
                         <InvoiceStatusBadge status={invoice.status} />
-                      </td>
-                    </tr>
+                      </AltairTableCell>
+                    </AltairTableRow>
                   );
                 })}
               </Fragment>
             ))}
-          </tbody>
-        </table>
+          </AltairTableBody>
+        </AltairTable>
       </div>
     </>
   );

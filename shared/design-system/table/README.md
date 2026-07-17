@@ -7,13 +7,10 @@ is the standard this primitive exists to encode, not a new one.
 
 ## Status
 
-**Migrated (2):** Customers, Expenses desktop tables.
-
-**Not yet migrated:** Jobs, Estimates, Invoices, Leads — still own their raw
-`<table>` markup and rely on `.altair-surface-workspace table ...` /
-`.admin-card table ...` descendant styling in `app/globals.css`. That CSS
-remains in place; migrating a ledger to these primitives is always a
-deliberate, separate adoption pass (see "Migration guidance" below).
+**Migrated (6):** Customers, Expenses, Jobs, Estimates, Invoices, and Leads
+desktop tables. Every `MasterPageSurface` `variant="workspace"` consumer now
+renders its desktop ledger through these primitives — no remaining ledger
+owns raw `<table>`/`<thead>`/`<tbody>`/`<tr>`/`<th>`/`<td>` markup.
 
 ## What this owns vs. what it doesn't
 
@@ -57,15 +54,19 @@ import {
 | `AltairTablePrimaryCell` | `<td>` | The primary/secondary vertical stack + truncation shell (`min-w-0`), optional `leading` (avatar) and `trailing` (badge) slots |
 | `AltairTableSecondaryText` | `<p>` | A name for the muted metadata line — no default style (see below) |
 
-No `AltairTableActionsCell` exists. Neither Customers nor Expenses has an
-inline per-row action-button column today (both act on a row via click, not
-a rendered action cell), so there is no repeated structure to justify one.
-Add it in a future pass only once two real ledgers need it.
+No `AltairTableActionsCell` exists. None of the six migrated ledgers has an
+inline per-row action-button column today (each acts on a row via click, a
+routed Link, or an in-page button, not a rendered action cell), so there is
+no repeated structure to justify one. Add it in a future pass only once a
+real ledger needs it.
 
-No full-width empty/loading `<tr><td colSpan>` helper exists either.
-Customers and Expenses both render their empty and loading states as a
-sibling of the table, not as a row inside it — there is no repeated
-in-table markup to extract.
+No full-width empty/loading `<tr><td colSpan>` helper exists either. Every
+migrated ledger renders its empty and loading states as a sibling of the
+table, not as a row inside it — Estimates/Invoices' section-header row
+(`BillingWorkflowSectionHeader`, a plain `<tr><td colSpan>`) is the one
+in-table exception, and it is a domain component the primitives intentionally
+know nothing about — there is no repeated in-table markup to extract into
+the design system.
 
 ### Why Body owns nothing
 
@@ -205,10 +206,22 @@ already built for exactly this job instead of reproducing the legacy color.
 Selection remains programmatically understandable via the `selected` prop
 regardless of the visual token used.
 
+The same applies to each ledger's North Star branch: before migration,
+Customers/Jobs/Estimates/Invoices/Leads applied North Star's own
+`northStarListTokens.tableRowSelected` (a gold tint with a left accent
+border) directly as a conditional `className` alongside `isSelected`. Once
+migrated, every ledger instead passes `selected={isSelected}` to
+`AltairTableRow` and drops `tableRowSelected` entirely, so North Star's
+selected-row treatment converges on the same `altair-table-row-selected`
+token as the legacy branch. This mirrors the Customers/Expenses precedent
+above and is the same category of small, intentional, documented
+difference — not a regression.
+
 ## North Star extension boundary
 
-Customers and Expenses render the same primitives in both their legacy and
-North Star (`NEXT_PUBLIC_NORTH_STAR_SHELL=true`) branches. The primitives
+Every migrated ledger (Customers, Expenses, Jobs, Estimates, Invoices,
+Leads) renders the same primitives in both its legacy and North Star
+(`NEXT_PUBLIC_NORTH_STAR_SHELL=true`) branches. The primitives
 never branch on North Star themselves and never import
 `shared/design-system/north-star/tokens`. Every North Star visual
 difference (gold accents, ivory ledger chrome, brand-specific typography)
@@ -221,23 +234,31 @@ extension point.
 ## Mobile boundary
 
 Desktop only. `AltairTable*` primitives are never used by
-`CustomersMobileCardList`, `ExpensesMobileCardList`, or any other mobile
-card composition, and this task did not touch any of them. The existing
-`hidden ... md:block` desktop wrapper around the table stays in the domain
-component — the Table primitive itself has no responsive-hiding opinion.
+`CustomersMobileCardList`, `ExpensesMobileCardList`, `JobsMobileCardList`,
+`EstimatesMobileCardList`, `InvoicesMobileCardList`, `LeadCard`, or any
+other mobile card composition — no migration pass has touched any of them.
+The existing `hidden ... md:block` (or `lg:block`) desktop wrapper around
+the table stays in the domain component — the Table primitive itself has no
+responsive-hiding opinion.
 
 ## CSS migration boundary
 
-`.altair-surface-workspace table ...` in `app/globals.css` still recolors
-any plain `<table>` nested inside a `variant="workspace"` surface (Jobs,
-Estimates, Invoices, Leads today). That CSS is untouched and still load-bearing
-for those un-migrated ledgers — do not delete it as part of adopting these
-primitives elsewhere. `AltairTable`/`AltairTableHeader`/`AltairTableRow`
-instead carry their own explicit classes (`altair-table`,
-`altair-table-header`, `altair-table-row`, `altair-table-row-selected`,
-defined right below the workspace-table block in `app/globals.css`) using
-the same semantic token values, so a migrated ledger's material no longer
-depends on which surface wrapper happens to contain it.
+`.altair-surface-workspace table ...` in `app/globals.css` used to recolor
+any plain `<table>` nested inside a `variant="workspace"` surface. Once
+Customers, Expenses, Jobs, Estimates, Invoices, and Leads all migrated to
+these primitives — confirmed by a full-repo search for both `<table` and
+`variant="workspace"` — no consumer of that surface rendered a bare
+`<table>` anymore, so that now-dead generic descendant block was removed.
+`AltairTable`/`AltairTableHeader`/`AltairTableRow` instead carry their own
+explicit classes (`altair-table`, `altair-table-header`, `altair-table-row`,
+`altair-table-row-selected`, defined in `app/globals.css`) using the same
+semantic token values, so a migrated ledger's material no longer depends on
+which surface wrapper happens to contain it.
+
+This does not touch the separate, still-load-bearing `.admin-card table ...`
+/ `.admin-table-row` rules, which remain in active use by non-ledger admin
+tables outside this design system's scope (e.g. `ServiceItemsTable`,
+`TeamMembersTable`, `TimeEntriesTable`).
 
 ## Migration guidance
 

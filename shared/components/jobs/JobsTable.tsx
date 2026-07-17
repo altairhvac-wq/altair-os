@@ -10,9 +10,14 @@ import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox"
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import {
-  adminTableRowClass,
-  adminTableRowSelectedClass,
-} from "@/shared/lib/admin-density";
+  AltairTable,
+  AltairTableBody,
+  AltairTableCell,
+  AltairTableHead,
+  AltairTableHeader,
+  AltairTablePrimaryCell,
+  AltairTableRow,
+} from "@/shared/design-system/table";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
 import { JobsMobileCardList } from "./JobsMobileCardList";
 import { JobPriorityBadge } from "./JobPriorityBadge";
@@ -28,8 +33,6 @@ type JobsTableProps = {
   onToggleAllVisible?: (selectAll: boolean) => void;
   northStar?: boolean;
 };
-
-const jobRowClassName = adminTableRowClass;
 
 /**
  * Focus ring for the primary job-number link: the same Paper-surface
@@ -79,18 +82,12 @@ export function JobsTable({
           northStar ? " job-north-star-ledger" : ""
         }`}
       >
-        <table className="w-full min-w-[760px] text-left text-sm">
-          <thead>
-            <tr
-              className={
-                northStar
-                  ? lt.tableHeaderRow
-                  : "border-b border-slate-100/90 bg-white text-xs font-semibold uppercase tracking-wide text-slate-500"
-              }
-            >
+        <AltairTable className="min-w-[760px]">
+          <AltairTableHeader>
+            <AltairTableRow className={northStar ? lt.tableHeaderRow : undefined}>
               {selectionEnabled ? (
-                <th
-                  className={`w-10 ${northStar ? lt.tableHeaderCell : "admin-table-cell"}`}
+                <AltairTableHead
+                  className={`w-10 ${northStar ? lt.tableHeaderCell : ""}`}
                 >
                   {headerSelection && headerSelection.selectableCount > 0 ? (
                     <BulkSelectCheckbox
@@ -101,77 +98,68 @@ export function JobsTable({
                       variant={northStar ? "northStar" : "default"}
                     />
                   ) : null}
-                </th>
+                </AltairTableHead>
               ) : null}
-              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
                 Job
-              </th>
-              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
                 Scheduled
-              </th>
-              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
                 Status
-              </th>
-              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
                 Priority
-              </th>
-              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
                 Customer
-              </th>
-              <th className={northStar ? lt.tableHeaderCell : "admin-table-cell"}>
+              </AltairTableHead>
+              <AltairTableHead className={northStar ? lt.tableHeaderCell : undefined}>
                 Technician
-              </th>
-            </tr>
-          </thead>
-          <tbody
-            className={
-              northStar
-                ? "divide-y divide-[rgba(138,99,36,0.12)]"
-                : "divide-y divide-slate-50"
-            }
-          >
+              </AltairTableHead>
+            </AltairTableRow>
+          </AltairTableHeader>
+          <AltairTableBody>
             {jobs.map((job) => {
               const isSelected = selectedIds?.has(job.id) ?? false;
 
               return (
-                <tr
+                <AltairTableRow
                   key={job.id}
+                  selected={isSelected}
                   onClick={() => onSelect(job)}
-                  className={
-                    northStar
-                      ? `${lt.tableRow} ${isSelected ? lt.tableRowSelected : ""}`
-                      : `${jobRowClassName} ${
-                          isSelected ? adminTableRowSelectedClass : ""
-                        }`
-                  }
+                  className={northStar ? lt.tableRow : undefined}
                 >
                   {selectionEnabled ? (
-                    <td className="admin-table-cell">
+                    <AltairTableCell>
                       <BulkSelectCheckbox
                         checked={isSelected}
                         ariaLabel={`Select job ${job.jobNumber}`}
                         onChange={() => onToggleSelection?.(job.id)}
                         variant={northStar ? "northStar" : "default"}
                       />
-                    </td>
+                    </AltairTableCell>
                   ) : null}
-                  <td className="admin-table-cell">
-                    <Link
-                      href={`/jobs/${job.id}`}
-                      onClick={handleJobLinkClick}
-                      className={
-                        northStar
-                          ? `${lt.tablePrimaryText} ${jobNumberLinkFocusClass}`
-                          : `font-semibold text-slate-900 ${jobNumberLinkFocusClass}`
-                      }
-                    >
-                      {job.jobNumber}
-                    </Link>
-                  </td>
-                  <td
-                    className={`admin-table-cell ${
+                  <AltairTablePrimaryCell
+                    primary={
+                      <Link
+                        href={`/jobs/${job.id}`}
+                        onClick={handleJobLinkClick}
+                        className={
+                          northStar
+                            ? `${lt.tablePrimaryText} ${jobNumberLinkFocusClass}`
+                            : `font-semibold text-slate-900 ${jobNumberLinkFocusClass}`
+                        }
+                      >
+                        {job.jobNumber}
+                      </Link>
+                    }
+                  />
+                  <AltairTableCell
+                    className={
                       northStar ? "job-north-star-scheduled-cell" : "text-slate-600"
-                    }`}
+                    }
                   >
                     <p className={northStar ? lt.tableDateText : undefined}>
                       {formatScheduledDate(job.scheduledDate)}
@@ -183,14 +171,14 @@ export function JobsTable({
                     >
                       {formatScheduledTime(job.scheduledDate)}
                     </p>
-                  </td>
-                  <td className="admin-table-cell">
+                  </AltairTableCell>
+                  <AltairTableCell>
                     <JobStatusBadge status={job.status} />
-                  </td>
-                  <td className="admin-table-cell">
+                  </AltairTableCell>
+                  <AltairTableCell>
                     <JobPriorityBadge priority={job.priority} />
-                  </td>
-                  <td className="admin-table-cell">
+                  </AltairTableCell>
+                  <AltairTableCell>
                     <CustomerNameLink
                       customerId={job.customerId}
                       customerName={job.customerName}
@@ -202,11 +190,11 @@ export function JobsTable({
                       }
                       stopRowNavigation
                     />
-                  </td>
-                  <td
-                    className={`admin-table-cell ${
+                  </AltairTableCell>
+                  <AltairTableCell
+                    className={
                       northStar ? "job-north-star-tech-cell" : "text-slate-600"
-                    }`}
+                    }
                   >
                     {job.assignedTechnician ?? (
                       <span
@@ -217,12 +205,12 @@ export function JobsTable({
                         Unassigned
                       </span>
                     )}
-                  </td>
-                </tr>
+                  </AltairTableCell>
+                </AltairTableRow>
               );
             })}
-          </tbody>
-        </table>
+          </AltairTableBody>
+        </AltairTable>
       </div>
     </>
   );

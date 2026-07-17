@@ -2615,11 +2615,11 @@ a[href] {
  * --surface-card, slate --border-subtle) with warm Paper, warm Border, and the
  * existing global --shadow-card token — no new shadow token, no gradient.
  *
- * Customers and Leads (legacy/non-North-Star list branches) opt into this
- * variant today. .admin-card remains unchanged and every other
- * MasterPageSurface consumer is unaffected. Do not add page-specific
- * spacing, business status, or raw colors here — this class owns material
- * only.
+ * Customers, Expenses, Jobs, Estimates, Invoices, and Leads (legacy/
+ * non-North-Star list branches) opt into this variant today. .admin-card
+ * remains unchanged and every other MasterPageSurface consumer is
+ * unaffected. Do not add page-specific spacing, business status, or raw
+ * colors here — this class owns material only.
  */
 .altair-surface-workspace {
   border-radius: 1rem;
@@ -2629,36 +2629,18 @@ a[href] {
 }
 
 /*
- * Tables rendered inside the Surface inherit their header/zebra/hover chrome
- * from here (mirrors ".admin-card table ..." below, recolored to semantic
- * tokens) so consumers (CustomersTable/CustomersMobileCardList, the desktop
- * table in LeadList) need no changes of their own — the row markup and
- * business logic stay exactly as they are.
+ * The generic ".altair-surface-workspace table ..." descendant rules that
+ * used to live here (header/zebra/hover chrome for a bare <table> nested in
+ * this Surface) were removed once every workspace-variant ledger —
+ * Customers, Expenses, Jobs, Estimates, Invoices, and Leads — migrated its
+ * desktop table onto the AltairTable primitives below, which render the
+ * same header/zebra/hover/selected material via their own explicit,
+ * stable classes (altair-table-header, altair-table-row, ...) regardless of
+ * which Surface variant happens to wrap them. Confirmed via a full-repo
+ * search that no remaining `variant="workspace"` consumer renders a bare
+ * `<table>` before removing this block — see
+ * shared/design-system/table/README.md ("CSS migration boundary").
  */
-.altair-surface-workspace table thead tr {
-  border-bottom: 1px solid var(--altair-border);
-  background-color: var(--altair-paper-subtle);
-}
-
-.altair-surface-workspace table thead th {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--altair-ink-on-paper-muted);
-}
-
-.altair-surface-workspace table tbody tr {
-  transition: background-color 0.15s ease;
-}
-
-.altair-surface-workspace table tbody tr:nth-child(even) {
-  background-color: var(--altair-paper-subtle);
-}
-
-.altair-surface-workspace table tbody tr:hover {
-  background-color: var(--altair-paper-elevated);
-}
 
 /*
  * ============================================================================
@@ -2668,12 +2650,12 @@ a[href] {
  * shared/design-system/table/README.md (contract + composition).
  *
  * These classes belong to shared/design-system/table/AltairTable.tsx only.
- * Unlike ".altair-surface-workspace table ..." above (an ambient wrapper
- * selector any nested <table> inherits from), these are explicit, stable
- * classes the primitives render themselves, so a table's material no longer
- * depends on which page surface happens to wrap it. Same semantic token
- * values as the workspace-table rules above — no new colors, no visual
- * change for the two migrated ledgers' legacy branch.
+ * Unlike the removed ".altair-surface-workspace table ..." ambient wrapper
+ * selector above (which any nested <table> used to inherit from), these are
+ * explicit, stable classes the primitives render themselves, so a table's
+ * material no longer depends on which page surface happens to wrap it. Same
+ * semantic token values as that former workspace-table block — no new
+ * colors, no visual change for any migrated ledger's legacy branch.
  *
  * Every rule is wrapped in :where(...), which carries zero specificity. This
  * is the escape hatch North Star needs: North Star passes its own gold/ivory
