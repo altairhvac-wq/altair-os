@@ -6,9 +6,12 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import {
   createEstimate,
+  findActiveEstimateForJob,
   getEstimateById,
   updateEstimateStatus,
+  updateFieldEstimateDraftContent,
 } from "@/lib/database/queries/estimates";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import { upsertBillingSignature } from "@/lib/database/queries/billing-signatures";
 import { getJobById } from "@/lib/database/queries/jobs";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
@@ -162,12 +165,18 @@ export type CreateFieldEstimateActionResult = {
   estimate?: EstimateDetail;
 };
 
+export type FieldEstimateDraftActionResult = {
+  error?: string;
+  estimate?: EstimateDetail;
+};
+
 async function assertFieldEstimateWritePermission(jobId: string): Promise<{
   error?: string;
   jobId?: string;
   customerId?: string;
   customerName?: string;
   jobNumber?: string;
+  useServiceRole?: boolean;
 }> {
   const context = await getActiveCompanyContext();
 
@@ -196,6 +205,7 @@ async function assertFieldEstimateWritePermission(jobId: string): Promise<{
       customerId: job.customerId,
       customerName: job.customerName,
       jobNumber: job.jobNumber,
+      useServiceRole: false,
     };
   }
 
@@ -214,7 +224,13 @@ async function assertFieldEstimateWritePermission(jobId: string): Promise<{
     customerId: job.customerId,
     customerName: job.customerName,
     jobNumber: job.jobNumber,
+    // Assigned techs can insert drafts via RLS but cannot select/update them.
+    useServiceRole: true,
   };
+}
+
+function resolveFieldEstimateDb(useServiceRole: boolean | undefined) {
+  return useServiceRole ? createServiceRoleClient() : undefined;
 }
 
 export async function createFieldEstimateFromJobAction(
@@ -230,6 +246,22 @@ export async function createFieldEstimateFromJobAction(
   const permission = await assertFieldEstimateWritePermission(jobId);
   if (permission.error || !permission.jobId || !permission.customerId) {
     return { error: permission.error ?? "Unable to create estimate for this job." };
+  }
+
+  const fieldDb = resolveFieldEstimateDb(permission.useServiceRole);
+  const existing = await findActiveEstimateForJob(
+    context.company.id,
+    permission.jobId,
+    fieldDb,
+  );
+
+  if (existing) {
+    return {
+      error:
+        existing.status === "draft"
+          ? `Draft ${existing.estimateNumber} already exists for this job. Finish that estimate instead of creating another.`
+          : `Estimate ${existing.estimateNumber} already exists for this job.`,
+    };
   }
 
   const billingDefaults = getCompanyBillingDefaultsFromRow(context.company);
@@ -277,6 +309,102 @@ export async function createFieldEstimateFromJobAction(
   });
 
   revalidatePath("/estimates");
+  revalidatePath("/technician");
+  revalidatePath(`/jobs/${permission.jobId}`);
+
+  return { estimate };
+}
+
+export async function getFieldEstimateDraftAction(
+  jobId: string,
+  estimateId: string,
+): Promise<FieldEstimateDraftActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
+  }
+
+  const permission = await assertFieldEstimateWritePermission(jobId);
+  if (permission.error || !permission.jobId) {
+    return { error: permission.error ?? "Unable to load estimate for this job." };
+  }
+
+  const fieldDb = resolveFieldEstimateDb(permission.useServiceRole);
+  const estimate = await getEstimateById(
+    context.company.id,
+    estimateId,
+    fieldDb,
+  );
+
+  if (!estimate) {
+    return { error: "Estimate not found." };
+  }
+
+  if (estimate.jobId !== permission.jobId) {
+    return { error: "Estimate does not belong to this job." };
+  }
+
+  if (estimate.status !== "draft") {
+    return { error: "Only draft estimates can be finished from the field." };
+  }
+
+  return { estimate };
+}
+
+export async function updateFieldEstimateFromJobAction(
+  jobId: string,
+  estimateId: string,
+  data: FieldEstimateFormData,
+): Promise<CreateFieldEstimateActionResult> {
+  const context = await getActiveCompanyContext();
+
+  if (!context) {
+    return { error: NO_ACTIVE_COMPANY_MESSAGE };
+  }
+
+  const permission = await assertFieldEstimateWritePermission(jobId);
+  if (permission.error || !permission.jobId) {
+    return { error: permission.error ?? "Unable to update estimate for this job." };
+  }
+
+  const fieldDb = resolveFieldEstimateDb(permission.useServiceRole);
+  const current = await getEstimateById(
+    context.company.id,
+    estimateId,
+    fieldDb,
+  );
+
+  if (!current) {
+    return { error: "Estimate not found." };
+  }
+
+  if (current.jobId !== permission.jobId) {
+    return { error: "Estimate does not belong to this job." };
+  }
+
+  if (current.status !== "draft") {
+    return { error: "Only draft estimates can be updated from the field." };
+  }
+
+  const billingDefaults = getCompanyBillingDefaultsFromRow(context.company);
+  const { estimate, error } = await updateFieldEstimateDraftContent(
+    context.company.id,
+    estimateId,
+    {
+      notes: data.notes?.trim() ?? "",
+      taxRate: billingDefaults.defaultTaxRate,
+      lineItems: data.lineItems,
+    },
+    fieldDb,
+  );
+
+  if (error || !estimate) {
+    return { error: error ?? "Failed to update estimate." };
+  }
+
+  revalidatePath("/estimates");
+  revalidatePath(`/estimates/${estimateId}`);
   revalidatePath("/technician");
   revalidatePath(`/jobs/${permission.jobId}`);
 

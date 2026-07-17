@@ -123,6 +123,9 @@ export function TechnicianJobFieldDetail({
   const [activeSheet, setActiveSheet] = useState<
     "material" | "expense" | "photo" | "estimate" | "approve_estimate" | null
   >(null);
+  const [editingEstimateId, setEditingEstimateId] = useState<string | null>(
+    null,
+  );
   const sentEstimateForApproval = billingContext
     ? selectActiveEstimate(billingContext.estimates.filter((e) => e.status === "sent"))
     : null;
@@ -137,6 +140,7 @@ export function TechnicianJobFieldDetail({
   useEffect(() => {
     if (status === "completed" || status === "cancelled") {
       setActiveSheet(null);
+      setEditingEstimateId(null);
       setCompleteSheetOpen(false);
     }
   }, [status]);
@@ -233,7 +237,20 @@ export function TechnicianJobFieldDetail({
                   canApproveOnSite && Boolean(sentEstimateForApproval),
               }}
               onFieldEstimateClick={
-                showCreateEstimate ? () => setActiveSheet("estimate") : undefined
+                showCreateEstimate
+                  ? () => {
+                      setEditingEstimateId(null);
+                      setActiveSheet("estimate");
+                    }
+                  : undefined
+              }
+              onFieldFinishEstimateClick={
+                showCreateEstimate
+                  ? (estimateId) => {
+                      setEditingEstimateId(estimateId);
+                      setActiveSheet("estimate");
+                    }
+                  : undefined
               }
               onFieldApproveClick={
                 canApproveOnSite && sentEstimateForApproval
@@ -447,11 +464,15 @@ export function TechnicianJobFieldDetail({
           customerName={job.customerName}
           jobType={job.jobType}
           jobTitle={job.description}
+          estimateId={editingEstimateId ?? undefined}
           serviceItems={serviceItems}
           defaultTaxRate={defaultTaxRate}
           aiFeaturesEnabled={aiFeaturesEnabled}
           canDraftDescription={canCreateEstimate}
-          onClose={() => setActiveSheet(null)}
+          onClose={() => {
+            setActiveSheet(null);
+            setEditingEstimateId(null);
+          }}
         />
       ) : null}
 

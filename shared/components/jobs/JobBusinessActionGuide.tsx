@@ -14,6 +14,8 @@ type JobBusinessActionGuideProps = {
   fieldSoft?: boolean;
   disabled?: boolean;
   onFieldEstimateClick?: () => void;
+  /** Continue an existing draft estimate (Finish/Send) without creating a new one. */
+  onFieldFinishEstimateClick?: (estimateId: string) => void;
   onFieldApproveClick?: () => void;
 };
 
@@ -90,6 +92,7 @@ export function JobBusinessActionGuide({
   fieldSoft = false,
   disabled = false,
   onFieldEstimateClick,
+  onFieldFinishEstimateClick,
   onFieldApproveClick,
 }: JobBusinessActionGuideProps) {
   if (!action || !matchesPresentation(action, presentation)) {
@@ -98,8 +101,12 @@ export function JobBusinessActionGuide({
 
   const compact = layout === "compact";
   const useFieldEstimateHandler =
-    onFieldEstimateClick &&
-    (action.id === "create_estimate" || action.id === "finish_send_estimate");
+    onFieldEstimateClick && action.id === "create_estimate";
+  const useFieldFinishEstimateHandler =
+    onFieldFinishEstimateClick &&
+    action.id === "finish_send_estimate" &&
+    Boolean(action.estimateId);
+  const finishEstimateId = action.estimateId;
   const useFieldApproveHandler =
     onFieldApproveClick && action.id === "approve_estimate_on_site";
 
@@ -147,6 +154,15 @@ export function JobBusinessActionGuide({
         <button
           type="button"
           onClick={onFieldApproveClick}
+          disabled={disabled}
+          className={ctaClassName(compact, action.emphasize)}
+        >
+          {ctaLabel}
+        </button>
+      ) : useFieldFinishEstimateHandler && finishEstimateId ? (
+        <button
+          type="button"
+          onClick={() => onFieldFinishEstimateClick(finishEstimateId)}
           disabled={disabled}
           className={ctaClassName(compact, action.emphasize)}
         >

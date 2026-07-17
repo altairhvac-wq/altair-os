@@ -1,4 +1,5 @@
 import type { JobRow } from "@/lib/database/types/core-tables";
+import { mapDatabaseError } from "@/lib/database/errors";
 import {
   fetchOperationalDayJobRows,
   fetchOperationalWeekJobRows,
@@ -70,7 +71,7 @@ export async function listAssignedJobsForTechnician(
       technicianId,
       message: error.message,
     });
-    return [];
+    throw new Error(mapDatabaseError(error));
   }
 
   return rows.map(mapJobRowToTechnicianJob);

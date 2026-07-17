@@ -5,6 +5,7 @@ import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import {
   listJobBillingSummariesForJobs,
+  listJobEstimateSummariesForAssignedJobs,
   listJobInvoiceSummariesForAssignedJobs,
 } from "@/lib/database/queries/job-billing-summaries";
 import { listAssignedJobsForTechnician } from "@/lib/database/queries/technician-jobs";
@@ -55,11 +56,19 @@ export default async function TechnicianPage() {
   );
 
   if (!canViewBillingData) {
-    billingSummaries.invoicesByJobId =
-      await listJobInvoiceSummariesForAssignedJobs(
+    const assignedJobIds = jobs.map((job) => job.id);
+    const [estimatesByJobId, invoicesByJobId] = await Promise.all([
+      listJobEstimateSummariesForAssignedJobs(
         context.company.id,
-        jobs.map((job) => job.id),
-      );
+        assignedJobIds,
+      ),
+      listJobInvoiceSummariesForAssignedJobs(
+        context.company.id,
+        assignedJobIds,
+      ),
+    ]);
+    billingSummaries.estimatesByJobId = estimatesByJobId;
+    billingSummaries.invoicesByJobId = invoicesByJobId;
   }
 
   return (

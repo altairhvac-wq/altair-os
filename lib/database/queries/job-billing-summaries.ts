@@ -162,6 +162,47 @@ export async function listJobBillingSummariesForJobs(
 }
 
 /**
+ * Load estimate summaries for assigned jobs using the service role.
+ * Caller must pass job ids already scoped to the authenticated technician.
+ */
+export async function listJobEstimateSummariesForAssignedJobs(
+  companyId: string,
+  assignedJobIds: string[],
+): Promise<Record<string, JobEstimateSummary[]>> {
+  const uniqueJobIds = [...new Set(assignedJobIds.filter(Boolean))];
+
+  if (uniqueJobIds.length === 0) {
+    return {};
+  }
+
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("estimates")
+    .select(ESTIMATE_SUMMARY_SELECT)
+    .eq("company_id", companyId)
+    .in("job_id", uniqueJobIds)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[listJobEstimateSummariesForAssignedJobs] query failed:", {
+      companyId,
+      jobCount: uniqueJobIds.length,
+      code: error.code,
+      message: error.message,
+    });
+    return {};
+  }
+
+  const estimateRows = ((data ?? []) as EstimateSummaryRow[])
+    .map(mapEstimateSummaryRow)
+    .filter((row): row is NonNullable<typeof row> => row !== null);
+
+  return groupSummariesByJobId(estimateRows);
+}
+
+/**
  * Load invoice summaries for assigned jobs using the service role.
  * Caller must pass job ids already scoped to the authenticated technician.
  */

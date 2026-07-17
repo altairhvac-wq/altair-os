@@ -12,8 +12,8 @@ export default function TechnicianError({ error, reset }: TechnicianErrorProps) 
     <RouteErrorView
       error={error}
       reset={reset}
-      title="Could not load jobs"
-      description="Something went wrong while loading your assigned jobs. Please try again."
+      title="Connection problem"
+      description="We couldn't load your schedule. Check your connection and try again."
       backHref="/technician"
       backLabel="Back to today"
       logLabel="TechnicianPage"

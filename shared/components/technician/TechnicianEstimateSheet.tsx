@@ -21,6 +21,8 @@ type TechnicianEstimateSheetProps = {
   customerName: string;
   jobType?: string;
   jobTitle?: string;
+  /** When set, continues the existing draft instead of creating a new estimate. */
+  estimateId?: string;
   serviceItems: ServiceItem[];
   defaultTaxRate: number;
   aiFeaturesEnabled?: boolean;
@@ -37,6 +39,7 @@ export function TechnicianEstimateSheet({
   customerName,
   jobType,
   jobTitle,
+  estimateId,
   serviceItems,
   defaultTaxRate,
   aiFeaturesEnabled = false,
@@ -44,6 +47,7 @@ export function TechnicianEstimateSheet({
   onClose,
   onSaved,
 }: TechnicianEstimateSheetProps) {
+  const isContinuingDraft = Boolean(estimateId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [savedEstimateNumber, setSavedEstimateNumber] = useState<string | null>(
@@ -69,8 +73,12 @@ export function TechnicianEstimateSheet({
       <MobileSheetPanel>
         <MobileSheetHeader
           titleId={TITLE_ID}
-          title="Create estimate"
-          subtitle="Draft quote for office review"
+          title={isContinuingDraft ? "Finish estimate" : "Create estimate"}
+          subtitle={
+            isContinuingDraft
+              ? "Continue this draft for office review"
+              : "Draft quote for office review"
+          }
           onClose={onClose}
           closeDisabled={closeDisabled}
           icon={
@@ -93,11 +101,13 @@ export function TechnicianEstimateSheet({
           <>
             <MobileSheetBody>
               <TechnicianEstimateForm
+                key={estimateId ?? "create"}
                 jobId={jobId}
                 jobNumber={jobNumber}
                 customerName={customerName}
                 jobType={jobType}
                 jobTitle={jobTitle}
+                estimateId={estimateId}
                 serviceItems={serviceItems}
                 defaultTaxRate={defaultTaxRate}
                 aiFeaturesEnabled={aiFeaturesEnabled}

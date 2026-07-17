@@ -87,6 +87,14 @@ export function StartRouteButton({
 
   const routeDisabled = isPending || competingSheetActive;
 
+  function openMaps() {
+    if (!openMapsDirectionsUrl(mapsUrl!)) {
+      setError(
+        "Unable to open navigation. Allow pop-ups for this site and try again.",
+      );
+    }
+  }
+
   function handleStartRoute(event: React.MouseEvent<HTMLAnchorElement>) {
     if (routeDisabled) {
       event.preventDefault();
@@ -110,14 +118,12 @@ export function StartRouteButton({
 
         onStatusUpdated?.(result.job.status);
         router.refresh();
+        openMaps();
       });
+      return;
     }
 
-    if (!openMapsDirectionsUrl(mapsUrl!)) {
-      setError(
-        "Unable to open navigation. Allow pop-ups for this site and try again.",
-      );
-    }
+    openMaps();
   }
 
   const linkClassName =
@@ -161,7 +167,7 @@ export function StartRouteButton({
       </a>
       {showScheduledHint ? (
         <p className={technicianFieldWorkflowHintClass}>
-          Opens maps and marks you en route.
+          Marks you en route, then opens maps.
         </p>
       ) : null}
       {showEnRouteHint ? (

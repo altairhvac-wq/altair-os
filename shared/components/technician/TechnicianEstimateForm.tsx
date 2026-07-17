@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createFieldEstimateFromJobAction } from "@/app/actions/estimates";
+import {
+  createFieldEstimateFromJobAction,
+  getFieldEstimateDraftAction,
+  updateFieldEstimateFromJobAction,
+} from "@/app/actions/estimates";
 import { EstimateDescriptionAiAssistant } from "@/shared/components/estimates/EstimateDescriptionAiAssistant";
 import { LineItemsEditor } from "@/shared/components/estimates/LineItemsEditor";
 import { formatActionError, formatRetryGuidance } from "@/shared/lib/operational-errors";
@@ -19,6 +23,8 @@ type TechnicianEstimateFormProps = {
   customerName: string;
   jobType?: string;
   jobTitle?: string;
+  /** When set, continues the existing draft instead of creating a new estimate. */
+  estimateId?: string;
   serviceItems: ServiceItem[];
   defaultTaxRate: number;
   aiFeaturesEnabled?: boolean;
@@ -42,6 +48,7 @@ export function TechnicianEstimateForm({
   customerName,
   jobType,
   jobTitle,
+  estimateId,
   serviceItems,
   defaultTaxRate,
   aiFeaturesEnabled = false,
@@ -53,6 +60,7 @@ export function TechnicianEstimateForm({
   const router = useRouter();
   const submitLockRef = useRef(false);
   const [isPending, startTransition] = useTransition();
+  const [isLoadingDraft, setIsLoadingDraft] = useState(Boolean(estimateId));
   const [error, setError] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [lineItems, setLineItems] = useState<EstimateLineItemFormData[]>([
@@ -60,13 +68,59 @@ export function TechnicianEstimateForm({
   ]);
 
   useEffect(() => {
-    onSubmittingChange?.(isPending);
-  }, [isPending, onSubmittingChange]);
+    onSubmittingChange?.(isPending || isLoadingDraft);
+  }, [isPending, isLoadingDraft, onSubmittingChange]);
+
+  useEffect(() => {
+    if (!estimateId) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void getFieldEstimateDraftAction(jobId, estimateId).then((result) => {
+      if (cancelled) {
+        return;
+      }
+
+      if (result.error || !result.estimate) {
+        setError(
+          formatRetryGuidance(
+            formatActionError(
+              result.error,
+              "Could not load this draft estimate. Try again.",
+            ),
+          ),
+        );
+        setIsLoadingDraft(false);
+        return;
+      }
+
+      setNotes(result.estimate.notes ?? "");
+      setLineItems(
+        result.estimate.lineItems.length > 0
+          ? result.estimate.lineItems.map((item) => ({
+              serviceItemId: item.serviceItemId,
+              name: item.name,
+              description: item.description ?? "",
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              taxable: item.taxable,
+            }))
+          : [{ ...emptyLineItem }],
+      );
+      setIsLoadingDraft(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [estimateId, jobId]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (isPending || submitLockRef.current) {
+    if (isPending || isLoadingDraft || submitLockRef.current) {
       return;
     }
 
@@ -85,10 +139,15 @@ export function TechnicianEstimateForm({
     setError(null);
 
     startTransition(async () => {
-      const result = await createFieldEstimateFromJobAction(jobId, {
-        lineItems: validLineItems,
-        notes,
-      });
+      const result = estimateId
+        ? await updateFieldEstimateFromJobAction(jobId, estimateId, {
+            lineItems: validLineItems,
+            notes,
+          })
+        : await createFieldEstimateFromJobAction(jobId, {
+            lineItems: validLineItems,
+            notes,
+          });
 
       submitLockRef.current = false;
 
@@ -107,6 +166,16 @@ export function TechnicianEstimateForm({
       router.refresh();
       onSuccess?.(result.estimate.estimateNumber);
     });
+  }
+
+  if (isLoadingDraft) {
+    return (
+      <div className={`min-w-0 ${adminFormStackClass}`} aria-busy>
+        <p className="rounded-md bg-white px-2.5 py-1.5 text-sm text-slate-600">
+          Loading draft estimate…
+        </p>
+      </div>
+    );
   }
 
   return (

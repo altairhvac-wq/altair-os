@@ -737,6 +737,159 @@ export async function createEstimate(
   };
 }
 
+const ACTIVE_FIELD_ESTIMATE_STATUSES: EstimateStatus[] = [
+  "draft",
+  "sent",
+  "approved",
+];
+
+/**
+ * Newest non-terminal estimate for a job. Caller may pass a service-role
+ * client after application-level authorization (assigned-tech field flows).
+ */
+export async function findActiveEstimateForJob(
+  companyId: string,
+  jobId: string,
+  db?: DbClient,
+): Promise<Estimate | null> {
+  const supabase = await resolveDbClient(db);
+
+  const { data, error } = await supabase
+    .from("estimates")
+    .select(ESTIMATE_LIST_SELECT)
+    .eq("company_id", companyId)
+    .eq("job_id", jobId)
+    .in("status", ACTIVE_FIELD_ESTIMATE_STATUSES)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[findActiveEstimateForJob] query failed:", {
+      companyId,
+      jobId,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  // No lifecycle enrichment — callers only need identity/status for guards.
+  return mapEstimateRowToEstimate(data as EstimateRowWithRelations);
+}
+
+/**
+ * Replace draft estimate content while preserving identity, status, and history.
+ * Caller must authorize write access and may pass a service-role client when
+ * assigned technicians cannot update via RLS.
+ */
+export async function updateFieldEstimateDraftContent(
+  companyId: string,
+  estimateId: string,
+  data: Pick<EstimateFormData, "notes" | "taxRate" | "lineItems">,
+  db?: DbClient,
+): Promise<{ estimate: EstimateDetail | null; error: string | null }> {
+  const validLineItems = data.lineItems.filter(isValidLineItem);
+
+  if (validLineItems.length === 0) {
+    return { estimate: null, error: "At least one line item is required." };
+  }
+
+  const serviceItemValidation = await validateServiceItemIdsBelongToCompany(
+    companyId,
+    validLineItems.map((item) => item.serviceItemId),
+  );
+  if (serviceItemValidation.error) {
+    return { estimate: null, error: serviceItemValidation.error };
+  }
+
+  const supabase = await resolveDbClient(db);
+  const { subtotal, taxRate, tax, total } = computeTotals(
+    validLineItems,
+    data.taxRate,
+  );
+
+  const { data: updatedRow, error: updateError } = await supabase
+    .from("estimates")
+    .update({
+      notes: data.notes.trim() || null,
+      subtotal,
+      tax_rate: taxRate,
+      tax,
+      total,
+    })
+    .eq("company_id", companyId)
+    .eq("id", estimateId)
+    .eq("status", "draft")
+    .select("id")
+    .maybeSingle();
+
+  if (updateError) {
+    console.error("[updateFieldEstimateDraftContent] update failed:", {
+      companyId,
+      estimateId,
+      code: updateError.code,
+      message: updateError.message,
+    });
+    return { estimate: null, error: mapDatabaseError(updateError) };
+  }
+
+  if (!updatedRow) {
+    return {
+      estimate: null,
+      error: "Draft estimate was not found or is no longer editable.",
+    };
+  }
+
+  const { error: deleteLineItemsError } = await supabase
+    .from("estimate_line_items")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("estimate_id", estimateId);
+
+  if (deleteLineItemsError) {
+    console.error("[updateFieldEstimateDraftContent] line items delete failed:", {
+      companyId,
+      estimateId,
+      code: deleteLineItemsError.code,
+      message: deleteLineItemsError.message,
+    });
+    return { estimate: null, error: mapDatabaseError(deleteLineItemsError) };
+  }
+
+  const lineItemInserts = mapLineItemsToInsert(
+    companyId,
+    estimateId,
+    validLineItems,
+  );
+
+  const { error: lineItemsError } = await supabase
+    .from("estimate_line_items")
+    .insert(lineItemInserts);
+
+  if (lineItemsError) {
+    console.error("[updateFieldEstimateDraftContent] line items insert failed:", {
+      companyId,
+      estimateId,
+      code: lineItemsError.code,
+      message: lineItemsError.message,
+    });
+    return { estimate: null, error: mapDatabaseError(lineItemsError) };
+  }
+
+  const estimate = await getEstimateById(companyId, estimateId, db);
+
+  return {
+    estimate,
+    error: estimate ? null : "Failed to load updated estimate.",
+  };
+}
+
 export async function updateEstimateStatus(
   companyId: string,
   estimateId: string,

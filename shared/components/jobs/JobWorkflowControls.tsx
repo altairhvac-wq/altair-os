@@ -50,6 +50,7 @@ type JobWorkflowControlsProps = {
   };
   businessActionOptions?: JobBusinessActionOptions;
   onFieldEstimateClick?: () => void;
+  onFieldFinishEstimateClick?: (estimateId: string) => void;
   onFieldApproveClick?: () => void;
   onCompleteSheetOpenChange?: (open: boolean) => void;
   onStatusUpdated?: (status: JobStatus) => void;
@@ -109,6 +110,7 @@ export function JobWorkflowControls({
   businessContext,
   businessActionOptions,
   onFieldEstimateClick,
+  onFieldFinishEstimateClick,
   onFieldApproveClick,
   onCompleteSheetOpenChange,
   onStatusUpdated,
@@ -181,6 +183,7 @@ export function JobWorkflowControls({
         fieldSoft={businessGuideLayout === "field"}
         disabled={competingSheetActive}
         onFieldEstimateClick={onFieldEstimateClick}
+        onFieldFinishEstimateClick={onFieldFinishEstimateClick}
         onFieldApproveClick={onFieldApproveClick}
       />
     );
