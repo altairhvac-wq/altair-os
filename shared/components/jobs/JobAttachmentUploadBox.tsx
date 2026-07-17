@@ -8,7 +8,12 @@ import {
   createJobAttachmentAction,
   prepareJobAttachmentUploadAction,
 } from "@/app/actions/job-attachments";
-import { formatActionError, formatUploadError } from "@/shared/lib/operational-errors";
+import {
+  CONNECTION_UPLOAD_ERROR,
+  formatActionError,
+  formatConnectionCatchError,
+  formatUploadError,
+} from "@/shared/lib/operational-errors";
 import { COMPANY_FILES_BUCKET } from "@/lib/storage/company-files";
 import {
   JOB_ATTACHMENT_ALLOWED_MIME_TYPES,
@@ -41,8 +46,10 @@ export function JobAttachmentUploadBox({
 }: JobAttachmentUploadBoxProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const uploadLockRef = useRef(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [retryFile, setRetryFile] = useState<File | null>(null);
   const [attachmentType, setAttachmentType] = useState<JobAttachmentType>(
     defaultAttachmentType,
   );
@@ -56,83 +63,127 @@ export function JobAttachmentUploadBox({
   }, [isPending, onPendingChange]);
 
   function handlePickFile() {
-    if (!isPending) {
+    if (!isPending && !uploadLockRef.current) {
       inputRef.current?.click();
     }
+  }
+
+  function validateFile(file: File): string | null {
+    if (
+      !(JOB_ATTACHMENT_ALLOWED_MIME_TYPES as readonly string[]).includes(
+        file.type.toLowerCase(),
+      )
+    ) {
+      return "Unsupported file type. Use JPG, PNG, WEBP, HEIC, or PDF.";
+    }
+
+    if (file.size <= 0 || file.size > JOB_ATTACHMENT_MAX_FILE_SIZE) {
+      return "File must be between 1 byte and 10 MB.";
+    }
+
+    return null;
+  }
+
+  function uploadFile(file: File) {
+    if (uploadLockRef.current || isPending) {
+      return;
+    }
+
+    const validationError = validateFile(file);
+    if (validationError) {
+      setError(validationError);
+      setRetryFile(null);
+      return;
+    }
+
+    setError(null);
+    uploadLockRef.current = true;
+
+    startTransition(async () => {
+      try {
+        const attachmentId = crypto.randomUUID();
+
+        const target = await prepareJobAttachmentUploadAction({
+          jobId,
+          attachmentId,
+          fileName: file.name,
+        });
+
+        if (target.error || !target.storagePath) {
+          setRetryFile(file);
+          setError(
+            formatActionError(target.error, "Could not prepare upload. Try again."),
+          );
+          return;
+        }
+
+        const supabase = createClient();
+        const { error: uploadError } = await supabase.storage
+          .from(COMPANY_FILES_BUCKET)
+          .upload(target.storagePath, file, {
+            upsert: false,
+            contentType: file.type,
+          });
+
+        if (uploadError) {
+          setRetryFile(file);
+          setError(formatUploadError());
+          return;
+        }
+
+        const result = await createJobAttachmentAction({
+          jobId,
+          attachmentId,
+          fileName: file.name,
+          filePath: target.storagePath,
+          mimeType: file.type,
+          fileSize: file.size,
+          attachmentType,
+        });
+
+        if (result.error) {
+          await supabase.storage
+            .from(COMPANY_FILES_BUCKET)
+            .remove([target.storagePath]);
+          setRetryFile(file);
+          setError(formatActionError(result.error, formatUploadError()));
+          return;
+        }
+
+        setRetryFile(null);
+        onUploaded?.();
+        router.refresh();
+      } catch {
+        setRetryFile(file);
+        setError(formatConnectionCatchError(CONNECTION_UPLOAD_ERROR));
+      } finally {
+        uploadLockRef.current = false;
+      }
+    });
   }
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
 
-    if (!file || isPending) {
+    if (!file || isPending || uploadLockRef.current) {
       return;
     }
 
-    setError(null);
+    uploadFile(file);
+  }
 
-    if (
-      !(JOB_ATTACHMENT_ALLOWED_MIME_TYPES as readonly string[]).includes(
-        file.type.toLowerCase(),
-      )
-    ) {
-      setError("Unsupported file type. Use JPG, PNG, WEBP, HEIC, or PDF.");
+  function handleRetry() {
+    if (isPending || uploadLockRef.current) {
       return;
     }
 
-    if (file.size <= 0 || file.size > JOB_ATTACHMENT_MAX_FILE_SIZE) {
-      setError("File must be between 1 byte and 10 MB.");
+    if (retryFile) {
+      uploadFile(retryFile);
       return;
     }
 
-    startTransition(async () => {
-      const attachmentId = crypto.randomUUID();
-
-      const target = await prepareJobAttachmentUploadAction({
-        jobId,
-        attachmentId,
-        fileName: file.name,
-      });
-
-      if (target.error || !target.storagePath) {
-        setError(formatActionError(target.error, "Could not prepare upload. Try again."));
-        return;
-      }
-
-      const supabase = createClient();
-      const { error: uploadError } = await supabase.storage
-        .from(COMPANY_FILES_BUCKET)
-        .upload(target.storagePath, file, {
-          upsert: false,
-          contentType: file.type,
-        });
-
-      if (uploadError) {
-        setError(formatUploadError());
-        return;
-      }
-
-      const result = await createJobAttachmentAction({
-        jobId,
-        attachmentId,
-        fileName: file.name,
-        filePath: target.storagePath,
-        mimeType: file.type,
-        fileSize: file.size,
-        attachmentType,
-      });
-
-      if (result.error) {
-        await supabase.storage
-          .from(COMPANY_FILES_BUCKET)
-          .remove([target.storagePath]);
-        setError(formatActionError(result.error, formatUploadError()));
-        return;
-      }
-
-      onUploaded?.();
-      router.refresh();
-    });
+    handlePickFile();
   }
 
   return (
@@ -200,7 +251,9 @@ export function JobAttachmentUploadBox({
               : "Tap to upload photo or file"}
         </p>
         <p className="mt-1 text-xs text-slate-500">
-          JPG, PNG, WEBP, HEIC, or PDF up to 10 MB
+          {retryFile && !isPending
+            ? `${retryFile.name} ready to retry`
+            : "JPG, PNG, WEBP, HEIC, or PDF up to 10 MB"}
         </p>
         <button
           type="button"
@@ -224,10 +277,10 @@ export function JobAttachmentUploadBox({
           <button
             type="button"
             disabled={isPending}
-            onClick={handlePickFile}
+            onClick={handleRetry}
             className="text-sm font-semibold text-cyan-700 hover:text-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Try again
+            {retryFile ? "Retry upload" : "Try again"}
           </button>
         </div>
       ) : null}

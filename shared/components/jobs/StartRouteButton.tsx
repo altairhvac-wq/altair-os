@@ -2,13 +2,17 @@
 
 import { Navigation } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { updateJobStatusAction } from "@/app/actions/jobs";
 import {
   buildGoogleMapsDirectionsUrl,
   buildMapsDirectionsUrl,
   openMapsDirectionsUrl,
 } from "@/shared/lib/maps";
+import {
+  formatActionError,
+  formatConnectionCatchError,
+} from "@/shared/lib/operational-errors";
 import type { JobStatus } from "@/shared/types/job";
 import {
   technicianFieldPrimaryActionClass,
@@ -55,6 +59,7 @@ export function StartRouteButton({
   onStatusUpdated,
 }: StartRouteButtonProps) {
   const router = useRouter();
+  const submitLockRef = useRef(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const addressParts = { serviceAddress, city, state, zip };
@@ -63,6 +68,8 @@ export function StartRouteButton({
   );
 
   useEffect(() => {
+    // Client-only platform maps URL (avoids SSR/iOS hydration mismatch).
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- post-hydration platform pick
     setMapsUrl(buildMapsDirectionsUrl(addressParts));
   }, [serviceAddress, city, state, zip]);
 
@@ -108,17 +115,37 @@ export function StartRouteButton({
     const shouldDispatch = status === "scheduled" && canUpdateStatus;
 
     if (shouldDispatch) {
+      if (submitLockRef.current) {
+        return;
+      }
+
+      submitLockRef.current = true;
       startTransition(async () => {
-        const result = await updateJobStatusAction(jobId, "dispatch", status);
+        try {
+          const result = await updateJobStatusAction(jobId, "dispatch", status);
 
-        if (result.error || !result.job) {
-          setError(result.error ?? "The job status could not be updated.");
-          return;
+          if (result.error || !result.job) {
+            setError(
+              formatActionError(
+                result.error,
+                "Could not mark en route. Maps stayed closed — try again.",
+              ),
+            );
+            return;
+          }
+
+          onStatusUpdated?.(result.job.status);
+          router.refresh();
+          openMaps();
+        } catch {
+          setError(
+            formatConnectionCatchError(
+              "Connection problem. Status was not updated and maps stayed closed — try again.",
+            ),
+          );
+        } finally {
+          submitLockRef.current = false;
         }
-
-        onStatusUpdated?.(result.job.status);
-        router.refresh();
-        openMaps();
       });
       return;
     }

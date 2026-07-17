@@ -124,6 +124,42 @@ export function formatRetryGuidance(message: string): string {
   return `${message} Review and retry, or contact your office if this keeps happening.`;
 }
 
+/** Thrown / network-failure copy when a mutation never returned a typed result. */
+export const CONNECTION_ACTION_ERROR =
+  "Connection problem. Check your signal and try again.";
+
+export const OFFLINE_ACTION_ERROR =
+  "You're offline. Your entries are still here — reconnect and try again.";
+
+export const CONNECTION_UPLOAD_ERROR =
+  "Upload interrupted. Check your connection — your photo is still ready to retry.";
+
+/**
+ * Map unexpected throws (timeouts, fetch failures) to safe technician messaging.
+ * Prefer typed `{ error }` results from server actions when available.
+ */
+export function formatConnectionCatchError(
+  fallback: string = CONNECTION_ACTION_ERROR,
+): string {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    return OFFLINE_ACTION_ERROR;
+  }
+
+  return fallback;
+}
+
+export function formatPreservedFormError(message: string): string {
+  if (
+    message.includes("still here") ||
+    message.includes("entries are saved") ||
+    message.includes("Review and retry")
+  ) {
+    return message;
+  }
+
+  return `${message} Your entries are still here — review and try again.`;
+}
+
 export const MISSING_CUSTOMER_EMAIL_SEND_REASON =
   "Add a customer email on their profile before sending.";
 

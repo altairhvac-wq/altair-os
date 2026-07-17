@@ -1,9 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { updateJobStatusAction } from "@/app/actions/jobs";
-import { formatActionError } from "@/shared/lib/operational-errors";
+import {
+  formatActionError,
+  formatConnectionCatchError,
+} from "@/shared/lib/operational-errors";
 import type { JobStatus } from "@/shared/types/job";
 import {
   getDisplayWorkflowActions,
@@ -77,6 +80,7 @@ export function JobWorkflowActions({
   onStatusUpdated,
 }: JobWorkflowActionsProps) {
   const router = useRouter();
+  const submitLockRef = useRef(false);
   const [isPending, startTransition] = useTransition();
   const [pendingAction, setPendingAction] = useState<JobWorkflowActionId | null>(
     null,
@@ -138,7 +142,7 @@ export function JobWorkflowActions({
   }
 
   function handleAction(actionId: JobWorkflowActionId) {
-    if (workflowActionsDisabled) {
+    if (workflowActionsDisabled || submitLockRef.current) {
       return;
     }
 
@@ -152,13 +156,19 @@ export function JobWorkflowActions({
     setError(null);
     setSuccessMessage(null);
     setPendingAction(actionId);
+    submitLockRef.current = true;
 
     startTransition(async () => {
       try {
         const result = await updateJobStatusAction(jobId, actionId, status);
 
         if (!result.job) {
-          setError(formatActionError(result.error, "We couldn't update this job's status. Try again."));
+          setError(
+            formatActionError(
+              result.error,
+              "We couldn't update this job's status. Try again.",
+            ),
+          );
           if (result.error?.includes("assigned")) {
             router.refresh();
           }
@@ -166,7 +176,12 @@ export function JobWorkflowActions({
         }
 
         if (result.error) {
-          setError(formatActionError(result.error, "We couldn't update this job's status. Try again."));
+          setError(
+            formatActionError(
+              result.error,
+              "We couldn't update this job's status. Try again.",
+            ),
+          );
           onStatusUpdated?.(result.job.status);
           router.refresh();
           return;
@@ -180,8 +195,15 @@ export function JobWorkflowActions({
         setSuccessMessage(`${actionLabel} updated successfully.`);
         onStatusUpdated?.(result.job.status);
         window.setTimeout(() => router.refresh(), 500);
+      } catch {
+        setError(
+          formatConnectionCatchError(
+            "Connection problem. Status was not updated — try again when your signal is stable.",
+          ),
+        );
       } finally {
         setPendingAction(null);
+        submitLockRef.current = false;
       }
     });
   }

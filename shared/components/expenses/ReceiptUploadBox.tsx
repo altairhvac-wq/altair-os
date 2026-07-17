@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Check, FileImage, Loader2, Upload, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -8,7 +8,12 @@ import {
   attachExpenseReceiptAction,
   prepareExpenseReceiptUploadAction,
 } from "@/app/actions/expenses";
-import { formatActionError, formatUploadError } from "@/shared/lib/operational-errors";
+import {
+  CONNECTION_UPLOAD_ERROR,
+  formatActionError,
+  formatConnectionCatchError,
+  formatUploadError,
+} from "@/shared/lib/operational-errors";
 import { COMPANY_FILES_BUCKET } from "@/lib/storage/company-files";
 import {
   EXPENSE_RECEIPT_ALLOWED_MIME_TYPES,
@@ -41,32 +46,33 @@ export function ReceiptUploadBox({
 }: ReceiptUploadBoxProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const uploadLockRef = useRef(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [localFile, setLocalFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [retryFile, setRetryFile] = useState<File | null>(null);
 
-  const activeFile = selectedFile ?? localFile;
+  const activeFile = selectedFile ?? localFile ?? retryFile;
   const displayFileName = activeFile?.name ?? null;
-  const showImagePreview =
-    activeFile != null && isImageMimeType(activeFile.type) && previewUrl != null;
-
-  useEffect(() => {
+  const previewUrl = useMemo(() => {
     if (!activeFile || !isImageMimeType(activeFile.type)) {
-      setPreviewUrl(null);
-      return;
+      return null;
     }
 
-    const url = URL.createObjectURL(activeFile);
-    setPreviewUrl(url);
-
-    return () => {
-      URL.revokeObjectURL(url);
-    };
+    return URL.createObjectURL(activeFile);
   }, [activeFile]);
+  const showImagePreview = previewUrl != null;
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   function handlePickFile() {
-    if (!isPending) {
+    if (!isPending && !uploadLockRef.current) {
       inputRef.current?.click();
     }
   }
@@ -74,6 +80,7 @@ export function ReceiptUploadBox({
   function handleClearFile(event: React.MouseEvent) {
     event.stopPropagation();
     setLocalFile(null);
+    setRetryFile(null);
     setError(null);
     onFileSelected?.(null);
   }
@@ -94,31 +101,34 @@ export function ReceiptUploadBox({
     return null;
   }
 
-  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0] ?? null;
-    event.target.value = "";
-    setError(null);
-
-    if (!file) {
+  function uploadToExpense(file: File) {
+    if (!expenseId || uploadLockRef.current || isPending) {
       return;
     }
 
     const validationError = validateFile(file);
-
     if (validationError) {
       setError(validationError);
+      setRetryFile(null);
       return;
     }
 
-    if (expenseId) {
-      startTransition(async () => {
+    setError(null);
+    uploadLockRef.current = true;
+
+    startTransition(async () => {
+      try {
         const target = await prepareExpenseReceiptUploadAction({
           expenseId,
           fileName: file.name,
         });
 
         if (target.error || !target.storagePath) {
-          setError(formatActionError(target.error, "Could not prepare upload. Try again."));
+          setRetryFile(file);
+          setLocalFile(file);
+          setError(
+            formatActionError(target.error, "Could not prepare upload. Try again."),
+          );
           return;
         }
 
@@ -131,6 +141,8 @@ export function ReceiptUploadBox({
           });
 
         if (uploadError) {
+          setRetryFile(file);
+          setLocalFile(file);
           setError(formatUploadError());
           return;
         }
@@ -147,6 +159,8 @@ export function ReceiptUploadBox({
           await supabase.storage
             .from(COMPANY_FILES_BUCKET)
             .remove([target.storagePath]);
+          setRetryFile(file);
+          setLocalFile(file);
           setError(formatActionError(result.error, formatUploadError()));
           return;
         }
@@ -155,15 +169,57 @@ export function ReceiptUploadBox({
           onExpenseUpdated?.(result.expense);
         }
 
+        setRetryFile(null);
         setLocalFile(file);
         onUploaded?.();
         router.refresh();
-      });
+      } catch {
+        setRetryFile(file);
+        setLocalFile(file);
+        setError(formatConnectionCatchError(CONNECTION_UPLOAD_ERROR));
+      } finally {
+        uploadLockRef.current = false;
+      }
+    });
+  }
+
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    event.target.value = "";
+    setError(null);
+
+    if (!file || isPending || uploadLockRef.current) {
       return;
     }
 
+    const validationError = validateFile(file);
+
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    if (expenseId) {
+      uploadToExpense(file);
+      return;
+    }
+
+    setRetryFile(null);
     setLocalFile(file);
     onFileSelected?.(file);
+  }
+
+  function handleRetry() {
+    if (isPending || uploadLockRef.current) {
+      return;
+    }
+
+    if (expenseId && retryFile) {
+      uploadToExpense(retryFile);
+      return;
+    }
+
+    handlePickFile();
   }
 
   return (
@@ -251,9 +307,11 @@ export function ReceiptUploadBox({
                     : "Drop receipt here or tap to browse"}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              {captureEnvironment
-                ? "Opens camera first · JPG, PNG, PDF up to 10 MB"
-                : "PNG, JPG, WEBP, HEIC, or PDF up to 10 MB"}
+              {retryFile && expenseId && !isPending
+                ? "Receipt ready to retry"
+                : captureEnvironment
+                  ? "Opens camera first · JPG, PNG, PDF up to 10 MB"
+                  : "PNG, JPG, WEBP, HEIC, or PDF up to 10 MB"}
             </p>
             {!displayFileName ? (
               <button
@@ -290,10 +348,10 @@ export function ReceiptUploadBox({
           <button
             type="button"
             disabled={isPending}
-            onClick={handlePickFile}
+            onClick={handleRetry}
             className="text-sm font-semibold text-cyan-700 hover:text-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Try again
+            {retryFile && expenseId ? "Retry upload" : "Try again"}
           </button>
         </div>
       ) : null}

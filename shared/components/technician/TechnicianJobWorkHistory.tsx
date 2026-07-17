@@ -45,6 +45,7 @@ export function TechnicianJobWorkHistory({
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   const trimmedNotes = notes?.trim() ?? "";
   const trimmedDescription = description?.trim() ?? "";
@@ -53,31 +54,46 @@ export function TechnicianJobWorkHistory({
     let cancelled = false;
 
     void (async () => {
-      const result = await getTechnicianJobWorkHistoryAction(jobId);
-      if (cancelled) {
-        return;
-      }
+      try {
+        const result = await getTechnicianJobWorkHistoryAction(jobId);
+        if (cancelled) {
+          return;
+        }
 
-      if (result.error) {
-        setError(result.error);
+        if (result.error) {
+          setError(result.error);
+          setAttachments([]);
+          setMaterials([]);
+          setExpenses([]);
+          return;
+        }
+
+        setError(null);
+        setAttachments(result.attachments ?? []);
+        setMaterials(result.materials ?? []);
+        setExpenses(result.expenses ?? []);
+      } catch {
+        if (cancelled) {
+          return;
+        }
+
+        setError(
+          "Could not load work history. Check your connection and try again.",
+        );
         setAttachments([]);
         setMaterials([]);
         setExpenses([]);
-        setIsLoading(false);
-        return;
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
-
-      setError(null);
-      setAttachments(result.attachments ?? []);
-      setMaterials(result.materials ?? []);
-      setExpenses(result.expenses ?? []);
-      setIsLoading(false);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [jobId]);
+  }, [jobId, loadAttempt]);
 
   const receiptExpenses = expenses.filter(
     (expense) => expense.receiptStatus === "attached" || expense.amount != null,
@@ -99,9 +115,23 @@ export function TechnicianJobWorkHistory({
       ) : null}
 
       {error ? (
-        <p className="px-0.5 text-sm text-rose-600" role="alert">
-          {error}
-        </p>
+        <div className="space-y-1.5 px-0.5">
+          <p className="text-sm text-rose-600" role="alert">
+            {error}
+          </p>
+          <button
+            type="button"
+            disabled={isLoading}
+            onClick={() => {
+              setIsLoading(true);
+              setError(null);
+              setLoadAttempt((current) => current + 1);
+            }}
+            className="text-sm font-semibold text-cyan-700 hover:text-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Retry
+          </button>
+        </div>
       ) : null}
 
       {!isLoading && !error && hasLoggedWork ? (

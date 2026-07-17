@@ -119,6 +119,47 @@ Run this checklist after each production or preview deploy that matters for inte
 
 ---
 
+## Technician weak-network resilience (closed beta)
+
+This pass is **not** offline sync. It covers connectivity awareness, safe retries, form preservation, and duplicate-submit guards while online/unstable.
+
+### Connectivity banner
+
+- [ ] Sign in as technician on `/technician`
+- [ ] In DevTools, set Network to Offline (or disable device radio)
+- [ ] Amber **No connection** banner appears in the technician shell
+- [ ] Restore network — brief green **Back online** banner appears, then clears
+
+### Duplicate-submit / pending guards
+
+- [ ] Open an assigned job and tap a workflow action (e.g. En Route / Arrived / Start Work) twice quickly — only one status change applies; button stays pending
+- [ ] Start Route (when it dispatches) — double-tap does not double-dispatch; maps open only after a successful status update
+- [ ] Complete job — double-submit does not create duplicate completion side effects
+
+### Form preservation on failure
+
+- [ ] On a job, fill materials / expense / estimate fields, then force a failure (Offline or throttle + submit)
+- [ ] Error copy mentions connection/retry and that entries are still present
+- [ ] Typed values remain on screen; reconnect and retry succeeds without re-entering everything
+
+### Photo / receipt retry
+
+- [ ] Upload a job photo while Offline or with upload interrupted — error shows; file remains ready to retry
+- [ ] Tap **Retry upload** after reconnect — upload succeeds without re-picking the file
+- [ ] Same check for expense receipt attach (existing expense) and create-expense-with-receipt from the technician expense form
+
+### Work history retry
+
+- [ ] Open job work history while Offline (or after a failed load) — error + **Retry** control
+- [ ] Reconnect, tap Retry — attachments/materials/expenses load
+
+### Clock-out after complete (connection messaging)
+
+- [ ] Complete a job while clocked in so the shift clock-out prompt appears
+- [ ] If clock-out fails due to connection, an on-screen error appears and the shift remains open (no silent failure)
+
+---
+
 ## Role-based nav check
 
 For each test role, verify sidebar/mobile nav:

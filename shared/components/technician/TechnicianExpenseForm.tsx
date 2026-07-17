@@ -16,7 +16,11 @@ import {
 } from "@/shared/components/expenses/ExpensePaymentMethodField";
 import { ReceiptUploadBox } from "@/shared/components/expenses/ReceiptUploadBox";
 import { submitExpenseWithReceipt } from "@/shared/lib/submit-expense-with-receipt";
-import { formatActionError } from "@/shared/lib/operational-errors";
+import {
+  formatActionError,
+  formatConnectionCatchError,
+  formatPreservedFormError,
+} from "@/shared/lib/operational-errors";
 
 type TechnicianExpenseFormProps = {
   jobId?: string;
@@ -79,44 +83,60 @@ export function TechnicianExpenseForm({
     submitLockRef.current = true;
 
     startTransition(async () => {
-      const form = new FormData(formEl);
-      const amountValue = String(form.get("amount") ?? "").trim();
-      const merchant = String(form.get("merchant") ?? "").trim();
+      try {
+        const form = new FormData(formEl);
+        const amountValue = String(form.get("amount") ?? "").trim();
+        const merchant = String(form.get("merchant") ?? "").trim();
 
-      if (!receiptFile && !amountValue) {
-        setError("Add a receipt photo or enter an amount.");
-        submitLockRef.current = false;
-        return;
-      }
-
-      if (amountValue) {
-        const parsedAmount = Number(amountValue);
-        if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
-          setError("Enter a valid amount of zero or greater.");
-          submitLockRef.current = false;
+        if (!receiptFile && !amountValue) {
+          setError("Add a receipt photo or enter an amount.");
           return;
         }
-      }
 
-      const data: ExpenseFormData = {
-        amount: amountValue ? Number(amountValue) : undefined,
-        purchaseDate: getDefaultPaymentDate(),
-        merchant: merchant || undefined,
-        category,
-        paymentMethod: parseExpensePaymentMethod(form.get("paymentMethod")),
-        jobId,
-      };
+        if (amountValue) {
+          const parsedAmount = Number(amountValue);
+          if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
+            setError("Enter a valid amount of zero or greater.");
+            return;
+          }
+        }
 
-      const result = await submitExpenseWithReceipt({ data, receiptFile });
+        const data: ExpenseFormData = {
+          amount: amountValue ? Number(amountValue) : undefined,
+          purchaseDate: getDefaultPaymentDate(),
+          merchant: merchant || undefined,
+          category,
+          paymentMethod: parseExpensePaymentMethod(form.get("paymentMethod")),
+          jobId,
+        };
 
-      if (result.error) {
-        setError(formatActionError(result.error, "Could not save this expense. Try again."));
+        const result = await submitExpenseWithReceipt({ data, receiptFile });
+
+        if (result.error) {
+          setError(
+            formatPreservedFormError(
+              formatActionError(
+                result.error,
+                "Could not save this expense. Try again.",
+              ),
+            ),
+          );
+          return;
+        }
+
+        onSuccess?.();
+        router.refresh();
+      } catch {
+        setError(
+          formatPreservedFormError(
+            formatConnectionCatchError(
+              "Connection problem. Could not save this expense.",
+            ),
+          ),
+        );
+      } finally {
         submitLockRef.current = false;
-        return;
       }
-
-      onSuccess?.();
-      router.refresh();
     });
   }
 

@@ -1,9 +1,12 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { LogOut } from "lucide-react";
 import { stopClockAction } from "@/app/actions/time-entries";
-import { formatActionError } from "@/shared/lib/operational-errors";
+import {
+  formatActionError,
+  formatConnectionCatchError,
+} from "@/shared/lib/operational-errors";
 import {
   MobileSheet,
   MobileSheetBody,
@@ -25,19 +28,32 @@ export function CompleteWorkClockOutPrompt({
   onStayClockedIn,
 }: CompleteWorkClockOutPromptProps) {
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   function handleClockOut() {
+    if (isPending) return;
+
+    setError(null);
     startTransition(async () => {
-      const result = await stopClockAction();
-      if (result.error) {
-        console.error(
-          formatActionError(
-            result.error,
-            "Could not clock out. Your shift clock is still running.",
+      try {
+        const result = await stopClockAction();
+        if (result.error) {
+          setError(
+            formatActionError(
+              result.error,
+              "Could not clock out. Your shift clock is still running.",
+            ),
+          );
+          return;
+        }
+        onClose();
+      } catch {
+        setError(
+          formatConnectionCatchError(
+            "Could not clock out. Check your connection; your shift clock is still running.",
           ),
         );
       }
-      onClose();
     });
   }
 
@@ -63,11 +79,20 @@ export function CompleteWorkClockOutPrompt({
           }
         />
 
-        <MobileSheetBody>
+        <MobileSheetBody className="space-y-3">
           <p className="text-sm text-slate-600">
             Job labor for this visit has been saved. Payroll time stays open
             until you clock out.
           </p>
+          {error ? (
+            <p
+              role="alert"
+              aria-live="assertive"
+              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800"
+            >
+              {error}
+            </p>
+          ) : null}
         </MobileSheetBody>
 
         <MobileSheetFooter>

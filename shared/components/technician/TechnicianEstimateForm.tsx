@@ -9,7 +9,11 @@ import {
 } from "@/app/actions/estimates";
 import { EstimateDescriptionAiAssistant } from "@/shared/components/estimates/EstimateDescriptionAiAssistant";
 import { LineItemsEditor } from "@/shared/components/estimates/LineItemsEditor";
-import { formatActionError, formatRetryGuidance } from "@/shared/lib/operational-errors";
+import {
+  formatActionError,
+  formatConnectionCatchError,
+  formatRetryGuidance,
+} from "@/shared/lib/operational-errors";
 import type { EstimateLineItemFormData } from "@/shared/types/estimate";
 import type { ServiceItem } from "@/shared/types/service-item";
 import {
@@ -139,32 +143,42 @@ export function TechnicianEstimateForm({
     setError(null);
 
     startTransition(async () => {
-      const result = estimateId
-        ? await updateFieldEstimateFromJobAction(jobId, estimateId, {
-            lineItems: validLineItems,
-            notes,
-          })
-        : await createFieldEstimateFromJobAction(jobId, {
-            lineItems: validLineItems,
-            notes,
-          });
+      try {
+        const result = estimateId
+          ? await updateFieldEstimateFromJobAction(jobId, estimateId, {
+              lineItems: validLineItems,
+              notes,
+            })
+          : await createFieldEstimateFromJobAction(jobId, {
+              lineItems: validLineItems,
+              notes,
+            });
 
-      submitLockRef.current = false;
+        if (result.error || !result.estimate) {
+          setError(
+            formatRetryGuidance(
+              formatActionError(
+                result.error,
+                "Could not save this estimate. Try again.",
+              ),
+            ),
+          );
+          return;
+        }
 
-      if (result.error || !result.estimate) {
+        router.refresh();
+        onSuccess?.(result.estimate.estimateNumber);
+      } catch {
         setError(
           formatRetryGuidance(
-            formatActionError(
-              result.error,
-              "Could not save this estimate. Try again.",
+            formatConnectionCatchError(
+              "Connection problem. Could not save this estimate.",
             ),
           ),
         );
-        return;
+      } finally {
+        submitLockRef.current = false;
       }
-
-      router.refresh();
-      onSuccess?.(result.estimate.estimateNumber);
     });
   }
 

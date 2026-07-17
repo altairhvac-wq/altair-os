@@ -6,6 +6,7 @@ import {
 import { COMPANY_FILES_BUCKET } from "@/lib/storage/company-files";
 import {
   formatActionError,
+  formatConnectionCatchError,
   formatUploadError,
 } from "@/shared/lib/operational-errors";
 import type { ExpenseFormData } from "@/shared/types/expense";
@@ -24,60 +25,82 @@ export async function submitExpenseWithReceipt(input: {
   let receiptMimeType: string | undefined;
   let receiptFileSize: number | undefined;
 
-  if (input.receiptFile) {
-    const target = await prepareExpenseReceiptUploadAction({
+  try {
+    if (input.receiptFile) {
+      const target = await prepareExpenseReceiptUploadAction({
+        expenseId,
+        fileName: input.receiptFile.name,
+        forCreate: true,
+      });
+
+      if (target.error || !target.storagePath) {
+        return {
+          error: formatActionError(
+            target.error,
+            "Could not prepare receipt upload. Try again.",
+          ),
+        };
+      }
+
+      const supabase = createClient();
+      const { error: uploadError } = await supabase.storage
+        .from(COMPANY_FILES_BUCKET)
+        .upload(target.storagePath, input.receiptFile, {
+          upsert: false,
+          contentType: input.receiptFile.type,
+        });
+
+      if (uploadError) {
+        return { error: formatUploadError() };
+      }
+
+      receiptFileName = input.receiptFile.name;
+      receiptStoragePath = target.storagePath;
+      receiptMimeType = input.receiptFile.type;
+      receiptFileSize = input.receiptFile.size;
+    }
+
+    const result = await createExpenseAction({
+      data: input.data,
       expenseId,
-      fileName: input.receiptFile.name,
-      forCreate: true,
+      receiptFileName,
+      receiptStoragePath,
+      receiptMimeType,
+      receiptFileSize,
     });
 
-    if (target.error || !target.storagePath) {
+    if (result.error) {
+      if (receiptStoragePath) {
+        const supabase = createClient();
+        await supabase.storage
+          .from(COMPANY_FILES_BUCKET)
+          .remove([receiptStoragePath]);
+      }
       return {
         error: formatActionError(
-          target.error,
-          "Could not prepare receipt upload. Try again.",
+          result.error,
+          "Could not save this expense. Try again.",
         ),
       };
     }
 
-    const supabase = createClient();
-    const { error: uploadError } = await supabase.storage
-      .from(COMPANY_FILES_BUCKET)
-      .upload(target.storagePath, input.receiptFile, {
-        upsert: false,
-        contentType: input.receiptFile.type,
-      });
-
-    if (uploadError) {
-      return { error: formatUploadError() };
-    }
-
-    receiptFileName = input.receiptFile.name;
-    receiptStoragePath = target.storagePath;
-    receiptMimeType = input.receiptFile.type;
-    receiptFileSize = input.receiptFile.size;
-  }
-
-  const result = await createExpenseAction({
-    data: input.data,
-    expenseId,
-    receiptFileName,
-    receiptStoragePath,
-    receiptMimeType,
-    receiptFileSize,
-  });
-
-  if (result.error) {
+    return {};
+  } catch {
     if (receiptStoragePath) {
-      const supabase = createClient();
-      await supabase.storage
-        .from(COMPANY_FILES_BUCKET)
-        .remove([receiptStoragePath]);
+      try {
+        const supabase = createClient();
+        await supabase.storage
+          .from(COMPANY_FILES_BUCKET)
+          .remove([receiptStoragePath]);
+      } catch {
+        // Best-effort cleanup after a network interruption.
+      }
     }
+
     return {
-      error: formatActionError(result.error, "Could not save this expense. Try again."),
+      error: formatConnectionCatchError(
+        "Connection problem. Could not save this expense. Try again.",
+      ),
     };
   }
-
-  return {};
 }

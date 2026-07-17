@@ -38,6 +38,7 @@ import {
   MobileSheetPanel,
   MobileSheetSuccess,
 } from "@/shared/components/ui/mobile-sheet";
+import { formatConnectionCatchError } from "@/shared/lib/operational-errors";
 import type { JobStatus } from "@/shared/types/job";
 
 type CompleteJobSheetProps = {
@@ -107,95 +108,116 @@ export function CompleteJobSheet({
     submitLockRef.current = true;
 
     startTransition(async () => {
-      if (equipmentPayload.mode === "create" && equipmentPayload.data) {
-        const validationError = validateCustomerEquipmentFormData(
-          equipmentPayload.data,
-        );
-        if (validationError) {
-          setError(formatRetryError(validationError));
-          submitLockRef.current = false;
-          return;
+      let completedSuccessfully = false;
+
+      try {
+        if (equipmentPayload.mode === "create" && equipmentPayload.data) {
+          const validationError = validateCustomerEquipmentFormData(
+            equipmentPayload.data,
+          );
+          if (validationError) {
+            setError(formatRetryError(validationError));
+            return;
+          }
+
+          const equipmentResult = await createCustomerEquipmentAction(
+            customerId,
+            equipmentPayload.data,
+            jobId,
+          );
+
+          if (equipmentResult.error) {
+            setError(formatRetryError(equipmentResult.error));
+            return;
+          }
         }
 
-        const equipmentResult = await createCustomerEquipmentAction(
-          customerId,
-          equipmentPayload.data,
+        if (
+          equipmentPayload.mode === "update" &&
+          equipmentPayload.equipmentId &&
+          equipmentPayload.data
+        ) {
+          const validationError = validateCustomerEquipmentFormData(
+            equipmentPayload.data,
+          );
+          if (validationError) {
+            setError(formatRetryError(validationError));
+            return;
+          }
+
+          const equipmentResult = await updateCustomerEquipmentAction(
+            equipmentPayload.equipmentId,
+            equipmentPayload.data,
+            jobId,
+          );
+
+          if (equipmentResult.error) {
+            setError(formatRetryError(equipmentResult.error));
+            return;
+          }
+        }
+
+        const result = await updateJobStatusAction(
           jobId,
+          "complete",
+          currentStatus,
+          {
+            completionNotes: completionNotes.trim() || undefined,
+            followUpNotes: followUpNotes.trim() || undefined,
+          },
         );
 
-        if (equipmentResult.error) {
-          setError(formatRetryError(equipmentResult.error));
-          submitLockRef.current = false;
-          return;
-        }
-      }
-
-      if (
-        equipmentPayload.mode === "update" &&
-        equipmentPayload.equipmentId &&
-        equipmentPayload.data
-      ) {
-        const validationError = validateCustomerEquipmentFormData(
-          equipmentPayload.data,
-        );
-        if (validationError) {
-          setError(formatRetryError(validationError));
-          submitLockRef.current = false;
+        if (!result.job) {
+          setError(
+            formatRetryError(result.error ?? "Could not complete this job."),
+          );
           return;
         }
 
-        const equipmentResult = await updateCustomerEquipmentAction(
-          equipmentPayload.equipmentId,
-          equipmentPayload.data,
-          jobId,
-        );
-
-        if (equipmentResult.error) {
-          setError(formatRetryError(equipmentResult.error));
-          submitLockRef.current = false;
+        if (result.error) {
+          hadPartialSuccessRef.current = true;
+          onCompleted?.(result.job.status, "partial");
+          setError(
+            `${result.error} The job is marked complete, but the office may still need to review something. You can close this form safely.`,
+          );
           return;
         }
-      }
 
-      const result = await updateJobStatusAction(jobId, "complete", currentStatus, {
-        completionNotes: completionNotes.trim() || undefined,
-        followUpNotes: followUpNotes.trim() || undefined,
-      });
-
-      if (!result.job) {
+        onCompleted?.(result.job.status, "success");
+        router.refresh();
+        completedSuccessfully = true;
+      } catch {
         setError(
-          formatRetryError(result.error ?? "Could not complete this job."),
+          formatRetryError(
+            formatConnectionCatchError(
+              "Connection problem. The job may not be complete yet.",
+            ),
+          ),
         );
-        submitLockRef.current = false;
         return;
+      } finally {
+        if (!completedSuccessfully) {
+          submitLockRef.current = false;
+        }
       }
 
-      if (result.error) {
-        hadPartialSuccessRef.current = true;
-        onCompleted?.(result.job.status, "partial");
-        setError(
-          `${result.error} The job is marked complete, but the office may still need to review something. You can close this form safely.`,
-        );
+      // Clock-out prompt fetches are best-effort after a successful complete.
+      // Do not surface a "not complete" error if only these follow-ups fail.
+      try {
+        const [timeResult, promptResult] = await Promise.all([
+          getTechnicianTimeDashboardAction(),
+          shouldPromptShiftClockOutAfterJobCompleteAction(jobId),
+        ]);
+
+        if (timeResult.state?.openClockEntry && promptResult.shouldPrompt) {
+          setShowClockOutPrompt(true);
+          setShowSuccess(true);
+          return;
+        }
+      } catch {
+        // Job already completed — fall through to success close.
+      } finally {
         submitLockRef.current = false;
-        return;
-      }
-
-      onCompleted?.(result.job.status, "success");
-      router.refresh();
-
-      const [timeResult, promptResult] = await Promise.all([
-        getTechnicianTimeDashboardAction(),
-        shouldPromptShiftClockOutAfterJobCompleteAction(jobId),
-      ]);
-
-      if (
-        timeResult.state?.openClockEntry &&
-        promptResult.shouldPrompt
-      ) {
-        setShowClockOutPrompt(true);
-        setShowSuccess(true);
-        submitLockRef.current = false;
-        return;
       }
 
       setShowSuccess(true);

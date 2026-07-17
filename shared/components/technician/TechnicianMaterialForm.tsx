@@ -5,7 +5,12 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createJobMaterialAction } from "@/app/actions/job-materials";
 import { ServiceItemMaterialPicker } from "@/shared/components/service-items/ServiceItemMaterialPicker";
-import { formatActionError, formatRetryGuidance } from "@/shared/lib/operational-errors";
+import {
+  formatActionError,
+  formatConnectionCatchError,
+  formatPreservedFormError,
+  formatRetryGuidance,
+} from "@/shared/lib/operational-errors";
 import { formatCurrency } from "@/shared/types/customer";
 import {
   calculateJobMaterialTotalBillable,
@@ -181,17 +186,37 @@ export function TechnicianMaterialForm({
     submitLockRef.current = true;
 
     startTransition(async () => {
-      const result = await createJobMaterialAction({ data });
+      try {
+        const result = await createJobMaterialAction({ data });
 
-      if (result.error) {
-        setError(formatRetryGuidance(formatActionError(result.error, "Could not log this material. Try again.")));
+        if (result.error) {
+          setError(
+            formatPreservedFormError(
+              formatRetryGuidance(
+                formatActionError(
+                  result.error,
+                  "Could not log this material. Try again.",
+                ),
+              ),
+            ),
+          );
+          return;
+        }
+
+        resetForm();
+        onSuccess?.();
+        router.refresh();
+      } catch {
+        setError(
+          formatPreservedFormError(
+            formatConnectionCatchError(
+              "Connection problem. Could not log this material.",
+            ),
+          ),
+        );
+      } finally {
         submitLockRef.current = false;
-        return;
       }
-
-      resetForm();
-      onSuccess?.();
-      router.refresh();
     });
   }
 
