@@ -98,13 +98,18 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
           <Briefcase className="mt-0.5 h-4 w-4 shrink-0 text-cyan-700" aria-hidden="true" />
           <div>
             <p className="text-sm font-semibold text-cyan-900">
-              Your workspace is just getting started
+              Reports fill in as you operate
             </p>
             <p className="mt-0.5 text-xs text-cyan-800">
-              Reports will populate as you add customers, schedule jobs, send
-              estimates, and record invoices. Empty counts here mean no activity
-              yet — not a loading or permission issue.
+              Add a customer, schedule a job, then send an estimate or invoice —
+              totals here update from real activity, not placeholders.
             </p>
+            <Link
+              href="/customers"
+              className="mt-2 inline-flex text-xs font-semibold text-cyan-900 underline-offset-2 hover:underline"
+            >
+              Add your first customer
+            </Link>
           </div>
         </div>
       ) : null}

@@ -11,6 +11,7 @@ export type OnboardingSnapshot = {
 };
 
 export type OnboardingChecklistItemId =
+  | "workspace-ready"
   | "invite-team"
   | "add-customer"
   | "add-lead"

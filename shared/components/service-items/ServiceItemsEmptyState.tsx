@@ -16,11 +16,11 @@ export function ServiceItemsEmptyState({
   const isNoResults = variant === "no-results";
   const Icon = isNoResults ? SearchX : BookOpen;
 
-  const title = isNoResults ? "No items found" : "No price book items yet";
+  const title = isNoResults ? "No items found" : "Let's build your price book";
   const description = isNoResults
     ? "Try adjusting your search or filter to find what you're looking for."
     : onCreateItem
-      ? "Add services and parts to your price book so estimates and invoices stay consistent."
+      ? "Add a few common services so estimates and invoices stay consistent."
       : "Price book items will appear here once your office team adds them.";
 
   if (northStar) {

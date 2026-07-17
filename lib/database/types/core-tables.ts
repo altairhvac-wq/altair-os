@@ -119,6 +119,8 @@ export type ProfileRow = {
   phone: string | null;
   avatar_url: string | null;
   default_company_id: UUID | null;
+  /** User-scoped UI preferences; may be absent before migration 117. */
+  preferences?: Json | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -160,6 +162,7 @@ export type ProfileInsert = {
   phone?: string | null;
   avatar_url?: string | null;
   default_company_id?: UUID | null;
+  preferences?: Json | null;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 };

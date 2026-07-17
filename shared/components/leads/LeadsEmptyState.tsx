@@ -47,9 +47,11 @@ export function LeadsEmptyState({
           >
             <Users className="h-6 w-6 text-[#8A6324]" />
           </div>
-          <p className="mt-4 text-sm font-semibold text-[#17130E]">No leads yet.</p>
+          <p className="mt-4 text-sm font-semibold text-[#17130E]">
+            Let&apos;s add your first lead
+          </p>
           <p className="mt-1 text-sm text-[#64748B]">
-            Capture new opportunities before they become customers.
+            Capture opportunities before they become customers.
           </p>
           {onCreateLead ? (
             <button
@@ -58,7 +60,7 @@ export function LeadsEmptyState({
               className={`mt-4 inline-flex items-center gap-2 ${lt.emptyStateAction}`}
             >
               <Plus className="h-4 w-4" />
-              Create Lead
+              Add your first lead
             </button>
           ) : null}
         </div>
@@ -72,9 +74,11 @@ export function LeadsEmptyState({
         <div className="admin-empty-icon mx-auto">
           <Users className="h-7 w-7 text-slate-400" />
         </div>
-        <p className="mt-4 text-sm font-semibold text-slate-900">No leads yet.</p>
+        <p className="mt-4 text-sm font-semibold text-slate-900">
+          Let&apos;s add your first lead
+        </p>
         <p className="mt-1 text-sm text-slate-500">
-          Track new opportunities before they become customers.
+          Capture opportunities before they become customers.
         </p>
         {onCreateLead ? (
           <button
@@ -83,7 +87,7 @@ export function LeadsEmptyState({
             className="mt-4 inline-flex items-center gap-2 admin-btn-primary"
           >
             <Plus className="h-4 w-4" />
-            Create Lead
+            Add your first lead
           </button>
         ) : null}
       </div>

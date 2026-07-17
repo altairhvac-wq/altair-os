@@ -26,14 +26,14 @@ export function TeamMembersEmptyState({
           </div>
 
           <h3 className="mt-4 text-lg font-bold text-[#17130E]">
-            {isNoResults ? "No members match your search" : "You're the only member so far"}
+            {isNoResults ? "No members match your search" : "Invite your team when you're ready"}
           </h3>
 
           <p className="mt-2 max-w-sm text-sm text-[#4F4638]">
             {isNoResults
               ? "Try a different name, email, or role."
               : canManageTeam
-                ? "Use the invite form above when you're ready to add technicians or office staff."
+                ? "You're set to run solo. Use the invite form above to add technicians or office staff."
                 : "Team members will appear here once your admin invites them."}
           </p>
 
@@ -60,14 +60,14 @@ export function TeamMembersEmptyState({
       </div>
 
       <h3 className="mt-5 text-lg font-bold text-slate-900">
-        {isNoResults ? "No members match your search" : "You're the only member so far"}
+        {isNoResults ? "No members match your search" : "Invite your team when you're ready"}
       </h3>
 
       <p className="mt-2 max-w-sm text-sm text-slate-500">
         {isNoResults
           ? "Try a different name, email, or role."
           : canManageTeam
-            ? "Use the invite form above when you're ready to add technicians or office staff."
+            ? "You're set to run solo. Use the invite form above to add technicians or office staff."
             : "Team members will appear here once your admin invites them."}
       </p>
 

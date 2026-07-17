@@ -1,7 +1,4 @@
-import {
-  DashboardOnboardingBands,
-  shouldUseDashboardActivationHero,
-} from "@/shared/components/onboarding/DashboardOnboardingBands";
+import { DashboardOnboardingBands } from "@/shared/components/onboarding/DashboardOnboardingBands";
 import type { DashboardData } from "@/shared/types/dashboard";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
@@ -18,7 +15,9 @@ export type DashboardNorthStarViewProps = {
   onboardingChecklist?: OnboardingChecklist;
   companyId?: string;
   userId?: string;
+  userDisplayName?: string;
   demoDataStatus?: DemoDataStatus | null;
+  onboardingDismissed?: boolean;
 };
 
 function formatDateLabel(date: Date): string {
@@ -34,12 +33,10 @@ export function DashboardNorthStarView({
   onboardingChecklist,
   companyId,
   userId,
+  userDisplayName,
   demoDataStatus,
+  onboardingDismissed = false,
 }: DashboardNorthStarViewProps) {
-  const useActivationHero = shouldUseDashboardActivationHero(
-    onboardingChecklist,
-    demoDataStatus,
-  );
   const dateLabel = formatDateLabel(new Date());
 
   return (
@@ -48,29 +45,21 @@ export function DashboardNorthStarView({
         onboardingChecklist={onboardingChecklist}
         companyId={companyId}
         userId={userId}
+        userDisplayName={userDisplayName}
         demoDataStatus={demoDataStatus}
+        onboardingDismissed={onboardingDismissed}
         northStar
       />
 
       <MasterContentStack density="compact" className="hidden lg:flex">
-        {!useActivationHero ? (
-          <NorthStarMissionHero data={data} dateLabel={dateLabel} />
-        ) : null}
-        {!useActivationHero ? (
-          <NorthStarWorkflowRail data={data} />
-        ) : null}
-        {!useActivationHero ? (
-          <NorthStarOperatingBoard data={data} />
-        ) : null}
-        {!useActivationHero ? <NorthStarWorkflowMemory data={data} /> : null}
-        {!useActivationHero ? (
-          <NorthStarSupportingBands data={data} />
-        ) : null}
+        <NorthStarMissionHero data={data} dateLabel={dateLabel} />
+        <NorthStarWorkflowRail data={data} />
+        <NorthStarOperatingBoard data={data} />
+        <NorthStarWorkflowMemory data={data} />
+        <NorthStarSupportingBands data={data} />
       </MasterContentStack>
 
-      {!useActivationHero ? (
-        <DashboardNorthStarMobileView data={data} dateLabel={dateLabel} />
-      ) : null}
+      <DashboardNorthStarMobileView data={data} dateLabel={dateLabel} />
     </>
   );
 }

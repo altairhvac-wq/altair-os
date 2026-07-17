@@ -1,4 +1,5 @@
-import { Radio, SearchX } from "lucide-react";
+import { Radio, SearchX, Wrench } from "lucide-react";
+import Link from "next/link";
 import { northStarDispatchTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type DispatchEmptyStateProps = {
@@ -12,6 +13,15 @@ export function DispatchEmptyState({
   canDispatchJobs = false,
   northStar = false,
 }: DispatchEmptyStateProps) {
+  const title =
+    variant === "no-jobs" ? "Nothing to dispatch yet" : "No jobs on board";
+  const description =
+    variant === "no-jobs"
+      ? canDispatchJobs
+        ? "Schedule a job first — today's work will land here for assignment."
+        : "Scheduled jobs for today will appear here when your team assigns work."
+      : "Try adjusting your search or filters to find matching dispatch jobs.";
+
   if (northStar) {
     return (
       <div className="flex min-h-[10rem] items-center justify-center py-6 sm:min-h-[12rem] sm:py-8">
@@ -24,17 +34,19 @@ export function DispatchEmptyState({
             )}
           </div>
 
-          <h3 className={dt.emptyStateTitle}>
-            {variant === "no-jobs" ? "No jobs scheduled today" : "No jobs on board"}
-          </h3>
+          <h3 className={dt.emptyStateTitle}>{title}</h3>
 
-          <p className={dt.emptyStateDescription}>
-            {variant === "no-jobs"
-              ? canDispatchJobs
-                ? "Scheduled jobs for today will appear on the dispatch board. Create jobs from the Jobs page to get started."
-                : "Scheduled jobs for today will appear here when your team assigns work."
-              : "Try adjusting your search or filters to find dispatch jobs matching your criteria."}
-          </p>
+          <p className={dt.emptyStateDescription}>{description}</p>
+
+          {variant === "no-jobs" && canDispatchJobs ? (
+            <Link
+              href="/jobs"
+              className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-[#C9A44D] px-4 py-2.5 text-sm font-semibold text-[#17130E] transition hover:bg-[#D4B05A]"
+            >
+              <Wrench className="h-4 w-4" aria-hidden="true" />
+              Schedule a job
+            </Link>
+          ) : null}
         </div>
       </div>
     );
@@ -51,17 +63,19 @@ export function DispatchEmptyState({
           )}
         </div>
 
-        <h3 className="admin-heading-section mt-3 text-base">
-          {variant === "no-jobs" ? "No jobs scheduled today" : "No jobs on board"}
-        </h3>
+        <h3 className="admin-heading-section mt-3 text-base">{title}</h3>
 
-        <p className="admin-text-muted mt-1.5 text-sm">
-          {variant === "no-jobs"
-            ? canDispatchJobs
-              ? "Scheduled jobs for today will appear on the dispatch board. Create jobs from the Jobs page to get started."
-              : "Scheduled jobs for today will appear here when your team assigns work."
-            : "Try adjusting your search or filters to find dispatch jobs matching your criteria."}
-        </p>
+        <p className="admin-text-muted mt-1.5 text-sm">{description}</p>
+
+        {variant === "no-jobs" && canDispatchJobs ? (
+          <Link
+            href="/jobs"
+            className="mt-4 inline-flex items-center gap-2 admin-btn-primary"
+          >
+            <Wrench className="h-4 w-4" aria-hidden="true" />
+            Schedule a job
+          </Link>
+        ) : null}
       </div>
     </div>
   );

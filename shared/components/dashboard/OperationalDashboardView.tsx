@@ -14,6 +14,7 @@ type OperationalDashboardViewProps = {
   companyId?: string;
   userId?: string;
   demoDataStatus?: DemoDataStatus | null;
+  onboardingDismissed?: boolean;
 };
 
 export function OperationalDashboardView({
@@ -23,6 +24,7 @@ export function OperationalDashboardView({
   companyId,
   userId,
   demoDataStatus,
+  onboardingDismissed = false,
 }: OperationalDashboardViewProps) {
   return (
     <MasterShellPage density="compact">
@@ -34,6 +36,7 @@ export function OperationalDashboardView({
           companyId={companyId}
           userId={userId}
           demoDataStatus={demoDataStatus}
+          onboardingDismissed={onboardingDismissed}
         />
       </MasterPageCanvas>
     </MasterShellPage>

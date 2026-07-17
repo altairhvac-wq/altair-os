@@ -28,13 +28,13 @@ export function CustomersEmptyState({
             )}
           </div>
           <h3 className="mt-4 text-base font-semibold text-[#17130E]">
-            {isNoResults ? "No customers found" : "No customers yet"}
+            {isNoResults ? "No customers found" : "Let's add your first customer"}
           </h3>
           <p className="mt-2 text-sm text-[#64748B]">
             {isNoResults
               ? "Try adjusting your search or filter to find what you're looking for."
               : onCreateCustomer
-                ? "Add your first customer to start scheduling jobs, estimates, and service history."
+                ? "Customers unlock jobs, estimates, and service history. Start with one real account."
                 : "Customers will appear here once someone on your team adds them."}
           </p>
           {!isNoResults && onCreateCustomer ? (
@@ -62,12 +62,12 @@ export function CustomersEmptyState({
             <Users className="h-6 w-6" />
           )
         }
-        title={isNoResults ? "No customers found" : "No customers yet"}
+        title={isNoResults ? "No customers found" : "Let's add your first customer"}
         description={
           isNoResults
             ? "Try adjusting your search or filter to find what you're looking for."
             : onCreateCustomer
-              ? "Add your first customer to start scheduling jobs, estimates, and service history."
+              ? "Customers unlock jobs, estimates, and service history. Start with one real account."
               : "Customers will appear here once someone on your team adds them."
         }
         action={

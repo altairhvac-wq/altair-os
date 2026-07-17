@@ -43,12 +43,10 @@ export function TechnicianWorkloadCards({
       return (
         <div className={dt.workloadEmptyState}>
           <p className="text-xs font-semibold text-[#FFF8E8] sm:text-sm">
-            No technicians on roster
+            Invite a technician to dispatch
           </p>
           <p className="mt-0.5 hidden text-xs text-[#AEB6C2] sm:mt-1 sm:block">
-            Invite team members with the technician role to enable assignments.
-            Technician availability and specialties are not modeled in the database
-            yet.
+            Add team members with the technician role in Settings, then assign jobs here.
           </p>
         </div>
       );
@@ -57,12 +55,10 @@ export function TechnicianWorkloadCards({
     return (
       <div className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2.5 sm:rounded-2xl sm:px-4 sm:py-4">
         <p className="text-xs font-semibold text-slate-700 sm:text-sm">
-          No technicians on roster
+          Invite a technician to dispatch
         </p>
         <p className="mt-0.5 hidden text-xs text-slate-500 sm:mt-1 sm:block">
-          Invite team members with the technician role to enable assignments.
-          Technician availability and specialties are not modeled in the database
-          yet.
+          Add team members with the technician role in Settings, then assign jobs here.
         </p>
       </div>
     );

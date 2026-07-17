@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { shouldUseTechnicianHome } from "@/lib/auth/redirects";
 import { canManageDemoData } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
+import { getOnboardingDismissedFromContext } from "@/lib/database/queries/onboarding-dismiss";
 import { getDemoDataStatus } from "@/lib/database/queries/demo-data";
 import { getOnboardingSnapshot } from "@/lib/database/queries/onboarding-snapshot";
 import { getDashboardData } from "@/lib/database/services/dashboard";
@@ -31,6 +32,7 @@ export default async function DashboardPage() {
     buildOnboardingChecklist(onboardingSnapshot),
     companyContext,
   );
+  const onboardingDismissed = getOnboardingDismissedFromContext(companyContext);
 
   const userDisplayName =
     companyContext.profile.full_name ??
@@ -45,6 +47,7 @@ export default async function DashboardPage() {
       companyId={companyContext.company.id}
       userId={companyContext.user.id}
       demoDataStatus={demoDataStatus}
+      onboardingDismissed={onboardingDismissed}
     />
   );
 }

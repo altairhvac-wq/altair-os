@@ -5,15 +5,19 @@ import { useRouter } from "next/navigation";
 import { useMemo, useTransition } from "react";
 import {
   ArrowRight,
-  Brain,
+  CheckCircle2,
   Loader2,
   Sparkles,
 } from "lucide-react";
 import { seedDemoDataAction } from "@/app/actions/demo-data";
+import { ClosedBetaFeedbackStrip } from "@/shared/components/onboarding/ClosedBetaFeedbackStrip";
 import { HorizonHero } from "@/shared/design-system/signature";
 import { signatureCockpitSurfaceClass } from "@/shared/design-system/shell/tokens";
 import {
+  buildOnboardingWelcomeCopy,
+  getFirstNameFromDisplayName,
   getNextOnboardingChecklistItem,
+  getOnboardingProgressPercent,
   ONBOARDING_MONEY_PATH_STEPS,
 } from "@/shared/lib/onboarding-activation";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
@@ -22,15 +26,19 @@ import type { OnboardingChecklist } from "@/shared/types/onboarding";
 type DashboardActivationHeroProps = {
   checklist: OnboardingChecklist;
   companyId: string;
+  userDisplayName?: string;
   demoDataStatus?: DemoDataStatus | null;
   northStar?: boolean;
+  checklistDismissed?: boolean;
 };
 
 export function DashboardActivationHero({
   checklist,
   companyId,
+  userDisplayName = "there",
   demoDataStatus,
   northStar = false,
+  checklistDismissed = false,
 }: DashboardActivationHeroProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -38,9 +46,13 @@ export function DashboardActivationHero({
     () => getNextOnboardingChecklistItem(checklist),
     [checklist],
   );
+  const firstName = getFirstNameFromDisplayName(userDisplayName);
+  const welcome = buildOnboardingWelcomeCopy(firstName, nextStep, checklist);
+  const progressPercent = getOnboardingProgressPercent(checklist);
   const canSeedDemo = Boolean(
     demoDataStatus?.canSetupDemoData && !demoDataStatus.hasDemoData,
   );
+  const missionComplete = checklist.isComplete;
 
   function handleSeedDemo() {
     if (!canSeedDemo) {
@@ -55,10 +67,6 @@ export function DashboardActivationHero({
     });
   }
 
-  const progressPercent = Math.round(
-    (checklist.completedCount / checklist.totalCount) * 100,
-  );
-
   const content = (
     <div
       className={
@@ -69,21 +77,13 @@ export function DashboardActivationHero({
     >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <Brain
-              className={`h-4 w-4 shrink-0 ${
-                northStar ? "text-[#C9A44D]" : "text-cyan-700"
-              }`}
-              aria-hidden="true"
-            />
-            <p
-              className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${
-                northStar ? "text-[#C9A44D]/90" : "text-cyan-700/90"
-              }`}
-            >
-              Your dashboard is the brain
-            </p>
-          </div>
+          <p
+            className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${
+              northStar ? "text-[#C9A44D]/90" : "text-cyan-700/90"
+            }`}
+          >
+            {missionComplete ? "Mission complete" : "Closed beta · Getting started"}
+          </p>
           <h1
             className={`mt-2 font-bold tracking-tight ${
               northStar
@@ -91,50 +91,50 @@ export function DashboardActivationHero({
                 : "text-xl text-slate-900 lg:text-[1.35rem]"
             }`}
           >
-            Start here — one path to a working workspace
+            {welcome.title}
           </h1>
           <p
             className={`mt-2 max-w-2xl text-sm leading-relaxed ${
               northStar ? "text-[#C6BBA8]" : "text-slate-600"
             }`}
           >
-            Altair watches jobs, dispatch, and billing together — then surfaces
-            what needs attention next. Complete the steps below, or load sample
-            data to see the brain in action immediately.
+            {welcome.subtitle}
           </p>
 
-          <div className="mt-4">
-            <p
-              className={`text-[10px] font-bold uppercase tracking-widest ${
-                northStar ? "text-[#8A6324]" : "text-slate-500"
-              }`}
-            >
-              The money path
-            </p>
-            <ol className="mt-2 flex flex-wrap items-center gap-1.5 text-xs font-semibold">
-              {ONBOARDING_MONEY_PATH_STEPS.map((step, index) => (
-                <li key={step} className="flex items-center gap-1.5">
-                  <span
-                    className={
-                      northStar
-                        ? "rounded-md bg-[#2A2418] px-2 py-1 text-[#E8DDC2] ring-1 ring-[rgba(201,164,77,0.2)]"
-                        : "rounded-md bg-slate-100 px-2 py-1 text-slate-700"
-                    }
-                  >
-                    {step}
-                  </span>
-                  {index < ONBOARDING_MONEY_PATH_STEPS.length - 1 ? (
-                    <ArrowRight
-                      className={`h-3 w-3 shrink-0 ${
-                        northStar ? "text-[#6B6255]" : "text-slate-400"
-                      }`}
-                      aria-hidden="true"
-                    />
-                  ) : null}
-                </li>
-              ))}
-            </ol>
-          </div>
+          {!missionComplete ? (
+            <div className="mt-4">
+              <p
+                className={`text-[10px] font-bold uppercase tracking-widest ${
+                  northStar ? "text-[#8A6324]" : "text-slate-500"
+                }`}
+              >
+                Path to operational
+              </p>
+              <ol className="mt-2 flex flex-wrap items-center gap-1.5 text-xs font-semibold">
+                {ONBOARDING_MONEY_PATH_STEPS.map((step, index) => (
+                  <li key={step} className="flex items-center gap-1.5">
+                    <span
+                      className={
+                        northStar
+                          ? "rounded-md bg-[#2A2418] px-2 py-1 text-[#E8DDC2] ring-1 ring-[rgba(201,164,77,0.2)]"
+                          : "rounded-md bg-slate-100 px-2 py-1 text-slate-700"
+                      }
+                    >
+                      {step}
+                    </span>
+                    {index < ONBOARDING_MONEY_PATH_STEPS.length - 1 ? (
+                      <ArrowRight
+                        className={`h-3 w-3 shrink-0 ${
+                          northStar ? "text-[#6B6255]" : "text-slate-400"
+                        }`}
+                        aria-hidden="true"
+                      />
+                    ) : null}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
         </div>
 
         <div
@@ -144,42 +144,72 @@ export function DashboardActivationHero({
               : "rounded-xl border border-cyan-100 bg-cyan-50/40 p-4"
           }`}
         >
-          <p
-            className={`text-[10px] font-bold uppercase tracking-widest ${
-              northStar ? "text-[#C9A44D]" : "text-cyan-700"
-            }`}
-          >
-            Your next step
-          </p>
-          {nextStep ? (
+          {missionComplete ? (
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2
+                className={`mt-0.5 h-5 w-5 shrink-0 ${
+                  northStar ? "text-[#C9A44D]" : "text-emerald-600"
+                }`}
+                aria-hidden="true"
+              />
+              <div>
+                <p
+                  className={`text-base font-bold ${
+                    northStar ? "text-white" : "text-slate-900"
+                  }`}
+                >
+                  Workspace ready
+                </p>
+                <p
+                  className={`mt-1 text-xs leading-relaxed ${
+                    northStar ? "text-[#C6BBA8]" : "text-slate-600"
+                  }`}
+                >
+                  Required setup is done. Altair will stay out of the way — open
+                  Settings anytime for optional polish.
+                </p>
+              </div>
+            </div>
+          ) : (
             <>
               <p
-                className={`mt-1 text-base font-bold ${
-                  northStar ? "text-white" : "text-slate-900"
+                className={`text-[10px] font-bold uppercase tracking-widest ${
+                  northStar ? "text-[#C9A44D]" : "text-cyan-700"
                 }`}
               >
-                {nextStep.title}
+                Next recommended
               </p>
-              <p
-                className={`mt-1 text-xs leading-relaxed ${
-                  northStar ? "text-[#C6BBA8]" : "text-slate-600"
-                }`}
-              >
-                {nextStep.description}
-              </p>
-              <Link
-                href={nextStep.href}
-                className={`mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-                  northStar
-                    ? "bg-[#C9A44D] text-[#17130E] hover:bg-[#D4B05A]"
-                    : "bg-cyan-600 text-white hover:bg-cyan-700"
-                }`}
-              >
-                {nextStep.title}
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
+              {nextStep ? (
+                <>
+                  <p
+                    className={`mt-1 text-base font-bold ${
+                      northStar ? "text-white" : "text-slate-900"
+                    }`}
+                  >
+                    {nextStep.title}
+                  </p>
+                  <p
+                    className={`mt-1 text-xs leading-relaxed ${
+                      northStar ? "text-[#C6BBA8]" : "text-slate-600"
+                    }`}
+                  >
+                    {nextStep.description}
+                  </p>
+                  <Link
+                    href={nextStep.href}
+                    className={`mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
+                      northStar
+                        ? "bg-[#C9A44D] text-[#17130E] hover:bg-[#D4B05A]"
+                        : "bg-cyan-600 text-white hover:bg-cyan-700"
+                    }`}
+                  >
+                    {checklistDismissed ? "Resume setup" : nextStep.title}
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </>
+              ) : null}
             </>
-          ) : null}
+          )}
 
           <div className="mt-3">
             <div
@@ -187,7 +217,7 @@ export function DashboardActivationHero({
                 northStar ? "text-[#C6BBA8]" : "text-slate-600"
               }`}
             >
-              <span>{progressPercent}% workspace ready</span>
+              <span>{progressPercent}% ready</span>
               <span>
                 {checklist.completedCount}/{checklist.totalCount}
               </span>
@@ -203,7 +233,7 @@ export function DashboardActivationHero({
               aria-label="Workspace setup progress"
             >
               <div
-                className={`h-full rounded-full transition-all ${
+                className={`h-full rounded-full transition-[width] duration-300 ease-out ${
                   northStar ? "bg-[#C9A44D]" : "bg-cyan-500"
                 }`}
                 style={{ width: `${progressPercent}%` }}
@@ -211,7 +241,7 @@ export function DashboardActivationHero({
             </div>
           </div>
 
-          {canSeedDemo ? (
+          {canSeedDemo && !missionComplete ? (
             <button
               type="button"
               onClick={handleSeedDemo}
@@ -232,12 +262,18 @@ export function DashboardActivationHero({
           ) : null}
         </div>
       </div>
+
+      {!missionComplete ? (
+        <div className="mt-4">
+          <ClosedBetaFeedbackStrip northStar={northStar} />
+        </div>
+      ) : null}
     </div>
   );
 
   if (northStar) {
     return (
-      <section aria-label="Workspace activation">{content}</section>
+      <section aria-label="Workspace setup">{content}</section>
     );
   }
 

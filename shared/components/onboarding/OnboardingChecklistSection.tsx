@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import {
   ArrowRight,
   CheckCircle2,
@@ -9,8 +10,9 @@ import {
   Rocket,
   X,
 } from "lucide-react";
+import { dismissOnboardingChecklistAction } from "@/app/actions/onboarding";
+import { getOnboardingProgressPercent } from "@/shared/lib/onboarding-activation";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
-import { getOnboardingDismissStorageKey } from "@/shared/lib/onboarding-activation";
 
 type OnboardingChecklistSectionProps = {
   checklist: OnboardingChecklist;
@@ -18,57 +20,54 @@ type OnboardingChecklistSectionProps = {
   userId?: string;
   variant?: "dashboard" | "settings";
   northStar?: boolean;
+  /** Server-persisted dismiss; when true on dashboard, section is hidden. */
+  dismissed?: boolean;
 };
-
-function getDismissStorageKey(companyId: string, userId?: string): string {
-  return getOnboardingDismissStorageKey(companyId, userId);
-}
 
 export function OnboardingChecklistSection({
   checklist,
-  companyId,
-  userId,
   variant = "dashboard",
   northStar = false,
+  dismissed = false,
 }: OnboardingChecklistSectionProps) {
-  const [dismissed, setDismissed] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [localDismissed, setLocalDismissed] = useState(false);
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem(
-      getDismissStorageKey(companyId, userId),
-    );
-    setDismissed(stored === "true");
-    setHydrated(true);
-  }, [companyId, userId]);
-
-  if (!hydrated || dismissed || checklist.isComplete) {
+  if (checklist.isComplete) {
     return null;
   }
 
-  const progressPercent = Math.round(
-    (checklist.completedCount / checklist.totalCount) * 100,
-  );
+  if (variant === "dashboard" && (dismissed || localDismissed)) {
+    return null;
+  }
+
+  const progressPercent = getOnboardingProgressPercent(checklist);
 
   function handleDismiss() {
-    window.localStorage.setItem(
-      getDismissStorageKey(companyId, userId),
-      "true",
-    );
-    setDismissed(true);
+    setLocalDismissed(true);
+    startTransition(async () => {
+      const result = await dismissOnboardingChecklistAction();
+      if (result.error) {
+        setLocalDismissed(false);
+        return;
+      }
+      router.refresh();
+    });
   }
 
   const title =
-    variant === "settings" ? "Workspace setup" : "Get your workspace ready";
+    variant === "settings" ? "Workspace setup" : "Setup checklist";
   const description =
     variant === "settings"
-      ? "Complete the required steps below to get your company operational for beta. Optional steps can wait."
-      : `${checklist.completedCount} of ${checklist.totalCount} required steps done — your next action is highlighted above.`;
+      ? "Complete the required steps to get operational. Optional steps can wait."
+      : `${checklist.completedCount} of ${checklist.totalCount} required steps done — pick up where you left off.`;
 
   const isSettingsCompact = variant === "settings";
 
   return (
     <section
+      aria-label="Onboarding checklist"
       className={
         northStar
           ? "min-w-0 max-w-full overflow-x-clip rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF]"
@@ -102,7 +101,7 @@ export function OnboardingChecklistSection({
                 northStar ? "text-[#8A6324]" : "text-cyan-600/90"
               }`}
             >
-              Beta setup
+              Guided setup
             </p>
             <h2
               className={`font-black tracking-tight ${
@@ -132,7 +131,8 @@ export function OnboardingChecklistSection({
           <button
             type="button"
             onClick={handleDismiss}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            disabled={isPending}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
             aria-label="Dismiss setup checklist"
           >
             <X className="h-5 w-5" />
@@ -159,7 +159,7 @@ export function OnboardingChecklistSection({
             aria-label="Setup progress"
           >
             <div
-              className={`h-full rounded-full transition-all duration-300 ${
+              className={`h-full rounded-full transition-[width] duration-300 ease-out ${
                 northStar ? "bg-[#C9A44D]" : "bg-cyan-500"
               }`}
               style={{ width: `${progressPercent}%` }}
@@ -167,7 +167,7 @@ export function OnboardingChecklistSection({
           </div>
         </div>
 
-        <ul className={isSettingsCompact ? "space-y-1.5" : "space-y-2"}>
+        <ol className={isSettingsCompact ? "space-y-1.5" : "space-y-2"}>
           {checklist.items.map((item) => (
             <li key={item.id}>
               {item.completed ? (
@@ -256,7 +256,7 @@ export function OnboardingChecklistSection({
               )}
             </li>
           ))}
-        </ul>
+        </ol>
 
         <p
           className={`${
@@ -265,8 +265,7 @@ export function OnboardingChecklistSection({
             isSettingsCompact ? "mt-3 text-[11px] leading-snug" : "mt-4 text-xs"
           }`}
         >
-          When required steps are done, this checklist hides automatically. Optional
-          team and billing setup can be finished anytime in Settings.
+          When required steps are done, this checklist hides automatically.
         </p>
       </div>
     </section>

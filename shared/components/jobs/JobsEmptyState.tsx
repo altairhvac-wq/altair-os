@@ -41,12 +41,12 @@ export function JobsEmptyState({
         ? "No jobs found"
         : isNoJobsToday
           ? "No jobs scheduled for today"
-          : "No jobs yet";
+          : "Let's schedule your first job";
 
   const description = isNoCompanyCustomers
     ? canAddCustomer
-      ? "Jobs are linked to customers. Add your first customer, then come back here to schedule work."
-      : "Jobs are linked to customers. Your office team needs to add a customer before work can be scheduled."
+      ? "Jobs need a customer. Add one, then come back here to put work on the board."
+      : "Jobs need a customer. Ask your office team to add one before scheduling."
     : isNoCustomerSearchResults
       ? "Try a different name, phone number, or company."
       : isNoResults
@@ -54,7 +54,7 @@ export function JobsEmptyState({
         : isNoJobsToday
           ? "Nothing is on today's board. Create a job or check All Jobs for upcoming work."
           : onCreateJob
-            ? "Create your first job to schedule work, assign technicians, and track status."
+            ? "Put work on the board — then you can estimate, dispatch, and invoice from it."
             : "Assigned and scheduled jobs will appear here once dispatch adds work to the board.";
 
   const Icon = icon;

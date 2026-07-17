@@ -30,13 +30,48 @@ export function buildOnboardingChecklist(
 ): OnboardingChecklist {
   const items: OnboardingChecklistItem[] = [
     {
+      id: "workspace-ready",
+      title: "Create workspace",
+      description: "Your company workspace is live — Altair is ready to guide the rest.",
+      href: "/",
+      completed: true,
+    },
+    {
       id: "add-customer",
       title: "Add your first customer",
       description:
-        "Start here — customers are required before you can schedule jobs or send estimates.",
+        "Start here — customers unlock jobs, estimates, and service history.",
       href: "/customers",
       completed: snapshot.customerCount > 0,
       tip: "Use a real account you dispatch for this week.",
+    },
+    {
+      id: "invite-team",
+      title: "Invite your team",
+      description:
+        "Add technicians or office staff when you are ready — optional if you run solo.",
+      href: "/settings#team-members",
+      completed: snapshot.hasInvitedOrActiveTeam,
+      optional: true,
+      tip: "Invites stay pending until the teammate signs up with the same email.",
+    },
+    {
+      id: "create-job",
+      title: "Schedule your first job",
+      description:
+        "Put work on the board, then estimate and invoice from that job.",
+      href: "/jobs",
+      completed: snapshot.jobCount > 0,
+      tip: "A simple job is enough to walk dispatch and the money path.",
+    },
+    {
+      id: "setup-price-book",
+      title: "Build your price book",
+      description:
+        "Add common services so estimates and invoices use consistent pricing.",
+      href: "/price-book",
+      completed: snapshot.serviceItemCount > 0,
+      tip: "Three to five frequent services is a good starting set.",
     },
     {
       id: "add-lead",
@@ -46,55 +81,27 @@ export function buildOnboardingChecklist(
       href: "/leads",
       completed: snapshot.leadCount > 0,
       optional: true,
-      tip: "Leads stay separate from customers until you convert or send an estimate.",
-    },
-    {
-      id: "create-job",
-      title: "Schedule your first job",
-      description:
-        "Create a job to put work on the board — then send an estimate and invoice from that job.",
-      href: "/jobs",
-      completed: snapshot.jobCount > 0,
-      tip: "A simple test job is enough to walk through dispatch and the money path.",
-    },
-    {
-      id: "setup-price-book",
-      title: "Build your price book",
-      description:
-        "Add common services and parts so estimates and invoices pull consistent line items.",
-      href: "/price-book",
-      completed: snapshot.serviceItemCount > 0,
-      tip: "Three to five frequent services is a good starting set.",
+      tip: "Leads stay separate until you convert or send an estimate.",
     },
     {
       id: "money-path",
-      title: "Walk the money path",
+      title: "Create your first invoice",
       description:
-        "Send an estimate, convert it to an invoice, and record a payment — Altair tracks revenue at every step.",
-      href: "/estimates",
+        "Send an estimate, turn it into an invoice, and record a payment.",
+      href: "/invoices",
       completed: snapshot.estimateCount > 0 && snapshot.invoiceCount > 0,
       optional: true,
-      tip: "Open any job to create an estimate, then invoice and collect payment when ready.",
+      tip: "Open any job to create an estimate, then invoice when ready.",
     },
     {
       id: "billing-defaults",
       title: "Review billing defaults",
       description:
-        "Set tax rate, payment terms, and default notes before your first estimate or invoice.",
+        "Set tax rate, payment terms, and default notes once.",
       href: "/settings#billing-defaults",
       completed: snapshot.hasBillingDefaultsConfigured,
       optional: true,
-      tip: "Defaults apply automatically when new billing documents are created.",
-    },
-    {
-      id: "invite-team",
-      title: "Invite your team",
-      description:
-        "Add technicians, dispatchers, or office staff when you are ready — you can run solo for now.",
-      href: "/settings#team-members",
-      completed: snapshot.hasInvitedOrActiveTeam,
-      optional: true,
-      tip: "Invites stay pending until the teammate signs up with the same email.",
+      tip: "Defaults apply automatically on new billing documents.",
     },
   ];
 

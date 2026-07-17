@@ -20,16 +20,16 @@ export function InvoicesEmptyState({
   const isNoToday = variant === "no-today";
 
   const emptyDescription = needsCustomers
-    ? "Invoices are linked to customers. Add a customer first, then create your first invoice."
+    ? "Invoices need a customer. Add one first, then bill for the work."
     : onCreateInvoice
-      ? "Create your first invoice with line items, tax, and a due date."
+      ? "Bill for completed work — line items, tax, due date, then collect payment."
       : "Invoices will appear here once your office team creates them.";
 
   const title = isNoResults
     ? "No invoices found"
     : isNoToday
       ? "No invoices need attention today."
-      : "No invoices yet";
+      : "Let's create your first invoice";
 
   const description = isNoResults
     ? "Try adjusting your search or filters to find what you're looking for."

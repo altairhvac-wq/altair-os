@@ -36,8 +36,8 @@ export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
         total: 1,
         label: "Company workspace",
       }}
-      title="Set up your workspace"
-      description="Name your company to create your workspace. This is the only required step before you can start using Altair."
+      title="Launch your workspace"
+      description="One step — then Altair guides you from first customer to first invoice."
       aboveCard={aboveCard}
     >
       <form action={formAction} className="space-y-5" aria-busy={pending}>
@@ -53,15 +53,15 @@ export function CompanySetupForm({ aboveCard }: CompanySetupFormProps) {
           <ul className="mt-2.5 space-y-2 text-sm text-slate-600">
             <li className="flex items-start gap-2">
               <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-cyan-500" />
-              Your company workspace is created right away
+              Your workspace is created instantly
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-cyan-500" />
-              You&apos;ll land on your dashboard with a short setup checklist
+              Mission Control shows a short guided checklist
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-cyan-500" />
-              Add a customer, schedule a job, and invite your crew when ready
+              Add a customer, schedule a job, then invoice when ready
             </li>
           </ul>
         </div>

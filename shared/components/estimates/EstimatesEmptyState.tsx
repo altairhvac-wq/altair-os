@@ -20,16 +20,16 @@ export function EstimatesEmptyState({
   const isNoToday = variant === "no-today";
 
   const emptyDescription = needsCustomers
-    ? "Estimates are linked to customers. Add a customer first, then create your first quote."
+    ? "Estimates need a customer. Add one first, then send your first quote."
     : onCreateEstimate
-      ? "Create your first estimate with line items, pricing, and a valid-until date."
+      ? "Price the work with line items, then send it for approval — invoices come next."
       : "Estimates will appear here once your office team creates them.";
 
   const title = isNoResults
     ? "No estimates found"
     : isNoToday
       ? "No estimates need attention today."
-      : "No estimates yet";
+      : "Let's create your first estimate";
 
   const description = isNoResults
     ? "Try adjusting your search or filters to find what you're looking for."
