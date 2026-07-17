@@ -4,7 +4,7 @@ import { LoginPageShell } from "@/shared/components/auth/LoginPageShell";
 function LoginMarketingSkeleton() {
   return (
     <section
-      className="relative min-h-dvh overflow-hidden bg-[#14110c] px-5 py-7 text-white sm:px-8 sm:py-9"
+      className="relative min-h-dvh overflow-hidden bg-[#050b14] px-5 py-7 text-white sm:px-8 sm:py-9"
       aria-hidden="true"
     >
       <div className="auth-grid pointer-events-none absolute inset-0 opacity-30" />

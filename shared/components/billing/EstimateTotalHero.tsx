@@ -12,7 +12,7 @@ export function EstimateTotalHero({
   if (northStar) {
     return (
       <div
-        className="estimate-total-hero rounded-xl border border-[rgba(201,164,77,0.35)] bg-gradient-to-br from-[#403527] via-[#372D21] to-[#17130E] px-3 py-2 text-[#FFF9EA] shadow-[0_12px_40px_-16px_rgba(3,7,12,0.42)] sm:rounded-2xl sm:px-4 sm:py-3 print:rounded-none print:border-2 print:border-slate-900 print:bg-white print:px-0 print:py-1.5 print:text-slate-900 print:shadow-none"
+        className="estimate-total-hero rounded-xl border border-[rgba(201,164,77,0.35)] bg-gradient-to-br from-[#273140] via-[#1F2937] to-[#17130E] px-3 py-2 text-[#FFF9EA] shadow-[0_12px_40px_-16px_rgba(3,7,12,0.42)] sm:rounded-2xl sm:px-4 sm:py-3 print:rounded-none print:border-2 print:border-slate-900 print:bg-white print:px-0 print:py-1.5 print:text-slate-900 print:shadow-none"
         aria-label="Estimated total"
       >
         <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[#D6BE78] sm:text-[10px] sm:tracking-[0.16em] print:text-slate-600">

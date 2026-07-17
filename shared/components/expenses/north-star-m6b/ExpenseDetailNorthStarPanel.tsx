@@ -23,7 +23,7 @@ function NorthStarPanelHeader({
   closeDisabled?: boolean;
 }) {
   return (
-    <div className="expense-north-star-detail-panel-header flex shrink-0 items-center justify-end border-b border-[rgba(201,164,77,0.14)] bg-gradient-to-b from-[#403527] to-[#292219] px-3 py-2 sm:px-4">
+    <div className="expense-north-star-detail-panel-header flex shrink-0 items-center justify-end border-b border-[rgba(201,164,77,0.14)] bg-gradient-to-b from-[#273140] to-[#1A2029] px-3 py-2 sm:px-4">
       <button
         type="button"
         onClick={onClose}
@@ -67,14 +67,14 @@ function NorthStarDesktopDrawer({
           disabled={closeDisabled}
           className="absolute inset-0 bg-[rgba(3,7,12,0.45)] backdrop-blur-[1px] transition-opacity disabled:cursor-default"
         />
-        <aside className="expense-north-star-detail-panel relative ml-auto flex h-full w-[min(720px,58vw)] min-w-[min(100%,520px)] flex-col overflow-hidden border-l border-[rgba(174,182,194,0.18)] bg-[#292219] shadow-[0_22px_60px_rgba(3,7,12,0.42)]">
+        <aside className="expense-north-star-detail-panel relative ml-auto flex h-full w-[min(720px,58vw)] min-w-[min(100%,520px)] flex-col overflow-hidden border-l border-[rgba(174,182,194,0.18)] bg-[#1A2029] shadow-[0_22px_60px_rgba(3,7,12,0.42)]">
           <NorthStarPanelHeader onClose={onClose} closeDisabled={closeDisabled} />
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="expense-north-star-detail-panel-body flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-2.5 sm:px-4 sm:py-3">
               {children}
             </div>
             {footer ? (
-              <div className="overlay-form-actions shrink-0 border-t border-[rgba(201,164,77,0.14)] bg-[#292219] px-3 py-2.5 sm:px-4">
+              <div className="overlay-form-actions shrink-0 border-t border-[rgba(201,164,77,0.14)] bg-[#1A2029] px-3 py-2.5 sm:px-4">
                 {footer}
               </div>
             ) : null}
@@ -110,7 +110,7 @@ export function ExpenseDetailNorthStarPanel({
 
       <aside className="expense-north-star-detail-panel-mobile flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:hidden">
         <NorthStarPanelHeader onClose={onClose} closeDisabled={closeDisabled} />
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#292219]">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#1A2029]">
           <div className="expense-north-star-detail-panel-body flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-2.5">
             {children}
           </div>
