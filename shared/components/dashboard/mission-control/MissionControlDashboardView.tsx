@@ -11,6 +11,7 @@ import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import { MasterContentStack } from "@/shared/design-system/shell";
 import { MissionControlGreeting } from "./MissionControlGreeting";
+import { MissionControlPrimaryActionsRow } from "./MissionControlPrimaryActionsRow";
 import { MissionCriticalSection } from "./MissionCriticalSection";
 import { MissionControlTodaysOperationsSection } from "./MissionControlTodaysOperationsSection";
 import { MissionControlCashFlowSection } from "./MissionControlCashFlowSection";
@@ -57,6 +58,8 @@ export function MissionControlDashboardView({
         <MasterContentStack density="compact">
           <MissionControlGreeting content={content.greeting} />
 
+          <MissionControlPrimaryActionsRow actions={content.primaryQuickActions} />
+
           <MissionCriticalSection
             items={content.missionCritical}
             isClear={content.isMissionClear}
@@ -65,6 +68,8 @@ export function MissionControlDashboardView({
 
           <MissionControlTodaysOperationsSection cards={content.todaysOperations} />
 
+          <MissionControlCashFlowSection cards={content.cashFlow} />
+
           <div className="grid gap-2 lg:grid-cols-2 lg:gap-3">
             {data.access.canViewBilling ? (
               <MissionControlTrendChart series={content.revenueTrend} />
@@ -72,11 +77,9 @@ export function MissionControlDashboardView({
             <MissionControlTrendChart series={content.jobsTrend} />
           </div>
 
-          <MissionControlCashFlowSection cards={content.cashFlow} />
-
           <MissionControlActivityTimelineSection data={data} />
 
-          <MissionControlQuickActionsSection actions={content.quickActions} />
+          <MissionControlQuickActionsSection actions={content.secondaryQuickActions} />
         </MasterContentStack>
       ) : null}
     </>

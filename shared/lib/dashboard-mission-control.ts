@@ -21,10 +21,12 @@ import {
   AlertCircle,
   Briefcase,
   Clock,
+  CreditCard,
   DollarSign,
   FileText,
   Phone,
   Receipt,
+  UserPlus,
   Users,
 } from "lucide-react";
 
@@ -44,6 +46,8 @@ export type MissionControlGreetingContent = {
   dateLabel: string;
   attentionSummary: string;
   attentionCount: number;
+  /** Short briefing fragments rendered inline, e.g. "4 areas need attention". */
+  briefingItems: string[];
 };
 
 export type MissionControlOperationsCard = {
@@ -62,6 +66,8 @@ export type MissionControlCashFlowCard = {
   value: string;
   trend: string;
   href: string;
+  icon: LucideIcon;
+  tone: "neutral" | "success" | "warning" | "info";
 };
 
 export type MissionControlQuickAction = {
@@ -69,6 +75,7 @@ export type MissionControlQuickAction = {
   label: string;
   href: string;
   description: string;
+  icon: LucideIcon;
 };
 
 export type MissionControlTrendPoint = {
@@ -92,7 +99,10 @@ export type MissionControlContent = {
   isMissionClear: boolean;
   todaysOperations: MissionControlOperationsCard[];
   cashFlow: MissionControlCashFlowCard[];
-  quickActions: MissionControlQuickAction[];
+  /** Highest-frequency create actions, surfaced directly under the greeting. */
+  primaryQuickActions: MissionControlQuickAction[];
+  /** Lower-frequency actions, kept in the full Quick Actions section. */
+  secondaryQuickActions: MissionControlQuickAction[];
   revenueTrend: MissionControlChartSeries;
   jobsTrend: MissionControlChartSeries;
 };
@@ -295,6 +305,30 @@ function buildAttentionSummary(data: DashboardData): {
   };
 }
 
+function buildBriefingItems(
+  data: DashboardData,
+  attention: { attentionCount: number; attentionSummary: string },
+): string[] {
+  const { access, operations, money } = data;
+  const items: string[] = [];
+
+  items.push(
+    attention.attentionCount > 0
+      ? `${attention.attentionCount} ${pluralize(attention.attentionCount, "area")} need attention`
+      : "operations running smoothly",
+  );
+
+  items.push(
+    `${operations.totalJobsToday} ${pluralize(operations.totalJobsToday, "job")} today`,
+  );
+
+  if (access.canViewBilling && money.unpaidTotal > 0) {
+    items.push(`${formatCurrency(money.unpaidTotal)} outstanding`);
+  }
+
+  return items;
+}
+
 function buildTodaysOperationsCards(data: DashboardData): MissionControlOperationsCard[] {
   const { access, operations, money, analytics, technicians, leadPipelineSummary } =
     data;
@@ -413,6 +447,8 @@ function buildCashFlowCards(data: DashboardData): MissionControlCashFlowCard[] {
       value: formatCurrency(money.unpaidTotal),
       trend: `${money.unpaidCount} open ${pluralize(money.unpaidCount, "invoice")}`,
       href: INVOICE_PAGE_UNPAID_HREF,
+      icon: Receipt,
+      tone: money.unpaidTotal > 0 ? "info" : "neutral",
     },
     {
       id: "awaiting-payments",
@@ -423,6 +459,8 @@ function buildCashFlowCards(data: DashboardData): MissionControlCashFlowCard[] {
           ? `${money.overdueCount} past due`
           : "No invoices past due",
       href: INVOICE_PAGE_OVERDUE_HREF,
+      icon: AlertCircle,
+      tone: money.overdueCount > 0 ? "warning" : "neutral",
     },
     {
       id: "revenue-week",
@@ -430,6 +468,8 @@ function buildCashFlowCards(data: DashboardData): MissionControlCashFlowCard[] {
       value: formatCurrency(weekRevenue),
       trend: "From recorded payments this week",
       href: INVOICE_PAGE_CASH_FLOW_HREF,
+      icon: DollarSign,
+      tone: weekRevenue > 0 ? "success" : "neutral",
     },
     {
       id: "revenue-month",
@@ -437,9 +477,19 @@ function buildCashFlowCards(data: DashboardData): MissionControlCashFlowCard[] {
       value: formatCurrency(monthRevenue),
       trend: "From recorded payments this month",
       href: INVOICE_PAGE_CASH_FLOW_HREF,
+      icon: DollarSign,
+      tone: monthRevenue > 0 ? "success" : "neutral",
     },
   ];
 }
+
+/** Highest-frequency create actions — surfaced directly under the greeting (see #8). */
+const PRIMARY_QUICK_ACTION_IDS = new Set([
+  "new-customer",
+  "new-job",
+  "new-estimate",
+  "create-invoice",
+]);
 
 function buildQuickActions(data: DashboardData): MissionControlQuickAction[] {
   const { access } = data;
@@ -451,6 +501,7 @@ function buildQuickActions(data: DashboardData): MissionControlQuickAction[] {
       label: "New Customer",
       href: "/customers",
       description: "Add a customer profile",
+      icon: UserPlus,
     });
   }
 
@@ -460,6 +511,7 @@ function buildQuickActions(data: DashboardData): MissionControlQuickAction[] {
       label: "New Job",
       href: "/jobs?create=1",
       description: "Schedule field work",
+      icon: Briefcase,
     });
   }
 
@@ -469,18 +521,21 @@ function buildQuickActions(data: DashboardData): MissionControlQuickAction[] {
       label: "New Estimate",
       href: "/estimates?create=1",
       description: "Send a quote",
+      icon: FileText,
     });
     actions.push({
       id: "create-invoice",
       label: "Create Invoice",
       href: "/invoices?create=1",
       description: "Bill completed work",
+      icon: Receipt,
     });
     actions.push({
       id: "record-payment",
       label: "Record Payment",
       href: INVOICE_PAGE_UNPAID_HREF,
       description: "Apply payment to invoice",
+      icon: CreditCard,
     });
   }
 
@@ -490,6 +545,7 @@ function buildQuickActions(data: DashboardData): MissionControlQuickAction[] {
       label: "Dispatch Technician",
       href: DISPATCH_PAGE_TODAY_HREF,
       description: "Open today's dispatch board",
+      icon: Users,
     });
   }
 
@@ -500,9 +556,9 @@ function buildRevenueTrend(data: DashboardData): MissionControlChartSeries {
   const { access, money } = data;
   if (!access.canViewBilling) {
     return {
-      id: "revenue-trend",
-      title: "Revenue trend",
-      subtitle: "Last 7 days of recorded payments",
+      id: "collections-trend",
+      title: "Collections trend",
+      subtitle: "Recorded payments, last 7 days",
       points: [],
       valueFormatter: (value) => formatCurrency(value),
       emptyTitle: "No payment history yet",
@@ -535,9 +591,9 @@ function buildRevenueTrend(data: DashboardData): MissionControlChartSeries {
   }
 
   return {
-    id: "revenue-trend",
-    title: "Revenue trend",
-    subtitle: "Last 7 days of recorded payments",
+    id: "collections-trend",
+    title: "Collections trend",
+    subtitle: "Recorded payments, last 7 days",
     points,
     valueFormatter: (value) => formatCurrency(value),
     emptyTitle: "No payment history yet",
@@ -549,13 +605,13 @@ function buildJobsTrend(data: DashboardData): MissionControlChartSeries {
   const { operations } = data;
 
   return {
-    id: "jobs-trend",
-    title: "Jobs trend",
-    subtitle: "Today's field pipeline",
+    id: "jobs-pipeline",
+    title: "Today's job pipeline",
+    subtitle: "Where today's board stands right now",
     points: [
-      { label: "Sched", value: operations.scheduledToday },
-      { label: "Route", value: operations.dispatched },
-      { label: "Work", value: operations.inProgress },
+      { label: "Scheduled", value: operations.scheduledToday },
+      { label: "Dispatched", value: operations.dispatched },
+      { label: "Working", value: operations.inProgress },
       { label: "Done", value: operations.completedToday },
     ],
     valueFormatter: (value) => String(value),
@@ -572,19 +628,26 @@ export function buildMissionControlContent(
   const missionCritical = buildMissionCriticalItems(data);
   const attention = buildAttentionSummary(data);
   const firstName = getFirstName(userDisplayName);
+  const quickActions = buildQuickActions(data);
 
   return {
     greeting: {
       greeting: `${getTimeOfDayGreeting(reference)}, ${firstName}`,
-      dateLabel: `Today is ${formatDateLabel(reference)}`,
+      dateLabel: formatDateLabel(reference),
       attentionSummary: attention.attentionSummary,
       attentionCount: attention.attentionCount,
+      briefingItems: buildBriefingItems(data, attention),
     },
     missionCritical,
     isMissionClear: missionCritical.every((item) => item.severity === "healthy"),
     todaysOperations: buildTodaysOperationsCards(data),
     cashFlow: buildCashFlowCards(data),
-    quickActions: buildQuickActions(data),
+    primaryQuickActions: quickActions.filter((action) =>
+      PRIMARY_QUICK_ACTION_IDS.has(action.id),
+    ),
+    secondaryQuickActions: quickActions.filter(
+      (action) => !PRIMARY_QUICK_ACTION_IDS.has(action.id),
+    ),
     revenueTrend: buildRevenueTrend(data),
     jobsTrend: buildJobsTrend(data),
   };
@@ -599,9 +662,9 @@ export const MISSION_CRITICAL_ICONS: Record<string, LucideIcon> = {
 };
 
 export const MISSION_CONTROL_SECTION_LABELS = {
-  missionCritical: "Mission Critical",
-  todaysOperations: "Today's Operations",
-  cashFlow: "Cash Flow",
-  activityTimeline: "Activity Timeline",
-  quickActions: "Quick Actions",
+  missionCritical: "Mission critical",
+  todaysOperations: "Today's operations",
+  cashFlow: "Cash flow",
+  activityTimeline: "Activity timeline",
+  quickActions: "Quick actions",
 } as const;

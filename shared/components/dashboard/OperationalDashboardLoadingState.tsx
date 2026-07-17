@@ -13,11 +13,20 @@ function Skeleton({ className }: { className?: string }) {
 
 function GreetingSkeleton() {
   return (
-    <MasterPageSurface variant="card" className="p-4 sm:p-5">
-      <Skeleton className="h-6 w-56" />
-      <Skeleton className="mt-2 h-4 w-44" />
-      <Skeleton className="mt-3 h-4 w-40" />
+    <MasterPageSurface variant="card" className="p-3 sm:p-4">
+      <Skeleton className="h-5 w-48" />
+      <Skeleton className="mt-2 h-3.5 w-64" />
     </MasterPageSurface>
+  );
+}
+
+function PrimaryActionsRowSkeleton() {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <Skeleton key={index} className="h-9 w-28 rounded-lg" />
+      ))}
+    </div>
   );
 }
 
@@ -55,7 +64,7 @@ function ChartSkeleton() {
     <MasterPageSurface variant="card" className="p-4">
       <Skeleton className="h-4 w-32" />
       <Skeleton className="mt-2 h-3 w-48" />
-      <Skeleton className="mt-4 h-36 w-full rounded-xl" />
+      <Skeleton className="mt-4 h-24 w-full rounded-xl" />
     </MasterPageSurface>
   );
 }
@@ -68,9 +77,12 @@ function TimelineSkeleton() {
     >
       <MasterPageSurface variant="card" className="divide-y divide-slate-100">
         {Array.from({ length: 5 }).map((_, index) => (
-          <div key={index} className="px-4 py-3">
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="mt-2 h-3 w-full max-w-md" />
+          <div key={index} className="flex items-start gap-3 px-4 py-3">
+            <Skeleton className="h-8 w-8 shrink-0 rounded-lg" />
+            <div className="min-w-0 flex-1">
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="mt-2 h-3 w-full max-w-md" />
+            </div>
           </div>
         ))}
       </MasterPageSurface>
@@ -84,8 +96,8 @@ function QuickActionsSkeleton() {
       title={MISSION_CONTROL_SECTION_LABELS.quickActions}
       density="compact"
     >
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, index) => (
+      <div className="grid gap-2 sm:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, index) => (
           <Skeleton key={index} className="h-16 w-full rounded-xl" />
         ))}
       </div>
@@ -99,6 +111,7 @@ export function OperationalDashboardLoadingState() {
       <MasterPageCanvas width="wide">
         <MasterContentStack density="compact" aria-busy="true" aria-live="polite">
           <GreetingSkeleton />
+          <PrimaryActionsRowSkeleton />
           <MissionCriticalSkeleton />
           <MasterPageSection
             title={MISSION_CONTROL_SECTION_LABELS.todaysOperations}
@@ -106,16 +119,16 @@ export function OperationalDashboardLoadingState() {
           >
             <MetricGridSkeleton columns={5} />
           </MasterPageSection>
-          <div className="grid gap-2 lg:grid-cols-2 lg:gap-3">
-            <ChartSkeleton />
-            <ChartSkeleton />
-          </div>
           <MasterPageSection
             title={MISSION_CONTROL_SECTION_LABELS.cashFlow}
             density="compact"
           >
             <MetricGridSkeleton columns={4} />
           </MasterPageSection>
+          <div className="grid gap-2 lg:grid-cols-2 lg:gap-3">
+            <ChartSkeleton />
+            <ChartSkeleton />
+          </div>
           <TimelineSkeleton />
           <QuickActionsSkeleton />
         </MasterContentStack>

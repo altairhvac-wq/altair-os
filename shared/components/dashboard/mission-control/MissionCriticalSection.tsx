@@ -20,18 +20,24 @@ type MissionCriticalSectionProps = {
 
 const severityStyles = {
   critical: {
-    row: "border-rose-100 bg-rose-50/50 hover:bg-rose-50/80",
+    row: "border-rose-100 bg-rose-50/60 hover:bg-rose-50/90 border-l-4 border-l-rose-500",
     badge: "bg-rose-100 text-rose-800",
+    badgeLabel: "Urgent",
+    iconWrap: "bg-rose-100 text-rose-700 ring-rose-200/70",
     value: "text-rose-900",
   },
   warning: {
-    row: "border-amber-100 bg-amber-50/50 hover:bg-amber-50/80",
+    row: "border-amber-100 bg-amber-50/60 hover:bg-amber-50/90 border-l-4 border-l-amber-500",
     badge: "bg-amber-100 text-amber-800",
+    badgeLabel: "Attention",
+    iconWrap: "bg-amber-100 text-amber-700 ring-amber-200/70",
     value: "text-amber-900",
   },
   healthy: {
-    row: "border-slate-100 bg-white hover:bg-slate-50/80",
+    row: "border-slate-100 bg-white hover:bg-slate-50/80 border-l-4 border-l-slate-200",
     badge: "bg-slate-100 text-slate-700",
+    badgeLabel: "Clear",
+    iconWrap: "bg-slate-100 text-slate-600 ring-slate-200/70",
     value: "text-slate-900",
   },
 };
@@ -66,14 +72,18 @@ function MissionCriticalRow({
     <div
       className={`flex items-start gap-3 rounded-xl border px-3 py-3 transition-colors sm:px-4 sm:py-4 ${styles.row}`}
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/5">
-        <Icon className="h-4 w-4 text-slate-700" aria-hidden="true" />
+      <div
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ${styles.iconWrap}`}
+      >
+        <Icon className="h-4 w-4" aria-hidden="true" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm font-bold text-slate-900 sm:text-base">{item.label}</p>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${styles.badge}`}>
-            {item.severity === "healthy" ? "Clear" : "Attention"}
+          <span
+            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${styles.badge}`}
+          >
+            {styles.badgeLabel}
           </span>
         </div>
         <p className={`mt-1 text-2xl font-black tabular-nums ${styles.value}`}>
@@ -137,6 +147,7 @@ export function MissionCriticalSection({
       title={MISSION_CONTROL_SECTION_LABELS.missionCritical}
       description="Issues that need immediate office attention."
       density="compact"
+      headerVariant="spacious"
     >
       {isClear ? (
         <MissionControlInlineEmptyState

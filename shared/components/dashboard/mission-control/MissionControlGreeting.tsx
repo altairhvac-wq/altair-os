@@ -6,17 +6,28 @@ type MissionControlGreetingProps = {
 
 export function MissionControlGreeting({ content }: MissionControlGreetingProps) {
   return (
-    <header className="rounded-xl border border-slate-200/70 bg-white px-4 py-4 shadow-sm sm:px-5 sm:py-5">
-      <p className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
+    <header className="rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 shadow-sm sm:px-5 sm:py-3">
+      <p className="text-base font-black tracking-tight text-slate-900 sm:text-lg">
         {content.greeting}
       </p>
-      <p className="mt-1 text-sm text-slate-600">{content.dateLabel}</p>
-      <p
-        className={`mt-2 text-sm font-semibold ${
-          content.attentionCount > 0 ? "text-amber-800" : "text-emerald-700"
-        }`}
-      >
-        {content.attentionSummary}
+      <p className="mt-0.5 text-xs text-slate-600 sm:text-sm">
+        <span>{content.dateLabel}</span>
+        {content.briefingItems.map((item) => (
+          <span key={item}>
+            <span aria-hidden="true" className="mx-1.5 text-slate-300">
+              ·
+            </span>
+            <span
+              className={
+                item === content.briefingItems[0] && content.attentionCount > 0
+                  ? "font-semibold text-amber-800"
+                  : "font-medium text-slate-700"
+              }
+            >
+              {item}
+            </span>
+          </span>
+        ))}
       </p>
     </header>
   );

@@ -1,9 +1,19 @@
 import Link from "next/link";
 import {
+  Briefcase,
+  CreditCard,
+  FileText,
+  History,
+  Receipt,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+import {
   formatOperationalActivityDetailsForAccess,
   formatOperationalActivityLabelForAccess,
   formatOperationalActivityTimestamp,
   getOperationalActivityHref,
+  type OperationalActivity,
 } from "@/shared/types/operational-activity";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { MISSION_CONTROL_SECTION_LABELS } from "@/shared/lib/dashboard-mission-control";
@@ -14,6 +24,27 @@ type MissionControlActivityTimelineSectionProps = {
   data: DashboardData;
   limit?: number;
 };
+
+function resolveActivityIcon(activity: OperationalActivity): LucideIcon {
+  if (activity.eventType === "payment_recorded" || activity.eventType === "invoice_paid") {
+    return CreditCard;
+  }
+
+  switch (activity.source) {
+    case "customer":
+      return Users;
+    case "job":
+      return Briefcase;
+    case "estimate":
+      return FileText;
+    case "invoice":
+      return Receipt;
+    case "expense":
+      return Receipt;
+    default:
+      return History;
+  }
+}
 
 export function MissionControlActivityTimelineSection({
   data,
@@ -27,10 +58,12 @@ export function MissionControlActivityTimelineSection({
       title={MISSION_CONTROL_SECTION_LABELS.activityTimeline}
       description="Latest operational events, newest first."
       density="compact"
+      headerVariant="spacious"
     >
       {activities.length === 0 ? (
         <MissionControlInlineEmptyState
-          title="No recent activity"
+          icon={<History className="h-4 w-4 text-slate-500" aria-hidden="true" />}
+          title="No recent activity yet"
           description={
             access.canViewBilling
               ? "Invoice, job, and customer events will appear here as work happens."
@@ -48,28 +81,34 @@ export function MissionControlActivityTimelineSection({
               activity,
               access.canViewBilling,
             );
+            const Icon = resolveActivityIcon(activity);
 
             const body = (
-              <div className="flex flex-col gap-1 px-3 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:px-4">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">
-                    {formatOperationalActivityLabelForAccess(
-                      activity,
-                      access.canViewBilling,
-                    )}
-                  </p>
+              <div className="flex items-start gap-3 px-3 py-3 sm:px-4">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                    <p className="text-sm font-bold text-slate-900">
+                      {formatOperationalActivityLabelForAccess(
+                        activity,
+                        access.canViewBilling,
+                      )}
+                    </p>
+                    <time className="shrink-0 text-xs text-slate-500">
+                      {formatOperationalActivityTimestamp(activity.createdAt)}
+                    </time>
+                  </div>
                   {details ? (
-                    <p className="mt-1 text-sm text-slate-600">{details}</p>
+                    <p className="mt-0.5 text-sm text-slate-600">{details}</p>
                   ) : null}
                   {activity.actorName ? (
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-0.5 text-xs text-slate-500">
                       by {activity.actorName}
                     </p>
                   ) : null}
                 </div>
-                <time className="shrink-0 text-xs text-slate-400">
-                  {formatOperationalActivityTimestamp(activity.createdAt)}
-                </time>
               </div>
             );
 

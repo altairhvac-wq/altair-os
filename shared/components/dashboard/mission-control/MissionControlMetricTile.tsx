@@ -38,23 +38,21 @@ export function MissionControlMetricTile({
       className={`admin-metric-card admin-metric-card-interactive block ${toneClasses[tone]}`}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 lg:text-xs">
-            {label}
-          </p>
-          <p className="mt-1 text-xl font-black tabular-nums text-slate-900 lg:mt-2 lg:text-2xl">
-            {value}
-          </p>
-          <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-slate-500 lg:mt-1 lg:text-xs">
-            {trend}
-          </p>
-        </div>
+        <p className="min-w-0 truncate text-[10px] font-bold uppercase tracking-wide text-slate-500 lg:text-xs">
+          {label}
+        </p>
         <div
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg lg:h-9 lg:w-9 ${iconToneClasses[tone]}`}
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md lg:h-7 lg:w-7 ${iconToneClasses[tone]}`}
         >
-          <Icon className="h-3.5 w-3.5 lg:h-4 lg:w-4" aria-hidden="true" />
+          <Icon className="h-3 w-3 lg:h-3.5 lg:w-3.5" aria-hidden="true" />
         </div>
       </div>
+      <p className="mt-1.5 text-2xl font-black leading-none tracking-tight tabular-nums text-slate-900 lg:mt-2 lg:text-3xl">
+        {value}
+      </p>
+      <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-slate-500 lg:text-xs">
+        {trend}
+      </p>
     </Link>
   );
 }

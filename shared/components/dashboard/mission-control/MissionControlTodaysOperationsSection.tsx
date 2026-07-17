@@ -22,6 +22,7 @@ export function MissionControlTodaysOperationsSection({
       title={MISSION_CONTROL_SECTION_LABELS.todaysOperations}
       description="Live field and office activity for today."
       density="compact"
+      headerVariant="spacious"
     >
       {cards.length === 0 ? (
         <MissionControlInlineEmptyState

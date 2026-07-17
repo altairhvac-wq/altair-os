@@ -112,7 +112,7 @@ export function DemoDataSection({
     return (
       <section
         aria-label="Demo data active"
-        className="min-w-0 max-w-full overflow-x-clip rounded-lg border border-violet-200/70 bg-violet-50/40 px-2.5 py-2"
+        className="min-w-0 max-w-full overflow-x-clip rounded-lg border border-slate-200/80 bg-white px-2.5 py-1.5"
       >
         <div className="flex min-w-0 items-start gap-2">
           <Database
@@ -202,7 +202,7 @@ export function DemoDataSection({
     return (
       <section
         aria-label="Load demo data"
-        className="min-w-0 max-w-full overflow-x-clip rounded-lg border border-slate-200/80 bg-white px-2.5 py-2"
+        className="min-w-0 max-w-full overflow-x-clip rounded-lg border border-slate-200/80 bg-white px-2.5 py-1.5"
       >
         <div className="flex min-w-0 items-start gap-2">
           <Sparkles

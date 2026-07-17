@@ -8,6 +8,9 @@ type MissionControlTrendChartProps = {
 export function MissionControlTrendChart({ series }: MissionControlTrendChartProps) {
   const maxValue = Math.max(...series.points.map((point) => point.value), 1);
   const hasData = series.points.some((point) => point.value > 0);
+  const accessibleSummary = series.points
+    .map((point) => `${point.label} ${series.valueFormatter(point.value)}`)
+    .join(", ");
 
   return (
     <section
@@ -30,32 +33,41 @@ export function MissionControlTrendChart({ series }: MissionControlTrendChartPro
             description={series.emptyDescription}
           />
         ) : (
-          <div
-            role="img"
-            aria-label={`${series.title} chart`}
-            className="flex h-36 items-end gap-2 sm:gap-3"
-          >
-            {series.points.map((point) => {
-              const height = Math.max((point.value / maxValue) * 100, point.value > 0 ? 8 : 2);
+          <>
+            <div
+              role="img"
+              aria-label={`${series.title}: ${accessibleSummary}`}
+              className="flex h-24 items-end gap-2 sm:gap-3"
+            >
+              {series.points.map((point) => {
+                const height = Math.max(
+                  (point.value / maxValue) * 100,
+                  point.value > 0 ? 8 : 2,
+                );
 
-              return (
-                <div key={point.label} className="flex min-w-0 flex-1 flex-col items-center gap-2">
-                  <span className="text-[10px] font-semibold tabular-nums text-slate-600">
-                    {series.valueFormatter(point.value)}
-                  </span>
-                  <div className="flex h-24 w-full items-end">
-                    <div
-                      className="w-full rounded-t-md bg-gradient-to-t from-cyan-600/80 to-cyan-400/70"
-                      style={{ height: `${height}%` }}
-                    />
+                return (
+                  <div
+                    key={point.label}
+                    className="flex min-w-0 flex-1 flex-col items-center gap-1.5"
+                  >
+                    <span className="text-[10px] font-semibold tabular-nums text-slate-600">
+                      {series.valueFormatter(point.value)}
+                    </span>
+                    <div className="flex h-16 w-full items-end">
+                      <div
+                        className="w-full rounded-t-md bg-gradient-to-t from-cyan-600/80 to-cyan-400/70"
+                        style={{ height: `${height}%` }}
+                      />
+                    </div>
+                    <span className="text-center text-[10px] font-medium uppercase leading-tight tracking-wide text-slate-500">
+                      {point.label}
+                    </span>
                   </div>
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
-                    {point.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+            <p className="sr-only">{accessibleSummary}</p>
+          </>
         )}
       </div>
     </section>
