@@ -14,8 +14,8 @@ type LoginPageShellProps = {
 
 export function LoginPageShell({ children, heroPanel }: LoginPageShellProps) {
   return (
-    <div className="flex min-h-dvh flex-col bg-[#050b14] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(390px,35vw)] lg:items-start">
-      <main className="login-access-panel relative flex min-h-dvh min-w-0 flex-col overflow-x-clip border-l border-white/[0.06] bg-[#07101d] text-white lg:fixed lg:right-0 lg:top-0 lg:z-20 lg:h-dvh lg:w-[35vw] lg:min-w-[390px] lg:overflow-x-hidden lg:overflow-y-auto">
+    <div className="flex min-h-dvh flex-col bg-[#14110c] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(390px,35vw)] lg:items-start">
+      <main className="login-access-panel relative flex min-h-dvh min-w-0 flex-col overflow-x-clip border-l border-white/[0.06] bg-[#1d1812] text-white lg:fixed lg:right-0 lg:top-0 lg:z-20 lg:h-dvh lg:w-[35vw] lg:min-w-[390px] lg:overflow-x-hidden lg:overflow-y-auto">
         <div className="auth-grid pointer-events-none absolute inset-0 opacity-35" />
         <div className="auth-noise pointer-events-none absolute inset-0 opacity-20" />
         <div className="pointer-events-none absolute -right-28 top-20 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(201,164,77,0.09)_0%,transparent_70%)]" />

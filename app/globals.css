@@ -1,41 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f7fa;
+  --background: #faf6ef;
   --foreground: #0f172a;
-  --surface-canvas: #f4f7fa;
-  --surface-panel: #fcfdfe;
-  --surface-card: #fcfdfe;
-  --surface-muted: #eef2f6;
-  --border-subtle: rgb(203 213 225 / 0.62);
-  --border-strong: rgb(148 163 184 / 0.42);
+  --surface-canvas: #faf6ef;
+  --surface-panel: #fefaf3;
+  --surface-card: #fefaf3;
+  --surface-muted: #f6f2eb;
+  --border-subtle: rgb(196 178 143 / 0.4);
+  --border-strong: rgb(168 148 110 / 0.4);
   --radius-panel: 1rem;
   --radius-section: 0.875rem;
   --accent-teal: #0891b2;
   --accent-teal-hover: #0e7490;
   --accent-teal-muted: rgb(8 145 178 / 0.1);
   --shadow-card:
-    0 1px 2px rgb(15 23 42 / 0.028),
-    0 2px 8px -2px rgb(15 23 42 / 0.06);
+    0 1px 2px rgb(23 19 14 / 0.028),
+    0 2px 8px -2px rgb(23 19 14 / 0.06);
   --shadow-panel:
-    0 1px 2px rgb(15 23 42 / 0.024),
-    0 4px 16px -4px rgb(15 23 42 / 0.07);
-  --shadow-sticky: 0 -4px 16px -4px rgb(15 23 42 / 0.08);
-  --shell-navy-base: #071827;
-  --shell-navy-mid: #0b1f33;
-  --shell-navy-highlight: #102a43;
-  --shell-navy-shine: rgb(255 255 255 / 0.07);
-  --shell-navy-border: rgb(255 255 255 / 0.08);
-  --shell-navy-text: #f1f5f9;
+    0 1px 2px rgb(23 19 14 / 0.024),
+    0 4px 16px -4px rgb(23 19 14 / 0.07);
+  --shadow-sticky: 0 -4px 16px -4px rgb(23 19 14 / 0.08);
+  --shell-navy-base: #272018;
+  --shell-navy-mid: #332a1f;
+  --shell-navy-highlight: #433729;
+  --shell-navy-shine: rgb(255 250 240 / 0.07);
+  --shell-navy-border: rgb(255 250 240 / 0.08);
+  --shell-navy-text: #f9f5ee;
   --shell-navy-text-muted: #94a3b8;
-  --shell-nav-surface: #f0f5f9;
-  --shell-nav-border: rgb(186 203 220 / 0.75);
-  --shell-nav-divider: rgb(15 23 42 / 0.08);
-  --north-star-root: #070b10;
-  --north-star-sidebar: #0b1118;
-  --north-star-topbar: #0e141d;
-  --north-star-panel: #101a28;
-  --north-star-border: #223044;
+  --shell-nav-surface: #f9f5ee;
+  --shell-nav-border: rgb(214 199 172 / 0.65);
+  --shell-nav-divider: rgb(23 19 14 / 0.08);
+  --north-star-root: #100d0a;
+  --north-star-sidebar: #18140f;
+  --north-star-topbar: #1d1812;
+  --north-star-panel: #282118;
+  --north-star-border: #443829;
   --north-star-bronze: #8a6324;
   --north-star-brass: #b88a2e;
   --north-star-gold: #c9a44d;
@@ -86,17 +86,17 @@
  */
 :root {
   /* Stone — secondary structural backing between Graphite and Paper. */
-  --altair-stone: #dce3ec;
+  --altair-stone: #ece1cb;
 
   /* Paper — the work surface: cards, panels, forms, documents. */
   --altair-paper: #fbf7ef;
   /* Paper Elevated — the brightest Paper tone; the surface currently active/focused. */
   --altair-paper-elevated: #ffffff;
   /* Paper Subtle — Paper's palest, quietest register; a resting canvas plane. */
-  --altair-paper-subtle: #eef2f6;
+  --altair-paper-subtle: #f6f2eb;
 
   /* Graphite — the operating shell: chrome that asserts Altair's own structure. */
-  --altair-graphite: #1a2029;
+  --altair-graphite: #292219;
 
   /* Ink — text and numerals, at three strengths, on the theme's dominant surface. */
   --altair-ink: #17130e;
@@ -121,8 +121,8 @@
   --altair-ink-on-paper-muted: #64748b;
 
   /* Border — quiet separation; Border Strong — deliberate emphasis (selection, focus). */
-  --altair-border: rgb(100 116 139 / 0.18);
-  --altair-border-strong: rgb(148 163 184 / 0.35);
+  --altair-border: rgb(120 104 74 / 0.18);
+  --altair-border-strong: rgb(168 148 110 / 0.35);
 
   /* Brass — the one primary command per screen; Brass Interactive — its hover/active state. */
   --altair-brass: #b88a2e;
@@ -158,14 +158,14 @@
 }
 
 [data-theme="dark"] {
-  --altair-stone: #1f2a38;
+  --altair-stone: #382e22;
 
   --altair-paper: #fbf7ef;
   --altair-paper-elevated: #ffffff;
   /* On dark chrome, Paper Subtle is a faint ivory-tinted overlay rather than a flat fill. */
   --altair-paper-subtle: rgb(255 255 255 / 0.06);
 
-  --altair-graphite: #111821;
+  --altair-graphite: #211b14;
 
   /* Ink flips to light, warm text for legibility against dark Graphite/Stone chrome. */
   --altair-ink: #f3ebdd;
@@ -177,8 +177,8 @@
   --altair-ink-on-paper-secondary: #4f4638;
   --altair-ink-on-paper-muted: #64748b;
 
-  --altair-border: rgb(174 182 194 / 0.18);
-  --altair-border-strong: rgb(174 182 194 / 0.35);
+  --altair-border: rgb(196 182 156 / 0.18);
+  --altair-border-strong: rgb(196 182 156 / 0.35);
 
   /* Brass runs brighter against the dark field — this is where it does its most important work. */
   --altair-brass: #c9a44d;
@@ -635,26 +635,26 @@ a[href] {
 
 /* North Star shell scope — premium palette overrides legacy admin chrome when flag is on */
 .admin-north-star-shell {
-  --north-star-root: #070b10;
-  --north-star-sidebar: #0b1118;
-  --north-star-topbar: #0e141d;
-  --north-star-panel: #101a28;
-  --north-star-border: #223044;
+  --north-star-root: #100d0a;
+  --north-star-sidebar: #18140f;
+  --north-star-topbar: #1d1812;
+  --north-star-panel: #282118;
+  --north-star-border: #443829;
   --north-star-bronze: #8a6324;
   --north-star-brass: #b88a2e;
   --north-star-gold: #c9a44d;
   --north-star-champagne: #e6d092;
-  --north-star-ivory: #f8fafc;
+  --north-star-ivory: #fcf8f1;
   --north-star-ivory-strong: #ffffff;
   --north-star-text-dark: #17130e;
   --north-star-text-secondary: #4f4638;
   --north-star-text-muted: var(--north-star-work-text-muted);
   --north-star-text-light: #f3ebdd;
   --north-star-text-light-muted: #c9bfae;
-  --north-star-work-surface: #e8edf3;
-  --north-star-work-band: #dce3ec;
+  --north-star-work-surface: #f3e8d1;
+  --north-star-work-band: #ece1cb;
   --north-star-work-row: #ffffff;
-  --north-star-work-row-hover: #f2f5f8;
+  --north-star-work-row-hover: #f8edd5;
   --north-star-work-input: #ffffff;
   --north-star-work-border: rgb(100 116 139 / 0.18);
   --north-star-work-border-strong: rgb(148 163 184 / 0.24);
@@ -688,7 +688,7 @@ a[href] {
 }
 
 .admin-north-star-shell .bg-\[\#EDE3C8\] {
-  background-color: #d7dee8 !important;
+  background-color: #d6cbb0 !important;
 }
 
 .admin-north-star-shell .hover\:bg-\[\#FFF9EA\]:hover,
@@ -708,17 +708,17 @@ a[href] {
   background-image:
     radial-gradient(
       ellipse 110% 60% at 50% -8%,
-      rgb(186 230 253 / 0.14) 0%,
+      rgb(201 164 77 / 0.1) 0%,
       transparent 58%
     ),
     radial-gradient(
       ellipse 70% 45% at 85% 5%,
-      rgb(224 242 254 / 0.08) 0%,
+      rgb(230 208 146 / 0.07) 0%,
       transparent 55%
     ),
     linear-gradient(
       180deg,
-      rgb(246 249 253 / 0.92) 0%,
+      rgb(250 246 237 / 0.92) 0%,
       var(--surface-canvas) 32%,
       var(--surface-canvas) 100%
     );
@@ -758,7 +758,7 @@ a[href] {
       ),
       radial-gradient(
         ellipse 42% 38% at 82% 0%,
-        rgb(56 189 248 / 0.06) 0%,
+        rgb(201 164 77 / 0.07) 0%,
         transparent 52%
       );
     pointer-events: none;
@@ -791,7 +791,7 @@ a[href] {
     border-bottom: 1px solid var(--shell-nav-border) !important;
     background: linear-gradient(
       180deg,
-      rgb(248 250 252 / 0.98) 0%,
+      rgb(250 246 237 / 0.98) 0%,
       var(--shell-nav-surface) 100%
     ) !important;
     box-shadow:
@@ -1076,7 +1076,7 @@ a[href] {
     border-radius: 1.5rem;
     padding: 1rem;
     border: 1px solid rgb(174 182 194 / 0.18);
-    background: linear-gradient(180deg, #273140 0%, #1a2029 18%, #111821 100%);
+    background: linear-gradient(180deg, #403527 0%, #292219 18%, #211b14 100%);
     box-shadow:
       0 22px 60px rgb(3 7 12 / 0.3),
       inset 0 1px 0 rgb(255 255 255 / 0.08);
@@ -1103,7 +1103,7 @@ a[href] {
   overflow: hidden;
   border-radius: 1.25rem;
   border: 1px solid rgb(214 190 120 / 0.2);
-  background: linear-gradient(180deg, #222b38 0%, #17202b 100%);
+  background: linear-gradient(180deg, #382e22 0%, #2b231a 100%);
   box-shadow:
     0 8px 32px -12px rgb(3 7 12 / 0.34),
     inset 0 1px 0 rgb(255 255 255 / 0.06);
@@ -1785,7 +1785,7 @@ a[href] {
 .dispatch-north-star-workflow a.bg-cyan-600,
 .dispatch-north-star-workflow button.bg-cyan-600 {
   border: 1px solid rgb(201 164 77 / 0.32) !important;
-  background: linear-gradient(to bottom, #273140 0%, #1a2029 100%) !important;
+  background: linear-gradient(to bottom, #403527 0%, #292219 100%) !important;
   color: #fff8e8 !important;
   box-shadow: 0 2px 10px rgb(3 7 12 / 0.16) !important;
 }
@@ -1794,20 +1794,20 @@ a[href] {
 .dispatch-north-star-workflow a.bg-cyan-600:hover,
 .dispatch-north-star-workflow button.bg-cyan-600:hover {
   border-color: rgb(214 190 120 / 0.42) !important;
-  background: linear-gradient(to bottom, #2f3d50 0%, #1f2a38 100%) !important;
+  background: linear-gradient(to bottom, #504231 0%, #382e22 100%) !important;
   color: #fff8e8 !important;
 }
 
 .dispatch-north-star-workflow .bg-cyan-600:active,
 .dispatch-north-star-workflow button.bg-cyan-600:active {
-  background: #1a2029 !important;
+  background: #292219 !important;
 }
 
 .dispatch-north-star-workflow .bg-indigo-600,
 .dispatch-north-star-workflow a.bg-indigo-600,
 .dispatch-north-star-workflow button.bg-indigo-600 {
   border: 1px solid rgb(201 164 77 / 0.32) !important;
-  background: linear-gradient(to bottom, #273140 0%, #1a2029 100%) !important;
+  background: linear-gradient(to bottom, #403527 0%, #292219 100%) !important;
   color: #fff8e8 !important;
   box-shadow: 0 2px 10px rgb(3 7 12 / 0.16) !important;
 }
@@ -1816,7 +1816,7 @@ a[href] {
 .dispatch-north-star-workflow a.bg-indigo-600:hover,
 .dispatch-north-star-workflow button.bg-indigo-600:hover {
   border-color: rgb(214 190 120 / 0.42) !important;
-  background: linear-gradient(to bottom, #2f3d50 0%, #1f2a38 100%) !important;
+  background: linear-gradient(to bottom, #504231 0%, #382e22 100%) !important;
   color: #fff8e8 !important;
 }
 
@@ -1937,7 +1937,7 @@ a[href] {
 /* Disabled assignment CTA — flat graphite, clearly inactive */
 .dispatch-north-star-detail-panel-body .north-star-dispatch-disabled-action:disabled {
   border-color: rgb(174 182 194 / 0.18) !important;
-  background: #2a3648 !important;
+  background: #483b2c !important;
   background-image: none !important;
   color: #aeb6c2 !important;
   box-shadow: none !important;
@@ -2304,7 +2304,7 @@ a[href] {
   .admin-north-star-shell .expense-north-star-detail-panel-mobile {
     border: 1px solid rgb(174 182 194 / 0.18);
     border-radius: 1rem;
-    background: #1a2029;
+    background: #292219;
     box-shadow: 0 10px 36px -12px rgb(3 7 12 / 0.32);
   }
 }
@@ -2320,7 +2320,7 @@ a[href] {
     border-radius: 1.5rem;
     padding: 1rem;
     border: 1px solid rgb(174 182 194 / 0.18);
-    background: linear-gradient(180deg, #273140 0%, #1a2029 18%, #111821 100%);
+    background: linear-gradient(180deg, #403527 0%, #292219 18%, #211b14 100%);
     box-shadow:
       0 22px 60px rgb(3 7 12 / 0.3),
       inset 0 1px 0 rgb(255 255 255 / 0.08);
@@ -2664,7 +2664,7 @@ a[href] {
  * beat this file's defaults, in any build's class order, the same way
  * Button.tsx's README already flags Tailwind's cascade as unreliable for
  * className-based overrides otherwise. Without :where(), a North Star header
- * row's "bg-[#DCE3EC]" or a body row's "hover:bg-[#F2F5F8]" could lose to
+ * row's "bg-[#ECE1CB]" or a body row's "hover:bg-[#F8EDD5]" could lose to
  * these defaults depending on Tailwind's generated stylesheet order.
  *
  * "altair-table-header tr" only sets background — the header row's border
@@ -2818,7 +2818,7 @@ a[href] {
   background: linear-gradient(
     180deg,
     var(--surface-panel) 0%,
-    rgb(248 250 252 / 0.94) 100%
+    rgb(250 246 237 / 0.94) 100%
   );
 }
 
@@ -3061,7 +3061,7 @@ a[href] {
   align-items: center;
   justify-content: center;
   border-radius: 0.875rem;
-  background: linear-gradient(145deg, #f8fafc, var(--surface-muted));
+  background: linear-gradient(145deg, #fcf8f1, var(--surface-muted));
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.85),
     0 1px 2px rgb(15 23 42 / 0.04);
@@ -3281,8 +3281,8 @@ a[href] {
   background: linear-gradient(
     135deg,
     var(--surface-panel) 0%,
-    rgb(241 248 252 / 0.94) 52%,
-    rgb(236 244 250 / 0.9) 100%
+    rgb(243 237 224 / 0.94) 52%,
+    rgb(238 231 214 / 0.9) 100%
   );
   box-shadow: var(--shadow-card);
   padding: 0.875rem 1rem;
@@ -3350,7 +3350,7 @@ a[href] {
 .admin-skeleton {
   animation: admin-skeleton-pulse 1.8s ease-in-out infinite;
   border-radius: 0.5rem;
-  background: linear-gradient(90deg, #eef4f8 0%, #e2e8f0 45%, #eef4f8 90%);
+  background: linear-gradient(90deg, #eef4f8 0%, #f0e5ce 45%, #eef4f8 90%);
   background-size: 200% 100%;
 }
 
@@ -3506,7 +3506,7 @@ a[href] {
 }
 
 .admin-metric-icon-neutral {
-  background: linear-gradient(145deg, #f1f5f9, #e2e8f0);
+  background: linear-gradient(145deg, #f9f5ee, #f0e5ce);
   color: #475569;
 }
 
@@ -3531,7 +3531,7 @@ a[href] {
 }
 
 .admin-metric-icon-slate {
-  background: linear-gradient(145deg, #f8fafc, #e2e8f0);
+  background: linear-gradient(145deg, #fcf8f1, #f0e5ce);
   color: #334155;
 }
 
@@ -3619,7 +3619,7 @@ a[href] {
   }
 
   .overlay-form-root[data-overlay-surface="north-star"] {
-    background-color: #1a2029;
+    background-color: #292219;
   }
 
   .overlay-form-root .overlay-form-scroll,
@@ -3686,14 +3686,14 @@ a[href] {
 }
 
 .tech-canvas {
-  background-color: #f1f5f9;
+  background-color: #f9f5ee;
   background-image:
     radial-gradient(
       ellipse 90% 60% at 50% -15%,
       rgb(186 230 253 / 0.18) 0%,
       transparent 60%
     ),
-    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    linear-gradient(180deg, #fcf8f1 0%, #f9f5ee 100%);
 }
 
 /*
@@ -3787,7 +3787,7 @@ a[href] {
 @media (prefers-reduced-motion: reduce) {
   .admin-skeleton {
     animation: none;
-    background: #e2e8f0;
+    background: #f0e5ce;
   }
 
   .north-star-skeleton,

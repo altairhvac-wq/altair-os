@@ -1,10 +1,10 @@
 /** Owner-operator /jobs mobile North Star — technician-inspired, light field surfaces. */
 
 export const ownerMobilePageCanvas =
-  "max-lg:bg-gradient-to-b max-lg:from-[#f8fafc] max-lg:via-[#f5f5f4] max-lg:to-[#f1f5f9]";
+  "max-lg:bg-gradient-to-b max-lg:from-[#fcf8f1] max-lg:via-[#f5f1ea] max-lg:to-[#f9f5ee]";
 
 export const ownerMobileCompactHeroClass =
-  "shrink-0 border-b border-slate-500/25 bg-[#273140] px-4 py-2.5";
+  "shrink-0 border-b border-slate-500/25 bg-[#403527] px-4 py-2.5";
 
 export const ownerMobileCompactHeroEyebrowClass =
   "text-[10px] font-semibold uppercase tracking-[0.18em] text-[#D9BC6E]";

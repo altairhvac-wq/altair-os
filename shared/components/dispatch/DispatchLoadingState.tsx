@@ -104,7 +104,7 @@ function DispatchNorthStarBoardSkeleton() {
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="flex min-w-0 max-w-full gap-2 overflow-hidden rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#1F2A38] sm:rounded-2xl"
+              className="flex min-w-0 max-w-full gap-2 overflow-hidden rounded-xl border border-[rgba(174,182,194,0.16)] bg-[#382E22] sm:rounded-2xl"
             >
               <div className={`${dt.laneHeader} shrink-0 sm:w-44 lg:w-48`}>
                 <NorthStarSkeleton
@@ -132,7 +132,7 @@ function DispatchNorthStarBoardSkeleton() {
             <NorthStarSkeleton dark className="h-5 w-32" />
             <NorthStarSkeleton dark className="h-3 w-48" />
           </div>
-          <div className="min-h-0 flex-1 space-y-3 bg-[#141c26] p-4 sm:p-5">
+          <div className="min-h-0 flex-1 space-y-3 bg-[#261f17] p-4 sm:p-5">
             <NorthStarSkeleton dark className="h-24 w-full rounded-xl" />
             <NorthStarSkeleton dark className="h-20 w-full rounded-xl" />
             <NorthStarSkeleton dark className="h-16 w-full rounded-xl" />

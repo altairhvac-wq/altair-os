@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 /** Matches `--surface-canvas` in globals.css */
-const APP_SHELL_BACKGROUND = "#f4f7fa";
-/** Premium slate accent used across auth/admin surfaces */
-const APP_THEME_COLOR = "#0f172a";
+const APP_SHELL_BACKGROUND = "#faf6ef";
+/** Warm graphite accent used across auth/admin surfaces */
+const APP_THEME_COLOR = "#1d1812";
 
 export const viewport: Viewport = {
   width: "device-width",

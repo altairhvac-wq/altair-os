@@ -26,9 +26,9 @@ function PreviewShell({
   children,
 }: PreviewShellProps) {
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.1] bg-[#0a1421] shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)]">
+    <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.1] bg-[#211b14] shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)]">
       <div className="flex items-start gap-3 border-b border-white/[0.07] px-4 py-3.5">
-        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#c9a44d]/20 bg-[#08121f] text-[#e0b84f]">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#c9a44d]/20 bg-[#1f1a13] text-[#e0b84f]">
           <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
         <div>
@@ -39,7 +39,7 @@ function PreviewShell({
         </div>
       </div>
       <div
-        className="min-h-[236px] flex-1 overflow-hidden bg-[#e8edf3] p-3.5"
+        className="min-h-[236px] flex-1 overflow-hidden bg-[#f3e8d1] p-3.5"
         aria-hidden="true"
       >
         {children}
@@ -61,8 +61,8 @@ function DashboardPreview() {
       description="A live operating center for today’s work and cash flow."
       icon={LayoutDashboard}
     >
-      <div className="h-full overflow-hidden rounded-xl border border-[#223044]/15 bg-white shadow-sm">
-        <div className="flex items-center justify-between bg-[#101a28] px-3.5 py-3 text-white">
+      <div className="h-full overflow-hidden rounded-xl border border-[#443829]/15 bg-white shadow-sm">
+        <div className="flex items-center justify-between bg-[#282118] px-3.5 py-3 text-white">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#e6d092]">
               Operating center
@@ -73,7 +73,7 @@ function DashboardPreview() {
             Healthy
           </span>
         </div>
-        <div className="grid grid-cols-3 gap-2 bg-[#dce3ec] p-3">
+        <div className="grid grid-cols-3 gap-2 bg-[#ece1cb] p-3">
           {metrics.map((metric) => (
             <div key={metric.label} className="rounded-lg border border-slate-200 bg-white p-2.5">
               <p className="text-[10px] leading-4 text-slate-500">{metric.label}</p>
@@ -131,7 +131,7 @@ function DispatchPreview() {
       description="Every job assigned, visible, and moving through the day."
       icon={Radio}
     >
-      <div className="h-full rounded-xl border border-[#223044] bg-[#0e141d] p-3.5 shadow-sm">
+      <div className="h-full rounded-xl border border-[#443829] bg-[#1d1812] p-3.5 shadow-sm">
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <div className="flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#e6d092]/20 bg-[#8a6324] text-[10px] font-semibold text-white">
@@ -148,7 +148,7 @@ function DispatchPreview() {
         </div>
         <div className="mt-3 space-y-2">
           {DISPATCH_JOBS.map((job) => (
-            <div key={job.id} className="grid grid-cols-[3.4rem_1fr_auto] items-center gap-2 rounded-lg border border-white/[0.07] bg-[#101a28] p-2.5">
+            <div key={job.id} className="grid grid-cols-[3.4rem_1fr_auto] items-center gap-2 rounded-lg border border-white/[0.07] bg-[#282118] p-2.5">
               <span className="text-[10px] font-medium tabular-nums text-slate-400">{job.time}</span>
               <span className="min-w-0">
                 <span className="block truncate text-[11px] font-semibold text-white">{job.title}</span>
@@ -173,7 +173,7 @@ function InvoicesPreview() {
       icon={ReceiptText}
     >
       <div className="h-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between bg-[#dce3ec] px-3.5 py-3">
+        <div className="flex items-center justify-between bg-[#ece1cb] px-3.5 py-3">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-[#6f4b13]">
               INV-DEMO-3002
@@ -219,7 +219,7 @@ function CustomerPreview() {
       icon={Users}
     >
       <div className="h-full overflow-hidden rounded-xl border border-[#d8ccb4] bg-[#fffaf0] shadow-sm">
-        <div className="flex items-center gap-3 bg-[#101a28] px-3.5 py-3 text-white">
+        <div className="flex items-center gap-3 bg-[#282118] px-3.5 py-3 text-white">
           <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#e6d092]/30 bg-[#8a6324] text-xs font-semibold">
             LA
           </span>

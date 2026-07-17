@@ -150,7 +150,7 @@ export function FocusedDocumentOverlay({
     </div>
   ) : null;
 
-  const surfaceClass = northStar ? "bg-[#1A2029]" : "bg-white";
+  const surfaceClass = northStar ? "bg-[#292219]" : "bg-white";
   const bodyClassName =
     bodyScroll === "child"
       ? "overlay-form-shell overflow-hidden"
@@ -160,7 +160,7 @@ export function FocusedDocumentOverlay({
     <ModalPortal>
       <div
         className={`overlay-form-root fixed inset-0 z-50 flex min-h-dvh flex-col overflow-hidden ${
-          northStar ? "max-lg:bg-[#1A2029]" : "max-lg:bg-white"
+          northStar ? "max-lg:bg-[#292219]" : "max-lg:bg-white"
         } ${rootClassName ?? ""}`}
         data-overlay-surface={northStar ? "north-star" : "default"}
         role="dialog"
