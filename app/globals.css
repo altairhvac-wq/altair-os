@@ -2720,6 +2720,98 @@ a[href] {
   background-color: var(--altair-paper-elevated);
 }
 
+/*
+ * ============================================================================
+ * Altair Design Foundation — canonical Dialog primitives
+ * ============================================================================
+ * Source of truth: docs/altair/ALTAIR_DESIGN_FOUNDATION.md ("Shadow System",
+ * "Motion", "Accessibility"), shared/design-system/dialog/README.md
+ * (contract + composition).
+ *
+ * These classes belong to shared/design-system/dialog/AltairDialog.tsx only.
+ * Wrapped in :where(...) for the same reason as the Table primitives above —
+ * zero specificity, so a caller's own className (a North Star tint, a
+ * domain-specific footer background) always wins without a specificity
+ * fight, regardless of Tailwind's generated stylesheet order.
+ *
+ * Backdrop: a calm Graphite-tinted scrim via color-mix, not a raw black or
+ * slate value and not a cyan/blue tint — Graphite already recedes to let
+ * Paper "lift" off it per the Foundation's material relationships, so tinting
+ * the scrim with Graphite (rather than an arbitrary gray) is the material,
+ * not decorative, choice. Dialog surface reuses Paper Elevated + Border +
+ * the existing --shadow-panel token (no new shadow token, no gradient), the
+ * same reuse precedent as the workspace Surface and Table blocks above.
+ *
+ * Motion follows the Foundation's "Motion" section: a short, restrained
+ * fade + slight rise on the way in, fully removed under
+ * prefers-reduced-motion, and never gating form interaction (the animation
+ * is purely visual — focus and input are usable immediately on mount).
+ */
+:where(.altair-dialog-overlay) {
+  background-color: color-mix(in srgb, var(--altair-graphite) 55%, transparent);
+  animation: altair-dialog-overlay-in 160ms ease-out;
+}
+
+:where(.altair-dialog-content) {
+  background-color: var(--altair-paper-elevated);
+  border: 1px solid var(--altair-border);
+  box-shadow: var(--shadow-panel);
+  animation: altair-dialog-content-in 160ms ease-out;
+}
+
+:where(.altair-dialog-header) {
+  padding: 1.125rem 1.25rem 0.875rem;
+  border-bottom: 1px solid var(--altair-border);
+}
+
+:where(.altair-dialog-body) {
+  padding: 1.125rem 1.25rem;
+}
+
+:where(.altair-dialog-footer) {
+  padding: 1rem 1.25rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--altair-border);
+}
+
+:where(.altair-dialog-close) {
+  color: var(--altair-ink-on-paper-muted);
+}
+
+:where(.altair-dialog-close:hover) {
+  color: var(--altair-ink-on-paper);
+  background-color: var(--altair-stone);
+}
+
+@keyframes altair-dialog-overlay-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes altair-dialog-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.altair-dialog-overlay),
+  :where(.altair-dialog-content) {
+    animation: none;
+  }
+}
+
 .admin-panel-header {
   padding: 0.625rem 0.875rem;
   border-bottom: 1px solid var(--border-subtle);

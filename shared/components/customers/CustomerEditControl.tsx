@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, X } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { updateCustomerAction } from "@/app/actions/customers";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { CustomerForm } from "./CustomerForm";
@@ -13,6 +13,15 @@ import {
   type CustomerFormData,
 } from "@/shared/types/customer";
 import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import {
+  AltairDialog,
+  AltairDialogBody,
+  AltairDialogClose,
+  AltairDialogContent,
+  AltairDialogDescription,
+  AltairDialogHeader,
+  AltairDialogTitle,
+} from "@/shared/design-system/dialog";
 
 type CustomerEditControlProps = {
   customer: Customer;
@@ -86,49 +95,31 @@ export function CustomerEditControl({
         Edit customer
       </button>
 
-      {panelOpen ? (
-        <div className="fixed inset-0 z-40 flex items-end justify-center p-0 sm:items-center sm:p-4">
-          <button
-            type="button"
-            aria-label="Close customer edit form"
-            onClick={closePanel}
-            disabled={isPending}
-            className="absolute inset-0 bg-slate-900/40"
-          />
-          <div className="relative z-10 flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-xl sm:max-h-[85dvh] sm:rounded-2xl">
-            <header className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 pb-3.5 overlay-header-safe-mobile sm:px-5 sm:py-3.5">
-              <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  Edit customer
-                </h3>
-                <p className="text-sm text-slate-500">
-                  Update contact details and service location.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={closePanel}
-                disabled={isPending}
-                className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </header>
-
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
-              <CustomerForm
-                key={customer.id}
-                variant="edit"
-                initialData={mapCustomerToFormData(customer)}
-                onSubmit={handleSubmit}
-                onCancel={closePanel}
-                error={error}
-                isSubmitting={isPending}
-              />
+      <AltairDialog open={panelOpen} onOpenChange={closePanel} closeDisabled={isPending}>
+        <AltairDialogContent size="md">
+          <AltairDialogHeader>
+            <div>
+              <AltairDialogTitle>Edit customer</AltairDialogTitle>
+              <AltairDialogDescription>
+                Update contact details and service location.
+              </AltairDialogDescription>
             </div>
-          </div>
-        </div>
-      ) : null}
+            <AltairDialogClose disabled={isPending} />
+          </AltairDialogHeader>
+
+          <AltairDialogBody>
+            <CustomerForm
+              key={customer.id}
+              variant="edit"
+              initialData={mapCustomerToFormData(customer)}
+              onSubmit={handleSubmit}
+              onCancel={closePanel}
+              error={error}
+              isSubmitting={isPending}
+            />
+          </AltairDialogBody>
+        </AltairDialogContent>
+      </AltairDialog>
     </>
   );
 }

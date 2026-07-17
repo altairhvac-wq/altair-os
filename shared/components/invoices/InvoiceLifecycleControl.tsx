@@ -25,6 +25,7 @@ import {
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { formatDate } from "@/shared/types/customer";
 import type { Invoice } from "@/shared/types/invoice";
+import { AltairConfirmDialog } from "@/shared/design-system/dialog";
 
 type InvoiceLifecycleControlProps = {
   invoice: Pick<
@@ -41,6 +42,14 @@ type InvoiceLifecycleControlProps = {
   canManage: boolean;
 };
 
+type PendingConfirmation = {
+  title: string;
+  description?: string;
+  confirmLabel: string;
+  destructive: boolean;
+  run: () => Promise<{ error?: string }>;
+};
+
 export function InvoiceLifecycleControl({
   invoice,
   deleteDependencies,
@@ -49,6 +58,9 @@ export function InvoiceLifecycleControl({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [confirmation, setConfirmation] = useState<PendingConfirmation | null>(
+    null,
+  );
 
   if (!canManage) return null;
 
@@ -59,18 +71,32 @@ export function InvoiceLifecycleControl({
     deleteDependencies,
   );
 
-  function runAction(action: () => Promise<{ error?: string }>, confirm?: string) {
+  function runAction(action: () => Promise<{ error?: string }>) {
     if (isPending) return;
-    if (confirm && !window.confirm(confirm)) return;
     setError(null);
+
     startTransition(async () => {
       const result = await action();
+
       if (result.error) {
         setError(formatActionError(result.error, "This invoice could not be updated."));
         return;
       }
+
+      setConfirmation(null);
       router.refresh();
     });
+  }
+
+  function requestConfirmation(next: PendingConfirmation) {
+    if (isPending) return;
+    setError(null);
+    setConfirmation(next);
+  }
+
+  function handleConfirm() {
+    if (!confirmation) return;
+    runAction(confirmation.run);
   }
 
   return (
@@ -95,10 +121,12 @@ export function InvoiceLifecycleControl({
                 type="button"
                 disabled={isPending}
                 onClick={() =>
-                  runAction(
-                    () => archiveInvoiceAction(invoice.id),
-                    `Archive invoice ${invoice.invoiceNumber}?`,
-                  )
+                  requestConfirmation({
+                    title: `Archive invoice ${invoice.invoiceNumber}?`,
+                    confirmLabel: "Archive",
+                    destructive: false,
+                    run: () => archiveInvoiceAction(invoice.id),
+                  })
                 }
                 className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800"
               >
@@ -110,10 +138,12 @@ export function InvoiceLifecycleControl({
                 type="button"
                 disabled={isPending}
                 onClick={() =>
-                  runAction(
-                    () => voidInvoiceAction(invoice.id),
-                    `Void invoice ${invoice.invoiceNumber}?`,
-                  )
+                  requestConfirmation({
+                    title: `Void invoice ${invoice.invoiceNumber}?`,
+                    confirmLabel: "Void",
+                    destructive: true,
+                    run: () => voidInvoiceAction(invoice.id),
+                  })
                 }
                 className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900"
               >
@@ -125,10 +155,12 @@ export function InvoiceLifecycleControl({
                 type="button"
                 disabled={isPending}
                 onClick={() =>
-                  runAction(
-                    () => moveInvoiceToTrashAction(invoice.id),
-                    `Move invoice ${invoice.invoiceNumber} to Recently Deleted?`,
-                  )
+                  requestConfirmation({
+                    title: `Move invoice ${invoice.invoiceNumber} to Recently Deleted?`,
+                    confirmLabel: "Move to Trash",
+                    destructive: true,
+                    run: () => moveInvoiceToTrashAction(invoice.id),
+                  })
                 }
                 className="rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-900"
               >
@@ -157,10 +189,12 @@ export function InvoiceLifecycleControl({
                 type="button"
                 disabled={isPending}
                 onClick={() =>
-                  runAction(
-                    () => voidInvoiceAction(invoice.id),
-                    `Void invoice ${invoice.invoiceNumber}?`,
-                  )
+                  requestConfirmation({
+                    title: `Void invoice ${invoice.invoiceNumber}?`,
+                    confirmLabel: "Void",
+                    destructive: true,
+                    run: () => voidInvoiceAction(invoice.id),
+                  })
                 }
                 className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900"
               >
@@ -172,10 +206,12 @@ export function InvoiceLifecycleControl({
                 type="button"
                 disabled={isPending}
                 onClick={() =>
-                  runAction(
-                    () => moveInvoiceToTrashAction(invoice.id),
-                    `Move invoice ${invoice.invoiceNumber} to Recently Deleted?`,
-                  )
+                  requestConfirmation({
+                    title: `Move invoice ${invoice.invoiceNumber} to Recently Deleted?`,
+                    confirmLabel: "Move to Trash",
+                    destructive: true,
+                    run: () => moveInvoiceToTrashAction(invoice.id),
+                  })
                 }
                 className="rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-900"
               >
@@ -206,10 +242,13 @@ export function InvoiceLifecycleControl({
                 type="button"
                 disabled={isPending}
                 onClick={() =>
-                  runAction(
-                    () => permanentlyDeleteInvoiceAction(invoice.id),
-                    `Permanently delete invoice ${invoice.invoiceNumber}? This cannot be undone.`,
-                  )
+                  requestConfirmation({
+                    title: `Permanently delete invoice ${invoice.invoiceNumber}?`,
+                    description: "This cannot be undone.",
+                    confirmLabel: "Permanently Delete",
+                    destructive: true,
+                    run: () => permanentlyDeleteInvoiceAction(invoice.id),
+                  })
                 }
                 className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800"
               >
@@ -221,6 +260,19 @@ export function InvoiceLifecycleControl({
           </>
         ) : null}
       </div>
+
+      <AltairConfirmDialog
+        open={confirmation !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmation(null);
+        }}
+        title={confirmation?.title ?? ""}
+        description={confirmation?.description}
+        confirmLabel={confirmation?.confirmLabel ?? "Confirm"}
+        destructive={confirmation?.destructive ?? false}
+        pending={isPending}
+        onConfirm={handleConfirm}
+      />
     </div>
   );
 }

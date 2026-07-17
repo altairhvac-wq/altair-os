@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ExternalLink, FileText, ImageIcon, Receipt, X } from "lucide-react";
+import { useState } from "react";
+import { ExternalLink, FileText, ImageIcon, Receipt } from "lucide-react";
 import {
   formatExpenseDate,
   formatReceiptStatus,
@@ -9,6 +9,14 @@ import {
   type Expense,
 } from "@/shared/types/expense";
 import { ReceiptUploadBox } from "./ReceiptUploadBox";
+import {
+  AltairDialog,
+  AltairDialogBody,
+  AltairDialogClose,
+  AltairDialogContent,
+  AltairDialogHeader,
+  AltairDialogTitle,
+} from "@/shared/design-system/dialog";
 
 type ExpenseReceiptPreviewProps = {
   expense: Expense;
@@ -135,14 +143,13 @@ export function ExpenseReceiptPreview({
         </div>
       </button>
 
-      {showModal ? (
-        <ExpenseReceiptPreviewModal
-          expense={expense}
-          isImage={isImage}
-          onClose={() => setShowModal(false)}
-          northStar={northStar}
-        />
-      ) : null}
+      <ExpenseReceiptPreviewModal
+        expense={expense}
+        isImage={isImage}
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        northStar={northStar}
+      />
     </>
   );
 }
@@ -150,6 +157,7 @@ export function ExpenseReceiptPreview({
 type ExpenseReceiptPreviewModalProps = {
   expense: Expense;
   isImage: boolean;
+  open: boolean;
   onClose: () => void;
   northStar?: boolean;
 };
@@ -157,100 +165,58 @@ type ExpenseReceiptPreviewModalProps = {
 function ExpenseReceiptPreviewModal({
   expense,
   isImage,
+  open,
   onClose,
   northStar = false,
 }: ExpenseReceiptPreviewModalProps) {
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [onClose]);
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="expense-receipt-preview-title"
-    >
-      <button
-        type="button"
-        aria-label="Close receipt preview"
-        onClick={onClose}
-        className="absolute inset-0 bg-slate-900/50"
-      />
-      <div
-        className={`relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl border shadow-xl sm:max-h-[85vh] sm:rounded-2xl ${
-          northStar
-            ? "border-[rgba(138,99,36,0.12)] bg-[#FBF7EF]"
-            : "border-slate-200 bg-white"
-        }`}
+    <AltairDialog open={open} onOpenChange={onClose}>
+      <AltairDialogContent
+        size="lg"
+        className={
+          northStar ? "border-[rgba(138,99,36,0.12)] bg-[#FBF7EF]" : undefined
+        }
       >
-        <header
-          className={`flex shrink-0 items-center gap-3 border-b px-4 py-3.5 ${
-            northStar
-              ? "border-[rgba(138,99,36,0.12)]"
-              : "border-slate-100"
-          }`}
+        <AltairDialogHeader
+          className={northStar ? "border-[rgba(138,99,36,0.12)]" : undefined}
         >
           <div className="min-w-0 flex-1">
-            <h2
-              id="expense-receipt-preview-title"
-              className={`truncate text-sm font-bold ${
-                northStar ? "text-[#17130E]" : "text-slate-900"
-              }`}
+            <AltairDialogTitle
+              className={`truncate ${northStar ? "text-[#17130E]" : "text-slate-900"}`}
             >
               {expense.receiptFileName ?? "Receipt preview"}
-            </h2>
+            </AltairDialogTitle>
             <p className={`text-xs ${northStar ? "text-[#64748B]" : "text-slate-500"}`}>
               {expense.expenseNumber} · Uploaded {formatExpenseDate(expense.createdAt)}
             </p>
           </div>
-          {expense.receiptSignedUrl ? (
-            <a
-              href={expense.receiptSignedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+          <div className="flex shrink-0 items-center gap-2">
+            {expense.receiptSignedUrl ? (
+              <a
+                href={expense.receiptSignedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={
+                  northStar
+                    ? "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD]"
+                    : "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                }
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open
+              </a>
+            ) : null}
+            <AltairDialogClose
               className={
                 northStar
-                  ? "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD]"
-                  : "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                  ? "text-[#64748B] hover:bg-[#EFE4CB] hover:text-[#17130E]"
+                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
               }
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Open
-            </a>
-          ) : null}
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
-              northStar
-                ? "text-[#64748B] hover:bg-[#EFE4CB] hover:text-[#17130E]"
-                : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-            }`}
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </header>
+            />
+          </div>
+        </AltairDialogHeader>
 
-        <div
-          className={`min-h-0 flex-1 overflow-y-auto p-4 ${
-            northStar ? "bg-[#FBF7EF]" : "bg-white"
-          }`}
-        >
+        <AltairDialogBody className={northStar ? "bg-[#FBF7EF]" : "bg-white"}>
           {isImage && expense.receiptSignedUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -298,8 +264,8 @@ function ExpenseReceiptPreviewModal({
               </a>
             </div>
           ) : null}
-        </div>
-      </div>
-    </div>
+        </AltairDialogBody>
+      </AltairDialogContent>
+    </AltairDialog>
   );
 }

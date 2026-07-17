@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Settings2, X } from "lucide-react";
+import { Plus, Settings2 } from "lucide-react";
 import {
   createCustomerEquipmentAction,
   setCustomerEquipmentActiveAction,
@@ -23,6 +23,16 @@ import {
 import { CUSTOMER_DETAIL_EQUIPMENT_ANCHOR } from "@/shared/lib/customers/customer-detail-anchors";
 import { adminCardSectionClass } from "@/shared/lib/admin-density";
 import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import {
+  AltairDialog,
+  AltairDialogBody,
+  AltairDialogClose,
+  AltairDialogContent,
+  AltairDialogDescription,
+  AltairDialogFooter,
+  AltairDialogHeader,
+  AltairDialogTitle,
+} from "@/shared/design-system/dialog";
 
 type CustomerEquipmentSectionProps = {
   customerId: string;
@@ -309,67 +319,51 @@ export function CustomerEquipmentSection({
 
       {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
 
-      {panelOpen ? (
-        <div className="fixed inset-0 z-40 flex items-end justify-center p-0 sm:items-center sm:p-4">
-          <button
-            type="button"
-            aria-label="Close equipment form"
-            onClick={closePanel}
-            disabled={isPending}
-            className="absolute inset-0 bg-slate-900/40"
-          />
-          <div className="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-xl sm:max-h-[85vh] sm:rounded-2xl">
-            <header className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 pb-3.5 overlay-header-safe-mobile sm:px-5 sm:py-3.5">
-              <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  {editingEquipment ? "Edit equipment" : "Add equipment"}
-                </h3>
-                <p className="text-sm text-slate-500">
-                  Track installed assets and warranty details.
-                </p>
-              </div>
+      <AltairDialog open={panelOpen} onOpenChange={closePanel} closeDisabled={isPending}>
+        <AltairDialogContent size="md">
+          <AltairDialogHeader>
+            <div>
+              <AltairDialogTitle>
+                {editingEquipment ? "Edit equipment" : "Add equipment"}
+              </AltairDialogTitle>
+              <AltairDialogDescription>
+                Track installed assets and warranty details.
+              </AltairDialogDescription>
+            </div>
+            <AltairDialogClose disabled={isPending} />
+          </AltairDialogHeader>
+
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+            <AltairDialogBody>
+              <CustomerEquipmentForm
+                formId="customer-equipment-panel"
+                data={formData}
+                onChange={setFormData}
+                showActiveToggle={Boolean(editingEquipment)}
+              />
+              {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+            </AltairDialogBody>
+
+            <AltairDialogFooter>
               <button
                 type="button"
                 onClick={closePanel}
                 disabled={isPending}
-                className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
               >
-                <X className="h-5 w-5" />
+                Cancel
               </button>
-            </header>
-
-            <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-              <div className="overflow-y-auto px-4 py-4 sm:px-5">
-                <CustomerEquipmentForm
-                  formId="customer-equipment-panel"
-                  data={formData}
-                  onChange={setFormData}
-                  showActiveToggle={Boolean(editingEquipment)}
-                />
-                {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
-              </div>
-
-              <footer className="flex shrink-0 gap-3 border-t border-slate-100 px-4 py-4 sm:px-5">
-                <button
-                  type="button"
-                  onClick={closePanel}
-                  disabled={isPending}
-                  className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="inline-flex flex-1 items-center justify-center rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isPending ? "Saving..." : editingEquipment ? "Save changes" : "Add equipment"}
-                </button>
-              </footer>
-            </form>
-          </div>
-        </div>
-      ) : null}
+              <button
+                type="submit"
+                disabled={isPending}
+                className="inline-flex flex-1 items-center justify-center rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isPending ? "Saving..." : editingEquipment ? "Save changes" : "Add equipment"}
+              </button>
+            </AltairDialogFooter>
+          </form>
+        </AltairDialogContent>
+      </AltairDialog>
     </section>
   );
 }
