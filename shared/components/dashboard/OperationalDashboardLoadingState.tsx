@@ -5,133 +5,91 @@ import {
   MasterPageSurface,
   MasterShellPage,
 } from "@/shared/design-system/shell";
-import { HorizonHero } from "@/shared/design-system/signature";
-import { signatureCockpitSurfaceClass } from "@/shared/design-system/shell/tokens";
+import { MISSION_CONTROL_SECTION_LABELS } from "@/shared/lib/dashboard-mission-control";
 
 function Skeleton({ className }: { className?: string }) {
   return <div className={`admin-skeleton ${className ?? ""}`} />;
 }
 
-function CockpitSkeleton({ variant }: { variant: "desktop" | "mobile" }) {
-  const isMobile = variant === "mobile";
-
+function GreetingSkeleton() {
   return (
-    <HorizonHero
-      tone="cyan"
-      beamTone="cyan"
-      size={isMobile ? "compact" : "cockpit"}
-    >
-      <div
-        aria-hidden="true"
-        className={signatureCockpitSurfaceClass}
-      >
-        <div
-          className={
-            isMobile
-              ? "flex flex-col gap-2"
-              : "flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between lg:gap-6"
-          }
-        >
-          <div className="min-w-0 flex-1">
-            <Skeleton className="h-2.5 w-24" />
-            <Skeleton className="mt-2 h-5 w-44" />
-            <Skeleton className="mt-2 h-4 w-full max-w-md" />
-          </div>
-          {!isMobile ? (
-            <Skeleton className="h-[4.5rem] w-full max-w-xs rounded-lg lg:shrink-0" />
-          ) : null}
-        </div>
-
-        {isMobile ? (
-          <div className="mt-3 grid grid-cols-2 gap-3 border-t border-slate-200/40 pt-3">
-            <Skeleton className="h-10" />
-            <Skeleton className="h-10" />
-          </div>
-        ) : (
-          <div className="mt-3 border-t border-slate-200/45 pt-3">
-            <Skeleton className="h-2 w-28" />
-            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton key={index} className="h-14" />
-              ))}
-            </div>
-            <Skeleton className="mt-3 h-2 w-24" />
-            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton key={`today-${index}`} className="h-14" />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </HorizonHero>
+    <MasterPageSurface variant="card" className="p-4 sm:p-5">
+      <Skeleton className="h-6 w-56" />
+      <Skeleton className="mt-2 h-4 w-44" />
+      <Skeleton className="mt-3 h-4 w-40" />
+    </MasterPageSurface>
   );
 }
 
-const DASHBOARD_LOADING_SECTIONS = [
-  { title: "Operational health" },
-  { title: "Today's work" },
-  { title: "Revenue and billing" },
-  {
-    title: "Needs attention",
-    description: "Priority signals and open queues",
-  },
-] as const;
-
-function SectionCardsSkeleton() {
+function MissionCriticalSkeleton() {
   return (
-    <div className="grid gap-2 lg:grid-cols-2">
-      {Array.from({ length: 2 }).map((_, cardIndex) => (
-        <MasterPageSurface key={cardIndex} variant="card" className="p-3">
-          <Skeleton className="h-3.5 w-28" />
-          <Skeleton className="mt-2 h-6 w-16" />
-          <div className="mt-3 space-y-2">
-            {Array.from({ length: 2 }).map((_, rowIndex) => (
-              <Skeleton key={rowIndex} className="h-10 w-full rounded-lg" />
-            ))}
-          </div>
-        </MasterPageSurface>
+    <MasterPageSection
+      title={MISSION_CONTROL_SECTION_LABELS.missionCritical}
+      density="compact"
+    >
+      <div className="grid gap-2 lg:grid-cols-2 lg:gap-3">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={index} className="h-28 w-full rounded-xl" />
+        ))}
+      </div>
+    </MasterPageSection>
+  );
+}
+
+function MetricGridSkeleton({ columns = 4 }: { columns?: number }) {
+  return (
+    <div
+      className={`grid grid-cols-2 gap-2 sm:gap-3 ${
+        columns === 5 ? "xl:grid-cols-5" : "xl:grid-cols-4"
+      }`}
+    >
+      {Array.from({ length: columns }).map((_, index) => (
+        <Skeleton key={index} className="h-24 w-full rounded-xl" />
       ))}
     </div>
   );
 }
 
-function DesktopLoadingSkeleton() {
+function ChartSkeleton() {
   return (
-    <MasterContentStack density="compact" className="hidden lg:flex">
-      <CockpitSkeleton variant="desktop" />
-      <Skeleton className="h-24 w-full rounded-xl" />
-
-      {DASHBOARD_LOADING_SECTIONS.map((section) => (
-        <MasterPageSection
-          key={section.title}
-          title={section.title}
-          description={"description" in section ? section.description : undefined}
-          density="compact"
-        >
-          <SectionCardsSkeleton />
-        </MasterPageSection>
-      ))}
-    </MasterContentStack>
+    <MasterPageSurface variant="card" className="p-4">
+      <Skeleton className="h-4 w-32" />
+      <Skeleton className="mt-2 h-3 w-48" />
+      <Skeleton className="mt-4 h-36 w-full rounded-xl" />
+    </MasterPageSurface>
   );
 }
 
-function MobileLoadingSkeleton() {
+function TimelineSkeleton() {
   return (
-    <MasterContentStack density="compact">
-      <CockpitSkeleton variant="mobile" />
-      <Skeleton className="h-[3.25rem] w-full rounded-lg" />
-      <Skeleton className="h-[3.25rem] w-full rounded-lg" />
+    <MasterPageSection
+      title={MISSION_CONTROL_SECTION_LABELS.activityTimeline}
+      density="compact"
+    >
+      <MasterPageSurface variant="card" className="divide-y divide-slate-100">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className="px-4 py-3">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="mt-2 h-3 w-full max-w-md" />
+          </div>
+        ))}
+      </MasterPageSurface>
+    </MasterPageSection>
+  );
+}
 
-      <div className="space-y-1">
-        <Skeleton className="h-3 w-28" />
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded-lg" />
+function QuickActionsSkeleton() {
+  return (
+    <MasterPageSection
+      title={MISSION_CONTROL_SECTION_LABELS.quickActions}
+      density="compact"
+    >
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Skeleton key={index} className="h-16 w-full rounded-xl" />
         ))}
       </div>
-
-      <Skeleton className="h-10 w-full rounded-lg" />
-    </MasterContentStack>
+    </MasterPageSection>
   );
 }
 
@@ -139,10 +97,28 @@ export function OperationalDashboardLoadingState() {
   return (
     <MasterShellPage density="compact">
       <MasterPageCanvas width="wide">
-        <DesktopLoadingSkeleton />
-        <div className="min-w-0 lg:hidden">
-          <MobileLoadingSkeleton />
-        </div>
+        <MasterContentStack density="compact" aria-busy="true" aria-live="polite">
+          <GreetingSkeleton />
+          <MissionCriticalSkeleton />
+          <MasterPageSection
+            title={MISSION_CONTROL_SECTION_LABELS.todaysOperations}
+            density="compact"
+          >
+            <MetricGridSkeleton columns={5} />
+          </MasterPageSection>
+          <div className="grid gap-2 lg:grid-cols-2 lg:gap-3">
+            <ChartSkeleton />
+            <ChartSkeleton />
+          </div>
+          <MasterPageSection
+            title={MISSION_CONTROL_SECTION_LABELS.cashFlow}
+            density="compact"
+          >
+            <MetricGridSkeleton columns={4} />
+          </MasterPageSection>
+          <TimelineSkeleton />
+          <QuickActionsSkeleton />
+        </MasterContentStack>
       </MasterPageCanvas>
     </MasterShellPage>
   );

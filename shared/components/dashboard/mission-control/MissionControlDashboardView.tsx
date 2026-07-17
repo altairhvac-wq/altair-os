@@ -1,0 +1,84 @@
+"use client";
+
+import { useMemo } from "react";
+import {
+  DashboardOnboardingBands,
+  shouldUseDashboardActivationHero,
+} from "@/shared/components/onboarding/DashboardOnboardingBands";
+import { buildMissionControlContent } from "@/shared/lib/dashboard-mission-control";
+import type { DashboardData } from "@/shared/types/dashboard";
+import type { DemoDataStatus } from "@/shared/types/demo-data";
+import type { OnboardingChecklist } from "@/shared/types/onboarding";
+import { MasterContentStack } from "@/shared/design-system/shell";
+import { MissionControlGreeting } from "./MissionControlGreeting";
+import { MissionCriticalSection } from "./MissionCriticalSection";
+import { MissionControlTodaysOperationsSection } from "./MissionControlTodaysOperationsSection";
+import { MissionControlCashFlowSection } from "./MissionControlCashFlowSection";
+import { MissionControlActivityTimelineSection } from "./MissionControlActivityTimelineSection";
+import { MissionControlQuickActionsSection } from "./MissionControlQuickActionsSection";
+import { MissionControlTrendChart } from "./MissionControlTrendChart";
+
+export type MissionControlDashboardViewProps = {
+  data: DashboardData;
+  userDisplayName: string;
+  onboardingChecklist?: OnboardingChecklist;
+  companyId?: string;
+  userId?: string;
+  demoDataStatus?: DemoDataStatus | null;
+};
+
+export function MissionControlDashboardView({
+  data,
+  userDisplayName,
+  onboardingChecklist,
+  companyId,
+  userId,
+  demoDataStatus,
+}: MissionControlDashboardViewProps) {
+  const content = useMemo(
+    () => buildMissionControlContent(data, userDisplayName),
+    [data, userDisplayName],
+  );
+  const useActivationHero = shouldUseDashboardActivationHero(
+    onboardingChecklist,
+    demoDataStatus,
+  );
+
+  return (
+    <>
+      <DashboardOnboardingBands
+        onboardingChecklist={onboardingChecklist}
+        companyId={companyId}
+        userId={userId}
+        demoDataStatus={demoDataStatus}
+      />
+
+      {!useActivationHero ? (
+        <MasterContentStack density="compact">
+          <MissionControlGreeting content={content.greeting} />
+
+          <MissionCriticalSection
+            items={content.missionCritical}
+            isClear={content.isMissionClear}
+            data={data}
+          />
+
+          <MissionControlTodaysOperationsSection cards={content.todaysOperations} />
+
+          <div className="grid gap-2 lg:grid-cols-2 lg:gap-3">
+            {data.access.canViewBilling ? (
+              <MissionControlTrendChart series={content.revenueTrend} />
+            ) : null}
+            <MissionControlTrendChart series={content.jobsTrend} />
+          </div>
+
+          <MissionControlCashFlowSection cards={content.cashFlow} />
+
+          <MissionControlActivityTimelineSection data={data} />
+
+          <MissionControlQuickActionsSection actions={content.quickActions} />
+        </MasterContentStack>
+      ) : null}
+    </>
+  );
+}

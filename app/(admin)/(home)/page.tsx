@@ -32,9 +32,15 @@ export default async function DashboardPage() {
     companyContext,
   );
 
+  const userDisplayName =
+    companyContext.profile.full_name ??
+    companyContext.user.email ??
+    "User";
+
   return (
     <OperationalDashboardView
       data={data}
+      userDisplayName={userDisplayName}
       onboardingChecklist={onboardingChecklist}
       companyId={companyContext.company.id}
       userId={companyContext.user.id}
