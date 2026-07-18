@@ -8,6 +8,7 @@ import {
   listJobs,
   listJobsForOperationalDay,
 } from "@/lib/database/queries/jobs";
+import { listJobBillingSummariesForJobs } from "@/lib/database/queries/job-billing-summaries";
 import { listTechnicians } from "@/lib/database/queries/technicians";
 import { JobsPageView } from "@/shared/components/jobs/JobsPageView";
 import { UnauthorizedAccessView } from "@/shared/components/layout/UnauthorizedAccessView";
@@ -73,6 +74,12 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
       : Promise.resolve([]),
   ]);
 
+  const allJobsForBilling = [...jobs, ...deletedJobs, ...todayJobs];
+  const billingSummaries = await listJobBillingSummariesForJobs(
+    companyContext.company.id,
+    allJobsForBilling.map((job) => job.id),
+  );
+
   const preselectedCustomer = customerId
     ? customers.find((customer) => customer.id === customerId)
     : undefined;
@@ -103,6 +110,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
       initialStatusFilter={pageFilters.statusFilter}
       initialPriorityFilter={pageFilters.priorityFilter}
       initialUnassignedOnly={pageFilters.unassignedOnly}
+      billingSummaries={billingSummaries}
     />
   );
 }

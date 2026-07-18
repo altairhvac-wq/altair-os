@@ -2,12 +2,14 @@ import { adminListRowClass, adminListRowWrapSelectedClass } from "@/shared/lib/a
 import type { BillingWorkflowListSection } from "@/shared/lib/billing-workflow-list";
 import { canSelectInvoiceForBulkLifecycle } from "@/shared/lib/invoice-lifecycle";
 import { ChevronRight } from "lucide-react";
-import { formatCurrency, formatDate } from "@/shared/types/customer";
+import { formatCurrency } from "@/shared/types/customer";
 import type { Invoice } from "@/shared/types/invoice";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
+import { SearchMatchReason } from "@/shared/components/search/SearchMatchReason";
+import { formatInvoiceRelationshipLine } from "@/shared/lib/documents/relationship-labels";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 
 type InvoicesMobileCardListProps = {
@@ -19,6 +21,7 @@ type InvoicesMobileCardListProps = {
   selectedIds?: ReadonlySet<string>;
   onToggleSelection?: (invoiceId: string) => void;
   northStar?: boolean;
+  matchReasons?: Record<string, string>;
 };
 
 export function InvoicesMobileCardList({
@@ -30,6 +33,7 @@ export function InvoicesMobileCardList({
   selectedIds,
   onToggleSelection,
   northStar = false,
+  matchReasons,
 }: InvoicesMobileCardListProps) {
   return (
     <ul
@@ -133,9 +137,20 @@ export function InvoicesMobileCardList({
                               : "mt-1 text-xs text-slate-500"
                           }
                         >
-                          Due {formatDate(invoice.dueDate)}
-                          {invoice.jobNumber ? ` · ${invoice.jobNumber}` : ""}
+                          {formatInvoiceRelationshipLine({
+                            jobNumber: invoice.jobNumber,
+                            estimateNumber: invoice.estimateNumber,
+                            customerName: invoice.customerName,
+                          })}
                         </p>
+                        <SearchMatchReason
+                          reason={matchReasons?.[invoice.id]}
+                          className={
+                            northStar
+                              ? `mt-0.5 ${lt.tableMutedText}`
+                              : "mt-0.5 text-xs text-slate-500"
+                          }
+                        />
                       </div>
 
                       <div className="flex shrink-0 items-center gap-2 pt-0.5">

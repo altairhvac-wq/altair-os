@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useDeferredValue, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
@@ -72,8 +72,11 @@ import {
   prepareEstimatesForListView,
   sortEstimatesForWorkflow,
 } from "@/shared/lib/estimate-workflow-list";
-import { formatEstimateStatus } from "@/shared/types/estimate";
-import { formatCurrency } from "@/shared/types/customer";
+import {
+  buildEstimateSearchFields,
+  rankAndSortRecords,
+} from "@/shared/lib/search";
+import type { InvoiceDocumentRef } from "@/shared/lib/documents/document-refs";
 
 type PanelMode = "create" | "empty";
 
@@ -82,6 +85,7 @@ type EstimatesPageViewProps = {
   customers: Customer[];
   jobs: Job[];
   serviceItems: ServiceItem[];
+  invoiceDocumentRefs?: InvoiceDocumentRef[];
   canManageEstimates: boolean;
   canManageCustomers?: boolean;
   initialPanelMode?: PanelMode;
@@ -95,34 +99,52 @@ function filterEstimates(
   search: string,
   statusFilter: EstimateStatus | "all",
   lifecycleFilter: EstimateLifecycleState,
-): Estimate[] {
-  const query = search.trim().toLowerCase();
-
-  return estimates.filter((estimate) => {
+  customersById: Map<string, Customer>,
+  jobsById: Map<string, Job>,
+  invoicesByEstimateId: Map<string, string[]>,
+): { items: Estimate[]; matchReasons: Record<string, string> } {
+  const scoped = estimates.filter((estimate) => {
     const matchesLifecycle =
       getEstimateLifecycleState(estimate) === lifecycleFilter;
-
     if (!matchesLifecycle) return false;
 
     const matchesStatus =
       statusFilter === "all" || estimate.status === statusFilter;
-
-    if (!matchesStatus) return false;
-    if (!query) return true;
-
-    const haystack = [
-      estimate.estimateNumber,
-      estimate.customerName,
-      formatEstimateStatus(estimate.status),
-      estimate.status,
-      formatCurrency(estimate.total),
-      String(estimate.total),
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(query);
+    return matchesStatus;
   });
+
+  const query = search.trim();
+  if (!query) {
+    return { items: scoped, matchReasons: {} };
+  }
+
+  const ranked = rankAndSortRecords(scoped, query, (estimate) => {
+    const job = estimate.jobId ? jobsById.get(estimate.jobId) : undefined;
+    return buildEstimateSearchFields(
+      estimate,
+      customersById.get(estimate.customerId),
+      {
+        invoiceNumbers: invoicesByEstimateId.get(estimate.id),
+        serviceAddress: job
+          ? [job.serviceAddress, job.city, job.state, job.zip]
+              .filter(Boolean)
+              .join(", ")
+          : undefined,
+      },
+    );
+  });
+
+  const matchReasons: Record<string, string> = {};
+  for (const entry of ranked) {
+    if (entry.match.reason) {
+      matchReasons[entry.record.id] = entry.match.reason;
+    }
+  }
+
+  return {
+    items: ranked.map((entry) => entry.record),
+    matchReasons,
+  };
 }
 
 export function EstimatesPageView({
@@ -130,6 +152,7 @@ export function EstimatesPageView({
   customers,
   jobs,
   serviceItems,
+  invoiceDocumentRefs = [],
   canManageEstimates,
   canManageCustomers = false,
   initialPanelMode = "empty",
@@ -139,6 +162,7 @@ export function EstimatesPageView({
 }: EstimatesPageViewProps) {
   const [estimates, setEstimates] = useState(initialEstimates);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [workQueue, setWorkQueue] = useState<EstimateWorkQueue>("needs-action");
   const [statusFilter, setStatusFilter] = useState<EstimateStatus | "all">(
     "all",
@@ -194,16 +218,48 @@ export function EstimatesPageView({
     [estimates, workQueue],
   );
 
-  const filteredEstimates = useMemo(
+  const customersById = useMemo(
+    () => new Map(customers.map((customer) => [customer.id, customer])),
+    [customers],
+  );
+  const jobsById = useMemo(
+    () => new Map(jobs.map((job) => [job.id, job])),
+    [jobs],
+  );
+  const invoicesByEstimateId = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const ref of invoiceDocumentRefs) {
+      if (!ref.estimateId) continue;
+      const existing = map.get(ref.estimateId) ?? [];
+      existing.push(ref.invoiceNumber);
+      map.set(ref.estimateId, existing);
+    }
+    return map;
+  }, [invoiceDocumentRefs]);
+
+  const filteredEstimateResult = useMemo(
     () =>
       filterEstimates(
         queueScopedEstimates,
-        search,
+        deferredSearch,
         statusFilter,
         lifecycleFilter,
+        customersById,
+        jobsById,
+        invoicesByEstimateId,
       ),
-    [queueScopedEstimates, search, statusFilter, lifecycleFilter],
+    [
+      queueScopedEstimates,
+      deferredSearch,
+      statusFilter,
+      lifecycleFilter,
+      customersById,
+      jobsById,
+      invoicesByEstimateId,
+    ],
   );
+  const filteredEstimates = filteredEstimateResult.items;
+  const searchMatchReasons = filteredEstimateResult.matchReasons;
 
   const estimateListPresentation = useMemo(() => {
     if (workQueue === "needs-action") {
@@ -685,6 +741,8 @@ export function EstimatesPageView({
               onToggleSelection={handleToggleEstimateSelection}
               onToggleAllVisible={handleToggleAllVisibleSelection}
               northStar={northStar}
+              jobsById={jobsById}
+              matchReasons={searchMatchReasons}
             />
           )}
 

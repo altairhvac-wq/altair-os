@@ -20,6 +20,8 @@ import {
   AltairTableSecondaryText,
 } from "@/shared/design-system/table";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
+import { SearchMatchReason } from "@/shared/components/search/SearchMatchReason";
+import { formatInvoiceRelationshipLine } from "@/shared/lib/documents/relationship-labels";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { InvoicesMobileCardList } from "./InvoicesMobileCardList";
 
@@ -47,6 +49,7 @@ type InvoicesTableProps = {
   onToggleSelection?: (invoiceId: string) => void;
   onToggleAllVisible?: (selectAll: boolean) => void;
   northStar?: boolean;
+  matchReasons?: Record<string, string>;
 };
 
 export function InvoicesTable({
@@ -59,6 +62,7 @@ export function InvoicesTable({
   onToggleSelection,
   onToggleAllVisible,
   northStar = false,
+  matchReasons,
 }: InvoicesTableProps) {
   const visibleInvoices = useMemo(
     () => sections.flatMap((section) => section.items),
@@ -86,6 +90,7 @@ export function InvoicesTable({
         selectedIds={selectedIds}
         onToggleSelection={onToggleSelection}
         northStar={northStar}
+        matchReasons={matchReasons}
       />
 
       <div
@@ -192,13 +197,29 @@ export function InvoicesTable({
                           </Link>
                         }
                         secondary={
-                          <AltairTableSecondaryText
-                            className={
-                              northStar ? lt.tableMutedText : "text-xs text-slate-500"
-                            }
-                          >
-                            {formatDate(invoice.issueDate)}
-                          </AltairTableSecondaryText>
+                          <>
+                            <AltairTableSecondaryText
+                              className={
+                                northStar
+                                  ? lt.tableMutedText
+                                  : "text-xs text-slate-500"
+                              }
+                            >
+                              {formatInvoiceRelationshipLine({
+                                jobNumber: invoice.jobNumber,
+                                estimateNumber: invoice.estimateNumber,
+                                customerName: invoice.customerName,
+                              })}
+                            </AltairTableSecondaryText>
+                            <SearchMatchReason
+                              reason={matchReasons?.[invoice.id]}
+                              className={
+                                northStar
+                                  ? `mt-0.5 ${lt.tableMutedText}`
+                                  : "mt-0.5 text-xs text-slate-500"
+                              }
+                            />
+                          </>
                         }
                       />
                       <AltairTableCell>

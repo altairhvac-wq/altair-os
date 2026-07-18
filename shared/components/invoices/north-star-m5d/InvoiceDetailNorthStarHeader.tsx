@@ -3,6 +3,7 @@ import type { InvoiceDetail } from "@/shared/types/invoice";
 import { InvoiceStatusActions } from "@/shared/components/invoices/InvoiceStatusActions";
 import { InvoiceStatusBadge } from "@/shared/components/invoices/InvoiceStatusBadge";
 import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import { formatInvoiceRelationshipLine } from "@/shared/lib/documents/relationship-labels";
 
 type InvoiceDetailNorthStarHeaderProps = {
   invoice: InvoiceDetail;
@@ -80,6 +81,15 @@ export function InvoiceDetailNorthStarHeader({
           </div>
 
           <div className={`mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 ${dt.heroMeta}`}>
+            <span>
+              {formatInvoiceRelationshipLine({
+                jobNumber: invoice.jobNumber,
+                estimateNumber: invoice.estimateNumber,
+                customerName: invoice.customerName,
+              })}
+            </span>
+          </div>
+          <div className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 ${dt.heroMeta}`}>
             <span>Issued {formatDate(invoice.issueDate)}</span>
             <span className="text-[#8A6324]">·</span>
             <span>Due {formatDate(invoice.dueDate)}</span>

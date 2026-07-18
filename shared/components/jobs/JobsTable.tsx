@@ -17,8 +17,12 @@ import {
   AltairTableHeader,
   AltairTablePrimaryCell,
   AltairTableRow,
+  AltairTableSecondaryText,
 } from "@/shared/design-system/table";
 import { resolveBulkSelectionState } from "@/shared/lib/bulk-selection";
+import { SearchMatchReason } from "@/shared/components/search/SearchMatchReason";
+import { formatJobDocumentReferencesLine } from "@/shared/lib/documents/relationship-labels";
+import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
 import { JobsMobileCardList } from "./JobsMobileCardList";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
@@ -32,6 +36,8 @@ type JobsTableProps = {
   onToggleSelection?: (jobId: string) => void;
   onToggleAllVisible?: (selectAll: boolean) => void;
   northStar?: boolean;
+  billingSummaries?: JobBillingSummariesByJobId;
+  matchReasons?: Record<string, string>;
 };
 
 /**
@@ -56,6 +62,8 @@ export function JobsTable({
   onToggleSelection,
   onToggleAllVisible,
   northStar = false,
+  billingSummaries,
+  matchReasons,
 }: JobsTableProps) {
   const headerSelection = useMemo(
     () =>
@@ -75,6 +83,8 @@ export function JobsTable({
         selectedIds={selectedIds}
         onToggleSelection={onToggleSelection}
         northStar={northStar}
+        billingSummaries={billingSummaries}
+        matchReasons={matchReasons}
       />
 
       <div
@@ -154,6 +164,40 @@ export function JobsTable({
                       >
                         {job.jobNumber}
                       </Link>
+                    }
+                    secondary={
+                      <>
+                        {(() => {
+                          const documentLine = formatJobDocumentReferencesLine({
+                            estimateNumbers: (
+                              billingSummaries?.estimatesByJobId[job.id] ?? []
+                            ).map((estimate) => estimate.estimateNumber),
+                            invoiceNumbers: (
+                              billingSummaries?.invoicesByJobId[job.id] ?? []
+                            ).map((invoice) => invoice.invoiceNumber),
+                          });
+                          if (!documentLine) return null;
+                          return (
+                            <AltairTableSecondaryText
+                              className={
+                                northStar
+                                  ? lt.tableMutedText
+                                  : "text-xs text-slate-500"
+                              }
+                            >
+                              {documentLine}
+                            </AltairTableSecondaryText>
+                          );
+                        })()}
+                        <SearchMatchReason
+                          reason={matchReasons?.[job.id]}
+                          className={
+                            northStar
+                              ? `mt-0.5 ${lt.tableMutedText}`
+                              : "mt-0.5 text-xs text-slate-500"
+                          }
+                        />
+                      </>
                     }
                   />
                   <AltairTableCell

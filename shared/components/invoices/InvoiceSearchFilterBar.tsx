@@ -72,10 +72,18 @@ export function InvoiceSearchFilterBar({
             }`}
           />
           <input
+            id="invoices-search"
             type="search"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by invoice #, customer, status, job, or total..."
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                onSearchChange("");
+              }
+            }}
+            placeholder="Search invoices, jobs, estimates, customers…"
+            aria-label="Search invoices"
             className={searchInputClass}
           />
         </div>

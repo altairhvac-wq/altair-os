@@ -44,6 +44,14 @@ import {
   type InvoiceStatus,
 } from "@/shared/types/invoice";
 import type { JobStatus } from "@/shared/types/job";
+import {
+  buildJobLinkedInvoiceNumber,
+  extractJobReferenceCore,
+  parseChildDocumentSequence,
+} from "@/shared/lib/documents/document-numbers";
+import type { InvoiceDocumentRef } from "@/shared/lib/documents/document-refs";
+
+export type { InvoiceDocumentRef };
 
 type CustomerSummary = {
   name: string;
@@ -185,7 +193,9 @@ function mapInvoiceRowToInvoiceDetail(
   };
 }
 
-async function generateInvoiceNumber(
+const DOCUMENT_NUMBER_INSERT_RETRIES = 5;
+
+async function generateStandaloneInvoiceNumber(
   companyId: string,
   db?: DbClient,
 ): Promise<string> {
@@ -206,6 +216,68 @@ async function generateInvoiceNumber(
   }
 
   return `INV-${1050 + (count ?? 0)}`;
+}
+
+async function generateJobLinkedInvoiceNumberValue(
+  companyId: string,
+  jobNumber: string,
+  db?: DbClient,
+): Promise<string | null> {
+  const core = extractJobReferenceCore(jobNumber);
+  if (!core) return null;
+
+  const supabase = await resolveDbClient(db);
+  const prefix = `INV-${core}-`;
+
+  const { data, error } = await supabase
+    .from("invoices")
+    .select("invoice_number")
+    .eq("company_id", companyId)
+    .like("invoice_number", `${prefix}%`);
+
+  if (error) {
+    console.error("[generateInvoiceNumber] job-linked lookup failed:", {
+      companyId,
+      jobNumber,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  let maxSequence = 0;
+  for (const row of data ?? []) {
+    const sequence = parseChildDocumentSequence(
+      row.invoice_number,
+      "invoice",
+      core,
+    );
+    if (sequence && sequence > maxSequence) {
+      maxSequence = sequence;
+    }
+  }
+
+  return buildJobLinkedInvoiceNumber(jobNumber, maxSequence + 1);
+}
+
+async function generateInvoiceNumber(
+  companyId: string,
+  options?: {
+    jobNumber?: string | null;
+    db?: DbClient;
+  },
+): Promise<string> {
+  const jobNumber = options?.jobNumber?.trim();
+  if (jobNumber) {
+    const linked = await generateJobLinkedInvoiceNumberValue(
+      companyId,
+      jobNumber,
+      options?.db,
+    );
+    if (linked) return linked;
+  }
+
+  return generateStandaloneInvoiceNumber(companyId, options?.db);
 }
 
 function computeTotals(
@@ -348,12 +420,12 @@ async function validateJob(
   companyId: string,
   customerId: string,
   jobId: string,
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; jobNumber?: string }> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("jobs")
-    .select("id, customer_id, status")
+    .select("id, customer_id, status, job_number")
     .eq("company_id", companyId)
     .eq("id", jobId)
     .maybeSingle();
@@ -383,7 +455,7 @@ async function validateJob(
     return { error: jobBlockReason };
   }
 
-  return { error: null };
+  return { error: null, jobNumber: data.job_number };
 }
 
 async function validateEstimateForInvoiceLink(
@@ -479,6 +551,35 @@ export const listInvoices = cache(async function listInvoices(
 
   return ((data ?? []) as InvoiceRowWithRelations[]).map(mapInvoiceRowToInvoice);
 });
+
+/** Lightweight refs for relationship-aware search (no line items / totals). */
+export async function listInvoiceDocumentRefs(
+  companyId: string,
+): Promise<InvoiceDocumentRef[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("invoices")
+    .select("id, invoice_number, estimate_id, job_id")
+    .eq("company_id", companyId)
+    .is("deleted_at", null);
+
+  if (error) {
+    console.error("[listInvoiceDocumentRefs] query failed:", {
+      companyId,
+      code: error.code,
+      message: error.message,
+    });
+    return [];
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    invoiceNumber: row.invoice_number,
+    estimateId: row.estimate_id ?? undefined,
+    jobId: row.job_id ?? undefined,
+  }));
+}
 
 export type ListInvoicesByCustomerOptions = {
   includeArchived?: boolean;
@@ -1022,6 +1123,7 @@ export async function createInvoice(
     return { invoice: null, error: customerValidation.error };
   }
 
+  let linkedJobNumber: string | undefined;
   if (data.jobId?.trim()) {
     const jobValidation = await validateJob(
       companyId,
@@ -1031,6 +1133,7 @@ export async function createInvoice(
     if (jobValidation.error) {
       return { invoice: null, error: jobValidation.error };
     }
+    linkedJobNumber = jobValidation.jobNumber;
   }
 
   if (data.estimateId?.trim()) {
@@ -1055,34 +1158,58 @@ export async function createInvoice(
   }
 
   const supabase = await resolveDbClient(db);
-  const invoiceNumber = await generateInvoiceNumber(companyId, db);
-  const insert = mapInvoiceFormDataToInsert(
-    companyId,
-    invoiceNumber,
-    {
-      ...data,
-      lineItems: validLineItems,
-    },
-    timeZone,
-  );
+  let row: { id: string } | null = null;
+  let insertError: { code?: string; message?: string; details?: string; hint?: string } | null =
+    null;
 
-  const { data: row, error } = await supabase
-    .from("invoices")
-    .insert(insert)
-    .select("id")
-    .single();
+  for (let attempt = 0; attempt < DOCUMENT_NUMBER_INSERT_RETRIES; attempt += 1) {
+    const invoiceNumber = await generateInvoiceNumber(companyId, {
+      jobNumber: linkedJobNumber,
+      db,
+    });
+    const insert = mapInvoiceFormDataToInsert(
+      companyId,
+      invoiceNumber,
+      {
+        ...data,
+        lineItems: validLineItems,
+      },
+      timeZone,
+    );
 
-  if (error || !row) {
+    const { data: inserted, error } = await supabase
+      .from("invoices")
+      .insert(insert)
+      .select("id")
+      .single();
+
+    if (!error && inserted) {
+      row = inserted;
+      insertError = null;
+      break;
+    }
+
+    insertError = error;
+    if (error?.code === "23505" && attempt < DOCUMENT_NUMBER_INSERT_RETRIES - 1) {
+      continue;
+    }
+
+    break;
+  }
+
+  if (insertError || !row) {
     console.error("[createInvoice] insert failed:", {
       companyId,
-      code: error?.code,
-      message: error?.message,
-      details: error?.details,
-      hint: error?.hint,
+      code: insertError?.code,
+      message: insertError?.message,
+      details: insertError?.details,
+      hint: insertError?.hint,
     });
     return {
       invoice: null,
-      error: error ? mapDatabaseError(error) : "Failed to create invoice.",
+      error: insertError
+        ? mapDatabaseError(insertError)
+        : "Failed to create invoice.",
     };
   }
 

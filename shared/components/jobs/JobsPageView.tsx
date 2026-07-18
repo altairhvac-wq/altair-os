@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
@@ -75,6 +82,11 @@ import { JobsTable } from "./JobsTable";
 import { JobsNorthStarMobileOwnerView } from "./JobsNorthStarMobileOwnerView";
 import { JobsTodayCardList } from "./JobsTodayCardList";
 import { JobsViewTabs } from "./JobsViewTabs";
+import {
+  buildJobSearchFields,
+  rankAndSortRecords,
+} from "@/shared/lib/search";
+import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
 
 type PanelMode = "create" | "empty";
 
@@ -92,6 +104,7 @@ type JobsPageViewProps = {
   initialStatusFilter?: JobStatus | "all";
   initialPriorityFilter?: JobPriority | "all";
   initialUnassignedOnly?: boolean;
+  billingSummaries?: JobBillingSummariesByJobId;
 };
 
 function filterCustomers(customers: Customer[], search: string): Customer[] {
@@ -128,10 +141,12 @@ export function JobsPageView({
   initialStatusFilter = "all",
   initialPriorityFilter = "all",
   initialUnassignedOnly = false,
+  billingSummaries,
 }: JobsPageViewProps) {
   const [jobs, setJobs] = useState(initialJobs);
   const [todayJobs, setTodayJobs] = useState(initialTodayJobs);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [viewTab, setViewTab] = useState<JobsViewTab>(initialViewTab);
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">(
     initialStatusFilter,
@@ -271,41 +286,90 @@ export function JobsPageView({
     [todayJobs, lifecycleFilter],
   );
 
-  const filteredTodayJobs = useMemo(
-    () =>
-      sortJobsForOwnerView(
-        filterJobsByPageFilters(
-          lifecycleFilteredTodayJobs,
-          statusFilter,
-          priorityFilter,
-          unassignedOnly,
-          { matchDispatchInProgressCard: true },
-        ),
-      ),
-    [
+  const customersById = useMemo(
+    () => new Map(customers.map((customer) => [customer.id, customer])),
+    [customers],
+  );
+
+  const applyJobSearch = useCallback(
+    (sourceJobs: Job[]) => {
+      const query = deferredSearch.trim();
+      if (!query) {
+        return {
+          items: sortJobsForOwnerView(sourceJobs),
+          matchReasons: {} as Record<string, string>,
+        };
+      }
+
+      const ranked = rankAndSortRecords(sourceJobs, query, (job) =>
+        buildJobSearchFields(job, customersById.get(job.customerId), {
+          estimateNumbers: (
+            billingSummaries?.estimatesByJobId[job.id] ?? []
+          ).map((estimate) => estimate.estimateNumber),
+          invoiceNumbers: (
+            billingSummaries?.invoicesByJobId[job.id] ?? []
+          ).map((invoice) => invoice.invoiceNumber),
+        }),
+      );
+
+      const matchReasons: Record<string, string> = {};
+      for (const entry of ranked) {
+        if (entry.match.reason) {
+          matchReasons[entry.record.id] = entry.match.reason;
+        }
+      }
+
+      return {
+        items: ranked.map((entry) => entry.record),
+        matchReasons,
+      };
+    },
+    [billingSummaries, customersById, deferredSearch],
+  );
+
+  const filteredTodayResult = useMemo(() => {
+    const filtered = filterJobsByPageFilters(
       lifecycleFilteredTodayJobs,
       statusFilter,
       priorityFilter,
       unassignedOnly,
-    ],
-  );
+      { matchDispatchInProgressCard: true },
+    );
+    return applyJobSearch(filtered);
+  }, [
+    applyJobSearch,
+    lifecycleFilteredTodayJobs,
+    statusFilter,
+    priorityFilter,
+    unassignedOnly,
+  ]);
 
-  const filteredAllJobs = useMemo(
-    () =>
-      sortJobsForOwnerView(
-        filterJobsByPageFilters(
-          lifecycleFilteredJobs,
-          statusFilter,
-          priorityFilter,
-          unassignedOnly,
-        ),
-      ),
-    [lifecycleFilteredJobs, statusFilter, priorityFilter, unassignedOnly],
-  );
+  const filteredAllResult = useMemo(() => {
+    const filtered = filterJobsByPageFilters(
+      lifecycleFilteredJobs,
+      statusFilter,
+      priorityFilter,
+      unassignedOnly,
+    );
+    return applyJobSearch(filtered);
+  }, [
+    applyJobSearch,
+    lifecycleFilteredJobs,
+    statusFilter,
+    priorityFilter,
+    unassignedOnly,
+  ]);
+
+  const filteredTodayJobs = filteredTodayResult.items;
+  const filteredAllJobs = filteredAllResult.items;
+  const searchMatchReasons =
+    viewTab === "today"
+      ? filteredTodayResult.matchReasons
+      : filteredAllResult.matchReasons;
 
   const filteredCustomers = useMemo(
-    () => filterCustomers(customers, search),
-    [customers, search],
+    () => filterCustomers(customers, deferredSearch),
+    [customers, deferredSearch],
   );
 
   const visibleJobs = useMemo(
@@ -313,7 +377,7 @@ export function JobsPageView({
     [filteredAllJobs, filteredTodayJobs, viewTab],
   );
 
-  const isSearching = search.trim().length > 0;
+  const isSearching = deferredSearch.trim().length > 0;
   const selectionEnabled = canDispatchJobs && !isSearching;
   const {
     selectedIds,
@@ -693,8 +757,8 @@ export function JobsPageView({
   }
 
   const hasNoJobs = jobs.length === 0;
-  const showCustomerSearch = isSearching && customers.length > 0;
-  const showCustomerSearchUnavailable = isSearching && customers.length === 0;
+  const showCustomerMatches =
+    isSearching && customers.length > 0 && filteredCustomers.length > 0;
 
   const hasActiveFilters = hasActiveJobsPageFilters({
     viewTab,
@@ -704,14 +768,14 @@ export function JobsPageView({
   });
 
   const subtitle = isSearching
-    ? "Customer search"
+    ? `${visibleJobs.length} matching job${visibleJobs.length === 1 ? "" : "s"}`
     : viewTab === "today"
       ? hasActiveFilters
         ? `${filteredTodayJobs.length} of ${activeTodayCount} today`
         : `${activeTodayCount} scheduled today`
       : `${activeAllCount} total jobs`;
 
-  const showJobList = !isSearching && !hasNoJobs;
+  const showJobList = !hasNoJobs;
   const northStar = isNorthStarShellEnabled();
   const bulkSelectAllControl =
     selectionEnabled && selectionState.selectableCount > 0 && showJobList
@@ -725,15 +789,23 @@ export function JobsPageView({
         }
       : undefined;
 
-  function renderMainContent() {
-    if (showCustomerSearch) {
-      if (filteredCustomers.length === 0) {
-        return (
-          <JobsEmptyState variant="no-customer-search-results" northStar={northStar} />
-        );
-      }
+  function renderCustomerMatches() {
+    if (!showCustomerMatches) return null;
 
-      return (
+    return (
+      <section
+        className="mt-4 border-t border-slate-100 pt-4"
+        aria-label="Matching customers"
+      >
+        <p
+          className={
+            northStar
+              ? `mb-2 px-1 text-xs font-semibold uppercase tracking-[0.08em] ${lt.tableMutedText}`
+              : "mb-2 px-1 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500"
+          }
+        >
+          Customers
+        </p>
         <ul
           className={
             northStar
@@ -750,19 +822,11 @@ export function JobsPageView({
             </li>
           ))}
         </ul>
-      );
-    }
+      </section>
+    );
+  }
 
-    if (showCustomerSearchUnavailable) {
-      return (
-        <JobsEmptyState
-          variant="no-company-customers"
-          canAddCustomer={canManageCustomers}
-          northStar={northStar}
-        />
-      );
-    }
-
+  function renderMainContent() {
     if (viewTab === "today") {
       if (hasNoJobs) {
         return (
@@ -785,7 +849,12 @@ export function JobsPageView({
       }
 
       if (filteredTodayJobs.length === 0) {
-        return <JobsEmptyState variant="no-results" northStar={northStar} />;
+        return (
+          <>
+            <JobsEmptyState variant="no-results" northStar={northStar} />
+            {renderCustomerMatches()}
+          </>
+        );
       }
 
       return (
@@ -797,6 +866,8 @@ export function JobsPageView({
             selectedIds={selectedIds}
             onToggleSelection={handleToggleJobSelection}
             northStar={northStar}
+            billingSummaries={billingSummaries}
+            matchReasons={searchMatchReasons}
           />
           {selectionEnabled && lifecycleFilter === "active" ? (
             <JobsBulkActionBar
@@ -811,6 +882,7 @@ export function JobsPageView({
             />
           ) : null}
           {lifecycleBulkBar}
+          {renderCustomerMatches()}
         </>
       );
     }
@@ -826,7 +898,12 @@ export function JobsPageView({
     }
 
     if (filteredAllJobs.length === 0) {
-      return <JobsEmptyState variant="no-results" />;
+      return (
+        <>
+          <JobsEmptyState variant="no-results" northStar={northStar} />
+          {renderCustomerMatches()}
+        </>
+      );
     }
 
     return (
@@ -840,6 +917,8 @@ export function JobsPageView({
           onToggleSelection={handleToggleJobSelection}
           onToggleAllVisible={handleToggleAllVisibleSelection}
           northStar={northStar}
+          billingSummaries={billingSummaries}
+          matchReasons={searchMatchReasons}
         />
         {selectionEnabled && lifecycleFilter === "active" ? (
           <JobsBulkActionBar
@@ -854,6 +933,7 @@ export function JobsPageView({
           />
         ) : null}
         {lifecycleBulkBar}
+        {renderCustomerMatches()}
       </>
     );
   }

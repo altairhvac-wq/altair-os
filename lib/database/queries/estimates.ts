@@ -28,6 +28,11 @@ import {
   type EstimateLineItem,
   type EstimateStatus,
 } from "@/shared/types/estimate";
+import {
+  buildJobLinkedEstimateNumber,
+  extractJobReferenceCore,
+  parseChildDocumentSequence,
+} from "@/shared/lib/documents/document-numbers";
 
 type CustomerSummary = {
   name: string;
@@ -175,7 +180,9 @@ function mapEstimateRowToEstimateDetail(
   };
 }
 
-async function generateEstimateNumber(
+const DOCUMENT_NUMBER_INSERT_RETRIES = 5;
+
+async function generateStandaloneEstimateNumber(
   companyId: string,
   db?: DbClient,
 ): Promise<string> {
@@ -196,6 +203,68 @@ async function generateEstimateNumber(
   }
 
   return `EST-${1050 + (count ?? 0)}`;
+}
+
+async function generateJobLinkedEstimateNumberValue(
+  companyId: string,
+  jobNumber: string,
+  db?: DbClient,
+): Promise<string | null> {
+  const core = extractJobReferenceCore(jobNumber);
+  if (!core) return null;
+
+  const supabase = await resolveDbClient(db);
+  const prefix = `EST-${core}-`;
+
+  const { data, error } = await supabase
+    .from("estimates")
+    .select("estimate_number")
+    .eq("company_id", companyId)
+    .like("estimate_number", `${prefix}%`);
+
+  if (error) {
+    console.error("[generateEstimateNumber] job-linked lookup failed:", {
+      companyId,
+      jobNumber,
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+
+  let maxSequence = 0;
+  for (const row of data ?? []) {
+    const sequence = parseChildDocumentSequence(
+      row.estimate_number,
+      "estimate",
+      core,
+    );
+    if (sequence && sequence > maxSequence) {
+      maxSequence = sequence;
+    }
+  }
+
+  return buildJobLinkedEstimateNumber(jobNumber, maxSequence + 1);
+}
+
+async function generateEstimateNumber(
+  companyId: string,
+  options?: {
+    jobNumber?: string | null;
+    db?: DbClient;
+  },
+): Promise<string> {
+  const jobNumber = options?.jobNumber?.trim();
+  if (jobNumber) {
+    const linked = await generateJobLinkedEstimateNumberValue(
+      companyId,
+      jobNumber,
+      options?.db,
+    );
+    if (linked) return linked;
+  }
+
+  return generateStandaloneEstimateNumber(companyId, options?.db);
 }
 
 function computeTotals(
@@ -306,12 +375,12 @@ async function validateJob(
   companyId: string,
   customerId: string,
   jobId: string,
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; jobNumber?: string }> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("jobs")
-    .select("id, customer_id, status")
+    .select("id, customer_id, status, job_number")
     .eq("company_id", companyId)
     .eq("id", jobId)
     .maybeSingle();
@@ -341,7 +410,7 @@ async function validateJob(
     return { error: jobBlockReason };
   }
 
-  return { error: null };
+  return { error: null, jobNumber: data.job_number };
 }
 
 export type ListEstimatesOptions = {
@@ -650,6 +719,7 @@ export async function createEstimate(
     return { estimate: null, error: customerValidation.error };
   }
 
+  let linkedJobNumber: string | undefined;
   if (data.jobId?.trim()) {
     const jobValidation = await validateJob(
       companyId,
@@ -659,6 +729,7 @@ export async function createEstimate(
     if (jobValidation.error) {
       return { estimate: null, error: jobValidation.error };
     }
+    linkedJobNumber = jobValidation.jobNumber;
   }
 
   const serviceItemValidation = await validateServiceItemIdsBelongToCompany(
@@ -670,34 +741,58 @@ export async function createEstimate(
   }
 
   const supabase = await resolveDbClient(db);
-  const estimateNumber = await generateEstimateNumber(companyId, db);
-  const insert = mapEstimateFormDataToInsert(
-    companyId,
-    estimateNumber,
-    {
-      ...data,
-      lineItems: validLineItems,
-    },
-    timeZone,
-  );
+  let row: EstimateRow | null = null;
+  let insertError: { code?: string; message?: string; details?: string; hint?: string } | null =
+    null;
 
-  const { data: row, error } = await supabase
-    .from("estimates")
-    .insert(insert)
-    .select("*")
-    .single();
+  for (let attempt = 0; attempt < DOCUMENT_NUMBER_INSERT_RETRIES; attempt += 1) {
+    const estimateNumber = await generateEstimateNumber(companyId, {
+      jobNumber: linkedJobNumber,
+      db,
+    });
+    const insert = mapEstimateFormDataToInsert(
+      companyId,
+      estimateNumber,
+      {
+        ...data,
+        lineItems: validLineItems,
+      },
+      timeZone,
+    );
 
-  if (error || !row) {
+    const { data: inserted, error } = await supabase
+      .from("estimates")
+      .insert(insert)
+      .select("*")
+      .single();
+
+    if (!error && inserted) {
+      row = inserted as EstimateRow;
+      insertError = null;
+      break;
+    }
+
+    insertError = error;
+    if (error?.code === "23505" && attempt < DOCUMENT_NUMBER_INSERT_RETRIES - 1) {
+      continue;
+    }
+
+    break;
+  }
+
+  if (insertError || !row) {
     console.error("[createEstimate] insert failed:", {
       companyId,
-      code: error?.code,
-      message: error?.message,
-      details: error?.details,
-      hint: error?.hint,
+      code: insertError?.code,
+      message: insertError?.message,
+      details: insertError?.details,
+      hint: insertError?.hint,
     });
     return {
       estimate: null,
-      error: error ? mapDatabaseError(error) : "Failed to create estimate.",
+      error: insertError
+        ? mapDatabaseError(insertError)
+        : "Failed to create estimate.",
     };
   }
 

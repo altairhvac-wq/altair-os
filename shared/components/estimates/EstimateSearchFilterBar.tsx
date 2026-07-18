@@ -64,10 +64,18 @@ export function EstimateSearchFilterBar({
             }`}
           />
           <input
+            id="estimates-search"
             type="search"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by estimate #, customer, status, or total..."
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                onSearchChange("");
+              }
+            }}
+            placeholder="Search estimates, jobs, invoices, customers…"
+            aria-label="Search estimates"
             className={searchInputClass}
           />
         </div>

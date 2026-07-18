@@ -20,6 +20,9 @@ import {
   AltairTableSecondaryText,
 } from "@/shared/design-system/table";
 import { BillingWorkflowSectionHeader } from "@/shared/components/billing/BillingWorkflowSectionHeader";
+import { SearchMatchReason } from "@/shared/components/search/SearchMatchReason";
+import { formatEstimateRelationshipLine } from "@/shared/lib/documents/relationship-labels";
+import type { Job } from "@/shared/types/job";
 import { EstimateStatusBadge } from "./EstimateStatusBadge";
 import { EstimatesMobileCardList } from "./EstimatesMobileCardList";
 
@@ -47,6 +50,8 @@ type EstimatesTableProps = {
   onToggleSelection?: (estimateId: string) => void;
   onToggleAllVisible?: (selectAll: boolean) => void;
   northStar?: boolean;
+  jobsById?: Map<string, Job>;
+  matchReasons?: Record<string, string>;
 };
 
 export function EstimatesTable({
@@ -59,6 +64,8 @@ export function EstimatesTable({
   onToggleSelection,
   onToggleAllVisible,
   northStar = false,
+  jobsById,
+  matchReasons,
 }: EstimatesTableProps) {
   const visibleEstimates = useMemo(
     () => sections.flatMap((section) => section.items),
@@ -86,6 +93,8 @@ export function EstimatesTable({
         selectedIds={selectedIds}
         onToggleSelection={onToggleSelection}
         northStar={northStar}
+        jobsById={jobsById}
+        matchReasons={matchReasons}
       />
 
       <div
@@ -189,13 +198,31 @@ export function EstimatesTable({
                           </Link>
                         }
                         secondary={
-                          <AltairTableSecondaryText
-                            className={
-                              northStar ? lt.tableMutedText : "text-xs text-slate-500"
-                            }
-                          >
-                            {formatDate(estimate.createdAt)}
-                          </AltairTableSecondaryText>
+                          <>
+                            <AltairTableSecondaryText
+                              className={
+                                northStar
+                                  ? lt.tableMutedText
+                                  : "text-xs text-slate-500"
+                              }
+                            >
+                              {formatEstimateRelationshipLine({
+                                jobNumber: estimate.jobNumber,
+                                customerName: estimate.customerName,
+                                serviceAddress: estimate.jobId
+                                  ? jobsById?.get(estimate.jobId)?.serviceAddress
+                                  : undefined,
+                              })}
+                            </AltairTableSecondaryText>
+                            <SearchMatchReason
+                              reason={matchReasons?.[estimate.id]}
+                              className={
+                                northStar
+                                  ? `mt-0.5 ${lt.tableMutedText}`
+                                  : "mt-0.5 text-xs text-slate-500"
+                              }
+                            />
+                          </>
                         }
                       />
                       <AltairTableCell>

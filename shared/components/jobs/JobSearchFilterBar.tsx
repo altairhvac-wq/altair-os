@@ -80,10 +80,18 @@ export function JobSearchFilterBar({
             }`}
           />
           <input
+            id="jobs-search"
             type="search"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search customer…"
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                onSearchChange("");
+              }
+            }}
+            placeholder="Search jobs, customers, estimates, invoices…"
+            aria-label="Search jobs"
             className={searchInputClass}
           />
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useDeferredValue, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
@@ -47,7 +47,6 @@ import type { Customer } from "@/shared/types/customer";
 import type { Job } from "@/shared/types/job";
 import type { ServiceItem } from "@/shared/types/service-item";
 import {
-  formatInvoiceStatus,
   type Invoice,
   type InvoiceFormData,
   type InvoiceLifecycleState,
@@ -59,7 +58,6 @@ import {
   type InvoicePageFocusState,
 } from "@/shared/lib/invoice-page-focus";
 import { prepareInvoicesForListView } from "@/shared/lib/invoice-workflow-list";
-import { formatCurrency } from "@/shared/types/customer";
 import {
   MasterListPageLayout,
   MasterPageSurface,
@@ -82,6 +80,10 @@ import {
   sortInvoicesForWorkQueue,
   type InvoiceWorkQueue,
 } from "./invoice-work-queues";
+import {
+  buildInvoiceSearchFields,
+  rankAndSortRecords,
+} from "@/shared/lib/search";
 
 type PanelMode = "create" | "empty";
 
@@ -106,39 +108,52 @@ function filterInvoices(
   search: string,
   statusFilter: InvoiceListStatusFilter,
   lifecycleFilter: InvoiceLifecycleState,
+  customersById: Map<string, Customer>,
+  jobsById: Map<string, Job>,
   jobIdFilter?: string,
   prioritizeCashFlow = false,
-): Invoice[] {
-  const query = search.trim().toLowerCase();
-
-  const filtered = invoices.filter((invoice) => {
+): { items: Invoice[]; matchReasons: Record<string, string> } {
+  const scoped = invoices.filter((invoice) => {
     const matchesLifecycle =
       getInvoiceLifecycleState(invoice) === lifecycleFilter;
     const matchesJob = !jobIdFilter || invoice.jobId === jobIdFilter;
     const matchesStatus = matchesInvoiceListStatusFilter(invoice, statusFilter);
-
-    if (!matchesLifecycle || !matchesJob || !matchesStatus) return false;
-    if (!query) return true;
-
-    const haystack = [
-      invoice.invoiceNumber,
-      invoice.customerName,
-      formatInvoiceStatus(invoice.status),
-      invoice.status,
-      invoice.jobNumber,
-      invoice.estimateNumber,
-      formatCurrency(invoice.total),
-      String(invoice.total),
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(query);
+    return matchesLifecycle && matchesJob && matchesStatus;
   });
 
-  return prioritizeCashFlow
-    ? sortInvoicesForCashFlowFocus(filtered)
-    : filtered;
+  const query = search.trim();
+  if (!query) {
+    const items = prioritizeCashFlow
+      ? sortInvoicesForCashFlowFocus(scoped)
+      : scoped;
+    return { items, matchReasons: {} };
+  }
+
+  const ranked = rankAndSortRecords(scoped, query, (invoice) => {
+    const job = invoice.jobId ? jobsById.get(invoice.jobId) : undefined;
+    return buildInvoiceSearchFields(
+      invoice,
+      customersById.get(invoice.customerId),
+      job
+        ? [job.serviceAddress, job.city, job.state, job.zip]
+            .filter(Boolean)
+            .join(", ")
+        : undefined,
+    );
+  });
+
+  const matchReasons: Record<string, string> = {};
+  for (const entry of ranked) {
+    if (entry.match.reason) {
+      matchReasons[entry.record.id] = entry.match.reason;
+    }
+  }
+
+  const items = ranked.map((entry) => entry.record);
+  return {
+    items: prioritizeCashFlow ? sortInvoicesForCashFlowFocus(items) : items,
+    matchReasons,
+  };
 }
 
 export function InvoicesPageView({
@@ -158,6 +173,7 @@ export function InvoicesPageView({
 }: InvoicesPageViewProps) {
   const [invoices, setInvoices] = useState(initialInvoices);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [workQueue, setWorkQueue] = useState<InvoiceWorkQueue>("needs-action");
   const [statusFilter, setStatusFilter] =
     useState<InvoiceListStatusFilter>(initialStatusFilter);
@@ -225,25 +241,40 @@ export function InvoicesPageView({
     [invoices, workQueue],
   );
 
-  const filteredInvoices = useMemo(
+  const customersById = useMemo(
+    () => new Map(customers.map((customer) => [customer.id, customer])),
+    [customers],
+  );
+  const jobsForSearchById = useMemo(
+    () => new Map(jobs.map((job) => [job.id, job])),
+    [jobs],
+  );
+
+  const filteredInvoiceResult = useMemo(
     () =>
       filterInvoices(
         queueScopedInvoices,
-        search,
+        deferredSearch,
         statusFilter,
         lifecycleFilter,
+        customersById,
+        jobsForSearchById,
         initialJobId,
         prioritizeCashFlow,
       ),
     [
       queueScopedInvoices,
-      search,
+      deferredSearch,
       statusFilter,
       lifecycleFilter,
+      customersById,
+      jobsForSearchById,
       initialJobId,
       prioritizeCashFlow,
     ],
   );
+  const filteredInvoices = filteredInvoiceResult.items;
+  const searchMatchReasons = filteredInvoiceResult.matchReasons;
 
   const invoiceListPresentation = useMemo(() => {
     if (workQueue === "needs-action") {
@@ -754,6 +785,7 @@ export function InvoicesPageView({
               onToggleSelection={handleToggleInvoiceSelection}
               onToggleAllVisible={handleToggleAllVisibleSelection}
               northStar={northStar}
+              matchReasons={searchMatchReasons}
             />
           )}
 

@@ -7,7 +7,10 @@ import {
 } from "@/shared/types/job";
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
+import { SearchMatchReason } from "@/shared/components/search/SearchMatchReason";
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import { formatJobDocumentReferencesLine } from "@/shared/lib/documents/relationship-labels";
+import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
 
@@ -18,6 +21,8 @@ type JobsTodayCardListProps = {
   selectedIds?: ReadonlySet<string>;
   onToggleSelection?: (jobId: string) => void;
   northStar?: boolean;
+  billingSummaries?: JobBillingSummariesByJobId;
+  matchReasons?: Record<string, string>;
 };
 
 export function JobsTodayCardList({
@@ -27,6 +32,8 @@ export function JobsTodayCardList({
   selectedIds,
   onToggleSelection,
   northStar = false,
+  billingSummaries,
+  matchReasons,
 }: JobsTodayCardListProps) {
   return (
     <ul
@@ -116,6 +123,36 @@ export function JobsTodayCardList({
                   >
                     {job.assignedTechnician ?? "Unassigned"}
                   </p>
+                  {(() => {
+                    const documentLine = formatJobDocumentReferencesLine({
+                      estimateNumbers: (
+                        billingSummaries?.estimatesByJobId[job.id] ?? []
+                      ).map((estimate) => estimate.estimateNumber),
+                      invoiceNumbers: (
+                        billingSummaries?.invoicesByJobId[job.id] ?? []
+                      ).map((invoice) => invoice.invoiceNumber),
+                    });
+                    if (!documentLine) return null;
+                    return (
+                      <p
+                        className={
+                          northStar
+                            ? `mt-0.5 truncate ${lt.tableMutedText}`
+                            : "mt-0.5 truncate text-xs text-slate-400"
+                        }
+                      >
+                        {documentLine}
+                      </p>
+                    );
+                  })()}
+                  <SearchMatchReason
+                    reason={matchReasons?.[job.id]}
+                    className={
+                      northStar
+                        ? `mt-0.5 ${lt.tableMutedText}`
+                        : "mt-0.5 text-xs text-slate-400"
+                    }
+                  />
                 </div>
 
                 <ChevronRight

@@ -11,6 +11,7 @@ import {
   listDeletedEstimates,
   listEstimates,
 } from "@/lib/database/queries/estimates";
+import { listInvoiceDocumentRefs } from "@/lib/database/queries/invoices";
 import { listJobs } from "@/lib/database/queries/jobs";
 import { listActiveServiceItems } from "@/lib/database/queries/service-items";
 import { EstimatesPageView } from "@/shared/components/estimates/EstimatesPageView";
@@ -51,13 +52,14 @@ export default async function EstimatesPage({
 
   const { customerId, create, leadId, jobId } = await searchParams;
 
-  const [estimates, deletedEstimates, customers, jobs, serviceItems] =
+  const [estimates, deletedEstimates, customers, jobs, serviceItems, invoiceDocumentRefs] =
     await Promise.all([
     listEstimates(companyContext.company.id, { includeArchived: true }),
     listDeletedEstimates(companyContext.company.id),
     listCustomers(companyContext.company.id),
     listJobs(companyContext.company.id),
     listActiveServiceItems(companyContext.company.id),
+    listInvoiceDocumentRefs(companyContext.company.id),
   ]);
 
   const preselectedCustomer = customerId
@@ -88,6 +90,7 @@ export default async function EstimatesPage({
       customers={customers}
       jobs={jobs}
       serviceItems={serviceItems}
+      invoiceDocumentRefs={invoiceDocumentRefs}
       canManageEstimates={companyContext.permissions.manageBilling}
       canManageCustomers={companyContext.permissions.manageCustomers}
       initialPanelMode={create === "1" && preselectedCustomer ? "create" : "empty"}

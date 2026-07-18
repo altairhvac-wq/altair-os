@@ -6,6 +6,7 @@ import { EstimateStatusActions } from "@/shared/components/estimates/EstimateSta
 import {
   northStarDetailTokens as dt,
 } from "@/shared/design-system/north-star/tokens";
+import { formatEstimateRelationshipLine } from "@/shared/lib/documents/relationship-labels";
 import type { BillingSignature } from "@/shared/types/billing-signature";
 
 type EstimateDetailNorthStarHeaderProps = {
@@ -104,6 +105,14 @@ export function EstimateDetailNorthStarHeader({
           </div>
 
           <div className={`mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 ${dt.heroMeta}`}>
+            <span>
+              {formatEstimateRelationshipLine({
+                jobNumber: estimate.jobNumber,
+                customerName: estimate.customerName,
+              })}
+            </span>
+          </div>
+          <div className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 ${dt.heroMeta}`}>
             <span>Created {formatDate(estimate.createdAt)}</span>
             {estimate.validUntil ? (
               <>
