@@ -1,10 +1,12 @@
 /**
- * Altair operations foundation.
+ * Altair operations foundation + execution framework.
  *
- * Structured logging, request correlation IDs, error taxonomy, and safe
- * serialization. Infrastructure only — no domain/business logic.
+ * Structured logging, request correlation IDs, error taxonomy, safe
+ * serialization, and a reusable operation executor. Infrastructure only —
+ * no domain/business logic.
  *
  * @see docs/altair/OPERATIONS_FOUNDATION.md
+ * @see docs/altair/OPERATIONS_EXECUTION_FRAMEWORK.md
  */
 
 export {
@@ -31,6 +33,8 @@ export {
   type AltairErrorOptions,
 } from "@/lib/operations/errors";
 
+export { runOperation } from "@/lib/operations/executor";
+
 export {
   logger,
   type LogFields,
@@ -39,12 +43,30 @@ export {
 } from "@/lib/operations/logger";
 
 export {
+  getOperationMetricsHooks,
+  onOperationFailed,
+  onOperationFinished,
+  onOperationStarted,
+  resetOperationMetricsHooks,
+  setOperationMetricsHooks,
+  type OperationMetricsFinishEvent,
+  type OperationMetricsHooks,
+  type OperationMetricsStartEvent,
+} from "@/lib/operations/metrics";
+
+export {
   createOperationContext,
   getOperationDurationMs,
   startOperation,
   withOperation,
   withOperationSync,
 } from "@/lib/operations/operation-context";
+
+export type {
+  OperationCallback,
+  OperationName,
+  RunOperationInput,
+} from "@/lib/operations/operation";
 
 export {
   createRequestId,
@@ -57,6 +79,17 @@ export {
   runWithRequestContext,
   updateRequestContext,
 } from "@/lib/operations/request-context";
+
+export {
+  operationFailure,
+  operationSuccess,
+  type OperationResult,
+} from "@/lib/operations/result";
+
+export {
+  classifyRetryable,
+  isCategoryRetryable,
+} from "@/lib/operations/retry";
 
 export {
   redactMeta,
