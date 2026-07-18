@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Check, Circle, Minus } from "lucide-react";
 import type {
@@ -13,6 +12,7 @@ import {
   type JobWorkflowStageDestination,
   type JobWorkflowStageDestinationContext,
 } from "@/shared/lib/jobs/job-workflow-stage-destinations";
+import type { JobWorkflowDocument } from "@/shared/lib/jobs/job-workflow-documents";
 import { scrollToJobDetailSection } from "@/shared/lib/jobs/job-detail-scroll";
 import {
   jobDetailMutedTextClass,
@@ -25,6 +25,10 @@ type JobWorkflowTimelineProps = {
   stages: CanonicalWorkflowStage[];
   progress?: Pick<JobWorkflowProgress, "percent" | "completedCount" | "totalCount">;
   destinationContext?: JobWorkflowStageDestinationContext;
+  onOpenDocument?: (
+    document: JobWorkflowDocument,
+    trigger: HTMLElement | null,
+  ) => void;
   northStar?: boolean;
   className?: string;
 };
@@ -128,20 +132,6 @@ function StageMarker({
   );
 }
 
-function navigateDestination(destination: JobWorkflowStageDestination) {
-  if (destination.kind === "section") {
-    scrollToJobDetailSection(destination.sectionId, {
-      updateHash: true,
-      focus: true,
-    });
-    return;
-  }
-
-  if (destination.kind === "route" || destination.kind === "action") {
-    window.location.assign(destination.href);
-  }
-}
-
 function destinationOpenLabel(destination: JobWorkflowStageDestination): string {
   if (destination.kind === "locked") {
     return destination.reason;
@@ -149,10 +139,6 @@ function destinationOpenLabel(destination: JobWorkflowStageDestination): string 
 
   if (destination.kind === "section") {
     return `Go to ${destination.label}`;
-  }
-
-  if (destination.kind === "action") {
-    return `Open ${destination.label}`;
   }
 
   return `Open ${destination.label}`;
@@ -164,12 +150,17 @@ function StageControl({
   northStar,
   explanationId,
   onExplain,
+  onOpenDocument,
 }: {
   stage: CanonicalWorkflowStage;
   destination: JobWorkflowStageDestination;
   northStar: boolean;
   explanationId: string;
   onExplain: (reason: string) => void;
+  onOpenDocument?: (
+    document: JobWorkflowDocument,
+    trigger: HTMLElement | null,
+  ) => void;
 }) {
   const accessibleName = `${stage.label}, ${STATE_LABEL[stage.state]}`;
   const interactiveClass = `group flex w-[4.75rem] shrink-0 flex-col items-center gap-1 rounded-md px-0.5 py-0.5 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 sm:w-auto sm:min-w-[4.5rem] sm:max-w-[5.5rem] ${
@@ -204,24 +195,24 @@ function StageControl({
     );
   }
 
-  if (destination.kind === "route" || destination.kind === "action") {
-    return (
-      <Link
-        href={destination.href}
-        className={`${interactiveClass} hover:bg-black/[0.03]`}
-        aria-label={`${accessibleName}. ${destinationOpenLabel(destination)}`}
-      >
-        {label}
-      </Link>
-    );
-  }
-
   return (
     <button
       type="button"
       className={`${interactiveClass} hover:bg-black/[0.03]`}
       aria-label={`${accessibleName}. ${destinationOpenLabel(destination)}`}
-      onClick={() => navigateDestination(destination)}
+      onClick={(event) => {
+        if (destination.kind === "section") {
+          scrollToJobDetailSection(destination.sectionId, {
+            updateHash: true,
+            focus: true,
+          });
+          return;
+        }
+
+        if (destination.kind === "document") {
+          onOpenDocument?.(destination.document, event.currentTarget);
+        }
+      }}
     >
       {label}
     </button>
@@ -232,6 +223,7 @@ export function JobWorkflowTimeline({
   stages,
   progress,
   destinationContext,
+  onOpenDocument,
   northStar = false,
   className,
 }: JobWorkflowTimelineProps) {
@@ -270,8 +262,12 @@ export function JobWorkflowTimeline({
     customerId: "",
     canViewBilling: false,
     canCreateEstimate: false,
+    canEditJob: false,
+    canAssignTechnician: false,
+    canUpdateStatus: false,
     estimates: [],
     invoices: [],
+    jobStatus: "scheduled",
   };
 
   return (
@@ -342,6 +338,7 @@ export function JobWorkflowTimeline({
                 northStar={northStar}
                 explanationId={explanationId}
                 onExplain={setLockedReason}
+                onOpenDocument={onOpenDocument}
               />
             </li>
           );

@@ -113,6 +113,7 @@ export function InvoiceForm({
     onSubmit({
       customerId,
       jobId: jobId.trim() || undefined,
+      estimateId: defaults.estimateId?.trim() || undefined,
       status: INVOICE_CREATE_STATUS,
       issueDate: String(form.get("issueDate") ?? defaults.issueDate),
       dueDate: String(form.get("dueDate") ?? defaults.dueDate),

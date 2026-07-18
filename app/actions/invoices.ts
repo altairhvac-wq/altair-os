@@ -5,7 +5,10 @@ import { canViewBilling } from "@/lib/database/access-control";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import { getCompanyBillingDefaultsFromRow } from "@/lib/database/queries/companies";
 import { NO_ACTIVE_COMPANY_MESSAGE } from "@/lib/database/errors";
-import { getEstimateById } from "@/lib/database/queries/estimates";
+import {
+  getEstimateById,
+  updateEstimateStatus,
+} from "@/lib/database/queries/estimates";
 import {
   convertEstimateToInvoice,
   createInvoice,
@@ -163,6 +166,56 @@ export async function createInvoiceAction(
     jobNumber: invoice.jobNumber,
   });
 
+  const linkedEstimateId = invoice.estimateId?.trim();
+  if (linkedEstimateId) {
+    const { error: estimateStatusError } = await updateEstimateStatus(
+      context.company.id,
+      linkedEstimateId,
+      "approved",
+      "converted",
+    );
+
+    if (!estimateStatusError) {
+      await Promise.all([
+        recordInvoiceConvertedFromEstimateActivity({
+          companyId: context.company.id,
+          invoiceId: invoice.id,
+          actorId: context.user.id,
+          invoiceNumber: invoice.invoiceNumber,
+          estimateId: linkedEstimateId,
+          estimateNumber: invoice.estimateNumber ?? "",
+          customerId: invoice.customerId,
+          jobId: invoice.jobId,
+          jobNumber: invoice.jobNumber,
+        }),
+        recordEstimateStatusChangedActivity({
+          companyId: context.company.id,
+          estimateId: linkedEstimateId,
+          actorId: context.user.id,
+          fromStatus: "approved",
+          toStatus: "converted",
+          customerId: invoice.customerId,
+          jobId: invoice.jobId,
+          jobNumber: invoice.jobNumber,
+          invoiceId: invoice.id,
+          invoiceNumber: invoice.invoiceNumber,
+          estimateNumber: invoice.estimateNumber,
+        }),
+      ]);
+      revalidatePath("/estimates");
+      revalidatePath(`/estimates/${linkedEstimateId}`);
+    } else {
+      console.error(
+        "[createInvoiceAction] estimate conversion status update failed:",
+        {
+          estimateId: linkedEstimateId,
+          invoiceId: invoice.id,
+          error: estimateStatusError,
+        },
+      );
+    }
+  }
+
   if (reviewSnapshotBefore && invoice.jobId && reviewJobStatus) {
     void trackJobReviewBlockerResolutions({
       companyId: context.company.id,
@@ -181,6 +234,10 @@ export async function createInvoiceAction(
   }
 
   revalidatePath("/invoices");
+  revalidatePath(`/invoices/${invoice.id}`);
+  if (invoice.jobId) {
+    revalidatePath(`/jobs/${invoice.jobId}`);
+  }
   return { invoice };
 }
 
@@ -280,6 +337,9 @@ export async function convertEstimateToInvoiceAction(
   revalidatePath("/estimates");
   revalidatePath(`/estimates/${estimateId}`);
   revalidatePath(`/invoices/${invoice.id}`);
+  if (invoice.jobId) {
+    revalidatePath(`/jobs/${invoice.jobId}`);
+  }
 
   return { invoice };
 }

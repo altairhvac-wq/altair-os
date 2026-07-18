@@ -157,6 +157,9 @@ export async function createEstimateAction(
 
   revalidatePath("/estimates");
   revalidatePath("/leads");
+  if (estimate.jobId) {
+    revalidatePath(`/jobs/${estimate.jobId}`);
+  }
   return { estimate };
 }
 

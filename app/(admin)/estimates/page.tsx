@@ -17,7 +17,12 @@ import { EstimatesPageView } from "@/shared/components/estimates/EstimatesPageVi
 import { getEstimateCreateInitialData } from "@/shared/lib/company-billing-defaults";
 
 type EstimatesPageProps = {
-  searchParams: Promise<{ customerId?: string; create?: string; leadId?: string }>;
+  searchParams: Promise<{
+    customerId?: string;
+    create?: string;
+    leadId?: string;
+    jobId?: string;
+  }>;
 };
 
 export default async function EstimatesPage({
@@ -44,7 +49,7 @@ export default async function EstimatesPage({
     );
   }
 
-  const { customerId, create, leadId } = await searchParams;
+  const { customerId, create, leadId, jobId } = await searchParams;
 
   const [estimates, deletedEstimates, customers, jobs, serviceItems] =
     await Promise.all([
@@ -58,11 +63,23 @@ export default async function EstimatesPage({
   const preselectedCustomer = customerId
     ? customers.find((customer) => customer.id === customerId)
     : undefined;
+  const preselectedJob =
+    jobId && preselectedCustomer
+      ? jobs.find(
+          (job) =>
+            job.id === jobId && job.customerId === preselectedCustomer.id,
+        )
+      : undefined;
   const billingDefaults = getCompanyBillingDefaultsFromRow(companyContext.company);
   const createInitialData = getEstimateCreateInitialData(
     billingDefaults,
     companyContext.company.timezone,
-    preselectedCustomer ? { customerId: preselectedCustomer.id } : undefined,
+    preselectedCustomer
+      ? {
+          customerId: preselectedCustomer.id,
+          ...(preselectedJob ? { jobId: preselectedJob.id } : {}),
+        }
+      : undefined,
   );
 
   return (

@@ -17,6 +17,8 @@ type JobBusinessActionGuideProps = {
   /** Continue an existing draft estimate (Finish/Send) without creating a new one. */
   onFieldFinishEstimateClick?: (estimateId: string) => void;
   onFieldApproveClick?: () => void;
+  /** When set, office CTAs open locally instead of navigating away. */
+  onOfficeCtaClick?: (action: JobBusinessAction) => void;
 };
 
 function matchesPresentation(
@@ -94,6 +96,7 @@ export function JobBusinessActionGuide({
   onFieldEstimateClick,
   onFieldFinishEstimateClick,
   onFieldApproveClick,
+  onOfficeCtaClick,
 }: JobBusinessActionGuideProps) {
   if (!action || !matchesPresentation(action, presentation)) {
     return null;
@@ -109,6 +112,7 @@ export function JobBusinessActionGuide({
   const finishEstimateId = action.estimateId;
   const useFieldApproveHandler =
     onFieldApproveClick && action.id === "approve_estimate_on_site";
+  const useOfficeCtaHandler = Boolean(onOfficeCtaClick) && action.kind === "cta";
 
   if (action.kind === "status") {
     return (
@@ -172,6 +176,15 @@ export function JobBusinessActionGuide({
         <button
           type="button"
           onClick={onFieldEstimateClick}
+          disabled={disabled}
+          className={ctaClassName(compact, action.emphasize)}
+        >
+          {ctaLabel}
+        </button>
+      ) : useOfficeCtaHandler && onOfficeCtaClick ? (
+        <button
+          type="button"
+          onClick={() => onOfficeCtaClick(action)}
           disabled={disabled}
           className={ctaClassName(compact, action.emphasize)}
         >

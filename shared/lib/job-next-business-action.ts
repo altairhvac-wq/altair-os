@@ -171,11 +171,20 @@ export function getJobNextBusinessAction(
         return null;
       }
 
+      const approvedEstimate =
+        estimates
+          .filter((estimate) => estimate.status === "approved")
+          .sort(
+            (left, right) =>
+              Date.parse(right.createdAt) - Date.parse(left.createdAt),
+          )[0] ?? null;
+
       return {
         id: "create_invoice",
         label: "Create Invoice",
         kind: "cta",
         emphasize: true,
+        estimateId: approvedEstimate?.id,
         href,
         hint: "Work is finished — create an invoice to bill the customer.",
       };

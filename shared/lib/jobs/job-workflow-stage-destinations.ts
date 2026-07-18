@@ -4,10 +4,6 @@
  */
 
 import {
-  createEstimateForCustomerHref,
-  createInvoiceForCustomerHref,
-} from "@/shared/lib/customers/customer-action-links";
-import {
   selectActiveEstimate,
   type JobEstimateSummary,
   type JobInvoiceSummary,
@@ -17,43 +13,14 @@ import type {
   CanonicalWorkflowStageId,
   JobWorkflowAvailableAction,
 } from "@/shared/lib/workflow";
-import {
-  JOB_DETAIL_ACTIVITY_ANCHOR,
-  JOB_DETAIL_DISPATCH_ANCHOR,
-  JOB_DETAIL_SCOPE_ANCHOR,
-} from "@/shared/lib/jobs/job-detail-anchors";
+import type {
+  JobWorkflowDocument,
+  JobWorkflowStageTarget,
+} from "@/shared/lib/jobs/job-workflow-documents";
+import { JOB_DETAIL_SCOPE_ANCHOR } from "@/shared/lib/jobs/job-detail-anchors";
 import { isActiveInvoice } from "@/shared/types/invoice";
-import {
-  isValidOfficeReviewQueueCustomerId,
-  isValidOfficeReviewQueueJobId,
-  safeBuildQueueActionHref,
-} from "@/shared/types/office-review-queue";
 
-export type JobWorkflowStageDestinationAction =
-  | "create-estimate"
-  | "create-invoice";
-
-export type JobWorkflowStageDestination =
-  | {
-      kind: "route";
-      href: string;
-      label: string;
-    }
-  | {
-      kind: "section";
-      sectionId: string;
-      label: string;
-    }
-  | {
-      kind: "action";
-      action: JobWorkflowStageDestinationAction;
-      href: string;
-      label: string;
-    }
-  | {
-      kind: "locked";
-      reason: string;
-    };
+export type JobWorkflowStageDestination = JobWorkflowStageTarget;
 
 export type JobWorkflowStageDestinationContext = {
   stages: CanonicalWorkflowStage[];
@@ -62,8 +29,12 @@ export type JobWorkflowStageDestinationContext = {
   customerId: string;
   canViewBilling: boolean;
   canCreateEstimate: boolean;
+  canEditJob: boolean;
+  canAssignTechnician: boolean;
+  canUpdateStatus: boolean;
   estimates: JobEstimateSummary[];
   invoices: JobInvoiceSummary[];
+  jobStatus: string;
 };
 
 const STAGE_PREREQUISITES: Record<CanonicalWorkflowStageId, string> = {
@@ -79,11 +50,11 @@ const STAGE_PREREQUISITES: Record<CanonicalWorkflowStageId, string> = {
   completed: "Finish remaining workflow steps to complete this job.",
 };
 
-function sectionDestination(
-  sectionId: string,
+function documentDestination(
+  document: JobWorkflowDocument,
   label: string,
 ): JobWorkflowStageDestination {
-  return { kind: "section", sectionId, label };
+  return { kind: "document", document, label };
 }
 
 function lockedDestination(
@@ -110,7 +81,7 @@ function warnUnresolved(
 }
 
 /**
- * Canonical estimate for stage deep-links.
+ * Canonical estimate for stage documents.
  * Reuses selectActiveEstimate; falls back to newest excluded estimate for review.
  */
 export function selectEstimateForStageDestination(
@@ -129,6 +100,24 @@ export function selectEstimateForStageDestination(
           Date.parse(right.createdAt) - Date.parse(left.createdAt),
       )[0] ?? null
   );
+}
+
+function listActiveEstimatesForChooser(
+  estimates: JobEstimateSummary[],
+): JobEstimateSummary[] {
+  const active = estimates.filter(
+    (estimate) =>
+      estimate.status !== "converted" &&
+      estimate.status !== "cancelled" &&
+      estimate.status !== "declined",
+  );
+
+  return active
+    .slice()
+    .sort(
+      (left, right) =>
+        Date.parse(right.createdAt) - Date.parse(left.createdAt),
+    );
 }
 
 function selectInvoiceForStageDestination(
@@ -156,88 +145,52 @@ function selectInvoiceForStageDestination(
   );
 }
 
-function estimateRoute(estimate: JobEstimateSummary): JobWorkflowStageDestination {
-  const href =
-    safeBuildQueueActionHref(`/estimates/${encodeURIComponent(estimate.id)}`) ??
-    `/estimates/${estimate.id}`;
-
-  return {
-    kind: "route",
-    href,
-    label: `Estimate ${estimate.estimateNumber}`,
-  };
-}
-
-function invoiceRoute(invoice: JobInvoiceSummary): JobWorkflowStageDestination {
-  const href =
-    safeBuildQueueActionHref(`/invoices/${encodeURIComponent(invoice.id)}`) ??
-    `/invoices/${invoice.id}`;
-
-  return {
-    kind: "route",
-    href,
-    label: `Invoice ${invoice.invoiceNumber}`,
-  };
-}
-
-function createEstimateDestination(
-  customerId: string,
+function resolveEstimateDocument(
+  estimates: JobEstimateSummary[],
+  mode: "view" | "approval",
 ): JobWorkflowStageDestination | null {
-  if (!isValidOfficeReviewQueueCustomerId(customerId)) {
+  const chooserCandidates = listActiveEstimatesForChooser(estimates);
+  if (chooserCandidates.length > 1) {
+    return documentDestination(
+      {
+        kind: "estimate-chooser",
+        estimateIds: chooserCandidates.map((estimate) => estimate.id),
+      },
+      "Choose estimate",
+    );
+  }
+
+  const estimate = selectEstimateForStageDestination(estimates);
+  if (!estimate) {
     return null;
   }
 
-  return {
-    kind: "action",
-    action: "create-estimate",
-    href: createEstimateForCustomerHref(customerId),
-    label: "Create Estimate",
-  };
-}
-
-function createInvoiceDestination(
-  jobId: string,
-  customerId: string,
-): JobWorkflowStageDestination | null {
-  if (!isValidOfficeReviewQueueJobId(jobId)) {
-    return null;
+  if (mode === "approval") {
+    return documentDestination(
+      { kind: "estimate-approval", estimateId: estimate.id },
+      `Estimate ${estimate.estimateNumber}`,
+    );
   }
 
-  const params: Record<string, string> = {
-    create: "1",
-    jobId,
-  };
-
-  if (isValidOfficeReviewQueueCustomerId(customerId)) {
-    params.customerId = customerId;
-  }
-
-  const href =
-    safeBuildQueueActionHref("/invoices", params) ??
-    createInvoiceForCustomerHref(customerId);
-
-  return {
-    kind: "action",
-    action: "create-invoice",
-    href,
-    label: "Create Invoice",
-  };
+  return documentDestination(
+    { kind: "estimate-view", estimateId: estimate.id },
+    `Estimate ${estimate.estimateNumber}`,
+  );
 }
 
 function resolveEstimateCreatedDestination(
   context: JobWorkflowStageDestinationContext,
 ): JobWorkflowStageDestination {
-  const estimate = selectEstimateForStageDestination(context.estimates);
-
-  if (estimate && context.canViewBilling) {
-    return estimateRoute(estimate);
+  const estimateDoc = resolveEstimateDocument(context.estimates, "view");
+  if (estimateDoc && context.canViewBilling) {
+    return estimateDoc;
   }
 
-  if (!estimate && context.canCreateEstimate) {
-    const create = createEstimateDestination(context.customerId);
-    if (create) {
-      return create;
-    }
+  if (!selectEstimateForStageDestination(context.estimates) && context.canCreateEstimate) {
+    return documentDestination(
+      { kind: "estimate-create" },
+      "Create Estimate",
+    );
   }
 
   if (!context.canViewBilling && !context.canCreateEstimate) {
@@ -247,7 +200,7 @@ function resolveEstimateCreatedDestination(
     );
   }
 
-  warnUnresolved("estimate_created", "no estimate and create href unavailable");
+  warnUnresolved("estimate_created", "no estimate and create unavailable");
   return lockedDestination("estimate_created");
 }
 
@@ -257,14 +210,17 @@ function resolveCustomerApprovalDestination(
   const estimate = selectEstimateForStageDestination(context.estimates);
 
   if (estimate && context.canViewBilling) {
-    return estimateRoute(estimate);
+    const approvalDoc = resolveEstimateDocument(context.estimates, "approval");
+    if (approvalDoc) {
+      return approvalDoc;
+    }
   }
 
   if (!estimate && context.canCreateEstimate) {
-    const create = createEstimateDestination(context.customerId);
-    if (create) {
-      return create;
-    }
+    return documentDestination(
+      { kind: "estimate-create" },
+      "Create Estimate",
+    );
   }
 
   if (!estimate) {
@@ -286,14 +242,21 @@ function resolveInvoiceCreatedDestination(
   const invoice = selectInvoiceForStageDestination(context.invoices);
 
   if (invoice && context.canViewBilling) {
-    return invoiceRoute(invoice);
+    return documentDestination(
+      { kind: "invoice-view", invoiceId: invoice.id },
+      `Invoice ${invoice.invoiceNumber}`,
+    );
   }
 
   if (!invoice && context.canViewBilling) {
-    const create = createInvoiceDestination(context.jobId, context.customerId);
-    if (create) {
-      return create;
-    }
+    const estimate = selectEstimateForStageDestination(context.estimates);
+    return documentDestination(
+      {
+        kind: "invoice-create",
+        estimateId: estimate?.id,
+      },
+      estimate ? "Create Invoice from Estimate" : "Create Invoice",
+    );
   }
 
   if (!context.canViewBilling) {
@@ -303,7 +266,7 @@ function resolveInvoiceCreatedDestination(
     );
   }
 
-  warnUnresolved("invoice_created", "no invoice and create href unavailable");
+  warnUnresolved("invoice_created", "no invoice and create unavailable");
   return lockedDestination("invoice_created");
 }
 
@@ -313,7 +276,10 @@ function resolvePaymentReceivedDestination(
   const invoice = selectInvoiceForStageDestination(context.invoices);
 
   if (invoice && context.canViewBilling) {
-    return invoiceRoute(invoice);
+    return documentDestination(
+      { kind: "payment", invoiceId: invoice.id },
+      `Payment · Invoice ${invoice.invoiceNumber}`,
+    );
   }
 
   if (!invoice) {
@@ -330,8 +296,8 @@ function resolvePaymentReceivedDestination(
 }
 
 /**
- * Resolve where a workflow stage marker should navigate on Job Detail.
- * Always returns an exact artifact, creation action, meaningful section, or lock.
+ * Resolve where a workflow stage marker should open on Job Detail.
+ * Always returns an exact document, meaningful section, or lock.
  */
 export function resolveJobWorkflowStageDestination(
   stage: CanonicalWorkflowStage,
@@ -339,13 +305,22 @@ export function resolveJobWorkflowStageDestination(
 ): JobWorkflowStageDestination {
   switch (stage.id) {
     case "job_created":
-      return sectionDestination(JOB_DETAIL_SCOPE_ANCHOR, "Work scope");
+      if (context.canEditJob) {
+        return documentDestination({ kind: "job-details" }, "Edit Job");
+      }
+      return documentDestination({ kind: "job-details" }, "Job details");
 
     case "technician_assigned":
-      return sectionDestination(JOB_DETAIL_DISPATCH_ANCHOR, "Technician assignment");
+      return documentDestination(
+        { kind: "technician-assignment" },
+        "Technician assignment",
+      );
 
     case "inspection":
-      return sectionDestination(JOB_DETAIL_SCOPE_ANCHOR, "Inspection and work scope");
+      return documentDestination(
+        { kind: "inspection" },
+        "Inspection and work scope",
+      );
 
     case "estimate_created":
       return resolveEstimateCreatedDestination(context);
@@ -354,12 +329,26 @@ export function resolveJobWorkflowStageDestination(
       return resolveCustomerApprovalDestination(context);
 
     case "work_in_progress":
-      return sectionDestination(JOB_DETAIL_SCOPE_ANCHOR, "Work controls and scope");
+      return documentDestination(
+        { kind: "work-controls" },
+        "Work controls",
+      );
 
     case "work_completed":
-      return sectionDestination(
-        JOB_DETAIL_ACTIVITY_ANCHOR,
-        "Completion history",
+      if (context.jobStatus === "completed") {
+        return documentDestination(
+          { kind: "completion-details" },
+          "Completion details",
+        );
+      }
+      if (context.canUpdateStatus && context.jobStatus === "in_progress") {
+        return documentDestination({ kind: "completion" }, "Complete work");
+      }
+      return lockedDestination(
+        "work_completed",
+        context.jobStatus === "in_progress"
+          ? "Status update permission is required to complete work."
+          : "Start and finish on-site work before opening completion.",
       );
 
     case "invoice_created":
@@ -369,9 +358,9 @@ export function resolveJobWorkflowStageDestination(
       return resolvePaymentReceivedDestination(context);
 
     case "completed":
-      return sectionDestination(
-        JOB_DETAIL_ACTIVITY_ANCHOR,
-        "Completion summary",
+      return documentDestination(
+        { kind: "completed-summary" },
+        "Completed job summary",
       );
 
     default: {
@@ -382,4 +371,9 @@ export function resolveJobWorkflowStageDestination(
       );
     }
   }
+}
+
+/** @deprecated Prefer document destinations; kept for section scroll helpers. */
+export function jobWorkflowScopeSectionId(): string {
+  return JOB_DETAIL_SCOPE_ANCHOR;
 }

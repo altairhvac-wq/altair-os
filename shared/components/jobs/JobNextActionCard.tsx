@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, Clock3, XCircle } from "lucide-react";
-import { createEstimateForCustomerHref } from "@/shared/lib/customers/customer-action-links";
+import type { JobBusinessAction } from "@/shared/lib/job-next-business-action";
+import type { JobWorkflowDocument } from "@/shared/lib/jobs/job-workflow-documents";
 import type {
   JobWorkflowAvailableAction,
   JobWorkflowResolution,
@@ -43,6 +42,7 @@ type JobNextActionCardProps = {
   northStar?: boolean;
   className?: string;
   onStatusUpdated?: (status: JobStatus) => void;
+  onOpenDocument?: (document: JobWorkflowDocument) => void;
 };
 
 function actionHint(action: JobWorkflowAvailableAction | null): string | null {
@@ -116,8 +116,8 @@ export function JobNextActionCard({
   northStar = false,
   className,
   onStatusUpdated,
+  onOpenDocument,
 }: JobNextActionCardProps) {
-  const router = useRouter();
   const titleId = "job-next-action-title";
   const descriptionId = "job-next-action-description";
   const label = resolveDisplayLabel(workflow);
@@ -189,7 +189,55 @@ export function JobNextActionCard({
     recordPayment && Boolean(primaryAction.href) && !cancelled;
 
   function handleCreateEstimate() {
-    router.push(createEstimateForCustomerHref(customerId));
+    onOpenDocument?.({ kind: "estimate-create" });
+  }
+
+  function handleFinishEstimate(estimateId: string) {
+    onOpenDocument?.({ kind: "estimate-view", estimateId });
+  }
+
+  function handleOfficeCta(action: JobBusinessAction) {
+    switch (action.id) {
+      case "create_estimate":
+        onOpenDocument?.({ kind: "estimate-create" });
+        return;
+      case "finish_send_estimate":
+      case "approve_estimate_on_site":
+        if (action.estimateId) {
+          onOpenDocument?.({
+            kind:
+              action.id === "approve_estimate_on_site"
+                ? "estimate-approval"
+                : "estimate-view",
+            estimateId: action.estimateId,
+          });
+        }
+        return;
+      case "create_invoice":
+        onOpenDocument?.({
+          kind: "invoice-create",
+          estimateId: action.estimateId,
+        });
+        return;
+      case "view_invoice":
+        if (action.invoiceId) {
+          onOpenDocument?.({
+            kind: "invoice-view",
+            invoiceId: action.invoiceId,
+          });
+        }
+        return;
+      case "awaiting_payment":
+        if (action.invoiceId) {
+          onOpenDocument?.({
+            kind: "payment",
+            invoiceId: action.invoiceId,
+          });
+        }
+        return;
+      default:
+        return;
+    }
   }
 
   return (
@@ -249,18 +297,29 @@ export function JobNextActionCard({
                   ? handleCreateEstimate
                   : undefined
               }
+              onFieldFinishEstimateClick={handleFinishEstimate}
+              onOfficeCtaClick={onOpenDocument ? handleOfficeCta : undefined}
             />
           ) : null}
 
-          {showRecordPaymentCta && primaryAction.href ? (
-            <Link
-              href={primaryAction.href}
+          {showRecordPaymentCta &&
+          primaryAction &&
+          "invoiceId" in primaryAction &&
+          primaryAction.invoiceId ? (
+            <button
+              type="button"
               className={ctaClass}
               aria-label="Record payment for this job"
+              onClick={() =>
+                onOpenDocument?.({
+                  kind: "payment",
+                  invoiceId: primaryAction.invoiceId!,
+                })
+              }
             >
               Record Payment
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
+            </button>
           ) : null}
 
           {offerStartRoute ? (

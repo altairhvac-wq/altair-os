@@ -29,8 +29,20 @@ export function createJobForCustomerHref(customerId: string): string {
   return `/jobs?customerId=${encodeURIComponent(customerId)}&create=1`;
 }
 
-export function createEstimateForCustomerHref(customerId: string): string {
-  return `/estimates?customerId=${encodeURIComponent(customerId)}&create=1`;
+export function createEstimateForCustomerHref(
+  customerId: string,
+  options?: { jobId?: string },
+): string {
+  const params = new URLSearchParams({
+    customerId,
+    create: "1",
+  });
+
+  if (options?.jobId?.trim()) {
+    params.set("jobId", options.jobId.trim());
+  }
+
+  return `/estimates?${params.toString()}`;
 }
 
 export function createInvoiceForCustomerHref(customerId: string): string {

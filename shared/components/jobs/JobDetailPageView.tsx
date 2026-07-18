@@ -245,9 +245,17 @@ function LegacyJobDetailBody({
 
       <JobWorkflowOverview
         job={job}
+        customers={customers}
+        technicians={technicians}
+        serviceItems={serviceItems}
+        equipment={equipment}
+        materials={materials}
+        attachments={attachments}
         billingContext={billingContext}
         canUpdateStatus={canUpdateStatus}
         canViewBilling={canViewBilling}
+        canEditJob={canEditJob}
+        canAssignTechnician={canAssignTechnician}
         aiFeaturesEnabled={aiFeaturesEnabled}
       />
 
@@ -709,9 +717,17 @@ export function JobDetailPageView({
           />
           <JobWorkflowOverview
             job={job}
+            customers={customers}
+            technicians={technicians}
+            serviceItems={serviceItems}
+            equipment={equipment}
+            materials={materials}
+            attachments={attachments}
             billingContext={billingContext}
             canUpdateStatus={canUpdateStatus}
             canViewBilling={canViewBilling}
+            canEditJob={canEditJob}
+            canAssignTechnician={canAssignTechnician}
             aiFeaturesEnabled={aiFeaturesEnabled}
             northStar
           />
