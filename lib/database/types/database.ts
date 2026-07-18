@@ -1271,6 +1271,16 @@ export type Database = {
         };
         Returns: undefined;
       };
+      close_time_entry: {
+        Args: {
+          p_company_id: string;
+          p_entry_id: string;
+          p_ended_at: string;
+          p_notes?: string | null;
+          p_update_notes?: boolean;
+        };
+        Returns: TimeEntryRow;
+      };
       generate_expense_number: {
         Args: {
           p_company_id: string;

@@ -5,7 +5,6 @@ import { getDayBoundsInTimeZone } from "@/shared/lib/datetime";
 import type {
   TimeEntryInsert,
   TimeEntryRow,
-  TimeEntryUpdate,
 } from "@/lib/database/types/core-tables";
 import type { TimeEntry, TimeEntryType } from "@/shared/types/time-entry";
 
@@ -419,31 +418,47 @@ export async function closeTimeEntry(
   companyId: string,
   entryId: string,
   endedAt: string,
-  durationMinutes: number,
+  _durationMinutes: number,
   notes?: string,
 ): Promise<{ entry: TimeEntry | null; error: string | null }> {
   const supabase = await createClient();
 
-  const update: TimeEntryUpdate = {
-    ended_at: endedAt,
-    duration_minutes: durationMinutes,
-  };
+  // Close path is enforced by close_time_entry (migration 119). Duration is
+  // computed server-side; the caller-supplied minutes are retained for API
+  // compatibility with existing clock-out / correction callers.
+  const { error: rpcError } = await supabase.rpc("close_time_entry", {
+    p_company_id: companyId,
+    p_entry_id: entryId,
+    p_ended_at: endedAt,
+    p_notes: notes ?? null,
+    p_update_notes: notes !== undefined,
+  });
 
-  if (notes !== undefined) {
-    update.notes = notes;
+  if (rpcError) {
+    console.error("[closeTimeEntry] rpc failed:", {
+      companyId,
+      entryId,
+      code: rpcError.code,
+      message: rpcError.message,
+    });
+
+    const msg = rpcError.message ?? "";
+    if (msg.includes("Active time entry not found")) {
+      return { entry: null, error: "Active time entry not found." };
+    }
+
+    return { entry: null, error: mapDatabaseError(rpcError) };
   }
 
   const { data, error } = await supabase
     .from("time_entries")
-    .update(update)
+    .select(TIME_ENTRY_SELECT)
     .eq("company_id", companyId)
     .eq("id", entryId)
-    .is("ended_at", null)
-    .select(TIME_ENTRY_SELECT)
     .maybeSingle();
 
   if (error) {
-    console.error("[closeTimeEntry] update failed:", {
+    console.error("[closeTimeEntry] post-rpc fetch failed:", {
       companyId,
       entryId,
       code: error.code,
@@ -453,7 +468,11 @@ export async function closeTimeEntry(
   }
 
   if (!data) {
-    return { entry: null, error: "Active time entry not found." };
+    return {
+      entry: null,
+      error:
+        "Time entry was closed but could not be read back. Refresh the page.",
+    };
   }
 
   return {
