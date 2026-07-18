@@ -53,6 +53,12 @@ import type {
   PlatformFounderSignalActionRow,
   CompanyPaymentAccountInsert,
   CompanyPaymentAccountRow,
+  CompanyBillingAccountInsert,
+  CompanyBillingAccountRow,
+  CompanySubscriptionInsert,
+  CompanySubscriptionRow,
+  SubscriptionEventLedgerInsert,
+  SubscriptionEventLedgerRow,
   InvoicePaymentTokenInsert,
   InvoicePaymentTokenRow,
   InvoicePaymentTokenUpdate,
@@ -1066,6 +1072,55 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "company_payment_accounts_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      company_billing_accounts: {
+        Row: CompanyBillingAccountRow;
+        Insert: CompanyBillingAccountInsert;
+        Update: Partial<CompanyBillingAccountInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "company_billing_accounts_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: true;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      company_subscriptions: {
+        Row: CompanySubscriptionRow;
+        Insert: CompanySubscriptionInsert;
+        Update: Partial<CompanySubscriptionInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "company_subscriptions_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: true;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "company_subscriptions_billing_account_id_fkey";
+            columns: ["billing_account_id"];
+            isOneToOne: false;
+            referencedRelation: "company_billing_accounts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      subscription_event_ledger: {
+        Row: SubscriptionEventLedgerRow;
+        Insert: SubscriptionEventLedgerInsert;
+        Update: Partial<SubscriptionEventLedgerInsert>;
+        Relationships: [
+          {
+            foreignKeyName: "subscription_event_ledger_company_id_fkey";
             columns: ["company_id"];
             isOneToOne: false;
             referencedRelation: "companies";

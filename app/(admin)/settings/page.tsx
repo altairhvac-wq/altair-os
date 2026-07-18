@@ -35,6 +35,11 @@ import type {
 } from "@/shared/types/settings/payment-settings";
 import { buildStripePaymentSettingsSummary } from "@/shared/types/settings/payment-settings";
 import { isStripeConnectOnboardingConfigured, isStripeTestMode } from "@/lib/payments/env";
+import {
+  getCompanySubscriptionBillingSummary,
+  isSaasBillingCheckoutConfigured,
+  type CompanySubscriptionBillingSummary,
+} from "@/lib/saas-billing";
 
 const EMPTY_ONBOARDING_SNAPSHOT: OnboardingSnapshot = {
   teamMemberCount: 0,
@@ -87,6 +92,25 @@ async function loadDemoDataStatusSafely(
   }
 
   return getDemoDataStatusSafe(companyId, companyContext);
+}
+
+async function loadSubscriptionBillingSafely(
+  companyId: string,
+): Promise<{
+  summary: CompanySubscriptionBillingSummary | null;
+  error?: string;
+}> {
+  try {
+    const summary = await getCompanySubscriptionBillingSummary(companyId);
+    return { summary };
+  } catch (error) {
+    console.error("[SettingsPage] subscription billing load failed:", error);
+    return {
+      summary: null,
+      error:
+        "We couldn't load subscription status. Refresh the page or try again in a moment.",
+    };
+  }
 }
 
 async function loadStripePaymentSettingsSafely(
@@ -202,11 +226,17 @@ export default async function SettingsPage({
       ? params.payments
       : null;
 
-  const stripePaymentSettingsResult = await loadStripePaymentSettingsSafely(
-    companyContext.company.id,
-    canViewPaymentSettings,
-  );
+  const [stripePaymentSettingsResult, subscriptionBillingResult] =
+    await Promise.all([
+      loadStripePaymentSettingsSafely(
+        companyContext.company.id,
+        canViewPaymentSettings,
+      ),
+      loadSubscriptionBillingSafely(companyContext.company.id),
+    ]);
   const stripePaymentSettings = stripePaymentSettingsResult.summary;
+  const canManageSubscriptionBilling = companyContext.permissions.manageCompany;
+  const subscriptionCheckoutConfigured = isSaasBillingCheckoutConfigured();
 
   return (
     <div className="min-w-0 max-w-full space-y-3 sm:space-y-4">
@@ -226,6 +256,12 @@ export default async function SettingsPage({
       {stripePaymentSettingsResult.error ? (
         <SettingsAlertBanner tone="error" northStar={northStar}>
           {stripePaymentSettingsResult.error}
+        </SettingsAlertBanner>
+      ) : null}
+
+      {subscriptionBillingResult.error ? (
+        <SettingsAlertBanner tone="error" northStar={northStar}>
+          {subscriptionBillingResult.error}
         </SettingsAlertBanner>
       ) : null}
 
@@ -255,6 +291,10 @@ export default async function SettingsPage({
         stripeTestMode={stripeTestMode}
         paymentSetupNotice={paymentSetupNotice}
         companyTimezone={companyContext.company.timezone}
+        subscriptionBillingSummary={subscriptionBillingResult.summary}
+        subscriptionBillingLoadError={subscriptionBillingResult.error ?? null}
+        canManageSubscriptionBilling={canManageSubscriptionBilling}
+        subscriptionCheckoutConfigured={subscriptionCheckoutConfigured}
       />
     </div>
   );

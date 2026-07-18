@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   Bell,
-  CreditCard,
   GitBranch,
   Plug,
   Settings2,
@@ -25,7 +24,9 @@ import type {
   PaymentSetupReturnNotice,
   StripePaymentSettingsSummary,
 } from "@/shared/types/settings/payment-settings";
+import type { CompanySubscriptionBillingSummary } from "@/lib/saas-billing/types";
 import { BillingDocumentDefaultsCard } from "../BillingDocumentDefaultsCard";
+import { CompanySubscriptionBillingCard } from "../CompanySubscriptionBillingCard";
 import { PaymentSettingsCard } from "../PaymentSettingsCard";
 import { PendingInvitesCard } from "../PendingInvitesCard";
 import { SettingsAlertBanner } from "../SettingsAlertBanner";
@@ -69,6 +70,10 @@ export type SettingsNorthStarViewProps = {
   stripeTestMode?: boolean;
   paymentSetupNotice?: PaymentSetupReturnNotice | null;
   companyTimezone?: string | null;
+  subscriptionBillingSummary?: CompanySubscriptionBillingSummary | null;
+  subscriptionBillingLoadError?: string | null;
+  canManageSubscriptionBilling?: boolean;
+  subscriptionCheckoutConfigured?: boolean;
 };
 
 function buildLocationLabel(profile: CompanyProfileSummary): string | null {
@@ -130,6 +135,10 @@ export function SettingsNorthStarView({
   stripeTestMode = false,
   paymentSetupNotice = null,
   companyTimezone,
+  subscriptionBillingSummary = null,
+  subscriptionBillingLoadError = null,
+  canManageSubscriptionBilling = false,
+  subscriptionCheckoutConfigured = false,
 }: SettingsNorthStarViewProps) {
   const [members, setMembers] = useState(initialMembers);
   const [search, setSearch] = useState("");
@@ -210,15 +219,6 @@ export function SettingsNorthStarView({
   ];
   const primaryCompanyFields = companyFields.slice(0, 3);
   const extraCompanyFields = companyFields.slice(3);
-
-  const billingComingSoonItems = [
-    {
-      title: "Billing",
-      description:
-        "Subscription plans, payment methods, and invoice history.",
-      icon: CreditCard,
-    },
-  ];
 
   const integrationItems = [
     {
@@ -487,7 +487,13 @@ export function SettingsNorthStarView({
               showSetupHint={showBillingDefaultsSetupHint}
               northStar
             />
-            <SettingsComingSoonSection items={billingComingSoonItems} northStar />
+            <CompanySubscriptionBillingCard
+              summary={subscriptionBillingSummary}
+              canManageSubscription={canManageSubscriptionBilling}
+              checkoutConfigured={subscriptionCheckoutConfigured}
+              loadError={subscriptionBillingLoadError}
+              northStar
+            />
           </div>
         </section>
 

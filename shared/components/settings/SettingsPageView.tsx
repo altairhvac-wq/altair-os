@@ -6,7 +6,6 @@ import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { SettingsNorthStarView } from "@/shared/components/settings/north-star-m10";
 import {
   Bell,
-  CreditCard,
   GitBranch,
   Plug,
   Settings2,
@@ -27,7 +26,9 @@ import type {
   PaymentSetupReturnNotice,
   StripePaymentSettingsSummary,
 } from "@/shared/types/settings/payment-settings";
+import type { CompanySubscriptionBillingSummary } from "@/lib/saas-billing/types";
 import { BillingDocumentDefaultsCard } from "./BillingDocumentDefaultsCard";
+import { CompanySubscriptionBillingCard } from "./CompanySubscriptionBillingCard";
 import { PaymentSettingsCard } from "./PaymentSettingsCard";
 import { PendingInvitesCard } from "./PendingInvitesCard";
 import { SettingsAlertBanner } from "./SettingsAlertBanner";
@@ -76,6 +77,10 @@ type SettingsPageViewProps = {
   stripeTestMode?: boolean;
   paymentSetupNotice?: PaymentSetupReturnNotice | null;
   companyTimezone?: string | null;
+  subscriptionBillingSummary?: CompanySubscriptionBillingSummary | null;
+  subscriptionBillingLoadError?: string | null;
+  canManageSubscriptionBilling?: boolean;
+  subscriptionCheckoutConfigured?: boolean;
 };
 
 function buildLocationLabel(profile: CompanyProfileSummary): string | null {
@@ -115,6 +120,10 @@ function SettingsPageLegacyView({
   stripeTestMode = false,
   paymentSetupNotice = null,
   companyTimezone,
+  subscriptionBillingSummary = null,
+  subscriptionBillingLoadError = null,
+  canManageSubscriptionBilling = false,
+  subscriptionCheckoutConfigured = false,
 }: SettingsPageViewProps) {
   const [members, setMembers] = useState(initialMembers);
   const [search, setSearch] = useState("");
@@ -195,15 +204,6 @@ function SettingsPageLegacyView({
   ];
   const primaryCompanyFields = companyFields.slice(0, 3);
   const extraCompanyFields = companyFields.slice(3);
-
-  const billingComingSoonItems = [
-    {
-      title: "Billing",
-      description:
-        "Subscription plans, payment methods, and invoice history.",
-      icon: CreditCard,
-    },
-  ];
 
   const integrationItems = [
     {
@@ -449,7 +449,12 @@ function SettingsPageLegacyView({
               showSetupHint={showBillingDefaultsSetupHint}
             />
             <div className="mt-3">
-              <SettingsComingSoonSection items={billingComingSoonItems} />
+              <CompanySubscriptionBillingCard
+                summary={subscriptionBillingSummary}
+                canManageSubscription={canManageSubscriptionBilling}
+                checkoutConfigured={subscriptionCheckoutConfigured}
+                loadError={subscriptionBillingLoadError}
+              />
             </div>
           </MasterPageSection>
 

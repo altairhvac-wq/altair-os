@@ -61,6 +61,14 @@ import type {
   PaymentReconciliationRecordInsert,
   PaymentReconciliationStatus,
 } from "@/lib/payments/payment-reconciliations";
+import type {
+  CompanyBillingAccountInsert,
+  CompanyBillingAccountRow,
+  CompanySubscriptionInsert,
+  CompanySubscriptionRow,
+  SubscriptionEventLedgerInsert,
+  SubscriptionEventLedgerRow,
+} from "@/lib/saas-billing/types";
 
 export type { PaymentProviderEventStatus };
 export type PaymentProviderEventRow = PaymentProviderEvent;
@@ -91,6 +99,15 @@ export type {
 export type { CompanyPaymentAccountStatus, CompanyPaymentAccountProvider };
 export type CompanyPaymentAccountRow = CompanyPaymentAccountRecord;
 export type { CompanyPaymentAccountRecordInsert as CompanyPaymentAccountInsert };
+
+export type {
+  CompanyBillingAccountRow,
+  CompanyBillingAccountInsert,
+  CompanySubscriptionRow,
+  CompanySubscriptionInsert,
+  SubscriptionEventLedgerRow,
+  SubscriptionEventLedgerInsert,
+};
 
 export type CompanyRow = {
   id: UUID;
