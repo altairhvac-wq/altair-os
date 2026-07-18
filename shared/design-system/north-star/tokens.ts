@@ -419,7 +419,7 @@ export const northStarDetailTokens: NorthStarDetailPageTokens = {
   sectionNav:
     "-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 north-star-detail-section-nav",
   sectionNavLink:
-    "inline-flex min-h-9 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold text-[#4F4638] transition-colors hover:bg-[rgba(201,164,77,0.10)] hover:text-[#17130E]",
+    "inline-flex min-h-9 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold text-[#4F4638] transition-colors hover:bg-[rgba(201,164,77,0.10)] hover:text-[#17130E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A44D] focus-visible:ring-offset-1",
   primaryAction:
     "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-2.5 text-xs font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:-translate-y-px hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] [&_svg]:text-[#17130E]",
   secondaryAction:

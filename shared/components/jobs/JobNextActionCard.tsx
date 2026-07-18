@@ -8,6 +8,7 @@ import type {
   JobWorkflowAvailableAction,
   JobWorkflowResolution,
 } from "@/shared/lib/workflow";
+import { JOB_DETAIL_NEXT_ACTION_ANCHOR } from "@/shared/lib/jobs/job-detail-anchors";
 import {
   jobDetailMutedTextClass,
   jobDetailSectionSubtitleClass,
@@ -133,20 +134,20 @@ export function JobNextActionCard({
   const offerStartRoute = shouldOfferStartRoute(workflow, canUpdateStatus);
 
   const shellClass = northStar
-    ? `${dt.sectionSurface} sticky top-0 z-20 border border-[rgba(201,164,77,0.28)] bg-gradient-to-br from-[#FFF9EA] via-[#FBF7EF] to-[#F3EBDD] shadow-[0_10px_28px_-18px_rgba(138,99,36,0.35)]`
-    : `${resolveJobDetailSectionClass(false)} sticky top-0 z-20 border-cyan-200/80 bg-gradient-to-br from-cyan-50/90 via-white to-slate-50 shadow-[0_10px_28px_-18px_rgba(8,145,178,0.35)] dark:border-cyan-700/50 dark:from-cyan-950/40 dark:via-slate-950 dark:to-slate-900`;
+    ? `${dt.compactSectionSurface} sticky top-0 z-20 scroll-mt-6 border border-[rgba(201,164,77,0.28)] bg-gradient-to-br from-[#FFF9EA] via-[#FBF7EF] to-[#F3EBDD]`
+    : `${resolveJobDetailSectionClass(false)} sticky top-0 z-20 scroll-mt-6 border-cyan-200/80 bg-gradient-to-br from-cyan-50/90 via-white to-slate-50 dark:border-cyan-700/50 dark:from-cyan-950/40 dark:via-slate-950 dark:to-slate-900`;
 
   const eyebrowClass = northStar
     ? "text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8A6324]"
     : "text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-800 dark:text-cyan-300";
 
   const labelClass = northStar
-    ? "text-xl font-bold tracking-tight text-[#17130E] sm:text-2xl"
-    : "text-xl font-bold tracking-tight text-slate-950 sm:text-2xl dark:text-white";
+    ? "text-lg font-bold tracking-tight text-[#17130E] sm:text-xl"
+    : "text-lg font-bold tracking-tight text-slate-950 sm:text-xl dark:text-white";
 
   const ctaClass = northStar
-    ? `${dt.primaryAction} min-h-12 w-full justify-center px-4 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A44D] focus-visible:ring-offset-2 sm:text-base`
-    : "inline-flex min-h-12 w-full touch-manipulation items-center justify-center gap-1.5 rounded-xl bg-cyan-700 px-4 py-3 text-base font-semibold text-white transition-colors hover:bg-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:ring-offset-2 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400";
+    ? `${dt.primaryAction} min-h-11 w-full justify-center px-4 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A44D] focus-visible:ring-offset-2 sm:w-auto sm:min-w-[12rem] sm:text-sm`
+    : "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-1.5 rounded-xl bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:ring-offset-2 sm:w-auto sm:min-w-[12rem] dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400";
 
   const statusBannerClass = cancelled
     ? northStar
@@ -193,20 +194,23 @@ export function JobNextActionCard({
 
   return (
     <section
+      id={JOB_DETAIL_NEXT_ACTION_ANCHOR}
+      data-job-section={JOB_DETAIL_NEXT_ACTION_ANCHOR}
       aria-labelledby={titleId}
       aria-describedby={description ? descriptionId : undefined}
       className={`${shellClass} ${className ?? ""}`}
+      tabIndex={-1}
     >
-      <div className="flex flex-col gap-3">
-        <div className="min-w-0">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0 flex-1">
           <p className={eyebrowClass}>Next action</p>
-          <h2 id={titleId} className={`mt-1 ${labelClass}`}>
+          <h2 id={titleId} className={`mt-0.5 ${labelClass}`}>
             {label}
           </h2>
           {description ? (
             <p
               id={descriptionId}
-              className={`mt-1.5 max-w-2xl ${
+              className={`mt-1 max-w-2xl ${
                 hint
                   ? jobDetailSectionSubtitleClass(northStar)
                   : jobDetailMutedTextClass(northStar)
@@ -218,7 +222,7 @@ export function JobNextActionCard({
         </div>
 
         <div
-          className="flex w-full flex-col gap-2 [&_a]:min-h-12 [&_a]:w-full [&_button]:min-h-12 [&_button]:w-full [&_a]:focus-visible:outline-none [&_a]:focus-visible:ring-2 [&_a]:focus-visible:ring-offset-2 [&_button]:focus-visible:outline-none [&_button]:focus-visible:ring-2 [&_button]:focus-visible:ring-offset-2"
+          className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[14rem] sm:items-stretch [&_a]:min-h-11 [&_button]:min-h-11 sm:[&_a]:w-auto sm:[&_button]:w-auto [&_a]:focus-visible:outline-none [&_a]:focus-visible:ring-2 [&_a]:focus-visible:ring-offset-2 [&_button]:focus-visible:outline-none [&_button]:focus-visible:ring-2 [&_button]:focus-visible:ring-offset-2"
           aria-label={`Primary workflow action: ${label}`}
         >
           {showFieldActions ? (
@@ -275,7 +279,7 @@ export function JobNextActionCard({
 
           {statusBannerClass && StatusIcon ? (
             <div
-              className={`inline-flex min-h-12 w-full items-center gap-2 rounded-xl border px-3.5 py-3 text-sm font-semibold ${statusBannerClass}`}
+              className={`inline-flex min-h-11 w-full items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold sm:w-auto ${statusBannerClass}`}
               role="status"
             >
               <StatusIcon className="h-4 w-4 shrink-0" aria-hidden="true" />

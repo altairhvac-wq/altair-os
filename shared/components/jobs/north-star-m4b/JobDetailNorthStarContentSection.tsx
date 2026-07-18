@@ -19,6 +19,8 @@ export function JobDetailNorthStarContentSection({
   return (
     <section
       id={anchor}
+      data-job-section={anchor}
+      tabIndex={anchor ? -1 : undefined}
       className={`${compact ? dt.compactSectionSurface : dt.sectionSurface} scroll-mt-6`}
     >
       <h2 className={dt.sectionTitle}>{title}</h2>

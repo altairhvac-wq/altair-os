@@ -55,6 +55,7 @@ import { jobDetailBodyTextClass } from "@/shared/components/jobs/job-detail-sect
 import {
   JobDetailNorthStarContentSection,
   JobDetailNorthStarHeader,
+  JobDetailSectionCommandPlate,
   JobDetailSideRailBillingCard,
   JobDetailSideRailCustomerCard,
   JobDetailSideRailDispatchCard,
@@ -171,14 +172,6 @@ function LegacyJobDetailBody({
 
   return (
     <>
-      <JobWorkflowOverview
-        job={job}
-        billingContext={billingContext}
-        canUpdateStatus={canUpdateStatus}
-        canViewBilling={canViewBilling}
-        aiFeaturesEnabled={aiFeaturesEnabled}
-      />
-
       <section className="admin-card">
         <div className="border-b border-slate-100 bg-white px-3 py-2.5 sm:px-4 sm:py-3">
           <JobDetailHeaderSection
@@ -249,6 +242,16 @@ function LegacyJobDetailBody({
           </div>
         </div>
       </section>
+
+      <JobWorkflowOverview
+        job={job}
+        billingContext={billingContext}
+        canUpdateStatus={canUpdateStatus}
+        canViewBilling={canViewBilling}
+        showBillingSection={Boolean(canViewFinancials && profitability)}
+        showEquipmentSection={equipment.length > 0}
+        aiFeaturesEnabled={aiFeaturesEnabled}
+      />
 
       <JobSummaryAiAssistant
         jobId={job.id}
@@ -407,6 +410,7 @@ function LegacyJobDetailBody({
       <OperationalActivityTimeline
         activities={activities}
         canViewBilling={canViewBilling}
+        title="History"
         description={
           canViewBilling
             ? "Job workflow, estimates, and billing events"
@@ -531,6 +535,7 @@ function NorthStarMainColumn({
       <OperationalActivityTimeline
         activities={activities}
         canViewBilling={canViewBilling}
+        title="History"
         sectionId={JOB_DETAIL_ACTIVITY_ANCHOR}
         sectionClassName="scroll-mt-6"
         northStar
@@ -553,122 +558,59 @@ function NorthStarMainColumn({
   );
 }
 
-function NorthStarSideColumn({
-  job,
-  technicians,
-  equipment,
-  profitability,
-  canAssignTechnician,
-  canManageCustomers,
-  canViewFinancials,
-  canViewBilling,
-  billingContext,
-  scheduledLabel,
-  customerEmail,
-  customerPhone,
-  customerCompany,
-}: SharedWorkspaceProps) {
-  return (
-    <>
-      <JobDetailSideRailCustomerCard
-        customerId={job.customerId}
-        customerName={job.customerName}
-        customerCompany={customerCompany}
-        customerEmail={customerEmail}
-        customerPhone={customerPhone}
-        serviceAddress={job.serviceAddress}
-        city={job.city}
-        state={job.state}
-        zip={job.zip}
-        canManageCustomers={canManageCustomers}
-      />
-
-      <JobDetailSideRailDispatchCard
-        job={job}
-        scheduledLabel={scheduledLabel}
-        technicians={technicians}
-        canAssignTechnician={canAssignTechnician}
-      />
-
-      <JobCustomerEquipmentSection
-        customerId={job.customerId}
-        jobId={job.id}
-        equipment={equipment}
-        canViewCustomerProfile={canManageCustomers}
-        northStar
-        compact
-      />
-
-      {canViewFinancials && profitability ? (
-        <JobDetailSideRailBillingCard
-          profitability={profitability}
-          estimates={billingContext?.estimates ?? []}
-          invoices={billingContext?.invoices ?? []}
-          canViewBilling={canViewBilling}
-        />
-      ) : null}
-    </>
-  );
-}
-
 function NorthStarJobDetailBody(props: SharedWorkspaceProps) {
-  const mobileStack = (
-    <>
-      <JobDetailSideRailCustomerCard
-        customerId={props.job.customerId}
-        customerName={props.job.customerName}
-        customerCompany={props.customerCompany}
-        customerEmail={props.customerEmail}
-        customerPhone={props.customerPhone}
-        serviceAddress={props.job.serviceAddress}
-        city={props.job.city}
-        state={props.job.state}
-        zip={props.job.zip}
-        canManageCustomers={props.canManageCustomers}
-      />
-
-      <JobDetailSideRailDispatchCard
-        job={props.job}
-        scheduledLabel={props.scheduledLabel}
-        technicians={props.technicians}
-        canAssignTechnician={props.canAssignTechnician}
-      />
-
-      <NorthStarMainColumn {...props} />
-
-      <JobCustomerEquipmentSection
-        customerId={props.job.customerId}
-        jobId={props.job.id}
-        equipment={props.equipment}
-        canViewCustomerProfile={props.canManageCustomers}
-        northStar
-        compact
-      />
-
-      {props.canViewFinancials && props.profitability ? (
-        <JobDetailSideRailBillingCard
-          profitability={props.profitability}
-          estimates={props.billingContext?.estimates ?? []}
-          invoices={props.billingContext?.invoices ?? []}
-          canViewBilling={props.canViewBilling}
-        />
-      ) : null}
-    </>
-  );
-
+  // Single DOM tree: mobile stacks customer/dispatch first; desktop places
+  // them in the side column without duplicating section anchors.
   return (
-    <>
-      <div className="flex flex-col gap-3 lg:hidden">{mobileStack}</div>
-
-      <div className={`hidden lg:grid ${dt.workspaceGrid}`}>
-        <div className={dt.workspaceMain}>
-          <NorthStarMainColumn {...props} />
-        </div>
-        <div className={dt.workspaceSide}>
-          <NorthStarSideColumn {...props} />
-        </div>
+    <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(20rem,0.95fr)] lg:items-start lg:gap-2.5">
+      <div className="min-w-0 lg:col-start-2 lg:row-start-1">
+        <JobDetailSideRailCustomerCard
+          customerId={props.job.customerId}
+          customerName={props.job.customerName}
+          customerCompany={props.customerCompany}
+          customerEmail={props.customerEmail}
+          customerPhone={props.customerPhone}
+          serviceAddress={props.job.serviceAddress}
+          city={props.job.city}
+          state={props.job.state}
+          zip={props.job.zip}
+          canManageCustomers={props.canManageCustomers}
+        />
       </div>
-    </>
+
+      <div className="min-w-0 lg:col-start-2 lg:row-start-2">
+        <JobDetailSideRailDispatchCard
+          job={props.job}
+          scheduledLabel={props.scheduledLabel}
+          technicians={props.technicians}
+          canAssignTechnician={props.canAssignTechnician}
+        />
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-2.5 lg:col-start-1 lg:row-span-4 lg:row-start-1">
+        <NorthStarMainColumn {...props} />
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-2.5 lg:col-start-2 lg:row-start-3">
+        <JobCustomerEquipmentSection
+          customerId={props.job.customerId}
+          jobId={props.job.id}
+          equipment={props.equipment}
+          canViewCustomerProfile={props.canManageCustomers}
+          northStar
+          compact
+        />
+
+        {props.canViewFinancials && props.profitability ? (
+          <JobDetailSideRailBillingCard
+            profitability={props.profitability}
+            estimates={props.billingContext?.estimates ?? []}
+            invoices={props.billingContext?.invoices ?? []}
+            canViewBilling={props.canViewBilling}
+          />
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -700,6 +642,8 @@ export function JobDetailPageView({
   const customerCompany = job.customerCompany?.trim();
   const scheduledLabel = `${formatScheduledDate(job.scheduledDate)} at ${formatScheduledTime(job.scheduledDate)}`;
   const northStar = isNorthStarShellEnabled();
+  const showEquipmentNav = equipment.length > 0;
+  const showBillingNav = Boolean(canViewFinancials && profitability);
 
   const workspaceProps: SharedWorkspaceProps = {
     job,
@@ -751,14 +695,6 @@ export function JobDetailPageView({
 
       {northStar ? (
         <>
-          <JobWorkflowOverview
-            job={job}
-            billingContext={billingContext}
-            canUpdateStatus={canUpdateStatus}
-            canViewBilling={canViewBilling}
-            aiFeaturesEnabled={aiFeaturesEnabled}
-            northStar
-          />
           <JobDetailNorthStarHeader
             job={job}
             customers={customers}
@@ -772,7 +708,27 @@ export function JobDetailPageView({
             canViewBilling={canViewBilling}
             billingContext={billingContext}
             profitability={profitability}
-            showEquipmentNav={equipment.length > 0}
+          />
+          <JobWorkflowOverview
+            job={job}
+            billingContext={billingContext}
+            canUpdateStatus={canUpdateStatus}
+            canViewBilling={canViewBilling}
+            showBillingSection={showBillingNav}
+            showEquipmentSection={showEquipmentNav}
+            aiFeaturesEnabled={aiFeaturesEnabled}
+            northStar
+          />
+          <JobDetailSectionCommandPlate
+            job={job}
+            canUpdateStatus={canUpdateStatus}
+            canEditJob={canEditJob}
+            canViewBilling={canViewBilling}
+            canCreateEstimate={canViewBilling}
+            aiFeaturesEnabled={aiFeaturesEnabled}
+            showBilling={showBillingNav}
+            showEquipment={showEquipmentNav}
+            billingContext={billingContext}
           />
           <NorthStarJobDetailBody {...workspaceProps} />
         </>

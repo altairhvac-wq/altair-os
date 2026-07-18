@@ -45,6 +45,8 @@ export function JobCustomerEquipmentSection({
   return (
     <section
       id={northStar ? JOB_DETAIL_EQUIPMENT_ANCHOR : undefined}
+      data-job-section={northStar ? JOB_DETAIL_EQUIPMENT_ANCHOR : undefined}
+      tabIndex={northStar ? -1 : undefined}
       className={`${resolveJobDetailSectionClass(northStar, compact)} scroll-mt-6`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">

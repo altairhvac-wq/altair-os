@@ -58,6 +58,8 @@ export function JobAttachmentsSection({
   return (
     <section
       id={northStar ? JOB_DETAIL_ATTACHMENTS_ANCHOR : undefined}
+      data-job-section={northStar ? JOB_DETAIL_ATTACHMENTS_ANCHOR : undefined}
+      tabIndex={northStar ? -1 : undefined}
       className={`${resolveJobDetailSectionClass(northStar)} scroll-mt-6`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">

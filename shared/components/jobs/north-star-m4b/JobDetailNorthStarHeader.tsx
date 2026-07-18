@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { updateJobAction } from "@/app/actions/jobs";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
-import { JobDetailSectionNav } from "./JobDetailSectionNav";
 import { JobForm, jobToFormData } from "@/shared/components/jobs/JobForm";
 import { JobPriorityBadge } from "@/shared/components/jobs/JobPriorityBadge";
 import { JobStatusBadge } from "@/shared/components/jobs/JobStatusBadge";
@@ -48,7 +47,6 @@ type JobDetailNorthStarHeaderProps = {
     invoices: JobInvoiceSummary[];
   };
   profitability?: JobProfitabilitySnapshot | null;
-  showEquipmentNav: boolean;
 };
 
 const workflowControlsProps = (
@@ -95,7 +93,6 @@ export function JobDetailNorthStarHeader({
   canViewBilling,
   billingContext,
   profitability,
-  showEquipmentNav,
 }: JobDetailNorthStarHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -157,7 +154,6 @@ export function JobDetailNorthStarHeader({
       canViewBilling,
       billingContext,
       profitability,
-      showEquipmentNav,
     },
     status,
     handleStatusUpdated,
@@ -320,24 +316,6 @@ export function JobDetailNorthStarHeader({
               </div>
             </>
           )}
-        </div>
-      </div>
-
-      <div className={dt.commandPlate}>
-        <JobDetailSectionNav
-          showBilling={canViewFinancials || Boolean(canViewBilling)}
-          showEquipment={showEquipmentNav}
-        />
-        <div
-          className="min-w-0 flex-1 rounded-lg border border-dashed border-[rgba(138,99,36,0.22)] bg-[rgba(255,249,234,0.45)] px-3 py-2.5"
-          aria-label="Additional workflow controls"
-        >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8A6324]">
-            Additional workflow controls
-          </p>
-          <div className="mt-2 flex flex-col gap-2 opacity-80 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-            <JobWorkflowControls {...sharedWorkflowProps} section="actions" />
-          </div>
         </div>
       </div>
     </>

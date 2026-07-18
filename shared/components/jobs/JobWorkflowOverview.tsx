@@ -33,6 +33,8 @@ type JobWorkflowOverviewProps = {
   };
   canUpdateStatus: boolean;
   canViewBilling: boolean;
+  showBillingSection?: boolean;
+  showEquipmentSection?: boolean;
   aiFeaturesEnabled?: boolean;
   northStar?: boolean;
 };
@@ -42,6 +44,8 @@ export function JobWorkflowOverview({
   billingContext,
   canUpdateStatus,
   canViewBilling,
+  showBillingSection = false,
+  showEquipmentSection = false,
   aiFeaturesEnabled = false,
   northStar = false,
 }: JobWorkflowOverviewProps) {
@@ -90,8 +94,35 @@ export function JobWorkflowOverview({
     ],
   );
 
+  const destinationContext = useMemo(
+    () => ({
+      stages: workflow.progress.stages,
+      primaryAction: workflow.primaryAction,
+      canViewBilling,
+      showBillingSection,
+      showEquipmentSection,
+      estimates: billingContext?.estimates ?? [],
+      invoices: billingContext?.invoices ?? [],
+    }),
+    [
+      billingContext?.estimates,
+      billingContext?.invoices,
+      canViewBilling,
+      showBillingSection,
+      showEquipmentSection,
+      workflow.primaryAction,
+      workflow.progress.stages,
+    ],
+  );
+
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2">
+      <JobWorkflowTimeline
+        stages={workflow.progress.stages}
+        progress={workflow.progress}
+        destinationContext={destinationContext}
+        northStar={northStar}
+      />
       <JobNextActionCard
         workflow={workflow}
         jobId={job.id}
@@ -105,11 +136,6 @@ export function JobWorkflowOverview({
         aiFeaturesEnabled={aiFeaturesEnabled}
         northStar={northStar}
         onStatusUpdated={setStatus}
-      />
-      <JobWorkflowTimeline
-        stages={workflow.progress.stages}
-        progress={workflow.progress}
-        northStar={northStar}
       />
     </div>
   );

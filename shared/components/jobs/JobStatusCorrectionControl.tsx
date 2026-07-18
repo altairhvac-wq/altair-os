@@ -73,57 +73,63 @@ export function JobStatusCorrectionControl({
     "w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200 disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
-    <div className="rounded-xl border border-dashed border-amber-200 bg-amber-50/60 p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+    <details className="rounded-lg border border-dashed border-amber-200/80 bg-amber-50/40 open:bg-amber-50/60">
+      <summary className="cursor-pointer list-none px-3 py-2 text-xs font-semibold text-amber-900 marker:content-none [&::-webkit-details-marker]:hidden">
         Correct status
-      </p>
-      <p className="mt-1 text-xs text-amber-900/80">
-        Move this job back to an earlier workflow step when a status was set by
-        mistake. This does not reopen completed or cancelled jobs.
-      </p>
+        <span className="ml-1.5 font-normal text-amber-800/75">
+          (admin recovery)
+        </span>
+      </summary>
 
-      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
-        <div className="min-w-0 flex-1">
-          <label
-            htmlFor={`status-correction-${jobId}`}
-            className="sr-only"
+      <div className="space-y-2 border-t border-amber-200/70 px-3 py-2.5">
+        <p className="text-xs text-amber-900/80">
+          Move this job back to an earlier workflow step when a status was set by
+          mistake. This does not reopen completed or cancelled jobs.
+        </p>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div className="min-w-0 flex-1">
+            <label
+              htmlFor={`status-correction-${jobId}`}
+              className="sr-only"
+            >
+              Correct status target
+            </label>
+            <select
+              id={`status-correction-${jobId}`}
+              value={targetStatus}
+              onChange={(event) => {
+                setTargetStatus(event.target.value as JobStatus);
+                setError(null);
+                setSuccessMessage(null);
+              }}
+              disabled={disabled || isPending}
+              className={selectClass}
+            >
+              <option value="">Select corrected status…</option>
+              {correctionTargets.map((option) => (
+                <option key={option} value={option}>
+                  {formatJobStatus(option)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={disabled || isPending || !targetStatus}
+            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Correct status target
-          </label>
-          <select
-            id={`status-correction-${jobId}`}
-            value={targetStatus}
-            onChange={(event) => {
-              setTargetStatus(event.target.value as JobStatus);
-              setError(null);
-              setSuccessMessage(null);
-            }}
-            disabled={disabled || isPending}
-            className={selectClass}
-          >
-            <option value="">Select corrected status…</option>
-            {correctionTargets.map((option) => (
-              <option key={option} value={option}>
-                {formatJobStatus(option)}
-              </option>
-            ))}
-          </select>
+            {isPending ? "Applying…" : "Apply correction"}
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={disabled || isPending || !targetStatus}
-          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isPending ? "Applying…" : "Apply correction"}
-        </button>
+        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {successMessage ? (
+          <p className="text-sm text-emerald-700">{successMessage}</p>
+        ) : null}
       </div>
-
-      {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
-      {successMessage ? (
-        <p className="mt-2 text-sm text-emerald-700">{successMessage}</p>
-      ) : null}
-    </div>
+    </details>
   );
 }

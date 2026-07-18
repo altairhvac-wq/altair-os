@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import { User, UserMinus, UserPlus } from "lucide-react";
+import { Pencil, User, UserMinus, UserPlus } from "lucide-react";
 import { assignJobAction, unassignJobAction } from "@/app/actions/dispatch";
 import {
   canUnassignJobTechnician,
@@ -42,6 +42,7 @@ export function JobTechnicianAssignment({
   const [pendingAction, setPendingAction] = useState<"assign" | "unassign" | null>(
     null,
   );
+  const [isEditing, setIsEditing] = useState(!assignedTechnicianId && canAssign);
   const [isPending, startTransition] = useTransition();
   const isAssigned = hasAssignedJobTechnician({ assignedTechnicianId });
   const showUnassign = canUnassignJobTechnician(
@@ -55,7 +56,8 @@ export function JobTechnicianAssignment({
     setSelectedTechnicianId(assignedTechnicianId ?? "");
     setError(null);
     setSuccessMessage(null);
-  }, [assignedTechnicianId, jobId]);
+    setIsEditing(!assignedTechnicianId && canAssign);
+  }, [assignedTechnicianId, canAssign, jobId]);
 
   function handleUnassign() {
     if (!showUnassign || isPending) {
@@ -77,6 +79,7 @@ export function JobTechnicianAssignment({
 
         setSelectedTechnicianId("");
         setSuccessMessage("Technician unassigned.");
+        setIsEditing(true);
         router.refresh();
       } finally {
         setPendingAction(null);
@@ -106,6 +109,7 @@ export function JobTechnicianAssignment({
           technicians.find((technician) => technician.id === selectedTechnicianId)
             ?.name ?? "Technician";
         setSuccessMessage(`Assigned to ${assignedName}.`);
+        setIsEditing(false);
         router.refresh();
       } finally {
         setPendingAction(null);
@@ -117,29 +121,33 @@ export function JobTechnicianAssignment({
     (technician) => technician.id === assignedTechnicianId,
   );
 
+  const changeButtonClass = northStar
+    ? `${dt.secondaryAction} min-h-8 px-2 text-[11px]`
+    : "inline-flex min-h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-50";
+
   return (
-    <div className={compact ? "space-y-2.5" : "space-y-4"}>
+    <div className={compact ? "space-y-2" : "space-y-3"}>
       {isAssigned ? (
         <div
           className={
             northStar
               ? `${dt.innerCard} border-[rgba(16,185,129,0.18)] bg-[rgba(236,253,245,0.65)]`
-              : "rounded-xl border border-emerald-100 bg-emerald-50/60 p-4"
+              : "rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2.5"
           }
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <div
               className={
                 northStar
-                  ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[rgba(16,185,129,0.12)] text-xs font-bold text-emerald-900"
-                  : "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-sm font-bold text-emerald-800"
+                  ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgba(16,185,129,0.12)] text-xs font-bold text-emerald-900"
+                  : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-sm font-bold text-emerald-800"
               }
             >
               {assignedMember?.initials ??
                 assignedTechnician?.slice(0, 2).toUpperCase() ??
                 "?"}
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <p
                 className={
                   northStar
@@ -157,6 +165,17 @@ export function JobTechnicianAssignment({
                 {assignedMember?.role ?? "Team member"}
               </p>
             </div>
+            {canAssign ? (
+              <button
+                type="button"
+                className={changeButtonClass}
+                aria-expanded={isEditing}
+                onClick={() => setIsEditing((open) => !open)}
+              >
+                <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                {isEditing ? "Close" : "Change"}
+              </button>
+            ) : null}
           </div>
         </div>
       ) : (
@@ -164,7 +183,7 @@ export function JobTechnicianAssignment({
           className={
             northStar
               ? `${dt.innerCard} border-[rgba(245,158,11,0.22)] bg-[rgba(254,243,199,0.45)] px-2.5 py-2 text-xs font-medium text-[#92400E]`
-              : "flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-3 text-sm text-amber-800"
+              : "flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50/60 px-3 py-2.5 text-sm text-amber-800"
           }
         >
           {!northStar ? <User className="h-4 w-4 shrink-0" /> : null}
@@ -172,27 +191,27 @@ export function JobTechnicianAssignment({
         </div>
       )}
 
-      {showUnassign ? (
-        <button
-          type="button"
-          onClick={handleUnassign}
-          disabled={isPending}
-          className={
-            northStar
-              ? `${dt.secondaryAction} w-full justify-center`
-              : "inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-          }
-        >
-          <UserMinus className="h-4 w-4" />
-          {pendingAction === "unassign" && isPending
-            ? "Unassigning..."
-            : "Unassign technician"}
-        </button>
-      ) : null}
-
-      {canAssign ? (
+      {canAssign && isEditing ? (
         technicians.length > 0 ? (
           <div className="space-y-2">
+            {showUnassign ? (
+              <button
+                type="button"
+                onClick={handleUnassign}
+                disabled={isPending}
+                className={
+                  northStar
+                    ? `${dt.secondaryAction} w-full justify-center`
+                    : "inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                }
+              >
+                <UserMinus className="h-4 w-4" />
+                {pendingAction === "unassign" && isPending
+                  ? "Unassigning..."
+                  : "Unassign technician"}
+              </button>
+            ) : null}
+
             <label
               htmlFor={`assign-technician-${jobId}`}
               className={
@@ -237,7 +256,7 @@ export function JobTechnicianAssignment({
               className={
                 northStar
                   ? `${dt.primaryAction} w-full justify-center`
-                  : "inline-flex min-h-11 items-center gap-2 rounded-lg bg-cyan-600 px-3.5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  : "inline-flex min-h-10 items-center gap-2 rounded-lg bg-cyan-600 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
               }
             >
               <UserPlus className="h-4 w-4" />
@@ -254,11 +273,17 @@ export function JobTechnicianAssignment({
             to enable assignments.
           </p>
         )
-      ) : (
+      ) : null}
+
+      {!canAssign ? (
         <p className={northStar ? "text-sm text-[#64748B]" : "text-sm text-slate-500"}>
           You do not have permission to assign technicians to this job.
         </p>
-      )}
+      ) : null}
+
+      {canAssign && !isEditing && successMessage ? (
+        <p className="text-xs text-emerald-700">{successMessage}</p>
+      ) : null}
     </div>
   );
 }

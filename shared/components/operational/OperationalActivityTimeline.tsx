@@ -267,6 +267,8 @@ export function OperationalActivityTimeline({
   return (
     <section
       id={sectionId}
+      data-job-section={sectionId}
+      tabIndex={sectionId ? -1 : undefined}
       className={`${sectionClass} ${sectionClassName ?? ""}`}
     >
       <div className="flex items-center gap-2.5">

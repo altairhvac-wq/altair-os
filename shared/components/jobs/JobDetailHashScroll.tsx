@@ -1,15 +1,19 @@
 "use client";
 
 import { useEffect } from "react";
+import {
+  prefersReducedMotion,
+  scrollToJobDetailSection,
+} from "@/shared/lib/jobs/job-detail-scroll";
 
 /**
- * Scrolls to in-page hash targets inside admin detail pages.
+ * Scrolls to in-page hash targets inside admin Job Detail pages.
  */
 export function JobDetailHashScroll() {
   useEffect(() => {
     let frame = 0;
 
-    const scrollToHashTarget = () => {
+    const scrollToHashTarget = (focus = false) => {
       const hash = window.location.hash;
 
       if (!hash || hash.length <= 1) {
@@ -17,23 +21,31 @@ export function JobDetailHashScroll() {
       }
 
       const targetId = decodeURIComponent(hash.slice(1));
-      const element = document.getElementById(targetId);
-
-      if (!element) {
-        return;
-      }
 
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        element.scrollIntoView({ behavior: "smooth", block: "start" });
+        scrollToJobDetailSection(targetId, {
+          updateHash: false,
+          focus,
+          behavior: prefersReducedMotion() ? "auto" : "smooth",
+        });
       });
     };
 
-    scrollToHashTarget();
-    window.addEventListener("hashchange", scrollToHashTarget);
+    // Allow layout to settle before initial hash scroll.
+    frame = window.requestAnimationFrame(() => {
+      scrollToHashTarget(true);
+    });
+
+    const onHashChange = () => scrollToHashTarget(true);
+    const onPopState = () => scrollToHashTarget(false);
+
+    window.addEventListener("hashchange", onHashChange);
+    window.addEventListener("popstate", onPopState);
 
     return () => {
-      window.removeEventListener("hashchange", scrollToHashTarget);
+      window.removeEventListener("hashchange", onHashChange);
+      window.removeEventListener("popstate", onPopState);
       window.cancelAnimationFrame(frame);
     };
   }, []);

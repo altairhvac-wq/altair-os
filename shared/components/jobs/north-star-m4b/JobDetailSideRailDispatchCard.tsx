@@ -2,6 +2,7 @@ import { Calendar, MapPin, User } from "lucide-react";
 import type { Technician } from "@/shared/types/dispatch";
 import type { JobDetail } from "@/shared/types/job";
 import { JobTechnicianAssignment } from "@/shared/components/jobs/JobTechnicianAssignment";
+import { JOB_DETAIL_DISPATCH_ANCHOR } from "@/shared/lib/jobs/job-detail-anchors";
 import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
 
 type JobDetailSideRailDispatchCardProps = {
@@ -20,7 +21,12 @@ export function JobDetailSideRailDispatchCard({
   const isAssigned = Boolean(job.assignedTechnicianId);
 
   return (
-    <section className={`${dt.compactSectionSurface} scroll-mt-6`}>
+    <section
+      id={JOB_DETAIL_DISPATCH_ANCHOR}
+      data-job-section={JOB_DETAIL_DISPATCH_ANCHOR}
+      className={`${dt.compactSectionSurface} scroll-mt-6`}
+      tabIndex={-1}
+    >
       <h2 className={dt.sectionTitle}>Dispatch</h2>
       <p className={dt.sectionSubtitle}>Schedule and assignment</p>
 

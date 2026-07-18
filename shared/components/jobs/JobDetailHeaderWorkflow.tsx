@@ -9,6 +9,7 @@ import {
   type JobInvoiceSummary,
 } from "@/shared/lib/job-next-business-action";
 import { shouldAcceptServerWorkflowStatus } from "@/shared/types/job-workflow";
+import { JobAdditionalWorkflowControls } from "./JobAdditionalWorkflowControls";
 import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
 import { JobWorkflowControls } from "./JobWorkflowControls";
@@ -144,17 +145,9 @@ export function JobDetailHeaderWorkflow({
               Open dispatch
             </Link>
           </div>
-          <div
-            className="w-full rounded-lg border border-dashed border-slate-200 bg-slate-50/70 px-3 py-2.5 lg:max-w-md"
-            aria-label="Additional workflow controls"
-          >
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-              Additional workflow controls
-            </p>
-            <div className="mt-2 opacity-80">
-              <JobWorkflowControls {...sharedWorkflowProps} section="actions" />
-            </div>
-          </div>
+          <JobAdditionalWorkflowControls>
+            <JobWorkflowControls {...sharedWorkflowProps} section="actions" />
+          </JobAdditionalWorkflowControls>
         </div>
       </div>
     </div>
