@@ -291,6 +291,7 @@ export async function createFieldEstimateFromJobAction(
       customerName: permission.customerName ?? "Customer",
       jobNumber: permission.jobNumber,
     },
+    fieldDb,
   );
 
   if (error || !estimate) {

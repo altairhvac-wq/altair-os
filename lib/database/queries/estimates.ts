@@ -175,8 +175,11 @@ function mapEstimateRowToEstimateDetail(
   };
 }
 
-async function generateEstimateNumber(companyId: string): Promise<string> {
-  const supabase = await createClient();
+async function generateEstimateNumber(
+  companyId: string,
+  db?: DbClient,
+): Promise<string> {
+  const supabase = await resolveDbClient(db);
 
   const { count, error } = await supabase
     .from("estimates")
@@ -617,6 +620,13 @@ function mapInsertRowToEstimateDetail(input: {
   };
 }
 
+/**
+ * Creates an estimate (and line items). Caller may pass a service-role
+ * client after application-level authorization (assigned-tech field flows).
+ * Technicians can INSERT drafts via RLS but cannot SELECT them, so field
+ * creation must use the authorized privileged client for insert/select,
+ * line-item writes, and rollback delete to avoid orphan drafts.
+ */
 export async function createEstimate(
   companyId: string,
   data: EstimateFormData,
@@ -627,6 +637,7 @@ export async function createEstimate(
     customerEmail?: string;
     customerPhone?: string;
   },
+  db?: DbClient,
 ): Promise<{ estimate: EstimateDetail | null; error: string | null }> {
   const validLineItems = data.lineItems.filter(isValidLineItem);
 
@@ -658,8 +669,8 @@ export async function createEstimate(
     return { estimate: null, error: serviceItemValidation.error };
   }
 
-  const supabase = await createClient();
-  const estimateNumber = await generateEstimateNumber(companyId);
+  const supabase = await resolveDbClient(db);
+  const estimateNumber = await generateEstimateNumber(companyId, db);
   const insert = mapEstimateFormDataToInsert(
     companyId,
     estimateNumber,
@@ -707,11 +718,12 @@ export async function createEstimate(
       code: lineItemsError.code,
       message: lineItemsError.message,
     });
+    // Privileged client required so techs without DELETE RLS cannot leave orphans.
     await supabase.from("estimates").delete().eq("id", row.id);
     return { estimate: null, error: mapDatabaseError(lineItemsError) };
   }
 
-  const estimate = await getEstimateById(companyId, row.id);
+  const estimate = await getEstimateById(companyId, row.id, db);
 
   if (estimate) {
     return { estimate, error: null };
