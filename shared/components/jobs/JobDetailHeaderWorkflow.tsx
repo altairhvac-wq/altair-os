@@ -125,7 +125,6 @@ export function JobDetailHeaderWorkflow({
         </div>
 
         <div className="flex w-full flex-col gap-3 lg:w-auto lg:shrink-0 lg:items-end">
-          <JobWorkflowControls {...sharedWorkflowProps} section="actions" />
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:justify-end">
             {canEditJob ? (
               <button
@@ -144,6 +143,17 @@ export function JobDetailHeaderWorkflow({
               <Truck className="h-4 w-4" />
               Open dispatch
             </Link>
+          </div>
+          <div
+            className="w-full rounded-lg border border-dashed border-slate-200 bg-slate-50/70 px-3 py-2.5 lg:max-w-md"
+            aria-label="Additional workflow controls"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              Additional workflow controls
+            </p>
+            <div className="mt-2 opacity-80">
+              <JobWorkflowControls {...sharedWorkflowProps} section="actions" />
+            </div>
           </div>
         </div>
       </div>

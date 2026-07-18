@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, Clock3, XCircle } from "lucide-react";
+import { createEstimateForCustomerHref } from "@/shared/lib/customers/customer-action-links";
 import type {
   JobWorkflowAvailableAction,
   JobWorkflowResolution,
@@ -9,15 +13,35 @@ import {
   jobDetailSectionSubtitleClass,
   resolveJobDetailSectionClass,
 } from "@/shared/components/jobs/job-detail-section-styles";
+import { JobBusinessActionGuide } from "@/shared/components/jobs/JobBusinessActionGuide";
+import { JobWorkflowActions } from "@/shared/components/jobs/JobWorkflowActions";
+import { StartRouteButton } from "@/shared/components/jobs/StartRouteButton";
 import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import type { JobStatus } from "@/shared/types/job";
 
 type JobNextActionCardProps = {
   workflow: Pick<
     JobWorkflowResolution,
-    "primaryAction" | "currentStage" | "isCancelled" | "isTerminal" | "canAdvance"
+    | "primaryAction"
+    | "businessAction"
+    | "currentStage"
+    | "isCancelled"
+    | "isTerminal"
+    | "canAdvance"
+    | "jobStatus"
   >;
+  jobId: string;
+  customerId: string;
+  status: JobStatus;
+  serviceAddress: string;
+  city: string;
+  state: string;
+  zip: string;
+  canUpdateStatus: boolean;
+  aiFeaturesEnabled?: boolean;
   northStar?: boolean;
   className?: string;
+  onStatusUpdated?: (status: JobStatus) => void;
 };
 
 function actionHint(action: JobWorkflowAvailableAction | null): string | null {
@@ -26,18 +50,6 @@ function actionHint(action: JobWorkflowAvailableAction | null): string | null {
   }
 
   return action.hint ?? null;
-}
-
-function actionHref(action: JobWorkflowAvailableAction | null): string | null {
-  if (!action || action.source !== "business") {
-    return null;
-  }
-
-  return action.href ?? null;
-}
-
-function isStatusAction(action: JobWorkflowAvailableAction | null): boolean {
-  return action?.source === "business" && action.kind === "status";
 }
 
 function resolveDisplayLabel(
@@ -58,26 +70,71 @@ function resolveDisplayLabel(
   return "No next action";
 }
 
+function isWaitingStatusAction(
+  action: JobWorkflowAvailableAction | null,
+): boolean {
+  return action?.source === "business" && action.kind === "status";
+}
+
+function isRecordPaymentAction(
+  action: JobWorkflowAvailableAction | null,
+): action is Extract<JobWorkflowAvailableAction, { source: "business" }> {
+  return action?.source === "business" && action.id === "awaiting_payment";
+}
+
+function isCreateEstimateAction(
+  action: JobWorkflowAvailableAction | null,
+): boolean {
+  return action?.source === "business" && action.id === "create_estimate";
+}
+
+function shouldOfferStartRoute(
+  workflow: JobNextActionCardProps["workflow"],
+  canUpdateStatus: boolean,
+): boolean {
+  if (!canUpdateStatus || workflow.isTerminal || workflow.primaryAction) {
+    return false;
+  }
+
+  return (
+    workflow.jobStatus === "scheduled" || workflow.jobStatus === "dispatched"
+  );
+}
+
 export function JobNextActionCard({
   workflow,
+  jobId,
+  customerId,
+  status,
+  serviceAddress,
+  city,
+  state,
+  zip,
+  canUpdateStatus,
+  aiFeaturesEnabled = false,
   northStar = false,
   className,
+  onStatusUpdated,
 }: JobNextActionCardProps) {
+  const router = useRouter();
   const titleId = "job-next-action-title";
+  const descriptionId = "job-next-action-description";
   const label = resolveDisplayLabel(workflow);
-  const hint = actionHint(workflow.primaryAction);
-  const href = actionHref(workflow.primaryAction);
-  const waiting = isStatusAction(workflow.primaryAction);
+  const primaryAction = workflow.primaryAction;
+  const hint = actionHint(primaryAction);
+  const waiting = isWaitingStatusAction(primaryAction);
+  const recordPayment = isRecordPaymentAction(primaryAction);
   const complete =
-    !workflow.primaryAction &&
+    !primaryAction &&
     !workflow.isCancelled &&
     workflow.isTerminal &&
     workflow.currentStage?.id === "completed";
   const cancelled = workflow.isCancelled;
+  const offerStartRoute = shouldOfferStartRoute(workflow, canUpdateStatus);
 
   const shellClass = northStar
-    ? `${dt.sectionSurface} border border-[rgba(201,164,77,0.28)] bg-gradient-to-br from-[#FFF9EA] via-[#FBF7EF] to-[#F3EBDD] shadow-[0_10px_28px_-18px_rgba(138,99,36,0.35)]`
-    : `${resolveJobDetailSectionClass(false)} border-cyan-200/80 bg-gradient-to-br from-cyan-50/90 via-white to-slate-50 shadow-[0_10px_28px_-18px_rgba(8,145,178,0.35)] dark:border-cyan-700/50 dark:from-cyan-950/40 dark:via-slate-950 dark:to-slate-900`;
+    ? `${dt.sectionSurface} sticky top-0 z-20 border border-[rgba(201,164,77,0.28)] bg-gradient-to-br from-[#FFF9EA] via-[#FBF7EF] to-[#F3EBDD] shadow-[0_10px_28px_-18px_rgba(138,99,36,0.35)]`
+    : `${resolveJobDetailSectionClass(false)} sticky top-0 z-20 border-cyan-200/80 bg-gradient-to-br from-cyan-50/90 via-white to-slate-50 shadow-[0_10px_28px_-18px_rgba(8,145,178,0.35)] dark:border-cyan-700/50 dark:from-cyan-950/40 dark:via-slate-950 dark:to-slate-900`;
 
   const eyebrowClass = northStar
     ? "text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8A6324]"
@@ -88,14 +145,14 @@ export function JobNextActionCard({
     : "text-xl font-bold tracking-tight text-slate-950 sm:text-2xl dark:text-white";
 
   const ctaClass = northStar
-    ? `${dt.primaryAction} min-h-11 w-full justify-center px-4 text-sm sm:w-auto`
-    : "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-1.5 rounded-xl bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:ring-offset-2 sm:w-auto dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400";
+    ? `${dt.primaryAction} min-h-12 w-full justify-center px-4 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A44D] focus-visible:ring-offset-2 sm:text-base`
+    : "inline-flex min-h-12 w-full touch-manipulation items-center justify-center gap-1.5 rounded-xl bg-cyan-700 px-4 py-3 text-base font-semibold text-white transition-colors hover:bg-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:ring-offset-2 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400";
 
   const statusBannerClass = cancelled
     ? northStar
       ? "border-[rgba(100,116,139,0.35)] bg-[#F3EBDD] text-[#4F4638]"
       : "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-    : waiting
+    : waiting && !recordPayment
       ? northStar
         ? "border-[rgba(245,158,11,0.35)] bg-[rgba(254,243,199,0.55)] text-[#92400E]"
         : "border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-700/50 dark:bg-amber-950/40 dark:text-amber-100"
@@ -109,57 +166,117 @@ export function JobNextActionCard({
     ? XCircle
     : complete
       ? CheckCircle2
-      : waiting
+      : waiting && !recordPayment
         ? Clock3
         : null;
+
+  const description =
+    hint ??
+    (workflow.currentStage && primaryAction
+      ? `Current stage: ${workflow.currentStage.label}`
+      : null);
+
+  const showFieldActions =
+    primaryAction?.source === "field" && canUpdateStatus && !cancelled;
+
+  const showBusinessCta =
+    primaryAction?.source === "business" &&
+    primaryAction.kind === "cta" &&
+    !cancelled;
+
+  const showRecordPaymentCta =
+    recordPayment && Boolean(primaryAction.href) && !cancelled;
+
+  function handleCreateEstimate() {
+    router.push(createEstimateForCustomerHref(customerId));
+  }
 
   return (
     <section
       aria-labelledby={titleId}
+      aria-describedby={description ? descriptionId : undefined}
       className={`${shellClass} ${className ?? ""}`}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-        <div className="min-w-0 flex-1">
+      <div className="flex flex-col gap-3">
+        <div className="min-w-0">
           <p className={eyebrowClass}>Next action</p>
           <h2 id={titleId} className={`mt-1 ${labelClass}`}>
             {label}
           </h2>
-          {hint ? (
-            <p className={`mt-1.5 max-w-2xl ${jobDetailSectionSubtitleClass(northStar)}`}>
-              {hint}
-            </p>
-          ) : workflow.currentStage && workflow.primaryAction ? (
-            <p className={`mt-1.5 ${jobDetailMutedTextClass(northStar)}`}>
-              Current stage: {workflow.currentStage.label}
+          {description ? (
+            <p
+              id={descriptionId}
+              className={`mt-1.5 max-w-2xl ${
+                hint
+                  ? jobDetailSectionSubtitleClass(northStar)
+                  : jobDetailMutedTextClass(northStar)
+              }`}
+            >
+              {description}
             </p>
           ) : null}
         </div>
 
-        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:items-end">
-          {href && !waiting && !cancelled ? (
-            <Link href={href} className={ctaClass}>
-              {label}
+        <div
+          className="flex w-full flex-col gap-2 [&_a]:min-h-12 [&_a]:w-full [&_button]:min-h-12 [&_button]:w-full [&_a]:focus-visible:outline-none [&_a]:focus-visible:ring-2 [&_a]:focus-visible:ring-offset-2 [&_button]:focus-visible:outline-none [&_button]:focus-visible:ring-2 [&_button]:focus-visible:ring-offset-2"
+          aria-label={`Primary workflow action: ${label}`}
+        >
+          {showFieldActions ? (
+            <JobWorkflowActions
+              jobId={jobId}
+              customerId={customerId}
+              status={status}
+              canUpdateStatus={canUpdateStatus}
+              aiFeaturesEnabled={aiFeaturesEnabled}
+              layout="stack"
+              primarySize="hero"
+              showMobileHint={false}
+              onStatusUpdated={onStatusUpdated}
+            />
+          ) : null}
+
+          {showBusinessCta && workflow.businessAction ? (
+            <JobBusinessActionGuide
+              action={{ ...workflow.businessAction, hint: undefined }}
+              layout="compact"
+              presentation="cta"
+              onFieldEstimateClick={
+                isCreateEstimateAction(primaryAction)
+                  ? handleCreateEstimate
+                  : undefined
+              }
+            />
+          ) : null}
+
+          {showRecordPaymentCta && primaryAction.href ? (
+            <Link
+              href={primaryAction.href}
+              className={ctaClass}
+              aria-label="Record payment for this job"
+            >
+              Record Payment
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           ) : null}
 
-          {href && waiting ? (
-            <Link
-              href={href}
-              className={
-                northStar
-                  ? `${dt.secondaryAction} min-h-11 w-full justify-center px-4 text-sm sm:w-auto`
-                  : "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-sm font-semibold text-amber-950 transition-colors hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 sm:w-auto dark:border-amber-600 dark:bg-slate-900 dark:text-amber-100 dark:hover:bg-amber-950/50"
-              }
-            >
-              View details
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
+          {offerStartRoute ? (
+            <StartRouteButton
+              jobId={jobId}
+              status={status}
+              serviceAddress={serviceAddress}
+              city={city}
+              state={state}
+              zip={zip}
+              canUpdateStatus={canUpdateStatus}
+              layout="inline"
+              onStatusUpdated={onStatusUpdated}
+            />
           ) : null}
 
           {statusBannerClass && StatusIcon ? (
             <div
-              className={`inline-flex min-h-11 w-full items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-semibold sm:w-auto ${statusBannerClass}`}
+              className={`inline-flex min-h-12 w-full items-center gap-2 rounded-xl border px-3.5 py-3 text-sm font-semibold ${statusBannerClass}`}
+              role="status"
             >
               <StatusIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span>
@@ -170,15 +287,6 @@ export function JobNextActionCard({
                     : "Waiting on this step"}
               </span>
             </div>
-          ) : null}
-
-          {!href &&
-          workflow.primaryAction &&
-          !waiting &&
-          workflow.canAdvance ? (
-            <p className={`text-xs ${jobDetailMutedTextClass(northStar)}`}>
-              Use the workflow controls below to continue.
-            </p>
           ) : null}
         </div>
       </div>
