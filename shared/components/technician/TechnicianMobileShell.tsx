@@ -3,6 +3,7 @@
 import { LogOut } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
+import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
 import { logoutAction } from "@/app/actions/auth";
 import { CompanyTimezoneProvider } from "@/shared/lib/company-timezone";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
@@ -15,6 +16,7 @@ import { TechnicianBottomNav } from "./TechnicianBottomNav";
 import { TechnicianConnectivityBanner } from "./TechnicianConnectivityBanner";
 import { TechnicianShellContentLoadingState } from "./TechnicianShellContentLoadingState";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
+import { SubscriptionBillingBanner } from "@/shared/components/billing/SubscriptionBillingBanner";
 import { FounderMarketingDisplayProvider } from "@/shared/components/display/FounderMarketingDisplayContext";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 import { PwaInstallBanner } from "@/shared/components/pwa/PwaInstallBanner";
@@ -25,6 +27,8 @@ type TechnicianMobileShellProps = {
   userCompanies: MembershipWithCompany[];
   unreadNotificationCount?: number;
   hideDemoPrefixes?: boolean;
+  billingAccess?: CompanyBillingAccess | null;
+  canManageBilling?: boolean;
 };
 
 export function TechnicianMobileShell({
@@ -33,6 +37,8 @@ export function TechnicianMobileShell({
   userCompanies,
   unreadNotificationCount = 0,
   hideDemoPrefixes = false,
+  billingAccess = null,
+  canManageBilling = false,
 }: TechnicianMobileShellProps) {
   const { isOwner, viewMode, setViewMode, navigationContext, redirectPending } =
     useOwnerViewMode(companyContext);
@@ -80,6 +86,12 @@ export function TechnicianMobileShell({
             <PullToRefresh>
               <TechnicianConnectivityBanner />
               <PwaInstallBanner />
+              {billingAccess ? (
+                <SubscriptionBillingBanner
+                  access={billingAccess}
+                  canManageBilling={canManageBilling}
+                />
+              ) : null}
               {redirectPending ? (
                 <TechnicianShellContentLoadingState />
               ) : (

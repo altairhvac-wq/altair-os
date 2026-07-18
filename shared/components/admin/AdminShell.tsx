@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
+import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
 import { CompanyTimezoneProvider } from "@/shared/lib/company-timezone";
 import { PullToRefresh } from "@/shared/components/mobile/PullToRefresh";
 import { isPullToRefreshRoute } from "@/shared/components/mobile/is-pull-to-refresh-route";
@@ -16,6 +17,7 @@ import { Header } from "./Header";
 import { shouldHideAdminNavigation } from "./should-hide-admin-navigation";
 import type { Notification } from "@/shared/types/notification";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
+import { SubscriptionBillingBanner } from "@/shared/components/billing/SubscriptionBillingBanner";
 import { FounderMarketingDisplayProvider } from "@/shared/components/display/FounderMarketingDisplayContext";
 import { isBetaBugReportEnabled } from "@/lib/beta/beta-bug-report";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
@@ -30,6 +32,8 @@ type AdminShellProps = {
   unreadNotificationCount?: number;
   showPlatformAdminNav?: boolean;
   hideDemoPrefixes?: boolean;
+  billingAccess?: CompanyBillingAccess | null;
+  canManageBilling?: boolean;
 };
 
 export function AdminShell({
@@ -40,6 +44,8 @@ export function AdminShell({
   unreadNotificationCount = 0,
   showPlatformAdminNav = false,
   hideDemoPrefixes = false,
+  billingAccess = null,
+  canManageBilling = false,
 }: AdminShellProps) {
   const pathname = usePathname();
   const isMobile = useMobileViewport();
@@ -116,6 +122,12 @@ export function AdminShell({
       <main className="admin-shell-main min-h-0 min-w-0 max-w-full overflow-x-clip px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5 md:overflow-y-auto">
         <PullToRefresh enabled={pullToRefreshEnabled}>
           <PwaInstallBanner />
+          {billingAccess ? (
+            <SubscriptionBillingBanner
+              access={billingAccess}
+              canManageBilling={canManageBilling}
+            />
+          ) : null}
           {redirectPending ? <AdminShellContentLoadingState /> : children}
         </PullToRefresh>
       </main>

@@ -9,6 +9,7 @@ import {
   getUnreadNotificationCount,
   getUserNotifications,
 } from "@/lib/database/services/notifications";
+import { getRequestCompanyBillingAccess } from "@/lib/saas-billing/request-access";
 
 export default async function AdminLayout({
   children,
@@ -33,18 +34,21 @@ export default async function AdminLayout({
     redirect("/technician");
   }
 
-  const [notifications, unreadNotificationCount] = await Promise.all([
-    getUserNotifications(companyContext.company.id, companyContext.user.id, {
-      limit: 20,
-    }),
-    getUnreadNotificationCount(
-      companyContext.company.id,
-      companyContext.user.id,
-    ),
-  ]);
+  const [notifications, unreadNotificationCount, billingAccess] =
+    await Promise.all([
+      getUserNotifications(companyContext.company.id, companyContext.user.id, {
+        limit: 20,
+      }),
+      getUnreadNotificationCount(
+        companyContext.company.id,
+        companyContext.user.id,
+      ),
+      getRequestCompanyBillingAccess(companyContext.company.id),
+    ]);
 
   const showPlatformAdminNav = canAccessPlatformAdmin(user);
   const hideDemoPrefixes = shouldHideDemoPrefixesForDisplay(user);
+  const canManageBilling = companyContext.permissions.manageCompany;
 
   return (
     <AdminShell
@@ -54,6 +58,8 @@ export default async function AdminLayout({
       unreadNotificationCount={unreadNotificationCount}
       showPlatformAdminNav={showPlatformAdminNav}
       hideDemoPrefixes={hideDemoPrefixes}
+      billingAccess={billingAccess}
+      canManageBilling={canManageBilling}
     >
       {children}
     </AdminShell>

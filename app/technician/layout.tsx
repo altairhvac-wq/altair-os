@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext, getUserCompanies } from "@/lib/database/company-context";
 import { shouldHideDemoPrefixesForDisplay } from "@/lib/database/founder-marketing-display";
 import { getUnreadNotificationCount } from "@/lib/database/services/notifications";
+import { getRequestCompanyBillingAccess } from "@/lib/saas-billing/request-access";
 import { TECHNICIAN_NOTIFICATION_TYPES } from "@/shared/types/notification";
 
 export default async function TechnicianLayout({
@@ -26,13 +27,17 @@ export default async function TechnicianLayout({
     redirect("/setup");
   }
 
-  const unreadNotificationCount = await getUnreadNotificationCount(
-    companyContext.company.id,
-    companyContext.user.id,
-    { types: TECHNICIAN_NOTIFICATION_TYPES },
-  );
+  const [unreadNotificationCount, billingAccess] = await Promise.all([
+    getUnreadNotificationCount(
+      companyContext.company.id,
+      companyContext.user.id,
+      { types: TECHNICIAN_NOTIFICATION_TYPES },
+    ),
+    getRequestCompanyBillingAccess(companyContext.company.id),
+  ]);
 
   const hideDemoPrefixes = shouldHideDemoPrefixesForDisplay(user);
+  const canManageBilling = companyContext.permissions.manageCompany;
 
   return (
     <TechnicianMobileShell
@@ -40,6 +45,8 @@ export default async function TechnicianLayout({
       userCompanies={userCompanies}
       unreadNotificationCount={unreadNotificationCount}
       hideDemoPrefixes={hideDemoPrefixes}
+      billingAccess={billingAccess}
+      canManageBilling={canManageBilling}
     >
       {children}
     </TechnicianMobileShell>

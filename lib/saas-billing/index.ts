@@ -35,6 +35,8 @@ export {
   resolveCompanyBillingAccess,
 } from "@/lib/saas-billing/resolver";
 
+export { getRequestCompanyBillingAccess } from "@/lib/saas-billing/request-access";
+
 export {
   claimStaleProcessingSubscriptionEvent,
   claimSubscriptionEventForProcessing,
