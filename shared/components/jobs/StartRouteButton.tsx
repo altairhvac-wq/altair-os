@@ -33,6 +33,11 @@ type StartRouteButtonProps = {
   layout?: "inline" | "block";
   /** Use technician field tokens in block layout (mobile job detail). */
   fieldStyled?: boolean;
+  /**
+   * When fieldStyled, force secondary weight so Start Route does not compete
+   * with a recommended primary action (e.g. Create Quote).
+   */
+  fieldSecondary?: boolean;
   /** Dominant primary styling for the technician home hero (scheduled). */
   heroPrimary?: boolean;
   /** Compact secondary styling for the technician home hero (dispatched). */
@@ -53,6 +58,7 @@ export function StartRouteButton({
   canUpdateStatus = false,
   layout = "inline",
   fieldStyled = false,
+  fieldSecondary = false,
   heroPrimary = false,
   heroSecondary = false,
   competingSheetActive = false,
@@ -159,7 +165,7 @@ export function StartRouteButton({
       : heroSecondary
     ? technicianFieldHomeHeroRouteActionClass
     : fieldStyled
-    ? isEnRoute
+    ? isEnRoute || fieldSecondary
       ? technicianFieldStartRouteSecondaryClass
       : technicianFieldPrimaryActionClass
     : isEnRoute

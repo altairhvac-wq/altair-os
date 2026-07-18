@@ -1,30 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  Camera,
-  Calculator,
-  Clock,
-  Mail,
-  MapPin,
-  Navigation,
-  Package,
-  Phone,
-  Receipt,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Calculator, Clock, Mail, MapPin } from "lucide-react";
 import { JobSummaryAiAssistant } from "@/shared/components/jobs/JobSummaryAiAssistant";
 import { JobWorkflowControls } from "@/shared/components/jobs/JobWorkflowControls";
-import {
-  buildGoogleMapsDirectionsUrl,
-  buildMapsDirectionsUrl,
-  hasCompleteServiceAddress,
-  openMapsDirectionsUrl,
-} from "@/shared/lib/maps";
+import { hasCompleteServiceAddress } from "@/shared/lib/maps";
 import {
   selectActiveEstimate,
   type JobEstimateSummary,
   type JobInvoiceSummary,
 } from "@/shared/lib/job-next-business-action";
+import { resolveJobWorkflow } from "@/shared/lib/workflow";
 import { InvoicePaymentCollectionCard } from "@/shared/components/invoices/InvoicePaymentCollectionCard";
 import { canRecordInvoicePayment } from "@/shared/types/invoice-payment";
 import { isActiveInvoice } from "@/shared/types/invoice";
@@ -41,6 +27,7 @@ import type { ServiceItem } from "@/shared/types/service-item";
 import { TechnicianEstimateApprovalSheet } from "./TechnicianEstimateApprovalSheet";
 import { TechnicianEstimateSheet } from "./TechnicianEstimateSheet";
 import { TechnicianExpenseSheet } from "./TechnicianExpenseSheet";
+import { TechnicianJobCommandCenter } from "./TechnicianJobCommandCenter";
 import { TechnicianJobEquipmentSummary } from "./TechnicianJobEquipmentSummary";
 import { TechnicianJobLaborStatus } from "./TechnicianJobLaborStatus";
 import { TechnicianJobShiftStatus } from "./TechnicianJobShiftStatus";
@@ -48,12 +35,12 @@ import { TechnicianJobWorkHistory } from "./TechnicianJobWorkHistory";
 import { TechnicianMaterialSheet } from "./TechnicianMaterialSheet";
 import { TechnicianPhotoSheet } from "./TechnicianPhotoSheet";
 import {
-  technicianFieldContactPrimaryClass,
   technicianFieldContactSecondaryClass,
   technicianFieldContextBlockClass,
+  technicianFieldJobDetailsClass,
+  technicianFieldJobDetailsSummaryClass,
   technicianFieldReferenceSectionClass,
   technicianFieldSectionLabelClass,
-  technicianFieldUtilityActionClass,
   technicianFieldWorkflowSurfaceClass,
 } from "./technician-field-styles";
 
@@ -156,16 +143,7 @@ export function TechnicianJobFieldDetail({
     zip: job.zip,
   };
   const hasCompleteAddress = hasCompleteServiceAddress(addressParts);
-  const [mapsUrl, setMapsUrl] = useState(() =>
-    buildGoogleMapsDirectionsUrl(addressParts),
-  );
-
-  useEffect(() => {
-    setMapsUrl(buildMapsDirectionsUrl(addressParts));
-  }, [job.serviceAddress, job.city, job.state, job.zip]);
-  const hasPhone = Boolean(job.customerPhone?.trim());
   const hasEmail = Boolean(job.customerEmail?.trim());
-  const hasMaps = Boolean(mapsUrl);
   const isActive = status !== "completed" && status !== "cancelled";
   const fieldActionsDisabled = activeSheet !== null || completeSheetOpen;
   const showCreateEstimate =
@@ -180,6 +158,46 @@ export function TechnicianJobFieldDetail({
     canCollectPayment && payableInvoice !== null;
   const showLegacyEstimateButton =
     showCreateEstimate && !useBillingGuidance;
+
+  const workflow = useMemo(
+    () =>
+      resolveJobWorkflow(
+        {
+          jobId: job.id,
+          customerId: job.customerId,
+          status,
+          estimates: billingContext?.estimates ?? [],
+          invoices: billingContext?.invoices ?? [],
+        },
+        {
+          canCreateEstimate: showCreateEstimate,
+          canViewBilling,
+          canApproveOnSite:
+            canApproveOnSite && Boolean(sentEstimateForApproval),
+        },
+      ),
+    [
+      billingContext?.estimates,
+      billingContext?.invoices,
+      canApproveOnSite,
+      canViewBilling,
+      job.customerId,
+      job.id,
+      sentEstimateForApproval,
+      showCreateEstimate,
+      status,
+    ],
+  );
+
+  function openEstimateSheet(estimateId?: string | null) {
+    setEditingEstimateId(estimateId ?? null);
+    setActiveSheet("estimate");
+  }
+
+  function scrollToNotes() {
+    const target = document.getElementById("technician-job-notes");
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <>
@@ -205,56 +223,46 @@ export function TechnicianJobFieldDetail({
           ) : null}
         </div>
 
-        <section>
-          <h3 className={technicianFieldSectionLabelClass}>Next step</h3>
-          <div className={`${technicianFieldWorkflowSurfaceClass} mt-2`}>
-            <JobWorkflowControls
-              jobId={job.id}
-              customerId={job.customerId}
-              initialStatus={status}
-              serviceAddress={job.serviceAddress}
-              city={job.city}
-              state={job.state}
-              zip={job.zip}
-              canUpdateStatus
-              aiFeaturesEnabled={aiFeaturesEnabled}
-              layout="stack"
-              fieldActionFirst
-              showMobileHint
-              competingSheetActive={activeSheet !== null}
-              businessContext={billingContext}
-              businessActionOptions={{
-                canCreateEstimate: showCreateEstimate,
-                canViewBilling,
-                canApproveOnSite:
-                  canApproveOnSite && Boolean(sentEstimateForApproval),
-              }}
-              onFieldEstimateClick={
-                showCreateEstimate
-                  ? () => {
-                      setEditingEstimateId(null);
-                      setActiveSheet("estimate");
-                    }
-                  : undefined
-              }
-              onFieldFinishEstimateClick={
-                showCreateEstimate
-                  ? (estimateId) => {
-                      setEditingEstimateId(estimateId);
-                      setActiveSheet("estimate");
-                    }
-                  : undefined
-              }
-              onFieldApproveClick={
-                canApproveOnSite && sentEstimateForApproval
-                  ? () => setActiveSheet("approve_estimate")
-                  : undefined
-              }
-              onCompleteSheetOpenChange={setCompleteSheetOpen}
-              onStatusUpdated={handleStatusUpdated}
-            />
-          </div>
-        </section>
+        <TechnicianJobCommandCenter
+          jobId={job.id}
+          customerId={job.customerId}
+          status={status}
+          workflow={workflow}
+          address={addressParts}
+          customerPhone={job.customerPhone}
+          canUpdateStatus
+          canCreateEstimate={showCreateEstimate}
+          canApproveOnSite={
+            canApproveOnSite && Boolean(sentEstimateForApproval)
+          }
+          aiFeaturesEnabled={aiFeaturesEnabled}
+          disabled={fieldActionsDisabled}
+          onStatusUpdated={handleStatusUpdated}
+          onCompleteSheetOpenChange={setCompleteSheetOpen}
+          onCreateQuote={
+            showCreateEstimate ? () => openEstimateSheet(null) : undefined
+          }
+          onContinueQuote={
+            showCreateEstimate
+              ? (estimateId) => openEstimateSheet(estimateId)
+              : undefined
+          }
+          onCaptureApproval={
+            canApproveOnSite && sentEstimateForApproval
+              ? () => setActiveSheet("approve_estimate")
+              : undefined
+          }
+          onOpenPhotos={
+            isActive ? () => setActiveSheet("photo") : undefined
+          }
+          onOpenNotes={scrollToNotes}
+          onOpenMaterials={
+            isActive ? () => setActiveSheet("material") : undefined
+          }
+          onOpenReceipts={
+            isActive ? () => setActiveSheet("expense") : undefined
+          }
+        />
 
         {showPaymentCollection && payableInvoice ? (
           <section>
@@ -269,130 +277,105 @@ export function TechnicianJobFieldDetail({
           </section>
         ) : null}
 
-        {isActive ? (
-          <section className="space-y-3">
-            {(showLegacyEstimateButton || hasPhone || hasEmail || hasMaps) ? (
-              <div>
-                <h3 className={technicianFieldSectionLabelClass}>Contact</h3>
-                <div className="mt-2 flex gap-2">
-                  {hasPhone ? (
-                    <a
-                      href={`tel:${job.customerPhone}`}
-                      className={technicianFieldContactPrimaryClass}
-                    >
-                      <Phone className="h-4 w-4 shrink-0 text-emerald-600" />
-                      Call
-                    </a>
-                  ) : null}
-                  {hasMaps ? (
-                    <a
-                      href={mapsUrl!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(event) => {
-                        if (openMapsDirectionsUrl(mapsUrl!)) {
-                          event.preventDefault();
-                        }
-                      }}
-                      className={technicianFieldContactPrimaryClass}
-                    >
-                      <Navigation className="h-4 w-4 shrink-0 text-cyan-700" />
-                      Maps
-                    </a>
-                  ) : null}
-                  {hasEmail ? (
-                    <a
-                      href={`mailto:${job.customerEmail}`}
-                      className={technicianFieldContactSecondaryClass}
-                    >
-                      <Mail className="h-4 w-4 shrink-0 text-slate-500" />
-                      Email
-                    </a>
-                  ) : null}
-                  {showLegacyEstimateButton ? (
-                    <button
-                      type="button"
-                      disabled={fieldActionsDisabled}
-                      onClick={() => setActiveSheet("estimate")}
-                      className={`${technicianFieldContactSecondaryClass} disabled:cursor-not-allowed disabled:opacity-60`}
-                      title={
-                        fieldActionsDisabled
-                          ? completeSheetOpen
-                            ? "Finish or cancel complete work before creating an estimate"
-                            : "Finish the open form before creating an estimate"
-                          : undefined
-                      }
-                    >
-                      <Calculator className="h-4 w-4 shrink-0 text-indigo-600" />
-                      Estimate
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-            ) : null}
+        <details className={technicianFieldJobDetailsClass}>
+          <summary className={technicianFieldJobDetailsSummaryClass}>
+            Additional job controls
+          </summary>
+          <div className={`${technicianFieldWorkflowSurfaceClass} m-3 mt-0`}>
+            <p className="mb-3 text-xs leading-relaxed text-slate-500">
+              Fallback controls if you need the previous next-step layout.
+              Prefer the command center above when possible.
+            </p>
+            <JobWorkflowControls
+              jobId={job.id}
+              customerId={job.customerId}
+              initialStatus={status}
+              status={status}
+              serviceAddress={job.serviceAddress}
+              city={job.city}
+              state={job.state}
+              zip={job.zip}
+              canUpdateStatus
+              aiFeaturesEnabled={aiFeaturesEnabled}
+              layout="stack"
+              fieldActionFirst
+              showMobileHint
+              competingSheetActive={activeSheet !== null || completeSheetOpen}
+              businessContext={billingContext}
+              businessActionOptions={{
+                canCreateEstimate: showCreateEstimate,
+                canViewBilling,
+                canApproveOnSite:
+                  canApproveOnSite && Boolean(sentEstimateForApproval),
+              }}
+              onFieldEstimateClick={
+                showCreateEstimate
+                  ? () => openEstimateSheet(null)
+                  : undefined
+              }
+              onFieldFinishEstimateClick={
+                showCreateEstimate
+                  ? (estimateId) => openEstimateSheet(estimateId)
+                  : undefined
+              }
+              onFieldApproveClick={
+                canApproveOnSite && sentEstimateForApproval
+                  ? () => setActiveSheet("approve_estimate")
+                  : undefined
+              }
+              onCompleteSheetOpenChange={setCompleteSheetOpen}
+              onStatusUpdated={handleStatusUpdated}
+            />
+          </div>
+        </details>
 
+        {isActive && (showLegacyEstimateButton || hasEmail) ? (
+          <section className="space-y-3">
             <div>
-              <h3 className={technicianFieldSectionLabelClass}>Log on site</h3>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  disabled={fieldActionsDisabled}
-                  onClick={() => setActiveSheet("photo")}
-                  className={technicianFieldUtilityActionClass}
-                  title={
-                    fieldActionsDisabled
-                      ? completeSheetOpen
-                        ? "Finish or cancel complete work before adding a photo"
-                        : "Finish the open form before adding a photo"
-                      : undefined
-                  }
-                >
-                  <Camera className="h-4 w-4 shrink-0 text-violet-600" />
-                  Photos
-                </button>
-                <button
-                  type="button"
-                  disabled={fieldActionsDisabled}
-                  onClick={() => setActiveSheet("material")}
-                  className={technicianFieldUtilityActionClass}
-                  title={
-                    fieldActionsDisabled
-                      ? completeSheetOpen
-                        ? "Finish or cancel complete work before logging material"
-                        : "Finish the open form before logging material"
-                      : undefined
-                  }
-                >
-                  <Package className="h-4 w-4 shrink-0 text-cyan-700" />
-                  Materials
-                </button>
-                <button
-                  type="button"
-                  disabled={fieldActionsDisabled}
-                  onClick={() => setActiveSheet("expense")}
-                  className={technicianFieldUtilityActionClass}
-                  title={
-                    fieldActionsDisabled
-                      ? completeSheetOpen
-                        ? "Finish or cancel complete work before logging a receipt"
-                        : "Finish the open form before logging a receipt"
-                      : undefined
-                  }
-                >
-                  <Receipt className="h-4 w-4 shrink-0 text-amber-600" />
-                  Receipts
-                </button>
+              <h3 className={technicianFieldSectionLabelClass}>
+                More contact options
+              </h3>
+              <div className="mt-2 flex gap-2">
+                {hasEmail ? (
+                  <a
+                    href={`mailto:${job.customerEmail}`}
+                    className={technicianFieldContactSecondaryClass}
+                  >
+                    <Mail className="h-4 w-4 shrink-0 text-slate-500" />
+                    Email
+                  </a>
+                ) : null}
+                {showLegacyEstimateButton ? (
+                  <button
+                    type="button"
+                    disabled={fieldActionsDisabled}
+                    onClick={() => openEstimateSheet(null)}
+                    className={`${technicianFieldContactSecondaryClass} disabled:cursor-not-allowed disabled:opacity-60`}
+                    title={
+                      fieldActionsDisabled
+                        ? completeSheetOpen
+                          ? "Finish or cancel complete work before creating an estimate"
+                          : "Finish the open form before creating an estimate"
+                        : undefined
+                    }
+                  >
+                    <Calculator className="h-4 w-4 shrink-0 text-indigo-600" />
+                    Estimate
+                  </button>
+                ) : null}
               </div>
             </div>
           </section>
         ) : null}
 
-        <TechnicianJobWorkHistory
-          key={`${job.id}-${workHistoryRefreshKey}`}
-          jobId={job.id}
-          notes={job.notes}
-          description={job.description}
-        />
+        <div id="technician-job-notes">
+          <TechnicianJobWorkHistory
+            key={`${job.id}-${workHistoryRefreshKey}`}
+            jobId={job.id}
+            notes={job.notes}
+            description={job.description}
+          />
+        </div>
 
         <section className={technicianFieldReferenceSectionClass}>
           <h3 className={technicianFieldSectionLabelClass}>Reference</h3>
