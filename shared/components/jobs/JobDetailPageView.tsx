@@ -248,8 +248,6 @@ function LegacyJobDetailBody({
         billingContext={billingContext}
         canUpdateStatus={canUpdateStatus}
         canViewBilling={canViewBilling}
-        showBillingSection={Boolean(canViewFinancials && profitability)}
-        showEquipmentSection={equipment.length > 0}
         aiFeaturesEnabled={aiFeaturesEnabled}
       />
 
@@ -714,8 +712,6 @@ export function JobDetailPageView({
             billingContext={billingContext}
             canUpdateStatus={canUpdateStatus}
             canViewBilling={canViewBilling}
-            showBillingSection={showBillingNav}
-            showEquipmentSection={showEquipmentNav}
             aiFeaturesEnabled={aiFeaturesEnabled}
             northStar
           />

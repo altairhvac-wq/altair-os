@@ -122,16 +122,12 @@ function stageReachedFacts(
     input.status === "completed" ||
     Boolean(input.arrivedAt);
 
-  const estimateCreated =
-    skipEstimateStages ||
-    Boolean(estimate) ||
-    Boolean(invoice);
+  // Artifact truth only — never treat "create estimate" recommendation as complete.
+  const estimateCreated = skipEstimateStages ? false : Boolean(estimate);
 
-  const customerApproved =
-    skipEstimateStages ||
-    estimate?.status === "approved" ||
-    estimate?.status === "converted" ||
-    Boolean(invoice);
+  const customerApproved = skipEstimateStages
+    ? false
+    : estimate?.status === "approved" || estimate?.status === "converted";
 
   const workInProgress =
     input.status === "in_progress" ||
@@ -183,6 +179,8 @@ function resolveCurrentStageId(
 
   switch (businessAction?.id) {
     case "create_estimate":
+      // Next actionable stage, not current — keep current on last reached field stage.
+      break;
     case "finish_send_estimate":
       return "estimate_created";
     case "awaiting_approval":

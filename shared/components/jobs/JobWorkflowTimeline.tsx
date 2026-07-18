@@ -137,9 +137,25 @@ function navigateDestination(destination: JobWorkflowStageDestination) {
     return;
   }
 
-  if (destination.kind === "href") {
+  if (destination.kind === "route" || destination.kind === "action") {
     window.location.assign(destination.href);
   }
+}
+
+function destinationOpenLabel(destination: JobWorkflowStageDestination): string {
+  if (destination.kind === "locked") {
+    return destination.reason;
+  }
+
+  if (destination.kind === "section") {
+    return `Go to ${destination.label}`;
+  }
+
+  if (destination.kind === "action") {
+    return `Open ${destination.label}`;
+  }
+
+  return `Open ${destination.label}`;
 }
 
 function StageControl({
@@ -188,12 +204,12 @@ function StageControl({
     );
   }
 
-  if (destination.kind === "href") {
+  if (destination.kind === "route" || destination.kind === "action") {
     return (
       <Link
         href={destination.href}
         className={`${interactiveClass} hover:bg-black/[0.03]`}
-        aria-label={`${accessibleName}. Open ${destination.label}`}
+        aria-label={`${accessibleName}. ${destinationOpenLabel(destination)}`}
       >
         {label}
       </Link>
@@ -204,7 +220,7 @@ function StageControl({
     <button
       type="button"
       className={`${interactiveClass} hover:bg-black/[0.03]`}
-      aria-label={`${accessibleName}. Go to ${destination.label}`}
+      aria-label={`${accessibleName}. ${destinationOpenLabel(destination)}`}
       onClick={() => navigateDestination(destination)}
     >
       {label}
@@ -250,9 +266,10 @@ export function JobWorkflowTimeline({
   const context: JobWorkflowStageDestinationContext = destinationContext ?? {
     stages,
     primaryAction: null,
+    jobId: "",
+    customerId: "",
     canViewBilling: false,
-    showBillingSection: false,
-    showEquipmentSection: false,
+    canCreateEstimate: false,
     estimates: [],
     invoices: [],
   };

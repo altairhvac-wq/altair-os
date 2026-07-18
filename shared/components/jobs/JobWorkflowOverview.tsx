@@ -33,8 +33,6 @@ type JobWorkflowOverviewProps = {
   };
   canUpdateStatus: boolean;
   canViewBilling: boolean;
-  showBillingSection?: boolean;
-  showEquipmentSection?: boolean;
   aiFeaturesEnabled?: boolean;
   northStar?: boolean;
 };
@@ -44,8 +42,6 @@ export function JobWorkflowOverview({
   billingContext,
   canUpdateStatus,
   canViewBilling,
-  showBillingSection = false,
-  showEquipmentSection = false,
   aiFeaturesEnabled = false,
   northStar = false,
 }: JobWorkflowOverviewProps) {
@@ -98,9 +94,10 @@ export function JobWorkflowOverview({
     () => ({
       stages: workflow.progress.stages,
       primaryAction: workflow.primaryAction,
+      jobId: job.id,
+      customerId: job.customerId,
       canViewBilling,
-      showBillingSection,
-      showEquipmentSection,
+      canCreateEstimate: canViewBilling,
       estimates: billingContext?.estimates ?? [],
       invoices: billingContext?.invoices ?? [],
     }),
@@ -108,8 +105,8 @@ export function JobWorkflowOverview({
       billingContext?.estimates,
       billingContext?.invoices,
       canViewBilling,
-      showBillingSection,
-      showEquipmentSection,
+      job.customerId,
+      job.id,
       workflow.primaryAction,
       workflow.progress.stages,
     ],
