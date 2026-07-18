@@ -48,7 +48,6 @@ export function CompanySubscriptionBillingCard({
   loadError = null,
 }: CompanySubscriptionBillingCardProps) {
   const [actionError, setActionError] = useState<string | null>(null);
-  const [comingSoonMessage, setComingSoonMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const effectiveSummary: CompanySubscriptionBillingSummary = summary ?? {
@@ -93,20 +92,9 @@ export function CompanySubscriptionBillingCard({
   const primaryButtonClass = northStar
     ? "inline-flex min-h-10 items-center justify-center rounded-lg bg-[#B88A2E] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#9C7424] disabled:opacity-60"
     : "inline-flex min-h-10 items-center justify-center rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:opacity-60";
-  const secondaryButtonClass = northStar
-    ? "inline-flex min-h-10 items-center justify-center rounded-lg border border-[rgba(138,99,36,0.28)] bg-white px-3 py-2 text-sm font-semibold text-[#17130E] transition-colors hover:bg-[#FFF9EA] disabled:opacity-60"
-    : "inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 disabled:opacity-60";
-
-  function handleManageSubscription() {
-    setActionError(null);
-    setComingSoonMessage(
-      "Billing Portal management is coming soon. Contact support to change payment methods.",
-    );
-  }
 
   function handleStartSubscription() {
     setActionError(null);
-    setComingSoonMessage(null);
 
     if (!canManageSubscription) {
       setActionError("Only owners and admins can start a subscription.");
@@ -114,8 +102,8 @@ export function CompanySubscriptionBillingCard({
     }
 
     if (!checkoutConfigured) {
-      setComingSoonMessage(
-        "Subscription checkout is coming soon. Price configuration is not available yet.",
+      setActionError(
+        "Subscription checkout is not configured yet. Contact support to get started.",
       );
       return;
     }
@@ -191,7 +179,7 @@ export function CompanySubscriptionBillingCard({
                     : "inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700"
                 }
               >
-                Beta complimentary
+                Closed beta access
               </span>
             ) : (
               <span className={valueClass}>Paid subscription</span>
@@ -214,14 +202,8 @@ export function CompanySubscriptionBillingCard({
         </p>
       ) : null}
 
-      {comingSoonMessage ? (
-        <p className={`mt-3 ${mutedClass}`} role="status">
-          {comingSoonMessage}
-        </p>
-      ) : null}
-
       {canManageSubscription ? (
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+        <div className="mt-4 flex flex-col gap-2">
           {canStartCheckout ? (
             <button
               type="button"
@@ -232,16 +214,10 @@ export function CompanySubscriptionBillingCard({
               {isPending ? "Starting…" : "Start subscription"}
             </button>
           ) : null}
-          <button
-            type="button"
-            className={
-              canStartCheckout ? secondaryButtonClass : primaryButtonClass
-            }
-            disabled={isPending}
-            onClick={handleManageSubscription}
-          >
-            Manage subscription
-          </button>
+          <p className={mutedClass}>
+            To update payment methods or subscription details, contact support.
+            Self-serve billing management will be added over time.
+          </p>
         </div>
       ) : (
         <p className={`mt-4 ${mutedClass}`}>

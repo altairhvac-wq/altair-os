@@ -125,7 +125,7 @@ function DesignLabStaticTopbar({
               role="status"
               className="north-star-header-alpha inline-flex shrink-0 items-center rounded-full border border-[rgba(201,164,77,0.28)] bg-[rgba(201,164,77,0.12)] px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide text-[#E6D092] sm:px-2 sm:text-[11px]"
             >
-              Alpha
+              Preview
             </span>
           </div>
           <p

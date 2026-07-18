@@ -334,7 +334,7 @@ function checkAlphaHardening(): SystemCheckResult {
   if (enabled) {
     return {
       id: "alpha-hardening",
-      label: "Alpha hardening",
+      label: "Deployment hardening",
       status: "info",
       message: explicitFlag
         ? "Enabled via NEXT_PUBLIC_ALPHA_HARDENING=true."
@@ -344,7 +344,7 @@ function checkAlphaHardening(): SystemCheckResult {
 
   return {
     id: "alpha-hardening",
-    label: "Alpha hardening",
+    label: "Deployment hardening",
     status: "info",
     message: "Disabled in local development unless NEXT_PUBLIC_ALPHA_HARDENING=true.",
   };

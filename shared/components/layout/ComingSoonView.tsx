@@ -6,8 +6,8 @@ type ComingSoonViewProps = {
 };
 
 export function ComingSoonView({
-  title = "Coming soon",
-  description = "This area is being prepared for the next release. Check back after the internal alpha rollout.",
+  title = "Available soon",
+  description = "This area is being prepared for a later release. More capabilities will be added over time.",
 }: ComingSoonViewProps) {
   return (
     <div className="admin-card mx-auto flex w-full max-w-xl flex-col items-center px-6 py-12 text-center sm:px-8 sm:py-14">

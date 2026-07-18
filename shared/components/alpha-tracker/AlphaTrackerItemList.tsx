@@ -90,7 +90,7 @@ export function AlphaTrackerItemList({
       <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
         <p className="text-sm font-medium text-slate-900">No tracker items yet</p>
         <p className="mt-1 max-w-sm text-sm text-slate-500">
-          Report bugs, polish items, or unfinished areas found during alpha testing.
+          Report bugs, polish items, or areas that need improvement.
         </p>
       </div>
     );

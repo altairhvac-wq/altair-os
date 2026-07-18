@@ -26,7 +26,7 @@ export function SettingsFutureCard({
               {description}
             </p>
             <p className="mt-1.5 text-[10px] font-medium uppercase tracking-wide text-[#4F4638]">
-              Coming soon
+              More capabilities will be added over time
             </p>
           </div>
         </div>
@@ -46,7 +46,7 @@ export function SettingsFutureCard({
             {description}
           </p>
           <p className="mt-1.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-            Coming soon
+            More capabilities will be added over time
           </p>
         </div>
       </div>

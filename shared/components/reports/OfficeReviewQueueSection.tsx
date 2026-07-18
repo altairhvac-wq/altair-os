@@ -1240,7 +1240,7 @@ function QueueBatchPreviewModal({
             role="note"
           >
             <p className="text-xs font-bold text-amber-900">
-              Bulk workflows coming soon
+              Bulk workflows in preview
             </p>
             <ul className="mt-1.5 space-y-1 text-[11px] text-amber-900/90">
               {OFFICE_REVIEW_QUEUE_BATCH_PREVIEW_LIMITATIONS.map((limitation) => (

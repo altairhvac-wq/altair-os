@@ -35,7 +35,7 @@ export const shellNavGroups: ShellNavGroup[] = [
     label: "Command",
     items: [
       { label: "Dashboard", href: "/altair-shell-north-star-v1", icon: LayoutDashboard },
-      { label: "Alpha Tracker", href: "/alpha-tracker", icon: Bug },
+      { label: "Feedback", href: "/alpha-tracker", icon: Bug },
       { label: "Reports", href: "/reports", icon: BarChart3 },
     ],
   },

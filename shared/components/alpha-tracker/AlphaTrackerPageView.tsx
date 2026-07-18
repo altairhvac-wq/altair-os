@@ -189,9 +189,9 @@ export function AlphaTrackerPageView({
     <div className="admin-card flex min-w-0 max-w-full flex-col">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
         <div>
-          <h2 className="text-base font-bold text-slate-900">Alpha Tracker</h2>
+          <h2 className="text-base font-bold text-slate-900">Feedback</h2>
           <p className="text-xs text-slate-500">
-            Internal bug and feature tracking for alpha testing
+            Report issues and product feedback for your team
           </p>
         </div>
         <button

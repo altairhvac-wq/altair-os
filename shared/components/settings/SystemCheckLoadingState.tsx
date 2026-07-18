@@ -18,7 +18,7 @@ export function SystemCheckLoadingState() {
         <MasterContentStack density="compact">
           <MasterPageHeader
             title="System Check"
-            subtitle="Read-only production readiness checks for the internal alpha."
+            subtitle="Read-only production readiness checks for your workspace."
             density="compact"
             secondaryAction={
               <Skeleton className="hidden h-3 w-48 sm:block sm:max-w-xs" />
@@ -67,7 +67,7 @@ export function SystemCheckLoadingState() {
 
           <MasterPageSection
             title="Deploy documentation"
-            description="Use the repo checklists for Vercel env vars, Supabase Auth URLs, and the full internal alpha smoke test."
+            description="Use the deployment checklists for Vercel env vars, Supabase Auth URLs, and the full smoke test."
             density="compact"
           >
             <MasterPageSurface

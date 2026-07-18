@@ -107,11 +107,11 @@ export function getSubscriptionBillingBannerModel(
       if (access.isComped) {
         return {
           tone: "info",
-          title: "Complimentary beta access",
+          title: "Closed beta access",
           description: canManageBilling
-            ? "This company has complimentary beta access. No paid subscription is required right now."
-            : "Your company is using Altair OS with complimentary beta access.",
-          showManageAction: canManageBilling,
+            ? "This company has complimentary access during the closed beta. No paid subscription is required right now."
+            : "Your company is using Altair OS with complimentary closed beta access.",
+          showManageAction: false,
           role: "status",
         };
       }

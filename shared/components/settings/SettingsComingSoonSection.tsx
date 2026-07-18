@@ -28,9 +28,9 @@ export function SettingsComingSoonSection({
           <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 marker:content-none [&::-webkit-details-marker]:hidden">
             <div className="flex min-w-0 items-baseline gap-2">
               <span className="text-sm font-semibold text-[#17130E]">
-                Coming soon
+                Planned
               </span>
-              <span className="text-xs text-[#4F4638]">{count} planned</span>
+              <span className="text-xs text-[#4F4638]">{count} upcoming</span>
             </div>
             <ChevronDown
               className="h-4 w-4 shrink-0 text-[#8A6324] transition-transform group-open:rotate-180"
@@ -54,7 +54,7 @@ export function SettingsComingSoonSection({
                     {item.title}
                   </span>
                   <span className="shrink-0 text-[10px] font-medium uppercase tracking-wide text-[#4F4638]">
-                    Soon
+                    Later
                   </span>
                 </li>
               );
@@ -83,9 +83,9 @@ export function SettingsComingSoonSection({
         <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 marker:content-none [&::-webkit-details-marker]:hidden">
           <div className="flex min-w-0 items-baseline gap-2">
             <span className="text-sm font-semibold text-slate-900">
-              Coming soon
+              Planned
             </span>
-            <span className="text-xs text-slate-500">{count} planned</span>
+            <span className="text-xs text-slate-500">{count} upcoming</span>
           </div>
           <ChevronDown
             className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180"
@@ -109,7 +109,7 @@ export function SettingsComingSoonSection({
                   {item.title}
                 </span>
                 <span className="shrink-0 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                  Soon
+                  Later
                 </span>
               </li>
             );

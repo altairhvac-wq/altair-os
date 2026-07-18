@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
 import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import {
@@ -55,7 +54,6 @@ export function SubscriptionBillingBanner({
   canManageBilling,
   className = "",
 }: SubscriptionBillingBannerProps) {
-  const [portalMessage, setPortalMessage] = useState<string | null>(null);
   const model = getSubscriptionBillingBannerModel(access, canManageBilling);
 
   if (!model) {
@@ -66,9 +64,10 @@ export function SubscriptionBillingBanner({
   const styles = northStar
     ? NORTH_STAR_TONE_STYLES[model.tone]
     : TONE_STYLES[model.tone];
-  const manageButtonClass = northStar
-    ? "inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border border-[rgba(138,99,36,0.28)] bg-white px-3 py-1.5 text-xs font-semibold text-[#17130E] transition-colors hover:bg-[#FFF9EA] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8A6324]"
-    : "inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400";
+  const description =
+    model.showManageAction && canManageBilling
+      ? `${model.description} Contact support to update billing details.`
+      : model.description;
 
   return (
     <div
@@ -76,32 +75,9 @@ export function SubscriptionBillingBanner({
       aria-live={model.role === "alert" ? "assertive" : "polite"}
       className={`mb-2.5 min-w-0 break-words rounded-lg border px-4 py-3 text-sm ${styles.container} ${styles.text} ${className}`}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold">{model.title}</p>
-          <p className="mt-0.5 text-sm leading-relaxed opacity-95">
-            {model.description}
-          </p>
-          {portalMessage ? (
-            <p className="mt-2 text-sm leading-relaxed opacity-95" role="status">
-              {portalMessage}
-            </p>
-          ) : null}
-        </div>
-
-        {model.showManageAction ? (
-          <button
-            type="button"
-            className={manageButtonClass}
-            onClick={() =>
-              setPortalMessage(
-                "Billing Portal management is coming soon. Contact support to change payment methods.",
-              )
-            }
-          >
-            Manage Subscription
-          </button>
-        ) : null}
+      <div className="min-w-0">
+        <p className="font-semibold">{model.title}</p>
+        <p className="mt-0.5 text-sm leading-relaxed opacity-95">{description}</p>
       </div>
     </div>
   );

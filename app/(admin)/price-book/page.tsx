@@ -26,8 +26,8 @@ export default async function PriceBookPage() {
   if (shouldShowAlphaComingSoon("/price-book")) {
     return (
       <ComingSoonView
-        title="Price book coming soon"
-        description="Service catalog management is being polished for production. Existing invoice line items remain available."
+        title="Price book temporarily unavailable"
+        description="Service catalog management is being finalized. Existing invoice line items remain available."
       />
     );
   }

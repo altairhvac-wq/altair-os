@@ -13,7 +13,7 @@ export default async function AlphaTrackerPage() {
 
   if (!companyContext.permissions.manageCompany) {
     return (
-      <UnauthorizedAccessView description="Alpha tracker access is limited to company admins." />
+      <UnauthorizedAccessView description="Feedback access is limited to company admins." />
     );
   }
 

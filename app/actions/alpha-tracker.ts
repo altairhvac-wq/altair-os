@@ -33,7 +33,7 @@ export async function createAlphaTrackerItemAction(
   }
 
   if (!context.permissions.manageCompany) {
-    return { error: "You do not have permission to manage alpha tracker items." };
+    return { error: "You do not have permission to manage feedback items." };
   }
 
   if (!data.title.trim()) {
@@ -65,7 +65,7 @@ export async function updateAlphaTrackerItemAction(
   }
 
   if (!context.permissions.manageCompany) {
-    return { error: "You do not have permission to manage alpha tracker items." };
+    return { error: "You do not have permission to manage feedback items." };
   }
 
   if (!data.title.trim()) {
@@ -97,7 +97,7 @@ export async function updateAlphaTrackerItemStatusAction(
   }
 
   if (!context.permissions.manageCompany) {
-    return { error: "You do not have permission to manage alpha tracker items." };
+    return { error: "You do not have permission to manage feedback items." };
   }
 
   const { item, error } = await updateAlphaTrackerItemStatus(

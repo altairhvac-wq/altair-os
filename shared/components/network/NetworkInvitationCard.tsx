@@ -139,7 +139,7 @@ export function NetworkInvitationCard({
             <button
               type="button"
               disabled
-              title="Coming soon"
+              title="Email resend will be available in a later release"
               className={disabledButtonClass}
             >
               <Mail className="h-3.5 w-3.5" />

@@ -208,12 +208,14 @@ function SettingsPageLegacyView({
   const integrationItems = [
     {
       title: "Integrations",
-      description: "Connect accounting, payroll, and field service tools.",
+      description:
+        "Connect accounting, payroll, and field service tools. Available during the closed beta as we expand connectors.",
       icon: Plug,
     },
     {
       title: "Notifications",
-      description: "Configure alerts for jobs, billing, and team activity.",
+      description:
+        "Configure alerts for jobs, billing, and team activity. More options will be added over time.",
       icon: Bell,
     },
   ];
@@ -221,7 +223,8 @@ function SettingsPageLegacyView({
   const systemComingSoonItems = [
     {
       title: "Company Preferences",
-      description: "Company profile, branding, and operational configuration.",
+      description:
+        "Additional branding and operational preferences will be available in a later release.",
       icon: Settings2,
     },
   ];
@@ -246,7 +249,7 @@ function SettingsPageLegacyView({
 
           <MasterPageSection
             title="Company"
-            description="Company name, locale, and contact information (view only for beta)"
+            description="Company name, locale, and contact information. View only during the closed beta — editing will be available in a later release."
             density="compact"
           >
             <MasterPageSurface variant="card" className="min-w-0 p-2.5 sm:p-4">
@@ -509,8 +512,7 @@ function SettingsPageLegacyView({
                       System Check
                     </h3>
                     <p className="hidden text-xs leading-snug text-slate-600 sm:mt-0.5 sm:block sm:text-sm">
-                      Read-only production readiness checks for the internal
-                      alpha.
+                      Read-only production readiness checks for your workspace.
                     </p>
                   </div>
                 </div>

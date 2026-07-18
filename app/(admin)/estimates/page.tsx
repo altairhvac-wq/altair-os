@@ -44,8 +44,8 @@ export default async function EstimatesPage({
   if (shouldShowAlphaComingSoon("/estimates")) {
     return (
       <ComingSoonView
-        title="Estimates coming soon"
-        description="Estimate creation and customer approvals are being finalized for the internal alpha. Use jobs and invoices in the meantime."
+        title="Estimates temporarily unavailable"
+        description="Estimate creation and customer approvals are being finalized. Use jobs and invoices in the meantime."
       />
     );
   }

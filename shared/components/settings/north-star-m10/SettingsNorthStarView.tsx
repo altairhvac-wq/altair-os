@@ -223,12 +223,14 @@ export function SettingsNorthStarView({
   const integrationItems = [
     {
       title: "Integrations",
-      description: "Connect accounting, payroll, and field service tools.",
+      description:
+        "Connect accounting, payroll, and field service tools. Available during the closed beta as we expand connectors.",
       icon: Plug,
     },
     {
       title: "Notifications",
-      description: "Configure alerts for jobs, billing, and team activity.",
+      description:
+        "Configure alerts for jobs, billing, and team activity. More options will be added over time.",
       icon: Bell,
     },
   ];
@@ -236,7 +238,8 @@ export function SettingsNorthStarView({
   const systemComingSoonItems = [
     {
       title: "Company Preferences",
-      description: "Company profile, branding, and operational configuration.",
+      description:
+        "Additional branding and operational preferences will be available in a later release.",
       icon: Settings2,
     },
   ];
@@ -270,7 +273,7 @@ export function SettingsNorthStarView({
           <SettingsNorthStarSectionHeader
             eyebrow="Company"
             title="Company profile"
-            description="Company name, locale, and contact information (view only for beta)."
+            description="Company name, locale, and contact information. View only during the closed beta — editing will be available in a later release."
           />
 
           <div className="px-3 py-2 sm:px-4 sm:py-4 lg:px-5">
@@ -547,8 +550,7 @@ export function SettingsNorthStarView({
                   <div className="min-w-0">
                     <h3 className={st.systemCheckTitle}>System Check</h3>
                     <p className="mt-0.5 hidden text-xs leading-snug text-[#4F4638] sm:block sm:text-sm">
-                      Read-only production readiness checks for the internal
-                      alpha.
+                      Read-only production readiness checks for your workspace.
                     </p>
                   </div>
                 </div>

@@ -85,7 +85,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
           <p className="text-sm font-semibold text-slate-900">Read-only reports</p>
           <p className="mt-0.5 text-xs text-slate-600">
             Summaries reflect current company data. Export, AI insights, and custom
-            reports are not available yet.
+            reports will be added over time.
           </p>
         </div>
       </div>

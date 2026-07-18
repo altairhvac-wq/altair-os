@@ -101,7 +101,7 @@ export const adminNavItems: NavItem[] = [
     label: "Network",
     href: "/network",
     icon: Network,
-    description: "Trusted partners, overflow work, and coverage (early access)",
+    description: "Trusted partners, overflow work, and coverage",
   },
   {
     label: "Reports",
@@ -110,10 +110,10 @@ export const adminNavItems: NavItem[] = [
     description: "Revenue and productivity insights",
   },
   {
-    label: "Alpha Tracker",
+    label: "Feedback",
     href: "/alpha-tracker",
     icon: Bug,
-    description: "Internal bug and feature tracking for alpha testing",
+    description: "Report issues and product feedback",
   },
   {
     label: "Settings",

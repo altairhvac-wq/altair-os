@@ -11,7 +11,7 @@ export default async function SystemCheckPage() {
     return (
       <UnauthorizedAccessView
         title="Owner access required"
-        description="System checks are limited to company owners during the internal alpha."
+        description="System checks are limited to company owners."
       />
     );
   }

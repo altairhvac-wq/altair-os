@@ -4,7 +4,6 @@ import { LogOut, Search } from "lucide-react";
 import { getCompanyAccessScope } from "@/lib/database/access-control";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import { logoutAction } from "@/app/actions/auth";
-import { AlphaIndicator } from "@/shared/components/admin/AlphaIndicator";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
@@ -85,9 +84,6 @@ export function Header({
             >
               {title}
             </p>
-            <span className="hidden min-[430px]:inline-flex">
-              <AlphaIndicator tone={chromeTone} northStar={northStarChrome} />
-            </span>
           </div>
           {description ? (
             <p
