@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
+  ArrowLeft,
   Coffee,
   PlayCircle,
 } from "lucide-react";
@@ -15,7 +16,10 @@ import {
 } from "@/app/actions/time-entries";
 import { correctOpenShiftAction } from "@/app/actions/time-clock";
 import { CompactTimeClockBar } from "@/shared/components/time-clock/CompactTimeClockBar";
-import { formatActionError } from "@/shared/lib/operational-errors";
+import {
+  formatActionError,
+  formatConnectionCatchError,
+} from "@/shared/lib/operational-errors";
 import {
   formatDurationMinutes,
   formatTechnicianTimeState,
@@ -45,12 +49,15 @@ export function TechnicianTimeView({
   const [summary, setSummary] = useState(initialSummary);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryEndedAt, setRecoveryEndedAt] = useState("");
   const [recoveryReason, setRecoveryReason] = useState("");
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Server actions can refresh route props without remounting this client view.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(initialState);
     setEntries(initialEntries);
     setSummary(initialSummary);
@@ -134,22 +141,35 @@ export function TechnicianTimeView({
 
     setError(null);
     startTransition(async () => {
-      const result = await action();
-      if (result.error) {
-        setError(formatActionError(result.error, "Could not update your time. Try again."));
-        return;
-      }
+      try {
+        const result = await action();
+        if (result.error) {
+          setError(
+            formatActionError(
+              result.error,
+              "Could not update your time. Try again.",
+            ),
+          );
+          return;
+        }
 
-      if (result.state) {
-        setState(result.state);
-      }
+        if (result.state) {
+          setState(result.state);
+        }
 
-      if (result.entries) {
-        setEntries(result.entries);
-      }
+        if (result.entries) {
+          setEntries(result.entries);
+        }
 
-      if (result.summary) {
-        setSummary(result.summary);
+        if (result.summary) {
+          setSummary(result.summary);
+        }
+      } catch {
+        setError(
+          formatConnectionCatchError(
+            "Could not update your time. Check your connection and try again.",
+          ),
+        );
       }
     });
   }
@@ -185,38 +205,72 @@ export function TechnicianTimeView({
       .slice(0, 16);
     setRecoveryEndedAt(localNow);
     setRecoveryReason("");
+    setRecoveryError(null);
     setShowRecovery(true);
     setError(null);
+  }
+
+  function cancelRecovery() {
+    if (isPending) return;
+
+    setShowRecovery(false);
+    setRecoveryEndedAt("");
+    setRecoveryReason("");
+    setRecoveryError(null);
   }
 
   function recoverMissedClockOut() {
     if (!staleShift || isPending) return;
 
-    setError(null);
-    startTransition(async () => {
-      const result = await correctOpenShiftAction({
-        entryId: staleShift.id,
-        endedAt: new Date(recoveryEndedAt).toISOString(),
-        reason: recoveryReason,
-      });
-      if (result.error) {
-        setError(formatActionError(result.error, "Could not correct your shift."));
-        return;
-      }
+    const correctedEnd = new Date(recoveryEndedAt);
+    if (Number.isNaN(correctedEnd.getTime())) {
+      setRecoveryError("Enter a valid finish date and time.");
+      return;
+    }
 
-      window.location.reload();
+    setRecoveryError(null);
+    startTransition(async () => {
+      try {
+        const result = await correctOpenShiftAction({
+          entryId: staleShift.id,
+          endedAt: correctedEnd.toISOString(),
+          reason: recoveryReason,
+        });
+        if (result.error) {
+          setRecoveryError(
+            formatActionError(result.error, "Could not correct your shift."),
+          );
+          return;
+        }
+
+        window.location.reload();
+      } catch {
+        setRecoveryError(
+          "Could not save the correction. Check your connection and try again.",
+        );
+      }
     });
   }
 
   return (
     <div className="space-y-4">
+      <Link
+        href="/technician"
+        className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-white hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Back to Today
+      </Link>
+
       <div className="space-y-1">
         <h1 className="text-lg font-bold text-slate-900">Time review</h1>
         <p className="text-sm text-slate-600">
-          Your shift and job labor are tracked through{" "}
+          Starting and completing assigned jobs normally manages your shift
+          automatically. Use this page to clock in or out manually, take a
+          break, or correct time. Job labor remains tied to{" "}
           <span className="font-semibold text-slate-800">Start work</span> and{" "}
           <span className="font-semibold text-slate-800">Complete work</span> on
-          assigned jobs. Use this page for breaks or time corrections only.
+          assigned jobs.
         </p>
       </div>
 
@@ -231,47 +285,92 @@ export function TechnicianTimeView({
 
       {staleShift ? (
         <section className="rounded-xl border border-rose-200 bg-rose-50 p-3.5">
-          <p className="text-sm font-bold text-rose-900">Still clocked in from an earlier shift?</p>
+          <p className="text-sm font-bold text-rose-900">
+            Still clocked in from an earlier shift?
+          </p>
           <p className="mt-1 text-xs text-rose-700">
-            This shift has been open for 12 hours or longer. Enter when you actually finished; the correction and reason will be recorded for review.
+            This shift has been open for 12 hours or longer. Enter when you
+            actually finished; the correction and reason will be recorded for
+            review.
           </p>
           {showRecovery ? (
-            <div className="mt-3 space-y-2">
+            <form
+              className="mt-3 space-y-3"
+              aria-busy={isPending}
+              onSubmit={(event) => {
+                event.preventDefault();
+                recoverMissedClockOut();
+              }}
+            >
               <label className="block text-xs font-semibold text-rose-900">
                 Actual finish time
                 <input
                   type="datetime-local"
+                  required
                   value={recoveryEndedAt}
-                  onChange={(event) => setRecoveryEndedAt(event.target.value)}
-                  className="mt-1 w-full rounded-lg border border-rose-200 bg-white px-3 py-2.5 text-sm text-slate-900"
+                  onChange={(event) => {
+                    setRecoveryEndedAt(event.target.value);
+                    setRecoveryError(null);
+                  }}
+                  className="mt-1 min-h-11 w-full rounded-lg border border-rose-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none [color-scheme:light] placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-500/20"
                 />
               </label>
               <label className="block text-xs font-semibold text-rose-900">
                 What happened?
                 <textarea
+                  required
+                  minLength={5}
                   value={recoveryReason}
-                  onChange={(event) => setRecoveryReason(event.target.value)}
+                  onChange={(event) => {
+                    setRecoveryReason(event.target.value);
+                    setRecoveryError(null);
+                  }}
                   placeholder="For example: Forgot to clock out after the final appointment"
                   rows={2}
-                  className="mt-1 w-full rounded-lg border border-rose-200 bg-white px-3 py-2.5 text-sm text-slate-900"
+                  className="mt-1 min-h-20 w-full resize-y rounded-lg border border-rose-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-500/20"
                 />
               </label>
+              <p className="text-xs text-rose-700">
+                Add at least 5 characters so the adjustment has a clear audit
+                trail.
+              </p>
+              {recoveryError ? (
+                <p
+                  role="alert"
+                  aria-live="assertive"
+                  className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-red-800"
+                >
+                  {recoveryError}
+                </p>
+              ) : null}
               <div className="flex gap-2">
                 <button
-                  type="button"
-                  disabled={isPending || !recoveryEndedAt || recoveryReason.trim().length < 5}
-                  onClick={recoverMissedClockOut}
+                  type="submit"
+                  disabled={
+                    isPending ||
+                    !recoveryEndedAt ||
+                    recoveryReason.trim().length < 5
+                  }
                   className="min-h-11 rounded-xl bg-rose-700 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
                 >
                   {isPending ? "Saving…" : "Submit correction"}
                 </button>
-                <button type="button" onClick={() => setShowRecovery(false)} className="min-h-11 px-3 text-sm font-semibold text-rose-800">
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={cancelRecovery}
+                  className="min-h-11 px-3 text-sm font-semibold text-rose-800 disabled:opacity-50"
+                >
                   Cancel
                 </button>
               </div>
-            </div>
+            </form>
           ) : (
-            <button type="button" onClick={beginRecovery} className="mt-3 min-h-11 rounded-xl bg-rose-700 px-4 py-2.5 text-sm font-semibold text-white">
+            <button
+              type="button"
+              onClick={beginRecovery}
+              className="mt-3 min-h-11 rounded-xl bg-rose-700 px-4 py-2.5 text-sm font-semibold text-white"
+            >
               Fix missed clock-out
             </button>
           )}
@@ -382,12 +481,6 @@ export function TechnicianTimeView({
           </ul>
         )}
       </section>
-
-      <p className="text-center text-sm text-slate-500">
-        <Link href="/technician" className="font-semibold text-cyan-700 hover:text-cyan-800">
-          Back to Today
-        </Link>
-      </p>
     </div>
   );
 }

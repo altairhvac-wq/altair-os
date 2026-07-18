@@ -14,18 +14,22 @@ const FOCUSABLE_SELECTOR = [
 
 /**
  * Initial focus, Tab/Shift+Tab focus trapping, and focus restoration for an
- * overlay panel (dialog, sheet, drawer). This is the same mechanic already
- * proven in `shared/components/ui/mobile-sheet/MobileSheet.tsx`, extracted
- * so `AltairDialog` can reuse it instead of hand-rolling a second focus-trap
- * implementation. `MobileSheet` itself is intentionally left untouched and
- * does not consume this hook — it keeps its own inline copy.
+ * overlay panel (dialog, sheet, drawer). Shared by `AltairDialogContent` and
+ * `MobileSheetPanel` so both portal-mounted panels initialize focus only after
+ * their DOM exists — never from a parent that still renders `ModalPortal` as
+ * `null` on the first commit.
  *
  * A descendant can opt into a specific initial focus target with
- * `data-altair-dialog-initial-focus` (mirrors MobileSheet's
- * `data-mobile-sheet-initial-focus`); otherwise the first focusable
+ * `data-altair-dialog-initial-focus` (dialogs) or
+ * `data-mobile-sheet-initial-focus` (sheets); otherwise the first focusable
  * descendant is used, falling back to the panel itself.
  */
-export function useDialogFocusTrap(panelRef: RefObject<HTMLElement | null>) {
+export function useDialogFocusTrap(
+  panelRef: RefObject<HTMLElement | null>,
+  initialFocusAttribute:
+    | "data-altair-dialog-initial-focus"
+    | "data-mobile-sheet-initial-focus" = "data-altair-dialog-initial-focus",
+) {
   useEffect(() => {
     const panel: HTMLElement | null = panelRef.current;
     if (!panel) {
@@ -45,7 +49,7 @@ export function useDialogFocusTrap(panelRef: RefObject<HTMLElement | null>) {
     }
 
     const requestedFocus = panelElement.querySelector<HTMLElement>(
-      "[data-altair-dialog-initial-focus]",
+      `[${initialFocusAttribute}]`,
     );
     const initialFocus =
       requestedFocus ?? getFocusableElements()[0] ?? panelElement;
@@ -88,5 +92,5 @@ export function useDialogFocusTrap(panelRef: RefObject<HTMLElement | null>) {
         previousFocus.focus({ preventScroll: true });
       }
     };
-  }, [panelRef]);
+  }, [panelRef, initialFocusAttribute]);
 }

@@ -24,12 +24,17 @@ export function CompactTimeClockBar({
   const isClockOut = toggleAction === "clock_out";
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm sm:px-4">
-      <div className="flex items-center gap-3">
+    <section
+      className="rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm sm:px-4"
+      aria-busy={isPending}
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-slate-900">{statusLabel}</p>
           {subtext ? (
-            <p className="mt-0.5 truncate text-xs text-slate-500">{subtext}</p>
+            <p className="mt-0.5 break-words text-xs leading-5 text-slate-500">
+              {subtext}
+            </p>
           ) : null}
         </div>
 
@@ -38,7 +43,7 @@ export function CompactTimeClockBar({
             type="button"
             onClick={onToggle}
             disabled={isPending}
-            className={`inline-flex h-10 shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+            className={`inline-flex min-h-11 w-full shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${
               isClockOut
                 ? "bg-slate-900 hover:bg-slate-800"
                 : "bg-emerald-600 hover:bg-emerald-700"
@@ -64,7 +69,11 @@ export function CompactTimeClockBar({
       </div>
 
       {error ? (
-        <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs text-red-700">
+        <p
+          role="alert"
+          aria-live="assertive"
+          className="mt-3 rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs text-red-700"
+        >
           {error}
         </p>
       ) : null}

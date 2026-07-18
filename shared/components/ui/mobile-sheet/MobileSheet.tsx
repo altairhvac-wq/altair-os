@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { ModalPortal } from "@/shared/components/ui/ModalPortal";
+import { useDialogFocusTrap } from "@/shared/hooks/useDialogFocusTrap";
 import { useScrollLock, useSheetEscape } from "@/shared/hooks/useScrollLock";
 
 export type MobileSheetVariant = "bottom" | "responsive";
@@ -42,7 +43,9 @@ export function MobileSheet({
 }: MobileSheetProps) {
   useScrollLock(true);
   const closeDisabledRef = useRef(closeDisabled);
-  closeDisabledRef.current = closeDisabled;
+  useEffect(() => {
+    closeDisabledRef.current = closeDisabled;
+  }, [closeDisabled]);
   useSheetEscape(() => {
     if (!closeDisabledRef.current) {
       onClose();
@@ -112,12 +115,21 @@ export function MobileSheetPanel({
   unstyled = false,
   className,
 }: MobileSheetPanelProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Focus trap must live on the portal-mounted panel. ModalPortal returns
+  // null until after mount, so a parent-level effect would see a null ref
+  // once and never attach.
+  useDialogFocusTrap(panelRef, "data-mobile-sheet-initial-focus");
+
   const shellClass = unstyled
     ? ""
     : `rounded-t-2xl border bg-white shadow-xl ${panelToneClass[tone]} ${responsiveRounded ? "sm:rounded-2xl" : ""}`;
 
   return (
     <div
+      ref={panelRef}
+      data-mobile-sheet-panel
+      tabIndex={-1}
       className={`relative z-10 flex w-full min-h-0 ${maxWidthClass[maxWidth]} ${maxHeightClass[maxHeight]} flex-col overflow-hidden ${shellClass} ${className ?? ""}`}
     >
       {children}
