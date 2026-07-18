@@ -10,7 +10,21 @@ import {
   type SaasCheckoutPlanKey,
 } from "@/lib/saas-billing/constants";
 import { getOrCreateBillingCustomer, getPlatformStripeClient } from "@/lib/saas-billing/customer";
+import { getCompanySubscription } from "@/lib/saas-billing/resolver";
+import type { SaasSubscriptionStatus } from "@/lib/saas-billing/types";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+
+/**
+ * Local statuses that mean Checkout must not create another Stripe subscription.
+ * incomplete is omitted so an abandoned Checkout can be retried.
+ */
+const BLOCKED_CHECKOUT_STATUSES = new Set<SaasSubscriptionStatus>([
+  "active",
+  "trialing",
+  "past_due",
+  "unpaid",
+  "paused",
+]);
 
 export type CreateSubscriptionCheckoutResult =
   | { ok: true; url: string }
@@ -82,6 +96,26 @@ export async function createSubscriptionCheckout(
 
   const companyId = context.company.id;
   const supabase = createServiceRoleClient();
+
+  try {
+    const existingSubscription = await getCompanySubscription(companyId, supabase);
+    if (
+      existingSubscription?.stripe_subscription_id &&
+      BLOCKED_CHECKOUT_STATUSES.has(existingSubscription.status)
+    ) {
+      return {
+        ok: false,
+        error:
+          "This company already has a subscription. Manage it from Settings once Billing Portal is available, or contact support.",
+      };
+    }
+  } catch (error) {
+    console.error("[saas-billing] existing subscription check failed:", {
+      companyId,
+      message: error instanceof Error ? error.message : "unknown",
+    });
+    return { ok: false, error: "Failed to verify current subscription." };
+  }
 
   let billingAccount;
   try {

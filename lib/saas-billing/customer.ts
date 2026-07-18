@@ -163,6 +163,23 @@ export async function getOrCreateBillingCustomer(
             "Stripe live/test mode mismatch for this company's billing customer.",
           );
         }
+
+        // Best-effort cleanup of the orphan Customer this request created.
+        if (raced.stripe_customer_id !== customer.id) {
+          try {
+            await stripe.customers.del(customer.id);
+          } catch (cleanupError) {
+            console.error("[saas-billing] orphan customer cleanup failed:", {
+              companyId,
+              customerId: customer.id,
+              message:
+                cleanupError instanceof Error
+                  ? cleanupError.message
+                  : "unknown",
+            });
+          }
+        }
+
         return raced;
       }
     }

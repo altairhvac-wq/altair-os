@@ -9,6 +9,7 @@ import {
   getSaasBillingWebhookSecret,
   isSaasCheckoutPlanKey,
   isSaasPlanKey,
+  isSaasStripeLivemode,
   SAAS_CHECKOUT_METADATA_PURPOSE,
   SAAS_GRACE_PERIOD_DAYS,
 } from "@/lib/saas-billing/constants";
@@ -355,10 +356,36 @@ async function retrieveStripeSubscription(
   return getPlatformStripeClient().subscriptions.retrieve(subscriptionId);
 }
 
+/**
+ * Prefer live Stripe state so delayed/out-of-order webhook payloads cannot
+ * regress a newer subscription mirror. Falls back to the event object when
+ * retrieve fails for a deleted subscription.
+ */
+async function loadSubscriptionSnapshot(
+  subscriptionFromEvent: Stripe.Subscription,
+  options: { deleted?: boolean } = {},
+): Promise<Stripe.Subscription> {
+  try {
+    return await retrieveStripeSubscription(subscriptionFromEvent.id);
+  } catch (error) {
+    if (options.deleted) {
+      return {
+        ...subscriptionFromEvent,
+        status: "canceled",
+      };
+    }
+    throw error;
+  }
+}
+
 function graceEndsAtFromNow(): string {
   const ends = new Date();
   ends.setUTCDate(ends.getUTCDate() + SAAS_GRACE_PERIOD_DAYS);
   return ends.toISOString();
+}
+
+function isPaidAccessStatus(status: SaasSubscriptionStatus): boolean {
+  return status === "active" || status === "trialing";
 }
 
 async function upsertCompanySubscriptionFromStripe(
@@ -374,9 +401,30 @@ async function upsertCompanySubscriptionFromStripe(
 ): Promise<{ ok: boolean }> {
   const { subscription } = params;
   const status = mapStripeSubscriptionStatus(subscription.status);
+
+  const { data: existing, error: existingError } = await supabase
+    .from("company_subscriptions")
+    .select("id, plan_key, grace_period_ends_at, access_grant")
+    .eq("company_id", params.companyId)
+    .maybeSingle();
+
+  if (existingError) {
+    console.error("[saas-billing] load subscription for upsert failed:", {
+      companyId: params.companyId,
+      code: existingError.code,
+    });
+    return { ok: false };
+  }
+
+  const existingPlanKey =
+    existing?.plan_key && isSaasPlanKey(existing.plan_key)
+      ? existing.plan_key
+      : null;
+
   const planKey =
     params.planKey ??
     readMetadataPlanKey(subscription.metadata) ??
+    existingPlanKey ??
     "starter";
 
   const firstItem = subscription.items.data[0];
@@ -384,6 +432,21 @@ async function upsertCompanySubscriptionFromStripe(
     unixToIso(firstItem?.current_period_start) ??
     unixToIso(subscription.start_date);
   const periodEnd = unixToIso(firstItem?.current_period_end);
+
+  // Only clear complimentary beta once Stripe reports a paid/trialing sub.
+  // Incomplete Checkout must not revoke beta_comped mid-flow.
+  const accessGrantPatch = isPaidAccessStatus(status)
+    ? { access_grant: "none" as const }
+    : {};
+
+  // Grace is sticky: set once on first past_due, never extend on retries.
+  let gracePatch: { grace_period_ends_at: string | null } | Record<string, never> =
+    {};
+  if (params.clearGrace) {
+    gracePatch = { grace_period_ends_at: null };
+  } else if (params.setGrace && !existing?.grace_period_ends_at) {
+    gracePatch = { grace_period_ends_at: graceEndsAtFromNow() };
+  }
 
   const patch = {
     billing_account_id: params.billingAccountId,
@@ -396,25 +459,9 @@ async function upsertCompanySubscriptionFromStripe(
     current_period_ends_at: periodEnd,
     cancel_at_period_end: Boolean(subscription.cancel_at_period_end),
     canceled_at: unixToIso(subscription.canceled_at),
-    // Paid subscription supersedes complimentary beta grant.
-    access_grant: "none" as const,
-    ...(params.clearGrace ? { grace_period_ends_at: null } : {}),
-    ...(params.setGrace ? { grace_period_ends_at: graceEndsAtFromNow() } : {}),
+    ...accessGrantPatch,
+    ...gracePatch,
   };
-
-  const { data: existing, error: existingError } = await supabase
-    .from("company_subscriptions")
-    .select("id")
-    .eq("company_id", params.companyId)
-    .maybeSingle();
-
-  if (existingError) {
-    console.error("[saas-billing] load subscription for upsert failed:", {
-      companyId: params.companyId,
-      code: existingError.code,
-    });
-    return { ok: false };
-  }
 
   if (existing) {
     const { error } = await supabase
@@ -439,6 +486,53 @@ async function upsertCompanySubscriptionFromStripe(
   });
 
   if (error) {
+    // Concurrent webhook insert race — reload and update the winner row.
+    if (error.code === "23505") {
+      const { data: raced, error: racedError } = await supabase
+        .from("company_subscriptions")
+        .select("id, grace_period_ends_at")
+        .eq("company_id", params.companyId)
+        .maybeSingle();
+
+      if (racedError || !raced) {
+        console.error("[saas-billing] subscription race reload failed:", {
+          companyId: params.companyId,
+          code: racedError?.code ?? error.code,
+        });
+        return { ok: false };
+      }
+
+      const {
+        grace_period_ends_at: _discardGrace,
+        ...patchWithoutGrace
+      } = patch as typeof patch & { grace_period_ends_at?: string | null };
+
+      const racedPatch =
+        params.clearGrace
+          ? { ...patchWithoutGrace, grace_period_ends_at: null }
+          : params.setGrace && !raced.grace_period_ends_at
+            ? {
+                ...patchWithoutGrace,
+                grace_period_ends_at: graceEndsAtFromNow(),
+              }
+            : patchWithoutGrace;
+
+      const { error: updateError } = await supabase
+        .from("company_subscriptions")
+        .update(racedPatch)
+        .eq("id", raced.id);
+
+      if (updateError) {
+        console.error("[saas-billing] subscription race update failed:", {
+          companyId: params.companyId,
+          code: updateError.code,
+        });
+        return { ok: false };
+      }
+
+      return { ok: true };
+    }
+
     console.error("[saas-billing] subscription insert failed:", {
       companyId: params.companyId,
       code: error.code,
@@ -449,41 +543,65 @@ async function upsertCompanySubscriptionFromStripe(
   return { ok: true };
 }
 
+type ResolveCompanyContextResult =
+  | { ok: true; companyId: string; billingAccountId: string | null }
+  | { ok: false; reason: "not_found" | "company_mismatch" };
+
+/**
+ * Resolves company from the platform Stripe Customer (authoritative).
+ * Metadata company_id is validated when present — never trusted alone when a
+ * customer id is on the event.
+ */
 async function resolveCompanyContext(
   supabase: SupabaseClient<Database>,
   options: {
     metadataCompanyId?: string | null;
     stripeCustomerId?: string | null;
   },
-): Promise<{ companyId: string; billingAccountId: string | null } | null> {
-  if (options.metadataCompanyId) {
-    const { data } = await supabase
-      .from("company_billing_accounts")
-      .select("id, company_id")
-      .eq("company_id", options.metadataCompanyId)
-      .maybeSingle();
+): Promise<ResolveCompanyContextResult> {
+  const metadataCompanyId = options.metadataCompanyId?.trim() || null;
+  const stripeCustomerId = options.stripeCustomerId?.trim() || null;
 
-    return {
-      companyId: options.metadataCompanyId,
-      billingAccountId: data?.id ?? null,
-    };
-  }
-
-  if (options.stripeCustomerId) {
+  if (stripeCustomerId) {
     const account = await findBillingAccountByStripeCustomerId(
       supabase,
-      options.stripeCustomerId,
+      stripeCustomerId,
     );
+
     if (!account) {
-      return null;
+      return { ok: false, reason: "not_found" };
     }
+
+    if (metadataCompanyId && metadataCompanyId !== account.company_id) {
+      console.error("[saas-billing] company_id metadata mismatch:", {
+        metadataCompanyId,
+        billingCompanyId: account.company_id,
+      });
+      return { ok: false, reason: "company_mismatch" };
+    }
+
     return {
+      ok: true,
       companyId: account.company_id,
       billingAccountId: account.id,
     };
   }
 
-  return null;
+  if (metadataCompanyId) {
+    const { data } = await supabase
+      .from("company_billing_accounts")
+      .select("id, company_id")
+      .eq("company_id", metadataCompanyId)
+      .maybeSingle();
+
+    return {
+      ok: true,
+      companyId: metadataCompanyId,
+      billingAccountId: data?.id ?? null,
+    };
+  }
+
+  return { ok: false, reason: "not_found" };
 }
 
 function sanitizeProcessingError(error: unknown): string {
@@ -563,6 +681,19 @@ async function markFailed(
   };
 }
 
+function graceFlagsForStatus(status: SaasSubscriptionStatus): {
+  clearGrace: boolean;
+  setGrace: boolean;
+} {
+  if (isPaidAccessStatus(status)) {
+    return { clearGrace: true, setGrace: false };
+  }
+  if (status === "past_due") {
+    return { clearGrace: false, setGrace: true };
+  }
+  return { clearGrace: false, setGrace: false };
+}
+
 async function handleCheckoutSessionCompleted(
   supabase: SupabaseClient<Database>,
   event: Stripe.Event,
@@ -594,7 +725,7 @@ async function handleCheckoutSessionCompleted(
     };
   }
 
-  const companyId = readMetadataCompanyId(session.metadata);
+  const metadataCompanyId = readMetadataCompanyId(session.metadata);
   const planKey = readMetadataPlanKey(session.metadata);
   const customerId = extractCustomerId(session.customer);
   const subscriptionId =
@@ -602,27 +733,50 @@ async function handleCheckoutSessionCompleted(
       ? session.subscription
       : session.subscription?.id ?? null;
 
-  if (!companyId || !subscriptionId) {
+  if (!subscriptionId) {
     return {
-      companyId,
+      companyId: metadataCompanyId,
       result: await markFailed(
         supabase,
         event.id,
-        companyId,
-        new Error("Missing company_id or subscription on checkout session"),
+        metadataCompanyId,
+        new Error("Missing subscription on checkout session"),
+      ),
+    };
+  }
+
+  if (!customerId) {
+    return {
+      companyId: metadataCompanyId,
+      result: await markFailed(
+        supabase,
+        event.id,
+        metadataCompanyId,
+        new Error("Missing customer on checkout session"),
       ),
     };
   }
 
   const resolved = await resolveCompanyContext(supabase, {
-    metadataCompanyId: companyId,
+    metadataCompanyId,
     stripeCustomerId: customerId,
   });
 
+  if (!resolved.ok) {
+    const reason =
+      resolved.reason === "company_mismatch"
+        ? "Checkout company_id does not match billing customer"
+        : "No matching company billing account for checkout";
+    return {
+      companyId: metadataCompanyId,
+      result: await markIgnored(supabase, event.id, metadataCompanyId, reason),
+    };
+  }
+
   const stripeSubscription = await retrieveStripeSubscription(subscriptionId);
   const upsert = await upsertCompanySubscriptionFromStripe(supabase, {
-    companyId,
-    billingAccountId: resolved?.billingAccountId ?? null,
+    companyId: resolved.companyId,
+    billingAccountId: resolved.billingAccountId,
     subscription: stripeSubscription,
     planKey,
     clearGrace: true,
@@ -630,19 +784,19 @@ async function handleCheckoutSessionCompleted(
 
   if (!upsert.ok) {
     return {
-      companyId,
+      companyId: resolved.companyId,
       result: await markFailed(
         supabase,
         event.id,
-        companyId,
+        resolved.companyId,
         new Error("Failed to mirror subscription after checkout"),
       ),
     };
   }
 
   return {
-    companyId,
-    result: await markProcessed(supabase, event.id, companyId),
+    companyId: resolved.companyId,
+    result: await markProcessed(supabase, event.id, resolved.companyId),
   };
 }
 
@@ -651,53 +805,59 @@ async function handleSubscriptionLifecycle(
   event: Stripe.Event,
   options: { deleted?: boolean } = {},
 ): Promise<{ companyId: string | null; result: ProcessBillingWebhookResult }> {
-  const subscription = event.data.object as Stripe.Subscription;
-  const purpose = readMetadataPurpose(subscription.metadata);
+  const subscriptionFromEvent = event.data.object as Stripe.Subscription;
+  const purpose = readMetadataPurpose(subscriptionFromEvent.metadata);
 
   if (purpose && purpose !== SAAS_CHECKOUT_METADATA_PURPOSE) {
     return {
-      companyId: readMetadataCompanyId(subscription.metadata),
+      companyId: readMetadataCompanyId(subscriptionFromEvent.metadata),
       result: await markIgnored(
         supabase,
         event.id,
-        readMetadataCompanyId(subscription.metadata),
+        readMetadataCompanyId(subscriptionFromEvent.metadata),
         "Subscription purpose is not saas_subscription",
       ),
     };
   }
 
-  const customerId = extractCustomerId(subscription.customer);
+  const customerId = extractCustomerId(subscriptionFromEvent.customer);
   const resolved = await resolveCompanyContext(supabase, {
-    metadataCompanyId: readMetadataCompanyId(subscription.metadata),
+    metadataCompanyId: readMetadataCompanyId(subscriptionFromEvent.metadata),
     stripeCustomerId: customerId,
   });
 
-  if (!resolved) {
+  if (!resolved.ok) {
+    const reason =
+      resolved.reason === "company_mismatch"
+        ? "Subscription company_id does not match billing customer"
+        : "No matching company billing account";
     return {
       companyId: null,
-      result: await markIgnored(
-        supabase,
-        event.id,
-        null,
-        "No matching company billing account",
-      ),
+      result: await markIgnored(supabase, event.id, null, reason),
     };
   }
+
+  const subscription = options.deleted
+    ? await loadSubscriptionSnapshot(subscriptionFromEvent, { deleted: true })
+    : await loadSubscriptionSnapshot(subscriptionFromEvent);
+
+  const status = options.deleted
+    ? ("canceled" as const)
+    : mapStripeSubscriptionStatus(subscription.status);
+  const mirroredSubscription = options.deleted
+    ? { ...subscription, status: "canceled" as const }
+    : subscription;
+  const grace = options.deleted
+    ? { clearGrace: false, setGrace: false }
+    : graceFlagsForStatus(status);
 
   const upsert = await upsertCompanySubscriptionFromStripe(supabase, {
     companyId: resolved.companyId,
     billingAccountId: resolved.billingAccountId,
-    subscription: options.deleted
-      ? {
-          ...subscription,
-          status: "canceled",
-        }
-      : subscription,
+    subscription: mirroredSubscription,
     planKey: readMetadataPlanKey(subscription.metadata),
-    clearGrace:
-      !options.deleted &&
-      (subscription.status === "active" || subscription.status === "trialing"),
-    setGrace: !options.deleted && subscription.status === "past_due",
+    clearGrace: grace.clearGrace,
+    setGrace: grace.setGrace,
   });
 
   if (!upsert.ok) {
@@ -721,7 +881,7 @@ async function handleSubscriptionLifecycle(
 async function handleInvoiceEvent(
   supabase: SupabaseClient<Database>,
   event: Stripe.Event,
-  kind: "paid" | "payment_failed",
+  _kind: "paid" | "payment_failed",
 ): Promise<{ companyId: string | null; result: ProcessBillingWebhookResult }> {
   const invoice = event.data.object as Stripe.Invoice;
   const customerId = extractCustomerId(invoice.customer);
@@ -743,7 +903,7 @@ async function handleInvoiceEvent(
     stripeCustomerId: customerId,
   });
 
-  if (!resolved) {
+  if (!resolved.ok) {
     return {
       companyId: null,
       result: await markIgnored(
@@ -770,13 +930,18 @@ async function handleInvoiceEvent(
     };
   }
 
+  // Grace/status derived from live Stripe subscription so stale invoice events
+  // (e.g. delayed payment_failed after recovery) cannot corrupt local state.
+  const status = mapStripeSubscriptionStatus(stripeSubscription.status);
+  const grace = graceFlagsForStatus(status);
+
   const upsert = await upsertCompanySubscriptionFromStripe(supabase, {
     companyId: resolved.companyId,
     billingAccountId: resolved.billingAccountId,
     subscription: stripeSubscription,
     planKey: readMetadataPlanKey(stripeSubscription.metadata),
-    clearGrace: kind === "paid",
-    setGrace: kind === "payment_failed",
+    clearGrace: grace.clearGrace,
+    setGrace: grace.setGrace,
   });
 
   if (!upsert.ok) {
@@ -804,6 +969,15 @@ export async function processBillingWebhookEvent(
   supabase: SupabaseClient<Database>,
   event: Stripe.Event,
 ): Promise<ProcessBillingWebhookResult> {
+  if (event.livemode !== isSaasStripeLivemode()) {
+    return markIgnored(
+      supabase,
+      event.id,
+      null,
+      "Stripe livemode does not match server STRIPE_SECRET_KEY mode",
+    );
+  }
+
   if (!SUPPORTED_EVENT_TYPES.has(event.type)) {
     return markIgnored(supabase, event.id, null, `Unsupported event type: ${event.type}`);
   }

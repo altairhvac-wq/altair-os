@@ -68,6 +68,15 @@ export function CompanySubscriptionBillingCard({
   const planLabel =
     SAAS_PLAN_LABELS[effectiveSummary.planKey] ?? effectiveSummary.planLabel;
   const trialLabel = formatDateLabel(effectiveSummary.trialEndsAt);
+  const hasBlockingSubscription =
+    effectiveSummary.hasStripeSubscription &&
+    (effectiveSummary.status === "active" ||
+      effectiveSummary.status === "trialing" ||
+      effectiveSummary.status === "past_due" ||
+      effectiveSummary.status === "unpaid" ||
+      effectiveSummary.status === "paused");
+  const canStartCheckout =
+    canManageSubscription && checkoutConfigured && !hasBlockingSubscription;
   const surfaceClass = northStar
     ? "rounded-xl border border-[rgba(138,99,36,0.18)] bg-[#FFFCF5] p-4 sm:p-5"
     : "rounded-xl border border-slate-200 bg-white p-4 sm:p-5";
@@ -213,17 +222,21 @@ export function CompanySubscriptionBillingCard({
 
       {canManageSubscription ? (
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          {canStartCheckout ? (
+            <button
+              type="button"
+              className={primaryButtonClass}
+              disabled={isPending}
+              onClick={handleStartSubscription}
+            >
+              {isPending ? "Starting…" : "Start subscription"}
+            </button>
+          ) : null}
           <button
             type="button"
-            className={primaryButtonClass}
-            disabled={isPending}
-            onClick={handleStartSubscription}
-          >
-            {isPending ? "Starting…" : "Start subscription"}
-          </button>
-          <button
-            type="button"
-            className={secondaryButtonClass}
+            className={
+              canStartCheckout ? secondaryButtonClass : primaryButtonClass
+            }
             disabled={isPending}
             onClick={handleManageSubscription}
           >
