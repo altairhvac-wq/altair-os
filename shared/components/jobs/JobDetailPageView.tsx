@@ -63,6 +63,12 @@ import type {
   JobEstimateSummary,
   JobInvoiceSummary,
 } from "@/shared/lib/job-next-business-action";
+import {
+  resolveJobWorkflow,
+  type JobWorkflowResolution,
+} from "@/shared/lib/workflow";
+import { JobNextActionCard } from "@/shared/components/jobs/JobNextActionCard";
+import { JobWorkflowTimeline } from "@/shared/components/jobs/JobWorkflowTimeline";
 
 type JobDetailPageViewProps = {
   job: JobDetail;
@@ -137,7 +143,27 @@ type SharedWorkspaceProps = {
   customerEmail?: string | null;
   customerPhone?: string | null;
   customerCompany?: string | null;
+  workflow: JobWorkflowResolution;
 };
+
+function JobWorkflowOverview({
+  workflow,
+  northStar = false,
+}: {
+  workflow: JobWorkflowResolution;
+  northStar?: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-2.5">
+      <JobNextActionCard workflow={workflow} northStar={northStar} />
+      <JobWorkflowTimeline
+        stages={workflow.progress.stages}
+        progress={workflow.progress}
+        northStar={northStar}
+      />
+    </div>
+  );
+}
 
 function LegacyJobDetailBody({
   job,
@@ -165,11 +191,14 @@ function LegacyJobDetailBody({
   customerEmail,
   customerPhone,
   customerCompany,
+  workflow,
 }: SharedWorkspaceProps) {
   const isAssigned = Boolean(job.assignedTechnicianId);
 
   return (
     <>
+      <JobWorkflowOverview workflow={workflow} />
+
       <section className="admin-card">
         <div className="border-b border-slate-100 bg-white px-3 py-2.5 sm:px-4 sm:py-3">
           <JobDetailHeaderSection
@@ -691,6 +720,24 @@ export function JobDetailPageView({
   const customerCompany = job.customerCompany?.trim();
   const scheduledLabel = `${formatScheduledDate(job.scheduledDate)} at ${formatScheduledTime(job.scheduledDate)}`;
   const northStar = isNorthStarShellEnabled();
+  const workflow = resolveJobWorkflow(
+    {
+      jobId: job.id,
+      customerId: job.customerId,
+      status: job.status,
+      assignedTechnicianId: job.assignedTechnicianId,
+      assignedTechnician: job.assignedTechnician,
+      arrivedAt: job.arrivedAt,
+      workStartedAt: job.workStartedAt,
+      completedAt: job.completedAt,
+      estimates: billingContext?.estimates ?? [],
+      invoices: billingContext?.invoices ?? [],
+    },
+    {
+      canCreateEstimate: canViewBilling,
+      canViewBilling,
+    },
+  );
 
   const workspaceProps: SharedWorkspaceProps = {
     job,
@@ -718,6 +765,7 @@ export function JobDetailPageView({
     customerEmail,
     customerPhone,
     customerCompany,
+    workflow,
   };
 
   return (
@@ -742,6 +790,7 @@ export function JobDetailPageView({
 
       {northStar ? (
         <>
+          <JobWorkflowOverview workflow={workflow} northStar />
           <JobDetailNorthStarHeader
             job={job}
             customers={customers}
