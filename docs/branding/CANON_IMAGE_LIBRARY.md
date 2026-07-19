@@ -16,7 +16,7 @@ This document only tracks them.
 
 | Story | Asset ID | Title | Category | Status |
 |--------|----------|-------|----------|--------|
-| 000 | ALT-WLD-001 | The Altair World | World | Draft |
+| 000 | [ALT-WLD-001](canon/world/ALT-WLD-001.md) | The Altair World | World | Internal Review |
 | 001 | ALT-RES-001 | Morning Residence | Residence | Draft |
 | 002 | ALT-RES-002 | Coffee Before Sunrise | Residence | Planned |
 | 003 | ALT-SRV-001 | The Day Begins | Service | Planned |
