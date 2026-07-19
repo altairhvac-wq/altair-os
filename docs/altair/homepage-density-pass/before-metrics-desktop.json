@@ -1,0 +1,70 @@
+{
+  "documentHeight": 3360,
+  "viewportHeight": 1000,
+  "nav": {
+    "height": 73,
+    "top": 0,
+    "bottom": 73,
+    "paddingTop": "0px",
+    "paddingBottom": "0px",
+    "minHeight": "0px",
+    "marginTop": "0px",
+    "marginBottom": "0px"
+  },
+  "hero": {
+    "height": 996,
+    "top": 0,
+    "bottom": 996,
+    "paddingTop": "128px",
+    "paddingBottom": "112px",
+    "minHeight": "996px",
+    "marginTop": "0px",
+    "marginBottom": "0px"
+  },
+  "reality": {
+    "height": 675,
+    "top": 996,
+    "bottom": 1671,
+    "paddingTop": "144px",
+    "paddingBottom": "144px",
+    "minHeight": "0px",
+    "marginTop": "0px",
+    "marginBottom": "0px"
+  },
+  "os": {
+    "height": 1589,
+    "top": 1671,
+    "bottom": 3259,
+    "paddingTop": "144px",
+    "paddingBottom": "144px",
+    "minHeight": "0px",
+    "marginTop": "0px",
+    "marginBottom": "0px"
+  },
+  "footer": {
+    "height": 101,
+    "top": 3259,
+    "bottom": 3360,
+    "paddingTop": "40px",
+    "paddingBottom": "40px",
+    "minHeight": "0px",
+    "marginTop": "0px",
+    "marginBottom": "0px"
+  },
+  "heroGrid": {
+    "height": 470,
+    "top": 128,
+    "bottom": 598,
+    "paddingTop": "0px",
+    "paddingBottom": "0px",
+    "minHeight": "0px",
+    "marginTop": "0px",
+    "marginBottom": "0px"
+  },
+  "gaps": {
+    "realityHeadingToCards": 80,
+    "osCopyToSpine": 80,
+    "osSpineToShot": 96,
+    "osShotToCta": 64
+  }
+}

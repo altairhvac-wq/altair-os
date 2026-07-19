@@ -56,13 +56,13 @@ export function HomepageNav() {
         className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.2),transparent)]"
         aria-hidden="true"
       />
-      <div className="mx-auto flex h-[4.25rem] max-w-[90rem] items-center justify-between gap-4 px-5 sm:h-[4.5rem] sm:px-8 lg:px-10">
+      <div className="mx-auto flex h-16 max-w-[90rem] items-center justify-between gap-4 px-5 sm:h-[4.25rem] sm:px-8 lg:px-10">
         <Link
           href="/"
           className={`shrink-0 rounded-sm ${focusRing}`}
           aria-label="Altair OS home"
         >
-          <AltairLogo variant="white" size="md" showWordmark />
+          <AltairLogo variant="white" size="md" showWordmark className="origin-left scale-[1.06]" />
         </Link>
 
         <nav

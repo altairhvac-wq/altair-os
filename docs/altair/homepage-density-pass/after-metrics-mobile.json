@@ -1,0 +1,42 @@
+{
+  "documentHeight": 2749,
+  "nav": {
+    "height": 65,
+    "paddingTop": "0px",
+    "paddingBottom": "0px",
+    "minHeight": "0px"
+  },
+  "hero": {
+    "height": 795,
+    "paddingTop": "80px",
+    "paddingBottom": "40px",
+    "minHeight": "0px"
+  },
+  "reality": {
+    "height": 471,
+    "paddingTop": "48px",
+    "paddingBottom": "48px",
+    "minHeight": "0px"
+  },
+  "os": {
+    "height": 989,
+    "paddingTop": "48px",
+    "paddingBottom": "48px",
+    "minHeight": "0px"
+  },
+  "finalCta": 311,
+  "footer": {
+    "height": 183,
+    "paddingTop": "20px",
+    "paddingBottom": "20px",
+    "minHeight": "0px"
+  },
+  "finalCtaPlusFooter": 494,
+  "heroProductWidth": 350,
+  "proofProductWidth": 350,
+  "gaps": {
+    "realityHeadingToCards": null,
+    "osCopyToSpine": null,
+    "osSpineToShot": null
+  }
+}

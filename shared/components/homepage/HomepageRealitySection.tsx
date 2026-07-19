@@ -102,14 +102,14 @@ export function HomepageRealitySection() {
       ref={sectionRef}
       id="product"
       aria-labelledby="mc-reality-heading"
-      className="mc-reality relative px-5 py-28 sm:px-8 sm:py-36"
+      className="mc-reality relative px-5 py-12 sm:px-8 sm:py-14"
     >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.28),transparent)]"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute inset-x-[10%] top-0 h-28 bg-[radial-gradient(ellipse_at_top,rgba(210,216,224,0.07),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-[10%] top-0 h-20 bg-[radial-gradient(ellipse_at_top,rgba(210,216,224,0.07),transparent_70%)]"
         aria-hidden="true"
       />
 
@@ -120,7 +120,7 @@ export function HomepageRealitySection() {
           </p>
           <h2
             id="mc-reality-heading"
-            className="mt-6 text-[2rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[2.65rem] sm:leading-[1.15]"
+            className="mt-3 text-[1.85rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[2.35rem] sm:leading-[1.15]"
           >
             Too many tools. Too much chaos. Too many things slip.
           </h2>
@@ -128,7 +128,7 @@ export function HomepageRealitySection() {
 
         <ul
           className={[
-            "mt-20 hidden gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-5",
+            "mt-8 hidden gap-3 sm:grid sm:grid-cols-2 lg:mt-10 lg:grid-cols-5",
             visible ? "mc-reality-visible" : "opacity-0",
           ].join(" ")}
         >
@@ -137,7 +137,7 @@ export function HomepageRealitySection() {
             return (
               <li
                 key={item.id}
-                className="mc-reality-card mc-glass-card rounded-2xl px-5 py-6"
+                className="mc-reality-card mc-glass-card rounded-2xl px-4 py-5"
                 style={{ animationDelay: `${index * 90}ms` }}
               >
                 <Icon
@@ -145,10 +145,10 @@ export function HomepageRealitySection() {
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
-                <h3 className="mt-5 text-[0.95rem] font-semibold leading-snug text-[#fff9ea] sm:text-base">
+                <h3 className="mt-4 text-[0.95rem] font-semibold leading-snug text-[#fff9ea] sm:text-base">
                   {item.title}
                 </h3>
-                <p className="mt-2.5 text-[0.9rem] leading-relaxed text-[#9a9080]">
+                <p className="mt-2 text-[0.875rem] leading-relaxed text-[#9a9080]">
                   {item.detail}
                 </p>
               </li>
@@ -158,7 +158,7 @@ export function HomepageRealitySection() {
 
         <div
           className={[
-            "relative mt-16 sm:hidden",
+            "relative mt-8 sm:hidden",
             visible ? "mc-reality-visible" : "opacity-0",
           ].join(" ")}
           aria-live="polite"
@@ -170,7 +170,7 @@ export function HomepageRealitySection() {
               <div
                 key={item.id}
                 className={[
-                  "mc-glass-card rounded-2xl p-7 transition-opacity duration-500",
+                  "mc-glass-card rounded-2xl p-5 transition-opacity duration-500",
                   active ? "relative opacity-100" : "absolute inset-0 opacity-0",
                 ].join(" ")}
                 aria-hidden={!active}
@@ -180,17 +180,17 @@ export function HomepageRealitySection() {
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
-                <h3 className="mt-5 text-lg font-semibold text-[#fff9ea]">
+                <h3 className="mt-4 text-lg font-semibold text-[#fff9ea]">
                   {item.title}
                 </h3>
-                <p className="mt-2.5 text-sm leading-relaxed text-[#9a9080]">
+                <p className="mt-2 text-sm leading-relaxed text-[#9a9080]">
                   {item.detail}
                 </p>
               </div>
             );
           })}
           <div
-            className="mt-5 flex justify-center gap-1.5"
+            className="mt-4 flex justify-center gap-1.5"
             aria-hidden="true"
           >
             {VIGNETTES.map((item, index) => (

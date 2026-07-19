@@ -1,0 +1,22 @@
+{
+  "documentHeight": 3439,
+  "hero": {
+    "height": 973,
+    "paddingTop": "96px",
+    "paddingBottom": "80px",
+    "minHeight": "0px"
+  },
+  "reality": {
+    "height": 680,
+    "paddingTop": "112px",
+    "paddingBottom": "112px"
+  },
+  "os": {
+    "height": 1649,
+    "paddingTop": "112px",
+    "paddingBottom": "112px"
+  },
+  "footer": {
+    "height": 137
+  }
+}
