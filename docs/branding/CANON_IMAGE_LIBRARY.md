@@ -69,7 +69,7 @@ Only `Canon` assets may ship in production marketing surfaces.
 
 ## Folder Organization
 
-Assets live under `branding/canon/{category}/`.
+Assets live under `docs/branding/canon/{category}/`.
 
 Each approved image set includes:
 
@@ -100,4 +100,4 @@ Category folders:
 - Add rows to the Story Order table when new Canon candidates are approved for tracking.
 - Create matching files under the correct category folder using the Asset ID as the basename.
 - Update this index on every status change.
-- Consolidate related branding docs into `branding/docs/` only when explicitly planned; this library does not relocate them.
+- Consolidate related branding docs into `docs/branding/` only when explicitly planned; this library does not relocate them.

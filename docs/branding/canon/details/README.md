@@ -1,10 +1,10 @@
-# Community
+# Details
 
-Neighborhood and civic life imagery.
+Close-ups, objects, and texture studies.
 
 ## Naming
 
-`ALT-COM-NNN` (example: `ALT-COM-001`)
+`ALT-DET-NNN` (example: `ALT-DET-001`)
 
 IDs are permanent. Never recycle.
 
@@ -17,4 +17,4 @@ Every approved image receives:
 3. **Prompt History** — generation and revision record
 4. **Approval Notes** — review decision and date
 
-Track all assets in `branding/docs/CANON_IMAGE_LIBRARY.md`.
+Track all assets in `docs/branding/CANON_IMAGE_LIBRARY.md`.

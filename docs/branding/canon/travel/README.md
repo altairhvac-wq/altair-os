@@ -1,10 +1,10 @@
-# Business
+# Travel
 
-Office, dispatch, and operations imagery.
+Movement and journey imagery.
 
 ## Naming
 
-`ALT-BUS-NNN` (example: `ALT-BUS-001`)
+`ALT-TRV-NNN` (example: `ALT-TRV-001`)
 
 IDs are permanent. Never recycle.
 
@@ -17,4 +17,4 @@ Every approved image receives:
 3. **Prompt History** — generation and revision record
 4. **Approval Notes** — review decision and date
 
-Track all assets in `branding/docs/CANON_IMAGE_LIBRARY.md`.
+Track all assets in `docs/branding/CANON_IMAGE_LIBRARY.md`.

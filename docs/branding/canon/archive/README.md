@@ -15,4 +15,4 @@ Every archived image retains:
 3. **Prompt History** — generation and revision record
 4. **Approval Notes** — review decision and date
 
-Update status to `Archived` in `branding/docs/CANON_IMAGE_LIBRARY.md` when moving assets here.
+Update status to `Archived` in `docs/branding/CANON_IMAGE_LIBRARY.md` when moving assets here.

@@ -1,10 +1,10 @@
-# Wellness
+# World
 
-Rest, recovery, and balance imagery.
+Establishing Altair world and environment imagery.
 
 ## Naming
 
-`ALT-WEL-NNN` (example: `ALT-WEL-001`)
+`ALT-WLD-NNN` (example: `ALT-WLD-001`)
 
 IDs are permanent. Never recycle.
 
@@ -17,4 +17,4 @@ Every approved image receives:
 3. **Prompt History** — generation and revision record
 4. **Approval Notes** — review decision and date
 
-Track all assets in `branding/docs/CANON_IMAGE_LIBRARY.md`.
+Track all assets in `docs/branding/CANON_IMAGE_LIBRARY.md`.

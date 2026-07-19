@@ -1,10 +1,10 @@
-# Residence
+# Business
 
-Home and morning-residence scenes.
+Office, dispatch, and operations imagery.
 
 ## Naming
 
-`ALT-RES-NNN` (example: `ALT-RES-001`)
+`ALT-BUS-NNN` (example: `ALT-BUS-001`)
 
 IDs are permanent. Never recycle.
 
@@ -17,4 +17,4 @@ Every approved image receives:
 3. **Prompt History** — generation and revision record
 4. **Approval Notes** — review decision and date
 
-Track all assets in `branding/docs/CANON_IMAGE_LIBRARY.md`.
+Track all assets in `docs/branding/CANON_IMAGE_LIBRARY.md`.
