@@ -24,6 +24,9 @@ function getLocalDevOrigins(): string[] {
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: getLocalDevOrigins(),
+  images: {
+    qualities: [70, 75, 90],
+  },
   async redirects() {
     return [
       {

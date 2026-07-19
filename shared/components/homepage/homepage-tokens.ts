@@ -1,13 +1,16 @@
 /**
- * Mission Control homepage tokens — aligned with North Star Original Refined.
- * Marketing-only; does not alter in-app shell tokens.
+ * Mission Control homepage tokens — marketing-only.
+ * Premium graphite shell + silver light + restrained brass accent.
  */
 export const mc = {
-  graphite: "#0b1118",
-  graphiteMid: "#0e141d",
-  graphiteDeep: "#070b10",
-  slate: "#101a28",
-  slateBorder: "#223044",
+  graphite: "#0c0e12",
+  graphiteMid: "#12151b",
+  graphiteDeep: "#08090c",
+  slate: "#171b22",
+  slateBorder: "#2a303a",
+  silver: "rgba(210, 216, 224, 0.55)",
+  silverSoft: "rgba(210, 216, 224, 0.12)",
+  silverEdge: "rgba(222, 228, 236, 0.22)",
   brass: "#b88a2e",
   brassBright: "#c9a44d",
   brassSoft: "rgba(201, 164, 77, 0.28)",
@@ -19,10 +22,15 @@ export const mc = {
   textDim: "#8e826f",
 } as const;
 
+/**
+ * Retina Mission Control (North Star dashboard) capture.
+ * Do not substitute compressed social Dispatch assets.
+ */
 export const HOMEPAGE_SCREENSHOTS = {
-  dashboard: "/marketing/screenshots/marketing-dashboard.png",
-  leads: "/marketing/screenshots/marketing-leads.png",
-  dispatch: "/marketing/screenshots/marketing-dispatch.png",
-  estimate: "/marketing/screenshots/marketing-estimate.png",
+  hero: "/marketing/screenshots/mission-control-hero.png",
+  dashboard: "/marketing/screenshots/mission-control-hero.png",
+  leads: "/marketing/screenshots/social/leads-full-page.png",
+  dispatch: "/marketing/screenshots/social/dispatch-full-page.png",
+  estimate: "/marketing/screenshots/social/estimates-full-page.png",
   invoices: "/marketing/screenshots/social/invoices-full-page.png",
 } as const;
