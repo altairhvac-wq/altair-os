@@ -17,6 +17,8 @@ const AUTH_ROUTES = [
 ];
 const PRICING_ROUTE = "/pricing";
 const INSTALL_ROUTE = "/install";
+/** Internal rewrite target for the logged-out Mission Control homepage at `/`. */
+const MARKETING_HOMEPAGE_ROUTE = "/welcome";
 const AUTH_CALLBACK_ROUTE = "/auth/callback";
 const ESTIMATE_APPROVAL_ROUTE_PREFIX = "/estimate-approval";
 const INVOICE_PAYMENT_ROUTE_PREFIX = "/invoice-payment";
@@ -80,11 +82,20 @@ function isInstallRoute(pathname: string) {
   return pathname === INSTALL_ROUTE;
 }
 
+function isMarketingHomepageRoute(pathname: string) {
+  return (
+    pathname === "/" ||
+    pathname === MARKETING_HOMEPAGE_ROUTE ||
+    pathname.startsWith(`${MARKETING_HOMEPAGE_ROUTE}/`)
+  );
+}
+
 function isPublicRoute(pathname: string) {
   return (
     isAuthRoute(pathname) ||
     isPricingRoute(pathname) ||
     isInstallRoute(pathname) ||
+    isMarketingHomepageRoute(pathname) ||
     pathname === AUTH_CALLBACK_ROUTE ||
     isEstimateApprovalRoute(pathname) ||
     isInvoicePaymentRoute(pathname) ||
@@ -155,6 +166,17 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+
+  // Logged-out visitors see the Mission Control homepage at `/`.
+  // Authenticated users keep the existing dashboard at `/`.
+  if (!user && pathname === "/") {
+    const rewriteUrl = request.nextUrl.clone();
+    rewriteUrl.pathname = MARKETING_HOMEPAGE_ROUTE;
+    return withSupabaseCookies(
+      NextResponse.rewrite(rewriteUrl),
+      supabaseResponse,
+    );
+  }
 
   if (!user && !isPublicRoute(pathname)) {
     const redirectUrl = request.nextUrl.clone();
