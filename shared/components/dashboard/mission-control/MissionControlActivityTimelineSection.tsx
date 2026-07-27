@@ -17,7 +17,10 @@ import {
 } from "@/shared/types/operational-activity";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { MISSION_CONTROL_SECTION_LABELS } from "@/shared/lib/dashboard-mission-control";
-import { MasterPageSection } from "@/shared/design-system/shell";
+import {
+  MasterPageSection,
+  altairSurfaceListClass,
+} from "@/shared/design-system/shell";
 import { MissionControlInlineEmptyState } from "./MissionControlInlineEmptyState";
 
 type MissionControlActivityTimelineSectionProps = {
@@ -56,7 +59,6 @@ export function MissionControlActivityTimelineSection({
   return (
     <MasterPageSection
       title={MISSION_CONTROL_SECTION_LABELS.activityTimeline}
-      description="Latest operational events, newest first."
       density="compact"
       headerVariant="spacious"
     >
@@ -71,7 +73,7 @@ export function MissionControlActivityTimelineSection({
           }
         />
       ) : (
-        <ol className="altair-surface-list">
+        <ol className={altairSurfaceListClass}>
           {activities.map((activity) => {
             const href = getOperationalActivityHref(activity, {
               canViewBilling: access.canViewBilling,
@@ -84,8 +86,8 @@ export function MissionControlActivityTimelineSection({
             const Icon = resolveActivityIcon(activity);
 
             const body = (
-              <div className="altair-surface-list-row flex items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100/80 text-slate-600">
+              <div className="altair-surface-list-row flex items-start gap-3 py-3.5 sm:py-4">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100/70 text-slate-500">
                   <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -101,10 +103,10 @@ export function MissionControlActivityTimelineSection({
                     </time>
                   </div>
                   {details ? (
-                    <p className="mt-0.5 text-sm text-slate-600">{details}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{details}</p>
                   ) : null}
                   {activity.actorName ? (
-                    <p className="mt-0.5 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-slate-500">
                       by {activity.actorName}
                     </p>
                   ) : null}

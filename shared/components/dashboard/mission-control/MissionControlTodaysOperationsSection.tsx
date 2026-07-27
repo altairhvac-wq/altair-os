@@ -7,7 +7,7 @@ import {
   altairSurfaceSectionBodyClass,
   altairSurfaceSectionClass,
 } from "@/shared/design-system/shell";
-import { MissionControlMetricTile } from "./MissionControlMetricTile";
+import { MissionControlMetricCell } from "./MissionControlMetricCell";
 import { MissionControlInlineEmptyState } from "./MissionControlInlineEmptyState";
 
 type MissionControlTodaysOperationsSectionProps = {
@@ -24,7 +24,6 @@ export function MissionControlTodaysOperationsSection({
   return (
     <MasterPageSection
       title={MISSION_CONTROL_SECTION_LABELS.todaysOperations}
-      description="Live field and office activity for today."
       density="compact"
       headerVariant="spacious"
     >
@@ -35,9 +34,15 @@ export function MissionControlTodaysOperationsSection({
         />
       ) : (
         <div className={`${altairSurfaceSectionClass} ${altairSurfaceSectionBodyClass}`}>
-          <div className="grid grid-cols-2 gap-2 sm:gap-2.5 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-5 sm:gap-x-8 sm:gap-y-6">
             {cards.map((card) => (
-              <MissionControlMetricTile key={card.id} {...card} />
+              <MissionControlMetricCell
+                key={card.id}
+                label={card.label}
+                value={card.value}
+                detail={card.trend}
+                href={card.href}
+              />
             ))}
           </div>
         </div>

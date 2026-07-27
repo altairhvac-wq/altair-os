@@ -1,4 +1,4 @@
-import { Button } from "@/shared/design-system/components";
+import Link from "next/link";
 import {
   MISSION_CONTROL_SECTION_LABELS,
   type MissionControlQuickAction,
@@ -9,6 +9,9 @@ type MissionControlQuickActionsSectionProps = {
   actions: MissionControlQuickAction[];
 };
 
+/**
+ * Compact shortcut row — secondary to operational briefing, not oversized action cards.
+ */
 export function MissionControlQuickActionsSection({
   actions,
 }: MissionControlQuickActionsSectionProps) {
@@ -19,26 +22,25 @@ export function MissionControlQuickActionsSection({
   return (
     <MasterPageSection
       title={MISSION_CONTROL_SECTION_LABELS.quickActions}
-      description="Less frequent workflows, one tap away."
       density="compact"
       headerVariant="spacious"
     >
-      <div className="grid gap-1.5 sm:grid-cols-2 sm:gap-2">
+      <div
+        className="flex flex-wrap gap-x-1 gap-y-1"
+        role="group"
+        aria-label={MISSION_CONTROL_SECTION_LABELS.quickActions}
+      >
         {actions.map((action) => (
-          <Button
+          <Link
             key={action.id}
             href={action.href}
-            variant="quiet"
-            className="h-auto min-h-[3rem] w-full flex-col items-start gap-0.5 rounded-lg border border-transparent px-3 py-2.5 text-left hover:border-[var(--border-subtle)] hover:bg-[var(--surface-tile)] sm:min-h-[3.25rem]"
+            className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200/50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50"
           >
-            <span className="flex items-center gap-2">
-              <action.icon className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-              <span className="text-sm font-semibold text-slate-900">{action.label}</span>
+            <span aria-hidden="true" className="text-slate-400">
+              +
             </span>
-            <span className="pl-6 text-xs font-normal text-slate-500">
-              {action.description}
-            </span>
-          </Button>
+            <span>{action.shortLabel ?? action.label}</span>
+          </Link>
         ))}
       </div>
     </MasterPageSection>

@@ -4,31 +4,26 @@ type MissionControlGreetingProps = {
   content: MissionControlGreetingContent;
 };
 
+/**
+ * Lightweight orientation — no hero banner, no Surface chrome.
+ * Keeps attention summary above the fold without pushing briefing content down.
+ */
 export function MissionControlGreeting({ content }: MissionControlGreetingProps) {
   return (
-    <header className="rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 shadow-sm sm:px-5 sm:py-3">
-      <p className="text-base font-black tracking-tight text-slate-900 sm:text-lg">
+    <header className="min-w-0 px-0.5">
+      <p className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
         {content.greeting}
       </p>
-      <p className="mt-0.5 text-xs text-slate-600 sm:text-sm">
-        <span>{content.dateLabel}</span>
-        {content.briefingItems.map((item) => (
-          <span key={item}>
-            <span aria-hidden="true" className="mx-1.5 text-slate-300">
-              ·
-            </span>
-            <span
-              className={
-                item === content.briefingItems[0] && content.attentionCount > 0
-                  ? "font-semibold text-amber-800"
-                  : "font-medium text-slate-700"
-              }
-            >
-              {item}
-            </span>
-          </span>
-        ))}
+      <p
+        className={
+          content.attentionCount > 0
+            ? "mt-1 text-sm font-medium text-amber-800 sm:text-[0.9375rem]"
+            : "mt-1 text-sm text-slate-600 sm:text-[0.9375rem]"
+        }
+      >
+        {content.attentionSummary}
       </p>
+      <p className="mt-1 text-xs text-slate-500">{content.dateLabel}</p>
     </header>
   );
 }

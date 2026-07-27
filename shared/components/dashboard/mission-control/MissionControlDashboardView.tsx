@@ -8,13 +8,11 @@ import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 import { MasterContentStack } from "@/shared/design-system/shell";
 import { MissionControlGreeting } from "./MissionControlGreeting";
-import { MissionControlPrimaryActionsRow } from "./MissionControlPrimaryActionsRow";
 import { MissionCriticalSection } from "./MissionCriticalSection";
 import { MissionControlTodaysOperationsSection } from "./MissionControlTodaysOperationsSection";
 import { MissionControlCashFlowSection } from "./MissionControlCashFlowSection";
 import { MissionControlActivityTimelineSection } from "./MissionControlActivityTimelineSection";
 import { MissionControlQuickActionsSection } from "./MissionControlQuickActionsSection";
-import { MissionControlTrendChart } from "./MissionControlTrendChart";
 
 export type MissionControlDashboardViewProps = {
   data: DashboardData;
@@ -26,6 +24,10 @@ export type MissionControlDashboardViewProps = {
   onboardingDismissed?: boolean;
 };
 
+/**
+ * Owner mission briefing — five primary sections in decision order:
+ * Needs Attention → Today's Brief → Quick Actions → Business Health → Recent Activity
+ */
 export function MissionControlDashboardView({
   data,
   userDisplayName,
@@ -51,10 +53,8 @@ export function MissionControlDashboardView({
         onboardingDismissed={onboardingDismissed}
       />
 
-      <MasterContentStack density="compact" className="gap-4 lg:gap-5">
+      <MasterContentStack density="compact" className="gap-5 lg:gap-6">
         <MissionControlGreeting content={content.greeting} />
-
-        <MissionControlPrimaryActionsRow actions={content.primaryQuickActions} />
 
         <MissionCriticalSection
           items={content.missionCritical}
@@ -64,18 +64,16 @@ export function MissionControlDashboardView({
 
         <MissionControlTodaysOperationsSection cards={content.todaysOperations} />
 
-        <MissionControlCashFlowSection cards={content.cashFlow} />
+        <MissionControlQuickActionsSection actions={content.primaryQuickActions} />
 
-        <div className="grid gap-3 lg:grid-cols-2 lg:gap-4">
-          {data.access.canViewBilling ? (
-            <MissionControlTrendChart series={content.revenueTrend} />
-          ) : null}
-          <MissionControlTrendChart series={content.jobsTrend} />
-        </div>
+        <MissionControlCashFlowSection
+          cards={content.cashFlow}
+          collectionsTrend={
+            data.access.canViewBilling ? content.revenueTrend : undefined
+          }
+        />
 
         <MissionControlActivityTimelineSection data={data} />
-
-        <MissionControlQuickActionsSection actions={content.secondaryQuickActions} />
       </MasterContentStack>
     </>
   );

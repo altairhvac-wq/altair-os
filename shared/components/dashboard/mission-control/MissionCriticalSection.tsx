@@ -1,45 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import {
-  MISSION_CRITICAL_ICONS,
   MISSION_CONTROL_SECTION_LABELS,
   type MissionCriticalItem,
 } from "@/shared/lib/dashboard-mission-control";
 import { DashboardQueueActionTrigger } from "@/shared/components/dashboard/DashboardQueueActionTrigger";
 import type { DashboardData } from "@/shared/types/dashboard";
-import { MasterPageSection } from "@/shared/design-system/shell";
-import { MissionControlInlineEmptyState } from "./MissionControlInlineEmptyState";
+import {
+  MasterPageSection,
+  altairSurfaceListRowClass,
+  altairSurfaceSectionClass,
+} from "@/shared/design-system/shell";
 
 type MissionCriticalSectionProps = {
   items: MissionCriticalItem[];
   isClear: boolean;
   data: DashboardData;
-};
-
-const severityStyles = {
-  critical: {
-    row: "bg-rose-50/50 hover:bg-rose-50/80 border-l-[3px] border-l-rose-500",
-    badge: "bg-rose-100/80 text-rose-800",
-    badgeLabel: "Urgent",
-    iconWrap: "bg-rose-100/80 text-rose-700",
-    value: "text-rose-900",
-  },
-  warning: {
-    row: "bg-amber-50/50 hover:bg-amber-50/80 border-l-[3px] border-l-amber-500",
-    badge: "bg-amber-100/80 text-amber-800",
-    badgeLabel: "Attention",
-    iconWrap: "bg-amber-100/80 text-amber-700",
-    value: "text-amber-900",
-  },
-  healthy: {
-    row: "bg-[var(--surface-tile)] hover:bg-slate-50/80 border-l-[3px] border-l-slate-200",
-    badge: "bg-slate-100 text-slate-700",
-    badgeLabel: "Clear",
-    iconWrap: "bg-slate-100 text-slate-600",
-    value: "text-slate-900",
-  },
 };
 
 function resolveQueueType(id: string) {
@@ -57,48 +35,38 @@ function resolveQueueType(id: string) {
   }
 }
 
-function MissionCriticalRow({
+function NeedsAttentionRow({
   item,
   data,
 }: {
   item: MissionCriticalItem;
   data: DashboardData;
 }) {
-  const Icon = MISSION_CRITICAL_ICONS[item.id] ?? CheckCircle2;
-  const styles = severityStyles[item.severity];
   const queueType = resolveQueueType(item.id);
+  const valueClass =
+    item.severity === "critical"
+      ? "text-rose-800"
+      : item.severity === "warning"
+        ? "text-amber-800"
+        : "text-slate-900";
 
   const content = (
     <div
-      className={`flex items-start gap-3 rounded-lg px-3 py-3 transition-colors sm:px-3.5 sm:py-3.5 ${styles.row}`}
+      className={`${altairSurfaceListRowClass} flex items-baseline gap-3 border-b-0 py-3 sm:py-3.5`}
     >
-      <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${styles.iconWrap}`}
+      <p className="min-w-0 flex-1 text-sm font-medium text-slate-800 sm:text-[0.9375rem]">
+        {item.label}
+      </p>
+      <span
+        aria-hidden="true"
+        className="mx-1 hidden min-w-[2rem] flex-1 border-b border-dotted border-slate-300/90 sm:block"
+      />
+      <p
+        className={`shrink-0 text-base font-black tabular-nums sm:text-lg ${valueClass}`}
       >
-        <Icon className="h-4 w-4" aria-hidden="true" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm font-bold text-slate-900 sm:text-base">{item.label}</p>
-          <span
-            className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${styles.badge}`}
-          >
-            {styles.badgeLabel}
-          </span>
-        </div>
-        <p className={`mt-1 text-xl font-black tabular-nums sm:text-2xl ${styles.value}`}>
-          {item.count}
-        </p>
-        <p className="mt-1 text-xs leading-relaxed text-slate-600 sm:text-sm">
-          {item.description}
-        </p>
-      </div>
-      {item.severity !== "healthy" ? (
-        <ArrowRight
-          className="mt-1 h-4 w-4 shrink-0 text-slate-400"
-          aria-hidden="true"
-        />
-      ) : null}
+        {item.count}
+      </p>
+      <span className="sr-only">{item.description}</span>
     </div>
   );
 
@@ -142,30 +110,42 @@ export function MissionCriticalSection({
     return null;
   }
 
+  const attentionItems = items.filter((item) => item.severity !== "healthy");
+
   return (
     <MasterPageSection
       title={MISSION_CONTROL_SECTION_LABELS.missionCritical}
-      description="Issues that need immediate office attention."
       density="compact"
       headerVariant="spacious"
     >
-      {isClear ? (
-        <MissionControlInlineEmptyState
-          tone="success"
-          title="Everything is running smoothly."
-          description="No overdue jobs, billing gaps, or dispatch pressure detected."
-          icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />}
-        />
+      {isClear || attentionItems.length === 0 ? (
+        <div
+          className={`${altairSurfaceSectionClass} flex items-start gap-3 px-3.5 py-4 sm:px-4`}
+        >
+          <CheckCircle2
+            className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
+            aria-hidden="true"
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-emerald-900">
+              Everything is running smoothly
+            </p>
+            <p className="mt-0.5 text-xs leading-relaxed text-emerald-800/80">
+              No overdue jobs, billing gaps, or dispatch pressure detected.
+            </p>
+          </div>
+        </div>
       ) : (
-        <div className="altair-surface-section altair-surface-section-body grid gap-2 lg:grid-cols-2">
-          {items
-            .filter((item) => item.severity !== "healthy")
-            .map((item) => (
-              <MissionCriticalRow key={item.id} item={item} data={data} />
+        <div className={altairSurfaceSectionClass}>
+          <ul className="divide-y divide-slate-200/55 px-1 sm:px-2">
+            {attentionItems.map((item) => (
+              <li key={item.id}>
+                <NeedsAttentionRow item={item} data={data} />
+              </li>
             ))}
+          </ul>
         </div>
       )}
-
     </MasterPageSection>
   );
 }
