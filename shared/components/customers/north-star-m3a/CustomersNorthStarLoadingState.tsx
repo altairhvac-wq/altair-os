@@ -1,77 +1,64 @@
 import {
   MasterContentStack,
-  MasterListPageLoadingState,
   MasterPageSurface,
   MasterShellPage,
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import { customerMissionClasses as cm } from "../customer-list-presentation";
 
-function Skeleton({
-  className,
-  dark = false,
-}: {
-  className?: string;
-  dark?: boolean;
-}) {
-  return (
-    <div
-      className={`north-star-skeleton ${dark ? "north-star-skeleton-dark" : ""} ${className ?? ""}`}
-    />
-  );
+function Skeleton({ className }: { className?: string }) {
+  return <div className={`admin-skeleton ${className ?? ""}`} />;
 }
 
-function DesktopLoadingSkeleton() {
+/**
+ * Mission Briefing loading scaffold for Customers — compact header,
+ * search-first filter region, quiet list rows. Matches CustomersPageView.
+ */
+export function CustomersNorthStarLoadingState() {
   return (
-    <MasterShellPage fillViewport density="compact" className={lt.pageCanvas}>
-      <header
-        className={`north-star-page-header flex shrink-0 items-start justify-between gap-2 sm:items-center ${lt.pageHeader}`}
-      >
-        <div className="min-w-0 flex-1 space-y-1">
-          <Skeleton dark className="h-2.5 w-28" />
-          <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
-            <Skeleton dark className="h-5 w-32 shrink-0 sm:h-6 sm:w-40" />
-            <Skeleton dark className="h-3 w-48 max-w-full" />
-          </div>
+    <MasterShellPage fillViewport density="compact">
+      <header className="admin-page-header flex shrink-0 items-center justify-between gap-2 px-3 py-1.5 sm:px-3.5">
+        <div className="flex min-w-0 flex-1 items-baseline gap-2">
+          <Skeleton className="hidden h-5 w-28 shrink-0 md:block" />
+          <Skeleton className="h-3 w-52 max-w-full" />
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Skeleton className="h-9 w-24 shrink-0 rounded-lg border border-[rgba(138,99,36,0.18)]" />
-          <Skeleton className="h-9 w-28 shrink-0 rounded-lg border border-[rgba(201,164,77,0.22)]" />
+          <Skeleton className="h-9 w-20 shrink-0 rounded-lg" />
+          <Skeleton className="h-9 w-28 shrink-0 rounded-lg" />
         </div>
       </header>
 
       <MasterContentStack density="compact" scrollable>
         <MasterPageSurface
-          variant="northStarList"
-          className={`${masterListPageSurfaceClass} ${lt.listSurface}`}
+          variant="workspace"
+          className={masterListPageSurfaceClass}
         >
-          <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
-
-          <div className={`${lt.filterBar} shrink-0`}>
-            <div className={`${lt.viewTabsBand} border-b-0 px-0 py-0`}>
-              <div className={`${lt.viewTabsControl} !grid w-full grid-cols-4`}>
+          <div className={cm.filterRegion}>
+            <div className={cm.filterSearchBand}>
+              <Skeleton className="h-10 w-full max-w-xl rounded-lg" />
+              <Skeleton className="mt-1.5 h-3 w-24" />
+            </div>
+            <div className={`${cm.filterTabsBand} pb-2.5`}>
+              <div className="grid w-full grid-cols-4 gap-0.5 sm:flex sm:w-auto">
                 {Array.from({ length: 4 }).map((_, index) => (
-                  <Skeleton key={index} className="h-8 rounded-lg" />
+                  <Skeleton key={index} className="h-9 flex-1 rounded-md sm:w-24" />
                 ))}
               </div>
             </div>
-            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
-              <Skeleton className="h-9 w-full max-w-md rounded-lg" />
-            </div>
           </div>
 
-          <div className={`${masterListPageScrollRegionClass} p-4`}>
-            <div className="space-y-3">
+          <div className={`${masterListPageScrollRegionClass} ${cm.listShell}`}>
+            <div className="divide-y divide-altair-border/50">
               {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="flex items-center gap-4 px-2 py-3">
-                  <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+                <div key={index} className="flex items-center gap-3 px-3 py-3.5">
+                  <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
                   <div className="min-w-0 flex-1 space-y-2">
                     <Skeleton className="h-4 w-36" />
                     <Skeleton className="h-3 w-48" />
                   </div>
-                  <Skeleton className="h-6 w-16 rounded-full" />
-                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="hidden h-5 w-16 rounded-full sm:block" />
+                  <Skeleton className="h-4 w-24" />
                 </div>
               ))}
             </div>
@@ -79,23 +66,5 @@ function DesktopLoadingSkeleton() {
         </MasterPageSurface>
       </MasterContentStack>
     </MasterShellPage>
-  );
-}
-
-export function CustomersNorthStarLoadingState() {
-  return (
-    <>
-      <div className="hidden lg:block">
-        <DesktopLoadingSkeleton />
-      </div>
-      <div className="lg:hidden">
-        <MasterListPageLoadingState
-          showViewTabs
-          showSecondaryAction
-          filterControlCount={1}
-          tableRowVariant="customer"
-        />
-      </div>
-    </>
   );
 }

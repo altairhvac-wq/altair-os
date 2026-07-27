@@ -3,7 +3,6 @@ import {
   adminSegmentedItemActiveClass,
   adminSegmentedItemClass,
 } from "@/shared/design-system/shell/tokens";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import {
   CUSTOMER_WORK_QUEUE_LABELS,
   CUSTOMER_WORK_QUEUE_ORDER,
@@ -14,6 +13,7 @@ type CustomerQueueTabsProps = {
   activeQueue: CustomerWorkQueue;
   onQueueChange: (queue: CustomerWorkQueue) => void;
   counts: Record<CustomerWorkQueue, number>;
+  /** @deprecated Mission Briefing unifies presentation; retained for call-site compatibility. */
   northStar?: boolean;
 };
 
@@ -24,7 +24,6 @@ export function CustomerQueueTabs({
   activeQueue,
   onQueueChange,
   counts,
-  northStar = false,
 }: CustomerQueueTabsProps) {
   const tabs = CUSTOMER_WORK_QUEUE_ORDER.map((queue) => ({
     id: queue,
@@ -32,46 +31,22 @@ export function CustomerQueueTabs({
     count: counts[queue],
   }));
 
-  if (northStar) {
-    return (
-      <div className={`${lt.viewTabsControl} ${tabControlLayoutClass}`}>
-        {tabs.map((tab) => {
-          const isActive = activeQueue === tab.id;
-
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              aria-pressed={isActive}
-              onClick={() => onQueueChange(tab.id)}
-              className={`${lt.viewTabsItem} min-w-0 px-1 py-1.5 text-[10px] leading-tight sm:px-3 sm:py-1.5 sm:text-sm ${
-                isActive ? lt.viewTabsItemActive : ""
-              }`}
-            >
-              <span className="block text-center leading-tight">{tab.label}</span>
-              <span
-                className={`block text-center text-[10px] font-medium sm:ml-1.5 sm:inline sm:text-xs ${
-                  isActive ? lt.viewTabsCountActive : lt.viewTabsCount
-                }`}
-              >
-                {tab.count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    );
-  }
-
   return (
-    <div className={`${adminSegmentedControlClass} ${tabControlLayoutClass}`}>
+    <div
+      className={`${adminSegmentedControlClass} ${tabControlLayoutClass}`}
+      role="tablist"
+      aria-label="Customer queues"
+    >
       {tabs.map((tab) => {
         const isActive = activeQueue === tab.id;
+        const needsAttention = tab.id === "needs-info" && tab.count > 0;
 
         return (
           <button
             key={tab.id}
             type="button"
+            role="tab"
+            aria-selected={isActive}
             aria-pressed={isActive}
             onClick={() => onQueueChange(tab.id)}
             className={`${adminSegmentedItemClass} min-w-0 px-1 py-1.5 text-[10px] leading-tight sm:px-3 sm:py-1.5 sm:text-sm ${
@@ -81,7 +56,11 @@ export function CustomerQueueTabs({
             <span className="block text-center leading-tight">{tab.label}</span>
             <span
               className={`block text-center text-[10px] font-medium sm:ml-1.5 sm:inline sm:text-xs ${
-                isActive ? "text-slate-500" : "text-slate-400"
+                needsAttention && !isActive
+                  ? "text-altair-warning-foreground"
+                  : isActive
+                    ? "text-altair-ink-on-paper-secondary"
+                    : "text-altair-ink-on-paper-muted"
               }`}
             >
               {tab.count}

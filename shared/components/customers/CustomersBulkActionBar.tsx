@@ -3,7 +3,7 @@
 import { Archive, Loader2, RotateCcw, Trash2, X } from "lucide-react";
 import type { CustomerLifecycleActionId } from "@/shared/lib/customer-lifecycle";
 import type { CustomerLifecycleState } from "@/shared/types/customer";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import { customerMissionClasses as cm } from "./customer-list-presentation";
 
 type CustomersBulkActionBarProps = {
   selectedCount: number;
@@ -19,6 +19,7 @@ type CustomersBulkActionBarProps = {
   onRestoreFromTrash: () => void;
   onPermanentDelete: () => void;
   onClearSelection: () => void;
+  /** @deprecated Mission Briefing unifies presentation; retained for call-site compatibility. */
   northStar?: boolean;
 };
 
@@ -44,7 +45,6 @@ export function CustomersBulkActionBar({
   onRestoreFromTrash,
   onPermanentDelete,
   onClearSelection,
-  northStar = false,
 }: CustomersBulkActionBarProps) {
   const isBusy =
     isArchiving ||
@@ -113,34 +113,18 @@ export function CustomersBulkActionBar({
 
   return (
     <div
-      className={
-        northStar
-          ? lt.bulkBar
-          : "sticky bottom-0 z-20 border-t border-cyan-200 bg-cyan-50/95 px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.25)] backdrop-blur-sm sm:px-4"
-      }
+      className={cm.bulkBar}
       role="region"
       aria-label="Bulk customer actions"
     >
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
-          <p
-            className={
-              northStar
-                ? lt.bulkBarTitle
-                : "text-sm font-bold text-cyan-950"
-            }
-          >
-            {selectedCount} selected
-          </p>
+          <p className={cm.bulkBarTitle}>{selectedCount} selected</p>
           <button
             type="button"
             onClick={onClearSelection}
             disabled={isBusy}
-            className={
-              northStar
-                ? lt.bulkClearButton
-                : "inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-cyan-200 bg-white px-3 py-1.5 text-xs font-semibold text-cyan-900 transition-colors hover:border-cyan-300 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60"
-            }
+            className={cm.bulkClearButton}
           >
             <X className="h-3.5 w-3.5" aria-hidden="true" />
             Clear selection
@@ -154,11 +138,7 @@ export function CustomersBulkActionBar({
                 type="button"
                 onClick={handleArchiveClick}
                 disabled={isBusy}
-                className={
-                  northStar
-                    ? lt.bulkSecondaryAction
-                    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                }
+                className={cm.bulkSecondaryAction}
               >
                 {isArchiving ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -171,11 +151,7 @@ export function CustomersBulkActionBar({
                 type="button"
                 onClick={handleMoveToTrashClick}
                 disabled={isBusy}
-                className={
-                  northStar
-                    ? lt.bulkDestructiveAction
-                    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-900 transition-colors hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
-                }
+                className={cm.bulkDestructiveAction}
               >
                 {isMovingToTrash ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -193,11 +169,7 @@ export function CustomersBulkActionBar({
                 type="button"
                 onClick={onRestore}
                 disabled={isBusy}
-                className={
-                  northStar
-                    ? lt.bulkPrimaryAction
-                    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-cyan-700 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-                }
+                className={cm.bulkPrimaryAction}
               >
                 {isRestoring ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -210,11 +182,7 @@ export function CustomersBulkActionBar({
                 type="button"
                 onClick={handleMoveToTrashClick}
                 disabled={isBusy}
-                className={
-                  northStar
-                    ? lt.bulkDestructiveAction
-                    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-900 transition-colors hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
-                }
+                className={cm.bulkDestructiveAction}
               >
                 {isMovingToTrash ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -232,11 +200,7 @@ export function CustomersBulkActionBar({
                 type="button"
                 onClick={onRestoreFromTrash}
                 disabled={isBusy}
-                className={
-                  northStar
-                    ? lt.bulkPrimaryAction
-                    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-cyan-700 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-                }
+                className={cm.bulkPrimaryAction}
               >
                 {isRestoringFromTrash ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -249,11 +213,7 @@ export function CustomersBulkActionBar({
                 type="button"
                 onClick={handlePermanentDeleteClick}
                 disabled={isBusy}
-                className={
-                  northStar
-                    ? lt.bulkDestructiveAction
-                    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
-                }
+                className={cm.bulkDestructiveAction}
               >
                 {isPermanentlyDeleting ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />

@@ -4,14 +4,17 @@ import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DemoDisplayName } from "@/shared/components/display/DemoDisplayName";
 import { useFormatDemoDisplayName } from "@/shared/components/display/FounderMarketingDisplayContext";
-import { adminListRowClass } from "@/shared/lib/admin-density";
 import { isCustomerArchived, isCustomerDeleted } from "@/shared/lib/customer-lifecycle";
 import { getCustomerInitials, type Customer } from "@/shared/types/customer";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { CustomerStatusBadge } from "./CustomerStatusBadge";
+import {
+  customerMissionClasses as cm,
+  resolveCustomerListCue,
+} from "./customer-list-presentation";
 
 type CustomersMobileCardListProps = {
   customers: Customer[];
+  /** @deprecated Mission Briefing unifies presentation; retained for call-site compatibility. */
   northStar?: boolean;
 };
 
@@ -29,94 +32,59 @@ function formatCustomerContactLine(customer: Customer): string {
 
 export function CustomersMobileCardList({
   customers,
-  northStar = false,
 }: CustomersMobileCardListProps) {
   const router = useRouter();
   const formatDisplayName = useFormatDemoDisplayName();
 
   return (
     <ul
-      className={`max-w-full min-w-0 overflow-hidden md:hidden ${
-        northStar ? "divide-y divide-[rgba(79,70,56,0.08)]" : "divide-y divide-slate-100"
-      }`}
+      className={`max-w-full min-w-0 divide-y divide-altair-border/50 overflow-hidden md:hidden ${cm.listShell}`}
     >
       {customers.map((customer) => {
         const contactLine = formatCustomerContactLine(customer);
+        const cue = resolveCustomerListCue(customer);
 
         return (
           <li key={customer.id} className="min-w-0 max-w-full">
             <button
               type="button"
               onClick={() => router.push(`/customers/${customer.id}`)}
-              className={
-                northStar
-                  ? "flex w-full min-w-0 max-w-full items-start gap-3 px-3 py-3 text-left transition-colors"
-                  : `${adminListRowClass} px-3 py-3`
-              }
+              className="flex w-full min-w-0 max-w-full items-start gap-3 px-3 py-3.5 text-left transition-colors hover:bg-altair-paper-subtle/70"
               aria-label={`Open customer ${customer.name}`}
             >
-              <div
-                className={
-                  northStar
-                    ? lt.tableAvatar
-                    : "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-400 text-xs font-bold text-white"
-                }
-              >
+              <div className={cm.avatar}>
                 {getCustomerInitials(formatDisplayName(customer.name))}
               </div>
 
               <div className="min-w-0 flex-1 overflow-hidden">
                 <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                  <p
-                    className={
-                      northStar
-                        ? `min-w-0 truncate ${lt.tablePrimaryText}`
-                        : "min-w-0 truncate text-sm font-semibold text-slate-900"
-                    }
-                  >
+                  <p className={`min-w-0 truncate ${cm.primaryText}`}>
                     <DemoDisplayName>{customer.name}</DemoDisplayName>
                   </p>
                   {isCustomerDeleted(customer) ? (
-                    <span
-                      className={
-                        northStar
-                          ? lt.badgeDeleted
-                          : "inline-flex shrink-0 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-800"
-                      }
-                    >
-                      Deleted
-                    </span>
+                    <span className={cm.badgeDeleted}>Deleted</span>
                   ) : isCustomerArchived(customer) ? (
-                    <span
-                      className={
-                        northStar
-                          ? lt.badgeArchived
-                          : "inline-flex shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600"
-                      }
-                    >
-                      Archived
-                    </span>
+                    <span className={cm.badgeArchived}>Archived</span>
                   ) : null}
                   <CustomerStatusBadge status={customer.status} className="shrink-0" />
                 </div>
                 {contactLine ? (
-                  <p
-                    className={
-                      northStar
-                        ? `mt-0.5 truncate ${lt.tableSecondaryText}`
-                        : "mt-0.5 truncate text-xs text-slate-500"
-                    }
-                  >
+                  <p className={`mt-0.5 truncate ${cm.secondaryText}`}>
                     {contactLine}
                   </p>
                 ) : null}
+                <p
+                  className={`mt-1 truncate text-xs ${
+                    cue.tone === "warning"
+                      ? "font-medium text-altair-warning-foreground"
+                      : "text-altair-ink-on-paper-muted"
+                  }`}
+                >
+                  {cue.label}
+                </p>
               </div>
 
-              <ChevronRight
-                className={`mt-1 h-4 w-4 shrink-0 ${
-                  northStar ? "text-[#8A6324]/50" : "text-slate-300"
-                }`}
-              />
+              <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-altair-ink-on-paper-muted/60" />
             </button>
           </li>
         );

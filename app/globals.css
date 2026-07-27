@@ -1536,6 +1536,32 @@ a[href] {
   color: #8a6324;
 }
 
+/*
+ * Customers Mission Briefing list (Phase 1 owner experience).
+ * Whitespace-led rows; soft separators; no zebra noise.
+ */
+.customer-mission-list ul > li + li,
+.customer-mission-list :where(tbody .altair-table-row) {
+  border-color: color-mix(in srgb, var(--altair-border) 55%, transparent);
+}
+
+.customer-mission-list :where(tbody .altair-table-row:nth-of-type(even)) {
+  background-color: transparent;
+}
+
+.customer-mission-list :where(tbody .altair-table-row:hover) {
+  background-color: color-mix(in srgb, var(--altair-paper-subtle) 70%, transparent);
+}
+
+.customer-mission-list :where(.altair-table-header tr) {
+  background-color: transparent;
+  border-bottom: 1px solid color-mix(in srgb, var(--altair-border) 70%, transparent);
+}
+
+.customer-mission-filter-region {
+  background-color: color-mix(in srgb, var(--altair-paper-subtle) 85%, transparent);
+}
+
 /* North Star Jobs list — work ledger (M4A) */
 .admin-north-star-shell .north-star-page-header .north-star-jobs-primary-action {
   display: inline-flex !important;

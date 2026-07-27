@@ -1,85 +1,51 @@
 import { SearchX, Users } from "lucide-react";
-import { EmptyState } from "@/shared/design-system/components/EmptyState";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import { Button } from "@/shared/design-system/components";
 import { adminEmptyWrapClass } from "@/shared/lib/admin-density";
 
 type CustomersEmptyStateProps = {
   variant: "no-customers" | "no-results";
   onCreateCustomer?: () => void;
+  /** @deprecated Mission Briefing unifies presentation; retained for call-site compatibility. */
   northStar?: boolean;
 };
 
+/**
+ * Calm Mission Briefing empty states — paper surface, quiet copy, sparse brass CTA.
+ */
 export function CustomersEmptyState({
   variant,
   onCreateCustomer,
-  northStar = false,
 }: CustomersEmptyStateProps) {
   const isNoResults = variant === "no-results";
 
-  if (northStar) {
-    return (
-      <div className={adminEmptyWrapClass}>
-        <div className={`${lt.emptyState} w-full max-w-md text-center`}>
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE4CB] ring-1 ring-[rgba(138,99,36,0.12)]">
-            {isNoResults ? (
-              <SearchX className="h-6 w-6 text-[#8A6324]" />
-            ) : (
-              <Users className="h-6 w-6 text-[#8A6324]" />
-            )}
-          </div>
-          <h3 className="mt-4 text-base font-semibold text-[#17130E]">
-            {isNoResults ? "No customers found" : "Let's add your first customer"}
-          </h3>
-          <p className="mt-2 text-sm text-[#64748B]">
-            {isNoResults
-              ? "Try adjusting your search or filter to find what you're looking for."
-              : onCreateCustomer
-                ? "Customers unlock jobs, estimates, and service history. Start with one real account."
-                : "Customers will appear here once someone on your team adds them."}
-          </p>
-          {!isNoResults && onCreateCustomer ? (
-            <button
-              type="button"
-              onClick={onCreateCustomer}
-              className={`mt-5 ${lt.emptyStateAction}`}
-            >
-              Add your first customer
-            </button>
-          ) : null}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={adminEmptyWrapClass}>
-      <EmptyState
-        tone={isNoResults ? "neutral" : "info"}
-        icon={
-          isNoResults ? (
-            <SearchX className="h-6 w-6" />
+      <div className="w-full max-w-md rounded-xl border border-altair-border bg-altair-paper-subtle px-5 py-6 text-center">
+        <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg bg-altair-paper shadow-sm ring-1 ring-altair-border">
+          {isNoResults ? (
+            <SearchX className="h-4 w-4 text-altair-ink-on-paper-muted" />
           ) : (
-            <Users className="h-6 w-6" />
-          )
-        }
-        title={isNoResults ? "No customers found" : "Let's add your first customer"}
-        description={
-          isNoResults
-            ? "Try adjusting your search or filter to find what you're looking for."
+            <Users className="h-4 w-4 text-altair-ink-on-paper-muted" />
+          )}
+        </div>
+        <p className="mt-3 text-sm font-semibold text-altair-ink-on-paper">
+          {isNoResults ? "No customers found" : "Add your first customer"}
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-altair-ink-on-paper-secondary">
+          {isNoResults
+            ? "Try adjusting your search or queue to find who you need."
             : onCreateCustomer
               ? "Customers unlock jobs, estimates, and service history. Start with one real account."
-              : "Customers will appear here once someone on your team adds them."
-        }
-        action={
-          !isNoResults && onCreateCustomer
-            ? {
-                label: "Add your first customer",
-                onClick: onCreateCustomer,
-              }
-            : undefined
-        }
-        className="w-full max-w-md"
-      />
+              : "Customers will appear here once someone on your team adds them."}
+        </p>
+        {!isNoResults && onCreateCustomer ? (
+          <div className="mt-4 flex justify-center">
+            <Button size="sm" onClick={onCreateCustomer}>
+              Add your first customer
+            </Button>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

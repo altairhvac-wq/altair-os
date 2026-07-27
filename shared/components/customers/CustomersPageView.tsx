@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, UserPlus } from "lucide-react";
@@ -12,7 +11,6 @@ import {
   bulkRestoreCustomersFromTrashAction,
 } from "@/app/actions/customers-bulk";
 import { createCustomerAction } from "@/app/actions/customers";
-import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { usePageBulkSelection } from "@/shared/hooks/usePageBulkSelection";
 import { resolveSelectedItems } from "@/shared/lib/bulk-selection";
 import {
@@ -32,7 +30,6 @@ import {
   masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
 import { Button } from "@/shared/design-system/components";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { CustomerDetailPanel } from "./CustomerDetailPanel";
 import { CustomerQueueTabs } from "./CustomerQueueTabs";
@@ -40,6 +37,7 @@ import { CustomerSearchFilterBar } from "./CustomerSearchFilterBar";
 import { CustomersBulkActionBar } from "./CustomersBulkActionBar";
 import { CustomersEmptyState } from "./CustomersEmptyState";
 import { CustomersTable } from "./CustomersTable";
+import { customerMissionClasses as cm } from "./customer-list-presentation";
 import {
   countCustomersForWorkQueue,
   filterCustomersForWorkQueue,
@@ -365,57 +363,38 @@ export function CustomersPageView({
   const hasNoCustomers = customers.length === 0;
   const hasNoQueueCustomers = !hasNoCustomers && queueScopedCustomers.length === 0;
   const hasNoResults = !hasNoCustomers && filteredCustomers.length === 0;
-  const northStar = isNorthStarShellEnabled();
 
   return (
     <MasterListPageLayout
       title="Customers"
-      subtitle="Find customers, update records, and review service history."
+      subtitle="Find who you need. See what needs attention."
       density="compact"
+      headerSurfaceVariant="default"
+      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:shrink-0 sm:text-lg"
+      headerSubtitleClassName="min-w-0 text-xs leading-snug text-altair-ink-on-paper-muted sm:truncate"
+      headerClassName="items-start px-3 py-1.5 sm:items-center sm:px-3.5"
       primaryAction={
         canManageCustomers ? (
-          northStar ? (
-            <button
-              type="button"
-              onClick={handleNewCustomer}
-              className={`north-star-customers-primary-action ${lt.primaryAction}`}
-            >
-              <UserPlus className="h-3.5 w-3.5" />
-              New Customer
-            </button>
-          ) : (
-            <Button
-              size="sm"
-              onClick={handleNewCustomer}
-              leadingIcon={<UserPlus className="h-3.5 w-3.5" />}
-            >
-              New Customer
-            </Button>
-          )
+          <Button
+            size="sm"
+            onClick={handleNewCustomer}
+            leadingIcon={<UserPlus className="h-3.5 w-3.5" />}
+          >
+            New Customer
+          </Button>
         ) : undefined
       }
       secondaryAction={
         canManageCustomers ? (
-          northStar ? (
-            <Link
-              href="/customers/import"
-              className={`north-star-customers-secondary-action ${lt.secondaryAction}`}
-            >
-              <Upload className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Import Customers</span>
-              <span className="sm:hidden">Import</span>
-            </Link>
-          ) : (
-            <Button
-              href="/customers/import"
-              size="sm"
-              variant="secondary"
-              leadingIcon={<Upload className="h-3.5 w-3.5" />}
-            >
-              <span className="hidden sm:inline">Import Customers</span>
-              <span className="sm:hidden">Import</span>
-            </Button>
-          )
+          <Button
+            href="/customers/import"
+            size="sm"
+            variant="secondary"
+            leadingIcon={<Upload className="h-3.5 w-3.5" />}
+          >
+            <span className="hidden sm:inline">Import Customers</span>
+            <span className="sm:hidden">Import</span>
+          </Button>
         ) : undefined
       }
       banners={
@@ -434,98 +413,73 @@ export function CustomersPageView({
           </SettingsAlertBanner>
         ) : undefined
       }
-      className={northStar ? lt.pageCanvas : undefined}
-      headerClassName={northStar ? lt.pageHeader : undefined}
-      headerSurfaceVariant={northStar ? "northStar" : "default"}
-      headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
-      headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
       <MasterPageSurface
-        variant={northStar ? "northStarList" : "workspace"}
-        className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
+        variant="workspace"
+        className={masterListPageSurfaceClass}
       >
-        {northStar ? (
-          <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
-        ) : null}
-
-        <div
-          className={
-            northStar ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"
-          }
-        >
-          {!hasNoCustomers ? (
-            <div
-              className={
-                northStar
-                  ? lt.viewTabsBand
-                  : "shrink-0 border-b border-altair-border px-3 py-1.5 sm:px-4"
-              }
-            >
+        {!hasNoCustomers ? (
+          <div className={cm.filterRegion}>
+            <div className={cm.filterSearchBand}>
+              <CustomerSearchFilterBar
+                search={search}
+                onSearchChange={setSearch}
+                resultCount={filteredCustomers.length}
+                showPastLifecycleFilter={workQueue === "past"}
+                pastLifecycleFilter={pastLifecycleFilter}
+                onPastLifecycleFilterChange={setPastLifecycleFilter}
+              />
+            </div>
+            <div className={`${cm.filterTabsBand} pb-2.5`}>
               <CustomerQueueTabs
                 activeQueue={workQueue}
                 onQueueChange={handleQueueChange}
                 counts={queueCounts}
-                northStar={northStar}
               />
             </div>
-          ) : null}
-
-          {!hasNoCustomers ? (
-            <CustomerSearchFilterBar
-              search={search}
-              onSearchChange={setSearch}
-              resultCount={filteredCustomers.length}
-              northStar={northStar}
-              showPastLifecycleFilter={workQueue === "past"}
-              pastLifecycleFilter={pastLifecycleFilter}
-              onPastLifecycleFilterChange={setPastLifecycleFilter}
-            />
-          ) : null}
-
-          <div className={masterListPageScrollRegionClass}>
-            {hasNoCustomers ? (
-              <CustomersEmptyState
-                variant="no-customers"
-                onCreateCustomer={
-                  canManageCustomers ? handleNewCustomer : undefined
-                }
-                northStar={northStar}
-              />
-            ) : hasNoQueueCustomers || hasNoResults ? (
-              <CustomersEmptyState variant="no-results" northStar={northStar} />
-            ) : (
-              <CustomersTable
-                customers={filteredCustomers}
-                showRevenueStats={false}
-                selectionEnabled={selectionEnabled}
-                selectedIds={selectedIds}
-                onToggleSelection={toggleSelection}
-                onToggleAllVisible={toggleAllVisible}
-                northStar={northStar}
-                canManageCustomers={canManageCustomers}
-              />
-            )}
           </div>
+        ) : null}
 
-          {selectionEnabled ? (
-            <CustomersBulkActionBar
-              selectedCount={selectedCustomers.length}
-              lifecycleFilter={bulkLifecycleFilter}
-              isArchiving={isBulkArchiving}
-              isRestoring={isBulkRestoring}
-              isMovingToTrash={isBulkMovingToTrash}
-              isRestoringFromTrash={isBulkRestoringFromTrash}
-              isPermanentlyDeleting={isBulkPermanentlyDeleting}
-              onArchive={handleBulkArchive}
-              onRestore={handleBulkRestore}
-              onMoveToTrash={handleBulkMoveToTrash}
-              onRestoreFromTrash={handleBulkRestoreFromTrash}
-              onPermanentDelete={handleBulkPermanentDelete}
-              onClearSelection={clearSelection}
-              northStar={northStar}
+        <div className={masterListPageScrollRegionClass}>
+          {hasNoCustomers ? (
+            <CustomersEmptyState
+              variant="no-customers"
+              onCreateCustomer={
+                canManageCustomers ? handleNewCustomer : undefined
+              }
             />
-          ) : null}
+          ) : hasNoQueueCustomers || hasNoResults ? (
+            <CustomersEmptyState variant="no-results" />
+          ) : (
+            <CustomersTable
+              customers={filteredCustomers}
+              showRevenueStats={false}
+              selectionEnabled={selectionEnabled}
+              selectedIds={selectedIds}
+              onToggleSelection={toggleSelection}
+              onToggleAllVisible={toggleAllVisible}
+              canManageCustomers={canManageCustomers}
+            />
+          )}
         </div>
+
+        {selectionEnabled ? (
+          <CustomersBulkActionBar
+            selectedCount={selectedCustomers.length}
+            lifecycleFilter={bulkLifecycleFilter}
+            isArchiving={isBulkArchiving}
+            isRestoring={isBulkRestoring}
+            isMovingToTrash={isBulkMovingToTrash}
+            isRestoringFromTrash={isBulkRestoringFromTrash}
+            isPermanentlyDeleting={isBulkPermanentlyDeleting}
+            onArchive={handleBulkArchive}
+            onRestore={handleBulkRestore}
+            onMoveToTrash={handleBulkMoveToTrash}
+            onRestoreFromTrash={handleBulkRestoreFromTrash}
+            onPermanentDelete={handleBulkPermanentDelete}
+            onClearSelection={clearSelection}
+          />
+        ) : null}
       </MasterPageSurface>
 
       <CustomerDetailPanel
