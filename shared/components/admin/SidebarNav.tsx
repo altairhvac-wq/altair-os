@@ -28,7 +28,7 @@ function SidebarNavLink({ item, active }: SidebarNavLinkProps) {
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
-      className={`${northStarSidebarLinkClass} group relative flex items-center gap-3 rounded-xl px-3 pb-3 pt-2.5 text-sm transition-[background-color,color] duration-150 ${
+      className={`${northStarSidebarLinkClass} group relative flex items-center gap-3 rounded-lg px-3 pb-3 pt-2 text-sm transition-[background-color,color] duration-150 ${
         active
           ? `${northStarSidebarLinkActiveClass} font-semibold`
           : "font-medium"

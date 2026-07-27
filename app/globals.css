@@ -1310,10 +1310,10 @@ a[href] {
     box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
   }
 
-  /* Active destination — quiet plate, not a brass button. Underline marks "you are here." */
+  /* Active destination — no fill. Brass underline + icon mark "you are here." */
   .admin-north-star-sidebar-link-active {
-    background-color: #ffffff;
-    color: var(--altair-graphite);
+    background-color: transparent;
+    color: var(--north-star-ivory-strong);
     font-weight: 600;
     box-shadow: none;
   }
@@ -1326,8 +1326,8 @@ a[href] {
     content: "";
     position: absolute;
     left: 50%;
-    bottom: 0.35rem;
-    width: min(2.5rem, 42%);
+    bottom: 0.3rem;
+    width: min(2.25rem, 40%);
     height: 1.5px;
     transform: translateX(-50%);
     border-radius: 1px;
