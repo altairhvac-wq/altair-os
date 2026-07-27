@@ -82,9 +82,9 @@ export function HomepageHero() {
           </ul>
         </div>
 
-        <div className="ah-hero-fade ah-hero-fade-6 ah-hero-product-stage relative mx-auto mt-7 w-[min(100%,calc(84rem*1.17))] max-w-none sm:mt-9 lg:mt-10">
+        <div className="ah-hero-fade ah-hero-fade-6 ah-hero-product-stage relative mx-auto mt-7 w-[min(100%,calc(84rem*1.2))] max-w-none sm:mt-9 lg:mt-10">
           <div
-            className="pointer-events-none absolute -inset-x-[8%] -inset-y-[10%] bg-[radial-gradient(ellipse_at_center,rgba(230,236,244,0.14)_0%,rgba(210,216,224,0.045)_44%,transparent_70%)]"
+            className="pointer-events-none absolute -inset-x-[6%] -inset-y-[8%] bg-[radial-gradient(ellipse_at_center,rgba(236,240,246,0.16)_0%,rgba(210,216,224,0.05)_46%,transparent_72%)]"
             aria-hidden="true"
           />
           <HomepageProductFrame
@@ -92,7 +92,7 @@ export function HomepageHero() {
             alt="Altair Mission Control dashboard showing today's operations, mission-critical queues, cash flow, and technician activity"
             priority
             className="ah-hero-product"
-            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 96vw, 1480px"
+            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 96vw, 1550px"
           />
         </div>
       </div>

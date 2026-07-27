@@ -703,7 +703,7 @@ a[href] {
 
 /* Product stage — brightest plane; subtle lift in brightness/contrast */
 .ah-hero-product-image {
-  filter: brightness(1.06) contrast(1.04);
+  filter: brightness(1.09) contrast(1.05);
 }
 
 @media (prefers-reduced-motion: reduce) {

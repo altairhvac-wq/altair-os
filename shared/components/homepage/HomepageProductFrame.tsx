@@ -35,13 +35,13 @@ export function HomepageProductFrame({
         className="relative overflow-hidden rounded-xl sm:rounded-2xl"
         style={{
           background: isHero
-            ? "linear-gradient(155deg, rgba(238,242,248,0.55) 0%, rgba(190,198,210,0.24) 28%, rgba(48,54,64,0.5) 62%, rgba(12,14,18,0.96) 100%)"
+            ? "linear-gradient(155deg, rgba(242,246,252,0.62) 0%, rgba(198,206,218,0.28) 28%, rgba(52,58,68,0.52) 62%, rgba(12,14,18,0.96) 100%)"
             : "linear-gradient(155deg, rgba(230,236,244,0.42) 0%, rgba(170,178,190,0.18) 28%, rgba(40,46,56,0.55) 62%, rgba(12,14,18,0.98) 100%)",
           padding: "1px",
           boxShadow: isProof
             ? "0 24px 56px -28px rgba(0,0,0,0.75), 0 0 0 1px rgba(222,228,236,0.12), 0 1px 0 rgba(230,236,244,0.18) inset"
             : isHero
-              ? "0 36px 72px -36px rgba(0,0,0,0.72), 0 0 0 1px rgba(230,236,244,0.22), 0 1px 0 rgba(242,246,252,0.3) inset"
+              ? "0 32px 64px -34px rgba(0,0,0,0.68), 0 0 0 1px rgba(236,240,246,0.28), 0 1px 0 rgba(246,248,252,0.34) inset"
               : "0 40px 90px -36px rgba(0,0,0,0.85), 0 0 0 1px rgba(222,228,236,0.14), 0 1px 0 rgba(230,236,244,0.22) inset",
         }}
       >
