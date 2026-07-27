@@ -3549,10 +3549,11 @@ a[href] {
 }
 
 .admin-nav-link {
+  position: relative;
   transition:
-    background-color 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease;
+    color 0.12s ease,
+    background-color 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
 .admin-nav-link:focus-visible {
@@ -3560,12 +3561,46 @@ a[href] {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--altair-brass) 40%, transparent);
 }
 
-/* Legacy / mobile active — brass accent, lighter than prior cyan weight */
+/*
+ * Active destination — destination marker, not a button.
+ * White surface · graphite label · brass icon (set in component) · thin centered underline.
+ */
 .admin-nav-link-active {
-  background-color: color-mix(in srgb, var(--altair-brass) 10%, transparent);
-  color: var(--altair-ink-on-paper);
+  background-color: transparent;
+  color: var(--altair-graphite);
+  font-weight: 600;
   box-shadow: none;
-  outline: 1px solid color-mix(in srgb, var(--altair-brass) 28%, transparent);
+  outline: none;
+}
+
+.admin-nav-link-active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0.2rem;
+  width: min(2.25rem, 56%);
+  height: 1.5px;
+  transform: translateX(-50%);
+  border-radius: 1px;
+  background-color: var(--altair-brass);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin-nav-link-active::after {
+    animation: admin-nav-underline-in 0.12s ease-out;
+  }
+}
+
+@keyframes admin-nav-underline-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scaleX(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scaleX(1);
+  }
 }
 
 .admin-segmented-control {
@@ -4225,6 +4260,10 @@ a[href] {
   .admin-icon-btn,
   .admin-panel-action {
     transition: none;
+  }
+
+  .admin-nav-link-active::after {
+    animation: none;
   }
 
   .admin-btn-primary:active,

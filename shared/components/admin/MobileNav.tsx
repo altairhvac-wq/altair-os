@@ -28,17 +28,23 @@ function MobileNavLink({ item, active, linkRef }: MobileNavLinkProps) {
       ref={linkRef}
       href={item.href}
       aria-current={active ? "page" : undefined}
-      className={`${adminNavLinkClass} flex min-h-11 min-w-[4.75rem] max-w-[6.5rem] shrink-0 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-altair-brass ${
+      className={`${adminNavLinkClass} flex min-h-11 min-w-[4.75rem] max-w-[6.5rem] shrink-0 touch-manipulation flex-col items-center justify-center gap-1 rounded-xl px-2 pb-2 pt-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-altair-brass ${
         active
-          ? `${adminNavLinkActiveClass} text-altair-ink-on-paper`
-          : "text-slate-600 hover:bg-altair-brass/10 hover:text-slate-900"
+          ? `${adminNavLinkActiveClass} text-altair-graphite`
+          : "text-altair-ink-on-paper-muted hover:bg-slate-100/70 hover:text-altair-graphite"
       }`}
     >
       <Icon
-        className={`h-[18px] w-[18px] shrink-0 ${active ? "text-altair-brass" : ""}`}
+        className={`h-[18px] w-[18px] shrink-0 ${
+          active ? "text-altair-brass" : "text-altair-ink-on-paper-muted"
+        }`}
         aria-hidden="true"
       />
-      <span className="w-full truncate text-center text-[11px] font-medium leading-tight">
+      <span
+        className={`w-full truncate text-center text-[11px] leading-tight ${
+          active ? "font-semibold" : "font-medium"
+        }`}
+      >
         {item.label}
       </span>
     </Link>

@@ -70,7 +70,7 @@ export const masterWorkbenchRowClass =
 /** Desktop/mobile nav link — pair with active variant class when current. */
 export const adminNavLinkClass = "admin-nav-link";
 
-/** Active nav item surface (does not replace routing/active matching). */
+/** Active destination marker — brass underline, no filled surface (does not replace routing/active matching). */
 export const adminNavLinkActiveClass = "admin-nav-link-active";
 
 /** North Star M1 — grouped left sidebar shell (flag-gated). Width via `--north-star-sidebar-width` in globals.css. */

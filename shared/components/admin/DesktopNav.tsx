@@ -39,16 +39,19 @@ function DesktopNavLink({ item, active }: DesktopNavLinkProps) {
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
-      className={`${adminNavLinkClass} flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium ${
+      className={`${adminNavLinkClass} flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-2.5 pb-2.5 pt-1.5 text-sm ${
         active
-          ? `${adminNavLinkActiveClass} text-altair-ink-on-paper`
-          : "text-slate-600 hover:bg-altair-brass/10 hover:text-slate-900"
+          ? `${adminNavLinkActiveClass} font-semibold text-altair-graphite`
+          : "font-medium text-altair-ink-on-paper-muted hover:bg-slate-100/70 hover:text-altair-graphite"
       }`}
     >
       <Icon
         className={`h-4 w-4 shrink-0 ${
-          active ? "text-altair-brass" : "text-slate-500 group-hover:text-slate-700"
+          active
+            ? "text-altair-brass"
+            : "text-altair-ink-on-paper-muted group-hover:text-altair-graphite"
         }`}
+        aria-hidden="true"
       />
       {item.label}
     </Link>
