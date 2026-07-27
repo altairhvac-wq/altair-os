@@ -28,13 +28,12 @@ function SidebarNavLink({ item, active }: SidebarNavLinkProps) {
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
-      className={`${northStarSidebarLinkClass} group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-        active ? northStarSidebarLinkActiveClass : ""
+      className={`${northStarSidebarLinkClass} group relative flex items-center gap-3 rounded-xl px-3 pb-3 pt-2.5 text-sm transition-[background-color,color] duration-150 ${
+        active
+          ? `${northStarSidebarLinkActiveClass} font-semibold`
+          : "font-medium"
       }`}
     >
-      {active ? (
-        <span aria-hidden="true" className="admin-north-star-sidebar-rail" />
-      ) : null}
       <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
       <span className="truncate">{item.label}</span>
     </Link>

@@ -1297,7 +1297,7 @@ a[href] {
   }
 
   .admin-north-star-sidebar-link:hover {
-    background-color: rgb(201 164 77 / 0.1);
+    background-color: rgb(255 255 255 / 0.04);
     color: var(--north-star-sidebar-link-hover);
   }
 
@@ -1310,26 +1310,39 @@ a[href] {
     box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
   }
 
-  /* Active nav — lighter wash so chrome complements the dashboard, not dominates it */
+  /* Active destination — quiet plate, not a brass button. Underline marks "you are here." */
   .admin-north-star-sidebar-link-active {
-    background-color: rgb(201 164 77 / 0.08);
-    color: var(--north-star-sidebar-link-active);
-    font-weight: 500;
+    background-color: #ffffff;
+    color: var(--altair-graphite);
+    font-weight: 600;
+    box-shadow: none;
   }
 
   .admin-north-star-sidebar-link-active svg {
-    color: var(--north-star-sidebar-icon-active);
+    color: var(--altair-brass);
+  }
+
+  .admin-north-star-sidebar-link-active::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0.35rem;
+    width: min(2.5rem, 42%);
+    height: 1.5px;
+    transform: translateX(-50%);
+    border-radius: 1px;
+    background-color: var(--altair-brass);
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .admin-north-star-sidebar-link-active::after {
+      animation: admin-nav-underline-in 0.12s ease-out;
+    }
   }
 
   .admin-north-star-sidebar-rail {
-    position: absolute;
-    left: 0;
-    top: 50%;
-    height: 1rem;
-    width: 0.125rem;
-    transform: translateY(-50%);
-    border-radius: 0 9999px 9999px 0;
-    background-color: var(--altair-brass);
+    display: none;
   }
 }
 
@@ -4263,6 +4276,10 @@ a[href] {
   }
 
   .admin-nav-link-active::after {
+    animation: none;
+  }
+
+  .admin-north-star-sidebar-link-active::after {
     animation: none;
   }
 
