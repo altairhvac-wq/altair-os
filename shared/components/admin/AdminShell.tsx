@@ -119,11 +119,16 @@ export function AdminShell({
         ) : null}
       </div>
 
-      <main
-        className={`admin-shell-main min-h-0 min-w-0 max-w-full overflow-x-clip px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5 md:overflow-y-auto ${
-          showMobileDestinationNav ? "admin-shell-main-with-mobile-nav" : ""
-        }`}
-      >
+      {showMobileDestinationNav ? (
+        <div className="no-print md:hidden">
+          <MobileNav
+            companyContext={navigationContext}
+            showPlatformAdminNav={showPlatformAdminNav}
+          />
+        </div>
+      ) : null}
+
+      <main className="admin-shell-main min-h-0 min-w-0 max-w-full overflow-x-clip px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5 md:overflow-y-auto">
         <PullToRefresh enabled={pullToRefreshEnabled}>
           <PwaInstallBanner />
           {billingAccess ? (
@@ -138,25 +143,17 @@ export function AdminShell({
       </div>
       </div>
       {showMobileDestinationNav ? (
-        <>
-          <MobileNav
-            companyContext={navigationContext}
-            showPlatformAdminNav={showPlatformAdminNav}
-          />
-          <AdminQuickNavDrawer
-            open={quickNavOpen}
-            onClose={() => setQuickNavOpen(false)}
-            companyContext={navigationContext}
-            showPlatformAdminNav={showPlatformAdminNav}
-          />
-        </>
+        <AdminQuickNavDrawer
+          open={quickNavOpen}
+          onClose={() => setQuickNavOpen(false)}
+          companyContext={navigationContext}
+          showPlatformAdminNav={showPlatformAdminNav}
+        />
       ) : null}
       {isBetaBugReportEnabled() &&
       !(isMobile && pathname.startsWith("/settings")) &&
       !isMobileDashboard ? (
-        <BetaBugReportButton
-          aboveMobileBottomNav={isMobile && showMobileDestinationNav}
-        />
+        <BetaBugReportButton />
       ) : null}
     </CompanyTimezoneProvider>
     </FounderMarketingDisplayProvider>

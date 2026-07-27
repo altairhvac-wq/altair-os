@@ -52,7 +52,7 @@ type MobileNavProps = {
 
 /**
  * Horizontally scrollable mobile destination rail.
- * Fixed to the bottom of the viewport on phones; hidden from md+ where desktop nav applies.
+ * Sits directly beneath the admin header on phones; hidden from md+ where desktop nav applies.
  */
 export function MobileNav({
   companyContext,
@@ -85,9 +85,9 @@ export function MobileNav({
   return (
     <nav
       aria-label="Mobile navigation"
-      className="admin-mobile-bottom-nav no-print fixed inset-x-0 bottom-0 z-30 md:hidden"
+      className="admin-mobile-destination-rail no-print relative w-full max-w-full shrink-0 border-b border-slate-200/90 bg-white md:hidden"
     >
-      <div className="admin-mobile-bottom-nav-inner border-t border-slate-200/90 bg-white/95 pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-1.5 shadow-[0_-4px_24px_-8px_rgb(15_23_42_/_0.08)] backdrop-blur-md">
+      <div className="admin-mobile-destination-rail-inner py-1">
         <ul
           ref={scrollerRef}
           className="mobile-nav-rail-scroll flex w-full items-stretch gap-0.5 overflow-x-auto overscroll-x-contain px-1.5"

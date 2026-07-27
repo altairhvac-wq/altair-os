@@ -68,12 +68,16 @@ export function SubscriptionBillingBanner({
     model.showManageAction && canManageBilling
       ? `${model.description} Contact support to update billing details.`
       : model.description;
+  // Closed-beta status is desktop-only — it consumes scarce mobile chrome without aiding tasks.
+  const hideOnMobile = access.state === "ACTIVE" && access.isComped;
 
   return (
     <div
       role={model.role}
       aria-live={model.role === "alert" ? "assertive" : "polite"}
-      className={`mb-2.5 min-w-0 break-words rounded-lg border px-4 py-3 text-sm ${styles.container} ${styles.text} ${className}`}
+      className={`mb-2.5 min-w-0 break-words rounded-lg border px-4 py-3 text-sm ${styles.container} ${styles.text} ${
+        hideOnMobile ? "hidden md:block" : ""
+      } ${className}`}
     >
       <div className="min-w-0">
         <p className="font-semibold">{model.title}</p>

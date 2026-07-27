@@ -62,9 +62,9 @@ export function AdminNavSkeleton({ variant }: AdminNavSkeletonProps) {
     <nav
       aria-label="Loading navigation"
       aria-busy="true"
-      className="admin-mobile-bottom-nav fixed inset-x-0 bottom-0 z-30 md:hidden"
+      className="admin-mobile-destination-rail relative w-full max-w-full shrink-0 border-b border-slate-200/90 bg-white md:hidden"
     >
-      <div className="border-t border-slate-200/90 bg-white/95 pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-1.5">
+      <div className="py-1">
         <ul className="mobile-nav-rail-scroll flex w-full items-stretch gap-0.5 overflow-x-auto px-1.5">
           {Array.from({ length: 6 }).map((_, index) => (
             <li key={index} className="shrink-0">

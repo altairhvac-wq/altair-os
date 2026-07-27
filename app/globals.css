@@ -3834,11 +3834,6 @@ a[href] {
     flex: 0 1 auto;
     padding-bottom: max(0.625rem, var(--safe-area-bottom));
   }
-
-  /* Reserve space for the fixed bottom destination rail. */
-  .admin-shell-main-with-mobile-nav {
-    padding-bottom: max(6rem, calc(5.5rem + env(safe-area-inset-bottom, 0px)));
-  }
 }
 
 /* Horizontally scrollable mobile destination rail — hide scrollbars, keep swipe. */
