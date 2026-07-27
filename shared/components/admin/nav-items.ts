@@ -236,12 +236,36 @@ export function getGroupedAdminNavItems(
   return groups;
 }
 
-/** Single-row mobile nav: four daily destinations plus the More menu. */
+/**
+ * Left-to-right mobile bottom-rail order (workflow-first).
+ * Permission filtering still decides which destinations appear.
+ * There is no separate Schedule destination — Dispatch is the schedule surface.
+ */
+export const MOBILE_ADMIN_BOTTOM_RAIL_ORDER = [
+  "/",
+  "/jobs",
+  "/dispatch",
+  "/customers",
+  "/invoices",
+  "/estimates",
+  "/leads",
+  "/expenses",
+  "/reports",
+  "/marketing",
+  "/price-book",
+  "/time",
+  "/network",
+  "/alpha-tracker",
+  "/settings",
+] as const;
+
+/** @deprecated Prefer MOBILE_ADMIN_BOTTOM_RAIL_ORDER — More overflow is removed. */
 export const PRIMARY_MOBILE_ADMIN_NAV_ROWS = [
   ["/", "/jobs", "/dispatch", "/customers"],
   [],
 ] as const;
 
+/** @deprecated Prefer MOBILE_ADMIN_BOTTOM_RAIL_ORDER */
 export const PRIMARY_MOBILE_ADMIN_NAV_HREFS =
   PRIMARY_MOBILE_ADMIN_NAV_ROWS.flat();
 
@@ -278,23 +302,47 @@ export function getAdminNavItems(context: ActiveCompanyContext): NavItem[] {
   });
 }
 
+/**
+ * @deprecated More overflow is removed. Use getOrderedAdminNavItemsForMobile.
+ */
 export function splitAdminNavItemsForMobile(context: ActiveCompanyContext): {
   primaryRows: NavItem[][];
   secondary: NavItem[];
 } {
+  const ordered = getOrderedAdminNavItemsForMobile(context);
+  return { primaryRows: [ordered], secondary: [] };
+}
+
+/** Permission-filtered destinations in mobile bottom-rail order. */
+export function getOrderedAdminNavItemsForMobile(
+  context: ActiveCompanyContext,
+  options?: { includePlatformAdmin?: boolean },
+): NavItem[] {
   const items = getAdminNavItems(context);
   const itemsByHref = new Map(items.map((item) => [item.href, item]));
-  const primaryHrefs = new Set<string>(PRIMARY_MOBILE_ADMIN_NAV_HREFS);
+  const ordered: NavItem[] = [];
+  const seen = new Set<string>();
 
-  const primaryRows = PRIMARY_MOBILE_ADMIN_NAV_ROWS.map((row) =>
-    row
-      .map((href) => itemsByHref.get(href))
-      .filter((item): item is NavItem => item !== undefined),
-  );
+  for (const href of MOBILE_ADMIN_BOTTOM_RAIL_ORDER) {
+    const item = itemsByHref.get(href);
 
-  const secondary = items.filter((item) => !primaryHrefs.has(item.href));
+    if (item) {
+      ordered.push(item);
+      seen.add(href);
+    }
+  }
 
-  return { primaryRows, secondary };
+  for (const item of items) {
+    if (!seen.has(item.href)) {
+      ordered.push(item);
+    }
+  }
+
+  if (options?.includePlatformAdmin) {
+    ordered.push(platformAdminNavItem);
+  }
+
+  return ordered;
 }
 
 export function getOrderedAdminNavItemsForDesktop(

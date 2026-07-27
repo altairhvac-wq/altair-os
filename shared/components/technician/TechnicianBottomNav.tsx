@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ActiveCompanyContext } from "@/lib/database/types";
@@ -18,34 +19,60 @@ export function TechnicianBottomNav({
   const pathname = usePathname();
   const navItems = getTechnicianNavItems(companyContext);
   const activeItem = getTechnicianNavItemForPath(pathname, companyContext);
+  const activeLinkRef = useRef<HTMLAnchorElement | null>(null);
+
+  useEffect(() => {
+    const activeLink = activeLinkRef.current;
+    if (!activeLink) {
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    activeLink.scrollIntoView({
+      inline: "nearest",
+      block: "nearest",
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+  }, [pathname, activeItem.id]);
 
   return (
     <nav
       aria-label="Technician navigation"
       className="tech-bottom-nav fixed inset-x-0 bottom-0 z-30"
     >
-      <div className="tech-shell-nav-inner mx-auto flex items-stretch justify-around gap-0.5 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-2">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = item.id === activeItem.id;
+      <div className="tech-shell-nav-inner mx-auto pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-2">
+        <ul className="mobile-nav-rail-scroll flex items-stretch gap-0.5 overflow-x-auto overscroll-x-contain px-3">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = item.id === activeItem.id;
 
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={`relative flex min-h-[3.5rem] min-w-12 touch-manipulation flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1.5 transition-colors ${
-                isActive
-                  ? "bg-cyan-50 text-cyan-700"
-                  : "text-slate-500 hover:bg-slate-50/80 hover:text-slate-700 active:bg-slate-100/80"
-              }`}
-            >
-              <Icon className={`h-5 w-5 ${isActive ? "stroke-[2.5]" : ""}`} />
-              <span className="truncate text-[11px] font-semibold">
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
+            return (
+              <li key={item.id} className="shrink-0">
+                <Link
+                  ref={isActive ? activeLinkRef : undefined}
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`relative flex min-h-11 min-w-[4.75rem] max-w-[6.5rem] touch-manipulation flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 ${
+                    isActive
+                      ? "bg-cyan-50 text-cyan-700"
+                      : "text-slate-500 hover:bg-slate-50/80 hover:text-slate-700 active:bg-slate-100/80"
+                  }`}
+                >
+                  <Icon
+                    className={`h-5 w-5 ${isActive ? "stroke-[2.5]" : ""}`}
+                    aria-hidden="true"
+                  />
+                  <span className="w-full truncate text-center text-[11px] font-semibold">
+                    {item.label}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </nav>
   );

@@ -7,6 +7,7 @@ import { logoutAction } from "@/app/actions/auth";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { NotificationBell } from "@/shared/components/notifications/NotificationBell";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
+import { QuickNavToggle } from "@/shared/components/mobile/QuickNavToggle";
 import { useMobileViewport } from "@/shared/components/mobile/use-mobile-viewport";
 import type { OwnerViewMode } from "@/shared/lib/owner-view-mode";
 import { buildNotificationAccess } from "@/shared/types/notification";
@@ -23,6 +24,10 @@ type HeaderProps = {
   showViewSwitcher?: boolean;
   viewMode?: OwnerViewMode;
   onViewModeChange?: (viewMode: OwnerViewMode) => void;
+  /** When set, shows the mobile Quick Navigation toggle (hidden on desktop). */
+  showQuickNav?: boolean;
+  quickNavOpen?: boolean;
+  onQuickNavOpenChange?: (open: boolean) => void;
 };
 
 function getInitials(fullName: string | null, email: string | undefined) {
@@ -51,6 +56,9 @@ export function Header({
   showViewSwitcher = false,
   viewMode = "owner_admin",
   onViewModeChange,
+  showQuickNav = false,
+  quickNavOpen = false,
+  onQuickNavOpenChange,
 }: HeaderProps) {
   const displayName =
     companyContext.profile.full_name ??
@@ -71,10 +79,20 @@ export function Header({
   const isMobile = useMobileViewport();
   const northStarChrome = isNorthStarShellEnabled() && !isMobile;
   const chromeTone = isMobile ? "light" : "dark";
+  const showMobileQuickNav =
+    showQuickNav && typeof onQuickNavOpenChange === "function";
 
   return (
     <header className="admin-premium-header mobile-chrome-header-safe relative z-40 flex w-full max-w-full shrink-0 items-center justify-between gap-2 border-b border-slate-200/90 bg-white px-3 shadow-[0_1px_3px_rgb(15_23_42_/_0.04)] sm:gap-2.5 sm:px-5 md:h-[3.75rem] md:min-h-[3.75rem] md:pt-0">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+        {showMobileQuickNav ? (
+          <div className="md:hidden">
+            <QuickNavToggle
+              open={quickNavOpen}
+              onOpenChange={(open) => onQuickNavOpenChange?.(open)}
+            />
+          </div>
+        ) : null}
         <div className="min-w-0 md:hidden">
           <div className="flex min-w-0 items-center gap-2">
             <p

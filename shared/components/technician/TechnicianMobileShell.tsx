@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
@@ -8,12 +10,14 @@ import { logoutAction } from "@/app/actions/auth";
 import { CompanyTimezoneProvider } from "@/shared/lib/company-timezone";
 import { CompanySwitcher } from "@/shared/components/company/CompanySwitcher";
 import { PullToRefresh } from "@/shared/components/mobile/PullToRefresh";
+import { QuickNavToggle } from "@/shared/components/mobile/QuickNavToggle";
 import { TechnicianNotificationBadgeProvider } from "@/shared/components/notifications/TechnicianNotificationBadgeContext";
 import { TechnicianNotificationLink } from "@/shared/components/notifications/TechnicianNotificationLink";
 import { OwnerViewSwitcher } from "@/shared/components/view-mode/OwnerViewSwitcher";
 import { useOwnerViewMode } from "@/shared/components/view-mode/useOwnerViewMode";
 import { TechnicianBottomNav } from "./TechnicianBottomNav";
 import { TechnicianConnectivityBanner } from "./TechnicianConnectivityBanner";
+import { TechnicianQuickNavDrawer } from "./TechnicianQuickNavDrawer";
 import { TechnicianShellContentLoadingState } from "./TechnicianShellContentLoadingState";
 import { BetaBugReportButton } from "@/shared/components/beta-feedback/BetaBugReportButton";
 import { SubscriptionBillingBanner } from "@/shared/components/billing/SubscriptionBillingBanner";
@@ -40,8 +44,14 @@ export function TechnicianMobileShell({
   billingAccess = null,
   canManageBilling = false,
 }: TechnicianMobileShellProps) {
+  const pathname = usePathname();
+  const [quickNavOpen, setQuickNavOpen] = useState(false);
   const { isOwner, viewMode, setViewMode, navigationContext, redirectPending } =
     useOwnerViewMode(companyContext);
+
+  useEffect(() => {
+    setQuickNavOpen(false);
+  }, [pathname]);
 
   return (
     <FounderMarketingDisplayProvider hideDemoPrefixes={hideDemoPrefixes}>
@@ -52,7 +62,11 @@ export function TechnicianMobileShell({
       <div className="tech-canvas min-h-dvh max-w-full overflow-x-clip">
         <div className="tech-shell mx-auto flex min-h-dvh min-w-0 flex-col">
           <header className="tech-header tech-header-safe sticky top-0 z-30 px-4 pb-2.5 pt-0.5">
-            <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex min-w-0 items-center gap-2">
+              <QuickNavToggle
+                open={quickNavOpen}
+                onOpenChange={setQuickNavOpen}
+              />
               <AltairLogo variant="gold" size="sm" showWordmark={false} />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-slate-900">Altair OS</p>
@@ -74,7 +88,7 @@ export function TechnicianMobileShell({
                   type="submit"
                   aria-label="Sign out"
                   title="Sign out"
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                  className="inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
                 >
                   <LogOut className="h-4 w-4" />
                 </button>
@@ -101,6 +115,11 @@ export function TechnicianMobileShell({
           </main>
 
           <TechnicianBottomNav companyContext={navigationContext} />
+          <TechnicianQuickNavDrawer
+            open={quickNavOpen}
+            onClose={() => setQuickNavOpen(false)}
+            companyContext={navigationContext}
+          />
           {isBetaBugReportEnabled() ? (
             <BetaBugReportButton aboveMobileBottomNav />
           ) : null}

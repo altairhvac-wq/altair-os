@@ -3834,6 +3834,44 @@ a[href] {
     flex: 0 1 auto;
     padding-bottom: max(0.625rem, var(--safe-area-bottom));
   }
+
+  /* Reserve space for the fixed bottom destination rail. */
+  .admin-shell-main-with-mobile-nav {
+    padding-bottom: max(6rem, calc(5.5rem + env(safe-area-inset-bottom, 0px)));
+  }
+}
+
+/* Horizontally scrollable mobile destination rail — hide scrollbars, keep swipe. */
+.mobile-nav-rail-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  touch-action: pan-x;
+}
+
+.mobile-nav-rail-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-side-drawer-panel {
+  transform: translateX(0);
+  animation: mobile-side-drawer-enter 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-side-drawer-panel {
+    animation: none;
+  }
+}
+
+@keyframes mobile-side-drawer-enter {
+  from {
+    transform: translateX(-100%);
+    opacity: 0.96;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @media (min-width: 768px) {

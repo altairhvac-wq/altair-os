@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { ActiveCompanyContext, MembershipWithCompany } from "@/lib/database/types";
 import type { CompanyBillingAccess } from "@/lib/saas-billing/types";
@@ -11,6 +12,7 @@ import { useOwnerViewMode } from "@/shared/components/view-mode/useOwnerViewMode
 import { getNavItemForPath } from "./nav-items";
 import { AdminNavSkeleton } from "./AdminNavSkeleton";
 import { AdminShellContentLoadingState } from "./AdminShellContentLoadingState";
+import { AdminQuickNavDrawer } from "./AdminQuickNavDrawer";
 import { DesktopNav } from "./DesktopNav";
 import { MobileNav } from "./MobileNav";
 import { Header } from "./Header";
@@ -49,6 +51,7 @@ export function AdminShell({
 }: AdminShellProps) {
   const pathname = usePathname();
   const isMobile = useMobileViewport();
+  const [quickNavOpen, setQuickNavOpen] = useState(false);
   const { isOwner, viewMode, setViewMode, navigationContext, redirectPending } =
     useOwnerViewMode(companyContext);
   const hideAdminNavigation = shouldHideAdminNavigation(
@@ -60,9 +63,14 @@ export function AdminShell({
     isMobile && isPullToRefreshRoute(pathname);
   const isMobileDashboard = isMobile && pathname === "/";
   const northStarShell = isNorthStarShellEnabled();
+  const showMobileDestinationNav = !hideAdminNavigation;
   const current = getNavItemForPath(pathname, navigationContext, {
     includePlatformAdmin: showPlatformAdminNav,
   });
+
+  useEffect(() => {
+    setQuickNavOpen(false);
+  }, [pathname]);
 
   return (
     <FounderMarketingDisplayProvider hideDemoPrefixes={hideDemoPrefixes}>
@@ -95,6 +103,9 @@ export function AdminShell({
           showViewSwitcher={isOwner}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          showQuickNav={showMobileDestinationNav}
+          quickNavOpen={quickNavOpen}
+          onQuickNavOpenChange={setQuickNavOpen}
         />
         {!northStarShell ? (
           hideAdminNavigation ? (
@@ -108,18 +119,11 @@ export function AdminShell({
         ) : null}
       </div>
 
-      <div className="no-print md:hidden">
-        {hideAdminNavigation ? (
-          <AdminNavSkeleton variant="mobile" />
-        ) : (
-          <MobileNav
-            companyContext={navigationContext}
-            showPlatformAdminNav={showPlatformAdminNav}
-          />
-        )}
-      </div>
-
-      <main className="admin-shell-main min-h-0 min-w-0 max-w-full overflow-x-clip px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5 md:overflow-y-auto">
+      <main
+        className={`admin-shell-main min-h-0 min-w-0 max-w-full overflow-x-clip px-2.5 pt-2.5 sm:px-4 sm:pt-4 lg:p-5 md:overflow-y-auto ${
+          showMobileDestinationNav ? "admin-shell-main-with-mobile-nav" : ""
+        }`}
+      >
         <PullToRefresh enabled={pullToRefreshEnabled}>
           <PwaInstallBanner />
           {billingAccess ? (
@@ -133,10 +137,26 @@ export function AdminShell({
       </main>
       </div>
       </div>
+      {showMobileDestinationNav ? (
+        <>
+          <MobileNav
+            companyContext={navigationContext}
+            showPlatformAdminNav={showPlatformAdminNav}
+          />
+          <AdminQuickNavDrawer
+            open={quickNavOpen}
+            onClose={() => setQuickNavOpen(false)}
+            companyContext={navigationContext}
+            showPlatformAdminNav={showPlatformAdminNav}
+          />
+        </>
+      ) : null}
       {isBetaBugReportEnabled() &&
       !(isMobile && pathname.startsWith("/settings")) &&
       !isMobileDashboard ? (
-        <BetaBugReportButton />
+        <BetaBugReportButton
+          aboveMobileBottomNav={isMobile && showMobileDestinationNav}
+        />
       ) : null}
     </CompanyTimezoneProvider>
     </FounderMarketingDisplayProvider>

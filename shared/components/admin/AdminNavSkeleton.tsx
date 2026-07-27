@@ -62,13 +62,13 @@ export function AdminNavSkeleton({ variant }: AdminNavSkeletonProps) {
     <nav
       aria-label="Loading navigation"
       aria-busy="true"
-      className="relative z-30 w-full max-w-full shrink-0 border-b border-slate-200/90 bg-white shadow-[0_1px_2px_rgb(15_23_42_/_0.03)] md:hidden"
+      className="admin-mobile-bottom-nav fixed inset-x-0 bottom-0 z-30 md:hidden"
     >
-      <div className="flex flex-col gap-0.5 px-1 py-1.5">
-        <ul className="flex w-full items-stretch gap-0.5">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <li key={index} className="flex min-w-0 flex-1">
-              <div className="flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1">
+      <div className="border-t border-slate-200/90 bg-white/95 pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-1.5">
+        <ul className="mobile-nav-rail-scroll flex w-full items-stretch gap-0.5 overflow-x-auto px-1.5">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <li key={index} className="shrink-0">
+              <div className="flex min-h-11 min-w-[4.75rem] flex-col items-center justify-center gap-1 px-2 py-1.5">
                 <NavIconSkeleton />
                 <NavLabelSkeleton />
               </div>
