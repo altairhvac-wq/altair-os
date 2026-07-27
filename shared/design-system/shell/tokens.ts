@@ -3,12 +3,12 @@
 export type MasterShellDensity = "default" | "compact";
 
 export const masterShellStackGap: Record<MasterShellDensity, string> = {
-  default: "gap-3 lg:gap-4",
-  compact: "gap-2 lg:gap-3",
+  default: "gap-4 lg:gap-5",
+  compact: "gap-3 lg:gap-4",
 };
 
 export const masterShellSectionGap: Record<MasterShellDensity, string> = {
-  default: "gap-2 lg:gap-3",
+  default: "gap-2.5 lg:gap-3",
   compact: "gap-2 lg:gap-2.5",
 };
 

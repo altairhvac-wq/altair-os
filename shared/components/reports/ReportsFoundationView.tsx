@@ -39,8 +39,8 @@ function ReportsSection({
   children: ReactNode;
 }) {
   return (
-    <section className="admin-card min-w-0 overflow-x-clip p-4 sm:p-5">
-      <div className="admin-panel-header -mx-4 mb-4 px-4 py-3 sm:-mx-5 sm:px-5 sm:py-4">
+    <section className="altair-surface-section altair-surface-section-body min-w-0 overflow-x-clip">
+      <div className="mb-3">
         <h2 className="admin-heading-section sm:text-base">{title}</h2>
         <p className="admin-text-helper mt-0.5">{description}</p>
       </div>
@@ -118,7 +118,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
         title="Jobs summary"
         description="Scheduling and backlog counts from job records"
       >
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-2 sm:grid-cols-2 sm:gap-2.5 xl:grid-cols-4">
           <ReportsSummaryCard
             label="Jobs today"
             value={String(jobs.jobsToday)}
@@ -158,7 +158,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
         title="Revenue & invoices"
         description="Billing totals from invoice records"
       >
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 sm:gap-2.5 xl:grid-cols-3">
           <ReportsSummaryCard
             label="Unpaid invoices"
             value={String(invoices.unpaidCount)}
@@ -194,7 +194,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
         title="Estimates summary"
         description="Pipeline counts by estimate status"
       >
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 sm:gap-2.5 xl:grid-cols-3">
           <ReportsSummaryCard
             label="Draft estimates"
             value={String(estimates.draftCount)}
@@ -231,7 +231,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
         title="Labor & payroll"
         description="Field labor and shift time for payroll review. Technicians track time through Start work and Complete work on jobs."
       >
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-2 sm:grid-cols-2 sm:gap-2.5 xl:grid-cols-5">
           <ReportsSummaryCard
             label="Working now"
             value={String(labor.currentlyWorkingCount)}
@@ -394,7 +394,7 @@ export function ReportsFoundationView({ data }: ReportsFoundationViewProps) {
         title="Operations snapshot"
         description="Highlights from daily operations summary"
       >
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 sm:gap-2.5 xl:grid-cols-3">
           <ReportsSummaryCard
             label="Collected today"
             value={formatCurrency(operations.todayCollectedRevenue)}

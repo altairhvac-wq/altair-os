@@ -71,7 +71,7 @@ export function MissionControlActivityTimelineSection({
           }
         />
       ) : (
-        <ol className="admin-card divide-y divide-slate-100 overflow-hidden">
+        <ol className="altair-surface-list">
           {activities.map((activity) => {
             const href = getOperationalActivityHref(activity, {
               canViewBilling: access.canViewBilling,
@@ -84,13 +84,13 @@ export function MissionControlActivityTimelineSection({
             const Icon = resolveActivityIcon(activity);
 
             const body = (
-              <div className="flex items-start gap-3 px-3 py-3 sm:px-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+              <div className="altair-surface-list-row flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100/80 text-slate-600">
                   <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                    <p className="text-sm font-bold text-slate-900">
+                    <p className="text-sm font-semibold text-slate-900">
                       {formatOperationalActivityLabelForAccess(
                         activity,
                         access.canViewBilling,
@@ -115,10 +115,7 @@ export function MissionControlActivityTimelineSection({
             return (
               <li key={activity.id}>
                 {href ? (
-                  <Link
-                    href={href}
-                    className="block transition-colors hover:bg-slate-50/80"
-                  >
+                  <Link href={href} className="block">
                     {body}
                   </Link>
                 ) : (

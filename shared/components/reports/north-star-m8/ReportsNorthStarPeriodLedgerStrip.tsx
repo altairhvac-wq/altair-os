@@ -44,8 +44,8 @@ export function ReportsNorthStarPeriodLedgerStrip({
   ];
 
   return (
-    <section className="min-w-0 overflow-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] shadow-[0_4px_16px_rgba(3,7,12,0.08)]">
-      <div className="flex flex-col gap-3 border-b border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+    <section className="altair-surface-ns-card min-w-0 overflow-hidden">
+      <div className="flex flex-col gap-3 border-b border-[rgba(138,99,36,0.1)] bg-[#FFF9EA]/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div className="min-w-0">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8A6324]">
             Period ledger

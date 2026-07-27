@@ -136,11 +136,19 @@ export function ReportsPageView({
 
           <ReportDateRangeBar range={data.dateRange} />
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {data.kpis.map((metric) => (
-              <ReportKpiCard key={metric.id} metric={metric} />
-            ))}
-          </div>
+          <section className="altair-surface-section altair-surface-section-body min-w-0">
+            <div className="mb-2.5">
+              <h3 className="text-sm font-bold text-slate-900">Key metrics</h3>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Period performance at a glance.
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 sm:gap-2.5 lg:grid-cols-4">
+              {data.kpis.map((metric) => (
+                <ReportKpiCard key={metric.id} metric={metric} />
+              ))}
+            </div>
+          </section>
 
           {showAiSummaryCard ? (
             <AiBusinessSummaryCard

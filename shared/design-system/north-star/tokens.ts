@@ -395,7 +395,7 @@ export const northStarDetailTokens: NorthStarDetailPageTokens = {
   pageCanvas: "north-star-detail-page-canvas",
   backLink:
     "inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-[#C8D0DA] transition-colors hover:text-[#FFF9EA]",
-  heroShell: "north-star-detail-hero relative overflow-hidden rounded-[1.25rem] p-4 sm:p-5",
+  heroShell: "north-star-detail-hero relative overflow-hidden rounded-xl p-3 sm:p-3.5",
   heroAccentRail:
     "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(214,190,120,0.42)] to-transparent",
   heroEyebrow:
@@ -405,13 +405,13 @@ export const northStarDetailTokens: NorthStarDetailPageTokens = {
   heroMeta: "text-sm text-[#C8D0DA]",
   heroMetaIcon: "h-4 w-4 shrink-0 text-[#8A6324]",
   heroAvatar:
-    "flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-sm font-bold text-[#17130E] ring-2 ring-[rgba(201,164,77,0.35)] shadow-[0_2px_8px_rgba(138,99,36,0.24)]",
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-xs font-bold text-[#17130E] ring-1 ring-[rgba(201,164,77,0.28)]",
   heroStatLabel: "text-[10px] font-semibold uppercase tracking-[0.12em] text-[#C8D0DA]",
-  heroStatValue: "mt-0.5 text-lg font-bold tabular-nums text-[#FFF9EA]",
+  heroStatValue: "mt-0.5 text-base font-bold tabular-nums text-[#FFF9EA] sm:text-lg",
   heroLink:
     "text-xs font-semibold text-[#D6BE78] transition-colors hover:text-[#E6D092]",
   sectionSurface:
-    "north-star-detail-section scroll-mt-6 rounded-[1.25rem] p-3.5 sm:p-4",
+    "north-star-detail-section scroll-mt-6 rounded-xl p-3 sm:p-3.5",
   sectionTitle: "text-sm font-bold text-[#17130E]",
   sectionSubtitle: "text-[11px] text-[#4F4638]",
   sectionIconWrap:
@@ -427,7 +427,7 @@ export const northStarDetailTokens: NorthStarDetailPageTokens = {
   tertiaryAction:
     "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.35)] px-2.5 text-xs font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[rgba(39,49,64,0.55)] [&_svg]:text-[#D6BE78]",
   metaStrip:
-    "mt-3 rounded-lg border border-[rgba(201,164,77,0.14)] bg-[rgba(15,23,42,0.28)] px-3 py-2.5",
+    "mt-2.5 rounded-md border border-[rgba(201,164,77,0.1)] bg-[rgba(15,23,42,0.18)] px-2.5 py-2",
   metaRow: "flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#C8D0DA]",
   metaIcon: "h-3.5 w-3.5 shrink-0 text-[#8A6324]",
   tagChip:

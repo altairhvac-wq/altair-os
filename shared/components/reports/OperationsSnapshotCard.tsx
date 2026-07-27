@@ -27,16 +27,16 @@ function SnapshotList({
 
   if (northStar) {
     return (
-      <div className="min-w-0 rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-3 py-3.5 shadow-[0_4px_16px_rgba(3,7,12,0.08)] sm:px-4 sm:py-4">
+      <div className="min-w-0 px-1 py-1 sm:px-1.5">
         <h4 className="text-xs font-bold tracking-wide text-[#17130E]">{title}</h4>
         {rows.length === 0 ? (
           <p className="mt-2.5 text-[11px] leading-relaxed text-[#64748B]">{emptyMessage}</p>
         ) : (
-          <ul className="mt-2.5 space-y-0">
+          <ul className="mt-2 space-y-0">
             {rows.map((row) => (
               <li
                 key={row.id}
-                className="flex items-start justify-between gap-3 border-b border-[rgba(138,99,36,0.08)] py-2.5 last:border-b-0 last:pb-0 first:pt-0"
+                className="flex items-start justify-between gap-3 border-b border-[rgba(138,99,36,0.08)] py-2 last:border-b-0 last:pb-0 first:pt-0"
               >
                 <div className="min-w-0">
                   <p className="truncate text-[13px] font-medium text-[#17130E]">
@@ -74,16 +74,16 @@ function SnapshotList({
   }
 
   return (
-    <div className="admin-card min-w-0 px-3 py-3 sm:px-4 sm:py-3.5">
+    <div className="min-w-0 px-1 py-1">
       <h4 className="text-xs font-bold text-slate-900">{title}</h4>
       {rows.length === 0 ? (
         <p className="admin-text-helper mt-2 text-[11px]">{emptyMessage}</p>
       ) : (
-        <ul className="mt-2 space-y-1.5">
+        <ul className="mt-2 space-y-0">
           {rows.map((row) => (
             <li
               key={row.id}
-              className="flex items-start justify-between gap-2 border-b border-slate-100 pb-1.5 last:border-b-0 last:pb-0"
+              className="altair-surface-list-row flex items-start justify-between gap-2 !min-h-0 !px-0"
             >
               <div className="min-w-0">
                 <p className="truncate text-xs font-medium text-slate-800">
@@ -140,7 +140,13 @@ export function OperationsSnapshotSection({
   const northStar = isNorthStarReportSurface(variant);
 
   return (
-    <section className="space-y-3">
+    <section
+      className={
+        northStar
+          ? "altair-surface-ns-card space-y-3 p-3 sm:p-3.5"
+          : "altair-surface-section altair-surface-section-body space-y-3"
+      }
+    >
       <div>
         <h3
           className={
@@ -162,7 +168,7 @@ export function OperationsSnapshotSection({
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 sm:gap-x-5 sm:gap-y-4 xl:grid-cols-4">
         <SnapshotList
           title="Top Customers"
           rows={topCustomers}

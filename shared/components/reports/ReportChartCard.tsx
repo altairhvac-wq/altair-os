@@ -35,8 +35,8 @@ export function ReportChartCard({
     <section
       className={
         northStar
-          ? `flex h-full flex-col overflow-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] shadow-[0_4px_16px_rgba(3,7,12,0.08)] ${className}`
-          : `flex h-full flex-col overflow-hidden admin-card ${className}`
+          ? `altair-surface-ns-card flex h-full flex-col overflow-hidden ${className}`
+          : `altair-surface-card flex h-full flex-col overflow-hidden ${className}`
       }
     >
       <div

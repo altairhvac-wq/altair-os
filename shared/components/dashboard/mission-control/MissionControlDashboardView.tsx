@@ -51,7 +51,7 @@ export function MissionControlDashboardView({
         onboardingDismissed={onboardingDismissed}
       />
 
-      <MasterContentStack density="compact">
+      <MasterContentStack density="compact" className="gap-4 lg:gap-5">
         <MissionControlGreeting content={content.greeting} />
 
         <MissionControlPrimaryActionsRow actions={content.primaryQuickActions} />
@@ -66,7 +66,7 @@ export function MissionControlDashboardView({
 
         <MissionControlCashFlowSection cards={content.cashFlow} />
 
-        <div className="grid gap-2 lg:grid-cols-2 lg:gap-3">
+        <div className="grid gap-3 lg:grid-cols-2 lg:gap-4">
           {data.access.canViewBilling ? (
             <MissionControlTrendChart series={content.revenueTrend} />
           ) : null}

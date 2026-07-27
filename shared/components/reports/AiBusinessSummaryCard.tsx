@@ -38,8 +38,8 @@ export function AiBusinessSummaryCard({
 
   if (northStar) {
     return (
-      <section className="overflow-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] shadow-[0_4px_16px_rgba(3,7,12,0.08)]">
-        <div className="border-b border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] px-4 py-3 sm:px-5">
+      <section className="altair-surface-ns-card overflow-hidden">
+        <div className="border-b border-[rgba(138,99,36,0.1)] bg-[#FFF9EA]/70 px-4 py-3 sm:px-5">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-[#8A6324]" aria-hidden="true" />
             <h3 className="text-sm font-bold text-[#17130E]">AI business review</h3>
@@ -113,8 +113,8 @@ export function AiBusinessSummaryCard({
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
-      <div className="border-b border-slate-100 bg-gradient-to-b from-slate-50/80 to-white px-4 py-3 sm:px-5">
+    <section className="altair-surface-card overflow-hidden">
+      <div className="border-b border-slate-100/80 bg-[var(--surface-tile)] px-4 py-3 sm:px-5">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-violet-500" aria-hidden="true" />
           <h3 className="admin-heading-section text-[13px] sm:text-sm">

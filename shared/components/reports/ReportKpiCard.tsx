@@ -36,8 +36,8 @@ export function ReportKpiCard({
     <div
       className={
         northStar
-          ? "min-w-0 rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-4 py-4 shadow-[0_4px_16px_rgba(3,7,12,0.08)] sm:px-5 sm:py-5"
-          : "admin-card admin-metric-card min-w-0 px-4 py-4 sm:px-5 sm:py-5"
+          ? "altair-surface-ns-tile min-w-0 px-3 py-3 sm:px-4 sm:py-3.5"
+          : "altair-surface-tile min-w-0 px-3 py-3 sm:px-4 sm:py-3.5"
       }
     >
       <p
@@ -52,8 +52,8 @@ export function ReportKpiCard({
       <p
         className={
           northStar
-            ? "mt-2 truncate text-3xl font-extrabold tracking-tight text-[#17130E] sm:mt-2.5 sm:text-[2rem] sm:leading-none"
-            : "mt-2 truncate text-3xl font-extrabold tracking-tight text-slate-900 sm:mt-2.5 sm:text-[2rem] sm:leading-none"
+            ? "mt-1.5 truncate text-2xl font-extrabold tracking-tight text-[#17130E] sm:mt-2 sm:text-[1.75rem] sm:leading-none"
+            : "mt-1.5 truncate text-2xl font-extrabold tracking-tight text-slate-900 sm:mt-2 sm:text-[1.75rem] sm:leading-none"
         }
       >
         {metric.value}
@@ -61,8 +61,8 @@ export function ReportKpiCard({
       <p
         className={
           northStar
-            ? "mt-2 inline-flex items-center gap-1.5 text-xs text-[#4F4638]"
-            : "mt-2 inline-flex items-center gap-1.5 text-xs text-slate-500"
+            ? "mt-1.5 inline-flex items-center gap-1.5 text-xs text-[#4F4638]"
+            : "mt-1.5 inline-flex items-center gap-1.5 text-xs text-slate-500"
         }
       >
         <TrendIcon trend={metric.trend} />

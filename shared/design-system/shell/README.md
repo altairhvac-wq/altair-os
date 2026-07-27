@@ -4,7 +4,7 @@ Reusable page structure inside `AdminShell` main. Does not replace global naviga
 
 Master Shell V2 architecture migration is **complete** across major admin surfaces. Visual Polish Passes A–F, Micro-Interaction Batches A–B, Interaction Bug-Fix Pass A, and pre-beta interaction fixes are **complete**.
 
-**Current status:** Beta-ready. Master Shell V2 complete. **North Star M1–M14 + dispatch complete** behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. See `docs/altair/ALTair_MASTER_STATUS.md`.
+**Current status:** Beta-ready. Master Shell V2 complete. **North Star M1–M14 + dispatch complete** behind `NEXT_PUBLIC_NORTH_STAR_SHELL=true`. See `docs/product/ALTair_MASTER_STATUS.md`.
 
 ## Approved North Star (2026-06-16)
 
@@ -29,19 +29,30 @@ Master Shell V2 architecture migration is **complete** across major admin surfac
 
 **Founder design lab:** `/platform/design-lab` — live token editing and dashboard replica preview.
 
-See `docs/altair/ALTAIR_ART_DIRECTION.md` and Phase 9 in `docs/altair/ALTair_V2_ROADMAP.md`.
+See `docs/product/ALTAIR_ART_DIRECTION.md` and Phase 9 in `docs/product/ALTair_V2_ROADMAP.md`.
 
-## Surface system (Visual Polish Pass A — complete)
+## Surface Hierarchy System (Phase 1)
 
-Three shared tiers — defined in `app/globals.css`, consumed via CSS classes and shell tokens:
+Five semantic levels — tonal hierarchy over elevation. Whitespace is the primary separator; borders support; shadows are rare.
 
-| Tier | CSS class | Token | Use |
-|------|-----------|-------|-----|
-| **Canvas** | `.admin-canvas` | `--surface-canvas` | Page background inside `AdminShell` main; matches `html`/`body` shell color (`#f4f7fa`) |
-| **Panel** | `.admin-panel` | `--surface-panel`, `--radius-panel` | Large structural containers — list cards, Dispatch board, workbench panels |
-| **Card** | `.admin-card` | same radius as panel | Primary content cards with card shadow |
-| **Section** | `.admin-section-surface` | `masterSectionSurfaceClass` | Grouped blocks inside detail/settings/forms — slightly smaller radius (`--radius-section`) |
-| **Workspace** *(pilot)* | `.altair-surface-workspace` | `--altair-paper`, `--altair-border`, `--shadow-card` | Canonical Altair Design Foundation Surface — warm Paper on warm Border, semantic tokens only. `MasterPageSurface` `variant="workspace"`. |
+| Level | Name | CSS class | Use |
+|------|------|-----------|-----|
+| **0** | Canvas | `.altair-surface-canvas` / `.admin-canvas` | Page background — warm gray `#F3F5F7` (never pure white) |
+| **1** | Section | `.altair-surface-section` | Grouped region (Today's Operations, Cash Flow, Reports metrics) |
+| **2** | Card | `.altair-surface-card` | Only when content needs true separation (charts, documents) |
+| **3** | Tile | `.altair-surface-tile` | KPIs, metric blocks, quick-action cells — spacing over decoration |
+| **4** | List Row | `.altair-surface-list` / `.altair-surface-list-row` | Native-feeling rows (activity, snapshot lists) |
+
+Class tokens: `shared/design-system/shell/surface-hierarchy.ts`. `MasterPageSurface` variants `surfaceSection` / `surfaceCard` / `surfaceTile` map to levels 1–3.
+
+Legacy aliases still work and now follow the lighter hierarchy treatment:
+
+| Legacy | CSS class | Notes |
+|--------|-----------|-------|
+| **Panel** | `.admin-panel` | Large structural containers — list boards, workbench panels |
+| **Card** | `.admin-card` | Maps toward Surface 2 (no shadow by default) |
+| **Section** | `.admin-section-surface` | Detail/settings grouping |
+| **Workspace** | `.altair-surface-workspace` | Altair Design Foundation Paper surface |
 
 Panel headers use `.admin-panel-header` (`masterPanelHeaderClass`) with default padding; pages may override with Tailwind utilities.
 
@@ -52,7 +63,7 @@ Page command rows use `.admin-page-header`. Secondary header actions: `masterSec
 ### Canonical Surface pilot (Customers, Leads)
 
 `MasterPageSurface` `variant="workspace"` is the first production consumer of the
-Altair Design Foundation semantic tokens (`docs/altair/ALTAIR_DESIGN_FOUNDATION.md`,
+Altair Design Foundation semantic tokens (`docs/product/ALTAIR_DESIGN_FOUNDATION.md`,
 `shared/design-system/foundation/`). It replaces `.admin-card`'s legacy cool
 `--surface-card` / slate `--border-subtle` material with warm `--altair-paper`
 and `--altair-border`, reusing the existing global `--shadow-card` token (no new
@@ -229,7 +240,7 @@ Reference: Operational Dashboard, Reports, Tax Summary.
 
 **Deferred post-beta (unless smoke finds gaps):** Dispatch Phase 5 mobile viewport lock, Micro-Interaction Batch C, overlay/detail consistency pass, broad dark mode, route/page transitions.
 
-**Next operational step:** Authenticated production/user-data smoke before first external company onboarding. See `docs/altair/ALTair_CURRENT_SPRINT.md`.
+**Next operational step:** Authenticated production/user-data smoke before first external company onboarding. See `docs/product/ALTair_CURRENT_SPRINT.md`.
 
 **Active layout helpers:**
 

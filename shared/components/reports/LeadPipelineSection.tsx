@@ -24,11 +24,11 @@ function LeadKpiCard({ label, value, variant = "legacy" }: LeadKpiCardProps) {
 
   if (northStar) {
     return (
-      <div className="min-w-0 rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-3 py-3 shadow-[0_4px_16px_rgba(3,7,12,0.08)] sm:px-4 sm:py-3.5">
+      <div className="altair-surface-ns-tile min-w-0 px-3 py-2.5 sm:px-3.5 sm:py-3">
         <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#4F4638] sm:text-[11px]">
           {label}
         </p>
-        <p className="mt-1.5 truncate text-2xl font-extrabold tabular-nums tracking-tight text-[#17130E] sm:text-[1.75rem] sm:leading-none">
+        <p className="mt-1 truncate text-xl font-extrabold tabular-nums tracking-tight text-[#17130E] sm:text-2xl sm:leading-none">
           {value}
         </p>
       </div>
@@ -36,11 +36,11 @@ function LeadKpiCard({ label, value, variant = "legacy" }: LeadKpiCardProps) {
   }
 
   return (
-    <div className="admin-card min-w-0 px-3 py-3 sm:px-4 sm:py-3.5">
+    <div className="altair-surface-tile min-w-0 px-3 py-2.5 sm:px-3.5 sm:py-3">
       <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-[11px]">
         {label}
       </p>
-      <p className="mt-1.5 truncate text-2xl font-extrabold tabular-nums tracking-tight text-slate-900 sm:text-[1.75rem] sm:leading-none">
+      <p className="mt-1 truncate text-xl font-extrabold tabular-nums tracking-tight text-slate-900 sm:text-2xl sm:leading-none">
         {value}
       </p>
     </div>
@@ -63,7 +63,13 @@ export function LeadPipelineSection({
   const northStar = isNorthStarReportSurface(variant);
 
   return (
-    <section className="min-w-0 space-y-3 overflow-x-hidden">
+    <section
+      className={
+        northStar
+          ? "altair-surface-ns-card min-w-0 space-y-3 overflow-x-hidden p-3 sm:p-3.5"
+          : "altair-surface-section altair-surface-section-body min-w-0 space-y-3 overflow-x-hidden"
+      }
+    >
       <div>
         <h3
           className={
@@ -89,8 +95,8 @@ export function LeadPipelineSection({
         <div
           className={
             northStar
-              ? "rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] px-4 py-5 text-center shadow-[0_4px_16px_rgba(3,7,12,0.08)] sm:px-5"
-              : "admin-card px-4 py-5 text-center sm:px-5"
+              ? "rounded-lg border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FFF9EA]/60 px-4 py-5 text-center sm:px-5"
+              : "rounded-lg border border-dashed border-slate-200 bg-[var(--surface-tile)] px-4 py-5 text-center sm:px-5"
           }
         >
           <p
@@ -124,7 +130,7 @@ export function LeadPipelineSection({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5 lg:grid-cols-4">
             <LeadKpiCard
               label="Total Leads"
               value={String(metrics.totalLeads)}
@@ -167,8 +173,8 @@ export function LeadPipelineSection({
           <div
             className={
               northStar
-                ? "min-w-0 overflow-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] shadow-[0_4px_16px_rgba(3,7,12,0.08)]"
-                : "admin-card min-w-0 overflow-hidden"
+                ? "altair-surface-ns-tile min-w-0 overflow-hidden !p-0"
+                : "altair-surface-card min-w-0 overflow-hidden"
             }
           >
             <div

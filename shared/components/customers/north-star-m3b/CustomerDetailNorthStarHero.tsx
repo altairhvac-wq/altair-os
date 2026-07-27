@@ -47,12 +47,12 @@ export function CustomerDetailNorthStarHero({
       <div aria-hidden="true" className={dt.heroAccentRail} />
 
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-1 items-start gap-4">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
           <div className={dt.heroAvatar}>{getCustomerInitials(customer.name)}</div>
 
           <div className="min-w-0 flex-1">
             <p className={dt.heroEyebrow}>Customer 360</p>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
+            <div className="mt-0.5 flex flex-wrap items-center gap-2">
               <h1 className={dt.heroTitle}>
                 <DemoDisplayName>{customer.name}</DemoDisplayName>
               </h1>
@@ -63,7 +63,7 @@ export function CustomerDetailNorthStarHero({
               <p className={dt.heroCompany}>{customer.company}</p>
             ) : null}
 
-            <div className="mt-3 space-y-1.5">
+            <div className="mt-2 space-y-1">
               <div className={`flex items-center gap-2 ${dt.heroMeta}`}>
                 <Mail className={dt.heroMetaIcon} />
                 <span className="truncate">{customer.email || "No email on file"}</span>
@@ -143,7 +143,7 @@ export function CustomerDetailNorthStarHero({
         ) : null}
       </div>
 
-      <div className="mt-4 grid gap-3 border-t border-[rgba(201,164,77,0.14)] pt-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-3 grid gap-2.5 border-t border-[rgba(201,164,77,0.12)] pt-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className={dt.heroStatLabel}>Jobs</p>
           <p className={dt.heroStatValue}>{customer.totalJobs}</p>

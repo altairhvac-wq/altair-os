@@ -1,4 +1,9 @@
 import type { ReactNode } from "react";
+import {
+  altairSurfaceCardClass,
+  altairSurfaceSectionClass,
+  altairSurfaceTileClass,
+} from "./surface-hierarchy";
 import { masterSectionSurfaceClass } from "./tokens";
 
 export type MasterPageSurfaceVariant =
@@ -7,15 +12,21 @@ export type MasterPageSurfaceVariant =
   | "section"
   | "workspace"
   | "northStarList"
-  | "northStarDetail";
+  | "northStarDetail"
+  /** Surface Hierarchy — Surface 1 section grouping */
+  | "surfaceSection"
+  /** Surface Hierarchy — Surface 2 card */
+  | "surfaceCard"
+  /** Surface Hierarchy — Surface 3 tile */
+  | "surfaceTile";
 
 export type MasterPageSurfaceProps = {
   children: ReactNode;
   /**
-   * card = admin-card (legacy slate/cyan), panel = admin-panel, section = compact
-   * bordered block, workspace = canonical Altair Design Foundation Surface (warm
-   * Paper-on-Stone materials, semantic tokens only — see altair-surface-workspace
-   * in app/globals.css), northStarList/northStarDetail = ivory surfaces (no admin-card).
+   * card = admin-card, panel = admin-panel, section = compact bordered block,
+   * workspace = Altair Design Foundation Surface, northStarList/northStarDetail =
+   * ivory work surfaces, surfaceSection/surfaceCard/surfaceTile = Surface
+   * Hierarchy levels 1–3 (see surface-hierarchy.ts).
    */
   variant?: MasterPageSurfaceVariant;
   id?: string;
@@ -29,6 +40,9 @@ const variantClass: Record<MasterPageSurfaceVariant, string> = {
   workspace: "altair-surface-workspace overflow-hidden",
   northStarList: "north-star-list-surface overflow-hidden",
   northStarDetail: "north-star-detail-section-surface",
+  surfaceSection: `${altairSurfaceSectionClass} overflow-hidden`,
+  surfaceCard: `${altairSurfaceCardClass} overflow-hidden`,
+  surfaceTile: altairSurfaceTileClass,
 };
 
 export function MasterPageSurface({

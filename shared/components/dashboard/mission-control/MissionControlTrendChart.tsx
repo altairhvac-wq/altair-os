@@ -14,10 +14,10 @@ export function MissionControlTrendChart({ series }: MissionControlTrendChartPro
 
   return (
     <section
-      className="admin-card overflow-hidden"
+      className="altair-surface-card overflow-hidden"
       aria-labelledby={`${series.id}-title`}
     >
-      <div className="admin-section-header border-b border-slate-200/70 px-3 py-2.5 lg:px-4 lg:py-3">
+      <div className="border-b border-slate-200/50 px-3 py-2.5 lg:px-4 lg:py-3">
         <h3
           id={`${series.id}-title`}
           className="admin-heading-section text-sm lg:text-base"
@@ -26,7 +26,7 @@ export function MissionControlTrendChart({ series }: MissionControlTrendChartPro
         </h3>
         <p className="admin-text-helper">{series.subtitle}</p>
       </div>
-      <div className="admin-card-body">
+      <div className="px-3 py-3 lg:px-4 lg:py-3.5">
         {!hasData ? (
           <MissionControlInlineEmptyState
             title={series.emptyTitle}

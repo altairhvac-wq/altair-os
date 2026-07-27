@@ -19,7 +19,7 @@ export function ReportsSummaryCard({
 }: ReportsSummaryCardProps) {
   return (
     <div
-      className={`admin-metric-card ${accentClassName ?? ""}`}
+      className={`altair-surface-tile ${accentClassName ?? ""}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

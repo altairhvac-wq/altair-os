@@ -20,24 +20,24 @@ type MissionCriticalSectionProps = {
 
 const severityStyles = {
   critical: {
-    row: "border-rose-100 bg-rose-50/60 hover:bg-rose-50/90 border-l-4 border-l-rose-500",
-    badge: "bg-rose-100 text-rose-800",
+    row: "bg-rose-50/50 hover:bg-rose-50/80 border-l-[3px] border-l-rose-500",
+    badge: "bg-rose-100/80 text-rose-800",
     badgeLabel: "Urgent",
-    iconWrap: "bg-rose-100 text-rose-700 ring-rose-200/70",
+    iconWrap: "bg-rose-100/80 text-rose-700",
     value: "text-rose-900",
   },
   warning: {
-    row: "border-amber-100 bg-amber-50/60 hover:bg-amber-50/90 border-l-4 border-l-amber-500",
-    badge: "bg-amber-100 text-amber-800",
+    row: "bg-amber-50/50 hover:bg-amber-50/80 border-l-[3px] border-l-amber-500",
+    badge: "bg-amber-100/80 text-amber-800",
     badgeLabel: "Attention",
-    iconWrap: "bg-amber-100 text-amber-700 ring-amber-200/70",
+    iconWrap: "bg-amber-100/80 text-amber-700",
     value: "text-amber-900",
   },
   healthy: {
-    row: "border-slate-100 bg-white hover:bg-slate-50/80 border-l-4 border-l-slate-200",
+    row: "bg-[var(--surface-tile)] hover:bg-slate-50/80 border-l-[3px] border-l-slate-200",
     badge: "bg-slate-100 text-slate-700",
     badgeLabel: "Clear",
-    iconWrap: "bg-slate-100 text-slate-600 ring-slate-200/70",
+    iconWrap: "bg-slate-100 text-slate-600",
     value: "text-slate-900",
   },
 };
@@ -70,10 +70,10 @@ function MissionCriticalRow({
 
   const content = (
     <div
-      className={`flex items-start gap-3 rounded-xl border px-3 py-3 transition-colors sm:px-4 sm:py-4 ${styles.row}`}
+      className={`flex items-start gap-3 rounded-lg px-3 py-3 transition-colors sm:px-3.5 sm:py-3.5 ${styles.row}`}
     >
       <div
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ${styles.iconWrap}`}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${styles.iconWrap}`}
       >
         <Icon className="h-4 w-4" aria-hidden="true" />
       </div>
@@ -81,12 +81,12 @@ function MissionCriticalRow({
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm font-bold text-slate-900 sm:text-base">{item.label}</p>
           <span
-            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${styles.badge}`}
+            className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${styles.badge}`}
           >
             {styles.badgeLabel}
           </span>
         </div>
-        <p className={`mt-1 text-2xl font-black tabular-nums ${styles.value}`}>
+        <p className={`mt-1 text-xl font-black tabular-nums sm:text-2xl ${styles.value}`}>
           {item.count}
         </p>
         <p className="mt-1 text-xs leading-relaxed text-slate-600 sm:text-sm">
@@ -157,7 +157,7 @@ export function MissionCriticalSection({
           icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />}
         />
       ) : (
-        <div className="grid gap-2 lg:grid-cols-2 lg:gap-3">
+        <div className="altair-surface-section altair-surface-section-body grid gap-2 lg:grid-cols-2">
           {items
             .filter((item) => item.severity !== "healthy")
             .map((item) => (

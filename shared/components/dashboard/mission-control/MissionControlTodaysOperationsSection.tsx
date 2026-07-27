@@ -2,7 +2,11 @@ import {
   MISSION_CONTROL_SECTION_LABELS,
   type MissionControlOperationsCard,
 } from "@/shared/lib/dashboard-mission-control";
-import { MasterPageSection } from "@/shared/design-system/shell";
+import {
+  MasterPageSection,
+  altairSurfaceSectionBodyClass,
+  altairSurfaceSectionClass,
+} from "@/shared/design-system/shell";
 import { MissionControlMetricTile } from "./MissionControlMetricTile";
 import { MissionControlInlineEmptyState } from "./MissionControlInlineEmptyState";
 
@@ -30,10 +34,12 @@ export function MissionControlTodaysOperationsSection({
           description="Scheduled jobs and crew activity will appear here."
         />
       ) : (
-        <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-5">
-          {cards.map((card) => (
-            <MissionControlMetricTile key={card.id} {...card} />
-          ))}
+        <div className={`${altairSurfaceSectionClass} ${altairSurfaceSectionBodyClass}`}>
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5 xl:grid-cols-5">
+            {cards.map((card) => (
+              <MissionControlMetricTile key={card.id} {...card} />
+            ))}
+          </div>
         </div>
       )}
     </MasterPageSection>

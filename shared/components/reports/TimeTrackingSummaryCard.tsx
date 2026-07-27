@@ -18,8 +18,8 @@ export function TimeTrackingSummaryCard({
     <section
       className={
         northStar
-          ? "rounded-[1.25rem] border border-[rgba(138,99,36,0.14)] bg-[#FBF7EF] p-4 shadow-[0_3px_12px_rgba(3,7,12,0.06)] sm:p-5"
-          : "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+          ? "altair-surface-ns-card p-3.5 sm:p-4"
+          : "altair-surface-card p-3.5 sm:p-4"
       }
     >
       <div className="flex flex-wrap items-start justify-between gap-3">

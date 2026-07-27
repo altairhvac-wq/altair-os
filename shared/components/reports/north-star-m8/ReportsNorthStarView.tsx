@@ -128,11 +128,19 @@ export function ReportsNorthStarView({
 
         <ReportsNorthStarPeriodLedgerStrip summary={data.accountantSummary} />
 
-        <div className="grid min-w-0 gap-2.5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-3">
-          {data.kpis.map((metric) => (
-            <ReportKpiCard key={metric.id} metric={metric} variant="northStar" />
-          ))}
-        </div>
+        <section className="altair-surface-ns-card min-w-0 overflow-hidden p-3 sm:p-3.5">
+          <div className="mb-2.5">
+            <h3 className="text-sm font-bold text-[#17130E]">Key metrics</h3>
+            <p className="mt-0.5 text-xs text-[#64748B]">
+              Period performance at a glance.
+            </p>
+          </div>
+          <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-4 lg:gap-2.5">
+            {data.kpis.map((metric) => (
+              <ReportKpiCard key={metric.id} metric={metric} variant="northStar" />
+            ))}
+          </div>
+        </section>
 
         {showAiSummaryCard ? (
           <AiBusinessSummaryCard
