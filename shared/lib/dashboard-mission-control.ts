@@ -55,7 +55,7 @@ export type MissionControlOperationsCard = {
   trend: string;
   icon: LucideIcon;
   href: string;
-  tone: "neutral" | "success" | "warning" | "info";
+  tone: "neutral" | "success" | "warning" | "danger" | "info";
 };
 
 export type MissionControlCashFlowCard = {
@@ -65,7 +65,7 @@ export type MissionControlCashFlowCard = {
   trend: string;
   href: string;
   icon: LucideIcon;
-  tone: "neutral" | "success" | "warning" | "info";
+  tone: "neutral" | "success" | "warning" | "danger" | "info";
 };
 
 export type MissionControlQuickAction = {
@@ -436,7 +436,8 @@ function buildCashFlowCards(data: DashboardData): MissionControlCashFlowCard[] {
       trend: `${money.unpaidCount} open ${pluralize(money.unpaidCount, "invoice")}`,
       href: INVOICE_PAGE_UNPAID_HREF,
       icon: Receipt,
-      tone: money.unpaidTotal > 0 ? "info" : "neutral",
+      // Outstanding stays graphite unless past-due pressure elevates it.
+      tone: "neutral",
     },
     {
       id: "awaiting-payments",
@@ -448,7 +449,7 @@ function buildCashFlowCards(data: DashboardData): MissionControlCashFlowCard[] {
           : "No invoices past due",
       href: INVOICE_PAGE_OVERDUE_HREF,
       icon: AlertCircle,
-      tone: money.overdueCount > 0 ? "warning" : "neutral",
+      tone: money.overdueCount > 0 ? "danger" : "neutral",
     },
     {
       id: "revenue-month",

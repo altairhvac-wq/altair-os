@@ -14,9 +14,14 @@ import {
   formatOperationalActivityTimestamp,
   getOperationalActivityHref,
   type OperationalActivity,
+  type OperationalActivityEventType,
 } from "@/shared/types/operational-activity";
 import type { DashboardData } from "@/shared/types/dashboard";
 import { MISSION_CONTROL_SECTION_LABELS } from "@/shared/lib/dashboard-mission-control";
+import {
+  altairSemanticIndicatorClass,
+  type AltairColorHierarchyTone,
+} from "@/shared/design-system/foundation";
 import {
   MasterPageSection,
   altairSurfaceListClass,
@@ -49,6 +54,38 @@ function resolveActivityIcon(activity: OperationalActivity): LucideIcon {
   }
 }
 
+/** Color only for meaningful event state — feed stays mostly neutral. */
+function resolveActivityTone(
+  eventType: OperationalActivityEventType,
+): Exclude<AltairColorHierarchyTone, "neutral" | "info"> | null {
+  switch (eventType) {
+    case "payment_recorded":
+    case "invoice_paid":
+    case "estimate_approved":
+    case "work_completed":
+    case "expense_approved":
+    case "expense_reimbursed":
+    case "estimate_converted_to_invoice":
+    case "customer_restored":
+    case "customer_restored_from_trash":
+      return "success";
+    case "estimate_declined":
+    case "expense_rejected":
+    case "invoice_voided":
+    case "invoice_cancelled":
+    case "estimate_cancelled":
+    case "customer_deleted":
+    case "customer_permanently_deleted":
+      return "danger";
+    case "estimate_sent":
+    case "invoice_sent":
+    case "expense_submitted":
+      return "warning";
+    default:
+      return null;
+  }
+}
+
 export function MissionControlActivityTimelineSection({
   data,
   limit = 8,
@@ -64,7 +101,7 @@ export function MissionControlActivityTimelineSection({
     >
       {activities.length === 0 ? (
         <MissionControlInlineEmptyState
-          icon={<History className="h-4 w-4 text-slate-500" aria-hidden="true" />}
+          icon={<History className="h-4 w-4 text-altair-ink-muted" aria-hidden="true" />}
           title="No recent activity yet"
           description={
             access.canViewBilling
@@ -84,29 +121,38 @@ export function MissionControlActivityTimelineSection({
               access.canViewBilling,
             );
             const Icon = resolveActivityIcon(activity);
+            const tone = resolveActivityTone(activity.eventType);
 
             const body = (
               <div className="altair-surface-list-row flex items-start gap-3 py-3.5 sm:py-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100/70 text-slate-500">
+                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-altair-paper-subtle text-altair-ink-muted">
                   <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  {tone ? (
+                    <span
+                      aria-hidden="true"
+                      className={`absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full ${altairSemanticIndicatorClass[tone]}`}
+                    />
+                  ) : null}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                    <p className="text-sm font-semibold text-slate-900">
+                    <p className="text-sm font-semibold text-altair-ink-on-paper">
                       {formatOperationalActivityLabelForAccess(
                         activity,
                         access.canViewBilling,
                       )}
                     </p>
-                    <time className="shrink-0 text-xs text-slate-500">
+                    <time className="shrink-0 text-xs text-altair-ink-on-paper-muted">
                       {formatOperationalActivityTimestamp(activity.createdAt)}
                     </time>
                   </div>
                   {details ? (
-                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{details}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-altair-ink-on-paper-secondary">
+                      {details}
+                    </p>
                   ) : null}
                   {activity.actorName ? (
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-altair-ink-on-paper-muted">
                       by {activity.actorName}
                     </p>
                   ) : null}

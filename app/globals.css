@@ -1310,9 +1310,11 @@ a[href] {
     box-shadow: 0 0 0 2px rgb(201 164 77 / 0.35);
   }
 
+  /* Active nav — lighter wash so chrome complements the dashboard, not dominates it */
   .admin-north-star-sidebar-link-active {
-    background-color: rgb(201 164 77 / 0.14);
+    background-color: rgb(201 164 77 / 0.08);
     color: var(--north-star-sidebar-link-active);
+    font-weight: 500;
   }
 
   .admin-north-star-sidebar-link-active svg {
@@ -1323,11 +1325,11 @@ a[href] {
     position: absolute;
     left: 0;
     top: 50%;
-    height: 1.25rem;
+    height: 1rem;
     width: 0.125rem;
     transform: translateY(-50%);
     border-radius: 0 9999px 9999px 0;
-    background-color: var(--north-star-gold);
+    background-color: var(--altair-brass);
   }
 }
 
@@ -2875,6 +2877,27 @@ a[href] {
   border: 1px solid transparent;
 }
 
+/*
+ * Color Hierarchy System (Phase 2) — Needs Attention anchor surface.
+ * Slightly warmer than Surface 1; thin brass edge. Not a bright warning panel.
+ */
+.altair-surface-attention {
+  border-radius: var(--radius-section);
+  background-color: color-mix(in srgb, var(--altair-brass) 5%, var(--surface-section));
+  border: 1px solid color-mix(in srgb, var(--altair-brass) 32%, transparent);
+  box-shadow: inset 0 2px 0 0 color-mix(in srgb, var(--altair-brass) 65%, transparent);
+}
+
+/* Spacious section title — small brass identity mark, never a filled header bar */
+.altair-section-title-accent {
+  margin-top: 0.35rem;
+  height: 0.875rem;
+  width: 0.125rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background-color: color-mix(in srgb, var(--altair-brass) 75%, transparent);
+}
+
 .altair-surface-section-body {
   padding: 0.75rem;
 }
@@ -3508,14 +3531,15 @@ a[href] {
 
 .admin-nav-link:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(6 182 212 / 0.35);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--altair-brass) 40%, transparent);
 }
 
+/* Legacy / mobile active — brass accent, lighter than prior cyan weight */
 .admin-nav-link-active {
-  background-color: rgb(6 182 212 / 0.12);
-  color: #083344;
-  box-shadow: 0 1px 2px rgb(6 182 212 / 0.1);
-  outline: 1px solid rgb(6 182 212 / 0.22);
+  background-color: color-mix(in srgb, var(--altair-brass) 10%, transparent);
+  color: var(--altair-ink-on-paper);
+  box-shadow: none;
+  outline: 1px solid color-mix(in srgb, var(--altair-brass) 28%, transparent);
 }
 
 .admin-segmented-control {

@@ -18,15 +18,15 @@ function ReportLimitations({ report }: { report: OperationalHealthReport }) {
 
   return (
     <div
-      className="mt-4 rounded-lg border border-amber-200/80 bg-amber-50/60 px-3 py-2.5"
+      className="mt-4 rounded-lg border border-altair-warning/20 bg-altair-warning-surface px-3 py-2.5"
       role="note"
     >
       <div className="flex items-start gap-2">
         <AlertTriangle
-          className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700"
+          className="mt-0.5 h-3.5 w-3.5 shrink-0 text-altair-warning"
           aria-hidden="true"
         />
-        <ul className="space-y-1 text-xs text-amber-900/90">
+        <ul className="space-y-1 text-xs text-altair-warning-foreground/90">
           {report.meta.limitations.map((limitation) => (
             <li key={limitation}>{limitation}</li>
           ))}
@@ -89,7 +89,7 @@ export function OperationalHealthSection({
           </div>
           <Link
             href="/reports"
-            className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700"
+            className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-altair-brass hover:text-altair-brass-interactive"
           >
             View details
             <ArrowRight className="h-3.5 w-3.5" />
@@ -97,25 +97,25 @@ export function OperationalHealthSection({
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2 max-lg:mt-3 max-lg:gap-2 lg:mt-4 lg:gap-3">
-          <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 px-3 py-2.5 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-emerald-800/80">
+          <div className="rounded-xl border border-altair-success/20 bg-altair-success-surface/60 px-3 py-2.5 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-altair-success-foreground/80">
               Top strength
             </p>
-            <p className="mt-1 text-sm font-semibold text-emerald-950">
+            <p className="mt-1 text-sm font-semibold text-altair-success-foreground">
               {report.strongestOperationalArea.label}
             </p>
-            <p className="mt-0.5 text-xs text-emerald-800/80">
+            <p className="mt-0.5 text-xs text-altair-success-foreground/80">
               Area score {report.strongestOperationalArea.score}/100
             </p>
           </div>
-          <div className="rounded-xl border border-rose-100 bg-rose-50/40 px-3 py-2.5 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-rose-800/80">
+          <div className="rounded-xl border border-altair-danger/20 bg-altair-danger-surface/60 px-3 py-2.5 max-lg:px-3 max-lg:py-2.5 lg:px-4 lg:py-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-altair-danger-foreground/80">
               Top risk
             </p>
-            <p className="mt-1 text-sm font-semibold text-rose-950">
+            <p className="mt-1 text-sm font-semibold text-altair-danger-foreground">
               {report.biggestOperationalRisk.label}
             </p>
-            <p className="mt-0.5 text-xs text-rose-800/80">
+            <p className="mt-0.5 text-xs text-altair-danger-foreground/80">
               Area score {report.biggestOperationalRisk.score}/100
             </p>
           </div>
@@ -153,25 +153,25 @@ export function OperationalHealthSection({
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 px-4 py-3">
-          <p className="text-xs font-bold uppercase tracking-wide text-emerald-800/80">
+        <div className="rounded-xl border border-altair-success/20 bg-altair-success-surface/60 px-4 py-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-altair-success-foreground/80">
             Strongest area
           </p>
-          <p className="mt-1 text-sm font-semibold text-emerald-950">
+          <p className="mt-1 text-sm font-semibold text-altair-success-foreground">
             {report.strongestOperationalArea.label}
           </p>
-          <p className="mt-0.5 text-xs text-emerald-800/80">
+          <p className="mt-0.5 text-xs text-altair-success-foreground/80">
             {report.strongestOperationalArea.score}/100
           </p>
         </div>
-        <div className="rounded-xl border border-rose-100 bg-rose-50/40 px-4 py-3">
-          <p className="text-xs font-bold uppercase tracking-wide text-rose-800/80">
+        <div className="rounded-xl border border-altair-danger/20 bg-altair-danger-surface/60 px-4 py-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-altair-danger-foreground/80">
             Biggest risk
           </p>
-          <p className="mt-1 text-sm font-semibold text-rose-950">
+          <p className="mt-1 text-sm font-semibold text-altair-danger-foreground">
             {report.biggestOperationalRisk.label}
           </p>
-          <p className="mt-0.5 text-xs text-rose-800/80">
+          <p className="mt-0.5 text-xs text-altair-danger-foreground/80">
             {report.biggestOperationalRisk.score}/100
           </p>
         </div>
@@ -196,10 +196,10 @@ export function OperationalHealthSection({
                   <span
                     className={`shrink-0 text-xs font-semibold capitalize ${
                       factor.impact === "positive"
-                        ? "text-emerald-700"
+                        ? "text-altair-success-foreground"
                         : factor.impact === "negative"
-                          ? "text-rose-700"
-                          : "text-slate-600"
+                          ? "text-altair-danger-foreground"
+                          : "text-altair-ink-on-paper-secondary"
                     }`}
                   >
                     {factor.impact}

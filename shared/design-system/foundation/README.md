@@ -1,15 +1,36 @@
 # Altair Design Foundation — semantic token layer
 
-Authoritative spec: `docs/altair/ALTAIR_DESIGN_FOUNDATION.md`. This folder is the
+Authoritative spec: `docs/product/ALTAIR_DESIGN_FOUNDATION.md`. This folder is the
 implementation of that document's Color System section — nothing more. Read
 the Foundation before changing anything here.
 
 ## Status
 
-**Infrastructure only.** This layer defines the tokens; no page or component
-consumes them yet. Introducing it changes no rendered pixel. Future phases
-migrate existing legacy and North Star colors onto this layer — see the
-Foundation's "Migration Philosophy" section.
+**Active.** Tokens are consumed by StatusPill, Button, Mission Briefing
+(Color Hierarchy Phase 2), operational status badges, and selected owner
+surfaces. Prefer `--altair-*` / `altair-*` utilities over Tailwind palette
+colors (`rose`/`amber`/`emerald`/`cyan`) for status and brand accents.
+
+## Color Hierarchy System (Phase 2)
+
+Color answers: *What information deserves attention?* Target mix ≈ **90%
+neutral · 8% semantic · 2% brass**.
+
+| Role | When to use |
+|------|-------------|
+| Neutral (Paper/Ink/Graphite) | Default surfaces, labels, metadata, normal KPI values |
+| Danger | Past due, blocking failures, critical severity |
+| Warning | Awaiting action, caution (Jobs Waiting), pending state |
+| Success | Healthy/clear, paid/approved/completed, positive financial KPI (subtle) |
+| Information | In-flight operational state (scheduled, sent) — not urgency |
+| Brass | Command / identity only (section accent, quick-action +, active nav) — never status |
+
+Implementation helpers: `color-hierarchy.ts` (`resolveNeedsAttentionTone`,
+`altairMetricValueClass`, semantic indicator/value/surface class maps).
+Needs Attention surface: `.altair-surface-attention`. Section title mark:
+`.altair-section-title-accent`.
+
+**Caution** maps to the Warning token — do not invent a separate caution hue.
 
 ## The hierarchy
 

@@ -31,6 +31,17 @@ Master Shell V2 architecture migration is **complete** across major admin surfac
 
 See `docs/product/ALTAIR_ART_DIRECTION.md` and Phase 9 in `docs/product/ALTair_V2_ROADMAP.md`.
 
+## Color Hierarchy System (Phase 2)
+
+Complements Surface Hierarchy. Surfaces stay mostly neutral; semantic color
+and brass accent direct attention. See
+`shared/design-system/foundation/color-hierarchy.ts` and
+`shared/design-system/foundation/README.md`.
+
+- Needs Attention: `.altair-surface-attention` (warmer Surface 1 + brass edge)
+- Spacious section titles: left brass rule via `MasterPageSection`
+- Active nav: lighter brass wash (North Star sidebar + legacy/mobile links)
+
 ## Surface Hierarchy System (Phase 1)
 
 Five semantic levels — tonal hierarchy over elevation. Whitespace is the primary separator; borders support; shadows are rare.

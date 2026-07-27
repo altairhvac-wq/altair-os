@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { altairSectionTitleAccentClass } from "@/shared/design-system/foundation";
 import { masterShellSectionGap, type MasterShellDensity } from "./tokens";
 
 export type MasterPageSectionProps = {
@@ -47,27 +48,41 @@ export function MasterPageSection({
       id={id}
       className={`flex min-w-0 flex-col ${masterShellSectionGap[density]} ${className}`}
     >
-      <header className={isSpacious ? "" : "border-b border-slate-200/80 pb-1.5"}>
-        <h2
-          className={
-            isSpacious
-              ? "text-sm font-bold tracking-tight text-slate-900 sm:text-base"
-              : "text-xs font-bold uppercase tracking-wide text-slate-800 sm:text-sm"
-          }
-        >
-          {title}
-        </h2>
-        {description ? (
-          <p
+      <header
+        className={
+          isSpacious
+            ? "flex items-start gap-2.5"
+            : "border-b border-slate-200/80 pb-1.5"
+        }
+      >
+        {isSpacious ? (
+          <span
+            aria-hidden="true"
+            className={altairSectionTitleAccentClass}
+          />
+        ) : null}
+        <div className="min-w-0 flex-1">
+          <h2
             className={
               isSpacious
-                ? "mt-0.5 text-xs leading-snug text-slate-600"
-                : "mt-0.5 text-[11px] leading-snug text-slate-500 sm:text-xs"
+                ? "text-sm font-bold tracking-tight text-altair-ink-on-paper sm:text-base"
+                : "text-xs font-bold uppercase tracking-wide text-slate-800 sm:text-sm"
             }
           >
-            {description}
-          </p>
-        ) : null}
+            {title}
+          </h2>
+          {description ? (
+            <p
+              className={
+                isSpacious
+                  ? "mt-0.5 text-xs leading-snug text-altair-ink-on-paper-secondary"
+                  : "mt-0.5 text-[11px] leading-snug text-slate-500 sm:text-xs"
+              }
+            >
+              {description}
+            </p>
+          ) : null}
+        </div>
       </header>
       <div className={`flex min-w-0 flex-col ${masterShellSectionGap[density]}`}>
         {children}

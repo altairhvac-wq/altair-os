@@ -9,9 +9,15 @@ import {
 import { DashboardQueueActionTrigger } from "@/shared/components/dashboard/DashboardQueueActionTrigger";
 import type { DashboardData } from "@/shared/types/dashboard";
 import {
+  altairSemanticIndicatorClass,
+  altairSemanticSurfaceClass,
+  altairSemanticValueClass,
+  resolveNeedsAttentionTone,
+} from "@/shared/design-system/foundation";
+import {
   MasterPageSection,
+  altairSurfaceAttentionClass,
   altairSurfaceListRowClass,
-  altairSurfaceSectionClass,
 } from "@/shared/design-system/shell";
 
 type MissionCriticalSectionProps = {
@@ -43,23 +49,24 @@ function NeedsAttentionRow({
   data: DashboardData;
 }) {
   const queueType = resolveQueueType(item.id);
-  const valueClass =
-    item.severity === "critical"
-      ? "text-rose-800"
-      : item.severity === "warning"
-        ? "text-amber-800"
-        : "text-slate-900";
+  const tone = resolveNeedsAttentionTone(item);
+  const valueClass = altairSemanticValueClass[tone];
+  const indicatorClass = altairSemanticIndicatorClass[tone];
 
   const content = (
     <div
       className={`${altairSurfaceListRowClass} flex items-baseline gap-3 border-b-0 py-3 sm:py-3.5`}
     >
-      <p className="min-w-0 flex-1 text-sm font-medium text-slate-800 sm:text-[0.9375rem]">
+      <span
+        aria-hidden="true"
+        className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${indicatorClass}`}
+      />
+      <p className="min-w-0 flex-1 text-sm font-medium text-altair-ink-on-paper sm:text-[0.9375rem]">
         {item.label}
       </p>
       <span
         aria-hidden="true"
-        className="mx-1 hidden min-w-[2rem] flex-1 border-b border-dotted border-slate-300/90 sm:block"
+        className="mx-1 hidden min-w-[2rem] flex-1 border-b border-dotted border-altair-border sm:block"
       />
       <p
         className={`shrink-0 text-base font-black tabular-nums sm:text-lg ${valueClass}`}
@@ -120,24 +127,24 @@ export function MissionCriticalSection({
     >
       {isClear || attentionItems.length === 0 ? (
         <div
-          className={`${altairSurfaceSectionClass} flex items-start gap-3 px-3.5 py-4 sm:px-4`}
+          className={`flex items-start gap-3 rounded-[var(--radius-section)] border px-3.5 py-4 sm:px-4 ${altairSemanticSurfaceClass.success}`}
         >
           <CheckCircle2
-            className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
+            className="mt-0.5 h-4 w-4 shrink-0 text-altair-success"
             aria-hidden="true"
           />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-emerald-900">
+            <p className="text-sm font-semibold text-altair-success-foreground">
               Everything is running smoothly
             </p>
-            <p className="mt-0.5 text-xs leading-relaxed text-emerald-800/80">
+            <p className="mt-0.5 text-xs leading-relaxed text-altair-success-foreground/80">
               No overdue jobs, billing gaps, or dispatch pressure detected.
             </p>
           </div>
         </div>
       ) : (
-        <div className={altairSurfaceSectionClass}>
-          <ul className="divide-y divide-slate-200/55 px-1 sm:px-2">
+        <div className={altairSurfaceAttentionClass}>
+          <ul className="divide-y divide-altair-border/60 px-1 sm:px-2">
             {attentionItems.map((item) => (
               <li key={item.id}>
                 <NeedsAttentionRow item={item} data={data} />

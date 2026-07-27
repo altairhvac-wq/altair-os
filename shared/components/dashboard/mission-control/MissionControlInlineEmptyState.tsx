@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { altairSemanticSurfaceClass } from "@/shared/design-system/foundation";
 
 type MissionControlInlineEmptyStateProps = {
   title: string;
@@ -15,13 +16,13 @@ export function MissionControlInlineEmptyState({
 }: MissionControlInlineEmptyStateProps) {
   const toneClass =
     tone === "success"
-      ? "border-emerald-100 bg-emerald-50/50 text-emerald-900"
-      : "border-slate-100 bg-slate-50/70 text-slate-700";
+      ? `border ${altairSemanticSurfaceClass.success}`
+      : "border border-altair-border bg-altair-paper-subtle text-altair-ink-on-paper-secondary";
 
   return (
-    <div className={`rounded-xl border px-4 py-5 text-center ${toneClass}`}>
+    <div className={`rounded-xl px-4 py-5 text-center ${toneClass}`}>
       {icon ? (
-        <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-white/80 shadow-sm ring-1 ring-black/5">
+        <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-altair-paper shadow-sm ring-1 ring-altair-border">
           {icon}
         </div>
       ) : null}

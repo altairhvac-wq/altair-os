@@ -50,6 +50,7 @@ export {
 } from "./MasterPageSurface";
 
 export {
+  altairSurfaceAttentionClass,
   altairSurfaceCanvasClass,
   altairSurfaceCardClass,
   altairSurfaceLevelClass,
@@ -62,7 +63,6 @@ export {
   altairSurfaceTileClass,
   type AltairSurfaceLevel,
 } from "./surface-hierarchy";
-
 export {
   MasterShellPage,
   type MasterShellPageProps,

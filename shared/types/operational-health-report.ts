@@ -506,23 +506,27 @@ export function getOperationalHealthLabelStyles(label: OperationalHealthLabel): 
   switch (label) {
     case "Excellent":
       return {
-        scoreClass: "text-emerald-700",
-        badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-800",
+        scoreClass: "text-altair-success-foreground",
+        badgeClass:
+          "border-altair-success/20 bg-altair-success-surface text-altair-success-foreground",
       };
     case "Healthy":
       return {
-        scoreClass: "text-cyan-700",
-        badgeClass: "border-cyan-200 bg-cyan-50 text-cyan-800",
+        scoreClass: "text-altair-information-foreground",
+        badgeClass:
+          "border-altair-information/20 bg-altair-information-surface text-altair-information-foreground",
       };
     case "Needs attention":
       return {
-        scoreClass: "text-amber-700",
-        badgeClass: "border-amber-200 bg-amber-50 text-amber-800",
+        scoreClass: "text-altair-warning-foreground",
+        badgeClass:
+          "border-altair-warning/20 bg-altair-warning-surface text-altair-warning-foreground",
       };
     case "Operational risk":
       return {
-        scoreClass: "text-rose-700",
-        badgeClass: "border-rose-200 bg-rose-50 text-rose-800",
+        scoreClass: "text-altair-danger-foreground",
+        badgeClass:
+          "border-altair-danger/20 bg-altair-danger-surface text-altair-danger-foreground",
       };
   }
 }
@@ -535,17 +539,20 @@ export function getOperationalHealthTrendStyles(trend: OperationalHealthTrend): 
     case "improving":
       return {
         label: "Improving",
-        className: "border-emerald-200 bg-emerald-50 text-emerald-800",
+        className:
+          "border-altair-success/20 bg-altair-success-surface text-altair-success-foreground",
       };
     case "declining":
       return {
         label: "Declining",
-        className: "border-rose-200 bg-rose-50 text-rose-800",
+        className:
+          "border-altair-danger/20 bg-altair-danger-surface text-altair-danger-foreground",
       };
     case "stable":
       return {
         label: "Stable",
-        className: "border-slate-200 bg-white text-slate-700",
+        className:
+          "border-altair-border bg-altair-paper text-altair-ink-on-paper-secondary",
       };
   }
 }

@@ -39,6 +39,7 @@ export function MissionControlCashFlowSection({
               value={card.value}
               detail={card.trend}
               href={card.href}
+              tone={card.tone}
             />
           ))}
         </div>

@@ -11,6 +11,7 @@ type MissionControlQuickActionsSectionProps = {
 
 /**
  * Compact shortcut row — secondary to operational briefing, not oversized action cards.
+ * Brass accent on + / hover / focus only; not converted into buttons.
  */
 export function MissionControlQuickActionsSection({
   actions,
@@ -34,9 +35,9 @@ export function MissionControlQuickActionsSection({
           <Link
             key={action.id}
             href={action.href}
-            className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200/50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50"
+            className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-altair-ink-on-paper-secondary transition-colors hover:bg-altair-brass/10 hover:text-altair-ink-on-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40"
           >
-            <span aria-hidden="true" className="text-slate-400">
+            <span aria-hidden="true" className="text-altair-brass">
               +
             </span>
             <span>{action.shortLabel ?? action.label}</span>

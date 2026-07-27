@@ -12,20 +12,27 @@ type ExpenseStatusBadgeProps = {
   onDarkSurface?: boolean;
 };
 
+/** North Star draft/submitted keep quiet paper/brass chrome; status uses semantic tokens. */
 const northStarExpenseStatusStyles: Record<ExpenseStatus, string> = {
-  draft: "bg-[#F5F0E4] text-[#4F4638] ring-[rgba(138,99,36,0.14)]",
-  submitted: "bg-[rgba(201,164,77,0.18)] text-[#5A4A32] ring-[rgba(201,164,77,0.28)]",
-  approved: "bg-emerald-50 text-emerald-800 ring-emerald-600/20",
-  rejected: "bg-rose-50 text-rose-800 ring-rose-600/20",
-  reimbursed: "bg-[#EFE4CB] text-[#4F4638] ring-[rgba(138,99,36,0.18)]",
+  draft: "bg-altair-paper-subtle text-altair-ink-secondary ring-altair-border",
+  submitted:
+    "bg-altair-brass/15 text-altair-ink-on-paper ring-altair-brass/25",
+  approved:
+    "bg-altair-success-surface text-altair-success-foreground ring-altair-success/15",
+  rejected:
+    "bg-altair-danger-surface text-altair-danger-foreground ring-altair-danger/15",
+  reimbursed:
+    "bg-altair-success-surface text-altair-success-foreground ring-altair-success/15",
 };
 
 const northStarDarkSurfaceStatusStyles: Record<ExpenseStatus, string> = {
-  draft: "bg-[#F5F0E4] text-[#4F4638] ring-[rgba(138,99,36,0.14)]",
-  submitted: "bg-[rgba(201,164,77,0.22)] text-[#F3EBDD] ring-[rgba(201,164,77,0.32)]",
-  approved: "bg-emerald-950/40 text-emerald-200 ring-emerald-500/30",
-  rejected: "bg-rose-950/40 text-rose-200 ring-rose-500/30",
-  reimbursed: "bg-[#EFE4CB] text-[#4F4638] ring-[rgba(138,99,36,0.18)]",
+  draft: "bg-altair-paper-subtle text-altair-ink-secondary ring-altair-border",
+  submitted: "bg-altair-brass/25 text-altair-paper ring-altair-brass/35",
+  approved:
+    "bg-altair-success/20 text-altair-success-surface ring-altair-success/30",
+  rejected: "bg-altair-danger/20 text-altair-danger-surface ring-altair-danger/30",
+  reimbursed:
+    "bg-altair-success/20 text-altair-success-surface ring-altair-success/30",
 };
 
 export function ExpenseStatusBadge({

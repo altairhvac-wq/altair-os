@@ -19,6 +19,12 @@ export const altairSurfaceCanvasClass = "altair-surface-canvas";
 /** Surface 1 — section grouping region */
 export const altairSurfaceSectionClass = "altair-surface-section";
 
+/**
+ * Surface 1 attention variant — Needs Attention primary anchor.
+ * Color Hierarchy Phase 2; warmer + brass edge. See foundation/color-hierarchy.ts.
+ */
+export const altairSurfaceAttentionClass = "altair-surface-attention";
+
 /** Surface 2 — card (use sparingly; prefer section + spacing) */
 export const altairSurfaceCardClass = "altair-surface-card";
 

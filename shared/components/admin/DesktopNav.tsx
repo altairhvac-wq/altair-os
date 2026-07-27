@@ -41,13 +41,13 @@ function DesktopNavLink({ item, active }: DesktopNavLinkProps) {
       aria-current={active ? "page" : undefined}
       className={`${adminNavLinkClass} flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium ${
         active
-          ? `${adminNavLinkActiveClass} text-cyan-950`
-          : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
+          ? `${adminNavLinkActiveClass} text-altair-ink-on-paper`
+          : "text-slate-600 hover:bg-altair-brass/10 hover:text-slate-900"
       }`}
     >
       <Icon
         className={`h-4 w-4 shrink-0 ${
-          active ? "text-cyan-700" : "text-slate-500 group-hover:text-slate-700"
+          active ? "text-altair-brass" : "text-slate-500 group-hover:text-slate-700"
         }`}
       />
       {item.label}
