@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Check, Sparkles } from "lucide-react";
-import { AltairLogo } from "@/shared/components/brand/AltairLogo";
+import { HomepageNav } from "@/shared/components/homepage/HomepageNav";
+import { MarketingFooter } from "@/shared/components/marketing/MarketingFooter";
 import { SeeAltairInActionSection } from "@/shared/components/marketing/SeeAltairInActionSection";
 import {
   FOUNDING_BETA_FEATURES,
@@ -19,36 +20,12 @@ const ctaFocusClass =
 
 export function PricingPageView() {
   return (
-    <div className="min-h-dvh bg-gradient-to-b from-stone-50 via-white to-stone-100/80">
+    <div className="relative min-h-dvh bg-gradient-to-b from-stone-50 via-white to-stone-100/80">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/30 to-transparent" />
 
-      <header className="relative border-b border-stone-200/80 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
-          <Link
-            href="/login"
-            className={`shrink-0 ${ctaFocusClass} rounded-sm`}
-            aria-label="Altair OS — Sign in"
-          >
-            <AltairLogo variant="primary" size="sm" showWordmark />
-          </Link>
-          <nav aria-label="Account actions" className="flex items-center gap-3 text-sm">
-            <Link
-              href="/login"
-              className={`font-medium text-stone-600 transition-colors hover:text-stone-900 ${ctaFocusClass} rounded-sm`}
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/signup"
-              className={`rounded-lg bg-[#0A0A0A] px-3.5 py-2 font-semibold text-white shadow-[0_1px_2px_rgba(10,10,10,0.22),0_4px_18px_rgba(212,175,55,0.2)] ring-1 ring-[#D4AF37]/30 transition-colors hover:bg-[#141414] ${ctaFocusClass}`}
-            >
-              Get started
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <HomepageNav />
 
-      <main className="relative mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
+      <main className="relative mx-auto max-w-6xl px-5 pb-10 pt-24 sm:px-8 sm:pb-14 sm:pt-28">
         <div className="auth-hero-enter mx-auto max-w-3xl text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9A7209]">
             Limited early access
@@ -203,11 +180,7 @@ export function PricingPageView() {
         </section>
       </main>
 
-      <footer className="border-t border-stone-200/80 px-5 py-8 text-center">
-        <p className="text-[11px] tracking-wide text-stone-400">
-          © {new Date().getFullYear()} Altair · Built for trades and field service
-        </p>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

@@ -2,27 +2,36 @@
 
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react";
 import { AltairLogo } from "@/shared/components/brand/AltairLogo";
 
 const NAV_LINKS = [
-  { href: "#product", label: "Product" },
-  { href: "#one-operating-system", label: "How It Works" },
-  { href: "#why-altair", label: "Why Altair" },
-  { href: "/pricing", label: "Pricing" },
+  { href: "/#features", label: "Features", id: "features" },
+  { href: "/pricing", label: "Pricing", id: "pricing" },
+  { href: "/#about", label: "About", id: "about" },
 ] as const;
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a44d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c0e12]";
 
+function isHomepagePath(pathname: string) {
+  return pathname === "/" || pathname === "/welcome";
+}
+
 export function HomepageNav() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
+  const onHomepage = isHomepagePath(pathname);
+  const forceSolid = !onHomepage;
+  const solid = scrolled || forceSolid;
+  const pricingActive = pathname === "/pricing";
 
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY > 12);
+      setScrolled(window.scrollY > 16);
     };
 
     onScroll();
@@ -43,71 +52,76 @@ export function HomepageNav() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   return (
     <header
       className={[
-        "mc-nav fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter,box-shadow] duration-300",
-        scrolled
-          ? "border-b border-[rgba(222,228,236,0.08)] bg-[rgba(8,9,12,0.84)] shadow-[0_1px_0_rgba(222,228,236,0.04)] backdrop-blur-xl"
+        "ah-nav ah-hero-fade ah-hero-fade-0 fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter,box-shadow] duration-500 ease-out motion-reduce:transition-none",
+        solid
+          ? "border-b border-[rgba(251,247,239,0.08)] bg-[rgba(8,9,12,0.92)] shadow-[0_1px_0_rgba(251,247,239,0.04)] backdrop-blur-md"
           : "border-b border-transparent bg-transparent",
       ].join(" ")}
     >
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.2),transparent)]"
-        aria-hidden="true"
-      />
-      <div className="mx-auto flex h-16 max-w-[90rem] items-center justify-between gap-4 px-5 sm:h-[4.25rem] sm:px-8 lg:px-10">
+      <div className="relative mx-auto flex h-16 max-w-[90rem] items-center justify-between gap-4 px-5 sm:h-[4.25rem] sm:px-8 lg:px-12 xl:px-16">
         <Link
           href="/"
-          className={`shrink-0 rounded-sm ${focusRing}`}
-          aria-label="Altair OS home"
+          className={`relative z-10 shrink-0 rounded-sm ${focusRing}`}
+          aria-label="Altair home"
         >
-          <AltairLogo variant="white" size="md" showWordmark className="origin-left scale-[1.06]" />
+          <AltairLogo
+            variant="white"
+            size="md"
+            showWordmark
+            className="origin-left scale-[1.06]"
+          />
         </Link>
 
         <nav
           aria-label="Primary"
-          className="hidden items-center gap-8 xl:gap-9 lg:flex"
+          className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 lg:flex xl:gap-10"
         >
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`text-[13px] font-medium text-[#c9bfae] transition-colors hover:text-[#f3ebdd] ${focusRing} rounded-sm`}
-            >
-              {link.label}
-            </Link>
-          ))}
-          <Link
-            href="/install"
-            className={`inline-flex items-center gap-1 rounded-sm text-[13px] font-medium text-[#c9bfae] transition-colors hover:text-[#f3ebdd] ${focusRing}`}
-          >
-            Resources
-            <ChevronDown className="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
-          </Link>
+          {NAV_LINKS.map((link) => {
+            const active = link.id === "pricing" && pricingActive;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                className={[
+                  "rounded-sm text-[13px] font-medium tracking-wide transition-colors duration-200 motion-reduce:transition-none",
+                  active
+                    ? "text-[#fff9ea]"
+                    : "text-[#f3ebdd]/78 hover:text-[#fff9ea]",
+                  focusRing,
+                ].join(" ")}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="hidden items-center gap-3.5 md:flex">
+        <div className="relative z-10 hidden items-center gap-3 md:flex">
           <Link
             href="/login"
-            className={`rounded-sm px-2 py-1.5 text-[13px] font-medium text-[#c9bfae] transition-colors hover:text-[#f3ebdd] ${focusRing}`}
+            className={`rounded-sm px-2 py-1.5 text-[13px] font-medium text-[#f3ebdd]/72 transition-colors duration-200 hover:text-[#fff9ea] motion-reduce:transition-none ${focusRing}`}
           >
             Sign In
           </Link>
           <Link
             href="/signup"
-            className={`mc-cta-primary inline-flex items-center justify-center rounded-lg bg-[#b88a2e] px-4 py-2.5 text-[13px] font-semibold text-[#08090c] transition-colors hover:bg-[#c9a44d] ${focusRing}`}
+            className={`inline-flex min-h-10 items-center justify-center rounded-lg bg-[#b88a2e] px-4 py-2.5 text-[13px] font-semibold text-[#08090c] transition-colors duration-200 hover:bg-[#c9a44d] motion-reduce:transition-none ${focusRing}`}
           >
-            Request Closed Beta Access
-            <span className="ml-1 opacity-70" aria-hidden="true">
-              →
-            </span>
+            Start Free Beta
           </Link>
         </div>
 
         <button
           type="button"
-          className={`inline-flex items-center justify-center rounded-lg border border-[rgba(222,228,236,0.12)] bg-[rgba(18,21,27,0.8)] p-2 text-[#f3ebdd] md:hidden ${focusRing}`}
+          className={`relative z-10 inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-[rgba(251,247,239,0.14)] bg-[rgba(8,9,12,0.35)] p-2 text-[#fbf7ef] lg:hidden ${focusRing}`}
           aria-expanded={menuOpen}
           aria-controls={menuId}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -124,22 +138,30 @@ export function HomepageNav() {
       {menuOpen ? (
         <div
           id={menuId}
-          className="border-t border-[rgba(222,228,236,0.08)] bg-[rgba(8,9,12,0.96)] backdrop-blur-xl md:hidden"
+          className="border-t border-[rgba(251,247,239,0.08)] bg-[rgba(8,9,12,0.94)] backdrop-blur-xl lg:hidden"
         >
           <nav
             aria-label="Mobile"
             className="mx-auto flex max-w-[90rem] flex-col gap-1 px-5 py-4"
           >
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMenuOpen(false)}
-                className={`rounded-lg px-3 py-3 text-base font-medium text-[#f3ebdd] hover:bg-[rgba(23,27,34,0.85)] ${focusRing}`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {NAV_LINKS.map((link) => {
+              const active = link.id === "pricing" && pricingActive;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={active ? "page" : undefined}
+                  onClick={() => setMenuOpen(false)}
+                  className={[
+                    "rounded-lg px-3 py-3 text-base font-medium hover:bg-[rgba(23,27,34,0.85)]",
+                    active ? "text-[#fff9ea]" : "text-[#fbf7ef]",
+                    focusRing,
+                  ].join(" ")}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
             <Link
               href="/login"
               onClick={() => setMenuOpen(false)}
@@ -150,9 +172,9 @@ export function HomepageNav() {
             <Link
               href="/signup"
               onClick={() => setMenuOpen(false)}
-              className={`mt-2 inline-flex items-center justify-center rounded-lg bg-[#b88a2e] px-4 py-3 text-sm font-semibold text-[#08090c] hover:bg-[#c9a44d] ${focusRing}`}
+              className={`mt-2 inline-flex min-h-12 items-center justify-center rounded-lg bg-[#b88a2e] px-4 py-3 text-sm font-semibold text-[#08090c] hover:bg-[#c9a44d] ${focusRing}`}
             >
-              Request Closed Beta Access
+              Start Free Beta
             </Link>
           </nav>
         </div>

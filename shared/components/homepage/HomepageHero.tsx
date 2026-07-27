@@ -1,97 +1,99 @@
 import Link from "next/link";
-import { Lock, Network, Shield } from "lucide-react";
+import { Check } from "lucide-react";
 import { HomepageProductFrame } from "@/shared/components/homepage/HomepageProductFrame";
 import { HOMEPAGE_SCREENSHOTS } from "@/shared/components/homepage/homepage-tokens";
 
 const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a44d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c0e12]";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a44d]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090c]";
 
-const TRUST = [
-  { label: "Built for real shops", icon: Shield },
-  { label: "Secure by design", icon: Lock },
-  { label: "Connected end-to-end", icon: Network },
+const TRUST_ITEMS = [
+  "Free during beta",
+  "Setup support included",
+  "Built for HVAC & the trades",
 ] as const;
 
+/**
+ * Homepage hero — centered product-forward composition.
+ * Mission-led copy; the Mission Control screenshot carries the proof.
+ */
 export function HomepageHero() {
   return (
     <section
-      aria-labelledby="mc-hero-heading"
-      className="mc-hero relative overflow-hidden px-5 pb-10 pt-20 sm:px-8 sm:pb-12 sm:pt-24 lg:pb-14 lg:pt-28"
+      aria-labelledby="ah-hero-heading"
+      className="ah-hero relative isolate overflow-hidden px-5 pb-8 pt-20 sm:px-8 sm:pb-10 sm:pt-24 lg:px-12 lg:pb-12 lg:pt-24 xl:px-16"
     >
+      {/* Soft graphite light — environment alive, product remains the brightest plane */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="mc-silver-bloom absolute right-[-2%] top-[4%] h-[36rem] w-[44rem] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(210,216,224,0.14)_0%,rgba(210,216,224,0.05)_40%,transparent_68%)] blur-2xl" />
-        <div className="mc-silver-bloom absolute left-[6%] top-[18%] h-[20rem] w-[26rem] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(196,205,216,0.06)_0%,transparent_70%)] blur-xl" />
-        <div className="absolute inset-x-0 top-[4.5rem] h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.34),transparent)]" />
-        <div className="mc-silver-sweep absolute inset-x-0 top-[10%] h-44" />
-        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-[linear-gradient(to_top,rgba(8,9,12,0.96),transparent)]" />
+        <div className="absolute inset-x-[6%] top-[12%] h-[42%] bg-[radial-gradient(ellipse_at_center,rgba(210,216,224,0.09)_0%,transparent_68%)]" />
+        <div className="absolute inset-x-[16%] bottom-0 h-[56%] bg-[radial-gradient(ellipse_at_bottom,rgba(210,216,224,0.07)_0%,transparent_70%)]" />
       </div>
 
-      <div className="relative mx-auto grid max-w-[90rem] gap-6 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.38fr)] lg:grid-rows-[auto_auto] lg:items-center lg:gap-x-8 lg:gap-y-0 xl:gap-x-10">
-        <div className="mc-hero-copy max-w-xl text-center lg:max-w-none lg:self-end lg:text-left">
-          <p className="mc-hero-stage mc-hero-stage-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c9a44d]">
-            The operating system
+      <div className="relative mx-auto w-full max-w-[96rem]">
+        <div className="mx-auto max-w-3xl text-center lg:max-w-[52rem]">
+          <p className="ah-hero-fade ah-hero-fade-1 inline-flex items-center rounded-full border border-[rgba(222,228,236,0.14)] bg-[rgba(23,27,34,0.55)] px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#c9bfae]">
+            Closed Beta Now Available
           </p>
+
           <h1
-            id="mc-hero-heading"
-            className="mc-hero-stage mc-hero-stage-2 mt-3 text-[2.4rem] font-semibold leading-[1.06] tracking-[-0.02em] text-[#fff9ea] sm:mt-4 sm:text-[3.15rem] lg:text-[3.45rem] xl:text-[3.75rem]"
+            id="ah-hero-heading"
+            className="ah-hero-fade ah-hero-fade-2 ah-hero-display mt-4 text-[2.35rem] font-normal leading-[1.12] tracking-[-0.015em] text-[#fff9ea] sm:mt-5 sm:text-[3.25rem] sm:leading-[1.08] lg:mt-6 lg:text-[4.15rem] lg:leading-[1.05] xl:text-[4.65rem]"
           >
-            The operating system for{" "}
-            <span className="text-[#c9a44d]">HVAC</span> companies.
+            Be more present
+            <br />
+            where it matters most.
           </h1>
-          <p className="mc-hero-stage mc-hero-stage-3 mx-auto mt-3 max-w-lg text-base leading-[1.55] text-[#c9bfae] sm:mt-4 sm:text-lg lg:mx-0">
-            One command center for the whole shop — leads, customers, jobs,
-            dispatch, technicians, estimates, invoices, and payments.
+
+          <p className="ah-hero-fade ah-hero-fade-3 mx-auto mt-3.5 max-w-[600px] text-[0.95rem] leading-[1.75] text-[#c9bfae] sm:mt-4 sm:text-lg sm:leading-[1.8]">
+            Altair brings your customers, scheduling, technicians, jobs,
+            estimates, invoices, and payments into one calm, connected operating
+            system—so you can spend less time managing software and more time
+            leading your business.
           </p>
-        </div>
 
-        <div className="mc-hero-stage mc-hero-stage-deck relative mx-auto w-full max-w-none lg:col-start-2 lg:row-span-2 lg:-mr-2 lg:self-center xl:-mr-4">
-          <div className="mc-hero-deck">
-            <HomepageProductFrame
-              src={HOMEPAGE_SCREENSHOTS.hero}
-              alt="Altair OS Mission Control — North Star dashboard for HVAC companies"
-              priority
-              sizes="(max-width: 1024px) 100vw, 64vw"
-            />
-          </div>
-        </div>
-
-        <div className="mc-hero-copy flex flex-col items-stretch gap-5 text-center lg:self-start lg:pt-6 lg:text-left">
-          <div className="mc-hero-stage mc-hero-stage-4 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center lg:justify-start">
+          <div className="ah-hero-fade ah-hero-fade-4 mt-5 flex flex-col items-stretch justify-center gap-3 sm:mt-6 sm:flex-row sm:items-center sm:gap-3.5">
             <Link
               href="/signup"
-              className={`mc-cta-primary inline-flex items-center justify-center rounded-lg bg-[#b88a2e] px-5 py-3.5 text-sm font-semibold text-[#08090c] transition-[background-color,transform] duration-200 hover:bg-[#c9a44d] active:translate-y-px ${focusRing}`}
+              className={`inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-[#b88a2e] px-8 py-3.5 text-sm font-semibold text-[#08090c] transition-[background-color,transform] duration-200 hover:bg-[#c9a44d] active:translate-y-px motion-reduce:transition-none motion-reduce:active:translate-y-0 sm:w-auto ${focusRing}`}
             >
-              Request Closed Beta Access
-              <span className="ml-1.5 opacity-70" aria-hidden="true">
-                →
-              </span>
+              Start Free Beta
             </Link>
             <Link
-              href="#one-operating-system"
-              className={`mc-cta-secondary inline-flex items-center justify-center rounded-lg border border-[rgba(222,228,236,0.16)] bg-[rgba(18,21,27,0.72)] px-5 py-3.5 text-sm font-semibold text-[#f3ebdd] transition-[border-color,background-color] duration-200 hover:border-[rgba(222,228,236,0.28)] hover:bg-[rgba(23,27,34,0.9)] ${focusRing}`}
+              href="/#about"
+              className={`inline-flex min-h-12 w-full items-center justify-center rounded-lg border border-[rgba(222,228,236,0.18)] bg-transparent px-8 py-3.5 text-sm font-semibold text-[#fbf7ef] transition-[border-color,background-color] duration-200 hover:border-[rgba(222,228,236,0.32)] hover:bg-[rgba(23,27,34,0.45)] motion-reduce:transition-none sm:w-auto ${focusRing}`}
             >
-              <span className="mr-2 text-[0.65rem] opacity-70" aria-hidden="true">
-                ▷
-              </span>
-              See how it runs
+              Watch Our Story
             </Link>
           </div>
 
-          <ul className="mc-hero-stage mc-hero-stage-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 lg:justify-start">
-            {TRUST.map(({ label, icon: Icon }) => (
+          <ul className="ah-hero-fade ah-hero-fade-5 mx-auto mt-5 flex max-w-lg flex-row flex-wrap items-center justify-center gap-x-7 gap-y-2.5 sm:mt-6 sm:max-w-none sm:gap-x-10">
+            {TRUST_ITEMS.map((item) => (
               <li
-                key={label}
-                className="flex items-center gap-2 text-xs font-medium tracking-wide text-[#8e826f] sm:text-[13px]"
+                key={item}
+                className="flex items-center gap-1.5 text-[12px] text-[#8e826f]/88 sm:text-[13px]"
               >
-                <Icon
-                  className="h-3.5 w-3.5 shrink-0 text-[#c9a44d]/85"
-                  strokeWidth={1.5}
+                <Check
+                  className="h-3 w-3 shrink-0 text-[#c9a44d]/65"
+                  strokeWidth={2.25}
                   aria-hidden="true"
                 />
-                {label}
+                <span>{item}</span>
               </li>
             ))}
           </ul>
+        </div>
+
+        <div className="ah-hero-fade ah-hero-fade-6 ah-hero-product-stage relative mx-auto mt-7 w-[min(100%,calc(84rem*1.17))] max-w-none sm:mt-9 lg:mt-10">
+          <div
+            className="pointer-events-none absolute -inset-x-[8%] -inset-y-[10%] bg-[radial-gradient(ellipse_at_center,rgba(230,236,244,0.14)_0%,rgba(210,216,224,0.045)_44%,transparent_70%)]"
+            aria-hidden="true"
+          />
+          <HomepageProductFrame
+            src={HOMEPAGE_SCREENSHOTS.hero}
+            alt="Altair Mission Control dashboard showing today's operations, mission-critical queues, cash flow, and technician activity"
+            priority
+            className="ah-hero-product"
+            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 96vw, 1480px"
+          />
         </div>
       </div>
     </section>

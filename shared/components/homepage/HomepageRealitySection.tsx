@@ -102,7 +102,7 @@ export function HomepageRealitySection() {
       ref={sectionRef}
       id="product"
       aria-labelledby="mc-reality-heading"
-      className="mc-reality relative px-5 py-12 sm:px-8 sm:py-14"
+      className="mc-reality relative scroll-mt-28 px-5 py-12 sm:px-8 sm:py-14"
     >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(222,228,236,0.28),transparent)]"
@@ -116,14 +116,31 @@ export function HomepageRealitySection() {
       <div className="relative mx-auto max-w-[90rem]">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c9a44d]">
-            The reality of running a shop
+            The reality of running a business
           </p>
           <h2
             id="mc-reality-heading"
             className="mt-3 text-[1.85rem] font-semibold tracking-tight text-[#fff9ea] sm:text-[2.35rem] sm:leading-[1.15]"
           >
-            Too many tools. Too much chaos. Too many things slip.
+            When did the business start following you home?
           </h2>
+          <div className="mx-auto mt-5 max-w-2xl space-y-4 text-base leading-relaxed text-[#c9bfae] sm:mt-6 sm:text-lg sm:leading-[1.7]">
+            <p>
+              You did not start your company because you loved paperwork.
+              <br />
+              Or chasing invoices.
+              <br />
+              Or answering calls during dinner.
+            </p>
+            <p>You started it to build something worth being proud of.</p>
+            <p>
+              Somewhere along the way, the business started owning your
+              attention.
+            </p>
+            <p className="text-[#f3ebdd]">
+              Altair is being built to help give it back.
+            </p>
+          </div>
         </div>
 
         <ul

@@ -66,9 +66,9 @@ export function HomepageOperatingSystemSection() {
   return (
     <section
       ref={sectionRef}
-      id="one-operating-system"
+      id="features"
       aria-labelledby="mc-os-heading"
-      className="mc-os relative px-5 py-12 sm:px-8 sm:py-14 lg:py-16"
+      className="mc-os relative scroll-mt-28 px-5 py-12 sm:px-8 sm:py-14 lg:py-16"
     >
       <div
         className="pointer-events-none absolute inset-x-[8%] top-0 h-28 bg-[radial-gradient(ellipse_at_top,rgba(210,216,224,0.05),transparent_70%)]"
