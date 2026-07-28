@@ -9,6 +9,7 @@ This category is **Design / Foundation for the product interface**. Company phil
 - Product UI design constitution (tokens, materials, components rules)
 - Product visual philosophy (Horizon Intelligence / North Star)
 - Experience architecture map
+- Feature experience specifications (e.g., Altair Community)
 - V2 component definitions (product-facing)
 
 ## What does not belong here
@@ -26,6 +27,7 @@ This category is **Design / Foundation for the product interface**. Company phil
 | [`ALTAIR_DESIGN_FOUNDATION.md`](./ALTAIR_DESIGN_FOUNDATION.md) | Product UI design constitution |
 | [`ALTAIR_ART_DIRECTION.md`](./ALTAIR_ART_DIRECTION.md) | Product visual philosophy (Horizon Intelligence) |
 | [`ALTAIR_EXPERIENCE_MAP.md`](./ALTAIR_EXPERIENCE_MAP.md) | Experience architecture |
+| [`ALTAIR_COMMUNITY_EXPERIENCE.md`](./ALTAIR_COMMUNITY_EXPERIENCE.md) | Authoritative experience specification for Altair Community (subordinate to the Design Foundation; informed by the core Experience Map) |
 | [`ALTAIR_COMPONENT_SYSTEM.md`](./ALTAIR_COMPONENT_SYSTEM.md) | Component definitions |
 
 Pointer stubs remain under `docs/product/` for older links (`ALTAIR_DESIGN_FOUNDATION.md`, `ALTAIR_ART_DIRECTION.md`, `ALTAIR_DESIGN_MANIFESTO.md`, `ALTAIR_VISUAL_IDENTITY.md`, `ALTAIR_COMPONENT_SYSTEM.md`, `ALTAIR_EXPERIENCE_MAP.md`).
@@ -35,5 +37,6 @@ Pointer stubs remain under `docs/product/` for older links (`ALTAIR_DESIGN_FOUND
 1. `ALTAIR_DESIGN_FOUNDATION.md`
 2. `ALTAIR_ART_DIRECTION.md`
 3. `ALTAIR_EXPERIENCE_MAP.md`
-4. `ALTAIR_COMPONENT_SYSTEM.md`
-5. `shared/design-system/` for implementation
+4. `ALTAIR_COMMUNITY_EXPERIENCE.md` — when working on Altair Community
+5. `ALTAIR_COMPONENT_SYSTEM.md`
+6. `shared/design-system/` for implementation
