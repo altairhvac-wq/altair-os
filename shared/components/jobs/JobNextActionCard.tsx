@@ -141,6 +141,8 @@ export function JobNextActionCard({
     ? "text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8A6324]"
     : "text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-800 dark:text-cyan-300";
 
+  const nextActionEyebrow = northStar ? "Next command" : "Next action";
+
   const labelClass = northStar
     ? "text-lg font-bold tracking-tight text-[#17130E] sm:text-xl"
     : "text-lg font-bold tracking-tight text-slate-950 sm:text-xl dark:text-white";
@@ -174,7 +176,7 @@ export function JobNextActionCard({
   const description =
     hint ??
     (workflow.currentStage && primaryAction
-      ? `Current stage: ${workflow.currentStage.label}`
+      ? `Stage: ${workflow.currentStage.label}`
       : null);
 
   const showFieldActions =
@@ -251,7 +253,7 @@ export function JobNextActionCard({
     >
       <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 flex-1">
-          <p className={eyebrowClass}>Next action</p>
+          <p className={eyebrowClass}>{nextActionEyebrow}</p>
           <h2 id={titleId} className={`mt-0.5 ${labelClass}`}>
             {label}
           </h2>
@@ -346,7 +348,7 @@ export function JobNextActionCard({
                 {cancelled
                   ? "No further workflow actions"
                   : complete
-                    ? "Job workflow complete"
+                    ? "Completed"
                     : "Waiting on this step"}
               </span>
             </div>

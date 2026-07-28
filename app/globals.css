@@ -2682,6 +2682,47 @@ a[href] {
   box-shadow: none;
 }
 
+/* Quiet status/waiting banners inside the dark job hero */
+.north-star-detail-hero .border-emerald-200 {
+  border-color: rgb(16 185 129 / 0.35);
+  background-color: rgb(6 78 59 / 0.35);
+  color: #d1fae5;
+}
+
+.north-star-detail-hero .border-indigo-200,
+.north-star-detail-hero .border-amber-200 {
+  border-color: rgb(214 190 120 / 0.28);
+  background-color: rgb(15 23 42 / 0.45);
+  color: #f3ebdd;
+}
+
+.north-star-detail-hero .border-sky-200,
+.north-star-detail-hero .bg-sky-50\/60 {
+  border-color: rgb(214 190 120 / 0.28);
+  background-color: rgb(15 23 42 / 0.4);
+  color: #f3ebdd;
+}
+
+.north-star-detail-hero .text-sky-800,
+.north-star-detail-hero .text-sky-900\/80,
+.north-star-detail-hero .text-sky-900,
+.north-star-detail-hero .text-indigo-900,
+.north-star-detail-hero .text-amber-900,
+.north-star-detail-hero .text-emerald-800,
+.north-star-detail-hero .text-slate-500 {
+  color: inherit;
+}
+
+.north-star-detail-hero .border-sky-300 {
+  border-color: rgb(214 190 120 / 0.35);
+  background-color: rgb(39 49 64 / 0.55);
+  color: #fff9ea;
+}
+
+.north-star-detail-hero .border-sky-300:hover {
+  background-color: rgb(39 49 64 / 0.75);
+}
+
 .admin-north-star-shell .north-star-detail-section,
 .admin-north-star-shell .north-star-detail-section-surface {
   border: 1px solid rgb(138 99 36 / 0.1);

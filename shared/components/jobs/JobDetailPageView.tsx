@@ -708,12 +708,10 @@ export function JobDetailPageView({
             canUpdateStatus={canUpdateStatus}
             canEditJob={canEditJob}
             canManageCustomers={canManageCustomers}
-            canViewFinancials={canViewFinancials}
             aiFeaturesEnabled={aiFeaturesEnabled}
             canCreateEstimate={canViewBilling}
             canViewBilling={canViewBilling}
             billingContext={billingContext}
-            profitability={profitability}
           />
           <JobWorkflowOverview
             job={job}

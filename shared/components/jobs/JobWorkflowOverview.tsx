@@ -161,7 +161,7 @@ export function JobWorkflowOverview({
   const jobDetail = job as JobDetail;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className={`flex flex-col ${northStar ? "gap-2.5" : "gap-2"}`}>
       <JobWorkflowTimeline
         stages={workflow.progress.stages}
         progress={workflow.progress}

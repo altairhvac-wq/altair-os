@@ -24,11 +24,6 @@ import type {
 } from "@/shared/lib/job-next-business-action";
 import type { Customer } from "@/shared/types/customer";
 import type { JobDetail, JobFormData } from "@/shared/types/job";
-import {
-  formatJobProfitabilityCurrency,
-  formatJobProfitabilityLaborHours,
-  type JobProfitabilitySnapshot,
-} from "@/shared/types/job-profitability";
 import { shouldAcceptServerWorkflowStatus } from "@/shared/types/job-workflow";
 
 type JobDetailNorthStarHeaderProps = {
@@ -38,7 +33,6 @@ type JobDetailNorthStarHeaderProps = {
   canUpdateStatus: boolean;
   canEditJob: boolean;
   canManageCustomers: boolean;
-  canViewFinancials: boolean;
   aiFeaturesEnabled?: boolean;
   canCreateEstimate?: boolean;
   canViewBilling?: boolean;
@@ -46,7 +40,6 @@ type JobDetailNorthStarHeaderProps = {
     estimates: JobEstimateSummary[];
     invoices: JobInvoiceSummary[];
   };
-  profitability?: JobProfitabilitySnapshot | null;
 };
 
 const workflowControlsProps = (
@@ -87,12 +80,10 @@ export function JobDetailNorthStarHeader({
   canUpdateStatus,
   canEditJob,
   canManageCustomers,
-  canViewFinancials,
   aiFeaturesEnabled = false,
   canCreateEstimate,
   canViewBilling,
   billingContext,
-  profitability,
 }: JobDetailNorthStarHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -148,21 +139,17 @@ export function JobDetailNorthStarHeader({
       canUpdateStatus,
       canEditJob,
       canManageCustomers,
-      canViewFinancials,
       aiFeaturesEnabled,
       canCreateEstimate,
       canViewBilling,
       billingContext,
-      profitability,
     },
     status,
     handleStatusUpdated,
   );
 
   const isAssigned = Boolean(job.assignedTechnicianId);
-  const locationLine = `${job.serviceAddress} · ${job.city}, ${job.state} ${job.zip}`;
-  const estimateCount = billingContext?.estimates.length ?? 0;
-  const invoiceCount = billingContext?.invoices.length ?? 0;
+  const locationLine = `${job.serviceAddress}, ${job.city}, ${job.state} ${job.zip}`;
 
   if (isEditing) {
     return (
@@ -193,131 +180,68 @@ export function JobDetailNorthStarHeader({
   }
 
   return (
-    <>
-      <div className={dt.heroShell}>
-        <div aria-hidden="true" className={dt.heroAccentRail} />
+    <div className={dt.heroShell}>
+      <div aria-hidden="true" className={dt.heroAccentRail} />
 
-        <JobWorkflowControls {...sharedWorkflowProps} section="banners" />
+      <JobWorkflowControls {...sharedWorkflowProps} section="banners" />
 
-        <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <p className={dt.heroEyebrow}>Job command</p>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <h1 className={dt.heroTitle}>{job.jobNumber}</h1>
-              <JobStatusBadge status={status} />
-              <JobPriorityBadge priority={job.priority} />
-            </div>
-            <p className={`mt-1 ${dt.heroCompany}`}>{job.jobType}</p>
+      <div className="mt-2.5 flex flex-wrap items-start justify-between gap-2.5">
+        <div className="min-w-0 flex-1">
+          <p className={dt.heroEyebrow}>Job command center</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <h1 className={dt.heroTitle}>{job.jobNumber}</h1>
+            <JobStatusBadge status={status} />
+            <JobPriorityBadge priority={job.priority} />
           </div>
-
-          <div className="flex flex-col items-end gap-2">
-            {canEditJob ? (
-              <button
-                type="button"
-                onClick={handleEditClick}
-                className={dt.tertiaryAction}
-              >
-                <Pencil className="h-4 w-4" />
-                Edit job
-              </button>
-            ) : null}
-            <Link href="/dispatch" className={dt.tertiaryAction}>
-              <Truck className="h-4 w-4" />
-              Open dispatch
-            </Link>
-          </div>
+          <p className={`mt-1 text-base font-semibold tracking-tight text-[#F3EBDD] sm:text-lg`}>
+            {job.jobType}
+          </p>
         </div>
 
-        <div className={dt.metaStrip}>
-          <div className={dt.metaRow}>
-            <User className={dt.metaIcon} />
-            <CustomerNameLink
-              customerId={job.customerId}
-              customerName={job.customerName}
-              canManageCustomers={canManageCustomers}
-              linkClassName="font-semibold text-[#F3EBDD] transition-colors hover:text-[#FFF9EA]"
-            />
-          </div>
-          <div className={`mt-1 ${dt.metaRow}`}>
-            <MapPin className={dt.metaIcon} />
-            <span className="truncate">{locationLine}</span>
-          </div>
-          <div className={`mt-1 ${dt.metaRow}`}>
-            <Calendar className={dt.metaIcon} />
-            <span>{scheduledLabel}</span>
-            <span className="text-[#8A6324]">·</span>
-            <User className={dt.metaIcon} />
-            <span>{isAssigned ? job.assignedTechnician : "Unassigned"}</span>
-          </div>
-        </div>
-
-        <div className="mt-4 grid gap-3 border-t border-[rgba(201,164,77,0.14)] pt-4 sm:grid-cols-2 lg:grid-cols-4">
-          {canViewFinancials && profitability ? (
-            <>
-              <div>
-                <p className={dt.heroStatLabel}>Collected</p>
-                <p className={dt.heroStatValue}>
-                  {formatJobProfitabilityCurrency(profitability.revenue.collected)}
-                </p>
-              </div>
-              <div>
-                <p className={dt.heroStatLabel}>Gross profit</p>
-                <p className={dt.heroStatValue}>
-                  {formatJobProfitabilityCurrency(profitability.grossProfit)}
-                </p>
-              </div>
-              <div>
-                <p className={dt.heroStatLabel}>Labor</p>
-                <p className={`${dt.heroStatValue} text-base`}>
-                  {formatJobProfitabilityLaborHours(profitability.labor.totalHours)}
-                </p>
-              </div>
-              <div>
-                <p className={dt.heroStatLabel}>Invoices</p>
-                <p className={dt.heroStatValue}>{profitability.activeInvoiceCount}</p>
-              </div>
-            </>
-          ) : canViewBilling ? (
-            <>
-              <div>
-                <p className={dt.heroStatLabel}>Estimates</p>
-                <p className={dt.heroStatValue}>{estimateCount}</p>
-              </div>
-              <div>
-                <p className={dt.heroStatLabel}>Invoices</p>
-                <p className={dt.heroStatValue}>{invoiceCount}</p>
-              </div>
-              <div>
-                <p className={dt.heroStatLabel}>Technician</p>
-                <p className={`${dt.heroStatValue} text-base`}>
-                  {isAssigned ? job.assignedTechnician : "Unassigned"}
-                </p>
-              </div>
-              <div>
-                <p className={dt.heroStatLabel}>Priority</p>
-                <p className={`${dt.heroStatValue} text-base capitalize`}>
-                  {job.priority}
-                </p>
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <p className={dt.heroStatLabel}>Technician</p>
-                <p className={`${dt.heroStatValue} text-base`}>
-                  {isAssigned ? job.assignedTechnician : "Unassigned"}
-                </p>
-              </div>
-              <div>
-                <p className={dt.heroStatLabel}>Priority</p>
-                <p className={`${dt.heroStatValue} text-base capitalize`}>
-                  {job.priority}
-                </p>
-              </div>
-            </>
-          )}
+        <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-end">
+          {canEditJob ? (
+            <button
+              type="button"
+              onClick={handleEditClick}
+              className={dt.tertiaryAction}
+            >
+              <Pencil className="h-4 w-4" />
+              Edit job
+            </button>
+          ) : null}
+          <Link href="/dispatch" className={dt.tertiaryAction}>
+            <Truck className="h-4 w-4" />
+            Open dispatch
+          </Link>
         </div>
       </div>
-    </>
+
+      <div className={`${dt.metaStrip} space-y-1.5`}>
+        <div className={dt.metaRow}>
+          <Calendar className={dt.metaIcon} />
+          <span className="font-medium text-[#F3EBDD]">{scheduledLabel}</span>
+          <span className="text-[#8A6324]" aria-hidden="true">
+            ·
+          </span>
+          <User className={dt.metaIcon} />
+          <span className={isAssigned ? "text-[#F3EBDD]" : "text-[#D6BE78]"}>
+            {isAssigned ? job.assignedTechnician : "Unassigned"}
+          </span>
+        </div>
+        <div className={dt.metaRow}>
+          <MapPin className={dt.metaIcon} />
+          <span className="min-w-0 truncate">{locationLine}</span>
+        </div>
+        <div className={dt.metaRow}>
+          <User className={dt.metaIcon} />
+          <CustomerNameLink
+            customerId={job.customerId}
+            customerName={job.customerName}
+            canManageCustomers={canManageCustomers}
+            linkClassName="font-medium text-[#F3EBDD] transition-colors hover:text-[#FFF9EA]"
+          />
+        </div>
+      </div>
+    </div>
   );
 }

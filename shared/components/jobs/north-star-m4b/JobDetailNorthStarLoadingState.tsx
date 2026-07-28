@@ -34,15 +34,7 @@ function DesktopLoadingSkeleton() {
               <Skeleton dark className="h-7 w-40 max-w-full" />
               <Skeleton dark className="h-4 w-56 max-w-full" />
             </div>
-            <Skeleton dark className="h-16 w-full rounded-lg" />
-            <div className="grid gap-3 border-t border-[rgba(201,164,77,0.14)] pt-4 sm:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="space-y-2">
-                  <Skeleton dark className="h-2.5 w-16" />
-                  <Skeleton dark className="h-6 w-20" />
-                </div>
-              ))}
-            </div>
+            <Skeleton dark className="h-14 w-full rounded-lg" />
           </div>
 
           <div className={dt.commandPlate}>

@@ -1,0 +1,477 @@
+{
+  "baseUrl": "http://localhost:3040",
+  "authMethod": "Playwright storage state (.playwright/founder-auth.json) with magic-link refresh",
+  "scenarios": [
+    {
+      "scenario": "scheduled",
+      "jobId": "a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "jobNumber": "JOB-1111",
+      "route": "http://localhost:3040/jobs/a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "role": "owner",
+      "visibleWorkflowState": "Create Estimate",
+      "primaryExecutableCta": "Create Estimate",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": false,
+      "hasHeroStatGrid": false,
+      "languageConflict": false,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/a5ba6e04-d81c-4453-9c65-247a9679fff3",
+        "nextActionLabel": "Create Estimate",
+        "nextActionEyebrow": "NEXT COMMAND",
+        "primaryButtons": [
+          "Create Estimate"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": false,
+        "hasHeroStatGrid": false,
+        "statusBadge": "Scheduled",
+        "timelineStage": "Stage: Assigned",
+        "completedBannerConflict": false,
+        "customerRail": true,
+        "dispatchRail": true,
+        "nextActionVisible": true,
+        "jobIdentityVisible": true
+      }
+    },
+    {
+      "scenario": "unassigned",
+      "jobId": "383b578e-efb2-436f-a583-58e9c18237fb",
+      "jobNumber": "JOB-1065",
+      "route": "http://localhost:3040/jobs/383b578e-efb2-436f-a583-58e9c18237fb",
+      "role": "owner",
+      "visibleWorkflowState": "Create Estimate",
+      "primaryExecutableCta": "Create Estimate",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": false,
+      "hasHeroStatGrid": false,
+      "languageConflict": false,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/383b578e-efb2-436f-a583-58e9c18237fb",
+        "nextActionLabel": "Create Estimate",
+        "nextActionEyebrow": "NEXT COMMAND",
+        "primaryButtons": [
+          "Create Estimate"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": false,
+        "hasHeroStatGrid": false,
+        "statusBadge": "Scheduled",
+        "timelineStage": "Stage: Created",
+        "completedBannerConflict": false,
+        "customerRail": true,
+        "dispatchRail": true,
+        "nextActionVisible": true,
+        "jobIdentityVisible": true
+      }
+    },
+    {
+      "scenario": "in-progress",
+      "jobId": "887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+      "jobNumber": "JOB-1069",
+      "route": "http://localhost:3040/jobs/887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+      "role": "owner",
+      "visibleWorkflowState": "Complete work",
+      "primaryExecutableCta": "Complete work",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": false,
+      "hasHeroStatGrid": false,
+      "languageConflict": false,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+        "nextActionLabel": "Complete work",
+        "nextActionEyebrow": "NEXT COMMAND",
+        "primaryButtons": [
+          "Complete work"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": false,
+        "hasHeroStatGrid": false,
+        "statusBadge": "In Progress",
+        "timelineStage": "Stage: Approval",
+        "completedBannerConflict": false,
+        "customerRail": true,
+        "dispatchRail": true,
+        "nextActionVisible": true,
+        "jobIdentityVisible": true
+      }
+    },
+    {
+      "scenario": "completed",
+      "jobId": "c719bf94-615a-446a-93b2-883632fa9310",
+      "jobNumber": "JOB-1112",
+      "route": "http://localhost:3040/jobs/c719bf94-615a-446a-93b2-883632fa9310",
+      "role": "owner",
+      "visibleWorkflowState": "Create Invoice",
+      "primaryExecutableCta": "Create Invoice",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": true,
+      "hasHeroStatGrid": false,
+      "languageConflict": false,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/c719bf94-615a-446a-93b2-883632fa9310",
+        "nextActionLabel": "Create Invoice",
+        "nextActionEyebrow": "NEXT COMMAND",
+        "primaryButtons": [
+          "Create Invoice"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": true,
+        "hasHeroStatGrid": false,
+        "statusBadge": "In Progress",
+        "timelineStage": "Stage: Work completed",
+        "completedBannerConflict": false,
+        "customerRail": true,
+        "dispatchRail": true,
+        "nextActionVisible": true,
+        "jobIdentityVisible": true
+      }
+    },
+    {
+      "scenario": "estimate-waiting",
+      "jobId": "887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+      "jobNumber": "JOB-1069",
+      "route": "http://localhost:3040/jobs/887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+      "role": "owner",
+      "visibleWorkflowState": "Awaiting Approval",
+      "primaryExecutableCta": "Awaiting Approval",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": false,
+      "hasHeroStatGrid": false,
+      "languageConflict": false,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+        "nextActionLabel": "Awaiting Approval",
+        "nextActionEyebrow": "NEXT COMMAND",
+        "primaryButtons": [],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": false,
+        "hasHeroStatGrid": false,
+        "statusBadge": "Scheduled",
+        "timelineStage": "Stage: Approval",
+        "completedBannerConflict": false,
+        "customerRail": true,
+        "dispatchRail": true,
+        "nextActionVisible": true,
+        "jobIdentityVisible": true
+      }
+    },
+    {
+      "scenario": "invoice-next-action",
+      "jobId": "e48c6064-eccd-4ee3-84fc-de34185f7ab4",
+      "jobNumber": "JOB-1051",
+      "route": "http://localhost:3040/jobs/e48c6064-eccd-4ee3-84fc-de34185f7ab4",
+      "role": "owner",
+      "visibleWorkflowState": "Create Invoice",
+      "primaryExecutableCta": "Create Invoice",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Equipment",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": true,
+      "hasHeroStatGrid": false,
+      "languageConflict": false,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/e48c6064-eccd-4ee3-84fc-de34185f7ab4",
+        "nextActionLabel": "Create Invoice",
+        "nextActionEyebrow": "NEXT COMMAND",
+        "primaryButtons": [
+          "Create Invoice"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Equipment",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": true,
+        "hasHeroStatGrid": false,
+        "statusBadge": "En Route",
+        "timelineStage": "Stage: Work completed",
+        "completedBannerConflict": false,
+        "customerRail": true,
+        "dispatchRail": true,
+        "nextActionVisible": true,
+        "jobIdentityVisible": true
+      }
+    },
+    {
+      "scenario": "payment-waiting",
+      "jobId": "7ea62aa9-b2af-42b3-8a78-82cba706920f",
+      "jobNumber": "SMK-433303",
+      "route": "http://localhost:3040/jobs/7ea62aa9-b2af-42b3-8a78-82cba706920f",
+      "role": "owner",
+      "visibleWorkflowState": "Awaiting Payment",
+      "primaryExecutableCta": "Record Payment",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": true,
+      "hasHeroStatGrid": false,
+      "languageConflict": false,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/7ea62aa9-b2af-42b3-8a78-82cba706920f",
+        "nextActionLabel": "Awaiting Payment",
+        "nextActionEyebrow": "NEXT COMMAND",
+        "primaryButtons": [
+          "Record Payment"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": true,
+        "hasHeroStatGrid": false,
+        "statusBadge": "In Progress",
+        "timelineStage": "Stage: Payment",
+        "completedBannerConflict": false,
+        "customerRail": true,
+        "dispatchRail": true,
+        "nextActionVisible": true,
+        "jobIdentityVisible": true
+      }
+    },
+    {
+      "scenario": "mobile-owner",
+      "jobId": "a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "jobNumber": "JOB-1111",
+      "route": "http://localhost:3040/jobs/a5ba6e04-d81c-4453-9c65-247a9679fff3#job-detail-materials",
+      "role": "owner",
+      "visibleWorkflowState": "Create Estimate",
+      "primaryExecutableCta": "Create Estimate",
+      "duplicateCta": false,
+      "pass": true,
+      "mobileAnchor": {
+        "label": "Materials",
+        "ok": true,
+        "hash": "job-detail-materials",
+        "expectedId": "job-detail-materials",
+        "inView": true
+      },
+      "signals": {
+        "url": "http://localhost:3040/jobs/a5ba6e04-d81c-4453-9c65-247a9679fff3",
+        "nextActionLabel": "Create Estimate",
+        "nextActionEyebrow": "NEXT COMMAND",
+        "primaryButtons": [
+          "Create Estimate"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": false,
+        "hasHeroStatGrid": false,
+        "statusBadge": "Scheduled",
+        "timelineStage": "Stage: Assigned",
+        "completedBannerConflict": false,
+        "customerRail": true,
+        "dispatchRail": true,
+        "nextActionVisible": true,
+        "jobIdentityVisible": true
+      }
+    },
+    {
+      "scenario": "technician-overlay-smoke",
+      "jobId": "a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "jobNumber": "JOB-1111",
+      "route": "http://localhost:3040/technician?jobId=a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "role": "technician",
+      "visibleWorkflowState": "overlay-open",
+      "primaryExecutableCta": "technician-command-actions",
+      "duplicateCta": false,
+      "pass": true
+    },
+    {
+      "scenario": "financial-permission-denied",
+      "jobId": "a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "jobNumber": "JOB-1111",
+      "route": "http://localhost:3040/technician",
+      "role": "technician",
+      "visibleWorkflowState": "redirected-from-office-job-detail",
+      "primaryExecutableCta": "n/a (office detail blocked)",
+      "duplicateCta": false,
+      "pass": true
+    }
+  ],
+  "anchors": [
+    {
+      "label": "Scope",
+      "ok": true,
+      "hash": "job-detail-scope",
+      "expectedId": "job-detail-scope",
+      "inView": true
+    },
+    {
+      "label": "Materials",
+      "ok": true,
+      "hash": "job-detail-materials",
+      "expectedId": "job-detail-materials",
+      "inView": true
+    },
+    {
+      "label": "Photos",
+      "ok": true,
+      "hash": "job-detail-attachments",
+      "expectedId": "job-detail-attachments",
+      "inView": true
+    },
+    {
+      "label": "History",
+      "ok": true,
+      "hash": "job-detail-activity",
+      "expectedId": "job-detail-activity",
+      "inView": true
+    },
+    {
+      "label": "Billing",
+      "ok": true,
+      "hash": "job-detail-billing",
+      "expectedId": "job-detail-billing",
+      "inView": true
+    }
+  ],
+  "screenshots": [
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-3\\desktop-scheduled-header.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-3\\desktop-next-command-hierarchy.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-3\\desktop-customer-dispatch-context.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-3\\desktop-in-progress-header.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-3\\desktop-completed-header.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-3\\mobile-job-header.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-3\\mobile-next-command.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-3\\workflow-language-comparison.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-3\\workflow-language-comparison.md"
+  ],
+  "defects": [],
+  "reopenException": {
+    "visible": true,
+    "onlyOnCompleted": true,
+    "duplicatesNextActionCta": false,
+    "note": "Reopen remains the completed-job exception; Next Command stays the normal CTA owner."
+  },
+  "commandPlateNavOnly": true,
+  "technicianOverlay": {
+    "opened": true,
+    "quickActionsVisible": true,
+    "jobId": "a5ba6e04-d81c-4453-9c65-247a9679fff3",
+    "jobNumber": "JOB-1111",
+    "pass": true
+  },
+  "financialPermission": {
+    "role": "technician",
+    "attemptedRoute": "/jobs/a5ba6e04-d81c-4453-9c65-247a9679fff3",
+    "landed": "http://localhost:3040/technician",
+    "officeJobDetailBlocked": true,
+    "pass": true
+  },
+  "language": {
+    "nextCommandEyebrow": "NEXT COMMAND",
+    "statusBadge": "Scheduled",
+    "timelineStage": "Stage: Assigned",
+    "comparisonDoc": "workflow-language-comparison.md"
+  },
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "failed": [],
+    "commandPlateNavOnly": true,
+    "anchorsPassed": true,
+    "heroStatsRemoved": true
+  }
+}

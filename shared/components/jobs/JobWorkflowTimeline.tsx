@@ -283,7 +283,7 @@ export function JobWorkflowTimeline({
           <p className={`${jobDetailSectionSubtitleClass(northStar)} mt-0`}>
             {currentStage ? (
               <>
-                Current:{" "}
+                Stage:{" "}
                 <span className="font-semibold text-inherit">
                   {currentStage.label}
                 </span>

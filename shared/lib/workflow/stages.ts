@@ -34,19 +34,24 @@ export type CanonicalWorkflowStage = {
   state: CanonicalWorkflowStageState;
 };
 
+/**
+ * User-facing stage labels. Aligned with job-status vocabulary where a stage
+ * overlaps a canonical field status (e.g. In Progress). Distinct labels remain
+ * for billing stages that are not jobs.status values.
+ */
 export const CANONICAL_WORKFLOW_STAGE_LABELS: Record<
   CanonicalWorkflowStageId,
   string
 > = {
-  job_created: "Job Created",
-  technician_assigned: "Technician Assigned",
+  job_created: "Created",
+  technician_assigned: "Assigned",
   inspection: "Inspection",
-  estimate_created: "Estimate Created",
-  customer_approval: "Customer Approval",
-  work_in_progress: "Work In Progress",
-  work_completed: "Work Completed",
-  invoice_created: "Invoice Created",
-  payment_received: "Payment Received",
+  estimate_created: "Estimate",
+  customer_approval: "Approval",
+  work_in_progress: "In Progress",
+  work_completed: "Work completed",
+  invoice_created: "Invoice",
+  payment_received: "Payment",
   completed: "Completed",
 };
 

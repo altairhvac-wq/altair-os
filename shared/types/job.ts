@@ -80,7 +80,7 @@ export const JOB_STATUS_OPTIONS: {
   { value: "scheduled", label: "Scheduled" },
   { value: "dispatched", label: "En Route" },
   { value: "arrived", label: "On Site" },
-  { value: "in_progress", label: "In progress" },
+  { value: "in_progress", label: "In Progress" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
 ];

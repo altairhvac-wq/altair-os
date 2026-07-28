@@ -47,10 +47,6 @@ export function JobDetailSideRailDispatchCard({
             {isAssigned ? job.assignedTechnician : "Unassigned"}
           </span>
         </div>
-        <div className={`pt-1 ${dt.ivoryMetaRow}`}>
-          <span className={dt.metricLabel}>Job type</span>
-          <span className={`ml-2 ${dt.ivoryCardSecondary}`}>{job.jobType}</span>
-        </div>
       </div>
 
       <div className="mt-3">
