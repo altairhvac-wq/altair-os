@@ -1575,6 +1575,32 @@ a[href] {
   background-color: color-mix(in srgb, var(--altair-paper-subtle) 85%, transparent);
 }
 
+/*
+ * Jobs Mission Control list — mirrors Customers Mission Briefing.
+ * Whitespace-led rows; soft separators; no zebra noise.
+ */
+.job-mission-list ul > li + li,
+.job-mission-list :where(tbody .altair-table-row) {
+  border-color: color-mix(in srgb, var(--altair-border) 55%, transparent);
+}
+
+.job-mission-list :where(tbody .altair-table-row:nth-of-type(even)) {
+  background-color: transparent;
+}
+
+.job-mission-list :where(tbody .altair-table-row:hover) {
+  background-color: color-mix(in srgb, var(--altair-paper-subtle) 70%, transparent);
+}
+
+.job-mission-list :where(.altair-table-header tr) {
+  background-color: transparent;
+  border-bottom: 1px solid color-mix(in srgb, var(--altair-border) 70%, transparent);
+}
+
+.job-mission-filter-region {
+  background-color: color-mix(in srgb, var(--altair-paper-subtle) 85%, transparent);
+}
+
 /* North Star Jobs list — work ledger (M4A) */
 .admin-north-star-shell .north-star-page-header .north-star-jobs-primary-action {
   display: inline-flex !important;

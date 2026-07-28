@@ -3,7 +3,6 @@ import {
   adminSegmentedItemActiveClass,
   adminSegmentedItemClass,
 } from "@/shared/design-system/shell/tokens";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 
 export type TodayAllViewTab = "today" | "all";
 
@@ -13,6 +12,7 @@ type JobsViewTabsProps = {
   todayCount: number;
   allCount: number;
   allTabLabel?: string;
+  /** @deprecated Mission Control unifies presentation; retained for call-site compatibility. */
   northStar?: boolean;
 };
 
@@ -22,42 +22,18 @@ export function JobsViewTabs({
   todayCount,
   allCount,
   allTabLabel = "All Jobs",
-  northStar = false,
 }: JobsViewTabsProps) {
   const tabs: { id: TodayAllViewTab; label: string; count: number }[] = [
     { id: "today", label: "Today", count: todayCount },
     { id: "all", label: allTabLabel, count: allCount },
   ];
 
-  if (northStar) {
-    return (
-      <div className={`${lt.viewTabsControl} w-full sm:w-auto`}>
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              aria-pressed={isActive}
-              onClick={() => onTabChange(tab.id)}
-              className={`${lt.viewTabsItem} sm:px-3 sm:py-1.5 ${
-                isActive ? lt.viewTabsItemActive : ""
-              }`}
-            >
-              <span>{tab.label}</span>
-              <span className={isActive ? lt.viewTabsCountActive : lt.viewTabsCount}>
-                {tab.count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    );
-  }
-
   return (
-    <div className={`${adminSegmentedControlClass} w-full sm:w-auto`}>
+    <div
+      className={`${adminSegmentedControlClass} w-full sm:w-auto`}
+      role="tablist"
+      aria-label="Job queues"
+    >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
 
@@ -65,6 +41,8 @@ export function JobsViewTabs({
           <button
             key={tab.id}
             type="button"
+            role="tab"
+            aria-selected={isActive}
             aria-pressed={isActive}
             onClick={() => onTabChange(tab.id)}
             className={`${adminSegmentedItemClass} sm:px-3 sm:py-1.5 ${
@@ -74,7 +52,9 @@ export function JobsViewTabs({
             <span>{tab.label}</span>
             <span
               className={`ml-1.5 text-xs font-medium ${
-                isActive ? "text-slate-500" : "text-slate-400"
+                isActive
+                  ? "text-altair-ink-on-paper-secondary"
+                  : "text-altair-ink-on-paper-muted"
               }`}
             >
               {tab.count}

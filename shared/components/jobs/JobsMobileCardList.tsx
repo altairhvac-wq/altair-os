@@ -1,4 +1,3 @@
-import { adminListRowClass, adminListRowWrapSelectedClass } from "@/shared/lib/admin-density";
 import { ChevronRight } from "lucide-react";
 import {
   formatScheduledDate,
@@ -8,11 +7,15 @@ import {
 import { BulkSelectCheckbox } from "@/shared/components/bulk/BulkSelectCheckbox";
 import { CustomerNameLink } from "@/shared/components/customers/CustomerNameLink";
 import { SearchMatchReason } from "@/shared/components/search/SearchMatchReason";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
-import { formatJobDocumentReferencesLine } from "@/shared/lib/documents/relationship-labels";
 import type { JobBillingSummariesByJobId } from "@/shared/lib/job-next-business-action";
-import { JobPriorityBadge } from "./JobPriorityBadge";
 import { JobStatusBadge } from "./JobStatusBadge";
+import {
+  jobListCueClass,
+  jobMissionClasses as jm,
+  jobScheduleTextClass,
+  resolveJobListCue,
+  resolveJobSchedulePresentation,
+} from "./job-list-presentation";
 
 type JobsMobileCardListProps = {
   jobs: Job[];
@@ -21,9 +24,11 @@ type JobsMobileCardListProps = {
   selectionEnabled?: boolean;
   selectedIds?: ReadonlySet<string>;
   onToggleSelection?: (jobId: string) => void;
+  /** @deprecated Mission Control unifies presentation; retained for call-site compatibility. */
   northStar?: boolean;
   billingSummaries?: JobBillingSummariesByJobId;
   matchReasons?: Record<string, string>;
+  companyTimeZone?: string;
 };
 
 export function JobsMobileCardList({
@@ -33,28 +38,26 @@ export function JobsMobileCardList({
   selectionEnabled = false,
   selectedIds,
   onToggleSelection,
-  northStar = false,
   billingSummaries,
   matchReasons,
+  companyTimeZone,
 }: JobsMobileCardListProps) {
   return (
     <ul
-      className={`md:hidden ${
-        northStar ? "divide-y divide-[rgba(138,99,36,0.12)]" : "divide-y divide-slate-100"
-      }`}
+      className={`max-w-full min-w-0 divide-y divide-altair-border/50 overflow-hidden md:hidden ${jm.listShell}`}
     >
       {jobs.map((job) => {
         const isSelected = selectedIds?.has(job.id) ?? false;
+        const cue = resolveJobListCue(job, billingSummaries);
+        const schedule = resolveJobSchedulePresentation(job, {
+          timeZone: companyTimeZone,
+        });
 
         return (
-          <li key={job.id}>
+          <li key={job.id} className="min-w-0 max-w-full">
             <div
               className={`flex items-stretch ${
-                isSelected
-                  ? northStar
-                    ? "job-north-star-row-selected"
-                    : adminListRowWrapSelectedClass
-                  : ""
+                isSelected ? "bg-altair-brass/5" : ""
               }`}
             >
               {selectionEnabled ? (
@@ -67,7 +70,6 @@ export function JobsMobileCardList({
                       checked={isSelected}
                       ariaLabel={`Select job ${job.jobNumber}`}
                       onChange={() => onToggleSelection?.(job.id)}
-                      variant={northStar ? "northStar" : "default"}
                     />
                   </label>
                 </div>
@@ -76,93 +78,57 @@ export function JobsMobileCardList({
               <button
                 type="button"
                 onClick={() => onSelect(job)}
-                className={`${northStar ? "" : adminListRowClass} min-w-0 flex-1 px-3 py-3 text-left transition-colors`}
+                className="flex min-w-0 flex-1 items-start gap-2 px-3 py-3.5 text-left transition-colors hover:bg-altair-paper-subtle/70"
                 aria-label={`Open job ${job.jobNumber} for ${job.customerName}`}
               >
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={
-                      northStar
-                        ? `truncate ${lt.tablePrimaryText}`
-                        : "truncate text-sm font-bold text-slate-900"
-                    }
-                  >
-                    {job.jobNumber}
-                  </p>
-                  <p
-                    className={
-                      northStar
-                        ? `mt-0.5 ${lt.tableSecondaryText} text-sm`
-                        : "mt-0.5 text-sm text-slate-600"
-                    }
-                  >
-                    {formatScheduledDate(job.scheduledDate)} ·{" "}
-                    {formatScheduledTime(job.scheduledDate)}
-                  </p>
-                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                    <JobStatusBadge status={job.status} />
-                    <JobPriorityBadge priority={job.priority} />
+                <div className="min-w-0 flex-1 overflow-hidden">
+                  <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                    <p className={`min-w-0 truncate ${jm.primaryText}`}>
+                      {job.jobNumber}
+                    </p>
+                    <JobStatusBadge status={job.status} className="shrink-0" />
                   </div>
-                  <p
-                    className={
-                      northStar
-                        ? `mt-1 truncate ${lt.tablePrimaryText} text-sm font-medium`
-                        : "mt-1 truncate text-sm font-medium text-slate-900"
-                    }
-                  >
+
+                  <p className={`mt-0.5 truncate ${jm.secondaryText}`}>
                     <CustomerNameLink
                       customerId={job.customerId}
                       customerName={job.customerName}
                       canManageCustomers={canManageCustomers}
+                      className={jm.secondaryText}
+                      linkClassName={`${jm.secondaryText} hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-altair-brass/40`}
                       stopRowNavigation
                     />
                   </p>
+
                   <p
-                    className={
-                      northStar
-                        ? `mt-0.5 truncate ${lt.tableMutedText}`
-                        : "mt-0.5 truncate text-xs text-slate-400"
-                    }
+                    className={`mt-1 truncate text-xs ${jobScheduleTextClass(schedule.kind)}`}
                   >
-                    {job.assignedTechnician ?? "Unassigned"}
+                    {formatScheduledDate(job.scheduledDate)} ·{" "}
+                    {formatScheduledTime(job.scheduledDate)}
+                    {schedule.kind === "today" || schedule.kind === "past"
+                      ? ` · ${schedule.label}`
+                      : ""}
                   </p>
-                  {(() => {
-                    const documentLine = formatJobDocumentReferencesLine({
-                      estimateNumbers: (
-                        billingSummaries?.estimatesByJobId[job.id] ?? []
-                      ).map((estimate) => estimate.estimateNumber),
-                      invoiceNumbers: (
-                        billingSummaries?.invoicesByJobId[job.id] ?? []
-                      ).map((invoice) => invoice.invoiceNumber),
-                    });
-                    if (!documentLine) return null;
-                    return (
-                      <p
-                        className={
-                          northStar
-                            ? `mt-0.5 truncate ${lt.tableMutedText}`
-                            : "mt-0.5 truncate text-xs text-slate-400"
-                        }
-                      >
-                        {documentLine}
-                      </p>
-                    );
-                  })()}
+
+                  <p className={`mt-0.5 truncate text-xs ${jm.secondaryText}`}>
+                    {job.assignedTechnician ? (
+                      job.assignedTechnician
+                    ) : (
+                      <span className={jm.unassignedText}>Unassigned</span>
+                    )}
+                  </p>
+
+                  <p className={`mt-1 truncate text-xs ${jobListCueClass(cue.tone)}`}>
+                    {cue.label}
+                  </p>
+
                   <SearchMatchReason
                     reason={matchReasons?.[job.id]}
-                    className={
-                      northStar
-                        ? `mt-0.5 ${lt.tableMutedText}`
-                        : "mt-0.5 text-xs text-slate-400"
-                    }
+                    className={`mt-0.5 ${jm.secondaryText}`}
                   />
                 </div>
 
-                <ChevronRight
-                  className={`mt-1 h-4 w-4 shrink-0 ${
-                    northStar ? "text-[#8A6324]" : "text-slate-300"
-                  }`}
-                />
+                <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-altair-ink-on-paper-muted/60" />
               </button>
             </div>
           </li>

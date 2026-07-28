@@ -1,68 +1,45 @@
-import { adminListRowClass } from "@/shared/lib/admin-density";
 import Link from "next/link";
 import { ChevronRight, MapPin } from "lucide-react";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import {
   getCustomerInitials,
   type Customer,
 } from "@/shared/types/customer";
+import { jobMissionClasses as jm } from "./job-list-presentation";
 
 type CustomerSearchResultCardProps = {
   customer: Customer;
+  /** @deprecated Mission Control unifies presentation; retained for call-site compatibility. */
   northStar?: boolean;
 };
 
 export function CustomerSearchResultCard({
   customer,
-  northStar = false,
 }: CustomerSearchResultCardProps) {
   const location = [customer.city, customer.state].filter(Boolean).join(", ");
 
   return (
     <Link
       href={`/customers/${customer.id}`}
-      className={`${
-        northStar
-          ? "flex items-center gap-3 px-3 py-3 transition-colors hover:bg-[#F3EBDD]"
-          : `${adminListRowClass} items-center`
-      }`}
+      className="flex items-center gap-3 px-3 py-3 transition-colors hover:bg-altair-paper-subtle/70"
     >
       <div
-        className={
-          northStar
-            ? lt.tableAvatar
-            : "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-xs font-bold text-white"
-        }
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-altair-stone text-xs font-bold text-altair-ink-on-paper ring-1 ring-altair-border"
       >
         {getCustomerInitials(customer.name)}
       </div>
 
       <div className="min-w-0 flex-1">
-        <p
-          className={
-            northStar
-              ? lt.tablePrimaryText
-              : "truncate text-sm font-bold text-slate-900"
-          }
-        >
+        <p className={jm.primaryText}>
           {customer.name}
           {customer.phone ? (
-            <span
-              className={
-                northStar
-                  ? `font-normal ${lt.tableMutedText}`
-                  : "font-normal text-slate-500"
-              }
-            >
+            <span className={`font-normal ${jm.secondaryText}`}>
               {" · "}
               {customer.phone}
             </span>
           ) : null}
         </p>
         <div
-          className={`mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 ${
-            northStar ? lt.tableMutedText : "text-xs text-slate-500"
-          }`}
+          className={`mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 ${jm.secondaryText}`}
         >
           {customer.company ? (
             <span className="truncate">{customer.company}</span>
@@ -76,11 +53,7 @@ export function CustomerSearchResultCard({
         </div>
       </div>
 
-      <ChevronRight
-        className={`h-4 w-4 shrink-0 ${
-          northStar ? "text-[#8A6324]" : "text-slate-300"
-        }`}
-      />
+      <ChevronRight className="h-4 w-4 shrink-0 text-altair-ink-on-paper-muted/60" />
     </Link>
   );
 }

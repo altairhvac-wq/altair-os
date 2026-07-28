@@ -120,25 +120,25 @@ export function EntityLifecycleBulkBar({
 
   const shellClass = northStar
     ? lt.bulkBar
-    : "sticky bottom-0 z-20 border-t border-cyan-200 bg-cyan-50/95 px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(15,23,42,0.25)] backdrop-blur-sm sm:px-4";
+    : "sticky bottom-0 z-20 border-t border-altair-border bg-altair-paper/95 px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(3,7,12,0.12)] backdrop-blur-sm sm:px-4";
   const titleClass = northStar
     ? lt.bulkBarTitle
-    : "text-sm font-bold text-cyan-950";
+    : "text-sm font-semibold text-altair-ink-on-paper";
   const hintClass = northStar
     ? "mt-1 space-y-0.5 text-xs font-medium text-[#6B6255]"
-    : "mt-1 space-y-0.5 text-xs font-medium text-cyan-800/90";
+    : "mt-1 space-y-0.5 text-xs font-medium text-altair-ink-on-paper-secondary";
   const clearClass = northStar
     ? lt.bulkClearButton
-    : "inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-cyan-200 bg-white px-3 py-1.5 text-xs font-semibold text-cyan-900 transition-colors hover:border-cyan-300 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60";
+    : "inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-altair-border bg-altair-paper-elevated px-3 py-1.5 text-xs font-semibold text-altair-ink-on-paper-secondary transition-colors hover:border-altair-brass/40 hover:bg-altair-brass/5 disabled:cursor-not-allowed disabled:opacity-60";
   const secondaryActionClass = northStar
     ? lt.bulkSecondaryAction
-    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60";
+    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-altair-border bg-altair-paper-elevated px-3 py-2 text-xs font-semibold text-altair-ink-on-paper transition-colors hover:bg-altair-paper-subtle disabled:cursor-not-allowed disabled:opacity-60";
   const primaryActionClass = northStar
     ? lt.bulkPrimaryAction
-    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-cyan-700 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60";
+    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-altair-graphite bg-altair-graphite px-3 py-2 text-xs font-semibold text-altair-paper transition-colors hover:border-altair-brass-interactive disabled:cursor-not-allowed disabled:opacity-60";
   const destructiveActionClass = northStar
     ? lt.bulkDestructiveAction
-    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60";
+    : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-altair-danger/30 bg-altair-danger-surface px-3 py-2 text-xs font-semibold text-altair-danger-foreground transition-colors hover:border-altair-danger/50 disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
     <div

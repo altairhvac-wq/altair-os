@@ -23,7 +23,6 @@ import {
   bulkUpdateJobStatusAction,
 } from "@/app/actions/jobs-bulk";
 import { createJobAction } from "@/app/actions/jobs";
-import { isNorthStarShellEnabled } from "@/lib/beta/north-star-shell";
 import { usePageBulkSelection } from "@/shared/hooks/usePageBulkSelection";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import {
@@ -67,11 +66,10 @@ import type { JobWorkflowActionId } from "@/shared/types/job-workflow";
 import {
   MasterListPageLayout,
   MasterPageSurface,
-  masterListPagePrimaryActionClass,
   masterListPageScrollRegionClass,
   masterListPageSurfaceClass,
 } from "@/shared/design-system/shell";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import { Button } from "@/shared/design-system/components";
 import { SettingsAlertBanner } from "@/shared/components/settings/SettingsAlertBanner";
 import { CustomerSearchResultCard } from "./CustomerSearchResultCard";
 import { JobDetailsPanel } from "./JobDetailsPanel";
@@ -79,9 +77,9 @@ import { JobSearchFilterBar } from "./JobSearchFilterBar";
 import { JobsBulkActionBar } from "./JobsBulkActionBar";
 import { JobsEmptyState } from "./JobsEmptyState";
 import { JobsTable } from "./JobsTable";
-import { JobsNorthStarMobileOwnerView } from "./JobsNorthStarMobileOwnerView";
 import { JobsTodayCardList } from "./JobsTodayCardList";
 import { JobsViewTabs } from "./JobsViewTabs";
+import { jobMissionClasses as jm } from "./job-list-presentation";
 import {
   buildJobSearchFields,
   rankAndSortRecords,
@@ -264,6 +262,19 @@ export function JobsPageView({
       unassignedOnly: false,
     });
   }, [syncFiltersToUrl, viewTab]);
+
+  const handleUnassignedOnlyChange = useCallback(
+    (value: boolean) => {
+      setUnassignedOnly(value);
+      syncFiltersToUrl({
+        viewTab,
+        statusFilter,
+        priorityFilter,
+        unassignedOnly: value,
+      });
+    },
+    [priorityFilter, statusFilter, syncFiltersToUrl, viewTab],
+  );
 
   const lifecycleFilteredJobs = useMemo(
     () => jobs.filter((job) => getJobLifecycleState(job) === lifecycleFilter),
@@ -767,16 +778,7 @@ export function JobsPageView({
     unassignedOnly,
   });
 
-  const subtitle = isSearching
-    ? `${visibleJobs.length} matching job${visibleJobs.length === 1 ? "" : "s"}`
-    : viewTab === "today"
-      ? hasActiveFilters
-        ? `${filteredTodayJobs.length} of ${activeTodayCount} today`
-        : `${activeTodayCount} scheduled today`
-      : `${activeAllCount} total jobs`;
-
   const showJobList = !hasNoJobs;
-  const northStar = isNorthStarShellEnabled();
   const bulkSelectAllControl =
     selectionEnabled && selectionState.selectableCount > 0 && showJobList
       ? {
@@ -784,8 +786,7 @@ export function JobsPageView({
           allSelected: selectionState.allSelected,
           onSelectAll: () => handleToggleAllVisibleSelection(true),
           onClearSelection: handleClearSelection,
-          className:
-            viewTab === "today" ? undefined : "md:hidden",
+          className: viewTab === "today" ? undefined : "md:hidden",
         }
       : undefined;
 
@@ -794,31 +795,16 @@ export function JobsPageView({
 
     return (
       <section
-        className="mt-4 border-t border-slate-100 pt-4"
+        className="mt-4 border-t border-altair-border/60 pt-4"
         aria-label="Matching customers"
       >
-        <p
-          className={
-            northStar
-              ? `mb-2 px-1 text-xs font-semibold uppercase tracking-[0.08em] ${lt.tableMutedText}`
-              : "mb-2 px-1 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500"
-          }
-        >
+        <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.08em] text-altair-ink-on-paper-muted">
           Customers
         </p>
-        <ul
-          className={
-            northStar
-              ? "divide-y divide-[rgba(138,99,36,0.12)]"
-              : "divide-y divide-slate-100"
-          }
-        >
+        <ul className="divide-y divide-altair-border/50">
           {filteredCustomers.map((customer) => (
             <li key={customer.id}>
-              <CustomerSearchResultCard
-                customer={customer}
-                northStar={northStar}
-              />
+              <CustomerSearchResultCard customer={customer} />
             </li>
           ))}
         </ul>
@@ -833,7 +819,6 @@ export function JobsPageView({
           <JobsEmptyState
             variant="no-jobs"
             onCreateJob={canDispatchJobs ? handleNewJob : undefined}
-            northStar={northStar}
           />
         );
       }
@@ -843,7 +828,6 @@ export function JobsPageView({
           <JobsEmptyState
             variant="no-jobs-today"
             onCreateJob={canDispatchJobs ? handleNewJob : undefined}
-            northStar={northStar}
           />
         );
       }
@@ -851,7 +835,7 @@ export function JobsPageView({
       if (filteredTodayJobs.length === 0) {
         return (
           <>
-            <JobsEmptyState variant="no-results" northStar={northStar} />
+            <JobsEmptyState variant="no-results" />
             {renderCustomerMatches()}
           </>
         );
@@ -865,7 +849,6 @@ export function JobsPageView({
             selectionEnabled={selectionEnabled}
             selectedIds={selectedIds}
             onToggleSelection={handleToggleJobSelection}
-            northStar={northStar}
             billingSummaries={billingSummaries}
             matchReasons={searchMatchReasons}
           />
@@ -878,7 +861,6 @@ export function JobsPageView({
               onAssign={handleBulkAssign}
               onUpdateStatus={handleBulkUpdateStatus}
               onClearSelection={handleClearSelection}
-              northStar={northStar}
             />
           ) : null}
           {lifecycleBulkBar}
@@ -892,7 +874,6 @@ export function JobsPageView({
         <JobsEmptyState
           variant="no-jobs"
           onCreateJob={canDispatchJobs ? handleNewJob : undefined}
-          northStar={northStar}
         />
       );
     }
@@ -900,7 +881,7 @@ export function JobsPageView({
     if (filteredAllJobs.length === 0) {
       return (
         <>
-          <JobsEmptyState variant="no-results" northStar={northStar} />
+          <JobsEmptyState variant="no-results" />
           {renderCustomerMatches()}
         </>
       );
@@ -916,9 +897,9 @@ export function JobsPageView({
           selectedIds={selectedIds}
           onToggleSelection={handleToggleJobSelection}
           onToggleAllVisible={handleToggleAllVisibleSelection}
-          northStar={northStar}
           billingSummaries={billingSummaries}
           matchReasons={searchMatchReasons}
+          companyTimeZone={companyTimeZone}
         />
         {selectionEnabled && lifecycleFilter === "active" ? (
           <JobsBulkActionBar
@@ -929,7 +910,6 @@ export function JobsPageView({
             onAssign={handleBulkAssign}
             onUpdateStatus={handleBulkUpdateStatus}
             onClearSelection={handleClearSelection}
-            northStar={northStar}
           />
         ) : null}
         {lifecycleBulkBar}
@@ -941,24 +921,22 @@ export function JobsPageView({
   return (
     <MasterListPageLayout
       title="Jobs"
-      subtitle={subtitle}
-      eyebrow={northStar ? "Work ledger" : undefined}
+      subtitle="See what is happening, what needs attention, and what comes next."
       density="compact"
+      headerSurfaceVariant="default"
+      headerTitleClassName="min-w-0 text-base font-semibold tracking-tight text-altair-ink-on-paper sm:shrink-0 sm:text-lg"
+      headerSubtitleClassName="min-w-0 text-xs leading-snug text-altair-ink-on-paper-muted sm:truncate"
+      headerClassName="items-start px-3 py-1.5 sm:items-center sm:px-3.5"
       primaryAction={
         canDispatchJobs ? (
-          <button
-            type="button"
+          <Button
+            size="sm"
             onClick={handleNewJob}
             disabled={customers.length === 0}
-            className={
-              northStar
-                ? `north-star-jobs-primary-action ${lt.primaryAction} disabled:cursor-not-allowed disabled:opacity-60`
-                : `${masterListPagePrimaryActionClass} disabled:cursor-not-allowed disabled:opacity-60`
-            }
+            leadingIcon={<Plus className="h-3.5 w-3.5" />}
           >
-            <Plus className="h-3.5 w-3.5" />
             New Job
-          </button>
+          </Button>
         ) : undefined
       }
       banners={
@@ -977,99 +955,55 @@ export function JobsPageView({
           </SettingsAlertBanner>
         ) : undefined
       }
-      className={northStar ? lt.pageCanvas : undefined}
-      headerClassName={northStar ? lt.pageHeader : undefined}
-      headerSurfaceVariant={northStar ? "northStar" : "default"}
-      headerEyebrowClassName={northStar ? lt.pageHeaderEyebrow : undefined}
-      headerTitleClassName={northStar ? lt.pageHeaderTitle : undefined}
-      headerSubtitleClassName={northStar ? lt.pageHeaderSubtitle : undefined}
     >
       <MasterPageSurface
-        variant={northStar ? "northStarList" : "workspace"}
-        className={`${masterListPageSurfaceClass} ${northStar ? lt.listSurface : ""}`}
+        variant="workspace"
+        className={masterListPageSurfaceClass}
       >
-        {northStar ? (
-          <div aria-hidden="true" className={lt.listSurfaceTopAccent} />
-        ) : null}
-
-        {northStar ? (
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:hidden">
-            <JobsNorthStarMobileOwnerView
-              todayJobs={filteredTodayJobs}
-              archiveJobs={filteredAllJobs}
-              activeTodayCount={activeTodayCount}
-              scheduledTodayCount={lifecycleFilteredTodayJobs.length}
-              hasNoJobs={hasNoJobs}
-              hasActiveFilters={hasActiveFilters}
-              companyTimeZone={companyTimeZone}
-              statusFilter={statusFilter}
-              priorityFilter={priorityFilter}
-              lifecycleFilter={lifecycleFilter}
-              showLifecycleFilter={canDispatchJobs}
-              onSelectJob={handleSelectJob}
-              onCreateJob={canDispatchJobs ? handleNewJob : undefined}
-              onStatusFilterChange={handleStatusFilterChange}
-              onPriorityFilterChange={handlePriorityFilterChange}
-              onLifecycleFilterChange={setLifecycleFilter}
-              onClearFilters={handleClearFilters}
-            />
+        {!hasNoJobs ? (
+          <div className={jm.filterRegion}>
+            {!isSearching ? (
+              <div className={`${jm.filterTabsBand}`}>
+                <JobsViewTabs
+                  activeTab={viewTab}
+                  onTabChange={handleViewTabChange}
+                  todayCount={activeTodayCount}
+                  allCount={activeAllCount}
+                />
+              </div>
+            ) : null}
+            <div className={jm.filterSearchBand}>
+              <JobSearchFilterBar
+                search={search}
+                onSearchChange={setSearch}
+                resultCount={
+                  isSearching
+                    ? filteredCustomers.length
+                    : viewTab === "today"
+                      ? filteredTodayJobs.length
+                      : filteredAllJobs.length
+                }
+                resultLabel={isSearching ? "customers" : "jobs"}
+                statusFilter={statusFilter}
+                priorityFilter={priorityFilter}
+                onStatusFilterChange={handleStatusFilterChange}
+                onPriorityFilterChange={handlePriorityFilterChange}
+                lifecycleFilter={lifecycleFilter}
+                onLifecycleFilterChange={setLifecycleFilter}
+                showLifecycleFilter={!isSearching && canDispatchJobs}
+                showJobFilters={!isSearching}
+                unassignedOnly={unassignedOnly}
+                onUnassignedOnlyChange={handleUnassignedOnlyChange}
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={handleClearFilters}
+                bulkSelectAllControl={bulkSelectAllControl}
+              />
+            </div>
           </div>
         ) : null}
-
-        <div
-          className={
-            northStar
-              ? "hidden min-h-0 min-w-0 flex-1 flex-col lg:flex"
-              : "contents"
-          }
-        >
-        {!isSearching && !hasNoJobs ? (
-          <div
-            className={
-              northStar
-                ? lt.viewTabsBand
-                : "shrink-0 border-b border-altair-border px-3 py-1.5 sm:px-4"
-            }
-          >
-            <JobsViewTabs
-              activeTab={viewTab}
-              onTabChange={handleViewTabChange}
-              todayCount={activeTodayCount}
-              allCount={activeAllCount}
-              northStar={northStar}
-            />
-          </div>
-        ) : null}
-
-        <JobSearchFilterBar
-          search={search}
-          onSearchChange={setSearch}
-          resultCount={
-            isSearching
-              ? filteredCustomers.length
-              : viewTab === "today"
-                ? filteredTodayJobs.length
-                : filteredAllJobs.length
-          }
-          resultLabel={isSearching ? "customers" : "jobs"}
-          statusFilter={statusFilter}
-          priorityFilter={priorityFilter}
-          onStatusFilterChange={handleStatusFilterChange}
-          onPriorityFilterChange={handlePriorityFilterChange}
-          lifecycleFilter={lifecycleFilter}
-          onLifecycleFilterChange={setLifecycleFilter}
-          showLifecycleFilter={!isSearching && canDispatchJobs}
-          showJobFilters={!isSearching && !hasNoJobs}
-          unassignedOnly={unassignedOnly}
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={handleClearFilters}
-          bulkSelectAllControl={bulkSelectAllControl}
-          northStar={northStar}
-        />
 
         <div className={masterListPageScrollRegionClass}>
           {renderMainContent()}
-        </div>
         </div>
       </MasterPageSurface>
 

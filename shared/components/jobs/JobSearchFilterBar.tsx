@@ -1,6 +1,5 @@
 import { Filter, Search } from "lucide-react";
 import { BulkSelectAllControl } from "@/shared/components/bulk/BulkSelectAllControl";
-import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
 import {
   JOB_PRIORITY_OPTIONS,
   JOB_STATUS_OPTIONS,
@@ -9,6 +8,7 @@ import {
   type JobPriority,
   type JobStatus,
 } from "@/shared/types/job";
+import { jobMissionClasses as jm } from "./job-list-presentation";
 
 type JobSearchFilterBarProps = {
   search: string;
@@ -24,6 +24,7 @@ type JobSearchFilterBarProps = {
   showLifecycleFilter?: boolean;
   showJobFilters?: boolean;
   unassignedOnly?: boolean;
+  onUnassignedOnlyChange?: (value: boolean) => void;
   hasActiveFilters?: boolean;
   onClearFilters?: () => void;
   bulkSelectAllControl?: {
@@ -33,14 +34,9 @@ type JobSearchFilterBarProps = {
     onClearSelection: () => void;
     className?: string;
   };
+  /** @deprecated Mission Control unifies presentation; retained for call-site compatibility. */
   northStar?: boolean;
 };
-
-const filterSelectClass =
-  "h-11 w-full min-h-11 appearance-none rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 md:h-9 md:min-h-9 lg:w-auto lg:pr-10";
-
-const legacySearchInputClass =
-  "h-11 w-full min-h-11 rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-500/20 md:h-9 md:min-h-9";
 
 export function JobSearchFilterBar({
   search,
@@ -56,28 +52,20 @@ export function JobSearchFilterBar({
   showLifecycleFilter = false,
   showJobFilters = false,
   unassignedOnly = false,
+  onUnassignedOnlyChange,
   hasActiveFilters = false,
   onClearFilters,
   bulkSelectAllControl,
-  northStar = false,
 }: JobSearchFilterBarProps) {
-  const searchInputClass = northStar ? lt.searchInput : legacySearchInputClass;
-  const selectClass = northStar ? lt.filterSelect : filterSelectClass;
+  const showSecondaryFilters =
+    showJobFilters && onStatusFilterChange && onPriorityFilterChange;
 
   return (
-    <div
-      className={
-        northStar
-          ? `job-north-star-filter-bar ${lt.filterBar}`
-          : "shrink-0 border-b border-slate-100/90 bg-white px-3 py-2 sm:px-4"
-      }
-    >
+    <div className="job-mission-search">
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
-        <div className="relative mx-auto min-w-0 w-full max-w-xl flex-1 lg:mx-0">
+        <div className="relative min-w-0 w-full flex-1">
           <Search
-            className={`pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 ${
-              northStar ? lt.filterIcon : "text-slate-400"
-            }`}
+            className={`pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 ${jm.filterIcon}`}
           />
           <input
             id="jobs-search"
@@ -92,23 +80,22 @@ export function JobSearchFilterBar({
             }}
             placeholder="Search jobs, customers, estimates, invoices…"
             aria-label="Search jobs"
-            className={searchInputClass}
+            autoComplete="off"
+            className={jm.searchInput}
           />
         </div>
 
         {showLifecycleFilter && onLifecycleFilterChange ? (
           <div className="relative min-w-0 lg:shrink-0">
             <Filter
-              className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${
-                northStar ? lt.filterIcon : "text-slate-400"
-              }`}
+              className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${jm.filterIcon}`}
             />
             <select
               value={lifecycleFilter}
               onChange={(e) =>
                 onLifecycleFilterChange(e.target.value as JobLifecycleState)
               }
-              className={selectClass}
+              className={jm.filterSelect}
               aria-label="Filter by lifecycle"
             >
               {JOB_LIFECYCLE_FILTER_OPTIONS.map((option) => (
@@ -120,20 +107,18 @@ export function JobSearchFilterBar({
           </div>
         ) : null}
 
-        {showJobFilters && onStatusFilterChange && onPriorityFilterChange ? (
+        {showSecondaryFilters ? (
           <div className="grid grid-cols-2 gap-2 lg:flex lg:shrink-0 lg:flex-row lg:items-center lg:gap-2">
             <div className="relative min-w-0">
               <Filter
-                className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${
-                  northStar ? lt.filterIcon : "text-slate-400"
-                }`}
+                className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${jm.filterIcon}`}
               />
               <select
                 value={statusFilter}
                 onChange={(e) =>
                   onStatusFilterChange(e.target.value as JobStatus | "all")
                 }
-                className={selectClass}
+                className={jm.filterSelect}
                 aria-label="Filter by status"
               >
                 {JOB_STATUS_OPTIONS.map((option) => (
@@ -146,16 +131,14 @@ export function JobSearchFilterBar({
 
             <div className="relative min-w-0">
               <Filter
-                className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${
-                  northStar ? lt.filterIcon : "text-slate-400"
-                }`}
+                className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${jm.filterIcon}`}
               />
               <select
                 value={priorityFilter}
                 onChange={(e) =>
                   onPriorityFilterChange(e.target.value as JobPriority | "all")
                 }
-                className={selectClass}
+                className={jm.filterSelect}
                 aria-label="Filter by priority"
               >
                 {JOB_PRIORITY_OPTIONS.map((option) => (
@@ -168,19 +151,26 @@ export function JobSearchFilterBar({
           </div>
         ) : null}
 
+        {showJobFilters && onUnassignedOnlyChange ? (
+          <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-altair-border bg-altair-paper-elevated px-3 text-sm font-medium text-altair-ink-on-paper md:min-h-10 lg:shrink-0">
+            <input
+              type="checkbox"
+              checked={unassignedOnly}
+              onChange={(e) => onUnassignedOnlyChange(e.target.checked)}
+              className="h-4 w-4 rounded border-altair-border text-altair-brass focus:ring-altair-brass/40"
+              aria-label="Show unassigned jobs only"
+            />
+            Unassigned
+          </label>
+        ) : null}
+
         {bulkSelectAllControl ? (
           <BulkSelectAllControl {...bulkSelectAllControl} />
         ) : null}
       </div>
 
       {search.trim() || showJobFilters || unassignedOnly ? (
-        <div
-          className={`mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 sm:text-xs ${
-            northStar
-              ? lt.filterMeta
-              : "text-[11px] text-slate-500 sm:text-xs"
-          }`}
-        >
+        <div className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 ${jm.filterMeta}`}>
           <span>
             {resultCount}{" "}
             {resultCount === 1 ? resultLabel.replace(/s$/, "") : resultLabel}
@@ -190,11 +180,7 @@ export function JobSearchFilterBar({
             <button
               type="button"
               onClick={onClearFilters}
-              className={
-                northStar
-                  ? "job-north-star-clear-filters font-semibold"
-                  : "font-medium text-cyan-700 hover:text-cyan-800"
-              }
+              className={jm.clearFilters}
             >
               Clear filters
             </button>
