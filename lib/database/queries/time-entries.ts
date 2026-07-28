@@ -470,9 +470,10 @@ export async function closeTimeEntry(
 ): Promise<{ entry: TimeEntry | null; error: string | null }> {
   const supabase = await createClient();
 
-  // Close path is enforced by close_time_entry (migration 119). Duration is
-  // computed server-side; the caller-supplied minutes are retained for API
-  // compatibility with existing clock-out / correction callers.
+  // Close path is enforced by close_time_entry (migrations 119 / 123).
+  // Duration is computed server-side. Future ends are rejected at the DB with
+  // zero tolerance (p_ended_at <= now()). Caller-supplied minutes are retained
+  // for API compatibility with existing clock-out / correction callers.
   const { error: rpcError } = await supabase.rpc("close_time_entry", {
     p_company_id: companyId,
     p_entry_id: entryId,
@@ -492,6 +493,18 @@ export async function closeTimeEntry(
     const msg = rpcError.message ?? "";
     if (msg.includes("Active time entry not found")) {
       return { entry: null, error: "Active time entry not found." };
+    }
+    if (msg.includes("ended_at cannot be in the future")) {
+      return {
+        entry: null,
+        error: "End time cannot be in the future.",
+      };
+    }
+    if (msg.includes("ended_at must be at or after started_at")) {
+      return {
+        entry: null,
+        error: "End time must be at or after the start time.",
+      };
     }
 
     return { entry: null, error: mapDatabaseError(rpcError) };
