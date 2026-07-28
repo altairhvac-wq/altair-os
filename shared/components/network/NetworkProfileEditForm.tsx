@@ -20,6 +20,10 @@ type NetworkProfileEditFormProps = {
   profile: NetworkProfile;
   onSaved: (profile: NetworkProfile) => void;
   surface?: NetworkSurface;
+  /** Open the editor expanded on first render (Home / header entry points). */
+  defaultExpanded?: boolean;
+  /** Called when the user cancels or collapses while editing. */
+  onRequestClose?: () => void;
 };
 
 const legacyInputClass = `${adminFormInputClass} mt-1 rounded-xl`;
@@ -30,6 +34,8 @@ export function NetworkProfileEditForm({
   profile,
   onSaved,
   surface = "legacy",
+  defaultExpanded = false,
+  onRequestClose,
 }: NetworkProfileEditFormProps) {
   const isNorthStar = surface === "north-star";
   const inputClass = isNorthStar ? st.formInput : legacyInputClass;
@@ -49,8 +55,12 @@ export function NetworkProfileEditForm({
   const helperClass = isNorthStar
     ? "mt-1 text-[11px] leading-snug text-[#6B6255]"
     : "mt-1 text-[11px] leading-snug text-slate-500";
+  const footerClass = isNorthStar
+    ? "flex shrink-0 flex-wrap items-center gap-3 border-t border-[rgba(138,99,36,0.10)] pt-3"
+    : "flex shrink-0 flex-wrap items-center gap-3 border-t border-slate-200 pt-3";
+  const cancelClass = isNorthStar ? st.cancelButton : masterSecondaryActionClass;
 
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [formData, setFormData] = useState<NetworkProfileFormData>(() =>
     networkProfileToFormData(profile),
   );
@@ -58,6 +68,9 @@ export function NetworkProfileEditForm({
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const expandedShellClass = expanded
+    ? "flex min-h-0 max-h-[min(40rem,70dvh)] flex-col overflow-hidden"
+    : "";
   const mapVisibilityAllowed = canEnableNetworkMapVisibility(formData);
 
   function updateField<K extends keyof NetworkProfileFormData>(
@@ -76,6 +89,14 @@ export function NetworkProfileEditForm({
       return next;
     });
     setSuccess(null);
+  }
+
+  function handleCancel() {
+    setFormData(networkProfileToFormData(profile));
+    setError(null);
+    setSuccess(null);
+    setExpanded(false);
+    onRequestClose?.();
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -99,8 +120,8 @@ export function NetworkProfileEditForm({
   }
 
   return (
-    <section className={shellClass}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <section className={`${shellClass} ${expandedShellClass}`}>
+      <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h2 className={isNorthStar ? st.sectionTitle : "text-sm font-semibold text-slate-900"}>
             Your Community profile
@@ -111,7 +132,9 @@ export function NetworkProfileEditForm({
         </div>
         <button
           type="button"
-          onClick={() => setExpanded((current) => !current)}
+          onClick={() =>
+            expanded ? handleCancel() : setExpanded(true)
+          }
           className={
             isNorthStar
               ? st.secondaryAction
@@ -150,220 +173,233 @@ export function NetworkProfileEditForm({
           )}
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          {error ? <p className="text-sm text-rose-700">{error}</p> : null}
-          {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
+        <form
+          onSubmit={handleSubmit}
+          className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden"
+        >
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-1">
+            {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+            {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
 
-          {/* Identity */}
-          <div className={groupClass}>
-            <p className={groupTitleClass}>Identity</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label className={labelClass} htmlFor="networkProfileDisplayName">
-                  Display name
-                </label>
-                <input
-                  id="networkProfileDisplayName"
-                  type="text"
-                  value={formData.displayName}
-                  onChange={(event) =>
-                    updateField("displayName", event.target.value)
-                  }
-                  className={inputClass}
-                  required
-                />
-              </div>
+            {/* Identity */}
+            <div className={groupClass}>
+              <p className={groupTitleClass}>Identity</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label className={labelClass} htmlFor="networkProfileDisplayName">
+                    Display name
+                  </label>
+                  <input
+                    id="networkProfileDisplayName"
+                    type="text"
+                    value={formData.displayName}
+                    onChange={(event) =>
+                      updateField("displayName", event.target.value)
+                    }
+                    className={inputClass}
+                    required
+                  />
+                </div>
 
-              <div className="sm:col-span-2">
-                <label className={labelClass} htmlFor="networkProfileTradeType">
-                  Primary category
-                </label>
-                <select
-                  id="networkProfileTradeType"
-                  value={formData.tradeType}
-                  onChange={(event) =>
-                    updateField(
-                      "tradeType",
-                      event.target.value as NetworkProfileFormData["tradeType"],
-                    )
-                  }
-                  className={inputClass}
-                >
-                  {NETWORK_TRADE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="sm:col-span-2">
+                  <label className={labelClass} htmlFor="networkProfileTradeType">
+                    Primary category
+                  </label>
+                  <select
+                    id="networkProfileTradeType"
+                    value={formData.tradeType}
+                    onChange={(event) =>
+                      updateField(
+                        "tradeType",
+                        event.target.value as NetworkProfileFormData["tradeType"],
+                      )
+                    }
+                    className={inputClass}
+                  >
+                    {NETWORK_TRADE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* About */}
-          <div className={groupClass}>
-            <p className={groupTitleClass}>About</p>
-            <div>
-              <label className={labelClass} htmlFor="networkProfileBio">
-                Business description{" "}
-                <span className={optionalClass}>(recommended for referrals)</span>
+            {/* About */}
+            <div className={groupClass}>
+              <p className={groupTitleClass}>About</p>
+              <div>
+                <label className={labelClass} htmlFor="networkProfileBio">
+                  Business description{" "}
+                  <span className={optionalClass}>(recommended for referrals)</span>
+                </label>
+                <textarea
+                  id="networkProfileBio"
+                  value={formData.bio}
+                  onChange={(event) => updateField("bio", event.target.value)}
+                  rows={3}
+                  placeholder="What you specialize in, typical jobs, and who you serve best."
+                  className={textareaClass}
+                />
+                <p className={helperClass}>
+                  A clear description helps another owner decide whether to send you a
+                  customer.
+                </p>
+              </div>
+            </div>
+
+            {/* Where you serve */}
+            <div className={groupClass}>
+              <p className={groupTitleClass}>Where you serve</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label className={labelClass} htmlFor="networkProfileServiceArea">
+                    Service area{" "}
+                    <span className={optionalClass}>(recommended)</span>
+                  </label>
+                  <input
+                    id="networkProfileServiceArea"
+                    type="text"
+                    value={formData.serviceArea}
+                    onChange={(event) =>
+                      updateField("serviceArea", event.target.value)
+                    }
+                    placeholder="e.g. Greater Austin, North Dallas"
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass} htmlFor="networkProfileCity">
+                    City
+                  </label>
+                  <input
+                    id="networkProfileCity"
+                    type="text"
+                    value={formData.city}
+                    onChange={(event) => updateField("city", event.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass} htmlFor="networkProfileState">
+                    State
+                  </label>
+                  <input
+                    id="networkProfileState"
+                    type="text"
+                    value={formData.state}
+                    onChange={(event) => updateField("state", event.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass} htmlFor="networkProfilePostalCode">
+                    ZIP / postal code
+                  </label>
+                  <input
+                    id="networkProfilePostalCode"
+                    type="text"
+                    inputMode="numeric"
+                    value={formData.postalCode}
+                    onChange={(event) =>
+                      updateField("postalCode", event.target.value)
+                    }
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Referral availability */}
+            <div className={groupClass}>
+              <p className={groupTitleClass}>Referral availability</p>
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={formData.acceptingReferrals}
+                  onChange={(event) =>
+                    updateField("acceptingReferrals", event.target.checked)
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300"
+                />
+                <span>
+                  <span className={`block ${labelClass}`}>Accepting referrals</span>
+                  <span className={optionalClass}>
+                    Show that your company is open to referral work right now.
+                  </span>
+                </span>
               </label>
-              <textarea
-                id="networkProfileBio"
-                value={formData.bio}
-                onChange={(event) => updateField("bio", event.target.value)}
-                rows={3}
-                placeholder="What you specialize in, typical jobs, and who you serve best."
-                className={textareaClass}
-              />
-              <p className={helperClass}>
-                A clear description helps another owner decide whether to send you a
-                customer.
-              </p>
+            </div>
+
+            {/* Discovery settings */}
+            <div className={groupClass}>
+              <p className={groupTitleClass}>Discovery settings</p>
+              {!mapVisibilityAllowed ? (
+                <p className="text-xs text-amber-800">
+                  Add a city, state, or ZIP to prepare your profile for map discovery.
+                </p>
+              ) : null}
+
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={formData.isVisible}
+                  onChange={(event) =>
+                    updateField("isVisible", event.target.checked)
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300"
+                />
+                <span>
+                  <span className={`block ${labelClass}`}>Visible in directory</span>
+                  <span className={optionalClass}>
+                    Other companies can find your profile in the Community directory.
+                  </span>
+                </span>
+              </label>
+
+              <label
+                className={`flex items-start gap-3 ${
+                  mapVisibilityAllowed ? "cursor-pointer" : "cursor-not-allowed opacity-70"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={formData.showOnMap}
+                  disabled={!mapVisibilityAllowed}
+                  onChange={(event) =>
+                    updateField("showOnMap", event.target.checked)
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 disabled:cursor-not-allowed"
+                />
+                <span>
+                  <span className={`block ${labelClass}`}>Show on future map</span>
+                  <span className={optionalClass}>
+                    Map placement uses approximate city or ZIP-level location, never
+                    exact street address.
+                  </span>
+                </span>
+              </label>
             </div>
           </div>
 
-          {/* Where you serve */}
-          <div className={groupClass}>
-            <p className={groupTitleClass}>Where you serve</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label className={labelClass} htmlFor="networkProfileServiceArea">
-                  Service area{" "}
-                  <span className={optionalClass}>(recommended)</span>
-                </label>
-                <input
-                  id="networkProfileServiceArea"
-                  type="text"
-                  value={formData.serviceArea}
-                  onChange={(event) =>
-                    updateField("serviceArea", event.target.value)
-                  }
-                  placeholder="e.g. Greater Austin, North Dallas"
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label className={labelClass} htmlFor="networkProfileCity">
-                  City
-                </label>
-                <input
-                  id="networkProfileCity"
-                  type="text"
-                  value={formData.city}
-                  onChange={(event) => updateField("city", event.target.value)}
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label className={labelClass} htmlFor="networkProfileState">
-                  State
-                </label>
-                <input
-                  id="networkProfileState"
-                  type="text"
-                  value={formData.state}
-                  onChange={(event) => updateField("state", event.target.value)}
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label className={labelClass} htmlFor="networkProfilePostalCode">
-                  ZIP / postal code
-                </label>
-                <input
-                  id="networkProfilePostalCode"
-                  type="text"
-                  inputMode="numeric"
-                  value={formData.postalCode}
-                  onChange={(event) =>
-                    updateField("postalCode", event.target.value)
-                  }
-                  className={inputClass}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Referral availability */}
-          <div className={groupClass}>
-            <p className={groupTitleClass}>Referral availability</p>
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={formData.acceptingReferrals}
-                onChange={(event) =>
-                  updateField("acceptingReferrals", event.target.checked)
-                }
-                className="mt-0.5 h-4 w-4 rounded border-slate-300"
-              />
-              <span>
-                <span className={`block ${labelClass}`}>Accepting referrals</span>
-                <span className={optionalClass}>
-                  Show that your company is open to referral work right now.
-                </span>
-              </span>
-            </label>
-          </div>
-
-          {/* Discovery settings */}
-          <div className={groupClass}>
-            <p className={groupTitleClass}>Discovery settings</p>
-            {!mapVisibilityAllowed ? (
-              <p className="text-xs text-amber-800">
-                Add a city, state, or ZIP to prepare your profile for map discovery.
-              </p>
-            ) : null}
-
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={formData.isVisible}
-                onChange={(event) =>
-                  updateField("isVisible", event.target.checked)
-                }
-                className="mt-0.5 h-4 w-4 rounded border-slate-300"
-              />
-              <span>
-                <span className={`block ${labelClass}`}>Visible in directory</span>
-                <span className={optionalClass}>
-                  Other companies can find your profile in the Community directory.
-                </span>
-              </span>
-            </label>
-
-            <label
-              className={`flex items-start gap-3 ${
-                mapVisibilityAllowed ? "cursor-pointer" : "cursor-not-allowed opacity-70"
-              }`}
+          <div className={`${footerClass} mt-3`}>
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={isPending}
+              className={cancelClass}
             >
-              <input
-                type="checkbox"
-                checked={formData.showOnMap}
-                disabled={!mapVisibilityAllowed}
-                onChange={(event) =>
-                  updateField("showOnMap", event.target.checked)
-                }
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 disabled:cursor-not-allowed"
-              />
-              <span>
-                <span className={`block ${labelClass}`}>Show on future map</span>
-                <span className={optionalClass}>
-                  Map placement uses approximate city or ZIP-level location, never
-                  exact street address.
-                </span>
-              </span>
-            </label>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
+              Cancel
+            </button>
             <button type="submit" disabled={isPending} className={saveClass}>
               <AdminPendingLabel
                 pending={isPending}
                 pendingLabel="Saving..."
-                idleLabel="Save profile"
+                idleLabel="Save Profile"
               />
             </button>
           </div>

@@ -55,13 +55,13 @@ import {
   type NetworkInvitationsTab,
 } from "@/shared/types/network-invite";
 import { CommunityOverviewPanel } from "../CommunityOverviewPanel";
+import { CommunityMyBusinessProfileControl } from "../CommunityMyBusinessProfileControl";
 import { IncomingNetworkInvitesCard } from "../IncomingNetworkInvitesCard";
 import { NetworkDirectoryCard } from "../NetworkDirectoryCard";
 import { NetworkInviteForm } from "../NetworkInviteForm";
 import { NetworkInvitationCard } from "../NetworkInvitationCard";
 import { NetworkInvitedByBanner } from "../NetworkInvitedByBanner";
 import { NetworkProfileDetailPanel } from "../NetworkProfileDetailPanel";
-import { NetworkProfileEditForm } from "../NetworkProfileEditForm";
 import { NetworkReferralCard } from "../NetworkReferralCard";
 import { NetworkTrustedBadge } from "../NetworkTrustedBadge";
 import { st } from "./network-north-star-styles";
@@ -284,10 +284,8 @@ export function NetworkNorthStarView({
   );
 
   useEffect(() => {
-    if (!profileReadiness) {
-      setShowProfileEditor(false);
-    }
-  }, [profileReadiness]);
+    setOwnProfile(initialOwnProfile);
+  }, [initialOwnProfile]);
 
   const hasActiveDirectoryFilters =
     search.trim().length > 0 ||
@@ -330,6 +328,15 @@ export function NetworkNorthStarView({
 
   function handleOpenReferrals() {
     handleTabChange("referrals");
+  }
+
+  function handleOpenMyBusinessProfile() {
+    setActiveTab("overview");
+    setShowProfileEditor(true);
+    setSelectedProfileId(null);
+    setPanelMode("empty");
+    clearNetworkActionFeedback();
+    setNetworkActionTarget(null);
   }
 
   function handleStartSendReferral() {
@@ -717,6 +724,15 @@ export function NetworkNorthStarView({
               </button>
             ) : undefined
           }
+          secondaryAction={
+            canSendReferral ? (
+              <CommunityMyBusinessProfileControl
+                ownProfile={ownProfile}
+                profileReadiness={profileReadiness}
+                onEditProfile={handleOpenMyBusinessProfile}
+              />
+            ) : undefined
+          }
         />
       </div>
 
@@ -796,7 +812,7 @@ export function NetworkNorthStarView({
 
           <div className={st.tabBodyInner}>
             {activeTab === "overview" ? (
-              <div className="min-h-0 overflow-y-auto overflow-x-hidden">
+              <div className="min-w-0 overflow-x-hidden">
                 <CommunityOverviewPanel
                   ownProfile={ownProfile}
                   profileReadiness={profileReadiness}
@@ -807,10 +823,16 @@ export function NetworkNorthStarView({
                   onProfileSaved={handleProfileSaved}
                   incomingInvites={incomingNetworkInvites}
                   canAcceptInvites={canManageNetwork}
+                  sentReferrals={sentReferrals}
                   receivedReferrals={receivedReferrals}
                   canManageReceivedReferrals={canManageReceivedReferrals}
                   relationships={myNetworkEntries}
                   canManageRelationships={canManageNetwork}
+                  pendingOutgoingInviteCount={
+                    networkInvites.filter((invite) => invite.status === "pending")
+                      .length
+                  }
+                  directoryProfileCount={profiles.length}
                   canInvite={canManageNetwork}
                   canBrowseDirectory={canSendReferral}
                   canSendReferral={canSendReferral}
@@ -833,15 +855,7 @@ export function NetworkNorthStarView({
             ) : null}
 
             {activeTab === "directory" ? (
-              <div className="flex min-h-0 min-w-0 flex-col gap-3 overflow-x-hidden lg:min-h-[32rem] lg:gap-4 lg:overflow-hidden">
-                {ownProfile && canSendReferral ? (
-                  <NetworkProfileEditForm
-                    profile={ownProfile}
-                    onSaved={handleProfileSaved}
-                    surface="north-star"
-                  />
-                ) : null}
-
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-x-hidden lg:min-h-[32rem] lg:gap-4 lg:overflow-hidden">
                 <div className={st.filterToolbar}>
                   <div className={st.filterToolbarRow}>
                     <div className="relative min-w-0">

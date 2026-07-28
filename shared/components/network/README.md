@@ -84,7 +84,7 @@ network_referrals  → "I'm sending this lead to that company."
 ## Live components
 
 - `NetworkReferralsPageView.tsx` — page shell gate (North Star vs legacy)
-- `CommunityOverviewPanel.tsx` — Community Home orientation (attention, profile readiness, relationships, invite/browse)
+- `CommunityOverviewPanel.tsx` — Community Home operational dashboard (attention, pulse, quick actions, recent referrals, relationships, profile readiness)
 - `north-star-m11/NetworkNorthStarView.tsx` — Community workspace with Home + Relationships / Referrals / Invitations / Directory
 - `NetworkInviteForm.tsx`, `NetworkInvitationCard.tsx`, `NetworkInvitedByBanner.tsx` — invitations
 - `NetworkDirectoryCard.tsx`, `NetworkProfileDetailPanel.tsx`, `NetworkTrustedBadge.tsx` — directory + relationship badges
