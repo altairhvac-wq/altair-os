@@ -1,15 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMemo, useTransition } from "react";
-import {
-  ArrowRight,
-  CheckCircle2,
-  Loader2,
-  Sparkles,
-} from "lucide-react";
-import { seedDemoDataAction } from "@/app/actions/demo-data";
+import { useMemo } from "react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { ClosedBetaFeedbackStrip } from "@/shared/components/onboarding/ClosedBetaFeedbackStrip";
 import { HorizonHero } from "@/shared/design-system/signature";
 import { signatureCockpitSurfaceClass } from "@/shared/design-system/shell/tokens";
@@ -20,28 +13,22 @@ import {
   getOnboardingProgressPercent,
   ONBOARDING_MONEY_PATH_STEPS,
 } from "@/shared/lib/onboarding-activation";
-import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
 
 type DashboardActivationHeroProps = {
   checklist: OnboardingChecklist;
   companyId: string;
   userDisplayName?: string;
-  demoDataStatus?: DemoDataStatus | null;
   northStar?: boolean;
   checklistDismissed?: boolean;
 };
 
 export function DashboardActivationHero({
   checklist,
-  companyId,
   userDisplayName = "there",
-  demoDataStatus,
   northStar = false,
   checklistDismissed = false,
 }: DashboardActivationHeroProps) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const nextStep = useMemo(
     () => getNextOnboardingChecklistItem(checklist),
     [checklist],
@@ -49,23 +36,7 @@ export function DashboardActivationHero({
   const firstName = getFirstNameFromDisplayName(userDisplayName);
   const welcome = buildOnboardingWelcomeCopy(firstName, nextStep, checklist);
   const progressPercent = getOnboardingProgressPercent(checklist);
-  const canSeedDemo = Boolean(
-    demoDataStatus?.canSetupDemoData && !demoDataStatus.hasDemoData,
-  );
   const missionComplete = checklist.isComplete;
-
-  function handleSeedDemo() {
-    if (!canSeedDemo) {
-      return;
-    }
-
-    startTransition(async () => {
-      const result = await seedDemoDataAction(companyId);
-      if (!result.error) {
-        router.refresh();
-      }
-    });
-  }
 
   const content = (
     <div
@@ -240,26 +211,6 @@ export function DashboardActivationHero({
               />
             </div>
           </div>
-
-          {canSeedDemo && !missionComplete ? (
-            <button
-              type="button"
-              onClick={handleSeedDemo}
-              disabled={isPending}
-              className={`mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition disabled:opacity-60 ${
-                northStar
-                  ? "border-[rgba(201,164,77,0.25)] bg-transparent text-[#E8DDC2] hover:bg-[#2A2418]"
-                  : "border-violet-200 bg-white text-violet-800 hover:bg-violet-50"
-              }`}
-            >
-              {isPending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-              ) : (
-                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              )}
-              Or explore with sample data
-            </button>
-          ) : null}
         </div>
       </div>
 

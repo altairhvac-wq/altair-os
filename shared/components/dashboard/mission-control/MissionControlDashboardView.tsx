@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
 import { DashboardOnboardingBands } from "@/shared/components/onboarding/DashboardOnboardingBands";
 import { buildMissionControlContent } from "@/shared/lib/dashboard-mission-control";
@@ -41,6 +42,9 @@ export function MissionControlDashboardView({
     () => buildMissionControlContent(data, userDisplayName),
     [data, userDisplayName],
   );
+  const showSampleDataDiscovery = Boolean(
+    demoDataStatus?.canSetupDemoData && !demoDataStatus.hasDemoData,
+  );
 
   return (
     <>
@@ -54,7 +58,21 @@ export function MissionControlDashboardView({
       />
 
       <MasterContentStack density="compact" className="gap-5 lg:gap-6">
-        <MissionControlGreeting content={content.greeting} />
+        <div className="space-y-1.5">
+          <MissionControlGreeting content={content.greeting} />
+          {showSampleDataDiscovery ? (
+            <p className="text-sm text-slate-500">
+              Need example data?{" "}
+              <Link
+                href="/settings#sample-data"
+                className="font-medium text-slate-700 underline decoration-slate-300 underline-offset-2 transition hover:text-slate-900 hover:decoration-slate-500"
+              >
+                Load it from Settings
+              </Link>
+              .
+            </p>
+          ) : null}
+        </div>
 
         <MissionCriticalSection
           items={content.missionCritical}
