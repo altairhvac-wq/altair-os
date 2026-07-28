@@ -156,6 +156,7 @@ function profileSearchHaystack(profile: NetworkProfile): string {
     profile.state,
     profile.postalCode,
     profile.serviceArea,
+    profile.bio ?? "",
   ]
     .join(" ")
     .toLowerCase();

@@ -33,7 +33,7 @@ export function getCommunityProfileReadiness(
       reason: "missing",
       title: "Finish your Community profile",
       description:
-        "Add how your business presents itself so nearby companies understand what you do, find you in the directory, and send useful referrals.",
+        "Set up how your business appears so nearby owners can tell what you do, where you work, and whether they can confidently refer a customer to you.",
       ctaLabel: "Set up profile",
     };
   }
@@ -43,7 +43,7 @@ export function getCommunityProfileReadiness(
       reason: "hidden",
       title: "Make your business visible to the Community",
       description:
-        "Your profile is currently hidden from the directory. Making it visible helps nearby businesses discover what you do and improves relevant referrals.",
+        "Your profile is hidden from the directory. Visible profiles are easier to find and more likely to receive relevant referrals.",
       ctaLabel: "Update profile",
     };
   }
@@ -56,7 +56,7 @@ export function getCommunityProfileReadiness(
       reason: "incomplete",
       title: "Finish your Community profile",
       description:
-        "Add a short description and service area so nearby businesses understand what you do and can refer work more confidently.",
+        "Add a short business description and where you serve so another owner can decide whether to refer a customer to you.",
       ctaLabel: "Complete profile",
     };
   }

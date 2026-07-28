@@ -11,8 +11,16 @@ import {
 import { listDetailPanelClass } from "@/shared/components/layout/list-detail-layout";
 import { getPartnerInitials } from "@/shared/types/network";
 import type { NetworkProfile } from "@/shared/types/network-referral";
+import {
+  formatNetworkProfileCityStateZip,
+  formatNetworkProfileMemberSince,
+  getCommunityProfileEmptyHints,
+  hasNetworkProfileBio,
+  hasNetworkProfileServiceArea,
+} from "@/shared/lib/network/community-profile-presentation";
 import { st, type NetworkSurface } from "./north-star-m11/network-north-star-styles";
 import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
+import { NetworkAcceptingReferralsBadge } from "./NetworkAcceptingReferralsBadge";
 import { SendReferralDialog } from "./SendReferralDialog";
 import type { NetworkReferral } from "@/shared/types/network-referral";
 
@@ -36,13 +44,51 @@ type NetworkProfileDetailPanelProps = {
   surface?: NetworkSurface;
 };
 
+function ProfileEmptyState({
+  label,
+  message,
+  isNorthStar,
+}: {
+  label: string;
+  message: string;
+  isNorthStar: boolean;
+}) {
+  return (
+    <div
+      className={
+        isNorthStar
+          ? "rounded-xl border border-dashed border-[rgba(138,99,36,0.20)] bg-[#FFF9EA]/70 px-3.5 py-3"
+          : "rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3.5 py-3"
+      }
+    >
+      <p
+        className={
+          isNorthStar
+            ? "text-xs font-semibold text-[#4F4638]"
+            : "text-xs font-semibold text-slate-700"
+        }
+      >
+        {label}
+      </p>
+      <p
+        className={
+          isNorthStar
+            ? "mt-1 text-xs leading-relaxed text-[#6B6255]"
+            : "mt-1 text-xs leading-relaxed text-slate-500"
+        }
+      >
+        {message}
+      </p>
+    </div>
+  );
+}
+
 export function NetworkProfileDetailPanel({
   mode,
   profile,
   canSendReferral,
   canManageNetwork = false,
   isInMyNetwork = false,
-  myNetworkPartnerId,
   networkActionError = null,
   isNetworkActionPending = false,
   onClose,
@@ -99,8 +145,11 @@ export function NetworkProfileDetailPanel({
     ? "text-sm font-semibold text-[#4F4638]"
     : "text-sm font-bold text-slate-900";
   const locationClass = isNorthStar
-    ? "mt-1 flex items-center gap-1.5 text-xs text-[#6B6255]"
-    : "mt-1 flex items-center gap-1.5 text-xs text-slate-500";
+    ? "mt-1.5 flex items-start gap-1.5 text-xs text-[#6B6255]"
+    : "mt-1.5 flex items-start gap-1.5 text-xs text-slate-500";
+  const metaClass = isNorthStar
+    ? "mt-2 text-[11px] text-[#64748B]"
+    : "mt-2 text-[11px] text-slate-500";
   const networkButtonClass = isNorthStar
     ? `${st.cardActionAccentFull} min-h-10 disabled:opacity-60 sm:min-h-[44px]`
     : "inline-flex w-full items-center justify-center gap-2 admin-btn-primary disabled:opacity-60";
@@ -113,6 +162,16 @@ export function NetworkProfileDetailPanel({
   const permissionClass = isNorthStar
     ? "rounded-xl border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-4 py-3 text-xs text-[#6B6255]"
     : "rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-500";
+
+  const locationLine = detailProfile
+    ? formatNetworkProfileCityStateZip(detailProfile)
+    : null;
+  const emptyHints = detailProfile
+    ? getCommunityProfileEmptyHints(detailProfile)
+    : null;
+  const memberSince = detailProfile
+    ? formatNetworkProfileMemberSince(detailProfile.createdAt)
+    : null;
 
   return (
     <aside className={asideClass}>
@@ -171,8 +230,9 @@ export function NetworkProfileDetailPanel({
           )
         ) : null}
 
-        {detailProfile ? (
+        {detailProfile && emptyHints ? (
           <div className="space-y-5">
+            {/* Company hero — who / what / where / accepting / tenure */}
             <div className={isNorthStar ? st.detailPanelProfileHero : undefined}>
               <div className="flex items-start gap-3">
                 <div className={avatarClass}>
@@ -187,37 +247,99 @@ export function NetworkProfileDetailPanel({
                     {isInMyNetwork ? (
                       <NetworkTrustedBadge surface={surface} />
                     ) : null}
+                    <NetworkAcceptingReferralsBadge
+                      accepting={detailProfile.acceptingReferrals}
+                      surface={surface}
+                    />
                   </div>
-                  {detailProfile.city || detailProfile.state ? (
+                  {locationLine ? (
                     <div className={locationClass}>
-                      <MapPin className="h-3.5 w-3.5 shrink-0" />
-                      <span>
-                        {[detailProfile.city, detailProfile.state]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </span>
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      <span>{locationLine}</span>
                     </div>
+                  ) : null}
+                  {memberSince ? (
+                    <p className={metaClass}>Member since {memberSince}</p>
                   ) : null}
                 </div>
               </div>
             </div>
 
-            {detailProfile.serviceArea ? (
-              <section>
-                <p className={sectionLabelClass}>Service area</p>
-                <p className={bodyTextClass}>{detailProfile.serviceArea}</p>
-              </section>
-            ) : null}
-
-            {detailProfile.bio ? (
-              <section>
-                <p className={sectionLabelClass}>About</p>
+            {/* About */}
+            <section>
+              <p className={sectionLabelClass}>About</p>
+              {hasNetworkProfileBio(detailProfile) ? (
                 <p className={`${bodyTextClass} leading-relaxed`}>
-                  {detailProfile.bio}
+                  {detailProfile.bio?.trim()}
                 </p>
-              </section>
-            ) : null}
+              ) : (
+                <div className="mt-1.5">
+                  <ProfileEmptyState
+                    isNorthStar={isNorthStar}
+                    label="No description yet"
+                    message="This business has not added an about section. Ask what they specialize in before referring a customer."
+                  />
+                </div>
+              )}
+            </section>
 
+            {/* Services — primary category (specialties come later) */}
+            <section>
+              <p className={sectionLabelClass}>Services</p>
+              <p className={bodyTextClass}>
+                <span
+                  className={
+                    isNorthStar
+                      ? "font-medium text-[#17130E]"
+                      : "font-medium text-slate-900"
+                  }
+                >
+                  Primary category:
+                </span>{" "}
+                {detailProfile.tradeType}
+              </p>
+            </section>
+
+            {/* Service area */}
+            <section>
+              <p className={sectionLabelClass}>Service area</p>
+              {hasNetworkProfileServiceArea(detailProfile) ? (
+                <p className={bodyTextClass}>{detailProfile.serviceArea.trim()}</p>
+              ) : (
+                <div className="mt-1.5">
+                  <ProfileEmptyState
+                    isNorthStar={isNorthStar}
+                    label="Service area not listed"
+                    message="Cities or regions served are not listed yet. Confirm coverage before sending a referral."
+                  />
+                </div>
+              )}
+              {locationLine ? (
+                <p className={`${bodyTextClass} mt-2 text-xs`}>
+                  Based in {locationLine}
+                </p>
+              ) : emptyHints.missingLocation ? (
+                <div className="mt-1.5">
+                  <ProfileEmptyState
+                    isNorthStar={isNorthStar}
+                    label="Location not listed"
+                    message="City, state, or ZIP has not been added. Service coverage is unclear."
+                  />
+                </div>
+              ) : null}
+            </section>
+
+            {/* Referral status */}
+            <section>
+              <p className={sectionLabelClass}>Referral status</p>
+              <p className={`${bodyTextClass} leading-relaxed`}>
+                {detailProfile.acceptingReferrals
+                  ? "Open to referral work from Community partners."
+                  : "Not currently accepting referrals. Connect to stay linked for when they reopen."}
+              </p>
+            </section>
+
+            {/* Actions — unchanged behavior */}
             {canManageNetwork ? (
               <div className="space-y-3">
                 {isInMyNetwork ? (

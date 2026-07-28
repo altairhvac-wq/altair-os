@@ -1,6 +1,7 @@
 import { ChevronRight, MapPin, Send, UserMinus, UserPlus } from "lucide-react";
 import { getPartnerInitials } from "@/shared/types/network";
 import type { NetworkProfile } from "@/shared/types/network-referral";
+import { formatNetworkProfileLocationLine } from "@/shared/lib/network/community-profile-presentation";
 import { st, type NetworkSurface } from "./north-star-m11/network-north-star-styles";
 import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
 import { NetworkAcceptingReferralsBadge } from "./NetworkAcceptingReferralsBadge";
@@ -23,26 +24,6 @@ type NetworkDirectoryCardProps = {
   surface?: NetworkSurface;
 };
 
-function formatLocationLine(profile: NetworkProfile): string | null {
-  const cityState = [profile.city, profile.state, profile.postalCode]
-    .filter(Boolean)
-    .join(", ");
-
-  if (cityState && profile.serviceArea) {
-    return `${cityState} · ${profile.serviceArea}`;
-  }
-
-  if (cityState) {
-    return cityState;
-  }
-
-  if (profile.serviceArea) {
-    return profile.serviceArea;
-  }
-
-  return null;
-}
-
 export function NetworkDirectoryCard({
   profile,
   selected = false,
@@ -60,7 +41,7 @@ export function NetworkDirectoryCard({
   surface = "legacy",
 }: NetworkDirectoryCardProps) {
   const isNorthStar = surface === "north-star";
-  const locationLine = formatLocationLine(profile);
+  const locationLine = formatNetworkProfileLocationLine(profile);
 
   if (isNorthStar) {
     const articleClass = selected
@@ -81,14 +62,15 @@ export function NetworkDirectoryCard({
         >
           <div className={st.cardIcon}>{getPartnerInitials(profile.displayName)}</div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <p className={st.cardPrimary}>{profile.displayName}</p>
               {isTrustedPartner ? (
                 <NetworkTrustedBadge surface={surface} />
               ) : null}
-              {profile.acceptingReferrals ? (
-                <NetworkAcceptingReferralsBadge surface={surface} />
-              ) : null}
+              <NetworkAcceptingReferralsBadge
+                accepting={profile.acceptingReferrals}
+                surface={surface}
+              />
             </div>
             <p className={`mt-0.5 ${st.cardSecondary}`}>{profile.tradeType}</p>
             {locationLine ? (
@@ -96,7 +78,9 @@ export function NetworkDirectoryCard({
                 <MapPin className="h-3 w-3 shrink-0 text-[#8A6324]" />
                 <span className="truncate">{locationLine}</span>
               </p>
-            ) : null}
+            ) : (
+              <p className={`mt-0.5 ${st.cardMuted}`}>Location not listed</p>
+            )}
           </div>
           <ChevronRight
             className={`h-3.5 w-3.5 ${st.rosterRowChevron} ${
@@ -172,7 +156,6 @@ export function NetworkDirectoryCard({
   const nameClass = "truncate text-sm font-bold text-slate-900";
   const tradeClass = "mt-1 flex items-center gap-1.5 text-xs text-slate-600";
   const locationClass = "mt-1 flex items-center gap-1.5 text-xs text-slate-500";
-  const serviceAreaClass = "mt-2 line-clamp-2 text-xs text-slate-500";
 
   const removeButtonClass =
     "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60";
@@ -195,31 +178,22 @@ export function NetworkDirectoryCard({
               {isTrustedPartner ? (
                 <NetworkTrustedBadge surface={surface} />
               ) : null}
-              {profile.acceptingReferrals ? (
-                <NetworkAcceptingReferralsBadge surface={surface} />
-              ) : null}
+              <NetworkAcceptingReferralsBadge
+                accepting={profile.acceptingReferrals}
+                surface={surface}
+              />
             </div>
             <div className={tradeClass}>
               <span>{profile.tradeType}</span>
             </div>
-            {profile.city || profile.state || profile.postalCode ? (
+            {locationLine ? (
               <div className={locationClass}>
                 <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                <span>
-                  {[profile.city, profile.state, profile.postalCode]
-                    .filter(Boolean)
-                    .join(", ")}
-                </span>
+                <span className="line-clamp-2">{locationLine}</span>
               </div>
-            ) : profile.serviceArea ? (
-              <div className={locationClass}>
-                <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                <span className="line-clamp-1">{profile.serviceArea}</span>
-              </div>
-            ) : null}
-            {profile.serviceArea && (profile.city || profile.state || profile.postalCode) ? (
-              <p className={serviceAreaClass}>{profile.serviceArea}</p>
-            ) : null}
+            ) : (
+              <p className="mt-1 text-xs text-slate-400">Location not listed</p>
+            )}
           </div>
         </div>
       </button>

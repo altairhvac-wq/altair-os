@@ -40,6 +40,15 @@ export function NetworkProfileEditForm({
   const shellClass = isNorthStar
     ? "rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FBF7EF] p-4"
     : "rounded-2xl border border-slate-200 bg-white p-4";
+  const groupClass = isNorthStar
+    ? "space-y-3 rounded-xl border border-[rgba(138,99,36,0.10)] bg-[#FFF9EA]/60 p-3"
+    : "space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3";
+  const groupTitleClass = isNorthStar
+    ? "text-[11px] font-semibold uppercase tracking-wide text-[#6B6255]"
+    : "text-[11px] font-semibold uppercase tracking-wide text-slate-500";
+  const helperClass = isNorthStar
+    ? "mt-1 text-[11px] leading-snug text-[#6B6255]"
+    : "mt-1 text-[11px] leading-snug text-slate-500";
 
   const [expanded, setExpanded] = useState(false);
   const [formData, setFormData] = useState<NetworkProfileFormData>(() =>
@@ -97,7 +106,7 @@ export function NetworkProfileEditForm({
             Your Community profile
           </h2>
           <p className={isNorthStar ? `${st.sectionSubtitle} mt-1` : "mt-1 text-xs text-slate-500"}>
-            Control how other companies discover you for referrals and relationships.
+            Present your business so nearby companies can confidently refer customers to you.
           </p>
         </div>
         <button
@@ -145,126 +154,169 @@ export function NetworkProfileEditForm({
           {error ? <p className="text-sm text-rose-700">{error}</p> : null}
           {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <label className={labelClass} htmlFor="networkProfileDisplayName">
-                Display name
-              </label>
-              <input
-                id="networkProfileDisplayName"
-                type="text"
-                value={formData.displayName}
-                onChange={(event) =>
-                  updateField("displayName", event.target.value)
-                }
-                className={inputClass}
-                required
-              />
-            </div>
+          {/* Identity */}
+          <div className={groupClass}>
+            <p className={groupTitleClass}>Identity</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className={labelClass} htmlFor="networkProfileDisplayName">
+                  Display name
+                </label>
+                <input
+                  id="networkProfileDisplayName"
+                  type="text"
+                  value={formData.displayName}
+                  onChange={(event) =>
+                    updateField("displayName", event.target.value)
+                  }
+                  className={inputClass}
+                  required
+                />
+              </div>
 
+              <div className="sm:col-span-2">
+                <label className={labelClass} htmlFor="networkProfileTradeType">
+                  Primary category
+                </label>
+                <select
+                  id="networkProfileTradeType"
+                  value={formData.tradeType}
+                  onChange={(event) =>
+                    updateField(
+                      "tradeType",
+                      event.target.value as NetworkProfileFormData["tradeType"],
+                    )
+                  }
+                  className={inputClass}
+                >
+                  {NETWORK_TRADE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* About */}
+          <div className={groupClass}>
+            <p className={groupTitleClass}>About</p>
             <div>
-              <label className={labelClass} htmlFor="networkProfileTradeType">
-                Trade type
-              </label>
-              <select
-                id="networkProfileTradeType"
-                value={formData.tradeType}
-                onChange={(event) =>
-                  updateField(
-                    "tradeType",
-                    event.target.value as NetworkProfileFormData["tradeType"],
-                  )
-                }
-                className={inputClass}
-              >
-                {NETWORK_TRADE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className={labelClass} htmlFor="networkProfileServiceArea">
-                Service area{" "}
-                <span className={optionalClass}>(optional)</span>
-              </label>
-              <input
-                id="networkProfileServiceArea"
-                type="text"
-                value={formData.serviceArea}
-                onChange={(event) =>
-                  updateField("serviceArea", event.target.value)
-                }
-                placeholder="e.g. Greater Austin, North Dallas"
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label className={labelClass} htmlFor="networkProfileCity">
-                City
-              </label>
-              <input
-                id="networkProfileCity"
-                type="text"
-                value={formData.city}
-                onChange={(event) => updateField("city", event.target.value)}
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label className={labelClass} htmlFor="networkProfileState">
-                State
-              </label>
-              <input
-                id="networkProfileState"
-                type="text"
-                value={formData.state}
-                onChange={(event) => updateField("state", event.target.value)}
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label className={labelClass} htmlFor="networkProfilePostalCode">
-                ZIP / postal code
-              </label>
-              <input
-                id="networkProfilePostalCode"
-                type="text"
-                inputMode="numeric"
-                value={formData.postalCode}
-                onChange={(event) =>
-                  updateField("postalCode", event.target.value)
-                }
-                className={inputClass}
-              />
-            </div>
-
-            <div className="sm:col-span-2">
               <label className={labelClass} htmlFor="networkProfileBio">
-                Bio <span className={optionalClass}>(optional)</span>
+                Business description{" "}
+                <span className={optionalClass}>(recommended for referrals)</span>
               </label>
               <textarea
                 id="networkProfileBio"
                 value={formData.bio}
                 onChange={(event) => updateField("bio", event.target.value)}
                 rows={3}
+                placeholder="What you specialize in, typical jobs, and who you serve best."
                 className={textareaClass}
               />
+              <p className={helperClass}>
+                A clear description helps another owner decide whether to send you a
+                customer.
+              </p>
             </div>
           </div>
 
-          {!mapVisibilityAllowed ? (
-            <p className="text-xs text-amber-800">
-              Add a city, state, or ZIP to prepare your profile for map discovery.
-            </p>
-          ) : null}
+          {/* Where you serve */}
+          <div className={groupClass}>
+            <p className={groupTitleClass}>Where you serve</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className={labelClass} htmlFor="networkProfileServiceArea">
+                  Service area{" "}
+                  <span className={optionalClass}>(recommended)</span>
+                </label>
+                <input
+                  id="networkProfileServiceArea"
+                  type="text"
+                  value={formData.serviceArea}
+                  onChange={(event) =>
+                    updateField("serviceArea", event.target.value)
+                  }
+                  placeholder="e.g. Greater Austin, North Dallas"
+                  className={inputClass}
+                />
+              </div>
 
-          <div className="space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3">
+              <div>
+                <label className={labelClass} htmlFor="networkProfileCity">
+                  City
+                </label>
+                <input
+                  id="networkProfileCity"
+                  type="text"
+                  value={formData.city}
+                  onChange={(event) => updateField("city", event.target.value)}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className={labelClass} htmlFor="networkProfileState">
+                  State
+                </label>
+                <input
+                  id="networkProfileState"
+                  type="text"
+                  value={formData.state}
+                  onChange={(event) => updateField("state", event.target.value)}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className={labelClass} htmlFor="networkProfilePostalCode">
+                  ZIP / postal code
+                </label>
+                <input
+                  id="networkProfilePostalCode"
+                  type="text"
+                  inputMode="numeric"
+                  value={formData.postalCode}
+                  onChange={(event) =>
+                    updateField("postalCode", event.target.value)
+                  }
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Referral availability */}
+          <div className={groupClass}>
+            <p className={groupTitleClass}>Referral availability</p>
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={formData.acceptingReferrals}
+                onChange={(event) =>
+                  updateField("acceptingReferrals", event.target.checked)
+                }
+                className="mt-0.5 h-4 w-4 rounded border-slate-300"
+              />
+              <span>
+                <span className={`block ${labelClass}`}>Accepting referrals</span>
+                <span className={optionalClass}>
+                  Show that your company is open to referral work right now.
+                </span>
+              </span>
+            </label>
+          </div>
+
+          {/* Discovery settings */}
+          <div className={groupClass}>
+            <p className={groupTitleClass}>Discovery settings</p>
+            {!mapVisibilityAllowed ? (
+              <p className="text-xs text-amber-800">
+                Add a city, state, or ZIP to prepare your profile for map discovery.
+              </p>
+            ) : null}
+
             <label className="flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
@@ -278,23 +330,6 @@ export function NetworkProfileEditForm({
                 <span className={`block ${labelClass}`}>Visible in directory</span>
                 <span className={optionalClass}>
                   Other companies can find your profile in the Community directory.
-                </span>
-              </span>
-            </label>
-
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={formData.acceptingReferrals}
-                onChange={(event) =>
-                  updateField("acceptingReferrals", event.target.checked)
-                }
-                className="mt-0.5 h-4 w-4 rounded border-slate-300"
-              />
-              <span>
-                <span className={`block ${labelClass}`}>Accepting referrals</span>
-                <span className={optionalClass}>
-                  Show that your company is open to referral work.
                 </span>
               </span>
             </label>

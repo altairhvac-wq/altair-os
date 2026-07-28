@@ -51,7 +51,7 @@ export const networkNorthStarStyles = {
   cardActionAccentFull:
     "inline-flex w-full min-h-8 items-center justify-center gap-1.5 rounded-lg border border-[rgba(201,164,77,0.42)] bg-gradient-to-b from-[#F0E4B8] from-0% via-[#D4B05A] via-[50%] to-[#C9A44D] to-100% px-3 py-1.5 text-xs font-semibold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.12)] transition hover:from-[#F5EBC8] hover:via-[#DDB868] hover:to-[#B88A2E] disabled:opacity-60 [&_svg]:text-[#17130E]",
   detailPanel:
-    "flex min-w-0 shrink-0 flex-col overflow-hidden rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]/80 lg:max-h-[min(22rem,45vh)]",
+    "flex min-w-0 shrink-0 flex-col overflow-hidden rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]/80 lg:max-h-[min(40rem,70vh)]",
   detailPanelHeader:
     "flex shrink-0 items-start justify-between border-b border-[rgba(138,99,36,0.12)] bg-[#F5F0E4] px-3 py-2.5 sm:px-4",
   detailPanelTitle: "truncate text-sm font-bold text-[#17130E]",
