@@ -53,10 +53,10 @@ import {
 } from "@/shared/lib/jobs/job-detail-anchors";
 import { jobDetailBodyTextClass } from "@/shared/components/jobs/job-detail-section-styles";
 import {
+  JobDetailMoneyPath,
   JobDetailNorthStarContentSection,
   JobDetailNorthStarHeader,
   JobDetailSectionCommandPlate,
-  JobDetailSideRailBillingCard,
   JobDetailSideRailCustomerCard,
   JobDetailSideRailDispatchCard,
 } from "@/shared/components/jobs/north-star-m4b";
@@ -519,6 +519,15 @@ function NorthStarMainColumn({
 
       <JobExpenseReceiptsSection jobId={job.id} expenses={expenses} northStar />
 
+      {canViewFinancials ? (
+        <JobDetailMoneyPath
+          estimates={billingContext?.estimates ?? []}
+          invoices={billingContext?.invoices ?? []}
+          profitability={profitability}
+          canViewBilling={canViewBilling}
+        />
+      ) : null}
+
       {canViewFinancials && profitability ? (
         <>
           <JobReviewChecklistSection
@@ -593,7 +602,7 @@ function NorthStarJobDetailBody(props: SharedWorkspaceProps) {
         />
       </div>
 
-      <div className="flex min-w-0 flex-col gap-2.5 lg:col-start-1 lg:row-span-4 lg:row-start-1">
+      <div className="flex min-w-0 flex-col gap-2.5 lg:col-start-1 lg:row-span-3 lg:row-start-1">
         <NorthStarMainColumn {...props} />
       </div>
 
@@ -606,15 +615,6 @@ function NorthStarJobDetailBody(props: SharedWorkspaceProps) {
           northStar
           compact
         />
-
-        {props.canViewFinancials && props.profitability ? (
-          <JobDetailSideRailBillingCard
-            profitability={props.profitability}
-            estimates={props.billingContext?.estimates ?? []}
-            invoices={props.billingContext?.invoices ?? []}
-            canViewBilling={props.canViewBilling}
-          />
-        ) : null}
       </div>
     </div>
   );
@@ -649,7 +649,7 @@ export function JobDetailPageView({
   const scheduledLabel = `${formatScheduledDate(job.scheduledDate)} at ${formatScheduledTime(job.scheduledDate)}`;
   const northStar = isNorthStarShellEnabled();
   const showEquipmentNav = equipment.length > 0;
-  const showBillingNav = Boolean(canViewFinancials && profitability);
+  const showBillingNav = canViewFinancials;
 
   const workspaceProps: SharedWorkspaceProps = {
     job,

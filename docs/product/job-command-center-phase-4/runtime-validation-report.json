@@ -1,0 +1,416 @@
+{
+  "baseUrl": "http://localhost:3040",
+  "authMethod": "Playwright storage state (.playwright/founder-auth.json) with magic-link refresh",
+  "scenarios": [
+    {
+      "scenario": "no-estimate-no-invoice",
+      "jobId": "e48c6064-eccd-4ee3-84fc-de34185f7ab4",
+      "jobNumber": "JOB-1051",
+      "jobStatus": "completed",
+      "route": "http://localhost:3040/jobs/e48c6064-eccd-4ee3-84fc-de34185f7ab4",
+      "estimateState": "none",
+      "invoiceState": "none",
+      "paymentState": "Not started",
+      "nextCommand": "Create Invoice",
+      "moneyPathPresentation": "Money path Estimate → Invoice → Payment ESTIMATE Not created Optional — jobs may invoice without an estimate. INVOICE Not created No invoice linked to this job yet. PAYMENT Not started COLLECTED $0.00 OUTSTANDING $0.00",
+      "duplicateFinancialFacts": false,
+      "competingCta": false,
+      "sideRailBillingDuplicate": false,
+      "estimateLink": false,
+      "invoiceLink": false,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "nextActionLabel": "Create Invoice",
+        "primaryButtons": [
+          "Create Invoice"
+        ],
+        "moneyPathVisible": true,
+        "moneyPathText": "Money path Estimate → Invoice → Payment ESTIMATE Not created Optional — jobs may invoice without an estimate. INVOICE Not created No invoice linked to this job yet. PAYMENT Not started COLLECTED $0.00 OUTSTANDING $0.00",
+        "moneyPathButtons": [],
+        "competingPrimaryCta": false,
+        "profitabilityVisible": true,
+        "sideRailBillingDuplicate": false,
+        "duplicateFinancialFacts": false,
+        "estimateLink": false,
+        "invoiceLink": false
+      }
+    },
+    {
+      "scenario": "estimate-draft",
+      "jobId": "887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+      "jobNumber": "JOB-1069",
+      "jobStatus": "scheduled",
+      "route": "http://localhost:3040/jobs/887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+      "estimateState": "draft",
+      "invoiceState": "none",
+      "paymentState": "Not started",
+      "nextCommand": "Finish/Send Estimate",
+      "moneyPathPresentation": "Money path Estimate → Invoice → Payment ESTIMATE EST-1070 Draft View estimate INVOICE Not created No invoice linked to this job yet. PAYMENT Not started COLLECTED $0.00 OUTSTANDING $0.00",
+      "duplicateFinancialFacts": false,
+      "competingCta": false,
+      "sideRailBillingDuplicate": false,
+      "estimateLink": true,
+      "invoiceLink": false,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "nextActionLabel": "Finish/Send Estimate",
+        "primaryButtons": [
+          "Finish/Send Estimate"
+        ],
+        "moneyPathVisible": true,
+        "moneyPathText": "Money path Estimate → Invoice → Payment ESTIMATE EST-1070 Draft View estimate INVOICE Not created No invoice linked to this job yet. PAYMENT Not started COLLECTED $0.00 OUTSTANDING $0.00",
+        "moneyPathButtons": [
+          "View estimate"
+        ],
+        "competingPrimaryCta": false,
+        "profitabilityVisible": true,
+        "sideRailBillingDuplicate": false,
+        "duplicateFinancialFacts": false,
+        "estimateLink": true,
+        "invoiceLink": false
+      }
+    },
+    {
+      "scenario": "estimate-awaiting-approval",
+      "jobId": "887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+      "jobNumber": "JOB-1069",
+      "jobStatus": "scheduled",
+      "route": "http://localhost:3040/jobs/887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+      "estimateState": "sent",
+      "invoiceState": "none",
+      "paymentState": "Not started",
+      "nextCommand": "Awaiting Approval",
+      "moneyPathPresentation": "Money path Estimate → Invoice → Payment ESTIMATE EST-1070 Awaiting approval View estimate INVOICE Not created No invoice linked to this job yet. PAYMENT Not started COLLECTED $0.00 OUTSTANDING $0.00",
+      "duplicateFinancialFacts": false,
+      "competingCta": false,
+      "sideRailBillingDuplicate": false,
+      "estimateLink": true,
+      "invoiceLink": false,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "nextActionLabel": "Awaiting Approval",
+        "primaryButtons": [],
+        "moneyPathVisible": true,
+        "moneyPathText": "Money path Estimate → Invoice → Payment ESTIMATE EST-1070 Awaiting approval View estimate INVOICE Not created No invoice linked to this job yet. PAYMENT Not started COLLECTED $0.00 OUTSTANDING $0.00",
+        "moneyPathButtons": [
+          "View estimate"
+        ],
+        "competingPrimaryCta": false,
+        "profitabilityVisible": true,
+        "sideRailBillingDuplicate": false,
+        "duplicateFinancialFacts": false,
+        "estimateLink": true,
+        "invoiceLink": false
+      }
+    },
+    {
+      "scenario": "approved-ready-to-invoice",
+      "jobId": "a4ec339f-6dfc-4601-99a6-bc1099dae5e0",
+      "jobNumber": "JOB-1057",
+      "jobStatus": "completed",
+      "route": "http://localhost:3040/jobs/a4ec339f-6dfc-4601-99a6-bc1099dae5e0",
+      "estimateState": "approved",
+      "invoiceState": "none",
+      "paymentState": "Not started",
+      "nextCommand": "Create Invoice",
+      "moneyPathPresentation": "Money path Estimate → Invoice → Payment ESTIMATE EST-1065 Ready to invoice $129.00 2 estimates on job View estimate INVOICE Not created No invoice linked to this job yet. PAYMENT Not started COLLECTED $0.00 OUTSTANDING $0.00",
+      "duplicateFinancialFacts": false,
+      "competingCta": false,
+      "sideRailBillingDuplicate": false,
+      "estimateLink": true,
+      "invoiceLink": false,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "nextActionLabel": "Create Invoice",
+        "primaryButtons": [
+          "Create Invoice"
+        ],
+        "moneyPathVisible": true,
+        "moneyPathText": "Money path Estimate → Invoice → Payment ESTIMATE EST-1065 Ready to invoice $129.00 2 estimates on job View estimate INVOICE Not created No invoice linked to this job yet. PAYMENT Not started COLLECTED $0.00 OUTSTANDING $0.00",
+        "moneyPathButtons": [
+          "View estimate"
+        ],
+        "competingPrimaryCta": false,
+        "profitabilityVisible": true,
+        "sideRailBillingDuplicate": false,
+        "duplicateFinancialFacts": false,
+        "estimateLink": true,
+        "invoiceLink": false
+      }
+    },
+    {
+      "scenario": "invoice-ready-or-sent",
+      "jobId": "3a6471b8-8b0c-445a-8bb5-cf9af8ff721e",
+      "jobNumber": "JOB-1055",
+      "jobStatus": "completed",
+      "route": "http://localhost:3040/jobs/3a6471b8-8b0c-445a-8bb5-cf9af8ff721e",
+      "estimateState": "approved",
+      "invoiceState": "sent",
+      "paymentState": "Payment outstanding",
+      "nextCommand": "Awaiting Payment",
+      "moneyPathPresentation": "Money path Estimate → Invoice → Payment ESTIMATE EST-1066 Approved $1,200.00 2 estimates on job View estimate INVOICE INV-1069 Sent $129.00 2 active invoices on job View invoice PAYMENT Payment outstanding COLLECTED $1,284.00 OUTSTANDING $129.00 Invoiced $1,413.00 View payment de",
+      "duplicateFinancialFacts": false,
+      "competingCta": false,
+      "sideRailBillingDuplicate": false,
+      "estimateLink": true,
+      "invoiceLink": true,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "nextActionLabel": "Awaiting Payment",
+        "primaryButtons": [
+          "Record Payment"
+        ],
+        "moneyPathVisible": true,
+        "moneyPathText": "Money path Estimate → Invoice → Payment ESTIMATE EST-1066 Approved $1,200.00 2 estimates on job View estimate INVOICE INV-1069 Sent $129.00 2 active invoices on job View invoice PAYMENT Payment outstanding COLLECTED $1,284.00 OUTSTANDING $129.00 Invoiced $1,413.00 View payment details",
+        "moneyPathButtons": [
+          "View estimate",
+          "View invoice",
+          "View payment details"
+        ],
+        "competingPrimaryCta": false,
+        "profitabilityVisible": true,
+        "sideRailBillingDuplicate": false,
+        "duplicateFinancialFacts": false,
+        "estimateLink": true,
+        "invoiceLink": true
+      }
+    },
+    {
+      "scenario": "overdue-invoice",
+      "jobId": "7ea62aa9-b2af-42b3-8a78-82cba706920f",
+      "jobNumber": "SMK-433303",
+      "jobStatus": "completed",
+      "route": "http://localhost:3040/jobs/7ea62aa9-b2af-42b3-8a78-82cba706920f",
+      "estimateState": "none",
+      "invoiceState": "overdue",
+      "paymentState": "Payment outstanding",
+      "nextCommand": "Awaiting Payment",
+      "moneyPathPresentation": "Money path Estimate → Invoice → Payment ESTIMATE Not created Optional — jobs may invoice without an estimate. INVOICE INV-1070 Overdue $150.00 View invoice PAYMENT Payment outstanding COLLECTED $0.00 OUTSTANDING $150.00 Invoiced $150.00 View payment details",
+      "duplicateFinancialFacts": false,
+      "competingCta": false,
+      "sideRailBillingDuplicate": false,
+      "estimateLink": false,
+      "invoiceLink": true,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "nextActionLabel": "Awaiting Payment",
+        "primaryButtons": [
+          "Record Payment"
+        ],
+        "moneyPathVisible": true,
+        "moneyPathText": "Money path Estimate → Invoice → Payment ESTIMATE Not created Optional — jobs may invoice without an estimate. INVOICE INV-1070 Overdue $150.00 View invoice PAYMENT Payment outstanding COLLECTED $0.00 OUTSTANDING $150.00 Invoiced $150.00 View payment details",
+        "moneyPathButtons": [
+          "View invoice",
+          "View payment details"
+        ],
+        "competingPrimaryCta": false,
+        "profitabilityVisible": true,
+        "sideRailBillingDuplicate": false,
+        "duplicateFinancialFacts": false,
+        "estimateLink": false,
+        "invoiceLink": true
+      }
+    },
+    {
+      "scenario": "partially-paid",
+      "jobId": "3a6471b8-8b0c-445a-8bb5-cf9af8ff721e",
+      "jobNumber": "JOB-1055",
+      "jobStatus": "completed",
+      "route": "http://localhost:3040/jobs/3a6471b8-8b0c-445a-8bb5-cf9af8ff721e",
+      "estimateState": "approved",
+      "invoiceState": "partially_paid",
+      "paymentState": "Payment outstanding (partial)",
+      "nextCommand": "Awaiting Payment",
+      "moneyPathPresentation": "Money path Estimate → Invoice → Payment ESTIMATE EST-1066 Approved $1,200.00 2 estimates on job View estimate INVOICE INV-1069 Partially paid $129.00 2 active invoices on job View invoice PAYMENT Payment outstanding COLLECTED $1,348.50 OUTSTANDING $64.50 Invoiced $1,413.00 View p",
+      "duplicateFinancialFacts": false,
+      "competingCta": false,
+      "sideRailBillingDuplicate": false,
+      "estimateLink": true,
+      "invoiceLink": true,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "nextActionLabel": "Awaiting Payment",
+        "primaryButtons": [
+          "Record Payment"
+        ],
+        "moneyPathVisible": true,
+        "moneyPathText": "Money path Estimate → Invoice → Payment ESTIMATE EST-1066 Approved $1,200.00 2 estimates on job View estimate INVOICE INV-1069 Partially paid $129.00 2 active invoices on job View invoice PAYMENT Payment outstanding COLLECTED $1,348.50 OUTSTANDING $64.50 Invoiced $1,413.00 View payment details",
+        "moneyPathButtons": [
+          "View estimate",
+          "View invoice",
+          "View payment details"
+        ],
+        "competingPrimaryCta": false,
+        "profitabilityVisible": true,
+        "sideRailBillingDuplicate": false,
+        "duplicateFinancialFacts": false,
+        "estimateLink": true,
+        "invoiceLink": true
+      }
+    },
+    {
+      "scenario": "fully-paid",
+      "jobId": "e0cfe93f-c259-41a0-a448-2ef3cba75444",
+      "jobNumber": "JOB-1049",
+      "jobStatus": "cancelled",
+      "route": "http://localhost:3040/jobs/e0cfe93f-c259-41a0-a448-2ef3cba75444",
+      "estimateState": "none",
+      "invoiceState": "paid",
+      "paymentState": "Paid",
+      "nextCommand": "Cancelled",
+      "moneyPathPresentation": "Money path Estimate → Invoice → Payment ESTIMATE EST-1051 Converted 2 estimates on job View estimate INVOICE INV-1050 Paid $129.00 View invoice PAYMENT Paid COLLECTED $129.00 OUTSTANDING $0.00 Invoiced $129.00 View payment details",
+      "duplicateFinancialFacts": false,
+      "competingCta": false,
+      "sideRailBillingDuplicate": false,
+      "estimateLink": true,
+      "invoiceLink": true,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "nextActionLabel": "Cancelled",
+        "primaryButtons": [],
+        "moneyPathVisible": true,
+        "moneyPathText": "Money path Estimate → Invoice → Payment ESTIMATE EST-1051 Converted 2 estimates on job View estimate INVOICE INV-1050 Paid $129.00 View invoice PAYMENT Paid COLLECTED $129.00 OUTSTANDING $0.00 Invoiced $129.00 View payment details",
+        "moneyPathButtons": [
+          "View estimate",
+          "View invoice",
+          "View payment details"
+        ],
+        "competingPrimaryCta": false,
+        "profitabilityVisible": true,
+        "sideRailBillingDuplicate": false,
+        "duplicateFinancialFacts": false,
+        "estimateLink": true,
+        "invoiceLink": true
+      }
+    },
+    {
+      "scenario": "completed-awaiting-invoice",
+      "jobId": "e48c6064-eccd-4ee3-84fc-de34185f7ab4",
+      "jobNumber": "JOB-1051",
+      "jobStatus": "completed",
+      "route": "http://localhost:3040/jobs/e48c6064-eccd-4ee3-84fc-de34185f7ab4",
+      "estimateState": "none",
+      "invoiceState": "none",
+      "paymentState": "Not started",
+      "nextCommand": "Create Invoice",
+      "moneyPathPresentation": "Money path Estimate → Invoice → Payment ESTIMATE Not created Optional — jobs may invoice without an estimate. INVOICE Not created No invoice linked to this job yet. PAYMENT Not started COLLECTED $0.00 OUTSTANDING $0.00",
+      "duplicateFinancialFacts": false,
+      "competingCta": false,
+      "sideRailBillingDuplicate": false,
+      "estimateLink": false,
+      "invoiceLink": false,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "nextActionLabel": "Create Invoice",
+        "primaryButtons": [
+          "Create Invoice"
+        ],
+        "moneyPathVisible": true,
+        "moneyPathText": "Money path Estimate → Invoice → Payment ESTIMATE Not created Optional — jobs may invoice without an estimate. INVOICE Not created No invoice linked to this job yet. PAYMENT Not started COLLECTED $0.00 OUTSTANDING $0.00",
+        "moneyPathButtons": [],
+        "competingPrimaryCta": false,
+        "profitabilityVisible": true,
+        "sideRailBillingDuplicate": false,
+        "duplicateFinancialFacts": false,
+        "estimateLink": false,
+        "invoiceLink": false
+      }
+    },
+    {
+      "scenario": "mobile-owner-money-path",
+      "jobId": "3a6471b8-8b0c-445a-8bb5-cf9af8ff721e",
+      "jobNumber": "JOB-1055",
+      "estimateState": "approved",
+      "invoiceState": "sent",
+      "paymentState": "see money path",
+      "nextCommand": "Awaiting Payment",
+      "moneyPathPresentation": "Money path Estimate → Invoice → Payment ESTIMATE EST-1066 Approved $1,200.00 2 estimates on job View estimate INVOICE INV-1069 Sent $129.00 2 active invoices on job View invoice PAYMENT Payment outstanding COLLECTED $1,284.00 OUTSTANDING $129.00 Invoiced $1,413.00 View payment de",
+      "duplicateFinancialFacts": false,
+      "competingCta": false,
+      "pass": true
+    },
+    {
+      "scenario": "financial-permission-denied",
+      "jobId": "a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "jobNumber": "JOB-1111",
+      "estimateState": "hidden",
+      "invoiceState": "hidden",
+      "paymentState": "hidden",
+      "nextCommand": "n/a (office detail blocked)",
+      "moneyPathPresentation": "not shown",
+      "duplicateFinancialFacts": false,
+      "competingCta": false,
+      "pass": true,
+      "landed": "http://localhost:3040/technician"
+    },
+    {
+      "scenario": "technician-overlay-smoke",
+      "jobId": "a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "jobNumber": "JOB-1111",
+      "estimateState": "n/a",
+      "invoiceState": "n/a",
+      "paymentState": "n/a",
+      "nextCommand": "technician overlay",
+      "moneyPathPresentation": "office Money path not used",
+      "duplicateFinancialFacts": false,
+      "competingCta": false,
+      "pass": true
+    }
+  ],
+  "anchors": [
+    {
+      "label": "Billing",
+      "ok": true,
+      "hash": "job-detail-billing",
+      "expectedId": "job-detail-billing",
+      "inView": true
+    }
+  ],
+  "screenshots": [
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-4\\desktop-no-financial-documents.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-4\\desktop-estimate-awaiting-approval.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-4\\desktop-approved-ready-to-invoice.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-4\\desktop-invoice-outstanding.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-4\\desktop-partially-paid.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-4\\desktop-paid.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-4\\desktop-money-path-and-profitability.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-4\\mobile-money-path.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-4\\financial-permission-denied.png"
+  ],
+  "smoke": {
+    "billingAnchor": {
+      "label": "Billing",
+      "ok": true,
+      "hash": "job-detail-billing",
+      "expectedId": "job-detail-billing",
+      "inView": true
+    },
+    "estimateLink": true,
+    "invoiceLink": false,
+    "technicianRedirect": {
+      "redirectedFromOffice": true,
+      "landed": "http://localhost:3040/technician",
+      "pass": true
+    },
+    "technicianOverlay": {
+      "opened": true,
+      "pass": true
+    }
+  },
+  "summary": {
+    "total": 12,
+    "passed": 12,
+    "failed": [],
+    "billingAnchorOk": true,
+    "moneyPathIsBillingAnchor": true
+  }
+}

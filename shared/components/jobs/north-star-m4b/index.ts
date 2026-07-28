@@ -1,6 +1,7 @@
 export { JobDetailNorthStarHeader } from "./JobDetailNorthStarHeader";
 export { JobDetailNorthStarContentSection } from "./JobDetailNorthStarContentSection";
 export { JobDetailNorthStarLoadingState } from "./JobDetailNorthStarLoadingState";
+export { JobDetailMoneyPath } from "./JobDetailMoneyPath";
 export { JobDetailSectionNav } from "./JobDetailSectionNav";
 export { JobDetailSectionCommandPlate } from "./JobDetailSectionCommandPlate";
 export { JobDetailSideRailBillingCard } from "./JobDetailSideRailBillingCard";

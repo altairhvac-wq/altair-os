@@ -19,7 +19,6 @@ import {
   jobDetailSectionTitleClass,
   resolveJobDetailSectionClass,
 } from "@/shared/components/jobs/job-detail-section-styles";
-import { JOB_DETAIL_BILLING_ANCHOR } from "@/shared/lib/jobs/job-detail-anchors";
 
 type JobProfitabilitySectionProps = {
   jobId: string;
@@ -197,9 +196,6 @@ export function JobProfitabilitySection({
   return (
     <section
       aria-labelledby={`job-profitability-heading-${jobId}`}
-      id={northStar ? JOB_DETAIL_BILLING_ANCHOR : undefined}
-      data-job-section={northStar ? JOB_DETAIL_BILLING_ANCHOR : undefined}
-      tabIndex={northStar ? -1 : undefined}
       className={`${resolveJobDetailSectionClass(northStar)} scroll-mt-6`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -215,7 +211,9 @@ export function JobProfitabilitySection({
               Job profitability
             </h2>
             <p className={jobDetailSectionSubtitleClass(northStar)}>
-              Collected revenue minus direct costs. Labor hours shown separately.
+              {northStar
+                ? "Cost, margin, and labor analysis. Document and payment state live in Money path."
+                : "Collected revenue minus direct costs. Labor hours shown separately."}
             </p>
           </div>
         </div>
@@ -232,19 +230,27 @@ export function JobProfitabilitySection({
           </p>
         </div>
       ) : (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label="Collected revenue"
-            value={formatJobProfitabilityCurrency(revenue.collected)}
-            description={
-              revenue.collected === 0
-                ? "No payments recorded on linked invoices"
-                : `${snapshot.activeInvoiceCount} active invoice${snapshot.activeInvoiceCount === 1 ? "" : "s"}`
-            }
-            icon={DollarSign}
-            iconClassName="bg-emerald-100 text-emerald-700"
-            accentClassName="border-emerald-200/80 bg-emerald-50/30"
-          />
+        <div
+          className={
+            northStar
+              ? "mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+              : "mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+          }
+        >
+          {northStar ? null : (
+            <MetricCard
+              label="Collected revenue"
+              value={formatJobProfitabilityCurrency(revenue.collected)}
+              description={
+                revenue.collected === 0
+                  ? "No payments recorded on linked invoices"
+                  : `${snapshot.activeInvoiceCount} active invoice${snapshot.activeInvoiceCount === 1 ? "" : "s"}`
+              }
+              icon={DollarSign}
+              iconClassName="bg-emerald-100 text-emerald-700"
+              accentClassName="border-emerald-200/80 bg-emerald-50/30"
+            />
+          )}
           <MetricCard
             label="Direct costs"
             value={formatJobProfitabilityCurrency(costs.directCostTotal)}
@@ -260,7 +266,11 @@ export function JobProfitabilitySection({
           <MetricCard
             label="Gross profit"
             value={grossProfitValue}
-            description="Based on collected revenue only"
+            description={
+              northStar
+                ? "Collected revenue minus direct costs"
+                : "Based on collected revenue only"
+            }
             icon={Percent}
             iconClassName={grossProfitStyles.iconClassName}
             accentClassName={grossProfitStyles.accentClassName}
@@ -281,35 +291,58 @@ export function JobProfitabilitySection({
         </div>
       )}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <ContextRow
-          label="Invoiced total"
-          value={formatJobProfitabilityCurrency(revenue.invoiced)}
-          hint="Accrual total on active invoices"
-        />
-        <ContextRow
-          label="Outstanding balance"
-          value={formatJobProfitabilityCurrency(revenue.outstanding)}
-          hint={
-            revenue.outstanding === 0
-              ? "Nothing outstanding on linked invoices"
-              : "Uncollected balance on active invoices"
-          }
-        />
-        {projectedRevenue ? (
+      {northStar ? (
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {projectedRevenue ? (
+            <ContextRow
+              label="Projected revenue"
+              value={`${projectedRevenue.estimateNumber} · ${formatJobProfitabilityCurrency(projectedRevenue.total)}`}
+              hint="Newest approved estimate — not included in gross profit"
+            />
+          ) : (
+            <ContextRow
+              label="Projected revenue"
+              value="—"
+              hint="No approved estimate linked to this job"
+            />
+          )}
           <ContextRow
-            label="Projected revenue"
-            value={`${projectedRevenue.estimateNumber} · ${formatJobProfitabilityCurrency(projectedRevenue.total)}`}
-            hint="Newest approved estimate — not included in gross profit"
+            label="Direct cost mix"
+            value={`${formatJobProfitabilityCurrency(costs.materialCogs)} materials`}
+            hint={`${formatJobProfitabilityCurrency(costs.expenseCogs)} approved expenses`}
           />
-        ) : (
+        </div>
+      ) : (
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <ContextRow
-            label="Projected revenue"
-            value="—"
-            hint="No approved estimate linked to this job"
+            label="Invoiced total"
+            value={formatJobProfitabilityCurrency(revenue.invoiced)}
+            hint="Accrual total on active invoices"
           />
-        )}
-      </div>
+          <ContextRow
+            label="Outstanding balance"
+            value={formatJobProfitabilityCurrency(revenue.outstanding)}
+            hint={
+              revenue.outstanding === 0
+                ? "Nothing outstanding on linked invoices"
+                : "Uncollected balance on active invoices"
+            }
+          />
+          {projectedRevenue ? (
+            <ContextRow
+              label="Projected revenue"
+              value={`${projectedRevenue.estimateNumber} · ${formatJobProfitabilityCurrency(projectedRevenue.total)}`}
+              hint="Newest approved estimate — not included in gross profit"
+            />
+          ) : (
+            <ContextRow
+              label="Projected revenue"
+              value="—"
+              hint="No approved estimate linked to this job"
+            />
+          )}
+        </div>
+      )}
 
       <p className="mt-4 text-xs text-slate-500">
         Gross margin excludes labor dollar cost. Only closed labor hours are

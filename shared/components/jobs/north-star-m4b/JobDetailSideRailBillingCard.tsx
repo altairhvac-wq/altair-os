@@ -17,6 +17,11 @@ type JobDetailSideRailBillingCardProps = {
   canViewBilling: boolean;
 };
 
+/**
+ * Legacy side-rail billing summary.
+ * Phase 4 North Star Job Detail mounts `JobDetailMoneyPath` instead so Billing
+ * deep links land on the unified Money path region.
+ */
 export function JobDetailSideRailBillingCard({
   profitability,
   estimates,
