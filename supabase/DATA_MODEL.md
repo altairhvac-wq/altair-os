@@ -74,7 +74,7 @@ Unique constraint: `(company_id, user_id)`.
 
 ## Roles
 
-Mapped to product areas in `ARCHITECTURE.md`:
+Mapped to product areas in `docs/archive/architecture/ARCHITECTURE.md` (historical blueprint; verify against `docs/product/ALTair_BRAIN.md`):
 
 | Role | Primary surfaces |
 | --- | --- |

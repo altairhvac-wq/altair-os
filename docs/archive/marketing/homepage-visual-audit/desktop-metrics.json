@@ -1,0 +1,75 @@
+{
+  "title": "Altair OS",
+  "url": "http://localhost:3000/",
+  "h1Text": "Altair OS\nfor HVAC companies.",
+  "h1Styles": {
+    "fontSize": "54.4px",
+    "fontWeight": "600",
+    "lineHeight": "57.12px",
+    "textAlign": "left",
+    "maxWidth": "none"
+  },
+  "img": {
+    "src": "http://localhost:3000/_next/image?url=%2Fmarketing%2Fscreenshots%2Fsocial%2Fdispatch-full-page.png&w=1080&q=75",
+    "naturalWidth": 835,
+    "naturalHeight": 470,
+    "rendered": {
+      "w": 638,
+      "h": 404,
+      "x": 660,
+      "y": 178,
+      "top": 178,
+      "left": 660
+    },
+    "objectFit": "cover",
+    "objectPosition": "50% 0%"
+  },
+  "frame": {
+    "w": 640,
+    "h": 447,
+    "x": 659,
+    "y": 136,
+    "top": 136,
+    "left": 659
+  },
+  "nav": {
+    "w": 1440,
+    "h": 69,
+    "x": 0,
+    "y": 0,
+    "top": 0,
+    "left": 0
+  },
+  "hero": {
+    "w": 1440,
+    "h": 992,
+    "x": 0,
+    "y": 0,
+    "top": 0,
+    "left": 0
+  },
+  "grid": {
+    "w": 1152,
+    "h": 443,
+    "x": 144,
+    "y": 128,
+    "top": 128,
+    "left": 144
+  },
+  "copy": {
+    "w": 462,
+    "h": 418,
+    "x": 144,
+    "y": 141,
+    "top": 141,
+    "left": 144
+  },
+  "containerMaxWidth": "1152px",
+  "bodyOverflowX": false,
+  "scrollWidth": 1440,
+  "viewport": {
+    "w": 1440,
+    "h": 1000
+  },
+  "atmosphereLayers": 7
+}

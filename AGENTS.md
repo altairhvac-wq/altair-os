@@ -46,11 +46,17 @@ Typical request flow:
 - `supabase/migrations/`: ordered PostgreSQL schema, RLS, function, trigger, and grant migrations.
 - `public/`: static assets, PWA files, import templates, and marketing screenshots.
 - `scripts/`: integration smoke scripts and local asset/screenshot tooling.
-- `docs/altair/ALTair_MASTER_STATUS.md`: current product-state source of truth.
-- `docs/altair/ALTair_BRAIN.md`: confirmed architecture and production-module inventory.
-- `docs/internal-alpha-smoke-test.md`: manual authenticated smoke checklist.
+- `docs/README.md`: documentation architecture index.
+- `docs/DOCUMENTATION_ARCHITECTURE.md`: documentation organization audit and move log.
+- `docs/foundation/`: permanent mission, standard, personality, principles, and Canon.
+- `docs/design/`: product UI design constitution, art direction, experience map.
+- `docs/product/ALTair_MASTER_STATUS.md`: current product-state source of truth.
+- `docs/product/ALTair_BRAIN.md`: confirmed architecture and production-module inventory.
+- `docs/development/`: session workflow and operations/observability guides.
+- `docs/reference/internal-alpha-smoke-test.md`: manual authenticated smoke checklist.
+- `docs/archive/`: historical architecture notes and closed validation artifacts.
 
-The root `README.md`, `ARCHITECTURE.md`, `supabase/DATA_MODEL.md`, and `docs/backend-data-map.md` contain template, early-phase, or explicitly outdated material. Verify their claims against current code and the status documents above.
+The root `README.md`, `docs/archive/architecture/ARCHITECTURE.md`, `supabase/DATA_MODEL.md`, and `docs/archive/architecture/backend-data-map.md` contain template, early-phase, or explicitly outdated material. Verify their claims against current code and the status documents above. Stubs remain at the former `docs/architecture/` paths.
 
 ## Installation and development
 
@@ -103,7 +109,7 @@ node scripts/test-workflow-reminder-evaluation.mjs
 node scripts/test-workflow-reminder-dashboard.mjs
 ```
 
-These scripts require local environment configuration, connect to Supabase, and may create or modify test data. Inspect the script and confirm the target environment before running it. Use `docs/internal-alpha-smoke-test.md` for the manual end-to-end production workflow.
+These scripts require local environment configuration, connect to Supabase, and may create or modify test data. Inspect the script and confirm the target environment before running it. Use `docs/reference/internal-alpha-smoke-test.md` for the manual end-to-end production workflow.
 
 ## Coding conventions
 
@@ -158,7 +164,7 @@ A change is complete when all applicable items are true:
 - `npm run lint` passes.
 - `npx tsc --noEmit` passes.
 - `npm run build` passes for changes that can affect compilation, routing, rendering, or deployment.
-- Relevant targeted scripts and the applicable sections of `docs/internal-alpha-smoke-test.md` have been run when the change touches their workflows.
+- Relevant targeted scripts and the applicable sections of `docs/reference/internal-alpha-smoke-test.md` have been run when the change touches their workflows.
 - New configuration is documented in `.env.example` without real values, and secrets remain server-only.
 - Database changes are delivered as a new ordered migration with appropriate RLS, grants, and typed application updates.
 - Current source-of-truth documentation is updated when architecture, production status, setup, commands, routes, or operational procedures change.

@@ -1,0 +1,25 @@
+{
+  "h1Text": "Altair OS\nfor HVAC companies.",
+  "h1FontSize": "37.6px",
+  "h1Align": "center",
+  "img": {
+    "src": "http://localhost:3000/_next/image?url=%2Fmarketing%2Fscreenshots%2Fsocial%2Fdispatch-full-page.png&w=640&q=75",
+    "naturalWidth": 390,
+    "naturalHeight": 219,
+    "rendered": {
+      "w": 348,
+      "h": 218,
+      "x": 21,
+      "y": 644
+    }
+  },
+  "hero": {
+    "w": 390,
+    "h": 943,
+    "x": 0,
+    "y": 0
+  },
+  "bodyOverflowX": false,
+  "scrollWidth": 390,
+  "scrollHeight": 3240
+}

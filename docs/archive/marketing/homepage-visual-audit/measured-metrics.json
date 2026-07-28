@@ -1,0 +1,133 @@
+{
+  "desktop": {
+    "dpr": 2,
+    "logo": {
+      "w": 72,
+      "h": 40,
+      "x": 176,
+      "y": 14
+    },
+    "logoSvg": {
+      "w": 72,
+      "h": 40,
+      "x": 176,
+      "y": 14
+    },
+    "nav": {
+      "w": 1440,
+      "h": 69,
+      "x": 0,
+      "y": 0
+    },
+    "navLinkGap": "28px",
+    "navCta": {
+      "w": 225,
+      "h": 35.5,
+      "x": 1039,
+      "y": 16.3
+    },
+    "navCtaStyles": {
+      "padding": "8px 14px",
+      "fontSize": "13px"
+    },
+    "heroCta": {
+      "w": 253.8,
+      "h": 48,
+      "x": 144,
+      "y": 430.9
+    },
+    "h1": {
+      "box": {
+        "w": 461.7,
+        "h": 113,
+        "x": 144,
+        "y": 177.2
+      },
+      "fontSize": "54.4px",
+      "lineHeight": "57.12px",
+      "fontWeight": "600",
+      "text": "Altair OS\nfor HVAC companies."
+    },
+    "secondLineFontSize": "39.168px",
+    "hvacColor": "rgb(214, 222, 232)",
+    "imgSrc": "http://localhost:3000/_next/image?url=%2Fmarketing%2Fscreenshots%2Fsocial%2Fdispatch-full-page.png&w=1920&q=75",
+    "imgNatural": {
+      "w": 696,
+      "h": 391
+    },
+    "imgRenderedCss": {
+      "w": 641.3,
+      "h": 404.7,
+      "x": 657.3,
+      "y": 168.6
+    },
+    "imgDevicePixelsNeeded": {
+      "w": 1283,
+      "h": 809
+    },
+    "cssToNaturalScale": 0.921,
+    "deckTransform": "matrix3d(0.998135, 0, 0.0610485, -3.39159e-05, -0.00159806, 0.999657, 0.0261281, -1.45156e-05, -0.0610276, -0.0261769, 0.997793, -0.000554329, 0, 0, 0, 1)",
+    "productInner": {
+      "w": 641.3,
+      "h": 404.7,
+      "x": 657.3,
+      "y": 168.6
+    },
+    "realityCard": {
+      "w": 220.8,
+      "h": 174.3,
+      "x": 144,
+      "y": 1303.3
+    },
+    "realityCardCount": 5,
+    "workflowIcon": {
+      "w": 44,
+      "h": 44,
+      "x": 190.5,
+      "y": 1995.3
+    },
+    "maxW": "1152px",
+    "heroPadTop": "128px",
+    "copy": {
+      "w": 461.7,
+      "h": 417.9,
+      "x": 144,
+      "y": 140.7
+    },
+    "frame": {
+      "w": 643.3,
+      "h": 447.9,
+      "x": 656.4,
+      "y": 126.4
+    },
+    "unusedHeroVertical": 549
+  },
+  "mobile": {
+    "hero": {
+      "w": 390,
+      "h": 942.8
+    },
+    "reality": {
+      "w": 390,
+      "h": 607.2
+    },
+    "os": {
+      "w": 390,
+      "h": 1552.7
+    },
+    "scrollH": 3240,
+    "imgSrc": "http://localhost:3000/_next/image?url=%2Fmarketing%2Fscreenshots%2Fsocial%2Fdispatch-full-page.png&w=750&q=75",
+    "imgNatural": {
+      "w": 390,
+      "h": 219
+    },
+    "imgRendered": {
+      "w": 348,
+      "h": 217.5
+    },
+    "overflowX": false,
+    "h1Align": "center",
+    "productClippedInFirstViewport": true
+  },
+  "capturedAt": "2026-07-19T00:55:34.591Z"
+}
