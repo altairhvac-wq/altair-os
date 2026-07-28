@@ -88,7 +88,8 @@ export const networkNorthStarStyles = {
     "inline-flex items-center rounded-full border border-[rgba(201,164,77,0.28)] bg-[rgba(201,164,77,0.10)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8A6324]",
   tabBodySurface:
     "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]",
-  tabBodyInner: "min-h-0 flex-1 p-3 sm:p-4 lg:p-5",
+  tabBodyInner:
+    "flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain p-3 sm:p-4 lg:p-5",
   directoryListColumn:
     "flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-x-hidden lg:min-h-[28rem] lg:basis-[42%] lg:max-w-none lg:shrink-0",
   directoryDetailColumn:
