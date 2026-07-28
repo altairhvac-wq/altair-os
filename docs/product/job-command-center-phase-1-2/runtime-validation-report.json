@@ -1,0 +1,694 @@
+{
+  "baseUrl": "http://localhost:3040",
+  "authMethod": "Playwright storage state (.playwright/founder-auth.json) with magic-link refresh",
+  "scenarios": [
+    {
+      "scenario": "scheduled",
+      "jobId": "a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "jobNumber": "JOB-1111",
+      "route": "http://localhost:3040/jobs/a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "role": "owner",
+      "visibleWorkflowState": "Create Estimate",
+      "primaryExecutableCta": "Create Estimate",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": false,
+      "evidenceBeforeMoney": true,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/a5ba6e04-d81c-4453-9c65-247a9679fff3",
+        "nextActionLabel": "Create Estimate",
+        "primaryButtons": [
+          "Create Estimate"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": false,
+        "sectionHeadings": [
+          "Workflow",
+          "Create Estimate",
+          "Customer",
+          "Dispatch",
+          "Work scope",
+          "Materials used",
+          "Log material",
+          "Photos & attachments",
+          "Expense receipts",
+          "Job profitability",
+          "History",
+          "Customer equipment",
+          "Billing"
+        ],
+        "evidenceBeforeMoney": true,
+        "materialsIdx": 5,
+        "photosIdx": 7,
+        "receiptsIdx": 8,
+        "checklistIdx": -1,
+        "profitIdx": 9,
+        "billingNav": true,
+        "equipmentNav": false,
+        "profitabilityVisible": true,
+        "workflowBadge": "1",
+        "headerActionButtons": [
+          "1",
+          "View asOwner / Admin",
+          "Sign out",
+          "Open dispatch",
+          "Production Smoke 2026-07-12"
+        ],
+        "nextActionVisible": true
+      }
+    },
+    {
+      "scenario": "unassigned",
+      "jobId": "383b578e-efb2-436f-a583-58e9c18237fb",
+      "jobNumber": "JOB-1065",
+      "route": "http://localhost:3040/jobs/383b578e-efb2-436f-a583-58e9c18237fb",
+      "role": "owner",
+      "visibleWorkflowState": "Create Estimate",
+      "primaryExecutableCta": "Create Estimate",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": false,
+      "evidenceBeforeMoney": true,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/383b578e-efb2-436f-a583-58e9c18237fb",
+        "nextActionLabel": "Create Estimate",
+        "primaryButtons": [
+          "Create Estimate"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": false,
+        "sectionHeadings": [
+          "Workflow",
+          "Create Estimate",
+          "Customer",
+          "Dispatch",
+          "Work scope",
+          "Materials used",
+          "Log material",
+          "Photos & attachments",
+          "Expense receipts",
+          "Job profitability",
+          "History",
+          "Customer equipment",
+          "Billing"
+        ],
+        "evidenceBeforeMoney": true,
+        "materialsIdx": 5,
+        "photosIdx": 7,
+        "receiptsIdx": 8,
+        "checklistIdx": -1,
+        "profitIdx": 9,
+        "billingNav": true,
+        "equipmentNav": false,
+        "profitabilityVisible": true,
+        "workflowBadge": "1",
+        "headerActionButtons": [
+          "1",
+          "View asOwner / Admin",
+          "Sign out",
+          "Open dispatch",
+          "Kortney"
+        ],
+        "nextActionVisible": true
+      }
+    },
+    {
+      "scenario": "in-progress",
+      "jobId": "887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+      "jobNumber": "JOB-1069",
+      "route": "http://localhost:3040/jobs/887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+      "role": "owner",
+      "visibleWorkflowState": "Complete work",
+      "primaryExecutableCta": "Complete work",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": false,
+      "evidenceBeforeMoney": true,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+        "nextActionLabel": "Complete work",
+        "primaryButtons": [
+          "Complete work"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": false,
+        "sectionHeadings": [
+          "Workflow",
+          "Complete work",
+          "Customer",
+          "Dispatch",
+          "Work scope",
+          "Materials used",
+          "Log material",
+          "Photos & attachments",
+          "Expense receipts",
+          "Job profitability",
+          "History",
+          "Customer equipment",
+          "Billing"
+        ],
+        "evidenceBeforeMoney": true,
+        "materialsIdx": 5,
+        "photosIdx": 7,
+        "receiptsIdx": 8,
+        "checklistIdx": -1,
+        "profitIdx": 9,
+        "billingNav": true,
+        "equipmentNav": false,
+        "profitabilityVisible": true,
+        "workflowBadge": "1",
+        "headerActionButtons": [
+          "1",
+          "View asOwner / Admin",
+          "Sign out",
+          "Resend Estimate",
+          "Open dispatch",
+          "jeremiah"
+        ],
+        "nextActionVisible": true
+      }
+    },
+    {
+      "scenario": "completed",
+      "jobId": "c719bf94-615a-446a-93b2-883632fa9310",
+      "jobNumber": "JOB-1112",
+      "route": "http://localhost:3040/jobs/c719bf94-615a-446a-93b2-883632fa9310",
+      "role": "owner",
+      "visibleWorkflowState": "Create Invoice",
+      "primaryExecutableCta": "Create Invoice",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": true,
+      "evidenceBeforeMoney": true,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/c719bf94-615a-446a-93b2-883632fa9310",
+        "nextActionLabel": "Create Invoice",
+        "primaryButtons": [
+          "Create Invoice"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": true,
+        "sectionHeadings": [
+          "Workflow",
+          "Create Invoice",
+          "Customer",
+          "Dispatch",
+          "Work scope",
+          "Materials used",
+          "Log material",
+          "Photos & attachments",
+          "Expense receipts",
+          "Office review checklist",
+          "Job profitability",
+          "History",
+          "Customer equipment",
+          "Billing"
+        ],
+        "evidenceBeforeMoney": true,
+        "materialsIdx": 5,
+        "photosIdx": 7,
+        "receiptsIdx": 8,
+        "checklistIdx": 9,
+        "profitIdx": 10,
+        "billingNav": true,
+        "equipmentNav": false,
+        "profitabilityVisible": true,
+        "workflowBadge": "1",
+        "headerActionButtons": [
+          "1",
+          "View asOwner / Admin",
+          "Sign out",
+          "Open dispatch",
+          "aletia"
+        ],
+        "nextActionVisible": true
+      }
+    },
+    {
+      "scenario": "estimate-next-action",
+      "jobId": "887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+      "jobNumber": "JOB-1069",
+      "route": "http://localhost:3040/jobs/887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+      "role": "owner",
+      "visibleWorkflowState": "Awaiting Approval",
+      "primaryExecutableCta": "Awaiting Approval",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": false,
+      "evidenceBeforeMoney": true,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/887b5f3e-f5fa-45d8-bab0-9c3cf5c27735",
+        "nextActionLabel": "Awaiting Approval",
+        "primaryButtons": [],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": false,
+        "sectionHeadings": [
+          "Workflow",
+          "Awaiting Approval",
+          "Customer",
+          "Dispatch",
+          "Work scope",
+          "Materials used",
+          "Log material",
+          "Photos & attachments",
+          "Expense receipts",
+          "Job profitability",
+          "History",
+          "Customer equipment",
+          "Billing"
+        ],
+        "evidenceBeforeMoney": true,
+        "materialsIdx": 5,
+        "photosIdx": 7,
+        "receiptsIdx": 8,
+        "checklistIdx": -1,
+        "profitIdx": 9,
+        "billingNav": true,
+        "equipmentNav": false,
+        "profitabilityVisible": true,
+        "workflowBadge": "1",
+        "headerActionButtons": [
+          "1",
+          "View asOwner / Admin",
+          "Sign out",
+          "Resend Estimate",
+          "Open dispatch",
+          "jeremiah"
+        ],
+        "nextActionVisible": true
+      }
+    },
+    {
+      "scenario": "invoice-next-action",
+      "jobId": "e48c6064-eccd-4ee3-84fc-de34185f7ab4",
+      "jobNumber": "JOB-1051",
+      "route": "http://localhost:3040/jobs/e48c6064-eccd-4ee3-84fc-de34185f7ab4",
+      "role": "owner",
+      "visibleWorkflowState": "Create Invoice",
+      "primaryExecutableCta": "Create Invoice",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Equipment",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": true,
+      "evidenceBeforeMoney": true,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/e48c6064-eccd-4ee3-84fc-de34185f7ab4",
+        "nextActionLabel": "Create Invoice",
+        "primaryButtons": [
+          "Create Invoice"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Equipment",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": true,
+        "sectionHeadings": [
+          "Workflow",
+          "Create Invoice",
+          "Customer",
+          "Dispatch",
+          "Work scope",
+          "Operational data integrity",
+          "Materials used",
+          "Log material",
+          "Photos & attachments",
+          "Expense receipts",
+          "Office review checklist",
+          "Job profitability",
+          "History",
+          "Customer equipment",
+          "Billing"
+        ],
+        "evidenceBeforeMoney": true,
+        "materialsIdx": 6,
+        "photosIdx": 8,
+        "receiptsIdx": 9,
+        "checklistIdx": 10,
+        "profitIdx": 11,
+        "billingNav": true,
+        "equipmentNav": true,
+        "profitabilityVisible": true,
+        "workflowBadge": "1",
+        "headerActionButtons": [
+          "1",
+          "View asOwner / Admin",
+          "Sign out",
+          "Open dispatch",
+          "test customer"
+        ],
+        "nextActionVisible": true
+      }
+    },
+    {
+      "scenario": "waiting-or-payment",
+      "jobId": "7ea62aa9-b2af-42b3-8a78-82cba706920f",
+      "jobNumber": "SMK-433303",
+      "route": "http://localhost:3040/jobs/7ea62aa9-b2af-42b3-8a78-82cba706920f",
+      "role": "owner",
+      "visibleWorkflowState": "Awaiting Payment",
+      "primaryExecutableCta": "Record Payment",
+      "duplicateCta": false,
+      "commandPlateLabels": [
+        "Scope",
+        "Materials",
+        "Photos",
+        "Billing",
+        "History"
+      ],
+      "reopenVisible": true,
+      "evidenceBeforeMoney": true,
+      "profitabilityVisible": true,
+      "pass": true,
+      "signals": {
+        "url": "http://localhost:3040/jobs/7ea62aa9-b2af-42b3-8a78-82cba706920f",
+        "nextActionLabel": "Awaiting Payment",
+        "primaryButtons": [
+          "Record Payment"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": true,
+        "sectionHeadings": [
+          "Workflow",
+          "Awaiting Payment",
+          "Customer",
+          "Dispatch",
+          "Work scope",
+          "Materials used",
+          "Log material",
+          "Photos & attachments",
+          "Expense receipts",
+          "Office review checklist",
+          "Job profitability",
+          "History",
+          "Customer equipment",
+          "Billing"
+        ],
+        "evidenceBeforeMoney": true,
+        "materialsIdx": 5,
+        "photosIdx": 7,
+        "receiptsIdx": 8,
+        "checklistIdx": 9,
+        "profitIdx": 10,
+        "billingNav": true,
+        "equipmentNav": false,
+        "profitabilityVisible": true,
+        "workflowBadge": "1",
+        "headerActionButtons": [
+          "1",
+          "View asOwner / Admin",
+          "Sign out",
+          "Resend Invoice",
+          "Open dispatch",
+          "Smoke Test Customer"
+        ],
+        "nextActionVisible": true
+      }
+    },
+    {
+      "scenario": "mobile-section-navigation",
+      "jobId": "a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "jobNumber": "JOB-1111",
+      "route": "http://localhost:3040/jobs/a5ba6e04-d81c-4453-9c65-247a9679fff3#job-detail-materials",
+      "role": "owner",
+      "visibleWorkflowState": "Create Estimate",
+      "primaryExecutableCta": "Create Estimate",
+      "duplicateCta": false,
+      "pass": true,
+      "mobileAnchor": {
+        "label": "Materials",
+        "ok": true,
+        "hash": "job-detail-materials",
+        "expectedId": "job-detail-materials",
+        "inView": true
+      },
+      "signals": {
+        "url": "http://localhost:3040/jobs/a5ba6e04-d81c-4453-9c65-247a9679fff3",
+        "nextActionLabel": "Create Estimate",
+        "primaryButtons": [
+          "Create Estimate"
+        ],
+        "commandPlateLabels": [
+          "Scope",
+          "Materials",
+          "Photos",
+          "Billing",
+          "History"
+        ],
+        "commandPlateHasWorkflowCta": false,
+        "reopenVisible": false,
+        "sectionHeadings": [
+          "Workflow",
+          "Create Estimate",
+          "Customer",
+          "Dispatch",
+          "Work scope",
+          "Materials used",
+          "Log material",
+          "Photos & attachments",
+          "Expense receipts",
+          "Job profitability",
+          "History",
+          "Customer equipment",
+          "Billing"
+        ],
+        "evidenceBeforeMoney": true,
+        "materialsIdx": 5,
+        "photosIdx": 7,
+        "receiptsIdx": 8,
+        "checklistIdx": -1,
+        "profitIdx": 9,
+        "billingNav": true,
+        "equipmentNav": false,
+        "profitabilityVisible": true,
+        "workflowBadge": "",
+        "headerActionButtons": [
+          "1",
+          "View asOwner / Admin",
+          "Sign out",
+          "Open dispatch",
+          "Production Smoke 2026-07-12"
+        ],
+        "nextActionVisible": true
+      }
+    },
+    {
+      "scenario": "technician-overlay-smoke",
+      "jobId": "a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "jobNumber": "JOB-1111",
+      "route": "http://localhost:3040/technician?jobId=a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "role": "technician",
+      "visibleWorkflowState": "overlay-open",
+      "primaryExecutableCta": "technician-command-actions",
+      "duplicateCta": false,
+      "pass": true
+    },
+    {
+      "scenario": "financial-permission-denied",
+      "jobId": "a5ba6e04-d81c-4453-9c65-247a9679fff3",
+      "jobNumber": "JOB-1111",
+      "route": "http://localhost:3040/technician",
+      "role": "technician",
+      "visibleWorkflowState": "redirected-from-office-job-detail",
+      "primaryExecutableCta": "n/a (office detail blocked)",
+      "duplicateCta": false,
+      "pass": true
+    }
+  ],
+  "anchors": [
+    {
+      "label": "Scope",
+      "ok": true,
+      "hash": "job-detail-scope",
+      "expectedId": "job-detail-scope",
+      "inView": true
+    },
+    {
+      "label": "Materials",
+      "ok": true,
+      "hash": "job-detail-materials",
+      "expectedId": "job-detail-materials",
+      "inView": true
+    },
+    {
+      "label": "Photos",
+      "ok": true,
+      "hash": "job-detail-attachments",
+      "expectedId": "job-detail-attachments",
+      "inView": true
+    },
+    {
+      "label": "History",
+      "ok": true,
+      "hash": "job-detail-activity",
+      "expectedId": "job-detail-activity",
+      "inView": true
+    },
+    {
+      "label": "Billing",
+      "ok": true,
+      "hash": "job-detail-billing",
+      "expectedId": "job-detail-billing",
+      "inView": true
+    }
+  ],
+  "screenshots": [
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-1-2\\desktop-header-workflow-state.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-1-2\\desktop-single-next-command.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-1-2\\desktop-navigation-only-command-plate.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-1-2\\desktop-evidence-order.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-1-2\\desktop-money-order.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-1-2\\mobile-job-detail.png",
+    "C:\\Users\\User\\Desktop\\altair-os\\docs\\product\\job-command-center-phase-1-2\\technician-overlay-smoke.png"
+  ],
+  "defects": [],
+  "sectionOrder": {
+    "evidenceBeforeMoney": true,
+    "indices": {
+      "materials": 5,
+      "photos": 7,
+      "receipts": 8,
+      "checklist": -1,
+      "profit": 9
+    },
+    "headings": [
+      "Workflow",
+      "Create Estimate",
+      "Customer",
+      "Dispatch",
+      "Work scope",
+      "Materials used",
+      "Log material",
+      "Photos & attachments",
+      "Expense receipts",
+      "Job profitability",
+      "History",
+      "Customer equipment",
+      "Billing"
+    ]
+  },
+  "reopenException": {
+    "visible": true,
+    "onlyOnCompleted": true,
+    "duplicatesNextActionCta": false,
+    "note": "Reopen control may appear in header banners; Next Action shows terminal/completed state without a second primary executable workflow CTA."
+  },
+  "commandPlateNavOnly": true,
+  "technicianOverlay": {
+    "opened": true,
+    "quickActionsVisible": true,
+    "jobId": "a5ba6e04-d81c-4453-9c65-247a9679fff3",
+    "jobNumber": "JOB-1111",
+    "pass": true
+  },
+  "financialPermission": {
+    "role": "technician",
+    "attemptedRoute": "/jobs/a5ba6e04-d81c-4453-9c65-247a9679fff3",
+    "landed": "http://localhost:3040/technician",
+    "officeJobDetailBlocked": true,
+    "note": "Technician role lacks manageBilling/dispatchJobs/manageCompany; office layout redirects technicians away from North Star Job Detail, so prohibited financial sections are not reachable.",
+    "pass": true
+  },
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "failed": [],
+    "commandPlateNavOnly": true,
+    "evidenceBeforeMoney": true,
+    "anchorsPassed": true
+  }
+}

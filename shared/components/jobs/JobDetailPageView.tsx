@@ -501,6 +501,24 @@ function NorthStarMainColumn({
         />
       ) : null}
 
+      <JobMaterialsSection
+        jobId={job.id}
+        materials={materials}
+        serviceItems={serviceItems}
+        canLogMaterials={canLogMaterials}
+        canViewMaterialCosts={canViewFinancials}
+        northStar
+      />
+
+      <JobAttachmentsSection
+        jobId={job.id}
+        attachments={attachments}
+        canUpload={canUpdateStatus}
+        northStar
+      />
+
+      <JobExpenseReceiptsSection jobId={job.id} expenses={expenses} northStar />
+
       {canViewFinancials && profitability ? (
         <>
           <JobReviewChecklistSection
@@ -519,24 +537,6 @@ function NorthStarMainColumn({
           />
         </>
       ) : null}
-
-      <JobMaterialsSection
-        jobId={job.id}
-        materials={materials}
-        serviceItems={serviceItems}
-        canLogMaterials={canLogMaterials}
-        canViewMaterialCosts={canViewFinancials}
-        northStar
-      />
-
-      <JobAttachmentsSection
-        jobId={job.id}
-        attachments={attachments}
-        canUpload={canUpdateStatus}
-        northStar
-      />
-
-      <JobExpenseReceiptsSection jobId={job.id} expenses={expenses} northStar />
 
       <OperationalActivityTimeline
         activities={activities}
@@ -732,15 +732,8 @@ export function JobDetailPageView({
             northStar
           />
           <JobDetailSectionCommandPlate
-            job={job}
-            canUpdateStatus={canUpdateStatus}
-            canEditJob={canEditJob}
-            canViewBilling={canViewBilling}
-            canCreateEstimate={canViewBilling}
-            aiFeaturesEnabled={aiFeaturesEnabled}
             showBilling={showBillingNav}
             showEquipment={showEquipmentNav}
-            billingContext={billingContext}
           />
           <NorthStarJobDetailBody {...workspaceProps} />
         </>

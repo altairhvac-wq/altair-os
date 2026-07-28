@@ -51,10 +51,6 @@ function DesktopLoadingSkeleton() {
                 <Skeleton key={index} className="h-8 w-16 rounded-lg" />
               ))}
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              <Skeleton className="h-8 w-24 rounded-lg" />
-              <Skeleton className="h-8 w-28 rounded-lg" />
-            </div>
           </div>
 
           <div className={`hidden lg:grid ${dt.workspaceGrid}`}>
