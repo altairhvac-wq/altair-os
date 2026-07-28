@@ -1336,6 +1336,15 @@ export type Database = {
         };
         Returns: TimeEntryRow;
       };
+      create_time_entry: {
+        Args: {
+          p_company_id: string;
+          p_entry_type: TimeEntryRow["entry_type"];
+          p_job_id?: string | null;
+          p_notes?: string | null;
+        };
+        Returns: TimeEntryRow;
+      };
       generate_expense_number: {
         Args: {
           p_company_id: string;

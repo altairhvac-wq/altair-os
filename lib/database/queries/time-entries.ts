@@ -374,38 +374,85 @@ export async function createTimeEntry(
 ): Promise<{ entry: TimeEntry | null; error: string | null }> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("time_entries")
-    .insert({
-      company_id: input.company_id,
-      technician_id: input.technician_id,
-      job_id: input.job_id ?? null,
-      entry_type: input.entry_type,
-      started_at: input.started_at ?? new Date().toISOString(),
-      ended_at: input.ended_at ?? null,
-      duration_minutes: input.duration_minutes ?? null,
-      notes: input.notes ?? null,
-    })
-    .select(TIME_ENTRY_SELECT)
-    .single();
+  // Open-entry path is enforced by create_time_entry (migration 122).
+  // Server forces technician_id = auth.uid(), started_at = now(), and null
+  // ended_at / duration_minutes. Caller-supplied identity/schedule/duration
+  // fields are intentionally ignored.
+  const { data: created, error: rpcError } = await supabase.rpc(
+    "create_time_entry",
+    {
+      p_company_id: input.company_id,
+      p_entry_type: input.entry_type,
+      p_job_id: input.job_id ?? null,
+      p_notes: input.notes ?? null,
+    },
+  );
 
-  if (error) {
-    console.error("[createTimeEntry] insert failed:", {
+  if (rpcError) {
+    console.error("[createTimeEntry] rpc failed:", {
       companyId: input.company_id,
       technicianId: input.technician_id,
       entryType: input.entry_type,
-      code: error.code,
-      message: error.message,
+      code: rpcError.code,
+      message: rpcError.message,
     });
 
-    if (error.code === "23505") {
+    if (rpcError.code === "23505") {
       return {
         entry: null,
         error: mapActiveEntryConstraintError(input.entry_type),
       };
     }
 
+    const msg = rpcError.message ?? "";
+    if (msg.includes("You already have an open shift clock entry")) {
+      return { entry: null, error: mapActiveEntryConstraintError("clock") };
+    }
+    if (msg.includes("You are already on break")) {
+      return { entry: null, error: mapActiveEntryConstraintError("break") };
+    }
+    if (msg.includes("You already have open job work")) {
+      return {
+        entry: null,
+        error: mapActiveEntryConstraintError("job_labor"),
+      };
+    }
+
+    return { entry: null, error: mapDatabaseError(rpcError) };
+  }
+
+  const createdId =
+    created && typeof created === "object" && "id" in created
+      ? String((created as { id: string }).id)
+      : null;
+
+  if (!createdId) {
+    return { entry: null, error: "Failed to create time entry." };
+  }
+
+  const { data, error } = await supabase
+    .from("time_entries")
+    .select(TIME_ENTRY_SELECT)
+    .eq("company_id", input.company_id)
+    .eq("id", createdId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[createTimeEntry] post-rpc fetch failed:", {
+      companyId: input.company_id,
+      entryId: createdId,
+      code: error.code,
+      message: error.message,
+    });
     return { entry: null, error: mapDatabaseError(error) };
+  }
+
+  if (!data) {
+    return {
+      entry: null,
+      error:
+        "Time entry was created but could not be read back. Refresh the page.",
+    };
   }
 
   return {
