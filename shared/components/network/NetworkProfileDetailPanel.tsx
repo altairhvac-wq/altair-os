@@ -13,7 +13,7 @@ import { getPartnerInitials } from "@/shared/types/network";
 import type { NetworkProfile } from "@/shared/types/network-referral";
 import { st, type NetworkSurface } from "./north-star-m11/network-north-star-styles";
 import { NetworkTrustedBadge } from "./NetworkTrustedBadge";
-import { SendReferralForm } from "./SendReferralForm";
+import { SendReferralDialog } from "./SendReferralDialog";
 import type { NetworkReferral } from "@/shared/types/network-referral";
 
 type PanelMode = "detail" | "referral" | "empty";
@@ -54,14 +54,13 @@ export function NetworkProfileDetailPanel({
   surface = "legacy",
 }: NetworkProfileDetailPanelProps) {
   const isNorthStar = surface === "north-star";
-  const title =
-    mode === "referral" && profile
-      ? `Send referral to ${profile.displayName}`
-      : mode === "detail" && profile
-        ? "Business profile"
-        : isNorthStar
-          ? "Select a company"
-          : "Community profile";
+  const detailProfile =
+    mode === "detail" || mode === "referral" ? profile : null;
+  const title = detailProfile
+    ? "Business profile"
+    : isNorthStar
+      ? "Select a company"
+      : "Community profile";
 
   const asideClass = isNorthStar
     ? st.detailPanel
@@ -121,13 +120,11 @@ export function NetworkProfileDetailPanel({
         <div className="min-w-0">
           <h2 className={titleClass}>{title}</h2>
           <p className={subtitleClass}>
-            {mode === "referral"
-              ? "Create a lead in their pipeline with referral context"
-              : mode === "detail"
-                ? profile?.displayName ?? "Community business profile"
-                : isNorthStar
-                  ? "Choose a partner from the directory to view trust status, service area, and referral actions."
-                  : "Select a company to view profile and send referrals"}
+            {detailProfile
+              ? detailProfile.displayName
+              : isNorthStar
+                ? "Choose a partner from the directory to view trust status, service area, and referral actions."
+                : "Select a company to view profile and send referrals"}
           </p>
         </div>
         {mode !== "empty" ? (
@@ -174,28 +171,30 @@ export function NetworkProfileDetailPanel({
           )
         ) : null}
 
-        {mode === "detail" && profile ? (
+        {detailProfile ? (
           <div className="space-y-5">
             <div className={isNorthStar ? st.detailPanelProfileHero : undefined}>
               <div className="flex items-start gap-3">
                 <div className={avatarClass}>
-                  {getPartnerInitials(profile.displayName)}
+                  {getPartnerInitials(detailProfile.displayName)}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className={isNorthStar ? st.detailPanelProfileName : tradeClass}>
-                    {profile.displayName}
+                    {detailProfile.displayName}
                   </p>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
-                    <p className={tradeClass}>{profile.tradeType}</p>
+                    <p className={tradeClass}>{detailProfile.tradeType}</p>
                     {isInMyNetwork ? (
                       <NetworkTrustedBadge surface={surface} />
                     ) : null}
                   </div>
-                  {profile.city || profile.state ? (
+                  {detailProfile.city || detailProfile.state ? (
                     <div className={locationClass}>
                       <MapPin className="h-3.5 w-3.5 shrink-0" />
                       <span>
-                        {[profile.city, profile.state].filter(Boolean).join(", ")}
+                        {[detailProfile.city, detailProfile.state]
+                          .filter(Boolean)
+                          .join(", ")}
                       </span>
                     </div>
                   ) : null}
@@ -203,17 +202,19 @@ export function NetworkProfileDetailPanel({
               </div>
             </div>
 
-            {profile.serviceArea ? (
+            {detailProfile.serviceArea ? (
               <section>
                 <p className={sectionLabelClass}>Service area</p>
-                <p className={bodyTextClass}>{profile.serviceArea}</p>
+                <p className={bodyTextClass}>{detailProfile.serviceArea}</p>
               </section>
             ) : null}
 
-            {profile.bio ? (
+            {detailProfile.bio ? (
               <section>
                 <p className={sectionLabelClass}>About</p>
-                <p className={`${bodyTextClass} leading-relaxed`}>{profile.bio}</p>
+                <p className={`${bodyTextClass} leading-relaxed`}>
+                  {detailProfile.bio}
+                </p>
               </section>
             ) : null}
 
@@ -230,6 +231,8 @@ export function NetworkProfileDetailPanel({
                         type="button"
                         onClick={onSendReferral}
                         className={networkButtonClass}
+                        disabled={mode === "referral"}
+                        aria-pressed={mode === "referral"}
                       >
                         <Send className="h-4 w-4" />
                         Send Referral
@@ -243,7 +246,7 @@ export function NetworkProfileDetailPanel({
                       <button
                         type="button"
                         onClick={onRemoveFromNetwork}
-                        disabled={isNetworkActionPending}
+                        disabled={isNetworkActionPending || mode === "referral"}
                         className={networkButtonSecondaryClass}
                       >
                         <UserMinus className="h-4 w-4" />
@@ -259,7 +262,7 @@ export function NetworkProfileDetailPanel({
                       <button
                         type="button"
                         onClick={onAddToNetwork}
-                        disabled={isNetworkActionPending}
+                        disabled={isNetworkActionPending || mode === "referral"}
                         className={networkButtonClass}
                       >
                         <UserPlus className="h-4 w-4" />
@@ -273,6 +276,8 @@ export function NetworkProfileDetailPanel({
                         type="button"
                         onClick={onSendReferral}
                         className={networkButtonSecondaryClass}
+                        disabled={mode === "referral"}
+                        aria-pressed={mode === "referral"}
                       >
                         <Send className="h-4 w-4" />
                         Send Referral
@@ -299,6 +304,8 @@ export function NetworkProfileDetailPanel({
                     type="button"
                     onClick={onSendReferral}
                     className={networkButtonClass}
+                    disabled={mode === "referral"}
+                    aria-pressed={mode === "referral"}
                   >
                     <Send className="h-4 w-4" />
                     Send Referral
@@ -312,16 +319,15 @@ export function NetworkProfileDetailPanel({
             )}
           </div>
         ) : null}
-
-        {mode === "referral" && profile ? (
-          <SendReferralForm
-            targetProfile={profile}
-            onSuccess={onReferralSuccess}
-            onCancel={onReferralCancel}
-            surface={surface}
-          />
-        ) : null}
       </div>
+
+      <SendReferralDialog
+        open={mode === "referral" && Boolean(profile)}
+        targetProfile={profile}
+        onSuccess={onReferralSuccess}
+        onCancel={onReferralCancel}
+        surface={surface}
+      />
     </aside>
   );
 }

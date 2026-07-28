@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { sendNetworkReferralAction } from "@/app/actions/network-referrals";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { AdminPendingLabel } from "@/shared/design-system/components";
+import {
+  AltairDialogBody,
+  AltairDialogFooter,
+} from "@/shared/design-system/dialog";
 import { adminFormInputClass } from "@/shared/lib/admin-density";
 import {
   NETWORK_REFERRAL_URGENCY_OPTIONS,
@@ -18,6 +22,12 @@ type SendReferralFormProps = {
   onSuccess: (referral: NetworkReferral) => void;
   onCancel: () => void;
   surface?: NetworkSurface;
+  /**
+   * `dialog` wraps fields in AltairDialogBody and pins Cancel / Send Referral
+   * in AltairDialogFooter. `inline` keeps the stacked layout.
+   */
+  presentation?: "inline" | "dialog";
+  onPendingChange?: (pending: boolean) => void;
 };
 
 const DEFAULT_FORM: NetworkReferralFormData = {
@@ -35,15 +45,18 @@ const DEFAULT_FORM: NetworkReferralFormData = {
   incentiveNote: "",
 };
 
-const inputClassName = `${adminFormInputClass} mt-1 rounded-xl`;
+const inputClassName = `${adminFormInputClass} mt-1 w-full rounded-xl`;
 
 export function SendReferralForm({
   targetProfile,
   onSuccess,
   onCancel,
   surface = "legacy",
+  presentation = "inline",
+  onPendingChange,
 }: SendReferralFormProps) {
   const isNorthStar = surface === "north-star";
+  const isDialog = presentation === "dialog";
   const inputClass = isNorthStar ? st.formInput : inputClassName;
   const labelClass = isNorthStar ? st.formLabel : "text-xs font-semibold text-slate-700";
   const sectionTitleClass = isNorthStar
@@ -52,6 +65,9 @@ export function SendReferralForm({
   const sectionSubtitleClass = isNorthStar
     ? "text-xs text-[#6B6255]"
     : "text-xs text-slate-500";
+  const sectionShellClass = isDialog
+    ? "space-y-4 border-t border-[rgba(138,99,36,0.10)] pt-5"
+    : "space-y-4";
   const receiverCardClass = isNorthStar
     ? "rounded-[1rem] border border-[rgba(138,99,36,0.12)] bg-[#FFF9EA] p-4"
     : "rounded-2xl border border-slate-200 bg-white p-4";
@@ -59,14 +75,14 @@ export function SendReferralForm({
     ? "text-xs font-semibold uppercase tracking-wide text-[#6B6255]"
     : "text-xs font-semibold uppercase tracking-wide text-slate-500";
   const receiverNameClass = isNorthStar
-    ? "mt-1 text-sm font-semibold text-[#17130E]"
-    : "mt-1 text-sm font-semibold text-slate-900";
+    ? "mt-1 text-base font-semibold text-[#17130E]"
+    : "mt-1 text-base font-semibold text-slate-900";
   const receiverMetaClass = isNorthStar
-    ? "mt-0.5 text-xs text-[#6B6255]"
-    : "mt-0.5 text-xs text-slate-500";
+    ? "mt-0.5 text-sm text-[#6B6255]"
+    : "mt-0.5 text-sm text-slate-500";
   const incentiveSectionClass = isNorthStar
-    ? "space-y-3 rounded-[1rem] border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] p-4"
-    : "space-y-3 rounded-2xl border border-amber-100 bg-amber-50/40 p-4";
+    ? "space-y-3 rounded-[1rem] border border-[rgba(138,99,36,0.14)] bg-[#FFF9EA] p-4 sm:p-5"
+    : "space-y-3 rounded-2xl border border-amber-100 bg-amber-50/40 p-4 sm:p-5";
   const incentiveNoteClass = isNorthStar
     ? "text-xs leading-relaxed text-[#6B6255]"
     : "text-xs leading-relaxed text-amber-900/80";
@@ -75,12 +91,19 @@ export function SendReferralForm({
     : "rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700";
   const submitClass = isNorthStar ? st.saveButton : "admin-btn-primary";
   const cancelClass = isNorthStar ? st.cancelButton : "admin-btn-secondary";
+  const textareaClass = isNorthStar
+    ? `${st.formTextarea} min-h-[112px]`
+    : `${inputClassName} min-h-[112px]`;
   const [formData, setFormData] = useState<NetworkReferralFormData>({
     ...DEFAULT_FORM,
     targetNetworkProfileId: targetProfile.id,
   });
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
 
   function updateField<K extends keyof NetworkReferralFormData>(
     key: K,
@@ -104,8 +127,8 @@ export function SendReferralForm({
     });
   }
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+  const fields = (
+    <div className={isDialog ? "space-y-6 sm:space-y-7" : "space-y-6"}>
       <section className={receiverCardClass}>
         <p className={receiverLabelClass}>Receiving company</p>
         <p className={receiverNameClass}>{targetProfile.displayName}</p>
@@ -117,7 +140,7 @@ export function SendReferralForm({
         </p>
       </section>
 
-      <section className="space-y-4">
+      <section className={isDialog ? "space-y-4" : sectionShellClass}>
         <div>
           <h3 className={sectionTitleClass}>Customer / contact</h3>
           <p className={sectionSubtitleClass}>
@@ -138,8 +161,12 @@ export function SendReferralForm({
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
+        <div
+          className={
+            isDialog ? "grid gap-4 md:grid-cols-2" : "grid gap-4 sm:grid-cols-2"
+          }
+        >
+          <div className="min-w-0">
             <label className={labelClass} htmlFor="customerPhone">
               Phone
             </label>
@@ -150,7 +177,7 @@ export function SendReferralForm({
               onChange={(event) => updateField("customerPhone", event.target.value)}
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className={labelClass} htmlFor="customerEmail">
               Email
             </label>
@@ -165,7 +192,7 @@ export function SendReferralForm({
         </div>
       </section>
 
-      <section className="space-y-4">
+      <section className={sectionShellClass}>
         <div>
           <h3 className={sectionTitleClass}>Job details</h3>
           <p className={sectionSubtitleClass}>
@@ -185,8 +212,14 @@ export function SendReferralForm({
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div>
+        <div
+          className={
+            isDialog
+              ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+              : "grid gap-4 sm:grid-cols-3"
+          }
+        >
+          <div className="min-w-0">
             <label className={labelClass} htmlFor="city">
               City
             </label>
@@ -197,7 +230,7 @@ export function SendReferralForm({
               onChange={(event) => updateField("city", event.target.value)}
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className={labelClass} htmlFor="state">
               State
             </label>
@@ -208,7 +241,7 @@ export function SendReferralForm({
               onChange={(event) => updateField("state", event.target.value)}
             />
           </div>
-          <div>
+          <div className="min-w-0 sm:col-span-2 lg:col-span-1">
             <label className={labelClass} htmlFor="zip">
               ZIP
             </label>
@@ -227,7 +260,7 @@ export function SendReferralForm({
           </label>
           <textarea
             id="requestedService"
-            className={isNorthStar ? `${st.formTextarea} min-h-[88px]` : `${inputClassName} min-h-[88px]`}
+            className={textareaClass}
             value={formData.requestedService}
             onChange={(event) => updateField("requestedService", event.target.value)}
             required
@@ -263,7 +296,7 @@ export function SendReferralForm({
           </label>
           <textarea
             id="notes"
-            className={isNorthStar ? `${st.formTextarea} min-h-[88px]` : `${inputClassName} min-h-[88px]`}
+            className={textareaClass}
             value={formData.notes}
             onChange={(event) => updateField("notes", event.target.value)}
           />
@@ -290,28 +323,53 @@ export function SendReferralForm({
       </section>
 
       {error ? (
-        <p className={errorClass}>
+        <p className={errorClass} role="alert">
           {error}
         </p>
       ) : null}
+    </div>
+  );
 
-      <div className="flex flex-wrap justify-end gap-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className={cancelClass}
-          disabled={isPending}
-        >
-          Cancel
-        </button>
-        <button type="submit" className={submitClass} disabled={isPending}>
-          <AdminPendingLabel
-            pending={isPending}
-            pendingLabel="Sending referral…"
-            idleLabel="Send Referral Lead"
-          />
-        </button>
-      </div>
+  const actions = (
+    <>
+      <button
+        type="button"
+        onClick={onCancel}
+        className={`${cancelClass} w-full sm:w-auto`}
+        disabled={isPending}
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        className={`${submitClass} w-full sm:w-auto`}
+        disabled={isPending}
+      >
+        <AdminPendingLabel
+          pending={isPending}
+          pendingLabel="Sending referral…"
+          idleLabel="Send Referral"
+        />
+      </button>
+    </>
+  );
+
+  if (isDialog) {
+    return (
+      <form
+        onSubmit={handleSubmit}
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        <AltairDialogBody>{fields}</AltairDialogBody>
+        <AltairDialogFooter>{actions}</AltairDialogFooter>
+      </form>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {fields}
+      <div className="flex flex-wrap justify-end gap-2">{actions}</div>
     </form>
   );
 }
