@@ -477,21 +477,24 @@ Dashboard, Dispatch, Customers, Leads, Marketing, Jobs, Estimates, Price Book, I
 
 ---
 
-### Network
+### Network / Altair Community
 
-**Status:** Production (Production Hardened — referrals, invites, partner connections)
+**Status:** Production (Production Hardened — referrals, invites, partner connections; Community Phase 1 orientation shell)
 
-**Description:** Cross-company directory, trusted partners, invitations, and lead referrals.
+**Description:** User-facing **Altair Community** on `/network`. Cross-company directory, business relationships, invitations, and lead referrals. Presentation uses Community terminology; internal models remain Network-oriented.
 
 **Features:**
+- **Community Home** orientation: Needs Attention, profile readiness, My Relationships, invite/browse actions
 - **Directory** (`network_profiles`): public discovery profiles with visibility toggle
-- **My Network** (`network_partners`): trusted Altair company links (`linked_company_id`)
+- **My Relationships** (`network_partners`): one-sided Altair company links (`linked_company_id`)
 - **Invitations** (`network_invites`): invite contractors; accept creates bidirectional partner rows
 - **Incoming invite acceptance** in-platform (`IncomingNetworkInvitesCard`, `acceptIncomingNetworkInviteAction`)
 - **Sent/received referrals** (`network_referrals`): cross-company lead handoff; creates lead at send time
 - Referral outcome sync from lead pipeline
 - Invite partner link repair on page load
 - Trade types: HVAC, Plumbing, Electrical, Roofing, General Contracting, Landscaping, Painting
+
+**Not yet implemented (deferred):** Help Requests, Opportunities, Questions, Wins, Events, public reputation, `/community` route rename, database model rename
 
 **Dependencies:** network-profiles, network-partners, network-invites, network-referrals, leads
 

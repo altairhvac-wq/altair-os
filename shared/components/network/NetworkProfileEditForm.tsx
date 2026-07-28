@@ -78,7 +78,7 @@ export function NetworkProfileEditForm({
       const result = await updateOwnNetworkProfileAction(formData);
       if (result.error || !result.ownProfile) {
         setError(
-          formatActionError(result.error, "We couldn't save your network profile."),
+          formatActionError(result.error, "We couldn't save your Community profile."),
         );
         return;
       }
@@ -94,10 +94,10 @@ export function NetworkProfileEditForm({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h2 className={isNorthStar ? st.sectionTitle : "text-sm font-semibold text-slate-900"}>
-            Your network profile
+            Your Community profile
           </h2>
           <p className={isNorthStar ? `${st.sectionSubtitle} mt-1` : "mt-1 text-xs text-slate-500"}>
-            Control how other companies discover you for trusted referrals.
+            Control how other companies discover you for referrals and relationships.
           </p>
         </div>
         <button
@@ -277,7 +277,7 @@ export function NetworkProfileEditForm({
               <span>
                 <span className={`block ${labelClass}`}>Visible in directory</span>
                 <span className={optionalClass}>
-                  Other companies can find your profile in Discover.
+                  Other companies can find your profile in the Community directory.
                 </span>
               </span>
             </label>
@@ -294,7 +294,7 @@ export function NetworkProfileEditForm({
               <span>
                 <span className={`block ${labelClass}`}>Accepting referrals</span>
                 <span className={optionalClass}>
-                  Show that your company is open to trusted referral work.
+                  Show that your company is open to referral work.
                 </span>
               </span>
             </label>

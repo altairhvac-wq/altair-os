@@ -514,8 +514,8 @@ function NetworkReferralsPageLegacyView({
       <MasterPageCanvas width="wide" className="min-h-0 flex-1">
         <MasterContentStack density="compact" className="shrink-0">
           <MasterPageHeader
-            title="Network"
-            subtitle="Manage referral partners, invitations, and shared leads."
+            title="Community"
+            subtitle="Build stronger business relationships, manage referrals, and connect with companies in your area."
             density="compact"
             primaryAction={
               canManageNetwork ? (
@@ -525,7 +525,7 @@ function NetworkReferralsPageLegacyView({
                   className={masterSecondaryActionClass}
                 >
                   <UserPlus className="h-4 w-4" />
-                  Invite Partner
+                  Invite a Business
                 </button>
               ) : undefined
             }
@@ -817,7 +817,7 @@ function NetworkReferralsPageLegacyView({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-base font-bold text-slate-900">
-                    Trusted Partners
+                    My Relationships
                   </h2>
                   <p className="text-xs text-slate-500">
                     Companies in your private network for quick referrals
@@ -831,7 +831,7 @@ function NetworkReferralsPageLegacyView({
                       className={masterSecondaryActionClass}
                     >
                       <UserPlus className="h-4 w-4" />
-                      Invite Partner
+                      Invite a Business
                     </button>
                   ) : null}
                   <p className="text-xs font-medium text-slate-500">
@@ -933,7 +933,7 @@ function NetworkReferralsPageLegacyView({
                     className={masterSecondaryActionClass}
                   >
                     <UserPlus className="h-4 w-4" />
-                    Invite Partner
+                    Invite a Business
                   </button>
                 ) : null}
               </div>

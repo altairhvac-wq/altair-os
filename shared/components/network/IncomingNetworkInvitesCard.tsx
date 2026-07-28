@@ -58,7 +58,7 @@ export function IncomingNetworkInvitesCard({
       setSuccess(
         result.alreadyAccepted
           ? `Already connected with ${invite.sourceCompanyName}.`
-          : "Connected. Both companies are now trusted partners.",
+          : "Connected. Both companies are now in each other's relationships.",
       );
       setAcceptingId(null);
       router.refresh();
@@ -91,7 +91,7 @@ export function IncomingNetworkInvitesCard({
               You&apos;ve been invited to connect with {invite.sourceCompanyName}.
             </p>
             <p className={bodyClass}>
-              Accept to add both companies as trusted network partners.
+              Accept to add both companies to your Community relationships.
             </p>
           </div>
           <button
@@ -106,7 +106,7 @@ export function IncomingNetworkInvitesCard({
         </div>
         {!canAccept ? (
           <p className={`mt-2 text-xs ${isNorthStar ? "text-[#6B6255]" : "text-slate-500"}`}>
-            Only company owners and admins can accept network invitations.
+            Only company owners and admins can accept Community invitations.
           </p>
         ) : null}
         {error ? <p className="mt-2 text-xs text-rose-700">{error}</p> : null}
@@ -146,7 +146,7 @@ export function IncomingNetworkInvitesCard({
           <div className="min-w-0">
             <h2 className={headingClass}>Incoming Invitations</h2>
             <p className={subheadingClass}>
-              Network invitations sent to your email address for this workspace.
+              Community invitations sent to your email address for this workspace.
             </p>
           </div>
         </div>
@@ -215,7 +215,7 @@ export function IncomingNetworkInvitesCard({
 
         {!canAccept ? (
           <p className={`text-xs ${isNorthStar ? "text-[#6B6255]" : "text-slate-500"}`}>
-            Only company owners and admins can accept network invitations.
+            Only company owners and admins can accept Community invitations.
           </p>
         ) : null}
 

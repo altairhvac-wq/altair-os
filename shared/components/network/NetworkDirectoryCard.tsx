@@ -119,7 +119,7 @@ export function NetworkDirectoryCard({
                 className={st.cardActionFull}
               >
                 <UserMinus className="h-3.5 w-3.5" />
-                {isNetworkActionPending ? "Removing..." : "Remove from My Network"}
+                {isNetworkActionPending ? "Removing..." : "Remove from Relationships"}
               </button>
             ) : onAddToNetwork ? (
               <button
@@ -132,7 +132,7 @@ export function NetworkDirectoryCard({
                 className={st.cardActionAccentFull}
               >
                 <UserPlus className="h-3.5 w-3.5" />
-                {isNetworkActionPending ? "Adding..." : "Add to My Network"}
+                {isNetworkActionPending ? "Adding..." : "Add to Relationships"}
               </button>
             ) : null}
 
@@ -236,7 +236,7 @@ export function NetworkDirectoryCard({
               className={removeButtonClass}
             >
               <UserMinus className="h-3.5 w-3.5" />
-              {isNetworkActionPending ? "Removing..." : "Remove from My Network"}
+              {isNetworkActionPending ? "Removing..." : "Remove from Relationships"}
             </button>
           ) : onAddToNetwork ? (
             <button
@@ -249,7 +249,7 @@ export function NetworkDirectoryCard({
               className={addButtonClass}
             >
               <UserPlus className="h-3.5 w-3.5" />
-              {isNetworkActionPending ? "Adding..." : "Add to My Network"}
+              {isNetworkActionPending ? "Adding..." : "Add to Relationships"}
             </button>
           ) : null}
 

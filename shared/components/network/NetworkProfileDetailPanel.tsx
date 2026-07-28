@@ -58,10 +58,10 @@ export function NetworkProfileDetailPanel({
     mode === "referral" && profile
       ? `Send referral to ${profile.displayName}`
       : mode === "detail" && profile
-        ? "Partner profile"
+        ? "Business profile"
         : isNorthStar
           ? "Select a company"
-          : "Network profile";
+          : "Community profile";
 
   const asideClass = isNorthStar
     ? st.detailPanel
@@ -127,7 +127,7 @@ export function NetworkProfileDetailPanel({
             {mode === "referral"
               ? "Create a lead in their pipeline with referral context"
               : mode === "detail"
-                ? profile?.displayName ?? "Trusted trade company profile"
+                ? profile?.displayName ?? "Community business profile"
                 : isNorthStar
                   ? "Choose a partner from the directory to view trust status, service area, and referral actions."
                   : "Select a company to view profile and send referrals"}
@@ -226,7 +226,7 @@ export function NetworkProfileDetailPanel({
                   <div className="space-y-3">
                     <div className={`${trustedNoticeClass} inline-flex w-full items-center justify-center gap-1.5 py-2.5`}>
                       <CheckCircle2 className="h-3.5 w-3.5" />
-                      Trusted partner
+                      In Your Relationships
                     </div>
                     {onRemoveFromNetwork ? (
                       <button
@@ -238,7 +238,7 @@ export function NetworkProfileDetailPanel({
                         <UserMinus className="h-4 w-4" />
                         {isNetworkActionPending
                           ? "Removing..."
-                          : "Remove from My Network"}
+                          : "Remove from Relationships"}
                       </button>
                     ) : null}
                   </div>
@@ -250,7 +250,9 @@ export function NetworkProfileDetailPanel({
                     className={networkButtonClass}
                   >
                     <UserPlus className="h-4 w-4" />
-                    {isNetworkActionPending ? "Adding..." : "Add to My Network"}
+                    {isNetworkActionPending
+                      ? "Adding..."
+                      : "Add to Relationships"}
                   </button>
                 ) : null}
 
@@ -260,7 +262,7 @@ export function NetworkProfileDetailPanel({
               </div>
             ) : (
               <p className={permissionClass}>
-                Network connections are managed by company owners and admins.
+                Community relationships are managed by company owners and admins.
               </p>
             )}
 

@@ -5,6 +5,7 @@ import {
 } from "@/shared/types/network-referral";
 
 export type NetworkWorkspaceTab =
+  | "overview"
   | "partners"
   | "referrals"
   | "invitations"
@@ -22,7 +23,8 @@ export const NETWORK_WORKSPACE_TAB_OPTIONS: {
   value: NetworkWorkspaceTab;
   label: string;
 }[] = [
-  { value: "partners", label: "Partners" },
+  { value: "overview", label: "Home" },
+  { value: "partners", label: "Relationships" },
   { value: "referrals", label: "Referrals" },
   { value: "invitations", label: "Invitations" },
   { value: "directory", label: "Directory" },
@@ -51,10 +53,10 @@ export function getVisibleNetworkWorkspaceTabs(
   permissions: NetworkWorkspacePermissions,
 ): NetworkWorkspaceTab[] {
   if (isReferralsOnlyWorkspaceUser(permissions)) {
-    return ["referrals"];
+    return ["overview", "referrals"];
   }
 
-  const tabs: NetworkWorkspaceTab[] = [];
+  const tabs: NetworkWorkspaceTab[] = ["overview"];
 
   if (permissions.canManageNetwork) {
     tabs.push("partners");
@@ -78,23 +80,12 @@ export function getVisibleNetworkWorkspaceTabs(
 export function getDefaultNetworkWorkspaceTab(
   permissions: NetworkWorkspacePermissions,
 ): NetworkWorkspaceTab {
-  if (isReferralsOnlyWorkspaceUser(permissions)) {
-    return "referrals";
+  const visible = getVisibleNetworkWorkspaceTabs(permissions);
+  if (visible.includes("overview")) {
+    return "overview";
   }
 
-  if (permissions.canManageNetwork) {
-    return "partners";
-  }
-
-  if (permissions.canManageReceivedReferrals) {
-    return "referrals";
-  }
-
-  if (permissions.canSendReferral) {
-    return "directory";
-  }
-
-  return "partners";
+  return visible[0] ?? "overview";
 }
 
 export function getVisibleNetworkReferralsSubTabs(
@@ -130,4 +121,20 @@ export function hasReferralsAttention(
   receivedReferrals: NetworkReferral[],
 ): boolean {
   return receivedReferrals.some(isActionableReceivedNetworkReferral);
+}
+
+export function hasCommunityAttention(input: {
+  incomingInvites: IncomingNetworkInvite[];
+  receivedReferrals: NetworkReferral[];
+  canManageReceivedReferrals: boolean;
+}): boolean {
+  if (hasInvitationsAttention(input.incomingInvites)) {
+    return true;
+  }
+
+  if (!input.canManageReceivedReferrals) {
+    return false;
+  }
+
+  return hasReferralsAttention(input.receivedReferrals);
 }

@@ -18,7 +18,7 @@ export function NetworkTrustedBadge({
   return (
     <span className={`${badgeClass} ${className}`}>
       <BadgeCheck className="h-3 w-3" />
-      Trusted Partner
+      In Your Relationships
     </span>
   );
 }

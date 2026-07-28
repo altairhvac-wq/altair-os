@@ -135,7 +135,7 @@ const CAPTURES = [
   },
   {
     id: "network-workspace",
-    label: "Network workspace",
+    label: "Community workspace",
     route: "/network",
     output: "network-full-page.png",
     anchor: ".north-star-network-page-header",

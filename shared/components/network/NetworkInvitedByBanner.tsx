@@ -58,7 +58,7 @@ export function NetworkInvitedByBanner({
         <p className={titleClass}>Invited by</p>
         <p className={nameClass}>{sourceCompanyName}</p>
         <p className={bodyClass}>
-          You joined Altair through a trusted network invitation.
+          You joined Altair through a Community invitation.
         </p>
       </div>
       <button

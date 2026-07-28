@@ -21,8 +21,8 @@ export function NetworkLoadingState() {
       <MasterPageCanvas width="wide" className="min-h-0 flex-1">
         <MasterContentStack density="compact" className="shrink-0">
           <MasterPageHeader
-            title="Network"
-            subtitle="Manage referral partners, invitations, and shared leads."
+            title="Community"
+            subtitle="Build stronger business relationships, manage referrals, and connect with companies in your area."
             density="compact"
             primaryAction={<Skeleton className="h-9 w-36 shrink-0 rounded-xl" />}
           />

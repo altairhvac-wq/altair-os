@@ -4,7 +4,6 @@ import {
   MasterShellPage,
   masterListPageScrollRegionClass,
 } from "@/shared/design-system/shell";
-import { listDetailListSectionClassName } from "@/shared/components/layout/list-detail-layout";
 import { st } from "./network-north-star-styles";
 
 function Skeleton({
@@ -21,14 +20,14 @@ function Skeleton({
   );
 }
 
-const NETWORK_TAB_COUNT = 5;
+const COMMUNITY_TAB_COUNT = 5;
 
 export function NetworkNorthStarLoadingState() {
   return (
     <MasterShellPage fillViewport density="compact" className={st.pageCanvas}>
       <MasterPageHeader
-        title="Network"
-        subtitle="Manage referral partners, invitations, and shared leads."
+        title="Community"
+        subtitle="Build stronger business relationships, manage referrals, and connect with companies in your area."
         density="compact"
         surfaceVariant="northStar"
         className={`north-star-network-page-header ${st.pageHeader}`}
@@ -38,18 +37,10 @@ export function NetworkNorthStarLoadingState() {
       />
 
       <MasterContentStack density="compact" className={st.workspaceStack}>
-        <div className={st.profileVisibilityStrip}>
-          <div className="min-w-0 flex-1 space-y-2">
-            <Skeleton className="h-4 w-40" />
-            <Skeleton className="h-3 w-64 max-w-full" />
-          </div>
-          <Skeleton className="h-9 w-36 shrink-0 rounded-lg" />
-        </div>
-
-        <div className={`${st.sectionSurface} overflow-hidden`}>
+        <div className={`${st.tabBodySurface} overflow-hidden`}>
           <div className={st.tabBand}>
             <div className={st.tabControl} aria-hidden="true">
-              {Array.from({ length: NETWORK_TAB_COUNT }).map((_, index) => (
+              {Array.from({ length: COMMUNITY_TAB_COUNT }).map((_, index) => (
                 <Skeleton
                   key={index}
                   className="h-9 min-w-0 rounded-md sm:w-28 sm:shrink-0"
@@ -58,47 +49,43 @@ export function NetworkNorthStarLoadingState() {
             </div>
           </div>
 
-          <div className="p-3 pb-4 sm:p-4 sm:pb-5 lg:px-5 lg:pb-6">
-            <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:flex-row lg:overflow-hidden">
-              <div
-                className={`${st.sectionSurface} ${listDetailListSectionClassName} flex min-h-[16rem] min-w-0 flex-[1_1_55%] flex-col lg:min-h-[24rem] lg:flex-1 lg:overflow-hidden`}
-              >
-                <div className={st.panelHeader}>
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="space-y-2">
-                      <Skeleton className="h-2.5 w-16" />
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-3 w-56 max-w-full" />
-                    </div>
-                    <Skeleton className="h-3 w-20" />
-                  </div>
-                  <div className={`${st.filterControl} mt-3`}>
-                    <Skeleton className="h-8 w-24 rounded-md" />
-                    <Skeleton className="h-8 w-28 rounded-md" />
-                  </div>
-                  <Skeleton className="mt-3 h-10 w-full rounded-lg" />
-                </div>
+          <div className="space-y-4 p-3 pb-4 sm:p-4 sm:pb-5 lg:px-5 lg:pb-6">
+            <div className="rounded-[1.25rem] border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]/80 px-4 py-4">
+              <Skeleton className="h-3 w-28" />
+              <Skeleton className="mt-3 h-5 w-64 max-w-full" />
+              <Skeleton className="mt-2 h-3 w-80 max-w-full" />
+            </div>
 
-                <div className={`${masterListPageScrollRegionClass} space-y-3 p-3 sm:p-4`}>
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <Skeleton
-                      key={index}
-                      className="h-24 rounded-[1rem] border border-[rgba(138,99,36,0.12)]"
-                    />
-                  ))}
+            <div className={`${st.sectionSurface} space-y-3 p-4`}>
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-16 w-full rounded-xl" />
+            </div>
+
+            <div className={`${st.sectionSurface} space-y-3 p-4`}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-4 w-40" />
                 </div>
+                <Skeleton className="h-8 w-28 rounded-lg" />
               </div>
+              <div className={`${masterListPageScrollRegionClass} space-y-2`}>
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <Skeleton
+                    key={index}
+                    className="h-14 rounded-lg border border-[rgba(138,99,36,0.12)]"
+                  />
+                ))}
+              </div>
+            </div>
 
-              <div className={`${st.detailPanel} hidden lg:flex`}>
-                <div className={st.detailPanelHeader}>
-                  <Skeleton className="h-5 w-36" />
-                  <Skeleton className="mt-2 h-4 w-48" />
-                </div>
-                <div className="space-y-4 p-5">
-                  <Skeleton className="h-20 w-full rounded-[1rem]" />
-                  <Skeleton className="h-16 w-full rounded-[1rem]" />
-                  <Skeleton className="h-24 w-full rounded-[1rem]" />
-                </div>
+            <div className={`${st.sectionSurface} space-y-3 p-4`}>
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-4 w-44" />
+              <div className="flex flex-wrap gap-2">
+                <Skeleton className="h-9 w-36 rounded-lg" />
+                <Skeleton className="h-9 w-40 rounded-lg" />
               </div>
             </div>
           </div>

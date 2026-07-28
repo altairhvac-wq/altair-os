@@ -98,10 +98,10 @@ export const adminNavItems: NavItem[] = [
     description: "Active technicians, time entries, and payroll review",
   },
   {
-    label: "Network",
+    label: "Community",
     href: "/network",
     icon: Network,
-    description: "Trusted partners, overflow work, and coverage",
+    description: "Business relationships, referrals, and local discovery",
   },
   {
     label: "Reports",

@@ -1,6 +1,8 @@
-# Altair Network — canonical models
+# Altair Community / Network — canonical models
 
-The `/network` admin route (`app/(admin)/network/page.tsx`) renders **`NetworkReferralsPageView`** only. It is wired to Supabase for directory discovery, trusted partner links, invitations, and cross-company referrals.
+The `/network` admin route (`app/(admin)/network/page.tsx`) presents **Altair Community** via **`NetworkReferralsPageView`** (North Star: Community Home + secondary workflow tabs). It is wired to Supabase for directory discovery, relationships (`network_partners`), invitations, and cross-company referrals.
+
+Internal code, tables, queries, actions, and types remain Network-oriented. Do not treat Community Phase 1 as a schema or route rename.
 
 ## Canonical models
 
@@ -81,9 +83,11 @@ network_referrals  → "I'm sending this lead to that company."
 
 ## Live components
 
-- `NetworkReferralsPageView.tsx` — page shell (directory + my network + invitations + sent/received tabs)
+- `NetworkReferralsPageView.tsx` — page shell gate (North Star vs legacy)
+- `CommunityOverviewPanel.tsx` — Community Home orientation (attention, profile readiness, relationships, invite/browse)
+- `north-star-m11/NetworkNorthStarView.tsx` — Community workspace with Home + Relationships / Referrals / Invitations / Directory
 - `NetworkInviteForm.tsx`, `NetworkInvitationCard.tsx`, `NetworkInvitedByBanner.tsx` — invitations
-- `NetworkDirectoryCard.tsx`, `NetworkProfileDetailPanel.tsx`, `NetworkTrustedBadge.tsx` — directory + trusted badges
+- `NetworkDirectoryCard.tsx`, `NetworkProfileDetailPanel.tsx`, `NetworkTrustedBadge.tsx` — directory + relationship badges
 - `SendReferralForm.tsx`, `NetworkReferralCard.tsx`, `NetworkReferralStatusBadge.tsx` — referrals
 
 Types: `shared/types/network-referral.ts`, `shared/types/network-partner.ts`, `shared/types/network-invite.ts`

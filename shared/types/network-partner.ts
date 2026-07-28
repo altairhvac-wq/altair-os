@@ -182,7 +182,7 @@ export function mergeMyNetworkPartnersFromServer(
 }
 
 export const MY_NETWORK_EMPTY_MESSAGE =
-  "Add companies from the Directory so you can quickly send overflow work and referrals.";
+  "Browse businesses or invite a company you already know to start building Community relationships.";
 
 export type DirectoryFilter = "all" | "my-network";
 
@@ -191,5 +191,5 @@ export const DIRECTORY_FILTER_OPTIONS: {
   label: string;
 }[] = [
   { value: "all", label: "All companies" },
-  { value: "my-network", label: "My Network" },
+  { value: "my-network", label: "My Relationships" },
 ];

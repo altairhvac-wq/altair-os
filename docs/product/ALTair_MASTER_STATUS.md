@@ -59,6 +59,7 @@ Altair OS is a production-grade multi-tenant field service operating system on V
 | **M9** | Admin time / labor review pilot | **Complete** |
 | **M10** | Settings configuration workspace pilot | **Complete** |
 | **M11** | Network referral workspace pilot | **Complete** |
+| **Community Phase 1** | Community orientation shell on `/network` | **Complete** |
 | **M12** | Team member profile pilot | **Complete** |
 | **M13** | Platform admin pilot | **Complete** |
 | **M14** | Leads work queue pilot | **Complete** |
@@ -127,6 +128,7 @@ Code lives in `shared/components/*/north-star-m*` folders. Primary reference rem
 - Mobile install experience (`/install`) — PWA guidance with device-specific walkthrough
 - Electrical demo seed pack
 - Network workspace tab restructure and parity fixes
+- Altair Community Phase 1 orientation experience on `/network` (user-facing Community shell; Network backend retained; Help Requests and future content types not yet implemented; route/database rename deferred)
 
 ---
 

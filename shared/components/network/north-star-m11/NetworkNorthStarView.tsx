@@ -31,11 +31,13 @@ import {
   type NetworkProfile,
   type NetworkReferral,
 } from "@/shared/types/network-referral";
+import { getCommunityProfileReadiness } from "@/shared/lib/network/community-profile-readiness";
 import {
   getDefaultNetworkReferralsSubTab,
   getDefaultNetworkWorkspaceTab,
   getVisibleNetworkReferralsSubTabs,
   getVisibleNetworkWorkspaceTabs,
+  hasCommunityAttention,
   hasInvitationsAttention,
   hasReferralsAttention,
   NETWORK_REFERRALS_SUB_TAB_OPTIONS,
@@ -52,6 +54,7 @@ import {
   type NetworkInvite,
   type NetworkInvitationsTab,
 } from "@/shared/types/network-invite";
+import { CommunityOverviewPanel } from "../CommunityOverviewPanel";
 import { IncomingNetworkInvitesCard } from "../IncomingNetworkInvitesCard";
 import { NetworkDirectoryCard } from "../NetworkDirectoryCard";
 import { NetworkInviteForm } from "../NetworkInviteForm";
@@ -61,7 +64,6 @@ import { NetworkProfileDetailPanel } from "../NetworkProfileDetailPanel";
 import { NetworkProfileEditForm } from "../NetworkProfileEditForm";
 import { NetworkReferralCard } from "../NetworkReferralCard";
 import { NetworkTrustedBadge } from "../NetworkTrustedBadge";
-import { NetworkMapPreviewPanel } from "./NetworkMapPreviewPanel";
 import { st } from "./network-north-star-styles";
 
 type ProfilePanelMode = "detail" | "referral" | "empty";
@@ -193,6 +195,7 @@ export function NetworkNorthStarView({
   const [invitationsTab, setInvitationsTab] =
     useState<NetworkInvitationsTab>("pending");
   const [showInviteForm, setShowInviteForm] = useState(false);
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [latestInviteUrl, setLatestInviteUrl] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [tradeFilter, setTradeFilter] = useState<TradeType | "all">("all");
@@ -270,6 +273,21 @@ export function NetworkNorthStarView({
     incomingNetworkInvites,
   );
   const showReferralsAttention = hasReferralsAttention(receivedReferrals);
+  const showOverviewAttention = hasCommunityAttention({
+    incomingInvites: incomingNetworkInvites,
+    receivedReferrals,
+    canManageReceivedReferrals,
+  });
+  const profileReadiness = useMemo(
+    () => getCommunityProfileReadiness(ownProfile, canSendReferral),
+    [ownProfile, canSendReferral],
+  );
+
+  useEffect(() => {
+    if (!profileReadiness) {
+      setShowProfileEditor(false);
+    }
+  }, [profileReadiness]);
 
   const hasActiveDirectoryFilters =
     search.trim().length > 0 ||
@@ -302,6 +320,32 @@ export function NetworkNorthStarView({
     setLatestInviteUrl(null);
   }
 
+  function handleOpenRelationships() {
+    handleTabChange("partners");
+  }
+
+  function handleOpenDirectory() {
+    handleTabChange("directory");
+  }
+
+  function handleOpenReferrals() {
+    handleTabChange("referrals");
+  }
+
+  function handleSelectRelationshipFromOverview(profileId: string) {
+    setActiveTab("partners");
+    setSearch("");
+    setTradeFilter("all");
+    setLocationFilter("");
+    setAcceptingReferralsOnly(false);
+    clearNetworkActionFeedback();
+    setNetworkActionTarget(null);
+    setShowInviteForm(false);
+    setLatestInviteUrl(null);
+    setSelectedProfileId(profileId);
+    setPanelMode("detail");
+  }
+
   function handleInviteSuccess(invite: NetworkInvite, inviteUrl?: string) {
     setNetworkInvites((current) => [invite, ...current]);
     setShowInviteForm(false);
@@ -327,7 +371,7 @@ export function NetworkNorthStarView({
     pending: {
       title: "No pending invitations",
       description:
-        "Invite contractors you already trust to start building your network.",
+        "Invite a business you already work with to join Altair Community.",
     },
     accepted: {
       title: "No accepted invitations yet",
@@ -471,14 +515,6 @@ export function NetworkNorthStarView({
   }
 
   const deferCardActions = true;
-
-  const myNetworkProfiles = useMemo(
-    () =>
-      myNetworkEntries
-        .map((entry) => entry.linkedProfile)
-        .filter((profile): profile is NetworkProfile => profile !== undefined),
-    [myNetworkEntries],
-  );
 
   const profileDetailPanel = (
     <NetworkProfileDetailPanel
@@ -638,8 +674,8 @@ export function NetworkNorthStarView({
     <MasterShellPage fillViewport density="compact" className={st.pageCanvas}>
       <div className="space-y-2 px-3 pt-3 sm:px-3.5 lg:px-5">
         <MasterPageHeader
-          title="Network"
-          subtitle="Find trusted trade partners, share overflow work, and keep referral relationships moving."
+          title="Community"
+          subtitle="Build stronger business relationships, manage referrals, and connect with companies in your area."
           density="compact"
           surfaceVariant="northStar"
           className={`north-star-network-page-header ${st.pageHeader}`}
@@ -653,7 +689,7 @@ export function NetworkNorthStarView({
                 className={`north-star-network-primary-action ${st.primaryAction}`}
               >
                 <UserPlus className="h-4 w-4" />
-                Invite Partner
+                Invite a Business
               </button>
             ) : undefined
           }
@@ -673,7 +709,7 @@ export function NetworkNorthStarView({
           />
         ) : null}
 
-        {incomingNetworkInvites.length > 0 ? (
+        {activeTab !== "overview" && incomingNetworkInvites.length > 0 ? (
           <IncomingNetworkInvitesCard
             invites={incomingNetworkInvites}
             canAccept={canManageNetwork}
@@ -687,7 +723,7 @@ export function NetworkNorthStarView({
           <div className={st.tabBand}>
             <nav
               className={st.tabControl}
-              aria-label="Network sections"
+              aria-label="Community sections"
             >
               {NETWORK_WORKSPACE_TAB_OPTIONS.filter((tab) =>
                 visibleWorkspaceTabs.includes(tab.value),
@@ -703,6 +739,12 @@ export function NetworkNorthStarView({
                 >
                   <span className="inline-flex min-w-0 items-center justify-center">
                     {tab.label}
+                    {tab.value === "overview" && showOverviewAttention ? (
+                      <span
+                        className={st.tabAttentionBadge}
+                        aria-label="Items need attention"
+                      />
+                    ) : null}
                     {tab.value === "invitations" &&
                     showInvitationsAttention ? (
                       <span
@@ -729,6 +771,42 @@ export function NetworkNorthStarView({
           ) : null}
 
           <div className={st.tabBodyInner}>
+            {activeTab === "overview" ? (
+              <div className="min-h-0 overflow-y-auto overflow-x-hidden">
+                <CommunityOverviewPanel
+                  ownProfile={ownProfile}
+                  profileReadiness={profileReadiness}
+                  showProfileEditor={showProfileEditor}
+                  onToggleProfileEditor={() =>
+                    setShowProfileEditor((current) => !current)
+                  }
+                  onProfileSaved={handleProfileSaved}
+                  incomingInvites={incomingNetworkInvites}
+                  canAcceptInvites={canManageNetwork}
+                  receivedReferrals={receivedReferrals}
+                  canManageReceivedReferrals={canManageReceivedReferrals}
+                  relationships={myNetworkEntries}
+                  canManageRelationships={canManageNetwork}
+                  canInvite={canManageNetwork}
+                  canBrowseDirectory={canSendReferral}
+                  canSendReferral={canSendReferral}
+                  timeZone={timeZone}
+                  onOpenRelationships={handleOpenRelationships}
+                  onOpenDirectory={handleOpenDirectory}
+                  onOpenInvitations={handleOpenInviteForm}
+                  onOpenReferrals={handleOpenReferrals}
+                  onSelectRelationship={handleSelectRelationshipFromOverview}
+                  onReceivedReferralUpdated={(referral) => {
+                    setReceivedReferrals((current) =>
+                      current.map((item) =>
+                        item.id === referral.id ? referral : item,
+                      ),
+                    );
+                  }}
+                />
+              </div>
+            ) : null}
+
             {activeTab === "directory" ? (
               <div className="flex min-h-0 min-w-0 flex-col gap-3 overflow-x-hidden lg:min-h-[32rem] lg:gap-4 lg:overflow-hidden">
                 {ownProfile && canSendReferral ? (
@@ -750,7 +828,7 @@ export function NetworkNorthStarView({
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
                         placeholder="Search companies, trades, or locations"
-                        aria-label="Search network directory"
+                        aria-label="Search Community directory"
                         className={`${st.filterInput} pl-9 pr-3`}
                       />
                     </div>
@@ -809,7 +887,7 @@ export function NetworkNorthStarView({
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-x-hidden lg:flex-row lg:gap-4 lg:overflow-hidden">
                   <div className={st.directoryListColumn}>
                     <div className={st.rosterSectionHeader}>
-                      <p className={st.sectionTitle}>Partner directory</p>
+                      <p className={st.sectionTitle}>Business directory</p>
                       <p className={st.countMeta}>
                         {filteredProfiles.length} companies
                       </p>
@@ -828,12 +906,12 @@ export function NetworkNorthStarView({
                           <p className={st.emptyTitle}>
                             {hasActiveDirectoryFilters
                               ? "No companies match those filters"
-                              : "No visible network profiles yet"}
+                              : "No visible Community profiles yet"}
                           </p>
                           <p className={st.emptyDescription}>
                             {hasActiveDirectoryFilters
                               ? "Try a different trade or location."
-                              : "Partner companies appear here when they make their profile visible in the network."}
+                              : "Businesses appear here when they make their Community profile visible."}
                           </p>
                           {hasActiveDirectoryFilters ? (
                             <button
@@ -868,13 +946,6 @@ export function NetworkNorthStarView({
                     <div className="hidden min-w-0 shrink-0 lg:block">
                       {profileDetailPanel}
                     </div>
-
-                    <NetworkMapPreviewPanel
-                      profiles={filteredProfiles}
-                      trustedCompanyIds={trustedCompanyIds}
-                      ownProfile={ownProfile}
-                      className={st.discoveryMapRegion}
-                    />
                   </div>
                 </div>
               </div>
@@ -885,9 +956,12 @@ export function NetworkNorthStarView({
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-x-hidden lg:flex-row lg:gap-4 lg:overflow-hidden">
                   <div className={st.directoryListColumn}>
                     <div className={st.rosterSectionHeader}>
-                      <p className={st.sectionTitle}>Partners</p>
+                      <p className={st.sectionTitle}>My Relationships</p>
                       <p className={st.countMeta}>
-                        {myNetworkEntries.length} partners
+                        {myNetworkEntries.length}{" "}
+                        {myNetworkEntries.length === 1
+                          ? "relationship"
+                          : "relationships"}
                       </p>
                     </div>
 
@@ -896,11 +970,14 @@ export function NetworkNorthStarView({
                     >
                       {!canManageNetwork ? (
                         <p className={st.permissionCopy}>
-                          Trusted partners are managed by company owners and admins.
+                          Community relationships are managed by company owners
+                          and admins.
                         </p>
                       ) : myNetworkEntries.length === 0 ? (
                         <div className={`${st.emptyState} ${st.emptyStateStrong}`}>
-                          <p className={st.emptyTitle}>No trusted partners yet</p>
+                          <p className={st.emptyTitle}>
+                            Your Community relationships will appear here.
+                          </p>
                           <p className={st.emptyDescription}>
                             {MY_NETWORK_EMPTY_MESSAGE}
                           </p>
@@ -909,7 +986,7 @@ export function NetworkNorthStarView({
                             onClick={() => handleTabChange("directory")}
                             className={`${st.emptyStateCta} mt-4`}
                           >
-                            Browse Directory
+                            Browse Businesses
                           </button>
                         </div>
                       ) : (
@@ -930,13 +1007,6 @@ export function NetworkNorthStarView({
                     <div className="hidden min-w-0 shrink-0 lg:block">
                       {profileDetailPanel}
                     </div>
-
-                    <NetworkMapPreviewPanel
-                      profiles={myNetworkProfiles}
-                      trustedCompanyIds={trustedCompanyIds}
-                      ownProfile={ownProfile}
-                      className={st.discoveryMapRegion}
-                    />
                   </div>
                 </div>
               </div>
@@ -946,7 +1016,8 @@ export function NetworkNorthStarView({
               <div className="min-h-0 overflow-y-auto">
                 {!canManageNetwork ? (
                   <p className={st.permissionCopy}>
-                    Network invitations are managed by company owners and admins.
+                    Community invitations are managed by company owners and
+                    admins.
                   </p>
                 ) : (
                   <div className="space-y-4">
@@ -955,7 +1026,8 @@ export function NetworkNorthStarView({
                         <p className={st.sectionEyebrow}>Invite management</p>
                         <h2 className={st.sectionTitle}>Invitations</h2>
                         <p className={st.sectionSubtitle}>
-                          Track pending invites and partner onboarding status
+                          Bring businesses you already work with into Altair
+                          Community
                         </p>
                       </div>
                       {!showInviteForm ? (
@@ -965,7 +1037,7 @@ export function NetworkNorthStarView({
                           className={st.secondaryAction}
                         >
                           <UserPlus className="h-4 w-4" />
-                          Invite Partner
+                          Invite a Business
                         </button>
                       ) : null}
                     </div>
@@ -1110,7 +1182,7 @@ export function NetworkNorthStarView({
                         <p className={st.sectionEyebrow}>Outbound referrals</p>
                         <h2 className={st.sectionTitle}>Sent</h2>
                         <p className={st.sectionSubtitle}>
-                          Referral leads you&apos;ve sent to partner companies
+                          Referral leads you&apos;ve sent to other businesses
                         </p>
                       </div>
                       {sentReferrals.length === 0 ? (
@@ -1119,8 +1191,9 @@ export function NetworkNorthStarView({
                         >
                           <p className={st.emptyTitle}>No sent referrals yet</p>
                           <p className={st.emptyDescription}>
-                            Send overflow work from Partners or the Directory
-                            when a trusted partner is the right fit.
+                            Send overflow work from Relationships or the
+                            Directory when a business relationship is the right
+                            fit.
                           </p>
                           {canManageNetwork ? (
                             <button
@@ -1128,7 +1201,7 @@ export function NetworkNorthStarView({
                               onClick={() => handleTabChange("partners")}
                               className={`${st.secondaryAction} mt-4`}
                             >
-                              View Partners
+                              View Relationships
                             </button>
                           ) : (
                             <button
@@ -1136,7 +1209,7 @@ export function NetworkNorthStarView({
                               onClick={() => handleTabChange("directory")}
                               className={`${st.secondaryAction} mt-4`}
                             >
-                              Browse Directory
+                              Browse Businesses
                             </button>
                           )}
                         </div>
@@ -1171,20 +1244,20 @@ export function NetworkNorthStarView({
                     <div className={st.referralInboxHeader}>
                       <p className={st.sectionEyebrow}>Inbound referrals</p>
                       <h2 className={st.sectionTitle}>Received</h2>
-                      <p className={st.sectionSubtitle}>
-                        Referral work sent to you by partner companies
-                      </p>
-                    </div>
-                    {receivedReferrals.length === 0 ? (
-                      <div
-                        className={`${st.emptyState} ${st.emptyStateStrong}`}
-                      >
-                        <p className={st.emptyTitle}>No received referrals yet</p>
-                        <p className={st.emptyDescription}>
-                          Referred leads appear here when partner companies send
-                          overflow work your way.
+                        <p className={st.sectionSubtitle}>
+                          Referral work sent to you by other businesses
                         </p>
                       </div>
+                      {receivedReferrals.length === 0 ? (
+                        <div
+                          className={`${st.emptyState} ${st.emptyStateStrong}`}
+                        >
+                          <p className={st.emptyTitle}>No received referrals yet</p>
+                          <p className={st.emptyDescription}>
+                            Referred leads appear here when businesses in your
+                            Community send overflow work your way.
+                          </p>
+                        </div>
                     ) : (
                       <div className={st.invitationCardGrid}>
                         {receivedReferrals.map((referral) => (

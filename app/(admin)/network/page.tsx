@@ -1,6 +1,7 @@
 /**
- * Network admin route — live V1 referrals + connections UI (`NetworkReferralsPageView`).
- * Uses `network_profiles`, `network_referrals`, and `network_partners` (My Network).
+ * Community admin route (`/network`) — Altair Community orientation shell over
+ * the existing Network data/workflows (`NetworkReferralsPageView`).
+ * Uses `network_profiles`, `network_referrals`, and `network_partners`.
  * See `shared/components/network/README.md`.
  */
 
@@ -34,7 +35,7 @@ export default async function NetworkPage() {
 
   if (!canAccessAdminNavItem(companyContext, "/network")) {
     return (
-      <UnauthorizedAccessView description="Network access is limited to company owners, admins, dispatchers, and office staff." />
+      <UnauthorizedAccessView description="Community access is limited to company owners, admins, dispatchers, and office staff." />
     );
   }
 

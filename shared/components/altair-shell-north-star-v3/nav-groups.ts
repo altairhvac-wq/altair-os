@@ -62,7 +62,7 @@ export const v3NavGroups: V3NavGroup[] = [
     items: [
       { label: "Customers", href: "/customers", icon: Users },
       { label: "Leads", href: "/leads", icon: Target },
-      { label: "Network", href: "/network", icon: Network },
+      { label: "Community", href: "/network", icon: Network },
     ],
   },
   {
