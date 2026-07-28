@@ -25,6 +25,16 @@ export type AltairColorHierarchyTone =
 /** Thin left brass rule for spacious section titles. */
 export const altairSectionTitleAccentClass = "altair-section-title-accent";
 
+/**
+ * Canvas-level ink (Surface 0) — greeting and spacious section titles that sit
+ * on the page canvas, not on Paper cards. Resolves to dark ink on the light
+ * mobile canvas; North Star desktop graphite flips to light ink via globals.css.
+ */
+export const altairCanvasInkClass = "altair-canvas-ink";
+export const altairCanvasInkSecondaryClass = "altair-canvas-ink-secondary";
+export const altairCanvasInkMutedClass = "altair-canvas-ink-muted";
+export const altairCanvasInkLinkClass = "altair-canvas-ink-link";
+
 /** Compact semantic indicator (dot) beside Needs Attention counts / activity state. */
 export const altairSemanticIndicatorClass: Record<
   Exclude<AltairColorHierarchyTone, "neutral" | "info">,

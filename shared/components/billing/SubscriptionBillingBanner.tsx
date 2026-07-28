@@ -33,19 +33,27 @@ const TONE_STYLES: Record<
 
 const NORTH_STAR_TONE_STYLES: Record<
   SubscriptionBillingBannerTone,
-  { container: string; text: string }
+  { container: string; text: string; title: string; body: string }
 > = {
   error: {
     container: "border-[rgba(185,28,28,0.28)] bg-[rgba(254,242,242,0.92)]",
     text: "text-[#991B1B]",
+    title: "text-sm font-semibold",
+    body: "mt-0.5 text-sm leading-relaxed opacity-95",
   },
   warning: {
     container: "border-[rgba(180,83,9,0.22)] bg-[rgba(255,247,237,0.92)]",
     text: "text-[#9A3412]",
+    title: "text-sm font-semibold",
+    body: "mt-0.5 text-sm leading-relaxed opacity-95",
   },
   info: {
-    container: "border-[rgba(138,99,36,0.22)] bg-[#FFF9EA]",
-    text: "text-[#4F4638]",
+    /* Closed-beta account notice — secondary to Mission Briefing content */
+    container:
+      "border-[rgba(174,182,194,0.22)] bg-[rgba(255,255,255,0.06)] shadow-none",
+    text: "text-[var(--north-star-text-light-muted)]",
+    title: "text-xs font-medium tracking-tight text-[var(--north-star-text-light)]",
+    body: "mt-0.5 text-xs leading-relaxed text-[var(--north-star-text-light-muted)] opacity-90",
   },
 };
 
@@ -63,25 +71,30 @@ export function SubscriptionBillingBanner({
   const northStar = isNorthStarShellEnabled();
   const styles = northStar
     ? NORTH_STAR_TONE_STYLES[model.tone]
-    : TONE_STYLES[model.tone];
+    : {
+        ...TONE_STYLES[model.tone],
+        title: "font-semibold",
+        body: "mt-0.5 text-sm leading-relaxed opacity-95",
+      };
   const description =
     model.showManageAction && canManageBilling
       ? `${model.description} Contact support to update billing details.`
       : model.description;
   // Closed-beta status is desktop-only — it consumes scarce mobile chrome without aiding tasks.
   const hideOnMobile = access.state === "ACTIVE" && access.isComped;
+  const isQuietInfo = northStar && model.tone === "info";
 
   return (
     <div
       role={model.role}
       aria-live={model.role === "alert" ? "assertive" : "polite"}
-      className={`mb-2.5 min-w-0 break-words rounded-lg border px-4 py-3 text-sm ${styles.container} ${styles.text} ${
-        hideOnMobile ? "hidden md:block" : ""
-      } ${className}`}
+      className={`mb-2.5 min-w-0 break-words rounded-lg border text-sm ${styles.container} ${styles.text} ${
+        isQuietInfo ? "px-3 py-1.5" : "px-4 py-3"
+      } ${hideOnMobile ? "hidden md:block" : ""} ${className}`}
     >
       <div className="min-w-0">
-        <p className="font-semibold">{model.title}</p>
-        <p className="mt-0.5 text-sm leading-relaxed opacity-95">{description}</p>
+        <p className={styles.title}>{model.title}</p>
+        <p className={styles.body}>{description}</p>
       </div>
     </div>
   );

@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
-import { altairSectionTitleAccentClass } from "@/shared/design-system/foundation";
+import {
+  altairCanvasInkClass,
+  altairCanvasInkSecondaryClass,
+  altairSectionTitleAccentClass,
+} from "@/shared/design-system/foundation";
 import { masterShellSectionGap, type MasterShellDensity } from "./tokens";
 
 export type MasterPageSectionProps = {
@@ -65,7 +69,7 @@ export function MasterPageSection({
           <h2
             className={
               isSpacious
-                ? "text-sm font-bold tracking-tight text-altair-ink-on-paper sm:text-base"
+                ? `text-sm font-bold tracking-tight sm:text-base ${altairCanvasInkClass}`
                 : "text-xs font-bold uppercase tracking-wide text-slate-800 sm:text-sm"
             }
           >
@@ -75,7 +79,7 @@ export function MasterPageSection({
             <p
               className={
                 isSpacious
-                  ? "mt-0.5 text-xs leading-snug text-altair-ink-on-paper-secondary"
+                  ? `mt-0.5 text-xs leading-snug ${altairCanvasInkSecondaryClass}`
                   : "mt-0.5 text-[11px] leading-snug text-slate-500 sm:text-xs"
               }
             >

@@ -6,6 +6,10 @@ export {
 } from "./altair-tokens";
 
 export {
+  altairCanvasInkClass,
+  altairCanvasInkLinkClass,
+  altairCanvasInkMutedClass,
+  altairCanvasInkSecondaryClass,
   altairMetricValueClass,
   altairSectionTitleAccentClass,
   altairSemanticIndicatorClass,

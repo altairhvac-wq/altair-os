@@ -7,6 +7,10 @@ import { buildMissionControlContent } from "@/shared/lib/dashboard-mission-contr
 import type { DashboardData } from "@/shared/types/dashboard";
 import type { DemoDataStatus } from "@/shared/types/demo-data";
 import type { OnboardingChecklist } from "@/shared/types/onboarding";
+import {
+  altairCanvasInkLinkClass,
+  altairCanvasInkMutedClass,
+} from "@/shared/design-system/foundation";
 import { MasterContentStack } from "@/shared/design-system/shell";
 import { MissionControlGreeting } from "./MissionControlGreeting";
 import { MissionCriticalSection } from "./MissionCriticalSection";
@@ -61,11 +65,11 @@ export function MissionControlDashboardView({
         <div className="space-y-1.5">
           <MissionControlGreeting content={content.greeting} />
           {showSampleDataDiscovery ? (
-            <p className="text-sm text-slate-500">
+            <p className={`text-sm ${altairCanvasInkMutedClass}`}>
               Need example data?{" "}
               <Link
                 href="/settings#sample-data"
-                className="font-medium text-slate-700 underline decoration-slate-300 underline-offset-2 transition hover:text-slate-900 hover:decoration-slate-500"
+                className={`font-medium underline underline-offset-2 transition ${altairCanvasInkLinkClass}`}
               >
                 Load it from Settings
               </Link>

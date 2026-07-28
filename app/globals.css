@@ -2937,6 +2937,75 @@ a[href] {
   background-color: color-mix(in srgb, var(--altair-brass) 75%, transparent);
 }
 
+/*
+ * Canvas-level ink (Surface 0) — Mission Briefing greeting + spacious section
+ * titles sit on the page canvas, not Paper cards. Default = dark ink for the
+ * light mobile canvas. Desktop North Star graphite flips to light ink only
+ * under `.admin-north-star-shell` so Paper/card text stays dark.
+ */
+.altair-canvas-ink {
+  color: var(--altair-ink-on-paper);
+}
+
+.altair-canvas-ink-secondary {
+  color: var(--altair-ink-on-paper-secondary);
+}
+
+.altair-canvas-ink-muted {
+  color: var(--altair-ink-on-paper-muted);
+}
+
+.altair-canvas-ink-link {
+  color: var(--altair-ink-on-paper-secondary);
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--altair-ink-on-paper-muted) 70%,
+    transparent
+  );
+}
+
+.altair-canvas-ink-link:hover {
+  color: var(--altair-ink-on-paper);
+  text-decoration-color: var(--altair-ink-on-paper-muted);
+}
+
+@media (min-width: 768px) {
+  .admin-north-star-shell .altair-canvas-ink {
+    color: var(--north-star-text-light);
+  }
+
+  .admin-north-star-shell .altair-canvas-ink-secondary {
+    color: var(--north-star-text-light-muted);
+  }
+
+  .admin-north-star-shell .altair-canvas-ink-muted {
+    color: color-mix(
+      in srgb,
+      var(--north-star-text-light-muted) 88%,
+      transparent
+    );
+  }
+
+  .admin-north-star-shell .altair-canvas-ink-link {
+    color: var(--north-star-text-light-muted);
+    text-decoration-color: color-mix(
+      in srgb,
+      var(--north-star-champagne) 45%,
+      transparent
+    );
+  }
+
+  .admin-north-star-shell .altair-canvas-ink-link:hover {
+    color: var(--north-star-text-light);
+    text-decoration-color: var(--north-star-gold);
+  }
+
+  .admin-north-star-shell .altair-canvas-ink-link:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--north-star-gold) 55%, transparent);
+    outline-offset: 2px;
+  }
+}
+
 .altair-surface-section-body {
   padding: 0.75rem;
 }
