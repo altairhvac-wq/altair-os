@@ -104,7 +104,7 @@ export function NetworkProfileDetailPanel({
     : "mt-1 flex items-center gap-1.5 text-xs text-slate-500";
   const networkButtonClass = isNorthStar
     ? `${st.cardActionAccentFull} min-h-10 disabled:opacity-60 sm:min-h-[44px]`
-    : "inline-flex w-full items-center justify-center gap-2 admin-btn-secondary disabled:opacity-60";
+    : "inline-flex w-full items-center justify-center gap-2 admin-btn-primary disabled:opacity-60";
   const networkButtonSecondaryClass = isNorthStar
     ? `${st.cardActionFull} min-h-10 disabled:opacity-60 sm:min-h-[44px]`
     : "inline-flex w-full items-center justify-center gap-2 admin-btn-secondary disabled:opacity-60";
@@ -114,9 +114,6 @@ export function NetworkProfileDetailPanel({
   const permissionClass = isNorthStar
     ? "rounded-xl border border-dashed border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-4 py-3 text-xs text-[#6B6255]"
     : "rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-500";
-  const sendButtonClass = isNorthStar
-    ? `${st.cardActionFull} min-h-10 sm:min-h-[44px]`
-    : "inline-flex w-full items-center justify-center gap-2 admin-btn-primary";
 
   return (
     <aside className={asideClass}>
@@ -228,6 +225,20 @@ export function NetworkProfileDetailPanel({
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       In Your Relationships
                     </div>
+                    {canSendReferral ? (
+                      <button
+                        type="button"
+                        onClick={onSendReferral}
+                        className={networkButtonClass}
+                      >
+                        <Send className="h-4 w-4" />
+                        Send Referral
+                      </button>
+                    ) : (
+                      <p className={permissionClass}>
+                        Referral sending is limited to company owners and admins.
+                      </p>
+                    )}
                     {onRemoveFromNetwork ? (
                       <button
                         type="button"
@@ -242,39 +253,62 @@ export function NetworkProfileDetailPanel({
                       </button>
                     ) : null}
                   </div>
-                ) : onAddToNetwork ? (
-                  <button
-                    type="button"
-                    onClick={onAddToNetwork}
-                    disabled={isNetworkActionPending}
-                    className={networkButtonClass}
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    {isNetworkActionPending
-                      ? "Adding..."
-                      : "Add to Relationships"}
-                  </button>
-                ) : null}
+                ) : (
+                  <div className="space-y-3">
+                    {onAddToNetwork ? (
+                      <button
+                        type="button"
+                        onClick={onAddToNetwork}
+                        disabled={isNetworkActionPending}
+                        className={networkButtonClass}
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        {isNetworkActionPending
+                          ? "Connecting..."
+                          : "Connect"}
+                      </button>
+                    ) : null}
+                    {canSendReferral ? (
+                      <button
+                        type="button"
+                        onClick={onSendReferral}
+                        className={networkButtonSecondaryClass}
+                      >
+                        <Send className="h-4 w-4" />
+                        Send Referral
+                      </button>
+                    ) : (
+                      <p className={permissionClass}>
+                        Referral sending is limited to company owners and admins.
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {networkActionError ? (
                   <p className="text-xs text-rose-700">{networkActionError}</p>
                 ) : null}
               </div>
             ) : (
-              <p className={permissionClass}>
-                Community relationships are managed by company owners and admins.
-              </p>
-            )}
-
-            {canSendReferral ? (
-              <button type="button" onClick={onSendReferral} className={sendButtonClass}>
-                <Send className="h-4 w-4" />
-                Send Referral
-              </button>
-            ) : (
-              <p className={permissionClass}>
-                Referral sending is limited to company owners and admins.
-              </p>
+              <div className="space-y-3">
+                <p className={permissionClass}>
+                  Community relationships are managed by company owners and admins.
+                </p>
+                {canSendReferral ? (
+                  <button
+                    type="button"
+                    onClick={onSendReferral}
+                    className={networkButtonClass}
+                  >
+                    <Send className="h-4 w-4" />
+                    Send Referral
+                  </button>
+                ) : (
+                  <p className={permissionClass}>
+                    Referral sending is limited to company owners and admins.
+                  </p>
+                )}
+              </div>
             )}
           </div>
         ) : null}

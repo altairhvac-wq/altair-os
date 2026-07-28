@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Search, UserPlus, Users } from "lucide-react";
+import { Building2, Search, Send, UserPlus, Users } from "lucide-react";
 import type { IncomingNetworkInvite } from "@/shared/types/network-invite";
 import type { MyNetworkPartner } from "@/shared/types/network-partner";
 import {
@@ -30,6 +30,7 @@ type CommunityOverviewPanelProps = {
   canBrowseDirectory: boolean;
   canSendReferral: boolean;
   timeZone?: string;
+  onStartSendReferral: () => void;
   onOpenRelationships: () => void;
   onOpenDirectory: () => void;
   onOpenInvitations: () => void;
@@ -54,6 +55,7 @@ export function CommunityOverviewPanel({
   canBrowseDirectory,
   canSendReferral,
   timeZone,
+  onStartSendReferral,
   onOpenRelationships,
   onOpenDirectory,
   onOpenInvitations,
@@ -67,6 +69,8 @@ export function CommunityOverviewPanel({
   const hasAttention =
     incomingInvites.length > 0 || actionableReferrals.length > 0;
   const previewRelationships = relationships.slice(0, 5);
+  const showHomeActions =
+    canSendReferral || canInvite || canBrowseDirectory;
 
   return (
     <div className="space-y-5 overflow-x-hidden">
@@ -82,19 +86,65 @@ export function CommunityOverviewPanel({
           Your local business relationships, in one place
         </h2>
         <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[#4F4638]">
-          Review what needs attention, keep your Community profile useful, and
-          stay connected with the businesses you already work with.
+          Send overflow work to businesses you trust, invite partners you already
+          know, and stay on top of referrals that need a response.
         </p>
         {!hasAttention ? (
           <p className="mt-3 text-xs leading-snug text-[#64748B]">
-            {canInvite
-              ? "Next step: invite a business you already know, or browse companies nearby."
-              : canManageReceivedReferrals
-                ? "When a referral arrives, it will show up here first."
-                : "Open Community when you need relationships, referrals, or directory discovery."}
+            {canSendReferral
+              ? "Next step: send a referral to a business in your relationships or directory."
+              : canInvite
+                ? "Next step: invite a business you already know, or browse companies nearby."
+                : canManageReceivedReferrals
+                  ? "When a referral arrives, it will show up here first."
+                  : "Open Community when you need relationships, referrals, or directory discovery."}
           </p>
         ) : null}
       </section>
+
+      {showHomeActions ? (
+        <section
+          className={`${st.sectionSurface} p-4 sm:p-5`}
+          aria-labelledby="community-actions-heading"
+        >
+          <p className={st.sectionEyebrow}>Actions</p>
+          <h2 id="community-actions-heading" className={st.sectionTitle}>
+            What do you want to do?
+          </h2>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            {canSendReferral ? (
+              <button
+                type="button"
+                onClick={onStartSendReferral}
+                className={`north-star-network-primary-action ${st.primaryAction}`}
+              >
+                <Send className="h-4 w-4" aria-hidden="true" />
+                Send Referral
+              </button>
+            ) : null}
+            {canInvite ? (
+              <button
+                type="button"
+                onClick={onOpenInvitations}
+                className={st.secondaryAction}
+              >
+                <UserPlus className="h-4 w-4" aria-hidden="true" />
+                Invite a Business
+              </button>
+            ) : null}
+            {canBrowseDirectory ? (
+              <button
+                type="button"
+                onClick={onOpenDirectory}
+                className={st.secondaryAction}
+              >
+                <Search className="h-4 w-4" aria-hidden="true" />
+                Browse Directory
+              </button>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       <section
         className={`${st.sectionSurface} p-4 sm:p-5`}
@@ -337,61 +387,24 @@ export function CommunityOverviewPanel({
         </section>
       ) : null}
 
-      <section
-        className={`${st.sectionSurface} p-4 sm:p-5`}
-        aria-labelledby="community-contribute-heading"
-      >
-        <p className={st.sectionEyebrow}>Contribute</p>
-        <h2 id="community-contribute-heading" className={st.sectionTitle}>
-          Grow your Community
-        </h2>
-        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[#64748B]">
-          Bring in a business you already work with, or open the directory when
-          you need to find someone new.
-        </p>
-
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          {canInvite ? (
-            <button
-              type="button"
-              onClick={onOpenInvitations}
-              className={`north-star-network-primary-action ${st.primaryAction}`}
-            >
-              <UserPlus className="h-4 w-4" aria-hidden="true" />
-              Invite a Business
-            </button>
-          ) : null}
-          {canBrowseDirectory ? (
-            <button
-              type="button"
-              onClick={onOpenDirectory}
-              className={st.secondaryAction}
-            >
-              <Search className="h-4 w-4" aria-hidden="true" />
-              Browse Businesses
-            </button>
-          ) : null}
-          {(canSendReferral || canManageReceivedReferrals) && !canInvite ? (
-            <button
-              type="button"
-              onClick={onOpenReferrals}
-              className={st.secondaryAction}
-            >
-              Open referrals
-            </button>
-          ) : null}
-        </div>
-
-        {(canSendReferral || canManageReceivedReferrals) && canInvite ? (
+      {(canSendReferral || canManageReceivedReferrals) && !showHomeActions ? (
+        <section
+          className={`${st.sectionSurface} p-4 sm:p-5`}
+          aria-labelledby="community-contribute-heading"
+        >
+          <p className={st.sectionEyebrow}>Referrals</p>
+          <h2 id="community-contribute-heading" className={st.sectionTitle}>
+            Review referral activity
+          </h2>
           <button
             type="button"
             onClick={onOpenReferrals}
-            className="mt-3 text-xs font-semibold text-[#8A6324] underline-offset-2 hover:underline"
+            className={`${st.secondaryAction} mt-4`}
           >
-            View referrals
+            Open referrals
           </button>
-        ) : null}
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 }

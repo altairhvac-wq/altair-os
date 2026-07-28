@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Search, UserMinus, UserPlus } from "lucide-react";
+import { MapPin, Search, Send, UserMinus, UserPlus } from "lucide-react";
 import { getPartnerInitials } from "@/shared/types/network";
 import {
   addToMyNetworkAction,
@@ -330,6 +330,21 @@ export function NetworkNorthStarView({
 
   function handleOpenReferrals() {
     handleTabChange("referrals");
+  }
+
+  function handleStartSendReferral() {
+    const hasRelationships = myNetworkEntries.length > 0;
+    setSearch("");
+    setTradeFilter("all");
+    setLocationFilter("");
+    setAcceptingReferralsOnly(false);
+    setSelectedProfileId(null);
+    setPanelMode("empty");
+    clearNetworkActionFeedback();
+    setNetworkActionTarget(null);
+    setShowInviteForm(false);
+    setLatestInviteUrl(null);
+    setActiveTab(hasRelationships ? "partners" : "directory");
   }
 
   function handleSelectRelationshipFromOverview(profileId: string) {
@@ -682,7 +697,16 @@ export function NetworkNorthStarView({
           titleClassName={st.pageHeaderTitle}
           subtitleClassName={`${st.pageHeaderSubtitle} sm:whitespace-normal sm:truncate-none`}
           primaryAction={
-            canManageNetwork ? (
+            canSendReferral ? (
+              <button
+                type="button"
+                onClick={handleStartSendReferral}
+                className={`north-star-network-primary-action ${st.primaryAction}`}
+              >
+                <Send className="h-4 w-4" />
+                Send Referral
+              </button>
+            ) : canManageNetwork ? (
               <button
                 type="button"
                 onClick={handleOpenInviteForm}
@@ -791,6 +815,7 @@ export function NetworkNorthStarView({
                   canBrowseDirectory={canSendReferral}
                   canSendReferral={canSendReferral}
                   timeZone={timeZone}
+                  onStartSendReferral={handleStartSendReferral}
                   onOpenRelationships={handleOpenRelationships}
                   onOpenDirectory={handleOpenDirectory}
                   onOpenInvitations={handleOpenInviteForm}
@@ -1146,6 +1171,27 @@ export function NetworkNorthStarView({
 
             {activeTab === "referrals" ? (
               <div className="min-h-0 overflow-y-auto">
+                {canSendReferral ? (
+                  <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className={st.sectionEyebrow}>Referrals</p>
+                      <h2 className={st.sectionTitle}>Send or review referral work</h2>
+                      <p className={st.sectionSubtitle}>
+                        Send overflow work to a trusted business, or manage
+                        referrals already in motion.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleStartSendReferral}
+                      className={`north-star-network-primary-action ${st.primaryAction} shrink-0`}
+                    >
+                      <Send className="h-4 w-4" />
+                      Send Referral
+                    </button>
+                  </div>
+                ) : null}
+
                 {visibleReferralsSubTabs.length > 1 ? (
                   <div
                     className={`${st.filterControl} mb-4`}
@@ -1191,27 +1237,17 @@ export function NetworkNorthStarView({
                         >
                           <p className={st.emptyTitle}>No sent referrals yet</p>
                           <p className={st.emptyDescription}>
-                            Send overflow work from Relationships or the
-                            Directory when a business relationship is the right
-                            fit.
+                            Choose a business from your relationships or the
+                            directory, then send overflow work as a referral lead.
                           </p>
-                          {canManageNetwork ? (
-                            <button
-                              type="button"
-                              onClick={() => handleTabChange("partners")}
-                              className={`${st.secondaryAction} mt-4`}
-                            >
-                              View Relationships
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleTabChange("directory")}
-                              className={`${st.secondaryAction} mt-4`}
-                            >
-                              Browse Businesses
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={handleStartSendReferral}
+                            className={`${st.emptyStateCta} mt-4`}
+                          >
+                            <Send className="h-4 w-4" />
+                            Send Referral
+                          </button>
                         </div>
                       ) : (
                         <div className={st.invitationCardGrid}>
@@ -1256,7 +1292,20 @@ export function NetworkNorthStarView({
                           <p className={st.emptyDescription}>
                             Referred leads appear here when businesses in your
                             Community send overflow work your way.
+                            {canSendReferral
+                              ? " Meanwhile, you can send a referral to a partner anytime."
+                              : null}
                           </p>
+                          {canSendReferral ? (
+                            <button
+                              type="button"
+                              onClick={handleStartSendReferral}
+                              className={`${st.emptyStateCta} mt-4`}
+                            >
+                              <Send className="h-4 w-4" />
+                              Send Referral
+                            </button>
+                          ) : null}
                         </div>
                     ) : (
                       <div className={st.invitationCardGrid}>

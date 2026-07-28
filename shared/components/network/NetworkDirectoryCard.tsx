@@ -106,55 +106,56 @@ export function NetworkDirectoryCard({
           />
         </button>
 
-        {canManageNetwork && !deferActionsToPanel ? (
-          <div className="mt-2 space-y-1.5 border-t border-[rgba(138,99,36,0.08)] pt-2">
-            {isTrustedPartner && onRemoveFromNetwork ? (
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onRemoveFromNetwork();
-                }}
-                disabled={isNetworkActionPending}
-                className={st.cardActionFull}
-              >
-                <UserMinus className="h-3.5 w-3.5" />
-                {isNetworkActionPending ? "Removing..." : "Remove from Relationships"}
-              </button>
-            ) : onAddToNetwork ? (
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onAddToNetwork();
-                }}
-                disabled={isNetworkActionPending}
-                className={st.cardActionAccentFull}
-              >
-                <UserPlus className="h-3.5 w-3.5" />
-                {isNetworkActionPending ? "Adding..." : "Add to Relationships"}
-              </button>
-            ) : null}
+        {(() => {
+          const showSendPrimary =
+            Boolean(isTrustedPartner) &&
+            canSendReferral &&
+            Boolean(onSendReferral);
+          const showConnectPrimary =
+            !isTrustedPartner &&
+            canManageNetwork &&
+            Boolean(onAddToNetwork);
 
-            {networkActionError ? (
-              <p className="text-xs text-rose-700">{networkActionError}</p>
-            ) : null}
-          </div>
-        ) : null}
+          if (!showSendPrimary && !showConnectPrimary) {
+            return networkActionError ? (
+              <p className="mt-2 text-xs text-rose-700">{networkActionError}</p>
+            ) : null;
+          }
 
-        {canSendReferral && onSendReferral && !deferActionsToPanel ? (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onSendReferral();
-            }}
-            className={`${st.cardActionFull} mt-2`}
-          >
-            <Send className="h-3.5 w-3.5" />
-            Send Referral
-          </button>
-        ) : null}
+          return (
+            <div className="mt-2 space-y-1.5 border-t border-[rgba(138,99,36,0.08)] pt-2">
+              {showSendPrimary ? (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onSendReferral?.();
+                  }}
+                  className={st.cardActionAccentFull}
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  Send Referral
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onAddToNetwork?.();
+                  }}
+                  disabled={isNetworkActionPending}
+                  className={st.cardActionAccentFull}
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  {isNetworkActionPending ? "Connecting..." : "Connect"}
+                </button>
+              )}
+              {networkActionError ? (
+                <p className="text-xs text-rose-700">{networkActionError}</p>
+              ) : null}
+            </div>
+          );
+        })()}
       </article>
     );
   }
