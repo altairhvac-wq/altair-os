@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createSubscriptionCheckout,
-  type CreateSubscriptionCheckoutInput,
-} from "@/lib/saas-billing";
+import { createSubscriptionCheckout } from "@/lib/saas-billing";
 
 export type CreateSubscriptionCheckoutActionResult = {
   error?: string;
@@ -27,5 +24,3 @@ export async function createSubscriptionCheckoutAction(input: {
 
   return { url: result.url };
 }
-
-export type { CreateSubscriptionCheckoutInput };
