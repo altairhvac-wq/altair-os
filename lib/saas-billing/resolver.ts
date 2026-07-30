@@ -3,7 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database/types";
 import { createClient } from "@/lib/supabase/server";
-import { SAAS_PLAN_LABELS } from "@/lib/saas-billing/constants";
+import { SAAS_PLAN_LABELS, isSaasPlanKey } from "@/lib/saas-billing/catalog";
 import { evaluateBillingPolicy } from "@/lib/saas-billing/policy";
 import type {
   CompanyBillingAccess,
@@ -13,7 +13,6 @@ import type {
   SaasPlanKey,
   SaasSubscriptionStatus,
 } from "@/lib/saas-billing/types";
-import { isSaasPlanKey } from "@/lib/saas-billing/constants";
 
 function asPlanKey(value: string): SaasPlanKey {
   return isSaasPlanKey(value) ? value : "beta";

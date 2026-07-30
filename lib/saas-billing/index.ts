@@ -1,21 +1,39 @@
 export {
-  SAAS_CHECKOUT_METADATA_PURPOSE,
+  SAAS_BILLING_INTERVALS,
   SAAS_CHECKOUT_PLAN_KEYS,
-  SAAS_GRACE_PERIOD_DAYS,
   SAAS_PLAN_KEYS,
   SAAS_PLAN_LABELS,
-  getSaasBillingWebhookSecret,
-  getStripePriceIdForPlan,
-  isSaasBillingCheckoutConfigured,
+  SAAS_SUBSCRIPTION_CATALOG,
+  SAAS_TRIAL_CONFIG,
+  getSaasCatalogPlan,
+  getSaasPlanListPriceUsd,
+  getSaasStripePriceEnvName,
+  isSaasBillingInterval,
   isSaasCheckoutPlanKey,
   isSaasPlanKey,
-  isSaasStripeLivemode,
-  requireStripePriceIdForPlan,
+  listCheckoutEligibleSaasCatalogPlans,
+  listPublicSaasCatalogPlans,
   type SaasCheckoutPlanKey,
+} from "@/lib/saas-billing/catalog";
+
+export {
+  SAAS_CHECKOUT_METADATA_PURPOSE,
+  SAAS_GRACE_PERIOD_DAYS,
+  getSaasBillingWebhookSecret,
+  getStripePriceIdForPlan,
+  getStripePriceIdForPlanInterval,
+  isSaasBillingCheckoutConfigured,
+  isSaasStripeLivemode,
+  listSaasStripePriceEnvNames,
+  requireStripePriceIdForPlan,
+  requireStripePriceIdForPlanInterval,
 } from "@/lib/saas-billing/constants";
 
 export { createSubscriptionCheckout } from "@/lib/saas-billing/checkout";
-export type { CreateSubscriptionCheckoutResult } from "@/lib/saas-billing/checkout";
+export type {
+  CreateSubscriptionCheckoutInput,
+  CreateSubscriptionCheckoutResult,
+} from "@/lib/saas-billing/checkout";
 
 export {
   findBillingAccountByCompanyId,
@@ -61,8 +79,13 @@ export type {
   CompanySubscriptionRow,
   SaasAccessGrant,
   SaasBillingAccessState,
+  SaasBillingInterval,
+  SaasCatalogPlan,
   SaasPlanKey,
+  SaasPublicPlanKey,
+  SaasStripePriceEnvName,
   SaasSubscriptionStatus,
+  SaasTrialConfig,
   SubscriptionEventLedgerInsert,
   SubscriptionEventLedgerRow,
   SubscriptionEventProcessingStatus,

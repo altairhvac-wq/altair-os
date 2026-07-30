@@ -2,6 +2,58 @@ import type { Json, Timestamp, UUID } from "@/lib/database/types/enums";
 
 export type SaasPlanKey = "beta" | "starter" | "growth" | "pro";
 
+/** Public paid plans offered at launch (excludes internal `beta`). */
+export type SaasPublicPlanKey = Exclude<SaasPlanKey, "beta">;
+
+/** Supported SaaS billing intervals. */
+export type SaasBillingInterval = "monthly" | "annual";
+
+/**
+ * Canonical Stripe Price environment-variable names.
+ * Interval-aware; preferred over legacy `STRIPE_PRICE_*` (no interval) keys.
+ */
+export type SaasStripePriceEnvName =
+  | "STRIPE_PRICE_STARTER_MONTHLY"
+  | "STRIPE_PRICE_STARTER_ANNUAL"
+  | "STRIPE_PRICE_GROWTH_MONTHLY"
+  | "STRIPE_PRICE_GROWTH_ANNUAL"
+  | "STRIPE_PRICE_PRO_MONTHLY"
+  | "STRIPE_PRICE_PRO_ANNUAL";
+
+/** Trial policy for new public Checkout subscriptions (not applied to beta_comped). */
+export type SaasTrialConfig = {
+  durationDays: number;
+  requiresPaymentMethod: boolean;
+  convertsToPaidUnlessCanceled: boolean;
+};
+
+/**
+ * One plan in the canonical SaaS subscription catalog.
+ * Entitlements / feature gates are intentionally absent until approved.
+ */
+export type SaasCatalogPlan = {
+  planKey: SaasPlanKey;
+  label: string;
+  /** Lower sorts first in public/settings plan lists. */
+  displayOrder: number;
+  /** Shown on public marketing / pricing surfaces. */
+  isPublic: boolean;
+  /** Eligible for SaaS subscription Checkout (paid plans only). */
+  checkoutEligible: boolean;
+  /** Whole-dollar USD list price for monthly billing; null when not sold. */
+  monthlyPriceUsd: number | null;
+  /** Whole-dollar USD list price for annual billing; null when not sold. */
+  annualPriceUsd: number | null;
+  /** Dollars saved vs paying monthly for 12 months; null when not sold. */
+  annualSavingsUsd: number | null;
+  /** Equivalent free months when paying annually (e.g. 2). */
+  annualSavingsMonths: number | null;
+  stripePriceEnv: {
+    monthly: SaasStripePriceEnvName;
+    annual: SaasStripePriceEnvName;
+  } | null;
+};
+
 export type SaasSubscriptionStatus =
   | "active"
   | "trialing"

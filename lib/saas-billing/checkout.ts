@@ -3,15 +3,23 @@ import "server-only";
 import { getAppBaseUrl } from "@/lib/email/env";
 import { getActiveCompanyContext } from "@/lib/database/company-context";
 import {
-  isSaasBillingCheckoutConfigured,
+  isSaasBillingInterval,
   isSaasCheckoutPlanKey,
-  requireStripePriceIdForPlan,
-  SAAS_CHECKOUT_METADATA_PURPOSE,
+  SAAS_TRIAL_CONFIG,
   type SaasCheckoutPlanKey,
+} from "@/lib/saas-billing/catalog";
+import {
+  isSaasBillingCheckoutConfigured,
+  requireStripePriceIdForPlanInterval,
+  SAAS_CHECKOUT_METADATA_PURPOSE,
 } from "@/lib/saas-billing/constants";
 import { getOrCreateBillingCustomer, getPlatformStripeClient } from "@/lib/saas-billing/customer";
 import { getCompanySubscription } from "@/lib/saas-billing/resolver";
-import type { SaasSubscriptionStatus } from "@/lib/saas-billing/types";
+import type {
+  SaasBillingInterval,
+  SaasPublicPlanKey,
+  SaasSubscriptionStatus,
+} from "@/lib/saas-billing/types";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
 /**
@@ -25,6 +33,12 @@ const BLOCKED_CHECKOUT_STATUSES = new Set<SaasSubscriptionStatus>([
   "unpaid",
   "paused",
 ]);
+
+/** Canonical Checkout request (public paid plans only; excludes beta). */
+export type CreateSubscriptionCheckoutInput = {
+  planKey: SaasPublicPlanKey;
+  billingInterval: SaasBillingInterval;
+};
 
 export type CreateSubscriptionCheckoutResult =
   | { ok: true; url: string }
@@ -45,10 +59,14 @@ function buildCheckoutUrls(baseUrl: string): {
  * Creates a Stripe Checkout Session (mode: subscription) for Altair SaaS billing.
  * Company is resolved exclusively from getActiveCompanyContext() — never from client input.
  * Owner/Admin (manageCompany) only.
+ *
+ * Uses canonical catalog Price env names, applies the approved 14-day card-required trial,
+ * and records plan_key + billing_interval on session and subscription metadata.
  */
-export async function createSubscriptionCheckout(
-  planKey: string,
-): Promise<CreateSubscriptionCheckoutResult> {
+export async function createSubscriptionCheckout(input: {
+  planKey: string;
+  billingInterval: string;
+}): Promise<CreateSubscriptionCheckoutResult> {
   const context = await getActiveCompanyContext();
 
   if (!context) {
@@ -62,11 +80,16 @@ export async function createSubscriptionCheckout(
     };
   }
 
-  if (!isSaasCheckoutPlanKey(planKey)) {
+  if (!isSaasCheckoutPlanKey(input.planKey)) {
     return { ok: false, error: "Invalid subscription plan." };
   }
 
-  const checkoutPlanKey: SaasCheckoutPlanKey = planKey;
+  if (!isSaasBillingInterval(input.billingInterval)) {
+    return { ok: false, error: "Invalid billing interval." };
+  }
+
+  const checkoutPlanKey: SaasCheckoutPlanKey = input.planKey;
+  const billingInterval: SaasBillingInterval = input.billingInterval;
 
   if (!isSaasBillingCheckoutConfigured()) {
     return {
@@ -86,11 +109,14 @@ export async function createSubscriptionCheckout(
 
   let priceId: string;
   try {
-    priceId = requireStripePriceIdForPlan(checkoutPlanKey);
+    priceId = requireStripePriceIdForPlanInterval(
+      checkoutPlanKey,
+      billingInterval,
+    );
   } catch {
     return {
       ok: false,
-      error: `Price is not configured for the ${checkoutPlanKey} plan.`,
+      error: `Price is not configured for the ${checkoutPlanKey} plan (${billingInterval}).`,
     };
   }
 
@@ -134,6 +160,12 @@ export async function createSubscriptionCheckout(
 
   const urls = buildCheckoutUrls(baseUrl);
   const stripe = getPlatformStripeClient();
+  const sharedMetadata = {
+    purpose: SAAS_CHECKOUT_METADATA_PURPOSE,
+    company_id: companyId,
+    plan_key: checkoutPlanKey,
+    billing_interval: billingInterval,
+  };
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -143,17 +175,14 @@ export async function createSubscriptionCheckout(
       success_url: urls.successUrl,
       cancel_url: urls.cancelUrl,
       client_reference_id: companyId,
-      metadata: {
-        purpose: SAAS_CHECKOUT_METADATA_PURPOSE,
-        company_id: companyId,
-        plan_key: checkoutPlanKey,
-      },
+      // Card required up front so the trial converts to paid unless canceled.
+      payment_method_collection: SAAS_TRIAL_CONFIG.requiresPaymentMethod
+        ? "always"
+        : "if_required",
+      metadata: sharedMetadata,
       subscription_data: {
-        metadata: {
-          purpose: SAAS_CHECKOUT_METADATA_PURPOSE,
-          company_id: companyId,
-          plan_key: checkoutPlanKey,
-        },
+        trial_period_days: SAAS_TRIAL_CONFIG.durationDays,
+        metadata: sharedMetadata,
       },
     });
 
@@ -166,6 +195,7 @@ export async function createSubscriptionCheckout(
     console.error("[saas-billing] checkout.sessions.create failed:", {
       companyId,
       planKey: checkoutPlanKey,
+      billingInterval,
       message: error instanceof Error ? error.message : "unknown",
     });
     return { ok: false, error: "Failed to start subscription checkout." };

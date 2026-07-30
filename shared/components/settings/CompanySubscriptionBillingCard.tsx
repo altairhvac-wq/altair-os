@@ -3,8 +3,19 @@
 import { CreditCard } from "lucide-react";
 import { useState, useTransition } from "react";
 import { createSubscriptionCheckoutAction } from "@/app/actions/saas-billing";
-import type { CompanySubscriptionBillingSummary } from "@/lib/saas-billing/types";
-import { SAAS_PLAN_LABELS } from "@/shared/lib/saas-billing-labels";
+import type {
+  CompanySubscriptionBillingSummary,
+  SaasBillingInterval,
+} from "@/lib/saas-billing/types";
+import {
+  SAAS_BILLING_INTERVALS,
+  SAAS_CHECKOUT_PLAN_KEYS,
+  SAAS_PLAN_LABELS,
+  SAAS_SUBSCRIPTION_CATALOG,
+  SAAS_TRIAL_CONFIG,
+  getSaasPlanListPriceUsd,
+  type SaasCheckoutPlanKey,
+} from "@/shared/lib/saas-billing-labels";
 
 type CompanySubscriptionBillingCardProps = {
   summary: CompanySubscriptionBillingSummary | null;
@@ -21,6 +32,11 @@ const STATE_LABELS: Record<CompanySubscriptionBillingSummary["state"], string> =
   LIMITED: "Limited",
   READ_ONLY: "Read only",
   BLOCKED: "Blocked",
+};
+
+const INTERVAL_LABELS: Record<SaasBillingInterval, string> = {
+  monthly: "Monthly",
+  annual: "Annual",
 };
 
 function formatDateLabel(value: string | null): string | null {
@@ -40,6 +56,17 @@ function formatDateLabel(value: string | null): string | null {
   });
 }
 
+function formatCheckoutPriceLabel(
+  planKey: SaasCheckoutPlanKey,
+  interval: SaasBillingInterval,
+): string {
+  const amount = getSaasPlanListPriceUsd(planKey, interval);
+  if (amount == null) {
+    return SAAS_PLAN_LABELS[planKey];
+  }
+  return interval === "monthly" ? `$${amount}/mo` : `$${amount}/yr`;
+}
+
 export function CompanySubscriptionBillingCard({
   summary,
   canManageSubscription = false,
@@ -48,6 +75,9 @@ export function CompanySubscriptionBillingCard({
   loadError = null,
 }: CompanySubscriptionBillingCardProps) {
   const [actionError, setActionError] = useState<string | null>(null);
+  const [planKey, setPlanKey] = useState<SaasCheckoutPlanKey>("starter");
+  const [billingInterval, setBillingInterval] =
+    useState<SaasBillingInterval>("monthly");
   const [isPending, startTransition] = useTransition();
 
   const effectiveSummary: CompanySubscriptionBillingSummary = summary ?? {
@@ -76,6 +106,8 @@ export function CompanySubscriptionBillingCard({
       effectiveSummary.status === "paused");
   const canStartCheckout =
     canManageSubscription && checkoutConfigured && !hasBlockingSubscription;
+  const selectedPriceLabel = formatCheckoutPriceLabel(planKey, billingInterval);
+  const selectedPlanLabel = SAAS_SUBSCRIPTION_CATALOG[planKey].label;
   const surfaceClass = northStar
     ? "rounded-xl border border-[rgba(138,99,36,0.18)] bg-[#FFFCF5] p-4 sm:p-5"
     : "rounded-xl border border-slate-200 bg-white p-4 sm:p-5";
@@ -89,6 +121,9 @@ export function CompanySubscriptionBillingCard({
   const valueClass = northStar
     ? "text-sm font-medium text-[#17130E]"
     : "text-sm font-medium text-slate-900";
+  const fieldClass = northStar
+    ? "mt-1 w-full min-h-10 rounded-lg border border-[rgba(138,99,36,0.22)] bg-white px-3 py-2 text-sm text-[#17130E] focus:outline-none focus:ring-2 focus:ring-[rgba(184,138,46,0.35)]"
+    : "mt-1 w-full min-h-10 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/40";
   const primaryButtonClass = northStar
     ? "inline-flex min-h-10 items-center justify-center rounded-lg bg-[#B88A2E] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#9C7424] disabled:opacity-60"
     : "inline-flex min-h-10 items-center justify-center rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:opacity-60";
@@ -109,7 +144,10 @@ export function CompanySubscriptionBillingCard({
     }
 
     startTransition(async () => {
-      const result = await createSubscriptionCheckoutAction("starter");
+      const result = await createSubscriptionCheckoutAction({
+        planKey,
+        billingInterval,
+      });
       if (result.error) {
         setActionError(result.error);
         return;
@@ -203,16 +241,63 @@ export function CompanySubscriptionBillingCard({
       ) : null}
 
       {canManageSubscription ? (
-        <div className="mt-4 flex flex-col gap-2">
+        <div className="mt-4 flex flex-col gap-3">
           {canStartCheckout ? (
-            <button
-              type="button"
-              className={primaryButtonClass}
-              disabled={isPending}
-              onClick={handleStartSubscription}
-            >
-              {isPending ? "Starting…" : "Start subscription"}
-            </button>
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="min-w-0 block">
+                  <span className={labelClass}>Plan</span>
+                  <select
+                    className={fieldClass}
+                    value={planKey}
+                    disabled={isPending}
+                    onChange={(event) =>
+                      setPlanKey(event.target.value as SaasCheckoutPlanKey)
+                    }
+                  >
+                    {SAAS_CHECKOUT_PLAN_KEYS.map((key) => (
+                      <option key={key} value={key}>
+                        {SAAS_SUBSCRIPTION_CATALOG[key].label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="min-w-0 block">
+                  <span className={labelClass}>Billing</span>
+                  <select
+                    className={fieldClass}
+                    value={billingInterval}
+                    disabled={isPending}
+                    onChange={(event) =>
+                      setBillingInterval(
+                        event.target.value as SaasBillingInterval,
+                      )
+                    }
+                  >
+                    {SAAS_BILLING_INTERVALS.map((interval) => (
+                      <option key={interval} value={interval}>
+                        {INTERVAL_LABELS[interval]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <p className={mutedClass}>
+                {selectedPlanLabel} · {selectedPriceLabel} ·{" "}
+                {SAAS_TRIAL_CONFIG.durationDays}-day trial, card required. Converts
+                to paid billing unless canceled.
+              </p>
+              <button
+                type="button"
+                className={primaryButtonClass}
+                disabled={isPending}
+                onClick={handleStartSubscription}
+              >
+                {isPending
+                  ? "Starting…"
+                  : `Start ${SAAS_TRIAL_CONFIG.durationDays}-day trial`}
+              </button>
+            </>
           ) : null}
           <p className={mutedClass}>
             To update payment methods or subscription details, contact support.

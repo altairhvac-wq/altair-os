@@ -1,3 +1,9 @@
+/**
+ * Legacy founding-beta marketing copy still consumed by the public pricing page.
+ * Authoritative launch list prices, intervals, and plan labels live in
+ * `lib/saas-billing/catalog.ts` (`SAAS_SUBSCRIPTION_CATALOG`).
+ * Do not treat these post-beta amounts as the SaaS pricing source of truth.
+ */
 export const FOUNDING_BETA_OFFER = [
   "Founding Company Beta",
   "3 Months Free",
