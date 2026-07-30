@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { MetaPixel } from "@/shared/components/analytics/MetaPixel";
 import { PwaServiceWorkerRegistration } from "@/shared/components/pwa/PwaServiceWorkerRegistration";
 import "./globals.css";
 
@@ -69,6 +70,7 @@ export default function RootLayout({
         style={{ backgroundColor: APP_SHELL_BACKGROUND }}
       >
         <PwaServiceWorkerRegistration />
+        <MetaPixel />
         {children}
       </body>
     </html>
