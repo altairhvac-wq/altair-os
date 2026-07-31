@@ -36,6 +36,7 @@ const ALLOWED_NEXT_PATH_PREFIXES = [
   "/tech/receipts",
   "/tech/notifications",
   "/setup",
+  "/activate-subscription",
   "/reset-password",
 ] as const;
 

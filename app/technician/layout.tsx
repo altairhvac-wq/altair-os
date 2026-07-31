@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/database/auth";
 import { getActiveCompanyContext, getUserCompanies } from "@/lib/database/company-context";
 import { shouldHideDemoPrefixesForDisplay } from "@/lib/database/founder-marketing-display";
 import { getUnreadNotificationCount } from "@/lib/database/services/notifications";
-import { getRequestCompanyBillingAccess } from "@/lib/saas-billing/request-access";
+import { requireCompanyBillingAppAccess } from "@/lib/saas-billing/require-app-access";
 import { TECHNICIAN_NOTIFICATION_TYPES } from "@/shared/types/notification";
 
 export default async function TechnicianLayout({
@@ -27,14 +27,15 @@ export default async function TechnicianLayout({
     redirect("/setup");
   }
 
-  const [unreadNotificationCount, billingAccess] = await Promise.all([
-    getUnreadNotificationCount(
-      companyContext.company.id,
-      companyContext.user.id,
-      { types: TECHNICIAN_NOTIFICATION_TYPES },
-    ),
-    getRequestCompanyBillingAccess(companyContext.company.id),
-  ]);
+  const billingAccess = await requireCompanyBillingAppAccess(
+    companyContext.company.id,
+  );
+
+  const unreadNotificationCount = await getUnreadNotificationCount(
+    companyContext.company.id,
+    companyContext.user.id,
+    { types: TECHNICIAN_NOTIFICATION_TYPES },
+  );
 
   const hideDemoPrefixes = shouldHideDemoPrefixesForDisplay(user);
   const canManageBilling = companyContext.permissions.manageCompany;

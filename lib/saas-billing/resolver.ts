@@ -2,7 +2,6 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database/types";
-import { createClient } from "@/lib/supabase/server";
 import { SAAS_PLAN_LABELS, isSaasPlanKey } from "@/lib/saas-billing/catalog";
 import { evaluateBillingPolicy } from "@/lib/saas-billing/policy";
 import type {
@@ -13,6 +12,7 @@ import type {
   SaasPlanKey,
   SaasSubscriptionStatus,
 } from "@/lib/saas-billing/types";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 
 function asPlanKey(value: string): SaasPlanKey {
   return isSaasPlanKey(value) ? value : "beta";
@@ -51,12 +51,16 @@ function mapSubscriptionRow(
 
 /**
  * Loads the local subscription mirror. Reads Postgres only — never Stripe.
+ *
+ * Defaults to the service-role client so owners, admins, and technicians see
+ * the same entitlement state after application-layer membership authorization.
+ * Do not call without verifying the caller belongs to the company.
  */
 export async function getCompanySubscription(
   companyId: string,
   supabase?: SupabaseClient<Database>,
 ): Promise<CompanySubscriptionRow | null> {
-  const client = supabase ?? (await createClient());
+  const client = supabase ?? createServiceRoleClient();
   const { data, error } = await client
     .from("company_subscriptions")
     .select("*")

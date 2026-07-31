@@ -50,8 +50,8 @@ function buildCheckoutUrls(baseUrl: string): {
 } {
   const origin = baseUrl.replace(/\/$/, "");
   return {
-    successUrl: `${origin}/settings?billing=success`,
-    cancelUrl: `${origin}/settings?billing=cancel`,
+    successUrl: `${origin}/activate-subscription?billing=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancelUrl: `${origin}/activate-subscription?billing=cancel`,
   };
 }
 

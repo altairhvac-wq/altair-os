@@ -51,12 +51,28 @@ export type {
 } from "@/lib/saas-billing/policy";
 
 export {
+  SUBSCRIPTION_ACTIVATION_PATH,
+  assertCheckoutSessionOwnedByCompany,
+  companyHasFullApplicationAccess,
+} from "@/lib/saas-billing/app-access-policy";
+export type {
+  CheckoutSessionOwnershipInput,
+  CheckoutSessionOwnershipResult,
+  FullApplicationAccessInput,
+} from "@/lib/saas-billing/app-access-policy";
+
+export { requireCompanyBillingAppAccess } from "@/lib/saas-billing/require-app-access";
+
+export {
   getCompanySubscription,
   getCompanySubscriptionBillingSummary,
   resolveCompanyBillingAccess,
 } from "@/lib/saas-billing/resolver";
 
 export { getRequestCompanyBillingAccess } from "@/lib/saas-billing/request-access";
+
+export { reconcileCheckoutSessionForCompany } from "@/lib/saas-billing/reconcile-checkout";
+export type { ReconcileCheckoutSessionResult } from "@/lib/saas-billing/reconcile-checkout";
 
 export {
   claimStaleProcessingSubscriptionEvent,
@@ -66,6 +82,7 @@ export {
   insertSubscriptionEventLedger,
   isStaleSubscriptionEventProcessing,
   processBillingWebhookEvent,
+  upsertCompanySubscriptionFromStripe,
   STALE_SUBSCRIPTION_EVENT_PROCESSING_MS,
   stripeEventPayload,
   verifyBillingWebhookEvent,

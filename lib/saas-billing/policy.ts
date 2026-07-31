@@ -39,7 +39,7 @@ function isInFuture(value: string | null | undefined, nowMs: number): boolean {
 
 /**
  * Pure policy: maps normalized local subscription data → access state.
- * Does not call Stripe. Phase 1 does not enforce lockouts in the app shell.
+ * Does not call Stripe. App-shell lockouts use companyHasFullApplicationAccess.
  */
 export function evaluateBillingPolicy(
   subscription: NormalizedSubscriptionForPolicy | null,
@@ -47,12 +47,12 @@ export function evaluateBillingPolicy(
 ): BillingPolicyDecision {
   if (!subscription) {
     return {
-      state: "ACTIVE",
-      canUseOperationalFeatures: true,
-      canMutateOperationalData: true,
+      state: "BLOCKED",
+      canUseOperationalFeatures: false,
+      canMutateOperationalData: false,
       canManageBilling: true,
-      warnings: [],
-      isComped: true,
+      warnings: ["No subscription on file."],
+      isComped: false,
     };
   }
 

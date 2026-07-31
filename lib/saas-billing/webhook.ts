@@ -388,7 +388,11 @@ function isPaidAccessStatus(status: SaasSubscriptionStatus): boolean {
   return status === "active" || status === "trialing";
 }
 
-async function upsertCompanySubscriptionFromStripe(
+/**
+ * Mirrors a Stripe Subscription into company_subscriptions.
+ * Shared by webhooks and the post-Checkout reconcile path.
+ */
+export async function upsertCompanySubscriptionFromStripe(
   supabase: SupabaseClient<Database>,
   params: {
     companyId: string;

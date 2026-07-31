@@ -130,9 +130,9 @@ export function CompanySubscriptionBillingCard({
   const effectiveSummary: CompanySubscriptionBillingSummary = summary ?? {
     planKey: "beta",
     planLabel: SAAS_PLAN_LABELS.beta,
-    status: "active",
-    state: "ACTIVE",
-    isComped: true,
+    status: "incomplete",
+    state: "BLOCKED",
+    isComped: false,
     trialEndsAt: null,
     graceEndsAt: null,
     cancelAtPeriodEnd: false,
