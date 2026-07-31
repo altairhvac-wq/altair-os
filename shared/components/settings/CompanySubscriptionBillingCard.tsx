@@ -2,7 +2,10 @@
 
 import { CreditCard } from "lucide-react";
 import { useState, useTransition } from "react";
-import { createSubscriptionCheckoutAction } from "@/app/actions/saas-billing";
+import {
+  createBillingPortalSessionAction,
+  createSubscriptionCheckoutAction,
+} from "@/app/actions/saas-billing";
 import type {
   CompanySubscriptionBillingSummary,
   SaasBillingInterval,
@@ -127,6 +130,9 @@ export function CompanySubscriptionBillingCard({
   const primaryButtonClass = northStar
     ? "inline-flex min-h-10 items-center justify-center rounded-lg bg-[#B88A2E] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#9C7424] disabled:opacity-60"
     : "inline-flex min-h-10 items-center justify-center rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:opacity-60";
+  const secondaryButtonClass = northStar
+    ? "inline-flex min-h-10 items-center justify-center rounded-lg border border-[rgba(138,99,36,0.30)] bg-white px-3 py-2 text-sm font-semibold text-[#9C7424] transition-colors hover:bg-[#FFF3D6] disabled:opacity-60"
+    : "inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60";
 
   function handleStartSubscription() {
     setActionError(null);
@@ -148,6 +154,21 @@ export function CompanySubscriptionBillingCard({
         planKey,
         billingInterval,
       });
+      if (result.error) {
+        setActionError(result.error);
+        return;
+      }
+      if (result.url) {
+        window.location.assign(result.url);
+      }
+    });
+  }
+
+  function handleManageBilling() {
+    setActionError(null);
+
+    startTransition(async () => {
+      const result = await createBillingPortalSessionAction();
       if (result.error) {
         setActionError(result.error);
         return;
@@ -299,10 +320,17 @@ export function CompanySubscriptionBillingCard({
               </button>
             </>
           ) : null}
-          <p className={mutedClass}>
-            To update payment methods or subscription details, contact support.
-            Self-serve billing management will be added over time.
-          </p>
+          {effectiveSummary.hasStripeSubscription ? (
+            <button
+              type="button"
+              className={secondaryButtonClass}
+              disabled={isPending}
+              onClick={handleManageBilling}
+              aria-label="Manage billing in Stripe portal"
+            >
+              {isPending ? "Opening…" : "Manage billing"}
+            </button>
+          ) : null}
         </div>
       ) : (
         <p className={`mt-4 ${mutedClass}`}>

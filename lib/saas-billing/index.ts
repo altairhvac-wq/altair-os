@@ -35,6 +35,9 @@ export type {
   CreateSubscriptionCheckoutResult,
 } from "@/lib/saas-billing/checkout";
 
+export { createBillingPortalSession } from "@/lib/saas-billing/portal";
+export type { CreateBillingPortalSessionResult } from "@/lib/saas-billing/portal";
+
 export {
   findBillingAccountByCompanyId,
   getOrCreateBillingCustomer,

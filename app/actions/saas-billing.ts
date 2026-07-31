@@ -1,6 +1,9 @@
 "use server";
 
-import { createSubscriptionCheckout } from "@/lib/saas-billing";
+import {
+  createBillingPortalSession,
+  createSubscriptionCheckout,
+} from "@/lib/saas-billing";
 
 export type CreateSubscriptionCheckoutActionResult = {
   error?: string;
@@ -17,6 +20,25 @@ export async function createSubscriptionCheckoutAction(input: {
   billingInterval: string;
 }): Promise<CreateSubscriptionCheckoutActionResult> {
   const result = await createSubscriptionCheckout(input);
+
+  if (!result.ok) {
+    return { error: result.error };
+  }
+
+  return { url: result.url };
+}
+
+export type CreateBillingPortalSessionActionResult = {
+  error?: string;
+  url?: string;
+};
+
+/**
+ * Opens a Stripe Billing Portal session for the active company.
+ * Company and authorization are resolved server-side — no billing identifiers accepted from the client.
+ */
+export async function createBillingPortalSessionAction(): Promise<CreateBillingPortalSessionActionResult> {
+  const result = await createBillingPortalSession();
 
   if (!result.ok) {
     return { error: result.error };
