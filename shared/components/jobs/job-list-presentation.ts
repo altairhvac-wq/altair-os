@@ -4,6 +4,7 @@ import {
 } from "@/shared/lib/job-next-business-action";
 import { isJobOnOperationalDay } from "@/shared/lib/scheduled-today";
 import { getJobLifecycleState } from "@/shared/lib/job-lifecycle";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
   formatJobStatus,
   type Job,
@@ -161,12 +162,9 @@ export const jobMissionClasses = {
   bulkBar:
     "sticky bottom-0 z-20 border-t border-altair-border bg-altair-paper/95 px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(3,7,12,0.12)] backdrop-blur-sm sm:px-4",
   bulkBarTitle: "text-sm font-semibold text-altair-ink-on-paper",
-  bulkClearButton:
-    "inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-altair-border bg-altair-paper-elevated px-3 py-1.5 text-xs font-semibold text-altair-ink-on-paper-secondary transition-colors hover:border-altair-brass/40 hover:bg-altair-brass/5 disabled:cursor-not-allowed disabled:opacity-60",
-  bulkSecondaryAction:
-    "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-altair-border bg-altair-paper-elevated px-3 py-2 text-xs font-semibold text-altair-ink-on-paper transition-colors hover:bg-altair-paper-subtle disabled:cursor-not-allowed disabled:opacity-60",
-  bulkPrimaryAction:
-    "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-altair-graphite bg-altair-graphite px-3 py-2 text-xs font-semibold text-altair-paper transition-colors hover:border-altair-brass-interactive disabled:cursor-not-allowed disabled:opacity-60",
+  bulkClearButton: buttonClassName("quiet", "sm", "shrink-0"),
+  bulkSecondaryAction: buttonClassName("secondary", "sm"),
+  bulkPrimaryAction: buttonClassName("primary", "sm"),
   bulkFieldLabel:
     "text-[11px] font-semibold uppercase tracking-wide text-altair-ink-on-paper-muted",
   bulkSelect:

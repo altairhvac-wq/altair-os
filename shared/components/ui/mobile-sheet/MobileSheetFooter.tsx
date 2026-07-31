@@ -1,5 +1,7 @@
 "use client";
 
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
+
 type MobileSheetFooterProps = {
   children: React.ReactNode;
   className?: string;
@@ -27,7 +29,7 @@ export function MobileSheetFooterActions({
   submitForm,
   isSubmitting = false,
   submitDisabled = false,
-  submitClassName = "inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-cyan-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60",
+  submitClassName = buttonClassName("primary", "md", "flex-1"),
 }: {
   onCancel: () => void;
   cancelLabel?: string;
@@ -38,8 +40,7 @@ export function MobileSheetFooterActions({
   submitDisabled?: boolean;
   submitClassName?: string;
 }) {
-  const cancelClass =
-    "inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60";
+  const cancelClass = buttonClassName("secondary", "md", "flex-1");
 
   return (
     <>

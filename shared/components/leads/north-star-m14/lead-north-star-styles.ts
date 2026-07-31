@@ -1,4 +1,5 @@
 import type { LeadStatus } from "@/shared/types/lead";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 
 export const LEAD_STATUS_NORTH_STAR_BADGE_STYLES: Record<LeadStatus, string> = {
   new: "bg-[#EFE4CB] text-[#4F4638] ring-[rgba(138,99,36,0.18)]",
@@ -37,10 +38,8 @@ export const leadNorthStarStyles = {
     "rounded-full bg-[#FFF9EA] px-3 py-1.5 text-xs font-semibold text-[#4F4638] ring-1 ring-inset ring-[rgba(138,99,36,0.18)] transition-colors hover:bg-[#F3EBDD] hover:ring-[rgba(201,164,77,0.28)]",
   toggleLink:
     "text-xs font-semibold text-[#8A6324] transition-colors hover:text-[#B88A2E]",
-  saveButton:
-    "inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-4 py-2 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[44px] sm:w-auto sm:py-2.5",
-  secondaryButton:
-    "inline-flex min-h-10 items-center justify-center rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 py-2 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9 sm:px-2.5 sm:py-1.5 sm:text-xs",
+  saveButton: buttonClassName("primary", "md", "w-full sm:w-auto"),
+  secondaryButton: buttonClassName("secondary", "sm"),
   menuShell:
     "absolute bottom-full right-0 z-10 mb-1 min-w-[12rem] overflow-hidden rounded-xl border border-[rgba(138,99,36,0.18)] bg-[#FBF7EF] py-1 shadow-lg sm:bottom-auto sm:top-full sm:mb-0 sm:mt-1",
   menuItem:

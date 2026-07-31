@@ -1,3 +1,5 @@
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
+
 /** Shared rhythm and width tokens for Master Shell V2. */
 
 export type MasterShellDensity = "default" | "compact";
@@ -39,11 +41,11 @@ export const masterShellViewportFillClass =
 
 /** Compact list-page primary action button (README checklist item 8). */
 export const masterListPagePrimaryActionClass =
-  "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl admin-btn-primary px-3 py-1.5 text-sm md:h-9 md:min-h-9";
+  buttonClassName("primary", "sm", "shrink-0");
 
 /** Compact list-page secondary action button — pairs with primary in page headers. */
 export const masterSecondaryActionClass =
-  "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl admin-btn-secondary px-3 py-1.5 text-sm md:h-9 md:min-h-9";
+  buttonClassName("secondary", "sm", "shrink-0");
 
 /** Panel chrome header inside board/workbench surfaces (Dispatch, list detail panels). */
 export const masterPanelHeaderClass = "admin-panel-header shrink-0";

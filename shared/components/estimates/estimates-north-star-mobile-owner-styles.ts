@@ -9,9 +9,11 @@ export const estimatesOwnerMobileHeroEyebrowClass =
 export const estimatesOwnerMobileHeroTitleClass =
   "min-w-0 text-base font-bold tracking-tight text-[#FFF9EA]";
 
-/** Compact gold/champagne hero CTA — matches /jobs mobile New Job button treatment. */
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
+
+/** Compact canonical hero CTA — matches production list-page actions. */
 export const estimatesOwnerMobileHeroPrimaryActionClass =
-  "inline-flex min-h-11 shrink-0 touch-manipulation items-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3.5 py-1.5 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:-translate-y-px hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] hover:shadow-[0_4px_16px_rgba(138,99,36,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#273140] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:text-[#17130E]";
+  buttonClassName("primary", "sm", "shrink-0 touch-manipulation");
 
 /** Readable muted line on dark graphite — matches approved /jobs command hero subtitle. */
 export const estimatesOwnerMobileHeroMutedClass = "text-xs text-[#C8D0DA]";

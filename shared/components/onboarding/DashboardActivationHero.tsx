@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo } from "react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { Button } from "@/shared/design-system/components";
 import { ClosedBetaFeedbackStrip } from "@/shared/components/onboarding/ClosedBetaFeedbackStrip";
 import { HorizonHero } from "@/shared/design-system/signature";
 import { signatureCockpitSurfaceClass } from "@/shared/design-system/shell/tokens";
@@ -166,17 +166,13 @@ export function DashboardActivationHero({
                   >
                     {nextStep.description}
                   </p>
-                  <Link
+                  <Button
                     href={nextStep.href}
-                    className={`mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-                      northStar
-                        ? "bg-[#C9A44D] text-[#17130E] hover:bg-[#D4B05A]"
-                        : "bg-cyan-600 text-white hover:bg-cyan-700"
-                    }`}
+                    className="mt-3 w-full"
+                    trailingIcon={<ArrowRight className="h-4 w-4" />}
                   >
                     {checklistDismissed ? "Resume setup" : nextStep.title}
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </Link>
+                  </Button>
                 </>
               ) : null}
             </>

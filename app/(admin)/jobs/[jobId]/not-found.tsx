@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Wrench } from "lucide-react";
+import { Button } from "@/shared/design-system/components";
 
 export default function JobNotFound() {
   return (
@@ -11,12 +11,9 @@ export default function JobNotFound() {
       <p className="mt-2 text-sm text-slate-500">
         This job may have been removed or you may not have access to view it.
       </p>
-      <Link
-        href="/jobs"
-        className="mt-6 inline-flex rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
-      >
+      <Button href="/jobs" className="mt-6">
         Back to jobs
-      </Link>
+      </Button>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
   MobileSheetHeaderIcon,
   MobileSheetPanel,
 } from "@/shared/components/ui/mobile-sheet";
+import { technicianFieldPrimaryActionClass } from "./technician-field-styles";
 
 type TechnicianPhotoSheetProps = {
   jobId: string;
@@ -76,7 +77,7 @@ export function TechnicianPhotoSheet({
               type="button"
               disabled={isUploading}
               onClick={onClose}
-              className="inline-flex min-h-12 w-full touch-manipulation items-center justify-center rounded-xl bg-cyan-600 px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-cyan-700 active:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className={technicianFieldPrimaryActionClass}
             >
               Done
             </button>

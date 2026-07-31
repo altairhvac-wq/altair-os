@@ -426,13 +426,18 @@ Use `href` for navigation. Use `onClick` for in-page actions. If both are provid
 ## Button
 
 Canonical Altair action primitive. Expresses one of the four approved action
-types from `docs/altair/ALTAIR_DESIGN_FOUNDATION.md` ("Buttons" section) —
-`primary`, `secondary`, `destructive`, `quiet` — and nothing else. This is
-the first and, for now, the *only* migrated consumer of `Button`; every
-other button surface in the product (admin `admin-btn-*`, Master Shell
-`masterListPagePrimaryActionClass`/`masterSecondaryActionClass`, North Star,
-technician, auth, MobileSheet footers) remains on its existing contract
-until a deliberate future adoption pass.
+types from `docs/product/ALTAIR_DESIGN_FOUNDATION.md` ("Buttons" section) —
+`primary`, `secondary`, `destructive`, `quiet` — and nothing else. Production
+compatibility surfaces that cannot safely change markup in the same pass use
+the same presentation contract from `button-styles.ts`. This includes admin
+`admin-btn-*`, Master Shell action tokens, North Star action tokens,
+technician field actions, and MobileSheet footers.
+
+Outline controls map to `secondary`; ghost controls and neutral icon-only
+controls map to `quiet`. They are aliases in usage, not additional variants.
+Icon-only controls must keep an accessible name. Workflow-specific success
+controls may retain semantic success styling when the color communicates a
+completed operation rather than ordinary action priority.
 
 ### Import
 
@@ -497,7 +502,9 @@ not to override it from a call site.
   the dark theme (Ink flips light-on-light against Brass there). Brass
   appears only as a hover/active border accent on Primary, consistent with
   the Foundation's "Brass appears on Graphite as the accent" relationship.
-- Not yet adopted anywhere except `EmptyState`.
+- Loading and disabled states remain owned by `Button`; compatibility
+  surfaces mirror the disabled presentation while retaining their existing
+  pending labels and behavior.
 
 ---
 

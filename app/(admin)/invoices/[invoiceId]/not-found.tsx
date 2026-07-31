@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Receipt } from "lucide-react";
+import { Button } from "@/shared/design-system/components";
 
 export default function InvoiceNotFound() {
   return (
@@ -14,12 +14,9 @@ export default function InvoiceNotFound() {
         This invoice may have been removed or you may not have access to view
         it.
       </p>
-      <Link
-        href="/invoices"
-        className="mt-6 inline-flex rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
-      >
+      <Button href="/invoices" className="mt-6">
         Back to invoices
-      </Link>
+      </Button>
     </div>
   );
 }

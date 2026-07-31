@@ -3392,75 +3392,74 @@ a[href] {
 .admin-btn-primary {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.375rem;
   border-radius: 0.75rem;
-  background: linear-gradient(180deg, #0ea5c7 0%, var(--accent-teal) 100%);
+  border: 1px solid transparent;
+  background-color: var(--altair-graphite);
   padding: 0.625rem 1rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #ffffff;
-  box-shadow:
-    0 1px 2px rgb(8 145 178 / 0.28),
-    inset 0 1px 0 rgb(255 255 255 / 0.12);
+  color: var(--altair-paper);
   transition:
-    background 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.15s ease;
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .admin-btn-primary:hover {
-  background: linear-gradient(180deg, #0891b2 0%, var(--accent-teal-hover) 100%);
-  box-shadow:
-    0 4px 14px rgb(8 145 178 / 0.32),
-    inset 0 1px 0 rgb(255 255 255 / 0.1);
+  border-color: var(--altair-brass-interactive);
 }
 
 .admin-btn-primary:active {
-  transform: scale(0.98);
+  border-color: var(--altair-brass);
 }
 
 .admin-btn-secondary {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.375rem;
   border-radius: 0.75rem;
-  border: 1px solid rgb(203 213 225 / 0.85);
-  background: linear-gradient(180deg, #ffffff 0%, rgb(248 250 252 / 0.95) 100%);
+  border: 1px solid var(--altair-border-strong);
+  background-color: var(--altair-paper-subtle);
   padding: 0.625rem 1rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #334155;
-  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+  color: var(--altair-ink);
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease,
     color 0.15s ease,
-    transform 0.15s ease;
+    box-shadow 0.15s ease;
 }
 
 .admin-btn-secondary:hover {
-  border-color: rgb(186 203 220);
-  background: #ffffff;
-  color: #0f172a;
+  background-color: var(--altair-stone);
 }
 
 .admin-btn-secondary:active {
-  transform: scale(0.98);
-  background: rgb(248 250 252);
-  border-color: rgb(203 213 225);
+  background-color: var(--altair-stone);
 }
 
-.admin-btn-primary:focus-visible,
+.admin-btn-primary:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--altair-graphite),
+    0 0 0 4px var(--altair-paper);
+}
+
 .admin-btn-secondary:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(6 182 212 / 0.35);
+  box-shadow:
+    0 0 0 2px var(--altair-paper-subtle),
+    0 0 0 4px var(--altair-ink);
 }
 
 .admin-btn-primary:disabled,
 .admin-btn-secondary:disabled {
   cursor: not-allowed;
   opacity: 0.6;
-  transform: none;
 }
 
 @media (max-width: 767px) {
@@ -3517,9 +3516,11 @@ a[href] {
   justify-content: center;
   min-height: 2.75rem;
   min-width: 2.75rem;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  background-color: transparent;
   padding: 0.5rem;
-  color: #94a3b8;
+  color: var(--altair-ink-secondary);
   transition:
     background-color 0.15s ease,
     color 0.15s ease,
@@ -3527,32 +3528,35 @@ a[href] {
 }
 
 .admin-icon-btn:hover {
-  background-color: rgb(241 245 249);
-  color: #475569;
+  background-color: var(--altair-paper-subtle);
+  color: var(--altair-ink);
 }
 
 .admin-icon-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(6 182 212 / 0.35);
+  box-shadow:
+    0 0 0 2px var(--altair-paper-subtle),
+    0 0 0 4px var(--altair-ink);
 }
 
 .admin-icon-btn:active {
-  background-color: rgb(226 232 240 / 0.65);
-  color: #334155;
+  background-color: var(--altair-stone);
+  color: var(--altair-ink);
 }
 
 .admin-panel-action {
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 0.25rem;
-  border-radius: 0.5rem;
-  border: 1px solid rgb(226 232 240);
-  background-color: #ffffff;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--altair-border-strong);
+  background-color: var(--altair-paper-subtle);
   padding: 0.375rem 0.625rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--altair-ink);
   transition:
     background-color 0.15s ease,
     border-color 0.15s ease,
@@ -3561,30 +3565,36 @@ a[href] {
 }
 
 .admin-panel-action:hover {
-  border-color: rgb(203 213 225);
-  background-color: rgb(248 250 252);
-  color: #0f172a;
+  background-color: var(--altair-stone);
 }
 
 .admin-panel-action:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(6 182 212 / 0.35);
+  box-shadow:
+    0 0 0 2px var(--altair-paper-subtle),
+    0 0 0 4px var(--altair-ink);
 }
 
 .admin-panel-action:active {
-  background-color: rgb(241 245 249);
+  background-color: var(--altair-stone);
 }
 
 .admin-panel-action-accent {
-  border-color: rgb(165 243 252 / 0.85);
-  background-color: rgb(236 254 255 / 0.6);
-  color: #155e75;
+  border-color: transparent;
+  background-color: var(--altair-graphite);
+  color: var(--altair-paper);
 }
 
 .admin-panel-action-accent:hover {
-  border-color: rgb(103 232 249 / 0.75);
-  background-color: rgb(236 254 255);
-  color: #164e63;
+  border-color: var(--altair-brass-interactive);
+  background-color: var(--altair-graphite);
+  color: var(--altair-paper);
+}
+
+.admin-panel-action-accent:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--altair-graphite),
+    0 0 0 4px var(--altair-paper);
 }
 
 .admin-panel-action-warning {

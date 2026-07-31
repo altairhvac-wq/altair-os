@@ -7,6 +7,7 @@ import { createJobMaterialAction } from "@/app/actions/job-materials";
 import { ServiceItemMaterialPicker } from "@/shared/components/service-items/ServiceItemMaterialPicker";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import { formatCurrency } from "@/shared/types/customer";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
   calculateJobMaterialTotalBillable,
   calculateJobMaterialTotalCost,
@@ -311,14 +312,14 @@ export function JobMaterialForm({
           type="button"
           onClick={resetForm}
           disabled={isPending}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-60"
+          className={buttonClassName("secondary", "md")}
         >
           Clear
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:opacity-60"
+          className={buttonClassName("primary", "md")}
         >
           {isPending ? (
             <>

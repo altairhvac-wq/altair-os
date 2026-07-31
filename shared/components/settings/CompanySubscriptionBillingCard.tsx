@@ -20,6 +20,7 @@ import {
   type SaasCheckoutPlanKey,
 } from "@/shared/lib/saas-billing-labels";
 import { OPERATIONAL_STATUS_BADGE_BASE } from "@/shared/lib/operational-status-styles";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 
 type CompanySubscriptionBillingCardProps = {
   summary: CompanySubscriptionBillingSummary | null;
@@ -190,12 +191,8 @@ export function CompanySubscriptionBillingCard({
   const fieldClass = northStar
     ? "mt-1 w-full min-h-10 rounded-lg border border-[rgba(138,99,36,0.22)] bg-white px-3 py-2 text-sm text-[#17130E] focus:outline-none focus:ring-2 focus:ring-[rgba(184,138,46,0.35)]"
     : "mt-1 w-full min-h-10 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/40";
-  const primaryButtonClass = northStar
-    ? "inline-flex min-h-10 items-center justify-center rounded-lg bg-[#B88A2E] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#9C7424] disabled:opacity-60"
-    : "inline-flex min-h-10 items-center justify-center rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:opacity-60";
-  const secondaryButtonClass = northStar
-    ? "inline-flex min-h-10 items-center justify-center rounded-lg border border-[rgba(138,99,36,0.30)] bg-white px-3 py-2 text-sm font-semibold text-[#9C7424] transition-colors hover:bg-[#FFF3D6] disabled:opacity-60"
-    : "inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60";
+  const primaryButtonClass = buttonClassName("primary", "md");
+  const secondaryButtonClass = buttonClassName("secondary", "md");
   const dividerBorderClass = northStar
     ? "border-[rgba(138,99,36,0.12)]"
     : "border-slate-100";

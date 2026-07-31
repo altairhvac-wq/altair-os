@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
   archiveExpenseAction,
   moveExpenseToTrashAction,
@@ -102,9 +103,7 @@ export function ExpenseLifecycleControl({
   const secondaryButtonClass = northStar
     ? `${dt.secondaryAction} !text-xs`
     : "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800";
-  const restoreButtonClass = northStar
-    ? dt.primaryAction
-    : "rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white";
+  const restoreButtonClass = buttonClassName("primary", "sm");
   const trashButtonClass = northStar
     ? "rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-900 transition-colors hover:bg-orange-100"
     : "rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-900";

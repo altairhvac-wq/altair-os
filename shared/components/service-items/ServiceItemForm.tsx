@@ -4,6 +4,7 @@ import {
   type ServiceItem,
   type ServiceItemFormData,
 } from "@/shared/types/service-item";
+import { Button } from "@/shared/design-system/components";
 
 type ServiceItemFormProps = {
   initialData?: Partial<ServiceItemFormData>;
@@ -171,21 +172,22 @@ export function ServiceItemForm({
       </div>
 
       <div className="flex gap-2 border-t border-slate-100 pt-4">
-        <button
+        <Button
           type="submit"
-          disabled={isSubmitting}
-          className="flex-1 rounded-lg bg-cyan-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+          loading={isSubmitting}
+          className="flex-1"
         >
           {isSubmitting ? "Saving..." : submitLabel}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="flex-1 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          variant="secondary"
+          className="flex-1"
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </form>
   );

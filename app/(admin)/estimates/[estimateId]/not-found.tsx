@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { FileText } from "lucide-react";
+import { Button } from "@/shared/design-system/components";
 
 export default function EstimateNotFound() {
   return (
@@ -14,12 +14,9 @@ export default function EstimateNotFound() {
         This estimate may have been removed or you may not have access to view
         it.
       </p>
-      <Link
-        href="/estimates"
-        className="mt-6 inline-flex rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
-      >
+      <Button href="/estimates" className="mt-6">
         Back to estimates
-      </Link>
+      </Button>
     </div>
   );
 }

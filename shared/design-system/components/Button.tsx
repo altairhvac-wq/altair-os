@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import {
+  buttonClassName,
+  type ButtonSize,
+  type ButtonVariant,
+} from "./button-styles";
+
+export type { ButtonSize, ButtonVariant } from "./button-styles";
 
 /**
  * Canonical Altair Button primitive.
@@ -10,14 +17,11 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
  * button-vs-navigation branch. Never owns authorization, permissions,
  * domain wording, workflow transitions, data fetching, or layout.
  *
- * See docs/altair/ALTAIR_DESIGN_FOUNDATION.md ("Buttons" section) for the
+ * See docs/product/ALTAIR_DESIGN_FOUNDATION.md ("Buttons" section) for the
  * four approved action types this component expresses, and
  * shared/design-system/components/README.md for the full contract and
  * className extension policy.
  */
-export type ButtonVariant = "primary" | "secondary" | "destructive" | "quiet";
-export type ButtonSize = "sm" | "md";
-
 type ButtonBaseProps = {
   /** Action hierarchy — see the Foundation's "Buttons" section. Defaults to "primary". */
   variant?: ButtonVariant;
@@ -68,20 +72,12 @@ function isLinkProps(props: ButtonProps): props is ButtonAsLinkProps {
   return "href" in props && typeof props.href === "string";
 }
 
-const baseButtonClass =
-  "inline-flex items-center justify-center gap-1.5 rounded-xl border font-semibold outline-none transition-[background-color,border-color,color] duration-150 motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:pointer-events-none aria-disabled:cursor-not-allowed aria-disabled:opacity-60";
-
 /**
  * Two sizes, matched to the two production button footprints in use today:
  * `md` mirrors `.admin-btn-primary`/`.admin-btn-secondary` (EmptyState's
  * current footprint); `sm` mirrors `masterListPagePrimaryActionClass`
  * (compact list-page headers). See app/globals.css and shared/design-system/shell/tokens.ts.
  */
-const sizeClass: Record<ButtonSize, string> = {
-  sm: "min-h-11 px-3 py-1.5 text-sm md:h-9 md:min-h-9",
-  md: "max-md:min-h-11 px-4 py-2.5 text-sm",
-};
-
 /**
  * Each variant's focus ring reuses that variant's own foreground token as
  * the ring color and its own background token as the ring-offset color.
@@ -89,23 +85,6 @@ const sizeClass: Record<ButtonSize, string> = {
  * background (see README contrast matrix), the ring inherits that same
  * proof instead of needing a separate contrast justification.
  */
-const variantClass: Record<ButtonVariant, string> = {
-  primary:
-    "border-transparent bg-altair-graphite text-altair-paper hover:border-altair-brass-interactive active:border-altair-brass focus-visible:ring-altair-paper focus-visible:ring-offset-altair-graphite",
-  secondary:
-    "border-altair-border-strong bg-altair-paper-subtle text-altair-ink hover:bg-altair-stone active:bg-altair-stone focus-visible:ring-altair-ink focus-visible:ring-offset-altair-paper-subtle",
-  destructive:
-    "border-altair-danger/30 bg-altair-danger-surface text-altair-danger-foreground hover:border-altair-danger active:border-altair-danger focus-visible:ring-altair-danger-foreground focus-visible:ring-offset-altair-danger-surface",
-  quiet:
-    "border-transparent bg-transparent text-altair-ink-secondary hover:bg-altair-paper-subtle hover:text-altair-ink active:bg-altair-stone focus-visible:ring-altair-ink focus-visible:ring-offset-altair-paper-subtle",
-};
-
-function buildButtonClassName(variant: ButtonVariant, size: ButtonSize, className: string) {
-  return [baseButtonClass, sizeClass[size], variantClass[variant], className]
-    .filter(Boolean)
-    .join(" ");
-}
-
 function ButtonContent({
   loading,
   leadingIcon,
@@ -149,7 +128,7 @@ export function Button(props: ButtonProps) {
       ...linkRest
     } = props;
 
-    const composedClassName = buildButtonClassName(variant, size, className);
+    const composedClassName = buttonClassName(variant, size, className);
     const inactive = disabled || loading;
 
     // A disabled or loading navigation action must never render a live
@@ -193,7 +172,7 @@ export function Button(props: ButtonProps) {
     ...buttonRest
   } = props;
 
-  const composedClassName = buildButtonClassName(variant, size, className);
+  const composedClassName = buttonClassName(variant, size, className);
 
   return (
     <button

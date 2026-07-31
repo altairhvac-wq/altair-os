@@ -1,3 +1,5 @@
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
+
 /** Owner-operator /jobs mobile North Star — technician-inspired, light field surfaces. */
 
 export const ownerMobilePageCanvas =
@@ -24,12 +26,12 @@ export const ownerMobileHeroCardClass =
 export const ownerMobileHeroCardLiveClass =
   "ring-1 ring-inset ring-[rgba(198,167,87,0.22)]";
 
-/** Primary CTA — explicit dark surface + white label (fixes washed-out “View job”). */
+/** Primary CTA — canonical graphite command treatment. */
 export const ownerMobileHeroPrimaryActionClass =
-  "inline-flex min-h-12 w-full touch-manipulation items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-base font-semibold text-white shadow-sm transition-[transform,background-color] hover:bg-slate-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none";
+  buttonClassName("primary", "md", "w-full touch-manipulation");
 
 export const ownerMobileHeroSecondaryActionClass =
-  "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 active:bg-slate-100";
+  buttonClassName("secondary", "md", "w-full touch-manipulation");
 
 export const ownerMobileUpNextRowClass =
   "flex w-full touch-manipulation items-center gap-3 rounded-xl border border-slate-200/70 bg-white px-3.5 py-3 text-left shadow-[0_1px_6px_-2px_rgba(15,23,42,0.08)] transition-colors active:bg-slate-50/80";
@@ -40,9 +42,9 @@ export const ownerMobileArchiveInputClass =
 export const ownerMobileArchiveResultRowClass =
   "flex w-full touch-manipulation items-center gap-3 rounded-xl border border-slate-200/70 bg-white px-3.5 py-3 text-left shadow-[0_1px_6px_-2px_rgba(15,23,42,0.06)] transition-colors active:bg-slate-50/80";
 
-/** Dark compact hero — light tappable pill with graphite label on white surface. */
+/** Dark compact hero — canonical secondary action. */
 export const ownerMobileFiltersButtonClass =
-  "inline-flex min-h-11 shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 active:bg-slate-100";
+  buttonClassName("secondary", "sm", "shrink-0 touch-manipulation");
 
 export const ownerMobileEmptyCardClass =
   "rounded-2xl border border-slate-200/70 bg-white px-5 py-8 text-center shadow-[0_1px_8px_-2px_rgba(15,23,42,0.06)]";

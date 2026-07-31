@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
   archiveInvoiceAction,
   moveInvoiceToTrashAction,
@@ -179,7 +180,7 @@ export function InvoiceLifecycleControl({
                 type="button"
                 disabled={isPending}
                 onClick={() => runAction(() => restoreInvoiceAction(invoice.id))}
-                className="rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white"
+                className={buttonClassName("primary", "sm")}
               >
                 Restore
               </button>
@@ -232,7 +233,7 @@ export function InvoiceLifecycleControl({
                 onClick={() =>
                   runAction(() => restoreInvoiceFromTrashAction(invoice.id))
                 }
-                className="rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white"
+                className={buttonClassName("primary", "sm")}
               >
                 Restore
               </button>

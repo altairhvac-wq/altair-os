@@ -17,10 +17,10 @@ export const technicianFieldHomeHeroEyebrowClass =
   "text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-700/80";
 
 export const technicianFieldHomeHeroPrimaryActionClass =
-  "inline-flex min-h-[3.75rem] w-full touch-manipulation items-center justify-center rounded-2xl bg-cyan-600 px-5 py-4 text-lg font-bold tracking-tight text-white shadow-[0_6px_20px_-4px_rgb(8_145_178_/_0.5)] transition-[transform,background-color,box-shadow] hover:bg-cyan-700 active:scale-[0.98] active:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-[3.75rem] w-full touch-manipulation items-center justify-center rounded-2xl border border-transparent bg-altair-graphite px-5 py-4 text-lg font-bold tracking-tight text-altair-paper outline-none transition-[border-color,background-color,color] hover:border-altair-brass-interactive active:border-altair-brass focus-visible:ring-2 focus-visible:ring-altair-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-graphite disabled:cursor-not-allowed disabled:opacity-60";
 
 export const technicianFieldHomeHeroRouteActionClass =
-  "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-2 rounded-xl bg-white/70 px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200/50 transition-colors hover:bg-white active:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-2 rounded-xl border border-altair-border-strong bg-altair-paper-subtle px-4 py-2.5 text-sm font-semibold text-altair-ink outline-none transition-colors hover:bg-altair-stone active:bg-altair-stone focus-visible:ring-2 focus-visible:ring-altair-ink focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-subtle disabled:cursor-not-allowed disabled:opacity-60";
 
 export const technicianFieldUpNextMutedLabelClass =
   "text-[10px] font-medium uppercase tracking-[0.12em] text-slate-400";
@@ -38,10 +38,10 @@ export const technicianFieldSurfaceCardClass =
   "overflow-hidden rounded-2xl bg-white shadow-[0_1px_8px_-2px_rgb(15_23_42_/_0.08)] transition-[box-shadow,transform] active:scale-[0.99]";
 
 export const technicianFieldPrimaryActionClass =
-  "inline-flex min-h-12 w-full touch-manipulation items-center justify-center rounded-xl bg-cyan-600 px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-cyan-700 active:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-12 w-full touch-manipulation items-center justify-center rounded-xl border border-transparent bg-altair-graphite px-4 py-3 text-base font-bold text-altair-paper outline-none transition-colors hover:border-altair-brass-interactive active:border-altair-brass focus-visible:ring-2 focus-visible:ring-altair-paper focus-visible:ring-offset-2 focus-visible:ring-offset-altair-graphite disabled:cursor-not-allowed disabled:opacity-60";
 
 export const technicianFieldSecondaryActionClass =
-  "inline-flex min-h-11 w-full touch-manipulation items-center justify-center rounded-xl border border-slate-200/60 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 active:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-11 w-full touch-manipulation items-center justify-center rounded-xl border border-altair-border-strong bg-altair-paper-subtle px-4 py-2.5 text-sm font-semibold text-altair-ink outline-none transition-colors hover:bg-altair-stone active:bg-altair-stone focus-visible:ring-2 focus-visible:ring-altair-ink focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-subtle disabled:cursor-not-allowed disabled:opacity-60";
 
 export const technicianFieldContactPrimaryClass =
   "inline-flex min-h-11 min-w-0 touch-manipulation flex-1 items-center justify-center gap-1.5 rounded-xl bg-white px-2.5 py-2 text-xs font-medium text-slate-800 shadow-[0_1px_4px_-1px_rgb(15_23_42_/_0.06)] transition-colors hover:bg-slate-50 active:bg-slate-100";
@@ -102,7 +102,7 @@ export const technicianFieldWorkflowHintClass =
   "text-xs leading-relaxed text-slate-500";
 
 export const technicianFieldStartRouteSecondaryClass =
-  "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-2 rounded-xl border border-slate-200/60 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 active:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60";
+  technicianFieldSecondaryActionClass;
 
 /** Closeout sheet — guided wrap-up surfaces (CompleteJobSheet). */
 export const technicianFieldCloseoutPrimaryCardClass =
@@ -118,7 +118,7 @@ export const technicianFieldCloseoutAiPreviewClass =
   "rounded-xl bg-cyan-50/60 px-3 py-3";
 
 export const technicianFieldCloseoutAiButtonClass =
-  "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-1.5 rounded-xl bg-cyan-50 px-3 py-2.5 text-sm font-semibold text-cyan-800 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-1.5 rounded-xl border border-altair-border-strong bg-altair-paper-subtle px-3 py-2.5 text-sm font-semibold text-altair-ink outline-none transition-colors hover:bg-altair-stone active:bg-altair-stone focus-visible:ring-2 focus-visible:ring-altair-ink focus-visible:ring-offset-2 focus-visible:ring-offset-altair-paper-subtle disabled:cursor-not-allowed disabled:opacity-60";
 
 export const technicianFieldCloseoutCompleteActionClass =
   "inline-flex min-h-12 w-full touch-manipulation items-center justify-center rounded-xl bg-emerald-600 px-4 py-3.5 text-base font-bold text-white shadow-sm transition-colors hover:bg-emerald-700 active:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60";

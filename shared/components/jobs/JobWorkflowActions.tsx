@@ -15,7 +15,11 @@ import {
   type JobWorkflowAction,
   type JobWorkflowActionId,
 } from "@/shared/types/job-workflow";
-import { technicianFieldHomeHeroPrimaryActionClass } from "@/shared/components/technician/technician-field-styles";
+import {
+  technicianFieldHomeHeroPrimaryActionClass,
+  technicianFieldPrimaryActionClass,
+} from "@/shared/components/technician/technician-field-styles";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import { CompleteJobSheet } from "./CompleteJobSheet";
 
 function getMobileWorkflowHint(
@@ -120,7 +124,7 @@ export function JobWorkflowActions({
     const heroPrimaryClass =
       isCompact && primarySize === "hero"
         ? technicianFieldHomeHeroPrimaryActionClass
-        : "inline-flex min-h-12 w-full touch-manipulation items-center justify-center rounded-xl bg-cyan-600 px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-cyan-700 active:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60";
+        : technicianFieldPrimaryActionClass;
 
     return (
       <button
@@ -132,8 +136,8 @@ export function JobWorkflowActions({
           isPrimary
             ? isCompact
               ? heroPrimaryClass
-              : "inline-flex w-full items-center justify-center rounded-lg bg-cyan-600 px-4 py-3 sm:w-auto sm:px-3.5 sm:py-2 text-base sm:text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-            : "inline-flex w-full items-center justify-center rounded-lg border border-slate-200 bg-transparent px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              : buttonClassName("primary", "md", "w-full sm:w-auto")
+            : buttonClassName("destructive", "sm", "w-full sm:w-auto")
         }
       >
         {isActionPending ? "Saving…" : action.label}

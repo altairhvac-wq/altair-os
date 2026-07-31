@@ -21,6 +21,7 @@ import {
 } from "@/shared/components/ui/mobile-sheet";
 import type { MobileActionCard } from "@/shared/lib/mobile-action-dashboard";
 import type { MobileActionSheetData } from "@/shared/lib/mobile-action-dashboard";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
   buildOperationalResolutionQueue,
   getOperationalResolutionQueuePresentation,
@@ -173,14 +174,14 @@ export function OperationalResolutionQueueSheet({
               <button
                 type="button"
                 onClick={onClose}
-                className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg bg-cyan-600 px-4 text-sm font-semibold text-white hover:bg-cyan-700"
+                className={buttonClassName("primary", "md", "flex-1")}
               >
                 Return to dashboard
               </button>
               {presentation.relatedHref && presentation.relatedLabel ? (
                 <Link
                   href={presentation.relatedHref}
-                  className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className={buttonClassName("secondary", "md", "flex-1")}
                 >
                   {presentation.relatedLabel}
                 </Link>
@@ -189,7 +190,7 @@ export function OperationalResolutionQueueSheet({
           ) : presentation.relatedHref && presentation.relatedLabel ? (
             <Link
               href={presentation.relatedHref}
-              className="inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className={buttonClassName("secondary", "md", "w-full")}
             >
               {presentation.relatedLabel}
             </Link>

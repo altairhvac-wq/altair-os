@@ -121,9 +121,7 @@ export function JobTechnicianAssignment({
     (technician) => technician.id === assignedTechnicianId,
   );
 
-  const changeButtonClass = northStar
-    ? `${dt.secondaryAction} min-h-8 px-2 text-[11px]`
-    : "inline-flex min-h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-50";
+  const changeButtonClass = dt.secondaryAction;
 
   return (
     <div className={compact ? "space-y-2" : "space-y-3"}>
@@ -199,11 +197,7 @@ export function JobTechnicianAssignment({
                 type="button"
                 onClick={handleUnassign}
                 disabled={isPending}
-                className={
-                  northStar
-                    ? `${dt.secondaryAction} w-full justify-center`
-                    : "inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                }
+                className={`${dt.secondaryAction} w-full`}
               >
                 <UserMinus className="h-4 w-4" />
                 {pendingAction === "unassign" && isPending
@@ -253,11 +247,7 @@ export function JobTechnicianAssignment({
               type="button"
               onClick={handleAssign}
               disabled={!hasSelectionChanged || isPending}
-              className={
-                northStar
-                  ? `${dt.primaryAction} w-full justify-center`
-                  : "inline-flex min-h-10 items-center gap-2 rounded-lg bg-cyan-600 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-              }
+              className={`${dt.primaryAction} w-full`}
             >
               <UserPlus className="h-4 w-4" />
               {pendingAction === "assign" && isPending

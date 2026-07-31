@@ -61,11 +61,7 @@ export function JobExpenseReceiptsSection({
         <div className="flex flex-wrap items-center gap-3">
           <Link
             href={`/expenses?jobId=${jobId}&create=1`}
-            className={
-              northStar
-                ? dt.primaryAction
-                : "inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
-            }
+            className={dt.primaryAction}
           >
             Add receipt
           </Link>

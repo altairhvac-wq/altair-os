@@ -9,6 +9,7 @@ import {
   startStripeConnectOnboardingAction,
 } from "@/app/actions/company-payments";
 import { formatDateTimeInTimeZone, resolveCompanyTimeZone } from "@/shared/lib/datetime";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
   canEnableOnlineCheckoutAccount,
   CARD_PAYMENTS_DISPLAY_LABELS,
@@ -168,13 +169,9 @@ export function PaymentSettingsCard({
     ? "rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-xs text-emerald-800 sm:text-sm"
     : "rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-xs text-emerald-800 sm:text-sm";
 
-  const disabledButtonClass = northStar
-    ? "inline-flex min-h-9 cursor-not-allowed items-center justify-center rounded-lg border border-[rgba(138,99,36,0.16)] bg-[#F5F0E4] px-3 text-xs font-semibold text-[#4F4638] opacity-80 sm:text-sm"
-    : "inline-flex min-h-9 cursor-not-allowed items-center justify-center rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs font-semibold text-slate-500 sm:text-sm";
-
-  const enabledButtonClass = northStar
-    ? "inline-flex min-h-9 items-center justify-center rounded-lg border border-[rgba(138,99,36,0.24)] bg-[#8A6324] px-3 text-xs font-semibold text-white transition-colors hover:bg-[#75541F] disabled:cursor-not-allowed disabled:opacity-70 sm:text-sm"
-    : "inline-flex min-h-9 items-center justify-center rounded-lg border border-cyan-600 bg-cyan-600 px-3 text-xs font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-70 sm:text-sm";
+  const primaryButtonClass = buttonClassName("primary", "sm");
+  const secondaryButtonClass = buttonClassName("secondary", "sm");
+  const destructiveButtonClass = buttonClassName("destructive", "sm");
 
   const statusBadgeClass = northStar
     ? "inline-flex items-center rounded-full bg-[rgba(138,99,36,0.10)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8A6324] ring-1 ring-[rgba(138,99,36,0.16)]"
@@ -385,12 +382,12 @@ export function PaymentSettingsCard({
             type="button"
             onClick={handleStartStripeSetup}
             disabled={isPending}
-            className={enabledButtonClass}
+            className={primaryButtonClass}
           >
             {isPending ? "Opening Stripe…" : startButtonLabel}
           </button>
         ) : (
-          <button type="button" disabled className={disabledButtonClass}>
+          <button type="button" disabled className={primaryButtonClass}>
             {canStartStripeSetup && !stripeOnboardingConfigured
               ? "Stripe setup not configured"
               : displayStatus === "active"
@@ -404,7 +401,7 @@ export function PaymentSettingsCard({
               type="button"
               onClick={handleEnableOnlineCheckout}
               disabled={isPending}
-              className={enabledButtonClass}
+              className={primaryButtonClass}
             >
               {isPending ? "Enabling online payments…" : "Enable online payments"}
             </button>
@@ -413,7 +410,7 @@ export function PaymentSettingsCard({
               type="button"
               onClick={handleDisableOnlineCheckout}
               disabled={isPending}
-              className={enabledButtonClass}
+              className={destructiveButtonClass}
             >
               {isPending ? "Disabling online payments…" : "Disable online payments"}
             </button>
@@ -424,7 +421,7 @@ export function PaymentSettingsCard({
             type="button"
             onClick={handleRefreshStripeStatus}
             disabled={isPending}
-            className={enabledButtonClass}
+            className={secondaryButtonClass}
           >
             {isPending ? "Refreshing Stripe status…" : "Refresh Stripe status"}
           </button>

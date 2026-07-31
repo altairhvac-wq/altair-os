@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/shared/design-system/components";
 import {
   EXPENSE_CATEGORY_OPTIONS,
   type ExpenseCategory,
@@ -212,21 +213,22 @@ export function ExpenseForm({
       ) : null}
 
       <div className="flex gap-2 border-t border-slate-100 pt-4">
-        <button
+        <Button
           type="submit"
-          disabled={isPending}
-          className="flex-1 rounded-lg bg-cyan-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:opacity-60"
+          loading={isPending}
+          className="flex-1"
         >
           {isPending ? "Saving..." : "Save draft expense"}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={onCancel}
           disabled={isPending}
-          className="flex-1 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
+          variant="secondary"
+          className="flex-1"
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </form>
   );

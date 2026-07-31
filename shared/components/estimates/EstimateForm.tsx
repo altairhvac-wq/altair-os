@@ -17,6 +17,7 @@ import {
   adminFormInputClass,
   adminFormLabelClass,
 } from "@/shared/lib/admin-density";
+import { Button } from "@/shared/design-system/components";
 import { EstimateDescriptionAiAssistant } from "./EstimateDescriptionAiAssistant";
 import { LineItemsEditor } from "./LineItemsEditor";
 
@@ -324,40 +325,42 @@ export function EstimateForm({
       <div className={`${adminFormActionsClass} border-t border-slate-100 pt-3`}>
         {step === "info" ? (
           <>
-            <button
+            <Button
               type="button"
               onClick={handleNextStep}
               disabled={isSubmitting}
-              className="min-h-11 flex-1 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex-1"
             >
               Next
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={onCancel}
               disabled={isSubmitting}
-              className="min-h-11 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              variant="secondary"
+              className="flex-1"
             >
               Cancel
-            </button>
+            </Button>
           </>
         ) : (
           <>
-            <button
+            <Button
               type="submit"
-              disabled={isSubmitting}
-              className="min-h-11 flex-1 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              loading={isSubmitting}
+              className="flex-1"
             >
               {isSubmitting ? "Saving…" : "Save estimate"}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={handleBackStep}
               disabled={isSubmitting}
-              className="min-h-11 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              variant="secondary"
+              className="flex-1"
             >
               Back
-            </button>
+            </Button>
           </>
         )}
       </div>

@@ -3,6 +3,7 @@
  * Source: shared/components/altair-shell-color-lab-v1/palette-tokens.ts (missionControlRefined)
  * Do not import Color Lab at runtime. No palette switching.
  */
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 
 export type NorthStarDashboardTokens = {
   heroMode: "dark" | "light";
@@ -115,8 +116,11 @@ export const northStarTokens: NorthStarDashboardTokens = {
 
   primaryAction:
     "group relative flex w-full flex-col gap-3 overflow-hidden rounded-xl border-l-[3px] border-l-[#B8943F] bg-gradient-to-br from-[#0f1a2e] via-[#0c1525] to-[#0a1220] p-3.5 text-left shadow-[0_10px_36px_-14px_rgba(0,0,0,0.42)] ring-1 ring-[rgba(198,167,87,0.18)] transition-all hover:border-l-[#C6A757] hover:ring-[rgba(198,167,87,0.30)] sm:flex-row sm:items-center sm:justify-between sm:p-5",
-  accentCta:
-    "relative inline-flex shrink-0 items-center gap-2 self-start rounded-lg bg-[#B8943F] px-4 py-2.5 text-sm font-semibold text-[#FCFBF8] shadow-[0_2px_10px_rgba(184,148,63,0.28)] transition-all group-hover:bg-[#C6A757] sm:self-center",
+  accentCta: buttonClassName(
+    "primary",
+    "md",
+    "relative shrink-0 self-start sm:self-center",
+  ),
   accentBadge:
     "inline-flex items-center rounded-md bg-[rgba(198,167,87,0.18)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#E8DDC2] ring-1 ring-[rgba(198,167,87,0.32)]",
   accentLine: "h-px bg-gradient-to-r from-transparent via-[rgba(198,167,87,0.35)] to-transparent",
@@ -267,10 +271,8 @@ export const northStarListTokens: NorthStarListPageTokens = {
     "relative lg:rounded-[1.25rem] lg:ring-1 lg:ring-[rgba(100,116,139,0.18)]",
   listSurfaceTopAccent:
     "pointer-events-none absolute inset-x-0 top-0 hidden h-px bg-gradient-to-r from-transparent via-[rgba(148,163,184,0.28)] to-transparent lg:block",
-  primaryAction:
-    "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3.5 py-1.5 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:-translate-y-px hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] hover:shadow-[0_4px_16px_rgba(138,99,36,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A2029] md:h-9 md:min-h-9 [&_svg]:text-[#17130E]",
-  secondaryAction:
-    "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[#D6BE78] bg-[#FFF9EA] px-3 py-1.5 text-sm font-semibold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.16)] transition-colors hover:border-[#E6D092] hover:bg-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,164,77,0.40)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A2029] md:h-9 md:min-h-9 [&_svg]:text-[#8A6324]",
+  primaryAction: buttonClassName("primary", "sm", "shrink-0"),
+  secondaryAction: buttonClassName("secondary", "sm", "shrink-0"),
   viewTabsBand:
     "shrink-0 border-b border-[rgba(100,116,139,0.18)] bg-[#DCE3EC] px-3 py-2 sm:px-4 lg:px-5",
   viewTabsControl:
@@ -314,18 +316,17 @@ export const northStarListTokens: NorthStarListPageTokens = {
   bulkBar:
     "sticky bottom-0 z-20 border-t border-[rgba(138,99,36,0.12)] bg-[#EFE4CB] px-3 py-3 shadow-[0_-8px_24px_-12px_rgba(3,7,12,0.18)] sm:px-4 lg:bg-[#FBF7EF] lg:px-5",
   bulkBarTitle: "text-sm font-bold text-[#17130E]",
-  bulkClearButton:
-    "inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 py-1.5 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] disabled:cursor-not-allowed disabled:opacity-60 md:min-h-9",
-  bulkPrimaryAction:
-    "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3 py-2 text-xs font-semibold text-[#17130E] transition-all hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:opacity-60 md:min-h-10",
-  bulkSecondaryAction:
-    "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-3 py-2 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] disabled:cursor-not-allowed disabled:opacity-60 md:min-h-10",
-  bulkDestructiveAction:
-    "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[rgba(185,28,28,0.35)] bg-[#FEF2F2] px-3 py-2 text-xs font-semibold text-[#991B1B] transition-colors hover:border-[rgba(185,28,28,0.5)] hover:bg-[#FEE2E2] disabled:cursor-not-allowed disabled:opacity-60 md:min-h-10",
+  bulkClearButton: buttonClassName("quiet", "sm", "shrink-0"),
+  bulkPrimaryAction: buttonClassName("primary", "sm"),
+  bulkSecondaryAction: buttonClassName("secondary", "sm"),
+  bulkDestructiveAction: buttonClassName("destructive", "sm"),
   emptyState:
     "rounded-xl border border-[rgba(100,116,139,0.18)] bg-[#FFFFFF] px-6 py-8 shadow-[0_4px_16px_rgba(3,7,12,0.08)]",
-  emptyStateAction:
-    "inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-4 py-2.5 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:-translate-y-px hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] hover:shadow-[0_4px_16px_rgba(138,99,36,0.32)] sm:w-auto sm:min-w-[9rem]",
+  emptyStateAction: buttonClassName(
+    "primary",
+    "md",
+    "w-full sm:w-auto sm:min-w-[9rem]",
+  ),
 };
 
 /**
@@ -420,12 +421,9 @@ export const northStarDetailTokens: NorthStarDetailPageTokens = {
     "-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 north-star-detail-section-nav",
   sectionNavLink:
     "inline-flex min-h-9 shrink-0 items-center rounded-lg px-2.5 text-xs font-semibold text-[#4F4638] transition-colors hover:bg-[rgba(201,164,77,0.10)] hover:text-[#17130E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A44D] focus-visible:ring-offset-1",
-  primaryAction:
-    "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-2.5 text-xs font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:-translate-y-px hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] [&_svg]:text-[#17130E]",
-  secondaryAction:
-    "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-2.5 text-xs font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] [&_svg]:text-[#8A6324]",
-  tertiaryAction:
-    "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.35)] px-2.5 text-xs font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(201,164,77,0.28)] hover:bg-[rgba(39,49,64,0.55)] [&_svg]:text-[#D6BE78]",
+  primaryAction: buttonClassName("primary", "sm", "shrink-0"),
+  secondaryAction: buttonClassName("secondary", "sm", "shrink-0"),
+  tertiaryAction: buttonClassName("quiet", "sm", "shrink-0"),
   metaStrip:
     "mt-2.5 rounded-md border border-[rgba(201,164,77,0.1)] bg-[rgba(15,23,42,0.18)] px-2.5 py-2",
   metaRow: "flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#C8D0DA]",
@@ -860,10 +858,12 @@ export const northStarDispatchTokens: NorthStarDispatchTokens = {
     "rounded-lg border border-[rgba(201,164,77,0.28)] bg-[rgba(201,164,77,0.12)] px-3 py-2.5 text-xs font-medium text-[#E6D092] ring-1 ring-[rgba(201,164,77,0.16)]",
   detailSelect:
     "w-full min-h-11 rounded-lg border border-[rgba(148,163,184,0.24)] bg-[#FFFFFF] px-3 py-3 text-sm text-[#101827] outline-none focus:border-[#B88A2E] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2",
-  detailPrimaryButton:
-    "north-star-dispatch-disabled-action w-full min-h-11 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3 py-3 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:border-[rgba(174,182,194,0.18)] disabled:from-[#2A3648] disabled:via-[#2A3648] disabled:to-[#2A3648] disabled:text-[#AEB6C2] disabled:shadow-none sm:py-2",
-  detailSecondaryButton:
-    "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg border border-[rgba(174,182,194,0.22)] bg-[rgba(39,49,64,0.45)] px-3 py-3 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[rgba(201,164,77,0.32)] hover:bg-[rgba(39,49,64,0.65)] disabled:cursor-not-allowed disabled:opacity-60 sm:py-2 [&_svg]:text-[#D6BE78]",
+  detailPrimaryButton: buttonClassName(
+    "primary",
+    "md",
+    "north-star-dispatch-disabled-action w-full",
+  ),
+  detailSecondaryButton: buttonClassName("secondary", "md", "w-full"),
   detailMutedText: "text-xs text-[#AEB6C2]",
   detailBodyText: "text-sm leading-relaxed text-[#D7CDBD]",
   detailFooterLink:

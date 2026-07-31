@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { formatDate } from "@/shared/types/customer";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
   canActorCancelInvite,
   canActorEditMemberReportsTo,
@@ -322,7 +323,7 @@ export function TeamMembersTable({
                   pendingRoleChange.memberName,
                 )
               }
-              className="inline-flex min-h-[44px] items-center rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-60"
+              className={buttonClassName("primary", "md")}
             >
               {isPending ? "Updating..." : "Confirm role change"}
             </button>

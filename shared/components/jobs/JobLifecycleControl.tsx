@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import {
   archiveJobAction,
   cancelJobAction,
@@ -143,7 +144,7 @@ export function JobLifecycleControl({
                 type="button"
                 disabled={isPending}
                 onClick={() => runAction(() => restoreJobAction(job.id))}
-                className="rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white"
+                className={buttonClassName("primary", "sm")}
               >
                 Restore
               </button>
@@ -174,7 +175,7 @@ export function JobLifecycleControl({
                 type="button"
                 disabled={isPending}
                 onClick={() => runAction(() => restoreJobFromTrashAction(job.id))}
-                className="rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white"
+                className={buttonClassName("primary", "sm")}
               >
                 Restore
               </button>

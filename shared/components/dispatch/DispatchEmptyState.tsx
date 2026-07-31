@@ -1,6 +1,6 @@
 import { Radio, SearchX, Wrench } from "lucide-react";
-import Link from "next/link";
 import { northStarDispatchTokens as dt } from "@/shared/design-system/north-star/tokens";
+import { Button } from "@/shared/design-system/components";
 
 type DispatchEmptyStateProps = {
   variant: "no-results" | "no-jobs";
@@ -39,13 +39,13 @@ export function DispatchEmptyState({
           <p className={dt.emptyStateDescription}>{description}</p>
 
           {variant === "no-jobs" && canDispatchJobs ? (
-            <Link
+            <Button
               href="/jobs"
-              className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-[#C9A44D] px-4 py-2.5 text-sm font-semibold text-[#17130E] transition hover:bg-[#D4B05A]"
+              className="mt-5"
+              leadingIcon={<Wrench className="h-4 w-4" />}
             >
-              <Wrench className="h-4 w-4" aria-hidden="true" />
               Schedule a job
-            </Link>
+            </Button>
           ) : null}
         </div>
       </div>
@@ -68,13 +68,13 @@ export function DispatchEmptyState({
         <p className="admin-text-muted mt-1.5 text-sm">{description}</p>
 
         {variant === "no-jobs" && canDispatchJobs ? (
-          <Link
+          <Button
             href="/jobs"
-            className="mt-4 inline-flex items-center gap-2 admin-btn-primary"
+            className="mt-4"
+            leadingIcon={<Wrench className="h-4 w-4" />}
           >
-            <Wrench className="h-4 w-4" aria-hidden="true" />
             Schedule a job
-          </Link>
+          </Button>
         ) : null}
       </div>
     </div>

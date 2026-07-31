@@ -14,6 +14,7 @@ import {
   MobileSheetSuccess,
 } from "@/shared/components/ui/mobile-sheet";
 import { TechnicianMaterialForm } from "./TechnicianMaterialForm";
+import { technicianFieldPrimaryActionClass } from "./technician-field-styles";
 
 type TechnicianMaterialSheetProps = {
   jobId: string;
@@ -85,7 +86,7 @@ export function TechnicianMaterialSheet({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="inline-flex min-h-12 touch-manipulation items-center justify-center rounded-xl bg-cyan-600 px-3 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-cyan-700 active:bg-cyan-800"
+                  className={technicianFieldPrimaryActionClass}
                 >
                   Done
                 </button>

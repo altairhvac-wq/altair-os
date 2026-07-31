@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 import { AlertCircle } from "lucide-react";
+import { Button } from "@/shared/design-system/components";
 
 type RouteErrorViewProps = {
   error: Error & { digest?: string };
@@ -35,19 +35,18 @@ export function RouteErrorView({
       <h1 className="mt-5 text-lg font-bold text-slate-900">{title}</h1>
       <p className="mt-2 text-sm text-slate-500">{description}</p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-        <button
+        <Button
           type="button"
           onClick={reset}
-          className="inline-flex min-h-11 items-center rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
         >
           Try again
-        </button>
-        <Link
+        </Button>
+        <Button
           href={backHref}
-          className="inline-flex min-h-11 items-center rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          variant="secondary"
         >
           {backLabel}
-        </Link>
+        </Button>
       </div>
     </div>
   );

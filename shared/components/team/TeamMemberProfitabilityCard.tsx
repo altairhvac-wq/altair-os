@@ -13,6 +13,7 @@ import {
   formatLaborCostRate,
   type TeamMemberProfile,
 } from "@/shared/types/team-member-profile";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 
 type TeamMemberProfitabilityCardProps = {
   membershipId: string;
@@ -104,7 +105,7 @@ export function TeamMemberProfitabilityCard({
               type="button"
               onClick={handleSave}
               disabled={isPending}
-              className="inline-flex min-h-11 items-center rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:opacity-60"
+              className={buttonClassName("primary", "md")}
             >
               {isPending ? "Saving..." : "Save rate"}
             </button>

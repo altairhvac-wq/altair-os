@@ -1,4 +1,5 @@
 import { northStarListTokens as lt } from "@/shared/design-system/north-star/tokens";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 
 export const networkNorthStarStyles = {
   pageCanvas: lt.pageCanvas,
@@ -46,10 +47,8 @@ export const networkNorthStarStyles = {
   cardMuted: "truncate text-[11px] leading-snug text-[#64748B]",
   cardIcon:
     "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#E6D092] to-[#B88A2E] text-[10px] font-bold leading-none text-[#17130E] ring-1 ring-[rgba(138,99,36,0.16)]",
-  cardActionFull:
-    "inline-flex w-full min-h-8 items-center justify-center gap-1.5 rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-1.5 text-xs font-semibold text-[#4F4638] transition hover:border-[rgba(201,164,77,0.38)] hover:bg-[#F3EBDD] disabled:opacity-60 [&_svg]:text-[#8A6324]",
-  cardActionAccentFull:
-    "inline-flex w-full min-h-8 items-center justify-center gap-1.5 rounded-lg border border-[rgba(201,164,77,0.42)] bg-gradient-to-b from-[#F0E4B8] from-0% via-[#D4B05A] via-[50%] to-[#C9A44D] to-100% px-3 py-1.5 text-xs font-semibold text-[#17130E] shadow-[0_1px_4px_rgba(138,99,36,0.12)] transition hover:from-[#F5EBC8] hover:via-[#DDB868] hover:to-[#B88A2E] disabled:opacity-60 [&_svg]:text-[#17130E]",
+  cardActionFull: buttonClassName("secondary", "sm", "w-full"),
+  cardActionAccentFull: buttonClassName("primary", "sm", "w-full"),
   detailPanel:
     "flex min-w-0 shrink-0 flex-col overflow-hidden rounded-lg border border-[rgba(138,99,36,0.10)] bg-[#FBF7EF]/80 lg:max-h-[min(40rem,70vh)]",
   detailPanelHeader:
@@ -162,10 +161,8 @@ export const networkNorthStarStyles = {
     "mt-1 w-full min-h-[80px] max-w-full resize-y rounded-lg border border-[rgba(138,99,36,0.18)] bg-[#FFF9EA] px-3 py-2 text-sm text-[#17130E] placeholder:text-[#64748B] outline-none transition-colors focus:border-[#B88A2E] focus:bg-[#FBF7EF] focus:ring-2 focus:ring-[rgba(201,164,77,0.22)] sm:min-h-[96px] sm:py-2.5",
   formLabel: "text-xs font-semibold text-[#4F4638]",
   formLabelOptional: "font-normal text-[#64748B]",
-  saveButton:
-    "inline-flex min-h-10 items-center justify-center rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-4 py-2 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[44px] sm:py-2.5",
-  cancelButton:
-    "inline-flex min-h-10 items-center justify-center rounded-lg border border-[rgba(138,99,36,0.22)] bg-[#FFF9EA] px-4 py-2 text-sm font-semibold text-[#4F4638] transition-colors hover:border-[#C9A44D] hover:bg-[#F3EBDD] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[44px] sm:py-2.5",
+  saveButton: buttonClassName("primary", "md"),
+  cancelButton: buttonClassName("secondary", "md"),
   permissionCopy: "text-sm text-[#4F4638]",
   countMeta: "text-xs font-medium text-[#64748B]",
   workspaceStack:

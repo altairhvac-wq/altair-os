@@ -424,11 +424,7 @@ export function BillingDocumentDefaultsCard({
             <button
               type="submit"
               disabled={isPending}
-              className={
-                northStar
-                  ? st.saveButton
-                  : "inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[44px] sm:w-auto sm:py-2.5"
-              }
+              className={st.saveButton}
             >
               {isPending ? "Saving..." : "Save billing defaults"}
             </button>

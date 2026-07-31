@@ -3,7 +3,10 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateExpenseStatusAction } from "@/app/actions/expenses";
-import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import {
+  buttonClassName,
+  type ButtonVariant,
+} from "@/shared/design-system/components/button-styles";
 import { formatActionError } from "@/shared/lib/operational-errors";
 import type { Expense } from "@/shared/types/expense";
 import {
@@ -24,57 +27,22 @@ type ExpenseWorkflowActionsProps = {
 
 const ACTION_STYLES: Record<
   ExpenseWorkflowAction,
-  { primary?: boolean; className: string }
+  { variant: ButtonVariant }
 > = {
   submit: {
-    primary: true,
-    className:
-      "border-cyan-200 bg-cyan-600 text-white hover:bg-cyan-700",
+    variant: "primary",
   },
   approve: {
-    primary: true,
-    className:
-      "border-emerald-200 bg-emerald-600 text-white hover:bg-emerald-700",
+    variant: "primary",
   },
   reject: {
-    className:
-      "border-rose-200 bg-white text-rose-700 hover:bg-rose-50",
+    variant: "destructive",
   },
   reimburse: {
-    primary: true,
-    className:
-      "border-violet-200 bg-violet-600 text-white hover:bg-violet-700",
+    variant: "primary",
   },
   return_to_draft: {
-    className:
-      "border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
-  },
-};
-
-const NORTH_STAR_ACTION_STYLES: Record<
-  ExpenseWorkflowAction,
-  { primary?: boolean; className: string }
-> = {
-  submit: {
-    primary: true,
-    className:
-      "inline-flex min-h-10 items-center justify-center rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-3 py-2 text-xs font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition-all hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:opacity-60",
-  },
-  approve: {
-    primary: true,
-    className:
-      "inline-flex min-h-10 items-center justify-center rounded-lg border border-emerald-600/30 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60",
-  },
-  reject: {
-    className: `${dt.secondaryAction} !min-h-10 !border-rose-300 !bg-rose-50 !text-rose-800 hover:!bg-rose-100`,
-  },
-  reimburse: {
-    primary: true,
-    className:
-      "inline-flex min-h-10 items-center justify-center rounded-lg border border-violet-600/30 bg-violet-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60",
-  },
-  return_to_draft: {
-    className: `${dt.secondaryAction} !min-h-10`,
+    variant: "secondary",
   },
 };
 
@@ -161,8 +129,6 @@ export function ExpenseWorkflowActions({
     });
   }
 
-  const actionStyles = northStar ? NORTH_STAR_ACTION_STYLES : ACTION_STYLES;
-
   const content = (
     <>
       {showRejectForm ? (
@@ -204,22 +170,14 @@ export function ExpenseWorkflowActions({
                 setShowRejectForm(false);
                 setRejectionReason("");
               }}
-              className={
-                northStar
-                  ? `${dt.secondaryAction} flex-1 !min-h-10 !justify-center`
-                  : "flex-1 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-              }
+              className={buttonClassName("secondary", "md", "flex-1")}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className={
-                northStar
-                  ? "flex-1 rounded-lg border border-rose-300 bg-rose-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  : "flex-1 rounded-lg border border-rose-200 bg-rose-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
-              }
+              className={buttonClassName("destructive", "md", "flex-1")}
             >
               {isPending ? "Rejecting..." : "Confirm reject"}
             </button>
@@ -228,7 +186,7 @@ export function ExpenseWorkflowActions({
       ) : (
         <div className={`flex flex-wrap gap-2 ${compact ? "" : ""}`}>
           {actions.map((action) => {
-            const style = actionStyles[action];
+            const style = ACTION_STYLES[action];
 
             return (
               <button
@@ -236,9 +194,11 @@ export function ExpenseWorkflowActions({
                 type="button"
                 disabled={isPending}
                 onClick={() => runAction(action)}
-                className={`inline-flex items-center justify-center rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                  compact ? "flex-1 min-w-[7rem]" : "min-w-[8rem]"
-                } ${style.className}`}
+                className={buttonClassName(
+                  style.variant,
+                  "md",
+                  compact ? "min-w-[7rem] flex-1" : "min-w-[8rem]",
+                )}
               >
                 {isPending
                   ? "Working..."

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Loader2, Sparkles, Undo2 } from "lucide-react";
 import { generateMarketingPostRewriteAction } from "@/app/actions/marketing-ai";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import type { MarketingPostRewriteMode } from "@/shared/types/marketing-ai";
 import type {
   MarketingChannel,
@@ -300,7 +301,7 @@ export function MarketingPostAiAssistant({
               type="button"
               onClick={handleUseText}
               disabled={disabled || isPending}
-              className="inline-flex min-h-9 items-center rounded-lg bg-cyan-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className={buttonClassName("primary", "sm")}
             >
               Use this text
             </button>

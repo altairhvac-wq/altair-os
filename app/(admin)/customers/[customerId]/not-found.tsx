@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { UserX } from "lucide-react";
+import { Button } from "@/shared/design-system/components";
 
 export default function CustomerNotFound() {
   return (
@@ -14,12 +14,9 @@ export default function CustomerNotFound() {
         This customer may have been removed or you may not have access to view
         it.
       </p>
-      <Link
-        href="/customers"
-        className="mt-6 inline-flex rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
-      >
+      <Button href="/customers" className="mt-6">
         Back to customers
-      </Link>
+      </Button>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { COMPANY_ROLE_LABELS } from "@/lib/database/types/roles";
 import type { PendingTeamInvite } from "@/lib/database/queries/memberships";
 import { useCompanyTimezone } from "@/shared/lib/company-timezone";
 import { formatDateInTimeZone } from "@/shared/lib/datetime";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 
 type PendingInvitesCardProps = {
   invites: PendingTeamInvite[];
@@ -215,11 +216,11 @@ function PendingInvitesCardContent({
                 type="button"
                 onClick={() => handleAccept(invite.id, invite.companyName)}
                 disabled={isPending}
-                className={
-                  northStar
-                    ? "inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-4 py-2.5 text-sm font-semibold text-[#17130E] shadow-[0_2px_10px_rgba(138,99,36,0.28)] transition hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                    : "inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                }
+                className={buttonClassName(
+                  "primary",
+                  "md",
+                  "w-full shrink-0 sm:w-auto",
+                )}
               >
                 <UserCheck className="h-4 w-4" aria-hidden="true" />
                 {isAccepting ? "Accepting..." : "Accept invite"}

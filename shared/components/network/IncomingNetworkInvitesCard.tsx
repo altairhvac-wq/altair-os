@@ -65,9 +65,7 @@ export function IncomingNetworkInvitesCard({
     });
   }
 
-  const acceptButtonClass = isNorthStar
-    ? `${st.panelActionAccent} min-h-[44px] px-4 py-2.5 sm:min-h-[44px]`
-    : "inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60";
+  const acceptButtonClass = `${st.panelActionAccent} shrink-0`;
 
   if (variant === "banner" && items.length === 1) {
     const invite = items[0];

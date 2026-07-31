@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Loader2, Sparkles, Undo2 } from "lucide-react";
 import { generateMarketingCompletedJobDraftAction } from "@/app/actions/marketing-ai";
 import { formatActionError } from "@/shared/lib/operational-errors";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import type { MarketingCompletedJobDraftFields } from "@/shared/types/marketing-ai";
 import {
   formatMarketingChannel,
@@ -293,7 +294,7 @@ export function MarketingCompletedJobDraftAiGenerator({
               type="button"
               onClick={handleUseDraft}
               disabled={disabled || isPending}
-              className="inline-flex min-h-9 items-center rounded-lg bg-cyan-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className={buttonClassName("primary", "sm")}
             >
               Use this draft
             </button>

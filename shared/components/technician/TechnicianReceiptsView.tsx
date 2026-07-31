@@ -12,6 +12,7 @@ import {
 import { ExpenseReceiptPreview } from "@/shared/components/expenses/ExpenseReceiptPreview";
 import { ExpenseStatusBadge } from "@/shared/components/expenses/ExpenseStatusBadge";
 import { ExpenseWorkflowActions } from "@/shared/components/expenses/ExpenseWorkflowActions";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import { TechnicianExpenseSheet } from "./TechnicianExpenseSheet";
 
 type TechnicianReceiptsViewProps = {
@@ -85,7 +86,7 @@ export function TechnicianReceiptsView({
           <button
             type="button"
             onClick={() => setShowCreateSheet(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-3.5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+            className={buttonClassName("primary", "sm", "touch-manipulation")}
           >
             <Plus className="h-4 w-4" />
             Add
@@ -104,7 +105,11 @@ export function TechnicianReceiptsView({
             <button
               type="button"
               onClick={() => setShowCreateSheet(true)}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+              className={buttonClassName(
+                "primary",
+                "md",
+                "mt-5 touch-manipulation",
+              )}
             >
               <Plus className="h-4 w-4" />
               Add receipt

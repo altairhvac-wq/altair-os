@@ -186,17 +186,13 @@ export function DispatchDetailsPanel({
     ? `${dt.detailTechPhone} mt-2 flex items-center gap-2`
     : "mt-2 flex items-center gap-2 text-xs text-slate-600";
 
-  const unassignButtonClass = northStar
-    ? dt.detailSecondaryButton
-    : "inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 sm:py-2";
+  const unassignButtonClass = dt.detailSecondaryButton;
 
   const selectClass = northStar
     ? dt.detailSelect
     : "w-full min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-60 sm:py-2";
 
-  const assignButtonClass = northStar
-    ? dt.detailPrimaryButton
-    : "w-full min-h-11 rounded-lg bg-cyan-600 px-3 py-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60 sm:py-2";
+  const assignButtonClass = dt.detailPrimaryButton;
 
   const changeAssignmentDividerClass = northStar
     ? `space-y-2 border-t ${dt.detailSectionDivider} pt-3`

@@ -19,6 +19,7 @@ import { formatActionError, formatRetryGuidance } from "@/shared/lib/operational
 import type { BillingSignatureBlockVariant } from "@/shared/lib/billing-signature-block";
 import { getBillingSignatureBlockContent } from "@/shared/lib/billing-signature-block";
 import type { BillingSignature } from "@/shared/types/billing-signature";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import { SignaturePad, type SignaturePadHandle } from "./SignaturePad";
 
 type BillingSignatureCaptureSheetProps = {
@@ -305,7 +306,11 @@ function CaptureSignatureModal({
                 type="button"
                 onClick={handleClearSavedSignature}
                 disabled={formDisabled}
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                className={buttonClassName(
+                  "destructive",
+                  "md",
+                  "w-full sm:w-auto",
+                )}
               >
                 {isClearing ? "Clearing…" : "Clear saved signature"}
               </button>
@@ -314,14 +319,22 @@ function CaptureSignatureModal({
               type="button"
               onClick={onClose}
               disabled={formDisabled}
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              className={buttonClassName(
+                "secondary",
+                "md",
+                "w-full sm:w-auto",
+              )}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={formDisabled}
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 sm:ml-auto sm:w-auto"
+              className={buttonClassName(
+                "primary",
+                "md",
+                "w-full sm:ml-auto sm:w-auto",
+              )}
             >
               {isPending ? "Saving…" : "Save signature"}
             </button>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 
 type MobileActionRecordRowProps = {
   title: string;
@@ -73,10 +74,7 @@ export function MobileActionButton({
   pending = false,
   variant = "primary",
 }: MobileActionButtonProps) {
-  const className =
-    variant === "primary"
-      ? "inline-flex min-h-8 items-center justify-center rounded-md bg-cyan-600 px-2.5 text-[11px] font-semibold text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
-      : "inline-flex min-h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
+  const className = buttonClassName(variant, "sm");
 
   if (href && !disabled) {
     return (

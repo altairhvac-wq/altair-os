@@ -9,6 +9,7 @@ import type {
   TechnicianJob,
   TechnicianQuickAction,
 } from "@/shared/types/technician";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 
 type TechnicianQuickActionsProps = {
   job: TechnicianJob;
@@ -33,15 +34,6 @@ const actions: {
   },
 ];
 
-const variantStyles = {
-  primary:
-    "border border-slate-200/90 bg-white text-slate-800 shadow-sm hover:bg-slate-50 active:bg-slate-100 [&_svg]:text-cyan-700",
-  secondary:
-    "border border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50 active:bg-slate-100 [&_svg]:text-slate-500",
-  success:
-    "bg-cyan-600 text-white shadow-sm hover:bg-cyan-700 active:bg-cyan-800",
-};
-
 export function TechnicianQuickActions({
   job,
   onAction,
@@ -57,7 +49,15 @@ export function TechnicianQuickActions({
             key={action.id}
             type="button"
             onClick={() => onAction(action.id, job)}
-            className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-medium transition-colors ${variantStyles[action.variant]} ${isComplete ? "col-span-2 font-semibold" : ""}`}
+            className={buttonClassName(
+              action.variant === "success"
+                ? "primary"
+                : action.variant === "primary"
+                  ? "secondary"
+                  : "quiet",
+              "md",
+              `min-h-14 touch-manipulation ${isComplete ? "col-span-2" : ""}`,
+            )}
           >
             <Icon className="h-5 w-5 shrink-0" />
             {action.label}

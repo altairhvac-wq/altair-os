@@ -17,6 +17,7 @@ import {
   AltairDialogHeader,
   AltairDialogTitle,
 } from "@/shared/design-system/dialog";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 
 type ExpenseReceiptPreviewProps = {
   expense: Expense;
@@ -253,11 +254,7 @@ function ExpenseReceiptPreviewModal({
                 href={expense.receiptSignedUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={
-                  northStar
-                    ? "inline-flex items-center gap-2 rounded-lg border border-[#E6D092] bg-gradient-to-b from-[#E6D092] from-0% via-[#C9A44D] via-[45%] to-[#B88A2E] to-100% px-4 py-2.5 text-sm font-semibold text-[#17130E] transition-all hover:from-[#F0E4B8] hover:via-[#D4B05A] hover:to-[#9A7028]"
-                    : "inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
-                }
+                className={buttonClassName("primary", "md")}
               >
                 <ExternalLink className="h-4 w-4" />
                 Open receipt

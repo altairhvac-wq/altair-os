@@ -90,11 +90,7 @@ export function EstimateBatchSelectionBar({
             type="button"
             onClick={onClearSelection}
             disabled={isBusy}
-            className={
-              northStar
-                ? lt.bulkClearButton
-                : "inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 self-start rounded-lg border border-cyan-200 bg-white px-3 py-2 text-xs font-semibold text-cyan-900 transition-colors hover:border-cyan-300 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9"
-            }
+            className={lt.bulkClearButton}
           >
             <X className="h-3.5 w-3.5" aria-hidden="true" />
             Clear
@@ -111,11 +107,7 @@ export function EstimateBatchSelectionBar({
                 ? undefined
                 : "Only draft estimates with a valid customer email can be sent."
             }
-            className={
-              northStar
-                ? lt.bulkPrimaryAction
-                : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-cyan-600 bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-cyan-700 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9"
-            }
+            className={lt.bulkPrimaryAction}
           >
             {isSending ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -137,11 +129,7 @@ export function EstimateBatchSelectionBar({
                   ? "None of the selected estimates can be archived."
                   : undefined
               }
-              className={
-                northStar
-                  ? lt.bulkSecondaryAction
-                  : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9"
-              }
+              className={lt.bulkSecondaryAction}
             >
               {archiveAction.isPending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -162,11 +150,7 @@ export function EstimateBatchSelectionBar({
                   ? "Void sent estimates. Draft estimates should move to Recently Deleted."
                   : undefined
               }
-              className={
-                northStar
-                  ? lt.bulkDestructiveAction
-                  : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9"
-              }
+              className={lt.bulkDestructiveAction}
             >
               {voidAction.isPending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -189,11 +173,7 @@ export function EstimateBatchSelectionBar({
                   ? "Only draft estimates can move to Recently Deleted."
                   : undefined
               }
-              className={
-                northStar
-                  ? lt.bulkDestructiveAction
-                  : "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-900 transition-colors hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9"
-              }
+              className={lt.bulkDestructiveAction}
             >
               {moveToTrashAction.isPending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />

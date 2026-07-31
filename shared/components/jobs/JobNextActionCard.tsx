@@ -17,6 +17,7 @@ import { JobBusinessActionGuide } from "@/shared/components/jobs/JobBusinessActi
 import { JobWorkflowActions } from "@/shared/components/jobs/JobWorkflowActions";
 import { StartRouteButton } from "@/shared/components/jobs/StartRouteButton";
 import { northStarDetailTokens as dt } from "@/shared/design-system/north-star/tokens";
+import { buttonClassName } from "@/shared/design-system/components/button-styles";
 import type { JobStatus } from "@/shared/types/job";
 
 type JobNextActionCardProps = {
@@ -147,9 +148,11 @@ export function JobNextActionCard({
     ? "text-lg font-bold tracking-tight text-[#17130E] sm:text-xl"
     : "text-lg font-bold tracking-tight text-slate-950 sm:text-xl dark:text-white";
 
-  const ctaClass = northStar
-    ? `${dt.primaryAction} min-h-11 w-full justify-center px-4 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A44D] focus-visible:ring-offset-2 sm:w-auto sm:min-w-[12rem] sm:text-sm`
-    : "inline-flex min-h-11 w-full touch-manipulation items-center justify-center gap-1.5 rounded-xl bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:ring-offset-2 sm:w-auto sm:min-w-[12rem] dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400";
+  const ctaClass = buttonClassName(
+    "primary",
+    "md",
+    "w-full touch-manipulation sm:w-auto sm:min-w-[12rem]",
+  );
 
   const statusBannerClass = cancelled
     ? northStar
